@@ -1,0 +1,27 @@
+[
+    {
+        "id": "1",
+        "name": "Ban lãnh đạo",
+        "employee": 5
+    },
+    {
+        "id": "2",
+        "name": "Đảng ủy",
+        "employee": 10
+    },
+    {
+        "id": "3",
+        "name": "Phân xưởng cơ điện lò 1",
+        "employee": 7
+    },
+    {
+        "id": "4",
+        "name": "Phân xưởng cơ điện lò 2",
+        "employee": 12
+    },
+    {
+        "id": "5",
+        "name": "Phân xưởng cơ giới-cơ khí 1",
+        "employee": 15
+    }
+]
