@@ -6,5 +6,7 @@ export const ROUTES = {
     POSITION: "/chuc_vu",
     PROJECT: "/du_an",
     CAPITALSOURCE: "/nguon_von",
+    TYPEASSET: "/loai_tai_san",
+    TOOLGROUP: "/ccdc_group",
 } as const;
 

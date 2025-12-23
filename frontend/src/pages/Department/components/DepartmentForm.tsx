@@ -5,7 +5,7 @@ import SaveBtn from '../../../components/Button/SaveBtn'
 import CancelBtn from '../../../components/Button/CancelBtn'
 import FieldInput from '../../../components/TextField/FieldInput'
 import { useFormik } from 'formik'
-import { DepartmentValidation } from '../validate/Validation'
+import { DepartmentValidation } from '../validation/Validation'
 import ViewBtn from '../../../components/Button/ViewBtn'
 
 export default function DepartmentForm() {

@@ -6,7 +6,7 @@ import CancelBtn from '../../../components/Button/CancelBtn'
 import FieldInput from '../../../components/TextField/FieldInput'
 import { useFormik } from 'formik'
 import ViewBtn from '../../../components/Button/ViewBtn'
-import { PositionValidation } from '../validate/Validation'
+import { PositionValidation } from '../validation/Validation'
 
 export default function PositionForm() {
     const [expanded, setExpanded] = useState(false)

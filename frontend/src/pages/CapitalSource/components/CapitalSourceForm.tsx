@@ -6,7 +6,7 @@ import CancelBtn from '../../../components/Button/CancelBtn'
 import FieldInput from '../../../components/TextField/FieldInput'
 import { useFormik } from 'formik'
 import ViewBtn from '../../../components/Button/ViewBtn'
-import { CapitalSourceValidation } from '../validate/Validation'
+import { CapitalSourceValidation } from '../validation/Validation'
 
 export default function CapitalSourceForm() {
     const [expanded, setExpanded] = useState(false)

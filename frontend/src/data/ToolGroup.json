@@ -1,0 +1,47 @@
+[
+    {
+        "id": "1",
+        "code": "C1",
+        "name": "Bàn ghế văn phòng",
+        "createdAt": "2025-12-23",
+        "updatedAt": "2025-12-24",
+        "createdBy": "admin",
+        "updatedBy": "admin"
+    },
+    {
+        "id": "2",
+        "code": "C2",
+        "name": "Thiết bị điện",
+        "createdAt": "2025-12-23",
+        "updatedAt": "2025-12-24",
+        "createdBy": "admin",
+        "updatedBy": "admin"
+    },
+    {
+        "id": "3",
+        "code": "CCDC_BHLD",
+        "name": "Bảo hộ lao động",
+        "createdAt": "2025-12-23",
+        "updatedAt": "2025-12-24",
+        "createdBy": "admin",
+        "updatedBy": "admin"
+    },
+    {
+        "id": "4",
+        "code": "CCDC_GD",
+        "name": "Dụng cụ văn phòng",
+        "createdAt": "2025-12-23",
+        "updatedAt": "2025-12-24",
+        "createdBy": "admin",
+        "updatedBy": "admin"
+    },
+    {
+        "id": "5",
+        "code": "CCDC_CT",
+        "name": "Đồ nghề cầm tay",
+        "createdAt": "2025-12-23",
+        "updatedAt": "2025-12-24",
+        "createdBy": "admin",
+        "updatedBy": "admin"
+    }
+]

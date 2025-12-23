@@ -8,7 +8,7 @@ import Positions from '../../../data/Position.json'
 import Departments from '../../../data/Department.json'
 import FieldAutoCompleted from '../../../components/TextField/FieldAutoCompleted'
 import { useFormik } from 'formik'
-import { StaffValidation } from '../validate/Validation'
+import { StaffValidation } from '../validation/Validation'
 import UploadButton from '../../../components/Button/UploadButton'
 import ViewBtn from '../../../components/Button/ViewBtn'
 

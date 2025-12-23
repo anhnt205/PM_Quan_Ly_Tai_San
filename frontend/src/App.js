@@ -10,6 +10,8 @@ import Department from './pages/Department/Department';
 import Project from './pages/Project/Project';
 import CapitalSource from './pages/CapitalSource/CapitalSource';
 import Position from './pages/Position/Position';
+import TypeAsset from './pages/TypeAsset/TypeAsset';
+import ToolGroup from './pages/ToolGroup/ToolGroup';
 
 const ProtectedRoute = ({ allowedRoles, children }) => {
   const { user } = useSelector((state: RootState) => state.user);
@@ -38,6 +40,8 @@ function App() {
           <Route path={ROUTES.POSITION} element={<Position />} />
           <Route path={ROUTES.PROJECT} element={<Project />} />
           <Route path={ROUTES.CAPITALSOURCE} element={<CapitalSource />} />
+          <Route path={ROUTES.TYPEASSET} element={<TypeAsset />} />
+          <Route path={ROUTES.TOOLGROUP} element={<ToolGroup />} />
         </Route>
       </Routes>
     </BrowserRouter>

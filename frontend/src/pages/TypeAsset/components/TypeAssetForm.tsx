@@ -5,18 +5,20 @@ import SaveBtn from '../../../components/Button/SaveBtn'
 import CancelBtn from '../../../components/Button/CancelBtn'
 import FieldInput from '../../../components/TextField/FieldInput'
 import { useFormik } from 'formik'
-import { ProjectValidation } from '../validation/Validation'
 import ViewBtn from '../../../components/Button/ViewBtn'
+import { TypeAssetValidation } from '../validation/Validation'
+import FieldAutoCompleted from '../../../components/TextField/FieldAutoCompleted'
+import AssetParents from '../../../data/AssetParent.json'
 
-export default function ProjectForm() {
+export default function TypeAssetForm() {
     const [expanded, setExpanded] = useState(false)
     const formik = useFormik({
         initialValues: {
             code: '',
             name: '',
-            note: ''
+            assetParent: ''
         },
-        validationSchema: ProjectValidation,
+        validationSchema: TypeAssetValidation,
         onSubmit(values) {
 
         },
@@ -34,7 +36,7 @@ export default function ProjectForm() {
                         transform: 'none', // Ngăn không cho xoay
                     },
                 }}>
-                <Typography>Chi tiết dự án</Typography>
+                <Typography>Chi tiết loại tài sản</Typography>
             </AccordionSummary>
             <AccordionDetails>
                 <Box display="flex" gap={2}>
@@ -44,17 +46,17 @@ export default function ProjectForm() {
                 <Paper sx={{ mt: 2, p: 2, borderRadius: '12px' }}>
                     <Box display={"flex"} alignItems={"center"} gap={2}>
                         <InfoOutlineRounded color='primary' />
-                        <Typography>Thông tin dự án</Typography>
+                        <Typography>Thông tin loại tài sản</Typography>
                     </Box>
                     <Grid container spacing={2} sx={{ mt: 2 }}>
-                        <Grid size={{ xs: 6 }}>
-                            <FieldInput title="Mã dự án *" formik={formik} field="code" />
-                        </Grid>
-                        <Grid size={{ xs: 6 }}>
-                            <FieldInput title="Tên dự án *" formik={formik} field="name" />
+                        <Grid size={{ xs: 12 }}>
+                            <FieldInput title="Mã loại tài sản *" formik={formik} field="code" />
                         </Grid>
                         <Grid size={{ xs: 12 }}>
-                            <FieldInput title="Ghi chú" formik={formik} field="note" />
+                            <FieldAutoCompleted title="Mã loại tài sản cha *" data={AssetParents} labelkey='name' formik={formik} field="assetParent" />
+                        </Grid>
+                        <Grid size={{ xs: 12 }}>
+                            <FieldInput title="Tên loại tài sản *" formik={formik} field="name" />
                         </Grid>
                     </Grid>
                 </Paper >
