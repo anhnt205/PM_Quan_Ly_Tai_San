@@ -20,6 +20,7 @@ export default function Department() {
       field: "name",
       headerName: "Tên phòng/ban",
       flex: 1,
+      minWidth: 200,
       align: 'center',
       headerAlign: 'center'
     },

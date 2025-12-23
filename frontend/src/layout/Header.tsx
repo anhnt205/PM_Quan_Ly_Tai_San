@@ -1,4 +1,4 @@
-import { Avatar, Box, Typography } from "@mui/material";
+import { AppBar, Avatar, Box, Typography } from "@mui/material";
 import logo from '../assets/images/logo_1.png'
 import { Email, Phone } from "@mui/icons-material";
 import MenuHeader from "./MenuHeader";
@@ -33,7 +33,6 @@ export default function Header() {
                     </Box>
                 </Box>
             </Box>
-            <MenuHeader />
         </Box>
     )
 }

@@ -21,6 +21,7 @@ export default function Staff() {
       field: "name",
       headerName: "Tên nhân viên",
       flex: 1,
+      minWidth: 200,
       align: 'center',
       headerAlign: 'center'
     },

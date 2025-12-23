@@ -41,7 +41,7 @@ export default function ProjectForm() {
                     <SaveBtn onSave={formik.submitForm} />
                     <CancelBtn />
                 </Box>
-                <Paper sx={{ mt: 5, p: 2, borderRadius: '12px' }}>
+                <Paper sx={{ mt: 2, p: 2, borderRadius: '12px' }}>
                     <Box display={"flex"} alignItems={"center"} gap={2}>
                         <InfoOutlineRounded color='primary' />
                         <Typography>Thông tin dự án</Typography>

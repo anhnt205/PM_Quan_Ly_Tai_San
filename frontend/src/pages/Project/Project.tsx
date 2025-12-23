@@ -20,6 +20,7 @@ export default function Project() {
       field: "name",
       headerName: "Tên dự án",
       flex: 1,
+      minWidth: 200,
       align: 'center',
       headerAlign: 'center'
     },

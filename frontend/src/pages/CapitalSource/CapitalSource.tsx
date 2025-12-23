@@ -21,6 +21,7 @@ export default function CapitalSource() {
       field: "name",
       headerName: "Tên nguồn kinh phí",
       flex: 1,
+      minWidth: 200,
       align: 'center',
       headerAlign: 'center'
     },
