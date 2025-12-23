@@ -7,11 +7,9 @@
         "email": "dat@gmail.com",
         "department": "Ban lãnh đạo",
         "position": "Giám đốc",
-        "signature": [
-            "Ký nháy",
-            "Ký thường",
-            "Ký số"
-        ]
+        "isFlashSign": true,
+        "isNormalSign": true,
+        "isDigitalSign": true
     },
     {
         "id": "2",
@@ -21,10 +19,9 @@
         "email": "anhth@gmail.com",
         "department": "Ban lãnh đạo",
         "position": "Phó giám đốc",
-        "signature": [
-            "Ký nháy",
-            "Ký thường"
-        ]
+        "isFlashSign": false,
+        "isNormalSign": true,
+        "isDigitalSign": false
     },
     {
         "id": "3",
@@ -34,9 +31,9 @@
         "email": "minhlv@gmail.com",
         "department": "Phòng Kế toán",
         "position": "Kế toán trưởng",
-        "signature": [
-            "Ký thường"
-        ]
+        "isFlashSign": true,
+        "isNormalSign": false,
+        "isDigitalSign": true
     },
     {
         "id": "4",
@@ -46,7 +43,9 @@
         "email": "huongpt@gmail.com",
         "department": "Phòng Hành chính",
         "position": "Nhân viên",
-        "signature": []
+        "isFlashSign": false,
+        "isNormalSign": true,
+        "isDigitalSign": true
     },
     {
         "id": "5",
@@ -56,9 +55,8 @@
         "email": "khanhdq@gmail.com",
         "department": "Phòng Kỹ thuật",
         "position": "Trưởng phòng",
-        "signature": [
-            "Ký nháy",
-            "Ký số"
-        ]
+        "isFlashSign": true,
+        "isNormalSign": true,
+        "isDigitalSign": false
     }
 ]

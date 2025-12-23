@@ -10,6 +10,7 @@ import FieldAutoCompleted from '../../../components/TextField/FieldAutoCompleted
 import { useFormik } from 'formik'
 import { StaffValidation } from '../validate/Validation'
 import UploadButton from '../../../components/Button/UploadButton'
+import ViewBtn from '../../../components/Button/ViewBtn'
 
 export default function StaffForm() {
     const [showPin, setShowPin] = useState(false);
@@ -40,12 +41,7 @@ export default function StaffForm() {
         <Accordion sx={{ background: '#f6f8f4ff' }} expanded={expanded}>
             <AccordionSummary
                 expandIcon={
-                    <Button size='small'
-                        variant='contained'
-                        startIcon={expanded ? <Visibility /> : <VisibilityOff />}
-                        onClick={() => setExpanded(!expanded)}>
-                        {expanded ? 'Mở rộng' : 'Thu gọn'}
-                    </Button>}
+                    <ViewBtn expanded={expanded} setExpanded={setExpanded} />}
                 aria-controls="panel1-content"
                 id="panel1-header"
                 sx={{

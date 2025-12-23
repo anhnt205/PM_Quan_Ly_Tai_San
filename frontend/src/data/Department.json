@@ -1,26 +1,31 @@
 [
     {
         "id": "1",
+        "code": "BLD",
         "name": "Ban lãnh đạo",
         "employee": 5
     },
     {
         "id": "2",
+        "code": "DY",
         "name": "Đảng ủy",
         "employee": 10
     },
     {
         "id": "3",
+        "code": "PXCDL1",
         "name": "Phân xưởng cơ điện lò 1",
         "employee": 7
     },
     {
         "id": "4",
+        "code": "PXCDL2",
         "name": "Phân xưởng cơ điện lò 2",
         "employee": 12
     },
     {
         "id": "5",
+        "code": "PXCG-CK1",
         "name": "Phân xưởng cơ giới-cơ khí 1",
         "employee": 15
     }

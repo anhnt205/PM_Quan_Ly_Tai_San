@@ -1,0 +1,37 @@
+[
+    {
+        "id": "1",
+        "code": "001",
+        "name": "001-99",
+        "note": "99",
+        "active": true
+    },
+    {
+        "id": "2",
+        "code": "002",
+        "name": "002-MTB",
+        "note": "MTB",
+        "active": false
+    },
+    {
+        "id":"3",
+        "code": "003",
+        "name": "003-NCSTLBMT Đồng Vông",
+        "note": "NCSTLBMT Đồng Vông",
+        "active": true
+    },
+    {
+        "id":"4",
+        "code": "004",
+        "name": "004-Duy trì SX 2010",
+        "note": "Duy trì SX 2010",
+        "active": false
+    },
+    {
+        "id":"5",
+        "code": "005",
+        "name": "005-Duy trì SX 2011",
+        "note": "Duy trì SX 2011",
+        "active": true
+    }
+]

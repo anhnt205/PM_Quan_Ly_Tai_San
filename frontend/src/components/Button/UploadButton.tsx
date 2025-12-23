@@ -1,5 +1,5 @@
 import { UploadFile, Delete } from '@mui/icons-material';
-import { Button, IconButton, Stack, Typography, Box } from '@mui/material';
+import { Button, IconButton, Typography } from '@mui/material';
 import React, { ChangeEvent, useState } from 'react';
 
 interface Props {

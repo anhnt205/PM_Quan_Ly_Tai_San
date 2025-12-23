@@ -5,19 +5,18 @@ import SaveBtn from '../../../components/Button/SaveBtn'
 import CancelBtn from '../../../components/Button/CancelBtn'
 import FieldInput from '../../../components/TextField/FieldInput'
 import { useFormik } from 'formik'
-import { DepartmentValidation } from '../validate/Validation'
+import { ProjectValidation } from '../validate/Validation'
 import ViewBtn from '../../../components/Button/ViewBtn'
 
-export default function DepartmentForm() {
+export default function ProjectForm() {
     const [expanded, setExpanded] = useState(false)
     const formik = useFormik({
         initialValues: {
             code: '',
             name: '',
-            isStorage: false,
-            isDepartment: false,
+            note: ''
         },
-        validationSchema: DepartmentValidation,
+        validationSchema: ProjectValidation,
         onSubmit(values) {
 
         },
@@ -35,7 +34,7 @@ export default function DepartmentForm() {
                         transform: 'none', // Ngăn không cho xoay
                     },
                 }}>
-                <Typography>Chi tiết phòng ban</Typography>
+                <Typography>Chi tiết dự án</Typography>
             </AccordionSummary>
             <AccordionDetails>
                 <Box display="flex" gap={2}>
@@ -45,34 +44,17 @@ export default function DepartmentForm() {
                 <Paper sx={{ mt: 5, p: 2, borderRadius: '12px' }}>
                     <Box display={"flex"} alignItems={"center"} gap={2}>
                         <InfoOutlineRounded color='primary' />
-                        <Typography>Thông tin phòng ban</Typography>
+                        <Typography>Thông tin dự án</Typography>
                     </Box>
                     <Grid container spacing={2} sx={{ mt: 2 }}>
                         <Grid size={{ xs: 6 }}>
-                            <FieldInput title="Mã phòng ban *" formik={formik} field="code" />
+                            <FieldInput title="Mã dự án *" formik={formik} field="code" />
                         </Grid>
                         <Grid size={{ xs: 6 }}>
-                            <FieldInput title="Tên phòng ban *" formik={formik} field="name" />
+                            <FieldInput title="Tên dự án *" formik={formik} field="name" />
                         </Grid>
                         <Grid size={{ xs: 12 }}>
-                            <Box display="flex" alignItems="center">
-                                <Box width={200}><Typography>Là kho:</Typography></Box>
-                                <Checkbox
-                                    name="isStorage"
-                                    checked={formik.values.isStorage}
-                                    onChange={formik.handleChange}
-                                />
-                            </Box>
-                        </Grid>
-                        <Grid size={{ xs: 12 }}>
-                            <Box display="flex" alignItems="center">
-                                <Box width={200}><Typography>Là phòng ban lãnh đạo:</Typography></Box>
-                                <Checkbox
-                                    name="isDepartment"
-                                    checked={formik.values.isDepartment}
-                                    onChange={formik.handleChange}
-                                />
-                            </Box>
+                            <FieldInput title="Ghi chú" formik={formik} field="note" />
                         </Grid>
                     </Grid>
                 </Paper >

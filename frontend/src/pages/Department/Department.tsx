@@ -1,11 +1,10 @@
-import { Download, Settings, Upload } from '@mui/icons-material'
-import { Box, Button, IconButton, ListItemIcon, Menu, MenuItem, Typography } from '@mui/material'
-import React, { useState } from 'react'
+import { Box, IconButton } from '@mui/material'
 import PageAction from '../../components/common/PageAction'
 import TableCustom from '../../components/common/TableCustom'
 import { GridColDef } from '@mui/x-data-grid'
-import Staffs from '../../data/Staff.json'
-import StaffForm from './components/DepartmentForm'
+import Departments from '../../data/Department.json'
+import DepartmentForm from './components/DepartmentForm'
+import { Delete } from '@mui/icons-material'
 
 export default function Department() {
 
@@ -25,7 +24,7 @@ export default function Department() {
       headerAlign: 'center'
     },
     {
-      field: "count",
+      field: "employee",
       headerName: "Số lượng nhân viên",
       width: 200,
       align: 'center',
@@ -34,9 +33,12 @@ export default function Department() {
     {
       field: "action",
       headerName: "Hành động",
-      width: 150,
+      width: 100,
       align: 'center',
-      headerAlign: 'center'
+      headerAlign: 'center',
+      renderCell: (params) => <IconButton>
+        <Delete color='error' />
+      </IconButton>
     },
   ];
 
@@ -45,9 +47,9 @@ export default function Department() {
     <Box sx={{ width: '100%', }}>
       <PageAction title="Quản lý phòng ban" />
       <Box py={2}>
-        <StaffForm />
+        <DepartmentForm />
       </Box>
-      <TableCustom title="Quản lý phòng ban" columns={columns} rows={Staffs} />
+      <TableCustom title="Quản lý phòng ban" columns={columns} rows={Departments} />
     </Box>
   )
 }

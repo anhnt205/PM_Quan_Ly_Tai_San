@@ -7,6 +7,15 @@ interface Props {
 }
 export default function SaveBtn({ onSave }: Props) {
     return (
-        <Button variant='contained' startIcon={<Save />} onClick={onSave}>Lưu</Button>
+        <Button
+            variant='contained'
+            sx={{
+                height: '32px',
+                textTransform: 'none',
+                px: 2,
+                fontWeight: 600,
+                minWidth: '80px'
+            }}
+            startIcon={<Save />} onClick={onSave}>Lưu</Button>
     )
 }

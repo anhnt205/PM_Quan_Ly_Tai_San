@@ -7,6 +7,7 @@ import { RootState } from './redux/store'
 import Staff from './pages/Staff/Staff';
 import DashBoard from './pages/Dashboard/DashBoard';
 import Department from './pages/Department/Department';
+import Project from './pages/Project/Project';
 
 const ProtectedRoute = ({ allowedRoles, children }) => {
   const { user } = useSelector((state: RootState) => state.user);
@@ -32,6 +33,7 @@ function App() {
           <Route index element={<DashBoard />} />
           <Route path={ROUTES.STAFF} element={<Staff />} />
           <Route path={ROUTES.DEPARTMENT} element={<Department />} />
+          <Route path={ROUTES.PROJECT} element={<Project />} />
         </Route>
       </Routes>
     </BrowserRouter>

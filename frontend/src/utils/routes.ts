@@ -3,5 +3,7 @@ export const ROUTES = {
     MAIN: "/",
     STAFF: "/nhan_vien",
     DEPARTMENT: "/phong_ban",
+    POSITION: "/chuc_vu",
+    PROJECT: "/du_an",
 } as const;
 

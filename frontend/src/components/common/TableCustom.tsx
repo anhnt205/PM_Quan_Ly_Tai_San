@@ -30,16 +30,6 @@ interface Props {
   rows: any[]
 }
 
-function CustomToolbar() {
-  return (
-    <GridToolbarContainer>
-      <GridToolbarColumnsButton />
-      <GridToolbarFilterButton />
-      <GridToolbarDensitySelector />
-      <GridToolbarExport />
-    </GridToolbarContainer>
-  );
-}
 export default function TableCustom({
   title,
   columns,
@@ -49,7 +39,7 @@ export default function TableCustom({
     <Paper sx={{ my: 2, width: '100%' }}>
       <Box display={'flex'} alignItems={'center'} p={1} gap={2} sx={{ background: '#f5efefff' }}>
         <TableView />
-        <Typography>{title}</Typography>
+        <Typography>{title} ({rows.length})</Typography>
       </Box>
       {/* <Grid container spacing={2} p={2}>
         <Grid size={{ xs: 12, sm: 4 }}>
@@ -87,6 +77,7 @@ export default function TableCustom({
               printOptions: { disableToolbarButton: true },
             },
           }}
+          getRowHeight={() => 'auto'}
           sx={{
             "& .MuiDataGrid-columnHeader": {
               backgroundColor: "#1FA463",
@@ -117,6 +108,10 @@ export default function TableCustom({
             // Checkbox header
             "& .MuiDataGrid-columnHeaderCheckbox .MuiCheckbox-root": {
               color: "#fff",
+            },
+            '& .MuiDataGrid-cell': {
+              display: 'flex',
+              alignItems: 'center',
             },
           }}
         />
