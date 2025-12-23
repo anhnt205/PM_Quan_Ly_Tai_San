@@ -79,6 +79,7 @@ export default function TableCustom({
           }}
           getRowHeight={() => 'auto'}
           sx={{
+            fontSize: '14px',
             "& .MuiDataGrid-columnHeader": {
               backgroundColor: "#1FA463",
             },

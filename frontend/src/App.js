@@ -8,6 +8,7 @@ import Staff from './pages/Staff/Staff';
 import DashBoard from './pages/Dashboard/DashBoard';
 import Department from './pages/Department/Department';
 import Project from './pages/Project/Project';
+import CapitalSource from './pages/CapitalSource/CapitalSource';
 
 const ProtectedRoute = ({ allowedRoles, children }) => {
   const { user } = useSelector((state: RootState) => state.user);
@@ -34,6 +35,7 @@ function App() {
           <Route path={ROUTES.STAFF} element={<Staff />} />
           <Route path={ROUTES.DEPARTMENT} element={<Department />} />
           <Route path={ROUTES.PROJECT} element={<Project />} />
+          <Route path={ROUTES.CAPITALSOURCE} element={<CapitalSource />} />
         </Route>
       </Routes>
     </BrowserRouter>

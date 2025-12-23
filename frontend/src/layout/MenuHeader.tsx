@@ -106,7 +106,7 @@ export default function Menuheader() {
                 { text: 'Quản lý phòng ban', path: ROUTES.DEPARTMENT },
                 { text: 'Quản lý chức vụ', path: ROUTES.POSITION },
                 { text: 'Quản lý dự án', path: ROUTES.PROJECT },
-                { text: 'Quản lý nguồn vốn', path: '/' },
+                { text: 'Quản lý nguồn vốn', path: ROUTES.CAPITALSOURCE },
                 { text: 'Loại tài sản', path: '/' },
                 { text: 'nhóm ccdc', path: '/' },
                 { text: 'Loại ccdc', path: '/' },
