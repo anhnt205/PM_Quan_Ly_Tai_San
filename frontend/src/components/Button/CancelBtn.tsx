@@ -1,12 +1,13 @@
 import { Cancel } from '@mui/icons-material'
 import { Button } from '@mui/material'
 
-export default function CancelBtn() {
+export default function CancelBtn({ onClick }: { onClick: () => void }) {
   return (
     <Button
       variant='contained'
       size='small'
       color='error'
+      onClick={onClick}
       sx={{
         height: '32px',
         textTransform: 'none',

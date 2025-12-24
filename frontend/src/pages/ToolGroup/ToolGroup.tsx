@@ -5,9 +5,10 @@ import { GridColDef } from '@mui/x-data-grid'
 import ToolGroups from '../../data/ToolGroup.json'
 import { Delete } from '@mui/icons-material'
 import ToolGroupForm from './components/ToolGroupForm'
+import React, { useState } from 'react'
 
 export default function ToolGroup() {
-
+  const [showForm, setShowForm] = useState(false)
   const columns: GridColDef[] = [
     {
       field: "code",
@@ -67,10 +68,12 @@ export default function ToolGroup() {
 
   return (
     <Box sx={{ width: '100%', }}>
-      <PageAction title="Quản lý nhóm ccdc" />
-      <Box py={2}>
-        <ToolGroupForm />
-      </Box>
+      <PageAction title="Quản lý nhóm ccdc" onNewClick={() => setShowForm(true)} />
+      {showForm && (  
+        <Box py={2}>
+          <ToolGroupForm onCancel={() => setShowForm(false)} />
+        </Box>
+      )}
       <TableCustom title="Quản lý nhóm ccdc" columns={columns} rows={ToolGroups} />
     </Box>
   )

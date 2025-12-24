@@ -1,4 +1,4 @@
-import { InfoOutlineRounded } from '@mui/icons-material'
+import { InfoOutlineRounded, ArrowDropUp, ArrowDropDown } from '@mui/icons-material'
 import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Checkbox, Grid, IconButton, InputAdornment, Paper, TextField, Typography } from '@mui/material'
 import React, { useState } from 'react'
 import SaveBtn from '../../../components/Button/SaveBtn'
@@ -10,8 +10,8 @@ import { TypeAssetValidation } from '../validation/Validation'
 import FieldAutoCompleted from '../../../components/TextField/FieldAutoCompleted'
 import AssetParents from '../../../data/AssetParent.json'
 
-export default function TypeAssetForm() {
-    const [expanded, setExpanded] = useState(false)
+export default function TypeAssetForm({onCancel}: {onCancel: () => void}) {
+    const [expanded, setExpanded] = useState(true)
     const formik = useFormik({
         initialValues: {
             code: '',
@@ -36,12 +36,15 @@ export default function TypeAssetForm() {
                         transform: 'none', // Ngăn không cho xoay
                     },
                 }}>
-                <Typography>Chi tiết loại tài sản</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    {expanded ? <ArrowDropUp /> : <ArrowDropDown />}
+                    <Typography>Chi tiết loại tài sản</Typography>
+                </Box>
             </AccordionSummary>
             <AccordionDetails>
                 <Box display="flex" gap={2}>
                     <SaveBtn onSave={formik.submitForm} />
-                    <CancelBtn />
+                    <CancelBtn onClick={onCancel} />
                 </Box>
                 <Paper sx={{ mt: 2, p: 2, borderRadius: '12px' }}>
                     <Box display={"flex"} alignItems={"center"} gap={2}>

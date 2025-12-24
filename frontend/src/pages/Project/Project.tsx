@@ -5,9 +5,10 @@ import { GridColDef } from '@mui/x-data-grid'
 import Projects from '../../data/Project.json'
 import ProjectForm from './components/ProjectForm'
 import { Delete } from '@mui/icons-material'
+import React, { useState } from 'react'
 
 export default function Project() {
-
+  const [showForm, setShowForm] = useState(false)
   const columns: GridColDef[] = [
     {
       field: "code",
@@ -68,10 +69,12 @@ export default function Project() {
 
   return (
     <Box sx={{ width: '100%', }}>
-      <PageAction title="Quản lý dự án" />
-      <Box py={2}>
-        <ProjectForm />
-      </Box>
+      <PageAction title="Quản lý dự án" onNewClick={() => setShowForm(true)} />
+      {showForm && (
+        <Box py={2}>
+          <ProjectForm onCancel={() => setShowForm(false)} />
+        </Box>
+      )}  
       <TableCustom title="Quản lý dự án" columns={columns} rows={Projects} />
     </Box>
   )

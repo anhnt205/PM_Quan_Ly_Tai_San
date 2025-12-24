@@ -1,4 +1,4 @@
-import { InfoOutlineRounded, Visibility, VisibilityOff } from '@mui/icons-material'
+import { ArrowDropDown, ArrowDropUp, InfoOutlineRounded, Visibility, VisibilityOff } from '@mui/icons-material'
 import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Checkbox, Grid, IconButton, InputAdornment, Paper, TextField, Typography } from '@mui/material'
 import React, { useState } from 'react'
 import SaveBtn from '../../../components/Button/SaveBtn'
@@ -12,9 +12,9 @@ import { StaffValidation } from '../validation/Validation'
 import UploadButton from '../../../components/Button/UploadButton'
 import ViewBtn from '../../../components/Button/ViewBtn'
 
-export default function StaffForm() {
+export default function StaffForm({ onCancel }: { onCancel: () => void }) {
     const [showPin, setShowPin] = useState(false);
-    const [expanded, setExpanded] = useState(false)
+    const [expanded, setExpanded] = useState(true)
     const formik = useFormik({
         initialValues: {
             code: '',
@@ -49,12 +49,15 @@ export default function StaffForm() {
                         transform: 'none', // Ngăn không cho xoay
                     },
                 }}>
-                <Typography>Chi tiết nhân viên</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    {expanded ? <ArrowDropUp /> : <ArrowDropDown />}
+                    <Typography>Chi tiết nhân viên</Typography>
+                </Box>
             </AccordionSummary>
             <AccordionDetails>
                 <Box display="flex" gap={2}>
                     <SaveBtn onSave={formik.submitForm} />
-                    <CancelBtn />
+                    <CancelBtn onClick={onCancel} />
                 </Box>
                 <Paper sx={{ mt: 2, p: 2, borderRadius: '12px' }}>
                     <Box display={"flex"} alignItems={"center"} gap={2}>
@@ -192,3 +195,4 @@ export default function StaffForm() {
         </Accordion>
     )
 }
+

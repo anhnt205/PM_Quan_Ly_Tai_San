@@ -8,7 +8,7 @@ import TypeAssets from '../../data/TypeAsset.json'
 import TypeAssetForm from './components/TypeAssetForm'
 
 export default function TypeAsset() {
-
+  const [showForm, setShowForm] = useState(false)
   const columns: GridColDef[] = [
     {
       field: "code",
@@ -48,10 +48,12 @@ export default function TypeAsset() {
 
   return (
     <Box sx={{ width: '100%', }}>
-      <PageAction title="Quản lý loại tài sản" />
-      <Box py={2}>
-        <TypeAssetForm />
-      </Box>
+      <PageAction title="Quản lý loại tài sản" onNewClick={() => setShowForm(true)}/>
+      {showForm && (
+        <Box py={2}>
+          <TypeAssetForm onCancel={() => setShowForm(false)} />
+        </Box>
+      )}
       <TableCustom title="Quản lý loại tài sản" columns={columns} rows={TypeAssets} />
     </Box>
   )
