@@ -19,10 +19,36 @@ import CapitalSourceForm from "./components/CapitalSourceForm";
 export default function CapitalSource() {
   const [showForm, setShowForm] = useState(false);
   const [selectedCapitalSource, setSelectedCapitalSource] = useState<any>(null);
+  const [readOnly, setReadOnly] = useState(false);
+  const [CapitalSourceData, setCapitalSourceData] = useState(CapitalSources);
+
   const handleRowClick = (params: GridRowParams) => {
     setSelectedCapitalSource(params.row);
+    setReadOnly(true);
     setShowForm(true);
   };
+
+  const handleEdit = () => {
+    setReadOnly(false);
+  };
+
+  const handleSave = (values: any) => {
+    if (selectedCapitalSource) {
+      // Update existing capital source
+      const updatedCapitalSources = CapitalSourceData.map((CapitalSource) =>
+        CapitalSource.id === selectedCapitalSource.id ? { ...CapitalSource, ...values } : CapitalSource
+      );
+      setCapitalSourceData(updatedCapitalSources);
+    } else {
+      // Create new capital Source
+      const newCapitalSource = { ...values, id: Date.now() }; // Simple ID generation
+      console.log(newCapitalSource);
+      setCapitalSourceData([...CapitalSourceData, newCapitalSource]);
+    }
+    setShowForm(false);
+    setSelectedCapitalSource(null);
+  };
+  console.log(CapitalSourceData);
   const columns: GridColDef[] = [
     {
       field: "code",
@@ -115,6 +141,7 @@ export default function CapitalSource() {
         onNewClick={() => {
           setShowForm(true);
           setSelectedCapitalSource(null);
+          setReadOnly(false);
         }}
       />
       {showForm && (
@@ -122,14 +149,19 @@ export default function CapitalSource() {
           <CapitalSourceForm onCancel={() => {
             setShowForm(false);
             setSelectedCapitalSource(null);
+            setReadOnly(false);
           }}
-          capitalSource={selectedCapitalSource} />
+          capitalSource={selectedCapitalSource}
+          readOnly={readOnly}
+          onEdit={handleEdit}
+          onSave={handleSave}
+        />
         </Box>
       )}
       <TableCustom
         title="Quản lý nguồn vốn"
         columns={columns}
-        rows={CapitalSources}
+        rows={CapitalSourceData}
         onRowClick={handleRowClick}
       />
     </Box>

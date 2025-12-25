@@ -30,13 +30,20 @@ import { useFormik } from "formik";
 import { StaffValidation } from "../validation/Validation";
 import UploadButton from "../../../components/Button/UploadButton";
 import ViewBtn from "../../../components/Button/ViewBtn";
+import EditButton from "../../../components/Button/EditButton";
 
 export default function StaffForm({
+  onEdit,
   onCancel,
   staff,
+  readOnly,
+  onSave,
 }: {
+  onEdit: () => void;
   onCancel: () => void;
   staff?: any;
+  readOnly: boolean;
+  onSave: (values: any) => void;
 }) {
   const [showPin, setShowPin] = useState(false);
   const [expanded, setExpanded] = useState(true);
@@ -56,14 +63,19 @@ export default function StaffForm({
       savePin: false,
     },
     validationSchema: StaffValidation,
-    onSubmit(values) {},
+    onSubmit(values) {
+      onSave(values);
+    },
   });
 
   useEffect(() => {
     if (staff) {
       formik.setValues(staff);
+      formik.setErrors({}); // Clear errors when staff changes
+    }else{
+      formik.resetForm();
     }
-  }, [staff]);
+  }, [staff, readOnly]); // Add readOnly to dependencies
 
   return (
     <Accordion sx={{ background: "#f6f8f4ff" }} expanded={expanded}>
@@ -84,8 +96,9 @@ export default function StaffForm({
       </AccordionSummary>
       <AccordionDetails>
         <Box display="flex" gap={2}>
-          <SaveBtn onSave={formik.submitForm} />
-          <CancelBtn onClick={onCancel} />
+          {!readOnly && <SaveBtn onSave={formik.submitForm} />}
+          {!readOnly && <CancelBtn onClick={onCancel} />}
+          {readOnly && <EditButton onClick={onEdit} />}
         </Box>
         <Paper sx={{ mt: 2, p: 2, borderRadius: "12px" }}>
           <Box display={"flex"} alignItems={"center"} gap={2}>
@@ -100,6 +113,7 @@ export default function StaffForm({
                     title="Mã nhân viên *"
                     formik={formik}
                     field="code"
+                    disabled={readOnly}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -107,16 +121,23 @@ export default function StaffForm({
                     title="Tên nhân viên *"
                     formik={formik}
                     field="name"
+                    disabled={readOnly}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
-                  <FieldInput title="Email *" formik={formik} field="email" />
+                  <FieldInput
+                    title="Email *"
+                    formik={formik}
+                    field="email"
+                    disabled={readOnly}
+                  />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <FieldInput
                     title="Số điện thoại *"
                     formik={formik}
                     field="phone"
+                    disabled={readOnly}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -126,6 +147,7 @@ export default function StaffForm({
                     labelkey="name"
                     formik={formik}
                     field="position"
+                    disabled={readOnly}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -135,6 +157,7 @@ export default function StaffForm({
                     labelkey="name"
                     formik={formik}
                     field="department"
+                    disabled={readOnly}
                   />
                 </Grid>
               </Grid>
@@ -149,11 +172,12 @@ export default function StaffForm({
                   <Checkbox
                     name="isFlashSign"
                     checked={formik.values.isFlashSign}
-                    onChange={formik.handleChange}
+                    onChange={!readOnly ? formik.handleChange : undefined}
+                    disabled={readOnly}
                   />
                   {formik.values.isFlashSign && (
                     <Box flex={1} ml={1}>
-                      <UploadButton label="Nhấn để chọn file chữ ký (.png, .jpg...)" />
+                      <UploadButton label="Nhấn để chọn file chữ ký (.png, .jpg...)" disabled={readOnly} />
                     </Box>
                   )}
                 </Box>
@@ -166,11 +190,12 @@ export default function StaffForm({
                   <Checkbox
                     name="isNormalSign"
                     checked={formik.values.isNormalSign}
-                    onChange={formik.handleChange}
+                    onChange={!readOnly ? formik.handleChange : undefined}
+                    disabled={readOnly}
                   />
                   {formik.values.isNormalSign && (
                     <Box flex={1} ml={1}>
-                      <UploadButton label="Nhấn để chọn file chữ ký (.png, .jpg...)" />
+                      <UploadButton label="Nhấn để chọn file chữ ký (.png, .jpg...)" disabled ={readOnly} />
                     </Box>
                   )}
                 </Box>
@@ -183,7 +208,8 @@ export default function StaffForm({
                   <Checkbox
                     name="isDigitalSign"
                     checked={formik.values.isDigitalSign}
-                    onChange={formik.handleChange}
+                    onChange={!readOnly ? formik.handleChange : undefined}
+                    disabled={readOnly}
                   />
                 </Box>
                 {formik.values.isDigitalSign && (
@@ -195,10 +221,12 @@ export default function StaffForm({
                       placeholder="Agreement UUID"
                       name="agreementUuid"
                       value={formik.values.agreementUuid}
-                      onChange={formik.handleChange}
+                      onChange={!readOnly ? formik.handleChange : undefined}
                       InputProps={{
                         sx: { borderRadius: "8px" },
+                        readOnly: readOnly,
                       }}
+                      disabled={readOnly}
                     />
                     {/* Dòng 5: PIN */}
                     <TextField
@@ -208,7 +236,7 @@ export default function StaffForm({
                       type={showPin ? "text" : "password"}
                       name="pin"
                       value={formik.values.pin}
-                      onChange={formik.handleChange}
+                      onChange={!readOnly ? formik.handleChange : undefined}
                       InputProps={{
                         sx: { borderRadius: "8px" },
                         endAdornment: (
@@ -216,12 +244,15 @@ export default function StaffForm({
                             <IconButton
                               onClick={() => setShowPin(!showPin)}
                               edge="end"
+                              disabled={readOnly}
                             >
                               {showPin ? <VisibilityOff /> : <Visibility />}
                             </IconButton>
                           </InputAdornment>
                         ),
+                        readOnly: readOnly,
                       }}
+                      disabled={readOnly}
                     />
                     {/* Dòng 6: Lưu mã PIN */}
                     <Box display="flex" alignItems="center" gap={2}>
@@ -229,7 +260,8 @@ export default function StaffForm({
                       <Checkbox
                         name="savePin"
                         checked={formik.values.savePin}
-                        onChange={formik.handleChange}
+                        onChange={!readOnly ? formik.handleChange : undefined}
+                        disabled={readOnly}
                         sx={{
                           "& .MuiSvgIcon-root": { fontSize: 28 },
                           color: "#aaa",

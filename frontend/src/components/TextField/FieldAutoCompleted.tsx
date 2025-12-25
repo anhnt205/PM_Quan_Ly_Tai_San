@@ -6,13 +6,15 @@ interface Props {
     data: any[],
     labelkey: string,
     formik?: any,
-    field?: string
+    field?: string,
+    disabled?: boolean
 }
 
-export default function FieldAutoCompleted({ title, data, labelkey, formik, field }: Props) {
+export default function FieldAutoCompleted({ title, data, labelkey, formik, field, disabled }: Props) {
     const currentValue = (formik && field) ? formik.values[field] : null;
     return (
         <Autocomplete
+            disabled={disabled}
             fullWidth
             options={data}
             getOptionLabel={(option: any) => option[labelkey] || ''}

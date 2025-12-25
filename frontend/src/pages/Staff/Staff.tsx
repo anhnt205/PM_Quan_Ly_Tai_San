@@ -19,10 +19,33 @@ import StaffForm from "./components/StaffForm";
 export default function Staff() {
   const [showForm, setShowForm] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<any>(null);
+  const [readOnly, setReadOnly] = useState(false);
+  const [staffsData, setStaffsData] = useState(Staffs);
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedStaff(params.row);
+    setReadOnly(true); // Set readOnly to true when viewing details
     setShowForm(true);
+  };
+
+  const handleSave = (values: any) => {
+    if (selectedStaff) {
+      // Update existing staff
+      const updatedStaffs = staffsData.map((staff) =>
+        staff.id === selectedStaff.id ? { ...staff, ...values } : staff
+      );
+      setStaffsData(updatedStaffs);
+    } else {
+      // Create new staff
+      const newStaff = { ...values, id: Date.now() }; // Simple ID generation
+      setStaffsData([...staffsData, newStaff]);
+    }
+    setShowForm(false);
+    setSelectedStaff(null);
+  };
+
+  const handleEdit = () => {
+    setReadOnly(false);
   };
 
   const columns: GridColDef[] = [
@@ -147,6 +170,7 @@ export default function Staff() {
         onNewClick={() => {
           setShowForm(true);
           setSelectedStaff(null);
+          setReadOnly(false); // Set readOnly to false when creating a new staff
         }}
       />
       {showForm && (
@@ -155,15 +179,19 @@ export default function Staff() {
             onCancel={() => {
               setShowForm(false);
               setSelectedStaff(null);
+              setReadOnly(false); // Reset readOnly when form is closed
             }}
+            onEdit={handleEdit}
             staff={selectedStaff}
+            readOnly={readOnly}
+            onSave={handleSave}
           />
         </Box>
       )}
       <TableCustom
         title="Quản lý nhân viên"
         columns={columns}
-        rows={Staffs}
+        rows={staffsData}
         onRowClick={handleRowClick}
       />
     </Box>

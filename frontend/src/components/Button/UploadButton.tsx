@@ -1,5 +1,5 @@
 import { UploadFile, Delete } from '@mui/icons-material';
-import { Button, IconButton, Typography } from '@mui/material';
+import { Box, Button, IconButton, Typography } from '@mui/material';
 import React, { ChangeEvent, useState } from 'react';
 
 interface Props {
@@ -7,13 +7,15 @@ interface Props {
     onChange?: (file: File | null) => void; // Hàm callback trả file về cha
     accept?: string; // Định dạng file cho phép (VD: .png, .jpg)
     name?: string; // Tên field (dùng cho formik)
+    disabled?: boolean; // Vô hiệu hóa nút upload
 }
 
 export default function UploadButton({
     label = "Nhấn để chọn file chữ ký (.png, .jpg...)",
     onChange,
     accept = ".png, .jpg, .jpeg",
-    name
+    name,
+    disabled = false
 }: Props) {
     const [fileName, setFileName] = useState<string | null>(null);
 
@@ -31,8 +33,12 @@ export default function UploadButton({
         setFileName(null);
         if (onChange) onChange(null);
     };
-
+    
     return (
+        <Box>{disabled ? (
+            <img src="" alt="" />
+            
+        ) : (
         <Button
             component="label" // Biến button thành label để kích hoạt input hidden
             fullWidth
@@ -73,6 +79,7 @@ export default function UploadButton({
                     <Delete fontSize="small" />
                 </IconButton>
             )}
-        </Button>
+        </Button>)}
+        </Box>
     );
 }

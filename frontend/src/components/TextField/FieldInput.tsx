@@ -6,7 +6,8 @@ interface Props {
     type?: string,
     formik?: any,
     field?: string,
-    slotProps?: any
+    slotProps?: any,
+    disabled?: boolean
 }
 export default function FieldInput(
     {
@@ -14,10 +15,12 @@ export default function FieldInput(
         type = "text",
         formik,
         field,
-        slotProps
+        slotProps,
+        disabled = false
     }: Props) {
     return (
         <TextField
+            disabled={disabled}
             fullWidth
             type={type}
             size='small'
