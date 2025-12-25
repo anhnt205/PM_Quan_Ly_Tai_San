@@ -12,12 +12,17 @@ import {
 import React, { useState } from "react";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
-import { GridColDef } from "@mui/x-data-grid";
+import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import CapitalSources from "../../data/CapitalSource.json";
 import CapitalSourceForm from "./components/CapitalSourceForm";
 
 export default function CapitalSource() {
-  const [showForm, setShowForm] = useState(false)
+  const [showForm, setShowForm] = useState(false);
+  const [selectedCapitalSource, setSelectedCapitalSource] = useState<any>(null);
+  const handleRowClick = (params: GridRowParams) => {
+    setSelectedCapitalSource(params.row);
+    setShowForm(true);
+  };
   const columns: GridColDef[] = [
     {
       field: "code",
@@ -107,17 +112,25 @@ export default function CapitalSource() {
     <Box sx={{ width: "100%" }}>
       <PageAction
         title="Quản lý nguồn vốn"
-        onNewClick={() => setShowForm(true)}
+        onNewClick={() => {
+          setShowForm(true);
+          setSelectedCapitalSource(null);
+        }}
       />
       {showForm && (
         <Box py={2}>
-          <CapitalSourceForm onCancel={() => setShowForm(false)} />
+          <CapitalSourceForm onCancel={() => {
+            setShowForm(false);
+            setSelectedCapitalSource(null);
+          }}
+          capitalSource={selectedCapitalSource} />
         </Box>
       )}
       <TableCustom
         title="Quản lý nguồn vốn"
         columns={columns}
         rows={CapitalSources}
+        onRowClick={handleRowClick}
       />
     </Box>
   );

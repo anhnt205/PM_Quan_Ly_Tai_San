@@ -1,14 +1,20 @@
 import { Badge, Box, Chip, IconButton } from '@mui/material'
 import PageAction from '../../components/common/PageAction'
 import TableCustom from '../../components/common/TableCustom'
-import { GridColDef } from '@mui/x-data-grid'
+import { GridColDef, GridRowParams } from '@mui/x-data-grid'
 import ToolGroups from '../../data/ToolGroup.json'
 import { Delete } from '@mui/icons-material'
 import ToolGroupForm from './components/ToolGroupForm'
 import React, { useState } from 'react'
 
 export default function ToolGroup() {
-  const [showForm, setShowForm] = useState(false)
+  const [showForm, setShowForm] = useState(false);
+  const [selectedToolGroup, setSelectedToolGroup] = useState<any>(null);
+
+  const handleRowClick = (params: GridRowParams) => {
+    setSelectedToolGroup(params.row);
+    setShowForm(true);
+  };
   const columns: GridColDef[] = [
     {
       field: "code",
@@ -68,13 +74,20 @@ export default function ToolGroup() {
 
   return (
     <Box sx={{ width: '100%', }}>
-      <PageAction title="Quản lý nhóm ccdc" onNewClick={() => setShowForm(true)} />
+      <PageAction title="Quản lý nhóm ccdc" onNewClick={() => {
+        setShowForm(true);
+        setSelectedToolGroup(null);
+      }} />
       {showForm && (  
         <Box py={2}>
-          <ToolGroupForm onCancel={() => setShowForm(false)} />
+          <ToolGroupForm onCancel={() => {
+            setShowForm(false);
+            setSelectedToolGroup(null);
+          }} toolGroup={selectedToolGroup} />
         </Box>
       )}
-      <TableCustom title="Quản lý nhóm ccdc" columns={columns} rows={ToolGroups} />
+      <TableCustom title="Quản lý nhóm ccdc" columns={columns} rows={ToolGroups}
+        onRowClick={handleRowClick} />
     </Box>
   )
 }

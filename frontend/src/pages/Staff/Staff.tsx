@@ -12,12 +12,19 @@ import {
 import React, { useState } from "react";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
-import { GridColDef } from "@mui/x-data-grid";
+import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import Staffs from "../../data/Staff.json";
 import StaffForm from "./components/StaffForm";
 
 export default function Staff() {
   const [showForm, setShowForm] = useState(false);
+  const [selectedStaff, setSelectedStaff] = useState<any>(null);
+
+  const handleRowClick = (params: GridRowParams) => {
+    setSelectedStaff(params.row);
+    setShowForm(true);
+  };
+
   const columns: GridColDef[] = [
     {
       field: "code",
@@ -135,13 +142,30 @@ export default function Staff() {
 
   return (
     <Box sx={{ width: "100%" }}>
-      <PageAction title="Quản lý nhân viên" onNewClick={() => setShowForm(true)} />
+      <PageAction
+        title="Quản lý nhân viên"
+        onNewClick={() => {
+          setShowForm(true);
+          setSelectedStaff(null);
+        }}
+      />
       {showForm && (
         <Box py={2}>
-          <StaffForm onCancel={() => setShowForm(false)} />
+          <StaffForm
+            onCancel={() => {
+              setShowForm(false);
+              setSelectedStaff(null);
+            }}
+            staff={selectedStaff}
+          />
         </Box>
       )}
-      <TableCustom title="Quản lý nhân viên" columns={columns} rows={Staffs} />
+      <TableCustom
+        title="Quản lý nhân viên"
+        columns={columns}
+        rows={Staffs}
+        onRowClick={handleRowClick}
+      />
     </Box>
   );
 }

@@ -1,7 +1,7 @@
 import { Badge, Box, Checkbox, Chip, IconButton } from "@mui/material";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
-import { GridColDef } from "@mui/x-data-grid";
+import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import Positions from "../../data/Position.json";
 import ProjectForm from "./components/PositionForm";
 import { Delete } from "@mui/icons-material";
@@ -9,6 +9,12 @@ import React, { useState } from "react";
 
 export default function Position() {
   const [showForm, setShowForm] = useState(false);
+  const [selectedPosition, setSelectedPosition] = useState<any>(null);
+
+  const handleRowClick = (params: GridRowParams) => {
+    setSelectedPosition(params.row);
+    setShowForm(true);
+  };
   const columns: GridColDef[] = [
     {
       field: "code",
@@ -79,14 +85,22 @@ export default function Position() {
     <Box sx={{ width: "100%" }}>
       <PageAction
         title="Quản lý chức vụ"
-        onNewClick={() => setShowForm(true)}
+        onNewClick={() => {
+          setShowForm(true);
+          setSelectedPosition(null);
+        }}
       />
       {showForm && (
         <Box py={2}>
-          <ProjectForm onCancel={() => setShowForm(false)}/>
+          <ProjectForm onCancel={() => {
+            setShowForm(false);
+            setSelectedPosition(null);
+          }}
+          position={selectedPosition} />
         </Box>
       )}
-      <TableCustom title="Quản lý chức vụ" columns={columns} rows={Positions} />
+      <TableCustom title="Quản lý chức vụ" columns={columns} rows={Positions}
+      onRowClick={handleRowClick} />
     </Box>
   );
 }

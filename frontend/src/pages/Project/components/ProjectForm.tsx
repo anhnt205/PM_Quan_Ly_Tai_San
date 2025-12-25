@@ -1,6 +1,6 @@
 import { InfoOutlineRounded, ArrowDropUp, ArrowDropDown } from '@mui/icons-material'
 import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Checkbox, Grid, IconButton, InputAdornment, Paper, TextField, Typography } from '@mui/material'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import SaveBtn from '../../../components/Button/SaveBtn'
 import CancelBtn from '../../../components/Button/CancelBtn'
 import FieldInput from '../../../components/TextField/FieldInput'
@@ -8,7 +8,7 @@ import { useFormik } from 'formik'
 import { ProjectValidation } from '../validation/Validation'
 import ViewBtn from '../../../components/Button/ViewBtn'
 
-export default function ProjectForm({onCancel}: {onCancel: () => void}) {
+export default function ProjectForm({onCancel, project}: {onCancel: () => void; project?: any}) {
     const [expanded, setExpanded] = useState(true)
     const formik = useFormik({
         initialValues: {
@@ -17,10 +17,14 @@ export default function ProjectForm({onCancel}: {onCancel: () => void}) {
             note: ''
         },
         validationSchema: ProjectValidation,
-        onSubmit(values) {
+        onSubmit(values) {},
+    });
 
-        },
-    })
+    useEffect(() => {
+        if (project) {
+            formik.setValues(project);
+        }
+    }, [project]);
 
     return (
         <Accordion sx={{ background: '#f6f8f4ff' }} expanded={expanded}>

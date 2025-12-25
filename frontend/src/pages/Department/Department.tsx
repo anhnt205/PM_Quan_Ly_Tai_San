@@ -1,7 +1,7 @@
 import { Box, IconButton } from "@mui/material";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
-import { GridColDef } from "@mui/x-data-grid";
+import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import Departments from "../../data/Department.json";
 import DepartmentForm from "./components/DepartmentForm";
 import { Delete } from "@mui/icons-material";
@@ -9,6 +9,11 @@ import React, { useState } from "react";
 
 export default function Department() {
   const [showForm, setShowForm] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState<any>(null);
+  const handleRowClick = (params: GridRowParams) => {
+    setSelectedDepartment(params.row);
+    setShowForm(true);
+  };
   const columns: GridColDef[] = [
     {
       field: "code",
@@ -50,17 +55,25 @@ export default function Department() {
     <Box sx={{ width: "100%" }}>
       <PageAction
         title="Quản lý phòng ban"
-        onNewClick={() => setShowForm(true)}
+        onNewClick={() => {
+          setShowForm(true);
+          setSelectedDepartment(null);
+        }}
       />
       {showForm && (
         <Box py={2}>
-          <DepartmentForm onCancel={() => setShowForm(false)} />
+          <DepartmentForm onCancel={() => {
+            setShowForm(false);
+            setSelectedDepartment(null);
+          }} 
+          department={selectedDepartment} />
         </Box>
       )}
       <TableCustom
         title="Quản lý phòng ban"
         columns={columns}
         rows={Departments}
+        onRowClick={handleRowClick}
       />
     </Box>
   );

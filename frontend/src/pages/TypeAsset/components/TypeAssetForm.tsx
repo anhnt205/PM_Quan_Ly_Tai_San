@@ -1,6 +1,6 @@
 import { InfoOutlineRounded, ArrowDropUp, ArrowDropDown } from '@mui/icons-material'
 import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Checkbox, Grid, IconButton, InputAdornment, Paper, TextField, Typography } from '@mui/material'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import SaveBtn from '../../../components/Button/SaveBtn'
 import CancelBtn from '../../../components/Button/CancelBtn'
 import FieldInput from '../../../components/TextField/FieldInput'
@@ -10,8 +10,9 @@ import { TypeAssetValidation } from '../validation/Validation'
 import FieldAutoCompleted from '../../../components/TextField/FieldAutoCompleted'
 import AssetParents from '../../../data/AssetParent.json'
 
-export default function TypeAssetForm({onCancel}: {onCancel: () => void}) {
+export default function TypeAssetForm({onCancel, typeAsset}: {onCancel: () => void; typeAsset?: any}) {
     const [expanded, setExpanded] = useState(true)
+    console.log('typeAsset', typeAsset);
     const formik = useFormik({
         initialValues: {
             code: '',
@@ -19,10 +20,14 @@ export default function TypeAssetForm({onCancel}: {onCancel: () => void}) {
             assetParent: ''
         },
         validationSchema: TypeAssetValidation,
-        onSubmit(values) {
+        onSubmit(values) {},
+    });
 
-        },
-    })
+    useEffect(() => {
+        if (typeAsset) {
+            formik.setValues(typeAsset);
+        }
+    }, [typeAsset]);
 
     return (
         <Accordion sx={{ background: '#f6f8f4ff' }} expanded={expanded}>

@@ -27,13 +27,15 @@ const CustomFilterPanel = (props: any) => {
 interface Props {
   title: string,
   columns: GridColDef[],
-  rows: any[]
+  rows: any[],
+  onRowClick?: (params: any) => void;
 }
 
 export default function TableCustom({
   title,
   columns,
-  rows
+  rows,
+  onRowClick
 }: Props) {
   return (
     <Paper sx={{ my: 2, width: '100%' }}>
@@ -62,6 +64,7 @@ export default function TableCustom({
       </Grid> */}
       <Box sx={{ width: '100%', overflowX: 'auto' }}>
         <DataGrid
+          onRowClick={onRowClick}
           columns={columns}
           rows={rows}
           checkboxSelection

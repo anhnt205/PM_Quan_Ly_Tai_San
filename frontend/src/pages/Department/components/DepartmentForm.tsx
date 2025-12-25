@@ -1,6 +1,6 @@
 import { InfoOutlineRounded, ArrowDropDown, ArrowDropUp } from '@mui/icons-material'
 import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Checkbox, Grid, IconButton, InputAdornment, Paper, TextField, Typography } from '@mui/material'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import SaveBtn from '../../../components/Button/SaveBtn'
 import CancelBtn from '../../../components/Button/CancelBtn'
 import FieldInput from '../../../components/TextField/FieldInput'
@@ -8,7 +8,7 @@ import { useFormik } from 'formik'
 import { DepartmentValidation } from '../validation/Validation'
 import ViewBtn from '../../../components/Button/ViewBtn'
 
-export default function DepartmentForm({onCancel}: {onCancel: () => void}) {
+export default function DepartmentForm({onCancel, department}: {onCancel: () => void; department?: any}) {
     const [expanded, setExpanded] = useState(true)
     const formik = useFormik({
         initialValues: {
@@ -18,10 +18,14 @@ export default function DepartmentForm({onCancel}: {onCancel: () => void}) {
             isDepartment: false,
         },
         validationSchema: DepartmentValidation,
-        onSubmit(values) {
+        onSubmit(values) {},
+    });
 
-        },
-    })
+    useEffect(() => {
+        if (department) {
+            formik.setValues(department);
+        }
+    }, [department]);
 
     return (
         <Accordion sx={{ background: '#f6f8f4ff' }} expanded={expanded}>
@@ -82,5 +86,5 @@ export default function DepartmentForm({onCancel}: {onCancel: () => void}) {
 
             </AccordionDetails >
         </Accordion >
-    )
+    );
 }

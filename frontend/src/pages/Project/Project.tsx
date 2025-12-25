@@ -1,14 +1,20 @@
 import { Badge, Box, Chip, IconButton } from '@mui/material'
 import PageAction from '../../components/common/PageAction'
 import TableCustom from '../../components/common/TableCustom'
-import { GridColDef } from '@mui/x-data-grid'
+import { GridColDef, GridRowParams } from '@mui/x-data-grid'
 import Projects from '../../data/Project.json'
 import ProjectForm from './components/ProjectForm'
 import { Delete } from '@mui/icons-material'
 import React, { useState } from 'react'
 
 export default function Project() {
-  const [showForm, setShowForm] = useState(false)
+  const [showForm, setShowForm] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<any>(null);
+
+  const handleRowClick = (params: GridRowParams) => {
+    setSelectedProject(params.row);
+    setShowForm(true);
+  };
   const columns: GridColDef[] = [
     {
       field: "code",
@@ -69,13 +75,20 @@ export default function Project() {
 
   return (
     <Box sx={{ width: '100%', }}>
-      <PageAction title="Quản lý dự án" onNewClick={() => setShowForm(true)} />
+      <PageAction title="Quản lý dự án" onNewClick={() => {
+        setShowForm(true);
+        setSelectedProject(null);
+      }} />
       {showForm && (
         <Box py={2}>
-          <ProjectForm onCancel={() => setShowForm(false)} />
+          <ProjectForm onCancel={() => {
+            setShowForm(false);
+            setSelectedProject(null);
+          }} project={selectedProject} />
         </Box>
       )}  
-      <TableCustom title="Quản lý dự án" columns={columns} rows={Projects} />
+      <TableCustom title="Quản lý dự án" columns={columns} rows={Projects}
+      onRowClick={handleRowClick} />
     </Box>
   )
 }

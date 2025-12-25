@@ -1,6 +1,6 @@
 import { InfoOutlineRounded, ArrowDropUp, ArrowDropDown } from '@mui/icons-material'
 import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Checkbox, Grid, IconButton, InputAdornment, Paper, TextField, Typography } from '@mui/material'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import SaveBtn from '../../../components/Button/SaveBtn'
 import CancelBtn from '../../../components/Button/CancelBtn'
 import FieldInput from '../../../components/TextField/FieldInput'
@@ -8,7 +8,7 @@ import { useFormik } from 'formik'
 import ViewBtn from '../../../components/Button/ViewBtn'
 import { ToolGroupValidation } from '../validation/Validation'
 
-export default function ToolGroupForm({onCancel}: {onCancel: () => void}) {
+export default function ToolGroupForm({onCancel, toolGroup}: {onCancel: () => void; toolGroup?: any}) {
     const [expanded, setExpanded] = useState(true)
     const formik = useFormik({
         initialValues: {
@@ -16,10 +16,14 @@ export default function ToolGroupForm({onCancel}: {onCancel: () => void}) {
             name: '',
         },
         validationSchema: ToolGroupValidation,
-        onSubmit(values) {
+        onSubmit(values) {},
+    });
 
-        },
-    })
+    useEffect(() => {
+        if (toolGroup) {
+            formik.setValues(toolGroup);
+        }
+    }, [toolGroup]);
 
     return (
         <Accordion sx={{ background: '#f6f8f4ff' }} expanded={expanded}>

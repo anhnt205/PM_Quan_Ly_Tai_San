@@ -1,6 +1,6 @@
 import { InfoOutlineRounded, ArrowDropUp, ArrowDropDown } from '@mui/icons-material'
 import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Checkbox, Grid, IconButton, InputAdornment, Paper, TextField, Typography } from '@mui/material'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import SaveBtn from '../../../components/Button/SaveBtn'
 import CancelBtn from '../../../components/Button/CancelBtn'
 import FieldInput from '../../../components/TextField/FieldInput'
@@ -8,18 +8,28 @@ import { useFormik } from 'formik'
 import ViewBtn from '../../../components/Button/ViewBtn'
 import { PositionValidation } from '../validation/Validation'
 
-export default function PositionForm({onCancel}: {onCancel: () => void}) {
+export default function PositionForm({onCancel, position}: {onCancel: () => void; position?: any}) {
     const [expanded, setExpanded] = useState(true)
+    console.log('position', position);
     const formik = useFormik({
         initialValues: {
             code: '',
             name: '',
+            manager_staff: false,
+            manager_department: false,
+            manager_project: false,
+            manager_capital_source: false,
         },
         validationSchema: PositionValidation,
-        onSubmit(values) {
+        onSubmit(values) {},
+    });
 
-        },
-    })
+    useEffect(() => {
+        if (position) {
+            formik.setValues(position);
+        }
+    }, [position]);
+    console.log('formik.values', formik.values);
 
     return (
         <Accordion sx={{ background: '#f6f8f4ff' }} expanded={expanded}>
@@ -66,7 +76,8 @@ export default function PositionForm({onCancel}: {onCancel: () => void}) {
                         <Grid size={{ xs: 6 }}>
                             <Box display="flex" alignItems="center">
                                 <Box width={200}><Typography>Quản lý nhân viên:</Typography></Box>
-                                <Checkbox
+                                <Checkbox checked={formik.values.manager_staff}
+                                onChange={(e) => formik.setFieldValue("manager_staff", e.target.checked)}
                                     name="manager_staff"
                                 />
                             </Box>
@@ -74,7 +85,8 @@ export default function PositionForm({onCancel}: {onCancel: () => void}) {
                         <Grid size={{ xs: 6 }}>
                             <Box display="flex" alignItems="center">
                                 <Box width={200}><Typography>Quản lý phòng ban:</Typography></Box>
-                                <Checkbox
+                                <Checkbox checked={formik.values.manager_department}
+                                onChange={(e) => formik.setFieldValue("manager_department", e.target.checked)}
                                     name="manager_department"
                                 />
                             </Box>
@@ -82,7 +94,8 @@ export default function PositionForm({onCancel}: {onCancel: () => void}) {
                         <Grid size={{ xs: 6 }}>
                             <Box display="flex" alignItems="center">
                                 <Box width={200}><Typography>Quản lý dự án:</Typography></Box>
-                                <Checkbox
+                                <Checkbox checked={formik.values.manager_project}
+                                onChange={(e) => formik.setFieldValue("manager_project", e.target.checked)}
                                     name="manager_project"
                                 />
                             </Box>
@@ -90,7 +103,8 @@ export default function PositionForm({onCancel}: {onCancel: () => void}) {
                         <Grid size={{ xs: 6 }}>
                             <Box display="flex" alignItems="center">
                                 <Box width={200}><Typography>Quản lý nguồn vốn:</Typography></Box>
-                                <Checkbox
+                                <Checkbox checked={formik.values.manager_capital_source}
+                                onChange={(e) => formik.setFieldValue("manager_capital_source", e.target.checked)}
                                     name="manager_capital_source"
                                 />
                             </Box>
