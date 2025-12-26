@@ -26,10 +26,10 @@ export default function Header() {
                     <Box sx={{ color: 'white' }}>
                         <Typography align="center" fontSize={26} fontWeight={700}>PHẦN MỀM QUẢN LÝ TÀI SẢN</Typography>
                         <Typography align="center" fontWeight={700} fontSize={18}>CÔNG TY THAN UÔNG BÍ - TKV</Typography>
-                        <Typography sx={{ display: 'flex', justifyContent: 'center', gap: 3 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3 }}>
                             <Typography fontWeight={700} fontSize={12} display={'flex'} alignItems={'center'} gap={1}><Phone sx={{ fontSize: 16 }} />Hotline: 02033.854491</Typography>
                             <Typography fontWeight={700} fontSize={12} display={'flex'} alignItems={'center'} gap={1}><Email sx={{ fontSize: 16 }} />Email: ctythanub@gmail.com</Typography>
-                        </Typography>
+                        </Box>
                     </Box>
                 </Box>
             </Box>

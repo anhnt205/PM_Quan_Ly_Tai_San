@@ -116,7 +116,7 @@ export default function Menuheader() {
             ]
         },
         {
-            text: 'Quản lý tài sản', path: '/'
+            text: 'Quản lý tài sản', path: ROUTES.ASSETMANAGER
         },
         {
             text: 'Quản lý CCDC-Vật tư', path: '/'

@@ -1,17 +1,16 @@
-import { Search, Settings, TableView } from '@mui/icons-material'
-import { Box, Button, Grid, Paper, TextField, Typography } from '@mui/material'
+import { BarChart, Search, Settings, TableView } from "@mui/icons-material";
+import { Box, Button, Grid, Paper, TextField, Typography } from "@mui/material";
 import {
   DataGrid,
   GridColDef,
-  GridToolbarContainer,
-  GridToolbarColumnsButton,
-  GridToolbarFilterButton,
-  GridToolbarDensitySelector,
-  GridToolbarExport,
   GridToolbar,
   GridFilterPanel,
-} from '@mui/x-data-grid'
+} from "@mui/x-data-grid";
 import { viVN } from "@mui/x-data-grid/locales";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../../utils/routes";
+import FieldInput from "../TextField/FieldInput";
+import FieldDate from "../TextField/FieldDate";
 const CustomFilterPanel = (props: any) => {
   return (
     <GridFilterPanel
@@ -23,46 +22,70 @@ const CustomFilterPanel = (props: any) => {
   );
 };
 
-
 interface Props {
-  title: string,
-  columns: GridColDef[],
-  rows: any[],
+  title: string;
+  columns: GridColDef[];
+  rows: any[];
   onRowClick?: (params: any) => void;
+  isFilterDate?: boolean;
+  isDepreciation?: boolean;
 }
 
 export default function TableCustom({
   title,
   columns,
   rows,
-  onRowClick
+  onRowClick,
+  isFilterDate = false,
+  isDepreciation = false,
 }: Props) {
+  const navigate = useNavigate();
+
   return (
-    <Paper sx={{ my: 2, width: '100%' }}>
-      <Box display={'flex'} alignItems={'center'} p={1} gap={2} sx={{ background: '#f5efefff' }}>
+    <Paper sx={{ my: 2, width: "100%" }}>
+      <Box
+        display={"flex"}
+        alignItems={"center"}
+        p={1}
+        gap={2}
+        sx={{ background: "#f5efefff" }}
+      >
         <TableView />
-        <Typography>{title} ({rows.length})</Typography>
+        <Typography>
+          {title} ({rows.length})
+        </Typography>
       </Box>
-      {/* <Grid container spacing={2} p={2}>
+      <Grid container spacing={2} p={2}>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <TextField
-            size='small'
-            fullWidth
-            placeholder='Tìm kiếm'
+          <FieldInput
+            title="Tìm kiếm"
             InputProps={{
-              startAdornment: (
-                <Search />
-              ),
-              style: { borderRadius: '12px' }
-            }} />
+              startAdornment: <Search />,
+            }}
+          />
         </Grid>
-        <Grid size={{ xs: 12, sm: 8 }}>
-          <Box display={"flex"} justifyContent={'flex-end'}>
-            <Button variant='outlined' size='small' startIcon={<Settings />}>Cấu hình cột</Button>
+        <Grid size={{ xs: 12, sm: 2 }}>
+          {isFilterDate && <FieldDate title="Chọn thời gian khấu hao" />}
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <Box display={"flex"} justifyContent={"flex-end"} gap={2}>
+            {/* <Button variant="outlined" size="small" startIcon={<Settings />}>
+              Cấu hình cột
+            </Button> */}
+            {isDepreciation && (
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<BarChart />}
+                onClick={() => navigate(ROUTES.ASSETDEPRECIATION)}
+              >
+                Khấu hao tài sản
+              </Button>
+            )}
           </Box>
         </Grid>
-      </Grid> */}
-      <Box sx={{ width: '100%', overflowX: 'auto' }}>
+      </Grid>
+      <Box sx={{ width: "100%", overflowX: "auto" }}>
         <DataGrid
           onRowClick={onRowClick}
           columns={columns}
@@ -80,9 +103,9 @@ export default function TableCustom({
               printOptions: { disableToolbarButton: true },
             },
           }}
-          getRowHeight={() => 'auto'}
+          getRowHeight={() => "auto"}
           sx={{
-            fontSize: '14px',
+            fontSize: "14px",
             "& .MuiDataGrid-columnHeader": {
               backgroundColor: "#1FA463",
             },
@@ -93,7 +116,7 @@ export default function TableCustom({
             },
             "& .MuiDataGrid-columnHeader .MuiDataGrid-sortButton": {
               background: "#1FA463",
-              color: 'black'
+              color: "black",
             },
             "& .MuiDataGrid-iconButtonContainer": {
               visibility: "visible",
@@ -113,13 +136,13 @@ export default function TableCustom({
             "& .MuiDataGrid-columnHeaderCheckbox .MuiCheckbox-root": {
               color: "#fff",
             },
-            '& .MuiDataGrid-cell': {
-              display: 'flex',
-              alignItems: 'center',
+            "& .MuiDataGrid-cell": {
+              display: "flex",
+              alignItems: "center",
             },
           }}
         />
       </Box>
     </Paper>
-  )
+  );
 }
