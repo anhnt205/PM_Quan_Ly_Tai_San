@@ -10,10 +10,35 @@ import React, { useState } from "react";
 export default function Position() {
   const [showForm, setShowForm] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<any>(null);
+  const [readOnly, setReadOnly] = useState(false);
+  const [positionsData, setPositionsData] = useState(Positions);
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedPosition(params.row);
+    setReadOnly(true); // Set readOnly to true when viewing details
     setShowForm(true);
+  };
+
+  const handleSave = (values: any) => {
+    if (selectedPosition) {
+      // Update existing staff
+      const updatedStaffs = positionsData.map((position) =>
+        position.id === selectedPosition.id
+          ? { ...position, ...values }
+          : position
+      );
+      setPositionsData(updatedStaffs);
+    } else {
+      // Create new staff
+      const newStaff = { ...values, id: Date.now() }; // Simple ID generation
+      setPositionsData([...positionsData, newStaff]);
+    }
+    setShowForm(false);
+    setSelectedPosition(null);
+  };
+
+  const handleEdit = () => {
+    setReadOnly(false);
   };
   const columns: GridColDef[] = [
     {
@@ -88,19 +113,30 @@ export default function Position() {
         onNewClick={() => {
           setShowForm(true);
           setSelectedPosition(null);
+          setReadOnly(false);
         }}
       />
       {showForm && (
         <Box py={2}>
-          <ProjectForm onCancel={() => {
-            setShowForm(false);
-            setSelectedPosition(null);
-          }}
-          position={selectedPosition} />
+          <ProjectForm
+            onCancel={() => {
+              setShowForm(false);
+              setSelectedPosition(null);
+              setReadOnly(false); // Reset readOnly when form is closed
+            }}
+            onEdit={handleEdit}
+            selectedPosition={selectedPosition}
+            readOnly={readOnly}
+            onSave={handleSave}
+          />
         </Box>
       )}
-      <TableCustom title="Quản lý chức vụ" columns={columns} rows={Positions}
-      onRowClick={handleRowClick} />
+      <TableCustom
+        title="Quản lý chức vụ"
+        columns={columns}
+        rows={Positions}
+        onRowClick={handleRowClick}
+      />
     </Box>
   );
 }

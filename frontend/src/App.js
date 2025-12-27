@@ -15,6 +15,10 @@ import ToolGroup from "./pages/ToolGroup/ToolGroup";
 import AssetManager from "./pages/AssetManager/AssetManager";
 import AssetDepreciationForm from "./pages/AssetManager/components/AssetDepreciationForm";
 import AssetDepreciation from "./pages/AssetManager/AssetDepreciation";
+import ToolType from "./pages/ToolType/ToolType";
+import Unit from "./pages/Unit/Unit";
+import ReasonIncrease from "./pages/ReasonIncrease/ResonIncrease";
+import CurrentStatus from "./pages/CurrentStatus/CurrentStatus";
 
 const ProtectedRoute = ({ allowedRoles, children }) => {
   const { user } = useSelector((state: RootState) => state.user);
@@ -48,6 +52,10 @@ function App() {
           <Route path={ROUTES.CAPITALSOURCE} element={<CapitalSource />} />
           <Route path={ROUTES.TYPEASSET} element={<TypeAsset />} />
           <Route path={ROUTES.TOOLGROUP} element={<ToolGroup />} />
+          <Route path={ROUTES.TOOLTYPE} element={<ToolType />} />
+          <Route path={ROUTES.UNIT} element={<Unit />} />
+          <Route path={ROUTES.REASONINCREASE} element={<ReasonIncrease />} />
+          <Route path={ROUTES.CURRENTSTATUS} element={<CurrentStatus />} />
           <Route path={ROUTES.ASSETMANAGER} element={<AssetManager />} />
           <Route
             path={ROUTES.ASSETDEPRECIATION}

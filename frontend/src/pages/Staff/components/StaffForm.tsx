@@ -35,13 +35,13 @@ import EditButton from "../../../components/Button/EditButton";
 export default function StaffForm({
   onEdit,
   onCancel,
-  staff,
+  selectedStaff,
   readOnly,
   onSave,
 }: {
   onEdit: () => void;
   onCancel: () => void;
-  staff?: any;
+  selectedStaff?: any;
   readOnly: boolean;
   onSave: (values: any) => void;
 }) {
@@ -69,13 +69,13 @@ export default function StaffForm({
   });
 
   useEffect(() => {
-    if (staff) {
-      formik.setValues(staff);
-      formik.setErrors({}); // Clear errors when staff changes
+    if (selectedStaff) {
+      formik.setValues(selectedStaff);
+      formik.setErrors({}); // Clear errors when selectedStaff changes
     }else{
       formik.resetForm();
     }
-  }, [staff, readOnly]); // Add readOnly to dependencies
+  }, [selectedStaff, readOnly]); // Add readOnly to dependencies
 
   return (
     <Accordion sx={{ background: "#f6f8f4ff" }} expanded={expanded}>

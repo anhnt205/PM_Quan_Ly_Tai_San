@@ -1,94 +1,135 @@
-import { Badge, Box, Chip, IconButton } from '@mui/material'
-import PageAction from '../../components/common/PageAction'
-import TableCustom from '../../components/common/TableCustom'
-import { GridColDef, GridRowParams } from '@mui/x-data-grid'
-import Projects from '../../data/Project.json'
-import ProjectForm from './components/ProjectForm'
-import { Delete } from '@mui/icons-material'
-import React, { useState } from 'react'
+import { Badge, Box, Chip, IconButton } from "@mui/material";
+import PageAction from "../../components/common/PageAction";
+import TableCustom from "../../components/common/TableCustom";
+import { GridColDef, GridRowParams } from "@mui/x-data-grid";
+import Projects from "../../data/Project.json";
+import ProjectForm from "./components/ProjectForm";
+import { Delete } from "@mui/icons-material";
+import React, { useState } from "react";
 
 export default function Project() {
   const [showForm, setShowForm] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
+  const [readOnly, setReadOnly] = useState(false);
+  const [projectsData, setProjectsData] = useState(Projects);
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedProject(params.row);
+    setReadOnly(true); // Set readOnly to true when viewing details
     setShowForm(true);
+  };
+
+  const handleSave = (values: any) => {
+    if (selectedProject) {
+      // Update existing staff
+      const updatedStaffs = projectsData.map((project) =>
+        project.id === selectedProject.id ? { ...project, ...values } : project
+      );
+      setProjectsData(updatedStaffs);
+    } else {
+      // Create new staff
+      const newStaff = { ...values, id: Date.now() }; // Simple ID generation
+      setProjectsData([...projectsData, newStaff]);
+    }
+    setShowForm(false);
+    setSelectedProject(null);
+  };
+
+  const handleEdit = () => {
+    setReadOnly(false);
   };
   const columns: GridColDef[] = [
     {
       field: "code",
       headerName: "Mã dự án",
       width: 150,
-      align: 'center',
-      headerAlign: 'center'
+      align: "center",
+      headerAlign: "center",
     },
     {
       field: "name",
       headerName: "Tên dự án",
       flex: 1,
       minWidth: 200,
-      align: 'center',
-      headerAlign: 'center'
+      align: "center",
+      headerAlign: "center",
     },
     {
       field: "note",
       headerName: "Ghi chú",
       width: 200,
-      align: 'center',
-      headerAlign: 'center'
+      align: "center",
+      headerAlign: "center",
     },
     {
       field: "active",
       headerName: "Hiệu lực",
       width: 200,
-      align: 'center',
-      headerAlign: 'center',
+      align: "center",
+      headerAlign: "center",
       renderCell: (params) => {
         const isActive = params.row.active;
-        return <Chip
-          label={isActive ? 'Có hiệu lực' : 'Không hiệu lực'}
-          size="small" // Nên để small cho gọn trong bảng
-          sx={{
-            bgcolor: isActive ? '#baf7cbff' : '#f5f5f5',
+        return (
+          <Chip
+            label={isActive ? "Có hiệu lực" : "Không hiệu lực"}
+            size="small" // Nên để small cho gọn trong bảng
+            sx={{
+              bgcolor: isActive ? "#baf7cbff" : "#f5f5f5",
 
-            color: isActive ? '#137333' : '#616161',
+              color: isActive ? "#137333" : "#616161",
 
-            // Bỏ viền nếu không cần
-            border: 'none',
-          }}
-        />
+              // Bỏ viền nếu không cần
+              border: "none",
+            }}
+          />
+        );
       },
     },
     {
       field: "action",
       headerName: "Hành động",
       width: 100,
-      align: 'center',
-      headerAlign: 'center',
-      renderCell: (params) => <IconButton>
-        <Delete color='error' />
-      </IconButton>
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => (
+        <IconButton>
+          <Delete color="error" />
+        </IconButton>
+      ),
     },
   ];
 
-
   return (
-    <Box sx={{ width: '100%', }}>
-      <PageAction title="Quản lý dự án" onNewClick={() => {
-        setShowForm(true);
-        setSelectedProject(null);
-      }} />
+    <Box sx={{ width: "100%" }}>
+      <PageAction
+        title="Quản lý dự án"
+        onNewClick={() => {
+          setShowForm(true);
+          setSelectedProject(null);
+          setReadOnly(false);
+        }}
+      />
       {showForm && (
         <Box py={2}>
-          <ProjectForm onCancel={() => {
-            setShowForm(false);
-            setSelectedProject(null);
-          }} project={selectedProject} />
+          <ProjectForm
+            onCancel={() => {
+              setShowForm(false);
+              setSelectedProject(null);
+              setReadOnly(false); // Reset readOnly when form is closed
+            }}
+            onEdit={handleEdit}
+            selectedProject={selectedProject}
+            readOnly={readOnly}
+            onSave={handleSave}
+          />
         </Box>
-      )}  
-      <TableCustom title="Quản lý dự án" columns={columns} rows={Projects}
-      onRowClick={handleRowClick} />
+      )}
+      <TableCustom
+        title="Quản lý dự án"
+        columns={columns}
+        rows={Projects}
+        onRowClick={handleRowClick}
+      />
     </Box>
-  )
+  );
 }

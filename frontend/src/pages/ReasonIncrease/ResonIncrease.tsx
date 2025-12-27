@@ -1,66 +1,88 @@
-import { Box, IconButton } from "@mui/material";
+import { Delete, Download, Settings, Upload } from "@mui/icons-material";
+import {
+  Box,
+  Button,
+  Chip,
+  IconButton,
+  ListItemIcon,
+  Menu,
+  MenuItem,
+  Typography,
+} from "@mui/material";
+import React, { useState } from "react";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-import Departments from "../../data/Department.json";
-import DepartmentForm from "./components/DepartmentForm";
-import { Delete } from "@mui/icons-material";
-import React, { useState } from "react";
+import ReasonIncreases from "../../data/ReasonIncrease.json";
+import ReasonIncreaseForm from "./components/ReasonIncreaseForm";
 
-export default function Department() {
+export default function ReasonIncrease() {
   const [showForm, setShowForm] = useState(false);
-  const [selectedDepartment, setSelectedDepartment] = useState<any>(null);
+  const [selectedReasonIncrease, setSelectedReasonIncrease] =
+    useState<any>(null);
   const [readOnly, setReadOnly] = useState(false);
-  const [departmentsData, setDepartmentsData] = useState(Departments);
+  const [ReasonIncreasesData, setReasonIncreasesData] =
+    useState(ReasonIncreases);
 
   const handleRowClick = (params: GridRowParams) => {
-    setSelectedDepartment(params.row);
+    setSelectedReasonIncrease(params.row);
     setReadOnly(true); // Set readOnly to true when viewing details
     setShowForm(true);
   };
 
   const handleSave = (values: any) => {
-    if (selectedDepartment) {
+    if (selectedReasonIncrease) {
       // Update existing staff
-      const updatedStaffs = departmentsData.map((staff) =>
-        staff.id === selectedDepartment.id ? { ...staff, ...values } : staff
+      const updatedStaffs = ReasonIncreasesData.map((typeAsset) =>
+        typeAsset.id === selectedReasonIncrease.id
+          ? { ...typeAsset, ...values }
+          : typeAsset
       );
-      setDepartmentsData(updatedStaffs);
+      setReasonIncreasesData(updatedStaffs);
     } else {
       // Create new staff
       const newStaff = { ...values, id: Date.now() }; // Simple ID generation
-      setDepartmentsData([...departmentsData, newStaff]);
+      setReasonIncreasesData([...ReasonIncreasesData, newStaff]);
     }
     setShowForm(false);
-    setSelectedDepartment(null);
+    setSelectedReasonIncrease(null);
   };
 
   const handleEdit = () => {
     setReadOnly(false);
   };
-
   const columns: GridColDef[] = [
     {
       field: "code",
-      headerName: "Mã phòng ban",
+      headerName: "Mã lý do tăng",
       width: 150,
       align: "center",
       headerAlign: "center",
     },
     {
       field: "name",
-      headerName: "Tên phòng/ban",
+      headerName: "Tên lý do tăng",
       flex: 1,
-      minWidth: 200,
+      minWidth: 150,
       align: "center",
       headerAlign: "center",
     },
     {
-      field: "employee",
-      headerName: "Số lượng nhân viên",
-      width: 200,
+      field: "status",
+      headerName: "Tăng giảm",
+      flex: 1,
+      minWidth: 150,
       align: "center",
       headerAlign: "center",
+      renderCell: (params) => (
+        <Chip
+          label={params.row.status === 0 ? "Giảm" : "Tăng"}
+          sx={{
+            bgcolor: params.row.status === 0 ? "#f98e86ff" : "#baf7cbff",
+            color: params.row.status === 0 ? "#881d15ff" : "#137333",
+          }}
+        />
+      ),
     },
     {
       field: "action",
@@ -79,32 +101,32 @@ export default function Department() {
   return (
     <Box sx={{ width: "100%" }}>
       <PageAction
-        title="Quản lý phòng ban"
+        title="Lý do tăng"
         onNewClick={() => {
           setShowForm(true);
-          setSelectedDepartment(null);
+          setSelectedReasonIncrease(null);
           setReadOnly(false);
         }}
       />
       {showForm && (
         <Box py={2}>
-          <DepartmentForm
+          <ReasonIncreaseForm
             onCancel={() => {
               setShowForm(false);
-              setSelectedDepartment(null);
+              setSelectedReasonIncrease(null);
               setReadOnly(false); // Reset readOnly when form is closed
             }}
             onEdit={handleEdit}
-            selectedDepartment={selectedDepartment}
+            selectedReasonIncrease={selectedReasonIncrease}
             readOnly={readOnly}
             onSave={handleSave}
           />
         </Box>
       )}
       <TableCustom
-        title="Quản lý phòng ban"
+        title="Danh sách lý do tăng"
         columns={columns}
-        rows={Departments}
+        rows={ReasonIncreasesData}
         onRowClick={handleRowClick}
       />
     </Box>

@@ -182,7 +182,7 @@ export default function Staff() {
               setReadOnly(false); // Reset readOnly when form is closed
             }}
             onEdit={handleEdit}
-            staff={selectedStaff}
+            selectedStaff={selectedStaff}
             readOnly={readOnly}
             onSave={handleSave}
           />

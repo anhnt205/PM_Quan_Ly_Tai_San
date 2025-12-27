@@ -8,13 +8,8 @@ import {
   AccordionDetails,
   AccordionSummary,
   Box,
-  Button,
-  Checkbox,
   Grid,
-  IconButton,
-  InputAdornment,
   Paper,
-  TextField,
   Typography,
 } from "@mui/material";
 import React, { useState, useEffect } from "react";
@@ -23,19 +18,21 @@ import CancelBtn from "../../../components/Button/CancelBtn";
 import FieldInput from "../../../components/TextField/FieldInput";
 import { useFormik } from "formik";
 import ViewBtn from "../../../components/Button/ViewBtn";
-import { ToolGroupValidation } from "../validation/Validation";
+import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
+import ToolGroups from "../../../data/ToolGroup.json";
 import EditButton from "../../../components/Button/EditButton";
+import { ToolTypeValidation } from "../validation/Validation";
 
-export default function ToolGroupForm({
+export default function ToolTypeForm({
   onEdit,
   onCancel,
-  selectedToolGroup,
+  selectedToolType,
   readOnly,
   onSave,
 }: {
   onEdit: () => void;
   onCancel: () => void;
-  selectedToolGroup?: any;
+  selectedToolType?: any;
   readOnly: boolean;
   onSave: (values: any) => void;
 }) {
@@ -44,19 +41,22 @@ export default function ToolGroupForm({
     initialValues: {
       code: "",
       name: "",
+      toolGroup: "",
     },
-    validationSchema: ToolGroupValidation,
-    onSubmit(values) {},
+    validationSchema: ToolTypeValidation,
+    onSubmit(values) {
+      onSave(values)
+    },
   });
 
   useEffect(() => {
-    if (selectedToolGroup) {
-      formik.setValues(selectedToolGroup);
-      formik.setErrors({}); // Clear errors when selectedToolGroup changes
+    if (selectedToolType) {
+      formik.setValues(selectedToolType);
+      formik.setErrors({}); // Clear errors when selectedToolType changes
     } else {
       formik.resetForm();
     }
-  }, [selectedToolGroup, readOnly]);
+  }, [selectedToolType, readOnly]); // Add readOnly to dependencies
 
   return (
     <Accordion sx={{ background: "#f6f8f4ff" }} expanded={expanded}>
@@ -72,7 +72,7 @@ export default function ToolGroupForm({
       >
         <Box sx={{ display: "flex", alignItems: "center" }}>
           {expanded ? <ArrowDropUp /> : <ArrowDropDown />}
-          <Typography>Chi tiết nhóm ccdc</Typography>
+          <Typography>Chi tiết loại CCDC</Typography>
         </Box>
       </AccordionSummary>
       <AccordionDetails>
@@ -84,20 +84,30 @@ export default function ToolGroupForm({
         <Paper sx={{ mt: 2, p: 2, borderRadius: "12px" }}>
           <Box display={"flex"} alignItems={"center"} gap={2}>
             <InfoOutlineRounded color="primary" />
-            <Typography>Thông tin nhóm ccdc</Typography>
+            <Typography>Thông tin loại CCDC</Typography>
           </Box>
           <Grid container spacing={2} sx={{ mt: 2 }}>
             <Grid size={{ xs: 12 }}>
               <FieldInput
-                title="Mã nhóm ccdc *"
+                title="Mã loại CCDC *"
                 formik={formik}
                 field="code"
                 disabled={readOnly}
               />
             </Grid>
             <Grid size={{ xs: 12 }}>
+              <FieldAutoCompleted
+                title="Mã loại CCDC cha *"
+                data={ToolGroups}
+                labelkey="name"
+                formik={formik}
+                field="toolGroup"
+                disabled={readOnly}
+              />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
               <FieldInput
-                title="Tên nhóm ccdc *"
+                title="Tên loại CCDC *"
                 formik={formik}
                 field="name"
                 disabled={readOnly}

@@ -1,64 +1,67 @@
-import { Box, IconButton } from "@mui/material";
+import { Delete, Download, Settings, Upload } from "@mui/icons-material";
+import {
+  Box,
+  Button,
+  Chip,
+  IconButton,
+  ListItemIcon,
+  Menu,
+  MenuItem,
+  Typography,
+} from "@mui/material";
+import React, { useState } from "react";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-import Departments from "../../data/Department.json";
-import DepartmentForm from "./components/DepartmentForm";
-import { Delete } from "@mui/icons-material";
-import React, { useState } from "react";
+import CurrentStatuss from "../../data/CurrentStatus.json";
+import CurrentStatusForm from "./components/CurrentStatusForm";
 
-export default function Department() {
+export default function CurrentStatus() {
   const [showForm, setShowForm] = useState(false);
-  const [selectedDepartment, setSelectedDepartment] = useState<any>(null);
+  const [selectedCurrentStatus, setSelectedCurrentStatus] = useState<any>(null);
   const [readOnly, setReadOnly] = useState(false);
-  const [departmentsData, setDepartmentsData] = useState(Departments);
+  const [currentStatusData, setCurrentStatusData] = useState(CurrentStatuss);
 
   const handleRowClick = (params: GridRowParams) => {
-    setSelectedDepartment(params.row);
+    setSelectedCurrentStatus(params.row);
     setReadOnly(true); // Set readOnly to true when viewing details
     setShowForm(true);
   };
 
   const handleSave = (values: any) => {
-    if (selectedDepartment) {
+    if (selectedCurrentStatus) {
       // Update existing staff
-      const updatedStaffs = departmentsData.map((staff) =>
-        staff.id === selectedDepartment.id ? { ...staff, ...values } : staff
+      const updatedStaffs = currentStatusData.map((typeAsset) =>
+        typeAsset.id === selectedCurrentStatus.id
+          ? { ...typeAsset, ...values }
+          : typeAsset
       );
-      setDepartmentsData(updatedStaffs);
+      setCurrentStatusData(updatedStaffs);
     } else {
       // Create new staff
       const newStaff = { ...values, id: Date.now() }; // Simple ID generation
-      setDepartmentsData([...departmentsData, newStaff]);
+      setCurrentStatusData([...currentStatusData, newStaff]);
     }
     setShowForm(false);
-    setSelectedDepartment(null);
+    setSelectedCurrentStatus(null);
   };
 
   const handleEdit = () => {
     setReadOnly(false);
   };
-
   const columns: GridColDef[] = [
     {
       field: "code",
-      headerName: "Mã phòng ban",
+      headerName: "Mã trạng thái",
       width: 150,
       align: "center",
       headerAlign: "center",
     },
     {
       field: "name",
-      headerName: "Tên phòng/ban",
+      headerName: "Tên trạng thái",
       flex: 1,
-      minWidth: 200,
-      align: "center",
-      headerAlign: "center",
-    },
-    {
-      field: "employee",
-      headerName: "Số lượng nhân viên",
-      width: 200,
+      minWidth: 150,
       align: "center",
       headerAlign: "center",
     },
@@ -79,32 +82,32 @@ export default function Department() {
   return (
     <Box sx={{ width: "100%" }}>
       <PageAction
-        title="Quản lý phòng ban"
+        title="Quản lý hiện trạng"
         onNewClick={() => {
           setShowForm(true);
-          setSelectedDepartment(null);
+          setSelectedCurrentStatus(null);
           setReadOnly(false);
         }}
       />
       {showForm && (
         <Box py={2}>
-          <DepartmentForm
+          <CurrentStatusForm
             onCancel={() => {
               setShowForm(false);
-              setSelectedDepartment(null);
+              setSelectedCurrentStatus(null);
               setReadOnly(false); // Reset readOnly when form is closed
             }}
             onEdit={handleEdit}
-            selectedDepartment={selectedDepartment}
+            selectedCurrentStatus={selectedCurrentStatus}
             readOnly={readOnly}
             onSave={handleSave}
           />
         </Box>
       )}
       <TableCustom
-        title="Quản lý phòng ban"
+        title="Quản lý hiện trạng"
         columns={columns}
-        rows={Departments}
+        rows={currentStatusData}
         onRowClick={handleRowClick}
       />
     </Box>

@@ -1,0 +1,32 @@
+[
+  {
+    "id": "1",
+    "code": "BAI",
+    "name": "Bài",
+    "status": 0
+  },
+  {
+    "id": "2",
+    "code": "BAN",
+    "name": "Bản",
+    "status": 1
+  },
+  {
+    "id": "3",
+    "code": "BANG",
+    "name": "Băng",
+    "status": 0
+  },
+  {
+    "id": "4",
+    "code": "BANH",
+    "name": "Bánh",
+    "status": 1
+  },
+  {
+    "id": "5",
+    "code": "BAO",
+    "name": "Bao",
+    "status": 1
+  }
+]

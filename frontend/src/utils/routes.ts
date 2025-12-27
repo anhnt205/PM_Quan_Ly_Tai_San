@@ -7,7 +7,11 @@ export const ROUTES = {
   PROJECT: "/du_an",
   CAPITALSOURCE: "/nguon_von",
   TYPEASSET: "/loai_tai_san",
-  TOOLGROUP: "/ccdc_group",
+  TOOLGROUP: "/nhom_ccdc",
+  TOOLTYPE: "/loai_ccdc",
+  UNIT: "/don_vi_tinh",
+  REASONINCREASE: "/ly_do_tang",
+  CURRENTSTATUS: "/hien_trang",
   ASSETMANAGER: "/quan_ly_tai_san",
   ASSETDEPRECIATION: "/khau_hao_tai_san",
 } as const;

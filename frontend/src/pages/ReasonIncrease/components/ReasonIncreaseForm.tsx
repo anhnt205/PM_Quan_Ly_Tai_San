@@ -10,10 +10,13 @@ import {
   Box,
   Button,
   Checkbox,
+  FormControlLabel,
   Grid,
   IconButton,
   InputAdornment,
   Paper,
+  Radio,
+  RadioGroup,
   TextField,
   Typography,
 } from "@mui/material";
@@ -23,19 +26,19 @@ import CancelBtn from "../../../components/Button/CancelBtn";
 import FieldInput from "../../../components/TextField/FieldInput";
 import { useFormik } from "formik";
 import ViewBtn from "../../../components/Button/ViewBtn";
-import { ToolGroupValidation } from "../validation/Validation";
 import EditButton from "../../../components/Button/EditButton";
+import { ReasonIncreaseValidation } from "../validation/Validation";
 
-export default function ToolGroupForm({
+export default function ReasonIncreaseForm({
   onEdit,
   onCancel,
-  selectedToolGroup,
+  selectedReasonIncrease,
   readOnly,
   onSave,
 }: {
   onEdit: () => void;
   onCancel: () => void;
-  selectedToolGroup?: any;
+  selectedReasonIncrease?: any;
   readOnly: boolean;
   onSave: (values: any) => void;
 }) {
@@ -44,19 +47,22 @@ export default function ToolGroupForm({
     initialValues: {
       code: "",
       name: "",
+      status: 0,
     },
-    validationSchema: ToolGroupValidation,
-    onSubmit(values) {},
+    validationSchema: ReasonIncreaseValidation,
+    onSubmit(values) {
+      onSave(values);
+    },
   });
 
   useEffect(() => {
-    if (selectedToolGroup) {
-      formik.setValues(selectedToolGroup);
-      formik.setErrors({}); // Clear errors when selectedToolGroup changes
+    if (selectedReasonIncrease) {
+      formik.setValues(selectedReasonIncrease);
+      formik.setErrors({}); // Clear errors when selectedReasonIncrease changes
     } else {
       formik.resetForm();
     }
-  }, [selectedToolGroup, readOnly]);
+  }, [selectedReasonIncrease, readOnly]); // Add readOnly to dependencies
 
   return (
     <Accordion sx={{ background: "#f6f8f4ff" }} expanded={expanded}>
@@ -72,7 +78,7 @@ export default function ToolGroupForm({
       >
         <Box sx={{ display: "flex", alignItems: "center" }}>
           {expanded ? <ArrowDropUp /> : <ArrowDropDown />}
-          <Typography>Chi tiết nhóm ccdc</Typography>
+          <Typography>Chi tiết lý do tăng</Typography>
         </Box>
       </AccordionSummary>
       <AccordionDetails>
@@ -84,12 +90,12 @@ export default function ToolGroupForm({
         <Paper sx={{ mt: 2, p: 2, borderRadius: "12px" }}>
           <Box display={"flex"} alignItems={"center"} gap={2}>
             <InfoOutlineRounded color="primary" />
-            <Typography>Thông tin nhóm ccdc</Typography>
+            <Typography>Thông tin lý do tăng</Typography>
           </Box>
           <Grid container spacing={2} sx={{ mt: 2 }}>
             <Grid size={{ xs: 12 }}>
               <FieldInput
-                title="Mã nhóm ccdc *"
+                title="Mã lý do tăng *"
                 formik={formik}
                 field="code"
                 disabled={readOnly}
@@ -97,11 +103,32 @@ export default function ToolGroupForm({
             </Grid>
             <Grid size={{ xs: 12 }}>
               <FieldInput
-                title="Tên nhóm ccdc *"
+                title="Tên lý do tăng *"
                 formik={formik}
                 field="name"
                 disabled={readOnly}
               />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <RadioGroup
+                row
+                name="status"
+                value={formik.values.status}
+                onChange={(e) => formik.setFieldValue("status", e.target.value)}
+              >
+                <FormControlLabel
+                  value={0}
+                  control={<Radio />}
+                  label="Giảm"
+                  disabled={readOnly}
+                />
+                <FormControlLabel
+                  value={1}
+                  control={<Radio />}
+                  label="Tăng"
+                  disabled={readOnly}
+                />
+              </RadioGroup>
             </Grid>
           </Grid>
         </Paper>
