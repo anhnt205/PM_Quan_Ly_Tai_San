@@ -22,7 +22,7 @@ import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
 import FieldInput from "../../../components/TextField/FieldInput";
 import { useFormik } from "formik";
-import { DepartmentValidation } from "../validation/Validation";
+import { DepartmentValidation } from "../validation";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import EditButton from "../../../components/Button/EditButton";
 
@@ -42,10 +42,11 @@ export default function DepartmentForm({
   const [expanded, setExpanded] = useState(true);
   const formik = useFormik({
     initialValues: {
-      code: "",
-      name: "",
-      isStorage: false,
-      isDepartment: false,
+      Id: "",
+      DepartmentName: "",
+      IsStore: undefined as Number | undefined,
+      WarehouseType: undefined as Number | undefined,
+      IsLeader: undefined as Number | undefined,
     },
     validationSchema: DepartmentValidation,
     onSubmit(values) {
@@ -95,40 +96,94 @@ export default function DepartmentForm({
               <FieldInput
                 title="Mã phòng ban *"
                 formik={formik}
-                field="code"
-                disabled={readOnly}
+                field="Id"
+                disabled={Boolean(selectedDepartment)}
               />
             </Grid>
             <Grid size={{ xs: 6 }}>
               <FieldInput
                 title="Tên phòng ban *"
                 formik={formik}
-                field="name"
+                field="DepartmentName"
                 disabled={readOnly}
               />
             </Grid>
-            <Grid size={{ xs: 12 }}>
-              <Box display="flex" alignItems="center">
-                <Box width={200}>
-                  <Typography>Là kho:</Typography>
-                </Box>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              {/* Checkbox: Là kho */}
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+              >
+                <Typography>Là kho:</Typography>
                 <Checkbox
-                  name="isStorage"
-                  checked={formik.values.isStorage}
-                  onChange={formik.handleChange}
+                  name="IsStore"
+                  // Ép kiểu về boolean để checked hoạt động đúng
+                  checked={Boolean(formik.values.IsStore)}
+                  onChange={(e) => {
+                    const isChecked = e.target.checked ? 1 : 0;
+                    formik.setFieldValue("IsStore", isChecked);
+                    // Nếu chọn là kho thì tự động bỏ chọn Lãnh đạo
+                    if (isChecked) formik.setFieldValue("IsLeader", 0);
+                    // Nếu bỏ chọn kho thì reset luôn loại kho
+                    else formik.setFieldValue("WarehouseType", undefined);
+                  }}
                   disabled={readOnly}
                 />
               </Box>
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <Box display="flex" alignItems="center">
-                <Box width={200}>
-                  <Typography>Là phòng ban lãnh đạo:</Typography>
+
+              {/* Phần chọn loại kho (Chỉ hiện khi IsStore === 1) */}
+              {formik.values.IsStore === 1 && (
+                <Box pl={4}>
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="space-between"
+                  >
+                    <Typography variant="body2">Kho cấp phát:</Typography>
+                    <Checkbox
+                      size="small"
+                      checked={formik.values.WarehouseType === 1}
+                      onChange={() => formik.setFieldValue("WarehouseType", 1)}
+                      disabled={readOnly}
+                    />
+                  </Box>
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="space-between"
+                  >
+                    <Typography variant="body2">Kho thu hồi:</Typography>
+                    <Checkbox
+                      size="small"
+                      checked={formik.values.WarehouseType === 2}
+                      onChange={() => formik.setFieldValue("WarehouseType", 2)}
+                      disabled={readOnly}
+                    />
+                  </Box>
                 </Box>
+              )}
+
+              {/* Checkbox: Là phòng ban lãnh đạo */}
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+                mt={1}
+              >
+                <Typography>Là phòng ban lãnh đạo:</Typography>
                 <Checkbox
-                  name="isDepartment"
-                  checked={formik.values.isDepartment}
-                  onChange={formik.handleChange}
+                  name="IsLeader"
+                  checked={Boolean(formik.values.IsLeader)}
+                  onChange={(e) => {
+                    const isChecked = e.target.checked ? 1 : 0;
+                    formik.setFieldValue("IsLeader", isChecked);
+                    // Nếu là lãnh đạo thì không thể là kho
+                    if (isChecked) {
+                      formik.setFieldValue("IsStore", 0);
+                      formik.setFieldValue("WarehouseType", undefined);
+                    }
+                  }}
                   disabled={readOnly}
                 />
               </Box>

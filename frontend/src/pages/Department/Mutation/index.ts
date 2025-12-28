@@ -1,0 +1,105 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import api from "../../../config/api.config";
+import { DepartmentType } from "../types";
+import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
+
+export const useDepartmentMutation = (
+  page: number,
+  pageSize: number,
+  searchValue: string
+) => {
+  const queryClient = useQueryClient();
+  const createMutation = useMutation({
+    mutationFn: async (data: DepartmentType) => {
+      const res = await api.post("/departments/create", data);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["departments"] });
+      showSuccessAlert("Tạo phòng ban thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo phòng ban thất bại"
+      );
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: DepartmentType) => {
+      const res = await api.put(`/departments/update/${data.Id}`, data);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["departments"] });
+      showSuccessAlert("Sửa phòng ban thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Sửa phòng ban thất bại"
+      );
+    },
+  });
+  const deleteOneMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.delete(`/departments/deleteOne/${id}`);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["departments"] });
+      showSuccessAlert("Xóa phòng ban thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa phòng ban thất bại"
+      );
+    },
+  });
+  const deleteManyMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const res = await api.post(`/departments/deleteMany`, { ids });
+      return res.data.message;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["departments"] });
+      showSuccessAlert(data || "Xóa phòng ban thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa phòng ban thất bại"
+      );
+    },
+  });
+
+  const { data = { items: [], totalItems: 0 }, isLoading } = useQuery({
+    queryKey: ["departments", page, pageSize, searchValue], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/departments/getAll", {
+        params: {
+          page: page + 1,
+          limit: pageSize,
+          q: searchValue,
+        },
+      });
+      return res.data.data;
+    },
+  });
+
+  return {
+    createMutation,
+    updateMutation,
+    deleteOneMutation,
+    deleteManyMutation,
+    departments: data,
+  };
+};

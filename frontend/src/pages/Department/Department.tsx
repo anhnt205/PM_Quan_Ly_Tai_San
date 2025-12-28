@@ -7,11 +7,32 @@ import DepartmentForm from "./components/DepartmentForm";
 import { Delete } from "@mui/icons-material";
 import React, { useState } from "react";
 
+import { useDepartmentMutation } from "./Mutation";
+import { showConfirmAlert } from "../../components/Alert";
+
 export default function Department() {
   const [showForm, setShowForm] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<any>(null);
   const [readOnly, setReadOnly] = useState(false);
-  const [departmentsData, setDepartmentsData] = useState(Departments);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [searchValue, setSearchValue] = useState("");
+
+  const [paginationModel, setPaginationModel] = useState({
+    pageSize: 10,
+    page: 0,
+  });
+
+  const {
+    departments,
+    createMutation,
+    updateMutation,
+    deleteOneMutation,
+    deleteManyMutation,
+  } = useDepartmentMutation(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchValue
+  );
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedDepartment(params.row);
@@ -21,15 +42,9 @@ export default function Department() {
 
   const handleSave = (values: any) => {
     if (selectedDepartment) {
-      // Update existing staff
-      const updatedStaffs = departmentsData.map((staff) =>
-        staff.id === selectedDepartment.id ? { ...staff, ...values } : staff
-      );
-      setDepartmentsData(updatedStaffs);
+      updateMutation.mutate(values);
     } else {
-      // Create new staff
-      const newStaff = { ...values, id: Date.now() }; // Simple ID generation
-      setDepartmentsData([...departmentsData, newStaff]);
+      createMutation.mutate(values);
     }
     setShowForm(false);
     setSelectedDepartment(null);
@@ -41,14 +56,14 @@ export default function Department() {
 
   const columns: GridColDef[] = [
     {
-      field: "code",
+      field: "Id",
       headerName: "Mã phòng ban",
       width: 150,
       align: "center",
       headerAlign: "center",
     },
     {
-      field: "name",
+      field: "DepartmentName",
       headerName: "Tên phòng/ban",
       flex: 1,
       minWidth: 200,
@@ -69,7 +84,15 @@ export default function Department() {
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
-        <IconButton>
+        <IconButton
+          onClick={async (e) => {
+            e.stopPropagation();
+            const confirm = await showConfirmAlert("Xác nhận xóa!");
+            if (confirm.isConfirmed) {
+              deleteOneMutation.mutate(params.row.Id);
+            }
+          }}
+        >
           <Delete color="error" />
         </IconButton>
       ),
@@ -104,8 +127,17 @@ export default function Department() {
       <TableCustom
         title="Quản lý phòng ban"
         columns={columns}
-        rows={Departments}
+        rows={departments.items}
+        total={departments.totalItems}
+        paginationModel={paginationModel}
+        onPaginationModelChange={setPaginationModel}
+        loading={departments.loading}
         onRowClick={handleRowClick}
+        selectedIds={selectedIds}
+        onSelectionChange={setSelectedIds}
+        onDelete={deleteManyMutation.mutate}
+        searchValue={searchValue}
+        setSearchValue={setSearchValue}
       />
     </Box>
   );

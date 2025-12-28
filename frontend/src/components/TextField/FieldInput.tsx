@@ -1,5 +1,5 @@
 import { TextField } from "@mui/material";
-import React from "react";
+import React, { Dispatch, SetStateAction } from "react";
 
 interface Props {
   title?: string;
@@ -28,7 +28,7 @@ export default function FieldInput({
       label={title}
       value={field ? formik.values[field] : ""}
       onChange={(e) => {
-        formik.setFieldValue(field, e.target.value);
+        if (field) formik.setFieldValue(field, e.target.value);
       }}
       error={field && formik.touched[field] && Boolean(formik.errors[field])}
       helperText={field && formik.touched[field] && formik.errors[field]}

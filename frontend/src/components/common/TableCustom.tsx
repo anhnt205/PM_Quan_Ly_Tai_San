@@ -1,16 +1,25 @@
-import { BarChart, Search, Settings, TableView } from "@mui/icons-material";
+import {
+  BarChart,
+  Delete,
+  Search,
+  Settings,
+  TableView,
+} from "@mui/icons-material";
 import { Box, Button, Grid, Paper, TextField, Typography } from "@mui/material";
 import {
   DataGrid,
   GridColDef,
   GridToolbar,
   GridFilterPanel,
+  GridRowSelectionModel,
 } from "@mui/x-data-grid";
 import { viVN } from "@mui/x-data-grid/locales";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../utils/routes";
 import FieldInput from "../TextField/FieldInput";
 import FieldDate from "../TextField/FieldDate";
+import { showConfirmAlert } from "../Alert";
+import { Dispatch, SetStateAction } from "react";
 const CustomFilterPanel = (props: any) => {
   return (
     <GridFilterPanel
@@ -26,21 +35,38 @@ interface Props {
   title: string;
   columns: GridColDef[];
   rows: any[];
+  total?: number;
+  paginationModel?: { page: number; pageSize: number };
+  onPaginationModelChange?: (model: any) => void;
+  loading?: boolean;
   onRowClick?: (params: any) => void;
   isFilterDate?: boolean;
   isDepreciation?: boolean;
+  selectedIds?: string[];
+  onSelectionChange?: (ids: string[]) => void;
+  onDelete?: (ids: string[]) => void;
+  searchValue?: string;
+  setSearchValue?: Dispatch<SetStateAction<string>>;
 }
 
 export default function TableCustom({
   title,
   columns,
   rows,
+  total,
+  paginationModel,
+  onPaginationModelChange,
+  loading = false,
   onRowClick,
   isFilterDate = false,
   isDepreciation = false,
+  selectedIds = [],
+  onSelectionChange,
+  onDelete,
+  searchValue,
+  setSearchValue,
 }: Props) {
   const navigate = useNavigate();
-
   return (
     <Paper sx={{ my: 2, width: "100%" }}>
       <Box
@@ -57,8 +83,12 @@ export default function TableCustom({
       </Box>
       <Grid container spacing={2} p={2}>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <FieldInput
-            title="Tìm kiếm"
+          <TextField
+            label="Tìm kiếm"
+            fullWidth
+            size="small"
+            value={searchValue}
+            onChange={(e) => setSearchValue?.(e.target.value)}
             InputProps={{
               startAdornment: <Search />,
             }}
@@ -72,6 +102,26 @@ export default function TableCustom({
             {/* <Button variant="outlined" size="small" startIcon={<Settings />}>
               Cấu hình cột
             </Button> */}
+            {selectedIds.length > 0 && (
+              <Button
+                variant="contained"
+                color="error"
+                startIcon={<Delete />}
+                sx={{ mb: 2 }}
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const confirm = await showConfirmAlert(
+                    `Xác nhận xóa ${selectedIds.length} bản ghi?`
+                  );
+                  if (confirm.isConfirmed) {
+                    onDelete?.(selectedIds);
+                    onSelectionChange?.([]);
+                  }
+                }}
+              >
+                {selectedIds.length} Xóa đã chọn
+              </Button>
+            )}
             {isDepreciation && (
               <Button
                 variant="contained"
@@ -87,10 +137,20 @@ export default function TableCustom({
       </Grid>
       <Box sx={{ width: "100%", overflowX: "auto" }}>
         <DataGrid
+          getRowId={(row) => row.Id || row.id}
           onRowClick={onRowClick}
           columns={columns}
           rows={rows}
+          rowCount={total}
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={onPaginationModelChange}
+          pageSizeOptions={[10, 20, 50]}
+          loading={loading}
           checkboxSelection
+          onRowSelectionModelChange={(newSelection: GridRowSelectionModel) => {
+            onSelectionChange?.(Array.from(newSelection.ids) as string[]);
+          }}
           disableRowSelectionOnClick
           showToolbar
           slots={{ toolbar: GridToolbar, filterPanel: CustomFilterPanel }}

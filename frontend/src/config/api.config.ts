@@ -1,0 +1,40 @@
+import axios from "axios";
+import { store } from "../redux/store";
+import { logout } from "../redux/userSlice";
+import { ROUTES } from "../utils/routes";
+
+const API_URL = process.env.REACT_APP_BASE_API || "http://localhost:5000/api";
+
+const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+api.interceptors.request.use(
+  (config: any) => {
+    const state = store.getState();
+    const token = state.user?.token;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error: any) => {
+    return Promise.reject(error);
+  }
+);
+
+api.interceptors.response.use(
+  (response: any) => response,
+  (error: any) => {
+    if (error.response?.status === 401) {
+      store.dispatch(logout());
+      window.location.href = ROUTES.LOGIN;
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default api;
