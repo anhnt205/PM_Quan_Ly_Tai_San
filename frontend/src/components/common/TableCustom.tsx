@@ -148,8 +148,34 @@ export default function TableCustom({
           pageSizeOptions={[10, 20, 50]}
           loading={loading}
           checkboxSelection
-          onRowSelectionModelChange={(newSelection: GridRowSelectionModel) => {
-            onSelectionChange?.(Array.from(newSelection.ids) as string[]);
+          onRowSelectionModelChange={(newSelection: any) => {
+            let selectedIds: string[] = [];
+
+            // Kiểm tra nếu là cơ chế mới (Object có ids)
+            if (
+              newSelection &&
+              typeof newSelection === "object" &&
+              "ids" in newSelection
+            ) {
+              if (newSelection.type === "exclude") {
+                selectedIds = rows.map((row) => row.Id || row.id);
+
+                // Nếu có ids trong Set (những dòng bị bỏ chọn), thì lọc chúng ra
+                if (newSelection.ids.size > 0) {
+                  const excludedSet = newSelection.ids;
+                  selectedIds = selectedIds.filter(
+                    (id) => !excludedSet.has(id)
+                  );
+                }
+              } else {
+                // Nếu là 'include', lấy trực tiếp từ Set
+                selectedIds = Array.from(newSelection.ids);
+              }
+            } else {
+              // Nếu là mảng ID thông thường (cơ chế cũ)
+              selectedIds = newSelection;
+            }
+            onSelectionChange?.(selectedIds);
           }}
           disableRowSelectionOnClick
           showToolbar
