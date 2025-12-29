@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Chip, Grid, Paper } from "@mui/material";
+import { Box, Chip, Grid, Paper, Typography } from "@mui/material";
 import { Add } from "@mui/icons-material";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 
@@ -49,30 +49,96 @@ export default function AssetTransfer() {
     console.log("Xóa các bản ghi:", ids);
   };
 
-  // Columns Configuration
-  const columns: GridColDef[] = [
-    { field: "TenPhieu", headerName: "Phiếu kỹ nội sinh", width: 200 },
-    { field: "TrichYeu", headerName: "Trích yếu", width: 120 },
-    { field: "NgayTao", headerName: "Ngày có hiệu lực", width: 180 },
-    { field: "NguoiTao", headerName: "Trình duyệt bởi", width: 150 },
+  const columns: GridColDef<AssetTransferData>[] = [
     {
-      field: "TaiLieu",
-      headerName: "Tài liệu duyệt",
+      field: "SoQuyetDinh",
+      headerName: "Số chứng từ",
       width: 150,
-      renderCell: () => (
-        <Chip
-          label="Tài liệu..."
-          size="small"
-          variant="outlined"
-          color="success"
-          icon={<Add sx={{ fontSize: 12 }} />}
-          clickable
-        />
+      headerAlign: "center",
+      align: "center",
+      renderCell: (params) => (
+        <Typography variant="body2" fontWeight="bold" color="primary">
+          {params.value}
+        </Typography>
       ),
     },
-    { field: "SoQuyetDinh", headerName: "Ký số", width: 150 },
-    { field: "IdDonViGiao", headerName: "Đơn vị giao", width: 150 },
-    { field: "IdDonViNhan", headerName: "Đơn vị nhận", flex: 1 },
+
+    { field: "TenPhieu", headerName: "Tên phiếu", width: 200 },
+
+    { field: "TrichYeu", headerName: "Trích yếu", width: 180 },
+
+    {
+      field: "NgayTao",
+      headerName: "Ngày tạo",
+      width: 160,
+      valueFormatter: (value: any) => {
+        if (!value) return "";
+        return new Date(value).toLocaleString("vi-VN");
+      },
+    },
+
+    { field: "NguoiTao", headerName: "Người tạo", width: 160 },
+
+    { field: "IdDonViGiao", headerName: "Đơn vị giao", width: 180 },
+    { field: "IdDonViNhan", headerName: "Đơn vị nhận", width: 180 },
+    { field: "IdDonViDeNghi", headerName: "Đơn vị đề nghị", width: 180 },
+
+    {
+      field: "TenFile",
+      headerName: "Tài liệu",
+      width: 180,
+      renderCell: (params) => {
+        if (!params.value) return null;
+        return (
+          <Chip
+            label={
+              params.value.length > 20
+                ? params.value.substring(0, 15) + "..."
+                : params.value
+            }
+            size="small"
+            variant="outlined"
+            color="success"
+            icon={<Add sx={{ fontSize: 12 }} />}
+            clickable
+            title={params.value}
+          />
+        );
+      },
+    },
+
+    {
+      field: "TrangThai",
+      headerName: "Trạng thái",
+      width: 140,
+      headerAlign: "center",
+      align: "center",
+      renderCell: (params) => {
+        const statusMap: Record<
+          number,
+          { label: string; color: "default" | "info" | "error" | "success" }
+        > = {
+          0: { label: "Nháp", color: "default" },
+          1: { label: "Duyệt", color: "info" },
+          2: { label: "Hủy", color: "error" },
+          3: { label: "Hoàn thành", color: "success" },
+        };
+
+        const status = statusMap[params.value as number] || {
+          label: "KĐ",
+          color: "default",
+        };
+
+        return (
+          <Chip
+            label={status.label}
+            color={status.color}
+            size="small"
+            sx={{ minWidth: 80, fontWeight: 600 }}
+          />
+        );
+      },
+    },
   ];
 
   return (
