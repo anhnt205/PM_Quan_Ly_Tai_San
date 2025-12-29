@@ -13,7 +13,7 @@ import Position from "./pages/Position/Position";
 import TypeAsset from "./pages/TypeAsset/TypeAsset";
 import ToolGroup from "./pages/ToolGroup/ToolGroup";
 import AssetManager from "./pages/AssetManager/AssetManager";
-import AssetDepreciationForm from "./pages/AssetManager/components/AssetDepreciationForm";
+import AssetTransfer from "./pages/AssetTransfer/AssetTransfer";
 import AssetDepreciation from "./pages/AssetManager/AssetDepreciation";
 import ToolType from "./pages/ToolType/ToolType";
 import Unit from "./pages/Unit/Unit";
@@ -57,6 +57,7 @@ function App() {
           <Route path={ROUTES.REASONINCREASE} element={<ReasonIncrease />} />
           <Route path={ROUTES.CURRENTSTATUS} element={<CurrentStatus />} />
           <Route path={ROUTES.ASSETMANAGER} element={<AssetManager />} />
+          <Route path={ROUTES.ASSETTRANSFER} element={<AssetTransfer />} />
           <Route
             path={ROUTES.ASSETDEPRECIATION}
             element={<AssetDepreciation />}
