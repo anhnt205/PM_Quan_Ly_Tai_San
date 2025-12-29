@@ -307,7 +307,6 @@ export default function AssetTransferForm({
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }} sx={{ mt: 1 }}>
-                  {" "}
                   {/* Thêm margin top để nút "Thêm người ký" cách ra chút */}
                   <Button
                     variant="contained"
