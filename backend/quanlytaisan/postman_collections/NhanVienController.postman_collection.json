@@ -1,0 +1,251 @@
+{
+  "info": {
+    "name": "NhanVienController",
+    "description": "API collection for NhanVien management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get All NhanVien",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/nhanvien?idcongty={{idcongty}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "nhanvien"],
+          "query": [
+            {
+              "key": "idcongty",
+              "value": "{{idcongty}}",
+              "description": "ID của công ty"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get NhanVien by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/nhanvien/{{id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "nhanvien", "{{id}}"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "nhanvien_id_example"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get NhanVien by NhanVien ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/nhanvien/bynhanVien?idnhanVien={{idnhanVien}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "nhanvien", "bynhanVien"],
+          "query": [
+            {
+              "key": "idnhanVien",
+              "value": "{{idnhanVien}}",
+              "description": "ID của nhân viên"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create NhanVien",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"NV001\",\n  \"hoTen\": \"Nguyễn Văn A\",\n  \"diDong\": \"0123456789\",\n  \"emailCongViec\": \"nguyenvana@company.com\",\n  \"kyNhay\": true,\n  \"kyThuong\": false,\n  \"kySo\": true,\n  \"chuKyNhay\": \"base64_encoded_signature\",\n  \"chuKyThuong\": \"base64_encoded_signature\",\n  \"agreementUUId\": \"agreement_uuid\",\n  \"pin\": \"123456\",\n  \"boPhan\": \"IT\",\n  \"chucVu\": \"Developer\",\n  \"nguoiQuanLy\": \"manager_id\",\n  \"laQuanLy\": false,\n  \"avatar\": \"avatar_url\",\n  \"idCongTy\": \"CT001\",\n  \"diaChiLamViec\": \"Hà Nội\",\n  \"hinhThucLamViec\": \"Full-time\",\n  \"gioLamViec\": \"8:00-17:00\",\n  \"muiGio\": \"UTC+7\",\n  \"nguoiTao\": \"admin\",\n  \"nguoiCapNhat\": \"admin\",\n  \"isActive\": true,\n  \"ngayTao\": \"2024-01-01T00:00:00\",\n  \"ngayCapNhat\": \"2024-01-01T00:00:00\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/nhanvien",
+          "host": ["{{base_url}}"],
+          "path": ["api", "nhanvien"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update NhanVien",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"NV001\",\n  \"hoTen\": \"Nguyễn Văn A Updated\",\n  \"diDong\": \"0123456789\",\n  \"emailCongViec\": \"nguyenvana@company.com\",\n  \"kyNhay\": true,\n  \"kyThuong\": false,\n  \"kySo\": true,\n  \"chuKyNhay\": \"base64_encoded_signature\",\n  \"chuKyThuong\": \"base64_encoded_signature\",\n  \"agreementUUId\": \"agreement_uuid\",\n  \"pin\": \"123456\",\n  \"boPhan\": \"IT\",\n  \"chucVu\": \"Senior Developer\",\n  \"nguoiQuanLy\": \"manager_id\",\n  \"laQuanLy\": false,\n  \"avatar\": \"avatar_url\",\n  \"idCongTy\": \"CT001\",\n  \"diaChiLamViec\": \"Hà Nội\",\n  \"hinhThucLamViec\": \"Full-time\",\n  \"gioLamViec\": \"8:00-17:00\",\n  \"muiGio\": \"UTC+7\",\n  \"nguoiTao\": \"admin\",\n  \"nguoiCapNhat\": \"admin\",\n  \"isActive\": true,\n  \"ngayTao\": \"2024-01-01T00:00:00\",\n  \"ngayCapNhat\": \"2024-01-01T00:00:00\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/nhanvien/{{id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "nhanvien", "{{id}}"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "NV001"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Batch NhanVien",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  {\n    \"id\": \"NV001\",\n    \"hoTen\": \"Nguyễn Văn A\",\n    \"diDong\": \"0123456789\",\n    \"emailCongViec\": \"nguyenvana@company.com\",\n    \"kyNhay\": true,\n    \"kyThuong\": false,\n    \"kySo\": true,\n    \"chuKyNhay\": \"base64_encoded_signature\",\n    \"chuKyThuong\": \"base64_encoded_signature\",\n    \"agreementUUId\": \"agreement_uuid\",\n    \"pin\": \"123456\",\n    \"boPhan\": \"IT\",\n    \"chucVu\": \"Developer\",\n    \"nguoiQuanLy\": \"manager_id\",\n    \"laQuanLy\": false,\n    \"avatar\": \"avatar_url\",\n    \"idCongTy\": \"CT001\",\n    \"diaChiLamViec\": \"Hà Nội\",\n    \"hinhThucLamViec\": \"Full-time\",\n    \"gioLamViec\": \"8:00-17:00\",\n    \"muiGio\": \"UTC+7\",\n    \"nguoiTao\": \"admin\",\n    \"nguoiCapNhat\": \"admin\",\n    \"isActive\": true,\n    \"ngayTao\": \"2024-01-01T00:00:00\",\n    \"ngayCapNhat\": \"2024-01-01T00:00:00\"\n  },\n  {\n    \"id\": \"NV002\",\n    \"hoTen\": \"Trần Thị B\",\n    \"diDong\": \"0987654321\",\n    \"emailCongViec\": \"tranthib@company.com\",\n    \"kyNhay\": false,\n    \"kyThuong\": true,\n    \"kySo\": false,\n    \"chuKyNhay\": \"\",\n    \"chuKyThuong\": \"base64_encoded_signature\",\n    \"agreementUUId\": \"agreement_uuid_2\",\n    \"pin\": \"654321\",\n    \"boPhan\": \"HR\",\n    \"chucVu\": \"HR Manager\",\n    \"nguoiQuanLy\": \"manager_id\",\n    \"laQuanLy\": true,\n    \"avatar\": \"avatar_url_2\",\n    \"idCongTy\": \"CT001\",\n    \"diaChiLamViec\": \"TP.HCM\",\n    \"hinhThucLamViec\": \"Full-time\",\n    \"gioLamViec\": \"8:00-17:00\",\n    \"muiGio\": \"UTC+7\",\n    \"nguoiTao\": \"admin\",\n    \"nguoiCapNhat\": \"admin\",\n    \"isActive\": true,\n    \"ngayTao\": \"2024-01-01T00:00:00\",\n    \"ngayCapNhat\": \"2024-01-01T00:00:00\"\n  }\n]"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/nhanvien/batch",
+          "host": ["{{base_url}}"],
+          "path": ["api", "nhanvien", "batch"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete NhanVien",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/nhanvien/{{id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "nhanvien", "{{id}}"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "NV001"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Batch NhanVien",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\"NV001\", \"NV002\"]"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/nhanvien/batch",
+          "host": ["{{base_url}}"],
+          "path": ["api", "nhanvien", "batch"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Ky So",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/nhanvien/get-ky-so?idnhanvien={{idnhanvien}}&pin={{pin}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "nhanvien", "get-ky-so"],
+          "query": [
+            {
+              "key": "idnhanvien",
+              "value": "{{idnhanvien}}",
+              "description": "ID của nhân viên"
+            },
+            {
+              "key": "pin",
+              "value": "{{pin}}",
+              "description": "PIN của nhân viên"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Upload File NhanVien",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "path/to/file.csv"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/nhanvien/upload",
+          "host": ["{{base_url}}"],
+          "path": ["api", "nhanvien", "upload"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "idcongty",
+      "value": "CT001"
+    },
+    {
+      "key": "idnhanVien",
+      "value": "NV001"
+    },
+    {
+      "key": "idnhanvien",
+      "value": "NV001"
+    },
+    {
+      "key": "pin",
+      "value": "123456"
+    }
+  ]
+}

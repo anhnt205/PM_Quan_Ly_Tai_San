@@ -1,0 +1,3 @@
+id,idBanGiaoCCDCVatTu,idCCDCVatTu,soLuong,ngayTao,ngayCapNhat,nguoiTao,nguoiCapNhat,isActive
+CTBGCCDC01,BGCCDC01,CCDC01,10,2025-01-01 08:00:00,2025-01-05 09:00:00,admin,admin,true
+CTBGCCDC02,BGCCDC02,CCDC02,5,2025-02-01 09:00:00,2025-02-05 10:00:00,user1,user2,true

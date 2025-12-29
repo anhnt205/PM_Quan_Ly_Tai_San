@@ -1,0 +1,420 @@
+{
+	"info": {
+		"_postman_id": "kytailieu-controller",
+		"name": "KyTaiLieuController",
+		"description": "API collection for KyTaiLieu (Chữ ký tài liệu) management",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "KyTaiLieu API (Old)",
+			"item": [
+				{
+					"name": "1. Get KyTaiLieu by TaiLieu ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/chuky/{{idTaiLieu}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"chuky",
+								"{{idTaiLieu}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2. Create/Update KyTaiLieu List",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n    {\n        \"id\": \"ktl001\",\n        \"idTaiLieu\": \"{{idTaiLieu}}\",\n        \"loaiKy\": 1,\n        \"x\": 100.5,\n        \"y\": 200.3,\n        \"idNguoiKy\": \"nk001\",\n        \"chuKySo\": \"base64_encoded_signature\",\n        \"ngayKy\": \"2024-01-15 10:30:00\",\n        \"stt\": 1\n    },\n    {\n        \"id\": \"ktl002\",\n        \"idTaiLieu\": \"{{idTaiLieu}}\",\n        \"loaiKy\": 2,\n        \"x\": 300.5,\n        \"y\": 400.3,\n        \"idNguoiKy\": \"nk002\",\n        \"chuKySo\": \"base64_encoded_signature_2\",\n        \"ngayKy\": \"2024-01-15 11:30:00\",\n        \"stt\": 2\n    }\n]"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/chuky",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"chuky"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. Delete KyTaiLieu by ID",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/chuky/{{kyTaiLieuId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"chuky",
+								"{{kyTaiLieuId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "NguoiKy API (New)",
+			"item": [
+				{
+					"name": "1. Add NguoiKy",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"nk001\",\n    \"idTaiLieu\": \"{{idTaiLieu}}\",\n    \"idNguoiKy\": \"user001\",\n    \"tenNguoiKy\": \"Nguyễn Văn A\",\n    \"idPhongBan\": \"pb001\",\n    \"trangThai\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/chuky/nguoi-ky",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"chuky",
+								"nguoi-ky"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2. Get NguoiKy by ID and TaiLieu",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/chuky/nguoi-ky/{{idNguoiKy}}/{{idTaiLieu}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"chuky",
+								"nguoi-ky",
+								"{{idNguoiKy}}",
+								"{{idTaiLieu}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. Get All NguoiKy by TaiLieu ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/chuky/nguoi-ky/tailieu/{{idTaiLieu}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"chuky",
+								"nguoi-ky",
+								"tailieu",
+								"{{idTaiLieu}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "4. Update TrangThai Ky",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/chuky/nguoi-ky/{{nguoiKyId}}/trangthai?trangThai={{trangThai}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"chuky",
+								"nguoi-ky",
+								"{{nguoiKyId}}",
+								"trangthai"
+							],
+							"query": [
+								{
+									"key": "trangThai",
+									"value": "{{trangThai}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Test Scenarios",
+			"item": [
+				{
+					"name": "Scenario 1: Complete KyTaiLieu Workflow",
+					"item": [
+						{
+							"name": "1.1 Get existing KyTaiLieu",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/chuky/{{idTaiLieu}}"
+								}
+							}
+						},
+						{
+							"name": "1.2 Create new KyTaiLieu list",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "[\n    {\n        \"id\": \"test_ktl_001\",\n        \"idTaiLieu\": \"{{idTaiLieu}}\",\n        \"loaiKy\": 1,\n        \"x\": 150.0,\n        \"y\": 250.0,\n        \"idNguoiKy\": \"test_nk_001\",\n        \"chuKySo\": \"test_signature_base64\",\n        \"ngayKy\": \"2024-01-20 09:00:00\",\n        \"stt\": 1\n    }\n]"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/chuky"
+								}
+							}
+						},
+						{
+							"name": "1.3 Verify KyTaiLieu created",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/chuky/{{idTaiLieu}}"
+								}
+							}
+						},
+						{
+							"name": "1.4 Cleanup - Delete test KyTaiLieu",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/chuky/test_ktl_001"
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Scenario 2: Complete NguoiKy Workflow",
+					"item": [
+						{
+							"name": "2.1 Add NguoiKy",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"id\": \"test_nk_001\",\n    \"idTaiLieu\": \"{{idTaiLieu}}\",\n    \"idNguoiKy\": \"test_user_001\",\n    \"tenNguoiKy\": \"Test Người Ký\",\n    \"idPhongBan\": \"test_pb_001\",\n    \"trangThai\": 0\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/chuky/nguoi-ky"
+								}
+							}
+						},
+						{
+							"name": "2.2 Get NguoiKy by ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/chuky/nguoi-ky/test_user_001/{{idTaiLieu}}"
+								}
+							}
+						},
+						{
+							"name": "2.3 Get All NguoiKy by TaiLieu",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/chuky/nguoi-ky/tailieu/{{idTaiLieu}}"
+								}
+							}
+						},
+						{
+							"name": "2.4 Update TrangThai to Signed",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/chuky/nguoi-ky/test_nk_001/trangthai?trangThai=1"
+								}
+							}
+						},
+						{
+							"name": "2.5 Verify TrangThai updated",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/chuky/nguoi-ky/test_user_001/{{idTaiLieu}}"
+								}
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Error Test Cases",
+			"item": [
+				{
+					"name": "1. Get KyTaiLieu with non-existent TaiLieu ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/chuky/non_existent_tailieu"
+						}
+					}
+				},
+				{
+					"name": "2. Create KyTaiLieu with invalid data",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n    {\n        \"id\": \"\",\n        \"idTaiLieu\": \"\",\n        \"loaiKy\": null,\n        \"x\": null,\n        \"y\": null,\n        \"idNguoiKy\": \"\",\n        \"chuKySo\": \"\",\n        \"ngayKy\": \"\",\n        \"stt\": null\n    }\n]"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/chuky"
+						}
+					}
+				},
+				{
+					"name": "3. Delete non-existent KyTaiLieu",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/chuky/non_existent_id"
+						}
+					}
+				},
+				{
+					"name": "4. Get NguoiKy with non-existent ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/chuky/nguoi-ky/non_existent_user/non_existent_tailieu"
+						}
+					}
+				},
+				{
+					"name": "5. Add NguoiKy with invalid data",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"\",\n    \"idTaiLieu\": \"\",\n    \"idNguoiKy\": \"\",\n    \"tenNguoiKy\": \"\",\n    \"idPhongBan\": \"\",\n    \"trangThai\": null\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/chuky/nguoi-ky"
+						}
+					}
+				},
+				{
+					"name": "6. Update TrangThai with invalid ID",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/chuky/nguoi-ky/non_existent_id/trangthai?trangThai=1"
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "idTaiLieu",
+			"value": "tailieu001",
+			"type": "string"
+		},
+		{
+			"key": "kyTaiLieuId",
+			"value": "ktl001",
+			"type": "string"
+		},
+		{
+			"key": "idNguoiKy",
+			"value": "nk001",
+			"type": "string"
+		},
+		{
+			"key": "nguoiKyId",
+			"value": "nk001",
+			"type": "string"
+		},
+		{
+			"key": "trangThai",
+			"value": "1",
+			"type": "string"
+		}
+	]
+}

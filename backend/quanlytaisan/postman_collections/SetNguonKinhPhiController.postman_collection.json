@@ -1,0 +1,311 @@
+{
+	"info": {
+		"_postman_id": "setnguonkinhphi-controller",
+		"name": "SetNguonKinhPhiController",
+		"description": "API collection for SetNguonKinhPhi management",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get All SetNguonKinhPhi",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/setnguonkinhphi",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"setnguonkinhphi"
+					]
+				}
+			}
+		},
+		{
+			"name": "Get SetNguonKinhPhi by TaiSan ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/setnguonkinhphi/taisan/{{idTaiSan}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"setnguonkinhphi",
+						"taisan",
+						"{{idTaiSan}}"
+					]
+				}
+			}
+		},
+		{
+			"name": "Get SetNguonKinhPhi by NguonKinhPhi ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/setnguonkinhphi/nguonkinhphi/{{idNguonKinhPhi}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"setnguonkinhphi",
+						"nguonkinhphi",
+						"{{idNguonKinhPhi}}"
+					]
+				}
+			}
+		},
+		{
+			"name": "Get NguonKinhPhi Detail by TaiSan ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/setnguonkinhphi/nguonkinhphi-detail/{{idTaiSan}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"setnguonkinhphi",
+						"nguonkinhphi-detail",
+						"{{idTaiSan}}"
+					]
+				}
+			}
+		},
+		{
+			"name": "Get SetNguonKinhPhi by ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/setnguonkinhphi/{{id}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"setnguonkinhphi",
+						"{{id}}"
+					]
+				}
+			}
+		},
+		{
+			"name": "Create SetNguonKinhPhi",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"id\": \"snkp001\",\n    \"idTaiSan\": \"ts001\",\n    \"idNguonKinhPhi\": \"nkp001\",\n    \"tenNguonKinhPhi\": \"Nguồn kinh phí 1\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/setnguonkinhphi",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"setnguonkinhphi"
+					]
+				}
+			}
+		},
+		{
+			"name": "Create Batch SetNguonKinhPhi",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    {\n        \"id\": \"snkp001\",\n        \"idTaiSan\": \"ts001\",\n        \"idNguonKinhPhi\": \"nkp001\",\n        \"tenNguonKinhPhi\": \"Nguồn kinh phí 1\"\n    },\n    {\n        \"id\": \"snkp002\",\n        \"idTaiSan\": \"ts001\",\n        \"idNguonKinhPhi\": \"nkp002\",\n        \"tenNguonKinhPhi\": \"Nguồn kinh phí 2\"\n    }\n]"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/setnguonkinhphi/batch",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"setnguonkinhphi",
+						"batch"
+					]
+				}
+			}
+		},
+		{
+			"name": "Update SetNguonKinhPhi",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"idTaiSan\": \"ts002\",\n    \"idNguonKinhPhi\": \"nkp002\",\n    \"tenNguonKinhPhi\": \"Nguồn kinh phí đã cập nhật\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/setnguonkinhphi/{{id}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"setnguonkinhphi",
+						"{{id}}"
+					]
+				}
+			}
+		},
+		{
+			"name": "Delete SetNguonKinhPhi",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/setnguonkinhphi/{{id}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"setnguonkinhphi",
+						"{{id}}"
+					]
+				}
+			}
+		},
+		{
+			"name": "Delete SetNguonKinhPhi by TaiSan ID",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/setnguonkinhphi/taisan/{{idTaiSan}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"setnguonkinhphi",
+						"taisan",
+						"{{idTaiSan}}"
+					]
+				}
+			}
+		},
+		{
+			"name": "Delete SetNguonKinhPhi by NguonKinhPhi ID",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/setnguonkinhphi/nguonkinhphi/{{idNguonKinhPhi}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"setnguonkinhphi",
+						"nguonkinhphi",
+						"{{idNguonKinhPhi}}"
+					]
+				}
+			}
+		},
+		{
+			"name": "Delete Batch SetNguonKinhPhi",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\"snkp001\", \"snkp002\"]"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/setnguonkinhphi/batch",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"setnguonkinhphi",
+						"batch"
+					]
+				}
+			}
+		},
+		{
+			"name": "Upload SetNguonKinhPhi File",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": []
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/setnguonkinhphi/upload",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"setnguonkinhphi",
+						"upload"
+					]
+				}
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "id",
+			"value": "snkp001"
+		},
+		{
+			"key": "idTaiSan",
+			"value": "ts001"
+		},
+		{
+			"key": "idNguonKinhPhi",
+			"value": "nkp001"
+		}
+	]
+}

@@ -1,0 +1,3 @@
+id,tenMoHinh,phuongPhapKhauHao,kyKhauHao,loaiKyKhauHao,taiKhoanTaiSan,taiKhoanKhauHao,taiKhoanChiPhi,idCongTy,ngayTao,ngayCapNhat,nguoiTao,nguoiCapNhat,isActive
+MH01,Khấu hao đường thẳng,1,60,Tháng,211,214,642,CT01,2025-09-06 08:30:00,2025-09-06 09:00:00,admin,system,true
+MH02,Khấu hao nhanh,2,36,Năm,211,214,642,CT01,2025-09-06 09:15:00,2025-09-06 09:45:00,admin,system,true

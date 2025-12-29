@@ -1,0 +1,213 @@
+2025-12-29T12:47:38.476+07:00  INFO 15088 --- [quanlytaisan] [main] c.e.q.QuanlytaisanApplication            : Starting QuanlytaisanApplication using Java 17.0.12 with PID 15088 (E:\Workspace\PM_Quan_Ly_Tai_San\backend\quanlytaisan\target\classes started by admin in E:\Workspace\PM_Quan_Ly_Tai_San\backend)
+2025-12-29T12:47:38.494+07:00  INFO 15088 --- [quanlytaisan] [main] c.e.q.QuanlytaisanApplication            : No active profile set, falling back to 1 default profile: "default"
+2025-12-29T12:47:43.795+07:00  INFO 15088 --- [quanlytaisan] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8386 (http)
+2025-12-29T12:47:43.820+07:00  INFO 15088 --- [quanlytaisan] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-12-29T12:47:43.822+07:00  INFO 15088 --- [quanlytaisan] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.43]
+2025-12-29T12:47:43.973+07:00  INFO 15088 --- [quanlytaisan] [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-12-29T12:47:43.975+07:00  INFO 15088 --- [quanlytaisan] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 5293 ms
+2025-12-29T12:47:45.009+07:00  INFO 15088 --- [quanlytaisan] [ForkJoinPool.commonPool-worker-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-12-29T12:47:46.553+07:00  WARN 15088 --- [quanlytaisan] [main] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'permissionUtils': Lookup method resolution failed
+2025-12-29T12:47:46.567+07:00  INFO 15088 --- [quanlytaisan] [main] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
+2025-12-29T12:47:46.594+07:00  INFO 15088 --- [quanlytaisan] [main] .s.b.a.l.ConditionEvaluationReportLogger : 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2025-12-29T12:47:46.633+07:00 ERROR 15088 --- [quanlytaisan] [main] o.s.boot.SpringApplication               : Application run failed
+
+org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'permissionUtils': Lookup method resolution failed
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor.checkLookupMethods(AutowiredAnnotationBeanPostProcessor.java:498) ~[spring-beans-6.2.9.jar:6.2.9]
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor.determineCandidateConstructors(AutowiredAnnotationBeanPostProcessor.java:368) ~[spring-beans-6.2.9.jar:6.2.9]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.determineConstructorsFromBeanPostProcessors(AbstractAutowireCapableBeanFactory.java:1334) ~[spring-beans-6.2.9.jar:6.2.9]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1229) ~[spring-beans-6.2.9.jar:6.2.9]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:569) ~[spring-beans-6.2.9.jar:6.2.9]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529) ~[spring-beans-6.2.9.jar:6.2.9]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339) ~[spring-beans-6.2.9.jar:6.2.9]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:373) ~[spring-beans-6.2.9.jar:6.2.9]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337) ~[spring-beans-6.2.9.jar:6.2.9]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202) ~[spring-beans-6.2.9.jar:6.2.9]
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.instantiateSingleton(DefaultListableBeanFactory.java:1222) ~[spring-beans-6.2.9.jar:6.2.9]
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingleton(DefaultListableBeanFactory.java:1188) ~[spring-beans-6.2.9.jar:6.2.9]
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:1123) ~[spring-beans-6.2.9.jar:6.2.9]
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:987) ~[spring-context-6.2.9.jar:6.2.9]
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:627) ~[spring-context-6.2.9.jar:6.2.9]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146) ~[spring-boot-3.5.4.jar:3.5.4]
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:752) ~[spring-boot-3.5.4.jar:3.5.4]
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:439) ~[spring-boot-3.5.4.jar:3.5.4]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:318) ~[spring-boot-3.5.4.jar:3.5.4]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1361) ~[spring-boot-3.5.4.jar:3.5.4]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1350) ~[spring-boot-3.5.4.jar:3.5.4]
+	at com.ecotel.quanlytaisan.QuanlytaisanApplication.main(QuanlytaisanApplication.java:10) ~[classes/:na]
+Caused by: java.lang.IllegalStateException: Failed to introspect Class [com.ecotel.quanlytaisan.utils.PermissionUtils] from ClassLoader [jdk.internal.loader.ClassLoaders$AppClassLoader@1d44bcfa]
+	at org.springframework.util.ReflectionUtils.getDeclaredMethods(ReflectionUtils.java:483) ~[spring-core-6.2.9.jar:6.2.9]
+	at org.springframework.util.ReflectionUtils.doWithLocalMethods(ReflectionUtils.java:320) ~[spring-core-6.2.9.jar:6.2.9]
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor.checkLookupMethods(AutowiredAnnotationBeanPostProcessor.java:476) ~[spring-beans-6.2.9.jar:6.2.9]
+	... 21 common frames omitted
+Caused by: java.lang.NoClassDefFoundError: javax/servlet/http/HttpServletRequest
+	at java.base/java.lang.Class.getDeclaredMethods0(Native Method) ~[na:na]
+	at java.base/java.lang.Class.privateGetDeclaredMethods(Class.java:3402) ~[na:na]
+	at java.base/java.lang.Class.getDeclaredMethods(Class.java:2504) ~[na:na]
+	at org.springframework.util.ReflectionUtils.getDeclaredMethods(ReflectionUtils.java:465) ~[spring-core-6.2.9.jar:6.2.9]
+	... 23 common frames omitted
+Caused by: java.lang.ClassNotFoundException: javax.servlet.http.HttpServletRequest
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641) ~[na:na]
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188) ~[na:na]
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525) ~[na:na]
+	... 27 common frames omitted
+
+2025-12-29T12:50:36.940+07:00  INFO 14564 --- [quanlytaisan] [main] c.e.q.QuanlytaisanApplication            : Starting QuanlytaisanApplication using Java 17.0.12 with PID 14564 (E:\Workspace\PM_Quan_Ly_Tai_San\backend\quanlytaisan\target\classes started by admin in E:\Workspace\PM_Quan_Ly_Tai_San\backend)
+2025-12-29T12:50:36.946+07:00  INFO 14564 --- [quanlytaisan] [main] c.e.q.QuanlytaisanApplication            : No active profile set, falling back to 1 default profile: "default"
+2025-12-29T12:50:41.333+07:00  INFO 14564 --- [quanlytaisan] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8386 (http)
+2025-12-29T12:50:41.360+07:00  INFO 14564 --- [quanlytaisan] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-12-29T12:50:41.362+07:00  INFO 14564 --- [quanlytaisan] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.43]
+2025-12-29T12:50:41.566+07:00  INFO 14564 --- [quanlytaisan] [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-12-29T12:50:41.567+07:00  INFO 14564 --- [quanlytaisan] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 4492 ms
+2025-12-29T12:50:42.480+07:00  INFO 14564 --- [quanlytaisan] [ForkJoinPool.commonPool-worker-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-12-29T12:50:44.096+07:00  INFO 14564 --- [quanlytaisan] [ForkJoinPool.commonPool-worker-3] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-12-29T12:50:45.874+07:00  INFO 14564 --- [quanlytaisan] [ForkJoinPool.commonPool-worker-2] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-12-29T12:50:46.901+07:00  INFO 14564 --- [quanlytaisan] [main] o.s.v.b.OptionalValidatorFactoryBean     : Failed to set up a Bean Validation provider: jakarta.validation.NoProviderFoundException: Unable to create a Configuration, because no Jakarta Bean Validation provider could be found. Add a provider like Hibernate Validator (RI) to your classpath.
+2025-12-29T12:50:46.906+07:00  INFO 14564 --- [quanlytaisan] [ForkJoinPool.commonPool-worker-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-12-29T12:50:49.097+07:00  INFO 14564 --- [quanlytaisan] [main] o.s.m.s.b.SimpleBrokerMessageHandler     : Starting...
+2025-12-29T12:50:49.102+07:00  INFO 14564 --- [quanlytaisan] [main] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@42cc5460]]
+2025-12-29T12:50:49.103+07:00  INFO 14564 --- [quanlytaisan] [main] o.s.m.s.b.SimpleBrokerMessageHandler     : Started.
+2025-12-29T12:50:49.175+07:00  INFO 14564 --- [quanlytaisan] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8386 (http) with context path '/'
+2025-12-29T12:50:49.205+07:00  INFO 14564 --- [quanlytaisan] [main] c.e.q.QuanlytaisanApplication            : Started QuanlytaisanApplication in 13.523 seconds (process running for 14.817)
+2025-12-29T12:50:55.578+07:00  INFO 16304 --- [quanlytaisan] [main] c.e.q.QuanlytaisanApplication            : Starting QuanlytaisanApplication using Java 17.0.12 with PID 16304 (E:\Workspace\PM_Quan_Ly_Tai_San\backend\quanlytaisan\target\classes started by admin in E:\Workspace\PM_Quan_Ly_Tai_San\backend)
+2025-12-29T12:50:55.585+07:00  INFO 16304 --- [quanlytaisan] [main] c.e.q.QuanlytaisanApplication            : No active profile set, falling back to 1 default profile: "default"
+2025-12-29T12:50:59.690+07:00  INFO 16304 --- [quanlytaisan] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8386 (http)
+2025-12-29T12:50:59.721+07:00  INFO 16304 --- [quanlytaisan] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-12-29T12:50:59.722+07:00  INFO 16304 --- [quanlytaisan] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.43]
+2025-12-29T12:50:59.869+07:00  INFO 16304 --- [quanlytaisan] [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-12-29T12:50:59.870+07:00  INFO 16304 --- [quanlytaisan] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 4179 ms
+2025-12-29T12:51:00.624+07:00  INFO 16304 --- [quanlytaisan] [ForkJoinPool.commonPool-worker-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-12-29T12:51:02.460+07:00  INFO 16304 --- [quanlytaisan] [ForkJoinPool.commonPool-worker-3] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-12-29T12:51:03.029+07:00  INFO 16304 --- [quanlytaisan] [main] o.s.v.b.OptionalValidatorFactoryBean     : Failed to set up a Bean Validation provider: jakarta.validation.NoProviderFoundException: Unable to create a Configuration, because no Jakarta Bean Validation provider could be found. Add a provider like Hibernate Validator (RI) to your classpath.
+2025-12-29T12:51:03.494+07:00  INFO 16304 --- [quanlytaisan] [ForkJoinPool.commonPool-worker-2] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-12-29T12:51:04.531+07:00  INFO 16304 --- [quanlytaisan] [ForkJoinPool.commonPool-worker-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-12-29T12:51:04.673+07:00  INFO 16304 --- [quanlytaisan] [main] o.s.m.s.b.SimpleBrokerMessageHandler     : Starting...
+2025-12-29T12:51:04.680+07:00  INFO 16304 --- [quanlytaisan] [main] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@7e3ee128]]
+2025-12-29T12:51:04.683+07:00  INFO 16304 --- [quanlytaisan] [main] o.s.m.s.b.SimpleBrokerMessageHandler     : Started.
+2025-12-29T12:51:04.694+07:00  INFO 16304 --- [quanlytaisan] [main] o.s.m.s.b.SimpleBrokerMessageHandler     : Stopping...
+2025-12-29T12:51:04.695+07:00  INFO 16304 --- [quanlytaisan] [main] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=false, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@7e3ee128]]
+2025-12-29T12:51:04.695+07:00  INFO 16304 --- [quanlytaisan] [main] o.s.m.s.b.SimpleBrokerMessageHandler     : Stopped.
+2025-12-29T12:51:04.696+07:00  WARN 16304 --- [quanlytaisan] [main] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'
+2025-12-29T12:51:04.752+07:00  INFO 16304 --- [quanlytaisan] [main] .s.b.a.l.ConditionEvaluationReportLogger : 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2025-12-29T12:51:04.800+07:00 ERROR 16304 --- [quanlytaisan] [main] o.s.b.d.LoggingFailureAnalysisReporter   : 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8386 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8386 or configure this application to listen on another port.
+
+2025-12-29T12:51:49.116+07:00  INFO 14564 --- [quanlytaisan] [MessageBroker-1] o.s.w.s.c.WebSocketMessageBrokerStats    : WebSocketSession[0 current WS(0)-HttpStream(0)-HttpPoll(0), 0 total, 0 closed abnormally (0 connect failure, 0 send limit, 0 transport error)], stompSubProtocol[processed CONNECT(0)-CONNECTED(0)-DISCONNECT(0)], stompBrokerRelay[null], inboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], outboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], sockJsScheduler[pool size = 1, active threads = 1, queued tasks = 0, completed tasks = 0]
+2025-12-29T12:52:13.285+07:00  INFO 7972 --- [quanlytaisan] [main] c.e.q.QuanlytaisanApplication            : Starting QuanlytaisanApplication using Java 17.0.12 with PID 7972 (E:\Workspace\PM_Quan_Ly_Tai_San\backend\quanlytaisan\target\classes started by admin in E:\Workspace\PM_Quan_Ly_Tai_San\backend)
+2025-12-29T12:52:13.290+07:00  INFO 7972 --- [quanlytaisan] [main] c.e.q.QuanlytaisanApplication            : No active profile set, falling back to 1 default profile: "default"
+2025-12-29T12:52:18.421+07:00  INFO 7972 --- [quanlytaisan] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8386 (http)
+2025-12-29T12:52:18.454+07:00  INFO 7972 --- [quanlytaisan] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-12-29T12:52:18.455+07:00  INFO 7972 --- [quanlytaisan] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.43]
+2025-12-29T12:52:18.678+07:00  INFO 7972 --- [quanlytaisan] [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-12-29T12:52:18.679+07:00  INFO 7972 --- [quanlytaisan] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 5251 ms
+2025-12-29T12:52:19.724+07:00  INFO 7972 --- [quanlytaisan] [ForkJoinPool.commonPool-worker-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-12-29T12:52:21.435+07:00  INFO 7972 --- [quanlytaisan] [ForkJoinPool.commonPool-worker-3] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-12-29T12:52:22.020+07:00  INFO 7972 --- [quanlytaisan] [main] o.s.v.b.OptionalValidatorFactoryBean     : Failed to set up a Bean Validation provider: jakarta.validation.NoProviderFoundException: Unable to create a Configuration, because no Jakarta Bean Validation provider could be found. Add a provider like Hibernate Validator (RI) to your classpath.
+2025-12-29T12:52:22.481+07:00  INFO 7972 --- [quanlytaisan] [ForkJoinPool.commonPool-worker-2] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-12-29T12:52:23.503+07:00  INFO 7972 --- [quanlytaisan] [ForkJoinPool.commonPool-worker-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-12-29T12:52:24.020+07:00  INFO 7972 --- [quanlytaisan] [main] o.s.m.s.b.SimpleBrokerMessageHandler     : Starting...
+2025-12-29T12:52:24.027+07:00  INFO 7972 --- [quanlytaisan] [main] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@3ad847f8]]
+2025-12-29T12:52:24.029+07:00  INFO 7972 --- [quanlytaisan] [main] o.s.m.s.b.SimpleBrokerMessageHandler     : Started.
+2025-12-29T12:52:24.049+07:00  INFO 7972 --- [quanlytaisan] [main] o.s.m.s.b.SimpleBrokerMessageHandler     : Stopping...
+2025-12-29T12:52:24.050+07:00  INFO 7972 --- [quanlytaisan] [main] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=false, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@3ad847f8]]
+2025-12-29T12:52:24.051+07:00  INFO 7972 --- [quanlytaisan] [main] o.s.m.s.b.SimpleBrokerMessageHandler     : Stopped.
+2025-12-29T12:52:24.064+07:00  WARN 7972 --- [quanlytaisan] [main] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'
+2025-12-29T12:52:24.139+07:00  INFO 7972 --- [quanlytaisan] [main] .s.b.a.l.ConditionEvaluationReportLogger : 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2025-12-29T12:52:24.207+07:00 ERROR 7972 --- [quanlytaisan] [main] o.s.b.d.LoggingFailureAnalysisReporter   : 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8386 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8386 or configure this application to listen on another port.
+
+2025-12-29T12:54:35.435+07:00  INFO 2372 --- [quanlytaisan] [main] c.e.q.QuanlytaisanApplication            : Starting QuanlytaisanApplication using Java 17.0.12 with PID 2372 (E:\Workspace\PM_Quan_Ly_Tai_San\backend\quanlytaisan\target\classes started by admin in E:\Workspace\PM_Quan_Ly_Tai_San\backend)
+2025-12-29T12:54:35.441+07:00  INFO 2372 --- [quanlytaisan] [main] c.e.q.QuanlytaisanApplication            : No active profile set, falling back to 1 default profile: "default"
+2025-12-29T12:54:39.633+07:00  INFO 2372 --- [quanlytaisan] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8386 (http)
+2025-12-29T12:54:39.665+07:00  INFO 2372 --- [quanlytaisan] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-12-29T12:54:39.666+07:00  INFO 2372 --- [quanlytaisan] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.43]
+2025-12-29T12:54:39.832+07:00  INFO 2372 --- [quanlytaisan] [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-12-29T12:54:39.833+07:00  INFO 2372 --- [quanlytaisan] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 4260 ms
+2025-12-29T12:54:40.016+07:00  WARN 2372 --- [quanlytaisan] [main] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'permissionInterceptor': Unsatisfied dependency expressed through field 'userPermissionService': Error creating bean with name 'userPermissionService': Unsatisfied dependency expressed through field 'userPermissionDao': Error creating bean with name 'userPermissionDao': Unsatisfied dependency expressed through field 'jdbcTemplate': Error creating bean with name 'dataSourceScriptDatabaseInitializer' defined in class path resource [org/springframework/boot/autoconfigure/sql/init/DataSourceInitializationConfiguration.class]: Unsatisfied dependency expressed through method 'dataSourceScriptDatabaseInitializer' parameter 0: Error creating bean with name 'dataSource' defined in class path resource [org/springframework/boot/autoconfigure/jdbc/DataSourceConfiguration$Hikari.class]: Failed to instantiate [com.zaxxer.hikari.HikariDataSource]: Factory method 'dataSource' threw exception with message: Failed to determine suitable jdbc url
+2025-12-29T12:54:40.026+07:00  INFO 2372 --- [quanlytaisan] [main] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
+2025-12-29T12:54:40.064+07:00  INFO 2372 --- [quanlytaisan] [main] .s.b.a.l.ConditionEvaluationReportLogger : 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2025-12-29T12:54:40.109+07:00 ERROR 2372 --- [quanlytaisan] [main] o.s.b.d.LoggingFailureAnalysisReporter   : 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Failed to configure a DataSource: 'url' attribute is not specified and no embedded datasource could be configured.
+
+Reason: Failed to determine suitable jdbc url
+
+
+Action:
+
+Consider the following:
+	If you want an embedded database (H2, HSQL or Derby), please put it on the classpath.
+	If you have database settings to be loaded from a particular profile you may need to activate it (no profiles are currently active).
+
+2025-12-29T12:56:40.220+07:00  INFO 15784 --- [quanlytaisan] [main] c.e.q.QuanlytaisanApplication            : Starting QuanlytaisanApplication using Java 17.0.12 with PID 15784 (E:\Workspace\PM_Quan_Ly_Tai_San\backend\quanlytaisan\target\classes started by admin in E:\Workspace\PM_Quan_Ly_Tai_San\backend)
+2025-12-29T12:56:40.229+07:00  INFO 15784 --- [quanlytaisan] [main] c.e.q.QuanlytaisanApplication            : No active profile set, falling back to 1 default profile: "default"
+2025-12-29T12:56:44.501+07:00  INFO 15784 --- [quanlytaisan] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8386 (http)
+2025-12-29T12:56:44.541+07:00  INFO 15784 --- [quanlytaisan] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-12-29T12:56:44.542+07:00  INFO 15784 --- [quanlytaisan] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.43]
+2025-12-29T12:56:44.735+07:00  INFO 15784 --- [quanlytaisan] [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-12-29T12:56:44.737+07:00  INFO 15784 --- [quanlytaisan] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 4368 ms
+2025-12-29T12:56:45.593+07:00  INFO 15784 --- [quanlytaisan] [ForkJoinPool.commonPool-worker-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-12-29T12:56:46.159+07:00  INFO 15784 --- [quanlytaisan] [ForkJoinPool.commonPool-worker-1] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@47c71ce1
+2025-12-29T12:56:46.163+07:00  INFO 15784 --- [quanlytaisan] [ForkJoinPool.commonPool-worker-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-12-29T12:56:48.098+07:00  INFO 15784 --- [quanlytaisan] [main] o.s.v.b.OptionalValidatorFactoryBean     : Failed to set up a Bean Validation provider: jakarta.validation.NoProviderFoundException: Unable to create a Configuration, because no Jakarta Bean Validation provider could be found. Add a provider like Hibernate Validator (RI) to your classpath.
+2025-12-29T12:56:50.234+07:00  INFO 15784 --- [quanlytaisan] [main] o.s.m.s.b.SimpleBrokerMessageHandler     : Starting...
+2025-12-29T12:56:50.251+07:00  INFO 15784 --- [quanlytaisan] [main] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@2f1f9515]]
+2025-12-29T12:56:50.254+07:00  INFO 15784 --- [quanlytaisan] [main] o.s.m.s.b.SimpleBrokerMessageHandler     : Started.
+2025-12-29T12:56:50.268+07:00  INFO 15784 --- [quanlytaisan] [main] o.s.m.s.b.SimpleBrokerMessageHandler     : Stopping...
+2025-12-29T12:56:50.268+07:00  INFO 15784 --- [quanlytaisan] [main] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=false, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@2f1f9515]]
+2025-12-29T12:56:50.269+07:00  INFO 15784 --- [quanlytaisan] [main] o.s.m.s.b.SimpleBrokerMessageHandler     : Stopped.
+2025-12-29T12:56:50.271+07:00  WARN 15784 --- [quanlytaisan] [main] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'
+2025-12-29T12:56:50.316+07:00  INFO 15784 --- [quanlytaisan] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2025-12-29T12:56:50.360+07:00  INFO 15784 --- [quanlytaisan] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2025-12-29T12:56:50.391+07:00  INFO 15784 --- [quanlytaisan] [main] .s.b.a.l.ConditionEvaluationReportLogger : 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2025-12-29T12:56:50.435+07:00 ERROR 15784 --- [quanlytaisan] [main] o.s.b.d.LoggingFailureAnalysisReporter   : 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8386 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8386 or configure this application to listen on another port.
+

@@ -1,0 +1,271 @@
+{
+	"info": {
+		"_postman_id": "config-controller",
+		"name": "Config Controller API",
+		"description": "API collection for Config CRUD operations",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get All Config",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/config",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"config"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Config By IdAccount",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/config/{{idAccount}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"config",
+						"{{idAccount}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Config",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"idAccount\": \"ACC_001\",\n  \"configKey\": \"theme\",\n  \"configValue\": \"dark\",\n  \"description\": \"Giao diện tối\",\n  \"isActive\": true\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/config",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"config"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Batch Config",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n  {\n    \"idAccount\": \"ACC_002\",\n    \"configKey\": \"language\",\n    \"configValue\": \"vi\",\n    \"description\": \"Ngôn ngữ tiếng Việt\",\n    \"isActive\": true\n  },\n  {\n    \"idAccount\": \"ACC_003\",\n    \"configKey\": \"notifications\",\n    \"configValue\": \"enabled\",\n    \"description\": \"Bật thông báo\",\n    \"isActive\": true\n  }\n]"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/config/batch",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"config",
+						"batch"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Config",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"configKey\": \"theme\",\n  \"configValue\": \"light\",\n  \"description\": \"Giao diện sáng - đã cập nhật\",\n  \"isActive\": true\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/config/{{idAccount}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"config",
+						"{{idAccount}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Config",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/config/{{idAccount}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"config",
+						"{{idAccount}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Batch Config",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n  \"ACC_002\",\n  \"ACC_003\"\n]"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/config/batch",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"config",
+						"batch"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "USER123",
+			"type": "string"
+		},
+		{
+			"key": "idAccount",
+			"value": "ACC_001",
+			"type": "string"
+		}
+	]
+}

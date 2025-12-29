@@ -1,0 +1,216 @@
+{
+  "info": {
+    "name": "CCDCVatTuController",
+    "description": "API collection for CCDCVatTu management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get All CCDCVatTu",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/ccdcvattu?idcongty={{idcongty}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "ccdcvattu"],
+          "query": [
+            {
+              "key": "idcongty",
+              "value": "{{idcongty}}",
+              "description": "ID của công ty"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get CCDCVatTu by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/ccdcvattu/{{id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "ccdcvattu", "{{id}}"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "CCDC001"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create CCDCVatTu",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"CCDC001\",\n  \"idDonVi\": \"DV001\",\n  \"ten\": \"Bàn làm việc\",\n  \"ngayNhap\": \"2024-01-01T00:00:00\",\n  \"donViTinh\": \"Cái\",\n  \"soLuong\": 10,\n  \"idNhomCCDC\": \"NCCDC001\",\n  \"giaTri\": 5000000.0,\n  \"soKyHieu\": \"S001\",\n  \"kyHieu\": \"K001\",\n  \"congSuat\": \"100W\",\n  \"nuocSanXuat\": \"Việt Nam\",\n  \"namSanXuat\": 2023,\n  \"ghiChu\": \"Bàn làm việc văn phòng\",\n  \"idCongTy\": \"CT001\",\n  \"ngayTao\": \"2024-01-01T00:00:00\",\n  \"ngayCapNhat\": \"2024-01-01T00:00:00\",\n  \"nguoiTao\": \"admin\",\n  \"nguoiCapNhat\": \"admin\",\n  \"isActive\": true\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/ccdcvattu",
+          "host": ["{{base_url}}"],
+          "path": ["api", "ccdcvattu"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update CCDCVatTu",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"CCDC001\",\n  \"idDonVi\": \"DV001\",\n  \"ten\": \"Bàn làm việc Updated\",\n  \"ngayNhap\": \"2024-01-01T00:00:00\",\n  \"donViTinh\": \"Cái\",\n  \"soLuong\": 15,\n  \"idNhomCCDC\": \"NCCDC001\",\n  \"giaTri\": 6000000.0,\n  \"soKyHieu\": \"S001\",\n  \"kyHieu\": \"K001\",\n  \"congSuat\": \"100W\",\n  \"nuocSanXuat\": \"Việt Nam\",\n  \"namSanXuat\": 2023,\n  \"ghiChu\": \"Bàn làm việc văn phòng đã cập nhật\",\n  \"idCongTy\": \"CT001\",\n  \"ngayTao\": \"2024-01-01T00:00:00\",\n  \"ngayCapNhat\": \"2024-01-01T00:00:00\",\n  \"nguoiTao\": \"admin\",\n  \"nguoiCapNhat\": \"admin\",\n  \"isActive\": true\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/ccdcvattu/{{id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "ccdcvattu", "{{id}}"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "CCDC001"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Batch CCDCVatTu",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  {\n    \"id\": \"CCDC001\",\n    \"idDonVi\": \"DV001\",\n    \"ten\": \"Bàn làm việc\",\n    \"ngayNhap\": \"2024-01-01T00:00:00\",\n    \"donViTinh\": \"Cái\",\n    \"soLuong\": 10,\n    \"idNhomCCDC\": \"NCCDC001\",\n    \"giaTri\": 5000000.0,\n    \"soKyHieu\": \"S001\",\n    \"kyHieu\": \"K001\",\n    \"congSuat\": \"100W\",\n    \"nuocSanXuat\": \"Việt Nam\",\n    \"namSanXuat\": 2023,\n    \"ghiChu\": \"Bàn làm việc văn phòng\",\n    \"idCongTy\": \"CT001\",\n    \"ngayTao\": \"2024-01-01T00:00:00\",\n    \"ngayCapNhat\": \"2024-01-01T00:00:00\",\n    \"nguoiTao\": \"admin\",\n    \"nguoiCapNhat\": \"admin\",\n    \"isActive\": true\n  },\n  {\n    \"id\": \"CCDC002\",\n    \"idDonVi\": \"DV001\",\n    \"ten\": \"Ghế văn phòng\",\n    \"ngayNhap\": \"2024-01-01T00:00:00\",\n    \"donViTinh\": \"Cái\",\n    \"soLuong\": 20,\n    \"idNhomCCDC\": \"NCCDC001\",\n    \"giaTri\": 2000000.0,\n    \"soKyHieu\": \"S002\",\n    \"kyHieu\": \"K002\",\n    \"congSuat\": \"50W\",\n    \"nuocSanXuat\": \"Việt Nam\",\n    \"namSanXuat\": 2023,\n    \"ghiChu\": \"Ghế văn phòng\",\n    \"idCongTy\": \"CT001\",\n    \"ngayTao\": \"2024-01-01T00:00:00\",\n    \"ngayCapNhat\": \"2024-01-01T00:00:00\",\n    \"nguoiTao\": \"admin\",\n    \"nguoiCapNhat\": \"admin\",\n    \"isActive\": true\n  }\n]"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/ccdcvattu/batch",
+          "host": ["{{base_url}}"],
+          "path": ["api", "ccdcvattu", "batch"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Batch CCDCVatTu",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  {\n    \"id\": \"CCDC001\",\n    \"idDonVi\": \"DV001\",\n    \"ten\": \"Bàn làm việc Updated\",\n    \"ngayNhap\": \"2024-01-01T00:00:00\",\n    \"donViTinh\": \"Cái\",\n    \"soLuong\": 15,\n    \"idNhomCCDC\": \"NCCDC001\",\n    \"giaTri\": 6000000.0,\n    \"soKyHieu\": \"S001\",\n    \"kyHieu\": \"K001\",\n    \"congSuat\": \"100W\",\n    \"nuocSanXuat\": \"Việt Nam\",\n    \"namSanXuat\": 2023,\n    \"ghiChu\": \"Bàn làm việc văn phòng đã cập nhật\",\n    \"idCongTy\": \"CT001\",\n    \"ngayTao\": \"2024-01-01T00:00:00\",\n    \"ngayCapNhat\": \"2024-01-01T00:00:00\",\n    \"nguoiTao\": \"admin\",\n    \"nguoiCapNhat\": \"admin\",\n    \"isActive\": true\n  }\n]"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/ccdcvattu/batch",
+          "host": ["{{base_url}}"],
+          "path": ["api", "ccdcvattu", "batch"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete CCDCVatTu",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/ccdcvattu/{{id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "ccdcvattu", "{{id}}"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "CCDC001"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Batch CCDCVatTu",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\"CCDC001\", \"CCDC002\"]"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/ccdcvattu/batch",
+          "host": ["{{base_url}}"],
+          "path": ["api", "ccdcvattu", "batch"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Upload File CCDCVatTu",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "path/to/file.csv"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/ccdcvattu/upload",
+          "host": ["{{base_url}}"],
+          "path": ["api", "ccdcvattu", "upload"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "idcongty",
+      "value": "CT001"
+    }
+  ]
+}

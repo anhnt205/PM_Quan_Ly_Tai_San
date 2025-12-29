@@ -1,0 +1,138 @@
+{
+	"info": {
+		"_postman_id": "kytailieu-quick-test",
+		"name": "KyTaiLieu - Quick Test",
+		"description": "Quick test collection for KyTaiLieu APIs with essential endpoints only",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Quick Test - KyTaiLieu",
+			"item": [
+				{
+					"name": "1. Get KyTaiLieu by TaiLieu ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/chuky/{{idTaiLieu}}"
+						}
+					}
+				},
+				{
+					"name": "2. Create Test KyTaiLieu",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n    {\n        \"id\": \"test_ktl_001\",\n        \"idTaiLieu\": \"{{idTaiLieu}}\",\n        \"loaiKy\": 1,\n        \"x\": 100.0,\n        \"y\": 200.0,\n        \"idNguoiKy\": \"test_nk_001\",\n        \"chuKySo\": \"test_signature_base64\",\n        \"ngayKy\": \"2024-01-20 10:00:00\",\n        \"stt\": 1\n    }\n]"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/chuky"
+						}
+					}
+				},
+				{
+					"name": "3. Verify KyTaiLieu created",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/chuky/{{idTaiLieu}}"
+						}
+					}
+				},
+				{
+					"name": "4. Delete Test KyTaiLieu",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/chuky/test_ktl_001"
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Quick Test - NguoiKy",
+			"item": [
+				{
+					"name": "1. Add Test NguoiKy",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"test_nk_001\",\n    \"idTaiLieu\": \"{{idTaiLieu}}\",\n    \"idNguoiKy\": \"test_user_001\",\n    \"tenNguoiKy\": \"Test Người Ký\",\n    \"idPhongBan\": \"test_pb_001\",\n    \"trangThai\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/chuky/nguoi-ky"
+						}
+					}
+				},
+				{
+					"name": "2. Get NguoiKy by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/chuky/nguoi-ky/test_user_001/{{idTaiLieu}}"
+						}
+					}
+				},
+				{
+					"name": "3. Get All NguoiKy by TaiLieu",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/chuky/nguoi-ky/tailieu/{{idTaiLieu}}"
+						}
+					}
+				},
+				{
+					"name": "4. Update TrangThai to Signed",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/chuky/nguoi-ky/test_nk_001/trangthai?trangThai=1"
+						}
+					}
+				},
+				{
+					"name": "5. Verify TrangThai updated",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/chuky/nguoi-ky/test_user_001/{{idTaiLieu}}"
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "idTaiLieu",
+			"value": "tailieu001"
+		}
+	]
+}

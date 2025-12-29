@@ -1,0 +1,3 @@
+id,idDieuDongTaiSan,idTaiSan,soLuong,ghiChu,ngayTao,ngayCapNhat,nguoiTao,nguoiCapNhat,isActive
+CTDDTS01,DDTS01,TS01,10,Ghi chú 1,2025-01-01 08:00:00,2025-01-05 09:00:00,admin,admin,true
+CTDDTS02,DDTS02,TS02,5,Ghi chú 2,2025-02-01 09:00:00,2025-02-05 10:00:00,user1,user2,true
