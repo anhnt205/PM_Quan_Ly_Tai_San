@@ -64,6 +64,7 @@ export default function AssetManager() {
     setShowForm(false);
     setSelectedAsset(null);
   };
+
   const columns: GridColDef[] = [
     {
       field: "assetNumber",
