@@ -205,10 +205,8 @@ export default function FilterBar({ totalCount }: FilterBarProps) {
         />
         <FilterItem label="Nháp" count={0} color="default" />
         <FilterItem label="Duyệt" count={1} color="info" />{" "}
-        {/* Màu xanh dương */}
-        <FilterItem label="Hủy" count={1} color="error" /> {/* Màu đỏ */}
-        <FilterItem label="Hoàn thành" count={1} color="success" />{" "}
-        {/* Màu xanh lá */}
+        <FilterItem label="Hủy" count={1} color="error" />
+        <FilterItem label="Hoàn thành" count={1} color="success" />
       </Box>
     </Box>
   );
