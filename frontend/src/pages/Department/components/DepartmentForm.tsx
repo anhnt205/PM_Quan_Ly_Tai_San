@@ -42,11 +42,12 @@ export default function DepartmentForm({
   const [expanded, setExpanded] = useState(true);
   const formik = useFormik({
     initialValues: {
-      Id: "",
-      DepartmentName: "",
-      IsStore: undefined as Number | undefined,
-      WarehouseType: undefined as Number | undefined,
-      IsLeader: undefined as Number | undefined,
+      id: "",
+      tenPhongBan: "",
+      idCongTy: "ct001",
+      isKho: false,
+      isLanhDao: false,
+      loaiKho: undefined as Number | undefined,
     },
     validationSchema: DepartmentValidation,
     onSubmit(values) {
@@ -96,7 +97,7 @@ export default function DepartmentForm({
               <FieldInput
                 title="Mã phòng ban *"
                 formik={formik}
-                field="Id"
+                field="id"
                 disabled={Boolean(selectedDepartment)}
               />
             </Grid>
@@ -104,7 +105,7 @@ export default function DepartmentForm({
               <FieldInput
                 title="Tên phòng ban *"
                 formik={formik}
-                field="DepartmentName"
+                field="tenPhongBan"
                 disabled={readOnly}
               />
             </Grid>
@@ -117,23 +118,23 @@ export default function DepartmentForm({
               >
                 <Typography>Là kho:</Typography>
                 <Checkbox
-                  name="IsStore"
+                  name="isKho"
                   // Ép kiểu về boolean để checked hoạt động đúng
-                  checked={Boolean(formik.values.IsStore)}
+                  checked={Boolean(formik.values.isKho)}
                   onChange={(e) => {
-                    const isChecked = e.target.checked ? 1 : 0;
-                    formik.setFieldValue("IsStore", isChecked);
+                    const isChecked = e.target.checked;
+                    formik.setFieldValue("isKho", isChecked);
                     // Nếu chọn là kho thì tự động bỏ chọn Lãnh đạo
-                    if (isChecked) formik.setFieldValue("IsLeader", 0);
+                    if (isChecked) formik.setFieldValue("isLanhDao", false);
                     // Nếu bỏ chọn kho thì reset luôn loại kho
-                    else formik.setFieldValue("WarehouseType", undefined);
+                    else formik.setFieldValue("loaiKho", undefined);
                   }}
                   disabled={readOnly}
                 />
               </Box>
 
-              {/* Phần chọn loại kho (Chỉ hiện khi IsStore === 1) */}
-              {formik.values.IsStore === 1 && (
+              {/* Phần chọn loại kho (Chỉ hiện khi isKho === 1) */}
+              {formik.values.isKho && (
                 <Box pl={4}>
                   <Box
                     display="flex"
@@ -143,8 +144,8 @@ export default function DepartmentForm({
                     <Typography variant="body2">Kho cấp phát:</Typography>
                     <Checkbox
                       size="small"
-                      checked={formik.values.WarehouseType === 1}
-                      onChange={() => formik.setFieldValue("WarehouseType", 1)}
+                      checked={formik.values.loaiKho === 1}
+                      onChange={() => formik.setFieldValue("loaiKho", 1)}
                       disabled={readOnly}
                     />
                   </Box>
@@ -156,8 +157,8 @@ export default function DepartmentForm({
                     <Typography variant="body2">Kho thu hồi:</Typography>
                     <Checkbox
                       size="small"
-                      checked={formik.values.WarehouseType === 2}
-                      onChange={() => formik.setFieldValue("WarehouseType", 2)}
+                      checked={formik.values.loaiKho === 2}
+                      onChange={() => formik.setFieldValue("loaiKho", 2)}
                       disabled={readOnly}
                     />
                   </Box>
@@ -173,15 +174,15 @@ export default function DepartmentForm({
               >
                 <Typography>Là phòng ban lãnh đạo:</Typography>
                 <Checkbox
-                  name="IsLeader"
-                  checked={Boolean(formik.values.IsLeader)}
+                  name="isLanhDao"
+                  checked={Boolean(formik.values.isLanhDao)}
                   onChange={(e) => {
-                    const isChecked = e.target.checked ? 1 : 0;
-                    formik.setFieldValue("IsLeader", isChecked);
+                    const isChecked = e.target.checked;
+                    formik.setFieldValue("isLanhDao", isChecked);
                     // Nếu là lãnh đạo thì không thể là kho
                     if (isChecked) {
-                      formik.setFieldValue("IsStore", 0);
-                      formik.setFieldValue("WarehouseType", undefined);
+                      formik.setFieldValue("isKho", false);
+                      formik.setFieldValue("loaiKho", undefined);
                     }
                   }}
                   disabled={readOnly}

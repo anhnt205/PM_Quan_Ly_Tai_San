@@ -28,6 +28,7 @@ export default function Department() {
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
+    isLoading,
   } = useDepartmentMutation(
     paginationModel.page,
     paginationModel.pageSize,
@@ -56,14 +57,14 @@ export default function Department() {
 
   const columns: GridColDef[] = [
     {
-      field: "Id",
+      field: "id",
       headerName: "Mã phòng ban",
       width: 150,
       align: "center",
       headerAlign: "center",
     },
     {
-      field: "DepartmentName",
+      field: "tenPhongBan",
       headerName: "Tên phòng/ban",
       flex: 1,
       minWidth: 200,
@@ -71,7 +72,7 @@ export default function Department() {
       headerAlign: "center",
     },
     {
-      field: "employee",
+      field: "soLuongNhanVien",
       headerName: "Số lượng nhân viên",
       width: 200,
       align: "center",
@@ -89,7 +90,7 @@ export default function Department() {
             e.stopPropagation();
             const confirm = await showConfirmAlert("Xác nhận xóa!");
             if (confirm.isConfirmed) {
-              deleteOneMutation.mutate(params.row.Id);
+              deleteOneMutation.mutate(params.row.id);
             }
           }}
         >
@@ -131,7 +132,7 @@ export default function Department() {
         total={departments.totalItems}
         paginationModel={paginationModel}
         onPaginationModelChange={setPaginationModel}
-        loading={departments.loading}
+        loading={isLoading}
         onRowClick={handleRowClick}
         selectedIds={selectedIds}
         onSelectionChange={setSelectedIds}

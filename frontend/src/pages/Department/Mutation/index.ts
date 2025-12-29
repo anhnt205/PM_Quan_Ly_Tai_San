@@ -13,7 +13,7 @@ export const useDepartmentMutation = (
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: async (data: DepartmentType) => {
-      const res = await api.post("/departments/create", data);
+      const res = await api.post("/phongban", data);
       return res.data;
     },
     onSuccess: (data) => {
@@ -31,7 +31,7 @@ export const useDepartmentMutation = (
 
   const updateMutation = useMutation({
     mutationFn: async (data: DepartmentType) => {
-      const res = await api.put(`/departments/update/${data.Id}`, data);
+      const res = await api.put(`/phongban/${data.id}`, data);
       return res.data;
     },
     onSuccess: (data) => {
@@ -48,7 +48,7 @@ export const useDepartmentMutation = (
   });
   const deleteOneMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await api.delete(`/departments/deleteOne/${id}`);
+      const res = await api.delete(`/phongban/${id}`);
       return res.data;
     },
     onSuccess: (data) => {
@@ -65,7 +65,7 @@ export const useDepartmentMutation = (
   });
   const deleteManyMutation = useMutation({
     mutationFn: async (ids: string[]) => {
-      const res = await api.post(`/departments/deleteMany`, { ids });
+      const res = await api.delete(`/phongban/batch`, { data: ids });
       return res.data.message;
     },
     onSuccess: (data) => {
@@ -84,15 +84,17 @@ export const useDepartmentMutation = (
   const { data = { items: [], totalItems: 0 }, isLoading } = useQuery({
     queryKey: ["departments", page, pageSize, searchValue], // Key để cache dữ liệu
     queryFn: async () => {
-      const res = await api.get("/departments/getAll", {
+      const res = await api.get("/phongban/paged", {
         params: {
-          page: page + 1,
-          limit: pageSize,
-          q: searchValue,
+          idcongty: "ct001",
+          page: page,
+          size: pageSize,
+          search: searchValue,
         },
       });
-      return res.data.data;
+      return res.data;
     },
+    placeholderData: (previousData) => previousData,
   });
 
   return {
@@ -101,5 +103,6 @@ export const useDepartmentMutation = (
     deleteOneMutation,
     deleteManyMutation,
     departments: data,
+    isLoading,
   };
 };

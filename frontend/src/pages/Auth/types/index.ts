@@ -1,4 +1,4 @@
-export interface AuthType{
-    UserName:string,
-    Password:string
+export interface AuthType {
+  tenDangNhap: string;
+  matKhau: string;
 }

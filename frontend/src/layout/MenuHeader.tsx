@@ -215,7 +215,7 @@ export default function Menuheader() {
           onClick={handleOpenSettingMenu}
         >
           <Typography sx={{ color: "white", fontSize: 18 }}>
-            {user?.username}
+            {user?.taiKhoan?.hoTen}
           </Typography>
           <Avatar src={logo} />
         </IconButton>
@@ -248,7 +248,7 @@ export default function Menuheader() {
             <ListItemIcon>
               <Avatar src={logo} alt="avatar" />
             </ListItemIcon>
-            <Typography>{user?.username}</Typography>
+            <Typography>{user?.taiKhoan?.hoTen}</Typography>
           </MenuItem>
           <MenuItem sx={{ py: 2 }} onClick={handleCloseSettingMenu}>
             <ListItemIcon>

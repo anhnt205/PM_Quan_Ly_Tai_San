@@ -1,13 +1,37 @@
 export interface DepartmentType {
-  Id: string;
-  UnitGroupId?: string;
-  DepartmentName: string;
-  ManagerId?: string;
-  CompanyId: string;
-  ParentDepartment?: string;
-  ColorCode?: string;
-  IsActive: number;
-  IsStore?: number;
-  WarehouseType?: number;
-  IsLeader?: number;
+  id: string;
+  idCongTy?: string;
+  tenPhongBan: string;
+  idNhomDonVi?: string;
+  idQuanLy?: string;
+  hoTenQuanLy?: string;
+  tenPhongCapTren?: string;
+  tenNhom?: string;
+  soLuongNhanVien?: number;
+  phongCapTren?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+  mauSac?: string;
+  isKho?: boolean;
+  isLanhDao?: boolean;
+  loaiKho?: number;
+}
+
+export interface DepartmentType {
+  id: string;
+  idCongTy?: string;
+  tenPhongBan: string;
+  idNhomDonVi?: string;
+  idQuanLy?: string;
+  hoTenQuanLy?: string;
+  tenPhongCapTren?: string;
+  tenNhom?: string;
+  soLuongNhanVien?: number;
+  phongCapTren?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+  mauSac?: string;
+  isKho?: boolean;
+  isLanhDao?: boolean;
+  loaiKho?: number;
 }

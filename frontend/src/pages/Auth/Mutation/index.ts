@@ -12,11 +12,13 @@ export const useAuthMutation = () => {
 
   const loginMutation = useMutation({
     mutationFn: async (data: AuthType) => {
-      const res = await api.post("/auth/login", data);
-      return res.data;
+      const res = await api.post(
+        `/taikhoan/login?tenDangNhap=${data.tenDangNhap}&matKhau=${data.matKhau}`
+      );
+      return res.data.data;
     },
     onSuccess: (data) => {
-      dispatch(loginSuccess(data?.user));
+      dispatch(loginSuccess(data));
       navigate("/");
     },
     onError: (error: any) => {

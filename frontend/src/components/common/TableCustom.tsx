@@ -1,11 +1,21 @@
 import {
   BarChart,
+  Close,
+  CloseRounded,
   Delete,
   Search,
   Settings,
   TableView,
 } from "@mui/icons-material";
-import { Box, Button, Grid, Paper, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Grid,
+  IconButton,
+  Paper,
+  TextField,
+  Typography,
+} from "@mui/material";
 import {
   DataGrid,
   GridColDef,
@@ -78,7 +88,7 @@ export default function TableCustom({
       >
         <TableView />
         <Typography>
-          {title} ({rows.length})
+          {title} ({total})
         </Typography>
       </Box>
       <Grid container spacing={2} p={2}>
@@ -91,6 +101,11 @@ export default function TableCustom({
             onChange={(e) => setSearchValue?.(e.target.value)}
             InputProps={{
               startAdornment: <Search />,
+              endAdornment: (
+                <IconButton onClick={() => setSearchValue?.("")}>
+                  <Close />
+                </IconButton>
+              ),
             }}
           />
         </Grid>
@@ -181,7 +196,7 @@ export default function TableCustom({
           showToolbar
           slots={{ toolbar: GridToolbar, filterPanel: CustomFilterPanel }}
           localeText={viVN.components.MuiDataGrid.defaultProps.localeText}
-          disableVirtualization={true}
+          // disableVirtualization={true}
           slotProps={{
             filterPanel: { disableAddFilterButton: false },
             toolbar: {

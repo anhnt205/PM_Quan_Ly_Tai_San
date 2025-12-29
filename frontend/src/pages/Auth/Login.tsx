@@ -31,8 +31,8 @@ export default function Login() {
 
   const formik = useFormik({
     initialValues: {
-      UserName: "",
-      Password: "",
+      tenDangNhap: "",
+      matKhau: "",
     },
     validationSchema: validationSchema,
     onSubmit: (values) => {
@@ -95,9 +95,9 @@ export default function Login() {
             Đăng nhập
           </Typography>
           <FieldInput
-            title="Email *"
+            title="Tên đăng nhập *"
             formik={formik}
-            field="UserName"
+            field="tenDangNhap"
             slotProps={{
               input: {
                 startAdornment: (
@@ -112,7 +112,7 @@ export default function Login() {
             title="Mật khẩu *"
             type={showPassWord ? "password" : "text"}
             formik={formik}
-            field="Password"
+            field="matKhau"
             slotProps={{
               input: {
                 startAdornment: (
