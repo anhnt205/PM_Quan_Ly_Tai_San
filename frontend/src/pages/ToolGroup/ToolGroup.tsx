@@ -106,27 +106,29 @@ export default function ToolGroup() {
           setReadOnly(false);
         }}
       />
-      {showForm && (
-        <Box py={2}>
-          <ToolGroupForm
-            onCancel={() => {
-              setShowForm(false);
-              setSelectedToolGroup(null);
-              setReadOnly(false); // Reset readOnly when form is closed
-            }}
-            onEdit={handleEdit}
-            selectedToolGroup={selectedToolGroup}
-            readOnly={readOnly}
-            onSave={handleSave}
-          />
-        </Box>
-      )}
-      <TableCustom
-        title="Quản lý nhóm ccdc"
-        columns={columns}
-        rows={ToolGroups}
-        onRowClick={handleRowClick}
-      />
+      <Box p={2}>
+        {showForm && (
+          <Box py={2}>
+            <ToolGroupForm
+              onCancel={() => {
+                setShowForm(false);
+                setSelectedToolGroup(null);
+                setReadOnly(false); // Reset readOnly when form is closed
+              }}
+              onEdit={handleEdit}
+              selectedToolGroup={selectedToolGroup}
+              readOnly={readOnly}
+              onSave={handleSave}
+            />
+          </Box>
+        )}
+        <TableCustom
+          title="Quản lý nhóm ccdc"
+          columns={columns}
+          rows={ToolGroups}
+          onRowClick={handleRowClick}
+        />
+      </Box>
     </Box>
   );
 }

@@ -202,86 +202,88 @@ export default function ToolManager() {
           setReadOnly(false);
         }}
       />
-      {showForm && (
-        <Box py={2} px={2}>
-          <ToolForm
-            key={`${selectedTool?.id}-${readOnly}`}
-            onCancel={() => {
-              setShowForm(false);
-              setReadOnly(true);
-            }}
-            selectedTool={selectedTool}
-            readOnly={readOnly}
-            onEdit={handleEdit}
-            onSave={handleSave}
-          />
-        </Box>
-      )}
-
-      <Box
-        sx={{
-          mx: 2,
-          mb: 2,
-          mt: 2,
-          display: "flex",
-          borderRadius: 2,
-          border: "1px solid",
-          borderColor: "divider",
-          overflow: "hidden",
-          minHeight: 0,
-          minWidth: 0,
-        }}
-      >
-        {/* Table */}
-        <Box
-          sx={{
-            flex: 1,
-            minWidth: 0,
-            overflowX: "auto",
-            overflowY: "hidden",
-            borderRight: selectedTool && showSidebar ? "1px solid" : "none",
-            borderColor: "divider",
-            transition: "border 0.3s ease",
-          }}
-        >
-          <ToolTableCustom
-            title="Quản lý CCDC - Vật tư"
-            rows={ToolData}
-            onRowClick={(row) => {
-              setSelectedTool(row);
-              setReadOnly(true);
-              setShowForm(true);
-              setShowSidebar(true);
-            }}
-            selectedIds={selectedIds}
-            onSelectionChange={setSelectedIds}
-            onDelete={(ids) => {
-              setToolData(
-                ToolData.filter((tool) => !ids.includes(String(tool.id)))
-              );
-            }}
-          />
-        </Box>
-
-        {/* Sidebar */}
-        {selectedTool && showSidebar && (
-          <Box
-            sx={{
-              width: 380,
-              flexShrink: 0,
-              borderLeft: "1px solid",
-              borderColor: "divider",
-              transition: "all 0.3s ease",
-            }}
-          >
-            <ToolDetailSidebar
-              selectedTool={selectedTool}
-              onClose={() => {
-                setShowSidebar(false);
+      <Box p={2}>
+        {showForm && (
+          <Box py={2} px={2}>
+            <ToolForm
+              key={`${selectedTool?.id}-${readOnly}`}
+              onCancel={() => {
+                setShowForm(false);
+                setReadOnly(true);
               }}
+              selectedTool={selectedTool}
+              readOnly={readOnly}
+              onEdit={handleEdit}
+              onSave={handleSave}
             />
           </Box>
         )}
+
+        <Box
+          sx={{
+            mx: 2,
+            mb: 2,
+            mt: 2,
+            display: "flex",
+            borderRadius: 2,
+            border: "1px solid",
+            borderColor: "divider",
+            overflow: "hidden",
+            minHeight: 0,
+            minWidth: 0,
+          }}
+        >
+          {/* Table */}
+          <Box
+            sx={{
+              flex: 1,
+              minWidth: 0,
+              overflowX: "auto",
+              overflowY: "hidden",
+              borderRight: selectedTool && showSidebar ? "1px solid" : "none",
+              borderColor: "divider",
+              transition: "border 0.3s ease",
+            }}
+          >
+            <ToolTableCustom
+              title="Quản lý CCDC - Vật tư"
+              rows={ToolData}
+              onRowClick={(row) => {
+                setSelectedTool(row);
+                setReadOnly(true);
+                setShowForm(true);
+                setShowSidebar(true);
+              }}
+              selectedIds={selectedIds}
+              onSelectionChange={setSelectedIds}
+              onDelete={(ids) => {
+                setToolData(
+                  ToolData.filter((tool) => !ids.includes(String(tool.id)))
+                );
+              }}
+            />
+          </Box>
+
+          {/* Sidebar */}
+          {selectedTool && showSidebar && (
+            <Box
+              sx={{
+                width: 380,
+                flexShrink: 0,
+                borderLeft: "1px solid",
+                borderColor: "divider",
+                transition: "all 0.3s ease",
+              }}
+            >
+              <ToolDetailSidebar
+                selectedTool={selectedTool}
+                onClose={() => {
+                  setShowSidebar(false);
+                }}
+              />
+            </Box>
+          )}
+        </Box>
       </Box>
     </Box>
   );

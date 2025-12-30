@@ -88,27 +88,29 @@ export default function ToolType() {
           setReadOnly(false);
         }}
       />
-      {showForm && (
-        <Box py={2}>
-          <TypeAssetForm
-            onCancel={() => {
-              setShowForm(false);
-              setSelectedToolType(null);
-              setReadOnly(false); // Reset readOnly when form is closed
-            }}
-            onEdit={handleEdit}
-            selectedToolType={selectedToolType}
-            readOnly={readOnly}
-            onSave={handleSave}
-          />
-        </Box>
-      )}
-      <TableCustom
-        title="Quản lý loại CCDC"
-        columns={columns}
-        rows={toolTypesData}
-        onRowClick={handleRowClick}
-      />
+      <Box p={2}>
+        {showForm && (
+          <Box py={2}>
+            <TypeAssetForm
+              onCancel={() => {
+                setShowForm(false);
+                setSelectedToolType(null);
+                setReadOnly(false); // Reset readOnly when form is closed
+              }}
+              onEdit={handleEdit}
+              selectedToolType={selectedToolType}
+              readOnly={readOnly}
+              onSave={handleSave}
+            />
+          </Box>
+        )}
+        <TableCustom
+          title="Quản lý loại CCDC"
+          columns={columns}
+          rows={toolTypesData}
+          onRowClick={handleRowClick}
+        />
+      </Box>
     </Box>
   );
 }

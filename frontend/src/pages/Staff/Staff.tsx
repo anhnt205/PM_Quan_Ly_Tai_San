@@ -173,27 +173,29 @@ export default function Staff() {
           setReadOnly(false); // Set readOnly to false when creating a new staff
         }}
       />
-      {showForm && (
-        <Box py={2}>
-          <StaffForm
-            onCancel={() => {
-              setShowForm(false);
-              setSelectedStaff(null);
-              setReadOnly(false); // Reset readOnly when form is closed
-            }}
-            onEdit={handleEdit}
-            selectedStaff={selectedStaff}
-            readOnly={readOnly}
-            onSave={handleSave}
-          />
-        </Box>
-      )}
-      <TableCustom
-        title="Quản lý nhân viên"
-        columns={columns}
-        rows={staffsData}
-        onRowClick={handleRowClick}
-      />
+      <Box p={2}>
+        {showForm && (
+          <Box py={2}>
+            <StaffForm
+              onCancel={() => {
+                setShowForm(false);
+                setSelectedStaff(null);
+                setReadOnly(false); // Reset readOnly when form is closed
+              }}
+              onEdit={handleEdit}
+              selectedStaff={selectedStaff}
+              readOnly={readOnly}
+              onSave={handleSave}
+            />
+          </Box>
+        )}
+        <TableCustom
+          title="Quản lý nhân viên"
+          columns={columns}
+          rows={staffsData}
+          onRowClick={handleRowClick}
+        />
+      </Box>
     </Box>
   );
 }

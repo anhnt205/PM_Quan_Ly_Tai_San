@@ -23,7 +23,19 @@ export default function PageAction({ title, onNewClick }: Props) {
     setAnchorElExcel(event.currentTarget);
   };
   return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        position: "sticky",
+        gap: 2,
+        top: 60,
+        zIndex: 99,
+        bgcolor: "white",
+        boxShadow: "1px 1px 2px rgba(0,0,0,0.5)",
+        p: 1,
+      }}
+    >
       <NewButton onClick={onNewClick} />
       <Typography>{title}</Typography>
       <IconButton onClick={handleOnpenElExcel}>

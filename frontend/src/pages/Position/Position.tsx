@@ -116,27 +116,29 @@ export default function Position() {
           setReadOnly(false);
         }}
       />
-      {showForm && (
-        <Box py={2}>
-          <ProjectForm
-            onCancel={() => {
-              setShowForm(false);
-              setSelectedPosition(null);
-              setReadOnly(false); // Reset readOnly when form is closed
-            }}
-            onEdit={handleEdit}
-            selectedPosition={selectedPosition}
-            readOnly={readOnly}
-            onSave={handleSave}
-          />
-        </Box>
-      )}
-      <TableCustom
-        title="Quản lý chức vụ"
-        columns={columns}
-        rows={Positions}
-        onRowClick={handleRowClick}
-      />
+      <Box p={2}>
+        {showForm && (
+          <Box py={2}>
+            <ProjectForm
+              onCancel={() => {
+                setShowForm(false);
+                setSelectedPosition(null);
+                setReadOnly(false); // Reset readOnly when form is closed
+              }}
+              onEdit={handleEdit}
+              selectedPosition={selectedPosition}
+              readOnly={readOnly}
+              onSave={handleSave}
+            />
+          </Box>
+        )}
+        <TableCustom
+          title="Quản lý chức vụ"
+          columns={columns}
+          rows={Positions}
+          onRowClick={handleRowClick}
+        />
+      </Box>
     </Box>
   );
 }

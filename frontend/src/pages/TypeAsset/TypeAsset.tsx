@@ -32,7 +32,9 @@ export default function TypeAsset() {
     if (selectedTypeAsset) {
       // Update existing staff
       const updatedStaffs = typeAssetsData.map((typeAsset) =>
-        typeAsset.id === selectedTypeAsset.id ? { ...typeAsset, ...values } : typeAsset
+        typeAsset.id === selectedTypeAsset.id
+          ? { ...typeAsset, ...values }
+          : typeAsset
       );
       setTypeAssetsData(updatedStaffs);
     } else {
@@ -95,27 +97,29 @@ export default function TypeAsset() {
           setReadOnly(false);
         }}
       />
-      {showForm && (
-        <Box py={2}>
-          <TypeAssetForm
-            onCancel={() => {
-              setShowForm(false);
-              setSelectedTypeAsset(null);
-              setReadOnly(false); // Reset readOnly when form is closed
-            }}
-            onEdit={handleEdit}
-            selectedTypeAsset={selectedTypeAsset}
-            readOnly={readOnly}
-            onSave={handleSave}
-          />
-        </Box>
-      )}
-      <TableCustom
-        title="Quản lý loại tài sản"
-        columns={columns}
-        rows={TypeAssets}
-        onRowClick={handleRowClick}
-      />
+      <Box p={2}>
+        {showForm && (
+          <Box py={2}>
+            <TypeAssetForm
+              onCancel={() => {
+                setShowForm(false);
+                setSelectedTypeAsset(null);
+                setReadOnly(false); // Reset readOnly when form is closed
+              }}
+              onEdit={handleEdit}
+              selectedTypeAsset={selectedTypeAsset}
+              readOnly={readOnly}
+              onSave={handleSave}
+            />
+          </Box>
+        )}
+        <TableCustom
+          title="Quản lý loại tài sản"
+          columns={columns}
+          rows={TypeAssets}
+          onRowClick={handleRowClick}
+        />
+      </Box>
     </Box>
   );
 }

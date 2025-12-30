@@ -10,7 +10,7 @@ export default function Main() {
             <AppBar position="sticky" color="default" elevation={2}>
                 <MenuHeader />
             </AppBar>
-            <Box sx={{ p: 2, width: '100%' }}>
+            <Box sx={{ width: '100%' }}>
                 <Outlet />
             </Box>
         </Box>

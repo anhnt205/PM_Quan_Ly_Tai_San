@@ -44,8 +44,8 @@ export default function UnitForm({
   const [expanded, setExpanded] = useState(true);
   const formik = useFormik({
     initialValues: {
-      code: "",
-      name: "",
+      id: "",
+      tenDonVi: "",
       note: "",
     },
     validationSchema: UnitValidation,
@@ -94,7 +94,7 @@ export default function UnitForm({
               <FieldInput
                 title="Mã đơn vị tính *"
                 formik={formik}
-                field="code"
+                field="id"
                 disabled={readOnly}
               />
             </Grid>
@@ -102,7 +102,7 @@ export default function UnitForm({
               <FieldInput
                 title="Tên đơn vị tính *"
                 formik={formik}
-                field="name"
+                field="tenDonVi"
                 disabled={readOnly}
               />
             </Grid>

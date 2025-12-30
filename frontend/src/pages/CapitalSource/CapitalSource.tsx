@@ -144,26 +144,29 @@ export default function CapitalSource() {
           setReadOnly(false);
         }}
       />
-      {showForm && (
-        <Box py={2}>
-          <CapitalSourceForm onCancel={() => {
-            setShowForm(false);
-            setSelectedCapitalSource(null);
-            setReadOnly(false);
-          }}
-          capitalSource={selectedCapitalSource}
-          readOnly={readOnly}
-          onEdit={handleEdit}
-          onSave={handleSave}
+      <Box p={2}>
+        {showForm && (
+          <Box py={2}>
+            <CapitalSourceForm
+              onCancel={() => {
+                setShowForm(false);
+                setSelectedCapitalSource(null);
+                setReadOnly(false);
+              }}
+              capitalSource={selectedCapitalSource}
+              readOnly={readOnly}
+              onEdit={handleEdit}
+              onSave={handleSave}
+            />
+          </Box>
+        )}
+        <TableCustom
+          title="Quản lý nguồn vốn"
+          columns={columns}
+          rows={CapitalSourceData}
+          onRowClick={handleRowClick}
         />
-        </Box>
-      )}
-      <TableCustom
-        title="Quản lý nguồn vốn"
-        columns={columns}
-        rows={CapitalSourceData}
-        onRowClick={handleRowClick}
-      />
+      </Box>
     </Box>
   );
 }

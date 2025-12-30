@@ -89,27 +89,29 @@ export default function CurrentStatus() {
           setReadOnly(false);
         }}
       />
-      {showForm && (
-        <Box py={2}>
-          <CurrentStatusForm
-            onCancel={() => {
-              setShowForm(false);
-              setSelectedCurrentStatus(null);
-              setReadOnly(false); // Reset readOnly when form is closed
-            }}
-            onEdit={handleEdit}
-            selectedCurrentStatus={selectedCurrentStatus}
-            readOnly={readOnly}
-            onSave={handleSave}
-          />
-        </Box>
-      )}
-      <TableCustom
-        title="Quản lý hiện trạng"
-        columns={columns}
-        rows={currentStatusData}
-        onRowClick={handleRowClick}
-      />
+      <Box p={2}>
+        {showForm && (
+          <Box py={2}>
+            <CurrentStatusForm
+              onCancel={() => {
+                setShowForm(false);
+                setSelectedCurrentStatus(null);
+                setReadOnly(false); // Reset readOnly when form is closed
+              }}
+              onEdit={handleEdit}
+              selectedCurrentStatus={selectedCurrentStatus}
+              readOnly={readOnly}
+              onSave={handleSave}
+            />
+          </Box>
+        )}
+        <TableCustom
+          title="Quản lý hiện trạng"
+          columns={columns}
+          rows={currentStatusData}
+          onRowClick={handleRowClick}
+        />
+      </Box>
     </Box>
   );
 }

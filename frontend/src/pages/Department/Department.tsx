@@ -110,36 +110,38 @@ export default function Department() {
           setReadOnly(false);
         }}
       />
-      {showForm && (
-        <Box py={2}>
-          <DepartmentForm
-            onCancel={() => {
-              setShowForm(false);
-              setSelectedDepartment(null);
-              setReadOnly(false); // Reset readOnly when form is closed
-            }}
-            onEdit={handleEdit}
-            selectedDepartment={selectedDepartment}
-            readOnly={readOnly}
-            onSave={handleSave}
-          />
-        </Box>
-      )}
-      <TableCustom
-        title="Quản lý phòng ban"
-        columns={columns}
-        rows={departments.items}
-        total={departments.totalItems}
-        paginationModel={paginationModel}
-        onPaginationModelChange={setPaginationModel}
-        loading={isLoading}
-        onRowClick={handleRowClick}
-        selectedIds={selectedIds}
-        onSelectionChange={setSelectedIds}
-        onDelete={deleteManyMutation.mutate}
-        searchValue={searchValue}
-        setSearchValue={setSearchValue}
-      />
+      <Box p={2}>
+        {showForm && (
+          <Box py={2}>
+            <DepartmentForm
+              onCancel={() => {
+                setShowForm(false);
+                setSelectedDepartment(null);
+                setReadOnly(false); // Reset readOnly when form is closed
+              }}
+              onEdit={handleEdit}
+              selectedDepartment={selectedDepartment}
+              readOnly={readOnly}
+              onSave={handleSave}
+            />
+          </Box>
+        )}
+        <TableCustom
+          title="Quản lý phòng ban"
+          columns={columns}
+          rows={departments.items}
+          total={departments.totalItems}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          loading={isLoading}
+          onRowClick={handleRowClick}
+          selectedIds={selectedIds}
+          onSelectionChange={setSelectedIds}
+          onDelete={deleteManyMutation.mutate}
+          searchValue={searchValue}
+          setSearchValue={setSearchValue}
+        />
+      </Box>
     </Box>
   );
 }

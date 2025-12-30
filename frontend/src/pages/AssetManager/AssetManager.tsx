@@ -213,80 +213,86 @@ export default function AssetManager() {
           setReadOnly(false);
         }}
       />
-      {showForm && (
-        <Box py={2}>
-          <AssetManagerForm
-            onCancel={() => {
-              setShowForm(false);
-              setSelectedAsset(null);
-              setReadOnly(false);
+      <Box p={2}>
+        {showForm && (
+          <Box py={2}>
+            <AssetManagerForm
+              onCancel={() => {
+                setShowForm(false);
+                setSelectedAsset(null);
+                setReadOnly(false);
+              }}
+              selectedAsset={selectedAsset}
+              readOnly={readOnly}
+              onEdit={handleEdit}
+              onSave={handleSave}
+            />
+          </Box>
+        )}
+        <Paper sx={{ bgcolor: "#04b46eff", p: 2, mt: 2, width: "100%" }}>
+          <Typography fontWeight={600} color="white">
+            Quản lý tài sản
+          </Typography>
+          <Divider sx={{ bgcolor: "white", my: 2 }} />
+          <Box
+            display="flex"
+            gap={2}
+            sx={{
+              width: "100%",
+              overflowX: "auto",
+              overflowY: "hidden",
+              py: 1,
+
+              // Thanh cuộn mỏng
+              "&::-webkit-scrollbar": {
+                height: 6,
+              },
+              "&::-webkit-scrollbar-thumb": {
+                backgroundColor: "rgba(255,255,255,0.6)",
+                borderRadius: 10,
+              },
+              "&::-webkit-scrollbar-track": {
+                backgroundColor: "rgba(255,255,255,0.2)",
+              },
             }}
-            selectedAsset={selectedAsset}
-            readOnly={readOnly}
-            onEdit={handleEdit}
-            onSave={handleSave}
+          >
+            {AssetParents.map((i, index) => (
+              <AssetGroupItem key={index} item={i} />
+            ))}
+          </Box>
+        </Paper>
+        <Box>
+          <Box
+            display={"flex"}
+            justifyContent={"flex-end"}
+            bgcolor={"#f5efefff"}
+          >
+            <Tabs value={tab} onChange={(e, newValue) => setTab(newValue)}>
+              <Tab
+                label="Kho thu hồi"
+                icon={<Inventory2 fontSize="small" />}
+                sx={{ fontSize: 12 }}
+              />
+              <Tab
+                label="Tài sản đã bàn giao"
+                icon={<Inventory2 fontSize="small" />}
+                sx={{ fontSize: 12 }}
+              />
+              <Tab
+                label="Kho công ty"
+                icon={<Inventory2 fontSize="small" />}
+                sx={{ fontSize: 12 }}
+              />
+            </Tabs>
+          </Box>
+          <TableCustom
+            title="Quản lý tài sản"
+            columns={columns}
+            rows={AssetData}
+            onRowClick={handleRowClick}
+            isDepreciation={true}
           />
         </Box>
-      )}
-      <Paper sx={{ bgcolor: "#04b46eff", p: 2, mt: 2, width: "100%" }}>
-        <Typography fontWeight={600} color="white">
-          Quản lý tài sản
-        </Typography>
-        <Divider sx={{ bgcolor: "white", my: 2 }} />
-        <Box
-          display="flex"
-          gap={2}
-          sx={{
-            width: "100%",
-            overflowX: "auto",
-            overflowY: "hidden",
-            py: 1,
-
-            // Thanh cuộn mỏng
-            "&::-webkit-scrollbar": {
-              height: 6,
-            },
-            "&::-webkit-scrollbar-thumb": {
-              backgroundColor: "rgba(255,255,255,0.6)",
-              borderRadius: 10,
-            },
-            "&::-webkit-scrollbar-track": {
-              backgroundColor: "rgba(255,255,255,0.2)",
-            },
-          }}
-        >
-          {AssetParents.map((i, index) => (
-            <AssetGroupItem key={index} item={i} />
-          ))}
-        </Box>
-      </Paper>
-      <Box>
-        <Box display={"flex"} justifyContent={"flex-end"} bgcolor={"#f5efefff"}>
-          <Tabs value={tab} onChange={(e, newValue) => setTab(newValue)}>
-            <Tab
-              label="Kho thu hồi"
-              icon={<Inventory2 fontSize="small" />}
-              sx={{ fontSize: 12 }}
-            />
-            <Tab
-              label="Tài sản đã bàn giao"
-              icon={<Inventory2 fontSize="small" />}
-              sx={{ fontSize: 12 }}
-            />
-            <Tab
-              label="Kho công ty"
-              icon={<Inventory2 fontSize="small" />}
-              sx={{ fontSize: 12 }}
-            />
-          </Tabs>
-        </Box>
-        <TableCustom
-          title="Quản lý tài sản"
-          columns={columns}
-          rows={AssetData}
-          onRowClick={handleRowClick}
-          isDepreciation={true}
-        />
       </Box>
     </Box>
   );

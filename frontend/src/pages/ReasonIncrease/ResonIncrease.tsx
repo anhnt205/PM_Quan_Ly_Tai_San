@@ -108,27 +108,29 @@ export default function ReasonIncrease() {
           setReadOnly(false);
         }}
       />
-      {showForm && (
-        <Box py={2}>
-          <ReasonIncreaseForm
-            onCancel={() => {
-              setShowForm(false);
-              setSelectedReasonIncrease(null);
-              setReadOnly(false); // Reset readOnly when form is closed
-            }}
-            onEdit={handleEdit}
-            selectedReasonIncrease={selectedReasonIncrease}
-            readOnly={readOnly}
-            onSave={handleSave}
-          />
-        </Box>
-      )}
-      <TableCustom
-        title="Danh sách lý do tăng"
-        columns={columns}
-        rows={ReasonIncreasesData}
-        onRowClick={handleRowClick}
-      />
+      <Box p={2}>
+        {showForm && (
+          <Box py={2}>
+            <ReasonIncreaseForm
+              onCancel={() => {
+                setShowForm(false);
+                setSelectedReasonIncrease(null);
+                setReadOnly(false); // Reset readOnly when form is closed
+              }}
+              onEdit={handleEdit}
+              selectedReasonIncrease={selectedReasonIncrease}
+              readOnly={readOnly}
+              onSave={handleSave}
+            />
+          </Box>
+        )}
+        <TableCustom
+          title="Danh sách lý do tăng"
+          columns={columns}
+          rows={ReasonIncreasesData}
+          onRowClick={handleRowClick}
+        />
+      </Box>
     </Box>
   );
 }

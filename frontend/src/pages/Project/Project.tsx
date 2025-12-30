@@ -109,27 +109,29 @@ export default function Project() {
           setReadOnly(false);
         }}
       />
-      {showForm && (
-        <Box py={2}>
-          <ProjectForm
-            onCancel={() => {
-              setShowForm(false);
-              setSelectedProject(null);
-              setReadOnly(false); // Reset readOnly when form is closed
-            }}
-            onEdit={handleEdit}
-            selectedProject={selectedProject}
-            readOnly={readOnly}
-            onSave={handleSave}
-          />
-        </Box>
-      )}
-      <TableCustom
-        title="Quản lý dự án"
-        columns={columns}
-        rows={Projects}
-        onRowClick={handleRowClick}
-      />
+      <Box p={2}>
+        {showForm && (
+          <Box py={2}>
+            <ProjectForm
+              onCancel={() => {
+                setShowForm(false);
+                setSelectedProject(null);
+                setReadOnly(false); // Reset readOnly when form is closed
+              }}
+              onEdit={handleEdit}
+              selectedProject={selectedProject}
+              readOnly={readOnly}
+              onSave={handleSave}
+            />
+          </Box>
+        )}
+        <TableCustom
+          title="Quản lý dự án"
+          columns={columns}
+          rows={Projects}
+          onRowClick={handleRowClick}
+        />
+      </Box>
     </Box>
   );
 }

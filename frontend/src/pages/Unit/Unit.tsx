@@ -1,26 +1,38 @@
-import { Delete, Download, Settings, Upload } from "@mui/icons-material";
-import {
-  Box,
-  Button,
-  Chip,
-  IconButton,
-  ListItemIcon,
-  Menu,
-  MenuItem,
-  Typography,
-} from "@mui/material";
+import { Delete } from "@mui/icons-material";
+import { Box, IconButton } from "@mui/material";
 import React, { useState } from "react";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import Units from "../../data/Unit.json";
 import TypeAssetForm from "./components/UnitForm";
+import { useUnitMutation } from "./Mutation";
+import { showConfirmAlert } from "../../components/Alert";
 
 export default function Unit() {
   const [showForm, setShowForm] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState<any>(null);
   const [readOnly, setReadOnly] = useState(false);
-  const [unitsData, setUnitsData] = useState(Units);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [searchValue, setSearchValue] = useState("");
+
+  const [paginationModel, setPaginationModel] = useState({
+    pageSize: 10,
+    page: 0,
+  });
+
+  const {
+    units,
+    createMutation,
+    updateMutation,
+    deleteOneMutation,
+    deleteManyMutation,
+    isLoading,
+  } = useUnitMutation(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchValue
+  );
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedUnit(params.row);
@@ -30,17 +42,9 @@ export default function Unit() {
 
   const handleSave = (values: any) => {
     if (selectedUnit) {
-      // Update existing staff
-      const updatedStaffs = unitsData.map((typeAsset) =>
-        typeAsset.id === selectedUnit.id
-          ? { ...typeAsset, ...values }
-          : typeAsset
-      );
-      setUnitsData(updatedStaffs);
+      updateMutation.mutate(values);
     } else {
-      // Create new staff
-      const newStaff = { ...values, id: Date.now() }; // Simple ID generation
-      setUnitsData([...unitsData, newStaff]);
+      createMutation.mutate(values);
     }
     setShowForm(false);
     setSelectedUnit(null);
@@ -51,15 +55,15 @@ export default function Unit() {
   };
   const columns: GridColDef[] = [
     {
-      field: "code",
-      headerName: "Mã loại tài sản",
+      field: "id",
+      headerName: "Mã đơn vị tính",
       width: 150,
       align: "center",
       headerAlign: "center",
     },
     {
-      field: "name",
-      headerName: "Tên loại tài sản",
+      field: "tenDonVi",
+      headerName: "Tên đơn vị tính",
       flex: 1,
       minWidth: 150,
       align: "center",
@@ -80,7 +84,15 @@ export default function Unit() {
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
-        <IconButton>
+        <IconButton
+          onClick={async (e) => {
+            e.stopPropagation();
+            const confirm = await showConfirmAlert("Xác nhận xóa!");
+            if (confirm.isConfirmed) {
+              deleteOneMutation.mutate(params.row.id);
+            }
+          }}
+        >
           <Delete color="error" />
         </IconButton>
       ),
@@ -97,27 +109,38 @@ export default function Unit() {
           setReadOnly(false);
         }}
       />
-      {showForm && (
-        <Box py={2}>
-          <TypeAssetForm
-            onCancel={() => {
-              setShowForm(false);
-              setSelectedUnit(null);
-              setReadOnly(false); // Reset readOnly when form is closed
-            }}
-            onEdit={handleEdit}
-            selectedUnit={selectedUnit}
-            readOnly={readOnly}
-            onSave={handleSave}
-          />
-        </Box>
-      )}
-      <TableCustom
-        title="Quản lý đơn vị tính"
-        columns={columns}
-        rows={unitsData}
-        onRowClick={handleRowClick}
-      />
+      <Box p={2}>
+        {showForm && (
+          <Box py={2}>
+            <TypeAssetForm
+              onCancel={() => {
+                setShowForm(false);
+                setSelectedUnit(null);
+                setReadOnly(false); // Reset readOnly when form is closed
+              }}
+              onEdit={handleEdit}
+              selectedUnit={selectedUnit}
+              readOnly={readOnly}
+              onSave={handleSave}
+            />
+          </Box>
+        )}
+        <TableCustom
+          title="Quản lý đơn vị tính"
+          columns={columns}
+          rows={units.items}
+          total={units.totalItems}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          loading={isLoading}
+          onRowClick={handleRowClick}
+          selectedIds={selectedIds}
+          onSelectionChange={setSelectedIds}
+          onDelete={deleteManyMutation.mutate}
+          searchValue={searchValue}
+          setSearchValue={setSearchValue}
+        />
+      </Box>
     </Box>
   );
 }
