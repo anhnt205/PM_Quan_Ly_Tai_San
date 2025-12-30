@@ -19,6 +19,7 @@ import ToolType from "./pages/ToolType/ToolType";
 import Unit from "./pages/Unit/Unit";
 import ReasonIncrease from "./pages/ReasonIncrease/ResonIncrease";
 import CurrentStatus from "./pages/CurrentStatus/CurrentStatus";
+import ToolManager from "./pages/ToolManager/ToolManager";
 
 const ProtectedRoute = ({ allowedRoles, children }) => {
   const { user } = useSelector((state: RootState) => state.user);
@@ -62,6 +63,7 @@ function App() {
             path={ROUTES.ASSETDEPRECIATION}
             element={<AssetDepreciation />}
           />
+          <Route path={ROUTES.TOOLMANAGER} element={<ToolManager />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -139,7 +139,7 @@ export default function Menuheader() {
     },
     {
       text: "Quản lý CCDC-Vật tư",
-      path: "/",
+      path: ROUTES.TOOLMANAGER,
     },
     {
       text: "Điều động tài sản",

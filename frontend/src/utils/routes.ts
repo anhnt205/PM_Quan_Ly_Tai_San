@@ -15,4 +15,5 @@ export const ROUTES = {
   ASSETMANAGER: "/quan_ly_tai_san",
   ASSETTRANSFER: "/dieu_dong_tai_san",
   ASSETDEPRECIATION: "/khau_hao_tai_san",
+  TOOLMANAGER: "/quan_ly_ccdc",
 } as const;

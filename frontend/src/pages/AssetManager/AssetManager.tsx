@@ -91,7 +91,7 @@ export default function AssetManager() {
     },
     {
       field: "recordedDate",
-      headerName: "Ngày sào sổ",
+      headerName: "Ngày vào sổ",
       flex: 1,
       minWidth: 150,
       align: "center",
