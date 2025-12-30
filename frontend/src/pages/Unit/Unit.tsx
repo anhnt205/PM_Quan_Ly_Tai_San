@@ -62,7 +62,7 @@ export default function Unit() {
       headerAlign: "center",
     },
     {
-      field: "tenDonVi",
+      field: "ten",
       headerName: "Tên đơn vị tính",
       flex: 1,
       minWidth: 150,

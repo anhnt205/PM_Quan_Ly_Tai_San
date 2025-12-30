@@ -1,88 +1,90 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import api from "../../../config/api.config";
-import { UnitType } from "../types";
+import { ReasonIncreaseType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 
-export const useUnitMutation = (
+export const useReasonIncreaseMutation = (
   page: number,
   pageSize: number,
   searchValue: string
 ) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
-    mutationFn: async (data: UnitType) => {
-      const res = await api.post("/donvitinh", data);
+    mutationFn: async (data: ReasonIncreaseType) => {
+      const res = await api.post("/lydotang", data);
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["units"] });
-      showSuccessAlert("Tạo đơn vị tính thành công");
+      queryClient.invalidateQueries({ queryKey: ["reasonIncreases"] });
+      showSuccessAlert("Tạo lý do tăng thành công");
     },
     onError: (error: any) => {
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Tạo đơn vị tính thất bại"
+          "Tạo lý do tăng thất bại"
       );
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: UnitType) => {
-      const res = await api.put(`/donvitinh/${data.id}`, data);
+    mutationFn: async (data: ReasonIncreaseType) => {
+      const res = await api.put(`/lydotang/${data.id}`, data);
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["units"] });
-      showSuccessAlert("Sửa đơn vị tính thành công");
+      queryClient.invalidateQueries({ queryKey: ["reasonIncreases"] });
+      showSuccessAlert("Sửa lý do tăng thành công");
     },
     onError: (error: any) => {
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Sửa đơn vị tính thất bại"
+          "Sửa lý do tăng thất bại"
       );
     },
   });
   const deleteOneMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await api.delete(`/donvitinh/${id}`);
+      const res = await api.delete(`/lydotang/${id}`);
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["units"] });
-      showSuccessAlert("Xóa đơn vị tính thành công");
+      queryClient.invalidateQueries({ queryKey: ["reasonIncreases"] });
+      showSuccessAlert("Xóa lý do tăng thành công");
     },
     onError: (error: any) => {
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa đơn vị tính thất bại"
+          "Xóa lý do tăng thất bại"
       );
     },
   });
   const deleteManyMutation = useMutation({
     mutationFn: async (ids: string[]) => {
-      const res = await api.delete(`/donvitinh/batch`, { data: ids });
+      const res = await api.delete(`/lydotang/batch`, { data: ids });
       return res.data.message;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["units"] });
-      showSuccessAlert(data || "Xóa đơn vị tính thành công");
+      queryClient.invalidateQueries({ queryKey: ["reasonIncreases"] });
+      showSuccessAlert(data || "Xóa lý do tăng thành công");
     },
     onError: (error: any) => {
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa đơn vị tính thất bại"
+          "Xóa lý do tăng thất bại"
       );
     },
   });
 
   const { data = { items: [], totalItems: 0 }, isLoading } = useQuery({
-    queryKey: ["units", page, pageSize, searchValue], // Key để cache dữ liệu
+    queryKey: ["reasonIncreases", page, pageSize, searchValue], // Key để cache dữ liệu
     queryFn: async () => {
-      const res = await api.get("/donvitinh/paged-mini", {
+      const res = await api.get("/lydotang/paged-mini", {
         params: {
           page: page,
           size: pageSize,
@@ -94,12 +96,22 @@ export const useUnitMutation = (
     placeholderData: (previousData) => previousData,
   });
 
+  const { data: allData = [] } = useQuery({
+    queryKey: ["reasonIncreases"], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/lydotang");
+      return res.data.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+
   return {
     createMutation,
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
-    units: data,
+    reasonIncreases: data,
+    allData,
     isLoading,
   };
 };

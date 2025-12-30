@@ -15,14 +15,34 @@ import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import ReasonIncreases from "../../data/ReasonIncrease.json";
 import ReasonIncreaseForm from "./components/ReasonIncreaseForm";
+import { useReasonIncreaseMutation } from "./Mutation";
 
 export default function ReasonIncrease() {
   const [showForm, setShowForm] = useState(false);
   const [selectedReasonIncrease, setSelectedReasonIncrease] =
     useState<any>(null);
   const [readOnly, setReadOnly] = useState(false);
-  const [ReasonIncreasesData, setReasonIncreasesData] =
-    useState(ReasonIncreases);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [searchValue, setSearchValue] = useState("");
+
+  const [paginationModel, setPaginationModel] = useState({
+    pageSize: 10,
+    page: 0,
+  });
+
+  const {
+    reasonIncreases,
+    allData,
+    createMutation,
+    updateMutation,
+    deleteOneMutation,
+    deleteManyMutation,
+    isLoading,
+  } = useReasonIncreaseMutation(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchValue
+  );
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedReasonIncrease(params.row);
@@ -32,17 +52,9 @@ export default function ReasonIncrease() {
 
   const handleSave = (values: any) => {
     if (selectedReasonIncrease) {
-      // Update existing staff
-      const updatedStaffs = ReasonIncreasesData.map((typeAsset) =>
-        typeAsset.id === selectedReasonIncrease.id
-          ? { ...typeAsset, ...values }
-          : typeAsset
-      );
-      setReasonIncreasesData(updatedStaffs);
+      updateMutation.mutate(values);
     } else {
-      // Create new staff
-      const newStaff = { ...values, id: Date.now() }; // Simple ID generation
-      setReasonIncreasesData([...ReasonIncreasesData, newStaff]);
+      createMutation.mutate(values);
     }
     setShowForm(false);
     setSelectedReasonIncrease(null);
@@ -53,14 +65,14 @@ export default function ReasonIncrease() {
   };
   const columns: GridColDef[] = [
     {
-      field: "code",
+      field: "id",
       headerName: "Mã lý do tăng",
       width: 150,
       align: "center",
       headerAlign: "center",
     },
     {
-      field: "name",
+      field: "ten",
       headerName: "Tên lý do tăng",
       flex: 1,
       minWidth: 150,
@@ -68,7 +80,7 @@ export default function ReasonIncrease() {
       headerAlign: "center",
     },
     {
-      field: "status",
+      field: "tangGiam",
       headerName: "Tăng giảm",
       flex: 1,
       minWidth: 150,
@@ -76,10 +88,10 @@ export default function ReasonIncrease() {
       headerAlign: "center",
       renderCell: (params) => (
         <Chip
-          label={params.row.status === 0 ? "Giảm" : "Tăng"}
+          label={params.row.tangGiam ? "Tăng" : "Giảm"}
           sx={{
-            bgcolor: params.row.status === 0 ? "#f98e86ff" : "#baf7cbff",
-            color: params.row.status === 0 ? "#881d15ff" : "#137333",
+            bgcolor: params.row.tangGiam ? "#baf7cbff" : "#f98e86ff",
+            color: params.row.tangGiam ? "#137333" : "#881d15ff",
           }}
         />
       ),
@@ -127,8 +139,17 @@ export default function ReasonIncrease() {
         <TableCustom
           title="Danh sách lý do tăng"
           columns={columns}
-          rows={ReasonIncreasesData}
+          rows={reasonIncreases}
+          total={reasonIncreases.length}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          // loading={isLoading}
           onRowClick={handleRowClick}
+          selectedIds={selectedIds}
+          onSelectionChange={setSelectedIds}
+          onDelete={deleteManyMutation.mutate}
+          searchValue={searchValue}
+          setSearchValue={setSearchValue}
         />
       </Box>
     </Box>

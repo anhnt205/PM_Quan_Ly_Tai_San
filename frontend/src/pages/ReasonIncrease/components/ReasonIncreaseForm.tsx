@@ -45,9 +45,9 @@ export default function ReasonIncreaseForm({
   const [expanded, setExpanded] = useState(true);
   const formik = useFormik({
     initialValues: {
-      code: "",
-      name: "",
-      status: 0,
+      id: "",
+      ten: "",
+      tangGiam: 0,
     },
     validationSchema: ReasonIncreaseValidation,
     onSubmit(values) {
@@ -97,7 +97,7 @@ export default function ReasonIncreaseForm({
               <FieldInput
                 title="Mã lý do tăng *"
                 formik={formik}
-                field="code"
+                field="id"
                 disabled={readOnly}
               />
             </Grid>
@@ -105,27 +105,27 @@ export default function ReasonIncreaseForm({
               <FieldInput
                 title="Tên lý do tăng *"
                 formik={formik}
-                field="name"
+                field="ten"
                 disabled={readOnly}
               />
             </Grid>
             <Grid size={{ xs: 12 }}>
               <RadioGroup
                 row
-                name="status"
-                value={formik.values.status}
-                onChange={(e) => formik.setFieldValue("status", e.target.value)}
+                name="tangGiam"
+                value={formik.values.tangGiam}
+                onChange={(e) => formik.setFieldValue("tangGiam", e.target.value)}
               >
-                <FormControlLabel
-                  value={0}
-                  control={<Radio />}
-                  label="Giảm"
-                  disabled={readOnly}
-                />
                 <FormControlLabel
                   value={1}
                   control={<Radio />}
                   label="Tăng"
+                  disabled={readOnly}
+                />
+                <FormControlLabel
+                  value={0}
+                  control={<Radio />}
+                  label="Giảm"
                   disabled={readOnly}
                 />
               </RadioGroup>
