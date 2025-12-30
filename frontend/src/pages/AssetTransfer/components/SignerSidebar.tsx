@@ -24,6 +24,7 @@ import {
   SmartToy, // Icon cho nút Action xanh lá
   Cancel,
   ErrorOutline,
+  VisibilityOff,
 } from "@mui/icons-material";
 
 // Định nghĩa kiểu dữ liệu cho trạng thái ký
@@ -135,7 +136,7 @@ export default function SignerSidebar({
           </Typography>
         </Box>
         <IconButton size="small" onClick={onClose}>
-          <Close fontSize="small" />
+          <VisibilityOff fontSize="small" />
         </IconButton>
       </Box>
 

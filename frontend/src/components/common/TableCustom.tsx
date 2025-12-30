@@ -82,13 +82,13 @@ export default function TableCustom({
       <Box
         display={"flex"}
         alignItems={"center"}
-        justifyContent={"space-between"} // Để đẩy cụm checkbox sang phải
-        px={1}
-        sx={{ background: "#f5efefff", borderBottom: "1px solid #e0e0e0" }}
+        justifyContent={"space-between"}
+        p={1}
+        sx={{ background: "#f5efefff" }}
       >
         <Box display="flex" alignItems="center" gap={2}>
           <TableView />
-          <Typography fontWeight={600}>
+          <Typography>
             {title} ({total})
           </Typography>
         </Box>
