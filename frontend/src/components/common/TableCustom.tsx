@@ -1,7 +1,6 @@
 import {
   BarChart,
   Close,
-  CloseRounded,
   Delete,
   Search,
   Settings,
@@ -21,15 +20,14 @@ import {
   GridColDef,
   GridToolbar,
   GridFilterPanel,
-  GridRowSelectionModel,
 } from "@mui/x-data-grid";
 import { viVN } from "@mui/x-data-grid/locales";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../utils/routes";
-import FieldInput from "../TextField/FieldInput";
 import FieldDate from "../TextField/FieldDate";
 import { showConfirmAlert } from "../Alert";
 import { Dispatch, SetStateAction } from "react";
+import { FilterStatusGroup } from "./FilterStatusGroup";
 const CustomFilterPanel = (props: any) => {
   return (
     <GridFilterPanel
@@ -57,6 +55,7 @@ interface Props {
   onDelete?: (ids: string[]) => void;
   searchValue?: string;
   setSearchValue?: Dispatch<SetStateAction<string>>;
+  showStatusFilter?: boolean;
 }
 
 export default function TableCustom({
@@ -75,6 +74,7 @@ export default function TableCustom({
   onDelete,
   searchValue,
   setSearchValue,
+  showStatusFilter = false,
 }: Props) {
   const navigate = useNavigate();
   return (
@@ -82,15 +82,21 @@ export default function TableCustom({
       <Box
         display={"flex"}
         alignItems={"center"}
-        p={1}
-        gap={2}
-        sx={{ background: "#f5efefff" }}
+        justifyContent={"space-between"} // Để đẩy cụm checkbox sang phải
+        px={1}
+        sx={{ background: "#f5efefff", borderBottom: "1px solid #e0e0e0" }}
       >
-        <TableView />
-        <Typography>
-          {title} ({total})
-        </Typography>
+        <Box display="flex" alignItems="center" gap={2}>
+          <TableView />
+          <Typography fontWeight={600}>
+            {title} ({total})
+          </Typography>
+        </Box>
+
+        {/* Cụm Checkbox trạng thái hiển thị dựa trên biến boolean */}
+        {showStatusFilter && <FilterStatusGroup />}
       </Box>
+
       <Grid container spacing={2} p={2}>
         <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
