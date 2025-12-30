@@ -5,7 +5,6 @@ import {
   Box,
   Button,
   Checkbox,
-  Divider,
   Grid,
   IconButton,
   Paper,
@@ -17,7 +16,6 @@ import {
   Typography,
   Chip,
   styled,
-  alpha,
 } from "@mui/material";
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
@@ -28,7 +26,6 @@ import {
   ArrowDropUp,
   CloudUpload,
   Delete,
-  InfoOutlineRounded,
   Cancel,
   Description, // Icon file
   Visibility, // Icon xem trước
@@ -39,48 +36,8 @@ import EditButton from "../../../components/Button/EditButton";
 import FieldInput from "../../../components/TextField/FieldInput";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
 import FieldDateTime from "../../../components/TextField/FieldDateTime";
-
-// Styled Component cho nút Hủy Phiếu (như ảnh 1)
-const CancelStatusBadge = styled(Box)(({ theme }) => ({
-  backgroundColor: "#f44336", // Màu đỏ cam
-  color: "#fff",
-  padding: "6px 16px",
-  borderRadius: "20px", // Bo tròn 2 đầu
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "8px",
-  fontWeight: "bold",
-  fontSize: "14px",
-  marginBottom: "16px",
-  boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-}));
-
-// Styled Component cho vùng File Upload (như ảnh 2)
-const FileUploadBox = styled(Box)(({ theme }) => ({
-  border: "1px solid rgba(0, 0, 0, 0.23)",
-  borderRadius: "4px",
-  padding: "8px 12px",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  marginTop: "8px",
-  "&:hover": {
-    borderColor: "rgba(0, 0, 0, 0.87)",
-  },
-}));
-
-// Styled cho Table Cell để giống ảnh 2 (chỉ gạch chân)
-const CustomTableCell = styled(TableCell)(({ theme }) => ({
-  borderBottom: "1px solid rgba(224, 224, 224, 1)",
-  padding: "16px 8px", // Tăng padding dọc
-  fontSize: "14px",
-}));
-
-const CustomTableHeadCell = styled(CustomTableCell)(({ theme }) => ({
-  fontWeight: "bold",
-  color: "rgba(0, 0, 0, 0.87)",
-  backgroundColor: "transparent", // Nền trong suốt
-}));
+import CustomStepper from "../../../components/common/CustomStepper";
+import FileAttachmentInput from "./FileAttachmentInput";
 
 export default function AssetTransferForm({
   onEdit,
@@ -97,10 +54,48 @@ export default function AssetTransferForm({
 }) {
   const [expanded, setExpanded] = useState(true);
 
-  // Logic kiểm tra xem có được phép sửa hay không
-  // Giả sử trạng thái Nháp có mã là 0 hoặc null (khi tạo mới)
-  const isDraftOrNew = !selectedTransfer || selectedTransfer.TrangThai === 0;
-  // readOnly thực tế = props readOnly HOẶC không phải là Nháp/Mới
+  // Styled Component cho nút Hủy Phiếu
+  const CancelStatusBadge = styled(Box)(({ theme }) => ({
+    backgroundColor: "#f44336",
+    color: "#fff",
+    padding: "6px 16px",
+    borderRadius: "20px",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "8px",
+    fontWeight: "bold",
+    fontSize: "14px",
+    marginBottom: "16px",
+    boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+  }));
+
+  // Styled Component cho vùng File Upload
+  const FileUploadBox = styled(Box)(({ theme }) => ({
+    border: "1px solid rgba(0, 0, 0, 0.23)",
+    borderRadius: "4px",
+    padding: "8px 12px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: "8px",
+    "&:hover": { borderColor: "rgba(0, 0, 0, 0.87)" },
+  }));
+
+  const CustomTableCell = styled(TableCell)(({ theme }) => ({
+    borderBottom: "1px solid rgba(224, 224, 224, 1)",
+    padding: "16px 8px",
+    fontSize: "14px",
+  }));
+
+  const CustomTableHeadCell = styled(CustomTableCell)(({ theme }) => ({
+    fontWeight: "bold",
+    color: "rgba(0, 0, 0, 0.87)",
+    backgroundColor: "transparent",
+  }));
+
+  // Logic trạng thái
+  const currentStatus = selectedTransfer?.TrangThai ?? 0; // 0: Nháp, 1: Duyệt, 2: Hủy, 3: Hoàn thành
+  const isDraftOrNew = !selectedTransfer || currentStatus === 0;
   const isFormReadOnly = readOnly || !isDraftOrNew;
 
   const formik = useFormik({
@@ -119,41 +114,37 @@ export default function AssetTransferForm({
       IdTrinhDuyetCapPhong: "",
       IdTrinhDuyetGiamDoc: "",
       TenFile: "",
-      assets: [
-        {
-          assetId: "",
-          uom: "",
-          quantity: 1,
-          status: "",
-          note: "",
-        },
-      ],
+      assets: [{ assetId: "", uom: "", quantity: 1, status: "", note: "" }],
     },
-    onSubmit: (values) => {
-      onSave(values);
-    },
+    onSubmit: (values) => onSave(values),
   });
 
   useEffect(() => {
-    if (selectedTransfer) {
-      formik.setValues(selectedTransfer);
-    } else {
-      formik.resetForm();
-    }
+    if (selectedTransfer) formik.setValues(selectedTransfer);
+    else formik.resetForm();
   }, [selectedTransfer]);
 
   return (
     <Accordion
-      sx={{ background: "#f6f8f4ff", boxShadow: "none" }}
+      sx={{
+        background: "#f6f8f4ff",
+        boxShadow: "none",
+        "&.Mui-expanded": {
+          margin: 0,
+        },
+        "&:before": {
+          display: "none",
+        },
+      }}
       expanded={expanded}
     >
       <AccordionSummary
         expandIcon={<ViewBtn expanded={expanded} setExpanded={setExpanded} />}
         sx={{
+          p: 0,
           "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
             transform: "none",
           },
-          px: 0, // Bỏ padding ngang mặc định để thẳng hàng
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -162,19 +153,28 @@ export default function AssetTransferForm({
         </Box>
       </AccordionSummary>
 
-      <AccordionDetails sx={{ px: 0 }}>
-        {/* Nhóm Nút Hành Động */}
-        <Box display="flex" gap={2} mb={2}>
-          {!isFormReadOnly && <SaveBtn onSave={formik.submitForm} />}
-          {!isFormReadOnly && <CancelBtn onClick={onCancel} />}
-          {isFormReadOnly && isDraftOrNew && <EditButton onClick={onEdit} />}
+      <AccordionDetails sx={{ p: 0 }}>
+        {/* THANH CÔNG CỤ: NÚT HÀNH ĐỘNG VÀ STEPPER */}
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={2}
+          gap={2}
+        >
+          <Box display="flex" gap={2}>
+            {!isFormReadOnly && <SaveBtn onSave={formik.submitForm} />}
+            {!isFormReadOnly && <CancelBtn onClick={onCancel} />}
+            {isFormReadOnly && isDraftOrNew && <EditButton onClick={onEdit} />}
+          </Box>
+
+          {/* Tích hợp Component CustomStepper của bạn */}
+          <CustomStepper activeStep={currentStatus} />
         </Box>
 
-        {/* Thanh trạng thái Hủy phiếu (Chỉ hiện nếu trạng thái là Hủy - ví dụ mã 2) */}
-        {selectedTransfer?.TrangThai === 2 && (
+        {currentStatus === 2 && (
           <CancelStatusBadge>
-            <Cancel fontSize="small" />
-            Hủy phiếu Cấp phát tài sản
+            <Cancel fontSize="small" /> Hủy phiếu Cấp phát tài sản
           </CancelStatusBadge>
         )}
 
@@ -185,12 +185,12 @@ export default function AssetTransferForm({
             boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
           }}
         >
-          {/* --- PHẦN 1: THÔNG TIN CHUNG --- */}
+          {/* --- PHẦN 1: THÔNG TIN CHUNG (Sử dụng Grid size MUI v7) --- */}
           <Grid container spacing={4}>
             {/* CỘT TRÁI */}
             <Grid size={{ xs: 12, md: 6 }}>
               <Grid container spacing={2}>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={12}>
                   <FieldInput
                     title="Số chứng từ *"
                     formik={formik}
@@ -198,7 +198,7 @@ export default function AssetTransferForm({
                     disabled={isFormReadOnly}
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={12}>
                   <FieldInput
                     title="Tên phiếu *"
                     formik={formik}
@@ -206,7 +206,7 @@ export default function AssetTransferForm({
                     disabled={isFormReadOnly}
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={12}>
                   <FieldInput
                     title="Trích yếu *"
                     formik={formik}
@@ -214,7 +214,7 @@ export default function AssetTransferForm({
                     disabled={isFormReadOnly}
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={12}>
                   <FieldAutoCompleted
                     title="Đơn vị giao *"
                     labelkey="handovering-department"
@@ -224,7 +224,7 @@ export default function AssetTransferForm({
                     disabled={isFormReadOnly}
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={12}>
                   <FieldAutoCompleted
                     title="Đơn vị nhận *"
                     labelkey="receiving-department"
@@ -234,7 +234,7 @@ export default function AssetTransferForm({
                     disabled={isFormReadOnly}
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={12}>
                   <FieldDateTime
                     title="TGCN từ Ngày"
                     formik={formik}
@@ -242,7 +242,7 @@ export default function AssetTransferForm({
                     disabled={isFormReadOnly}
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={12}>
                   <FieldDateTime
                     title="TGCN đến Ngày"
                     formik={formik}
@@ -256,7 +256,7 @@ export default function AssetTransferForm({
             {/* CỘT PHẢI */}
             <Grid size={{ xs: 12, md: 6 }}>
               <Grid container spacing={2}>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={12}>
                   <FieldAutoCompleted
                     title="Đơn vị đề nghị *"
                     labelkey="requesting-department"
@@ -266,7 +266,7 @@ export default function AssetTransferForm({
                     disabled={isFormReadOnly}
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={12}>
                   <FieldInput
                     title="Người lập biểu *"
                     formik={formik}
@@ -274,7 +274,7 @@ export default function AssetTransferForm({
                     disabled={true}
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={12}>
                   <Box
                     display="flex"
                     alignItems="center"
@@ -296,7 +296,7 @@ export default function AssetTransferForm({
                     />
                   </Box>
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={12}>
                   <FieldAutoCompleted
                     title="Người duyệt *"
                     labelkey="room-approver"
@@ -306,8 +306,7 @@ export default function AssetTransferForm({
                     disabled={isFormReadOnly}
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }} sx={{ mt: 1 }}>
-                  {/* Thêm margin top để nút "Thêm người ký" cách ra chút */}
+                <Grid size={12} sx={{ mt: 1 }}>
                   <Button
                     variant="contained"
                     color="inherit"
@@ -324,7 +323,7 @@ export default function AssetTransferForm({
                     Thêm người ký
                   </Button>
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={12}>
                   <FieldAutoCompleted
                     title="Người phê duyệt *"
                     labelkey="approver"
@@ -343,57 +342,12 @@ export default function AssetTransferForm({
             <Typography variant="subtitle1" fontWeight={600} mb={1}>
               Tài liệu Quyết định
             </Typography>
-            <FileUploadBox>
-              {formik.values.TenFile ? (
-                <Chip
-                  icon={<Description color="success" />}
-                  label={formik.values.TenFile}
-                  onDelete={
-                    !isFormReadOnly
-                      ? () => formik.setFieldValue("TenFile", "")
-                      : undefined
-                  }
-                  variant="outlined"
-                  sx={{
-                    border: "none",
-                    bgcolor: "transparent",
-                    "& .MuiChip-label": { fontSize: "14px" },
-                  }}
-                />
-              ) : (
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ fontStyle: "italic" }}
-                >
-                  Chưa có tài liệu đính kèm...
-                </Typography>
-              )}
 
-              <Box>
-                {formik.values.TenFile && (
-                  <Typography variant="caption" color="text.secondary" mr={2}>
-                    Định dạng hỗ trợ: .pdf, .docx
-                  </Typography>
-                )}
-                <Button
-                  variant="contained"
-                  size="small"
-                  component="label"
-                  disabled={isFormReadOnly}
-                  sx={{
-                    bgcolor: "#bdbdbd",
-                    color: "#000",
-                    textTransform: "none",
-                    boxShadow: "none",
-                    "&:hover": { bgcolor: "#9e9e9e" },
-                  }}
-                  startIcon={<CloudUpload />}
-                >
-                  Chọn tệp <input type="file" hidden />
-                </Button>
-              </Box>
-            </FileUploadBox>
+            <FileAttachmentInput
+              formik={formik}
+              field="TenFile"
+              disabled={isFormReadOnly}
+            />
           </Box>
 
           {/* --- PHẦN 3: CHI TIẾT TÀI SẢN --- */}
@@ -401,7 +355,6 @@ export default function AssetTransferForm({
             <Typography variant="subtitle1" fontWeight={600} mb={2}>
               Chi tiết tài sản điều chuyển:
             </Typography>
-
             <Table
               size="small"
               sx={{
@@ -433,7 +386,7 @@ export default function AssetTransferForm({
                       {isFormReadOnly ? (
                         <Typography variant="body2">
                           {row.assetId || "-"}
-                        </Typography> // Hiển thị text khi ReadOnly
+                        </Typography>
                       ) : (
                         <FieldAutoCompleted
                           title=""
@@ -515,8 +468,6 @@ export default function AssetTransferForm({
                 ))}
               </TableBody>
             </Table>
-
-            {/* Nút "Thêm tài sản" - Chỉ hiện khi không phải ReadOnly */}
             {!isFormReadOnly && (
               <Box mt={2}>
                 <Button
@@ -540,8 +491,6 @@ export default function AssetTransferForm({
                 </Button>
               </Box>
             )}
-
-            {/* Link "Xem trước tài liệu" */}
             <Box
               mt={2}
               display="flex"

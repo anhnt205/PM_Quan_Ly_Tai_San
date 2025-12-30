@@ -5,7 +5,6 @@ import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 
 // Import Components
 import PageHeader from "./components/PageHeader";
-import FilterBar from "./components/FilterBar";
 import AssetTransferForm from "./components/AssetTransferForm";
 import SignerSidebar from "./components/SignerSidebar";
 import TableCustom from "../../components/common/TableCustom";
@@ -145,88 +144,67 @@ export default function AssetTransfer() {
     <>
       <PageHeader onNewClick={handleNewClick} />
 
-      <Box
-        sx={{
-          width: "100%",
-          bgcolor: "background.default",
-          minHeight: "100vh",
-        }}
-      >
-        {/* PAGE CONTAINER */}
-        <Box sx={{ px: 3, pb: 4, pt: 2 }}>
-          <Paper
-            elevation={0}
-            sx={{
-              width: "100%",
-              overflow: "hidden",
-              borderRadius: 3,
-              border: "1px solid",
-              borderColor: "divider",
-            }}
-          >
-            {/* 1. FILTER BAR (Đã tách ra component riêng) */}
-            <FilterBar totalCount={mockRows.length} />
-
-            {/* 2. CONTENT AREA */}
-            <Box sx={{ bgcolor: "background.paper" }}>
-              {/* FORM AREA */}
-              {showForm && (
-                <Box
-                  sx={{
-                    p: 3,
-                    borderBottom: "1px solid",
-                    borderColor: "divider",
-                    bgcolor: "grey.50",
-                  }}
-                >
-                  <AssetTransferForm
-                    onCancel={handleCloseForm}
-                    onSave={() => {}}
-                    onEdit={() => {}}
-                    readOnly={!!selectedRow}
-                    selectedTransfer={selectedRow}
-                  />
-                </Box>
-              )}
-
-              {/* GRID & SIDEBAR AREA */}
-              <Grid container>
-                <Grid
-                  size={{ xs: selectedRow ? 9 : 12 }}
-                  sx={{
-                    transition: "all 0.3s ease",
-                    borderRight: selectedRow ? "1px solid" : "none",
-                    borderColor: "divider",
-                  }}
-                >
-                  <TableCustom
-                    title="Danh sách phiếu điều chuyển"
-                    columns={columns}
-                    rows={mockRows}
-                    total={mockRows.length}
-                    paginationModel={paginationModel}
-                    onPaginationModelChange={setPaginationModel}
-                    onRowClick={handleRowClick}
-                    selectedIds={selectedIds}
-                    onSelectionChange={setSelectedIds}
-                    onDelete={handleDelete}
-                    searchValue={searchValue}
-                    setSearchValue={setSearchValue}
-                  />
-                </Grid>
-
-                {/* SIDEBAR */}
-                {selectedRow && (
-                  <Grid size={{ xs: 3 }}>
-                    <SignerSidebar
-                      selectedRow={selectedRow}
-                      onClose={() => setSelectedRow(null)}
-                    />
-                  </Grid>
-                )}
-              </Grid>
+      {/* PAGE CONTAINER */}
+      <Box sx={{ pb: 4, pt: 2 }}>
+        {/* 2. CONTENT AREA */}
+        <Box sx={{ bgcolor: "background.paper" }}>
+          {/* FORM AREA */}
+          {showForm && (
+            <Box
+              sx={{
+                p: 2,
+                borderBottom: "1px solid",
+                borderColor: "divider",
+                bgcolor: "grey.50",
+              }}
+            >
+              <AssetTransferForm
+                onCancel={handleCloseForm}
+                onSave={() => {}}
+                onEdit={() => {}}
+                readOnly={!!selectedRow}
+                selectedTransfer={selectedRow}
+              />
             </Box>
-          </Paper>
+          )}
+
+          {/* GRID & SIDEBAR AREA */}
+          <Grid container>
+            <Grid
+              size={{ xs: selectedRow ? 9 : 12 }}
+              sx={{
+                transition: "all 0.3s ease",
+                borderRight: selectedRow ? "1px solid" : "none",
+                borderColor: "divider",
+              }}
+            >
+              <TableCustom
+                title="Phiếu duyệt cấp phát tài sản"
+                columns={columns}
+                rows={mockRows}
+                total={mockRows.length}
+                paginationModel={paginationModel}
+                onPaginationModelChange={setPaginationModel}
+                onRowClick={handleRowClick}
+                selectedIds={selectedIds}
+                onSelectionChange={setSelectedIds}
+                onDelete={handleDelete}
+                searchValue={searchValue}
+                setSearchValue={setSearchValue}
+                showStatusFilter={true}
+              />
+            </Grid>
+
+            {/* SIDEBAR */}
+            {selectedRow && (
+              <Grid size={{ xs: 3 }}>
+                <SignerSidebar
+                  selectedRow={selectedRow}
+                  onClose={() => setSelectedRow(null)}
+                />
+              </Grid>
+            )}
+          </Grid>
         </Box>
       </Box>
     </>
