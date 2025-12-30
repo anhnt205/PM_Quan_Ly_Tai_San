@@ -129,19 +129,15 @@ export default function AssetTransferForm({
       sx={{
         background: "#f6f8f4ff",
         boxShadow: "none",
-        "&.Mui-expanded": {
-          margin: 0,
-        },
-        "&:before": {
-          display: "none",
-        },
+        margin: "0 !important",
+        "&:before": { display: "none" },
+        "&.Mui-expanded": { margin: "0 !important" },
       }}
       expanded={expanded}
     >
       <AccordionSummary
         expandIcon={<ViewBtn expanded={expanded} setExpanded={setExpanded} />}
         sx={{
-          p: 0,
           "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
             transform: "none",
           },
@@ -149,18 +145,24 @@ export default function AssetTransferForm({
       >
         <Box sx={{ display: "flex", alignItems: "center" }}>
           {expanded ? <ArrowDropUp /> : <ArrowDropDown />}
-          <Typography fontWeight={600}>Chi tiết cấp phát tài sản</Typography>
+          <Typography>Chi tiết cấp phát tài sản</Typography>
         </Box>
       </AccordionSummary>
 
-      <AccordionDetails sx={{ p: 0 }}>
+      <AccordionDetails
+        sx={{
+          pt: 0,
+          pb: 2,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         {/* THANH CÔNG CỤ: NÚT HÀNH ĐỘNG VÀ STEPPER */}
         <Box
           display="flex"
           justifyContent="space-between"
           alignItems="center"
           mb={2}
-          gap={2}
         >
           <Box display="flex" gap={2}>
             {!isFormReadOnly && <SaveBtn onSave={formik.submitForm} />}
