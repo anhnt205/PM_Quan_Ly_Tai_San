@@ -44,8 +44,9 @@ export default function CurrentStatusForm({
   const [expanded, setExpanded] = useState(true);
   const formik = useFormik({
     initialValues: {
-      code: "",
-      name: "",
+      id: "",
+      tenHTKT: "",
+      isActive: true,
     },
     validationSchema: CurrentStatusValidation,
     onSubmit(values) {
@@ -93,17 +94,18 @@ export default function CurrentStatusForm({
           <Grid container spacing={2} sx={{ mt: 2 }}>
             <Grid size={{ xs: 12 }}>
               <FieldInput
+                type="number"
                 title="Mã hiện trạng *"
                 formik={formik}
-                field="code"
-                disabled={readOnly}
+                field="id"
+                disabled={Boolean(selectedCurrentStatus)}
               />
             </Grid>
             <Grid size={{ xs: 12 }}>
               <FieldInput
                 title="Tên hiện trạng *"
                 formik={formik}
-                field="name"
+                field="tenHTKT"
                 disabled={readOnly}
               />
             </Grid>

@@ -380,9 +380,9 @@ export default function ToolTableCustom({
         </Grid>
         <Grid size={{ xs: 12, sm: 8 }}>
           <Box display="flex" justifyContent="flex-end" gap={2}>
-            <Button variant="outlined" size="small" startIcon={<Settings />}>
+            {/* <Button variant="outlined" size="small" startIcon={<Settings />}>
               Cấu hình cột
-            </Button>
+            </Button> */}
             {selectedIds.length > 0 && (
               <Button
                 variant="contained"

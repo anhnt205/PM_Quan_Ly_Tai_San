@@ -15,12 +15,33 @@ import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import CurrentStatuss from "../../data/CurrentStatus.json";
 import CurrentStatusForm from "./components/CurrentStatusForm";
+import { useCurrentStatusMutation } from "./Mutation";
+import { showConfirmAlert } from "../../components/Alert";
 
 export default function CurrentStatus() {
   const [showForm, setShowForm] = useState(false);
   const [selectedCurrentStatus, setSelectedCurrentStatus] = useState<any>(null);
   const [readOnly, setReadOnly] = useState(false);
-  const [currentStatusData, setCurrentStatusData] = useState(CurrentStatuss);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [searchValue, setSearchValue] = useState("");
+
+  const [paginationModel, setPaginationModel] = useState({
+    pageSize: 10,
+    page: 0,
+  });
+
+  const {
+    currentStatus,
+    createMutation,
+    updateMutation,
+    deleteOneMutation,
+    deleteManyMutation,
+    isLoading,
+  } = useCurrentStatusMutation(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchValue
+  );
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedCurrentStatus(params.row);
@@ -30,17 +51,9 @@ export default function CurrentStatus() {
 
   const handleSave = (values: any) => {
     if (selectedCurrentStatus) {
-      // Update existing staff
-      const updatedStaffs = currentStatusData.map((typeAsset) =>
-        typeAsset.id === selectedCurrentStatus.id
-          ? { ...typeAsset, ...values }
-          : typeAsset
-      );
-      setCurrentStatusData(updatedStaffs);
+      updateMutation.mutate(values);
     } else {
-      // Create new staff
-      const newStaff = { ...values, id: Date.now() }; // Simple ID generation
-      setCurrentStatusData([...currentStatusData, newStaff]);
+      createMutation.mutate(values);
     }
     setShowForm(false);
     setSelectedCurrentStatus(null);
@@ -51,14 +64,14 @@ export default function CurrentStatus() {
   };
   const columns: GridColDef[] = [
     {
-      field: "code",
+      field: "id",
       headerName: "Mã trạng thái",
       width: 150,
       align: "center",
       headerAlign: "center",
     },
     {
-      field: "name",
+      field: "tenHTKT",
       headerName: "Tên trạng thái",
       flex: 1,
       minWidth: 150,
@@ -72,7 +85,15 @@ export default function CurrentStatus() {
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
-        <IconButton>
+        <IconButton
+          onClick={async (e) => {
+            e.stopPropagation();
+            const confirm = await showConfirmAlert("Xác nhận xóa!");
+            if (confirm.isConfirmed) {
+              deleteOneMutation.mutate(params.row.id);
+            }
+          }}
+        >
           <Delete color="error" />
         </IconButton>
       ),
@@ -108,8 +129,17 @@ export default function CurrentStatus() {
         <TableCustom
           title="Quản lý hiện trạng"
           columns={columns}
-          rows={currentStatusData}
+          rows={currentStatus.items}
+          total={currentStatus.totalItems}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          loading={isLoading}
           onRowClick={handleRowClick}
+          selectedIds={selectedIds}
+          onSelectionChange={setSelectedIds}
+          onDelete={deleteManyMutation.mutate}
+          searchValue={searchValue}
+          setSearchValue={setSearchValue}
         />
       </Box>
     </Box>
