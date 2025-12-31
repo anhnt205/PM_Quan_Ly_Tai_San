@@ -6,6 +6,7 @@ import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 // Import Components
 import AssetTransferForm from "./components/AssetTransferForm";
 import SignerSidebar from "./components/SignerSidebar";
+import SignDocumentForm from "./components/SignDocumentForm";
 import TableCustom from "../../components/common/TableCustom";
 
 import { mockAssetTransfers as mockRows } from "../../data/AssetTransferData";
@@ -25,7 +26,9 @@ export default function AssetTransfer() {
     pageSize: 10,
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedDocuments, setSelectedDocuments] = useState<any[]>([]);
   const [searchValue, setSearchValue] = useState("");
+  const [showSignDocument, setShowSignDocument] = useState(false);
 
   const handleRowClick = (params: GridRowParams) => {
     const data = params.row as AssetTransferData;
@@ -40,6 +43,20 @@ export default function AssetTransfer() {
 
   const handleDelete = (ids: string[]) => {
     console.log("Xóa các bản ghi:", ids);
+  };
+
+  const handleSignAssets = (ids: string[]) => {
+    console.log("Ký biên bản cho các tài sản:", ids);
+    // Lấy thông tin document từ các dòng được chọn
+    const documents = mockRows
+      .filter((row: any) => ids.includes(row.id))
+      .map((row: any) => ({
+        id: row.id,
+        name: row.TenPhieu,
+        file: row.TenFile,
+      }));
+    setSelectedDocuments(documents);
+    setShowSignDocument(true);
   };
 
   const columns: GridColDef<AssetTransferData>[] = [
@@ -136,85 +153,106 @@ export default function AssetTransfer() {
 
   return (
     <>
-      <PageAction
-        title="Cấp phát tài sản"
-        onNewClick={() => setShowForm(true)}
-      />
-      <Box sx={{ p: 2 }}>
-        {/* FORM AREA */}
-        {showForm && (
-          <Box sx={{ mb: 2 }}>
-            {/* Thêm margin bottom để tách biệt với bảng bên dưới */}
-            <AssetTransferForm
-              onCancel={handleCloseForm}
-              onSave={() => {}}
-              onEdit={() => {}}
-              readOnly={!!selectedRow}
-              selectedTransfer={selectedRow}
-            />
-          </Box>
-        )}
-
-        <Grid
-          container
-          sx={{
-            display: "flex",
-            alignItems: "stretch", //  Giúp Sidebar cao bằng Table
-            bgcolor: "background.paper",
-            borderRadius: "8px",
-            overflow: "hidden",
-            border: "1px solid",
-            borderColor: "divider",
+      {showSignDocument ? (
+        <SignDocumentForm
+          selectedIds={selectedIds}
+          documents={selectedDocuments}
+          onCancel={() => {
+            setShowSignDocument(false);
+            setSelectedDocuments([]);
           }}
-        >
-          <Grid
-            size={{ xs: selectedRow ? 9 : 12 }}
-            sx={{
-              transition: "all 0.3s ease",
-              borderRight: selectedRow ? "1px solid" : "none",
-              borderColor: "divider",
-              "& .MuiPaper-root": {
-                margin: 0,
-                boxShadow: "none",
-                borderRadius: 0,
-              },
-            }}
-          >
-            <TableCustom
-              title="Phiếu duyệt cấp phát tài sản"
-              columns={columns}
-              rows={mockRows}
-              total={mockRows.length}
-              paginationModel={paginationModel}
-              onPaginationModelChange={setPaginationModel}
-              onRowClick={handleRowClick}
-              selectedIds={selectedIds}
-              onSelectionChange={setSelectedIds}
-              onDelete={handleDelete}
-              searchValue={searchValue}
-              setSearchValue={setSearchValue}
-              showStatusFilter={true}
-            />
-          </Grid>
+          onSign={() => {
+            console.log("Ký tài liệu thành công");
+            setShowSignDocument(false);
+            setSelectedIds([]);
+            setSelectedDocuments([]);
+          }}
+          fullscreen={true}
+        />
+      ) : (
+        <>
+          <PageAction
+            title="Cấp phát tài sản"
+            onNewClick={() => setShowForm(true)}
+          />
+          <Box sx={{ p: 2 }}>
+            {/* FORM AREA */}
+            {showForm && (
+              <Box sx={{ mb: 2 }}>
+                {/* Thêm margin bottom để tách biệt với bảng bên dưới */}
+                <AssetTransferForm
+                  onCancel={handleCloseForm}
+                  onSave={() => {}}
+                  onEdit={() => {}}
+                  readOnly={!!selectedRow}
+                  selectedTransfer={selectedRow}
+                />
+              </Box>
+            )}
 
-          {/* SIDEBAR - Bây giờ sẽ dính liền và cao bằng Table */}
-          {selectedRow && (
             <Grid
-              size={{ xs: 3 }}
+              container
               sx={{
                 display: "flex",
-                flexDirection: "column",
-                bgcolor: "#fafafa", // Màu nền nhẹ để phân biệt với bảng
+                alignItems: "stretch", 
+                bgcolor: "background.paper",
+                borderRadius: "8px",
+                overflow: "hidden",
+                border: "1px solid",
+                borderColor: "divider",
               }}
             >
-              <SignerSidebar
-                selectedRow={selectedRow}
-                onClose={() => setSelectedRow(null)}
-              />
+              <Grid
+                size={{ xs: selectedRow ? 9 : 12 }}
+                sx={{
+                  transition: "all 0.3s ease",
+                  borderRight: selectedRow ? "1px solid" : "none",
+                  borderColor: "divider",
+                  "& .MuiPaper-root": {
+                    margin: 0,
+                    boxShadow: "none",
+                    borderRadius: 0,
+                  },
+                }}
+              >
+                <TableCustom
+                  title="Phiếu duyệt cấp phát tài sản"
+                  columns={columns}
+                  rows={mockRows}
+                  total={mockRows.length}
+                  paginationModel={paginationModel}
+                  onPaginationModelChange={setPaginationModel}
+                  onRowClick={handleRowClick}
+                  selectedIds={selectedIds}
+                  onSelectionChange={setSelectedIds}
+                  onDelete={handleDelete}
+                  onSign={handleSignAssets}
+                  searchValue={searchValue}
+                  setSearchValue={setSearchValue}
+                  showStatusFilter={true}
+                />
+              </Grid>
+
+              {/* SIDEBAR - Bây giờ sẽ dính liền và cao bằng Table */}
+              {selectedRow && (
+                <Grid
+                  size={{ xs: 3 }}
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    bgcolor: "#fafafa", // Màu nền nhẹ để phân biệt với bảng
+                  }}
+                >
+                  <SignerSidebar
+                    selectedRow={selectedRow}
+                    onClose={() => setSelectedRow(null)}
+                  />
+                </Grid>
+              )}
             </Grid>
-          )}
-        </Grid>
-      </Box>
+          </Box>
+        </>
+      )}
     </>
   );
 }

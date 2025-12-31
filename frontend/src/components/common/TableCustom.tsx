@@ -1,3 +1,4 @@
+import React from "react";
 import {
   BarChart,
   Close,
@@ -5,6 +6,7 @@ import {
   Search,
   Settings,
   TableView,
+  Edit,
 } from "@mui/icons-material";
 import {
   Box,
@@ -20,6 +22,7 @@ import {
   GridColDef,
   GridToolbar,
   GridFilterPanel,
+  GridRowSelectionModel,
 } from "@mui/x-data-grid";
 import { viVN } from "@mui/x-data-grid/locales";
 import { useNavigate } from "react-router-dom";
@@ -53,6 +56,7 @@ interface Props {
   selectedIds?: string[];
   onSelectionChange?: (ids: string[]) => void;
   onDelete?: (ids: string[]) => void;
+  onSign?: (ids: string[]) => void;
   searchValue?: string;
   setSearchValue?: Dispatch<SetStateAction<string>>;
   showStatusFilter?: boolean;
@@ -72,11 +76,22 @@ export default function TableCustom({
   selectedIds = [],
   onSelectionChange,
   onDelete,
+  onSign,
   searchValue,
   setSearchValue,
   showStatusFilter = false,
 }: Props) {
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    console.log("TableCustom selectedIds:", selectedIds);
+    console.log(
+      "TableCustom onSign:",
+      typeof onSign,
+      onSign ? "defined" : "undefined"
+    );
+  }, [selectedIds, onSign]);
+
   return (
     <Paper sx={{ my: 2, width: "100%" }}>
       <Box
@@ -119,10 +134,28 @@ export default function TableCustom({
           {isFilterDate && <FieldDate title="Chọn thời gian khấu hao" />}
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
-          <Box display={"flex"} justifyContent={"flex-end"} gap={2}>
+          <Box display={"flex"} justifyContent={"flex-end"} gap={2} flexWrap="wrap">
             {/* <Button variant="outlined" size="small" startIcon={<Settings />}>
               Cấu hình cột
             </Button> */}
+            {selectedIds.length === 1 && (
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<Edit />}
+                sx={{ mb: 2 }}
+                onClick={(e) => {
+                  console.log(
+                    "Button Ký biên bản clicked! selectedIds:",
+                    selectedIds
+                  );
+                  e.stopPropagation();
+                  onSign?.(selectedIds);
+                }}
+              >
+                Ký biên bản
+              </Button>
+            )}
             {selectedIds.length > 0 && (
               <Button
                 variant="contained"
@@ -169,34 +202,20 @@ export default function TableCustom({
           pageSizeOptions={[10, 20, 50]}
           loading={loading}
           checkboxSelection
+          rowSelectionModel={
+            selectedIds && selectedIds.length > 0
+              ? { type: "include" as const, ids: new Set(selectedIds) }
+              : { type: "include" as const, ids: new Set() }
+          }
           onRowSelectionModelChange={(newSelection: any) => {
-            let selectedIds: string[] = [];
+            let result: string[] = [];
 
-            // Kiểm tra nếu là cơ chế mới (Object có ids)
-            if (
-              newSelection &&
-              typeof newSelection === "object" &&
-              "ids" in newSelection
-            ) {
-              if (newSelection.type === "exclude") {
-                selectedIds = rows.map((row) => row.Id || row.id);
-
-                // Nếu có ids trong Set (những dòng bị bỏ chọn), thì lọc chúng ra
-                if (newSelection.ids.size > 0) {
-                  const excludedSet = newSelection.ids;
-                  selectedIds = selectedIds.filter(
-                    (id) => !excludedSet.has(id)
-                  );
-                }
-              } else {
-                // Nếu là 'include', lấy trực tiếp từ Set
-                selectedIds = Array.from(newSelection.ids);
-              }
-            } else {
-              // Nếu là mảng ID thông thường (cơ chế cũ)
-              selectedIds = newSelection;
+            if (newSelection?.ids && newSelection.ids.size > 0) {
+              // Set model: { type: "include", ids: Set }
+              result = Array.from(newSelection.ids as Set<string>);
             }
-            onSelectionChange?.(selectedIds);
+
+            onSelectionChange?.(result);
           }}
           disableRowSelectionOnClick
           showToolbar
