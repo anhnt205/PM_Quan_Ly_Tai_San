@@ -57,6 +57,7 @@
     ]
   },
   "devDependencies": {
+    "@types/pdfjs-dist": "^2.10.377",
     "@types/redux-persist": "^4.0.0"
   }
 }
