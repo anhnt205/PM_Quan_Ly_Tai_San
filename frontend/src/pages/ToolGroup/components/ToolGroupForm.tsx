@@ -42,11 +42,14 @@ export default function ToolGroupForm({
   const [expanded, setExpanded] = useState(true);
   const formik = useFormik({
     initialValues: {
-      code: "",
-      name: "",
+      id: "",
+      ten: "",
+      idCongTy: "ct001",
     },
     validationSchema: ToolGroupValidation,
-    onSubmit(values) {},
+    onSubmit(values) {
+      onSave(values);
+    },
   });
 
   useEffect(() => {
@@ -91,15 +94,15 @@ export default function ToolGroupForm({
               <FieldInput
                 title="Mã nhóm ccdc *"
                 formik={formik}
-                field="code"
-                disabled={readOnly}
+                field="id"
+                disabled={Boolean(selectedToolGroup)}
               />
             </Grid>
             <Grid size={{ xs: 12 }}>
               <FieldInput
                 title="Tên nhóm ccdc *"
                 formik={formik}
-                field="name"
+                field="ten"
                 disabled={readOnly}
               />
             </Grid>

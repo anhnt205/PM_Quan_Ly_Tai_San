@@ -42,12 +42,17 @@ export default function ProjectForm({
   const [expanded, setExpanded] = useState(true);
   const formik = useFormik({
     initialValues: {
-      code: "",
-      name: "",
-      note: "",
+      id: "",
+      tenDuAn: "",
+      ghiChu: "",
+      idCongTy: "ct001",
+      hieuLuc: true,
+      isActive: true,
     },
     validationSchema: ProjectValidation,
-    onSubmit(values) {},
+    onSubmit(values) {
+      onSave(values);
+    },
   });
 
   useEffect(() => {
@@ -92,7 +97,7 @@ export default function ProjectForm({
               <FieldInput
                 title="Mã dự án *"
                 formik={formik}
-                field="code"
+                field="id"
                 disabled={readOnly}
               />
             </Grid>
@@ -100,7 +105,7 @@ export default function ProjectForm({
               <FieldInput
                 title="Tên dự án *"
                 formik={formik}
-                field="name"
+                field="tenDuAn"
                 disabled={readOnly}
               />
             </Grid>
@@ -108,7 +113,7 @@ export default function ProjectForm({
               <FieldInput
                 title="Ghi chú"
                 formik={formik}
-                field="note"
+                field="ghiChu"
                 disabled={readOnly}
               />
             </Grid>

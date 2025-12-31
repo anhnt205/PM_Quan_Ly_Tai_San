@@ -15,12 +15,34 @@ import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import TypeAssets from "../../data/TypeAsset.json";
 import TypeAssetForm from "./components/TypeAssetForm";
+import { showConfirmAlert } from "../../components/Alert";
+import { useTypeAssetMutation } from "./Mutation";
 
 export default function TypeAsset() {
   const [showForm, setShowForm] = useState(false);
   const [selectedTypeAsset, setSelectedTypeAsset] = useState<any>(null);
   const [readOnly, setReadOnly] = useState(false);
-  const [typeAssetsData, setTypeAssetsData] = useState(TypeAssets);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [searchValue, setSearchValue] = useState("");
+
+  const [paginationModel, setPaginationModel] = useState({
+    pageSize: 10,
+    page: 0,
+  });
+
+  const {
+    // typeAssets,
+    allData,
+    createMutation,
+    updateMutation,
+    deleteOneMutation,
+    deleteManyMutation,
+    isLoading,
+  } = useTypeAssetMutation(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchValue
+  );
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedTypeAsset(params.row);
@@ -30,17 +52,9 @@ export default function TypeAsset() {
 
   const handleSave = (values: any) => {
     if (selectedTypeAsset) {
-      // Update existing staff
-      const updatedStaffs = typeAssetsData.map((typeAsset) =>
-        typeAsset.id === selectedTypeAsset.id
-          ? { ...typeAsset, ...values }
-          : typeAsset
-      );
-      setTypeAssetsData(updatedStaffs);
+      updateMutation.mutate(values);
     } else {
-      // Create new staff
-      const newStaff = { ...values, id: Date.now() }; // Simple ID generation
-      setTypeAssetsData([...typeAssetsData, newStaff]);
+      createMutation.mutate(values);
     }
     setShowForm(false);
     setSelectedTypeAsset(null);
@@ -51,14 +65,14 @@ export default function TypeAsset() {
   };
   const columns: GridColDef[] = [
     {
-      field: "code",
+      field: "id",
       headerName: "Mã loại tài sản",
       width: 150,
       align: "center",
       headerAlign: "center",
     },
     {
-      field: "assetParent",
+      field: "idLoaiTs",
       headerName: "Mã loại tài sản cha",
       flex: 1,
       minWidth: 200,
@@ -66,7 +80,7 @@ export default function TypeAsset() {
       headerAlign: "center",
     },
     {
-      field: "name",
+      field: "tenLoai",
       headerName: "Tên loại tài sản",
       flex: 1,
       minWidth: 150,
@@ -80,7 +94,15 @@ export default function TypeAsset() {
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
-        <IconButton>
+        <IconButton
+          onClick={async (e) => {
+            e.stopPropagation();
+            const confirm = await showConfirmAlert("Xác nhận xóa!");
+            if (confirm.isConfirmed) {
+              deleteOneMutation.mutate(params.row.id);
+            }
+          }}
+        >
           <Delete color="error" />
         </IconButton>
       ),
@@ -116,8 +138,18 @@ export default function TypeAsset() {
         <TableCustom
           title="Quản lý loại tài sản"
           columns={columns}
-          rows={TypeAssets}
+          rows={allData}
+          total={allData.length}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          loading={isLoading}
           onRowClick={handleRowClick}
+          selectedIds={selectedIds}
+          onSelectionChange={setSelectedIds}
+          onDelete={deleteManyMutation.mutate}
+          searchValue={searchValue}
+          setSearchValue={setSearchValue}
+          paginationMode="client"
         />
       </Box>
     </Box>

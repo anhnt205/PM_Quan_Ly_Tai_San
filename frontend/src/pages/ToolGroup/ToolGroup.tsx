@@ -6,30 +6,45 @@ import ToolGroups from "../../data/ToolGroup.json";
 import { Delete } from "@mui/icons-material";
 import ToolGroupForm from "./components/ToolGroupForm";
 import React, { useState } from "react";
+import { useToolGroupMutation } from "./Mutation";
+import { showConfirmAlert } from "../../components/Alert";
 
 export default function ToolGroup() {
   const [showForm, setShowForm] = useState(false);
   const [selectedToolGroup, setSelectedToolGroup] = useState<any>(null);
   const [readOnly, setReadOnly] = useState(false);
-  const [toolGroupsData, setToolGroupsData] = useState(ToolGroups);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [searchValue, setSearchValue] = useState("");
+
+  const [paginationModel, setPaginationModel] = useState({
+    pageSize: 10,
+    page: 0,
+  });
+
+  const {
+    tooGroups,
+    createMutation,
+    updateMutation,
+    deleteOneMutation,
+    deleteManyMutation,
+    isLoading,
+  } = useToolGroupMutation(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchValue
+  );
 
   const handleRowClick = (params: GridRowParams) => {
-    setToolGroupsData(params.row);
+    setSelectedToolGroup(params.row);
     setReadOnly(true); // Set readOnly to true when viewing details
     setShowForm(true);
   };
 
   const handleSave = (values: any) => {
     if (selectedToolGroup) {
-      // Update existing staff
-      const updatedStaffs = toolGroupsData.map((staff) =>
-        staff.id === selectedToolGroup.id ? { ...staff, ...values } : staff
-      );
-      setToolGroupsData(updatedStaffs);
+      updateMutation.mutate(values);
     } else {
-      // Create new staff
-      const newStaff = { ...values, id: Date.now() }; // Simple ID generation
-      setToolGroupsData([...toolGroupsData, newStaff]);
+      createMutation.mutate(values);
     }
     setShowForm(false);
     setSelectedToolGroup(null);
@@ -40,14 +55,14 @@ export default function ToolGroup() {
   };
   const columns: GridColDef[] = [
     {
-      field: "code",
+      field: "id",
       headerName: "Mã nhóm ccdc",
       width: 150,
       align: "center",
       headerAlign: "center",
     },
     {
-      field: "name",
+      field: "ten",
       headerName: "Tên nhóm ccdc",
       flex: 1,
       minWidth: 200,
@@ -55,28 +70,28 @@ export default function ToolGroup() {
       headerAlign: "center",
     },
     {
-      field: "createdAt",
+      field: "ngayTao",
       headerName: "Ngày tạo",
       width: 200,
       align: "center",
       headerAlign: "center",
     },
     {
-      field: "updatedAt",
+      field: "ngayCapNhat",
       headerName: "Ngày cập nhật",
       width: 200,
       align: "center",
       headerAlign: "center",
     },
     {
-      field: "createdBy",
+      field: "nguoiTao",
       headerName: "Người tạo",
       width: 200,
       align: "center",
       headerAlign: "center",
     },
     {
-      field: "updatedBy",
+      field: "nguoiCapNhat",
       headerName: "Người cập nhật",
       width: 200,
       align: "center",
@@ -89,7 +104,15 @@ export default function ToolGroup() {
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
-        <IconButton>
+        <IconButton
+          onClick={async (e) => {
+            e.stopPropagation();
+            const confirm = await showConfirmAlert("Xác nhận xóa!");
+            if (confirm.isConfirmed) {
+              deleteOneMutation.mutate(params.row.id);
+            }
+          }}
+        >
           <Delete color="error" />
         </IconButton>
       ),
@@ -125,8 +148,17 @@ export default function ToolGroup() {
         <TableCustom
           title="Quản lý nhóm ccdc"
           columns={columns}
-          rows={ToolGroups}
+          rows={tooGroups.items}
+          total={tooGroups.totalItems}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          loading={isLoading}
           onRowClick={handleRowClick}
+          selectedIds={selectedIds}
+          onSelectionChange={setSelectedIds}
+          onDelete={deleteManyMutation.mutate}
+          searchValue={searchValue}
+          setSearchValue={setSearchValue}
         />
       </Box>
     </Box>

@@ -31,36 +31,39 @@ import EditButton from "../../../components/Button/EditButton";
 export default function CapitalSourceForm({
   onEdit,
   onCancel,
-  capitalSource,
+  selectedCapitalSource,
   readOnly,
   onSave,
 }: {
   onEdit: () => void;
   onCancel: () => void;
-  capitalSource?: any;
+  selectedCapitalSource?: any;
   readOnly?: boolean;
   onSave: (values: any) => void;
 }) {
   const [expanded, setExpanded] = useState(true);
   const formik = useFormik({
     initialValues: {
-      code: "",
-      name: "",
-      note: "",
+      id: "",
+      tenNguonKinhPhi: "",
+      idCongTy: "ct001",
+      ghiChu: "",
+      hieuLuc: true,
+      isActive: true,
     },
     validationSchema: CapitalSourceValidation,
     onSubmit(values) {
-        onSave(values);
+      onSave(values);
     },
   });
 
   useEffect(() => {
-    if (capitalSource) {
-      formik.setValues(capitalSource);
-    }else {
+    if (selectedCapitalSource) {
+      formik.setValues(selectedCapitalSource);
+    } else {
       formik.resetForm();
     }
-  }, [capitalSource]);
+  }, [selectedCapitalSource]);
 
   return (
     <Accordion sx={{ background: "#f6f8f4ff" }} expanded={expanded}>
@@ -95,20 +98,25 @@ export default function CapitalSourceForm({
               <FieldInput
                 title="Mã nguồn kinh phí *"
                 formik={formik}
-                field="code"
-                disabled={readOnly}
+                field="id"
+                disabled={Boolean(selectedCapitalSource)}
               />
             </Grid>
             <Grid size={{ xs: 6 }}>
               <FieldInput
                 title="Tên nguồn kinh phí *"
                 formik={formik}
-                field="name"
+                field="tenNguonKinhPhi"
                 disabled={readOnly}
               />
             </Grid>
             <Grid size={{ xs: 12 }}>
-              <FieldInput title="Ghi chú" formik={formik} field="note" disabled={readOnly} />
+              <FieldInput
+                title="Ghi chú"
+                formik={formik}
+                field="ghiChu"
+                disabled={readOnly}
+              />
             </Grid>
           </Grid>
         </Paper>

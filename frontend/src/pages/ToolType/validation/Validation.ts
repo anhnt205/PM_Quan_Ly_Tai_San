@@ -1,7 +1,7 @@
 import * as yup from "yup";
 
 export const ToolTypeValidation = yup.object({
-  code: yup.string().required("Bắt buộc"),
-  toolGroup: yup.string().required("Bắt buộc"),
-  name: yup.string().required("Bắt buộc"),
+  id: yup.string().required("Bắt buộc"),
+  idLoaiCCDC: yup.string().required("Bắt buộc"),
+  tenLoai: yup.string().required("Bắt buộc"),
 });

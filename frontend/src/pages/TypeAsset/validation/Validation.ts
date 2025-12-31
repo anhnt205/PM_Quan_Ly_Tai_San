@@ -1,6 +1,7 @@
-import * as yup from 'yup'
+import * as yup from "yup";
 
 export const TypeAssetValidation = yup.object({
-    code: yup.string().required('Bắt buộc'),
-    name: yup.string().required('Bắt buộc'),
-})
+  id: yup.string().required("Bắt buộc"),
+  idLoaiTs: yup.string().required("Bắt buộc"),
+  tenLoai: yup.string().required("Bắt buộc"),
+});

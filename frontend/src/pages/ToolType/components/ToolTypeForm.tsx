@@ -22,6 +22,7 @@ import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted
 import ToolGroups from "../../../data/ToolGroup.json";
 import EditButton from "../../../components/Button/EditButton";
 import { ToolTypeValidation } from "../validation/Validation";
+import { useToolGroupMutation } from "../../ToolGroup/Mutation";
 
 export default function ToolTypeForm({
   onEdit,
@@ -37,15 +38,16 @@ export default function ToolTypeForm({
   onSave: (values: any) => void;
 }) {
   const [expanded, setExpanded] = useState(true);
+  const { allData } = useToolGroupMutation();
   const formik = useFormik({
     initialValues: {
-      code: "",
-      name: "",
-      toolGroup: "",
+      id: "",
+      tenLoai: "",
+      idLoaiCCDC: "",
     },
     validationSchema: ToolTypeValidation,
     onSubmit(values) {
-      onSave(values)
+      onSave(values);
     },
   });
 
@@ -91,17 +93,17 @@ export default function ToolTypeForm({
               <FieldInput
                 title="Mã loại CCDC *"
                 formik={formik}
-                field="code"
-                disabled={readOnly}
+                field="id"
+                disabled={Boolean(selectedToolType)}
               />
             </Grid>
             <Grid size={{ xs: 12 }}>
               <FieldAutoCompleted
                 title="Mã loại CCDC cha *"
-                data={ToolGroups}
-                labelkey="name"
+                data={allData}
+                labelkey="ten"
                 formik={formik}
-                field="toolGroup"
+                field="idLoaiCCDC"
                 disabled={readOnly}
               />
             </Grid>
@@ -109,7 +111,7 @@ export default function ToolTypeForm({
               <FieldInput
                 title="Tên loại CCDC *"
                 formik={formik}
-                field="name"
+                field="tenLoai"
                 disabled={readOnly}
               />
             </Grid>

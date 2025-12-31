@@ -25,8 +25,8 @@ import { useFormik } from "formik";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import { TypeAssetValidation } from "../validation/Validation";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
-import AssetParents from "../../../data/AssetParent.json";
 import EditButton from "../../../components/Button/EditButton";
+import { useTypeAssetMutation } from "../Mutation";
 
 export default function TypeAssetForm({
   onEdit,
@@ -42,14 +42,17 @@ export default function TypeAssetForm({
   onSave: (values: any) => void;
 }) {
   const [expanded, setExpanded] = useState(true);
+  const { assetParents } = useTypeAssetMutation();
   const formik = useFormik({
     initialValues: {
-      code: "",
-      name: "",
-      assetParent: "",
+      id: "",
+      tenLoai: "",
+      idLoaiTs: "",
     },
     validationSchema: TypeAssetValidation,
-    onSubmit(values) {},
+    onSubmit(values) {
+      onSave(values);
+    },
   });
 
   useEffect(() => {
@@ -94,17 +97,17 @@ export default function TypeAssetForm({
               <FieldInput
                 title="Mã loại tài sản *"
                 formik={formik}
-                field="code"
-                disabled={readOnly}
+                field="id"
+                disabled={Boolean(selectedTypeAsset)}
               />
             </Grid>
             <Grid size={{ xs: 12 }}>
               <FieldAutoCompleted
                 title="Mã loại tài sản cha *"
-                data={AssetParents}
-                labelkey="name"
+                data={assetParents}
+                labelkey="tenLoaiTaiSan"
                 formik={formik}
-                field="assetParent"
+                field="idLoaiTs"
                 disabled={readOnly}
               />
             </Grid>
@@ -112,7 +115,7 @@ export default function TypeAssetForm({
               <FieldInput
                 title="Tên loại tài sản *"
                 formik={formik}
-                field="name"
+                field="tenLoai"
                 disabled={readOnly}
               />
             </Grid>

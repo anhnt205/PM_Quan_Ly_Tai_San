@@ -16,6 +16,7 @@ import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import ReasonIncreases from "../../data/ReasonIncrease.json";
 import ReasonIncreaseForm from "./components/ReasonIncreaseForm";
 import { useReasonIncreaseMutation } from "./Mutation";
+import { showConfirmAlert } from "../../components/Alert";
 
 export default function ReasonIncrease() {
   const [showForm, setShowForm] = useState(false);
@@ -103,7 +104,15 @@ export default function ReasonIncrease() {
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
-        <IconButton>
+        <IconButton
+          onClick={async (e) => {
+            e.stopPropagation();
+            const confirm = await showConfirmAlert("Xác nhận xóa!");
+            if (confirm.isConfirmed) {
+              deleteOneMutation.mutate(params.row.id);
+            }
+          }}
+        >
           <Delete color="error" />
         </IconButton>
       ),
@@ -139,8 +148,8 @@ export default function ReasonIncrease() {
         <TableCustom
           title="Danh sách lý do tăng"
           columns={columns}
-          rows={reasonIncreases}
-          total={reasonIncreases.length}
+          rows={allData}
+          total={allData.length}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
           // loading={isLoading}
@@ -150,6 +159,7 @@ export default function ReasonIncrease() {
           onDelete={deleteManyMutation.mutate}
           searchValue={searchValue}
           setSearchValue={setSearchValue}
+          paginationMode="client"
         />
       </Box>
     </Box>

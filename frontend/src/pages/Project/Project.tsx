@@ -6,12 +6,33 @@ import Projects from "../../data/Project.json";
 import ProjectForm from "./components/ProjectForm";
 import { Delete } from "@mui/icons-material";
 import React, { useState } from "react";
+import { useProjectMutation } from "./Mutation";
+import { showConfirmAlert } from "../../components/Alert";
 
 export default function Project() {
   const [showForm, setShowForm] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [readOnly, setReadOnly] = useState(false);
-  const [projectsData, setProjectsData] = useState(Projects);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [searchValue, setSearchValue] = useState("");
+
+  const [paginationModel, setPaginationModel] = useState({
+    pageSize: 10,
+    page: 0,
+  });
+
+  const {
+    projectsPage,
+    createMutation,
+    updateMutation,
+    deleteOneMutation,
+    deleteManyMutation,
+    isLoading,
+  } = useProjectMutation(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchValue
+  );
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedProject(params.row);
@@ -21,15 +42,9 @@ export default function Project() {
 
   const handleSave = (values: any) => {
     if (selectedProject) {
-      // Update existing staff
-      const updatedStaffs = projectsData.map((project) =>
-        project.id === selectedProject.id ? { ...project, ...values } : project
-      );
-      setProjectsData(updatedStaffs);
+      updateMutation.mutate(values);
     } else {
-      // Create new staff
-      const newStaff = { ...values, id: Date.now() }; // Simple ID generation
-      setProjectsData([...projectsData, newStaff]);
+      createMutation.mutate(values);
     }
     setShowForm(false);
     setSelectedProject(null);
@@ -40,14 +55,14 @@ export default function Project() {
   };
   const columns: GridColDef[] = [
     {
-      field: "code",
+      field: "id",
       headerName: "Mã dự án",
       width: 150,
       align: "center",
       headerAlign: "center",
     },
     {
-      field: "name",
+      field: "tenDuAn",
       headerName: "Tên dự án",
       flex: 1,
       minWidth: 200,
@@ -55,20 +70,20 @@ export default function Project() {
       headerAlign: "center",
     },
     {
-      field: "note",
+      field: "ghiChu",
       headerName: "Ghi chú",
       width: 200,
       align: "center",
       headerAlign: "center",
     },
     {
-      field: "active",
+      field: "hieuLuc",
       headerName: "Hiệu lực",
       width: 200,
       align: "center",
       headerAlign: "center",
       renderCell: (params) => {
-        const isActive = params.row.active;
+        const isActive = params.row.hieuLuc;
         return (
           <Chip
             label={isActive ? "Có hiệu lực" : "Không hiệu lực"}
@@ -92,7 +107,15 @@ export default function Project() {
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
-        <IconButton>
+        <IconButton
+          onClick={async (e) => {
+            e.stopPropagation();
+            const confirm = await showConfirmAlert("Xác nhận xóa!");
+            if (confirm.isConfirmed) {
+              deleteOneMutation.mutate(params.row.id);
+            }
+          }}
+        >
           <Delete color="error" />
         </IconButton>
       ),
@@ -128,8 +151,17 @@ export default function Project() {
         <TableCustom
           title="Quản lý dự án"
           columns={columns}
-          rows={Projects}
+          rows={projectsPage.items}
+          total={projectsPage.totalItems}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          loading={isLoading}
           onRowClick={handleRowClick}
+          selectedIds={selectedIds}
+          onSelectionChange={setSelectedIds}
+          onDelete={deleteManyMutation.mutate}
+          searchValue={searchValue}
+          setSearchValue={setSearchValue}
         />
       </Box>
     </Box>

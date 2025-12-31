@@ -22,7 +22,7 @@ import {
   GridColDef,
   GridToolbar,
   GridFilterPanel,
-  GridRowSelectionModel,
+  GridFeatureMode,
 } from "@mui/x-data-grid";
 import { viVN } from "@mui/x-data-grid/locales";
 import { useNavigate } from "react-router-dom";
@@ -60,6 +60,7 @@ interface Props {
   searchValue?: string;
   setSearchValue?: Dispatch<SetStateAction<string>>;
   showStatusFilter?: boolean;
+  paginationMode?: GridFeatureMode;
 }
 
 export default function TableCustom({
@@ -80,6 +81,7 @@ export default function TableCustom({
   searchValue,
   setSearchValue,
   showStatusFilter = false,
+  paginationMode = "server",
 }: Props) {
   const navigate = useNavigate();
 
@@ -196,7 +198,7 @@ export default function TableCustom({
           columns={columns}
           rows={rows}
           rowCount={total}
-          paginationMode="server"
+          paginationMode={paginationMode}
           paginationModel={paginationModel}
           onPaginationModelChange={onPaginationModelChange}
           pageSizeOptions={[10, 20, 50]}

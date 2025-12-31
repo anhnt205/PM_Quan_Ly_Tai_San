@@ -1,6 +1,6 @@
 import * as yup from 'yup'
 
 export const CapitalSourceValidation = yup.object({
-    code: yup.string().required('Bắt buộc'),
-    name: yup.string().required('Bắt buộc'),
+    id: yup.string().required('Bắt buộc'),
+    tenNguonKinhPhi: yup.string().required('Bắt buộc'),
 })
