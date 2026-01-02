@@ -56,7 +56,7 @@ interface Props {
   selectedIds?: string[];
   onSelectionChange?: (ids: string[]) => void;
   onDelete?: (ids: string[]) => void;
-  onSign?: (ids: string[]) => void;
+  onSign?: (ids: string) => void;
   searchValue?: string;
   setSearchValue?: Dispatch<SetStateAction<string>>;
   showStatusFilter?: boolean;
@@ -136,7 +136,12 @@ export default function TableCustom({
           {isFilterDate && <FieldDate title="Chọn thời gian khấu hao" />}
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
-          <Box display={"flex"} justifyContent={"flex-end"} gap={2} flexWrap="wrap">
+          <Box
+            display={"flex"}
+            justifyContent={"flex-end"}
+            gap={2}
+            flexWrap="wrap"
+          >
             {/* <Button variant="outlined" size="small" startIcon={<Settings />}>
               Cấu hình cột
             </Button> */}
@@ -152,7 +157,7 @@ export default function TableCustom({
                     selectedIds
                   );
                   e.stopPropagation();
-                  onSign?.(selectedIds);
+                  onSign?.(selectedIds[0]);
                 }}
               >
                 Ký biên bản

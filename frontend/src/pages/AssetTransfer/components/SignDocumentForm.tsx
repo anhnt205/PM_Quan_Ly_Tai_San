@@ -7,7 +7,6 @@ import {
   RadioGroup,
   Typography,
   Divider,
-  Grid,
   IconButton,
   Snackbar,
   Alert,
@@ -16,16 +15,29 @@ import {
 import { Close, PictureAsPdf } from "@mui/icons-material";
 import React, { useState, useEffect, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";
-import signatureImage from "../../../assets/images/sign.png";
+import signatureImage from "../../../assets/images/sign.png"; // Ảnh chữ ký mẫu
+import DraggableSignature from "./DraggableSignature";
 
-// Set up worker with proper version matching
+// Import component kéo thả ở trên (giả sử bạn để chung file thì không cần import)
+// import DraggableSignature from "./DraggableSignature";
+
+// --- Config Worker ---
 if (typeof window !== "undefined") {
   pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 }
 
+// --- Types ---
+interface SignatureData {
+  id: string;
+  page: number; // Trang số mấy
+  x: number;
+  y: number;
+  type: string; // 'standard' | 'initials'
+}
+
 interface SignDocumentFormProps {
   selectedIds: string[];
-  documents?: any[];
+  documents?: any;
   onCancel: () => void;
   onSign: () => void;
   fullscreen?: boolean;
@@ -33,53 +45,62 @@ interface SignDocumentFormProps {
 
 export default function SignDocumentForm({
   selectedIds,
-  documents = [],
+  documents,
   onCancel,
   onSign,
   fullscreen = true,
 }: SignDocumentFormProps) {
   const [signatureType, setSignatureType] = useState("standard");
-  const [initials, setInitials] = useState("standard");
   const [openSnackbar, setOpenSnackbar] = useState(false);
+
+  // State quản lý danh sách chữ ký
+  const [signatures, setSignatures] = useState<SignatureData[]>([]);
+
+  // State quản lý Canvas và Loading
   const defaultSampleFile = "/sample.pdf";
-  const [pages, setPages] = useState<string[]>([]);
+  const [pages, setPages] = useState<HTMLCanvasElement[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Ref chứa container để xử lý scroll
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // --- Render PDF ---
   useEffect(() => {
-    if (documents && documents.length > 0) return;
-
     const renderPDF = async () => {
       try {
         setLoading(true);
-        console.log("Loading PDF from:", defaultSampleFile);
         const pdf = await pdfjsLib.getDocument(defaultSampleFile).promise;
-        console.log("PDF loaded, pages:", pdf.numPages);
-        const imageUrls: string[] = [];
+        const canvases: HTMLCanvasElement[] = [];
 
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
           const page = await pdf.getPage(pageNum);
           const canvas = document.createElement("canvas");
-          const context = canvas.getContext("2d");
+          const context = canvas.getContext("2d")!;
+
+          // Scale 1.5 để nét
           const scale = 1.5;
           const viewport = page.getViewport({ scale });
 
           canvas.width = viewport.width;
           canvas.height = viewport.height;
 
+          // CSS width/height để hiển thị vừa vặn (quan trọng cho tính tọa độ)
+          canvas.style.width = "100%";
+          canvas.style.height = "auto";
+          canvas.style.display = "block"; // Tránh khoảng trắng dưới canvas
+
+          // Lưu số trang
+          canvas.dataset.page = pageNum.toString();
+
           await page.render({
-            canvasContext: context!,
-            viewport: viewport,
+            canvasContext: context,
+            viewport,
           }).promise;
 
-          const imageUrl = canvas.toDataURL("image/png");
-          console.log(
-            `Page ${pageNum} rendered: ${canvas.width}x${canvas.height}`
-          );
-          imageUrls.push(imageUrl);
+          canvases.push(canvas);
         }
 
-        setPages(imageUrls);
+        setPages(canvases);
         setLoading(false);
       } catch (error) {
         console.error("Error rendering PDF:", error);
@@ -88,15 +109,46 @@ export default function SignDocumentForm({
     };
 
     renderPDF();
-  }, [defaultSampleFile, documents]);
+  }, [defaultSampleFile]);
 
-  React.useEffect(() => {
-    console.log("SignDocumentForm mounted with selectedIds:", selectedIds);
-  }, [selectedIds]);
+  // --- Handlers ---
 
-  const handleExportPDF = () => {
-    console.log("Exporting PDF...");
-    setOpenSnackbar(true);
+  // Khi click vào PDF -> Thêm chữ ký
+  const handlePageClick = (e: React.MouseEvent, pageIndex: number) => {
+    // Lấy tọa độ click tương đối trong thẻ bao ngoài (wrapper)
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    // Tạo chữ ký mới căn giữa vị trí click (trừ đi 1/2 kích thước ảnh)
+    const newSignature: SignatureData = {
+      id: Date.now().toString(),
+      page: pageIndex + 1, // Page bắt đầu từ 1
+      x: x - 50, // 50 là nửa chiều rộng chữ ký
+      y: y - 25, // 25 là nửa chiều cao chữ ký
+      type: signatureType,
+    };
+    console.log(newSignature);
+
+    setSignatures([...signatures, newSignature]);
+  };
+
+  // Cập nhật vị trí sau khi kéo thả
+  const handleUpdatePosition = (id: string, newX: number, newY: number) => {
+    setSignatures((prev) =>
+      prev.map((sig) => (sig.id === id ? { ...sig, x: newX, y: newY } : sig))
+    );
+  };
+
+  // Xóa chữ ký
+  const handleDeleteSignature = (id: string) => {
+    setSignatures((prev) => prev.filter((sig) => sig.id !== id));
+  };
+
+  // Nút Xuất PDF (Console log tọa độ cuối cùng)
+  const handleConfirmSign = () => {
+    console.log("Danh sách chữ ký và tọa độ:", signatures);
+    onSign();
   };
 
   return (
@@ -106,18 +158,11 @@ export default function SignDocumentForm({
         display: "flex",
         flexDirection: "column",
         minHeight: "100vh",
-        backgroundColor: "#f5f5f5",
-        ...(fullscreen && {
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 9999,
-        }),
+        bgcolor: "#f5f5f5",
+        ...(fullscreen && { position: "fixed", inset: 0, zIndex: 9999 }),
       }}
     >
-      {/* Header - chỉ hiển thị khi fullscreen */}
+      {/* --- Header (Giữ nguyên) --- */}
       {fullscreen && (
         <Box
           sx={{
@@ -130,447 +175,144 @@ export default function SignDocumentForm({
           }}
         >
           <Box>
-            <Typography variant="h5" fontWeight={600}>
-              Soạn & Ký Tài Liệu
-            </Typography>
-            <Typography variant="caption" color="textSecondary">
-              3 trang
-            </Typography>
+            <Typography variant="h6">Soạn & Ký Tài Liệu</Typography>
           </Box>
-          <Box display="flex" gap={1} alignItems="center">
-            <Button
-              variant="contained"
-              startIcon={<PictureAsPdf />}
-              sx={{
-                bgcolor: "#6366f1",
-                textTransform: "none",
-                fontWeight: 500,
-                "&:hover": { bgcolor: "#4f46e5" },
-              }}
-              onClick={handleExportPDF}
-            >
-              Xuất PDF
-            </Button>
-            <IconButton
-              onClick={onCancel}
-              sx={{
-                color: "#ef4444",
-                borderRadius: 1,
-                border: "1px solid #fecaca",
-                padding: 1,
-                "&:hover": { bgcolor: "rgba(239, 68, 68, 0.1)" },
-              }}
-            >
+          <Box>
+            <IconButton onClick={onCancel}>
               <Close />
             </IconButton>
           </Box>
         </Box>
       )}
 
-      {/* Content */}
-      <Box
-        sx={{
-          width: "100%",
-          display: "flex",
-          flex: 1,
-          backgroundColor: "#f5f5f5",
-        }}
-      >
-        {/* Left Sidebar - Signature Tools */}
+      {/* --- Body --- */}
+      <Box sx={{ display: "flex", flex: 1, overflow: "hidden" }}>
+        {/* --- Left Sidebar (Công cụ) --- */}
         <Paper
           sx={{
-            width: 380,
-            padding: 2,
-            borderRadius: 0,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            width: 320,
+            p: 2,
             overflowY: "auto",
-            flexShrink: 0,
-            position: "sticky",
-            top: fullscreen ? 72 : 0,
-            height: fullscreen ? "calc(100vh - 72px)" : "100vh",
-            display: "flex",
-            flexDirection: "column",
+            borderRight: "1px solid #ddd",
           }}
         >
-          <Box>
-            <Typography
-              variant="h5"
-              fontWeight={700}
-              mb={3}
-              sx={{ fontSize: 20 }}
-            >
-              Công cụ ký
-            </Typography>
+          <Typography variant="h6" fontWeight="bold" mb={2}>
+            Công cụ ký
+          </Typography>
 
-            {/* Signature Type Selection - All options in one RadioGroup */}
-            <Box mb={3}>
-              <RadioGroup
-                value={signatureType}
-                onChange={(e) => setSignatureType(e.target.value)}
-              >
-                <FormControlLabel
-                  value="standard"
-                  control={
-                    <Radio
-                      sx={{
-                        color: "#000",
-                        "&.Mui-checked": { color: "#9c27b0" },
-                      }}
-                    />
-                  }
-                  label={
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      width="100%"
-                      gap={0}
-                    >
-                      <Typography variant="body1" fontWeight={500}>
-                        Ký thường
-                      </Typography>
-                      <Box
-                        component="img"
-                        src={signatureImage}
-                        sx={{
-                          width: 60,
-                          height: 50,
-                          border: "1px solid #e0e0e0",
-                          borderRadius: 1,
-                          p: 0.5,
-                          marginLeft: "auto",
-                        }}
-                      />
-                    </Box>
-                  }
-                />
-                <FormControlLabel
-                  value="initials"
-                  control={
-                    <Radio
-                      sx={{
-                        color: "#000",
-                        "&.Mui-checked": { color: "#9c27b0" },
-                      }}
-                    />
-                  }
-                  label={
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      width="100%"
-                      gap={0}
-                    >
-                      <Typography variant="body1" fontWeight={500}>
-                        Ký nháy
-                      </Typography>
-                      <Box
-                        component="img"
-                        src={signatureImage}
-                        sx={{
-                          width: 60,
-                          height: 50,
-                          border: "1px solid #e0e0e0",
-                          borderRadius: 1,
-                          p: 0.5,
-                          marginLeft: "auto",
-                        }}
-                      />
-                    </Box>
-                  }
-                />
-
-                {/* Chữ ký số Section within same RadioGroup */}
-                <Box
-                  sx={{
-                    mt: 2,
-                    p: 2,
-                    border: "1px solid #e0e0e0",
-                    borderRadius: 1,
-                    backgroundColor: "#fafafa",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 1.5,
-                  }}
-                >
-                  <Typography variant="h6" fontWeight={700}>
-                    Chữ ký số
-                  </Typography>
-
-                  <FormControlLabel
-                    value="display-default"
-                    control={
-                      <Radio
-                        sx={{
-                          color: "#000",
-                          "&.Mui-checked": { color: "#9c27b0" },
-                        }}
-                      />
-                    }
-                    label={
-                      <Typography
-                        variant="body1"
-                        fontWeight={500}
-                        sx={{ fontSize: 14 }}
-                      >
-                        Hiển thị mặc định
-                      </Typography>
-                    }
-                  />
-                  <FormControlLabel
-                    value="display-signature"
-                    control={
-                      <Radio
-                        sx={{
-                          color: "#000",
-                          "&.Mui-checked": { color: "#9c27b0" },
-                        }}
-                      />
-                    }
-                    label={
-                      <Box
-                        display="flex"
-                        alignItems="center"
-                        width="100%"
-                        gap={0.5}
-                      >
-                        <Typography
-                          variant="body1"
-                          fontWeight={500}
-                          sx={{ fontSize: 14 }}
-                        >
-                          Hiển thị chữ ký thường
-                        </Typography>
-                        <Box
-                          component="img"
-                          src={signatureImage}
-                          sx={{
-                            width: 60,
-                            height: 50,
-                            border: "1px solid #e0e0e0",
-                            borderRadius: 1,
-                            p: 0.5,
-                            marginRight: "auto",
-                          }}
-                        />
-                      </Box>
-                    }
-                  />
-                  <FormControlLabel
-                    value="display-initials"
-                    control={
-                      <Radio
-                        sx={{
-                          color: "#000",
-                          "&.Mui-checked": { color: "#9c27b0" },
-                        }}
-                      />
-                    }
-                    label={
-                      <Box
-                        display="flex"
-                        alignItems="center"
-                        width="100%"
-                        gap={0.5}
-                      >
-                        <Typography
-                          variant="body1"
-                          fontWeight={500}
-                          sx={{ fontSize: 14 }}
-                        >
-                          Hiển thị chữ ký nháy
-                        </Typography>
-                        <Box
-                          component="img"
-                          src={signatureImage}
-                          sx={{
-                            width: 60,
-                            height: 50,
-                            border: "1px solid #e0e0e0",
-                            borderRadius: 1,
-                            p: 0.5,
-                            marginLeft: "auto",
-                          }}
-                        />
-                      </Box>
-                    }
-                  />
-                </Box>
-              </RadioGroup>
+          <RadioGroup
+            value={signatureType}
+            onChange={(e) => setSignatureType(e.target.value)}
+          >
+            <FormControlLabel
+              value="standard"
+              control={<Radio />}
+              label="Ký thường"
+            />
+            <Box sx={{ ml: 4, mb: 2 }}>
+              <img
+                src={signatureImage}
+                alt="sample"
+                width={80}
+                style={{ border: "1px solid #eee" }}
+              />
             </Box>
 
-            <Divider sx={{ my: 2 }} />
-          </Box>
+            <FormControlLabel
+              value="initials"
+              control={<Radio />}
+              label="Ký nháy"
+            />
+          </RadioGroup>
 
-          {/* Action Buttons */}
-          <Box
-            display="flex"
-            flexDirection="column"
-            gap={1}
-            sx={{ flex: 1, display: "flex", flexDirection: "column" }}
+          <Divider sx={{ my: 2 }} />
+
+          <Button
+            variant="contained"
+            fullWidth
+            color="success"
+            onClick={handleConfirmSign} // Log kết quả
+            sx={{ mb: 1 }}
           >
-            <Button
-              variant="contained"
-              sx={{
-                backgroundColor: "#04b46e",
-                color: "white",
-                fontWeight: 600,
-                padding: "8px 12px",
-                fontSize: 14,
-                "&:hover": { backgroundColor: "#039558" },
-              }}
-              startIcon={<span>🖋️</span>}
-            >
-              Ký
-            </Button>
-
-            <Box sx={{ minHeight: 60 }} />
-
-            <Button
-              variant="contained"
-              fullWidth
-              sx={{
-                backgroundColor: "#1FA463",
-                color: "white",
-                fontWeight: 600,
-                padding: "8px 12px",
-                fontSize: 14,
-                "&:hover": { backgroundColor: "#168a4a" },
-              }}
-              startIcon={<span>✓</span>}
-              onClick={onSign}
-            >
-              Xác nhận
-            </Button>
-
-            <Button
-              variant="outlined"
-              fullWidth
-              sx={{
-                color: "#ff6b6b",
-                borderColor: "#ff6b6b",
-                fontWeight: 600,
-                padding: "8px 12px",
-                fontSize: 14,
-                "&:hover": {
-                  backgroundColor: "rgba(255, 107, 107, 0.05)",
-                  borderColor: "#ff6b6b",
-                },
-              }}
-              startIcon={<Close sx={{ fontSize: 18 }} />}
-              onClick={onCancel}
-            >
-              Hủy
-            </Button>
-          </Box>
+            Xác nhận ký
+          </Button>
+          <Typography variant="caption" color="text.secondary">
+            *Click vào trang tài liệu bên phải để đặt chữ ký.
+          </Typography>
         </Paper>
 
-        {/* Right Content Area */}
+        {/* --- Right Content (PDF Viewer) --- */}
         <Box
+          ref={containerRef}
           sx={{
             flex: 1,
-            padding: 0,
-            overflow: "auto",
-            backgroundColor: "#f9f9f9",
+            bgcolor: "#e0e0e0",
+            p: 4,
+            overflowY: "auto",
             display: "flex",
             flexDirection: "column",
+            alignItems: "center",
           }}
         >
-          {documents && documents.length > 0 ? (
-            <Box sx={{ width: "100%", padding: 2, paddingBottom: 4 }}>
-              {documents.map((doc: any) => (
-                <Box key={doc.id} sx={{ mb: 3 }}>
-                  <Typography variant="subtitle2" fontWeight={600} mb={1}>
-                    {doc.name}
-                  </Typography>
-                  {doc.file ? (
-                    <Box
-                      sx={{
-                        p: 2,
-                        border: "1px solid #e0e0e0",
-                        borderRadius: 1,
-                        backgroundColor: "#f9f9f9",
-                      }}
-                    >
-                      <Typography variant="body2">📎 {doc.file}</Typography>
-                    </Box>
-                  ) : (
-                    <Typography variant="body2" color="textSecondary">
-                      Không có tài liệu đính kèm
-                    </Typography>
-                  )}
-                </Box>
-              ))}
-            </Box>
+          {loading ? (
+            <CircularProgress />
           ) : (
-            <Box
-              ref={containerRef}
-              sx={{
-                width: "100%",
-                flex: 1,
-                backgroundColor: "#f0f0f0",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                padding: 2,
-                gap: 2,
-              }}
-            >
-              {loading ? (
+            pages.map((canvas, index) => {
+              const pageNum = index + 1;
+              // Lọc chữ ký thuộc trang hiện tại
+              const pageSignatures = signatures.filter(
+                (sig) => sig.page === pageNum
+              );
+
+              return (
                 <Box
+                  key={index}
                   sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    height: "100%",
+                    position: "relative", // QUAN TRỌNG: Để con (chữ ký) tuyệt đối theo cha
+                    marginBottom: 3,
+                    boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
+                    maxWidth: canvas.width, // Giới hạn chiều rộng bằng canvas
                   }}
+                  // Click vào vùng trống để thêm chữ ký
+                  onClick={(e) => handlePageClick(e, index)}
                 >
-                  <CircularProgress />
-                </Box>
-              ) : (
-                pages.map((imageUrl, index) => (
+                  {/* 1. Render Canvas */}
                   <Box
-                    key={index}
-                    sx={{
-                      backgroundColor: "white",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                      borderRadius: 1,
-                      overflow: "hidden",
+                    ref={(el: HTMLDivElement | null) => {
+                      if (el && !el.hasChildNodes()) {
+                        el.appendChild(canvas);
+                      }
                     }}
-                  >
-                    <Box
-                      component="img"
-                      src={imageUrl}
-                      alt={`Page ${index + 1}`}
-                      sx={{
-                        display: "block",
-                        maxWidth: "100%",
-                        height: "auto",
-                        cursor: "pointer",
-                      }}
+                  />
+
+                  {/* 2. Render Các chữ ký đè lên trên */}
+                  {pageSignatures.map((sig) => (
+                    <DraggableSignature
+                      key={sig.id}
+                      {...sig}
+                      initialX={sig.x}
+                      initialY={sig.y}
+                      imgSrc={signatureImage}
+                      containerWidth={canvas.width}
+                      containerHeight={canvas.height}
+                      onUpdatePosition={handleUpdatePosition}
+                      onDelete={handleDeleteSignature}
                     />
-                  </Box>
-                ))
-              )}
-            </Box>
+                  ))}
+                </Box>
+              );
+            })
           )}
         </Box>
-
-        {/* Snackbar notification */}
-        <Snackbar
-          open={openSnackbar}
-          autoHideDuration={3000}
-          onClose={() => setOpenSnackbar(false)}
-          anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-        >
-          <Alert
-            onClose={() => setOpenSnackbar(false)}
-            severity="success"
-            sx={{ width: "100%" }}
-          >
-            Đã xuất PDF thành công
-          </Alert>
-        </Snackbar>
       </Box>
+
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={3000}
+        onClose={() => setOpenSnackbar(false)}
+      >
+        <Alert severity="success">Đã xuất PDF thành công</Alert>
+      </Snackbar>
     </Box>
   );
 }

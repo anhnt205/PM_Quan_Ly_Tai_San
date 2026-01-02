@@ -45,12 +45,14 @@ export default function AssetTransferForm({
   selectedTransfer,
   readOnly,
   onSave,
+  label,
 }: {
   onEdit: () => void;
   onCancel: () => void;
   selectedTransfer?: any;
   readOnly?: boolean;
   onSave: (values: any) => void;
+  label?: string;
 }) {
   const [expanded, setExpanded] = useState(true);
 
@@ -145,7 +147,7 @@ export default function AssetTransferForm({
       >
         <Box sx={{ display: "flex", alignItems: "center" }}>
           {expanded ? <ArrowDropUp /> : <ArrowDropDown />}
-          <Typography>Chi tiết cấp phát tài sản</Typography>
+          <Typography>Chi tiết {label}</Typography>
         </Box>
       </AccordionSummary>
 
@@ -176,7 +178,7 @@ export default function AssetTransferForm({
 
         {currentStatus === 2 && (
           <CancelStatusBadge>
-            <Cancel fontSize="small" /> Hủy phiếu Cấp phát tài sản
+            <Cancel fontSize="small" /> Hủy phiếu {label}
           </CancelStatusBadge>
         )}
 

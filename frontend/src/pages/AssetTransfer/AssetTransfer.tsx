@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Box, Chip, Grid, Paper, Typography } from "@mui/material";
 import { Add } from "@mui/icons-material";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
@@ -14,6 +14,7 @@ import { mockAssetTransfers as mockRows } from "../../data/AssetTransferData";
 // Import Types & Data
 import { AssetTransferData } from "./types";
 import PageAction from "../../components/common/PageAction";
+import { useParams, useSearchParams } from "react-router-dom";
 
 export default function AssetTransfer() {
   // State
@@ -26,9 +27,36 @@ export default function AssetTransfer() {
     pageSize: 10,
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [selectedDocuments, setSelectedDocuments] = useState<any[]>([]);
+  const [selectedDocuments, setSelectedDocuments] = useState<any | null>(null);
   const [searchValue, setSearchValue] = useState("");
   const [showSignDocument, setShowSignDocument] = useState(false);
+
+  const [searchParams] = useSearchParams();
+  const type = searchParams.get("type");
+
+  useEffect(() => {
+    setSelectedIds([]);
+    setSelectedDocuments(null);
+    setSearchValue("");
+    setShowSignDocument(false);
+    setSelectedRow(null);
+    setShowForm(false);
+  }, [type]);
+  const getTypeInfo = (typeValue: any) => {
+    switch (Number(typeValue)) {
+      case 1:
+        return { title: "Cấp phát tài sản", label: "cấp phát tài sản" };
+      case 2:
+        return { title: "Điều chuyển tài sản", label: "điều chuyển tài sản" };
+      case 3:
+        return { title: "Thu hồi tài sản", label: "thu hồi tài sản" };
+      default:
+        return { title: "Cấp phát tài sản", label: "cấp phát tài sản" };
+    }
+  };
+
+  // Usage inside your component
+  const { title, label } = getTypeInfo(type);
 
   const handleRowClick = (params: GridRowParams) => {
     const data = params.row as AssetTransferData;
@@ -45,16 +73,10 @@ export default function AssetTransfer() {
     console.log("Xóa các bản ghi:", ids);
   };
 
-  const handleSignAssets = (ids: string[]) => {
-    console.log("Ký biên bản cho các tài sản:", ids);
+  const handleSignAssets = (id: string) => {
+    console.log("Ký biên bản cho các tài sản:", id);
     // Lấy thông tin document từ các dòng được chọn
-    const documents = mockRows
-      .filter((row: any) => ids.includes(row.id))
-      .map((row: any) => ({
-        id: row.id,
-        name: row.TenPhieu,
-        file: row.TenFile,
-      }));
+    const documents = mockRows.find((row: any) => row.id === id);
     setSelectedDocuments(documents);
     setShowSignDocument(true);
   };
@@ -171,10 +193,7 @@ export default function AssetTransfer() {
         />
       ) : (
         <>
-          <PageAction
-            title="Cấp phát tài sản"
-            onNewClick={() => setShowForm(true)}
-          />
+          <PageAction title={title} onNewClick={() => setShowForm(true)} />
           <Box sx={{ p: 2 }}>
             {/* FORM AREA */}
             {showForm && (
@@ -186,6 +205,7 @@ export default function AssetTransfer() {
                   onEdit={() => {}}
                   readOnly={!!selectedRow}
                   selectedTransfer={selectedRow}
+                  label={label}
                 />
               </Box>
             )}
@@ -194,7 +214,7 @@ export default function AssetTransfer() {
               container
               sx={{
                 display: "flex",
-                alignItems: "stretch", 
+                alignItems: "stretch",
                 bgcolor: "background.paper",
                 borderRadius: "8px",
                 overflow: "hidden",
@@ -216,7 +236,7 @@ export default function AssetTransfer() {
                 }}
               >
                 <TableCustom
-                  title="Phiếu duyệt cấp phát tài sản"
+                  title={`Phiếu duyệt ${label}`}
                   columns={columns}
                   rows={mockRows}
                   total={mockRows.length}

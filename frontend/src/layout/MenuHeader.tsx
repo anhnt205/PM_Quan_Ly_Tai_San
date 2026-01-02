@@ -145,9 +145,9 @@ export default function Menuheader() {
       text: "Điều động tài sản",
       path: "/",
       subMenu: [
-        { text: "Cấp phát tài sản", path: ROUTES.ASSETTRANSFER },
-        { text: "Điều chuyển tài sản", path: "/" },
-        { text: "Thu hồi tài sản", path: "/" },
+        { text: "Cấp phát tài sản", path: `${ROUTES.ASSETTRANSFER}?type=1` },
+        { text: "Điều chuyển tài sản", path: `${ROUTES.ASSETTRANSFER}?type=2`},
+        { text: "Thu hồi tài sản", path:`${ROUTES.ASSETTRANSFER}?type=3` },
       ],
     },
     {
