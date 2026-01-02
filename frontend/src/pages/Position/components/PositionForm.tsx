@@ -42,12 +42,22 @@ export default function PositionForm({
   const [expanded, setExpanded] = useState(true);
   const formik = useFormik({
     initialValues: {
-      code: "",
-      name: "",
-      manager_staff: false,
-      manager_department: false,
-      manager_project: false,
-      manager_capital_source: false,
+      id: "ct001",
+      tenChucVu: "ct001",
+      quanLyNhanVien: false,
+      quanLyPhongBan: false,
+      quanLyDuAn: false,
+      quanLyNguonVon: false,
+      quanLyMoHinhTaiSan: false,
+      quanLyNhomTaiSan: false,
+      quanLyTaiSan: false,
+      quanLyCCDCVatTu: false,
+      dieuDongTaiSan: false,
+      dieuDongCCDCVatTu: false,
+      banGiaoTaiSan: false,
+      banGiaoCCDCVatTu: false,
+      baoCao: false,
+      idCongTy: "ct001",
     },
     validationSchema: PositionValidation,
     onSubmit(values) {
@@ -97,7 +107,7 @@ export default function PositionForm({
               <FieldInput
                 title="Mã chức vụ *"
                 formik={formik}
-                field="code"
+                field="id"
                 disabled={readOnly}
               />
             </Grid>
@@ -105,7 +115,7 @@ export default function PositionForm({
               <FieldInput
                 title="Tên chức vụ *"
                 formik={formik}
-                field="name"
+                field="tenChucVu"
                 disabled={readOnly}
               />
             </Grid>
@@ -123,11 +133,26 @@ export default function PositionForm({
                   <Typography>Quản lý nhân viên:</Typography>
                 </Box>
                 <Checkbox
-                  checked={formik.values.manager_staff}
+                  checked={formik.values.quanLyNhanVien}
                   onChange={(e) =>
-                    formik.setFieldValue("manager_staff", e.target.checked)
+                    formik.setFieldValue("quanLyNhanVien", e.target.checked)
                   }
-                  name="manager_staff"
+                  name="quanLyNhanVien"
+                  disabled={readOnly}
+                />
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <Box display="flex" alignItems="center">
+                <Box width={200}>
+                  <Typography>Quản lý CCDC vật tư:</Typography>
+                </Box>
+                <Checkbox
+                  checked={formik.values.quanLyCCDCVatTu}
+                  onChange={(e) =>
+                    formik.setFieldValue("quanLyCCDCVatTu", e.target.checked)
+                  }
+                  name="quanLyCCDCVatTu"
                   disabled={readOnly}
                 />
               </Box>
@@ -138,11 +163,26 @@ export default function PositionForm({
                   <Typography>Quản lý phòng ban:</Typography>
                 </Box>
                 <Checkbox
-                  checked={formik.values.manager_department}
+                  checked={formik.values.quanLyPhongBan}
                   onChange={(e) =>
-                    formik.setFieldValue("manager_department", e.target.checked)
+                    formik.setFieldValue("quanLyPhongBan", e.target.checked)
                   }
-                  name="manager_department"
+                  name="quanLyPhongBan"
+                  disabled={readOnly}
+                />
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <Box display="flex" alignItems="center">
+                <Box width={200}>
+                  <Typography>Điều động tài sản:</Typography>
+                </Box>
+                <Checkbox
+                  checked={formik.values.dieuDongTaiSan}
+                  onChange={(e) =>
+                    formik.setFieldValue("dieuDongTaiSan", e.target.checked)
+                  }
+                  name="dieuDongTaiSan"
                   disabled={readOnly}
                 />
               </Box>
@@ -153,11 +193,26 @@ export default function PositionForm({
                   <Typography>Quản lý dự án:</Typography>
                 </Box>
                 <Checkbox
-                  checked={formik.values.manager_project}
+                  checked={formik.values.quanLyDuAn}
                   onChange={(e) =>
-                    formik.setFieldValue("manager_project", e.target.checked)
+                    formik.setFieldValue("quanLyDuAn", e.target.checked)
                   }
-                  name="manager_project"
+                  name="quanLyDuAn"
+                  disabled={readOnly}
+                />
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <Box display="flex" alignItems="center">
+                <Box width={200}>
+                  <Typography>Điều động CCDC vật tư:</Typography>
+                </Box>
+                <Checkbox
+                  checked={formik.values.dieuDongCCDCVatTu}
+                  onChange={(e) =>
+                    formik.setFieldValue("dieuDongCCDCVatTu", e.target.checked)
+                  }
+                  name="dieuDongCCDCVatTu"
                   disabled={readOnly}
                 />
               </Box>
@@ -168,17 +223,104 @@ export default function PositionForm({
                   <Typography>Quản lý nguồn vốn:</Typography>
                 </Box>
                 <Checkbox
-                  checked={formik.values.manager_capital_source}
+                  checked={formik.values.quanLyNguonVon}
                   onChange={(e) =>
-                    formik.setFieldValue(
-                      "manager_capital_source",
-                      e.target.checked
-                    )
+                    formik.setFieldValue("quanLyNguonVon", e.target.checked)
                   }
-                  name="manager_capital_source"
+                  name="quanLyNguonVon"
                   disabled={readOnly}
                 />
               </Box>
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <Box display="flex" alignItems="center">
+                <Box width={200}>
+                  <Typography>Bàn giao tài sản:</Typography>
+                </Box>
+                <Checkbox
+                  checked={formik.values.banGiaoTaiSan}
+                  onChange={(e) =>
+                    formik.setFieldValue("banGiaoTaiSan", e.target.checked)
+                  }
+                  name="banGiaoTaiSan"
+                  disabled={readOnly}
+                />
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <Box display="flex" alignItems="center">
+                <Box width={200}>
+                  <Typography>Quản lý mô hình tài sản:</Typography>
+                </Box>
+                <Checkbox
+                  checked={formik.values.quanLyMoHinhTaiSan}
+                  onChange={(e) =>
+                    formik.setFieldValue("quanLyMoHinhTaiSan", e.target.checked)
+                  }
+                  name="quanLyMoHinhTaiSan"
+                  disabled={readOnly}
+                />
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <Box display="flex" alignItems="center">
+                <Box width={200}>
+                  <Typography>bàn giao CCDC vật tư:</Typography>
+                </Box>
+                <Checkbox
+                  checked={formik.values.banGiaoCCDCVatTu}
+                  onChange={(e) =>
+                    formik.setFieldValue("banGiaoCCDCVatTu", e.target.checked)
+                  }
+                  name="banGiaoCCDCVatTu"
+                  disabled={readOnly}
+                />
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <Box display="flex" alignItems="center">
+                <Box width={200}>
+                  <Typography>Quản lý nhóm tài sản:</Typography>
+                </Box>
+                <Checkbox
+                  checked={formik.values.quanLyNhomTaiSan}
+                  onChange={(e) =>
+                    formik.setFieldValue("quanLyNhomTaiSan", e.target.checked)
+                  }
+                  name="quanLyNhomTaiSan"
+                  disabled={readOnly}
+                />
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <Box display="flex" alignItems="center">
+                <Box width={200}>
+                  <Typography>Báo cáo:</Typography>
+                </Box>
+                <Checkbox
+                  checked={formik.values.baoCao}
+                  onChange={(e) =>
+                    formik.setFieldValue("baoCao", e.target.checked)
+                  }
+                  name="baoCao"
+                  disabled={readOnly}
+                />
+              </Box>
+              <Grid size={{ xs: 6 }}>
+                <Box display="flex" alignItems="center">
+                  <Box width={200}>
+                    <Typography>Quản lý tài sản:</Typography>
+                  </Box>
+                  <Checkbox
+                    checked={formik.values.quanLyTaiSan}
+                    onChange={(e) =>
+                      formik.setFieldValue("quanLyTaiSan", e.target.checked)
+                    }
+                    name="quanLyTaiSan"
+                    disabled={readOnly}
+                  />
+                </Box>
+              </Grid>
             </Grid>
           </Grid>
         </Paper>

@@ -6,12 +6,33 @@ import Positions from "../../data/Position.json";
 import ProjectForm from "./components/PositionForm";
 import { Delete } from "@mui/icons-material";
 import React, { useState } from "react";
+import { showConfirmAlert } from "../../components/Alert";
+import { usePositionMutation } from "./Mutation";
 
 export default function Position() {
   const [showForm, setShowForm] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<any>(null);
   const [readOnly, setReadOnly] = useState(false);
-  const [positionsData, setPositionsData] = useState(Positions);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [searchValue, setSearchValue] = useState("");
+
+  const [paginationModel, setPaginationModel] = useState({
+    pageSize: 10,
+    page: 0,
+  });
+
+  const {
+    positionsPage,
+    createMutation,
+    updateMutation,
+    deleteOneMutation,
+    deleteManyMutation,
+    isLoading,
+  } = usePositionMutation(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchValue
+  );
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedPosition(params.row);
@@ -21,17 +42,9 @@ export default function Position() {
 
   const handleSave = (values: any) => {
     if (selectedPosition) {
-      // Update existing staff
-      const updatedStaffs = positionsData.map((position) =>
-        position.id === selectedPosition.id
-          ? { ...position, ...values }
-          : position
-      );
-      setPositionsData(updatedStaffs);
+      updateMutation.mutate(values);
     } else {
-      // Create new staff
-      const newStaff = { ...values, id: Date.now() }; // Simple ID generation
-      setPositionsData([...positionsData, newStaff]);
+      createMutation.mutate(values);
     }
     setShowForm(false);
     setSelectedPosition(null);
@@ -42,14 +55,14 @@ export default function Position() {
   };
   const columns: GridColDef[] = [
     {
-      field: "code",
+      field: "id",
       headerName: "Mã chức vụ",
       width: 150,
       align: "center",
       headerAlign: "center",
     },
     {
-      field: "name",
+      field: "tenChucVu",
       headerName: "Tên chức vụ",
       flex: 1,
       minWidth: 200,
@@ -57,40 +70,106 @@ export default function Position() {
       headerAlign: "center",
     },
     {
-      field: "manager_staff",
+      field: "quanLyNhanVien",
       headerName: "Quản lý nhân viên",
       width: 150,
       align: "center",
       headerAlign: "center",
-      renderCell: (params) => <Checkbox checked={params.row.manager_staff} />,
+      renderCell: (params) => <Checkbox checked={params.row.quanLyNhanVien} />,
     },
     {
-      field: "manager_department",
+      field: "quanLyPhongBan",
       headerName: "Quản lý phòng ban",
       width: 150,
       align: "center",
       headerAlign: "center",
-      renderCell: (params) => (
-        <Checkbox checked={params.row.manager_department} />
-      ),
+      renderCell: (params) => <Checkbox checked={params.row.quanLyPhongBan} />,
     },
     {
-      field: "manager_project",
+      field: "quanLyDuAn",
       headerName: "Quản lý dự án",
       width: 150,
       align: "center",
       headerAlign: "center",
-      renderCell: (params) => <Checkbox checked={params.row.manager_project} />,
+      renderCell: (params) => <Checkbox checked={params.row.quanLyDuAn} />,
     },
     {
-      field: "manager_capital_source",
+      field: "quanLyNguonVon",
       headerName: "Quản lý nguồn vốn",
       width: 150,
       align: "center",
       headerAlign: "center",
+      renderCell: (params) => <Checkbox checked={params.row.quanLyNguonVon} />,
+    },
+    {
+      field: "quanLyMoHinhTaiSan",
+      headerName: "Quản lý mô hình tài sản",
+      width: 150,
+      align: "center",
+      headerAlign: "center",
       renderCell: (params) => (
-        <Checkbox checked={params.row.manager_capital_source} />
+        <Checkbox checked={params.row.quanLyMoHinhTaiSan} />
       ),
+    },
+    {
+      field: "quanLyTaiSan",
+      headerName: "Quản lý tài sản",
+      width: 150,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => <Checkbox checked={params.row.quanLyTaiSan} />,
+    },
+    {
+      field: "quanLyCCDCVatTu",
+      headerName: "Quản lý CCDC - Vật tư",
+      width: 150,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => <Checkbox checked={params.row.quanLyCCDCVatTu} />,
+    },
+    {
+      field: "dieuDongTaiSan",
+      headerName: "Điều động tài sản",
+      width: 150,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => <Checkbox checked={params.row.dieuDongTaiSan} />,
+    },
+    {
+      field: "dieuDongCCDCVatTu",
+      headerName: "Điều động CCDC - vật tư",
+      width: 150,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => (
+        <Checkbox checked={params.row.dieuDongCCDCVatTu} />
+      ),
+    },
+    {
+      field: "banGiaoTaiSan",
+      headerName: "Bàn giao tài sản",
+      width: 150,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => <Checkbox checked={params.row.banGiaoTaiSan} />,
+    },
+    {
+      field: "banGiaoCCDCVatTu",
+      headerName: "Bàn giao CCDC - vật tư",
+      width: 150,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => (
+        <Checkbox checked={params.row.banGiaoCCDCVatTu} />
+      ),
+    },
+    {
+      field: "baoCao",
+      headerName: "Báo cáo",
+      width: 150,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => <Checkbox checked={params.row.baoCao} />,
     },
     {
       field: "action",
@@ -99,7 +178,15 @@ export default function Position() {
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
-        <IconButton>
+        <IconButton
+          onClick={async (e) => {
+            e.stopPropagation();
+            const confirm = await showConfirmAlert("Xác nhận xóa!");
+            if (confirm.isConfirmed) {
+              deleteOneMutation.mutate(params.row.id);
+            }
+          }}
+        >
           <Delete color="error" />
         </IconButton>
       ),
@@ -135,8 +222,17 @@ export default function Position() {
         <TableCustom
           title="Quản lý chức vụ"
           columns={columns}
-          rows={Positions}
+          rows={positionsPage.items}
+          total={positionsPage.totalItems}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          loading={isLoading}
           onRowClick={handleRowClick}
+          selectedIds={selectedIds}
+          onSelectionChange={setSelectedIds}
+          onDelete={deleteManyMutation.mutate}
+          searchValue={searchValue}
+          setSearchValue={setSearchValue}
         />
       </Box>
     </Box>
