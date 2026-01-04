@@ -1,10 +1,10 @@
 import * as yup from 'yup'
 
 export const StaffValidation = yup.object({
-    code: yup.string().required('Bắt buộc'),
-    name: yup.string().required('Bắt buộc'),
-    phone: yup.string().required('Bắt buộc'),
-    email: yup.string().required('Bắt buộc'),
-    department: yup.string().required('Bắt buộc'),
-    position: yup.string().required('Bắt buộc'),
-})
+  id: yup.string().required("Bắt buộc"),
+  hoTen: yup.string().required("Bắt buộc"),
+  diDong: yup.string().required("Bắt buộc"),
+  emailCongViec: yup.string().required("Bắt buộc"),
+  boPhan: yup.string().required("Bắt buộc"),
+  chucVu: yup.string().required("Bắt buộc"),
+});

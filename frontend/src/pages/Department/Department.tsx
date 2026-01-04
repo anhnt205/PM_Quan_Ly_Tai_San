@@ -23,7 +23,7 @@ export default function Department() {
   });
 
   const {
-    departments,
+    departmentsPage,
     createMutation,
     updateMutation,
     deleteOneMutation,
@@ -129,8 +129,8 @@ export default function Department() {
         <TableCustom
           title="Quản lý phòng ban"
           columns={columns}
-          rows={departments.items}
-          total={departments.totalItems}
+          rows={departmentsPage.items}
+          total={departmentsPage.totalItems}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
           loading={isLoading}

@@ -6,9 +6,9 @@ import { DepartmentType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 
 export const useDepartmentMutation = (
-  page: number,
-  pageSize: number,
-  searchValue: string
+  page?: number,
+  pageSize?: number,
+  searchValue?: string
 ) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
@@ -17,7 +17,7 @@ export const useDepartmentMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["departments"] });
+      queryClient.invalidateQueries({ queryKey: ["departmentsPage"] });
       showSuccessAlert("Tạo phòng ban thành công");
     },
     onError: (error: any) => {
@@ -35,7 +35,7 @@ export const useDepartmentMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["departments"] });
+      queryClient.invalidateQueries({ queryKey: ["departmentsPage"] });
       showSuccessAlert("Sửa phòng ban thành công");
     },
     onError: (error: any) => {
@@ -52,7 +52,7 @@ export const useDepartmentMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["departments"] });
+      queryClient.invalidateQueries({ queryKey: ["departmentsPage"] });
       showSuccessAlert("Xóa phòng ban thành công");
     },
     onError: (error: any) => {
@@ -69,7 +69,7 @@ export const useDepartmentMutation = (
       return res.data.message;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["departments"] });
+      queryClient.invalidateQueries({ queryKey: ["departmentsPage"] });
       showSuccessAlert(data || "Xóa phòng ban thành công");
     },
     onError: (error: any) => {
@@ -82,7 +82,7 @@ export const useDepartmentMutation = (
   });
 
   const { data = { items: [], totalItems: 0 }, isLoading } = useQuery({
-    queryKey: ["departments", page, pageSize, searchValue], // Key để cache dữ liệu
+    queryKey: ["departmentsPage", page, pageSize, searchValue], // Key để cache dữ liệu
     queryFn: async () => {
       const res = await api.get("/phongban/paged", {
         params: {
@@ -102,7 +102,7 @@ export const useDepartmentMutation = (
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
-    departments: data,
+    departmentsPage: data,
     isLoading,
   };
 };

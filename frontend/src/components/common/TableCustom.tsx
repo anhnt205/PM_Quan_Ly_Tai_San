@@ -236,6 +236,7 @@ export default function TableCustom({
               printOptions: { disableToolbarButton: true },
             },
           }}
+          getRowHeight={() => "auto"}
           sx={{
             fontSize: "14px",
             "& .MuiDataGrid-columnHeader": {

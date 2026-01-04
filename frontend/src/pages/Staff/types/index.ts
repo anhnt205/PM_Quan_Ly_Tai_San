@@ -1,0 +1,29 @@
+export interface StaffType {
+  id: "";
+  hoTen: "";
+  diDong: "";
+  emailCongViec: "";
+  kyNhay: boolean;
+  kyThuong: boolean;
+  kySo: boolean;
+  chuKyNhay: "";
+  chuKyThuong: "";
+  agreementUUId: "";
+  pin: "";
+  boPhan: "";
+  chucVu: "";
+  nguoiQuanLy: "";
+  laQuanLy: boolean;
+  avatar: "";
+  idCongTy: "";
+  diaChiLamViec: "";
+  hinhThucLamViec: "";
+  gioLamViec: "";
+  muiGio: "";
+  nguoiTao: "";
+  nguoiCapNhat: "";
+  isActive: boolean;
+  ngayTao: "";
+  ngayCapNhat: "";
+  savePin: boolean;
+}

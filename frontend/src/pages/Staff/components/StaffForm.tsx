@@ -23,14 +23,14 @@ import React, { useEffect, useState } from "react";
 import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
 import FieldInput from "../../../components/TextField/FieldInput";
-import Positions from "../../../data/Position.json";
-import Departments from "../../../data/Department.json";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
 import { useFormik } from "formik";
 import { StaffValidation } from "../validation/Validation";
 import UploadButton from "../../../components/Button/UploadButton";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import EditButton from "../../../components/Button/EditButton";
+import { usePositionMutation } from "../../Position/Mutation";
+import { useDepartmentMutation } from "../../Department/Mutation";
 
 export default function StaffForm({
   onEdit,
@@ -38,44 +38,97 @@ export default function StaffForm({
   selectedStaff,
   readOnly,
   onSave,
+  onUpload,
 }: {
   onEdit: () => void;
   onCancel: () => void;
   selectedStaff?: any;
   readOnly: boolean;
   onSave: (values: any) => void;
+  onUpload: (file: File) => void;
 }) {
   const [showPin, setShowPin] = useState(false);
   const [expanded, setExpanded] = useState(true);
+  const { positionsPage } = usePositionMutation();
+  const { departmentsPage } = useDepartmentMutation(0, 99999);
+
   const formik = useFormik({
     initialValues: {
-      code: "",
-      name: "",
-      phone: "",
-      email: "",
-      department: "",
-      position: "",
-      isFlashSign: false, // Ký nháy
-      isNormalSign: false, // Ký thường
-      isDigitalSign: false, // Ký số
-      agreementUuid: "",
+      id: "",
+      hoTen: "",
+      diDong: "",
+      emailCongViec: "",
+      kyNhay: false,
+      kyThuong: false,
+      kySo: false,
+      chuKyNhay: "",
+      chuKyThuong: "",
+      agreementUUId: "",
       pin: "",
+      boPhan: "",
+      chucVu: "",
+      laQuanLy: true,
+      idCongTy: "ct001",
+      isActive: true,
       savePin: false,
+      tempFileKyNhay: null as File | null,
+      tempFileKyThuong: null as File | null,
     },
     validationSchema: StaffValidation,
-    onSubmit(values) {
-      onSave(values);
+    onSubmit: async (values) => {
+      try {
+        // 1. Kiểm tra và Upload Chữ ký nháy (nếu có file mới)
+        if (values.tempFileKyNhay) {
+          await onUpload(values.tempFileKyNhay);
+        }
+
+        // 2. Kiểm tra và Upload Chữ ký thường (nếu có file mới)
+        if (values.tempFileKyThuong) {
+          await onUpload(values.tempFileKyThuong);
+        }
+
+        // 3. Chuẩn bị dữ liệu để Save (Loại bỏ 2 trường temp file thừa)
+        const { tempFileKyNhay, tempFileKyThuong, ...dataToSave } = values;
+
+        // 4. Gọi hàm Save cuối cùng
+        onSave(dataToSave);
+      } catch (error) {
+        console.error("Lỗi khi upload file:", error);
+        // Có thể show alert lỗi ở đây nếu cần
+      }
     },
   });
 
   useEffect(() => {
     if (selectedStaff) {
-      formik.setValues(selectedStaff);
+      formik.setValues({
+        ...selectedStaff,
+        boPhan: selectedStaff?.phongBanId,
+        chucVu: selectedStaff?.chucVuId,
+      });
       formik.setErrors({}); // Clear errors when selectedStaff changes
-    }else{
+    } else {
       formik.resetForm();
     }
   }, [selectedStaff, readOnly]); // Add readOnly to dependencies
+
+  // Hàm xử lý chung cho input file
+  const handleFileSelect = (
+    file: File | null, // Nhận trực tiếp File hoặc null từ UploadButton
+    fieldName: "chuKyNhay" | "chuKyThuong",
+    tempFieldName: "tempFileKyNhay" | "tempFileKyThuong"
+  ) => {
+    if (file) {
+      // Lưu tên file vào Formik để hiển thị/gửi DB
+      formik.setFieldValue(fieldName, file.name);
+      // Lưu file thực tế vào trường tạm để chờ submit
+      formik.setFieldValue(tempFieldName, file);
+    } else {
+      // Nếu xóa file (handleRemove từ nút Delete)
+      formik.setFieldValue(fieldName, "");
+      formik.setFieldValue(tempFieldName, null);
+    }
+  };
 
   return (
     <Accordion sx={{ background: "#f6f8f4ff" }} expanded={expanded}>
@@ -112,15 +165,15 @@ export default function StaffForm({
                   <FieldInput
                     title="Mã nhân viên *"
                     formik={formik}
-                    field="code"
-                    disabled={readOnly}
+                    field="id"
+                    disabled={Boolean(selectedStaff)}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <FieldInput
                     title="Tên nhân viên *"
                     formik={formik}
-                    field="name"
+                    field="hoTen"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -128,7 +181,7 @@ export default function StaffForm({
                   <FieldInput
                     title="Email *"
                     formik={formik}
-                    field="email"
+                    field="emailCongViec"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -136,27 +189,27 @@ export default function StaffForm({
                   <FieldInput
                     title="Số điện thoại *"
                     formik={formik}
-                    field="phone"
+                    field="diDong"
                     disabled={readOnly}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <FieldAutoCompleted
                     title="Chức vụ *"
-                    data={Positions}
-                    labelkey="name"
+                    data={positionsPage.items}
+                    labelkey="tenChucVu"
                     formik={formik}
-                    field="position"
+                    field="chucVu"
                     disabled={readOnly}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <FieldAutoCompleted
                     title="Phòng ban/Bộ phận *"
-                    data={Departments}
-                    labelkey="name"
+                    data={departmentsPage.items}
+                    labelkey="tenPhongBan"
                     formik={formik}
-                    field="department"
+                    field="boPhan"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -170,14 +223,26 @@ export default function StaffForm({
                     <Typography>Ký nháy:</Typography>
                   </Box>
                   <Checkbox
-                    name="isFlashSign"
-                    checked={formik.values.isFlashSign}
+                    name="kyNhay"
+                    checked={formik.values.kyNhay}
                     onChange={!readOnly ? formik.handleChange : undefined}
                     disabled={readOnly}
                   />
-                  {formik.values.isFlashSign && (
+                  {formik.values.kyNhay && (
                     <Box flex={1} ml={1}>
-                      <UploadButton label="Nhấn để chọn file chữ ký (.png, .jpg...)" disabled={readOnly} />
+                      <UploadButton
+                        label="Nhấn để chọn file chữ ký (.png, .jpg...)"
+                        disabled={readOnly}
+                        name="chuKyNhay"
+                        onChange={(file: any) =>
+                          handleFileSelect(
+                            file,
+                            "chuKyThuong",
+                            "tempFileKyThuong"
+                          )
+                        }
+                        nameFile={formik.values.chuKyNhay}
+                      />
                     </Box>
                   )}
                 </Box>
@@ -188,14 +253,22 @@ export default function StaffForm({
                     <Typography>Ký thường:</Typography>
                   </Box>
                   <Checkbox
-                    name="isNormalSign"
-                    checked={formik.values.isNormalSign}
+                    name="kyThuong"
+                    checked={formik.values.kyThuong}
                     onChange={!readOnly ? formik.handleChange : undefined}
                     disabled={readOnly}
                   />
-                  {formik.values.isNormalSign && (
+                  {formik.values.kyThuong && (
                     <Box flex={1} ml={1}>
-                      <UploadButton label="Nhấn để chọn file chữ ký (.png, .jpg...)" disabled ={readOnly} />
+                      <UploadButton
+                        label="Nhấn để chọn file chữ ký (.png, .jpg...)"
+                        disabled={readOnly}
+                        name="chuKyThuong"
+                        onChange={(e: any) =>
+                          handleFileSelect(e, "chuKyThuong", "tempFileKyThuong")
+                        }
+                        nameFile={formik.values.chuKyThuong}
+                      />
                     </Box>
                   )}
                 </Box>
@@ -206,21 +279,21 @@ export default function StaffForm({
                     <Typography>Ký số:</Typography>
                   </Box>
                   <Checkbox
-                    name="isDigitalSign"
-                    checked={formik.values.isDigitalSign}
+                    name="kySo"
+                    checked={formik.values.kySo}
                     onChange={!readOnly ? formik.handleChange : undefined}
                     disabled={readOnly}
                   />
                 </Box>
-                {formik.values.isDigitalSign && (
+                {formik.values.kySo && (
                   <Box display="flex" flexDirection={"column"} gap={1}>
                     {/* Dòng 4: Agreement UUID */}
                     <TextField
                       fullWidth
                       size="small"
                       placeholder="Agreement UUID"
-                      name="agreementUuid"
-                      value={formik.values.agreementUuid}
+                      name="agreementUUId"
+                      value={formik.values.agreementUUId}
                       onChange={!readOnly ? formik.handleChange : undefined}
                       InputProps={{
                         sx: { borderRadius: "8px" },
@@ -278,4 +351,3 @@ export default function StaffForm({
     </Accordion>
   );
 }
-

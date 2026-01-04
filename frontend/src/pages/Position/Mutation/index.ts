@@ -87,28 +87,11 @@ export const usePositionMutation = (
     placeholderData: (previousData) => previousData,
   });
 
-  const { data: allData = [] } = useQuery({
-    queryKey: ["positions", page, pageSize, searchValue], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/chucvu", {
-        params: {
-          idcongty: "ct001",
-          page: page,
-          size: pageSize,
-          search: searchValue,
-        },
-      });
-      return res.data;
-    },
-    placeholderData: (previousData) => previousData,
-  });
-
   return {
     createMutation,
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
-    allData,
     positionsPage: data,
     isLoading,
   };

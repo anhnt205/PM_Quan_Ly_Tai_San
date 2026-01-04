@@ -15,12 +15,34 @@ import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import Staffs from "../../data/Staff.json";
 import StaffForm from "./components/StaffForm";
+import { useStaffMutation } from "./Mutation";
+import { showConfirmAlert } from "../../components/Alert";
 
 export default function Staff() {
   const [showForm, setShowForm] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<any>(null);
   const [readOnly, setReadOnly] = useState(false);
-  const [staffsData, setStaffsData] = useState(Staffs);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [searchValue, setSearchValue] = useState("");
+
+  const [paginationModel, setPaginationModel] = useState({
+    pageSize: 10,
+    page: 0,
+  });
+
+  const {
+    staffsPage,
+    createMutation,
+    updateMutation,
+    deleteOneMutation,
+    deleteManyMutation,
+    uploadMutation,
+    isLoading,
+  } = useStaffMutation(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchValue
+  );
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedStaff(params.row);
@@ -30,34 +52,27 @@ export default function Staff() {
 
   const handleSave = (values: any) => {
     if (selectedStaff) {
-      // Update existing staff
-      const updatedStaffs = staffsData.map((staff) =>
-        staff.id === selectedStaff.id ? { ...staff, ...values } : staff
-      );
-      setStaffsData(updatedStaffs);
+      updateMutation.mutate(values);
     } else {
-      // Create new staff
-      const newStaff = { ...values, id: Date.now() }; // Simple ID generation
-      setStaffsData([...staffsData, newStaff]);
+      createMutation.mutate(values);
     }
     setShowForm(false);
     setSelectedStaff(null);
   };
-
   const handleEdit = () => {
     setReadOnly(false);
   };
 
   const columns: GridColDef[] = [
     {
-      field: "code",
+      field: "id",
       headerName: "Mã nhân viên",
       width: 150,
       align: "center",
       headerAlign: "center",
     },
     {
-      field: "name",
+      field: "hoTen",
       headerName: "Tên nhân viên",
       flex: 1,
       minWidth: 200,
@@ -65,28 +80,28 @@ export default function Staff() {
       headerAlign: "center",
     },
     {
-      field: "phone",
+      field: "diDong",
       headerName: "Số điện thoại",
       width: 150,
       align: "center",
       headerAlign: "center",
     },
     {
-      field: "email",
+      field: "emailCongViec",
       headerName: "Email",
       flex: 1,
       align: "center",
       headerAlign: "center",
     },
     {
-      field: "department",
+      field: "tenPhongBan",
       headerName: "Phòng ban",
       width: 180,
       align: "center",
       headerAlign: "center",
     },
     {
-      field: "position",
+      field: "tenChucVu",
       headerName: "Chức vụ",
       width: 150,
       align: "center",
@@ -99,9 +114,9 @@ export default function Staff() {
       align: "center",
       headerAlign: "center",
       renderCell: (params) => {
-        const isFlashSign = params.row.isFlashSign;
-        const isNormalSign = params.row.isNormalSign;
-        const isDigitalSign = params.row.isDigitalSign;
+        const isFlashSign = params.row.kyNhay;
+        const isNormalSign = params.row.kyThuong;
+        const isDigitalSign = params.row.kySo;
         const isSignature = !isFlashSign && !isNormalSign && !isDigitalSign;
         return (
           <Box
@@ -156,7 +171,15 @@ export default function Staff() {
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
-        <IconButton>
+        <IconButton
+          onClick={async (e) => {
+            e.stopPropagation();
+            const confirm = await showConfirmAlert("Xác nhận xóa!");
+            if (confirm.isConfirmed) {
+              deleteOneMutation.mutate(params.row.id);
+            }
+          }}
+        >
           <Delete color="error" />
         </IconButton>
       ),
@@ -186,14 +209,24 @@ export default function Staff() {
               selectedStaff={selectedStaff}
               readOnly={readOnly}
               onSave={handleSave}
+              onUpload={uploadMutation.mutate}
             />
           </Box>
         )}
         <TableCustom
           title="Quản lý nhân viên"
           columns={columns}
-          rows={staffsData}
+          rows={staffsPage.items}
+          total={staffsPage.totalItems}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          loading={isLoading}
           onRowClick={handleRowClick}
+          selectedIds={selectedIds}
+          onSelectionChange={setSelectedIds}
+          onDelete={deleteManyMutation.mutate}
+          searchValue={searchValue}
+          setSearchValue={setSearchValue}
         />
       </Box>
     </Box>
