@@ -8,6 +8,7 @@ interface Props {
   formik?: any;
   field?: string;
   disabled?: boolean;
+  onChange?: (newValue: any) => void;
 }
 
 export default function FieldAutoCompleted({
@@ -17,6 +18,7 @@ export default function FieldAutoCompleted({
   formik,
   field,
   disabled,
+  onChange,
 }: Props) {
   const currentValue = formik && field ? getIn(formik.values, field) : null;
 
@@ -35,6 +37,9 @@ export default function FieldAutoCompleted({
       onChange={(e, newValue) => {
         if (formik && field) {
           formik.setFieldValue(field, newValue?.id);
+        }
+        if (onChange) {
+          onChange(newValue);
         }
       }}
       renderInput={(params) => (

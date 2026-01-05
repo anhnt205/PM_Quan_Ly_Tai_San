@@ -688,7 +688,7 @@ export default function AssetHandoverForm({
                                 field={`chiTietBanGiaoTaiSan.${index}.idTaiSan`}
                                 data={allAssets}
                                 disabled={isFormReadOnly}
-                                onCChange={(newValue: any) => {
+                                onChange={(newValue: any) => {
                                   if (newValue) {
                                     formik.setFieldValue(
                                       `chiTietBanGiaoTaiSan.${index}.tenTaiSan`,
