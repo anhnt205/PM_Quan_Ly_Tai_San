@@ -61,6 +61,7 @@ function App() {
           <Route path={ROUTES.ASSETMANAGER} element={<AssetManager />} />
           <Route path={ROUTES.ASSETHANDOVER} element={<AssetHandover />} />
           <Route path={ROUTES.ASSETTRANSFER} element={<AssetTransfer />} />
+          <Route path={ROUTES.ASSETHANDOVER} element={<AssetHandover />} />
           <Route
             path={ROUTES.ASSETDEPRECIATION}
             element={<AssetDepreciation />}
