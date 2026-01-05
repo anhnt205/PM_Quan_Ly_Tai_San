@@ -1,5 +1,4 @@
 import { TextField } from "@mui/material";
-import { getIn } from "formik";
 import React, { Dispatch, SetStateAction } from "react";
 
 interface Props {
@@ -20,7 +19,7 @@ export default function FieldInput({
   disabled = false,
   InputProps,
 }: Props) {
-  const currentValue = formik && field ? getIn(formik.values, field) : '';
+  const currentValue = formik && field ? getIn(formik.values, field) : "";
   return (
     <TextField
       disabled={disabled}
