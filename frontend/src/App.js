@@ -20,9 +20,10 @@ import Unit from "./pages/Unit/Unit";
 import ReasonIncrease from "./pages/ReasonIncrease/ResonIncrease";
 import CurrentStatus from "./pages/CurrentStatus/CurrentStatus";
 import ToolManager from "./pages/ToolManager/ToolManager";
+import AssetHandover from "./pages/AssetHandover/AssetHandover";
 
 const ProtectedRoute = ({ allowedRoles, children }) => {
-  const { user } = useSelector((state: RootState) => state.user);
+  const { user } = useSelector((state) => state.user);
 
   if (!user) {
     return <Navigate to={ROUTES.LOGIN} />;
@@ -35,7 +36,7 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
   return typeof children === "function" ? children(user.role) : children;
 };
 function App() {
-  const { user } = useSelector((state: RootState) => state.user);
+  const { user } = useSelector((state) => state.user);
 
   return (
     <BrowserRouter>
@@ -59,6 +60,7 @@ function App() {
           <Route path={ROUTES.CURRENTSTATUS} element={<CurrentStatus />} />
           <Route path={ROUTES.ASSETMANAGER} element={<AssetManager />} />
           <Route path={ROUTES.ASSETTRANSFER} element={<AssetTransfer />} />
+          <Route path={ROUTES.ASSETHANDOVER} element={<AssetHandover />} />
           <Route
             path={ROUTES.ASSETDEPRECIATION}
             element={<AssetDepreciation />}

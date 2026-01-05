@@ -146,8 +146,8 @@ export default function Menuheader() {
       path: "/",
       subMenu: [
         { text: "Cấp phát tài sản", path: `${ROUTES.ASSETTRANSFER}?type=1` },
-        { text: "Điều chuyển tài sản", path: `${ROUTES.ASSETTRANSFER}?type=2`},
-        { text: "Thu hồi tài sản", path:`${ROUTES.ASSETTRANSFER}?type=3` },
+        { text: "Điều chuyển tài sản", path: `${ROUTES.ASSETTRANSFER}?type=2` },
+        { text: "Thu hồi tài sản", path: `${ROUTES.ASSETTRANSFER}?type=3` },
       ],
     },
     {
@@ -161,7 +161,7 @@ export default function Menuheader() {
     },
     {
       text: "Bàn giao tài sản",
-      path: "/",
+      path: "/ban_giao_tai_san",
     },
     {
       text: "Bàn giao CCDC-Vật tư",
