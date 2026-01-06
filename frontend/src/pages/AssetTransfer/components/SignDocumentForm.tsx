@@ -15,11 +15,8 @@ import {
 import { Close, PictureAsPdf } from "@mui/icons-material";
 import React, { useState, useEffect, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";
-import signatureImage from "../../../assets/images/sign.png"; // Ảnh chữ ký mẫu
+import signatureImage from "../../../assets/images/sign.png";
 import DraggableSignature from "./DraggableSignature";
-
-// Import component kéo thả ở trên (giả sử bạn để chung file thì không cần import)
-// import DraggableSignature from "./DraggableSignature";
 
 // --- Config Worker ---
 if (typeof window !== "undefined") {
@@ -29,10 +26,10 @@ if (typeof window !== "undefined") {
 // --- Types ---
 interface SignatureData {
   id: string;
-  page: number; // Trang số mấy
+  page: number;
   x: number;
   y: number;
-  type: string; // 'standard' | 'initials'
+  type: string;
 }
 
 interface SignDocumentFormProps {
@@ -41,6 +38,7 @@ interface SignDocumentFormProps {
   onCancel: () => void;
   onSign: () => void;
   fullscreen?: boolean;
+  showSignerSidebar?: boolean;
 }
 
 export default function SignDocumentForm({
@@ -49,6 +47,7 @@ export default function SignDocumentForm({
   onCancel,
   onSign,
   fullscreen = true,
+  showSignerSidebar = true,
 }: SignDocumentFormProps) {
   const [signatureType, setSignatureType] = useState("standard");
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -60,6 +59,11 @@ export default function SignDocumentForm({
   const defaultSampleFile = "/sample.pdf";
   const [pages, setPages] = useState<HTMLCanvasElement[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // State để tracking kích thước hiển thị thực tế của các canvas pages
+  const [canvasDisplaySizes, setCanvasDisplaySizes] = useState<
+    { width: number; height: number }[]
+  >([]);
 
   // Ref chứa container để xử lý scroll
   const containerRef = useRef<HTMLDivElement>(null);
@@ -77,17 +81,17 @@ export default function SignDocumentForm({
           const canvas = document.createElement("canvas");
           const context = canvas.getContext("2d")!;
 
-          // Scale 1.5 để nét
+          // Scale 1.5
           const scale = 1.5;
           const viewport = page.getViewport({ scale });
 
           canvas.width = viewport.width;
           canvas.height = viewport.height;
 
-          // CSS width/height để hiển thị vừa vặn (quan trọng cho tính tọa độ)
+          // CSS width/height hiển thị
           canvas.style.width = "100%";
           canvas.style.height = "auto";
-          canvas.style.display = "block"; // Tránh khoảng trắng dưới canvas
+          canvas.style.display = "block";
 
           // Lưu số trang
           canvas.dataset.page = pageNum.toString();
@@ -111,32 +115,46 @@ export default function SignDocumentForm({
     renderPDF();
   }, [defaultSampleFile]);
 
+  // Theo dõi kích thước hiển thị của các canvas pages
+  useEffect(() => {
+    if (pages.length === 0) return;
+
+    const observer = new ResizeObserver(() => {
+      const sizes = pages.map((canvas) => ({
+        width: canvas.getBoundingClientRect().width || canvas.width,
+        height: canvas.getBoundingClientRect().height || canvas.height,
+      }));
+      setCanvasDisplaySizes(sizes);
+    });
+
+    // Observe mỗi canvas
+    pages.forEach((canvas) => {
+      observer.observe(canvas);
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [pages]);
+
   // --- Handlers ---
 
-  // Khi click vào PDF -> Thêm chữ ký
+  // Khi click vào PDF
   const handlePageClick = (e: React.MouseEvent, pageIndex: number) => {
-    // Lấy tọa độ click tương đối trong thẻ bao ngoài (wrapper)
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    // Tạo chữ ký mới căn giữa vị trí click (trừ đi 1/2 kích thước ảnh)
-    const newSignature: SignatureData = {
-      id: Date.now().toString(),
-      page: pageIndex + 1, // Page bắt đầu từ 1
-      x: x - 50, // 50 là nửa chiều rộng chữ ký
-      y: y - 25, // 25 là nửa chiều cao chữ ký
-      type: signatureType,
-    };
-    console.log(newSignature);
-
-    setSignatures([...signatures, newSignature]);
+    // Không cần xử lý gì
   };
 
-  // Cập nhật vị trí sau khi kéo thả
+  // Cập nhật vị trí sau khi kéo thả (nhận tọa độ dưới dạng ratio)
   const handleUpdatePosition = (id: string, newX: number, newY: number) => {
     setSignatures((prev) =>
       prev.map((sig) => (sig.id === id ? { ...sig, x: newX, y: newY } : sig))
+    );
+  };
+
+  // Cập nhật trang khi chữ ký được kéo sang trang khác
+  const handleUpdatePage = (id: string, newPage: number) => {
+    setSignatures((prev) =>
+      prev.map((sig) => (sig.id === id ? { ...sig, page: newPage } : sig))
     );
   };
 
@@ -145,10 +163,17 @@ export default function SignDocumentForm({
     setSignatures((prev) => prev.filter((sig) => sig.id !== id));
   };
 
-  // Nút Xuất PDF (Console log tọa độ cuối cùng)
+  // Nút Xác nhận ký -> Thêm chữ ký vào danh sách
   const handleConfirmSign = () => {
-    console.log("Danh sách chữ ký và tọa độ:", signatures);
-    onSign();
+    const newSignature: SignatureData = {
+      id: Date.now().toString(),
+      page: 1,
+      x: 0.05, // Vị trí mặc định: 5% từ trái
+      y: 0.1, // 10% từ trên
+      type: signatureType,
+    };
+    console.log("Thêm chữ ký:", newSignature);
+    setSignatures([...signatures, newSignature]);
   };
 
   return (
@@ -176,8 +201,30 @@ export default function SignDocumentForm({
         >
           <Box>
             <Typography variant="h6">Soạn & Ký Tài Liệu</Typography>
+            <Typography variant="body2" color="textSecondary">
+              Tổng số trang: {pages.length}
+            </Typography>
           </Box>
-          <Box>
+          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => setOpenSnackbar(true)}
+              sx={{
+                textTransform: "none",
+                fontSize: "0.875rem",
+                color: "#8b5cf6",
+                borderColor: "#c4b5fd",
+                fontWeight: 500,
+                "&:hover": {
+                  borderColor: "#a78bfa",
+                  backgroundColor: "rgba(139, 92, 246, 0.04)",
+                },
+              }}
+              startIcon={<PictureAsPdf />}
+            >
+              Xuất PDF
+            </Button>
             <IconButton onClick={onCancel}>
               <Close />
             </IconButton>
@@ -188,58 +235,57 @@ export default function SignDocumentForm({
       {/* --- Body --- */}
       <Box sx={{ display: "flex", flex: 1, overflow: "hidden" }}>
         {/* --- Left Sidebar (Công cụ) --- */}
-        <Paper
-          sx={{
-            width: 320,
-            p: 2,
-            overflowY: "auto",
-            borderRight: "1px solid #ddd",
-          }}
-        >
-          <Typography variant="h6" fontWeight="bold" mb={2}>
-            Công cụ ký
-          </Typography>
-
-          <RadioGroup
-            value={signatureType}
-            onChange={(e) => setSignatureType(e.target.value)}
+        {showSignerSidebar && (
+          <Paper
+            sx={{
+              width: 320,
+              p: 2,
+              overflowY: "auto",
+              borderRight: "1px solid #ddd",
+            }}
           >
-            <FormControlLabel
-              value="standard"
-              control={<Radio />}
-              label="Ký thường"
-            />
-            <Box sx={{ ml: 4, mb: 2 }}>
-              <img
-                src={signatureImage}
-                alt="sample"
-                width={80}
-                style={{ border: "1px solid #eee" }}
+            <Typography variant="h6" fontWeight="bold" mb={2}>
+              Công cụ ký
+            </Typography>
+
+            <RadioGroup
+              value={signatureType}
+              onChange={(e) => setSignatureType(e.target.value)}
+            >
+              <FormControlLabel
+                value="standard"
+                control={<Radio />}
+                label="Ký thường"
               />
-            </Box>
+              <Box sx={{ ml: 4, mb: 2 }}>
+                <img
+                  src={signatureImage}
+                  alt="sample"
+                  width={80}
+                  style={{ border: "1px solid #eee" }}
+                />
+              </Box>
 
-            <FormControlLabel
-              value="initials"
-              control={<Radio />}
-              label="Ký nháy"
-            />
-          </RadioGroup>
+              <FormControlLabel
+                value="initials"
+                control={<Radio />}
+                label="Ký nháy"
+              />
+            </RadioGroup>
 
-          <Divider sx={{ my: 2 }} />
+            <Divider sx={{ my: 2 }} />
 
-          <Button
-            variant="contained"
-            fullWidth
-            color="success"
-            onClick={handleConfirmSign} // Log kết quả
-            sx={{ mb: 1 }}
-          >
-            Xác nhận ký
-          </Button>
-          <Typography variant="caption" color="text.secondary">
-            *Click vào trang tài liệu bên phải để đặt chữ ký.
-          </Typography>
-        </Paper>
+            <Button
+              variant="contained"
+              fullWidth
+              color="success"
+              onClick={handleConfirmSign}
+              sx={{ mb: 1 }}
+            >
+              Xác nhận ký
+            </Button>
+          </Paper>
+        )}
 
         {/* --- Right Content (PDF Viewer) --- */}
         <Box
@@ -257,51 +303,90 @@ export default function SignDocumentForm({
           {loading ? (
             <CircularProgress />
           ) : (
-            pages.map((canvas, index) => {
-              const pageNum = index + 1;
-              // Lọc chữ ký thuộc trang hiện tại
-              const pageSignatures = signatures.filter(
-                (sig) => sig.page === pageNum
-              );
+            <Box sx={{ position: "relative" }}>
+              {/* Render tất cả pages */}
+              {pages.map((canvas, index) => {
+                const pageNum = index + 1;
+                const displaySize = canvasDisplaySizes[index] || {
+                  width: canvas.width,
+                  height: canvas.height,
+                };
+                const canvasDisplayWidth = displaySize.width;
+                const canvasDisplayHeight = displaySize.height;
 
-              return (
-                <Box
-                  key={index}
-                  sx={{
-                    position: "relative", // QUAN TRỌNG: Để con (chữ ký) tuyệt đối theo cha
-                    marginBottom: 3,
-                    boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
-                    maxWidth: canvas.width, // Giới hạn chiều rộng bằng canvas
-                  }}
-                  // Click vào vùng trống để thêm chữ ký
-                  onClick={(e) => handlePageClick(e, index)}
-                >
-                  {/* 1. Render Canvas */}
-                  <Box
-                    ref={(el: HTMLDivElement | null) => {
-                      if (el && !el.hasChildNodes()) {
-                        el.appendChild(canvas);
-                      }
-                    }}
+                return (
+                  <Box key={index}>
+                    {/* Divider giữa các trang */}
+                    {index > 0 && (
+                      <Box
+                        sx={{
+                          height: "2px",
+                          bgcolor: "#1976d2",
+                          margin: "16px auto",
+                          width: "80%",
+                        }}
+                      />
+                    )}
+
+                    <Box
+                      sx={{
+                        position: "relative",
+                        marginBottom: 3,
+                        boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
+                        maxWidth: canvas.width,
+                        margin: "0 auto",
+                      }}
+                    >
+                      {/* 1. Render Canvas */}
+                      <Box
+                        ref={(el: HTMLDivElement | null) => {
+                          if (el && !el.hasChildNodes()) {
+                            el.appendChild(canvas);
+                          }
+                        }}
+                      />
+                    </Box>
+                  </Box>
+                );
+              })}
+
+              {/* 2. Render tất cả signatures với absolute positioning (cho phép drag giữa pages) */}
+              {signatures.map((sig) => {
+                const displaySize = canvasDisplaySizes[sig.page - 1] || {
+                  width: pages[sig.page - 1]?.width || 0,
+                  height: pages[sig.page - 1]?.height || 0,
+                };
+                const canvasDisplayWidth = displaySize.width;
+                const canvasDisplayHeight = displaySize.height;
+                const canvas = pages[sig.page - 1];
+                const pageMarginAndGap = 24 + 24; // marginBottom 3 + divider height 2 + margin 16 × 2
+
+                // Tính Y offset dựa trên page index
+                const pageOffset =
+                  (sig.page - 1) * (canvasDisplayHeight + pageMarginAndGap);
+
+                return (
+                  <DraggableSignature
+                    key={sig.id}
+                    {...sig}
+                    initialX={sig.x * canvasDisplayWidth}
+                    initialY={pageOffset + sig.y * canvasDisplayHeight}
+                    xRatio={sig.x}
+                    yRatio={sig.y}
+                    imgSrc={signatureImage}
+                    containerWidth={canvasDisplayWidth}
+                    containerHeight={canvasDisplayHeight}
+                    canvasWidth={canvas?.width || 0}
+                    canvasHeight={canvas?.height || 0}
+                    currentPage={sig.page}
+                    totalPages={pages.length}
+                    onUpdatePosition={handleUpdatePosition}
+                    onUpdatePage={handleUpdatePage}
+                    onDelete={handleDeleteSignature}
                   />
-
-                  {/* 2. Render Các chữ ký đè lên trên */}
-                  {pageSignatures.map((sig) => (
-                    <DraggableSignature
-                      key={sig.id}
-                      {...sig}
-                      initialX={sig.x}
-                      initialY={sig.y}
-                      imgSrc={signatureImage}
-                      containerWidth={canvas.width}
-                      containerHeight={canvas.height}
-                      onUpdatePosition={handleUpdatePosition}
-                      onDelete={handleDeleteSignature}
-                    />
-                  ))}
-                </Box>
-              );
-            })
+                );
+              })}
+            </Box>
           )}
         </Box>
       </Box>

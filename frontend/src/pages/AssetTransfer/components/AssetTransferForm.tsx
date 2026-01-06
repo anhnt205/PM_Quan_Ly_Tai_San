@@ -46,6 +46,7 @@ export default function AssetTransferForm({
   readOnly,
   onSave,
   label,
+  isSignedForm = false,
 }: {
   onEdit: () => void;
   onCancel: () => void;
@@ -53,6 +54,7 @@ export default function AssetTransferForm({
   readOnly?: boolean;
   onSave: (values: any) => void;
   label?: string;
+  isSignedForm?: boolean;
 }) {
   const [expanded, setExpanded] = useState(true);
 
@@ -116,6 +118,7 @@ export default function AssetTransferForm({
       IdTrinhDuyetCapPhong: "",
       IdTrinhDuyetGiamDoc: "",
       TenFile: "",
+      AttachmentFile: null as File | null, // Lưu file binary
       assets: [{ assetId: "", uom: "", quantity: 1, status: "", note: "" }],
     },
     onSubmit: (values) => onSave(values),
@@ -147,7 +150,9 @@ export default function AssetTransferForm({
       >
         <Box sx={{ display: "flex", alignItems: "center" }}>
           {expanded ? <ArrowDropUp /> : <ArrowDropDown />}
-          <Typography>Chi tiết {label}</Typography>
+          <Typography>
+            Chi tiết {isSignedForm ? "Có ký số" : "Không ký số"} {label}
+          </Typography>
         </Box>
       </AccordionSummary>
 
@@ -194,14 +199,16 @@ export default function AssetTransferForm({
             {/* CỘT TRÁI */}
             <Grid size={{ xs: 12, md: 6 }}>
               <Grid container spacing={2}>
-                <Grid size={12}>
-                  <FieldInput
-                    title="Số chứng từ *"
-                    formik={formik}
-                    field="SoQuyetDinh"
-                    disabled={isFormReadOnly}
-                  />
-                </Grid>
+                {isSignedForm && (
+                  <Grid size={12}>
+                    <FieldInput
+                      title="Số chứng từ *"
+                      formik={formik}
+                      field="SoQuyetDinh"
+                      disabled={isFormReadOnly}
+                    />
+                  </Grid>
+                )}
                 <Grid size={12}>
                   <FieldInput
                     title="Tên phiếu *"
@@ -350,6 +357,7 @@ export default function AssetTransferForm({
             <FileAttachmentInput
               formik={formik}
               field="TenFile"
+              fileField="AttachmentFile"
               disabled={isFormReadOnly}
             />
           </Box>

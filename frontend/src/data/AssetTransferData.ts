@@ -12,6 +12,9 @@ export const mockAssetTransfers: AssetTransferData[] = [
     NguoiCapNhat: "",
 
     TrangThai: 1, // Đang duyệt
+    TrangThaiKy: 1,
+    TrangThaiBanGiao: 0,
+    TrinhDuyet: 1,
 
     // Đơn vị
     IdDonViGiao: "Kho công ty",
@@ -82,6 +85,9 @@ export const mockAssetTransfers: AssetTransferData[] = [
     NguoiCapNhat: "",
 
     TrangThai: 0, // Nháp
+    TrangThaiKy: 1,
+    TrangThaiBanGiao: 1,
+    TrinhDuyet: 0,
 
     IdDonViGiao: "Kho công ty",
     IdDonViNhan: "Phân xưởng Cơ điện lò 2",
@@ -136,6 +142,9 @@ export const mockAssetTransfers: AssetTransferData[] = [
     NgayCapNhat: "",
     NguoiCapNhat: "",
     TrangThai: 1,
+    TrangThaiKy: 1,
+    TrangThaiBanGiao: 1,
+    TrinhDuyet: 1,
 
     IdDonViGiao: "Phòng Cơ điện",
     IdDonViNhan: "Phân xưởng Cơ khí",
@@ -190,7 +199,9 @@ export const mockAssetTransfers: AssetTransferData[] = [
     NgayCapNhat: "",
     NguoiCapNhat: "",
     TrangThai: 2,
-
+    TrangThaiKy: 2,
+    TrangThaiBanGiao: 0,
+    TrinhDuyet: 0,
     IdDonViGiao: "Phòng IT",
     IdDonViNhan: "Kho công ty",
     IdDonViDeNghi: "Phòng IT",
@@ -244,6 +255,9 @@ export const mockAssetTransfers: AssetTransferData[] = [
     NgayCapNhat: "",
     NguoiCapNhat: "",
     TrangThai: 1,
+    TrangThaiKy: 1,
+    TrangThaiBanGiao: 1,
+    TrinhDuyet: 1,
 
     IdDonViGiao: "Kho công ty",
     IdDonViNhan: "Phòng Hành chính",
@@ -305,6 +319,9 @@ export const mockAssetTransfers: AssetTransferData[] = [
     NgayCapNhat: "",
     NguoiCapNhat: "",
     TrangThai: 1,
+    TrangThaiKy: 1,
+    TrangThaiBanGiao: 0,
+    TrinhDuyet: 2,
 
     IdDonViGiao: "Kho trung tâm",
     IdDonViNhan: "Phân xưởng Đóng gói",

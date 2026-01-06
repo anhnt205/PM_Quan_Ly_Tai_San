@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/api/upload")
+@CrossOrigin(origins = "*", maxAge = 3600)
 public class UploadFileController {
 
     private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads/";
@@ -162,7 +163,8 @@ public class UploadFileController {
     }
 
     /**
-     * Convert DOCX file to PDF
+    /**
+     * Convert DOCX file to PDF using external API
      *
      * @param file DOCX file to convert
      * @return PDF file as byte array
@@ -196,14 +198,17 @@ public class UploadFileController {
             file.transferTo(tempFile);
 
             try {
-                // Convert DOCX sang PDF
+                // Convert DOCX sang PDF bằng service
                 byte[] pdfBytes = documentConversionService.convertDocxToPdfBytes(tempFile);
 
                 // Tạo tên file PDF
                 String pdfFileName = originalFilename.replaceAll("\\.(docx?)$", ".pdf");
 
                 // Trả về PDF file
-                return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + pdfFileName + "\"").contentType(MediaType.APPLICATION_PDF).body(pdfBytes);
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + pdfFileName + "\"")
+                        .contentType(MediaType.APPLICATION_PDF)
+                        .body(pdfBytes);
 
             } finally {
                 // Xóa file tạm
@@ -284,6 +289,76 @@ public class UploadFileController {
 
         } catch (Exception e) {
             response.put("error", "Lỗi khi convert file: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Convert DOCX file to PDF and return bytes as JSON
+     *
+     * @param file DOCX file to convert
+     * @return JSON with PDF bytes encoded as base64
+     */
+    @PostMapping("/convert/docx-to-pdf-bytes")
+    public ResponseEntity<Map<String, Object>> convertDocxToPdfBytes(@RequestParam("file") MultipartFile file) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // Kiểm tra file có tồn tại không
+            if (file.isEmpty()) {
+                response.put("error", "File không được để trống");
+                response.put("success", false);
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Kiểm tra định dạng file
+            String originalFilename = file.getOriginalFilename();
+            if (originalFilename == null || (!originalFilename.toLowerCase().endsWith(".docx") && !originalFilename.toLowerCase().endsWith(".doc"))) {
+                response.put("error", "Chỉ hỗ trợ file DOCX hoặc DOC");
+                response.put("success", false);
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Kiểm tra kích thước file (giới hạn 50MB)
+            if (file.getSize() > 50 * 1024 * 1024) {
+                response.put("error", "File quá lớn. Kích thước tối đa là 50MB");
+                response.put("success", false);
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Tạo file tạm
+            File tempFile = File.createTempFile("temp_docx_", ".docx");
+            file.transferTo(tempFile);
+
+            try {
+                // Convert DOCX sang PDF bằng service
+                byte[] pdfBytes = documentConversionService.convertDocxToPdfBytes(tempFile);
+
+                // Encode bytes thành Base64
+                String pdfBytesBase64 = java.util.Base64.getEncoder().encodeToString(pdfBytes);
+
+                // Tạo tên file PDF
+                String pdfFileName = originalFilename.replaceAll("\\.(docx?)$", ".pdf");
+
+                // Trả về thông tin file và PDF bytes
+                response.put("success", true);
+                response.put("originalFileName", originalFilename);
+                response.put("pdfFileName", pdfFileName);
+                response.put("pdfBytes", pdfBytesBase64);
+                response.put("message", "Convert thành công");
+
+                return ResponseEntity.ok(response);
+
+            } finally {
+                // Xóa file tạm
+                if (tempFile.exists()) {
+                    tempFile.delete();
+                }
+            }
+
+        } catch (Exception e) {
+            response.put("error", "Lỗi khi convert file: " + e.getMessage());
+            response.put("success", false);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

@@ -7,6 +7,7 @@ export interface AssetTransferDetail {
 }
 
 export interface AssetTransferData {
+  [x: string]: any;
   Id: string;
   SoQuyetDinh: string;
   TenPhieu: string;

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -6,6 +6,8 @@ import {
   Typography,
   InputAdornment,
   styled,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import { CloudUpload, Description } from "@mui/icons-material";
 
@@ -31,28 +33,131 @@ interface FileAttachmentInputProps {
   formik: any;
   field: string;
   disabled?: boolean;
+  fileField?: string; // Để lưu file binary
 }
 
 const FileAttachmentInput: React.FC<FileAttachmentInputProps> = ({
   formik,
   field,
   disabled,
+  fileField = "AttachmentFile", // Mặc định
 }) => {
   const fileName = formik.values[field];
+  const [isConverting, setIsConverting] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Hàm convert DOCX sang PDF thông qua API
+  const convertDocxToPdf = async (file: File): Promise<File | null> => {
+    try {
+      setIsConverting(true);
+      setUploadError(null);
+
+      // Tạo FormData gửi file lên backend
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // Lấy backend URL từ biến môi trường hoặc mặc định localhost
+      const backendUrl =
+        process.env.REACT_APP_API_URL || "http://localhost:8080";
+      console.log("Converting DOCX to PDF using backend:", backendUrl);
+
+      // Gọi API backend để convert
+      const response = await fetch(
+        `${backendUrl}/api/upload/convert/docx-to-pdf`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        console.error("Response status:", response.status, response.statusText);
+        const errorData = await response.text();
+        console.error("Response data:", errorData);
+        throw new Error(
+          `Lỗi convert: ${response.status} ${response.statusText}`
+        );
+      }
+
+      // Nhận file PDF từ backend
+      const pdfBlob = await response.blob();
+      console.log("PDF blob size:", pdfBlob.size, "type:", pdfBlob.type);
+
+      const pdfFileName = file.name.replace(/\.docx$/i, ".pdf");
+      const pdfFile = new File([pdfBlob], pdfFileName, {
+        type: "application/pdf",
+      });
+
+      console.log("Convert successful:", pdfFileName);
+      return pdfFile;
+    } catch (error) {
+      console.error("Lỗi khi convert DOCX sang PDF:", error);
+      setUploadError(
+        error instanceof Error ? error.message : "Lỗi chuyển đổi file"
+      );
+      return null;
+    } finally {
+      setIsConverting(false);
+    }
+  };
+
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (file) {
-      formik.setFieldValue(field, file.name);
+      // Kiểm tra định dạng file
+      const isPdf =
+        file.type === "application/pdf" ||
+        file.name.toLowerCase().endsWith(".pdf");
+      const isDocx =
+        file.type ===
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+        file.name.toLowerCase().endsWith(".docx");
+
+      if (!isPdf && !isDocx) {
+        setUploadError("Chỉ hỗ trợ file .pdf hoặc .docx");
+        formik.setFieldValue(field, "");
+        formik.setFieldValue(fileField, null);
+        return;
+      }
+
+      // Nếu là PDF, lưu trực tiếp
+      if (isPdf) {
+        formik.setFieldValue(field, file.name);
+        formik.setFieldValue(fileField, file);
+        setUploadError(null);
+        return;
+      }
+
+      // Nếu là DOCX, convert sang PDF
+      if (isDocx) {
+        const pdfFile = await convertDocxToPdf(file);
+        if (pdfFile) {
+          formik.setFieldValue(field, pdfFile.name);
+          formik.setFieldValue(fileField, pdfFile); // Lưu file PDF binary
+          setUploadError(null);
+        } else {
+          formik.setFieldValue(field, "");
+          formik.setFieldValue(fileField, null);
+        }
+      }
     }
   };
 
   return (
     <Box sx={{ width: "100%" }}>
+      {/* Hiển thị lỗi nếu có */}
+      {uploadError && (
+        <Alert severity="error" sx={{ mb: 1 }}>
+          {uploadError}
+        </Alert>
+      )}
+
       <Box
         display="flex"
         alignItems="stretch" // Đảm bảo nút và input cao bằng nhau
-        sx={{ width: "100%" }}
+        sx={{ width: "100%", position: "relative" }}
       >
         <StyledTextField
           fullWidth
@@ -71,8 +176,10 @@ const FileAttachmentInput: React.FC<FileAttachmentInputProps> = ({
         <Button
           component="label"
           variant="contained"
-          disabled={disabled}
-          startIcon={<CloudUpload />}
+          disabled={disabled || isConverting}
+          startIcon={
+            isConverting ? <CircularProgress size={20} /> : <CloudUpload />
+          }
           sx={{
             bgcolor: "#5cb85c", // Màu xanh lá nhẹ
             color: "#fff",
@@ -91,8 +198,13 @@ const FileAttachmentInput: React.FC<FileAttachmentInputProps> = ({
             },
           }}
         >
-          Chọn tệp
-          <input type="file" hidden onChange={handleFileChange} />
+          {isConverting ? "Đang chuyển đổi..." : "Chọn tệp"}
+          <input
+            type="file"
+            hidden
+            onChange={handleFileChange}
+            accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          />
         </Button>
       </Box>
 
