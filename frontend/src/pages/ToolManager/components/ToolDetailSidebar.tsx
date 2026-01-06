@@ -83,7 +83,7 @@ export default function ToolDetailSidebar({
           <Box display="flex" alignItems="center" gap={1} mb={0.5}>
             <Info fontSize="small" sx={{ color: "#00BCD4" }} />
             <Typography variant="body2" color="text.secondary">
-              Chi tiết Chi tiết đơn vị sở hữu "{selectedTool?.toolName || ""}"
+              Chi tiết đơn vị sở hữu "{selectedTool?.toolName || ""}"
             </Typography>
           </Box>
         </Box>

@@ -39,10 +39,10 @@ import FieldDateTime from "../../../components/TextField/FieldDateTime";
 import CustomStepper from "../../../components/common/CustomStepper";
 import FileAttachmentInput from "./FileAttachmentInput";
 
-export default function AssetTransferForm({
+export default function ToolTransferForm({
   onEdit,
   onCancel,
-  selectedTransfer,
+  selectedTool,
   readOnly,
   onSave,
   label,
@@ -50,7 +50,7 @@ export default function AssetTransferForm({
 }: {
   onEdit: () => void;
   onCancel: () => void;
-  selectedTransfer?: any;
+  selectedTool?: any;
   readOnly?: boolean;
   onSave: (values: any) => void;
   label?: string;
@@ -73,7 +73,6 @@ export default function AssetTransferForm({
     boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
   }));
 
-  // Styled Component cho vùng File Upload
   const FileUploadBox = styled(Box)(({ theme }) => ({
     border: "1px solid rgba(0, 0, 0, 0.23)",
     borderRadius: "4px",
@@ -84,7 +83,6 @@ export default function AssetTransferForm({
     marginTop: "8px",
     "&:hover": { borderColor: "rgba(0, 0, 0, 0.87)" },
   }));
-
   const CustomTableCell = styled(TableCell)(({ theme }) => ({
     borderBottom: "1px solid rgba(224, 224, 224, 1)",
     padding: "16px 8px",
@@ -97,9 +95,8 @@ export default function AssetTransferForm({
     backgroundColor: "transparent",
   }));
 
-  // Logic trạng thái
-  const currentStatus = selectedTransfer?.TrangThai ?? 0; // 0: Nháp, 1: Duyệt, 2: Hủy, 3: Hoàn thành
-  const isDraftOrNew = !selectedTransfer || currentStatus === 0;
+  const currentStatus = selectedTool?.TrangThai ?? 0; // 0: Nháp, 1: Duyệt, 2: Hủy, 3: Hoàn thành
+  const isDraftOrNew = !selectedTool || currentStatus === 0;
   const isFormReadOnly = readOnly || !isDraftOrNew;
 
   const formik = useFormik({
@@ -119,15 +116,24 @@ export default function AssetTransferForm({
       IdTrinhDuyetGiamDoc: "",
       TenFile: "",
       AttachmentFile: null as File | null, // Lưu file binary
-      assets: [{ assetId: "", uom: "", quantity: 1, status: "", note: "" }],
+      tools: [
+        {
+          toolId: "",
+          uom: "",
+          available_quantity: 1,
+          output_quantity: 1,
+          handed_out_quantity: 1,
+          note: "",
+        },
+      ],
     },
     onSubmit: (values) => onSave(values),
   });
 
   useEffect(() => {
-    if (selectedTransfer) formik.setValues(selectedTransfer);
+    if (selectedTool) formik.setValues(selectedTool);
     else formik.resetForm();
-  }, [selectedTransfer]);
+  }, [selectedTool]);
 
   return (
     <Accordion
@@ -279,7 +285,7 @@ export default function AssetTransferForm({
                 </Grid>
                 <Grid size={12}>
                   <FieldInput
-                    title="Người lập biểu *"
+                    title="Người lập phiếu *"
                     formik={formik}
                     field="IdNguoiLapPhieu"
                     disabled={true}
@@ -355,17 +361,17 @@ export default function AssetTransferForm({
             </Typography>
 
             <FileAttachmentInput
-              formik={formik}
-              field="TenFile"
-              fileField="AttachmentFile"
-              disabled={isFormReadOnly}
-            />
+                  formik={formik}
+                  field="TenFile"
+                  fileField="AttachmentFile"
+                  disabled={isFormReadOnly}
+                />
           </Box>
 
           {/* --- PHẦN 3: CHI TIẾT TÀI SẢN --- */}
           <Box>
             <Typography variant="subtitle1" fontWeight={600} mb={2}>
-              Chi tiết tài sản điều chuyển:
+              Chi tiết CCDC - Vật tư điều chuyển:
             </Typography>
             <Table
               size="small"
@@ -375,15 +381,20 @@ export default function AssetTransferForm({
             >
               <TableHead>
                 <TableRow>
-                  <CustomTableHeadCell width="25%">Tài sản</CustomTableHeadCell>
-                  <CustomTableHeadCell width="15%">
-                    Đơn vị tính
+                  <CustomTableHeadCell width="25%">
+                    CCDC Vật tư
                   </CustomTableHeadCell>
                   <CustomTableHeadCell width="15%">
-                    Số lượng
+                    Mã đơn vị tính
                   </CustomTableHeadCell>
-                  <CustomTableHeadCell width="20%">
-                    Tình trạng kỹ thuật
+                  <CustomTableHeadCell width="15%">
+                    Số lượng có sẵn
+                  </CustomTableHeadCell>
+                  <CustomTableHeadCell width="15%">
+                    Số lượng xuất
+                  </CustomTableHeadCell>
+                  <CustomTableHeadCell width="15%">
+                    Số lượng đã bàn giao
                   </CustomTableHeadCell>
                   <CustomTableHeadCell width="20%">Ghi chú</CustomTableHeadCell>
                   {!isFormReadOnly && (
@@ -392,12 +403,12 @@ export default function AssetTransferForm({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {formik.values.assets.map((row, index) => (
+                {formik.values.tools.map((row, index) => (
                   <TableRow key={index}>
                     <CustomTableCell>
                       {isFormReadOnly ? (
                         <Typography variant="body2">
-                          {row.assetId || "-"}
+                          {row.toolId || "-"}
                         </Typography>
                       ) : (
                         <FieldAutoCompleted
@@ -405,7 +416,7 @@ export default function AssetTransferForm({
                           labelkey=""
                           data={[]}
                           formik={formik}
-                          field={`assets.${index}.assetId`}
+                          field={`tools.${index}.toolId`}
                         />
                       )}
                     </CustomTableCell>
@@ -418,33 +429,50 @@ export default function AssetTransferForm({
                         <FieldInput
                           title=""
                           formik={formik}
-                          field={`assets.${index}.uom`}
+                          field={`tools.${index}.uom`}
                           disabled={true}
                         />
                       )}
                     </CustomTableCell>
                     <CustomTableCell>
                       {isFormReadOnly ? (
-                        <Typography variant="body2">{row.quantity}</Typography>
+                        <Typography variant="body2">
+                          {row.available_quantity}
+                        </Typography>
                       ) : (
                         <FieldInput
                           title=""
                           type="number"
                           formik={formik}
-                          field={`assets.${index}.quantity`}
+                          field={`tools.${index}.available_quantity`}
                         />
                       )}
                     </CustomTableCell>
                     <CustomTableCell>
                       {isFormReadOnly ? (
                         <Typography variant="body2">
-                          {row.status || "-"}
+                          {row.output_quantity}
                         </Typography>
                       ) : (
                         <FieldInput
                           title=""
+                          type="number"
                           formik={formik}
-                          field={`assets.${index}.status`}
+                          field={`tools.${index}.output_quantity`}
+                        />
+                      )}
+                    </CustomTableCell>
+                    <CustomTableCell>
+                      {isFormReadOnly ? (
+                        <Typography variant="body2">
+                          {row.handed_out_quantity}
+                        </Typography>
+                      ) : (
+                        <FieldInput
+                          title=""
+                          type="number"
+                          formik={formik}
+                          field={`tools.${index}.handed_out_quantity`}
                         />
                       )}
                     </CustomTableCell>
@@ -457,7 +485,7 @@ export default function AssetTransferForm({
                         <FieldInput
                           title=""
                           formik={formik}
-                          field={`assets.${index}.note`}
+                          field={`tools.${index}.note`}
                         />
                       )}
                     </CustomTableCell>
@@ -467,9 +495,9 @@ export default function AssetTransferForm({
                           color="error"
                           size="small"
                           onClick={() => {
-                            const newAssets = [...formik.values.assets];
-                            newAssets.splice(index, 1);
-                            formik.setFieldValue("assets", newAssets);
+                            const newTools = [...formik.values.tools];
+                            newTools.splice(index, 1);
+                            formik.setFieldValue("tools", newTools);
                           }}
                         >
                           <Delete fontSize="small" />
@@ -486,13 +514,14 @@ export default function AssetTransferForm({
                   startIcon={<Add />}
                   variant="text"
                   onClick={() => {
-                    formik.setFieldValue("assets", [
-                      ...formik.values.assets,
+                    formik.setFieldValue("tools", [
+                      ...formik.values.tools,
                       {
-                        assetId: "",
+                        toolId: "",
                         uom: "",
-                        quantity: 1,
-                        status: "Đang sử dụng",
+                        availabe_quantity: 1,
+                        output_quantity: 1,
+                        handed_out_quantity: 1,
                         note: "",
                       },
                     ]);

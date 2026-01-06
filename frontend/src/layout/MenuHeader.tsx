@@ -154,9 +154,9 @@ export default function Menuheader() {
       text: "Điều động CCDC - vật tư",
       path: "/",
       subMenu: [
-        { text: "Cấp phát CCDC - vật tư", path: "/" },
-        { text: "Điều chuyển CCDC - vật tư", path: "/" },
-        { text: "Thu hồi CCDC - vật tư", path: "/" },
+        { text: "Cấp phát CCDC - vật tư", path: `${ROUTES.TOOLTRANSFER}?type=1` },
+        { text: "Điều chuyển CCDC - vật tư", path: `${ROUTES.TOOLTRANSFER}?type=2` },
+        { text: "Thu hồi CCDC - vật tư", path: `${ROUTES.TOOLTRANSFER}?type=3` },
       ],
     },
     {
@@ -171,11 +171,11 @@ export default function Menuheader() {
       text: "Báo cáo",
       path: "/",
       subMenu: [
-        { text: "Báo cáo S22-DN", path: "/" },
-        { text: "Biên bản kiểm kê", path: "/" },
-        { text: "Báo cáo 05-TSCD-24-2017-TT-BTC", path: "/" },
-        { text: "Mẫu số-01", path: "/" },
-        { text: "Mẫu số-21", path: "/" },
+        { text: "Báo cáo S22-DN", path: `${ROUTES.REPORT}?type=1` },
+        { text: "Biên bản kiểm kê", path: `${ROUTES.REPORT}?type=2` },
+        { text: "Báo cáo 05-TSCD-24-2017-TT-BTC", path: `${ROUTES.REPORT}?type=3` },
+        { text: "Mẫu số-01", path: `${ROUTES.REPORT}?type=4` },
+        { text: "Mẫu số-21", path: `${ROUTES.REPORT}?type=5` },
       ],
     },
   ].filter(Boolean);

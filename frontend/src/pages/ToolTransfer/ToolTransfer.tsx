@@ -23,25 +23,23 @@ import {
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 
 // Import Components
-import AssetTransferForm from "./components/AssetTransferForm";
+import ToolTransferForm from "./components/ToolTransferForm";
 import SignerSidebar from "./components/SignerSidebar";
 import SignDocumentForm from "./components/SignDocumentForm";
 import BienBanDialog from "./components/BienBanDialog";
 import TableCustom from "../../components/common/TableCustom";
 
-import { mockAssetTransfers as mockRows } from "../../data/AssetTransferData";
+import { mockToolTransfers as mockRows } from "../../data/ToolTransferData";
 
 // Import Types & Data
-import { AssetTransferData } from "./types";
+import { ToolTransferData } from "./types";
 import PageAction from "../../components/common/PageAction";
 import { useParams, useSearchParams } from "react-router-dom";
 
-export default function AssetTransfer() {
+export default function ToolTransfer() {
   // State
   const [showForm, setShowForm] = useState(false);
-  const [selectedRow, setSelectedRow] = useState<AssetTransferData | null>(
-    null
-  );
+  const [selectedRow, setSelectedRow] = useState<ToolTransferData | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
   const [isNewForm, setIsNewForm] = useState(false);
   const [paginationModel, setPaginationModel] = useState({
@@ -53,9 +51,7 @@ export default function AssetTransfer() {
   const [searchValue, setSearchValue] = useState("");
   const [showSignDocument, setShowSignDocument] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [rowToDelete, setRowToDelete] = useState<AssetTransferData | null>(
-    null
-  );
+  const [rowToDelete, setRowToDelete] = useState<ToolTransferData | null>(null);
   const [showSignerSidebar, setShowSignerSidebar] = useState(true);
   const [showBienBanDialog, setShowBienBanDialog] = useState(false);
 
@@ -74,13 +70,25 @@ export default function AssetTransfer() {
   const getTypeInfo = (typeValue: any) => {
     switch (Number(typeValue)) {
       case 1:
-        return { title: "Cấp phát tài sản", label: "cấp phát tài sản" };
+        return {
+          title: "Cấp phát CCDC - Vật tư",
+          label: "cấp phát CCDC - Vật tư",
+        };
       case 2:
-        return { title: "Điều chuyển tài sản", label: "điều chuyển tài sản" };
+        return {
+          title: "Điều chuyển CCDC - Vật tư",
+          label: "điều chuyển CCDC - Vật tư",
+        };
       case 3:
-        return { title: "Thu hồi tài sản", label: "thu hồi tài sản" };
+        return {
+          title: "Thu hồi CCDC - Vật tư",
+          label: "thu hồi CCDC - Vật tư",
+        };
       default:
-        return { title: "Cấp phát tài sản", label: "cấp phát tài sản" };
+        return {
+          title: "Cấp phát CCDC - Vật tư",
+          label: "cấp phát CCDC - Vật tư",
+        };
     }
   };
 
@@ -88,7 +96,7 @@ export default function AssetTransfer() {
   const { title, label } = getTypeInfo(type);
 
   const handleRowClick = (params: GridRowParams) => {
-    const data = params.row as AssetTransferData;
+    const data = params.row as ToolTransferData;
     setSelectedRow(data);
     setShowForm(true);
     setShowSidebar(true);
@@ -104,7 +112,7 @@ export default function AssetTransfer() {
     console.log("Xóa các bản ghi:", ids);
   };
 
-  const handleOpenDeleteDialog = (row: AssetTransferData) => {
+  const handleOpenDeleteDialog = (row: ToolTransferData) => {
     setRowToDelete(row);
     setDeleteDialogOpen(true);
   };
@@ -122,7 +130,7 @@ export default function AssetTransfer() {
     handleCloseDeleteDialog();
   };
 
-  const handleSaveAssetTransfer = async (values: any) => {
+  const handleSaveToolTransfer = async (values: any) => {
     try {
       console.log("Lưu biên bản:", values);
 
@@ -159,8 +167,8 @@ export default function AssetTransfer() {
     }
   };
 
-  const handleSignAssets = (id: string) => {
-    console.log("Ký biên bản cho các tài sản:", id);
+  const handleSignTools = (id: string) => {
+    console.log("Ký biên bản cho các CCDC - Vật tư:", id);
     // Lấy thông tin document từ các dòng được chọn
     const documents = mockRows.find((row: any) => row.Id === id);
     setSelectedDocuments(documents);
@@ -168,20 +176,20 @@ export default function AssetTransfer() {
     setShowSignDocument(true);
   };
 
-  const handleViewDocument = (rowData: AssetTransferData) => {
+  const handleViewDocument = (rowData: ToolTransferData) => {
     console.log("Xem tài liệu:", rowData.Id);
     setSelectedDocuments(rowData);
     setShowSignerSidebar(false); // Ẩn sidebar khi xem
     setShowSignDocument(true);
   };
 
-  const handleViewBienBan = (rowData: AssetTransferData) => {
+  const handleViewBienBan = (rowData: ToolTransferData) => {
     console.log("Xem phiếu bàn giao:", rowData.Id);
     setSelectedDocuments(rowData);
     setShowBienBanDialog(true);
   };
 
-  const columns: GridColDef<AssetTransferData>[] = [
+  const columns: GridColDef<ToolTransferData>[] = [
     {
       field: "TenPhieu",
       headerName: "Phiếu ký nội sinh",
@@ -290,16 +298,9 @@ export default function AssetTransfer() {
       headerAlign: "center",
       align: "center",
     },
-    {
-      field: "IdDonViDeNghi",
-      headerName: "Đơn vị đề nghị",
-      width: 180,
-      headerAlign: "center",
-      align: "center",
-    },
 
     {
-      field: "TrangThaiPhieu",
+      field: "TrangThai",
       headerName: "Trạng thái phiếu",
       width: 140,
       headerAlign: "center",
@@ -439,7 +440,7 @@ export default function AssetTransfer() {
       sortable: false,
       filterable: false,
       renderCell: (params) => {
-        const rowData = params.row as AssetTransferData;
+        const rowData = params.row as ToolTransferData;
         return (
           <Box sx={{ display: "flex", gap: 0.5, justifyContent: "center" }}>
             <Tooltip title="Xóa">
@@ -611,16 +612,16 @@ export default function AssetTransfer() {
             {showForm && (
               <Box sx={{ mb: 2 }}>
                 {/* Thêm margin bottom để tách biệt với bảng bên dưới */}
-                <AssetTransferForm
+                <ToolTransferForm
                   key={isNewForm ? "new-form" : `edit-${selectedRow?.id}`}
                   onCancel={() => {
                     handleCloseForm();
                     setIsNewForm(false);
                   }}
-                  onSave={handleSaveAssetTransfer}
+                  onSave={handleSaveToolTransfer}
                   onEdit={() => {}}
                   readOnly={!!selectedRow && !isNewForm}
-                  selectedTransfer={isNewForm ? null : selectedRow}
+                  selectedTool={isNewForm ? null : selectedRow}
                   label={label}
                   isSignedForm={!!selectedRow && !isNewForm}
                 />
@@ -663,14 +664,12 @@ export default function AssetTransfer() {
                   selectedIds={selectedIds}
                   onSelectionChange={setSelectedIds}
                   onDelete={handleDelete}
-                  onSign={handleSignAssets}
+                  onSign={handleSignTools}
                   searchValue={searchValue}
                   setSearchValue={setSearchValue}
                   showStatusFilter={true}
                 />
               </Grid>
-
-              {/* SIDEBAR - Bây giờ sẽ dính liền và cao bằng Table */}
               {/* SIDEBAR - Bây giờ sẽ dính liền và cao bằng Table */}
               {showSidebar && (
                 <Grid

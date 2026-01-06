@@ -20,6 +20,8 @@ import Unit from "./pages/Unit/Unit";
 import ReasonIncrease from "./pages/ReasonIncrease/ResonIncrease";
 import CurrentStatus from "./pages/CurrentStatus/CurrentStatus";
 import ToolManager from "./pages/ToolManager/ToolManager";
+import ToolTransfer from "./pages/ToolTransfer/ToolTransfer";
+import Report from "./pages/Report/Report";
 
 const ProtectedRoute = ({ allowedRoles, children }) => {
   const { user } = useSelector((state: RootState) => state.user);
@@ -59,11 +61,13 @@ function App() {
           <Route path={ROUTES.CURRENTSTATUS} element={<CurrentStatus />} />
           <Route path={ROUTES.ASSETMANAGER} element={<AssetManager />} />
           <Route path={ROUTES.ASSETTRANSFER} element={<AssetTransfer />} />
+          <Route path={ROUTES.TOOLTRANSFER} element={<ToolTransfer />} />
           <Route
             path={ROUTES.ASSETDEPRECIATION}
             element={<AssetDepreciation />}
           />
           <Route path={ROUTES.TOOLMANAGER} element={<ToolManager />} />
+          <Route path={ROUTES.REPORT} element={<Report />} />
         </Route>
       </Routes>
     </BrowserRouter>

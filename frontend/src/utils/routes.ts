@@ -16,4 +16,6 @@ export const ROUTES = {
   ASSETTRANSFER: "/dieu_dong_tai_san",
   ASSETDEPRECIATION: "/khau_hao_tai_san",
   TOOLMANAGER: "/quan_ly_ccdc",
+  TOOLTRANSFER: "/dieu_dong_ccdc",
+  REPORT: "/bao_cao",
 } as const;
