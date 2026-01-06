@@ -596,7 +596,6 @@ export default function AssetHandover() {
           onSign={() => {
             setShowSignDocument(false);
             setSelectedIds([]);
-            // Gọi API reload data ở đây
           }}
           fullscreen={true}
         />
