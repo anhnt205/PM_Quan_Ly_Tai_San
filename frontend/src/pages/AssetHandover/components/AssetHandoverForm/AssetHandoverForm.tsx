@@ -39,6 +39,7 @@ import CustomStepper from "../../../../components/common/CustomStepper";
 import { useAssetHandoverMutation } from "../../Mutation";
 import { AssetHandoverFormValues } from "../../types";
 import ViewBtn from "../../../../components/Button/ViewBtn";
+import SignDocumentForm from "../../../../components/common/SignDocumentForm";
 
 const UnderlinedInputWrapper = styled(Box)({
   width: "100%",
@@ -129,15 +130,22 @@ export default function AssetHandoverForm({
 
   const [paginationModel] = useState({ page: 0, pageSize: 10 });
   const [searchValue] = useState("");
-  const { departments, staffs, allAssets, updateMutation, createMutation } =
-    useAssetHandoverMutation(
-      paginationModel.page,
-      paginationModel.pageSize,
-      searchValue
-    );
+  const {
+    departments,
+    staffs,
+    allAssets,
+    updateMutation,
+    createMutation,
+    handleDownloadFile,
+  } = useAssetHandoverMutation(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchValue
+  );
 
   const [expanded, setExpanded] = useState(true);
   const [tableExpanded, setTableExpanded] = useState(true);
+  const [previewFileName, setPreviewFileName] = useState<string | null>(null);
 
   const formik = useFormik<AssetHandoverFormValues>({
     initialValues: {
@@ -188,6 +196,7 @@ export default function AssetHandoverForm({
         },
       ],
       nguoiKyList: [{ idPhongBan: "", idNguoiKy: "" }],
+      chuKyList: [],
     },
     onSubmit: (values) => {
       const payload = {
@@ -289,6 +298,15 @@ export default function AssetHandoverForm({
           </Box>
           <CustomStepper activeStep={currentStatus} />
         </Box>
+
+        {previewFileName && (
+          <SignDocumentForm
+            fileName={previewFileName}
+            onCancel={() => setPreviewFileName(null)}
+            onDownload={handleDownloadFile}
+            showSignerSidebar={false}
+          />
+        )}
 
         {currentStatus === 2 && (
           <CancelStatusBadge>
@@ -518,7 +536,7 @@ export default function AssetHandoverForm({
             <Box sx={{ backgroundColor: "#f5f5f5", borderRadius: "4px", p: 2 }}>
               <FileAttachmentInput
                 formik={formik}
-                field="TenFile" // Đảm bảo trường này khớp với API của bạn (ví dụ tenFile)
+                field="tenFile"
                 disabled={isFormReadOnly}
               />
 
@@ -536,10 +554,13 @@ export default function AssetHandoverForm({
                       width: "fit-content",
                       "&:hover": { textDecoration: "underline" },
                     }}
-                    onClick={() => {
-                      // Logic mở file tại đây (ví dụ window.open đường dẫn file)
-                      const fileUrl = formik.values.duongDanFile;
-                      if (fileUrl) window.open(fileUrl, "_blank");
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (formik.values.tenFile) {
+                        setPreviewFileName(formik.values.tenFile);
+                      } else {
+                        alert("Không có file để xem!");
+                      }
                     }}
                   >
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>

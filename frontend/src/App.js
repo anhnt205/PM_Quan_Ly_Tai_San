@@ -21,6 +21,7 @@ import ReasonIncrease from "./pages/ReasonIncrease/ResonIncrease";
 import CurrentStatus from "./pages/CurrentStatus/CurrentStatus";
 import ToolManager from "./pages/ToolManager/ToolManager";
 import AssetHandover from "./pages/AssetHandover/AssetHandover";
+import Report from "./pages/Report/Report";
 
 const ProtectedRoute = ({ allowedRoles, children }) => {
   const { user } = useSelector((state) => state.user);
@@ -61,7 +62,6 @@ function App() {
           <Route path={ROUTES.ASSETMANAGER} element={<AssetManager />} />
           <Route path={ROUTES.ASSETHANDOVER} element={<AssetHandover />} />
           <Route path={ROUTES.ASSETTRANSFER} element={<AssetTransfer />} />
-          <Route path={ROUTES.ASSETHANDOVER} element={<AssetHandover />} />
           <Route
             path={ROUTES.ASSETDEPRECIATION}
             element={<AssetDepreciation />}

@@ -30,7 +30,7 @@ import { ROUTES } from "../../utils/routes";
 import FieldDate from "../TextField/FieldDate";
 import { showConfirmAlert } from "../Alert";
 import { Dispatch, SetStateAction } from "react";
-import { FilterStatusGroup } from "./FilterStatusGroup";
+import { FilterOption, FilterStatusGroup } from "./FilterStatusGroup";
 const CustomFilterPanel = (props: any) => {
   return (
     <GridFilterPanel
@@ -59,10 +59,13 @@ interface Props {
   onSign?: (ids: string) => void;
   searchValue?: string;
   setSearchValue?: Dispatch<SetStateAction<string>>;
+  showStatusFilter?: boolean;
   selectedDate?: string;
   setSelectedDate?: Dispatch<SetStateAction<string>>;
-  showStatusFilter?: boolean;
   paginationMode?: GridFeatureMode;
+  statusOptions?: FilterOption[];
+  statusValue?: any;
+  onStatusChange?: (val: any) => void;
 }
 
 export default function TableCustom({
@@ -82,10 +85,11 @@ export default function TableCustom({
   onSign,
   searchValue,
   setSearchValue,
-  selectedDate,
-  setSelectedDate,
   showStatusFilter = false,
   paginationMode = "server",
+  statusOptions = [],
+  statusValue,
+  onStatusChange,
 }: Props) {
   const navigate = useNavigate();
 
@@ -115,7 +119,13 @@ export default function TableCustom({
         </Box>
 
         {/* Cụm Checkbox trạng thái hiển thị dựa trên biến boolean */}
-        {showStatusFilter && <FilterStatusGroup />}
+        {showStatusFilter && (
+          <FilterStatusGroup
+            options={statusOptions}
+            selectedValue={statusValue}
+            onChange={(val) => onStatusChange?.(val)}
+          />
+        )}
       </Box>
 
       <Grid container spacing={2} p={2}>
@@ -137,13 +147,7 @@ export default function TableCustom({
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 2 }}>
-          {isFilterDate && (
-            <FieldDate
-              title="Chọn thời gian khấu hao"
-              selectedDate={selectedDate}
-              setSelectedDate={setSelectedDate}
-            />
-          )}
+          {isFilterDate && <FieldDate title="Chọn thời gian khấu hao" />}
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
           <Box
@@ -157,10 +161,10 @@ export default function TableCustom({
             </Button> */}
             {selectedIds.length === 1 && (
               <Button
+                size="small"
                 variant="contained"
                 color="primary"
                 startIcon={<Edit />}
-                sx={{ mb: 2 }}
                 onClick={(e) => {
                   console.log(
                     "Button Ký biên bản clicked! selectedIds:",
@@ -175,10 +179,10 @@ export default function TableCustom({
             )}
             {selectedIds.length > 0 && (
               <Button
+                size="small"
                 variant="contained"
                 color="error"
                 startIcon={<Delete />}
-                sx={{ mb: 2 }}
                 onClick={async (e) => {
                   e.stopPropagation();
                   const confirm = await showConfirmAlert(
@@ -208,7 +212,7 @@ export default function TableCustom({
       </Grid>
       <Box sx={{ width: "100%", overflowX: "auto" }}>
         <DataGrid
-          getRowId={(row) => row.Id || row.id || row.soThe}
+          getRowId={(row) => row.Id || row.id}
           onRowClick={onRowClick}
           columns={columns}
           rows={rows}

@@ -1,7 +1,7 @@
+import React from "react";
 import {
   Box,
   Checkbox,
-  Chip,
   Typography,
   styled,
   CheckboxProps,
@@ -10,32 +10,28 @@ import {
 import { Check } from "@mui/icons-material";
 
 const COLORS = {
-  default: "#757575",
+  default: "#424242", // Tất cả (Đen/Xám đậm)
+  success: "#4caf50", // Cấp phát (Xanh lá)
+  info: "#2196f3", // Điều chuyển (Xanh dương)
+  error: "#ff7043", // Thu hồi (Cam đỏ)
   primary: "#1976d2",
   secondary: "#9c27b0",
-  error: "#d32f2f",
-  info: "#0288d1",
-  success: "#2e7d32",
   warning: "#ed6c02",
 };
 
-const BpIcon = styled("span")<{ customColor: string }>(
-  ({ theme, customColor }) => ({
-    borderRadius: 3,
-    width: 18,
-    height: 18,
-    boxShadow: `inset 0 0 0 1px ${customColor}, inset 0 -1px 0 ${alpha(
-      customColor,
-      0.2
-    )}`,
-    backgroundColor: "#fff",
-    transition: "all 0.2s",
-    "input:hover ~ &": {
-      backgroundColor: alpha(customColor, 0.02),
-      boxShadow: `inset 0 0 0 2px ${customColor}`,
-    },
-  })
-);
+// --- Styled Components cho Checkbox Custom ---
+const BpIcon = styled("span")<{ customColor: string }>(({ customColor }) => ({
+  borderRadius: 3,
+  width: 18,
+  height: 18,
+  boxShadow: `inset 0 0 0 1px ${customColor}`,
+  backgroundColor: "#fff",
+  transition: "all 0.2s",
+  "input:hover ~ &": {
+    backgroundColor: alpha(customColor, 0.05),
+    boxShadow: `inset 0 0 0 2px ${customColor}`,
+  },
+}));
 
 const BpCheckedIconRoot = styled("span")<{ customcolor: string }>(
   ({ customcolor }) => ({
@@ -49,19 +45,8 @@ const BpCheckedIconRoot = styled("span")<{ customcolor: string }>(
     justifyContent: "center",
     color: "#fff",
     transition: "all 0.2s",
-    ".MuiCheckbox-root:hover &": {
-      backgroundColor: alpha(customcolor, 0.9),
-    },
   })
 );
-
-const BpCheckedIcon = ({ customColor }: { customColor: string }) => {
-  return (
-    <BpCheckedIconRoot customcolor={customColor}>
-      <Check sx={{ fontSize: 14, fontWeight: "bold" }} />
-    </BpCheckedIconRoot>
-  );
-};
 
 const CustomCheckbox = (
   props: CheckboxProps & { colorKey: keyof typeof COLORS }
@@ -70,71 +55,76 @@ const CustomCheckbox = (
   return (
     <Checkbox
       color="default"
-      checkedIcon={<BpCheckedIcon customColor={colorHex} />}
+      checkedIcon={
+        <BpCheckedIconRoot customcolor={colorHex}>
+          <Check sx={{ fontSize: 14, fontWeight: "bold" }} />
+        </BpCheckedIconRoot>
+      }
       icon={<BpIcon customColor={colorHex} />}
       sx={{
-        mr: 0.5,
-        color: colorHex,
-        "&:hover": {
-          bgcolor: alpha(colorHex, 0.1),
-        },
-        "&.Mui-checked": {
-          color: colorHex,
-        },
+        p: 0.5,
+        "&.Mui-checked": { color: colorHex },
       }}
       {...props}
     />
   );
 };
 
-const renderStatusChip = (count: number, colorKey: keyof typeof COLORS) => {
-  const colorHex = COLORS[colorKey] || COLORS.default;
-  return (
-    <Chip
-      label={count}
-      size="small"
-      sx={{
-        height: 22,
-        width: 22,
-        borderRadius: "50%",
-        fontSize: 11,
-        ml: 0.5,
-        bgcolor: alpha(colorHex, 0.15),
-        color: colorHex,
-        fontWeight: "bold",
-        "& .MuiChip-label": {
-          padding: 0,
-        },
-      }}
-    />
-  );
-};
+// --- Badge số lượng màu xám tròn ---
+const StatusCountBadge = ({ count }: { count: number }) => (
+  <Box
+    sx={{
+      height: 22,
+      minWidth: 22,
+      borderRadius: "50%",
+      fontSize: 12,
+      ml: 1,
+      bgcolor: "#e0e0e0",
+      color: "#333",
+      fontWeight: "bold",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      px: 0.5,
+    }}
+  >
+    {count}
+  </Box>
+);
 
+// --- Component Item đơn lẻ (Dynamic) ---
 const FilterItem = ({
   label,
   count,
   color = "default",
-  defaultChecked = false,
+  checked,
+  onChange,
 }: {
   label: string;
   count: number;
   color?: keyof typeof COLORS;
-  defaultChecked?: boolean;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
 }) => {
   return (
     <Box
       display="flex"
       alignItems="center"
+      onClick={() => onChange(!checked)}
       sx={{
         cursor: "pointer",
-        ml: 2, // Tạo khoảng cách giữa các item
-        "& .MuiTypography-root": { userSelect: "none" },
+        ml: 2,
+        userSelect: "none",
         "&:hover .MuiCheckbox-root": {
-          bgcolor: alpha(COLORS[color] || COLORS.default, 0.1),
+          bgcolor: alpha(COLORS[color] || COLORS.default, 0.05),
         },
       }}
     >
-      <CustomCheckbox defaultChecked={defaultChecked} colorKey={color} />
+      <CustomCheckbox
+        checked={checked}
+        colorKey={color}
+        onChange={(e) => onChange(e.target.checked)}
+      />
       <Typography
         variant="body2"
         sx={{
@@ -145,20 +135,43 @@ const FilterItem = ({
           alignItems: "center",
         }}
       >
-        {label} {renderStatusChip(count, color)}
+        {label} <StatusCountBadge count={count} />
       </Typography>
     </Box>
   );
 };
 
-export const FilterStatusGroup = () => {
+// --- Component Group chính (Dynamic) ---
+export interface FilterOption {
+  label: string;
+  count: number;
+  color: keyof typeof COLORS;
+  value: any;
+}
+
+interface FilterStatusGroupProps {
+  options: FilterOption[];
+  selectedValue: any;
+  onChange: (value: any) => void;
+}
+
+export const FilterStatusGroup = ({
+  options,
+  selectedValue,
+  onChange,
+}: FilterStatusGroupProps) => {
   return (
-    <Box display="flex" alignItems="center">
-      <FilterItem label="Tất cả" count={0} defaultChecked color="default" />
-      <FilterItem label="Nháp" count={0} color="default" />
-      <FilterItem label="Duyệt" count={1} color="info" />
-      <FilterItem label="Hủy" count={1} color="error" />
-      <FilterItem label="Hoàn thành" count={1} color="success" />
+    <Box display="flex" alignItems="center" flexWrap="wrap">
+      {options.map((opt) => (
+        <FilterItem
+          key={opt.value}
+          label={opt.label}
+          count={opt.count}
+          color={opt.color}
+          checked={selectedValue === opt.value}
+          onChange={() => onChange(opt.value)}
+        />
+      ))}
     </Box>
   );
 };

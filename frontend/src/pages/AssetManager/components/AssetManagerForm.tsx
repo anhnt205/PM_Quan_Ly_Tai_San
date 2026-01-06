@@ -561,7 +561,7 @@ export default function AssetManagerForm({
                         formik={formik}
                         field={`taiSanConList.${row.originalIndex}.id`}
                         disabled={readOnly}
-                        onCustomChange={(val) => {
+                        onChange={(val) => {
                           if (val) {
                             formik.setFieldValue(
                               `taiSanConList.${row.originalIndex}.idTaiSanCon`,
