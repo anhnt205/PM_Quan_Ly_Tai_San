@@ -6,9 +6,9 @@ import { ReasonIncreaseType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 
 export const useReasonIncreaseMutation = (
-  page: number,
-  pageSize: number,
-  searchValue: string
+  page?: number,
+  pageSize?: number,
+  searchValue?: string
 ) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
@@ -17,7 +17,7 @@ export const useReasonIncreaseMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["reasonIncreases"] });
+      queryClient.invalidateQueries({ queryKey: ["reasonIncreasesPage"] });
       showSuccessAlert("Tạo lý do tăng thành công");
     },
     onError: (error: any) => {
@@ -35,7 +35,7 @@ export const useReasonIncreaseMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["reasonIncreases"] });
+      queryClient.invalidateQueries({ queryKey: ["reasonIncreasesPage"] });
       showSuccessAlert("Sửa lý do tăng thành công");
     },
     onError: (error: any) => {
@@ -52,7 +52,7 @@ export const useReasonIncreaseMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["reasonIncreases"] });
+      queryClient.invalidateQueries({ queryKey: ["reasonIncreasesPage"] });
       showSuccessAlert("Xóa lý do tăng thành công");
     },
     onError: (error: any) => {
@@ -69,7 +69,7 @@ export const useReasonIncreaseMutation = (
       return res.data.message;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["reasonIncreases"] });
+      queryClient.invalidateQueries({ queryKey: ["reasonIncreasesPage"] });
       showSuccessAlert(data || "Xóa lý do tăng thành công");
     },
     onError: (error: any) => {
@@ -82,7 +82,7 @@ export const useReasonIncreaseMutation = (
   });
 
   const { data = { items: [], totalItems: 0 }, isLoading } = useQuery({
-    queryKey: ["reasonIncreases", page, pageSize, searchValue], // Key để cache dữ liệu
+    queryKey: ["reasonIncreasesPage", page, pageSize, searchValue], // Key để cache dữ liệu
     queryFn: async () => {
       const res = await api.get("/lydotang/paged-mini", {
         params: {
@@ -96,8 +96,8 @@ export const useReasonIncreaseMutation = (
     placeholderData: (previousData) => previousData,
   });
 
-  const { data: allData = [] } = useQuery({
-    queryKey: ["reasonIncreases"], // Key để cache dữ liệu
+  const { data: allReasonIncreases = [] } = useQuery({
+    queryKey: ["allReasonIncreases"], // Key để cache dữ liệu
     queryFn: async () => {
       const res = await api.get("/lydotang");
       return res.data.data;
@@ -110,8 +110,8 @@ export const useReasonIncreaseMutation = (
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
-    reasonIncreases: data,
-    allData,
+    reasonIncreasesPage: data,
+    allReasonIncreases,
     isLoading,
   };
 };

@@ -57,51 +57,35 @@ export default function AssetDepreciationForm({
   const [expanded, setExpanded] = useState(true);
   const formik = useFormik({
     initialValues: {
-      assetNumber: "",
-      assetCode: "",
-      assetName: "",
-      originalCost: "",
-      initialDepValue: "",
-      initialDepPeriod: "",
-      salvageValue: "",
-      assetModel: "",
-      depreciationMethod: "",
-      depreciationYears: "",
-      assetDisplayName: "",
-      depreciationAccountName: "",
-      expenseAccount: "",
-      assetGroupId: "",
-      assetTypeId: "",
-      recordedDate: null,
-      usedDate: null,
-
-      projectId: "",
-      stateBudgetCapital: "",
-      loanCapital: "",
-      otherCapital: "",
-      brand: "",
-      brandCode: "",
-      capacity: "",
-      countryOfOrigin: "",
-      manufactureYear: "",
-      increaseReasonId: "",
-      assetStatus: "",
-      quantity: 1,
-      unitId: "",
-      note: "",
-      autoCreateUnit: false,
-      warehouseId: "",
-      currentUnitId: "",
-
-      assets: [
-        {
-          asset: "",
-          uom: "",
-          quantity: "",
-          status: "",
-          note: "",
-        },
-      ],
+      soThe: "",
+      tenTaiSan: "",
+      nguonVon: "",
+      maTk: "",
+      ngayTinhKhao: "",
+      thangKh: 0,
+      nguyenGia: 0,
+      khauHaoBanDau: 0,
+      khauHaoPsdk: 0,
+      gtclBanDau: 0,
+      khauHaoPsck: 0,
+      gtclHienTai: 0,
+      khauHaoBinhQuan: 0,
+      soTien: 0,
+      chenhLech: 0,
+      khKyTruoc: 0,
+      clKyTruoc: 0,
+      hsdCkh: 0,
+      tkNo: "",
+      tkCo: "",
+      dtgt: "",
+      dtth: "",
+      kmcp: "",
+      ghiChuKhao: "",
+      userId: "",
+      userTime: "",
+      nvNS: 0,
+      vonVay: 0,
+      vonKhac: 0,
     },
     onSubmit(values) {
       onSave(values);
@@ -140,15 +124,7 @@ export default function AssetDepreciationForm({
                   <FieldInput
                     title="Số thẻ *"
                     formik={formik}
-                    field="assetNumber"
-                    disabled={readOnly}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <FieldInput
-                    title="Mã tài sản *"
-                    formik={formik}
-                    field="assetCode"
+                    field="soThe"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -156,7 +132,7 @@ export default function AssetDepreciationForm({
                   <FieldInput
                     title="Tên tài sản *"
                     formik={formik}
-                    field="assetName"
+                    field="tenTaiSan"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -164,7 +140,7 @@ export default function AssetDepreciationForm({
                   <FieldInput
                     title="Nguồn vốn"
                     formik={formik}
-                    field="originalCost"
+                    field="nguonVon"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -173,7 +149,7 @@ export default function AssetDepreciationForm({
                     title="Mã tài khoản"
                     type="number"
                     formik={formik}
-                    field="initialDepValue"
+                    field="maTk"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -181,7 +157,7 @@ export default function AssetDepreciationForm({
                   <FieldDate
                     title="Ngày tính khấu hao"
                     formik={formik}
-                    field="usedDate"
+                    field="ngayTinhKhao"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -190,7 +166,7 @@ export default function AssetDepreciationForm({
                     title="Tháng khấu hao"
                     type="number"
                     formik={formik}
-                    field="salvageValue"
+                    field="thangKh"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -198,7 +174,7 @@ export default function AssetDepreciationForm({
                   <FieldInput
                     title="Nguyên giá"
                     formik={formik}
-                    field="depreciationMethod"
+                    field="nguyenGia"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -207,7 +183,7 @@ export default function AssetDepreciationForm({
                     title="Khấu hao ban đầu"
                     type="number"
                     formik={formik}
-                    field="depreciationYears"
+                    field="khauHaoBanDau"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -216,7 +192,7 @@ export default function AssetDepreciationForm({
                     title="Khấu hao PSDK"
                     type="number"
                     formik={formik}
-                    field="assetDisplayName"
+                    field="khauHaoPsdk"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -225,7 +201,7 @@ export default function AssetDepreciationForm({
                     title="GTCL ban đầu"
                     type="number"
                     formik={formik}
-                    field="depreciationAccountName"
+                    field="gtclBanDau"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -234,7 +210,7 @@ export default function AssetDepreciationForm({
                     title="DTGT"
                     type="number"
                     formik={formik}
-                    field="expenseAccount"
+                    field="dtgt"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -242,7 +218,7 @@ export default function AssetDepreciationForm({
                   <FieldInput
                     title="DTTH"
                     formik={formik}
-                    field="expenseAccount"
+                    field="dtth"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -250,7 +226,7 @@ export default function AssetDepreciationForm({
                   <FieldInput
                     title="Ghi chú khấu hao"
                     formik={formik}
-                    field="expenseAccount"
+                    field="ghiChuKhao"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -262,7 +238,7 @@ export default function AssetDepreciationForm({
                   <FieldInput
                     title="Khấu hao PSCK"
                     formik={formik}
-                    field="stateBudgetCapital"
+                    field="khauHaoPsck"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -270,7 +246,7 @@ export default function AssetDepreciationForm({
                   <FieldInput
                     title="GTCL hiện tại"
                     formik={formik}
-                    field="loanCapital"
+                    field="gtclHienTai"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -279,7 +255,7 @@ export default function AssetDepreciationForm({
                     title="Khấu hao bình quân"
                     type="number"
                     formik={formik}
-                    field="otherCapital"
+                    field="khauHaoBinhQuan"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -287,7 +263,7 @@ export default function AssetDepreciationForm({
                   <FieldInput
                     title="Số tiền"
                     formik={formik}
-                    field="brand"
+                    field="soTien"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -296,7 +272,7 @@ export default function AssetDepreciationForm({
                     title="Chênh lệch"
                     type="number"
                     formik={formik}
-                    field="brandCode"
+                    field="chenhLech"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -304,7 +280,15 @@ export default function AssetDepreciationForm({
                   <FieldInput
                     title="Khấu hao kỳ trước"
                     formik={formik}
-                    field="capacity"
+                    field="khKyTruoc"
+                    disabled={readOnly}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <FieldInput
+                    title="Chênh lệch kỳ trước"
+                    formik={formik}
+                    field="clKyTruoc"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -313,7 +297,7 @@ export default function AssetDepreciationForm({
                     title="HSDCKH"
                     type="number"
                     formik={formik}
-                    field="manufactureYear"
+                    field="hsdCkh"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -322,7 +306,7 @@ export default function AssetDepreciationForm({
                     title="Tài khoản nợ"
                     type="number"
                     formik={formik}
-                    field="quantity"
+                    field="tkNo"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -330,7 +314,7 @@ export default function AssetDepreciationForm({
                   <FieldInput
                     title="Tài khoản có"
                     formik={formik}
-                    field="note"
+                    field="tkCo"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -338,7 +322,7 @@ export default function AssetDepreciationForm({
                   <FieldInput
                     title="KMCP"
                     formik={formik}
-                    field="note"
+                    field="kmcp"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -346,7 +330,7 @@ export default function AssetDepreciationForm({
                   <FieldInput
                     title="Người tạo"
                     formik={formik}
-                    field="note"
+                    field="userId"
                     disabled={readOnly}
                   />
                 </Grid>

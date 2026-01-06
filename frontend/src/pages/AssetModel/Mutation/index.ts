@@ -1,88 +1,88 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../../../config/api.config";
-import { CapitalSourceType } from "../types";
+import { AssetModel } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 
-export const useCapitalSourceMutation = (
+export const useAssetModelMutation = (
   page?: number,
   pageSize?: number,
   searchValue?: string
 ) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
-    mutationFn: async (data: CapitalSourceType) => {
-      const res = await api.post("/nguonvon", data);
+    mutationFn: async (data: AssetModel) => {
+      const res = await api.post("/taisan", data);
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["capitalSourcesPage"] });
-      showSuccessAlert("Tạo nguồn vốn thành công");
+      queryClient.invalidateQueries({ queryKey: ["assetsModelPage"] });
+      showSuccessAlert("Tạo mô hình tài sản thành công");
     },
     onError: (error: any) => {
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Tạo nguồn vốn thất bại"
+          "Tạo mô hình tài sản thất bại"
       );
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: CapitalSourceType) => {
-      const res = await api.put(`/nguonvon/${data.id}`, data);
+    mutationFn: async (data: AssetModel) => {
+      const res = await api.put(`/taisan/${data.id}`, data);
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["capitalSourcesPage"] });
-      showSuccessAlert("Sửa nguồn vốn thành công");
+      queryClient.invalidateQueries({ queryKey: ["assetsModelPage"] });
+      showSuccessAlert("Sửa mô hình tài sản thành công");
     },
     onError: (error: any) => {
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Sửa nguồn vốn thất bại"
+          "Sửa mô hình tài sản thất bại"
       );
     },
   });
   const deleteOneMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await api.delete(`/nguonvon/${id}`);
+      const res = await api.delete(`/taisan/${id}`);
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["capitalSourcesPage"] });
-      showSuccessAlert("Xóa nguồn vốn thành công");
+      queryClient.invalidateQueries({ queryKey: ["assetsModelPage"] });
+      showSuccessAlert("Xóa mô hình tài sản thành công");
     },
     onError: (error: any) => {
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa nguồn vốn thất bại"
+          "Xóa mô hình tài sản thất bại"
       );
     },
   });
   const deleteManyMutation = useMutation({
     mutationFn: async (ids: string[]) => {
-      const res = await api.delete(`/nguonvon/batch`, { data: ids });
+      const res = await api.delete(`/taisan/batch`, { data: ids });
       return res.data.message;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["capitalSourcesPage"] });
-      showSuccessAlert(data || "Xóa nguồn vốn thành công");
+      queryClient.invalidateQueries({ queryKey: ["assetsModelPage"] });
+      showSuccessAlert(data || "Xóa mô hình tài sản thành công");
     },
     onError: (error: any) => {
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa nguồn vốn thất bại"
+          "Xóa mô hình tài sản thất bại"
       );
     },
   });
 
   const { data = { items: [], totalItems: 0 }, isLoading } = useQuery({
-    queryKey: ["capitalSourcesPage", page, pageSize, searchValue], // Key để cache dữ liệu
+    queryKey: ["assetsModelPage", page, pageSize, searchValue], // Key để cache dữ liệu
     queryFn: async () => {
-      const res = await api.get("/nguonvon/paged", {
+      const res = await api.get("/mohinhtaisan/paged", {
         params: {
           idcongty: "ct001",
           page: page,
@@ -90,22 +90,20 @@ export const useCapitalSourceMutation = (
           search: searchValue,
         },
       });
-      return res.data;
+      return res.data.data || res.data;
     },
     placeholderData: (previousData) => previousData,
   });
-
-  const { data: allData = [] } = useQuery({
-    queryKey: ["capitalSources"], // Key để cache dữ liệu
+  const { data: allAssetModel = [] } = useQuery({
+    queryKey: ["allAssetModel"], // Key để cache dữ liệu
     queryFn: async () => {
-      const res = await api.get("/nguonvon", {
+      const res = await api.get("/mohinhtaisan", {
         params: {
           idcongty: "ct001",
         },
       });
       return res.data;
     },
-    placeholderData: (previousData) => previousData,
   });
 
   return {
@@ -113,8 +111,8 @@ export const useCapitalSourceMutation = (
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
-    allData,
-    capitalSourcesPage: data,
+    assetsModelPage: data,
+    allAssetModel,
     isLoading,
   };
 };

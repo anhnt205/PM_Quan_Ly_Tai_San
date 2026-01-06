@@ -32,7 +32,7 @@ export default function TypeAsset() {
 
   const {
     // typeAssets,
-    allData,
+    allTypeAssets,
     createMutation,
     updateMutation,
     deleteOneMutation,
@@ -138,8 +138,8 @@ export default function TypeAsset() {
         <TableCustom
           title="Quản lý loại tài sản"
           columns={columns}
-          rows={allData}
-          total={allData.length}
+          rows={allTypeAssets}
+          total={allTypeAssets.length}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
           loading={isLoading}

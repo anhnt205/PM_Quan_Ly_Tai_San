@@ -4,21 +4,18 @@ import {
   ArrowDropUp,
   Delete,
   InfoOutlineRounded,
-  Visibility,
-  VisibilityOff,
 } from "@mui/icons-material";
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
+  Autocomplete,
   Box,
   Button,
   Checkbox,
   Grid,
   IconButton,
-  InputAdornment,
   Paper,
-  Select,
   Table,
   TableBody,
   TableCell,
@@ -27,18 +24,16 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
 import FieldInput from "../../../components/TextField/FieldInput";
 import { useFormik } from "formik";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
-import AssetParents from "../../../data/AssetParent.json";
-import TypeAssets from "../../../data/TypeAsset.json";
-import Projects from "../../../data/Project.json";
 import FieldDateTime from "../../../components/TextField/FieldDateTime";
 import EditButton from "../../../components/Button/EditButton";
+import { findById } from "../../../utils/helpers";
 
 export default function AssetManagerForm({
   onEdit,
@@ -46,73 +41,147 @@ export default function AssetManagerForm({
   selectedAsset,
   readOnly,
   onSave,
+  allAssetModel,
+  allCurrentStatus,
+  assetGroups,
+  allProjects,
+  allDepartments,
+  typeAssetsByAssetGroup,
+  assetsByType,
+  allUnits,
+  allReasonIncreases,
+  countries,
+  setSelectedAssetGroup,
 }: {
   onEdit: () => void;
   onCancel: () => void;
   selectedAsset?: any;
   readOnly?: boolean;
   onSave: (values: any) => void;
+  allAssetModel: any[];
+  allCurrentStatus: any[];
+  assetGroups: any[];
+  allProjects: any[];
+  allDepartments: any[];
+  typeAssetsByAssetGroup: [];
+  assetsByType: any[];
+  allUnits: any[];
+  allReasonIncreases: any[];
+  countries: any[];
+  setSelectedAssetGroup: Dispatch<SetStateAction<string>>;
 }) {
   const [expanded, setExpanded] = useState(true);
   const formik = useFormik({
     initialValues: {
-      assetNumber: "",
-      assetCode: "",
-      assetName: "",
-      originalCost: "",
-      initialDepValue: "",
-      initialDepPeriod: "",
-      salvageValue: "",
-      assetModel: "",
-      depreciationMethod: "",
-      depreciationYears: "",
-      assetDisplayName: "",
-      depreciationAccountName: "",
-      expenseAccount: "",
-      assetGroupId: "",
-      assetTypeId: "",
-      recordedDate: null,
-      usedDate: null,
-
-      projectId: "",
-      stateBudgetCapital: "",
-      loanCapital: "",
-      otherCapital: "",
-      brand: "",
-      brandCode: "",
-      capacity: "",
-      countryOfOrigin: "",
-      manufactureYear: "",
-      increaseReasonId: "",
-      assetStatus: "",
-      quantity: 1,
-      unitId: "",
-      note: "",
-      autoCreateUnit: false,
-      warehouseId: "",
-      currentUnitId: "",
-
-      assets: [
+      id: "",
+      idLoaiTaiSan: "",
+      tenTaiSan: "",
+      nguyenGia: 0,
+      giaTriKhauHaoBanDau: 0,
+      kyKhauHaoBanDau: 0,
+      giaTriThanhLy: 0,
+      idMoHinhTaiSan: "",
+      phuongPhapKhauHao: 0,
+      soKyKhauHao: 0,
+      taiKhoanTaiSan: 0,
+      taiKhoanKhauHao: 0,
+      taiKhoanChiPhi: 0,
+      idNhomTaiSan: "",
+      ngayVaoSo: "",
+      ngaySuDung: "",
+      idDuAn: "",
+      idNguonVon: "",
+      kyHieu: "",
+      soKyHieu: "",
+      congSuat: "",
+      nuocSanXuat: "",
+      namSanXuat: 0,
+      lyDoTang: "",
+      hienTrang: 0,
+      soLuong: 0,
+      donViTinh: "",
+      ghiChu: "",
+      idDonViBanDau: "",
+      idDonViHienThoi: "",
+      moTa: "",
+      idCongTy: "ct001",
+      ngayTao: "",
+      ngayCapNhat: "",
+      nguoiTao: "",
+      nguoiCapNhat: "",
+      isActive: true,
+      isTaiSanCon: false,
+      idLoaiTaiSanCon: "",
+      soThe: "",
+      nvNS: 0,
+      vonVay: 0,
+      vonKhac: 0,
+      taiSanConList: [
         {
-          asset: "",
-          uom: "",
-          quantity: "",
-          status: "",
-          note: "",
+          id: "",
+          idTaiSanCha: "",
+          idTaiSanCon: "",
+          ngayTao: "",
+          ngayCapNhat: "",
+          nguoiTao: "",
+          nguoiCapNhat: "",
+          isActive: true,
+          donViTinh: "",
+          soLuong: 0,
+          hienTrang: "",
+          moTa: "",
+          isDeleted: false,
+          isInsert: true,
         },
       ],
     },
     onSubmit(values) {
-      onSave(values);
+      onSave({
+        ...values,
+        idLoaiTaiSan: values.idNhomTaiSan,
+        taiSanConList: values.taiSanConList.map((item: any) => ({
+          ...item,
+          idTaiSanCha: values.id,
+        })),
+      });
     },
   });
   useEffect(() => {
     if (selectedAsset) {
-      formik.setValues(selectedAsset);
+      const enrichedTaiSanConList =
+        selectedAsset.taiSanConList?.map((item: any) => {
+          // Tìm thông tin từ các list danh mục có sẵn
+          const assetDetail = assetsByType.find(
+            (a) => a.id === item.idTaiSanCon
+          );
+          const unit = findById(allUnits, assetDetail?.donViTinh);
+          const status = findById(allCurrentStatus, assetDetail?.hienTrang);
+
+          return {
+            ...item,
+            // Gán sẵn tên để các FieldInput (đang disabled) hiển thị được luôn
+            donViTinh: unit ? unit.tenDonVi : "",
+            hienTrang: status ? status.tenHTKT : "",
+            soLuong: item.soLuong || assetDetail?.soLuong || 0,
+            moTa: item.moTa || assetDetail?.ghiChu || "",
+            isDeleted: false,
+          };
+        }) || [];
+
+      formik.setValues({
+        ...selectedAsset,
+        taiSanConList: enrichedTaiSanConList,
+      });
     } else {
       formik.resetForm();
     }
-  }, [selectedAsset]);
+  }, [selectedAsset, allUnits, allCurrentStatus, assetsByType]);
+
+  useEffect(() => {
+    if (formik.values.idNhomTaiSan) {
+      setSelectedAssetGroup(formik.values.idNhomTaiSan);
+    }
+  }, [formik.values.idNhomTaiSan]);
   return (
     <Accordion sx={{ background: "#f6f8f4ff" }} expanded={expanded}>
       <AccordionSummary
@@ -148,7 +217,7 @@ export default function AssetManagerForm({
                   <FieldInput
                     title="Số thẻ tài sản *"
                     formik={formik}
-                    field="assetNumber"
+                    field="soThe"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -156,15 +225,15 @@ export default function AssetManagerForm({
                   <FieldInput
                     title="Mã tài sản *"
                     formik={formik}
-                    field="assetCode"
-                    disabled={readOnly}
+                    field="id"
+                    disabled={Boolean(selectedAsset)}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <FieldInput
                     title="Tên tài sản *"
                     formik={formik}
-                    field="assetName"
+                    field="tenTaiSan"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -173,7 +242,7 @@ export default function AssetManagerForm({
                     title="Nguyên giá tài sản"
                     type="number"
                     formik={formik}
-                    field="originalCost"
+                    field="nguyenGia"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -182,7 +251,7 @@ export default function AssetManagerForm({
                     title="Giá trị khấu hao ban đầu"
                     type="number"
                     formik={formik}
-                    field="initialDepValue"
+                    field="giaTriKhauHaoBanDau"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -191,7 +260,7 @@ export default function AssetManagerForm({
                     title="Kỳ khấu hao ban đầu"
                     type="number"
                     formik={formik}
-                    field="initialDepPeriod"
+                    field="kyKhauHaoBanDau"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -200,17 +269,17 @@ export default function AssetManagerForm({
                     title="Giá trị thanh lý"
                     type="number"
                     formik={formik}
-                    field="salvageValue"
+                    field="giaTriThanhLy"
                     disabled={readOnly}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <FieldAutoCompleted
                     title="Mô hình tài sản"
-                    data={[]}
-                    labelkey="name"
+                    data={allAssetModel}
+                    labelkey="tenMoHinh"
                     formik={formik}
-                    field="assetModel"
+                    field="idMoHinhTaiSan"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -218,7 +287,7 @@ export default function AssetManagerForm({
                   <FieldInput
                     title="Phương pháp khấu hao"
                     formik={formik}
-                    field="depreciationMethod"
+                    field="phuongPhapKhauHao"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -227,7 +296,7 @@ export default function AssetManagerForm({
                     title="Số kỳ khấu hao"
                     type="number"
                     formik={formik}
-                    field="depreciationYears"
+                    field="soKyKhauHao"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -235,7 +304,7 @@ export default function AssetManagerForm({
                   <FieldInput
                     title="Tên tài sản"
                     formik={formik}
-                    field="assetDisplayName"
+                    field="tenTaiSan"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -243,7 +312,7 @@ export default function AssetManagerForm({
                   <FieldInput
                     title="Tên khoản khấu hao"
                     formik={formik}
-                    field="depreciationAccountName"
+                    field="taiKhoanKhauHao"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -251,27 +320,27 @@ export default function AssetManagerForm({
                   <FieldInput
                     title="Tài khoản chi phí"
                     formik={formik}
-                    field="expenseAccount"
+                    field="taiKhoanChiPhi"
                     disabled={readOnly}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <FieldAutoCompleted
                     title="Nhóm tài sản *"
-                    data={AssetParents}
-                    labelkey="name"
+                    data={assetGroups}
+                    labelkey="tenNhom"
                     formik={formik}
-                    field="assetGroupId"
+                    field="idNhomTaiSan"
                     disabled={readOnly}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <FieldAutoCompleted
                     title="Loại tài sản"
-                    data={TypeAssets}
-                    labelkey="name"
+                    data={typeAssetsByAssetGroup}
+                    labelkey="tenLoai"
                     formik={formik}
-                    field="assetTypeId"
+                    field="idLoaiTaiSanCon"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -279,7 +348,7 @@ export default function AssetManagerForm({
                   <FieldDateTime
                     title="Ngày vào sổ"
                     formik={formik}
-                    field="recordedDate"
+                    field="ngayVaoSo"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -287,7 +356,7 @@ export default function AssetManagerForm({
                   <FieldDateTime
                     title="Ngày sử dụng"
                     formik={formik}
-                    field="usedDate"
+                    field="ngaySuDung"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -298,10 +367,10 @@ export default function AssetManagerForm({
                 <Grid size={{ xs: 12 }}>
                   <FieldAutoCompleted
                     title="Dự án"
-                    data={Projects}
-                    labelkey="name"
+                    data={allProjects}
+                    labelkey="tenDuAn"
                     formik={formik}
-                    field="projectId"
+                    field="idDuAn"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -310,7 +379,7 @@ export default function AssetManagerForm({
                     title="Vốn NS"
                     type="number"
                     formik={formik}
-                    field="stateBudgetCapital"
+                    field="nvNS"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -319,7 +388,7 @@ export default function AssetManagerForm({
                     title="Vốn vay"
                     type="number"
                     formik={formik}
-                    field="loanCapital"
+                    field="vonVay"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -328,19 +397,23 @@ export default function AssetManagerForm({
                     title="Vốn khác"
                     type="number"
                     formik={formik}
-                    field="otherCapital"
+                    field="vonKhac"
                     disabled={readOnly}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
-                  <FieldInput title="Mã hiệu" formik={formik} field="brand" />
+                  <FieldInput
+                    title="Mã hiệu"
+                    formik={formik}
+                    field="kyHieu"
+                    disabled={readOnly}
+                  />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <FieldInput
                     title="Số mã hiệu"
-                    type="number"
                     formik={formik}
-                    field="brandCode"
+                    field="soKyHieu"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -348,18 +421,35 @@ export default function AssetManagerForm({
                   <FieldInput
                     title="Công suất"
                     formik={formik}
-                    field="capacity"
+                    field="congSuat"
                     disabled={readOnly}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
-                  <FieldAutoCompleted
-                    title="Nước sản xuất"
-                    data={[]}
-                    labelkey="name"
-                    formik={formik}
-                    field="countryOfOrigin"
+                  <Autocomplete
                     disabled={readOnly}
+                    fullWidth
+                    options={countries}
+                    getOptionLabel={(option: any) => option.niceName || ""}
+                    isOptionEqualToValue={(option, value) =>
+                      option.niceName === value.niceName
+                    }
+                    value={
+                      countries.find(
+                        (i: any) => i.niceName === formik.values.nuocSanXuat
+                      ) || null
+                    }
+                    onChange={(e, newValue) => {
+                      console.log("newValue", newValue);
+                      formik.setFieldValue("nuocSanXuat", newValue?.niceName);
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label={"Nước sản xuất"}
+                        size="small"
+                      />
+                    )}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -367,27 +457,27 @@ export default function AssetManagerForm({
                     title="Năm sản xuất"
                     type="number"
                     formik={formik}
-                    field="manufactureYear"
+                    field="namSanXuat"
                     disabled={readOnly}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <FieldAutoCompleted
                     title="Lý do tăng"
-                    data={[]}
-                    labelkey="name"
+                    data={allReasonIncreases}
+                    labelkey="ten"
                     formik={formik}
-                    field="increaseReasonId"
+                    field="lyDoTang"
                     disabled={readOnly}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <FieldAutoCompleted
                     title="Hiện trạng"
-                    data={[]}
-                    labelkey="name"
+                    data={allCurrentStatus}
+                    labelkey="tenHTKT"
                     formik={formik}
-                    field="assetStatus"
+                    field="hienTrang"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -396,17 +486,17 @@ export default function AssetManagerForm({
                     title="Số lượng"
                     type="number"
                     formik={formik}
-                    field="quantity"
+                    field="soLuong"
                     disabled={readOnly}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <FieldAutoCompleted
                     title="Đơn vị tính"
-                    data={[]}
-                    labelkey="name"
+                    data={allUnits}
+                    labelkey="tenDonVi"
                     formik={formik}
-                    field="unitId"
+                    field="donViTinh"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -414,42 +504,28 @@ export default function AssetManagerForm({
                   <FieldInput
                     title="Ghi chú"
                     formik={formik}
-                    field="note"
+                    field="moTa"
+                    disabled={readOnly}
+                  />
+                </Grid>
+
+                <Grid size={{ xs: 12 }}>
+                  <FieldAutoCompleted
+                    title="Kho"
+                    data={allDepartments.filter((i) => i.id === "K30")}
+                    labelkey="tenPhongBan"
+                    formik={formik}
+                    field="idDonViBanDau"
                     disabled={readOnly}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
-                  <Box display={"flex"} alignItems={"center"}>
-                    <Typography>Khởi tạo đơn vị:</Typography>
-                    <Checkbox
-                      name="autoCreateUnit"
-                      checked={formik.values.autoCreateUnit}
-                      onChange={(e) =>
-                        formik.setFieldValue("autoCreateUnit", e.target.checked)
-                      }
-                      disabled={readOnly}
-                    />
-                  </Box>
-                </Grid>
-                {formik.values.autoCreateUnit && (
-                  <Grid size={{ xs: 12 }}>
-                    <FieldAutoCompleted
-                      title="Kho"
-                      data={[]}
-                      labelkey="name"
-                      formik={formik}
-                      field="warehouseId"
-                      disabled={readOnly}
-                    />
-                  </Grid>
-                )}
-                <Grid size={{ xs: 12 }}>
                   <FieldAutoCompleted
                     title="Đơn vị hiện thời"
-                    data={[]}
-                    labelkey="name"
+                    data={allDepartments.filter((i) => !i.isKho)}
+                    labelkey="tenPhongBan"
                     formik={formik}
-                    field="currentUnitId"
+                    field="idDonViHienThoi"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -462,96 +538,140 @@ export default function AssetManagerForm({
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell>Tài sản</TableCell>
-                <TableCell>Đơn vị tính</TableCell>
-                <TableCell>Số lượng</TableCell>
-                <TableCell>Tình trạng kỹ thuật</TableCell>
-                <TableCell>Ghi chú</TableCell>
+                <TableCell sx={{ width: "25%" }}>Tài sản</TableCell>
+                <TableCell sx={{ width: "15%" }}>Đơn vị tính</TableCell>
+                <TableCell sx={{ width: "20%" }}>Số lượng</TableCell>
+                <TableCell sx={{ width: "20%" }}>Tình trạng kỹ thuật</TableCell>
+                <TableCell sx={{ width: "20%" }}>Ghi chú</TableCell>
                 <TableCell width={50}></TableCell>
               </TableRow>
             </TableHead>
 
             <TableBody>
-              {formik.values.assets.map((row, index) => (
-                <TableRow key={index}>
-                  <TableCell>
-                    <FieldAutoCompleted
-                      title=""
-                      data={TypeAssets}
-                      labelkey="name"
-                      formik={formik}
-                      field={`assets.${index}.asset`}
-                      disabled={readOnly}
-                    />
-                  </TableCell>
+              {formik.values.taiSanConList
+                .map((row, originalIndex) => ({ ...row, originalIndex }))
+                .filter((row) => !row.isDeleted)
+                .map((row) => (
+                  <TableRow key={row.id || row.originalIndex}>
+                    <TableCell>
+                      <FieldAutoCompleted
+                        title=""
+                        data={assetsByType}
+                        labelkey="tenTaiSan"
+                        formik={formik}
+                        field={`taiSanConList.${row.originalIndex}.id`}
+                        disabled={readOnly}
+                        onCustomChange={(val) => {
+                          if (val) {
+                            formik.setFieldValue(
+                              `taiSanConList.${row.originalIndex}.idTaiSanCon`,
+                              val?.id
+                            );
 
-                  <TableCell>
-                    <FieldInput
-                      formik={formik}
-                      field={`assets.${index}.uom`}
-                      disabled={true}
-                    />
-                  </TableCell>
+                            formik.setFieldValue(
+                              `taiSanConList.${row.originalIndex}.isActive`,
+                              val.isActive
+                            );
 
-                  <TableCell>
-                    <FieldInput
-                      type="number"
-                      formik={formik}
-                      field={`assets[${index}].quantity`}
-                      disabled={readOnly}
-                    />
-                  </TableCell>
+                            formik.setFieldValue(
+                              `taiSanConList.${row.originalIndex}.donViTinh`,
+                              findById(allUnits, val.donViTinh)?.tenDonVi
+                            );
+                            formik.setFieldValue(
+                              `taiSanConList.${row.originalIndex}.moTa`,
+                              val.ghiChu
+                            );
+                            formik.setFieldValue(
+                              `taiSanConList.${row.originalIndex}.hienTrang`,
+                              findById(allCurrentStatus, val.hienTrang)?.tenHTKT
+                            );
+                            formik.setFieldValue(
+                              `taiSanConList.${row.originalIndex}.soLuong`,
+                              val.soLuong
+                            );
+                          }
+                        }}
+                      />
+                    </TableCell>
 
-                  <TableCell>
-                    <FieldInput
-                      formik={formik}
-                      field={`assets[${index}].status`}
-                      disabled={readOnly}
-                    />
-                  </TableCell>
+                    <TableCell>
+                      <FieldInput
+                        formik={formik}
+                        field={`taiSanConList.${row.originalIndex}.donViTinh`}
+                        disabled
+                      />
+                    </TableCell>
 
-                  <TableCell>
-                    <FieldInput
-                      formik={formik}
-                      field={`assets[${index}].note`}
-                      disabled={readOnly}
-                    />
-                  </TableCell>
+                    <TableCell>
+                      <FieldInput
+                        type="number"
+                        formik={formik}
+                        field={`taiSanConList.${row.originalIndex}.soLuong`}
+                        disabled
+                      />
+                    </TableCell>
 
-                  <TableCell>
-                    <IconButton
-                      color="error"
+                    <TableCell>
+                      <FieldInput
+                        formik={formik}
+                        field={`taiSanConList.${row.originalIndex}.hienTrang`}
+                        disabled
+                      />
+                    </TableCell>
+
+                    <TableCell>
+                      <FieldInput
+                        formik={formik}
+                        field={`taiSanConList.${row.originalIndex}.moTa`}
+                        disabled
+                      />
+                    </TableCell>
+
+                    <TableCell>
+                      <IconButton
+                        color="error"
+                        onClick={() => {
+                          formik.setFieldValue(
+                            `taiSanConList.${row.originalIndex}.isDeleted`,
+                            true
+                          );
+                        }}
+                        disabled={readOnly}
+                      >
+                        <Delete />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              {!readOnly && (
+                <TableRow>
+                  <TableCell colSpan={6}>
+                    {" "}
+                    {/* colSpan bằng tổng số cột của bạn */}
+                    <Button
+                      size="small"
+                      startIcon={<Add />}
                       onClick={() => {
-                        const newAssets = [...formik.values.assets];
-                        newAssets.splice(index, 1);
-                        formik.setFieldValue("assets", newAssets);
+                        formik.setFieldValue("taiSanConList", [
+                          ...formik.values.taiSanConList,
+                          {
+                            id: "",
+                            idTaiSanCha: "",
+                            idTaiSanCon: "",
+                            isActive: true,
+                            isInsert: true,
+                            isDeleted: false,
+                          },
+                        ]);
                       }}
-                      disabled={readOnly}
+                      variant="text"
                     >
-                      <Delete />
-                    </IconButton>
+                      Thêm một dòng
+                    </Button>
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
-            <Button
-              startIcon={<Add />}
-              onClick={() => {
-                formik.setFieldValue("assets", [
-                  ...formik.values.assets,
-                  {
-                    asset: "",
-                    uom: "",
-                    quantity: "",
-                    status: "",
-                    note: "",
-                  },
-                ]);
-              }}
-              variant="text"
-            >
-              Thêm một dòng
-            </Button>
           </Table>
         </Paper>
       </AccordionDetails>

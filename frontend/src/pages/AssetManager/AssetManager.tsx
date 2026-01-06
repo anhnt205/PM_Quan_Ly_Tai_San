@@ -1,22 +1,8 @@
-import {
-  Archive,
-  Cases,
-  Delete,
-  Download,
-  Inventory,
-  Inventory2,
-  Settings,
-  Upload,
-} from "@mui/icons-material";
+import { Delete, Inventory2 } from "@mui/icons-material";
 import {
   Box,
-  Button,
-  Chip,
   Divider,
   IconButton,
-  ListItemIcon,
-  Menu,
-  MenuItem,
   Paper,
   Tab,
   Tabs,
@@ -30,13 +16,59 @@ import Assets from "../../data/Assets.json";
 import AssetParents from "../../data/AssetParent.json";
 import AssetManagerForm from "./components/AssetManagerForm";
 import AssetGroupItem from "./components/AssetGroupItem";
+import { showConfirmAlert } from "../../components/Alert";
+import { useAssetManagerMutation } from "./Mutation";
+import { findById } from "../../utils/helpers";
+import { useDepartmentMutation } from "../Department/Mutation";
+import { useCurrentStatusMutation } from "../CurrentStatus/Mutation";
+import { useTypeAssetMutation } from "../TypeAsset/Mutation";
+import { useUnitMutation } from "../Unit/Mutation";
+import { useAssetModelMutation } from "../AssetModel/Mutation";
+import { useProjectMutation } from "../Project/Mutation";
+import { useReasonIncreaseMutation } from "../ReasonIncrease/Mutation";
 
 export default function AssetManager() {
   const [tab, setTab] = React.useState(0);
   const [showForm, setShowForm] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<any>(null);
   const [readOnly, setReadOnly] = useState(false);
-  const [AssetData, setAssetData] = useState(Assets);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [searchValue, setSearchValue] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState("");
+  const [selectedAssetGroup, setSelectedAssetGroup] = useState("");
+
+  const [paginationModel, setPaginationModel] = useState({
+    pageSize: 10,
+    page: 0,
+  });
+
+  const {
+    assetsPage,
+    assetsByType,
+    createMutation,
+    updateMutation,
+    deleteOneMutation,
+    deleteManyMutation,
+    createChildAssetBulkMutation,
+    deleteOneChildAsssetMutation,
+    isLoading,
+    countries,
+  } = useAssetManagerMutation(
+    tab,
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchValue,
+    selectedGroup,
+    selectedAssetGroup
+  );
+  const { allDepartments } = useDepartmentMutation();
+  const { allCurrentStatus } = useCurrentStatusMutation();
+  const { allTypeAssets, typeAssetsByAssetGroup, assetGroups } =
+    useTypeAssetMutation(undefined, undefined, "", selectedAssetGroup);
+  const { allUnits } = useUnitMutation();
+  const { allAssetModel } = useAssetModelMutation();
+  const { allProjects } = useProjectMutation();
+  const { allReasonIncreases } = useReasonIncreaseMutation();
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedAsset(params.row);
@@ -50,16 +82,20 @@ export default function AssetManager() {
 
   const handleSave = (values: any) => {
     if (selectedAsset) {
-      // Update existing capital source
-      const updatedAssets = AssetData.map((Asset) =>
-        Asset.id === selectedAsset.id ? { ...Asset, ...values } : Asset
-      );
-      setAssetData(updatedAssets);
+      updateMutation.mutate(values);
+      if (values.taiSanConList.some((item: any) => item.isInsert)) {
+        const newChildAssets = values.taiSanConList.filter(
+          (item: any) => item.isInsert
+        );
+        createChildAssetBulkMutation.mutate(newChildAssets);
+      } else if (values.taiSanConList.some((item: any) => item.isDeleted)) {
+        values.taiSanConList
+          .filter((item: any) => item.isDeleted)
+          .map((item: any) => deleteOneChildAsssetMutation.mutate(item.id));
+      }
     } else {
-      // Create new capital Source
-      const newAsset = { ...values, id: Date.now() }; // Simple ID generation
-      console.log(newAsset);
-      setAssetData([...AssetData, newAsset]);
+      createMutation.mutate(values);
+      createChildAssetBulkMutation.mutate(values.taiSanConList);
     }
     setShowForm(false);
     setSelectedAsset(null);
@@ -67,14 +103,14 @@ export default function AssetManager() {
 
   const columns: GridColDef[] = [
     {
-      field: "assetNumber",
+      field: "id",
       headerName: "Mã tài sản",
       width: 150,
       align: "center",
       headerAlign: "center",
     },
     {
-      field: "assetCode",
+      field: "soThe",
       headerName: "Số thẻ",
       flex: 1,
       minWidth: 200,
@@ -82,7 +118,7 @@ export default function AssetManager() {
       headerAlign: "center",
     },
     {
-      field: "assetName",
+      field: "tenTaiSan",
       headerName: "Tên tài sản",
       flex: 1,
       minWidth: 150,
@@ -90,7 +126,7 @@ export default function AssetManager() {
       headerAlign: "center",
     },
     {
-      field: "recordedDate",
+      field: "ngayVaoSo",
       headerName: "Ngày vào sổ",
       flex: 1,
       minWidth: 150,
@@ -98,31 +134,34 @@ export default function AssetManager() {
       headerAlign: "center",
     },
     {
-      field: "stateBudgetCapital",
+      field: "nvNS",
       headerName: "Vốn NS",
       flex: 1,
       minWidth: 150,
       align: "center",
       headerAlign: "center",
+      renderCell: (params) => (params.row.nvNS || 0).toLocaleString(),
     },
     {
-      field: "loanCapital",
+      field: "vonVay",
       headerName: "Vốn vay",
       flex: 1,
       minWidth: 150,
       align: "center",
       headerAlign: "center",
+      renderCell: (params) => (params.row.vonVay || 0).toLocaleString(),
     },
     {
-      field: "otherCapital",
+      field: "vonKhac",
       headerName: "Vốn khác",
       flex: 1,
       minWidth: 150,
       align: "center",
       headerAlign: "center",
+      renderCell: (params) => (params.row.vonKhac || 0).toLocaleString(),
     },
     {
-      field: "usedDate",
+      field: "ngaySuDung",
       headerName: "Ngày sử dụng",
       flex: 1,
       minWidth: 150,
@@ -130,23 +169,26 @@ export default function AssetManager() {
       headerAlign: "center",
     },
     {
-      field: "currentUnitId",
+      field: "idDonViHienThoi",
       headerName: "Đơn vị hiện thời",
       flex: 1,
       minWidth: 150,
       align: "center",
       headerAlign: "center",
+      renderCell: (params) =>
+        findById(allDepartments, params.row.idDonViHienThoi)?.tenPhongBan,
     },
     {
-      field: "quantityAsset",
+      field: "taiSanConList",
       headerName: "Số lượng TS con",
       flex: 1,
       minWidth: 150,
       align: "center",
       headerAlign: "center",
+      renderCell: (params) => params.row.taiSanConList.length || 0,
     },
     {
-      field: "assetGroupId",
+      field: "tenNhom",
       headerName: "Nhóm tài sản",
       flex: 1,
       minWidth: 150,
@@ -154,23 +196,27 @@ export default function AssetManager() {
       headerAlign: "center",
     },
     {
-      field: "assetTypeId",
+      field: "idLoaiTaiSanCon",
       headerName: "Loại tài sản",
       flex: 1,
       minWidth: 150,
       align: "center",
       headerAlign: "center",
+      renderCell: (params) =>
+        findById(allTypeAssets, params.row.idLoaiTaiSanCon)?.tenLoai,
     },
     {
-      field: "assetStatus",
+      field: "hienTrang",
       headerName: "Hiện trạng",
       flex: 1,
       minWidth: 150,
       align: "center",
       headerAlign: "center",
+      renderCell: (params) =>
+        findById(allCurrentStatus, params.row.hienTrang)?.tenHTKT,
     },
     {
-      field: "quantity",
+      field: "soLuong",
       headerName: "Số lượng",
       flex: 1,
       minWidth: 150,
@@ -178,15 +224,17 @@ export default function AssetManager() {
       headerAlign: "center",
     },
     {
-      field: "unitId",
+      field: "donViTinh",
       headerName: "Đơn vị tính",
       flex: 1,
       minWidth: 150,
       align: "center",
       headerAlign: "center",
+      renderCell: (params) =>
+        findById(allUnits, params.row.donViTinh)?.tenDonVi,
     },
     {
-      field: "brand",
+      field: "kyHieu",
       headerName: "Mã hiệu",
       flex: 1,
       minWidth: 150,
@@ -194,12 +242,32 @@ export default function AssetManager() {
       headerAlign: "center",
     },
     {
-      field: "brandCode",
+      field: "soKyHieu",
       headerName: "Số mã hiệu",
       flex: 1,
       minWidth: 150,
       align: "center",
       headerAlign: "center",
+    },
+    {
+      field: "action",
+      headerName: "Hành động",
+      width: 100,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => (
+        <IconButton
+          onClick={async (e) => {
+            e.stopPropagation();
+            const confirm = await showConfirmAlert("Xác nhận xóa!");
+            if (confirm.isConfirmed) {
+              deleteOneMutation.mutate(params.row.id);
+            }
+          }}
+        >
+          <Delete color="error" />
+        </IconButton>
+      ),
     },
   ];
 
@@ -226,6 +294,17 @@ export default function AssetManager() {
               readOnly={readOnly}
               onEdit={handleEdit}
               onSave={handleSave}
+              allAssetModel={allAssetModel}
+              allCurrentStatus={allCurrentStatus}
+              assetGroups={assetGroups}
+              allProjects={allProjects}
+              allDepartments={allDepartments}
+              typeAssetsByAssetGroup={typeAssetsByAssetGroup}
+              assetsByType={assetsByType}
+              allUnits={allUnits}
+              allReasonIncreases={allReasonIncreases}
+              countries={countries}
+              setSelectedAssetGroup={setSelectedAssetGroup}
             />
           </Box>
         )}
@@ -256,8 +335,13 @@ export default function AssetManager() {
               },
             }}
           >
-            {AssetParents.map((i, index) => (
-              <AssetGroupItem key={index} item={i} />
+            {assetGroups.map((i: any, index: number) => (
+              <AssetGroupItem
+                key={i.id}
+                item={i}
+                selectedGroup={selectedGroup}
+                setSelectedGroup={setSelectedGroup}
+              />
             ))}
           </Box>
         </Paper>
@@ -288,8 +372,17 @@ export default function AssetManager() {
           <TableCustom
             title="Quản lý tài sản"
             columns={columns}
-            rows={AssetData}
+            rows={assetsPage.items}
+            total={assetsPage.totalItems}
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            loading={isLoading}
             onRowClick={handleRowClick}
+            selectedIds={selectedIds}
+            onSelectionChange={setSelectedIds}
+            onDelete={deleteManyMutation.mutate}
+            searchValue={searchValue}
+            setSearchValue={setSearchValue}
             isDepreciation={true}
           />
         </Box>

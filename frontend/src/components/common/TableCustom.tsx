@@ -59,6 +59,8 @@ interface Props {
   onSign?: (ids: string) => void;
   searchValue?: string;
   setSearchValue?: Dispatch<SetStateAction<string>>;
+  selectedDate?: string;
+  setSelectedDate?: Dispatch<SetStateAction<string>>;
   showStatusFilter?: boolean;
   paginationMode?: GridFeatureMode;
 }
@@ -80,6 +82,8 @@ export default function TableCustom({
   onSign,
   searchValue,
   setSearchValue,
+  selectedDate,
+  setSelectedDate,
   showStatusFilter = false,
   paginationMode = "server",
 }: Props) {
@@ -133,7 +137,13 @@ export default function TableCustom({
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 2 }}>
-          {isFilterDate && <FieldDate title="Chọn thời gian khấu hao" />}
+          {isFilterDate && (
+            <FieldDate
+              title="Chọn thời gian khấu hao"
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+            />
+          )}
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
           <Box
@@ -198,7 +208,7 @@ export default function TableCustom({
       </Grid>
       <Box sx={{ width: "100%", overflowX: "auto" }}>
         <DataGrid
-          getRowId={(row) => row.Id || row.id}
+          getRowId={(row) => row.Id || row.id || row.soThe}
           onRowClick={onRowClick}
           columns={columns}
           rows={rows}

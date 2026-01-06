@@ -96,13 +96,24 @@ export const useDepartmentMutation = (
     },
     placeholderData: (previousData) => previousData,
   });
-
+  const { data: allDepartments = [] } = useQuery({
+    queryKey: ["allDepartments"], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/phongban", {
+        params: {
+          idcongty: "ct001",
+        },
+      });
+      return res.data;
+    },
+  });
   return {
     createMutation,
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
     departmentsPage: data,
+    allDepartments,
     isLoading,
   };
 };

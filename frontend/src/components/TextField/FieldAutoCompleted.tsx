@@ -9,6 +9,7 @@ interface Props {
   formik?: any;
   field?: string;
   disabled?: boolean;
+  onCustomChange?: (val: any) => void;
 }
 
 export default function FieldAutoCompleted({
@@ -18,10 +19,12 @@ export default function FieldAutoCompleted({
   formik,
   field,
   disabled,
+  onCustomChange,
 }: Props) {
   const currentValue = formik && field ? getIn(formik.values, field) : null;
 
-  const selectedOption = data.find((i) => i.id === currentValue) || null;
+  const selectedOption =
+    data.find((i) => i.id === currentValue) || null;
 
   const touched = field ? getIn(formik.touched, field) : false;
   const error = field ? getIn(formik.errors, field) : null;
@@ -36,6 +39,9 @@ export default function FieldAutoCompleted({
       onChange={(e, newValue) => {
         if (formik && field) {
           formik.setFieldValue(field, newValue?.id);
+        }
+        if (onCustomChange) {
+          onCustomChange(newValue);
         }
       }}
       renderInput={(params) => (

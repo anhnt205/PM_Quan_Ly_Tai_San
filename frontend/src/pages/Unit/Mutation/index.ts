@@ -4,9 +4,9 @@ import { UnitType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 
 export const useUnitMutation = (
-  page: number,
-  pageSize: number,
-  searchValue: string
+  page?: number,
+  pageSize?: number,
+  searchValue?: string
 ) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
@@ -94,12 +94,21 @@ export const useUnitMutation = (
     placeholderData: (previousData) => previousData,
   });
 
+  const { data: allUnits = [] } = useQuery({
+    queryKey: ["allUnits"], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/donvitinh", {});
+      return res.data;
+    },
+  });
+
   return {
     createMutation,
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
     units: data,
+    allUnits,
     isLoading,
   };
 };

@@ -42,7 +42,7 @@ export default function TypeAssetForm({
   onSave: (values: any) => void;
 }) {
   const [expanded, setExpanded] = useState(true);
-  const { assetParents } = useTypeAssetMutation();
+  const { assetGroups } = useTypeAssetMutation();
   const formik = useFormik({
     initialValues: {
       id: "",
@@ -104,7 +104,7 @@ export default function TypeAssetForm({
             <Grid size={{ xs: 12 }}>
               <FieldAutoCompleted
                 title="Mã loại tài sản cha *"
-                data={assetParents}
+                data={assetGroups}
                 labelkey="tenLoaiTaiSan"
                 formik={formik}
                 field="idLoaiTs"

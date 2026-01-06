@@ -32,8 +32,8 @@ export default function ReasonIncrease() {
   });
 
   const {
-    reasonIncreases,
-    allData,
+    // reasonIncreasesPage,
+    allReasonIncreases,
     createMutation,
     updateMutation,
     deleteOneMutation,
@@ -148,8 +148,8 @@ export default function ReasonIncrease() {
         <TableCustom
           title="Danh sách lý do tăng"
           columns={columns}
-          rows={allData}
-          total={allData.length}
+          rows={allReasonIncreases}
+          total={allReasonIncreases.length}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
           // loading={isLoading}

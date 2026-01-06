@@ -87,15 +87,12 @@ export const useProjectMutation = (
     placeholderData: (previousData) => previousData,
   });
 
-  const { data: allData = [] } = useQuery({
-    queryKey: ["projects", page, pageSize, searchValue], // Key để cache dữ liệu
+  const { data: allProjects = [] } = useQuery({
+    queryKey: ["allProjects"], // Key để cache dữ liệu
     queryFn: async () => {
       const res = await api.get("/duan", {
         params: {
           idcongty: "ct001",
-          page: page,
-          size: pageSize,
-          search: searchValue,
         },
       });
       return res.data;
@@ -108,7 +105,7 @@ export const useProjectMutation = (
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
-    allData,
+    allProjects,
     projectsPage: data,
     isLoading,
   };

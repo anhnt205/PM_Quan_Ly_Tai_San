@@ -6,7 +6,8 @@ import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 export const useTypeAssetMutation = (
   page?: number,
   pageSize?: number,
-  searchValue?: string
+  searchValue?: string,
+  assetGroup?: string
 ) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
@@ -15,7 +16,7 @@ export const useTypeAssetMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["typeAssets"] });
+      queryClient.invalidateQueries({ queryKey: ["allTypeAssets"] });
       showSuccessAlert("Tạo loại ccdc thành công");
     },
     onError: (error: any) => {
@@ -33,7 +34,7 @@ export const useTypeAssetMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["typeAssets"] });
+      queryClient.invalidateQueries({ queryKey: ["allTypeAssets"] });
       showSuccessAlert("Sửa loại ccdc thành công");
     },
     onError: (error: any) => {
@@ -50,7 +51,7 @@ export const useTypeAssetMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["typeAssets"] });
+      queryClient.invalidateQueries({ queryKey: ["allTypeAssets"] });
       showSuccessAlert("Xóa loại ccdc thành công");
     },
     onError: (error: any) => {
@@ -67,7 +68,7 @@ export const useTypeAssetMutation = (
       return res.data.message;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["typeAssets"] });
+      queryClient.invalidateQueries({ queryKey: ["allTypeAssets"] });
       showSuccessAlert(data || "Xóa loại ccdc thành công");
     },
     onError: (error: any) => {
@@ -95,26 +96,28 @@ export const useTypeAssetMutation = (
     placeholderData: (previousData) => previousData,
   });
 
-  const { data: allData = [] } = useQuery({
-    queryKey: ["typeAssets", page, pageSize, searchValue], // Key để cache dữ liệu
+  const { data: allTypeAssets = [] } = useQuery({
+    queryKey: ["allTypeAssets"], // Key để cache dữ liệu
     queryFn: async () => {
-      const res = await api.get("/loaitaisancon", {
-        params: {
-          idcongty: "ct001",
-          page: page,
-          size: pageSize,
-          search: searchValue,
-        },
-      });
+      const res = await api.get("/loaitaisancon");
       return res.data;
     },
     placeholderData: (previousData) => previousData,
   });
 
-  const { data: assetParents = [] } = useQuery({
-    queryKey: ["typeAssets"], // Key để cache dữ liệu
+  const { data: typeAssetsByAssetGroup = [] } = useQuery({
+    queryKey: ["typeAssetsByAssetGroup", assetGroup], // Key để cache dữ liệu
     queryFn: async () => {
-      const res = await api.get("/loaitaisan", {
+      const res = await api.get(`/loaitaisancon/byloaitaisan/${assetGroup}`);
+      return res.data;
+    },
+    enabled: !!assetGroup,
+  });
+
+  const { data: assetGroups = [] } = useQuery({
+    queryKey: ["assetGroups"], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/nhomtaisan", {
         params: {
           idcongty: "ct001",
         },
@@ -129,9 +132,10 @@ export const useTypeAssetMutation = (
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
-    allData,
+    allTypeAssets,
     typeAssets: data,
     isLoading,
-    assetParents,
+    assetGroups,
+    typeAssetsByAssetGroup,
   };
 };

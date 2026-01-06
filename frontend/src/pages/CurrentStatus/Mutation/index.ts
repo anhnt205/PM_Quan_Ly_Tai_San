@@ -4,9 +4,9 @@ import { CurrentStatusType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 
 export const useCurrentStatusMutation = (
-  page: number,
-  pageSize: number,
-  searchValue: string
+  page?: number,
+  pageSize?: number,
+  searchValue?: string
 ) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
@@ -93,6 +93,13 @@ export const useCurrentStatusMutation = (
     },
     placeholderData: (previousData) => previousData,
   });
+  const { data: allCurrentStatus } = useQuery({
+    queryKey: ["allCurrentStatus"], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/hientrangkythuat");
+      return res.data;
+    },
+  });
 
   return {
     createMutation,
@@ -100,6 +107,7 @@ export const useCurrentStatusMutation = (
     deleteOneMutation,
     deleteManyMutation,
     currentStatus: data,
+    allCurrentStatus,
     isLoading,
   };
 };
