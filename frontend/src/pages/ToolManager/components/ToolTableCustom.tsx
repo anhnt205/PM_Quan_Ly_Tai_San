@@ -409,10 +409,17 @@ export default function ToolTableCustom({
             width: "100%",
             minWidth: "fit-content",
             borderCollapse: "collapse",
+            tableLayout: "fixed",
             "& .MuiTableCell-root": {
               padding: "12px",
               borderBottom: "1px solid #e0e0e0",
+              borderRight: "1px solid rgba(224, 224, 224, 0.5)",
               whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            },
+            "& .MuiTableCell-root:last-child": {
+              borderRight: "none",
             },
           }}
         >
@@ -425,13 +432,22 @@ export default function ToolTableCustom({
                   fontWeight: 700,
                   padding: "12px",
                   fontSize: "14px",
+                  borderRight: "1px solid rgba(255, 255, 255, 0.3)",
+                },
+                "& .MuiTableCell-head:last-child": {
+                  borderRight: "none",
                 },
               }}
             >
               <TableCell
                 width="50px"
                 align="center"
-                sx={{ color: "#ffffff", fontWeight: 700, cursor: "pointer" }}
+                sx={{
+                  color: "#ffffff",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  minWidth: 50,
+                }}
                 onClick={handleExpandAll}
               >
                 {expandedRows.size === filteredRows.length ? (
@@ -443,7 +459,7 @@ export default function ToolTableCustom({
               <TableCell
                 padding="checkbox"
                 width="50px"
-                sx={{ color: "#ffffff", fontWeight: 700 }}
+                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 50 }}
               >
                 <Checkbox
                   checked={isAllSelected}
@@ -458,49 +474,71 @@ export default function ToolTableCustom({
                   }}
                 />
               </TableCell>
-              <TableCell sx={{ color: "#ffffff", fontWeight: 700 }}>
+              <TableCell
+                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 120 }}
+              >
                 Mã CCDC
               </TableCell>
-              <TableCell sx={{ color: "#ffffff", fontWeight: 700 }}>
+              <TableCell
+                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 180 }}
+              >
                 Tên CCDC
               </TableCell>
-              <TableCell sx={{ color: "#ffffff", fontWeight: 700 }}>
+              <TableCell
+                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 130 }}
+              >
                 Đơn vị nhập
               </TableCell>
-              <TableCell sx={{ color: "#ffffff", fontWeight: 700 }}>
+              <TableCell
+                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 130 }}
+              >
                 Nhóm CCDC
               </TableCell>
-              <TableCell sx={{ color: "#ffffff", fontWeight: 700 }}>
+              <TableCell
+                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 120 }}
+              >
                 Ngày nhập
               </TableCell>
-              <TableCell sx={{ color: "#ffffff", fontWeight: 700 }}>
+              <TableCell
+                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 100 }}
+              >
                 Đơn vị tính
               </TableCell>
               <TableCell
                 align="center"
-                sx={{ color: "#ffffff", fontWeight: 700 }}
+                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 90 }}
               >
                 Số lượng
               </TableCell>
               <TableCell
                 align="right"
-                sx={{ color: "#ffffff", fontWeight: 700 }}
+                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 100 }}
               >
                 Giá trị
               </TableCell>
-              <TableCell sx={{ color: "#ffffff", fontWeight: 700 }}>
+              <TableCell
+                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 90 }}
+              >
                 Ký hiệu
               </TableCell>
-              <TableCell sx={{ color: "#ffffff", fontWeight: 700 }}>
+              <TableCell
+                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 120 }}
+              >
                 Ghi chú
               </TableCell>
-              <TableCell sx={{ color: "#ffffff", fontWeight: 700 }}>
+              <TableCell
+                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 120 }}
+              >
                 Người tạo
               </TableCell>
-              <TableCell sx={{ color: "#ffffff", fontWeight: 700 }}>
+              <TableCell
+                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 120 }}
+              >
                 Ngày tạo
               </TableCell>
-              <TableCell sx={{ color: "#ffffff", fontWeight: 700 }}>
+              <TableCell
+                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 100 }}
+              >
                 Trạng thái
               </TableCell>
             </TableRow>

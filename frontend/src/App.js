@@ -23,6 +23,7 @@ import ToolManager from "./pages/ToolManager/ToolManager";
 import AssetHandover from "./pages/AssetHandover/AssetHandover";
 import Report from "./pages/Report/Report";
 import ToolTransfer from "./pages/ToolTransfer/ToolTransfer";
+import ToolHandover from "./pages/ToolHandover/ToolHandover";
 
 const ProtectedRoute = ({ allowedRoles, children }) => {
   const { user } = useSelector((state) => state.user);
@@ -69,7 +70,7 @@ function App() {
           />
           <Route path={ROUTES.TOOLMANAGER} element={<ToolManager />} />
           <Route path={ROUTES.TOOLTRANSFER} element={<ToolTransfer />} />
-          <Route path={ROUTES.REPORT} element={<Report />} />
+          <Route path={ROUTES.TOOLHANDOVER} element={<ToolHandover />} />
         </Route>
       </Routes>
     </BrowserRouter>

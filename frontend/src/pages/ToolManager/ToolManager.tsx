@@ -26,10 +26,10 @@ import {
 import React, { useState } from "react";
 import PageAction from "../../components/common/PageAction";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-import Tools from "../../data/ToolGroup.json";
 import ToolForm from "./components/ToolForm";
 import ToolTableCustom from "./components/ToolTableCustom";
 import ToolDetailSidebar from "./components/ToolDetailSidebar";
+import { useToolManagerMutation } from "./Mutation";
 //import ToolGroupItem from "./components/ToolGroupItem";
 
 export default function ToolManager() {
@@ -38,23 +38,29 @@ export default function ToolManager() {
   const [selectedTool, setSelectedTool] = useState<any>(null);
   const [readOnly, setReadOnly] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
-  const [ToolData, setToolData] = useState(
-    Tools.map((tool: any) => ({
-      id: tool.id,
-      toolNumber: tool.code,
-      toolName: tool.name,
-      toolInput: "",
-      toolGroupName: "",
-      toolInputedAt: tool.createdAt,
-      toolUnit: "",
-      toolQuantity: 0,
-      toolValue: 0,
-      toolSign: "",
-      toolNote: "",
-      toolCreator: tool.createdBy,
-      toolCreatedAt: tool.createdAt,
-      toolStatus: "",
-    }))
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [searchValue, setSearchValue] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState("");
+
+  const [paginationModel, setPaginationModel] = useState({
+    pageSize: 10,
+    page: 0,
+  });
+
+  const {
+    toolsPage,
+    toolGroups,
+    isLoading,
+    createMutation,
+    updateMutation,
+    deleteOneMutation,
+    deleteManyMutation,
+  } = useToolManagerMutation(
+    tab,
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchValue,
+    selectedGroup
   );
 
   const handleRowClick = (params: GridRowParams) => {
@@ -69,19 +75,20 @@ export default function ToolManager() {
 
   const handleSave = (values: any) => {
     if (selectedTool) {
-      // Update existing capital source
-      const updatedTools = ToolData.map((Tool) =>
-        Tool.id === selectedTool.id ? { ...Tool, ...values } : Tool
-      );
-      setToolData(updatedTools);
+      updateMutation.mutate(values, {
+        onSuccess: () => {
+          setShowForm(false);
+          setSelectedTool(null);
+        },
+      });
     } else {
-      // Create new capital Source
-      const newTool = { ...values, id: Date.now() }; // Simple ID generation
-      console.log(newTool);
-      setToolData([...ToolData, newTool]);
+      createMutation.mutate(values, {
+        onSuccess: () => {
+          setShowForm(false);
+          setSelectedTool(null);
+        },
+      });
     }
-    setShowForm(false);
-    setSelectedTool(null);
   };
 
   const columns: GridColDef[] = [
@@ -190,8 +197,6 @@ export default function ToolManager() {
     },
   ];
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-
   return (
     <Box sx={{ width: "100%" }}>
       <PageAction
@@ -247,7 +252,7 @@ export default function ToolManager() {
           >
             <ToolTableCustom
               title="Quản lý CCDC - Vật tư"
-              rows={ToolData}
+              rows={toolsPage?.items || []}
               onRowClick={(row) => {
                 setSelectedTool(row);
                 setReadOnly(true);
@@ -257,9 +262,7 @@ export default function ToolManager() {
               selectedIds={selectedIds}
               onSelectionChange={setSelectedIds}
               onDelete={(ids) => {
-                setToolData(
-                  ToolData.filter((tool) => !ids.includes(String(tool.id)))
-                );
+                deleteManyMutation.mutate(ids);
               }}
             />
           </Box>

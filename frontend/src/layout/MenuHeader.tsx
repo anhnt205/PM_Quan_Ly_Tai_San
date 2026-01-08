@@ -165,7 +165,7 @@ export default function Menuheader() {
     },
     {
       text: "Bàn giao CCDC-Vật tư",
-      path: "/",
+      path: ROUTES.TOOLHANDOVER,
     },
     {
       text: "Báo cáo",
