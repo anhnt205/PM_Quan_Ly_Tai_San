@@ -14,6 +14,7 @@ import {
   ListItemIcon,
   Menu,
   MenuItem,
+  Snackbar,
   Typography,
 } from "@mui/material";
 import logo from "../assets/images/logo_1.png";
@@ -23,6 +24,7 @@ import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { logout } from "../redux/userSlice";
 import { ROUTES } from "../utils/routes";
+import ExpirationSettingDialog from "../components/common/ExpirationSettingDialog";
 
 const NavMenuItem = ({ item }: { item: any }) => {
   const navigate = useNavigate();
@@ -104,11 +106,41 @@ export default function Menuheader() {
   const [anchorElSetting, setAnchorElSetting] = useState<null | HTMLElement>(
     null
   );
+  const [openExpirationDialog, setOpenExpirationDialog] = useState(false);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+
   const handleOpenSettingMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElSetting(event.currentTarget);
   };
   const handleCloseSettingMenu = () => {
     setAnchorElSetting(null);
+  };
+
+  const handleOpenExpirationDialog = () => {
+    handleCloseSettingMenu();
+    setOpenExpirationDialog(true);
+  };
+
+  const handleCloseExpirationDialog = () => {
+    setOpenExpirationDialog(false);
+  };
+
+  const handleConfirmExpiration = (
+    expirationDays: number,
+    warningDays: number
+  ) => {
+    // TODO: Gọi API lưu cài đặt ở đây
+    console.log(
+      "Expiration days:",
+      expirationDays,
+      "Warning days:",
+      warningDays
+    );
+    setOpenSnackbar(true);
+  };
+
+  const handleCloseSnackbar = () => {
+    setOpenSnackbar(false);
   };
   const menuItems = [
     {
@@ -154,9 +186,18 @@ export default function Menuheader() {
       text: "Điều động CCDC - vật tư",
       path: "/",
       subMenu: [
-        { text: "Cấp phát CCDC - vật tư", path: `${ROUTES.TOOLTRANSFER}?type=1` },
-        { text: "Điều chuyển CCDC - vật tư", path: `${ROUTES.TOOLTRANSFER}?type=2` },
-        { text: "Thu hồi CCDC - vật tư", path: `${ROUTES.TOOLTRANSFER}?type=3` },
+        {
+          text: "Cấp phát CCDC - vật tư",
+          path: `${ROUTES.TOOLTRANSFER}?type=1`,
+        },
+        {
+          text: "Điều chuyển CCDC - vật tư",
+          path: `${ROUTES.TOOLTRANSFER}?type=2`,
+        },
+        {
+          text: "Thu hồi CCDC - vật tư",
+          path: `${ROUTES.TOOLTRANSFER}?type=3`,
+        },
       ],
     },
     {
@@ -173,7 +214,10 @@ export default function Menuheader() {
       subMenu: [
         { text: "Báo cáo S22-DN", path: `${ROUTES.REPORT}?type=1` },
         { text: "Biên bản kiểm kê", path: `${ROUTES.REPORT}?type=2` },
-        { text: "Báo cáo 05-TSCD-24-2017-TT-BTC", path: `${ROUTES.REPORT}?type=3` },
+        {
+          text: "Báo cáo 05-TSCD-24-2017-TT-BTC",
+          path: `${ROUTES.REPORT}?type=3`,
+        },
         { text: "Mẫu số-01", path: `${ROUTES.REPORT}?type=4` },
         { text: "Mẫu số-21", path: `${ROUTES.REPORT}?type=5` },
       ],
@@ -256,7 +300,7 @@ export default function Menuheader() {
             </ListItemIcon>
             <Typography>Quản lý tài khoản</Typography>
           </MenuItem>
-          <MenuItem sx={{ py: 2 }} onClick={handleCloseSettingMenu}>
+          <MenuItem sx={{ py: 2 }} onClick={handleOpenExpirationDialog}>
             <ListItemIcon>
               <Settings fontSize="small" color="success" />
             </ListItemIcon>
@@ -277,6 +321,29 @@ export default function Menuheader() {
           </MenuItem>
         </Menu>
       </Box>
+
+      {/* Dialog Thiết lập thời gian hết hạn */}
+      <ExpirationSettingDialog
+        open={openExpirationDialog}
+        onClose={handleCloseExpirationDialog}
+        onConfirm={handleConfirmExpiration}
+      />
+
+      {/* Snackbar thông báo thành công */}
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        message="Thiết lập thời gian hết hạn thành công"
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        ContentProps={{
+          sx: {
+            backgroundColor: "#1b8a4a",
+            color: "white",
+            fontWeight: 500,
+          },
+        }}
+      />
     </Box>
   );
 }
