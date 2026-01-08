@@ -71,6 +71,7 @@ function App() {
           <Route path={ROUTES.TOOLMANAGER} element={<ToolManager />} />
           <Route path={ROUTES.TOOLTRANSFER} element={<ToolTransfer />} />
           <Route path={ROUTES.TOOLHANDOVER} element={<ToolHandover />} />
+          <Route path={ROUTES.REPORT} element={<Report />} />
         </Route>
       </Routes>
     </BrowserRouter>
