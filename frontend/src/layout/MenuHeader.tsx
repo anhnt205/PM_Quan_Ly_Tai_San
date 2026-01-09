@@ -21,7 +21,7 @@ import logo from "../assets/images/logo_1.png";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../redux/store";
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { logout } from "../redux/userSlice";
 import { ROUTES } from "../utils/routes";
 import ExpirationSettingDialog from "../components/common/ExpirationSettingDialog";
@@ -298,7 +298,19 @@ export default function Menuheader() {
             <ListItemIcon>
               <Person fontSize="small" color="success" />
             </ListItemIcon>
-            <Typography>Quản lý tài khoản</Typography>
+            <Typography
+              variant="body2"
+              component={Link}
+              to="/tai_khoan"
+              sx={{
+                textDecoration: "none",
+                color: "primary.main",
+                cursor: "pointer",
+                "&:hover": { textDecoration: "underline" },
+              }}
+            >
+              Quản lý tài khoản
+            </Typography>
           </MenuItem>
           <MenuItem sx={{ py: 2 }} onClick={handleOpenExpirationDialog}>
             <ListItemIcon>

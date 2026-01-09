@@ -20,4 +20,5 @@ export const ROUTES = {
   TOOLTRANSFER: "/dieu_dong_ccdc",
   TOOLHANDOVER: "/ban_giao_ccdc",
   REPORT: "/bao_cao",
+  ACCOUNT: "/tai_khoan",
 } as const;

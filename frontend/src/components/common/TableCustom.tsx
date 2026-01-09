@@ -7,6 +7,7 @@ import {
   Settings,
   TableView,
   Edit,
+  TableChart,
 } from "@mui/icons-material";
 import {
   Box,
@@ -66,6 +67,7 @@ interface Props {
   statusOptions?: FilterOption[];
   statusValue?: any;
   onStatusChange?: (val: any) => void;
+  checkboxSelection?: boolean;
 }
 
 export default function TableCustom({
@@ -90,6 +92,7 @@ export default function TableCustom({
   statusOptions = [],
   statusValue,
   onStatusChange,
+  checkboxSelection = true,
 }: Props) {
   const navigate = useNavigate();
 
@@ -111,9 +114,20 @@ export default function TableCustom({
         p={1}
         sx={{ background: "#f5efefff" }}
       >
-        <Box display="flex" alignItems="center" gap={2}>
-          <TableView />
-          <Typography>
+        <Box display="flex" alignItems="center" gap={1}>
+          <TableChart
+            sx={{
+              fontSize: 20,
+              color: "#737373ff",
+            }}
+          />
+          <Typography
+            sx={{
+              fontWeight: 500,
+              color: "#737373ff",
+              fontSize: "14px",
+            }}
+          >
             {title} ({total})
           </Typography>
         </Box>
@@ -222,7 +236,7 @@ export default function TableCustom({
           onPaginationModelChange={onPaginationModelChange}
           pageSizeOptions={[10, 20, 50]}
           loading={loading}
-          checkboxSelection
+          checkboxSelection={checkboxSelection}
           rowSelectionModel={
             selectedIds && selectedIds.length > 0
               ? { type: "include" as const, ids: new Set(selectedIds) }
