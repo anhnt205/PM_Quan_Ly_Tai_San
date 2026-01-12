@@ -299,14 +299,12 @@ export default function Menuheader() {
               <Person fontSize="small" color="success" />
             </ListItemIcon>
             <Typography
-              variant="body2"
               component={Link}
               to="/tai_khoan"
               sx={{
                 textDecoration: "none",
-                color: "primary.main",
+                color: "black",
                 cursor: "pointer",
-                "&:hover": { textDecoration: "underline" },
               }}
             >
               Quản lý tài khoản

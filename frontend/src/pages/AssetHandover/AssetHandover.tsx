@@ -385,7 +385,8 @@ export default function AssetHandover() {
             size="small"
             onClick={(e) => {
               e.stopPropagation();
-              handleDelete([params.row.id]);
+              setRowToDelete(params.row);
+              setDeleteDialogOpen(true);
             }}
           >
             <Trash2 size={20} strokeWidth={2} color="#f44336" />
@@ -626,6 +627,7 @@ export default function AssetHandover() {
               </Box>
             )}
 
+            {/* Bước 1: Cấu trúc lại Grid để Tabs luôn chiếm 100% chiều ngang */}
             <Grid
               container
               sx={{
@@ -634,11 +636,8 @@ export default function AssetHandover() {
                 overflow: "hidden",
               }}
             >
-              <Grid
-                size={{
-                  xs: activeTab === 0 && showSidebar && selectedRow ? 9 : 12,
-                }}
-              >
+              {/* HÀNG 1: TABS - Luôn full width (size 12) */}
+              <Grid size={{ xs: 12 }}>
                 <Box
                   sx={{
                     borderBottom: 1,
@@ -664,6 +663,7 @@ export default function AssetHandover() {
                       label="Biên bản bàn giao"
                       iconPosition="top"
                     />
+                    <Box width={108}></Box>
                     <Tab
                       icon={
                         <Badge badgeContent={3} color="error">
@@ -675,7 +675,14 @@ export default function AssetHandover() {
                     />
                   </Tabs>
                 </Box>
-
+              </Grid>
+              {/* HÀNG 2: BẢNG VÀ SIDEBAR */}
+              {/* Cột bên trái: Chứa Bảng */}
+              <Grid
+                size={{
+                  xs: activeTab === 0 && showSidebar && selectedRow ? 9 : 12,
+                }}
+              >
                 <TableCustom
                   loading={isLoading}
                   title={
@@ -713,11 +720,14 @@ export default function AssetHandover() {
                   }}
                 />
               </Grid>
-
+              {/* Cột bên phải: Chứa Sidebar (Chỉ hiển thị khi đủ điều kiện) */}
               {activeTab === 0 && showSidebar && selectedRow && (
                 <Grid
                   size={{ xs: 3 }}
-                  sx={{ bgcolor: "#fafafa", borderLeft: "1px solid #e0e0e0" }}
+                  sx={{
+                    bgcolor: "#fafafa",
+                    borderLeft: "1px solid #e0e0e0",
+                  }}
                 >
                   <SignerSidebar
                     selectedRow={selectedRow}
