@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
   Box,
   Button,
@@ -14,6 +14,7 @@ import {
   IconButton,
   Checkbox,
   TablePagination,
+  CircularProgress,
 } from "@mui/material";
 import {
   Delete,
@@ -21,11 +22,10 @@ import {
   TableView,
   ExpandMore,
   ExpandLess,
-  Settings,
 } from "@mui/icons-material";
 import { ColumnConfig } from "../columnConfig";
 import ColumnConfigMenu from "./ColumnConfig";
-import { GridFeatureMode } from "@mui/x-data-grid";
+import { CircleCheck } from "lucide-react";
 
 interface Props {
   title: string;
@@ -63,6 +63,29 @@ export default function ToolTableCustom({
   const [expandedRows, setExpandedRows] = useState<Set<string | number>>(
     new Set()
   );
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setContainerWidth(rect.width);
+      }
+    };
+
+    const resizeObserver = new ResizeObserver(() => {
+      window.requestAnimationFrame(updateWidth);
+    });
+
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    updateWidth();
+    return () => resizeObserver.disconnect();
+  }, []);
 
   const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
@@ -188,103 +211,159 @@ export default function ToolTableCustom({
 
     // Expanded detail row
     if (isExpanded) {
-      // Sample data if no details exist
-      const detailsToShow =
-        row.chiTietDonViSoHuuList && row.chiTietDonViSoHuuList.length > 0
-          ? row.chiTietDonViSoHuuList
-          : [];
+      const detailsToShow = row.chiTietDonViSoHuuList || [];
 
       tableRows.push(
-        <TableRow key={`detail-${row.id}`} sx={{ backgroundColor: "#fff9e6" }}>
-          <TableCell colSpan={visibleColumns.length + 2} sx={{ padding: 0 }}>
-            <Box sx={{ p: 2, bgcolor: "#fff9e6" }}>
-              <Typography
-                variant="subtitle2"
-                sx={{
-                  fontWeight: 700,
-                  mb: 2,
-                  fontSize: "14px",
-                }}
-              >
-                Chi tiết đơn vị sở hữu
-              </Typography>
+        <TableRow
+          key={`detail-${row.id}`}
+          sx={{
+            backgroundColor: "#fff9e6",
+            "& td": { borderBottom: "none" },
+          }}
+        >
+          <TableCell
+            colSpan={visibleColumns.length + 2}
+            sx={{
+              padding: 0,
+              border: "none",
+              // Removed position: "relative" here to fix positioning context and misalignment
+            }}
+          >
+            <Box
+              sx={{
+                position: "sticky",
+                left: 0,
+                width: `${containerWidth}px`,
+                maxWidth: `${containerWidth}px`,
+                boxSizing: "border-box",
+                p: 0, // Moved padding out to prevent content shrinkage
+                bgcolor: "#fff9e6",
+                zIndex: 1,
+                margin: 0,
+                marginLeft: 0,
+              }}
+            >
+              {/* Wrap content in an inner Box for padding, so the outer Box width remains exact */}
+              <Box sx={{ p: 2 }}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{
+                    fontWeight: 700,
+                    mb: 2,
+                    fontSize: "14px",
+                    color: "#333",
+                  }}
+                >
+                  Chi tiết đơn vị sở hữu
+                </Typography>
 
-              <Table size="small" sx={{ backgroundColor: "#ffffff" }}>
-                <TableHead>
-                  <TableRow
-                    sx={{
-                      backgroundColor: "#fff3cd",
-                      "& .MuiTableCell-head": {
-                        color: "#856404",
-                        fontWeight: 700,
-                        padding: "12px",
-                        border: "1px solid #e0e0e0",
-                      },
-                    }}
-                  >
-                    <TableCell
+                {/* Sub-table */}
+                <Table
+                  size="small"
+                  sx={{
+                    backgroundColor: "#ffffff",
+                    border: "1px solid #e0e0e0",
+                    width: "100%",
+                    tableLayout: "fixed",
+                    boxSizing: "border-box", // Added to include border in width calculation
+                  }}
+                >
+                  <TableHead>
+                    <TableRow
                       sx={{
-                        color: "#856404",
-                        fontWeight: 700,
-                        border: "1px solid #e0e0e0",
+                        backgroundColor: "#fff3cd",
+                        "& .MuiTableCell-head": {
+                          color: "#856404",
+                          fontWeight: 700,
+                          padding: "10px",
+                          border: "1px solid #e0e0e0",
+                        },
                       }}
                     >
-                      Mã chỉ tiết CCDC - Vật tư
-                    </TableCell>
-                    <TableCell
-                      sx={{
-                        color: "#856404",
-                        fontWeight: 700,
-                        border: "1px solid #e0e0e0",
-                      }}
-                    >
-                      Đơn vị sở hữu
-                    </TableCell>
-                    <TableCell
-                      sx={{
-                        color: "#856404",
-                        fontWeight: 700,
-                        border: "1px solid #e0e0e0",
-                      }}
-                    >
-                      Số lượng đang sở hữu
-                    </TableCell>
-                    <TableCell
-                      sx={{
-                        color: "#856404",
-                        fontWeight: 700,
-                        border: "1px solid #e0e0e0",
-                      }}
-                    >
-                      Thời gian ban giao
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {detailsToShow.map((detail: any) => (
-                    <TableRow key={`detail-item-${detail.id}`}>
-                      <TableCell sx={{ border: "1px solid #e0e0e0" }}>
-                        {detail.idTsCon || "-"}
-                      </TableCell>
-                      <TableCell sx={{ border: "1px solid #e0e0e0" }}>
-                        {detail.idDonViSoHuu || "-"}
-                      </TableCell>
-                      <TableCell sx={{ border: "1px solid #e0e0e0" }}>
-                        {detail.soLuong || "-"}
-                      </TableCell>
-                      <TableCell sx={{ border: "1px solid #e0e0e0" }}>
-                        {detail.thoiGianBanGiao || "-"}
-                      </TableCell>
+                      <TableCell>Mã chi tiết CCDC - Vật tư</TableCell>
+                      <TableCell>Đơn vị sở hữu</TableCell>
+                      <TableCell>Số lượng đang sở hữu</TableCell>
+                      <TableCell>Thời gian bàn giao</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHead>
+                  <TableBody>
+                    {loading ? (
+                      <TableRow>
+                        <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
+                          <CircularProgress size={24} color="warning" />
+                        </TableCell>
+                      </TableRow>
+                    ) : detailsToShow.length > 0 ? (
+                      detailsToShow.map((detail: any) => (
+                        <TableRow key={`detail-item-${detail.id}`}>
+                          <TableCell sx={{ border: "1px solid #e0e0e0" }}>
+                            {detail.idTsCon || "-"}
+                          </TableCell>
+                          <TableCell sx={{ border: "1px solid #e0e0e0" }}>
+                            {detail.idDonViSoHuu || "-"}
+                          </TableCell>
+                          <TableCell sx={{ border: "1px solid #e0e0e0" }}>
+                            {detail.soLuong || "-"}
+                          </TableCell>
+                          <TableCell sx={{ border: "1px solid #e0e0e0" }}>
+                            {detail.thoiGianBanGiao || "-"}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={4} align="center" sx={{ py: 2 }}>
+                          Không có dữ liệu chi tiết
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </Box>
             </Box>
           </TableCell>
         </TableRow>
       );
     }
   });
+
+  // 2. Tạo một ref để giữ giá trị columns mới nhất
+  const columnsRef = useRef(columns);
+  useEffect(() => {
+    columnsRef.current = columns;
+  }, [columns]);
+
+  const handleMouseDown = (e: React.MouseEvent, colKey: string) => {
+    e.preventDefault(); // Ngăn việc bôi đen văn bản khi kéo
+
+    const startX = e.pageX;
+    // Lấy độ rộng hiện tại từ ref để đảm bảo luôn chính xác
+    const currentCol = columnsRef.current.find((c) => c.key === colKey);
+    const startWidth = Number(currentCol?.width) || 150;
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      const currentX = moveEvent.pageX;
+      const diffX = currentX - startX;
+      const newWidth = Math.max(50, startWidth + diffX);
+
+      // Sử dụng columnsRef.current để đảm bảo danh sách các cột khác không bị mất dữ liệu
+      const updatedColumns = columnsRef.current.map((col) =>
+        col.key === colKey ? { ...col, width: newWidth } : col
+      );
+
+      onColumnsChange?.(updatedColumns);
+    };
+
+    const onMouseUp = () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+      document.body.style.cursor = "default";
+    };
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+    document.body.style.cursor = "col-resize";
+  };
 
   return (
     <Paper
@@ -356,21 +435,21 @@ export default function ToolTableCustom({
       </Box>
       {/* Table */}
       <Box
+        ref={containerRef}
         sx={{ flex: 1, minWidth: 0, overflowX: "auto", overflowY: "hidden" }}
       >
         <Table
           sx={{
-            // Allow the table to size to content and enable horizontal scrolling
             width: "max-content",
             minWidth: tableMinWidth,
-            borderCollapse: "collapse",
-            tableLayout: "auto",
+            borderCollapse: "separate",
+            borderSpacing: 0,
+            tableLayout: "fixed",
             "& .MuiTableCell-root": {
               padding: "8px",
+              borderBottom: "1px solid #e0e0e0",
+              borderRight: "1px solid #e0e0e0",
             },
-            // "& .MuiTableCell-root:last-child": {
-            //   borderRight: "none",
-            // },
           }}
         >
           <TableHead>
@@ -428,9 +507,38 @@ export default function ToolTableCustom({
                     color: "#fff",
                     fontWeight: 700,
                     minWidth: (col as any).width || 150,
+                    position: "relative", // Quan trọng để đặt resizer
+                    "&:hover .resizer": {
+                      opacity: 1,
+                    },
                   }}
                 >
                   {col.label}
+
+                  {/* Thanh Resizer */}
+                  <Box
+                    className="resizer"
+                    onMouseDown={(e) => {
+                      e.stopPropagation(); // Ngăn chặn sự kiện click vào header
+                      handleMouseDown(e, col.key);
+                    }}
+                    sx={{
+                      position: "absolute",
+                      right: 0,
+                      top: 0,
+                      height: "100%",
+                      width: "4px",
+                      cursor: "col-resize",
+                      backgroundColor: "rgba(255, 255, 255, 0.5)",
+                      opacity: 0, // Chỉ hiện khi hover vào cell
+                      transition: "opacity 0.2s",
+                      zIndex: 1,
+                      "&:hover": {
+                        backgroundColor: "#fff",
+                        width: "6px",
+                      },
+                    }}
+                  />
                 </TableCell>
               ))}
             </TableRow>

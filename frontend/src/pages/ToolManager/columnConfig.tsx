@@ -1,3 +1,4 @@
+import { Chip } from "@mui/material";
 import { ReactNode } from "react";
 
 export interface ColumnConfig {
@@ -96,7 +97,18 @@ export const DEFAULT_COLUMNS: ColumnConfig[] = [
     visible: true,
     isShow: true,
     width: 100,
-    render: (v: any) => (v ? "Hoạt động" : "Không hoạt động"),
+    render: (v: any) => (
+      <Chip
+        label={v ? "Hoạt động" : "Không hoạt động"}
+        color={v ? "success" : "error"}
+        size="small"
+        variant="filled"
+        sx={{
+          color: "#fff",
+          fontWeight: "bold",
+        }}
+      />
+    ),
   },
   {
     key: "chiTietTaiSanList",

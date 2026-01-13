@@ -1,15 +1,5 @@
-import React from "react";
-import { Box, Typography, Paper, IconButton, ListItem } from "@mui/material";
+import { Box, Typography, Paper, IconButton } from "@mui/material";
 import { Close, Info } from "@mui/icons-material";
-import {
-  Timeline,
-  TimelineConnector,
-  TimelineContent,
-  TimelineDot,
-  TimelineItem,
-  TimelineSeparator,
-  timelineItemClasses,
-} from "@mui/lab";
 import { findById } from "../../../utils/helpers";
 
 interface ToolDetailSidebarProps {
@@ -79,71 +69,84 @@ export default function ToolDetailSidebar({
             </Typography>
           </Box>
 
-          <Timeline
-            sx={{
-              p: 0,
-              [`& .${timelineItemClasses.root}:before`]: {
-                flex: 0,
-                padding: 0,
-              },
-            }}
-          >
-            {/* LỌC DỮ LIỆU TỪ DANH SÁCH TỔNG CỦA selectedTool */}
+          <Box sx={{ pl: 1 }}>
             {(selectedTool?.chiTietDonViSoHuuList || [])
               .filter((donVi: any) => donVi.idTsCon === taiSan.id)
-              .map((item: any, index: number) => (
-                <TimelineItem key={index}>
-                  <TimelineSeparator>
-                    <TimelineConnector
-                      sx={{ height: 20, bgcolor: "#bdbdbd" }}
-                    />
-                    <TimelineDot
-                      variant="outlined"
-                      sx={{ borderColor: "#bdbdbd", p: 0.5 }}
-                    />
-                    <TimelineConnector sx={{ bgcolor: "#bdbdbd" }} />
-                  </TimelineSeparator>
+              .map((item: any, index: number, arr: any[]) => (
+                <Box
+                  key={index}
+                  display="flex"
+                  alignItems="stretch"
+                  gap={2}
+                  position="relative"
+                  sx={{ mb: 2 }}
+                >
+                  {/* Cột timeline */}
+                  <Box
+                    display="flex"
+                    flexDirection="column"
+                    alignItems="center"
+                    sx={{ width: 24 }}
+                  >
+                    {/* Line trên */}
+                    {index !== 0 && (
+                      <Box sx={{ flex: 1, width: "2px", bgcolor: "#bdbdbd" }} />
+                    )}
 
-                  <TimelineContent sx={{ pr: 0 }}>
-                    <Paper
-                      elevation={0}
+                    {/* Dot */}
+                    <Box
                       sx={{
-                        p: 2,
-                        border: "1px solid #f0f0f0",
-                        borderRadius: 3,
-                        bgcolor: "#fcfaff",
+                        width: 10,
+                        height: 10,
+                        borderRadius: "50%",
+                        border: "2px solid #bdbdbd",
+                        bgcolor: "#fff",
                       }}
+                    />
+
+                    {/* Line dưới */}
+                    {index !== arr.length - 1 && (
+                      <Box sx={{ flex: 1, width: "2px", bgcolor: "#bdbdbd" }} />
+                    )}
+                  </Box>
+
+                  {/* Content */}
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2,
+                      flex: 1,
+                      border: "1px solid #f0f0f0",
+                      borderRadius: 3,
+                      bgcolor: "#fcfaff",
+                    }}
+                  >
+                    <Typography variant="subtitle2" fontWeight="bold">
+                      {findById(departments, item?.idDonViSoHuu)?.tenPhongBan ||
+                        item?.idDonViSoHuu ||
+                        "Không xác định"}
+                    </Typography>
+
+                    <Typography variant="body2" color="primary">
+                      Mã chi tiết CCDC: {item.idTsCon}
+                    </Typography>
+
+                    <Typography variant="body2" color="success.main">
+                      Số lượng đang sở hữu: {item?.soLuong}
+                    </Typography>
+
+                    <Typography
+                      variant="caption"
+                      display="block"
+                      color="text.secondary"
+                      sx={{ mt: 1 }}
                     >
-                      <Typography variant="subtitle2" fontWeight="bold">
-                        {/* Chỗ này cần lưu ý: Nếu API trả về mã K30, bạn có thể cần map sang tên "Kho công ty" */}
-                        {findById(departments, item?.idDonViSoHuu)
-                          ?.tenPhongBan ||
-                          item?.idDonViSoHuu ||
-                          "Không xác định"}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="primary"
-                        sx={{ wordBreak: "break-word" }}
-                      >
-                        Mã chi tiết CCDC - : {item.idTsCon}
-                      </Typography>
-                      <Typography variant="body2" color="success.main">
-                        Số lượng đang sở hữu: {item?.soLuong}
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        display="block"
-                        color="text.secondary"
-                        sx={{ mt: 1 }}
-                      >
-                        Thời gian bàn giao: {item?.thoiGianBanGiao}
-                      </Typography>
-                    </Paper>
-                  </TimelineContent>
-                </TimelineItem>
+                      Thời gian bàn giao: {item?.thoiGianBanGiao}
+                    </Typography>
+                  </Paper>
+                </Box>
               ))}
-          </Timeline>
+          </Box>
         </Box>
       ))}
     </Paper>
