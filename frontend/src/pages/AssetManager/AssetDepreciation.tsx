@@ -104,6 +104,10 @@ export default function AssetDepreciation() {
       minWidth: 150,
       align: "center",
       headerAlign: "center",
+      renderCell: (params) =>
+        params.row.ngayTinhKhao
+          ? dayjs(params.row.ngayTinhKhao).format("DD/MM/YYYY HH:mm:ss")
+          : "",
     },
     {
       field: "thangKh",

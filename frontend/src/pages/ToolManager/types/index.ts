@@ -19,3 +19,27 @@ export interface ToolType {
   ngayCapNhat: string;
   isActive: boolean;
 }
+
+export interface OwnerUnitType {
+  id: string;
+  idCCDCVT: string;
+  idDonViSoHuu: string;
+  soLuong: number;
+  thoiGianBanGiao: string;
+  ngayTao: string;
+  nguoiTao: string;
+  idTsCon: string;
+}
+
+export interface AssetDetailType {
+  id: string;
+  idTaiSan: string;
+  idDonVi: string;
+  ngayVaoSo: string;
+  ngaySuDung: string;
+  soKyHieu: string;
+  congSuat: string;
+  nuocSanXuat: string;
+  namSanXuat: number;
+  soLuong: number;
+}

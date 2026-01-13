@@ -4,9 +4,9 @@ import { ToolTypeType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 
 export const useToolTypeMutation = (
-  page: number,
-  pageSize: number,
-  searchValue: string
+  page?: number,
+  pageSize?: number,
+  searchValue?: string
 ) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
@@ -95,7 +95,7 @@ export const useToolTypeMutation = (
     placeholderData: (previousData) => previousData,
   });
 
-  const { data: allData = [] } = useQuery({
+  const { data: toolTypes = [] } = useQuery({
     queryKey: ["toolTypes", page, pageSize, searchValue], // Key để cache dữ liệu
     queryFn: async () => {
       const res = await api.get("/loaiccdccon", {
@@ -113,8 +113,8 @@ export const useToolTypeMutation = (
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
-    allData,
-    toolTypes: data,
+    toolTypes,
+    toolTypesPage: data,
     isLoading,
   };
 };

@@ -1,28 +1,4 @@
-import {
-  Archive,
-  Cases,
-  Delete,
-  Download,
-  Inventory,
-  Inventory2,
-  Settings,
-  Upload,
-} from "@mui/icons-material";
-import {
-  Box,
-  Button,
-  Chip,
-  Divider,
-  Grid,
-  IconButton,
-  ListItemIcon,
-  Menu,
-  MenuItem,
-  Paper,
-  Tab,
-  Tabs,
-  Typography,
-} from "@mui/material";
+import { Box } from "@mui/material";
 import React, { useState } from "react";
 import PageAction from "../../components/common/PageAction";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
@@ -31,16 +7,20 @@ import ToolTableCustom from "./components/ToolTableCustom";
 import ToolDetailSidebar from "./components/ToolDetailSidebar";
 import { useToolManagerMutation } from "./Mutation";
 //import ToolGroupItem from "./components/ToolGroupItem";
+import { DEFAULT_COLUMNS } from "./columnConfig";
+import ColumnConfigMenu from "./components/ColumnConfig";
+import { useDepartmentMutation } from "../Department/Mutation";
+import { useToolTypeMutation } from "../ToolType/Mutation";
+import { useUnitMutation } from "../Unit/Mutation";
+import { useToolGroupMutation } from "../ToolGroup/Mutation";
 
 export default function ToolManager() {
-  const [tab, setTab] = React.useState(0);
   const [showForm, setShowForm] = useState(false);
   const [selectedTool, setSelectedTool] = useState<any>(null);
   const [readOnly, setReadOnly] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
-  const [selectedGroup, setSelectedGroup] = useState("");
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
@@ -56,12 +36,15 @@ export default function ToolManager() {
     deleteOneMutation,
     deleteManyMutation,
   } = useToolManagerMutation(
-    tab,
     paginationModel.page,
     paginationModel.pageSize,
-    searchValue,
-    selectedGroup
+    searchValue
   );
+  const { allDepartments } = useDepartmentMutation();
+  const { toolTypes } = useToolTypeMutation();
+  const { allUnits } = useUnitMutation();
+
+  const [columns, setColumns] = useState(DEFAULT_COLUMNS);
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedTool(params.row);
@@ -91,112 +74,6 @@ export default function ToolManager() {
     }
   };
 
-  const columns: GridColDef[] = [
-    {
-      field: "toolNumber",
-      headerName: "Mã CCDC",
-      width: 150,
-      align: "center",
-      headerAlign: "center",
-    },
-    {
-      field: "toolName",
-      headerName: "Tên CCDC",
-      flex: 1,
-      minWidth: 200,
-      align: "center",
-      headerAlign: "center",
-    },
-    {
-      field: "toolInput",
-      headerName: "Đơn vị nhập",
-      flex: 1,
-      minWidth: 150,
-      align: "center",
-      headerAlign: "center",
-    },
-    {
-      field: "toolGroupName",
-      headerName: "Nhóm CCDC",
-      flex: 1,
-      minWidth: 150,
-      align: "center",
-      headerAlign: "center",
-    },
-    {
-      field: "toolInputedAt",
-      headerName: "Ngày nhập",
-      flex: 1,
-      minWidth: 150,
-      align: "center",
-      headerAlign: "center",
-    },
-    {
-      field: "toolUnit",
-      headerName: "Đơn vị tính",
-      flex: 1,
-      minWidth: 150,
-      align: "center",
-      headerAlign: "center",
-    },
-    {
-      field: "toolQuantity",
-      headerName: "Số lượng",
-      flex: 1,
-      minWidth: 150,
-      align: "center",
-      headerAlign: "center",
-    },
-    {
-      field: "toolValue",
-      headerName: "Giá trị",
-      flex: 1,
-      minWidth: 150,
-      align: "center",
-      headerAlign: "center",
-    },
-    {
-      field: "toolSign",
-      headerName: "Ký hiệu",
-      flex: 1,
-      minWidth: 150,
-      align: "center",
-      headerAlign: "center",
-    },
-    {
-      field: "toolNote",
-      headerName: "Ghi chú",
-      flex: 1,
-      minWidth: 150,
-      align: "center",
-      headerAlign: "center",
-    },
-    {
-      field: "toolCreator",
-      headerName: "Người tạo",
-      flex: 1,
-      minWidth: 150,
-      align: "center",
-      headerAlign: "center",
-    },
-    {
-      field: "toolCreatedAt",
-      headerName: "Ngày tạo",
-      flex: 1,
-      minWidth: 150,
-      align: "center",
-      headerAlign: "center",
-    },
-    {
-      field: "toolStatus",
-      headerName: "Trạng thái",
-      flex: 1,
-      minWidth: 150,
-      align: "center",
-      headerAlign: "center",
-    },
-  ];
-
   return (
     <Box sx={{ width: "100%" }}>
       <PageAction
@@ -209,26 +86,25 @@ export default function ToolManager() {
       />
       <Box p={2}>
         {showForm && (
-          <Box py={2} px={2}>
-            <ToolForm
-              key={`${selectedTool?.id}-${readOnly}`}
-              onCancel={() => {
-                setShowForm(false);
-                setReadOnly(true);
-              }}
-              selectedTool={selectedTool}
-              readOnly={readOnly}
-              onEdit={handleEdit}
-              onSave={handleSave}
-            />
-          </Box>
+          <ToolForm
+            key={`${selectedTool?.id}-${readOnly}`}
+            onCancel={() => {
+              setShowForm(false);
+              setReadOnly(true);
+            }}
+            selectedTool={selectedTool}
+            readOnly={readOnly}
+            onEdit={handleEdit}
+            onSave={handleSave}
+            departments={allDepartments}
+            toolTypes={toolTypes}
+            allUnits={allUnits}
+            toolGroups={toolGroups}
+          />
         )}
 
         <Box
           sx={{
-            mx: 2,
-            mb: 2,
-            mt: 2,
             display: "flex",
             borderRadius: 2,
             border: "1px solid",
@@ -253,6 +129,9 @@ export default function ToolManager() {
             <ToolTableCustom
               title="Quản lý CCDC - Vật tư"
               rows={toolsPage?.items || []}
+              total={toolsPage?.totalItems || 0}
+              columns={columns}
+              onColumnsChange={setColumns}
               onRowClick={(row) => {
                 setSelectedTool(row);
                 setReadOnly(true);
@@ -264,6 +143,11 @@ export default function ToolManager() {
               onDelete={(ids) => {
                 deleteManyMutation.mutate(ids);
               }}
+              setSearchValue={setSearchValue}
+              searchValue={searchValue}
+              paginationModel={paginationModel}
+              onPaginationModelChange={setPaginationModel}
+              loading={isLoading}
             />
           </Box>
 
@@ -280,6 +164,7 @@ export default function ToolManager() {
             >
               <ToolDetailSidebar
                 selectedTool={selectedTool}
+                departments={allDepartments}
                 onClose={() => {
                   setShowSidebar(false);
                 }}

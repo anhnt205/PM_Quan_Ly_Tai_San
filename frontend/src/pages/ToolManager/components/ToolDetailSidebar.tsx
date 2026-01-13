@@ -1,66 +1,35 @@
 import React from "react";
-import {
-  Box,
-  Typography,
-  Paper,
-  IconButton,
-  Divider,
-  Step,
-  StepLabel,
-  Stepper,
-} from "@mui/material";
+import { Box, Typography, Paper, IconButton, ListItem } from "@mui/material";
 import { Close, Info } from "@mui/icons-material";
+import {
+  Timeline,
+  TimelineConnector,
+  TimelineContent,
+  TimelineDot,
+  TimelineItem,
+  TimelineSeparator,
+  timelineItemClasses,
+} from "@mui/lab";
+import { findById } from "../../../utils/helpers";
 
 interface ToolDetailSidebarProps {
   selectedTool: any;
+  departments: any[];
   onClose: () => void;
 }
 
 export default function ToolDetailSidebar({
   selectedTool,
+  departments,
   onClose,
 }: ToolDetailSidebarProps) {
   if (!selectedTool) return null;
-
-  // Sample detail items grouped by title (matching the image structure)
-  const groupedDetails = [
-    {
-      title: "CCDC_01-STT-0",
-      nsx: "2020",
-      items: [
-        {
-          status: "Đang ủy",
-          code: "CCDC_01-STT-0",
-          quantity: 5,
-          transferTime: "2025-11-29 02:30:48",
-        },
-      ],
-    },
-    {
-      title: "CCDC_01-STT-1",
-      nsx: "2025",
-      items: [
-        {
-          status: "Đang ủy",
-          code: "CCDC_01-STT-1",
-          quantity: 5,
-          transferTime: "2025-11-29 02:30:48",
-        },
-        {
-          status: "null",
-          code: "CCDC_01-STT-1",
-          quantity: 0,
-          transferTime: "-",
-        },
-      ],
-    },
-  ];
 
   return (
     <Paper
       elevation={0}
       sx={{
-        height: "fit-content",
+        minHeight: "fit-content",
         maxHeight: "calc(100vh - 200px)",
         borderLeft: "1px solid",
         borderColor: "divider",
@@ -83,7 +52,7 @@ export default function ToolDetailSidebar({
           <Box display="flex" alignItems="center" gap={1} mb={0.5}>
             <Info fontSize="small" sx={{ color: "#00BCD4" }} />
             <Typography variant="body2" color="text.secondary">
-              Chi tiết đơn vị sở hữu "{selectedTool?.toolName || ""}"
+              Chi tiết đơn vị sở hữu "{selectedTool?.ten || ""}"
             </Typography>
           </Box>
         </Box>
@@ -92,137 +61,91 @@ export default function ToolDetailSidebar({
         </IconButton>
       </Box>
 
-      {/* Title */}
-      <Box px={2} py={2} borderBottom="1px solid" borderColor="divider">
-        <Typography
-          variant="body2"
-          sx={{
-            color: "#ff4444",
-            fontWeight: 600,
-            backgroundColor: "#fff0f0",
-            padding: "8px 12px",
-            borderRadius: "8px",
-          }}
-        >
-          {selectedTool?.toolNumber} - NSX: 2020
-        </Typography>
-      </Box>
-
-      {/* Detail Items Timeline */}
-      <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 3 }}>
-        {groupedDetails.map((group, groupIndex) => (
-          <Box key={groupIndex} display="flex" flexDirection="column" gap={2}>
-            {/* Title Section */}
-            <Typography
-              variant="body2"
-              sx={{
-                color: "#ff4444",
-                fontWeight: 600,
-                backgroundColor: "#fff0f0",
-                padding: "8px 12px",
-                borderRadius: "8px",
-              }}
-            >
-              {group.title} - NSX: {group.nsx}
+      {/* Lặp qua danh sách tài sản (như CCDC-TEST-STT-0, STT-1) */}
+      {selectedTool?.chiTietTaiSanList?.map((taiSan: any) => (
+        <Box key={taiSan.id} sx={{ px: 2, mb: 4 }}>
+          {/* PHẦN ĐẦU (HEADER GROUP) */}
+          <Box
+            sx={{
+              border: "1px solid #ffebee",
+              borderRadius: "12px",
+              p: 1.5,
+              mb: 1,
+              bgcolor: "#fff9f9",
+            }}
+          >
+            <Typography sx={{ color: "#ff5252", fontWeight: "bold" }}>
+              {taiSan?.id} -- NSX: {taiSan?.namSanXuat}
             </Typography>
-
-            {/* Items for this group */}
-            <Box display="flex" flexDirection="column" gap={2}>
-              {group.items.map((item, itemIndex) => (
-                <Box key={itemIndex} display="flex" gap={2}>
-                  {/* Timeline */}
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      gap: 1,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        width: "12px",
-                        height: "12px",
-                        borderRadius: "50%",
-                        backgroundColor: "#666",
-                      }}
-                    />
-                    {itemIndex < group.items.length - 1 && (
-                      <Box
-                        sx={{
-                          width: "2px",
-                          height: "80px",
-                          backgroundColor: "#ddd",
-                        }}
-                      />
-                    )}
-                  </Box>
-
-                  {/* Content */}
-                  <Box
-                    sx={{
-                      flex: 1,
-                      backgroundColor: "#f9f9f9",
-                      padding: "12px",
-                      borderRadius: "8px",
-                      border: "1px solid #e8e8e8",
-                    }}
-                  >
-                    {/* Status Label */}
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        marginBottom: "8px",
-                        fontSize: "12px",
-                        color: "#333",
-                      }}
-                    >
-                      {item.status}
-                    </Typography>
-
-                    {/* Detail Code */}
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: "#0066cc",
-                        marginBottom: "4px",
-                        fontSize: "12px",
-                        fontWeight: 500,
-                      }}
-                    >
-                      Mã chỉ tiết CCDC - Vật tư: {item.code}
-                    </Typography>
-
-                    {/* Quantity */}
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: "#28a745",
-                        marginBottom: "4px",
-                        fontSize: "12px",
-                        fontWeight: 500,
-                      }}
-                    >
-                      Số lượng đang sở hữu: {item.quantity}
-                    </Typography>
-
-                    {/* Transfer Time */}
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: "#666",
-                        fontSize: "12px",
-                      }}
-                    >
-                      Thời gian ban giao: {item.transferTime}
-                    </Typography>
-                  </Box>
-                </Box>
-              ))}
-            </Box>
           </Box>
-        ))}
-      </Box>
+
+          <Timeline
+            sx={{
+              p: 0,
+              [`& .${timelineItemClasses.root}:before`]: {
+                flex: 0,
+                padding: 0,
+              },
+            }}
+          >
+            {/* LỌC DỮ LIỆU TỪ DANH SÁCH TỔNG CỦA selectedTool */}
+            {(selectedTool?.chiTietDonViSoHuuList || [])
+              .filter((donVi: any) => donVi.idTsCon === taiSan.id)
+              .map((item: any, index: number) => (
+                <TimelineItem key={index}>
+                  <TimelineSeparator>
+                    <TimelineConnector
+                      sx={{ height: 20, bgcolor: "#bdbdbd" }}
+                    />
+                    <TimelineDot
+                      variant="outlined"
+                      sx={{ borderColor: "#bdbdbd", p: 0.5 }}
+                    />
+                    <TimelineConnector sx={{ bgcolor: "#bdbdbd" }} />
+                  </TimelineSeparator>
+
+                  <TimelineContent sx={{ pr: 0 }}>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        border: "1px solid #f0f0f0",
+                        borderRadius: 3,
+                        bgcolor: "#fcfaff",
+                      }}
+                    >
+                      <Typography variant="subtitle2" fontWeight="bold">
+                        {/* Chỗ này cần lưu ý: Nếu API trả về mã K30, bạn có thể cần map sang tên "Kho công ty" */}
+                        {findById(departments, item?.idDonViSoHuu)
+                          ?.tenPhongBan ||
+                          item?.idDonViSoHuu ||
+                          "Không xác định"}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="primary"
+                        sx={{ wordBreak: "break-word" }}
+                      >
+                        Mã chi tiết CCDC - : {item.idTsCon}
+                      </Typography>
+                      <Typography variant="body2" color="success.main">
+                        Số lượng đang sở hữu: {item?.soLuong}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        display="block"
+                        color="text.secondary"
+                        sx={{ mt: 1 }}
+                      >
+                        Thời gian bàn giao: {item?.thoiGianBanGiao}
+                      </Typography>
+                    </Paper>
+                  </TimelineContent>
+                </TimelineItem>
+              ))}
+          </Timeline>
+        </Box>
+      ))}
     </Paper>
   );
 }

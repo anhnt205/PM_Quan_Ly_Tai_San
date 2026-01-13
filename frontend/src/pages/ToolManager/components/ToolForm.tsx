@@ -40,6 +40,9 @@ import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted
 import ToolType from "../../../data/ToolType.json";
 import FieldDateTime from "../../../components/TextField/FieldDateTime";
 import EditButton from "../../../components/Button/EditButton";
+import dayjs from "dayjs";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../redux/store";
 
 export default function ToolForm({
   onEdit,
@@ -47,65 +50,86 @@ export default function ToolForm({
   selectedTool,
   readOnly,
   onSave,
+  departments,
+  toolTypes,
+  allUnits,
+  toolGroups,
 }: {
   onEdit: () => void;
   onCancel: () => void;
   selectedTool?: any;
   readOnly?: boolean;
   onSave: (values: any) => void;
+  departments: any[];
+  toolTypes: any[];
+  allUnits: any[];
+  toolGroups: any[];
 }) {
   const [expanded, setExpanded] = useState(true);
-  const [initialToolCount, setInitialToolCount] = useState(0);
-  const [hasAddedNewRow, setHasAddedNewRow] = useState(false);
+  const { user } = useSelector((state: RootState) => state.user);
   const formik = useFormik({
     initialValues: {
       id: "",
-      code: "",
-      name: "",
-      createdAt: "",
-      updatedAt: "",
-      createdBy: "",
-      updatedBy: "",
-      tools: [
-        {
-          tool: "",
-          toolSign: "",
-          toolQuantity: "",
-          toolCapacity: "",
-          toolCreatedCountry: "",
-          toolCreatedYear: "",
-        },
-      ],
+      idDonVi: "",
+      ten: "",
+      ngayNhap: "",
+      donViTinh: "",
+      soLuong: 0,
+      idNhomCCDC: "",
+      giaTri: 0,
+      soKyHieu: "",
+      kyHieu: "",
+      congSuat: "",
+      nuocSanXuat: "",
+      namSanXuat: 0,
+      ghiChu: "",
+      idCongTy: "ct001",
+      ngayTao: "",
+      ngayCapNhat: "",
+      nguoiTao: "",
+      nguoiCapNhat: user?.username || "",
+      isActive: true,
+      idLoaiCCDCCon: "",
+      hienTrang: 0,
+      chiTietTaiSanList: [],
+      chiTietDonViSoHuuList: [],
     },
     onSubmit(values) {
-      onSave(values);
+      onSave({
+        ...values,
+        chiTietTaiSanList: values.chiTietTaiSanList.map(
+          (item: any, index: number) => ({
+            ...item,
+            idDonVi: values.idDonVi,
+            idTaiSan: values.id,
+          })
+        ),
+      });
     },
   });
   useEffect(() => {
     if (selectedTool) {
-      const tools =
-        selectedTool.tools && selectedTool.tools.length > 0
-          ? selectedTool.tools
-          : [
-              {
-                tool: "",
-                toolSign: "",
-                toolQuantity: "",
-                toolCapacity: "",
-                toolCreatedCountry: "",
-                toolCreatedYear: "",
-              },
-            ];
-      setInitialToolCount(tools.length);
       formik.setValues({
         ...selectedTool,
-        tools: tools,
+        chiTietTaiSanList: selectedTool.chiTietTaiSanList.map(
+          (item: any, index: number) => ({
+            ...item,
+            stt: index + 1,
+            isInserted: true,
+          })
+        ),
       });
     } else {
       formik.resetForm();
-      setInitialToolCount(1);
     }
   }, [selectedTool, readOnly]);
+
+  useEffect(() => {
+    const soLuong = formik.values.chiTietTaiSanList
+      .filter((item: any) => !item?.isDeleted)
+      .reduce((sum: number, item: any) => sum + Number(item.soLuong || 0), 0);
+    formik.setFieldValue("soLuong", soLuong);
+  }, [formik.values.chiTietTaiSanList]);
   return (
     <Accordion sx={{ background: "#f6f8f4ff" }} expanded={expanded}>
       <AccordionSummary
@@ -141,8 +165,6 @@ export default function ToolForm({
               <SaveBtn
                 onSave={() => {
                   formik.submitForm();
-                  setHasAddedNewRow(false);
-                  setInitialToolCount(formik.values.tools.length);
                 }}
               />
             )}
@@ -150,7 +172,6 @@ export default function ToolForm({
               <CancelBtn
                 onClick={() => {
                   onCancel();
-                  setHasAddedNewRow(false);
                 }}
               />
             )}
@@ -229,7 +250,7 @@ export default function ToolForm({
                   <FieldInput
                     title="Mã công cụ dụng cụ *"
                     formik={formik}
-                    field="toolNumber"
+                    field="id"
                     disabled={Boolean(selectedTool)}
                   />
                 </Grid>
@@ -237,31 +258,35 @@ export default function ToolForm({
                   <FieldInput
                     title="Tên công cụ dụng cụ *"
                     formik={formik}
-                    field="toolName"
+                    field="ten"
                     disabled={readOnly}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
-                  <FieldInput
+                  <FieldAutoCompleted
                     title="Đơn vị tính *"
+                    data={allUnits}
+                    labelkey="tenDonVi"
+                    field="donViTinh"
                     formik={formik}
-                    field="toolUnit"
                     disabled={readOnly}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
-                  <FieldInput
-                    title="Đơn vị nhập *"
+                  <FieldAutoCompleted
+                    title="Đơn vị nhập"
+                    data={departments}
+                    labelkey="tenPhongBan"
+                    field="idDonVi"
                     formik={formik}
-                    field="toolInput"
                     disabled={readOnly}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
-                  <FieldInput
+                  <FieldDateTime
                     title="Ngày nhập"
                     formik={formik}
-                    field="toolInputedAt"
+                    field="ngayTao"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -269,7 +294,7 @@ export default function ToolForm({
                   <FieldInput
                     title="Ghi chú"
                     formik={formik}
-                    field="toolNote"
+                    field="ghiChu"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -278,20 +303,22 @@ export default function ToolForm({
             <Grid size={{ xs: 6 }}>
               <Grid container spacing={2} sx={{ mt: 2 }}>
                 <Grid size={{ xs: 12 }}>
-                  <FieldInput
+                  <FieldAutoCompleted
                     title="Nhóm CCDC *"
+                    data={toolGroups}
+                    labelkey="ten"
                     formik={formik}
-                    field="toolGroupName"
+                    field="idNhomCCDC"
                     disabled={readOnly}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <FieldAutoCompleted
                     title="Loại CCDC *"
-                    data={ToolType}
-                    labelkey="name"
+                    data={toolTypes}
+                    labelkey="tenLoai"
                     formik={formik}
-                    field="toolTypeId"
+                    field="idLoaiCCDCCon"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -300,8 +327,8 @@ export default function ToolForm({
                     title="Số lượng"
                     type="number"
                     formik={formik}
-                    field="toolQuantity"
-                    disabled={Boolean(selectedTool)}
+                    field="soLuong"
+                    disabled
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -309,7 +336,7 @@ export default function ToolForm({
                     title="Giá trị *"
                     type="number"
                     formik={formik}
-                    field="toolValue"
+                    field="giaTri"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -317,7 +344,7 @@ export default function ToolForm({
                   <FieldInput
                     title="Ký hiệu"
                     formik={formik}
-                    field="toolSign"
+                    field="kyHieu"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -340,88 +367,92 @@ export default function ToolForm({
               </TableRow>
             </TableHead>
             <TableBody>
-              {formik.values.tools.map((row, index) => {
-                const isNewRow = index >= initialToolCount;
-                const isFieldDisabled =
-                  readOnly || (!hasAddedNewRow && !isNewRow);
-                return (
-                  <TableRow key={index}>
+              {formik.values.chiTietTaiSanList
+                .map((row: any, originalIndex) => ({ ...row, originalIndex }))
+                .filter((row) => !row.isDeleted)
+                .map((row) => (
+                  <TableRow key={row.originalIndex}>
                     <TableCell>
-                      <FieldAutoCompleted
-                        title=""
-                        data={ToolType}
-                        labelkey="name"
+                      <FieldInput
                         formik={formik}
-                        field={`tools.${index}.tool`}
-                        disabled={isFieldDisabled}
+                        field={`chiTietTaiSanList.${row.originalIndex}.stt`}
+                        disabled={true}
                       />
                     </TableCell>
                     <TableCell>
                       <FieldInput
                         formik={formik}
-                        field={`tools.${index}.toolSign`}
-                        disabled={isFieldDisabled}
+                        field={`chiTietTaiSanList.${row.originalIndex}.soKyHieu`}
+                        disabled={readOnly}
                       />
                     </TableCell>
                     <TableCell>
                       <FieldInput
                         formik={formik}
-                        field={`tools.${index}.toolQuantity`}
-                        disabled={isFieldDisabled}
+                        field={`chiTietTaiSanList.${row.originalIndex}.soLuong`}
+                        disabled={readOnly}
                       />
                     </TableCell>
                     <TableCell>
                       <FieldInput
                         formik={formik}
-                        field={`tools.${index}.toolCapacity`}
-                        disabled={isFieldDisabled}
+                        field={`chiTietTaiSanList.${row.originalIndex}.congSuat`}
+                        disabled={readOnly}
                       />
                     </TableCell>
                     <TableCell>
                       <FieldInput
                         formik={formik}
-                        field={`tools.${index}.toolCreatedCountry`}
-                        disabled={isFieldDisabled}
+                        field={`chiTietTaiSanList.${row.originalIndex}.nuocSanXuat`}
+                        disabled={readOnly}
                       />
                     </TableCell>
                     <TableCell>
                       <FieldInput
                         formik={formik}
-                        field={`tools.${index}.toolCreatedYear`}
-                        disabled={isFieldDisabled}
+                        field={`chiTietTaiSanList.${row.originalIndex}.namSanXuat`}
+                        disabled={readOnly}
                       />
                     </TableCell>
                     <TableCell>
                       <IconButton
                         color="error"
                         onClick={() => {
-                          const newTools = [...formik.values.tools];
-                          newTools.splice(index, 1);
-                          formik.setFieldValue("tools", newTools);
+                          formik.setFieldValue(
+                            `chiTietTaiSanList.${row.originalIndex}.isDeleted`,
+                            true
+                          );
+                          formik.setFieldValue(
+                            `chiTietTaiSanList.${row.originalIndex}.isInserted`,
+                            false
+                          );
                         }}
-                        disabled={!hasAddedNewRow}
+                        disabled={readOnly}
                       >
                         <Delete />
                       </IconButton>
                     </TableCell>
                   </TableRow>
-                );
-              })}
+                ))}
             </TableBody>
             {!readOnly && (
               <Button
                 startIcon={<Add />}
                 onClick={() => {
-                  setHasAddedNewRow(true);
-                  formik.setFieldValue("tools", [
-                    ...formik.values.tools,
+                  formik.setFieldValue("chiTietTaiSanList", [
+                    ...formik.values.chiTietTaiSanList,
                     {
-                      tool: "",
-                      toolSign: "",
-                      toolQuantity: "",
-                      toolCapacity: "",
-                      toolCreatedCountry: "",
-                      toolCreatedYear: "",
+                      stt: formik.values.chiTietTaiSanList.length + 1,
+                      id: "",
+                      idTaiSan: "",
+                      ngayVaoSo: "",
+                      ngaySuDung: "",
+                      soKyHieu: "",
+                      congSuat: "",
+                      nuocSanXuat: "",
+                      namSanXuat: 0,
+                      soLuong: 0,
+                      isInserted: true,
                     },
                   ]);
                 }}

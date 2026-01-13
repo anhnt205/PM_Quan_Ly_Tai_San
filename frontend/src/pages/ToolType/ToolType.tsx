@@ -22,8 +22,8 @@ export default function ToolType() {
   });
 
   const {
-    allData,
     toolTypes,
+    toolTypesPage,
     createMutation,
     updateMutation,
     deleteOneMutation,
@@ -129,8 +129,8 @@ export default function ToolType() {
         <TableCustom
           title="Quản lý loại CCDC"
           columns={columns}
-          rows={allData}
-          total={allData.length}
+          rows={toolTypes}
+          total={toolTypes.length}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
           loading={isLoading}

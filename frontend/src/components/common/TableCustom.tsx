@@ -226,7 +226,7 @@ export default function TableCustom({
       </Grid>
       <Box sx={{ width: "100%", overflowX: "auto" }}>
         <DataGrid
-          getRowId={(row) => row.Id || row.id}
+          getRowId={(row) => row.Id || row.id || row.soThe}
           onRowClick={onRowClick}
           columns={columns}
           rows={rows}

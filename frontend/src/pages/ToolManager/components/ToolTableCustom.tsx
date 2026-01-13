@@ -23,77 +23,50 @@ import {
   ExpandLess,
   Settings,
 } from "@mui/icons-material";
-
-interface DetailItem {
-  id: string | number;
-  detailCode: string;
-  ownerUnit: string;
-  quantity: number | string;
-  transferTime: string;
-}
-
-interface ToolData {
-  id: string | number;
-  toolNumber: string;
-  toolName: string;
-  toolInput: string;
-  toolGroupName: string;
-  toolInputedAt: string;
-  toolUnit: string;
-  toolQuantity: number | string;
-  toolValue: string | number;
-  toolSign: string;
-  toolNote: string;
-  toolCreator: string;
-  toolCreatedAt: string;
-  toolStatus: string;
-  details?: DetailItem[];
-  [key: string]: any;
-}
+import { ColumnConfig } from "../columnConfig";
+import ColumnConfigMenu from "./ColumnConfig";
+import { GridFeatureMode } from "@mui/x-data-grid";
 
 interface Props {
   title: string;
-  rows: ToolData[];
-  onRowClick?: (row: ToolData) => void;
+  rows: any[];
+  total: number;
+  columns: ColumnConfig[];
+  onRowClick?: (row: any) => void;
   selectedIds?: string[];
   onSelectionChange?: (ids: string[]) => void;
   onDelete?: (ids: string[]) => void;
+  onColumnsChange?: (columns: ColumnConfig[]) => void;
+  setSearchValue: React.Dispatch<React.SetStateAction<string>>;
+  searchValue?: string;
+  paginationModel?: { page: number; pageSize: number };
+  onPaginationModelChange?: (model: any) => void;
+  loading?: boolean;
 }
 
 export default function ToolTableCustom({
   title,
   rows,
+  total,
+  columns,
   onRowClick,
   selectedIds = [],
   onSelectionChange,
   onDelete,
+  onColumnsChange,
+  setSearchValue,
+  searchValue = "",
+  paginationModel,
+  onPaginationModelChange,
+  loading = false,
 }: Props) {
   const [expandedRows, setExpandedRows] = useState<Set<string | number>>(
     new Set()
   );
-  const [searchValue, setSearchValue] = useState("");
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-
-  // Filter rows based on search
-  const filteredRows = useMemo(() => {
-    return rows.filter((row) =>
-      Object.values(row).some((value) => {
-        if (value === null || value === undefined) return false;
-        return String(value).toLowerCase().includes(searchValue.toLowerCase());
-      })
-    );
-  }, [rows, searchValue]);
-
-  // Paginate filtered rows
-  const paginatedRows = useMemo(() => {
-    const startIndex = page * pageSize;
-    return filteredRows.slice(startIndex, startIndex + pageSize);
-  }, [filteredRows, page, pageSize]);
 
   const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
-      const allIds = filteredRows.map((row) => String(row.id));
+      const allIds = rows.map((row: any) => String(row.id));
       onSelectionChange?.(allIds);
     } else {
       onSelectionChange?.([]);
@@ -123,38 +96,45 @@ export default function ToolTableCustom({
     setExpandedRows(newExpanded);
   };
 
-  const handlePageChange = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handlePageSizeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setPageSize(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
   const handleExpandAll = () => {
-    if (expandedRows.size === filteredRows.length) {
+    if (expandedRows.size === total) {
       // Collapse all
       setExpandedRows(new Set());
     } else {
       // Expand all
-      const allIds = new Set(filteredRows.map((row) => row.id));
+      const allIds = new Set(rows.map((row) => row.id));
       setExpandedRows(allIds);
     }
   };
 
   const isAllSelected =
-    filteredRows.length > 0 &&
-    filteredRows.every((row) => selectedIds.includes(String(row.id)));
+    total > 0 && rows.every((row) => selectedIds.includes(String(row.id)));
 
   const isIndeterminate =
     selectedIds.length > 0 &&
-    selectedIds.length < filteredRows.length &&
-    paginatedRows.every((row) => selectedIds.includes(String(row.id)));
+    selectedIds.length < total &&
+    rows.every((row) => selectedIds.includes(String(row.id)));
 
   const tableRows: React.ReactNode[] = [];
 
-  paginatedRows.forEach((row, index) => {
+  // Visible columns used for sizing and colSpan calculations
+  const visibleColumns = useMemo(
+    () => columns.filter((c) => c.visible && c.isShow),
+    [columns]
+  );
+
+  // Compute a reasonable minWidth for the table so it can overflow horizontally
+  const tableMinWidth = useMemo(() => {
+    const colsWidth = visibleColumns.reduce(
+      (s, c) => s + (c.width ? Number((c as any).width) : 150),
+      0
+    );
+    // extra space for expand + checkbox columns and paddings
+    const extra = 120;
+    return colsWidth + extra;
+  }, [visibleColumns]);
+
+  rows.forEach((row, index) => {
     const isExpanded = expandedRows.has(row.id);
     const isSelected = selectedIds.includes(String(row.id));
 
@@ -177,7 +157,7 @@ export default function ToolTableCustom({
         </TableCell>
 
         {/* Checkbox Column */}
-        <TableCell padding="checkbox" width="50px">
+        <TableCell width="50px" align="center">
           <Checkbox
             checked={isSelected}
             onChange={() => handleSelectRow(row.id)}
@@ -186,45 +166,23 @@ export default function ToolTableCustom({
         </TableCell>
 
         {/* Data Columns */}
-        <TableCell onClick={() => onRowClick?.(row)}>
-          {row.toolNumber || "-"}
-        </TableCell>
-        <TableCell onClick={() => onRowClick?.(row)}>
-          {row.toolName || "-"}
-        </TableCell>
-        <TableCell onClick={() => onRowClick?.(row)}>
-          {row.toolInput || "-"}
-        </TableCell>
-        <TableCell onClick={() => onRowClick?.(row)}>
-          {row.toolGroupName || "-"}
-        </TableCell>
-        <TableCell onClick={() => onRowClick?.(row)}>
-          {row.toolInputedAt || "-"}
-        </TableCell>
-        <TableCell onClick={() => onRowClick?.(row)}>
-          {row.toolUnit || "-"}
-        </TableCell>
-        <TableCell align="center" onClick={() => onRowClick?.(row)}>
-          {row.toolQuantity || "-"}
-        </TableCell>
-        <TableCell align="right" onClick={() => onRowClick?.(row)}>
-          {row.toolValue || "-"}
-        </TableCell>
-        <TableCell onClick={() => onRowClick?.(row)}>
-          {row.toolSign || "-"}
-        </TableCell>
-        <TableCell onClick={() => onRowClick?.(row)}>
-          {row.toolNote || "-"}
-        </TableCell>
-        <TableCell onClick={() => onRowClick?.(row)}>
-          {row.toolCreator || "-"}
-        </TableCell>
-        <TableCell onClick={() => onRowClick?.(row)}>
-          {row.toolCreatedAt || "-"}
-        </TableCell>
-        <TableCell onClick={() => onRowClick?.(row)}>
-          {row.toolStatus || "-"}
-        </TableCell>
+        {visibleColumns.map((col) => {
+          const rawValue = row[col.key];
+          const displayValue = col.render
+            ? col.render(rawValue, row)
+            : rawValue ?? "-";
+
+          return (
+            <TableCell
+              key={col.key}
+              onClick={() => onRowClick?.(row)}
+              align={col.align || "left"}
+              sx={{ minWidth: (col as any).width || 150 }}
+            >
+              {displayValue}
+            </TableCell>
+          );
+        })}
       </TableRow>
     );
 
@@ -232,21 +190,13 @@ export default function ToolTableCustom({
     if (isExpanded) {
       // Sample data if no details exist
       const detailsToShow =
-        row.details && row.details.length > 0
-          ? row.details
-          : [
-              {
-                id: "detail-1",
-                detailCode: `${row.toolNumber}-STT-0`,
-                ownerUnit: "Phân xưởng Co điện lộ 1",
-                quantity: row.toolQuantity || 120,
-                transferTime: "2025-11-01 17:54:14",
-              },
-            ];
+        row.chiTietDonViSoHuuList && row.chiTietDonViSoHuuList.length > 0
+          ? row.chiTietDonViSoHuuList
+          : [];
 
       tableRows.push(
         <TableRow key={`detail-${row.id}`} sx={{ backgroundColor: "#fff9e6" }}>
-          <TableCell colSpan={15} sx={{ padding: 0 }}>
+          <TableCell colSpan={visibleColumns.length + 2} sx={{ padding: 0 }}>
             <Box sx={{ p: 2, bgcolor: "#fff9e6" }}>
               <Typography
                 variant="subtitle2"
@@ -256,7 +206,7 @@ export default function ToolTableCustom({
                   fontSize: "14px",
                 }}
               >
-                Chi tiết đơn vị sở hữu - {row.toolName} ({row.toolNumber})
+                Chi tiết đơn vị sở hữu
               </Typography>
 
               <Table size="small" sx={{ backgroundColor: "#ffffff" }}>
@@ -311,19 +261,19 @@ export default function ToolTableCustom({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {detailsToShow.map((detail) => (
+                  {detailsToShow.map((detail: any) => (
                     <TableRow key={`detail-item-${detail.id}`}>
                       <TableCell sx={{ border: "1px solid #e0e0e0" }}>
-                        {detail.detailCode || "-"}
+                        {detail.idTsCon || "-"}
                       </TableCell>
                       <TableCell sx={{ border: "1px solid #e0e0e0" }}>
-                        {detail.ownerUnit || "-"}
+                        {detail.idDonViSoHuu || "-"}
                       </TableCell>
                       <TableCell sx={{ border: "1px solid #e0e0e0" }}>
-                        {detail.quantity || "-"}
+                        {detail.soLuong || "-"}
                       </TableCell>
                       <TableCell sx={{ border: "1px solid #e0e0e0" }}>
-                        {detail.transferTime || "-"}
+                        {detail.thoiGianBanGiao || "-"}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -355,8 +305,8 @@ export default function ToolTableCustom({
         sx={{ background: "#f5f5f5" }}
       >
         <TableView sx={{ color: "#1FA463" }} />
-        <Typography variant="h6" sx={{ fontWeight: 600 }}>
-          {title} ({filteredRows.length})
+        <Typography>
+          {title} ({total})
         </Typography>
       </Box>
 
@@ -370,7 +320,6 @@ export default function ToolTableCustom({
             value={searchValue}
             onChange={(e) => {
               setSearchValue(e.target.value);
-              setPage(0);
             }}
             InputProps={{
               startAdornment: <SearchIcon sx={{ mr: 1, color: "#666" }} />,
@@ -399,28 +348,29 @@ export default function ToolTableCustom({
           </Box>
         </Grid>
       </Grid>
-
+      <Box display="flex" justifyContent="flex-start" gap={2}>
+        <ColumnConfigMenu
+          columns={columns.filter((col) => col.isShow)}
+          onChange={onColumnsChange}
+        />
+      </Box>
       {/* Table */}
       <Box
         sx={{ flex: 1, minWidth: 0, overflowX: "auto", overflowY: "hidden" }}
       >
         <Table
           sx={{
-            width: "100%",
-            minWidth: "fit-content",
+            // Allow the table to size to content and enable horizontal scrolling
+            width: "max-content",
+            minWidth: tableMinWidth,
             borderCollapse: "collapse",
-            tableLayout: "fixed",
+            tableLayout: "auto",
             "& .MuiTableCell-root": {
-              padding: "12px",
-              borderBottom: "1px solid #e0e0e0",
-              borderRight: "1px solid rgba(224, 224, 224, 0.5)",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
+              padding: "8px",
             },
-            "& .MuiTableCell-root:last-child": {
-              borderRight: "none",
-            },
+            // "& .MuiTableCell-root:last-child": {
+            //   borderRight: "none",
+            // },
           }}
         >
           <TableHead>
@@ -450,11 +400,7 @@ export default function ToolTableCustom({
                 }}
                 onClick={handleExpandAll}
               >
-                {expandedRows.size === filteredRows.length ? (
-                  <ExpandLess />
-                ) : (
-                  <ExpandMore />
-                )}
+                {expandedRows.size === total ? <ExpandLess /> : <ExpandMore />}
               </TableCell>
               <TableCell
                 padding="checkbox"
@@ -474,73 +420,19 @@ export default function ToolTableCustom({
                   }}
                 />
               </TableCell>
-              <TableCell
-                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 120 }}
-              >
-                Mã CCDC
-              </TableCell>
-              <TableCell
-                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 180 }}
-              >
-                Tên CCDC
-              </TableCell>
-              <TableCell
-                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 130 }}
-              >
-                Đơn vị nhập
-              </TableCell>
-              <TableCell
-                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 130 }}
-              >
-                Nhóm CCDC
-              </TableCell>
-              <TableCell
-                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 120 }}
-              >
-                Ngày nhập
-              </TableCell>
-              <TableCell
-                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 100 }}
-              >
-                Đơn vị tính
-              </TableCell>
-              <TableCell
-                align="center"
-                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 90 }}
-              >
-                Số lượng
-              </TableCell>
-              <TableCell
-                align="right"
-                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 100 }}
-              >
-                Giá trị
-              </TableCell>
-              <TableCell
-                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 90 }}
-              >
-                Ký hiệu
-              </TableCell>
-              <TableCell
-                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 120 }}
-              >
-                Ghi chú
-              </TableCell>
-              <TableCell
-                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 120 }}
-              >
-                Người tạo
-              </TableCell>
-              <TableCell
-                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 120 }}
-              >
-                Ngày tạo
-              </TableCell>
-              <TableCell
-                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 100 }}
-              >
-                Trạng thái
-              </TableCell>
+              {visibleColumns.map((col) => (
+                <TableCell
+                  key={col.key}
+                  align={col.align || "center"}
+                  sx={{
+                    color: "#fff",
+                    fontWeight: 700,
+                    minWidth: (col as any).width || 150,
+                  }}
+                >
+                  {col.label}
+                </TableCell>
+              ))}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -548,7 +440,11 @@ export default function ToolTableCustom({
               tableRows
             ) : (
               <TableRow>
-                <TableCell colSpan={15} align="center" sx={{ py: 4 }}>
+                <TableCell
+                  colSpan={visibleColumns.length + 2}
+                  align="center"
+                  sx={{ py: 4 }}
+                >
                   <Typography color="textSecondary">
                     Không có dữ liệu
                   </Typography>
@@ -563,11 +459,21 @@ export default function ToolTableCustom({
       <TablePagination
         rowsPerPageOptions={[5, 10, 20, 50, 100]}
         component="div"
-        count={filteredRows.length}
-        rowsPerPage={pageSize}
-        page={page}
-        onPageChange={handlePageChange}
-        onRowsPerPageChange={handlePageSizeChange}
+        count={total}
+        rowsPerPage={paginationModel?.pageSize || 10}
+        page={paginationModel?.page || 0}
+        onPageChange={(_, newPage) => {
+          onPaginationModelChange?.({
+            page: newPage,
+            pageSize: paginationModel?.pageSize || 10,
+          });
+        }}
+        onRowsPerPageChange={(event) => {
+          onPaginationModelChange?.({
+            page: 0,
+            pageSize: parseInt(event.target.value, 10),
+          });
+        }}
         labelRowsPerPage="Số hàng trên trang:"
         labelDisplayedRows={({ from, to, count }) =>
           `${from}-${to} của ${count !== -1 ? count : `hơn ${to}`}`
