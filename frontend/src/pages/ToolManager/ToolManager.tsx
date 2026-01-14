@@ -33,8 +33,9 @@ export default function ToolManager() {
     isLoading,
     createMutation,
     updateMutation,
-    deleteOneMutation,
     deleteManyMutation,
+    exportExcelMutation,
+    importExcelMutation,
   } = useToolManagerMutation(
     paginationModel.page,
     paginationModel.pageSize,
@@ -83,6 +84,8 @@ export default function ToolManager() {
           setSelectedTool(null);
           setReadOnly(false);
         }}
+        onExport={() => exportExcelMutation.mutate()}
+        onImport={(file) => importExcelMutation.mutate(file)}
       />
       <Box p={2}>
         {showForm && (

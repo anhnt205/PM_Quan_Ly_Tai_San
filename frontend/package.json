@@ -33,6 +33,7 @@
     "redux-persist": "^6.0.0",
     "sweetalert2": "^11.26.10",
     "web-vitals": "^2.1.4",
+    "xlsx": "^0.18.5",
     "yup": "^1.7.1"
   },
   "scripts": {
@@ -61,7 +62,6 @@
   },
   "devDependencies": {
     "@types/pdfjs-dist": "^2.10.377",
-    "@types/redux-persist": "^4.0.0",
-    "typescript": "^5.9.3"
+    "@types/redux-persist": "^4.0.0"
   }
 }

@@ -25,7 +25,6 @@ import {
 } from "@mui/icons-material";
 import { ColumnConfig } from "../columnConfig";
 import ColumnConfigMenu from "./ColumnConfig";
-import { CircleCheck } from "lucide-react";
 
 interface Props {
   title: string;
@@ -506,7 +505,7 @@ export default function ToolTableCustom({
                   sx={{
                     color: "#fff",
                     fontWeight: 700,
-                    minWidth: (col as any).width || 150,
+                    width: (col as any).width || 150,
                     position: "relative", // Quan trọng để đặt resizer
                     "&:hover .resizer": {
                       opacity: 1,

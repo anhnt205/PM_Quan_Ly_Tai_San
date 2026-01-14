@@ -24,7 +24,7 @@ export const DEFAULT_COLUMNS: ColumnConfig[] = [
     label: "Tên CCDC",
     visible: true,
     isShow: true,
-    width: 200,
+    width: 400,
   },
   {
     key: "tenDonVi",
