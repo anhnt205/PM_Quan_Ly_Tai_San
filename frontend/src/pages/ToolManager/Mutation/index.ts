@@ -8,10 +8,21 @@ import dayjs from "dayjs";
 import axios from "axios";
 import * as XLSX from "xlsx";
 let donViSoHuuList: any[] = [];
+
+const getColumnLetter = (colIndex: number): string => {
+  let letter = "";
+  while (colIndex >= 0) {
+    letter = String.fromCharCode((colIndex % 26) + 65) + letter;
+    colIndex = Math.floor(colIndex / 26) - 1;
+  }
+  return letter;
+};
+
 export const useToolManagerMutation = (
   page?: number,
   pageSize?: number,
-  searchValue?: string
+  searchValue?: string,
+  onValidationError?: (messages: string[]) => void
 ) => {
   const queryClient = useQueryClient();
   const idCongTy = "ct001";
@@ -178,6 +189,7 @@ export const useToolManagerMutation = (
       );
     },
   });
+
   const createManyOwnerUnitMutation = useMutation({
     mutationFn: async (data: OwnerUnitType[]) => {
       const res = await axios.post(
@@ -197,6 +209,7 @@ export const useToolManagerMutation = (
       );
     },
   });
+
   const updateManyOwnerUnitMutation = useMutation({
     mutationFn: async (data: any) => {
       const res = await axios.put(
@@ -216,6 +229,7 @@ export const useToolManagerMutation = (
       );
     },
   });
+
   const deleteOneOwnerUnitMutation = useMutation({
     mutationFn: async (id: any) => {
       const res = await axios.delete(
@@ -252,6 +266,7 @@ export const useToolManagerMutation = (
       );
     },
   });
+
   const createManyAssetDetailMutation = useMutation({
     mutationFn: async (data: AssetDetailType[]) => {
       const res = await api.post("/chitiettaisan/batch", data);
@@ -280,6 +295,7 @@ export const useToolManagerMutation = (
       );
     },
   });
+
   const updateManyAssetDetailMutation = useMutation({
     mutationFn: async (data: any) => {
       const res = await api.put("/chitiettaisan/batch", data);
@@ -308,6 +324,7 @@ export const useToolManagerMutation = (
       );
     },
   });
+
   const deleteManyAssetDetailMutation = useMutation({
     mutationFn: async (data: any) => {
       const res = await api.delete("/chitiettaisan/batch", { data });
@@ -372,7 +389,7 @@ export const useToolManagerMutation = (
       !row["Mã công cụ dụng cụ"] ||
       String(row["Mã công cụ dụng cụ"]).trim() === ""
     ) {
-      rowErrors.push("Mã loại CCDC không được để trống"); // Sửa .add -> .push
+      rowErrors.push("Mã loại CCDC không được để trống");
     }
     const maNhom = String(row["Mã nhóm CCDC"] || "").trim();
     if (!maNhom) {
@@ -406,65 +423,94 @@ export const useToolManagerMutation = (
             const sheetName = workbook.SheetNames[0];
             const sheet = workbook.Sheets[sheetName];
             const jsonData = XLSX.utils.sheet_to_json(sheet);
+            const errorMessages: string[] = [];
             const idToHeader: Record<string, any> = {};
             const idToDetails: Record<string, any[]> = {};
-            const errorMessages: string[] = [];
-            jsonData.forEach((item: any, index: number) => {
-              const validation = validateRow(item, index, toolGroups); // Sử dụng hàm validateRow
-              if (validation.hasError) {
+            const maxErrorsBeforeExit = 500;
+
+            // Sửa từ jsonData.forEach sang vòng lặp for
+            for (let index = 0; index < jsonData.length; index++) {
+              const item: any = jsonData[index];
+              const rowIndex = index + 2;
+
+              // 1. Kiểm tra mã nhóm (Cột F - index 5)
+              const idNhom = String(item["Mã nhóm CCDC"] || "").trim();
+              const groupExists = toolGroups.some((g: any) => g.id === idNhom);
+
+              if (!idNhom) {
                 errorMessages.push(
-                  `Dòng ${validation.rowIndex}: ${validation.errors.join(", ")}`
+                  `Cột F - Hàng ${rowIndex}: Mã nhóm CCDC đang bỏ trống`
                 );
-                return;
+              } else if (!groupExists) {
+                errorMessages.push(
+                  `Cột F - Hàng ${rowIndex}: Mã nhóm [${idNhom}] không tồn tại`
+                );
               }
 
-              const id = String(item["Mã công cụ dụng cụ"] || "").trim();
+              // 2. Kiểm tra các trường bắt buộc khác
+              if (!item["Mã công cụ dụng cụ"])
+                errorMessages.push(
+                  `Cột A - Hàng ${rowIndex}: Mã CCDC đang bỏ trống`
+                );
+              if (!item["Tên công cụ dụng cụ"])
+                errorMessages.push(
+                  `Cột C - Hàng ${rowIndex}: Tên CCDC đang bỏ trống`
+                );
 
-              // 1. Nếu chưa có Header cho ID này, khởi tạo nó (Giống idToHeader.putIfAbsent)
-              if (!idToHeader[id]) {
-                idToHeader[id] = {
-                  id: id,
-                  idDonVi: String(item["Mã đơn vị"] || ""),
-                  ten: String(item["Tên công cụ dụng cụ"] || ""),
-                  ngayNhap: item["Ngày nhập"]
-                    ? dayjs(item["Ngày nhập"]).format("YYYY-MM-DDTHH:mm:ss")
-                    : now,
-                  donViTinh: String(item["Mã đơn vị tính"] || ""),
-                  idNhomCCDC: String(item["Mã nhóm CCDC"] || ""),
-                  idLoaiCCDCCon: String(item["Mã loại CCDC con"] || ""),
-                  giaTri: Number(item["Giá trị"]) || 0,
-                  kyHieu: String(item["Ký hiệu"] || ""),
-                  ghiChu: String(item["Ghi chú"] || ""),
-                  idCongTy: idCongTy,
-                  ngayTao: now,
-                  ngayCapNhat: now,
-                  nguoiTao: user?.tailkhoan?.tenDangNhap || "",
-                  nguoiCapNhat: user?.tailkhoan?.tenDangNhap || "",
-                  isActive: true,
-                  hienTrang: 0,
-                  chiTietTaiSanList: [], // Khởi tạo mảng chi tiết
-                };
+              // 3. Kiểm tra giới hạn lỗi (Giống hệt Flutter)
+              if (errorMessages.length >= maxErrorsBeforeExit) {
+                errorMessages.push(
+                  `... Đã dừng kiểm tra sớm do quá nhiều lỗi (>${maxErrorsBeforeExit} lỗi).`
+                );
+                break;
               }
 
-              // 2. Kiểm tra xem dòng này có chứa thông tin chi tiết không (Cột 10-14 trong Excel)
-              const soKyHieu = String(item["Số ký hiệu"] || "").trim();
-              const soLuong = Number(item["Số lượng"]) || 0;
+              // 4. Nếu chưa có lỗi nào thì mới gom nhóm dữ liệu
+              if (errorMessages.length === 0) {
+                const id = String(item["Mã công cụ dụng cụ"] || "").trim();
+                if (!idToHeader[id]) {
+                  idToHeader[id] = {
+                    id: id,
+                    idDonVi: String(item["Mã đơn vị"] || ""),
+                    ten: String(item["Tên công cụ dụng cụ"] || ""),
+                    ngayNhap: item["Ngày nhập"]
+                      ? dayjs(item["Ngày nhập"]).format("YYYY-MM-DDTHH:mm:ss")
+                      : now,
+                    donViTinh: String(item["Mã đơn vị tính"] || ""),
+                    idNhomCCDC: idNhom,
+                    idLoaiCCDCCon: String(item["Mã loại CCDC con"] || ""),
+                    giaTri: Number(item["Giá trị"]) || 0,
+                    kyHieu: String(item["Ký hiệu"] || ""),
+                    ghiChu: String(item["Ghi chú"] || ""),
+                    idCongTy: idCongTy,
+                    ngayTao: now,
+                    ngayCapNhat: now,
+                    nguoiTao: user?.tailkhoan?.tenDangNhap || "",
+                    nguoiCapNhat: user?.tailkhoan?.tenDangNhap || "",
+                    isActive: true,
+                    hienTrang: 0,
+                    chiTietTaiSanList: [],
+                  };
+                }
 
-              if (soKyHieu || soLuong > 0) {
-                if (!idToDetails[id]) idToDetails[id] = [];
-
-                idToDetails[id].push({
-                  id: "", // Sẽ sinh sau giống Flutter
-                  idTaiSan: id,
-                  soKyHieu: soKyHieu || null,
-                  soLuong: soLuong,
-                  congSuat: String(item["Công suất"] || "") || null,
-                  nuocSanXuat: String(item["Nước sản xuất"] || "") || null,
-                  namSanXuat: Number(item["Năm sản xuất"]) || 0,
-                  idDonVi: idToHeader[id].idDonVi,
-                });
+                // Xử lý chi tiết (Số ký hiệu, Số lượng...)
+                const soKyHieu = String(item["Số ký hiệu"] || "").trim();
+                const soLuong = Number(item["Số lượng"]) || 0;
+                if (soKyHieu || soLuong > 0) {
+                  if (!idToDetails[id]) idToDetails[id] = [];
+                  idToDetails[id].push({
+                    id: "",
+                    idTaiSan: id,
+                    soKyHieu: soKyHieu || null,
+                    soLuong: soLuong,
+                    congSuat: String(item["Công suất"] || "") || null,
+                    nuocSanXuat: String(item["Nước sản xuất"] || "") || null,
+                    namSanXuat: Number(item["Năm sản xuất"]) || 0,
+                    idDonVi: idToHeader[id].idDonVi,
+                  });
+                }
               }
-            });
+            }
             // 3. Kết thúc: Gắn chi tiết vào header và tính tổng số lượng
             const finalData = Object.values(idToHeader).map((header: any) => {
               const details = idToDetails[header.id] || [];
@@ -504,7 +550,10 @@ export const useToolManagerMutation = (
     },
     onError: (error: any) => {
       if (error.isValidationError) {
-        showErrorAlert("Dữ liệu Excel có lỗi:\n" + error.messages.join("\n"));
+        // Gọi callback để UI hiển thị Modal MUI
+        if (onValidationError) {
+          onValidationError(error.messages);
+        }
       } else {
         showErrorAlert(
           error.response?.data?.message || "Lỗi khi đọc hoặc gửi file"

@@ -12,8 +12,6 @@ import React, { useState } from "react";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-import Assets from "../../data/Assets.json";
-import AssetParents from "../../data/AssetParent.json";
 import AssetManagerForm from "./components/AssetManagerForm";
 import AssetGroupItem from "./components/AssetGroupItem";
 import { showConfirmAlert } from "../../components/Alert";
@@ -26,6 +24,7 @@ import { useUnitMutation } from "../Unit/Mutation";
 import { useAssetModelMutation } from "../AssetModel/Mutation";
 import { useProjectMutation } from "../Project/Mutation";
 import { useReasonIncreaseMutation } from "../ReasonIncrease/Mutation";
+import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 
 export default function AssetManager() {
   const [tab, setTab] = React.useState(0);
@@ -53,13 +52,20 @@ export default function AssetManager() {
     deleteOneChildAsssetMutation,
     isLoading,
     countries,
+    exportAssetMutation,
+    importAssetMutation,
   } = useAssetManagerMutation(
     tab,
     paginationModel.page,
     paginationModel.pageSize,
     searchValue,
+    undefined,
     selectedGroup,
-    selectedAssetGroup
+    selectedAssetGroup,
+    (messages) => {
+      setImportErrors(messages); // Lưu mảng lỗi vào state
+      setOpenErrorModal(true); // Mở Modal MUI hiển thị danh sách lỗi
+    }
   );
   const { allDepartments } = useDepartmentMutation();
   const { allCurrentStatus } = useCurrentStatusMutation();
@@ -69,6 +75,9 @@ export default function AssetManager() {
   const { allAssetModel } = useAssetModelMutation();
   const { allProjects } = useProjectMutation();
   const { allReasonIncreases } = useReasonIncreaseMutation();
+
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [openErrorModal, setOpenErrorModal] = useState(false);
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedAsset(params.row);
@@ -273,6 +282,12 @@ export default function AssetManager() {
 
   return (
     <Box sx={{ width: "100%" }}>
+      <ImportErrorDialog
+        open={openErrorModal}
+        onClose={() => setOpenErrorModal(false)}
+        errors={importErrors}
+      />
+
       <PageAction
         title="Quản lý tài sản"
         onNewClick={() => {
@@ -280,6 +295,8 @@ export default function AssetManager() {
           setSelectedAsset(null);
           setReadOnly(false);
         }}
+        onExport={() => exportAssetMutation.mutate()}
+        onImport={(file) => importAssetMutation.mutate(file)}
       />
       <Box p={2}>
         {showForm && (

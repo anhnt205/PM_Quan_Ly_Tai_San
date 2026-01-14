@@ -1,18 +1,16 @@
 import { Box } from "@mui/material";
-import React, { useState } from "react";
+import { useState } from "react";
 import PageAction from "../../components/common/PageAction";
-import { GridColDef, GridRowParams } from "@mui/x-data-grid";
+import { GridRowParams } from "@mui/x-data-grid";
 import ToolForm from "./components/ToolForm";
 import ToolTableCustom from "./components/ToolTableCustom";
 import ToolDetailSidebar from "./components/ToolDetailSidebar";
 import { useToolManagerMutation } from "./Mutation";
-//import ToolGroupItem from "./components/ToolGroupItem";
 import { DEFAULT_COLUMNS } from "./columnConfig";
-import ColumnConfigMenu from "./components/ColumnConfig";
 import { useDepartmentMutation } from "../Department/Mutation";
 import { useToolTypeMutation } from "../ToolType/Mutation";
 import { useUnitMutation } from "../Unit/Mutation";
-import { useToolGroupMutation } from "../ToolGroup/Mutation";
+import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 
 export default function ToolManager() {
   const [showForm, setShowForm] = useState(false);
@@ -21,6 +19,9 @@ export default function ToolManager() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
+
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [openErrorModal, setOpenErrorModal] = useState(false);
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
@@ -39,7 +40,11 @@ export default function ToolManager() {
   } = useToolManagerMutation(
     paginationModel.page,
     paginationModel.pageSize,
-    searchValue
+    searchValue,
+    (messages) => {
+      setImportErrors(messages);
+      setOpenErrorModal(true);
+    }
   );
   const { allDepartments } = useDepartmentMutation();
   const { toolTypes } = useToolTypeMutation();
@@ -77,6 +82,11 @@ export default function ToolManager() {
 
   return (
     <Box sx={{ width: "100%" }}>
+      <ImportErrorDialog
+        open={openErrorModal}
+        onClose={() => setOpenErrorModal(false)}
+        errors={importErrors}
+      />
       <PageAction
         title="Quản lý CCDC - Vật tư"
         onNewClick={() => {
