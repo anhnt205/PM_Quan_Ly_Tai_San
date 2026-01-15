@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../../../config/api.config";
 import { StaffType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
+import dayjs from "dayjs";
 
 export const useStaffMutation = (
   page: number,
@@ -9,6 +10,7 @@ export const useStaffMutation = (
   searchValue: string
 ) => {
   const queryClient = useQueryClient();
+
   const createMutation = useMutation({
     mutationFn: async (data: StaffType) => {
       const res = await api.post("/nhanvien", data);
@@ -120,7 +122,79 @@ export const useStaffMutation = (
     placeholderData: (previousData) => previousData,
   });
 
+  // Chuẩn hóa Mapping theo format Flutter toExportJson
+  const exportMutation = useMutation({
+    mutationFn: async () => {
+      const listRes = await api.get("/nhanvien", {
+        params: { idcongty: "ct001" },
+      });
+      const allStaffs = listRes.data;
+
+      const payload = allStaffs.map((s: any) => ({
+        "Mã nhân viên": s.id || "",
+        "Tên nhân viên": s.hoTen || "",
+        "Số điện thoại": s.diDong || "",
+        Email: s.emailCongViec || "",
+        "Chữ ký nháy": s.chuKyNhay ? s.chuKyNhay.split("/").pop() : "",
+        "Chữ ký thường": s.chuKyThuong ? s.chuKyThuong.split("/").pop() : "",
+        "Agreement UUId": s.agreementUUId || "",
+        "Mã Pin": s.pin || "",
+        "Phòng ban (Mã phòng ban)": s.phongBanId || "",
+        "Chức vụ (Mã chức vụ)": s.chucVuId || "",
+        "Ngày tạo": s.ngayTao || "",
+        "Ngày cập nhật": s.ngayCapNhat || "",
+      }));
+
+      const res = await api.post("/upload/export", payload, {
+        params: { sheetName: "Sheet1" },
+        responseType: "blob",
+      });
+
+      return res.data;
+    },
+    onSuccess: (data) => {
+      const url = window.URL.createObjectURL(new Blob([data]));
+      const link = document.createElement("a");
+      link.href = url;
+      const fileName = `nhan_vien_${dayjs().format("YYYYMMDD_HHmmss")}.xlsx`;
+      link.setAttribute("download", fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      showSuccessAlert("Xuất dữ liệu thành công");
+    },
+    onError: () => showErrorAlert("Xuất dữ liệu thất bại"),
+  });
+
+  const importExcelMutation = useMutation({
+    mutationFn: async (file: File) => {
+      // 1. Dùng FormData thay vì JSON để gửi binary như Flutter
+      const formData = new FormData();
+
+      formData.append("file", file);
+
+      const res = await api.post("/nhanvien/upload-from-excel", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["staffsPage"] });
+      showSuccessAlert("Import dữ liệu thành công");
+    },
+    onError: (error: any) => {
+      const errorMsg = error.response?.data?.message || "Lỗi khi nhập dữ liệu";
+      showErrorAlert(errorMsg);
+    },
+  });
+
   return {
+    exportMutation,
+    importExcelMutation,
     createMutation,
     updateMutation,
     deleteOneMutation,

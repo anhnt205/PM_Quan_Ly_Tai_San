@@ -4,8 +4,6 @@ import {
   Close,
   Delete,
   Search,
-  Settings,
-  TableView,
   Edit,
   TableChart,
 } from "@mui/icons-material";
@@ -32,6 +30,7 @@ import FieldDate from "../TextField/FieldDate";
 import { showConfirmAlert } from "../Alert";
 import { Dispatch, SetStateAction } from "react";
 import { FilterOption, FilterStatusGroup } from "./FilterStatusGroup";
+
 const CustomFilterPanel = (props: any) => {
   return (
     <GridFilterPanel

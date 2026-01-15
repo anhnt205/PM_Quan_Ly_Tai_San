@@ -1,22 +1,21 @@
-import { Delete, Download, Settings, Upload } from "@mui/icons-material";
+import { Delete } from "@mui/icons-material";
 import {
   Box,
-  Button,
   Chip,
+  CircularProgress,
+  Dialog,
+  DialogContent,
   IconButton,
-  ListItemIcon,
-  Menu,
-  MenuItem,
   Typography,
 } from "@mui/material";
-import React, { useState } from "react";
+import { useState } from "react";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-import Staffs from "../../data/Staff.json";
 import StaffForm from "./components/StaffForm";
 import { useStaffMutation } from "./Mutation";
-import { showConfirmAlert } from "../../components/Alert";
+import { showConfirmAlert, showErrorAlert } from "../../components/Alert";
+import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 
 export default function Staff() {
   const [showForm, setShowForm] = useState(false);
@@ -29,6 +28,8 @@ export default function Staff() {
     pageSize: 10,
     page: 0,
   });
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [openErrorDialog, setOpenErrorDialog] = useState(false);
 
   const {
     staffsPage,
@@ -38,6 +39,8 @@ export default function Staff() {
     deleteManyMutation,
     uploadMutation,
     isLoading,
+    exportMutation,
+    importExcelMutation,
   } = useStaffMutation(
     paginationModel.page,
     paginationModel.pageSize,
@@ -61,6 +64,24 @@ export default function Staff() {
   };
   const handleEdit = () => {
     setReadOnly(false);
+  };
+
+  const handleImport = (file: File) => {
+    importExcelMutation.mutate(file, {
+      onError: (error: any) => {
+        // Kiểm tra nếu server trả về danh sách lỗi (array)
+        const serverErrors = error.response?.data?.errors;
+        if (Array.isArray(serverErrors) && serverErrors.length > 0) {
+          setImportErrors(serverErrors);
+          setOpenErrorDialog(true);
+        } else {
+          // Nếu không có mảng lỗi cụ thể, hiện alert lỗi chung như cũ
+          showErrorAlert(
+            error.response?.data?.message || "Lỗi khi nhập dữ liệu"
+          );
+        }
+      },
+    });
   };
 
   const columns: GridColDef[] = [
@@ -193,10 +214,32 @@ export default function Staff() {
         onNewClick={() => {
           setShowForm(true);
           setSelectedStaff(null);
-          setReadOnly(false); // Set readOnly to false when creating a new staff
+          setReadOnly(false);
         }}
+        onExport={() => exportMutation.mutate()}
+        onImport={handleImport}
       />
       <Box p={2}>
+        <Dialog
+          open={exportMutation.isPending || importExcelMutation.isPending}
+          PaperProps={{
+            sx: {
+              borderRadius: 0,
+              boxShadow: "none",
+              border: "1px solid #d9d9d9",
+              minWidth: "200px",
+            },
+          }}
+        >
+          <DialogContent>
+            <Box display="flex" alignItems="center" gap={2}>
+              <CircularProgress size={20} color="inherit" thickness={4} />
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                Đang xử lý dữ liệu...
+              </Typography>
+            </Box>
+          </DialogContent>
+        </Dialog>
         {showForm && (
           <Box py={2}>
             <StaffForm
@@ -229,6 +272,11 @@ export default function Staff() {
           setSearchValue={setSearchValue}
         />
       </Box>
+      <ImportErrorDialog
+        open={openErrorDialog}
+        errors={importErrors}
+        onClose={() => setOpenErrorDialog(false)}
+      />
     </Box>
   );
 }
