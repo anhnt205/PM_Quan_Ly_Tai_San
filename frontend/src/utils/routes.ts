@@ -21,4 +21,5 @@ export const ROUTES = {
   TOOLHANDOVER: "/ban_giao_ccdc",
   REPORT: "/bao_cao",
   ACCOUNT: "/tai_khoan",
+  DASHBOARD: "/dashboard",
 } as const;
