@@ -1,22 +1,20 @@
-import { Delete, Download, Settings, Upload } from "@mui/icons-material";
+import { Delete } from "@mui/icons-material";
 import {
   Box,
-  Button,
-  Chip,
+  CircularProgress,
+  Dialog,
+  DialogContent,
   IconButton,
-  ListItemIcon,
-  Menu,
-  MenuItem,
   Typography,
 } from "@mui/material";
-import React, { useState } from "react";
+import { useState } from "react";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-import TypeAssets from "../../data/TypeAsset.json";
 import TypeAssetForm from "./components/TypeAssetForm";
 import { showConfirmAlert } from "../../components/Alert";
 import { useTypeAssetMutation } from "./Mutation";
+import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 
 export default function TypeAsset() {
   const [showForm, setShowForm] = useState(false);
@@ -24,6 +22,8 @@ export default function TypeAsset() {
   const [readOnly, setReadOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
@@ -31,12 +31,13 @@ export default function TypeAsset() {
   });
 
   const {
-    // typeAssets,
     allTypeAssets,
     createMutation,
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
+    importExcelMutation,
+    exportMutation,
     isLoading,
   } = useTypeAssetMutation(
     paginationModel.page,
@@ -44,9 +45,21 @@ export default function TypeAsset() {
     searchValue
   );
 
+  const handleImport = (file: File) => {
+    importExcelMutation.mutate(file, {
+      onError: (error: any) => {
+        if (error.message && error.message.includes("\n")) {
+          const errorList = error.message.split("\n");
+          setImportErrors(errorList);
+          setShowErrorDialog(true);
+        }
+      },
+    });
+  };
+
   const handleRowClick = (params: GridRowParams) => {
     setSelectedTypeAsset(params.row);
-    setReadOnly(true); // Set readOnly to true when viewing details
+    setReadOnly(true);
     setShowForm(true);
   };
 
@@ -118,15 +131,43 @@ export default function TypeAsset() {
           setSelectedTypeAsset(null);
           setReadOnly(false);
         }}
+        onExport={() => exportMutation.mutate(allTypeAssets)}
+        onImport={handleImport}
       />
       <Box p={2}>
+        <ImportErrorDialog
+          open={showErrorDialog}
+          onClose={() => setShowErrorDialog(false)}
+          errors={importErrors}
+        />
+
+        <Dialog
+          open={exportMutation.isPending || importExcelMutation.isPending}
+          PaperProps={{
+            sx: {
+              borderRadius: 0,
+              boxShadow: "none",
+              border: "1px solid #d9d9d9",
+              minWidth: "200px",
+            },
+          }}
+        >
+          <DialogContent>
+            <Box display="flex" alignItems="center" gap={2}>
+              <CircularProgress size={20} color="inherit" thickness={4} />
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                Đang xử lý dữ liệu loại tài sản...
+              </Typography>
+            </Box>
+          </DialogContent>
+        </Dialog>
         {showForm && (
           <Box py={2}>
             <TypeAssetForm
               onCancel={() => {
                 setShowForm(false);
                 setSelectedTypeAsset(null);
-                setReadOnly(false); // Reset readOnly when form is closed
+                setReadOnly(false);
               }}
               onEdit={handleEdit}
               selectedTypeAsset={selectedTypeAsset}

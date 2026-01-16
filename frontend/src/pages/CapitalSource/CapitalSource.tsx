@@ -1,19 +1,17 @@
-import { Delete, Download, Settings, Upload } from "@mui/icons-material";
+import { Delete } from "@mui/icons-material";
 import {
   Box,
-  Button,
   Chip,
+  CircularProgress,
+  Dialog,
+  DialogContent,
   IconButton,
-  ListItemIcon,
-  Menu,
-  MenuItem,
   Typography,
 } from "@mui/material";
-import React, { useState } from "react";
+import { useState } from "react";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-import CapitalSources from "../../data/CapitalSource.json";
 import CapitalSourceForm from "./components/CapitalSourceForm";
 import { useCapitalSourceMutation } from "./Mutation";
 import { showConfirmAlert } from "../../components/Alert";
@@ -36,6 +34,9 @@ export default function CapitalSource() {
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
+    importExcelMutation,
+    exportMutation,
+    allData,
     isLoading,
   } = useCapitalSourceMutation(
     paginationModel.page,
@@ -96,13 +97,10 @@ export default function CapitalSource() {
         return (
           <Chip
             label={isActive ? "Hoạt động" : "Không hoạt động"}
-            size="small" // Nên để small cho gọn trong bảng
+            size="small"
             sx={{
               bgcolor: isActive ? "#baf7cbff" : "#f5f5f5",
-
               color: isActive ? "#137333" : "#616161",
-
-              // Bỏ viền nếu không cần
               border: "none",
             }}
           />
@@ -164,8 +162,30 @@ export default function CapitalSource() {
           setSelectedCapitalSource(null);
           setReadOnly(false);
         }}
+        onExport={() => exportMutation.mutate(allData)}
+        onImport={(file) => importExcelMutation.mutate(file)}
       />
       <Box p={2}>
+        <Dialog
+          open={exportMutation.isPending || importExcelMutation.isPending}
+          PaperProps={{
+            sx: {
+              borderRadius: 0,
+              boxShadow: "none",
+              border: "1px solid #d9d9d9",
+              minWidth: "200px",
+            },
+          }}
+        >
+          <DialogContent>
+            <Box display="flex" alignItems="center" gap={2}>
+              <CircularProgress size={20} color="inherit" thickness={4} />
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                Đang xử lý dữ liệu nguồn vốn...
+              </Typography>
+            </Box>
+          </DialogContent>
+        </Dialog>
         {showForm && (
           <Box py={2}>
             <CapitalSourceForm

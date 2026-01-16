@@ -1,11 +1,18 @@
-import { Badge, Box, Chip, IconButton } from "@mui/material";
+import {
+  Box,
+  Chip,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  IconButton,
+  Typography,
+} from "@mui/material";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-import Projects from "../../data/Project.json";
 import ProjectForm from "./components/ProjectForm";
 import { Delete } from "@mui/icons-material";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useProjectMutation } from "./Mutation";
 import { showConfirmAlert } from "../../components/Alert";
 
@@ -27,6 +34,9 @@ export default function Project() {
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
+    exportMutation,
+    importExcelMutation,
+    allProjects,
     isLoading,
   } = useProjectMutation(
     paginationModel.page,
@@ -131,8 +141,30 @@ export default function Project() {
           setSelectedProject(null);
           setReadOnly(false);
         }}
+        onExport={() => exportMutation.mutate(allProjects)}
+        onImport={(file) => importExcelMutation.mutate(file)}
       />
       <Box p={2}>
+        <Dialog
+          open={exportMutation.isPending || importExcelMutation.isPending}
+          PaperProps={{
+            sx: {
+              borderRadius: 0,
+              boxShadow: "none",
+              border: "1px solid #d9d9d9",
+              minWidth: "200px",
+            },
+          }}
+        >
+          <DialogContent>
+            <Box display="flex" alignItems="center" gap={2}>
+              <CircularProgress size={20} color="inherit" thickness={4} />
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                Đang xử lý dữ liệu...
+              </Typography>
+            </Box>
+          </DialogContent>
+        </Dialog>
         {showForm && (
           <Box py={2}>
             <ProjectForm

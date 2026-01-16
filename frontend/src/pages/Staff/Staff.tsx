@@ -246,7 +246,7 @@ export default function Staff() {
               onCancel={() => {
                 setShowForm(false);
                 setSelectedStaff(null);
-                setReadOnly(false); // Reset readOnly when form is closed
+                setReadOnly(false);
               }}
               onEdit={handleEdit}
               selectedStaff={selectedStaff}

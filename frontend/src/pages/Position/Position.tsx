@@ -1,11 +1,18 @@
-import { Badge, Box, Checkbox, Chip, IconButton } from "@mui/material";
+import {
+  Box,
+  Checkbox,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  IconButton,
+  Typography,
+} from "@mui/material";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-import Positions from "../../data/Position.json";
 import ProjectForm from "./components/PositionForm";
 import { Delete } from "@mui/icons-material";
-import React, { useState } from "react";
+import { useState } from "react";
 import { showConfirmAlert } from "../../components/Alert";
 import { usePositionMutation } from "./Mutation";
 
@@ -27,7 +34,10 @@ export default function Position() {
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
+    importExcelMutation,
+    exportMutation,
     isLoading,
+    allPositions,
   } = usePositionMutation(
     paginationModel.page,
     paginationModel.pageSize,
@@ -202,8 +212,30 @@ export default function Position() {
           setSelectedPosition(null);
           setReadOnly(false);
         }}
+        onExport={() => exportMutation.mutate(allPositions)}
+        onImport={(file) => importExcelMutation.mutate(file)}
       />
       <Box p={2}>
+        <Dialog
+          open={exportMutation.isPending || importExcelMutation.isPending}
+          PaperProps={{
+            sx: {
+              borderRadius: 0,
+              boxShadow: "none",
+              border: "1px solid #d9d9d9",
+              minWidth: "200px",
+            },
+          }}
+        >
+          <DialogContent>
+            <Box display="flex" alignItems="center" gap={2}>
+              <CircularProgress size={20} color="inherit" thickness={4} />
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                Đang xử lý dữ liệu...
+              </Typography>
+            </Box>
+          </DialogContent>
+        </Dialog>
         {showForm && (
           <Box py={2}>
             <ProjectForm

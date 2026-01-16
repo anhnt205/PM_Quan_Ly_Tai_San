@@ -2,7 +2,7 @@ export interface DepartmentType {
   id: string;
   idCongTy?: string;
   tenPhongBan: string;
-  idNhomDonVi?: string;
+  idNhomDonvi?: string;
   idQuanLy?: string;
   hoTenQuanLy?: string;
   tenPhongCapTren?: string;
@@ -15,4 +15,7 @@ export interface DepartmentType {
   isKho?: boolean;
   isLanhDao?: boolean;
   loaiKho?: number;
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  isActive?: boolean;
 }

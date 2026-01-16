@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../../../config/api.config";
 import { PositionType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
+import * as XLSX from "xlsx";
 
 export const usePositionMutation = (
   page?: number,
@@ -40,6 +41,7 @@ export const usePositionMutation = (
       );
     },
   });
+
   const deleteOneMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await api.delete(`/chucvu/${id}`);
@@ -55,6 +57,7 @@ export const usePositionMutation = (
       );
     },
   });
+
   const deleteManyMutation = useMutation({
     mutationFn: async (ids: string[]) => {
       const res = await api.delete(`/chucvu/batch`, { data: ids });
@@ -87,12 +90,132 @@ export const usePositionMutation = (
     placeholderData: (previousData) => previousData,
   });
 
+  const { data: allPositions = [] } = useQuery({
+    queryKey: ["allPositions"],
+    queryFn: async () => {
+      const res = await api.get("/chucvu/congty/ct001");
+      return res.data?.data || [];
+    },
+  });
+
+  // 1. Chuyển EXPORT thành Mutation
+  const exportMutation = useMutation({
+    mutationFn: async (dataToExport: PositionType[]) => {
+      return new Promise((resolve) => {
+        // Giữ nguyên logic map dữ liệu của bạn
+        const worksheetData = dataToExport.map((item) => ({
+          "Mã chức vụ": item.id || "",
+          "Tên chức vụ": item.tenChucVu || "",
+          "Quản lý Nhân viên": item.quanLyNhanVien ? "TRUE" : "FALSE",
+          "Quản lý Phòng ban": item.quanLyPhongBan ? "TRUE" : "FALSE",
+          "Quản lý Dự án": item.quanLyDuAn ? "TRUE" : "FALSE",
+          "Quản lý Nguồn vốn": item.quanLyNguonVon ? "TRUE" : "FALSE",
+          "Quản lý Mô hình tài sản": item.quanLyMoHinhTaiSan ? "TRUE" : "FALSE",
+          "Quản lý Nhóm tài sản": item.quanLyNhomTaiSan ? "TRUE" : "FALSE",
+          "Quản lý Tài sản": item.quanLyTaiSan ? "TRUE" : "FALSE",
+          "Quản lý CCDC - Vật tư": item.quanLyCCDCVatTu ? "TRUE" : "FALSE",
+          "Có quyền Điều động tài sản": item.dieuDongTaiSan ? "TRUE" : "FALSE",
+          "Có quyền Điều động CCDC - Vật tư": item.dieuDongCCDCVatTu
+            ? "TRUE"
+            : "FALSE",
+          "Có quyền Bàn giao tài sản": item.banGiaoTaiSan ? "TRUE" : "FALSE",
+          "Có quyền Bàn giao CCDC - VT": item.banGiaoCCDCVatTu
+            ? "TRUE"
+            : "FALSE",
+          "Quản lý Báo cáo": item.baoCao ? "TRUE" : "FALSE",
+          "Ngày tạo": item.ngayTao || "",
+          "Ngày cập nhật": item.ngayCapNhat || "",
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "ChucVu");
+        XLSX.writeFile(workbook, "danh_sach_chuc_vu.xlsx");
+        resolve(true);
+      });
+    },
+    onSuccess: () => showSuccessAlert("Xuất file chức vụ thành công"),
+    onError: () => showErrorAlert("Lỗi khi xuất file Excel"),
+  });
+
+  const importExcelMutation = useMutation({
+    mutationFn: (file: File) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          try {
+            const data = new Uint8Array(e.target?.result as ArrayBuffer);
+            const workbook = XLSX.read(data, { type: "array" });
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData: any[][] = XLSX.utils.sheet_to_json(worksheet, {
+              header: 1,
+            });
+
+            const listChucVu: PositionType[] = [];
+            // Giữ nguyên helper b của bạn
+            const b = (val: any) =>
+              val === true || val?.toString().toUpperCase() === "TRUE";
+
+            for (let i = 1; i < jsonData.length; i++) {
+              const row = jsonData[i];
+              if (!row[1]) continue;
+
+              listChucVu.push({
+                id: row[0]?.toString() || "",
+                tenChucVu: row[1]?.toString() || "",
+                quanLyNhanVien: b(row[2]),
+                quanLyPhongBan: b(row[3]),
+                quanLyDuAn: b(row[4]),
+                quanLyNguonVon: b(row[5]),
+                quanLyMoHinhTaiSan: b(row[6]),
+                quanLyNhomTaiSan: b(row[7]),
+                quanLyTaiSan: b(row[8]),
+                quanLyCCDCVatTu: b(row[9]),
+                dieuDongTaiSan: b(row[10]),
+                dieuDongCCDCVatTu: b(row[11]),
+                banGiaoTaiSan: b(row[12]),
+                banGiaoCCDCVatTu: b(row[13]),
+                baoCao: b(row[14]),
+                idCongTy: "ct001",
+                ngayTao: row[15]?.toString() || new Date().toISOString(),
+                ngayCapNhat: row[16]?.toString() || new Date().toISOString(),
+                nguoiTao: "admin",
+                nguoiCapNhat: "admin",
+              });
+            }
+
+            if (listChucVu.length > 0) {
+              const res = await api.post("/chucvu/batch", listChucVu);
+              resolve(res.data);
+            } else {
+              reject(new Error("Không tìm thấy dữ liệu hợp lệ trong file"));
+            }
+          } catch (err) {
+            reject(err);
+          }
+        };
+        reader.onerror = (error) => reject(error);
+        reader.readAsArrayBuffer(file);
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["positionsPage"] });
+      showSuccessAlert("Import danh sách chức vụ thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(error.response?.data?.message || "Lỗi khi import chức vụ");
+    },
+  });
+
   return {
     createMutation,
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
+    importExcelMutation,
+    exportMutation,
     positionsPage: data,
+    allPositions,
     isLoading,
   };
 };

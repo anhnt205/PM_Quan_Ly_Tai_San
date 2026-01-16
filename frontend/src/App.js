@@ -3,7 +3,6 @@ import { ROUTES } from "./utils/routes";
 import Login from "./pages/Auth/Login";
 import Main from "./layout/Main";
 import { useSelector } from "react-redux";
-import { RootState } from "./redux/store";
 import Staff from "./pages/Staff/Staff";
 import DashBoard from "./pages/Dashboard/DashBoard";
 import Department from "./pages/Department/Department";

@@ -1,5 +1,5 @@
 export interface TypeAssetType {
   id: string;
-  idLoaiTS: string;
+  idLoaiTs: string;
   tenLoai: string;
 }
