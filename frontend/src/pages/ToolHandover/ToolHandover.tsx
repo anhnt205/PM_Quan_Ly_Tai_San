@@ -37,14 +37,13 @@ export default function ToolHandover() {
     pageSize: 10,
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [selectedDocuments, setSelectedDocuments] = useState<any | null>(null);
+  const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
   const [searchValue, setSearchValue] = useState("");
   const [showSignDocument, setShowSignDocument] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [rowToDelete, setRowToDelete] = useState<any>(null);
   const [readOnly, setReadOnly] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
-  console.log(selectedIds);
   const [searchParams] = useSearchParams();
   const type = searchParams.get("type");
   const handleEdit = () => setReadOnly(false);
@@ -132,7 +131,7 @@ export default function ToolHandover() {
     );
 
     if (document) {
-      setSelectedDocuments(document);
+      setSelectedDocument(document);
       setShowSignDocument(true);
     } else {
       console.error("Không tìm thấy dữ liệu cho ID:", id);
@@ -588,10 +587,10 @@ export default function ToolHandover() {
       {showSignDocument ? (
         <SignDocumentForm
           selectedIds={selectedIds}
-          documents={selectedDocuments}
+          document={selectedDocument}
           onCancel={() => {
             setShowSignDocument(false);
-            setSelectedDocuments([]);
+            setSelectedDocument([]);
           }}
           onSign={() => {
             setShowSignDocument(false);

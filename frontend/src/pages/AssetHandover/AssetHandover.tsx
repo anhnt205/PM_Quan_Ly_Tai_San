@@ -37,7 +37,7 @@ export default function AssetHandover() {
     pageSize: 10,
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [selectedDocuments, setSelectedDocuments] = useState<any | null>(null);
+  const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
   const [searchValue, setSearchValue] = useState("");
   const [showSignDocument, setShowSignDocument] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -132,7 +132,7 @@ export default function AssetHandover() {
     );
 
     if (document) {
-      setSelectedDocuments(document);
+      setSelectedDocument(document);
       setShowSignDocument(true);
     } else {
       console.error("Không tìm thấy dữ liệu cho ID:", id);
@@ -589,10 +589,10 @@ export default function AssetHandover() {
       {showSignDocument ? (
         <SignDocumentForm
           selectedIds={selectedIds}
-          documents={selectedDocuments}
+          document={selectedDocument}
           onCancel={() => {
             setShowSignDocument(false);
-            setSelectedDocuments([]);
+            setSelectedDocument([]);
           }}
           onSign={() => {
             setShowSignDocument(false);

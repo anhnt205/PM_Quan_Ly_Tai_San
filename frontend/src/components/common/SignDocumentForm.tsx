@@ -34,7 +34,7 @@ interface SignatureData {
 
 interface SignDocumentFormProps {
   selectedIds?: string[];
-  documents?: any;
+  document?: any;
   onCancel: () => void;
   onSign?: () => void;
   onDownload?: (fileName: string) => void;
@@ -45,7 +45,7 @@ interface SignDocumentFormProps {
 
 export default function SignDocumentForm({
   selectedIds,
-  documents,
+  document,
   onCancel,
   onSign,
   fullscreen = true,
@@ -141,25 +141,12 @@ export default function SignDocumentForm({
     };
   }, [pages]);
 
-  // --- Handlers ---
-
-  // Khi click vào PDF
-  const handlePageClick = (e: React.MouseEvent, pageIndex: number) => {
-    // Không cần xử lý gì
-  };
-
   // Cập nhật vị trí sau khi kéo thả (nhận tọa độ dưới dạng ratio)
   const handleUpdatePosition = (id: string, newX: number, newY: number) => {
     setSignatures((prev) =>
-      prev.map((sig) => (sig.id === id ? { ...sig, x: newX, y: newY } : sig))
+      prev.map((sig) => (sig.id === id ? { ...sig, x: newX, y: newY } : sig)),
     );
-  };
-
-  // Cập nhật trang khi chữ ký được kéo sang trang khác
-  const handleUpdatePage = (id: string, newPage: number) => {
-    setSignatures((prev) =>
-      prev.map((sig) => (sig.id === id ? { ...sig, page: newPage } : sig))
-    );
+    console.log(newX, newY);
   };
 
   // Xóa chữ ký
@@ -374,24 +361,25 @@ export default function SignDocumentForm({
                   (sig.page - 1) * (canvasDisplayHeight + pageMarginAndGap);
 
                 return (
-                  <DraggableSignature
-                    key={sig.id}
-                    {...sig}
-                    initialX={sig.x * canvasDisplayWidth}
-                    initialY={pageOffset + sig.y * canvasDisplayHeight}
-                    xRatio={sig.x}
-                    yRatio={sig.y}
-                    imgSrc={signatureImage}
-                    containerWidth={canvasDisplayWidth}
-                    containerHeight={canvasDisplayHeight}
-                    canvasWidth={canvas?.width || 0}
-                    canvasHeight={canvas?.height || 0}
-                    currentPage={sig.page}
-                    totalPages={pages.length}
-                    onUpdatePosition={handleUpdatePosition}
-                    onUpdatePage={handleUpdatePage}
-                    onDelete={handleDeleteSignature}
-                  />
+                  <></>
+                  // <DraggableSignature
+                  //   key={sig.id}
+                  //   {...sig}
+                  //   initialX={sig.x * canvasDisplayWidth}
+                  //   initialY={pageOffset + sig.y * canvasDisplayHeight}
+                  //   // xRatio={sig.x}
+                  //   // yRatio={sig.y}
+                  //   imgSrc={signatureImage}
+                  //   containerWidth={canvasDisplayWidth}
+                  //   // containerHeight={canvasDisplayHeight}
+                  //   // canvasWidth={canvas?.width || 0}
+                  //   // canvasHeight={canvas?.height || 0}
+                  //   // currentPage={sig.page}
+                  //   // totalPages={pages.length}
+                  //   onUpdatePosition={handleUpdatePosition}
+                  //   // onUpdatePage={handleUpdatePage}
+                  //   onDelete={handleDeleteSignature}
+                  // />
                 );
               })}
             </Box>

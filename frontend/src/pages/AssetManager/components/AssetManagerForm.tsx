@@ -89,7 +89,7 @@ export default function AssetManagerForm({
       idNhomTaiSan: "",
       ngayVaoSo: "",
       ngaySuDung: "",
-      idDuAn: "",
+      idDuDan: "",
       idNguonVon: "",
       kyHieu: "",
       soKyHieu: "",
@@ -170,6 +170,7 @@ export default function AssetManagerForm({
 
       formik.setValues({
         ...selectedAsset,
+        idDuDan: selectedAsset.idDuAn,
         taiSanConList: enrichedTaiSanConList,
       });
     } else {
@@ -370,7 +371,7 @@ export default function AssetManagerForm({
                     data={allProjects}
                     labelkey="tenDuAn"
                     formik={formik}
-                    field="idDuAn"
+                    field="idDuDan"
                     disabled={readOnly}
                   />
                 </Grid>

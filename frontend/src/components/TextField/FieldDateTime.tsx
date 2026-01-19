@@ -26,7 +26,6 @@ export default function FieldDateTime({
   disabled?: boolean;
 }) {
   const value = formik && field ? getIn(formik.values, field) : selectedDate;
-
   const setValue = (val: string) => {
     if (formik && field) {
       formik.setFieldValue(field, val);

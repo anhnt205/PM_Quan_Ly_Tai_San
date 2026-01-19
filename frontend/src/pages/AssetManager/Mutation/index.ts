@@ -40,7 +40,7 @@ export const useAssetManagerMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["assetsPage"] });
+      queryClient.invalidateQueries({ queryKey: ["assetsPage"], exact: false });
       showSuccessAlert("Tạo tài sản thành công");
     },
     onError: (error: any) => {
@@ -56,7 +56,7 @@ export const useAssetManagerMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["assetsPage"] });
+      queryClient.invalidateQueries({ queryKey: ["assetsPage"], exact: false });
       showSuccessAlert("Sửa tài sản thành công");
     },
     onError: (error: any) => {
@@ -71,7 +71,7 @@ export const useAssetManagerMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["assetsPage"] });
+      queryClient.invalidateQueries({ queryKey: ["assetsPage"], exact: false });
       showSuccessAlert("Xóa tài sản thành công");
     },
     onError: (error: any) => {
@@ -86,7 +86,7 @@ export const useAssetManagerMutation = (
       return res.data.message;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["assetsPage"] });
+      queryClient.invalidateQueries({ queryKey: ["assetsPage"], exact: false });
       showSuccessAlert(data || "Xóa tài sản thành công");
     },
     onError: (error: any) => {
@@ -174,7 +174,7 @@ export const useAssetManagerMutation = (
 
   // khauhaotaisan
   const { data: assetDepreciations = [] } = useQuery({
-    queryKey: ["assetsPage", date], // Key để cache dữ liệu
+    queryKey: ["assetDepreciationsPage", date], // Key để cache dữ liệu
     queryFn: async () => {
       const res = await api.get("/taisan/khauhaotaisan", {
         params: {

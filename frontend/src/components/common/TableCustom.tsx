@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   BarChart,
   Close,
@@ -30,7 +30,13 @@ import FieldDate from "../TextField/FieldDate";
 import { showConfirmAlert } from "../Alert";
 import { Dispatch, SetStateAction } from "react";
 import { FilterOption, FilterStatusGroup } from "./FilterStatusGroup";
-
+import {
+  canSign,
+  handleSignDocument,
+  isCheckShowShare,
+} from "../../pages/AssetTransfer/config";
+import { useSelector } from "react-redux";
+import { RootState } from "../../redux/store";
 const CustomFilterPanel = (props: any) => {
   return (
     <GridFilterPanel
@@ -56,7 +62,7 @@ interface Props {
   selectedIds?: string[];
   onSelectionChange?: (ids: string[]) => void;
   onDelete?: (ids: string[]) => void;
-  onSign?: (ids: string) => void;
+  onSign?: (fileName: string, item: any) => void;
   searchValue?: string;
   setSearchValue?: Dispatch<SetStateAction<string>>;
   showStatusFilter?: boolean;
@@ -67,6 +73,9 @@ interface Props {
   statusValue?: any;
   onStatusChange?: (val: any) => void;
   checkboxSelection?: boolean;
+  showDelete?: boolean;
+  handleSendToSigner?: (selectedItem: any[]) => void;
+  setDepartmentId?: Dispatch<SetStateAction<string>>;
 }
 
 export default function TableCustom({
@@ -92,17 +101,13 @@ export default function TableCustom({
   statusValue,
   onStatusChange,
   checkboxSelection = true,
+  showDelete = true,
+  handleSendToSigner,
+  setDepartmentId,
 }: Props) {
   const navigate = useNavigate();
-
-  React.useEffect(() => {
-    console.log("TableCustom selectedIds:", selectedIds);
-    console.log(
-      "TableCustom onSign:",
-      typeof onSign,
-      onSign ? "defined" : "undefined"
-    );
-  }, [selectedIds, onSign]);
+  const { user } = useSelector((state: RootState) => state.user);
+  const [selectedItem, setSelectedItem] = useState<any[]>([]);
 
   return (
     <Paper sx={{ my: 2, width: "100%" }}>
@@ -172,25 +177,35 @@ export default function TableCustom({
             {/* <Button variant="outlined" size="small" startIcon={<Settings />}>
               Cấu hình cột
             </Button> */}
-            {selectedIds.length === 1 && (
+            {selectedItem && canSign(selectedItem, user) && (
               <Button
                 size="small"
                 variant="contained"
                 color="primary"
                 startIcon={<Edit />}
                 onClick={(e) => {
-                  console.log(
-                    "Button Ký biên bản clicked! selectedIds:",
-                    selectedIds
-                  );
                   e.stopPropagation();
-                  onSign?.(selectedIds[0]);
+                  handleSignDocument(selectedItem[0], user, onSign);
                 }}
               >
                 Ký biên bản
               </Button>
             )}
-            {selectedIds.length > 0 && (
+            {selectedItem && isCheckShowShare(selectedItem) && (
+              <Button
+                size="small"
+                variant="contained"
+                color="primary"
+                startIcon={<Edit />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSendToSigner?.(selectedItem);
+                }}
+              >
+                Trình duyệt người ký ({selectedItem.length})
+              </Button>
+            )}
+            {selectedIds.length > 0 && showDelete && (
               <Button
                 size="small"
                 variant="contained"
@@ -199,7 +214,7 @@ export default function TableCustom({
                 onClick={async (e) => {
                   e.stopPropagation();
                   const confirm = await showConfirmAlert(
-                    `Xác nhận xóa ${selectedIds.length} bản ghi?`
+                    `Xác nhận xóa ${selectedIds.length} bản ghi?`,
                   );
                   if (confirm.isConfirmed) {
                     onDelete?.(selectedIds);
@@ -250,6 +265,12 @@ export default function TableCustom({
             }
 
             onSelectionChange?.(result);
+            const selectedRows = rows.filter((row) => {
+              const rowId = row.Id || row.id || row.soThe;
+              return result.includes(rowId);
+            });
+            setSelectedItem(selectedRows);
+            setDepartmentId?.(selectedRows[0]?.idDonViGiao);
           }}
           disableRowSelectionOnClick
           showToolbar

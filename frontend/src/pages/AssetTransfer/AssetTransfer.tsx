@@ -29,60 +29,86 @@ import SignDocumentForm from "./components/SignDocumentForm";
 import BienBanDialog from "./components/BienBanDialog";
 import TableCustom from "../../components/common/TableCustom";
 
-import { mockAssetTransfers as mockRows } from "../../data/AssetTransferData";
-
 // Import Types & Data
-import { AssetTransferData } from "./types";
+import { AssetTransferData, SignaturesData } from "./types";
 import PageAction from "../../components/common/PageAction";
 import { useParams, useSearchParams } from "react-router-dom";
+import { useAssetTranferMutation } from "./Mutation";
+import { useSelector } from "react-redux";
+import { findById, getPermissionSigning } from "../../utils/helpers";
+import {
+  getTypeInfo,
+  handleSendToSigner,
+  isCheckShowDelete,
+  showDownloadFile,
+  ShowPermissionSigning,
+  showShareStatus,
+  showStatus,
+  showStatusDocument,
+} from "./config";
+import { showConfirmAlert } from "../../components/Alert";
 
 export default function AssetTransfer() {
+  const { user } = useSelector((state: any) => state.user);
   // State
   const [showForm, setShowForm] = useState(false);
   const [selectedRow, setSelectedRow] = useState<AssetTransferData | null>(
-    null
+    null,
   );
   const [showSidebar, setShowSidebar] = useState(false);
-  const [isNewForm, setIsNewForm] = useState(false);
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
     pageSize: 10,
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [selectedDocuments, setSelectedDocuments] = useState<any | null>(null);
+  const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
   const [searchValue, setSearchValue] = useState("");
   const [showSignDocument, setShowSignDocument] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [rowToDelete, setRowToDelete] = useState<AssetTransferData | null>(
-    null
-  );
   const [showSignerSidebar, setShowSignerSidebar] = useState(true);
   const [showBienBanDialog, setShowBienBanDialog] = useState(false);
+  const [readOnly, setReadOnly] = useState(false);
 
   const [searchParams] = useSearchParams();
   const type = searchParams.get("type");
+  const [departmentId, setDepartmentId] = useState("");
+  const [assetTransferDetail, setAssetTransferDetail] = useState<any[]>([]);
+
+  const {
+    assetTranferPage,
+    allDepartments,
+    allStaff,
+    allUnits,
+    allCurrentStatus,
+    allAssetsByDonVi,
+    handleDownloadFile,
+    createMutation,
+    updateMutation,
+    updateManyMutation,
+    cancelMutation,
+    deleteOneMutation,
+    handleSignatureList,
+    signMutation,
+    isFetchingAssetsByDonVi,
+  } = useAssetTranferMutation(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchValue,
+    type ? Number(type) : undefined,
+    user?.taiKhoan?.tenDangNhap,
+    undefined,
+    departmentId,
+  );
 
   useEffect(() => {
     setSelectedIds([]);
-    setSelectedDocuments(null);
+    setSelectedDocument(null);
     setSearchValue("");
     setShowSignDocument(false);
     setSelectedRow(null);
     setShowForm(false);
     setShowSidebar(false);
+    setReadOnly(false);
   }, [type]);
-  const getTypeInfo = (typeValue: any) => {
-    switch (Number(typeValue)) {
-      case 1:
-        return { title: "Cấp phát tài sản", label: "cấp phát tài sản" };
-      case 2:
-        return { title: "Điều chuyển tài sản", label: "điều chuyển tài sản" };
-      case 3:
-        return { title: "Thu hồi tài sản", label: "thu hồi tài sản" };
-      default:
-        return { title: "Cấp phát tài sản", label: "cấp phát tài sản" };
-    }
-  };
 
   // Usage inside your component
   const { title, label } = getTypeInfo(type);
@@ -91,99 +117,68 @@ export default function AssetTransfer() {
     const data = params.row as AssetTransferData;
     setSelectedRow(data);
     setShowForm(true);
+    setReadOnly(true);
     setShowSidebar(true);
   };
 
-  const handleCloseForm = () => {
+  const handleEdit = () => {
+    setReadOnly(false);
+  };
+  const handleClose = () => {
+    setSelectedIds([]);
+    setSelectedDocument(null);
+    setSearchValue("");
+    setShowSignDocument(false);
+    setSelectedRow(null);
+    setShowForm(false);
+    setShowSidebar(false);
+    setReadOnly(false);
+  };
+
+  const handleSend = (items: any[]) => {
+    handleSendToSigner(items, updateManyMutation.mutateAsync, handleClose);
+  };
+  const handleSave = (values: any) => {
+    if (selectedRow) {
+      updateMutation.mutate(values);
+    } else {
+      createMutation.mutate(values);
+    }
     setShowForm(false);
     setSelectedRow(null);
-    setShowSidebar(false);
   };
-
-  const handleDelete = (ids: string[]) => {
-    console.log("Xóa các bản ghi:", ids);
-  };
-
-  const handleOpenDeleteDialog = (row: AssetTransferData) => {
-    setRowToDelete(row);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleCloseDeleteDialog = () => {
-    setDeleteDialogOpen(false);
-    setRowToDelete(null);
-  };
-
-  const handleConfirmDelete = () => {
-    if (rowToDelete) {
-      handleDelete([rowToDelete.id]);
-      console.log("Đã xóa:", rowToDelete.TenPhieu);
-    }
-    handleCloseDeleteDialog();
-  };
-
-  const handleSaveAssetTransfer = async (values: any) => {
-    try {
-      console.log("Lưu biên bản:", values);
-
-      // Nếu có file đính kèm, gửi file lên server
-      if (values.AttachmentFile) {
-        const formData = new FormData();
-        formData.append("file", values.AttachmentFile);
-
-        // Gửi file lên backend
-        const uploadResponse = await fetch(
-          "http://42.119.110.246:8389/api/upload",
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-
-        if (!uploadResponse.ok) {
-          console.error("Lỗi upload file");
-        }
+  const handleCancel = async () => {
+    if (selectedRow) {
+      const confirm = await showConfirmAlert(
+        `Hủy phiếu ${title} "${selectedRow?.id}"`,
+      );
+      if (confirm.isConfirmed) {
+        await cancelMutation.mutate(selectedRow?.id);
+        handleClose();
       }
-
-      // Gửi dữ liệu biên bản (không gửi file binary)
-      const dataToSend = { ...values };
-      delete dataToSend.AttachmentFile; // Xóa file binary khỏi payload
-
-      // Gọi API save biên bản (sẽ implement sau)
-      console.log("Dữ liệu gửi:", dataToSend);
-
-      // Đóng form sau khi save thành công
-      handleCloseForm();
-    } catch (error) {
-      console.error("Lỗi khi lưu biên bản:", error);
     }
   };
 
-  const handleSignAssets = (id: string) => {
-    console.log("Ký biên bản cho các tài sản:", id);
-    // Lấy thông tin document từ các dòng được chọn
-    const documents = mockRows.find((row: any) => row.Id === id);
-    setSelectedDocuments(documents);
-    setShowSignerSidebar(true); // Hiện sidebar khi ký
-    setShowSignDocument(true);
+  const handleSign = (data: SignaturesData[]) => {
+    signMutation.mutate(data);
   };
 
-  const handleViewDocument = (rowData: AssetTransferData) => {
-    console.log("Xem tài liệu:", rowData.Id);
-    setSelectedDocuments(rowData);
-    setShowSignerSidebar(false); // Ẩn sidebar khi xem
+  const handleViewSignAssets = async (fileName: string, item: any) => {
+    setSelectedDocument(fileName);
     setShowSignDocument(true);
+    setAssetTransferDetail(item.chiTietDieuDongTaiSanDTOS);
+    setShowSignerSidebar(true); // Hiện sidebar khi ký
   };
 
   const handleViewBienBan = (rowData: AssetTransferData) => {
-    console.log("Xem phiếu bàn giao:", rowData.Id);
-    setSelectedDocuments(rowData);
+    console.log("Xem phiếu bàn giao:", rowData.id);
+    setSelectedDocument(rowData);
     setShowBienBanDialog(true);
   };
 
-  const columns: GridColDef<AssetTransferData>[] = [
+  const columns: GridColDef<any>[] = [
     {
-      field: "TenPhieu",
+      field: "tenPhieu",
       headerName: "Phiếu ký nội sinh",
       width: 200,
       headerAlign: "center",
@@ -191,7 +186,7 @@ export default function AssetTransfer() {
     },
 
     {
-      field: "TrichYeu",
+      field: "trichYeu",
       headerName: "Trích yếu",
       width: 180,
       headerAlign: "center",
@@ -199,19 +194,19 @@ export default function AssetTransfer() {
     },
 
     {
-      field: "NgayTao",
+      field: "ngayHieuLuc",
       headerName: "Ngày có hiệu lực",
       width: 160,
       headerAlign: "center",
       align: "center",
-      valueFormatter: (value: any) => {
-        if (!value) return "";
-        return new Date(value).toLocaleString("vi-VN");
+      renderCell(params) {
+        if (!params.row?.tggnTuNgay) return "";
+        return new Date(params.row?.tggnTuNgay).toLocaleString("vi-VN");
       },
     },
 
     {
-      field: "NguoiTao",
+      field: "tenTrinhDuyetGiamDoc",
       headerName: "Trình duyệt biên bản",
       width: 160,
       headerAlign: "center",
@@ -219,33 +214,21 @@ export default function AssetTransfer() {
     },
 
     {
-      field: "TenFile",
+      field: "tenFile",
       headerName: "Tài liệu duyệt",
       width: 180,
       headerAlign: "center",
       align: "center",
       renderCell: (params) => {
         if (!params.value) return null;
-        return (
-          <Chip
-            label={
-              params.value.length > 20
-                ? params.value.substring(0, 15) + "..."
-                : params.value
-            }
-            size="small"
-            variant="outlined"
-            color="success"
-            icon={<Add sx={{ fontSize: 12 }} />}
-            clickable
-            title={params.value}
-          />
+        return showDownloadFile(params.value, () =>
+          handleDownloadFile(params.value),
         );
       },
     },
 
     {
-      field: "SoQuyetDinh",
+      field: "id",
       headerName: "Ký số",
       width: 150,
       headerAlign: "center",
@@ -253,7 +236,7 @@ export default function AssetTransfer() {
     },
 
     {
-      field: "ThoiGianTuNgay",
+      field: "tggnTuNgay",
       headerName: "Thời gian giao nhận từ ngày",
       width: 160,
       headerAlign: "center",
@@ -265,7 +248,7 @@ export default function AssetTransfer() {
     },
 
     {
-      field: "ThoiGianDenNgay",
+      field: "tggnDenNgay",
       headerName: "Thời gian giao nhận đến ngày",
       width: 160,
       headerAlign: "center",
@@ -277,58 +260,30 @@ export default function AssetTransfer() {
     },
 
     {
-      field: "IdDonViGiao",
+      field: "idDonViGiao",
       headerName: "Đơn vị giao",
       width: 180,
       headerAlign: "center",
       align: "center",
+      renderCell: (params) =>
+        findById(allDepartments, params.value)?.tenPhongBan,
     },
     {
-      field: "IdDonViNhan",
+      field: "idDonViNhan",
       headerName: "Đơn vị nhận",
       width: 180,
       headerAlign: "center",
       align: "center",
+      renderCell: (params) =>
+        findById(allDepartments, params.value)?.tenPhongBan,
     },
     {
-      field: "IdDonViDeNghi",
-      headerName: "Đơn vị đề nghị",
-      width: 180,
-      headerAlign: "center",
-      align: "center",
-    },
-
-    {
-      field: "TrangThaiPhieu",
+      field: "trangThai",
       headerName: "Trạng thái phiếu",
       width: 140,
       headerAlign: "center",
       align: "center",
-      renderCell: (params) => {
-        const statusMap: Record<
-          number,
-          { label: string; color: "default" | "info" | "error" | "success" }
-        > = {
-          0: { label: "Nháp", color: "default" },
-          1: { label: "Duyệt", color: "info" },
-          2: { label: "Hủy", color: "error" },
-          3: { label: "Hoàn thành", color: "success" },
-        };
-
-        const status = statusMap[params.value as number] || {
-          label: "KĐ",
-          color: "default",
-        };
-
-        return (
-          <Chip
-            label={status.label}
-            color={status.color}
-            size="small"
-            sx={{ minWidth: 80, fontWeight: 600 }}
-          />
-        );
-      },
+      renderCell: (params) => showStatus(params.row.trangThai ?? 0),
     },
 
     {
@@ -337,31 +292,8 @@ export default function AssetTransfer() {
       width: 140,
       headerAlign: "center",
       align: "center",
-      renderCell: (params) => {
-        const statusMap: Record<
-          number,
-          { label: string; color: "default" | "info" | "error" | "success" }
-        > = {
-          0: { label: "Không được phép ký", color: "info" },
-          1: { label: "Không được phép ký", color: "info" },
-          2: { label: "Không được phép ký", color: "info" },
-          3: { label: "Không được phép ký", color: "info" },
-        };
-
-        const status = statusMap[params.value as number] || {
-          label: "KĐ",
-          color: "default",
-        };
-
-        return (
-          <Chip
-            label={status.label}
-            color={status.color}
-            size="small"
-            sx={{ minWidth: 80, fontWeight: 600 }}
-          />
-        );
-      },
+      renderCell: (params) =>
+        ShowPermissionSigning(getPermissionSigning(params.row, user, allStaff)),
     },
 
     {
@@ -370,64 +302,21 @@ export default function AssetTransfer() {
       width: 140,
       headerAlign: "center",
       align: "center",
-      renderCell: (params) => {
-        const statusMap: Record<
-          number,
-          { label: string; color: "default" | "info" | "error" | "success" }
-        > = {
-          0: { label: "Chưa tạo biên bản", color: "error" },
-          1: { label: "Sắp quá hạn bàn giao", color: "default" },
-          /*2: { label: "Hủy", color: "error" },
-          3: { label: "Hoàn thành", color: "success" },*/
-        };
-
-        const status = statusMap[params.value as number] || {
-          label: "KĐ",
-          color: "default",
-        };
-
-        return (
-          <Chip
-            label={status.label}
-            color={status.color}
-            size="small"
-            sx={{ minWidth: 80, fontWeight: 600 }}
-          />
-        );
-      },
+      renderCell: (params) =>
+        showStatusDocument(params.row?.trangThaiPhieuDieuDong ?? 0),
     },
 
     {
-      field: "TrinhDuyet",
+      field: "share",
       headerName: "Trình duyệt",
       width: 140,
       headerAlign: "center",
       align: "center",
-      renderCell: (params) => {
-        const statusMap: Record<
-          number,
-          { label: string; color: "default" | "info" | "error" | "success" }
-        > = {
-          0: { label: "Được gửi", color: "success" },
-          1: { label: "Đã gửi", color: "success" },
-          2: { label: "Chưa gửi", color: "error" },
-          //3: { label: "Hoàn thành", color: "success" },
-        };
-
-        const status = statusMap[params.value as number] || {
-          label: "KĐ",
-          color: "default",
-        };
-
-        return (
-          <Chip
-            label={status.label}
-            color={status.color}
-            size="small"
-            sx={{ minWidth: 80, fontWeight: 600 }}
-          />
-        );
-      },
+      renderCell: (params) =>
+        showShareStatus(
+          params.row?.share ?? false,
+          params.row?.nguoiTao == user?.taiKhoan?.tenDangNhap,
+        ),
     },
 
     {
@@ -444,11 +333,16 @@ export default function AssetTransfer() {
           <Box sx={{ display: "flex", gap: 0.5, justifyContent: "center" }}>
             <Tooltip title="Xóa">
               <IconButton
-                size="small"
                 color="error"
-                onClick={(e) => {
+                disabled={!isCheckShowDelete(rowData, user)}
+                onClick={async (e) => {
                   e.stopPropagation();
-                  handleOpenDeleteDialog(rowData);
+                  const confirm = await showConfirmAlert(
+                    `Xóa phiếu ${title} "${rowData?.id}"`,
+                  );
+                  if (confirm.isConfirmed) {
+                    deleteOneMutation.mutate(rowData.id);
+                  }
                 }}
                 sx={{
                   padding: "4px",
@@ -461,7 +355,6 @@ export default function AssetTransfer() {
 
             <Tooltip title="Xem phiếu bàn giao">
               <IconButton
-                size="small"
                 color="primary"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -478,11 +371,17 @@ export default function AssetTransfer() {
 
             <Tooltip title="Xem">
               <IconButton
-                size="small"
                 color="success"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleViewDocument(rowData);
+                  setSelectedDocument(rowData.tenFile);
+                  setAssetTransferDetail(
+                    rowData.chiTietDieuDongTaiSanDTOS || [],
+                  );
+                  setShowSignerSidebar(false); // Ẩn sidebar khi xem
+                  setDepartmentId(rowData.idDonViGiao);
+                  setSelectedIds([rowData.id]);
+                  setShowSignDocument(true);
                 }}
                 sx={{
                   padding: "4px",
@@ -500,110 +399,36 @@ export default function AssetTransfer() {
 
   return (
     <>
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={handleCloseDeleteDialog}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle
-          sx={{ textAlign: "center", fontWeight: 600, fontSize: 18 }}
-        >
-          Xóa biên bản bàn giao
-        </DialogTitle>
-        <DialogContent sx={{ textAlign: "center", py: 3 }}>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              mb: 2,
-            }}
-          >
-            <Box
-              sx={{
-                width: 60,
-                height: 60,
-                borderRadius: "50%",
-                backgroundColor: "#ffcccc",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <DeleteIcon sx={{ fontSize: 32, color: "#f44336" }} />
-            </Box>
-          </Box>
-          <DialogContentText sx={{ color: "#666", fontSize: 14 }}>
-            Bạn có chắc muốn xóa <strong>"{rowToDelete?.TenPhieu}"</strong>
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: "center", pb: 2, gap: 2 }}>
-          <Button
-            onClick={handleCloseDeleteDialog}
-            sx={{
-              px: 3,
-              py: 1,
-              backgroundColor: "#f0f0f0",
-              color: "#333",
-              fontWeight: 500,
-              textTransform: "none",
-              fontSize: 14,
-              "&:hover": { backgroundColor: "#e0e0e0" },
-            }}
-          >
-            Không
-          </Button>
-          <Button
-            onClick={handleConfirmDelete}
-            variant="contained"
-            color="error"
-            sx={{
-              px: 3,
-              py: 1,
-              fontWeight: 500,
-              textTransform: "none",
-              fontSize: 14,
-            }}
-          >
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
-
       {/* Dialog Xem Biên Bản */}
       <BienBanDialog
         open={showBienBanDialog}
         onClose={() => setShowBienBanDialog(false)}
-        documentData={selectedDocuments}
+        documentData={selectedDocument}
       />
 
-      {showSignDocument ? (
+      {showSignDocument && !isFetchingAssetsByDonVi ? (
         <SignDocumentForm
           selectedIds={selectedIds}
-          documents={selectedDocuments}
-          onCancel={() => {
-            setShowSignDocument(false);
-            setSelectedDocuments([]);
-            setShowSignerSidebar(true);
-          }}
-          onSign={() => {
-            console.log("Ký tài liệu thành công");
-            setShowSignDocument(false);
-            setSelectedIds([]);
-            setSelectedDocuments([]);
-            setShowSignerSidebar(true);
-          }}
+          document={selectedDocument}
+          onCancel={handleClose}
+          onSign={handleSign}
+          assetTransferDetail={assetTransferDetail}
           showSignerSidebar={showSignerSidebar}
+          allAssetsByDonVi={allAssetsByDonVi.items}
+          allUnits={allUnits}
+          allCurrentStatus={allCurrentStatus}
           fullscreen={true}
+          staffs={allStaff}
+          handleSignatureList={handleSignatureList}
         />
       ) : (
         <>
           <PageAction
             title={title}
             onNewClick={() => {
-              setIsNewForm(true);
               setShowForm(true);
+              setSelectedRow(null);
+              setReadOnly(false);
             }}
           />
           <Box sx={{ p: 2 }}>
@@ -612,17 +437,22 @@ export default function AssetTransfer() {
               <Box sx={{ mb: 2 }}>
                 {/* Thêm margin bottom để tách biệt với bảng bên dưới */}
                 <AssetTransferForm
-                  key={isNewForm ? "new-form" : `edit-${selectedRow?.id}`}
-                  onCancel={() => {
-                    handleCloseForm();
-                    setIsNewForm(false);
-                  }}
-                  onSave={handleSaveAssetTransfer}
-                  onEdit={() => {}}
-                  readOnly={!!selectedRow && !isNewForm}
-                  selectedTransfer={isNewForm ? null : selectedRow}
+                  key={showForm ? "new-form" : `edit-${selectedRow?.id}`}
+                  onClose={handleClose}
+                  readOnly={readOnly}
+                  type={Number(type)}
+                  onEdit={handleEdit}
+                  onSave={handleSave}
+                  onCancel={handleCancel}
+                  selectedTransfer={selectedRow}
                   label={label}
-                  isSignedForm={!!selectedRow && !isNewForm}
+                  isSignedForm={!!selectedRow && !showForm}
+                  departments={allDepartments}
+                  staffs={allStaff}
+                  setDepartmentId={setDepartmentId}
+                  allAssetsByDonVi={allAssetsByDonVi}
+                  allUnits={allUnits}
+                  allCurrentStatus={allCurrentStatus}
                 />
               </Box>
             )}
@@ -655,18 +485,21 @@ export default function AssetTransfer() {
                 <TableCustom
                   title={`Phiếu duyệt ${label}`}
                   columns={columns}
-                  rows={mockRows}
-                  total={mockRows.length}
+                  rows={assetTranferPage.items}
+                  total={assetTranferPage.totalItems}
                   paginationModel={paginationModel}
                   onPaginationModelChange={setPaginationModel}
                   onRowClick={handleRowClick}
                   selectedIds={selectedIds}
                   onSelectionChange={setSelectedIds}
-                  onDelete={handleDelete}
-                  onSign={handleSignAssets}
+                  // onDelete={handleDelete}
+                  onSign={handleViewSignAssets}
                   searchValue={searchValue}
                   setSearchValue={setSearchValue}
                   showStatusFilter={true}
+                  showDelete={false}
+                  handleSendToSigner={handleSend}
+                  setDepartmentId={setDepartmentId}
                 />
               </Grid>
 

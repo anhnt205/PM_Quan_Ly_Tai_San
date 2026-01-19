@@ -28,7 +28,7 @@ import {
 } from "@mui/icons-material";
 
 // Định nghĩa kiểu dữ liệu cho trạng thái ký
-type SignStatus = "completed" | "pending" | "rejected" | "future";
+type SignStatus = "completed" | "pending";
 
 interface SignerStepProps {
   label: string;
@@ -37,26 +37,66 @@ interface SignerStepProps {
   date?: string;
 }
 
-// Mock data mô phỏng quy trình ký
-const steps: SignerStepProps[] = [
-  {
-    label: "Người ký nháy",
-    name: "Hoàng Đức Duy",
-    status: "completed",
-    date: "29/12/2025 15:30",
-  },
-  {
+const getSteps = (item: any): SignerStepProps[] => {
+  if (!item) return [];
+
+  const steps: SignerStepProps[] = [];
+
+  // 1. Người ký nháy
+  if (item.nguoiLapPhieuKyNhay) {
+    steps.push({
+      label: "Người ký nháy",
+      name: item.tenNguoiKyNhay || "Chưa xác định", // Giả định field name
+      status: item.trangThaiKyNhay ? "completed" : "pending",
+      date: item.ngayKyNhay, // Giả định có field ngày
+    });
+  }
+
+  // 2. Trưởng phòng xác nhận
+  if (item.quanTrongCanXacNhan) {
+    steps.push({
+      label: "Trưởng phòng xác nhận",
+      name: item.tenTruongPhongDonViGiao || "Chưa xác định",
+      status: item.truongPhongDonViGiaoXacNhan ? "completed" : "pending",
+    });
+  }
+
+  // 3. Phó phòng xác nhận
+  if (item.phoPhongDonViGiaoXacNhan) {
+    steps.push({
+      label: "Phó phòng xác nhận",
+      name: item.tenPhoPhongDonViGiao || "Chưa xác định",
+      status: item.phoPhongDonViGiaoXacNhan ? "completed" : "pending",
+    });
+  }
+
+  // 4. Trình duyệt cấp phòng (Luôn hiển thị theo code Flutter)
+  steps.push({
     label: "Trình duyệt cấp phòng",
-    name: "Đỗ Ánh",
-    status: "rejected", // Giả lập trạng thái bị từ chối/đang chờ xử lý lỗi
-    date: "29/12/2025 16:00",
-  },
-  {
+    name: item.tenTrinhDuyetCapPhong || "Chưa xác định",
+    status: item.trinhDuyetCapPhongXacNhan ? "completed" : "pending",
+  });
+
+  // 5. Danh sách người đại diện (Map từ listSignatory)
+  if (item.listSignatory && Array.isArray(item.listSignatory)) {
+    item.listSignatory.forEach((e: any) => {
+      steps.push({
+        label: "Người đại diện",
+        name: e.tenNguoiKy || "",
+        status: e.trangThai === 1 ? "completed" : "pending",
+      });
+    });
+  }
+
+  // 6. Trình duyệt ban giám đốc (Luôn hiển thị)
+  steps.push({
     label: "Trình duyệt ban giám đốc",
-    name: "Hoàng Đức Duy",
-    status: "future",
-  },
-];
+    name: item.tenTrinhDuyetGiamDoc || "Chưa xác định",
+    status: item.trinhDuyetGiamDocXacNhan ? "completed" : "pending",
+  });
+
+  return steps;
+};
 
 export default function SignerSidebar({
   selectedRow,
@@ -67,9 +107,15 @@ export default function SignerSidebar({
 }) {
   const theme = useTheme();
 
+  // Chuyển đổi data từ row sang định dạng Stepper
+  const dynamicSteps = React.useMemo(
+    () => getSteps(selectedRow),
+    [selectedRow],
+  );
+
+  if (!selectedRow) return null;
   if (!selectedRow) return null;
 
-  // Hàm lấy màu sắc dựa trên trạng thái
   const getStatusConfig = (status: SignStatus) => {
     switch (status) {
       case "completed":
@@ -79,13 +125,6 @@ export default function SignerSidebar({
           borderColor: alpha(theme.palette.success.main, 0.3),
           icon: <CheckCircle color="success" />,
         };
-      case "rejected":
-        return {
-          color: theme.palette.error.main,
-          bgcolor: alpha(theme.palette.error.main, 0.08),
-          borderColor: alpha(theme.palette.error.main, 0.3),
-          icon: <Cancel color="error" />,
-        };
       case "pending":
         return {
           color: theme.palette.warning.main,
@@ -93,7 +132,7 @@ export default function SignerSidebar({
           borderColor: alpha(theme.palette.warning.main, 0.3),
           icon: <History color="warning" />,
         };
-      default: // future
+      default: // future hoặc mặc định
         return {
           color: theme.palette.text.disabled,
           bgcolor: theme.palette.action.hover,
@@ -128,12 +167,9 @@ export default function SignerSidebar({
           <Box display="flex" alignItems="center" gap={1} mb={0.5}>
             <ErrorOutline fontSize="small" color="action" />
             <Typography variant="subtitle2" color="text.secondary">
-              Chi tiết Trạng thái ký
+              Chi tiết Trạng thái ký "Biên bản {selectedRow?.id}"
             </Typography>
           </Box>
-          <Typography variant="subtitle1" fontWeight={700} color="primary.main">
-            {selectedRow.SoQuyetDinh || "Chưa có số"}
-          </Typography>
         </Box>
         <IconButton size="small" onClick={onClose}>
           <VisibilityOff fontSize="small" />
@@ -144,7 +180,7 @@ export default function SignerSidebar({
       <Box p={3} sx={{ flex: 1, overflowY: "auto" }}>
         {/* Stepper */}
         <Stepper orientation="vertical" activeStep={1}>
-          {steps.map((step, index) => {
+          {dynamicSteps.map((step, index) => {
             const config = getStatusConfig(step.status);
 
             return (
@@ -180,7 +216,7 @@ export default function SignerSidebar({
                       fontWeight={600}
                       sx={{
                         color:
-                          step.status === "future"
+                          step.status === "pending"
                             ? "text.secondary"
                             : "text.primary",
                       }}

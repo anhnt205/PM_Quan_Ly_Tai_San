@@ -121,6 +121,8 @@ export default function AssetHandoverForm({
   onSave: (values: any) => void;
   label?: string;
 }) {
+  const [document, setDocument] = useState<File | string | any>("");
+
   const isNew =
     !selectedTransfer || (!selectedTransfer.id && !selectedTransfer.Id);
   const currentStatus =
@@ -140,7 +142,7 @@ export default function AssetHandoverForm({
   } = useAssetHandoverMutation(
     paginationModel.page,
     paginationModel.pageSize,
-    searchValue
+    searchValue,
   );
 
   const [expanded, setExpanded] = useState(true);
@@ -485,7 +487,8 @@ export default function AssetHandoverForm({
                                   formik={formik}
                                   field={`nguoiKyList.${index}.idNguoiKy`}
                                   data={staffs.filter(
-                                    (s: any) => s.phongBanId === item.idPhongBan
+                                    (s: any) =>
+                                      s.phongBanId === item.idPhongBan,
                                   )}
                                   labelkey="hoTen"
                                   disabled={isFormReadOnly}
@@ -505,7 +508,7 @@ export default function AssetHandoverForm({
                                 </Grid>
                               )}
                             </Grid>
-                          )
+                          ),
                         )}
                       </Grid>
                     )}
@@ -536,7 +539,8 @@ export default function AssetHandoverForm({
             <Box sx={{ backgroundColor: "#f5f5f5", borderRadius: "4px", p: 2 }}>
               <FileAttachmentInput
                 formik={formik}
-                field="tenFile"
+                fileName="tenFile"
+                setDocument={setDocument}
                 disabled={isFormReadOnly}
               />
 
@@ -713,15 +717,15 @@ export default function AssetHandoverForm({
                                   if (newValue) {
                                     formik.setFieldValue(
                                       `chiTietBanGiaoTaiSan.${index}.tenTaiSan`,
-                                      newValue.tenTaiSan
+                                      newValue.tenTaiSan,
                                     );
                                     formik.setFieldValue(
                                       `chiTietBanGiaoTaiSan.${index}.donViTinh`,
-                                      newValue.donViTinh
+                                      newValue.donViTinh,
                                     );
                                     formik.setFieldValue(
                                       `chiTietBanGiaoTaiSan.${index}.hienTrang`,
-                                      newValue.hienTrang || "1"
+                                      newValue.hienTrang || "1",
                                     );
                                   }
                                 }}
@@ -826,7 +830,7 @@ export default function AssetHandoverForm({
                                   newAssets.splice(index, 1);
                                   formik.setFieldValue(
                                     "chiTietBanGiaoTaiSan",
-                                    newAssets
+                                    newAssets,
                                   );
                                 }}
                               >
@@ -835,7 +839,7 @@ export default function AssetHandoverForm({
                             </CustomTableCell>
                           )}
                         </TableRow>
-                      )
+                      ),
                     )}
                   </TableBody>
                 </Table>

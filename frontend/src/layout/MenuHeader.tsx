@@ -258,7 +258,7 @@ export default function Menuheader() {
           sx={{ display: "flex", gap: 2 }}
           onClick={handleOpenSettingMenu}
         >
-          <Typography sx={{ color: "white", fontSize: 18 }}>
+          <Typography sx={{ color: "white", fontSize: 14 }}>
             {user?.taiKhoan?.hoTen}
           </Typography>
           <Avatar src={logo} />

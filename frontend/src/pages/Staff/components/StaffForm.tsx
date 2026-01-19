@@ -116,7 +116,7 @@ export default function StaffForm({
   const handleFileSelect = (
     file: File | null, // Nhận trực tiếp File hoặc null từ UploadButton
     fieldName: "chuKyNhay" | "chuKyThuong",
-    tempFieldName: "tempFileKyNhay" | "tempFileKyThuong"
+    tempFieldName: "tempFileKyNhay" | "tempFileKyThuong",
   ) => {
     if (file) {
       // Lưu tên file vào Formik để hiển thị/gửi DB
@@ -235,11 +235,7 @@ export default function StaffForm({
                         disabled={readOnly}
                         name="chuKyNhay"
                         onChange={(file: any) =>
-                          handleFileSelect(
-                            file,
-                            "chuKyThuong",
-                            "tempFileKyThuong"
-                          )
+                          handleFileSelect(file, "chuKyNhay", "tempFileKyNhay")
                         }
                         nameFile={formik.values.chuKyNhay}
                       />

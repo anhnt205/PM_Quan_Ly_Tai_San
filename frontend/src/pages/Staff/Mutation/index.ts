@@ -5,9 +5,9 @@ import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import dayjs from "dayjs";
 
 export const useStaffMutation = (
-  page: number,
-  pageSize: number,
-  searchValue: string,
+  page?: number,
+  pageSize?: number,
+  searchValue?: string
 ) => {
   const queryClient = useQueryClient();
 
@@ -190,6 +190,17 @@ export const useStaffMutation = (
     },
   });
 
+  const { data: allStaff = [] } = useQuery({
+    queryKey: ["staffsPage"], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/nhanvien", {
+        params: {
+          idcongty: "ct001",
+        },
+      });
+      return res.data;
+    },
+  });
   return {
     exportMutation,
     importExcelMutation,
@@ -199,6 +210,7 @@ export const useStaffMutation = (
     deleteManyMutation,
     uploadMutation,
     staffsPage: data,
+    allStaff,
     isLoading,
   };
 };

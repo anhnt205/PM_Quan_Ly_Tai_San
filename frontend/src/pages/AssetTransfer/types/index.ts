@@ -1,59 +1,81 @@
 export interface AssetTransferDetail {
-  assetId: string;
-  uom: string;
-  quantity: number;
-  status: string;
-  note: string;
+  id: string;
+  idDieuDongTaiSan: string;
+  idTaiSan: string;
+  soLuong: number;
+  ghiChu: string;
+  ngayTao: string;
+  ngayCapNhat: string;
+  nguoiTao: string;
+  nguoiCapNhat: string;
+  isActive: boolean;
+  hienTrang: string;
+  moTa: string;
+  daBanGiao: boolean;
+}
+
+export interface Signer {
+  id: string;
+  idTaiLieu: string;
+  idNguoiKy: string;
+  tenNguoiKy: string;
+  idPhongBan: string;
+  trangThai: number;
+}
+
+export interface SignaturesData {
+  id: string;
+  idTaiLieu: string;
+  loaiKy: number;
+  x: number;
+  y: number;
+  idNguoiKy: string;
+  chuKySo: string;
+  ngayKy: string;
+  stt: number;
+  chuKyNhay: string;
+  chuKyThuong: string;
+  scale: number;
+  width: number;
+  isLocked:boolean
 }
 
 export interface AssetTransferData {
-  [x: string]: any;
-  Id: string;
-  SoQuyetDinh: string;
-  TenPhieu: string;
-  IdDonViGiao: string;
-  IdDonViNhan: string;
-
-  IdNguoiKyNhay: string;
-  TrangThaiKyNhay: number; // TINYINT(1)
-  NguoiLapPhieuKyNhay: number; // TINYINT(1)
-
-  IdDonViDeNghi: string;
-  TGGNTuNgay: string | null;
-  TGGNDenNgay: string | null;
-
-  IdTrinhDuyetCapPhong: string;
-  TrinhDuyetCapPhongXacNhan: number; // TINYINT(1)
-
-  IdTrinhDuyetGiamDoc: string;
-  TrinhDuyetGiamDocXacNhan: number; // TINYINT(1)
-
-  DiaDiemGiaoNhan: string;
-  IdPhongBanXemPhieu: string;
-  NoiNhan: string;
-
-  TrangThai: number; // INT
-  IdCongTy: string;
-
-  NgayTao: string;
-  NgayCapNhat: string;
-  NguoiTao: string;
-  NguoiCapNhat: string;
-
-  CoHieuLuc: number; // TINYINT(1)
-  Loai: number; // INT
-  Share: number; // TINYINT(1)
-
-  TrichYeu: string;
-  DuongDanFile: string;
-  TenFile: string;
-  NgayKy: string | null;
-
-  DaBanGiao: number; // TINYINT(1)
-  ByStep: number; // TINYINT(1)
-  CoPhieuBanGiao: number; // TINYINT(1)
-
-  // Trường bổ trợ cho Frontend (Grid/Table con)
-  TaiLieu?: string; // Dùng để hiển thị Chip "Tài liệu..." trên Grid
-  assets: AssetTransferDetail[]; // Dữ liệu bảng chi tiết tài sản
+  id: string;
+  soQuyetDinh: string;
+  tenPhieu: string;
+  idDonViGiao: string;
+  idDonViNhan: string;
+  idNguoiKyNhay: string;
+  trangThaiKyNhay: boolean;
+  nguoiLapPhieuKyNhay: boolean;
+  idDonViDeNghi: string;
+  tgGnTuNgay: string;
+  tgGnDenNgay: string;
+  idTrinhDuyetCapPhong: string;
+  trinhDuyetCapPhongXacNhan: boolean;
+  idTrinhDuyetGiamDoc: string;
+  trinhDuyetGiamDocXacNhan: boolean;
+  diaDiemGiaoNhan: string;
+  idPhongBanXemPhieu: string;
+  noiNhan: string;
+  trangThai: number;
+  idCongTy: string;
+  ngayTao: string;
+  ngayCapNhat: string;
+  nguoiTao: string;
+  nguoiCapNhat: string;
+  coHieuLuc: number;
+  loai: number;
+  share: boolean;
+  trichYeu: string;
+  duongDanFile: string;
+  tenFile: string;
+  ngayKy: string;
+  daBanGiao: boolean;
+  byStep: boolean;
+  coPhieuBanGiao: boolean;
+  chiTietDieuDongTaiSanDTOS?: AssetTransferDetail[];
+  nguoiKyList?: Signer[];
+  initialChiTiet?: string[];
 }
