@@ -41,7 +41,7 @@ export default function Department() {
   } = useDepartmentMutation(
     paginationModel.page,
     paginationModel.pageSize,
-    searchValue
+    searchValue,
   );
 
   const handleRowClick = (params: GridRowParams) => {
@@ -148,7 +148,7 @@ export default function Department() {
               onCancel={() => {
                 setShowForm(false);
                 setSelectedDepartment(null);
-                setReadOnly(false); // Reset readOnly when form is closed
+                setReadOnly(false);
               }}
               onEdit={handleEdit}
               selectedDepartment={selectedDepartment}

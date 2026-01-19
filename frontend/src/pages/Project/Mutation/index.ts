@@ -3,11 +3,12 @@ import api from "../../../config/api.config";
 import { ProjectType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import * as XLSX from "xlsx";
+import { b, s } from "../../../utils/helpers";
 
 export const useProjectMutation = (
   page?: number,
   pageSize?: number,
-  searchValue?: string
+  searchValue?: string,
 ) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
@@ -21,7 +22,7 @@ export const useProjectMutation = (
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || error.message || "Tạo dự án thất bại"
+        error.response?.data?.message || error.message || "Tạo dự án thất bại",
       );
     },
   });
@@ -37,7 +38,7 @@ export const useProjectMutation = (
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || error.message || "Sửa dự án thất bại"
+        error.response?.data?.message || error.message || "Sửa dự án thất bại",
       );
     },
   });
@@ -52,7 +53,7 @@ export const useProjectMutation = (
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || error.message || "Xóa dự án thất bại"
+        error.response?.data?.message || error.message || "Xóa dự án thất bại",
       );
     },
   });
@@ -67,7 +68,7 @@ export const useProjectMutation = (
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || error.message || "Xóa dự án thất bại"
+        error.response?.data?.message || error.message || "Xóa dự án thất bại",
       );
     },
   });
@@ -99,36 +100,33 @@ export const useProjectMutation = (
     },
   });
 
-  // 1. Mutation cho EXPORT
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: ProjectType[]) => {
-      return new Promise((resolve) => {
-        // Tạo độ trễ giả lập 500ms để người dùng thấy Dialog đang xử lý
-        setTimeout(() => {
-          const worksheetData = dataToExport.map((item) => ({
-            "Mã dự án": item.id || "",
-            "Tên dự án": item.tenDuAn || "",
-            "Ghi chú": item.ghiChu || "",
-            "Hiệu lực": item.hieuLuc !== false ? "TRUE" : "FALSE",
-          }));
+      const payload = dataToExport.map((item) => ({
+        "Mã dự án": item.id || "",
+        "Tên dự án": item.tenDuAn || "",
+        "Ghi chú": item.ghiChu || "",
+        "Hiệu lực": item.hieuLuc ?? true,
+      }));
 
-          const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-          const workbook = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(workbook, worksheet, "DuAn");
-          XLSX.writeFile(workbook, "danh_sach_du_an.xlsx");
-          resolve(true);
-        }, 500);
+      const response = await api.post("/upload/export", payload, {
+        responseType: "blob",
       });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "danh_sach_du_an.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      return true;
     },
-    onSuccess: () => {
-      showSuccessAlert("Xuất file thành công!");
-    },
-    onError: () => {
-      showErrorAlert("Có lỗi khi xuất file Excel");
-    },
+    onSuccess: () => showSuccessAlert("Xuất file dự án thành công"),
+    onError: () => showErrorAlert("Lỗi khi kết nối server để xuất file"),
   });
 
-  // 2. Mutation cho IMPORT
   const importExcelMutation = useMutation({
     mutationFn: (file: File) => {
       return new Promise((resolve, reject) => {
@@ -140,55 +138,61 @@ export const useProjectMutation = (
             const worksheet = workbook.Sheets[workbook.SheetNames[0]];
             const jsonData: any[][] = XLSX.utils.sheet_to_json(worksheet, {
               header: 1,
+              defval: "",
             });
 
-            const listDuAn: ProjectType[] = [];
-            const b = (val: any) =>
-              val === true ||
-              val?.toString().toUpperCase() === "TRUE" ||
-              val === null ||
-              val === undefined;
+            const listImport: ProjectType[] = [];
+            const errorMessages: string[] = [];
 
             for (let i = 1; i < jsonData.length; i++) {
               const row = jsonData[i];
-              if (!row[1]) continue;
+              if (!row[0] && !row[1]) continue;
 
-              listDuAn.push({
-                id: row[0]?.toString() || "",
-                tenDuAn: row[1]?.toString() || "",
-                ghiChu: row[2]?.toString() || "",
-                hieuLuc: b(row[3]),
-                idCongTy: "ct001",
-                isActive: true,
-                nguoiTao: "admin",
-                nguoiCapNhat: "admin",
-              });
+              const id = s(row[0]);
+              const tenDuAn = s(row[1]);
+              const ghiChu = s(row[2]);
+              const hieuLuc = b(row[3], true);
+
+              const rowErrors: string[] = [];
+              if (!id) rowErrors.push("Mã dự án không được để trống");
+              if (!tenDuAn) rowErrors.push("Tên dự án không được để trống");
+
+              if (rowErrors.length > 0) {
+                errorMessages.push(`Dòng ${i + 1}: ${rowErrors.join(", ")}`);
+              } else {
+                listImport.push({
+                  id,
+                  tenDuAn,
+                  ghiChu,
+                  hieuLuc,
+                  idCongTy: "ct001",
+                  isActive: true,
+                  nguoiTao: "admin",
+                  nguoiCapNhat: "admin",
+                  ngayTao: new Date().toISOString(),
+                  ngayCapNhat: new Date().toISOString(),
+                });
+              }
             }
 
-            if (listDuAn.length > 0) {
-              const res = await api.post("/duan/batch", listDuAn);
+            if (errorMessages.length > 0) {
+              reject(new Error(errorMessages.join("\n")));
+            } else if (listImport.length > 0) {
+              const res = await api.post("/duan/batch", listImport);
               resolve(res.data);
             } else {
-              reject(new Error("File Excel không có dữ liệu hợp lệ"));
+              reject(new Error("File không có dữ liệu hợp lệ"));
             }
           } catch (err) {
-            reject(err);
+            reject(new Error("Lỗi đọc file hoặc lỗi hệ thống"));
           }
         };
-        reader.onerror = (error) => reject(error);
         reader.readAsArrayBuffer(file);
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projectsPage"] });
-      showSuccessAlert("Import dữ liệu dự án thành công!");
-    },
-    onError: (error: any) => {
-      showErrorAlert(
-        error.response?.data?.message ||
-          error.message ||
-          "Lỗi khi lưu dữ liệu import"
-      );
+      showSuccessAlert("Import dự án thành công");
     },
   });
 

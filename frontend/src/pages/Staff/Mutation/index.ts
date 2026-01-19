@@ -7,7 +7,7 @@ import dayjs from "dayjs";
 export const useStaffMutation = (
   page: number,
   pageSize: number,
-  searchValue: string
+  searchValue: string,
 ) => {
   const queryClient = useQueryClient();
 
@@ -24,7 +24,7 @@ export const useStaffMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Tạo nhân viên thất bại"
+          "Tạo nhân viên thất bại",
       );
     },
   });
@@ -42,7 +42,7 @@ export const useStaffMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Sửa nhân viên thất bại"
+          "Sửa nhân viên thất bại",
       );
     },
   });
@@ -59,7 +59,7 @@ export const useStaffMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa nhân viên thất bại"
+          "Xóa nhân viên thất bại",
       );
     },
   });
@@ -76,7 +76,7 @@ export const useStaffMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa nhân viên thất bại"
+          "Xóa nhân viên thất bại",
       );
     },
   });
@@ -122,7 +122,6 @@ export const useStaffMutation = (
     placeholderData: (previousData) => previousData,
   });
 
-  // Chuẩn hóa Mapping theo format Flutter toExportJson
   const exportMutation = useMutation({
     mutationFn: async () => {
       const listRes = await api.get("/nhanvien", {
@@ -169,7 +168,6 @@ export const useStaffMutation = (
 
   const importExcelMutation = useMutation({
     mutationFn: async (file: File) => {
-      // 1. Dùng FormData thay vì JSON để gửi binary như Flutter
       const formData = new FormData();
 
       formData.append("file", file);

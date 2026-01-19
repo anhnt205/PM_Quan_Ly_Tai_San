@@ -1,13 +1,20 @@
 import { Delete } from "@mui/icons-material";
-import { Box, IconButton } from "@mui/material";
-import React, { useState } from "react";
+import {
+  Box,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  IconButton,
+  Typography,
+} from "@mui/material";
+import { useState } from "react";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-import Units from "../../data/Unit.json";
 import TypeAssetForm from "./components/UnitForm";
 import { useUnitMutation } from "./Mutation";
 import { showConfirmAlert } from "../../components/Alert";
+import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 
 export default function Unit() {
   const [showForm, setShowForm] = useState(false);
@@ -16,27 +23,43 @@ export default function Unit() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
 
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
     page: 0,
   });
 
   const {
-    units,
     createMutation,
     updateMutation,
+    allUnits,
+    importExcelMutation,
+    exportMutation,
     deleteOneMutation,
     deleteManyMutation,
     isLoading,
   } = useUnitMutation(
     paginationModel.page,
     paginationModel.pageSize,
-    searchValue
+    searchValue,
   );
+
+  const handleImport = (file: File) => {
+    importExcelMutation.mutate(file, {
+      onError: (error: any) => {
+        if (error.message && error.message.includes("\n")) {
+          setImportErrors(error.message.split("\n"));
+          setShowErrorDialog(true);
+        }
+      },
+    });
+  };
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedUnit(params.row);
-    setReadOnly(true); // Set readOnly to true when viewing details
+    setReadOnly(true);
     setShowForm(true);
   };
 
@@ -62,7 +85,7 @@ export default function Unit() {
       headerAlign: "center",
     },
     {
-      field: "ten",
+      field: "tenDonVi",
       headerName: "Tên đơn vị tính",
       flex: 1,
       minWidth: 150,
@@ -108,7 +131,28 @@ export default function Unit() {
           setSelectedUnit(null);
           setReadOnly(false);
         }}
+        onExport={() => exportMutation.mutate(allUnits)}
+        onImport={handleImport}
       />
+
+      <ImportErrorDialog
+        open={showErrorDialog}
+        onClose={() => setShowErrorDialog(false)}
+        errors={importErrors}
+      />
+
+      {/* Dialog Loading */}
+      <Dialog open={exportMutation.isPending || importExcelMutation.isPending}>
+        <DialogContent>
+          <Box display="flex" alignItems="center" gap={2}>
+            <CircularProgress size={20} />
+            <Typography variant="body2">
+              Đang xử lý dữ liệu đơn vị tính...
+            </Typography>
+          </Box>
+        </DialogContent>
+      </Dialog>
+
       <Box p={2}>
         {showForm && (
           <Box py={2}>
@@ -116,7 +160,7 @@ export default function Unit() {
               onCancel={() => {
                 setShowForm(false);
                 setSelectedUnit(null);
-                setReadOnly(false); // Reset readOnly when form is closed
+                setReadOnly(false);
               }}
               onEdit={handleEdit}
               selectedUnit={selectedUnit}
@@ -128,8 +172,8 @@ export default function Unit() {
         <TableCustom
           title="Quản lý đơn vị tính"
           columns={columns}
-          rows={units.items}
-          total={units.totalItems}
+          rows={allUnits}
+          total={allUnits.length}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
           loading={isLoading}
@@ -139,6 +183,7 @@ export default function Unit() {
           onDelete={deleteManyMutation.mutate}
           searchValue={searchValue}
           setSearchValue={setSearchValue}
+          paginationMode="client"
         />
       </Box>
     </Box>

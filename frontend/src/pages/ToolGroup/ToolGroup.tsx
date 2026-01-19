@@ -1,13 +1,20 @@
-import { Badge, Box, Chip, IconButton } from "@mui/material";
+import {
+  Box,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  IconButton,
+  Typography,
+} from "@mui/material";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-import ToolGroups from "../../data/ToolGroup.json";
 import { Delete } from "@mui/icons-material";
 import ToolGroupForm from "./components/ToolGroupForm";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useToolGroupMutation } from "./Mutation";
 import { showConfirmAlert } from "../../components/Alert";
+import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 
 export default function ToolGroup() {
   const [showForm, setShowForm] = useState(false);
@@ -16,6 +23,9 @@ export default function ToolGroup() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
 
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
     page: 0,
@@ -23,16 +33,31 @@ export default function ToolGroup() {
 
   const {
     tooGroups,
+    allData,
     createMutation,
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
+    importExcelMutation,
+    exportMutation,
     isLoading,
   } = useToolGroupMutation(
     paginationModel.page,
     paginationModel.pageSize,
-    searchValue
+    searchValue,
   );
+
+  const handleImport = (file: File) => {
+    importExcelMutation.mutate(file, {
+      onError: (error: any) => {
+        if (error.message && error.message.includes("\n")) {
+          const errorList = error.message.split("\n");
+          setImportErrors(errorList);
+          setShowErrorDialog(true);
+        }
+      },
+    });
+  };
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedToolGroup(params.row);
@@ -128,7 +153,36 @@ export default function ToolGroup() {
           setSelectedToolGroup(null);
           setReadOnly(false);
         }}
+        onExport={() => exportMutation.mutate(allData)}
+        onImport={handleImport}
       />
+      <ImportErrorDialog
+        open={showErrorDialog}
+        onClose={() => setShowErrorDialog(false)}
+        errors={importErrors}
+      />
+
+      <Dialog
+        open={exportMutation.isPending || importExcelMutation.isPending}
+        PaperProps={{
+          sx: {
+            borderRadius: 0,
+            boxShadow: "none",
+            border: "1px solid #d9d9d9",
+            minWidth: "240px",
+          },
+        }}
+      >
+        <DialogContent>
+          <Box display="flex" alignItems="center" gap={2}>
+            <CircularProgress size={20} color="inherit" thickness={4} />
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              Đang xử lý dữ liệu nhóm CCDC...
+            </Typography>
+          </Box>
+        </DialogContent>
+      </Dialog>
+
       <Box p={2}>
         {showForm && (
           <Box py={2}>
@@ -136,7 +190,7 @@ export default function ToolGroup() {
               onCancel={() => {
                 setShowForm(false);
                 setSelectedToolGroup(null);
-                setReadOnly(false); // Reset readOnly when form is closed
+                setReadOnly(false);
               }}
               onEdit={handleEdit}
               selectedToolGroup={selectedToolGroup}

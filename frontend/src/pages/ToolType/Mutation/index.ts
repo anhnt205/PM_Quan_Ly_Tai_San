@@ -2,13 +2,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../../../config/api.config";
 import { ToolTypeType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
+import * as XLSX from "xlsx";
+import { s } from "../../../utils/helpers";
 
 export const useToolTypeMutation = (
   page?: number,
   pageSize?: number,
-  searchValue?: string
+  searchValue?: string,
 ) => {
   const queryClient = useQueryClient();
+
   const createMutation = useMutation({
     mutationFn: async (data: ToolTypeType) => {
       const res = await api.post("/loaiccdccon", data);
@@ -22,7 +25,7 @@ export const useToolTypeMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Tạo loại ccdc thất bại"
+          "Tạo loại ccdc thất bại",
       );
     },
   });
@@ -40,10 +43,11 @@ export const useToolTypeMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Sửa loại ccdc thất bại"
+          "Sửa loại ccdc thất bại",
       );
     },
   });
+
   const deleteOneMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await api.delete(`/loaiccdccon/${id}`);
@@ -57,10 +61,11 @@ export const useToolTypeMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa loại ccdc thất bại"
+          "Xóa loại ccdc thất bại",
       );
     },
   });
+
   const deleteManyMutation = useMutation({
     mutationFn: async (ids: string[]) => {
       const res = await api.delete(`/loaiccdccon/batch`, { data: ids });
@@ -74,7 +79,7 @@ export const useToolTypeMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa loại ccdc thất bại"
+          "Xóa loại ccdc thất bại",
       );
     },
   });
@@ -108,11 +113,132 @@ export const useToolTypeMutation = (
     placeholderData: (previousData) => previousData,
   });
 
+  const { data: ccdcGroups = [] } = useQuery({
+    queryKey: ["ccdcGroups"],
+    queryFn: async () => {
+      const res = await api.get("/nhomccdc", {
+        params: { idcongty: "ct001" },
+      });
+      return res.data;
+    },
+  });
+
+  const exportMutation = useMutation({
+    mutationFn: async (dataToExport: ToolTypeType[]) => {
+      const payload = dataToExport.map((item) => ({
+        "Mã loại CCDC": item.id || "",
+        "Mã loại CCDC cha": item.idLoaiCCDC || "",
+        "Tên loại CCDC": item.tenLoai || "",
+      }));
+
+      const response = await api.post("/upload/export", payload, {
+        responseType: "blob",
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "danh_sach_loai_ccdc.xlsx");
+      document.body.appendChild(link);
+      link.click();
+
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      return true;
+    },
+    onSuccess: () => showSuccessAlert("Xuất file loại CCDC thành công"),
+    onError: () => showErrorAlert("Lỗi khi kết nối server để xuất file"),
+  });
+
+  const importExcelMutation = useMutation({
+    mutationFn: (file: File) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          try {
+            const data = new Uint8Array(e.target?.result as ArrayBuffer);
+            const workbook = XLSX.read(data, { type: "array" });
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+
+            const jsonData: any[][] = XLSX.utils.sheet_to_json(worksheet, {
+              header: 1,
+              defval: "",
+            });
+
+            const listImport: ToolTypeType[] = [];
+            const errorMessages: string[] = [];
+
+            for (let i = 1; i < jsonData.length; i++) {
+              const row = jsonData[i];
+
+              if (!row[0] && !row[1] && !row[2]) continue;
+
+              const id = s(row[0]);
+              const idLoaiCCDC = s(row[1]);
+              const tenLoai = s(row[2]);
+
+              const rowErrors: string[] = [];
+
+              if (!id) {
+                rowErrors.push("Mã loại CCDC không được để trống");
+              }
+
+              if (!idLoaiCCDC) {
+                rowErrors.push("Mã loại CCDC cha không được để trống");
+              } else {
+                const parentExists = ccdcGroups.some(
+                  (g: any) => g.id === idLoaiCCDC,
+                );
+                if (!parentExists) {
+                  rowErrors.push(
+                    `Mã loại CCDC cha không tồn tại ${idLoaiCCDC}`,
+                  );
+                }
+              }
+
+              if (!tenLoai) {
+                rowErrors.push("Tên loại CCDC không được để trống");
+              }
+
+              if (rowErrors.length > 0) {
+                errorMessages.push(`Dòng ${i + 1}: ${rowErrors.join(", ")}`);
+              } else {
+                listImport.push({ id, idLoaiCCDC, tenLoai });
+              }
+            }
+
+            if (errorMessages.length > 0) {
+              reject(new Error(errorMessages.join("\n")));
+            } else if (listImport.length > 0) {
+              const res = await api.post("/loaiccdccon/batch", listImport);
+              resolve(res.data);
+            } else {
+              reject(new Error("File không có dữ liệu hợp lệ"));
+            }
+          } catch (err) {
+            reject(new Error("Lỗi đọc file hoặc lỗi hệ thống"));
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["toolTypesPage"] });
+      queryClient.invalidateQueries({ queryKey: ["toolTypes"] });
+      showSuccessAlert("Import loại CCDC thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(`Import dữ liệu thất bại: \n${error.message}`);
+    },
+  });
+
   return {
     createMutation,
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
+    exportMutation,
+    importExcelMutation,
     toolTypes,
     toolTypesPage: data,
     isLoading,

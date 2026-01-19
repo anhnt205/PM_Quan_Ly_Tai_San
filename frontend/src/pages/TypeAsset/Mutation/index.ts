@@ -3,12 +3,13 @@ import api from "../../../config/api.config";
 import { TypeAssetType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import * as XLSX from "xlsx";
+import { s } from "../../../utils/helpers";
 
 export const useTypeAssetMutation = (
   page?: number,
   pageSize?: number,
   searchValue?: string,
-  assetGroup?: string
+  assetGroup?: string,
 ) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
@@ -24,7 +25,7 @@ export const useTypeAssetMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Tạo loại ccdc thất bại"
+          "Tạo loại ccdc thất bại",
       );
     },
   });
@@ -42,10 +43,11 @@ export const useTypeAssetMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Sửa loại ccdc thất bại"
+          "Sửa loại ccdc thất bại",
       );
     },
   });
+
   const deleteOneMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await api.delete(`/loaitaisancon/${id}`);
@@ -59,10 +61,11 @@ export const useTypeAssetMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa loại ccdc thất bại"
+          "Xóa loại ccdc thất bại",
       );
     },
   });
+
   const deleteManyMutation = useMutation({
     mutationFn: async (ids: string[]) => {
       const res = await api.delete(`/loaitaisancon/batch`, { data: ids });
@@ -76,7 +79,7 @@ export const useTypeAssetMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa loại ccdc thất bại"
+          "Xóa loại ccdc thất bại",
       );
     },
   });
@@ -130,22 +133,29 @@ export const useTypeAssetMutation = (
 
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: TypeAssetType[]) => {
-      return new Promise((resolve) => {
-        const worksheetData = dataToExport.map((item) => ({
-          "Mã loại tài sản con": item.id || "",
-          "Mã loại tài sản cha": item.idLoaiTs || "",
-          "Tên loại tài sản": item.tenLoai || "",
-        }));
+      const payload = dataToExport.map((item) => ({
+        "Mã loại tài sản": item.id || "",
+        "Mã loại tài sản cha": item.idLoaiTs || "",
+        "Tên loại tài sản con": item.tenLoai || "",
+      }));
 
-        const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "LoaiTaiSanCon");
-        XLSX.writeFile(workbook, "danh_sach_loai_tai_san_con.xlsx");
-        resolve(true);
+      const response = await api.post("/upload/export", payload, {
+        responseType: "blob",
       });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "danh_sach_loai_tai_san_con.xlsx");
+      document.body.appendChild(link);
+      link.click();
+
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      return true;
     },
     onSuccess: () => showSuccessAlert("Xuất file loại tài sản thành công"),
-    onError: () => showErrorAlert("Lỗi khi xuất file"),
+    onError: () => showErrorAlert("Lỗi khi kết nối server để xuất file"),
   });
 
   const importExcelMutation = useMutation({
@@ -157,61 +167,73 @@ export const useTypeAssetMutation = (
             const data = new Uint8Array(e.target?.result as ArrayBuffer);
             const workbook = XLSX.read(data, { type: "array" });
             const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+
             const jsonData: any[][] = XLSX.utils.sheet_to_json(worksheet, {
               header: 1,
+              defval: "",
             });
 
             const listImport: TypeAssetType[] = [];
-            const errors: string[] = [];
+            const errorMessages: string[] = [];
 
             for (let i = 1; i < jsonData.length; i++) {
               const row = jsonData[i];
+
               if (!row[0] && !row[1] && !row[2]) continue;
 
-              const id = row[0]?.toString().trim() || "";
-              const idLoaiTs = row[1]?.toString().trim() || "";
-              const tenLoai = row[2]?.toString().trim() || "";
+              const id = s(row[0]);
+              const idLoaiTs = s(row[1]);
+              const tenLoai = s(row[2]);
 
               const rowErrors: string[] = [];
 
-              if (!id) rowErrors.push("Mã loại con trống");
-              if (!tenLoai) rowErrors.push("Tên loại trống");
-
-              const parentExists = assetGroups.some(
-                (group: any) => group.id === idLoaiTs
-              );
+              if (!id) {
+                rowErrors.push("Mã loại tài sản không được để trống");
+              }
 
               if (!idLoaiTs) {
-                rowErrors.push("Mã loại cha trống");
-              } else if (!parentExists) {
-                rowErrors.push(`Mã cha ${idLoaiTs} không tồn tại`);
+                rowErrors.push("Mã loại tài sản cha không được để trống");
+              } else {
+                const parentExists = assetGroups.some(
+                  (g: any) => g.id === idLoaiTs,
+                );
+                if (!parentExists) {
+                  rowErrors.push(
+                    `Mã loại tài sản cha không tồn tại ${idLoaiTs}`,
+                  );
+                }
+              }
+
+              if (!tenLoai) {
+                rowErrors.push("Tên loại tài sản không được để trống");
               }
 
               if (rowErrors.length > 0) {
-                errors.push(`Dòng ${i + 1}: ${rowErrors.join(", ")}`);
+                errorMessages.push(`Dòng ${i + 1}: ${rowErrors.join(", ")}`);
               } else {
                 listImport.push({ id, idLoaiTs, tenLoai });
               }
             }
 
-            if (errors.length > 0) {
-              reject(new Error(errors.join("\n")));
+            if (errorMessages.length > 0) {
+              reject(new Error(errorMessages.join("\n")));
             } else if (listImport.length > 0) {
               const res = await api.post("/loaitaisancon/batch", listImport);
               resolve(res.data);
             } else {
-              reject(new Error("File không có dữ liệu"));
+              reject(new Error("File không có dữ liệu hợp lệ"));
             }
           } catch (err) {
-            reject(err);
+            reject(new Error("Lỗi định dạng file hoặc lỗi hệ thống"));
           }
         };
         reader.readAsArrayBuffer(file);
       });
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["typeAssetsByAssetGroup"] });
       queryClient.invalidateQueries({ queryKey: ["allTypeAssets"] });
-      showSuccessAlert("Import dữ liệu thành công");
+      showSuccessAlert("Import loại tài sản thành công");
     },
     onError: (error: any) => {
       if (!error.message.includes("\n")) {

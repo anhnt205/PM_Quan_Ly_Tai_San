@@ -1,14 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import api from "../../../config/api.config";
 import { ToolGroupType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
+import * as XLSX from "xlsx";
+import { b, formatDateTime, s } from "../../../utils/helpers";
 
 export const useToolGroupMutation = (
   page?: number,
   pageSize?: number,
-  searchValue?: string
+  searchValue?: string,
 ) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
@@ -24,7 +24,7 @@ export const useToolGroupMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Tạo nhóm ccdc thất bại"
+          "Tạo nhóm ccdc thất bại",
       );
     },
   });
@@ -42,10 +42,11 @@ export const useToolGroupMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Sửa nhóm ccdc thất bại"
+          "Sửa nhóm ccdc thất bại",
       );
     },
   });
+
   const deleteOneMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await api.delete(`/nhomccdc/${id}`);
@@ -59,10 +60,11 @@ export const useToolGroupMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa nhóm ccdc thất bại"
+          "Xóa nhóm ccdc thất bại",
       );
     },
   });
+
   const deleteManyMutation = useMutation({
     mutationFn: async (ids: string[]) => {
       const res = await api.delete(`/nhomccdc/batch`, { data: ids });
@@ -76,7 +78,7 @@ export const useToolGroupMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa nhóm ccdc thất bại"
+          "Xóa nhóm ccdc thất bại",
       );
     },
   });
@@ -110,11 +112,120 @@ export const useToolGroupMutation = (
     placeholderData: (previousData) => previousData,
   });
 
+  const exportMutation = useMutation({
+    mutationFn: async (dataToExport: ToolGroupType[]) => {
+      const payload = dataToExport.map((item) => ({
+        "Mã nhóm CCDC": item.id || "",
+        "Tên nhóm CCDC": item.ten || "",
+        "Hiệu lực": item.hieuLuc ?? false,
+        "Ngày tạo": item.ngayTao
+          ? item.ngayTao.replace("T", " ").split(".")[0]
+          : "",
+        "Ngày cập nhật": item.ngayCapNhat
+          ? item.ngayCapNhat.replace("T", " ").split(".")[0]
+          : "",
+      }));
+
+      const response = await api.post("/upload/export", payload, {
+        responseType: "blob",
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "danh_sach_nhom_ccdc.xlsx");
+      document.body.appendChild(link);
+      link.click();
+
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      return true;
+    },
+    onSuccess: () => showSuccessAlert("Xuất file nhóm CCDC thành công"),
+    onError: () => showErrorAlert("Lỗi khi kết nối server để xuất file"),
+  });
+
+  const importExcelMutation = useMutation({
+    mutationFn: (file: File) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          try {
+            const data = new Uint8Array(e.target?.result as ArrayBuffer);
+            const workbook = XLSX.read(data, { type: "array" });
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+
+            const jsonData: any[][] = XLSX.utils.sheet_to_json(worksheet, {
+              header: 1,
+              defval: "",
+            });
+
+            const listImport: ToolGroupType[] = [];
+            const errorMessages: string[] = [];
+            const currentUser = "admin";
+
+            for (let i = 1; i < jsonData.length; i++) {
+              const row = jsonData[i];
+
+              if (!row[0] && !row[1]) continue;
+
+              const id = s(row[0]);
+              const ten = s(row[1]);
+              const hieuLuc = b(row[2]);
+              const ngayTao = formatDateTime(row[3]);
+              const ngayCapNhat = formatDateTime(row[4]);
+
+              const rowErrors: string[] = [];
+              if (!id) rowErrors.push("Mã nhóm CCDC không được để trống");
+              if (!ten) rowErrors.push("Tên nhóm CCDC không được để trống");
+
+              if (rowErrors.length > 0) {
+                errorMessages.push(`Dòng ${i + 1}: ${rowErrors.join(", ")}`);
+              } else {
+                listImport.push({
+                  id,
+                  ten,
+                  hieuLuc,
+                  idCongTy: "ct001",
+                  ngayTao,
+                  ngayCapNhat,
+                  nguoiTao: currentUser,
+                  nguoiCapNhat: currentUser,
+                });
+              }
+            }
+
+            if (errorMessages.length > 0) {
+              reject(new Error(errorMessages.join("\n")));
+            } else if (listImport.length > 0) {
+              const res = await api.post("/nhomccdc/batch", listImport);
+              resolve(res.data);
+            } else {
+              reject(new Error("File không có dữ liệu hợp lệ"));
+            }
+          } catch (err) {
+            reject(new Error("Lỗi đọc file hoặc lỗi hệ thống"));
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ccdcGroups"] });
+      showSuccessAlert("Import nhóm CCDC thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(`Import dữ liệu thất bại: \n${error.message}`);
+    },
+  });
+
   return {
     createMutation,
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
+    exportMutation,
+    importExcelMutation,
     allData,
     tooGroups: data,
     isLoading,

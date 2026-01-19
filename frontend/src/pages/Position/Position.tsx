@@ -41,7 +41,7 @@ export default function Position() {
   } = usePositionMutation(
     paginationModel.page,
     paginationModel.pageSize,
-    searchValue
+    searchValue,
   );
 
   const handleRowClick = (params: GridRowParams) => {
@@ -242,7 +242,7 @@ export default function Position() {
               onCancel={() => {
                 setShowForm(false);
                 setSelectedPosition(null);
-                setReadOnly(false); // Reset readOnly when form is closed
+                setReadOnly(false);
               }}
               onEdit={handleEdit}
               selectedPosition={selectedPosition}

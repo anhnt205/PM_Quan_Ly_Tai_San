@@ -1,14 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import api from "../../../config/api.config";
 import { ReasonIncreaseType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
+import { s } from "../../../utils/helpers";
+import * as XLSX from "xlsx";
 
 export const useReasonIncreaseMutation = (
   page?: number,
   pageSize?: number,
-  searchValue?: string
+  searchValue?: string,
 ) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
@@ -24,7 +24,7 @@ export const useReasonIncreaseMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Tạo lý do tăng thất bại"
+          "Tạo lý do tăng thất bại",
       );
     },
   });
@@ -42,10 +42,11 @@ export const useReasonIncreaseMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Sửa lý do tăng thất bại"
+          "Sửa lý do tăng thất bại",
       );
     },
   });
+
   const deleteOneMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await api.delete(`/lydotang/${id}`);
@@ -59,10 +60,11 @@ export const useReasonIncreaseMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa lý do tăng thất bại"
+          "Xóa lý do tăng thất bại",
       );
     },
   });
+
   const deleteManyMutation = useMutation({
     mutationFn: async (ids: string[]) => {
       const res = await api.delete(`/lydotang/batch`, { data: ids });
@@ -76,20 +78,16 @@ export const useReasonIncreaseMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa lý do tăng thất bại"
+          "Xóa lý do tăng thất bại",
       );
     },
   });
 
   const { data = { items: [], totalItems: 0 }, isLoading } = useQuery({
-    queryKey: ["reasonIncreasesPage", page, pageSize, searchValue], // Key để cache dữ liệu
+    queryKey: ["reasonIncreases", "paged", page, pageSize, searchValue],
     queryFn: async () => {
       const res = await api.get("/lydotang/paged-mini", {
-        params: {
-          page: page,
-          size: pageSize,
-          search: searchValue,
-        },
+        params: { page, size: pageSize, search: searchValue },
       });
       return res.data;
     },
@@ -97,12 +95,113 @@ export const useReasonIncreaseMutation = (
   });
 
   const { data: allReasonIncreases = [] } = useQuery({
-    queryKey: ["allReasonIncreases"], // Key để cache dữ liệu
+    queryKey: ["reasonIncreases", "all"],
     queryFn: async () => {
       const res = await api.get("/lydotang");
-      return res.data.data;
+      return Array.isArray(res.data) ? res.data : res.data.data || [];
     },
-    placeholderData: (previousData) => previousData,
+  });
+
+  const exportMutation = useMutation({
+    mutationFn: async (dataToExport: ReasonIncreaseType[]) => {
+      const payload = dataToExport.map((item) => ({
+        "Mã lý do tăng": item.id || "",
+        "Tên lý do tăng": item.ten || "",
+        "Tăng giảm":
+          item.tangGiam !== undefined ? item.tangGiam.toString() : "",
+      }));
+
+      const response = await api.post("/upload/export", payload, {
+        responseType: "blob",
+      });
+
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "danh_sach_ly_do_tang.xlsx");
+      document.body.appendChild(link);
+      link.click();
+
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      return true;
+    },
+    onSuccess: () => showSuccessAlert("Xuất file lý do tăng thành công"),
+    onError: () => showErrorAlert("Lỗi khi kết nối server để xuất file"),
+  });
+
+  const importExcelMutation = useMutation({
+    mutationFn: async (file: File) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          try {
+            const data = new Uint8Array(e.target?.result as ArrayBuffer);
+            const workbook = XLSX.read(data, { type: "array" });
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData: any[][] = XLSX.utils.sheet_to_json(worksheet, {
+              header: 1,
+              defval: "",
+            });
+            const listImport: ReasonIncreaseType[] = [];
+            const errorMessages: string[] = [];
+            for (let i = 1; i < jsonData.length; i++) {
+              const row = jsonData[i];
+              if (!row[0] && !row[1] && !row[2]) continue;
+              const id = s(row[0]);
+              const ten = s(row[1]);
+              const tangGiamRaw = s(row[2]);
+              const rowErrors: string[] = [];
+              if (!id) rowErrors.push("Mã lý do tăng không được để trống");
+              if (!ten) rowErrors.push("Tên lý do tăng không được để trống");
+              let tangGiamValue: number | null = null;
+              if (!tangGiamRaw) {
+                rowErrors.push("Tăng giảm không được để trống");
+              } else {
+                const parsed = parseInt(tangGiamRaw);
+                if (isNaN(parsed)) {
+                  rowErrors.push(
+                    `Tăng giảm không hợp lệ ${tangGiamRaw} phải là số 0 hoặc 1`,
+                  );
+                } else {
+                  tangGiamValue = parsed;
+                }
+              }
+              if (rowErrors.length > 0) {
+                errorMessages.push(`Dòng ${i + 1}: ${rowErrors.join(", ")}`);
+              } else {
+                listImport.push({
+                  id,
+                  ten,
+                  tangGiam: tangGiamValue as number,
+                });
+              }
+            }
+            if (errorMessages.length > 0) {
+              reject(new Error(errorMessages.join("\n")));
+            } else if (listImport.length > 0) {
+              const res = await api.post("/lydotang/batch", listImport);
+              resolve(res.data);
+            } else {
+              reject(new Error("File không có dữ liệu hợp lệ"));
+            }
+          } catch (err) {
+            reject(new Error("Lỗi đọc file hoặc lỗi hệ thống"));
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reasonIncreases"] });
+      showSuccessAlert("Import lý do tăng thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(`Import dữ liệu thất bại: \n${error.message}`);
+    },
   });
 
   return {
@@ -110,6 +209,8 @@ export const useReasonIncreaseMutation = (
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
+    exportMutation,
+    importExcelMutation,
     reasonIncreasesPage: data,
     allReasonIncreases,
     isLoading,

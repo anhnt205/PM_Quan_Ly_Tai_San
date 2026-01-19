@@ -3,11 +3,12 @@ import api from "../../../config/api.config";
 import { CapitalSourceType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import * as XLSX from "xlsx";
+import { b, formatDateTime, s } from "../../../utils/helpers";
 
 export const useCapitalSourceMutation = (
   page?: number,
   pageSize?: number,
-  searchValue?: string
+  searchValue?: string,
 ) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
@@ -23,7 +24,7 @@ export const useCapitalSourceMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Tạo nguồn vốn thất bại"
+          "Tạo nguồn vốn thất bại",
       );
     },
   });
@@ -41,7 +42,7 @@ export const useCapitalSourceMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Sửa nguồn vốn thất bại"
+          "Sửa nguồn vốn thất bại",
       );
     },
   });
@@ -58,7 +59,7 @@ export const useCapitalSourceMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa nguồn vốn thất bại"
+          "Xóa nguồn vốn thất bại",
       );
     },
   });
@@ -75,7 +76,7 @@ export const useCapitalSourceMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa nguồn vốn thất bại"
+          "Xóa nguồn vốn thất bại",
       );
     },
   });
@@ -111,25 +112,36 @@ export const useCapitalSourceMutation = (
 
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: CapitalSourceType[]) => {
-      return new Promise((resolve) => {
-        const worksheetData = dataToExport.map((item) => ({
-          Id: item.id || "",
-          "Tên nguồn kinh phí": item.tenNguonKinhPhi || "",
-          "Ghi chú": item.ghiChu || "",
-          "Hiệu lực": item.hieuLuc ? "TRUE" : "FALSE", // Hiển thị TRUE/FALSE như ảnh mẫu
-          "Ngày tạo": item.ngayTao || "",
-          "Ngày cập nhật": item.ngayCapNhat || "",
-        }));
+      const payload = dataToExport.map((item) => ({
+        Id: item.id || "null",
+        "Tên nguồn kinh phí": item.tenNguonKinhPhi || "null",
+        "Ghi chú": item.ghiChu || "null",
+        "Hiệu lực": item.hieuLuc ?? false,
+        "Ngày tạo": item.ngayTao
+          ? item.ngayTao.replace("T", " ").split(".")[0]
+          : "null",
+        "Ngày cập nhật": item.ngayCapNhat
+          ? item.ngayCapNhat.replace("T", " ").split(".")[0]
+          : "null",
+      }));
 
-        const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "NguonVon");
-        XLSX.writeFile(workbook, "danh_sach_nguon_von.xlsx");
-        resolve(true);
+      const response = await api.post("/upload/export", payload, {
+        responseType: "blob",
       });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "danh_sach_nguon_von.xlsx");
+      document.body.appendChild(link);
+      link.click();
+
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      return true;
     },
     onSuccess: () => showSuccessAlert("Xuất file nguồn vốn thành công"),
-    onError: () => showErrorAlert("Lỗi khi xuất file"),
+    onError: () => showErrorAlert("Lỗi khi kết nối server để xuất file"),
   });
 
   const importExcelMutation = useMutation({
@@ -141,53 +153,75 @@ export const useCapitalSourceMutation = (
             const data = new Uint8Array(e.target?.result as ArrayBuffer);
             const workbook = XLSX.read(data, { type: "array" });
             const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+
             const jsonData: any[][] = XLSX.utils.sheet_to_json(worksheet, {
               header: 1,
+              defval: "",
             });
 
-            const listNguonVon: CapitalSourceType[] = [];
+            const listImport: CapitalSourceType[] = [];
+            const errorMessages: string[] = [];
+            const currentUser = "admin";
 
-            // Bắt đầu từ i = 1 để bỏ qua tiêu đề
             for (let i = 1; i < jsonData.length; i++) {
               const row = jsonData[i];
-              if (!row[1]) continue; // Bỏ qua nếu không có Tên nguồn kinh phí
 
-              // Xử lý logic Hiệu lực (TRUE/FALSE từ excel sang boolean)
-              const hieuLucValue = row[3]?.toString().toUpperCase() === "TRUE";
+              if (!row[0] && !row[1]) continue;
 
-              listNguonVon.push({
-                id: row[0]?.toString() || "",
-                tenNguonKinhPhi: row[1]?.toString() || "",
-                ghiChu: row[2]?.toString() || "",
-                hieuLuc: hieuLucValue,
-                idCongTy: "ct001", // Gán mặc định theo pattern của bạn
-                isActive: true, // Mặc định hoạt động khi import
-              });
+              const id = s(row[0]);
+              const tenNguonKinhPhi = s(row[1]);
+              const ghiChu = s(row[2]);
+              const hieuLuc = b(row[3], true);
+
+              const ngayTao = formatDateTime(row[5]);
+              const ngayCapNhat = formatDateTime(row[6]);
+
+              const rowErrors: string[] = [];
+              if (!id) rowErrors.push("Mã nguồn kinh phí không được để trống");
+              if (!tenNguonKinhPhi)
+                rowErrors.push("Tên nguồn kinh phí không được để trống");
+
+              if (rowErrors.length > 0) {
+                errorMessages.push(`Dòng ${i + 1}: ${rowErrors.join(", ")}`);
+              } else {
+                listImport.push({
+                  id,
+                  tenNguonKinhPhi,
+                  ghiChu,
+                  hieuLuc,
+                  idCongTy: "ct001",
+                  isActive: true,
+                  ngayTao,
+                  ngayCapNhat,
+                  nguoiTao: currentUser,
+                  nguoiCapNhat: currentUser,
+                });
+              }
             }
 
-            if (listNguonVon.length > 0) {
-              // Gọi đến đúng endpoint /api/nguonvon/batch
-              const res = await api.post("/nguonvon/batch", listNguonVon);
+            if (errorMessages.length > 0) {
+              reject(new Error(errorMessages.join("\n")));
+            } else if (listImport.length > 0) {
+              const res = await api.post("/nguonvon/batch", listImport);
               resolve(res.data);
             } else {
               reject(new Error("File không có dữ liệu hợp lệ"));
             }
           } catch (err) {
-            reject(err);
+            reject(new Error("Lỗi định dạng file hoặc lỗi hệ thống"));
           }
         };
-        reader.onerror = (error) => reject(error);
         reader.readAsArrayBuffer(file);
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["allCapitalSources"] });
+      queryClient.invalidateQueries({ queryKey: ["capitalSources"] });
       showSuccessAlert("Import dữ liệu nguồn vốn thành công");
     },
     onError: (error: any) => {
-      showErrorAlert(
-        error.response?.data?.message || "Lỗi khi lưu dữ liệu import nguồn vốn"
-      );
+      if (!error.message.includes("\n")) {
+        showErrorAlert(error.message || "Lỗi khi import dữ liệu");
+      }
     },
   });
 

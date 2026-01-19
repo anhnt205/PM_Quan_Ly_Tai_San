@@ -41,7 +41,7 @@ export default function Project() {
   } = useProjectMutation(
     paginationModel.page,
     paginationModel.pageSize,
-    searchValue
+    searchValue,
   );
 
   const handleRowClick = (params: GridRowParams) => {
@@ -171,7 +171,7 @@ export default function Project() {
               onCancel={() => {
                 setShowForm(false);
                 setSelectedProject(null);
-                setReadOnly(false); // Reset readOnly when form is closed
+                setReadOnly(false);
               }}
               onEdit={handleEdit}
               selectedProject={selectedProject}

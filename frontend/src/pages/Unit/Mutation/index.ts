@@ -2,13 +2,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../../../config/api.config";
 import { UnitType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
+import * as XLSX from "xlsx";
+import { s } from "../../../utils/helpers";
 
 export const useUnitMutation = (
   page?: number,
   pageSize?: number,
-  searchValue?: string
+  searchValue?: string,
 ) => {
   const queryClient = useQueryClient();
+
   const createMutation = useMutation({
     mutationFn: async (data: UnitType) => {
       const res = await api.post("/donvitinh", data);
@@ -22,7 +25,7 @@ export const useUnitMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Tạo đơn vị tính thất bại"
+          "Tạo đơn vị tính thất bại",
       );
     },
   });
@@ -40,10 +43,11 @@ export const useUnitMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Sửa đơn vị tính thất bại"
+          "Sửa đơn vị tính thất bại",
       );
     },
   });
+
   const deleteOneMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await api.delete(`/donvitinh/${id}`);
@@ -57,10 +61,11 @@ export const useUnitMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa đơn vị tính thất bại"
+          "Xóa đơn vị tính thất bại",
       );
     },
   });
+
   const deleteManyMutation = useMutation({
     mutationFn: async (ids: string[]) => {
       const res = await api.delete(`/donvitinh/batch`, { data: ids });
@@ -74,31 +79,126 @@ export const useUnitMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa đơn vị tính thất bại"
+          "Xóa đơn vị tính thất bại",
       );
     },
   });
 
-  const { data = { items: [], totalItems: 0 }, isLoading } = useQuery({
-    queryKey: ["units", page, pageSize, searchValue], // Key để cache dữ liệu
+  // const { data = { items: [], totalItems: 0 },  } = useQuery({
+  //   queryKey: ["units", page, pageSize, searchValue], // Key để cache dữ liệu
+  //   queryFn: async () => {
+  //     const res = await api.get("/donvitinh/paged-mini", {
+  //       params: {
+  //         page: page,
+  //         size: pageSize,
+  //         search: searchValue,
+  //       },
+  //     });
+  //     return res.data;
+  //   },
+  //
+  // });
+
+  const { data: allUnits = [], isLoading } = useQuery({
+    queryKey: ["allUnits"], // Key để cache dữ liệu
     queryFn: async () => {
-      const res = await api.get("/donvitinh/paged-mini", {
-        params: {
-          page: page,
-          size: pageSize,
-          search: searchValue,
-        },
-      });
+      const res = await api.get("/donvitinh", {});
       return res.data;
     },
     placeholderData: (previousData) => previousData,
   });
 
-  const { data: allUnits = [] } = useQuery({
-    queryKey: ["allUnits"], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/donvitinh", {});
-      return res.data;
+  const exportMutation = useMutation({
+    mutationFn: async (dataToExport: UnitType[]) => {
+      const payload = dataToExport.map((item) => ({
+        "Mã đơn vị": item.id || "",
+        "Tên đơn vị": item.tenDonVi || "",
+        "Ghi chú": item.note || "",
+      }));
+
+      const response = await api.post("/upload/export", payload, {
+        responseType: "blob",
+      });
+
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "danh_sach_don_vi_tinh.xlsx");
+      document.body.appendChild(link);
+      link.click();
+
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      return true;
+    },
+    onSuccess: () => showSuccessAlert("Xuất file thành công"),
+    onError: () => showErrorAlert("Lỗi khi kết nối server để xuất file"),
+  });
+
+  const importExcelMutation = useMutation({
+    mutationFn: (file: File) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          try {
+            const data = new Uint8Array(e.target?.result as ArrayBuffer);
+            const workbook = XLSX.read(data, { type: "array" });
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+
+            const jsonData: any[][] = XLSX.utils.sheet_to_json(worksheet, {
+              header: 1,
+              defval: "",
+            });
+
+            const listImport: UnitType[] = [];
+            const errorMessages: string[] = [];
+
+            for (let i = 1; i < jsonData.length; i++) {
+              const row = jsonData[i];
+
+              const id = s(row[0]);
+              const tenDonVi = s(row[1]);
+              const note = s(row[2]);
+
+              if (!id && !tenDonVi && !note) continue;
+
+              const rowErrors: string[] = [];
+              if (!id) rowErrors.push("Mã đơn vị không được để trống");
+              if (!tenDonVi) rowErrors.push("Tên đơn vị không được để trống");
+
+              if (rowErrors.length > 0) {
+                errorMessages.push(`Dòng ${i + 1}: ${rowErrors.join(", ")}`);
+              } else {
+                listImport.push({ id, tenDonVi, note });
+              }
+            }
+
+            if (errorMessages.length > 0) {
+              // Ném lỗi về onError để hiển thị thông báo tổng hợp
+              reject(new Error(errorMessages.join("\n")));
+            } else if (listImport.length > 0) {
+              // Gọi API lưu vào DB
+              const res = await api.post("/donvitinh/batch", listImport);
+              resolve(res.data);
+            } else {
+              reject(new Error("File không có dữ liệu hợp lệ"));
+            }
+          } catch (err) {
+            reject(new Error("Lỗi khi đọc file Excel hoặc kết nối API"));
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["units"] });
+      showSuccessAlert("Import đơn vị tính thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(`Import dữ liệu thất bại: \n${error.message}`);
     },
   });
 
@@ -107,7 +207,9 @@ export const useUnitMutation = (
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
-    units: data,
+    exportMutation,
+    importExcelMutation,
+    // units: data,
     allUnits,
     isLoading,
   };

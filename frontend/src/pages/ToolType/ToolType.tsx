@@ -1,13 +1,20 @@
 import { Delete } from "@mui/icons-material";
-import { Box, IconButton } from "@mui/material";
-import React, { useState } from "react";
+import {
+  Box,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  IconButton,
+  Typography,
+} from "@mui/material";
+import { useState } from "react";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-import ToolTypes from "../../data/ToolType.json";
 import TypeAssetForm from "./components/ToolTypeForm";
 import { useToolTypeMutation } from "./Mutation";
 import { showConfirmAlert } from "../../components/Alert";
+import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 
 export default function ToolType() {
   const [showForm, setShowForm] = useState(false);
@@ -15,6 +22,9 @@ export default function ToolType() {
   const [readOnly, setReadOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
+
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
@@ -28,12 +38,25 @@ export default function ToolType() {
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
+    importExcelMutation,
+    exportMutation,
     isLoading,
   } = useToolTypeMutation(
     paginationModel.page,
     paginationModel.pageSize,
-    searchValue
+    searchValue,
   );
+
+  const handleImport = (file: File) => {
+    importExcelMutation.mutate(file, {
+      onError: (error: any) => {
+        if (error.message && error.message.includes("\n")) {
+          setImportErrors(error.message.split("\n"));
+          setShowErrorDialog(true);
+        }
+      },
+    });
+  };
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedToolType(params.row);
@@ -109,7 +132,27 @@ export default function ToolType() {
           setSelectedToolType(null);
           setReadOnly(false);
         }}
+        onExport={() => exportMutation.mutate(toolTypes)}
+        onImport={handleImport}
       />
+
+      <ImportErrorDialog
+        open={showErrorDialog}
+        onClose={() => setShowErrorDialog(false)}
+        errors={importErrors}
+      />
+
+      <Dialog open={exportMutation.isPending || importExcelMutation.isPending}>
+        <DialogContent>
+          <Box display="flex" alignItems="center" gap={2}>
+            <CircularProgress size={20} />
+            <Typography variant="body2">
+              Đang xử lý dữ liệu loại CCDC...
+            </Typography>
+          </Box>
+        </DialogContent>
+      </Dialog>
+
       <Box p={2}>
         {showForm && (
           <Box py={2}>
@@ -117,7 +160,7 @@ export default function ToolType() {
               onCancel={() => {
                 setShowForm(false);
                 setSelectedToolType(null);
-                setReadOnly(false); // Reset readOnly when form is closed
+                setReadOnly(false);
               }}
               onEdit={handleEdit}
               selectedToolType={selectedToolType}
