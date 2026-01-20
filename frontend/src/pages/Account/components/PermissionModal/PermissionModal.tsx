@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -21,16 +21,19 @@ interface Props {
 }
 
 export default function PermissionModal({ open, onClose, userId }: Props) {
-  // Gọi Hook chung, truyền userId vào để lấy quyền
   const { userPermissions, isLoading, updatePermissionBatchMutation } =
     useAccountMutation(undefined, undefined, undefined, userId);
 
   const [localPermissions, setLocalPermissions] = useState<any[]>([]);
 
-  // Cập nhật state nội bộ khi dữ liệu từ API về
   useEffect(() => {
-    if (userPermissions) setLocalPermissions(userPermissions);
-  }, [userPermissions]);
+    if (open && userPermissions && localPermissions.length === 0) {
+      setLocalPermissions(userPermissions);
+    }
+    if (!open) {
+      setLocalPermissions([]);
+    }
+  }, [userPermissions, open, localPermissions.length]);
 
   const handleToggle = (index: number, field: string) => {
     const newData = [...localPermissions];
@@ -40,7 +43,10 @@ export default function PermissionModal({ open, onClose, userId }: Props) {
 
   const handleConfirm = () => {
     updatePermissionBatchMutation.mutate(localPermissions, {
-      onSuccess: () => onClose(),
+      onSuccess: () => {
+        setLocalPermissions([]);
+        onClose();
+      },
     });
   };
 

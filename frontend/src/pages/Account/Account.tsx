@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Box, IconButton, Tooltip } from "@mui/material";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import { Edit, Trash2, ShieldCheck } from "lucide-react";
@@ -6,20 +6,23 @@ import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { useAccountMutation } from "./Mutation";
 import { AccountData } from "./types";
-import { showConfirmAlert } from "../../components/Alert";
+import { showConfirmAlert, showErrorAlert } from "../../components/Alert";
 import AccountModal from "./components/AccountModal/AccountModal";
 import PermissionModal from "./components/PermissionModal/PermissionModal";
 import EditAccountModal from "./components/EditAccountModal/EditAccountModal";
+import { useSelector } from "react-redux";
 
 export default function Account() {
   const [showForm, setShowForm] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<AccountData | null>(
-    null
+    null,
   );
   const [readOnly, setReadOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [showAccountModal, setShowAccountModal] = useState(false);
+
+  const currentUser = useSelector((state: any) => state.user.user);
 
   const [permissionUserId, setPermissionUserId] = useState<string | null>(null);
   const [editModal, setEditModal] = useState({
@@ -41,7 +44,7 @@ export default function Account() {
   } = useAccountMutation(
     paginationModel.page,
     paginationModel.pageSize,
-    searchValue
+    searchValue,
   );
 
   const handleRowClick = (params: GridRowParams) => {
@@ -66,7 +69,7 @@ export default function Account() {
 
   const handleDeleteMany = async (ids: string[]) => {
     const confirm = await showConfirmAlert(
-      `Xác nhận xóa ${ids.length} tài khoản!`
+      `Xác nhận xóa ${ids.length} tài khoản!`,
     );
     if (confirm.isConfirmed) {
       ids.forEach((id) => deleteAccountMutation.mutate(id));
@@ -115,7 +118,7 @@ export default function Account() {
                 onClick={async (e) => {
                   e.stopPropagation();
                   const confirm = await showConfirmAlert(
-                    `Xác nhận xóa tài khoản "${params.row.hoTen}"?`
+                    `Xác nhận xóa tài khoản "${params.row.hoTen}"?`,
                   );
                   if (confirm.isConfirmed) {
                     deleteAccountMutation.mutate(params.row.id);
@@ -151,6 +154,12 @@ export default function Account() {
       <PageAction
         title="Quản lý tài khoản"
         onNewClick={() => {
+          const isAdmin = currentUser?.taiKhoan?.tenDangNhap === "admin";
+
+          if (!isAdmin) {
+            showErrorAlert("Bạn không có quyền tạo tài khoản");
+            return;
+          }
           setShowAccountModal(true);
         }}
       />

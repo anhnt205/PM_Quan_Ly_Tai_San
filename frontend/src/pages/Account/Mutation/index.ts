@@ -6,23 +6,23 @@ export const useAccountMutation = (
   page?: number,
   pageSize?: number,
   searchValue?: string,
-  userIdPermission?: string | null // Thêm id để theo dõi quyền nếu cần
+  userIdPermission?: string | null,
+  idCongTy?: string,
 ) => {
   const queryClient = useQueryClient();
   const mainKey = "accountPage";
   const permissionKey = "userPermissions";
-  const idCongTy = "ct001";
 
-  // --- 1. QUERIES DANH MỤC & DỮ LIỆU ---
-
-  // Lấy nhân viên để lấy thông tin Phòng Ban
   const { data: staffs = [] } = useQuery({
     queryKey: ["staffs", idCongTy],
-    queryFn: async () =>
-      (await api.get("/nhanvien", { params: { idcongty: idCongTy } })).data,
+    queryFn: async () => {
+      if (!idCongTy) return [];
+      return (await api.get("/nhanvien", { params: { idcongty: idCongTy } }))
+        .data;
+    },
+    enabled: !!idCongTy,
   });
 
-  // Lấy danh sách tài khoản và map dữ liệu phòng ban
   const { data: accountPage, isLoading: loadingAccount } = useQuery({
     queryKey: [mainKey, page, pageSize, searchValue],
     queryFn: async () => {
@@ -47,24 +47,21 @@ export const useAccountMutation = (
     enabled: !!staffs,
   });
 
-  // Query lấy danh sách quyền của User cụ thể
-  const { data: userPermissions = [], isLoading: loadingPermissions } =
-    useQuery({
-      queryKey: [permissionKey, userIdPermission],
-      queryFn: async () => {
-        if (!userIdPermission) return [];
-        const res = await api.get(`/userpermission/user/${userIdPermission}`);
-        return res.data;
-      },
-      enabled: !!userIdPermission,
-    });
-
-  // --- 2. MUTATIONS TÀI KHOẢN ---
+  const { data: userPermissions, isLoading: loadingPermissions } = useQuery({
+    queryKey: [permissionKey, userIdPermission],
+    queryFn: async () => {
+      if (!userIdPermission) return [];
+      const res = await api.get(`/userpermission/user/${userIdPermission}`);
+      return res.data;
+    },
+    enabled: !!userIdPermission,
+  });
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => (await api.post("/taikhoan", data)).data,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [mainKey] });
+      queryClient.invalidateQueries({ queryKey: ["staffs"] });
       showSuccessAlert("Thêm tài khoản thành công");
     },
     onError: () => showErrorAlert("Lỗi khi thêm tài khoản"),
@@ -89,8 +86,6 @@ export const useAccountMutation = (
     },
   });
 
-  // --- 3. MUTATIONS PHÂN QUYỀN ---
-
   const updatePermissionBatchMutation = useMutation({
     mutationFn: async (payload: any[]) => {
       return (await api.put("/userpermission/update-permission-batch", payload))
@@ -104,13 +99,10 @@ export const useAccountMutation = (
   });
 
   return {
-    // Data
     accountPage,
     staffs,
     userPermissions,
     isLoading: loadingAccount || loadingPermissions,
-
-    // Mutations
     createMutation,
     updateMutation,
     deleteAccountMutation,

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,6 @@ import {
 } from "@mui/material";
 import {
   Close,
-  Settings,
   AddCircle,
   Visibility,
   VisibilityOff,
@@ -21,9 +20,9 @@ import { useAccountMutation } from "../../Mutation";
 import { useFormik } from "formik";
 import TableCustom from "../../../../components/common/TableCustom";
 import FieldInput from "../../../../components/TextField/FieldInput";
-// Import các component nút bấm chuẩn của bạn
 import SaveBtn from "../../../../components/Button/SaveBtn";
 import CancelBtn from "../../../../components/Button/CancelBtn";
+import { useSelector } from "react-redux";
 
 interface Props {
   open: boolean;
@@ -36,12 +35,19 @@ export default function AccountModal({ open, onClose }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [searchValue, setSearchValue] = useState("");
 
-  const { accountPage, staffs, createMutation } = useAccountMutation();
+  const currentUser = useSelector((state: any) => state.user.user);
 
+  const { accountPage, staffs, createMutation } = useAccountMutation(
+    undefined,
+    undefined,
+    undefined,
+    null,
+    currentUser?.taiKhoan?.idCongTy,
+  );
   const staffWithStatus = useMemo(() => {
     return staffs.map((staff: any) => {
       const hasAccount = accountPage?.items?.some(
-        (acc: any) => acc.tenDangNhap === staff.id
+        (acc: any) => acc.tenDangNhap === staff.id,
       );
       return { ...staff, hasAccount };
     });
@@ -55,7 +61,8 @@ export default function AccountModal({ open, onClose }: Props) {
       hoTen: "",
       email: "",
       soDienThoai: "",
-      idCongTy: "ct001",
+      idCongTy: currentUser?.taiKhoan?.idCongTy || "",
+      nguoiTao: currentUser?.taiKhoan?.hoTen || "",
       isActive: true,
     },
     onSubmit: (values) => {
