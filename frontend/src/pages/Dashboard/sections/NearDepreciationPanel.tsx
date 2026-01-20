@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Card,
@@ -20,55 +20,65 @@ import {
 import Grid from "@mui/material/Grid";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import InsertChartOutlinedIcon from "@mui/icons-material/InsertChartOutlined";
+import Pagination from "@mui/material/Pagination";
+import { useDashboardMutation } from "../Mutation";
 
-const mockData = [
-  {
-    id: "A579",
-    name: "Giá nạp máy bắn mìn (MCS-5): U = 12/250V; n = 5 m...",
-    date: "20/03/2023",
-  },
-  {
-    id: "A726",
-    name: "Áp tô mát phòng nở 200A, U=1140(660)V, mã hiệu: T...",
-    date: "20/04/2025",
-  },
-  {
-    id: "A372",
-    name: "Máy biến áp chiếu sáng phòng nổ 660/127V-20kVA; ...",
-    date: "24/11/2021",
-  },
-  {
-    id: "A373",
-    name: "Máy biến áp chiếu sáng phòng nổ 660/127V-20kVA; ...",
-    date: "24/11/2021",
-  },
-  {
-    id: "A374",
-    name: "Máy biến áp chiếu sáng phòng nổ 660/127V-20kVA; ...",
-    date: "24/11/2021",
-  },
-  {
-    id: "A375",
-    name: "Máy biến áp chiếu sáng phòng nổ 660/127V-20kVA; ...",
-    date: "24/11/2021",
-  },
-  {
-    id: "A376",
-    name: "Máy biến áp chiếu sáng phòng nổ 660/127V-20kVA; ...",
-    date: "24/11/2021",
-  },
-  {
-    id: "A377",
-    name: "Máy nén khí công nghiệp model XJ-200",
-    date: "03/02/2024",
-  },
-  { id: "A381", name: "Bộ nguồn dự phòng UPS 5kVA", date: "11/06/2022" },
-  { id: "A392", name: "Máy quét mã vạch Zebra ZD621", date: "08/08/2023" },
-];
+
+type AssetRow = {
+  Id?: string | number;
+  id?: string | number;
+  Ma?: string | number;
+  TenTaiSan?: string;
+  name?: string;
+  NgaySuDung?: string | number | null;
+  SoKyKhauHao?: number | null;
+  NguyenGia?: number | string | null;
+  NgayHetHan?: string | number | null;
+  ThoiHanConLai?: string | number | null;
+  ThoiHan?: string | number | null;
+  TrangThai?: string;
+};
 
 export default function NearDepreciationPanel() {
+  const { taiSanSapHet = [], isLoading } = useDashboardMutation();
+  const rows = (
+    Array.isArray(taiSanSapHet) ? taiSanSapHet : taiSanSapHet?.data || []
+  ) as AssetRow[];
+  const [rowsPerPage, setRowsPerPage] = useState<number | "all">(20);
+  const [page, setPage] = useState<number>(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [rowsPerPage, rows.length]);
+
+  const handleRowsPerPageChange = (e: any) => {
+    const v = e.target.value;
+    setRowsPerPage(v === "all" ? "all" : Number(v));
+    setPage(1);
+  };
+
+  const handlePageChange = (_: any, value: number) => {
+    setPage(value);
+  };
+
+  const displayedRows =
+    rowsPerPage === "all"
+      ? rows
+      : rows.slice(
+          (page - 1) * (rowsPerPage as number),
+          page * (rowsPerPage as number),
+        );
+
+  const getStatusFor = (val: any) => {
+    const n = Number(val);
+    if (Number.isNaN(n)) return null;
+    if (n <= 0 || n === 1) return { label: "Khẩn cấp", bg: "#ffeaea", color: "#d14343" };
+    if (n === 2) return { label: "Cảnh báo", bg: "#fffbe6", color: "#f59e0b" };
+    return { label: "Bình thường", bg: "#e6f4ea", color: "#0b9d55" };
+  };
+
   return (
-    <Card sx={{ borderRadius: 3 }}>
+    <Card sx={{ borderRadius: 3, bgcolor: "#f6fffa" }}>
       <CardContent sx={{ p: 2.5 }}>
         <Grid container alignItems="center" spacing={2} sx={{ mb: 2 }}>
           <Grid size={{ xs: 6 }}>
@@ -94,20 +104,17 @@ export default function NearDepreciationPanel() {
                 </Typography>
                 <Select
                   size="small"
-                  defaultValue={20}
+                  value={rowsPerPage === "all" ? "all" : rowsPerPage}
+                  onChange={handleRowsPerPageChange}
                   sx={{ bgcolor: "background.paper", borderRadius: 1 }}
                 >
                   <MenuItem value={10}>10</MenuItem>
                   <MenuItem value={20}>20</MenuItem>
                   <MenuItem value={50}>50</MenuItem>
+                  <MenuItem value={100}>100</MenuItem>
+                  <MenuItem value="all">Tất cả</MenuItem>
                 </Select>
               </Box>
-
-              <Tooltip title="Lọc">
-                <IconButton size="small">
-                  <FilterListIcon />
-                </IconButton>
-              </Tooltip>
 
               <Box
                 sx={{
@@ -124,7 +131,7 @@ export default function NearDepreciationPanel() {
                   variant="body2"
                   sx={{ color: "#f97316", fontWeight: 600 }}
                 >
-                  174 tài sản
+                  {rows.length.toLocaleString()} tài sản
                 </Typography>
               </Box>
             </Box>
@@ -134,33 +141,115 @@ export default function NearDepreciationPanel() {
         <TableContainer
           component={Paper}
           elevation={0}
-          sx={{ borderRadius: 2, overflow: "hidden" }}
+          sx={{
+            borderRadius: 2,
+            overflow: "auto",
+            bgcolor: "transparent",
+            maxHeight: 360,
+          }}
         >
-          <Table size="small">
+          <Table size="small" stickyHeader sx={{ minWidth: 2000 }}>
             <TableHead>
-              <TableRow sx={{ backgroundColor: "#eaf7ee" }}>
+              <TableRow sx={{ backgroundColor: "#eaf7ee", height: 64 }}>
                 <TableCell
-                  sx={{ width: 120, fontWeight: 700, color: "#0b9d55" }}
+                  sx={{
+                    width: 140,
+                    fontWeight: 700,
+                    color: "#0b9d55",
+                    bgcolor: "#eaf7ee",
+                  }}
                 >
                   ID
                 </TableCell>
-                <TableCell sx={{ fontWeight: 700, color: "#0b9d55" }}>
+                <TableCell
+                  align="left"
+                  sx={{
+                    fontWeight: 700,
+                    color: "#0b9d55",
+                    minWidth: 700,
+                    bgcolor: "#eaf7ee",
+                  }}
+                >
                   Tên tài sản
                 </TableCell>
                 <TableCell
-                  align="right"
-                  sx={{ width: 160, fontWeight: 700, color: "#0b9d55" }}
+                  align="left"
+                  sx={{
+                    width: 280,
+                    fontWeight: 700,
+                    color: "#0b9d55",
+                    bgcolor: "#eaf7ee",
+                  }}
                 >
                   Ngày sử dụng
+                </TableCell>
+                <TableCell
+                  align="left"
+                  sx={{
+                    width: 280,
+                    fontWeight: 700,
+                    color: "#0b9d55",
+                    bgcolor: "#eaf7ee",
+                  }}
+                >
+                  Số kỳ khấu hao
+                </TableCell>
+                <TableCell
+                  align="left"
+                  sx={{
+                    width: 280,
+                    fontWeight: 700,
+                    color: "#0b9d55",
+                    bgcolor: "#eaf7ee",
+                  }}
+                >
+                  Nguyên giá
+                </TableCell>
+                <TableCell
+                  align="left"
+                  sx={{
+                    width: 280,
+                    fontWeight: 700,
+                    color: "#0b9d55",
+                    bgcolor: "#eaf7ee",
+                  }}
+                >
+                  Ngày hết hạn
+                </TableCell>
+                <TableCell
+                  align="left"
+                  sx={{
+                    width: 280,
+                    fontWeight: 700,
+                    color: "#0b9d55",
+                    bgcolor: "#eaf7ee",
+                  }}
+                >
+                  Thời hạn còn lại
+                </TableCell>
+                <TableCell
+                  align="left"
+                  sx={{
+                    width: 280,
+                    fontWeight: 700,
+                    color: "#0b9d55",
+                    bgcolor: "#eaf7ee",
+                  }}
+                >
+                  Trạng thái
                 </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {mockData.map((row) => (
-                <TableRow key={row.id} hover>
-                  <TableCell>
+              {displayedRows.map((row, idx) => (
+                <TableRow
+                  key={String(row.Id || row.id || row.Ma || idx)}
+                  hover
+                  sx={{ backgroundColor: "#fff" }}
+                >
+                  <TableCell align="left">
                     <Chip
-                      label={row.id}
+                      label={row.Id}
                       sx={{
                         bgcolor: "#e6f4ea",
                         color: "#0b9d55",
@@ -168,13 +257,78 @@ export default function NearDepreciationPanel() {
                       }}
                     />
                   </TableCell>
-                  <TableCell sx={{ maxWidth: 680 }}>
-                    <Typography noWrap sx={{ maxWidth: { xs: 240, md: 640 } }}>
-                      {row.name}
+                  <TableCell align="left" sx={{ maxWidth: 800 }}>
+                    <Typography noWrap sx={{ maxWidth: { xs: 320, md: 900 } }}>
+                      {row.TenTaiSan || row.name || ""}
                     </Typography>
                   </TableCell>
-                  <TableCell align="right">
-                    <Typography>{row.date}</Typography>
+                  <TableCell align="left" sx={{ width: 280 }}>
+                    <Typography noWrap sx={{ maxWidth: { xs: 320, md: 900 } }}>
+                      {row.NgaySuDung
+                        ? new Date(row.NgaySuDung).toLocaleDateString("en-GB")
+                        : ""}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="left" sx={{ width: 280 }}>
+                    {row.SoKyKhauHao != null ? (
+                      <Chip
+                        label={`${row.SoKyKhauHao} kỳ`}
+                        sx={{
+                          bgcolor: "#e6f4ea",
+                          color: "#0b9d55",
+                          fontWeight: 700,
+                        }}
+                      />
+                    ) : (
+                      <Typography />
+                    )}
+                  </TableCell>
+                  <TableCell align="left" sx={{ width: 280 }}>
+                    <Typography>
+                      {row.NguyenGia != null
+                        ? Number(row.NguyenGia).toLocaleString() + " đ"
+                        : ""}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="left" sx={{ width: 280 }}>
+                    <Typography>
+                      {row.NgayHetHan
+                        ? new Date(row.NgayHetHan).toLocaleDateString("en-GB")
+                        : ""}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="left" sx={{ width: 280 }}>
+                    {row.ThoiHanConLai != null ? (
+                      <Chip
+                        label={`${row.ThoiHanConLai} tháng`}
+                        sx={{
+                          bgcolor: "#e6f4ea",
+                          color: "#0b9d55",
+                          fontWeight: 700,
+                        }}
+                      />
+                    ) : (
+                      <Typography />
+                    )}
+                  </TableCell>
+                  <TableCell align="left" sx={{ width: 280 }}>
+                    {(() => {
+                      const status = getStatusFor(
+                        (row.ThoiHanConLai ?? row.ThoiHan) || row.ThoiHanConLai,
+                      );
+                      return status ? (
+                        <Chip
+                          label={status.label}
+                          sx={{
+                            bgcolor: status.bg,
+                            color: status.color,
+                            fontWeight: 700,
+                          }}
+                        />
+                      ) : (
+                        <Typography>{row.TrangThai || ""}</Typography>
+                      );
+                    })()}
                   </TableCell>
                 </TableRow>
               ))}
@@ -182,10 +336,38 @@ export default function NearDepreciationPanel() {
           </Table>
         </TableContainer>
 
-        <Box sx={{ mt: 1, display: "flex", justifyContent: "flex-end" }}>
-          <Typography variant="caption" color="text.secondary">
-            Hiển thị 1–10 trong 174 kết quả
-          </Typography>
+        <Box
+          sx={{
+            mt: 1,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Box>
+            <Typography variant="caption" color="text.secondary">
+              {(() => {
+                const total = rows.length;
+                if (total === 0) return `Hiển thị 0 kết quả`;
+                if (rowsPerPage === "all")
+                  return `Hiển thị 1–${total} trong ${total} kết quả`;
+                const start = (page - 1) * (rowsPerPage as number) + 1;
+                const end = Math.min(page * (rowsPerPage as number), total);
+                return `Hiển thị ${start}–${end} trong ${total} kết quả`;
+              })()}
+            </Typography>
+          </Box>
+          <Box>
+            {rowsPerPage !== "all" && rows.length > (rowsPerPage as number) && (
+              <Pagination
+                count={Math.ceil(rows.length / (rowsPerPage as number))}
+                page={page}
+                onChange={handlePageChange}
+                color="primary"
+                size="small"
+              />
+            )}
+          </Box>
         </Box>
       </CardContent>
     </Card>

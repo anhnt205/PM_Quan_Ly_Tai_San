@@ -18,7 +18,7 @@ export default function DashBoard() {
     string | undefined
   >(undefined);
   const [selectedNhomCCDC, setSelectedNhomCCDC] = useState<string | undefined>(
-    undefined
+    undefined,
   );
   const [yearTaiSan, setYearTaiSan] = useState(currentYear);
   const [yearCCDC, setYearCCDC] = useState(currentYear);
@@ -33,7 +33,6 @@ export default function DashBoard() {
     ccdcTheoNhomByData,
     tongCCDC,
     tongGiaTriCCDC,
-    ccdcTheoLoaiByNhom,
     ccdcTheoThangByNgayNhap,
     taiSanTheoThangByNgayVaoSo,
     taiSanTheoLoai,
@@ -45,19 +44,28 @@ export default function DashBoard() {
     selectedNhomTaiSan,
     selectedNhomCCDC,
     yearTaiSan,
-    yearCCDC
+    yearCCDC,
   );
+
+  React.useEffect(() => {
+    if (
+      !selectedNhomCCDC &&
+      Array.isArray(uniqueNhomCCDC) &&
+      uniqueNhomCCDC.length > 0
+    ) {
+      const first = uniqueNhomCCDC[0];
+      if (first && first.id) setSelectedNhomCCDC(String(first.id));
+    }
+  }, [uniqueNhomCCDC, selectedNhomCCDC, setSelectedNhomCCDC]);
 
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
-  let ccdcPieData = (ccdcTheoNhomByData || []).map(
-    (item: any, index: number) => ({
-      ten: item.ten,
-      soLuong: item.soLuong,
-      phanTram: item.phanTram,
-      color: COLORS[index % COLORS.length],
-    })
-  );
+  let ccdcPieData = (ccdcTheoNhom || []).map((item: any, index: number) => ({
+    ten: item.tenNhom || item.ten,
+    soLuong: item.soLuong,
+    phanTram: item.phanTram,
+    color: COLORS[index % COLORS.length],
+  }));
 
   let hideCcdcLegend = false;
   const allEmptyGroup =
@@ -67,7 +75,7 @@ export default function DashBoard() {
       (it: any) =>
         !it.ten ||
         String(it.ten).trim() === "" ||
-        String(it.ten).trim() === "Chưa xác định"
+        String(it.ten).trim() === "Chưa xác định",
     );
 
   if (allEmptyGroup) {
@@ -79,7 +87,7 @@ export default function DashBoard() {
     "ccdcPieData for PieChart:",
     ccdcPieData,
     "hideLegend:",
-    hideCcdcLegend
+    hideCcdcLegend,
   );
 
   const taiSanPieData = (taiSanTheoNhom || []).map(
@@ -88,20 +96,30 @@ export default function DashBoard() {
       soLuong: item.soLuong,
       phanTram: item.phanTram,
       color: COLORS[index % COLORS.length],
-    })
+    }),
   );
 
-  const ccdcBarData = ccdcTheoLoaiByNhom || [];
+  const ccdcBarData =
+    ccdcTheoLoai && ccdcTheoLoai.length > 0 ? ccdcTheoLoai : [];
 
   const taiSanBarData = (taiSanTheoLoai || []).map((item: any) => ({
     label: item.tenLoai || item.ten,
     value: item.soLuong,
   }));
 
-  const ccdcMonthlyData = (ccdcTheoThangByNgayNhap || [])
+  const rawCcdcMonthly =
+    ccdcTheoThang && ccdcTheoThang.length > 0
+      ? ccdcTheoThang
+      : ccdcTheoThangByNgayNhap || [];
+  const ccdcMonthlyData = (rawCcdcMonthly || [])
     .filter((item: any) => item.nam === yearCCDC)
     .sort((a: any, b: any) => a.thang - b.thang);
-  const taiSanMonthlyData = (taiSanTheoThangByNgayVaoSo || [])
+
+  const rawTaiSanMonthly =
+    taiSanTheoThang && taiSanTheoThang.length > 0
+      ? taiSanTheoThang
+      : taiSanTheoThangByNgayVaoSo || [];
+  const taiSanMonthlyData = (rawTaiSanMonthly || [])
     .filter((item: any) => item.nam === yearTaiSan)
     .sort((a: any, b: any) => a.thang - b.thang);
 
@@ -109,11 +127,11 @@ export default function DashBoard() {
 
   const maxCCDC = Math.max(
     ...(ccdcMonthlyData || []).map((d: any) => d.soLuong || 0),
-    1
+    1,
   );
   const maxTaiSan = Math.max(
     ...(taiSanMonthlyData || []).map((d: any) => d.soLuong || 0),
-    1
+    1,
   );
 
   return (
@@ -143,7 +161,7 @@ export default function DashBoard() {
         </Box>
 
         <Grid container spacing={2}>
-          <Grid size={{ xs: 2 }}>
+          <Grid size={{ xs: 3 }}>
             <CcdcGroupCard
               ccdcPieData={ccdcPieData}
               hideCcdcLegend={hideCcdcLegend}
@@ -151,8 +169,7 @@ export default function DashBoard() {
               tongGiaTriCCDC={tongGiaTriCCDC}
             />
           </Grid>
-
-          <Grid size={{ xs: 5 }}>
+          <Grid size={{ xs: 4.5 }}>
             <CcdcTypeCard
               selectedNhomCCDC={selectedNhomCCDC}
               setSelectedNhomCCDC={setSelectedNhomCCDC}
@@ -160,8 +177,7 @@ export default function DashBoard() {
               ccdcBarData={ccdcBarData}
             />
           </Grid>
-
-          <Grid size={{ xs: 5 }}>
+          <Grid size={{ xs: 4.5 }}>
             <CcdcMonthlyCard
               ccdcMonthlyData={ccdcMonthlyData}
               maxCCDC={maxCCDC}
@@ -171,18 +187,16 @@ export default function DashBoard() {
             />
           </Grid>
 
-          <Grid size={{ xs: 6 }}>
+          <Grid size={{ xs: 3 }}>
             <TaisanGroupCard
               taiSanPieData={taiSanPieData}
               statistics={statistics}
             />
           </Grid>
-
-          <Grid size={{ xs: 6 }}>
+          <Grid size={{ xs: 4.5 }}>
             <TaisanTypeCard taiSanBarData={taiSanBarData} />
           </Grid>
-
-          <Grid size={{ xs: 6 }}>
+          <Grid size={{ xs: 4.5 }}>
             <TaisanMonthlyCard
               taiSanMonthlyData={taiSanMonthlyData}
               maxTaiSan={maxTaiSan}
@@ -199,7 +213,7 @@ export default function DashBoard() {
               <Top5Panel />
             </Grid>
             <Grid size={{ xs: 6 }}>
-              <NearDepreciationPanel /> 
+              <NearDepreciationPanel />
             </Grid>
           </Grid>
         </Box>

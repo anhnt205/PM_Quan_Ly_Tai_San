@@ -2,196 +2,202 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "../../../config/api.config";
 
-// API functions
 const fetchStatistics = async () => {
-  const response = await api.get("/dashboard/statistics");
-  return response.data;
+  const res = await api.get("/dashboard/statistics");
+  return res.data;
 };
 
-const fetchTongQuan = async () => {
-  const response = await api.get("/dashboard/tong-quan");
-  return response.data;
+const fetchTaiSanSapHetHan = async () => {
+  const res = await api.get("/dashboard/tai-san-sap-het-han-khau-hao");
+  return res.data;
 };
 
 const fetchTaiSanTheoNhom = async () => {
-  const response = await api.get("/dashboard/tai-san-theo-nhom-phan-tram");
-  return response.data;
+  const res = await api.get("/dashboard/tai-san-theo-nhom-phan-tram-chi-tiet");
+  return res.data;
 };
 
-const fetchCCDCTheoNhom = async () => {
-  const response = await api.get("/dashboard/ccdc-theo-nhom-phan-tram");
-  return response.data;
+const fetchCCDCTheoNhom = async (nam: number) => {
+  const res = await api.get("/dashboard/ccdc-theo-nhom-phan-tram-chi-tiet", {
+    params: { idcongty: "ct001", nam },
+  });
+  return res.data;
+};
+
+const fetchNhomCCDCList = async () => {
+  const res = await api.get("/nhomccdc", { params: { idcongty: "ct001" } });
+  return res.data;
+};
+
+const fetchAllCCDC = async () => {
+  const res = await api.get("/ccdcvattu/paged", {
+    params: { idcongty: "ct001", page: 0, size: 1000 },
+  });
+  return res.data;
+};
+
+const fetchAllLoaiCCDC = async () => {
+  const res = await api.get("/loaiccdccon", { params: { idcongty: "ct001" } });
+  return res.data;
+};
+
+const fetchAllTaiSan = async () => {
+  const res = await api.get("/taisan/paged", {
+    params: { idcongty: "ct001", page: 0, size: 10000 },
+  });
+  return res.data;
 };
 
 const fetchTaiSanTheoLoai = async (nhomId?: string) => {
-  const response = await api.get("/dashboard/tai-san-theo-loai-con-phan-tram", {
+  const res = await api.get("/dashboard/tai-san-theo-nhom-loai-con-phan-tram", {
     params: nhomId ? { nhomId } : {},
   });
-  return response.data;
+  return res.data;
 };
 
 const fetchCCDCTheoLoai = async (nhomId?: string) => {
-  const response = await api.get("/dashboard/ccdc-theo-loai-phan-tram", {
+  const res = await api.get("/dashboard/ccdc-theo-nhom-loai-con-phan-tram", {
     params: nhomId ? { nhomId } : {},
   });
-  return response.data;
+  return res.data.data;
 };
 
-// Lấy danh sách nhóm CCDC
-const fetchNhomCCDCList = async () => {
-  const response = await api.get("/nhomccdc", {
-    params: { idcongty: "ct001" },
-  });
-  return response.data;
-};
-
-// Lấy danh sách nhóm tài sản
-const fetchNhomTaiSanList = async () => {
-  const response = await api.get("/nhomtaisan", {
-    params: { idcongty: "ct001" },
-  });
-  return response.data;
-};
-
-// Lấy danh sách CCDC để extract nhóm unique (từ dữ liệu thực tế)
-const fetchAllCCDC = async () => {
-  const response = await api.get("/ccdcvattu/paged", {
-    params: { idcongty: "ct001", page: 0, size: 1000 },
-  });
-  return response.data;
-};
-
-// Lấy danh sách loại CCDC
-const fetchAllLoaiCCDC = async () => {
-  const response = await api.get("/loaiccdccon", {
-    params: { idcongty: "ct001" },
-  });
-  return response.data;
-};
-
-// Lấy danh sách tài sản
-const fetchAllTaiSan = async () => {
-  const response = await api.get("/taisan/paged", {
-    params: { idcongty: "ct001", page: 0, size: 10000 },
-  });
-  return response.data;
-};
-
-const fetchTaiSanTheoThang = async (nam: number) => {
-  const response = await api.get("/dashboard/tai-san-theo-thang", {
-    params: { nam },
-  });
-  return response.data;
-};
-
-const fetchCCDCTheoThang = async (nam: number) => {
-  const response = await api.get("/dashboard/ccdc-theo-thang", {
-    params: { nam },
-  });
-  return response.data;
-};
-
-// Custom hook
 export const useDashboardMutation = (
   selectedNhomTaiSan?: string,
   selectedNhomCCDC?: string,
   namTaiSan: number = new Date().getFullYear(),
-  namCCDC: number = new Date().getFullYear()
+  namCCDC: number = new Date().getFullYear(),
 ) => {
-  // Query for statistics
+  // queries
   const { data: statistics, isLoading: isLoadingStatistics } = useQuery({
     queryKey: ["dashboard-statistics"],
     queryFn: fetchStatistics,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-
-  // Query for tong quan
-  const { data: tongQuan, isLoading: isLoadingTongQuan } = useQuery({
-    queryKey: ["dashboard-tong-quan"],
-    queryFn: fetchTongQuan,
     staleTime: 5 * 60 * 1000,
   });
 
-  // Query for tai san theo nhom
+  const { data: taiSanSapHet, isLoading: isLoadingTaiSanSapHet } = useQuery({
+    queryKey: ["dashboard-tai-san-sap-het"],
+    queryFn: fetchTaiSanSapHetHan,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const { data: taiSanTheoNhom, isLoading: isLoadingTaiSanTheoNhom } = useQuery(
     {
       queryKey: ["dashboard-tai-san-theo-nhom"],
       queryFn: fetchTaiSanTheoNhom,
       staleTime: 5 * 60 * 1000,
-    }
+    },
   );
 
-  // Query for CCDC theo nhom
   const { data: ccdcTheoNhom, isLoading: isLoadingCCDCTheoNhom } = useQuery({
-    queryKey: ["dashboard-ccdc-theo-nhom"],
-    queryFn: fetchCCDCTheoNhom,
+    queryKey: ["dashboard-ccdc-theo-nhom", namCCDC],
+    queryFn: () => fetchCCDCTheoNhom(namCCDC),
     staleTime: 5 * 60 * 1000,
   });
 
-  // Query for danh sách nhóm CCDC (cho dropdown)
   const { data: nhomCCDCList, isLoading: isLoadingNhomCCDCList } = useQuery({
     queryKey: ["nhom-ccdc-list"],
     queryFn: fetchNhomCCDCList,
     staleTime: 5 * 60 * 1000,
   });
 
-  // Query lấy tất cả CCDC để extract nhóm unique
   const { data: allCCDCData, isLoading: isLoadingAllCCDC } = useQuery({
     queryKey: ["all-ccdc-for-dropdown"],
     queryFn: fetchAllCCDC,
     staleTime: 5 * 60 * 1000,
   });
 
-  // Query lấy tất cả loại CCDC để join với dữ liệu CCDC
   const { data: allLoaiCCDC, isLoading: isLoadingAllLoaiCCDC } = useQuery({
     queryKey: ["all-loai-ccdc"],
     queryFn: fetchAllLoaiCCDC,
     staleTime: 5 * 60 * 1000,
   });
 
-  // Query lấy tất cả tài sản
   const { data: allTaiSanData, isLoading: isLoadingAllTaiSan } = useQuery({
     queryKey: ["all-tai-san-for-dashboard"],
     queryFn: fetchAllTaiSan,
     staleTime: 5 * 60 * 1000,
   });
 
-  // Tạo map nhóm CCDC theo id để join
+  const { data: taiSanTheoLoai, isLoading: isLoadingTaiSanTheoLoai } = useQuery(
+    {
+      queryKey: ["dashboard-tai-san-theo-loai", selectedNhomTaiSan],
+      queryFn: () => fetchTaiSanTheoLoai(selectedNhomTaiSan),
+      staleTime: 5 * 60 * 1000,
+      enabled: !!selectedNhomTaiSan,
+    },
+  );
+
+  const { data: ccdcTheoLoai = [], isLoading: isLoadingCCDCTheoLoai } =
+    useQuery({
+      queryKey: ["dashboard-ccdc-theo-loai", selectedNhomCCDC],
+      queryFn: () => fetchCCDCTheoLoai(selectedNhomCCDC),
+      staleTime: 5 * 60 * 1000,
+      enabled: !!selectedNhomCCDC,
+    });
+
+  const taiSanTheoThangFromStats = React.useMemo(() => {
+    if (!statistics || !statistics.data) return [];
+    return (
+      statistics.data.taiSanTangMoiTheoThang ||
+      statistics.data.taiSanTheoThang ||
+      []
+    );
+  }, [statistics]);
+
+  const ccdcTheoThangFromStats = React.useMemo(() => {
+    if (!statistics || !statistics.data) return [];
+    return (
+      statistics.data.ccdcTangMoiTheoThang ||
+      statistics.data.ccdcTheoThang ||
+      []
+    );
+  }, [statistics]);
+
+  const top5TaiSanFromStats = React.useMemo(() => {
+    if (!statistics || !statistics.data) return [];
+    return (
+      statistics.data.top5TaiSan ||
+      statistics.data.top5 ||
+      statistics.data.top5TaiSanGiaTri ||
+      statistics.data.top5TaiSanGiaTriCao ||
+      []
+    );
+  }, [statistics]);
+
+  // helpers
   const nhomCCDCMap = React.useMemo(() => {
-    const map = new Map();
+    const map = new Map<string, any>();
     const nhomList = Array.isArray(nhomCCDCList)
       ? nhomCCDCList
       : nhomCCDCList?.data || [];
     nhomList.forEach((nhom: any) => {
-      // NhomCCDC table có field 'ten' hoặc 'tenNhom'
-      // normalize key as string to avoid number/string mismatches
       const key =
-        nhom.id !== undefined && nhom.id !== null ? String(nhom.id).trim() : "";
+        nhom?.id !== undefined && nhom?.id !== null
+          ? String(nhom.id).trim()
+          : "";
       map.set(key, nhom.ten || nhom.tenNhom);
     });
     return map;
   }, [nhomCCDCList]);
 
-  // Tạo map loại CCDC theo id
   const loaiCCDCMap = React.useMemo(() => {
-    const map = new Map();
-    // allLoaiCCDC có thể là array trực tiếp hoặc có .data
+    const map = new Map<string, any>();
     const loaiList = Array.isArray(allLoaiCCDC)
       ? allLoaiCCDC
       : allLoaiCCDC?.data || [];
     loaiList.forEach((loai: any) => {
-      // normalize key as string
       const key =
-        loai.id !== undefined && loai.id !== null ? String(loai.id).trim() : "";
+        loai?.id !== undefined && loai?.id !== null
+          ? String(loai.id).trim()
+          : "";
       map.set(key, loai.tenLoai);
     });
     return map;
   }, [allLoaiCCDC]);
 
-  // Helper function để extract items từ response data
   const extractCCDCItems = React.useCallback((data: any) => {
     if (!data) return [];
-    // Thử các cấu trúc khác nhau của response
     if (data?.data?.items) return data.data.items;
     if (data?.items) return data.items;
     if (data?.data?.content) return data.data.content;
@@ -201,17 +207,9 @@ export const useDashboardMutation = (
     return [];
   }, []);
 
-  // Helper: Lấy đúng giá trị thực tế cột "Nhóm CCDC" (text).
-  // Logic:
-  // 1) Nếu item có trực tiếp cột hiển thị từ ToolManager (ví dụ: "Nhóm CCDC" hoặc các biến thể) -> dùng luôn giá trị đó.
-  // 2) Nếu có idNhomCCDC và map chứa tên -> trả tên đó.
-  // 3) Thử các trường phổ biến khác và ánh xạ qua map nếu cần.
-  // 4) Nếu không có giá trị trả về "Chưa xác định".
   const getGroupValue = React.useCallback(
     (item: any) => {
       if (!item) return "Chưa xác định";
-
-      // 1) Kiểm tra trực tiếp các tên cột có thể xuất hiện trong ToolManager (bao gồm khoảng trắng và không)
       const possibleKeys = [
         "Nhóm CCDC",
         "Nhom CCDC",
@@ -223,38 +221,22 @@ export const useDashboardMutation = (
         "nhom",
         "Nhóm",
       ];
-
       for (const key of possibleKeys) {
         if (Object.prototype.hasOwnProperty.call(item, key)) {
           const v = item[key];
-          if (v !== undefined && v !== null && String(v).trim() !== "") {
+          if (v !== undefined && v !== null && String(v).trim() !== "")
             return String(v).trim();
-          }
         }
       }
-
-      // 2) Nếu có idNhomCCDC và map chứa tên -> trả tên đó
       const idNhomRaw =
         item.idNhomCCDC !== undefined && item.idNhomCCDC !== null
           ? String(item.idNhomCCDC).trim()
           : "";
       if (idNhomRaw) {
-        if (nhomCCDCMap.has(idNhomRaw)) {
-          return nhomCCDCMap.get(idNhomRaw);
-        }
-        // If there's an id but no mapping, return the raw id string
-        // This ensures dropdown shows values like "2" (raw group value)
-        if (process.env.NODE_ENV !== "production") {
-          console.debug(
-            "[Dashboard] getGroupValue: unmapped idNhomCCDC, returning raw:",
-            idNhomRaw
-          );
-        }
+        if (nhomCCDCMap.has(idNhomRaw)) return nhomCCDCMap.get(idNhomRaw);
         return idNhomRaw;
       }
-
-      // 3) Thử các trường khác và ánh xạ nếu là id
-      let fallback =
+      const fallback =
         item.tenNhomCCDC || item.nhomCCDC || item.nhom || item.tenNhom;
       const strVal =
         fallback !== undefined && fallback !== null
@@ -265,154 +247,154 @@ export const useDashboardMutation = (
         if (nhomCCDCMap.has(strKey)) return nhomCCDCMap.get(strKey);
         return strVal;
       }
-
-      // 4) Không tìm được gì
       return "Chưa xác định";
     },
-    [nhomCCDCMap]
+    [nhomCCDCMap],
   );
 
-  // Extract unique nhóm CCDC từ dữ liệu thực tế (join idNhomCCDC với nhomCCDCMap)
-  const uniqueNhomCCDC = React.useMemo(() => {
-    const items = extractCCDCItems(allCCDCData);
-    if (process.env.NODE_ENV !== "production") {
-      console.debug(
-        "[Dashboard] sample allCCDCData items:",
-        items.slice(0, 10)
-      );
-      console.debug(
-        "[Dashboard] nhomCCDCMap keys:",
-        Array.from(nhomCCDCMap.keys()).slice(0, 20)
-      );
-    }
-    const nhomSet = new Map();
-    items.forEach((item: any) => {
-      // Lấy giá trị nhóm thực tế (text) từ item
-      const tenNhom = getGroupValue(item);
-      // Dùng chính giá trị text làm key để giữ đúng nhóm như trên trang Quản lý CCDC
-      if (!nhomSet.has(tenNhom)) {
-        nhomSet.set(tenNhom, {
-          id: tenNhom,
-          tenNhom: tenNhom,
-        });
-      }
-    });
-    return Array.from(nhomSet.values());
-  }, [allCCDCData, extractCCDCItems, getGroupValue]);
+  const nhomCCDCListNormalized = React.useMemo(() => {
+    if (!nhomCCDCList) return [];
+    return Array.isArray(nhomCCDCList) ? nhomCCDCList : nhomCCDCList.data || [];
+  }, [nhomCCDCList]);
 
-  // Tính số lượng CCDC theo nhóm (lấy đúng giá trị thực tế của cột "Nhóm CCDC" trong dữ liệu)
+  const normalizeGroupItems = (items: any[]): any[] => {
+    if (!items || !Array.isArray(items)) return [];
+    const mapped = items.map((it: any) => {
+      const idRaw =
+        it.id !== undefined && it.id !== null
+          ? String(it.id).trim()
+          : it.Id !== undefined && it.Id !== null
+            ? String(it.Id).trim()
+            : it.idNhomCCDC !== undefined && it.idNhomCCDC !== null
+              ? String(it.idNhomCCDC).trim()
+              : it.IdNhomCCDC !== undefined && it.IdNhomCCDC !== null
+                ? String(it.IdNhomCCDC).trim()
+                : it.idNhom !== undefined && it.idNhom !== null
+                  ? String(it.idNhom).trim()
+                  : "";
+      const ten =
+        it.tenNhom ||
+        it.TenNhom ||
+        it.ten ||
+        it.Ten ||
+        it.nhom ||
+        it.tenGroup ||
+        it.name ||
+        "";
+      const id = idRaw || (ten ? String(ten).trim() : "");
+      const soLuongRaw =
+        it.soLuong ??
+        it.SoLuong ??
+        it.count ??
+        it.so_luong ??
+        it.sl ??
+        it.value ??
+        0;
+      const soLuong =
+        typeof soLuongRaw === "string"
+          ? Number(String(soLuongRaw).replace(/[^0-9.-]+/g, ""))
+          : Number(soLuongRaw || 0);
+      const phanTramRaw =
+        it.phanTram ??
+        it.phan_tram ??
+        it.percent ??
+        it.tiLe ??
+        it.TiLePhanTram ??
+        it.TiLe ??
+        null;
+      const phanTram = phanTramRaw != null ? Number(phanTramRaw) : null;
+      return { ...it, id, ten, soLuong, phanTram };
+    });
+
+    const anyHasPercent = mapped.some(
+      (m) => m.phanTram != null && !Number.isNaN(m.phanTram),
+    );
+    if (!anyHasPercent) {
+      const total =
+        mapped.reduce((s, m) => s + (Number(m.soLuong) || 0), 0) || 1;
+      mapped.forEach((m) => {
+        m.phanTram = total > 0 ? (Number(m.soLuong) / total) * 100 : 0;
+      });
+    }
+
+    return mapped;
+  };
+
+  const ccdcTheoNhomNormalized = normalizeGroupItems(
+    ccdcTheoNhom?.data || ccdcTheoNhom || [],
+  );
+  const taiSanTheoNhomNormalized = normalizeGroupItems(
+    taiSanTheoNhom?.data || taiSanTheoNhom || [],
+  );
+
+  const uniqueNhomCCDC = React.useMemo(() => {
+    if (ccdcTheoNhomNormalized && ccdcTheoNhomNormalized.length > 0) {
+      return ccdcTheoNhomNormalized.map((n: any) => ({
+        id: n.id || n.ten,
+        tenNhom: n.ten,
+      }));
+    }
+    if (nhomCCDCListNormalized.length > 0) {
+      return nhomCCDCListNormalized.map((n: any) => ({
+        id: n.id,
+        tenNhom: n.ten || n.tenNhom,
+      }));
+    }
+    return [];
+  }, [ccdcTheoNhomNormalized, nhomCCDCListNormalized]);
+
   const ccdcTheoNhomByData = React.useMemo(() => {
     const items = extractCCDCItems(allCCDCData);
-    if (items.length === 0) {
-      if (process.env.NODE_ENV !== "production")
-        console.debug("[Dashboard] no CCDC items found from allCCDCData");
-      return [];
-    }
-
-    // Đếm theo giá trị nhóm thực tế, dùng getGroupValue để đảm bảo bắt đúng cột
+    if (items.length === 0) return [];
     const nhomCountMap = new Map<string, number>();
+    let validItemsCount = 0;
     items.forEach((item: any) => {
       const tenNhom = getGroupValue(item);
-      const current = nhomCountMap.get(tenNhom) || 0;
-      nhomCountMap.set(tenNhom, current + 1);
+      if (tenNhom !== "Chưa xác định") {
+        const cur = nhomCountMap.get(tenNhom) || 0;
+        nhomCountMap.set(tenNhom, cur + 1);
+        validItemsCount++;
+      }
     });
-
-    const totalItems = items.length;
-    if (process.env.NODE_ENV !== "production") {
-      console.debug("[Dashboard] total CCDC items:", totalItems);
-      console.debug(
-        "[Dashboard] nhomCountMap entries:",
-        Array.from(nhomCountMap.entries())
-      );
-    }
+    if (validItemsCount === 0) return [];
     return Array.from(nhomCountMap.entries()).map(([ten, soLuong]) => ({
       ten,
       soLuong,
-      phanTram: totalItems > 0 ? (soLuong / totalItems) * 100 : 0,
+      phanTram: validItemsCount > 0 ? (soLuong / validItemsCount) * 100 : 0,
     }));
   }, [allCCDCData, extractCCDCItems, getGroupValue]);
 
-  // Tính tổng số CCDC và tổng giá trị từ dữ liệu thực tế
   const { tongCCDC, tongGiaTriCCDC } = React.useMemo(() => {
     const items = extractCCDCItems(allCCDCData);
-    const tongCCDC = items.length;
-    const tongGiaTriCCDC = items.reduce(
+    const tong = items.length;
+    const tongGiaTri = items.reduce(
       (sum: number, item: any) => sum + (item.giaTri || item.thanhTien || 0),
-      0
+      0,
     );
-    return { tongCCDC, tongGiaTriCCDC };
+    return { tongCCDC: tong, tongGiaTriCCDC: tongGiaTri };
   }, [allCCDCData, extractCCDCItems]);
 
-  // Tính số lượng CCDC theo loại dựa trên nhóm đã chọn
-  // NOTE: selectedNhomCCDC coming from the dropdown is a text value (group name)
-  // so compare against the resolved group text via `getGroupValue(item)` instead
-  // of matching `idNhomCCDC` which may be numeric/id and not equal to the dropdown value.
-  const ccdcTheoLoaiByNhom = React.useMemo(() => {
-    if (!selectedNhomCCDC) return [];
-
-    const items = extractCCDCItems(allCCDCData);
-    // Filter by resolved group text (uses same logic as uniqueNhomCCDC)
-    const filteredItems = items.filter((item: any) => {
-      const tenNhom = getGroupValue(item);
-      return tenNhom === selectedNhomCCDC;
-    });
-
-    // Đếm số lượng theo loại CCDC
-    const loaiCountMap = new Map();
-    filteredItems.forEach((item: any) => {
-      // Lấy tên loại CCDC từ map (join theo idLoaiCCDCCon)
-      let tenLoai = loaiCCDCMap.get(item.idLoaiCCDCCon) || item.tenLoaiCCDC;
-      if (!tenLoai || tenLoai === "UNKNOW") {
-        tenLoai = "Chưa xác định loại";
-      }
-      const currentCount = loaiCountMap.get(tenLoai) || 0;
-      loaiCountMap.set(tenLoai, currentCount + 1);
-    });
-
-    // Chuyển thành array cho biểu đồ
-    return Array.from(loaiCountMap.entries()).map(([label, value]) => ({
-      label,
-      value,
-    }));
-  }, [
-    allCCDCData,
-    selectedNhomCCDC,
-    loaiCCDCMap,
-    extractCCDCItems,
-    getGroupValue,
-  ]);
-
-  // Tính số lượng CCDC tăng mới theo tháng dựa trên ngayNhap
   const ccdcTheoThangByNgayNhap = React.useMemo(() => {
     const items = extractCCDCItems(allCCDCData);
-
-    // Đếm số lượng theo tháng/năm
-    const thangMap = new Map();
+    const thangMap = new Map<string, number>();
     items.forEach((item: any) => {
       if (item.ngayNhap) {
         const date = new Date(item.ngayNhap);
-        const thang = date.getMonth() + 1; // 1-12
+        const thang = date.getMonth() + 1;
         const nam = date.getFullYear();
         const key = `${nam}-${thang}`;
-        const currentCount = thangMap.get(key) || 0;
-        thangMap.set(key, currentCount + 1);
+        const cur = thangMap.get(key) || 0;
+        thangMap.set(key, cur + 1);
       }
     });
-
-    // Chuyển thành array với thông tin tháng và năm
     return Array.from(thangMap.entries())
       .map(([key, soLuong]) => {
         const [nam, thang] = key.split("-").map(Number);
         return { thang, nam, soLuong };
       })
-      .sort((a, b) => {
-        // Sắp xếp theo năm rồi tháng
-        if (a.nam !== b.nam) return a.nam - b.nam;
-        return a.thang - b.thang;
-      });
+      .sort((a, b) => (a.nam !== b.nam ? a.nam - b.nam : a.thang - b.thang));
   }, [allCCDCData, extractCCDCItems]);
 
-  // Helper function để extract items từ tài sản response data
   const extractTaiSanItems = React.useCallback((data: any) => {
     if (!data) return [];
     if (data?.data?.items) return data.data.items;
@@ -424,109 +406,122 @@ export const useDashboardMutation = (
     return [];
   }, []);
 
-  // Tính số lượng tài sản tăng mới theo tháng dựa trên ngayVaoSo
   const taiSanTheoThangByNgayVaoSo = React.useMemo(() => {
     const items = extractTaiSanItems(allTaiSanData);
-
-    // Đếm số lượng theo tháng/năm
-    const thangMap = new Map();
+    const thangMap = new Map<string, number>();
     items.forEach((item: any) => {
       if (item.ngayVaoSo) {
         const date = new Date(item.ngayVaoSo);
-        const thang = date.getMonth() + 1; // 1-12
+        const thang = date.getMonth() + 1;
         const nam = date.getFullYear();
         const key = `${nam}-${thang}`;
-        const currentCount = thangMap.get(key) || 0;
-        thangMap.set(key, currentCount + 1);
+        const cur = thangMap.get(key) || 0;
+        thangMap.set(key, cur + 1);
       }
     });
-
-    // Chuyển thành array với thông tin tháng và năm
     return Array.from(thangMap.entries())
       .map(([key, soLuong]) => {
         const [nam, thang] = key.split("-").map(Number);
         return { thang, nam, soLuong };
       })
-      .sort((a, b) => {
-        // Sắp xếp theo năm rồi tháng
-        if (a.nam !== b.nam) return a.nam - b.nam;
-        return a.thang - b.thang;
-      });
+      .sort((a, b) => (a.nam !== b.nam ? a.nam - b.nam : a.thang - b.thang));
   }, [allTaiSanData, extractTaiSanItems]);
 
-  // Query for danh sách nhóm tài sản (cho dropdown)
-  const { data: nhomTaiSanList, isLoading: isLoadingNhomTaiSanList } = useQuery(
-    {
-      queryKey: ["nhom-tai-san-list"],
-      queryFn: fetchNhomTaiSanList,
-      staleTime: 5 * 60 * 1000,
+  const nhomTaiSanList = [] as any[];
+
+  const isLoading =
+    isLoadingStatistics ||
+    isLoadingTaiSanSapHet ||
+    isLoadingTaiSanTheoNhom ||
+    isLoadingCCDCTheoNhom ||
+    isLoadingNhomCCDCList ||
+    isLoadingAllCCDC ||
+    isLoadingAllLoaiCCDC ||
+    isLoadingAllTaiSan ||
+    isLoadingTaiSanTheoLoai ||
+    isLoadingCCDCTheoLoai;
+
+  let rawCcdcLoai: any[] = [];
+  if (ccdcTheoLoai && Array.isArray(ccdcTheoLoai)) {
+    rawCcdcLoai = ccdcTheoLoai;
+  } else if (ccdcTheoLoai && typeof ccdcTheoLoai === "object") {
+    let resolvedKey: string | undefined = undefined;
+    if (selectedNhomCCDC) {
+      const byId = (ccdcTheoNhomNormalized || []).find(
+        (g: any) =>
+          String(g.id) === String(selectedNhomCCDC) ||
+          String(g.ten) === String(selectedNhomCCDC),
+      );
+      if (byId) resolvedKey = byId.ten;
+      if (!resolvedKey) {
+        const byList = (nhomCCDCListNormalized || []).find(
+          (g: any) =>
+            String(g.id) === String(selectedNhomCCDC) ||
+            String(g.ten) === String(selectedNhomCCDC) ||
+            String(g.tenNhom) === String(selectedNhomCCDC),
+        );
+        if (byList) resolvedKey = byList.ten || byList.tenNhom;
+      }
     }
-  );
 
-  // Query for tai san theo loai (filtered by nhom)
-  const { data: taiSanTheoLoai, isLoading: isLoadingTaiSanTheoLoai } = useQuery(
-    {
-      queryKey: ["dashboard-tai-san-theo-loai", selectedNhomTaiSan],
-      queryFn: () => fetchTaiSanTheoLoai(selectedNhomTaiSan),
-      staleTime: 5 * 60 * 1000,
-      enabled: !!selectedNhomTaiSan,
+    const key = resolvedKey || Object.keys(ccdcTheoLoai)[0];
+    const arr = ccdcTheoLoai[key] || ccdcTheoLoai[String(key)] || [];
+    if (Array.isArray(arr)) rawCcdcLoai = arr;
+  } else if (ccdcTheoLoai?.data && typeof ccdcTheoLoai.data === "object") {
+    let resolvedKey: string | undefined = undefined;
+    if (selectedNhomCCDC) {
+      const byId = (ccdcTheoNhomNormalized || []).find(
+        (g: any) =>
+          String(g.id) === String(selectedNhomCCDC) ||
+          String(g.ten) === String(selectedNhomCCDC),
+      );
+      if (byId) resolvedKey = byId.ten;
+      if (!resolvedKey) {
+        const byList = (nhomCCDCListNormalized || []).find(
+          (g: any) =>
+            String(g.id) === String(selectedNhomCCDC) ||
+            String(g.ten) === String(selectedNhomCCDC) ||
+            String(g.tenNhom) === String(selectedNhomCCDC),
+        );
+        if (byList) resolvedKey = byList.ten || byList.tenNhom;
+      }
     }
-  );
+    const key = resolvedKey || Object.keys(ccdcTheoLoai.data)[0];
+    const arr = ccdcTheoLoai.data[key] || [];
+    if (Array.isArray(arr)) rawCcdcLoai = arr;
+  }
 
-  // Query for CCDC theo loai (filtered by nhom)
-  const { data: ccdcTheoLoai, isLoading: isLoadingCCDCTheoLoai } = useQuery({
-    queryKey: ["dashboard-ccdc-theo-loai", selectedNhomCCDC],
-    queryFn: () => fetchCCDCTheoLoai(selectedNhomCCDC),
-    staleTime: 5 * 60 * 1000,
-    enabled: !!selectedNhomCCDC,
-  });
-
-  // Query for tai san theo thang
-  const { data: taiSanTheoThang, isLoading: isLoadingTaiSanTheoThang } =
-    useQuery({
-      queryKey: ["dashboard-tai-san-theo-thang", namTaiSan],
-      queryFn: () => fetchTaiSanTheoThang(namTaiSan),
-      staleTime: 5 * 60 * 1000,
-    });
-
-  // Query for CCDC theo thang
-  const { data: ccdcTheoThang, isLoading: isLoadingCCDCTheoThang } = useQuery({
-    queryKey: ["dashboard-ccdc-theo-thang", namCCDC],
-    queryFn: () => fetchCCDCTheoThang(namCCDC),
-    staleTime: 5 * 60 * 1000,
+  const ccdcTheoLoaiNormalized = (rawCcdcLoai || []).map((it: any) => {
+    const label =
+      it.tenLoai || it.TenLoai || it.ten || it.Ten || it.label || "";
+    const valueRaw =
+      it.soLuong ?? it.SoLuong ?? it.count ?? it.value ?? it.sl ?? 0;
+    const value =
+      typeof valueRaw === "string"
+        ? Number(String(valueRaw).replace(/[^0-9.-]+/g, ""))
+        : Number(valueRaw || 0);
+    return { label, value };
   });
 
   return {
-    statistics: statistics?.data,
-    tongQuan: tongQuan?.data,
-    taiSanTheoNhom: taiSanTheoNhom?.data || [],
-    ccdcTheoNhom: ccdcTheoNhom?.data || [],
+    statistics: statistics?.data || null,
+    tongQuan: null,
+    taiSanSapHet: taiSanSapHet?.data || [],
+    taiSanTheoNhom: taiSanTheoNhomNormalized || [],
+    ccdcTheoNhom: ccdcTheoNhomNormalized || [],
     nhomCCDCList: nhomCCDCList || [],
     nhomTaiSanList: nhomTaiSanList || [],
     uniqueNhomCCDC,
     ccdcTheoNhomByData,
     tongCCDC,
     tongGiaTriCCDC,
-    ccdcTheoLoaiByNhom,
     ccdcTheoThangByNgayNhap,
     taiSanTheoThangByNgayVaoSo,
     taiSanTheoLoai: taiSanTheoLoai?.data || [],
-    ccdcTheoLoai: ccdcTheoLoai?.data || [],
-    taiSanTheoThang: taiSanTheoThang?.data || [],
-    ccdcTheoThang: ccdcTheoThang?.data || [],
-    isLoading:
-      isLoadingStatistics ||
-      isLoadingTongQuan ||
-      isLoadingTaiSanTheoNhom ||
-      isLoadingCCDCTheoNhom ||
-      isLoadingNhomCCDCList ||
-      isLoadingNhomTaiSanList ||
-      isLoadingAllCCDC ||
-      isLoadingAllLoaiCCDC ||
-      isLoadingAllTaiSan ||
-      isLoadingTaiSanTheoLoai ||
-      isLoadingCCDCTheoLoai ||
-      isLoadingTaiSanTheoThang ||
-      isLoadingCCDCTheoThang,
-  };
+    ccdcTheoLoai: ccdcTheoLoaiNormalized || [],
+    taiSanTheoThang: taiSanTheoThangFromStats || [],
+    ccdcTheoThang: ccdcTheoThangFromStats || [],
+    top5TaiSan: top5TaiSanFromStats || [],
+    isLoading,
+  } as const;
 };
