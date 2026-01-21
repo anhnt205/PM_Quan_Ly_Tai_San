@@ -9,6 +9,8 @@ interface Props {
   field?: string;
   disabled?: boolean;
   onChange?: (newValue: any) => void;
+  componentsProps?: any;
+  autocompleteSx?: any;
 }
 
 export default function FieldAutoCompleted({
@@ -19,6 +21,8 @@ export default function FieldAutoCompleted({
   field,
   disabled,
   onChange,
+  componentsProps,
+  autocompleteSx,
 }: Props) {
   const currentValue = formik && field ? getIn(formik.values, field) : null;
 
@@ -29,6 +33,8 @@ export default function FieldAutoCompleted({
   const error = field ? getIn(formik.errors, field) : null;
   return (
     <Autocomplete
+      sx={autocompleteSx}
+      componentsProps={componentsProps}
       disabled={disabled}
       fullWidth
       options={data}

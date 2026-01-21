@@ -3,6 +3,7 @@ import { Box, Typography, TextField } from "@mui/material";
 
 interface BBKiemKeContentProps {
   onContentChange?: (content: any) => void;
+  selectedDeptName?: string;
 }
 
 interface MemberRow {
@@ -23,6 +24,7 @@ interface InventoryItem {
 
 export default function BBKiemKeContent({
   onContentChange,
+  selectedDeptName,
 }: BBKiemKeContentProps) {
   const [headerInfo, setHeaderInfo] = useState({
     qdSo: "",
@@ -49,14 +51,8 @@ export default function BBKiemKeContent({
     { name: "", position: "" },
   ]);
 
-  // Tạo sẵn 5 dòng trắng cố định
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([
-    { stt: "1", tenTaiSan: "", dvt: "", nuocSx: "", phuongThuc: "", soLuong: "", hienTrang: "", ghiChu: "" },
-    { stt: "2", tenTaiSan: "", dvt: "", nuocSx: "", phuongThuc: "", soLuong: "", hienTrang: "", ghiChu: "" },
-    { stt: "3", tenTaiSan: "", dvt: "", nuocSx: "", phuongThuc: "", soLuong: "", hienTrang: "", ghiChu: "" },
-    { stt: "4", tenTaiSan: "", dvt: "", nuocSx: "", phuongThuc: "", soLuong: "", hienTrang: "", ghiChu: "" },
-    { stt: "5", tenTaiSan: "", dvt: "", nuocSx: "", phuongThuc: "", soLuong: "", hienTrang: "", ghiChu: "" },
-  ]);
+  // Start with no sample inventory rows
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
 
   const [closingTime, setClosingTime] = useState("");
   const [currentDateStr, setCurrentDateStr] = useState("");
@@ -69,42 +65,102 @@ export default function BBKiemKeContent({
     setCurrentDateStr(`${yyyy}-${mm}-${dd}`);
   }, []);
 
-  const handleHeaderChange = (field: keyof typeof headerInfo, value: string) => {
+  const handleHeaderChange = (
+    field: keyof typeof headerInfo,
+    value: string,
+  ) => {
     const newInfo = { ...headerInfo, [field]: value };
     setHeaderInfo(newInfo);
-    onContentChange?.({ headerInfo: newInfo, generalInfo, members, membersUnit, inventoryItems, closingTime });
+    onContentChange?.({
+      headerInfo: newInfo,
+      generalInfo,
+      members,
+      membersUnit,
+      inventoryItems,
+      closingTime,
+    });
   };
 
-  const handleGeneralInfoChange = (field: keyof typeof generalInfo, value: string) => {
+  const handleGeneralInfoChange = (
+    field: keyof typeof generalInfo,
+    value: string,
+  ) => {
     const newInfo = { ...generalInfo, [field]: value };
     setGeneralInfo(newInfo);
-    onContentChange?.({ headerInfo, generalInfo: newInfo, members, membersUnit, inventoryItems, closingTime });
+    onContentChange?.({
+      headerInfo,
+      generalInfo: newInfo,
+      members,
+      membersUnit,
+      inventoryItems,
+      closingTime,
+    });
   };
 
-  const handleMemberChange = (index: number, field: keyof MemberRow, value: string) => {
+  const handleMemberChange = (
+    index: number,
+    field: keyof MemberRow,
+    value: string,
+  ) => {
     const newMembers = [...members];
     newMembers[index] = { ...newMembers[index], [field]: value };
     setMembers(newMembers);
-    onContentChange?.({ headerInfo, generalInfo, members: newMembers, membersUnit, inventoryItems, closingTime });
+    onContentChange?.({
+      headerInfo,
+      generalInfo,
+      members: newMembers,
+      membersUnit,
+      inventoryItems,
+      closingTime,
+    });
   };
 
-  const handleMemberUnitChange = (index: number, field: keyof MemberRow, value: string) => {
+  const handleMemberUnitChange = (
+    index: number,
+    field: keyof MemberRow,
+    value: string,
+  ) => {
     const newMembersUnit = [...membersUnit];
     newMembersUnit[index] = { ...newMembersUnit[index], [field]: value };
     setMembersUnit(newMembersUnit);
-    onContentChange?.({ headerInfo, generalInfo, members, membersUnit: newMembersUnit, inventoryItems, closingTime });
+    onContentChange?.({
+      headerInfo,
+      generalInfo,
+      members,
+      membersUnit: newMembersUnit,
+      inventoryItems,
+      closingTime,
+    });
   };
 
-  const handleInventoryChange = (index: number, field: keyof InventoryItem, value: string) => {
+  const handleInventoryChange = (
+    index: number,
+    field: keyof InventoryItem,
+    value: string,
+  ) => {
     const newItems = [...inventoryItems];
     newItems[index] = { ...newItems[index], [field]: value };
     setInventoryItems(newItems);
-    onContentChange?.({ headerInfo, generalInfo, members, membersUnit, inventoryItems: newItems, closingTime });
+    onContentChange?.({
+      headerInfo,
+      generalInfo,
+      members,
+      membersUnit,
+      inventoryItems: newItems,
+      closingTime,
+    });
   };
 
   const handleClosingTimeChange = (value: string) => {
     setClosingTime(value);
-    onContentChange?.({ headerInfo, generalInfo, members, membersUnit, inventoryItems, closingTime: value });
+    onContentChange?.({
+      headerInfo,
+      generalInfo,
+      members,
+      membersUnit,
+      inventoryItems,
+      closingTime: value,
+    });
   };
 
   const fontStyle = {
@@ -157,12 +213,25 @@ export default function BBKiemKeContent({
       }}
       id="printable-bbkiemke-content"
     >
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 3 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          mb: 3,
+        }}
+      >
         <Box sx={{ width: "50%", textAlign: "center" }}>
           <Typography sx={{ ...fontStyle, textTransform: "uppercase" }}>
             TẬP ĐOÀN CÔNG NGHIỆP <br /> THAN - KHOÁNG SẢN VIỆT NAM
           </Typography>
-          <Typography sx={{ ...fontStyle, fontWeight: "bold", textTransform: "uppercase" }}>
+          <Typography
+            sx={{
+              ...fontStyle,
+              fontWeight: "bold",
+              textTransform: "uppercase",
+            }}
+          >
             CÔNG TY THAN UÔNG BÍ - TKV
           </Typography>
         </Box>
@@ -171,9 +240,18 @@ export default function BBKiemKeContent({
           <Typography sx={{ ...fontStyle, fontWeight: "bold", mb: 0.5 }}>
             Mẫu số 01a-TS
           </Typography>
-          
-          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "baseline", flexWrap: "wrap" }}>
-            <Typography sx={fontStyle}>Ban hành kèm theo QĐ số&nbsp;</Typography>
+
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "baseline",
+              flexWrap: "wrap",
+            }}
+          >
+            <Typography sx={fontStyle}>
+              Ban hành kèm theo QĐ số&nbsp;
+            </Typography>
             <TextField
               variant="standard"
               value={headerInfo.qdSo}
@@ -183,7 +261,13 @@ export default function BBKiemKeContent({
             <Typography sx={fontStyle}>&nbsp;/QĐ-TUB</Typography>
           </Box>
 
-          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "baseline" }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "baseline",
+            }}
+          >
             <Typography sx={fontStyle}>ngày&nbsp;</Typography>
             <TextField
               variant="standard"
@@ -211,11 +295,18 @@ export default function BBKiemKeContent({
       </Box>
 
       <Box sx={{ textAlign: "center", mb: 2 }}>
-        <Typography sx={{ ...fontStyle, fontSize: "16pt", fontWeight: "bold", textTransform: "uppercase" }}>
+        <Typography
+          sx={{
+            ...fontStyle,
+            fontSize: "16pt",
+            fontWeight: "bold",
+            textTransform: "uppercase",
+          }}
+        >
           BIÊN BẢN KIỂM KÊ TSCĐ, CCDC TẠI HIỆN TRƯỜNG
         </Typography>
         <Typography sx={{ ...fontStyle, mt: 1, fontWeight: "bold" }}>
-          Đơn vị:
+          Đơn vị: <b style={{ fontWeight: "bold" }}>{selectedDeptName || ""}</b>
         </Typography>
       </Box>
 
@@ -225,21 +316,27 @@ export default function BBKiemKeContent({
           <TextField
             variant="standard"
             value={generalInfo.ngayKiemKe}
-            onChange={(e) => handleGeneralInfoChange("ngayKiemKe", e.target.value)}
+            onChange={(e) =>
+              handleGeneralInfoChange("ngayKiemKe", e.target.value)
+            }
             sx={{ ...dottedInputSx, width: "30px" }}
           />
           <Typography sx={fontStyle}>&nbsp;tháng&nbsp;</Typography>
           <TextField
             variant="standard"
             value={generalInfo.thangKiemKe}
-            onChange={(e) => handleGeneralInfoChange("thangKiemKe", e.target.value)}
+            onChange={(e) =>
+              handleGeneralInfoChange("thangKiemKe", e.target.value)
+            }
             sx={{ ...dottedInputSx, width: "30px" }}
           />
           <Typography sx={fontStyle}>&nbsp;năm&nbsp;</Typography>
           <TextField
             variant="standard"
             value={generalInfo.namKiemKe}
-            onChange={(e) => handleGeneralInfoChange("namKiemKe", e.target.value)}
+            onChange={(e) =>
+              handleGeneralInfoChange("namKiemKe", e.target.value)
+            }
             sx={{ ...dottedInputSx, width: "50px" }}
           />
           <Typography sx={fontStyle}>&nbsp;tại&nbsp;</Typography>
@@ -247,7 +344,12 @@ export default function BBKiemKeContent({
             variant="standard"
             value={generalInfo.diaDiem}
             onChange={(e) => handleGeneralInfoChange("diaDiem", e.target.value)}
-            sx={{ ...dottedInputSx, width: "150px", flexGrow: 1, "& input": { textAlign: "left" } }}
+            sx={{
+              ...dottedInputSx,
+              width: "150px",
+              flexGrow: 1,
+              "& input": { textAlign: "left" },
+            }}
           />
         </Box>
         <Typography sx={{ ...fontStyle, mt: 1 }}>
@@ -256,7 +358,9 @@ export default function BBKiemKeContent({
       </Box>
 
       <Box sx={{ mb: 2 }}>
-        <Typography sx={{ ...fontStyle, fontWeight: "bold", textTransform: "uppercase" }}>
+        <Typography
+          sx={{ ...fontStyle, fontWeight: "bold", textTransform: "uppercase" }}
+        >
           A. THÀNH PHẦN
         </Typography>
         <Typography sx={{ ...fontStyle, fontWeight: "bold" }}>
@@ -264,20 +368,37 @@ export default function BBKiemKeContent({
         </Typography>
 
         {members.map((row, index) => (
-          <Box key={`mb1-${index}`} sx={{ display: "flex", alignItems: "baseline", mt: 0.5 }}>
+          <Box
+            key={`mb1-${index}`}
+            sx={{ display: "flex", alignItems: "baseline", mt: 0.5 }}
+          >
             <Typography sx={fontStyle}>{index + 1}. Ông (bà):&nbsp;</Typography>
             <TextField
               variant="standard"
               value={row.name}
-              onChange={(e) => handleMemberChange(index, "name", e.target.value)}
-              sx={{ ...dottedInputSx, flexGrow: 1, "& input": { textAlign: "left" } }}
+              onChange={(e) =>
+                handleMemberChange(index, "name", e.target.value)
+              }
+              sx={{
+                ...dottedInputSx,
+                flexGrow: 1,
+                "& input": { textAlign: "left" },
+              }}
             />
-            <Typography sx={{ ...fontStyle, ml: 1 }}>&nbsp;Chức vụ:&nbsp;</Typography>
+            <Typography sx={{ ...fontStyle, ml: 1 }}>
+              &nbsp;Chức vụ:&nbsp;
+            </Typography>
             <TextField
               variant="standard"
               value={row.position}
-              onChange={(e) => handleMemberChange(index, "position", e.target.value)}
-              sx={{ ...dottedInputSx, width: "30%", "& input": { textAlign: "left" } }}
+              onChange={(e) =>
+                handleMemberChange(index, "position", e.target.value)
+              }
+              sx={{
+                ...dottedInputSx,
+                width: "30%",
+                "& input": { textAlign: "left" },
+              }}
             />
           </Box>
         ))}
@@ -287,42 +408,79 @@ export default function BBKiemKeContent({
         </Typography>
 
         {membersUnit.map((row, index) => (
-          <Box key={`mb2-${index}`} sx={{ display: "flex", alignItems: "baseline", mt: 0.5 }}>
+          <Box
+            key={`mb2-${index}`}
+            sx={{ display: "flex", alignItems: "baseline", mt: 0.5 }}
+          >
             <Typography sx={fontStyle}>{index + 1}. Ông (bà):&nbsp;</Typography>
             <TextField
               variant="standard"
               value={row.name}
-              onChange={(e) => handleMemberUnitChange(index, "name", e.target.value)}
-              sx={{ ...dottedInputSx, flexGrow: 1, "& input": { textAlign: "left" } }}
+              onChange={(e) =>
+                handleMemberUnitChange(index, "name", e.target.value)
+              }
+              sx={{
+                ...dottedInputSx,
+                flexGrow: 1,
+                "& input": { textAlign: "left" },
+              }}
             />
-            <Typography sx={{ ...fontStyle, ml: 1 }}>&nbsp;Chức vụ:&nbsp;</Typography>
+            <Typography sx={{ ...fontStyle, ml: 1 }}>
+              &nbsp;Chức vụ:&nbsp;
+            </Typography>
             <TextField
               variant="standard"
               value={row.position}
-              onChange={(e) => handleMemberUnitChange(index, "position", e.target.value)}
-              sx={{ ...dottedInputSx, width: "30%", "& input": { textAlign: "left" } }}
+              onChange={(e) =>
+                handleMemberUnitChange(index, "position", e.target.value)
+              }
+              sx={{
+                ...dottedInputSx,
+                width: "30%",
+                "& input": { textAlign: "left" },
+              }}
             />
           </Box>
         ))}
 
-        <Typography sx={{ ...fontStyle, fontWeight: "bold", textTransform: "uppercase", mt: 2 }}>
+        <Typography
+          sx={{
+            ...fontStyle,
+            fontWeight: "bold",
+            textTransform: "uppercase",
+            mt: 2,
+          }}
+        >
           B. NỘI DUNG
         </Typography>
 
         <Typography sx={{ ...fontStyle, mt: 1, mb: 2 }}>
-          Tiến hành kiểm kê TSCĐ, CCDC hiện có tại đơn vị đến ngày {currentDateStr} cụ thể như sau:
+          Tiến hành kiểm kê TSCĐ, CCDC hiện có tại đơn vị đến ngày{" "}
+          {currentDateStr} cụ thể như sau:
         </Typography>
 
         <Box sx={{ width: "100%", overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid black" }}>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              border: "1px solid black",
+            }}
+          >
             <thead>
               <tr>
                 <th style={{ ...tableCellSx, width: "5%" }}>STT</th>
-                <th style={{ ...tableCellSx, width: "30%" }}>Tên tài sản, công cụ dụng cụ ( ký mã hiệu )</th>
+                <th style={{ ...tableCellSx, width: "30%" }}>
+                  Tên tài sản, công cụ dụng cụ ( ký mã hiệu )
+                </th>
                 <th style={{ ...tableCellSx, width: "10%" }}>Đơn vị tính</th>
                 <th style={{ ...tableCellSx, width: "10%" }}>Nước sản xuất</th>
-                <th style={{ ...tableCellSx, width: "10%" }}>Phương thức kiểm kê</th>
-                <th style={{ ...tableCellSx, width: "10%" }}>Số lượng kiểm kê thực tế</th>
+                <th style={{ ...tableCellSx, width: "10%" }}>
+                  Phương thức kiểm kê
+                </th>
+                <th style={{ ...tableCellSx, width: "10%" }}>
+                  Số lượng kiểm kê thực tế
+                </th>
                 <th style={{ ...tableCellSx, width: "10%" }}>Hiện trạng</th>
                 <th style={{ ...tableCellSx, width: "15%" }}>Ghi chú</th>
               </tr>
@@ -336,7 +494,13 @@ export default function BBKiemKeContent({
                       fullWidth
                       variant="standard"
                       value={item.tenTaiSan}
-                      onChange={(e) => handleInventoryChange(index, "tenTaiSan", e.target.value)}
+                      onChange={(e) =>
+                        handleInventoryChange(
+                          index,
+                          "tenTaiSan",
+                          e.target.value,
+                        )
+                      }
                       sx={{ ...tableInputSx, "& input": { textAlign: "left" } }}
                     />
                   </td>
@@ -345,7 +509,9 @@ export default function BBKiemKeContent({
                       fullWidth
                       variant="standard"
                       value={item.dvt}
-                      onChange={(e) => handleInventoryChange(index, "dvt", e.target.value)}
+                      onChange={(e) =>
+                        handleInventoryChange(index, "dvt", e.target.value)
+                      }
                       sx={tableInputSx}
                     />
                   </td>
@@ -354,7 +520,9 @@ export default function BBKiemKeContent({
                       fullWidth
                       variant="standard"
                       value={item.nuocSx}
-                      onChange={(e) => handleInventoryChange(index, "nuocSx", e.target.value)}
+                      onChange={(e) =>
+                        handleInventoryChange(index, "nuocSx", e.target.value)
+                      }
                       sx={tableInputSx}
                     />
                   </td>
@@ -363,7 +531,13 @@ export default function BBKiemKeContent({
                       fullWidth
                       variant="standard"
                       value={item.phuongThuc}
-                      onChange={(e) => handleInventoryChange(index, "phuongThuc", e.target.value)}
+                      onChange={(e) =>
+                        handleInventoryChange(
+                          index,
+                          "phuongThuc",
+                          e.target.value,
+                        )
+                      }
                       sx={tableInputSx}
                     />
                   </td>
@@ -372,7 +546,9 @@ export default function BBKiemKeContent({
                       fullWidth
                       variant="standard"
                       value={item.soLuong}
-                      onChange={(e) => handleInventoryChange(index, "soLuong", e.target.value)}
+                      onChange={(e) =>
+                        handleInventoryChange(index, "soLuong", e.target.value)
+                      }
                       sx={tableInputSx}
                     />
                   </td>
@@ -381,7 +557,13 @@ export default function BBKiemKeContent({
                       fullWidth
                       variant="standard"
                       value={item.hienTrang}
-                      onChange={(e) => handleInventoryChange(index, "hienTrang", e.target.value)}
+                      onChange={(e) =>
+                        handleInventoryChange(
+                          index,
+                          "hienTrang",
+                          e.target.value,
+                        )
+                      }
                       sx={tableInputSx}
                     />
                   </td>
@@ -390,7 +572,9 @@ export default function BBKiemKeContent({
                       fullWidth
                       variant="standard"
                       value={item.ghiChu}
-                      onChange={(e) => handleInventoryChange(index, "ghiChu", e.target.value)}
+                      onChange={(e) =>
+                        handleInventoryChange(index, "ghiChu", e.target.value)
+                      }
                       sx={{ ...tableInputSx, "& input": { textAlign: "left" } }}
                     />
                   </td>
@@ -400,28 +584,44 @@ export default function BBKiemKeContent({
           </table>
         </Box>
 
-        <Box sx={{ mt: 3, display: "flex", alignItems: "baseline", justifyContent: "flex-start" }}>
-            <Typography sx={fontStyle}>Biên bản được lập xong hồi&nbsp;</Typography>
-            <TextField
-              variant="standard"
-              value={closingTime}
-              onChange={(e) => handleClosingTimeChange(e.target.value)}
-              sx={{ ...dottedInputSx, width: "60px" }}
-            />
-            <Typography sx={fontStyle}>&nbsp;giờ cùng ngày, các thành viên thống nhất thông qua.</Typography>
+        <Box
+          sx={{
+            mt: 3,
+            display: "flex",
+            alignItems: "baseline",
+            justifyContent: "flex-start",
+          }}
+        >
+          <Typography sx={fontStyle}>
+            Biên bản được lập xong hồi&nbsp;
+          </Typography>
+          <TextField
+            variant="standard"
+            value={closingTime}
+            onChange={(e) => handleClosingTimeChange(e.target.value)}
+            sx={{ ...dottedInputSx, width: "60px" }}
+          />
+          <Typography sx={fontStyle}>
+            &nbsp;giờ cùng ngày, các thành viên thống nhất thông qua.
+          </Typography>
         </Box>
 
         <Box sx={{ mt: 5, display: "flex", justifyContent: "flex-end" }}>
           <Box sx={{ width: "50%" }}></Box>
 
           <Box sx={{ width: "50%", textAlign: "center" }}>
-            <Typography sx={{ ...fontStyle, fontWeight: "bold", textTransform: "uppercase" }}>
+            <Typography
+              sx={{
+                ...fontStyle,
+                fontWeight: "bold",
+                textTransform: "uppercase",
+              }}
+            >
               TRƯỞNG TIỂU BAN KIỂM KÊ
             </Typography>
             <Box sx={{ height: "40px" }}></Box>
           </Box>
         </Box>
-
       </Box>
     </Box>
   );

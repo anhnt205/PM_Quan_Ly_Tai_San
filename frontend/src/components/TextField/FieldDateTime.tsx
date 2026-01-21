@@ -17,6 +17,7 @@ export default function FieldDateTime({
   setSelectedDate,
   field,
   disabled = false,
+  minutesStep = 1,
 }: {
   title: string;
   formik?: any;
@@ -24,6 +25,7 @@ export default function FieldDateTime({
   setSelectedDate?: React.Dispatch<React.SetStateAction<string>>;
   field?: string;
   disabled?: boolean;
+  minutesStep?: number;
 }) {
   const value = formik && field ? getIn(formik.values, field) : selectedDate;
   const setValue = (val: string) => {
@@ -48,6 +50,7 @@ export default function FieldDateTime({
         onChange={(val) =>
           setValue(val ? dayjs(val).format("YYYY-MM-DD HH:mm:ss") : "")
         }
+        timeSteps={{ minutes: minutesStep }}
         slotProps={{
           textField: {
             fullWidth: true,

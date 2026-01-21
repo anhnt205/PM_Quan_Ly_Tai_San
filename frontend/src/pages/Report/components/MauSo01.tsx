@@ -1,4 +1,6 @@
 import React, { useState, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
+import api from "../../../config/api.config";
 import {
   Box,
   Button,
@@ -18,7 +20,7 @@ export default function MauSo01({ title }: { title?: string }) {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
-    "success"
+    "success",
   );
   const [contentData, setContentData] = useState({});
 
@@ -31,7 +33,7 @@ export default function MauSo01({ title }: { title?: string }) {
       IdDonVi: "",
       KyBaoCao: `${String(new Date().getMonth() + 1).padStart(
         2,
-        "0"
+        "0",
       )}/${new Date().getFullYear()}`,
     },
     onSubmit: (values) => {
@@ -40,6 +42,13 @@ export default function MauSo01({ title }: { title?: string }) {
       setSnackbarSeverity("success");
       setOpenSnackbar(true);
     },
+  });
+
+  const idCongTy = "ct001";
+  const { data: departments = [] } = useQuery({
+    queryKey: ["departments", idCongTy],
+    queryFn: async () =>
+      (await api.get("/phongban", { params: { idcongty: idCongTy } })).data,
   });
 
   const handleExport = () => {
@@ -85,10 +94,25 @@ export default function MauSo01({ title }: { title?: string }) {
         <Box sx={{ mb: 3 }}>
           <FieldAutoCompleted
             title="Đơn vị"
-            labelkey="apartment"
-            data={[]}
+            labelkey="tenPhongBan"
+            data={departments}
             formik={formik}
             field="IdDonVi"
+            componentsProps={{
+              paper: {
+                sx: {
+                  backgroundColor: "#fff0f5",
+                  borderRadius: "6px",
+                },
+              },
+              popper: {
+                style: { width: 360, overflow: "visible" },
+                placement: "bottom-start",
+              },
+              listbox: {
+                sx: { maxHeight: 220, overflow: "auto" },
+              },
+            }}
           />
         </Box>
 
@@ -159,7 +183,7 @@ export default function MauSo01({ title }: { title?: string }) {
       <Box
         sx={{
           p: 3,
-          height: "300px",
+          height: "800px",
           bgcolor: "white",
           border: "2px solid #ccc",
           borderRadius: "8px",
