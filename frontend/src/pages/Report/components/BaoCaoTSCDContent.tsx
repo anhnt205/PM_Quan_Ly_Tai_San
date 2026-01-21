@@ -3,6 +3,7 @@ import { Box, Typography, TextField } from "@mui/material";
 
 interface BaoCaoTSCDContentProps {
   onContentChange?: (content: any) => void;
+  selectedDeptName?: string;
 }
 
 interface MemberRow {
@@ -30,6 +31,7 @@ interface InventoryItem {
 
 export default function BaoCaoTSCDContent({
   onContentChange,
+  selectedDeptName,
 }: BaoCaoTSCDContentProps) {
   const [headerInfo, setHeaderInfo] = useState({
     qdSo: "",
@@ -231,7 +233,10 @@ export default function BaoCaoTSCDContent({
           BIÊN BẢN KIỂM KÊ TÀI SẢN CỐ ĐỊNH
         </Typography>
         <Typography sx={{ ...fontStyle, mt: 1, fontWeight: "bold" }}>
-          Đơn vị: Ban lãnh đạo
+          Đơn vị: {" "}
+            <b style={{ fontWeight: "bold" }}>
+              {selectedDeptName || ""}
+            </b>
         </Typography>
       </Box>
 

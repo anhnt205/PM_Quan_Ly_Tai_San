@@ -1,4 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
+import api from "../../../config/api.config";
 import {
   Box,
   Button,
@@ -18,17 +20,18 @@ export default function MauSo21({ title }: { title?: string }) {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
-    "success"
+    "success",
   );
   const [contentData, setContentData] = useState({});
-  
-    const handleContentChange = useCallback((data: any) => {
-      setContentData(data);
-    }, []);
+
+  const handleContentChange = useCallback((data: any) => {
+    setContentData(data);
+  }, []);
 
   const formik = useFormik({
     initialValues: {
       IdDonVi: "",
+      IdLoaiTaiSan: "",
       NgayBaoCao: new Date().toISOString().slice(0, 19).replace("T", " "),
     },
     onSubmit: (values) => {
@@ -39,11 +42,34 @@ export default function MauSo21({ title }: { title?: string }) {
     },
   });
 
+  const idCongTy = "ct001";
+  const { data: groups = [] } = useQuery({
+    queryKey: ["nhomtaisan", idCongTy],
+    queryFn: async () =>
+      (await api.get("/nhomtaisan", { params: { idcongty: idCongTy } })).data,
+  });
+
   const handleExport = () => {
     setSnackbarMessage("Không có dữ liệu để xuất!");
     setSnackbarSeverity("error");
     setOpenSnackbar(true);
   };
+
+  const selectedDeptName =
+    groups.find(
+      (d: any) => d.id?.toString() === String(formik.values.IdLoaiTaiSan),
+    )?.tenNhom || "";
+  const selectedYear = (() => {
+    try {
+      const raw = formik.values.NgayBaoCao;
+      if (!raw) return "";
+      const d = new Date(raw);
+      const y = d.getFullYear();
+      return Number.isFinite(y) ? y : "";
+    } catch {
+      return "";
+    }
+  })();
 
   return (
     <Box
@@ -53,7 +79,9 @@ export default function MauSo21({ title }: { title?: string }) {
         gap: 3,
         p: 2,
         bgcolor: "#f5f5f5",
-        minHeight: "100vh",
+        minHeight: "auto",
+        position: "relative",
+        zIndex: 0,
       }}
     >
       {/* Box 1: Form chọn đơn vị, năm và các nút */}
@@ -83,10 +111,25 @@ export default function MauSo21({ title }: { title?: string }) {
         <Box sx={{ mb: 3 }}>
           <FieldAutoCompleted
             title="Loại tài sản"
-            labelkey="assetType"
-            data={[]}
+            labelkey="tenNhom"
+            data={groups}
             formik={formik}
             field="IdLoaiTaiSan"
+            componentsProps={{
+              paper: {
+                sx: {
+                  backgroundColor: "#fff0f5",
+                  borderRadius: "6px",
+                },
+              },
+              popper: {
+                style: { width: 360, overflow: "visible" },
+                placement: "bottom-start",
+              },
+              listbox: {
+                sx: { maxHeight: 220, overflow: "auto" },
+              },
+            }}
           />
         </Box>
 
@@ -158,16 +201,22 @@ export default function MauSo21({ title }: { title?: string }) {
       <Box
         sx={{
           p: 3,
-          height: "300px",
+          height: "800px",
           bgcolor: "white",
           border: "2px solid #ccc",
           borderRadius: "8px",
           boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
           overflowY: "auto",
           overflowX: "hidden",
+          position: "relative",
+          zIndex: 1,
         }}
       >
-        <MauSo21Content onContentChange={handleContentChange} />
+        <MauSo21Content
+          onContentChange={handleContentChange}
+          selectedDeptName={selectedDeptName}
+          selectedYear={selectedYear}
+        />
       </Box>
 
       <Snackbar

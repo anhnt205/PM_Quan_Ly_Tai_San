@@ -1,4 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
+import api from "../../../config/api.config";
 import {
   Box,
   Button,
@@ -18,13 +20,13 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
-    "success"
+    "success",
   );
   const [contentData, setContentData] = useState({});
-    
-      const handleContentChange = useCallback((data: any) => {
-        setContentData(data);
-      }, []);
+
+  const handleContentChange = useCallback((data: any) => {
+    setContentData(data);
+  }, []);
 
   const formik = useFormik({
     initialValues: {
@@ -39,11 +41,23 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
     },
   });
 
+  const idCongTy = "ct001";
+  const { data: departments = [] } = useQuery({
+    queryKey: ["departments", idCongTy],
+    queryFn: async () =>
+      (await api.get("/phongban", { params: { idcongty: idCongTy } })).data,
+  });
+
   const handleExport = () => {
     setSnackbarMessage("Không có dữ liệu để xuất!");
     setSnackbarSeverity("error");
     setOpenSnackbar(true);
   };
+
+  const selectedDeptName =
+    departments.find(
+      (d: any) => d.id?.toString() === String(formik.values.IdDonVi),
+    )?.tenPhongBan || "";
 
   return (
     <Box
@@ -83,10 +97,25 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
         <Box sx={{ mb: 3 }}>
           <FieldAutoCompleted
             title="Chọn đơn vị"
-            labelkey="department"
-            data={[]}
+            labelkey="tenPhongBan"
+            data={departments}
             formik={formik}
             field="IdDonVi"
+            componentsProps={{
+              paper: {
+                sx: {
+                  backgroundColor: "#fff0f5",
+                  borderRadius: "6px",
+                },
+              },
+              popper: {
+                style: { width: 360, overflow: "visible" },
+                placement: "bottom-start",
+              },
+              listbox: {
+                sx: { maxHeight: 220, overflow: "auto" },
+              },
+            }}
           />
         </Box>
 
@@ -162,7 +191,7 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
       <Box
         sx={{
           p: 3,
-          height: "300px",
+          height: "800px",
           bgcolor: "white",
           border: "2px solid #ccc",
           borderRadius: "8px",
@@ -171,7 +200,10 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
           overflowX: "hidden",
         }}
       >
-        <BaoCaoTSCDContent onContentChange={handleContentChange} />
+        <BaoCaoTSCDContent
+          onContentChange={handleContentChange}
+          selectedDeptName={selectedDeptName}
+        />
       </Box>
 
       <Snackbar

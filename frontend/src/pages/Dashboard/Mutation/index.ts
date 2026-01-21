@@ -31,7 +31,8 @@ const fetchNhomCCDCList = async () => {
 
 const fetchAllCCDC = async () => {
   const res = await api.get("/ccdcvattu/paged", {
-    params: { idcongty: "ct001", page: 0, size: 1000 },
+    // request a sufficiently large page size so frontend receives all CCDC
+    params: { idcongty: "ct001", page: 0, size: 10000 },
   });
   return res.data;
 };
@@ -367,10 +368,23 @@ export const useDashboardMutation = (
   const { tongCCDC, tongGiaTriCCDC } = React.useMemo(() => {
     const items = extractCCDCItems(allCCDCData);
     const tong = items.length;
-    const tongGiaTri = items.reduce(
-      (sum: number, item: any) => sum + (item.giaTri || item.thanhTien || 0),
-      0,
-    );
+    const parseNumber = (v: any) => {
+      if (v === undefined || v === null) return 0;
+      if (typeof v === "number") return v;
+      const cleaned = String(v).replace(/[^0-9.-]+/g, "");
+      const n = Number(cleaned);
+      return Number.isFinite(n) ? n : 0;
+    };
+
+    const tongGiaTri = items.reduce((sum: number, item: any) => {
+      const val =
+        item.giaTri !== undefined
+          ? parseNumber(item.giaTri)
+          : item.thanhTien !== undefined
+            ? parseNumber(item.thanhTien)
+            : 0;
+      return sum + val;
+    }, 0);
     return { tongCCDC: tong, tongGiaTriCCDC: tongGiaTri };
   }, [allCCDCData, extractCCDCItems]);
 
