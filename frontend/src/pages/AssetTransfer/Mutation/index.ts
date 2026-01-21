@@ -441,6 +441,33 @@ export const useAssetTranferMutation = (
     },
     enabled: !!idDonViGiao && !!loai,
   });
+
+  const handleAssetByDonVi = async (loai: number, idDonViGiao: string) => {
+    try {
+      // Encode tên file để xử lý ký tự đặc biệt
+      const res = await api.get(
+        loai === 1
+          ? "/taisan/by-donvi-bandau/paged"
+          : "/taisan/by-donvi-hienthoi/paged",
+        {
+          params: {
+            idcongty: "ct001",
+            page: 0,
+            size: 999,
+            ...(loai === 1
+              ? {
+                  iddonvibandau: idDonViGiao,
+                }
+              : { iddonvihienthoi: idDonViGiao }),
+          },
+        },
+      );
+      return res.data.data || res.data;
+    } catch (error) {
+      console.log("Không thể lấy dữ liệu");
+      return { items: [] };
+    }
+  };
   // don vi tính
   const { data: allUnits = [] } = useQuery({
     queryKey: ["allUnits"], // Key để cache dữ liệu
@@ -450,7 +477,7 @@ export const useAssetTranferMutation = (
     },
   });
   //hien trang ki thuat
-  const { data: allCurrentStatus=[] } = useQuery({
+  const { data: allCurrentStatus = [] } = useQuery({
     queryKey: ["allCurrentStatus"], // Key để cache dữ liệu
     queryFn: async () => {
       const res = await api.get("/hientrangkythuat");
@@ -565,5 +592,6 @@ export const useAssetTranferMutation = (
     handleSignatureList,
     signMutation,
     isFetchingAssetsByDonVi,
+    handleAssetByDonVi,
   };
-};;
+};

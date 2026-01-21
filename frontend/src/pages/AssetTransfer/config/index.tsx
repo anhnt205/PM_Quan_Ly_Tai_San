@@ -478,3 +478,59 @@ export const canUserSign = (newSigningType: number, images: any[]) => {
   // Nếu chỉ có chữ ký loại 1, được phép ký thêm
   return true;
 };
+
+// Tính tổng chiều cao của tất cả các trang (để làm mẫu số chung)
+export const getTotalDocumentHeight = (sizes: { height: number }[]) => {
+  return sizes.reduce((sum, size) => sum + size.height, 0);
+};
+
+// Chuyển đổi: Tọa độ trang con -> Tọa độ toàn cục (Dùng khi thả chuột - onDrop)
+export const localToGlobal = (
+  localYRatio: number, // 0-1 trong trang hiện tại
+  pageIndex: number,
+  sizes: { height: number }[]
+) => {
+  const totalHeight = getTotalDocumentHeight(sizes);
+  let previousPagesHeight = 0;
+  for (let i = 0; i < pageIndex; i++) {
+    previousPagesHeight += sizes[i].height;
+  }
+  
+  // Chiều cao tính theo pixel từ đỉnh tài liệu đến điểm thả
+  const globalYPixel = previousPagesHeight + (localYRatio * sizes[pageIndex].height);
+  
+  // Trả về tỉ lệ 0-1 toàn cục
+  return globalYPixel / totalHeight;
+};
+
+// Chuyển đổi: Tọa độ toàn cục -> Trang và Tọa độ con (Dùng khi Render và Export)
+export const globalToLocal = (
+  globalYRatio: number, 
+  sizes: { height: number }[]
+) => {
+  const totalHeight = getTotalDocumentHeight(sizes);
+  const targetPixel = globalYRatio * totalHeight;
+
+  let currentHeightAccumulator = 0;
+  
+  for (let i = 0; i < sizes.length; i++) {
+    const pageHeight = sizes[i].height;
+    
+    // Kiểm tra xem điểm Y có nằm trong trang này không
+    if (targetPixel >= currentHeightAccumulator && targetPixel <= currentHeightAccumulator + pageHeight) {
+      // Tìm thấy trang!
+      const localPixel = targetPixel - currentHeightAccumulator;
+      return {
+        pageIndex: i, // Index bắt đầu từ 0
+        localYRatio: localPixel / pageHeight
+      };
+    }
+    currentHeightAccumulator += pageHeight;
+  }
+  
+  // Fallback (nếu y=1 hoặc lỗi làm tròn): Trả về trang cuối
+  return {
+    pageIndex: sizes.length - 1,
+    localYRatio: 1
+  };
+};

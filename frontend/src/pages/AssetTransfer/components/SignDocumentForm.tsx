@@ -11,6 +11,7 @@ import {
   Snackbar,
   Alert,
   CircularProgress,
+  Stack,
 } from "@mui/material";
 import {
   Cancel,
@@ -26,14 +27,19 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { PDFDocument } from "pdf-lib";
 import "../../../assets/fonts/times_new_roman-normal";
-import { findById } from "../../../utils/helpers";
+import { findById, generateSha256 } from "../../../utils/helpers";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import { SignaturesData } from "../types";
 import dayjs from "dayjs";
 import { Check, Pencil, TicketCheck } from "lucide-react";
-import { showErrorAlert } from "../../../components/Alert";
+import { confirmPin, showErrorAlert } from "../../../components/Alert";
 import { canUserSign } from "../config";
+import { toPng } from "html-to-image";
+import { createRoot } from "react-dom/client";
+import axios from "axios";
+import { constants } from "node:fs";
+import { ConfirmPin } from "./ConfirmPin";
 
 // --- Config Worker ---
 if (typeof window !== "undefined") {
@@ -82,6 +88,64 @@ export default function SignDocumentForm({
   const [loading, setLoading] = useState(true);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfError, setPdfError] = useState<string | null>(null);
+  const [digitalSignatureMap, setDigitalSignatureMap] = useState<
+    Record<string, string>
+  >({});
+  const [openConfirmPin, setOpenConfirmPin] = useState(false);
+  // login ký
+  const handleLogin = async () => {
+    const url = "https://rms.efy.com.vn/clients/login";
+    const payload = {
+      username: "rp_test",
+      password: "rp_test",
+      rpCode: "RP_TEST",
+    };
+    try {
+      const response = await axios.post(url, payload, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const token = response.data.token;
+      console.log("Đăng nhập thành công!");
+      return token;
+    } catch (error) {
+      console.log("Đăng nhập thất bại!", error);
+    }
+  };
+
+  // ký hash
+
+  const handleSigning = async (idNguoiKy: string, idTaiLieu: string) => {
+    const value = idNguoiKy + idTaiLieu;
+    const hash = generateSha256(value);
+    const token = await handleLogin();
+    if (token === null) {
+      showErrorAlert("Đăng nhập thất bại!. Không thể ký");
+      return;
+    }
+    const url = "https://rms.efy.com.vn/signing/hash";
+    const payload = {
+      agreementUUID: "02e80096-912a-4b30-a38e-334ddc110a1e",
+      authMode: "EXPLICIT/PIN",
+      authorizeCode: "efyvn@123",
+      encryption: "RSA",
+      hash: hash,
+      hashAlgorithm: "SHA-256",
+      mimeType: "application/sha256-binary",
+    };
+    try {
+      const result = await axios.post(url, payload, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return result.data.signatureValue;
+    } catch (error) {
+      return showErrorAlert("Ký không thành công!");
+    }
+  };
 
   // 1. Cập nhật useEffect lấy danh sách chữ ký từ API
   const fetchSignatures = async () => {
@@ -217,8 +281,50 @@ export default function SignDocumentForm({
 
   const { handlePreview } = useAssetTranferMutation();
 
+  const handleConfirmPinDialog = async (pin: string) => {
+    if (employee.pin !== pin) {
+      showErrorAlert("Mã pin không chính xác!");
+      return;
+    }
+
+    setOpenConfirmPin(false);
+
+    // 👉 tiếp tục ký số
+    const result = await handleSigning(
+      user?.taiKhoan?.tenDangNhap,
+      selectedIds[0],
+    );
+
+    if (!result) {
+      showErrorAlert("Ký không thành công!");
+      return;
+    }
+
+    // thêm chữ ký số
+    const newSignature: SignaturesData = {
+      stt: signatures.length + 1,
+      id: `temp-${Date.now()}`,
+      idTaiLieu: selectedIds[0],
+      idNguoiKy: user?.taiKhoan?.tenDangNhap,
+      loaiKy: signatureType,
+      ngayKy: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      x: 0.5, // Giữa trang theo chiều ngang
+      y: 0.2, // Vị trí dọc chuẩn hóa
+      chuKyNhay:
+        (signatureType === 1 || signatureType === 5) && employee.chuKyNhay,
+      chuKyThuong:
+        (signatureType === 2 || signatureType === 4) && employee.chuKyThuong,
+      width: 120,
+      scale: 1,
+      chuKySo: result,
+      isLocked: false,
+    };
+
+    setSignatures((prev) => [...prev, newSignature]);
+  };
+
   // 2. Sửa hàm handleConfirmSign để tính Y chuẩn hóa
-  const handleSign = () => {
+  const handleSign = async () => {
     if (!employee) return;
     if (!employee.chuKyNhay && !employee.chuKyThuong && !employee.chuKySo) {
       return showErrorAlert("Không tìm thấy chữ ký");
@@ -248,6 +354,22 @@ export default function SignDocumentForm({
       showErrorAlert(errorMessage);
       return;
     }
+    let key = "";
+    if (signatureType === 3 || signatureType === 4 || signatureType === 5) {
+      if (!employee.savePin) {
+        setOpenConfirmPin(true);
+        return;
+      }
+      const result = await handleSigning(
+        user?.taiKhoan?.tenDangNhap,
+        selectedIds[0],
+      );
+      if (!result) {
+        return showErrorAlert("Ký không thành công!");
+      }
+      key = result;
+    }
+
     const newSignature: SignaturesData = {
       stt: signatures.length + 1,
       id: `temp-${Date.now()}`,
@@ -257,16 +379,43 @@ export default function SignDocumentForm({
       ngayKy: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       x: 0.5, // Giữa trang theo chiều ngang
       y: 0.2, // Vị trí dọc chuẩn hóa
-      chuKyNhay: signatureType === 1 && employee.chuKyNhay,
-      chuKyThuong: signatureType === 2 && employee.chuKyThuong,
+      chuKyNhay:
+        (signatureType === 1 || signatureType === 5) && employee.chuKyNhay,
+      chuKyThuong:
+        (signatureType === 2 || signatureType === 4) && employee.chuKyThuong,
       width: 120,
       scale: 1,
-      chuKySo: "",
+      chuKySo: key,
       isLocked: false,
     };
 
     setSignatures([...signatures, newSignature]);
   };
+
+  useEffect(() => {
+    const renderDigitalSignatures = async () => {
+      const newMap: Record<string, string> = {};
+
+      for (const sig of signatures) {
+        if (sig.loaiKy === 3 && !digitalSignatureMap[sig.id]) {
+          const signer = findById(staffs, sig.idNguoiKy);
+
+          const base64 = await renderDigitalSignatureToImage(
+            signer?.hoTen,
+            dayjs(sig.ngayKy).format("DD/MM/YYYY"),
+          );
+
+          newMap[sig.id] = base64;
+        }
+      }
+
+      if (Object.keys(newMap).length > 0) {
+        setDigitalSignatureMap((prev) => ({ ...prev, ...newMap }));
+      }
+    };
+
+    renderDigitalSignatures();
+  }, [signatures, staffs]);
 
   // 3. Cập nhật hàm xử lý vị trí (Nhận ratio thay vì pixel)
   const handleUpdatePosition = (
@@ -295,6 +444,7 @@ export default function SignDocumentForm({
     }
     await onSign(data);
     fetchSignatures();
+    onCancel()
   };
 
   // Lấy PDF từ backend
@@ -506,17 +656,39 @@ export default function SignDocumentForm({
 
       // 4. Vẽ chữ ký
       for (const sig of signatures) {
-        const imgPath = sig.loaiKy === 1 ? sig.chuKyNhay : sig.chuKyThuong;
-        if (!imgPath) continue;
-
-        const imageUrl = `${process.env.REACT_APP_URL_UPLOAD}/${imgPath}`;
+        let imageBytes: ArrayBuffer;
+        let isPng = true;
 
         try {
-          const imageBytes = await fetch(imageUrl).then((res) =>
-            res.arrayBuffer(),
-          );
+          if (sig.loaiKy === 3) {
+            // TRƯỜNG HỢP: CHỮ KÝ SỐ (Dùng dữ liệu Base64 từ digitalSignatureMap)
+            const base64Data = digitalSignatureMap[sig.id];
+            if (!base64Data) continue;
 
-          const pdfImage = imgPath.toLowerCase().endsWith(".png")
+            // Chuyển Base64 thành ArrayBuffer
+            const base64Content = base64Data.split(",")[1];
+            const binaryString = window.atob(base64Content);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+              bytes[i] = binaryString.charCodeAt(i);
+            }
+            imageBytes = bytes.buffer;
+            isPng = true; // Canvas.toDataURL mặc định là PNG
+          } else {
+            // TRƯỜNG HỢP: CHỮ KÝ THƯỜNG (Tải từ Server)
+            const imgPath =
+              sig.loaiKy === 1 || sig.loaiKy === 5
+                ? sig.chuKyNhay
+                : sig.chuKyThuong;
+            if (!imgPath) continue;
+
+            const imageUrl = `${process.env.REACT_APP_URL_UPLOAD}/${imgPath}`;
+            const response = await fetch(imageUrl);
+            imageBytes = await response.arrayBuffer();
+            isPng = imgPath.toLowerCase().endsWith(".png");
+          }
+
+          const pdfImage = isPng
             ? await pdfDoc.embedPng(imageBytes)
             : await pdfDoc.embedJpg(imageBytes);
 
@@ -641,38 +813,93 @@ export default function SignDocumentForm({
               onChange={(e) => setSignatureType(Number(e.target.value))}
             >
               {employee.kyNhay && (
-                <>
+                <Box
+                  display="flex"
+                  alignItems={"center"}
+                  justifyContent={"space-between"}
+                  sx={{ mb: 2 }}
+                >
                   <FormControlLabel
                     value={1}
                     control={<Radio />}
                     label="Ký nháy"
                   />
-                  <Box sx={{ ml: 4, mb: 2 }}>
-                    <img
-                      src={`${process.env.REACT_APP_URL_UPLOAD}/${employee.chuKyNhay}`}
-                      alt="sample"
-                      width={80}
-                      style={{ border: "1px solid #eee" }}
-                    />
-                  </Box>
-                </>
+                  <img
+                    src={`${process.env.REACT_APP_URL_UPLOAD}/${employee.chuKyNhay}`}
+                    alt="sample"
+                    width={60}
+                    style={{ border: "1px solid #eee" }}
+                  />
+                </Box>
               )}
               {employee.kyThuong && (
-                <>
+                <Box
+                  display="flex"
+                  alignItems={"center"}
+                  justifyContent={"space-between"}
+                  sx={{ mb: 2 }}
+                >
                   <FormControlLabel
                     value={2}
                     control={<Radio />}
                     label="Ký thường"
                   />
-                  <Box sx={{ ml: 4, mb: 2 }}>
+                  <img
+                    src={`${process.env.REACT_APP_URL_UPLOAD}/${employee.chuKyThuong}`}
+                    alt="sample"
+                    width={60}
+                    style={{ border: "1px solid #eee" }}
+                  />
+                </Box>
+              )}
+              {employee.kySo && (
+                <Box sx={{ p: 1, border: "1px solid #ddd", borderRadius: 5 }}>
+                  <Typography fontWeight={600}>Chữ ký số</Typography>
+                  <Box sx={{ mb: 2 }}>
+                    {" "}
+                    <FormControlLabel
+                      value={3}
+                      control={<Radio />}
+                      label="Hiển thị mặc định"
+                    />
+                  </Box>
+                  <Box
+                    display="flex"
+                    alignItems={"center"}
+                    justifyContent={"space-between"}
+                    sx={{ mb: 2 }}
+                  >
+                    <FormControlLabel
+                      value={4}
+                      control={<Radio />}
+                      label="Hiển thị chữ kí thường"
+                    />
                     <img
                       src={`${process.env.REACT_APP_URL_UPLOAD}/${employee.chuKyThuong}`}
-                      alt="sample"
-                      width={80}
+                      alt="chukythuong"
+                      width={60}
                       style={{ border: "1px solid #eee" }}
                     />
                   </Box>
-                </>
+                  <Box
+                    display="flex"
+                    alignItems={"center"}
+                    justifyContent={"space-between"}
+                    sx={{ mb: 2 }}
+                  >
+                    <FormControlLabel
+                      value={5}
+                      control={<Radio />}
+                      label="Hiển thị chữ kí nháy"
+                    />
+                    <img
+                      src={`${process.env.REACT_APP_URL_UPLOAD}/${employee.chuKyNhay}`}
+                      alt="chukynhay"
+                      width={60}
+                      style={{ border: "1px solid #eee" }}
+                    />
+                  </Box>
+                </Box>
               )}
             </RadioGroup>
             <Divider sx={{ my: 2 }} />
@@ -769,7 +996,11 @@ export default function SignDocumentForm({
                             initialY={sig.y * displaySize.height}
                             width={sig.width}
                             initialScale={sig.scale || 1}
-                            imgSrc={`${process.env.REACT_APP_URL_UPLOAD}/${sig.chuKyNhay || sig.chuKyThuong}`}
+                            imgSrc={
+                              sig.loaiKy === 3
+                                ? digitalSignatureMap[sig.id]
+                                : `${process.env.REACT_APP_URL_UPLOAD}/${sig.chuKyNhay || sig.chuKyThuong}`
+                            }
                             containerWidth={displaySize.width}
                             containerHeight={displaySize.height}
                             onUpdatePosition={handleUpdatePosition}
@@ -795,6 +1026,55 @@ export default function SignDocumentForm({
       >
         <Alert severity="success">Đã xuất PDF thành công</Alert>
       </Snackbar>
+      <ConfirmPin
+        open={openConfirmPin}
+        onClose={() => setOpenConfirmPin(false)}
+        onConfirm={handleConfirmPinDialog}
+      />
     </Box>
   );
 }
+const renderDigitalSignatureToImage = async (
+  name?: string | null,
+  date?: string,
+): Promise<string> => {
+  // 1. Tạo một canvas ngầm
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return "";
+
+  // 2. Thiết lập kích thước (tỉ lệ 2x để nét)
+  const width = 260;
+  const height = 90;
+  const scale = 2;
+  canvas.width = width * scale;
+  canvas.height = height * scale;
+  ctx.scale(scale, scale);
+
+  // 3. Vẽ nền trắng và khung viền đỏ
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.strokeStyle = "#d32f2f";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(5, 5, width - 10, height - 10);
+
+  // 4. Vẽ Text
+  ctx.textBaseline = "top";
+
+  // Dòng 1: Tiêu đề
+  ctx.fillStyle = "#d32f2f";
+  ctx.font = "bold 20px Arial";
+  ctx.fillText("Chữ ký số", 15, 15);
+
+  // Dòng 2: Người ký
+  ctx.font = "bold 20px Arial";
+  ctx.fillText(`Ký bởi: ${name || ""}`, 15, 40);
+
+  // Dòng 3: Ngày ký
+  ctx.font = "bold 20px Arial";
+  ctx.fillText(`Ký ngày: ${date || ""}`, 15, 65);
+
+  // 5. Xuất ra Base64
+  return canvas.toDataURL("image/png");
+};

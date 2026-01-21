@@ -1,7 +1,9 @@
+import { sha256 } from "js-sha256";
+
 export const findById = (array: any[], id: any) => {
   return array.find((item) => item.id?.toString() === id?.toString());
 };
-export const generateCode=(prefix: string)=>{
+export const generateCode = (prefix: string) => {
   const now = new Date();
 
   const yyyy = now.getFullYear();
@@ -14,7 +16,7 @@ export const generateCode=(prefix: string)=>{
   const random = Math.random().toString(36).substring(2, 4).toUpperCase();
 
   return `${prefix}${yyyy}${MM}${dd}-${HH}${mm}${ss}-${random}`;
-}
+};
 
 export const getPermissionSigning = (data: any, user?: any, allStaffs = []) => {
   const signatureFlow: any[] = [];
@@ -97,4 +99,7 @@ export const b = (v: any, fallback: boolean = false): boolean => {
 export const formatDateTime = (v: any) => {
   const dateStr = v ? v.toString() : new Date().toISOString();
   return dateStr.replace("T", " ").replace("Z", "").split(".")[0];
+};
+export const generateSha256 = (value: string) => {
+  return sha256(value);
 };

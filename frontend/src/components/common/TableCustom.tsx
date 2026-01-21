@@ -75,7 +75,7 @@ interface Props {
   checkboxSelection?: boolean;
   showDelete?: boolean;
   handleSendToSigner?: (selectedItem: any[]) => void;
-  setDepartmentId?: Dispatch<SetStateAction<string>>;
+  handleAssetTransfer?: (department: string) => void;
 }
 
 export default function TableCustom({
@@ -95,7 +95,7 @@ export default function TableCustom({
   onSign,
   searchValue,
   setSearchValue,
-  showStatusFilter = false,
+  showStatusFilter = true,
   paginationMode = "server",
   statusOptions = [],
   statusValue,
@@ -103,12 +103,11 @@ export default function TableCustom({
   checkboxSelection = true,
   showDelete = true,
   handleSendToSigner,
-  setDepartmentId,
+  handleAssetTransfer,
 }: Props) {
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.user);
   const [selectedItem, setSelectedItem] = useState<any[]>([]);
-
   return (
     <Paper sx={{ my: 2, width: "100%" }}>
       <Box
@@ -197,9 +196,10 @@ export default function TableCustom({
                 variant="contained"
                 color="primary"
                 startIcon={<Edit />}
-                onClick={(e) => {
+                onClick={async (e) => {
                   e.stopPropagation();
-                  handleSendToSigner?.(selectedItem);
+                  await handleSendToSigner?.(selectedItem);
+                  setSelectedItem([]);
                 }}
               >
                 Trình duyệt người ký ({selectedItem.length})
@@ -270,7 +270,7 @@ export default function TableCustom({
               return result.includes(rowId);
             });
             setSelectedItem(selectedRows);
-            setDepartmentId?.(selectedRows[0]?.idDonViGiao);
+            handleAssetTransfer?.(selectedRows[0]?.idDonViGiao);
           }}
           disableRowSelectionOnClick
           showToolbar

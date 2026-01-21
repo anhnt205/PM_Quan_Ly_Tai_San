@@ -47,6 +47,7 @@ import {
   showStatusDocument,
 } from "./config";
 import { showConfirmAlert } from "../../components/Alert";
+import { FilterOption } from "../../components/common/FilterStatusGroup";
 
 export default function AssetTransfer() {
   const { user } = useSelector((state: any) => state.user);
@@ -72,7 +73,8 @@ export default function AssetTransfer() {
   const type = searchParams.get("type");
   const [departmentId, setDepartmentId] = useState("");
   const [assetTransferDetail, setAssetTransferDetail] = useState<any[]>([]);
-
+  const [status, setStatus] = useState("");
+  const [assetByDepartment, setAssetByDepartment] = useState<any[]>([]);
   const {
     assetTranferPage,
     allDepartments,
@@ -88,16 +90,49 @@ export default function AssetTransfer() {
     deleteOneMutation,
     handleSignatureList,
     signMutation,
-    isFetchingAssetsByDonVi,
+    handleAssetByDonVi,
   } = useAssetTranferMutation(
     paginationModel.page,
     paginationModel.pageSize,
     searchValue,
-    type ? Number(type) : undefined,
+    type ? Number(type) : 1,
     user?.taiKhoan?.tenDangNhap,
-    undefined,
+    status ? Number(status) : undefined,
     departmentId,
   );
+
+  const statusOptions: FilterOption[] = [
+    {
+      label: "Tất cả",
+      count: assetTranferPage.totalItems,
+      color: "default",
+      value: "",
+    },
+    {
+      label: "Nháp",
+      count: assetTranferPage?.trangThaiCounts?.["0"] ?? 0,
+      color: "default",
+      value: "0",
+    },
+    {
+      label: "Duyệt",
+      count: assetTranferPage?.trangThaiCounts?.["1"] ?? 0,
+      color: "info",
+      value: "1",
+    },
+    {
+      label: "Hủy",
+      count: assetTranferPage?.trangThaiCounts?.["2"] ?? 0,
+      color: "error",
+      value: "2",
+    },
+    {
+      label: "Hoàn thành",
+      count: assetTranferPage?.trangThaiCounts?.["3"] ?? 0,
+      color: "success",
+      value: "3",
+    },
+  ];
 
   useEffect(() => {
     setSelectedIds([]);
@@ -121,6 +156,14 @@ export default function AssetTransfer() {
     setShowSidebar(true);
   };
 
+  const handleAssetTransfer = async (department: string) => {
+    const result = await handleAssetByDonVi(
+      type ? Number(type) : 1,
+      department,
+    );
+    setAssetByDepartment(result?.items);
+  };
+
   const handleEdit = () => {
     setReadOnly(false);
   };
@@ -138,11 +181,13 @@ export default function AssetTransfer() {
   const handleSend = (items: any[]) => {
     handleSendToSigner(items, updateManyMutation.mutateAsync, handleClose);
   };
-  const handleSave = (values: any) => {
+  const handleSave = async (values: any) => {
     if (selectedRow) {
-      updateMutation.mutate(values);
+      await updateMutation.mutate(values);
+      handleClose();
     } else {
-      createMutation.mutate(values);
+      await createMutation.mutate(values);
+      handleClose();
     }
     setShowForm(false);
     setSelectedRow(null);
@@ -372,7 +417,7 @@ export default function AssetTransfer() {
             <Tooltip title="Xem">
               <IconButton
                 color="success"
-                onClick={(e) => {
+                onClick={async (e) => {
                   e.stopPropagation();
                   setSelectedDocument(rowData.tenFile);
                   setAssetTransferDetail(
@@ -381,6 +426,7 @@ export default function AssetTransfer() {
                   setShowSignerSidebar(false); // Ẩn sidebar khi xem
                   setDepartmentId(rowData.idDonViGiao);
                   setSelectedIds([rowData.id]);
+                  await handleAssetTransfer(rowData.idDonViGiao);
                   setShowSignDocument(true);
                 }}
                 sx={{
@@ -406,7 +452,7 @@ export default function AssetTransfer() {
         documentData={selectedDocument}
       />
 
-      {showSignDocument && !isFetchingAssetsByDonVi ? (
+      {showSignDocument ? (
         <SignDocumentForm
           selectedIds={selectedIds}
           document={selectedDocument}
@@ -414,7 +460,7 @@ export default function AssetTransfer() {
           onSign={handleSign}
           assetTransferDetail={assetTransferDetail}
           showSignerSidebar={showSignerSidebar}
-          allAssetsByDonVi={allAssetsByDonVi.items}
+          allAssetsByDonVi={assetByDepartment}
           allUnits={allUnits}
           allCurrentStatus={allCurrentStatus}
           fullscreen={true}
@@ -499,7 +545,12 @@ export default function AssetTransfer() {
                   showStatusFilter={true}
                   showDelete={false}
                   handleSendToSigner={handleSend}
-                  setDepartmentId={setDepartmentId}
+                  statusOptions={statusOptions}
+                  onStatusChange={(value) => {
+                    setStatus(value);
+                  }}
+                  statusValue={status}
+                  handleAssetTransfer={handleAssetTransfer}
                 />
               </Grid>
 

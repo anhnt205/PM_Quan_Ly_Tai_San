@@ -160,6 +160,7 @@ export const FilterStatusGroup = ({
   selectedValue,
   onChange,
 }: FilterStatusGroupProps) => {
+  console.log(selectedValue);
   return (
     <Box display="flex" alignItems="center" flexWrap="wrap">
       {options.map((opt) => (
