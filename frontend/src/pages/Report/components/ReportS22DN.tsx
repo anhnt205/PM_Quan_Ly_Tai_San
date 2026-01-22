@@ -11,6 +11,7 @@ import {
   Alert,
   Tooltip,
 } from "@mui/material";
+import XLSX from "xlsx-js-style";
 import { useFormik } from "formik";
 import { Print, TableChart } from "@mui/icons-material";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
@@ -58,29 +59,349 @@ export default function ReportS22DN({ title }: { title?: string }) {
   });
 
   const handleExport = () => {
-    const hasContent = (data: any) => {
-      if (!data) return false;
-      if (Array.isArray(data)) return data.length > 0;
-      for (const k of Object.keys(data)) {
-        const v = (data as any)[k];
-        if (Array.isArray(v) && v.length > 0) return true;
-        if (v && typeof v === "object") {
-          for (const k2 of Object.keys(v)) {
-            const v2 = v[k2];
-            if (Array.isArray(v2) && v2.length > 0) return true;
-          }
-        }
-      }
-      return false;
-    };
-
-    if (!hasContent(contentData)) {
+    const data = contentData as any;
+    if (!data || (!data.tsRows?.length && !data.ccdcRows?.length)) {
       setSnackbarMessage("Chưa có dữ liệu để xuất!");
       setSnackbarSeverity("warning");
       setOpenSnackbar(true);
       return;
     }
-    // TODO: implement real export when data exists
+
+    // --- ĐỊNH NGHĨA STYLE ---
+    const borderStyle = {
+      top: { style: "thin" },
+      bottom: { style: "thin" },
+      left: { style: "thin" },
+      right: { style: "thin" },
+    };
+
+    const fontStyle = { name: "Times New Roman", sz: 11 };
+    const fontBold = { name: "Times New Roman", sz: 11, bold: true };
+
+    // Style cho tiêu đề cột (Header): In đậm, căn giữa, có viền
+    const sHeader = {
+      font: fontBold,
+      alignment: { horizontal: "center", vertical: "center", wrapText: true },
+      border: borderStyle,
+    };
+
+    // Style cho dữ liệu text thường: Căn trái, có viền
+    const sText = {
+      font: fontStyle,
+      alignment: { horizontal: "left", vertical: "center", wrapText: true },
+      border: borderStyle,
+    };
+
+    // Style cho dữ liệu số: Căn phải, có viền
+    const sNum = {
+      font: fontStyle,
+      alignment: { horizontal: "right", vertical: "center" },
+      border: borderStyle,
+    };
+
+    // Style cho phần Tiêu đề trang (Không viền)
+    const sTitle = {
+      font: { name: "Times New Roman", sz: 16, bold: true },
+      alignment: { horizontal: "center" },
+    };
+    const sInfo = { font: { name: "Times New Roman", sz: 12 } };
+    const sInfoCenter = {
+      font: { name: "Times New Roman", sz: 12, bold: true },
+      alignment: { horizontal: "center" },
+    };
+
+    // --- HÀM HỖ TRỢ TẠO CELL ---
+    // Giúp gán style nhanh cho từng ô
+    const cell = (v: any, s: any) => ({ v: v, s: s });
+
+    const wb = XLSX.utils.book_new();
+    let wsData: any[][] = [];
+    let merges: any[] = [];
+    let currentRow = 0;
+
+    // --- PHẦN 1: HEADER TRANG ---
+    // Dùng chuỗi thường vì phần này không cần border
+    wsData.push([
+      `Đơn vị: ${selectedDeptName || ""}`,
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "Mẫu số S22-DN",
+    ]);
+    wsData.push([
+      `Địa chỉ: ${data.diaChi || ""}`,
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "(Ban hành theo TT số 200/2014/TT-BTC)",
+    ]);
+    wsData.push([
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "Ngày 22/12/2014 của Bộ Tài chính",
+    ]);
+
+    merges.push({ s: { r: 0, c: 8 }, e: { r: 0, c: 12 } });
+    merges.push({ s: { r: 1, c: 8 }, e: { r: 1, c: 12 } });
+    merges.push({ s: { r: 2, c: 8 }, e: { r: 2, c: 12 } });
+
+    // Áp dụng style thủ công cho phần header trang (nếu cần đẹp hơn)
+    // Ở đây mình để mặc định cho đơn giản, chỉ xử lý Title chính
+    currentRow = 4;
+    wsData[currentRow] = Array(13).fill("");
+    wsData[currentRow][0] = {
+      v: "SỔ THEO DÕI TÀI SẢN CỐ ĐỊNH VÀ CÔNG CỤ, DỤNG CỤ TẠI NƠI SỬ DỤNG",
+      s: sTitle,
+    };
+    merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 12 } });
+
+    currentRow++;
+    wsData[currentRow] = Array(13).fill("");
+    wsData[currentRow][0] = { v: `Năm ${selectedYear || ""}`, s: sInfoCenter };
+    merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 12 } });
+
+    currentRow++;
+    wsData[currentRow] = Array(13).fill("");
+    wsData[currentRow][0] = {
+      v: `Tên đơn vị (phòng, ban hoặc người sử dụng): ${selectedDeptName || ""}`,
+      s: sInfo,
+    };
+    merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 12 } });
+
+    currentRow += 2; // Cách dòng
+
+    // --- HÀM VẼ HEADER BẢNG (Có Border) ---
+    const addTableHeader = (startRow: number, title: string) => {
+      // 1. Tên bảng (Không border hoặc border bao quanh tùy ý, ở đây để Bold Center)
+      wsData[startRow] = Array(13).fill(cell("", sHeader)); // Fill cell rỗng có border để khi merge không mất viền
+      wsData[startRow][0] = cell(title, {
+        ...sHeader,
+        alignment: { horizontal: "left", vertical: "center" },
+      });
+      merges.push({ s: { r: startRow, c: 0 }, e: { r: startRow, c: 12 } });
+
+      const r = startRow + 1;
+
+      // Helper tạo dòng header full border
+      const createHeaderRow = () =>
+        Array(13)
+          .fill(null)
+          .map(() => cell("", sHeader));
+
+      // Dòng 1
+      const h1 = createHeaderRow();
+      h1[0] = cell("Ghi tăng tài sản cố định", sHeader);
+      h1[7] = cell("Ghi giảm tài sản cố định", sHeader);
+      h1[12] = cell("Ghi chú", sHeader);
+      wsData[r] = h1;
+      merges.push({ s: { r: r, c: 0 }, e: { r: r, c: 6 } });
+      merges.push({ s: { r: r, c: 7 }, e: { r: r, c: 11 } });
+      merges.push({ s: { r: r, c: 12 }, e: { r: r + 2, c: 12 } });
+
+      // Dòng 2
+      const h2 = createHeaderRow();
+      h2[0] = cell("Chứng từ", sHeader);
+      h2[7] = cell("Chứng từ", sHeader);
+      h2[2] = cell("Tên, nhãn hiệu, quy cách", sHeader);
+      h2[3] = cell("ĐVT", sHeader);
+      h2[4] = cell("Số lượng", sHeader);
+      h2[10] = cell("Số lượng", sHeader);
+      h2[5] = cell("Đơn giá", sHeader);
+      h2[6] = cell("Số tiền", sHeader);
+      h2[11] = cell("Số tiền", sHeader);
+      h2[9] = cell("Lý do", sHeader);
+      wsData[r + 1] = h2;
+
+      merges.push({ s: { r: r + 1, c: 0 }, e: { r: r + 1, c: 1 } }); // CT Tăng
+      merges.push({ s: { r: r + 1, c: 7 }, e: { r: r + 1, c: 8 } }); // CT Giảm
+      // Merge dọc các cột khác
+      [2, 3, 4, 5, 6, 9, 10, 11].forEach((c) =>
+        merges.push({ s: { r: r + 1, c: c }, e: { r: r + 2, c: c } }),
+      );
+
+      // Dòng 3
+      const h3 = createHeaderRow();
+      h3[0] = cell("Số hiệu", sHeader);
+      h3[1] = cell("Ngày tháng", sHeader);
+      h3[7] = cell("Số hiệu", sHeader);
+      h3[8] = cell("Ngày tháng", sHeader);
+      wsData[r + 2] = h3;
+
+      // Dòng 4 (A, B, C...)
+      const h4 = [
+        "A",
+        "B",
+        "C",
+        "D",
+        "1",
+        "2",
+        "3",
+        "E",
+        "G",
+        "H",
+        "4",
+        "5",
+        "I",
+      ].map((t) => cell(t, sHeader));
+      wsData[r + 3] = h4;
+
+      return r + 4;
+    };
+
+    // --- PHẦN 2: BẢNG TSCĐ ---
+    currentRow = addTableHeader(
+      currentRow,
+      "Bảng ghi tăng/giảm Tài sản cố định",
+    );
+    (data.tsRows || []).forEach((row: any) => {
+      wsData[currentRow] = [
+        cell(row.ctTangSoHieu, sText),
+        cell(row.ctTangNgay, sText),
+        cell(row.tenNhanHieu, sText),
+        cell(row.dvt, sText),
+        cell(Number(row.tangSoLuong) || row.tangSoLuong, sNum),
+        cell(Number(row.tangDonGia) || row.tangDonGia, sNum),
+        cell(Number(row.tangSoTien) || row.tangSoTien, sNum),
+        cell(row.ctGiamSoHieu, sText),
+        cell(row.ctGiamNgay, sText),
+        cell(row.giamLyDo, sText),
+        cell(Number(row.giamSoLuong) || row.giamSoLuong, sNum),
+        cell(Number(row.giamSoTien) || row.giamSoTien, sNum),
+        cell(row.ghiChu, sText),
+      ];
+      currentRow++;
+    });
+
+    currentRow += 1;
+
+    // --- PHẦN 3: BẢNG CCDC ---
+    currentRow = addTableHeader(
+      currentRow,
+      "Bảng ghi tăng/giảm Công cụ dụng cụ cố định",
+    );
+    (data.ccdcRows || []).forEach((row: any) => {
+      wsData[currentRow] = [
+        cell(row.ctTangSoHieu, sText),
+        cell(row.ctTangNgay, sText),
+        cell(row.tenNhanHieu, sText),
+        cell(row.dvt, sText),
+        cell(Number(row.tangSoLuong) || row.tangSoLuong, sNum),
+        cell(Number(row.tangDonGia) || row.tangDonGia, sNum),
+        cell(Number(row.tangSoTien) || row.tangSoTien, sNum),
+        cell(row.ctGiamSoHieu, sText),
+        cell(row.ctGiamNgay, sText),
+        cell(row.giamLyDo, sText),
+        cell(Number(row.giamSoLuong) || row.giamSoLuong, sNum),
+        cell(Number(row.giamSoTien) || row.giamSoTien, sNum),
+        cell(row.ghiChu, sText),
+      ];
+      currentRow++;
+    });
+
+    currentRow += 2;
+
+    // --- PHẦN 4: FOOTER (Chữ ký) ---
+    // Phần này không cần border ô, dùng text thường
+    const f = data.footerData || {};
+    wsData[currentRow] = [
+      cell(
+        `- Sổ này có ${f.soTrang || "..."} trang, đánh số từ trang 01 đến trang ${f.denTrang || "..."}`,
+        sInfo,
+      ),
+    ];
+    merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 12 } });
+
+    currentRow++;
+    wsData[currentRow] = [cell(`- Ngày mở sổ: ${f.ngayMoSo || "..."}`, sInfo)];
+    merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 12 } });
+
+    currentRow += 2;
+    const dateSign = `Ngày ${f.ngayKy || "..."} tháng ${f.thangKy || "..."} năm ${f.namKy || "..."}`;
+
+    // Tạo dòng chữ ký
+    const signRow = Array(13).fill("");
+    signRow[0] = cell("Người ghi sổ", sInfoCenter);
+    signRow[5] = cell("Kế toán trưởng", sInfoCenter);
+    signRow[11] = cell(dateSign, {
+      ...sInfoCenter,
+      font: { ...sInfoCenter.font, italic: true },
+    }); // Ngày tháng nghiêng
+    wsData[currentRow] = signRow;
+
+    merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 2 } });
+    merges.push({ s: { r: currentRow, c: 4 }, e: { r: currentRow, c: 7 } });
+    merges.push({ s: { r: currentRow, c: 11 }, e: { r: currentRow, c: 12 } }); // Ngày tháng merge
+
+    currentRow++;
+    const jobRow = Array(13).fill("");
+    jobRow[11] = cell("Giám đốc", sInfoCenter); // Giám đốc ở dòng dưới ngày tháng
+    wsData[currentRow] = jobRow;
+    merges.push({ s: { r: currentRow, c: 11 }, e: { r: currentRow, c: 12 } });
+
+    currentRow++;
+    const signTitleRow = Array(13).fill("");
+    signTitleRow[0] = cell("(Ký, họ tên)", {
+      ...sInfoCenter,
+      font: { ...sInfoCenter.font, italic: true },
+    });
+    signTitleRow[5] = cell("(Ký, họ tên)", {
+      ...sInfoCenter,
+      font: { ...sInfoCenter.font, italic: true },
+    });
+    signTitleRow[11] = cell("(Ký, họ tên, đóng dấu)", {
+      ...sInfoCenter,
+      font: { ...sInfoCenter.font, italic: true },
+    });
+    wsData[currentRow] = signTitleRow;
+
+    merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 2 } });
+    merges.push({ s: { r: currentRow, c: 4 }, e: { r: currentRow, c: 7 } });
+    merges.push({ s: { r: currentRow, c: 11 }, e: { r: currentRow, c: 12 } });
+
+    // --- TẠO SHEET & XUẤT ---
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws["!merges"] = merges;
+    ws["!cols"] = [
+      { wch: 10 },
+      { wch: 12 },
+      { wch: 30 },
+      { wch: 8 },
+      { wch: 8 },
+      { wch: 12 },
+      { wch: 15 },
+      { wch: 10 },
+      { wch: 12 },
+      { wch: 20 },
+      { wch: 8 },
+      { wch: 15 },
+      { wch: 15 },
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, "S22DN");
+    const safeName = (selectedDeptName || "S22DN").replace(
+      /[^a-z0-9\-_]/gi,
+      "_",
+    );
+    const fname = `Bao_cao_S22DN_${safeName}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    XLSX.writeFile(wb, fname);
+
+    setSnackbarMessage("Xuất file thành công");
+    setSnackbarSeverity("success");
+    setOpenSnackbar(true);
   };
 
   const selectedDeptName =

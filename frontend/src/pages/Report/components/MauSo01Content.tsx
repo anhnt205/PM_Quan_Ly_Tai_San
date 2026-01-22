@@ -142,7 +142,12 @@ export default function MauSo01Content({
         newRows.push(...ccdc);
 
         setTableRows(newRows);
-        onContentChange?.({ ...formData, tableRows: newRows });
+        onContentChange?.({ 
+            ...formData, 
+            tableRows: newRows, // Dữ liệu hiển thị
+            tsRows: taiSan,     // Dữ liệu TSCĐ (cho Excel) -> Sửa lỗi "Chưa có dữ liệu"
+            ccdcRows: ccdc      // Dữ liệu CCDC (cho Excel)
+        });
         onFetchSuccess?.();
       } catch (err) {
         console.error("Fetch MauSo01 tang-giam error", err);
@@ -152,6 +157,62 @@ export default function MauSo01Content({
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchKey]);
+
+  // when parent kyBaoCao changes (format expected "MM/YYYY"), update the displayed month/year
+  useEffect(() => {
+    if (!kyBaoCao) return;
+    const v = String(kyBaoCao || "").trim();
+    // support formats: MM/YYYY, M/YYYY, YYYY-MM, YYYY/MM
+    let month = "";
+    let year = "";
+    if (v.includes("/")) {
+      const parts = v.split("/").map((p) => p.trim());
+      if (parts.length === 2) {
+        // could be MM/YYYY or YYYY/MM depending on order; detect by length
+        if (parts[0].length === 4) {
+          year = parts[0];
+          month = parts[1];
+        } else {
+          month = parts[0];
+          year = parts[1];
+        }
+      }
+    } else if (v.includes("-")) {
+      const parts = v.split("-").map((p) => p.trim());
+      if (parts.length === 2) {
+        if (parts[0].length === 4) {
+          year = parts[0];
+          month = parts[1];
+        } else {
+          month = parts[0];
+          year = parts[1];
+        }
+      }
+    } else if (/^\d{6}$/.test(v)) {
+      // YYYYMM
+      year = v.slice(0, 4);
+      month = v.slice(4);
+    }
+
+    // normalize month to numeric without leading dots
+    month = month.replace(/^0+/, "") || month;
+    // if month still has leading zeros intended, keep as-is
+    if (month === "") {
+      // try to infer from Date
+      const d = new Date();
+      month = String(d.getMonth() + 1);
+      year = year || String(d.getFullYear());
+    }
+
+    const newData = {
+      ...formData,
+      thangBaoCao: month,
+      namBaoCao: year,
+    };
+    setFormData(newData);
+    onContentChange?.({ ...newData, tableRows });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kyBaoCao]);
 
   const handleInputChange = (field: string, value: string) => {
     const newData = { ...formData, [field]: value };
@@ -350,19 +411,49 @@ export default function MauSo01Content({
           }}
         >
           <span>Tháng</span>
-          <TextField
-            value={formData.thangBaoCao}
-            onChange={(e) => handleInputChange("thangBaoCao", e.target.value)}
-            variant="standard"
-            sx={{ ...dottedInputSx, width: "50px", mx: 1 }}
-          />
+          {formData.thangBaoCao ? (
+            <Box
+              component="span"
+              sx={{
+                display: "inline-block",
+                minWidth: "50px",
+                textAlign: "center",
+                fontWeight: "bold",
+                mx: 1,
+              }}
+            >
+              {formData.thangBaoCao}
+            </Box>
+          ) : (
+            <TextField
+              value={formData.thangBaoCao}
+              onChange={(e) => handleInputChange("thangBaoCao", e.target.value)}
+              variant="standard"
+              sx={{ ...dottedInputSx, width: "50px", mx: 1 }}
+            />
+          )}
           <span>năm</span>
-          <TextField
-            value={formData.namBaoCao}
-            onChange={(e) => handleInputChange("namBaoCao", e.target.value)}
-            variant="standard"
-            sx={{ ...dottedInputSx, width: "70px", mx: 1 }}
-          />
+          {formData.namBaoCao ? (
+            <Box
+              component="span"
+              sx={{
+                display: "inline-block",
+                minWidth: "70px",
+                textAlign: "center",
+                fontWeight: "bold",
+                mx: 1,
+              }}
+            >
+              {formData.namBaoCao}
+            </Box>
+          ) : (
+            <TextField
+              value={formData.namBaoCao}
+              onChange={(e) => handleInputChange("namBaoCao", e.target.value)}
+              variant="standard"
+              sx={{ ...dottedInputSx, width: "70px", mx: 1 }}
+            />
+          )}
         </Box>
         <Typography
           sx={{ fontFamily: "inherit", fontSize: "0.9em", fontStyle: "italic" }}
