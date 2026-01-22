@@ -1,60 +1,104 @@
+export interface ToolSignature {
+  id: string;
+  idTaiLieu: string;
+  loaiKy: number;
+  x: number;
+  y: number;
+  idNguoiKy: string;
+  chuKySo: string;
+  ngayKy: string;
+  stt: number;
+  chuKyNhay: string;
+  chuKyThuong: string;
+  scale: number;
+  width: number;
+}
+
+export interface ToolSigner {
+  id: string;
+  idTaiLieu: string;
+  idNguoiKy: string;
+  tenNguoiKy: string;
+  idPhongBan: string;
+  trangThai: number;
+}
+
 export interface ToolTransferDetail {
-    toolId: string;
-    uom: string;
-    available_quantity: number;
-    output_quantity: number;
-    handed_out_quantity: number;
-    note: string;
-};
+  id: string;
+  idDieuDongCCDCVatTu: string;
+  tenPhieu: string;
+  soQuyetDinh: string;
+  idCCDCVatTu: string;
+  tenCCDCVatTu: string;
+  donViTinh: string;
+  congSuat: string;
+  nuocSanXuat: string;
+  soKyHieu: string;
+  kyHieu: string;
+  namSanXuat: string;
+  soLuong: number;
+  soLuongXuat: number;
+  ghiChu: string;
+  ngayTao: string;
+  ngayCapNhat: string;
+  nguoiTao: string;
+  nguoiCapNhat: string;
+  idChiTietCCDCVatTu: string;
+  isActive: boolean;
+  soLuongDaBanGiao: number;
+  soLuongConLai: number;
+  hienTrang: string;
+  moTa: string;
+}
 
 export interface ToolTransferData {
-  [x: string]: any;
-  Id: string;
-  SoQuyetDinh: string;
-  TenPhieu: string;
-  IdDonViGiao: string;
-  IdDonViNhan: string;
+  id: string;
+  soQuyetDinh: string;
+  tenPhieu: string;
+  idDonViGiao: string;
+  tenDonViGiao: string;
+  idDonViNhan: string;
+  tenDonViNhan: string;
+  idNguoiKyNhay: string;
+  trangThaiKyNhay: boolean;
+  nguoiLapPhieuKyNhay: boolean;
+  tenNguoiKyNhay: string;
+  idDonViDeNghi: string;
+  tenDonViDeNghi: string;
+  tggnTuNgay: string;
+  tggnDenNgay: string;
+  idTrinhDuyetCapPhong: string;
+  tenTrinhDuyetCapPhong: string;
+  trinhDuyetCapPhongXacNhan: boolean;
+  idTrinhDuyetGiamDoc: string;
+  trinhDuyetGiamDocXacNhan: boolean;
+  tenTrinhDuyetGiamDoc: string;
+  idPhongBanXemPhieu: string;
+  tenPhongBanXemPhieu: string;
+  diaDiemGiaoNhan: string;
+  noiNhan: string;
+  trangThai: number;
+  idCongTy: string;
+  ngayTao: string;
+  ngayCapNhat: string;
+  nguoiTao: string;
+  nguoiCapNhat: string;
+  coHieuLuc: number;
+  loai: number;
+  share: boolean;
+  trichYeu: string;
+  duongDanFile: string;
+  tenFile: string;
+  ngayKy: string;
+  daBanGiao: boolean;
+  byStep: boolean;
+  coPhieuBanGiao: boolean;
+  trangThaiPhieu: number;
+  trangThaiPhieuDieuDong: number;
+  trangThaiBanGiao: number;
+  trinhDuyet: boolean;
 
-  IdNguoiKyNhay: string;
-  TrangThaiKyNhay: number; // TINYINT(1)
-  NguoiLapPhieuKyNhay: number; // TINYINT(1)
-
-  IdDonViDeNghi: string;
-  TGGNTuNgay: string | null;
-  TGGNDenNgay: string | null;
-
-  IdTrinhDuyetCapPhong: string;
-  TrinhDuyetCapPhongXacNhan: number; // TINYINT(1)
-
-  IdTrinhDuyetGiamDoc: string;
-  TrinhDuyetGiamDocXacNhan: number; // TINYINT(1)
-
-  DiaDiemGiaoNhan: string;
-  IdPhongBanXemPhieu: string;
-  NoiNhan: string;
-
-  TrangThai: number; // INT
-  IdCongTy: string;
-
-  NgayTao: string;
-  NgayCapNhat: string;
-  NguoiTao: string;
-  NguoiCapNhat: string;
-
-  CoHieuLuc: number; // TINYINT(1)
-  Loai: number; // INT
-  Share: number; // TINYINT(1)
-
-  TrichYeu: string;
-  DuongDanFile: string;
-  TenFile: string;
-  NgayKy: string | null;
-
-  DaBanGiao: number; // TINYINT(1)
-  ByStep: number; // TINYINT(1)
-  CoPhieuBanGiao: number; // TINYINT(1)
-
-  // Trường bổ trợ cho Frontend (Grid/Table con)
-  TaiLieu?: string; // Dùng để hiển thị Chip "Tài liệu..." trên Grid
-  assets: ToolTransferDetail[]; // Dữ liệu bảng chi tiết tài sản
+  chuKyList: ToolSignature[];
+  chiTietDieuDongCCDCVatTuDTOS: any[];
+  nguoiKyList: ToolSigner[];
 }

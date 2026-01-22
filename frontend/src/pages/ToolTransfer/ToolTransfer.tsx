@@ -1,436 +1,302 @@
-import { useEffect, useMemo, useState } from "react";
-import {
-  Box,
-  Chip,
-  Grid,
-  Paper,
-  Typography,
-  IconButton,
-  Tooltip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Button,
-} from "@mui/material";
-import {
-  Add,
-  Delete as DeleteIcon,
-  Visibility as VisibilityIcon,
-  EventNote as EventNoteIcon,
-} from "@mui/icons-material";
-import { GridColDef, GridRowParams } from "@mui/x-data-grid";
+import { useEffect, useState } from "react";
+import { Box, Grid, IconButton, Tooltip, LinearProgress } from "@mui/material";
 
-// Import Components
+import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import ToolTransferForm from "./components/ToolTransferForm";
 import SignerSidebar from "./components/SignerSidebar";
-import SignDocumentForm from "./components/SignDocumentForm";
 import BienBanDialog from "./components/BienBanDialog";
 import TableCustom from "../../components/common/TableCustom";
-
-import { mockToolTransfers as mockRows } from "../../data/ToolTransferData";
-
-// Import Types & Data
 import { ToolTransferData } from "./types";
 import PageAction from "../../components/common/PageAction";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { useToolTransferMutation } from "./Mutation";
+import { showConfirmAlert } from "../../components/Alert";
+import {
+  getTypeInfo,
+  isCheckShowDelete,
+  showDownloadFile,
+  ShowPermissionSigning,
+  showShareStatus,
+  showStatus,
+  showStatusDocument,
+} from "../AssetTransfer/config";
+import ImportErrorDialog from "../../components/common/ImportErrorDialog";
+import { findById, getPermissionSigning } from "../../utils/helpers";
+import { Building, Eye, Trash2 } from "lucide-react";
+import SignDocumentForm from "../../components/common/SignDocumentForm";
 
 export default function ToolTransfer() {
-  // State
+  const { user } = useSelector((state: any) => state.user);
+  const [searchParams] = useSearchParams();
+  const type = searchParams.get("type");
+
   const [showForm, setShowForm] = useState(false);
   const [selectedRow, setSelectedRow] = useState<ToolTransferData | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
-  const [isNewForm, setIsNewForm] = useState(false);
+  const [readOnly, setReadOnly] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
     pageSize: 10,
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [selectedDocuments, setSelectedDocuments] = useState<any | null>(null);
-  const [searchValue, setSearchValue] = useState("");
+
   const [showSignDocument, setShowSignDocument] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [rowToDelete, setRowToDelete] = useState<ToolTransferData | null>(null);
+  const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
   const [showSignerSidebar, setShowSignerSidebar] = useState(true);
   const [showBienBanDialog, setShowBienBanDialog] = useState(false);
+  const [toolTransferDetail, setToolTransferDetail] = useState<any[]>([]);
+  const [toolByDepartment, setToolByDepartment] = useState<any[]>([]);
 
-  const [searchParams] = useSearchParams();
-  const type = searchParams.get("type");
+  const {
+    toolTransferPage,
+    allStaff,
+    allDepartments,
+    handleDownloadFile,
+    handoverDetails,
+    allToolsByDonVi,
+    createMutation,
+    updateMutation,
+    deleteOneMutation,
+    allUnits,
+    allCurrentStatus,
+    setDepartmentId,
+    cancelMutation,
+    signMutation,
+    isFetching,
+    errorState,
+    handleSignatureList,
+    handleToolByDonVi,
+  } = useToolTransferMutation(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchValue,
+    type ? Number(type) : undefined,
+    user?.taiKhoan?.tenDangNhap,
+    undefined,
+    selectedRow?.id,
+  );
 
   useEffect(() => {
+    setShowForm(false);
+    setSelectedRow(null);
+    setShowSidebar(false);
+    setReadOnly(false);
     setSelectedIds([]);
-    setSelectedDocuments(null);
     setSearchValue("");
     setShowSignDocument(false);
-    setSelectedRow(null);
-    setShowForm(false);
-    setShowSidebar(false);
+    setSelectedDocument(null);
   }, [type]);
-  const getTypeInfo = (typeValue: any) => {
-    switch (Number(typeValue)) {
-      case 1:
-        return {
-          title: "Cấp phát CCDC - Vật tư",
-          label: "cấp phát CCDC - Vật tư",
-        };
-      case 2:
-        return {
-          title: "Điều chuyển CCDC - Vật tư",
-          label: "điều chuyển CCDC - Vật tư",
-        };
-      case 3:
-        return {
-          title: "Thu hồi CCDC - Vật tư",
-          label: "thu hồi CCDC - Vật tư",
-        };
-      default:
-        return {
-          title: "Cấp phát CCDC - Vật tư",
-          label: "cấp phát CCDC - Vật tư",
-        };
-    }
-  };
 
-  // Usage inside your component
   const { title, label } = getTypeInfo(type);
+
+  // --- HANDLERS ---
+  const handleClose = () => {
+    setShowForm(false);
+    setSelectedRow(null);
+    setShowSidebar(false);
+    setReadOnly(false);
+    setSelectedIds([]);
+    setShowSignDocument(false);
+  };
 
   const handleRowClick = (params: GridRowParams) => {
     const data = params.row as ToolTransferData;
     setSelectedRow(data);
     setShowForm(true);
+    setReadOnly(true);
     setShowSidebar(true);
   };
 
-  const handleCloseForm = () => {
-    setShowForm(false);
-    setSelectedRow(null);
-    setShowSidebar(false);
-  };
-
-  const handleDelete = (ids: string[]) => {
-    console.log("Xóa các bản ghi:", ids);
-  };
-
-  const handleOpenDeleteDialog = (row: ToolTransferData) => {
-    setRowToDelete(row);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleCloseDeleteDialog = () => {
-    setDeleteDialogOpen(false);
-    setRowToDelete(null);
-  };
-
-  const handleConfirmDelete = () => {
-    if (rowToDelete) {
-      handleDelete([rowToDelete.id]);
-      console.log("Đã xóa:", rowToDelete.TenPhieu);
-    }
-    handleCloseDeleteDialog();
-  };
-
-  const handleSaveToolTransfer = async (values: any) => {
+  const handleSave = async (values: any) => {
     try {
-      console.log("Lưu biên bản:", values);
-
-      // Nếu có file đính kèm, gửi file lên server
+      // 1. Xử lý upload file binary nếu có
       if (values.AttachmentFile) {
         const formData = new FormData();
         formData.append("file", values.AttachmentFile);
-
-        // Gửi file lên backend
-        const uploadResponse = await fetch(
-          "http://42.119.110.246:8389/api/upload",
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-
-        if (!uploadResponse.ok) {
-          console.error("Lỗi upload file");
-        }
+        // await uploadFileMutation.mutateAsync(formData); // Giả định có mutation upload
       }
 
-      // Gửi dữ liệu biên bản (không gửi file binary)
       const dataToSend = { ...values };
-      delete dataToSend.AttachmentFile; // Xóa file binary khỏi payload
+      delete dataToSend.AttachmentFile;
 
-      // Gọi API save biên bản (sẽ implement sau)
-      console.log("Dữ liệu gửi:", dataToSend);
+      // 3. Thực hiện lưu (Update hoặc Create)
+      if (selectedRow) {
+        await updateMutation.mutateAsync(dataToSend);
+      } else {
+        await createMutation.mutateAsync(dataToSend);
+      }
 
-      // Đóng form sau khi save thành công
-      handleCloseForm();
+      handleClose();
     } catch (error) {
-      console.error("Lỗi khi lưu biên bản:", error);
+      console.error("Lỗi khi lưu phiếu:", error);
     }
   };
 
-  const handleSignTools = (id: string) => {
-    console.log("Ký biên bản cho các CCDC - Vật tư:", id);
-    // Lấy thông tin document từ các dòng được chọn
-    const documents = mockRows.find((row: any) => row.Id === id);
-    setSelectedDocuments(documents);
-    setShowSignerSidebar(true); // Hiện sidebar khi ký
+  const handleEdit = () => {
+    setReadOnly(false);
+  };
+
+  const handleDelete = async (rowData: ToolTransferData) => {
+    const confirm = await showConfirmAlert(
+      `Xóa phiếu ${title} "${rowData.tenPhieu}"`,
+    );
+    if (confirm.isConfirmed) {
+      deleteOneMutation.mutate(rowData.id);
+    }
+  };
+
+  const handleSignTools = (id: string, rowData: ToolTransferData) => {
+    setSelectedDocument(rowData);
+    setShowSignerSidebar(true);
     setShowSignDocument(true);
   };
 
   const handleViewDocument = (rowData: ToolTransferData) => {
-    console.log("Xem tài liệu:", rowData.Id);
-    setSelectedDocuments(rowData);
-    setShowSignerSidebar(false); // Ẩn sidebar khi xem
+    setSelectedDocument(rowData);
+    setShowSignerSidebar(false);
+    setSelectedIds([rowData.id]);
     setShowSignDocument(true);
   };
 
+  const handleToolTransfer = async (department: string) => {
+    const result = await handleToolByDonVi(type ? Number(type) : 1, department);
+    setToolByDepartment(result?.items);
+  };
+
   const handleViewBienBan = (rowData: ToolTransferData) => {
-    console.log("Xem phiếu bàn giao:", rowData.Id);
-    setSelectedDocuments(rowData);
+    setSelectedDocument(rowData);
     setShowBienBanDialog(true);
   };
 
   const columns: GridColDef<ToolTransferData>[] = [
     {
-      field: "TenPhieu",
+      field: "tenPhieu",
       headerName: "Phiếu ký nội sinh",
       width: 200,
       headerAlign: "center",
       align: "center",
     },
-
     {
-      field: "TrichYeu",
+      field: "trichYeu",
       headerName: "Trích yếu",
       width: 180,
       headerAlign: "center",
       align: "center",
     },
-
     {
-      field: "NgayTao",
+      field: "ngayHieuLuc",
       headerName: "Ngày có hiệu lực",
       width: 160,
       headerAlign: "center",
       align: "center",
-      valueFormatter: (value: any) => {
-        if (!value) return "";
-        return new Date(value).toLocaleString("vi-VN");
+      renderCell: (params) => {
+        if (!params.row?.tggnTuNgay) return "";
+        return new Date(params.row?.tggnTuNgay).toLocaleString("vi-VN");
       },
     },
-
     {
-      field: "NguoiTao",
+      field: "nguoiTao",
       headerName: "Trình duyệt biên bản",
       width: 160,
       headerAlign: "center",
       align: "center",
     },
-
     {
-      field: "TenFile",
+      field: "tenFile",
       headerName: "Tài liệu duyệt",
       width: 180,
       headerAlign: "center",
       align: "center",
       renderCell: (params) => {
         if (!params.value) return null;
-        return (
-          <Chip
-            label={
-              params.value.length > 20
-                ? params.value.substring(0, 15) + "..."
-                : params.value
-            }
-            size="small"
-            variant="outlined"
-            color="success"
-            icon={<Add sx={{ fontSize: 12 }} />}
-            clickable
-            title={params.value}
-          />
+        return showDownloadFile(params.value, () =>
+          handleDownloadFile(params.value),
         );
       },
     },
-
     {
-      field: "SoQuyetDinh",
+      field: "soQuyetDinh",
       headerName: "Ký số",
       width: 150,
       headerAlign: "center",
       align: "center",
     },
-
     {
-      field: "ThoiGianTuNgay",
+      field: "tggnTuNgay",
       headerName: "Thời gian giao nhận từ ngày",
       width: 160,
       headerAlign: "center",
       align: "center",
-      valueFormatter: (value: any) => {
-        if (!value) return "";
-        return new Date(value).toLocaleString("vi-VN");
-      },
+      valueFormatter: (value: any) =>
+        value ? new Date(value).toLocaleString("vi-VN") : "",
     },
-
     {
-      field: "ThoiGianDenNgay",
+      field: "tggnDenNgay",
       headerName: "Thời gian giao nhận đến ngày",
       width: 160,
       headerAlign: "center",
       align: "center",
-      valueFormatter: (value: any) => {
-        if (!value) return "";
-        return new Date(value).toLocaleString("vi-VN");
-      },
+      valueFormatter: (value: any) =>
+        value ? new Date(value).toLocaleString("vi-VN") : "",
     },
-
     {
-      field: "IdDonViGiao",
+      field: "idDonViGiao",
       headerName: "Đơn vị giao",
       width: 180,
       headerAlign: "center",
       align: "center",
+      renderCell: (params) =>
+        findById(allDepartments, params.value)?.tenPhongBan,
     },
     {
-      field: "IdDonViNhan",
+      field: "idDonViNhan",
       headerName: "Đơn vị nhận",
       width: 180,
       headerAlign: "center",
       align: "center",
+      renderCell: (params) =>
+        findById(allDepartments, params.value)?.tenPhongBan,
     },
-
     {
-      field: "TrangThai",
+      field: "trangThai",
       headerName: "Trạng thái phiếu",
       width: 140,
       headerAlign: "center",
       align: "center",
-      renderCell: (params) => {
-        const statusMap: Record<
-          number,
-          { label: string; color: "default" | "info" | "error" | "success" }
-        > = {
-          0: { label: "Nháp", color: "default" },
-          1: { label: "Duyệt", color: "info" },
-          2: { label: "Hủy", color: "error" },
-          3: { label: "Hoàn thành", color: "success" },
-        };
-
-        const status = statusMap[params.value as number] || {
-          label: "KĐ",
-          color: "default",
-        };
-
-        return (
-          <Chip
-            label={status.label}
-            color={status.color}
-            size="small"
-            sx={{ minWidth: 80, fontWeight: 600 }}
-          />
-        );
-      },
+      renderCell: (params) => showStatus(params.value ?? 0),
     },
-
     {
-      field: "TrangThaiKy",
+      field: "trangThaiKy",
       headerName: "Trạng thái ký",
       width: 140,
       headerAlign: "center",
       align: "center",
-      renderCell: (params) => {
-        const statusMap: Record<
-          number,
-          { label: string; color: "default" | "info" | "error" | "success" }
-        > = {
-          0: { label: "Không được phép ký", color: "info" },
-          1: { label: "Không được phép ký", color: "info" },
-          2: { label: "Không được phép ký", color: "info" },
-          3: { label: "Không được phép ký", color: "info" },
-        };
-
-        const status = statusMap[params.value as number] || {
-          label: "KĐ",
-          color: "default",
-        };
-
-        return (
-          <Chip
-            label={status.label}
-            color={status.color}
-            size="small"
-            sx={{ minWidth: 80, fontWeight: 600 }}
-          />
-        );
-      },
+      renderCell: (params) =>
+        ShowPermissionSigning(getPermissionSigning(params.row, user, allStaff)),
     },
-
     {
-      field: "TrangThaiBanGiao",
+      field: "trangThaiBanGiao",
       headerName: "Trạng thái bàn giao",
       width: 140,
       headerAlign: "center",
       align: "center",
-      renderCell: (params) => {
-        const statusMap: Record<
-          number,
-          { label: string; color: "default" | "info" | "error" | "success" }
-        > = {
-          0: { label: "Chưa tạo biên bản", color: "error" },
-          1: { label: "Sắp quá hạn bàn giao", color: "default" },
-          /*2: { label: "Hủy", color: "error" },
-          3: { label: "Hoàn thành", color: "success" },*/
-        };
-
-        const status = statusMap[params.value as number] || {
-          label: "KĐ",
-          color: "default",
-        };
-
-        return (
-          <Chip
-            label={status.label}
-            color={status.color}
-            size="small"
-            sx={{ minWidth: 80, fontWeight: 600 }}
-          />
-        );
-      },
+      renderCell: (params) =>
+        showStatusDocument(params.row?.trangThaiBanGiao ?? 0),
     },
-
     {
-      field: "TrinhDuyet",
+      field: "trinhDuyet",
       headerName: "Trình duyệt",
       width: 140,
       headerAlign: "center",
       align: "center",
-      renderCell: (params) => {
-        const statusMap: Record<
-          number,
-          { label: string; color: "default" | "info" | "error" | "success" }
-        > = {
-          0: { label: "Được gửi", color: "success" },
-          1: { label: "Đã gửi", color: "success" },
-          2: { label: "Chưa gửi", color: "error" },
-          //3: { label: "Hoàn thành", color: "success" },
-        };
-
-        const status = statusMap[params.value as number] || {
-          label: "KĐ",
-          color: "default",
-        };
-
-        return (
-          <Chip
-            label={status.label}
-            color={status.color}
-            size="small"
-            sx={{ minWidth: 80, fontWeight: 600 }}
-          />
-        );
-      },
+      renderCell: (params) =>
+        showShareStatus(
+          params.row?.trinhDuyet ?? false,
+          params.row?.nguoiTao == user?.taiKhoan?.tenDangNhap,
+        ),
     },
-
     {
       field: "HanhDong",
       headerName: "Hành động",
@@ -447,19 +313,24 @@ export default function ToolTransfer() {
               <IconButton
                 size="small"
                 color="error"
-                onClick={(e) => {
+                disabled={!isCheckShowDelete(rowData, user)}
+                onClick={async (e) => {
                   e.stopPropagation();
-                  handleOpenDeleteDialog(rowData);
+                  const confirm = await showConfirmAlert(
+                    `Xóa phiếu ${title} "${rowData?.soQuyetDinh}"`,
+                  );
+                  if (confirm.isConfirmed) {
+                    deleteOneMutation.mutate(rowData.soQuyetDinh);
+                  }
                 }}
                 sx={{
                   padding: "4px",
                   "&:hover": { bgcolor: "rgba(244, 67, 54, 0.08)" },
                 }}
               >
-                <DeleteIcon sx={{ fontSize: 18 }} />
+                <Trash2 size={18} />
               </IconButton>
             </Tooltip>
-
             <Tooltip title="Xem phiếu bàn giao">
               <IconButton
                 size="small"
@@ -473,24 +344,31 @@ export default function ToolTransfer() {
                   "&:hover": { bgcolor: "rgba(25, 118, 210, 0.08)" },
                 }}
               >
-                <EventNoteIcon sx={{ fontSize: 18 }} />
+                <Building size={18} />
               </IconButton>
             </Tooltip>
-
             <Tooltip title="Xem">
               <IconButton
                 size="small"
                 color="success"
-                onClick={(e) => {
+                onClick={async (e) => {
                   e.stopPropagation();
-                  handleViewDocument(rowData);
+                  setSelectedDocument(rowData.tenFile);
+                  setToolTransferDetail(
+                    rowData.chiTietDieuDongCCDCVatTuDTOS || [],
+                  );
+                  setShowSignerSidebar(false);
+                  setDepartmentId(rowData.idDonViGiao);
+                  setSelectedIds([rowData.id]);
+                  await handleToolTransfer(rowData.idDonViGiao);
+                  setShowSignDocument(true);
                 }}
                 sx={{
                   padding: "4px",
                   "&:hover": { bgcolor: "rgba(76, 175, 80, 0.08)" },
                 }}
               >
-                <VisibilityIcon sx={{ fontSize: 18 }} />
+                <Eye size={18} />
               </IconButton>
             </Tooltip>
           </Box>
@@ -501,100 +379,24 @@ export default function ToolTransfer() {
 
   return (
     <>
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={handleCloseDeleteDialog}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle
-          sx={{ textAlign: "center", fontWeight: 600, fontSize: 18 }}
-        >
-          Xóa biên bản bàn giao
-        </DialogTitle>
-        <DialogContent sx={{ textAlign: "center", py: 3 }}>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              mb: 2,
-            }}
-          >
-            <Box
-              sx={{
-                width: 60,
-                height: 60,
-                borderRadius: "50%",
-                backgroundColor: "#ffcccc",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <DeleteIcon sx={{ fontSize: 32, color: "#f44336" }} />
-            </Box>
-          </Box>
-          <DialogContentText sx={{ color: "#666", fontSize: 14 }}>
-            Bạn có chắc muốn xóa <strong>"{rowToDelete?.TenPhieu}"</strong>
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: "center", pb: 2, gap: 2 }}>
-          <Button
-            onClick={handleCloseDeleteDialog}
-            sx={{
-              px: 3,
-              py: 1,
-              backgroundColor: "#f0f0f0",
-              color: "#333",
-              fontWeight: 500,
-              textTransform: "none",
-              fontSize: 14,
-              "&:hover": { backgroundColor: "#e0e0e0" },
-            }}
-          >
-            Không
-          </Button>
-          <Button
-            onClick={handleConfirmDelete}
-            variant="contained"
-            color="error"
-            sx={{
-              px: 3,
-              py: 1,
-              fontWeight: 500,
-              textTransform: "none",
-              fontSize: 14,
-            }}
-          >
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ImportErrorDialog
+        open={errorState.open}
+        onClose={errorState.onClose}
+        errors={errorState.errors}
+      />
 
-      {/* Dialog Xem Biên Bản */}
       <BienBanDialog
         open={showBienBanDialog}
         onClose={() => setShowBienBanDialog(false)}
-        documentData={selectedDocuments}
+        documentData={selectedDocument}
       />
 
       {showSignDocument ? (
         <SignDocumentForm
           selectedIds={selectedIds}
-          documents={selectedDocuments}
-          onCancel={() => {
-            setShowSignDocument(false);
-            setSelectedDocuments([]);
-            setShowSignerSidebar(true);
-          }}
-          onSign={() => {
-            console.log("Ký tài liệu thành công");
-            setShowSignDocument(false);
-            setSelectedIds([]);
-            setSelectedDocuments([]);
-            setShowSignerSidebar(true);
-          }}
+          document={selectedDocument}
+          onCancel={handleClose}
+          onSign={() => signMutation.mutate}
           showSignerSidebar={showSignerSidebar}
           fullscreen={true}
         />
@@ -603,27 +405,52 @@ export default function ToolTransfer() {
           <PageAction
             title={title}
             onNewClick={() => {
-              setIsNewForm(true);
+              setSelectedRow(null);
               setShowForm(true);
+              setReadOnly(false);
             }}
           />
-          <Box sx={{ p: 2 }}>
-            {/* FORM AREA */}
+
+          <Box sx={{ p: 2, position: "relative" }}>
+            {isFetching && (
+              <LinearProgress
+                sx={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  zIndex: 10,
+                  height: 2,
+                }}
+              />
+            )}
+
             {showForm && (
               <Box sx={{ mb: 2 }}>
-                {/* Thêm margin bottom để tách biệt với bảng bên dưới */}
                 <ToolTransferForm
-                  key={isNewForm ? "new-form" : `edit-${selectedRow?.id}`}
-                  onCancel={() => {
-                    handleCloseForm();
-                    setIsNewForm(false);
+                  key={selectedRow ? `edit-${selectedRow.id}` : "new-form"}
+                  onClose={handleClose}
+                  onSave={handleSave}
+                  onEdit={handleEdit}
+                  onCancel={async () => {
+                    if (selectedRow) {
+                      const confirm = await showConfirmAlert(
+                        `Bạn có chắc muốn hủy phiếu "${selectedRow.tenPhieu}"?`,
+                      );
+                      if (confirm.isConfirmed)
+                        cancelMutation.mutate(selectedRow.id);
+                    }
                   }}
-                  onSave={handleSaveToolTransfer}
-                  onEdit={() => {}}
-                  readOnly={!!selectedRow && !isNewForm}
-                  selectedTool={isNewForm ? null : selectedRow}
+                  readOnly={readOnly}
+                  selectedTool={selectedRow}
+                  departments={allDepartments}
+                  staffs={allStaff}
+                  setDepartmentId={setDepartmentId}
+                  allToolsByDonVi={allToolsByDonVi}
+                  allUnits={allUnits}
+                  allCurrentStatus={allCurrentStatus}
                   label={label}
-                  isSignedForm={!!selectedRow && !isNewForm}
+                  type={Number(type)}
                 />
               </Box>
             )}
@@ -638,6 +465,7 @@ export default function ToolTransfer() {
                 overflow: "hidden",
                 border: "1px solid",
                 borderColor: "divider",
+                minHeight: "500px",
               }}
             >
               <Grid
@@ -646,42 +474,50 @@ export default function ToolTransfer() {
                   transition: "all 0.3s ease",
                   borderRight: showSidebar ? "1px solid" : "none",
                   borderColor: "divider",
+                  height: "100%",
+                  overflow: "hidden",
+                  display: "flex",
+                  flexDirection: "column",
                   "& .MuiPaper-root": {
                     margin: 0,
                     boxShadow: "none",
                     borderRadius: 0,
+                    flexGrow: 1,
                   },
                 }}
               >
                 <TableCustom
-                  title={`Phiếu duyệt ${label}`}
+                  title={`Danh sách phiếu ${label}`}
                   columns={columns}
-                  rows={mockRows}
-                  total={mockRows.length}
+                  rows={toolTransferPage.items || []}
+                  total={toolTransferPage.totalItems || 0}
                   paginationModel={paginationModel}
                   onPaginationModelChange={setPaginationModel}
                   onRowClick={handleRowClick}
                   selectedIds={selectedIds}
                   onSelectionChange={setSelectedIds}
-                  onDelete={handleDelete}
+                  onDelete={(ids: string[]) => {}}
                   onSign={handleSignTools}
                   searchValue={searchValue}
                   setSearchValue={setSearchValue}
                   showStatusFilter={true}
                 />
               </Grid>
-              {/* SIDEBAR - Bây giờ sẽ dính liền và cao bằng Table */}
+
               {showSidebar && (
                 <Grid
                   size={{ xs: 3 }}
                   sx={{
                     display: "flex",
                     flexDirection: "column",
-                    bgcolor: "#fafafa", // Màu nền nhẹ để phân biệt với bảng
+                    bgcolor: "#fafafa",
+                    height: "100%",
+                    overflow: "hidden",
                   }}
                 >
                   <SignerSidebar
                     selectedRow={selectedRow}
+                    handoverDetails={handoverDetails}
                     onClose={() => setShowSidebar(false)}
                   />
                 </Grid>

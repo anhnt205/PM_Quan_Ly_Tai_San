@@ -1,38 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { Box, Grid, IconButton, Tooltip } from "@mui/material";
 import {
-  Box,
-  Chip,
-  Grid,
-  Paper,
-  Typography,
-  IconButton,
-  Tooltip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Button,
-} from "@mui/material";
-import {
-  Add,
   Delete as DeleteIcon,
   Visibility as VisibilityIcon,
   EventNote as EventNoteIcon,
 } from "@mui/icons-material";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-
-// Import Components
 import AssetTransferForm from "./components/AssetTransferForm";
 import SignerSidebar from "./components/SignerSidebar";
 import SignDocumentForm from "./components/SignDocumentForm";
 import BienBanDialog from "./components/BienBanDialog";
 import TableCustom from "../../components/common/TableCustom";
-
-// Import Types & Data
 import { AssetTransferData, SignaturesData } from "./types";
 import PageAction from "../../components/common/PageAction";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useAssetTranferMutation } from "./Mutation";
 import { useSelector } from "react-redux";
 import { findById, getPermissionSigning } from "../../utils/helpers";
@@ -51,7 +32,6 @@ import { FilterOption } from "../../components/common/FilterStatusGroup";
 
 export default function AssetTransfer() {
   const { user } = useSelector((state: any) => state.user);
-  // State
   const [showForm, setShowForm] = useState(false);
   const [selectedRow, setSelectedRow] = useState<AssetTransferData | null>(
     null,
@@ -145,7 +125,6 @@ export default function AssetTransfer() {
     setReadOnly(false);
   }, [type]);
 
-  // Usage inside your component
   const { title, label } = getTypeInfo(type);
 
   const handleRowClick = (params: GridRowParams) => {
@@ -445,7 +424,6 @@ export default function AssetTransfer() {
 
   return (
     <>
-      {/* Dialog Xem Biên Bản */}
       <BienBanDialog
         open={showBienBanDialog}
         onClose={() => setShowBienBanDialog(false)}
@@ -478,10 +456,8 @@ export default function AssetTransfer() {
             }}
           />
           <Box sx={{ p: 2 }}>
-            {/* FORM AREA */}
             {showForm && (
               <Box sx={{ mb: 2 }}>
-                {/* Thêm margin bottom để tách biệt với bảng bên dưới */}
                 <AssetTransferForm
                   key={showForm ? "new-form" : `edit-${selectedRow?.id}`}
                   onClose={handleClose}
@@ -554,15 +530,13 @@ export default function AssetTransfer() {
                 />
               </Grid>
 
-              {/* SIDEBAR - Bây giờ sẽ dính liền và cao bằng Table */}
-              {/* SIDEBAR - Bây giờ sẽ dính liền và cao bằng Table */}
               {showSidebar && (
                 <Grid
                   size={{ xs: 3 }}
                   sx={{
                     display: "flex",
                     flexDirection: "column",
-                    bgcolor: "#fafafa", // Màu nền nhẹ để phân biệt với bảng
+                    bgcolor: "#fafafa",
                   }}
                 >
                   <SignerSidebar

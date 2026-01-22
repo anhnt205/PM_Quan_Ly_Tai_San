@@ -1,6 +1,5 @@
-import React from "react";
 import { Chip } from "@mui/material";
-import { Download, FileDownloadOutlined } from "@mui/icons-material";
+import { FileDownloadOutlined } from "@mui/icons-material";
 import {
   showConfirmAlert,
   showErrorAlert,
@@ -468,7 +467,9 @@ export const canUserSign = (newSigningType: number, images: any[]) => {
   }
 
   // Kiểm tra xem đã có chữ ký loại khác 1 chưa
-  const hasNonType1Signature = userNewSignatures.some((img) => img.loaiKy !== 1);
+  const hasNonType1Signature = userNewSignatures.some(
+    (img) => img.loaiKy !== 1,
+  );
 
   // Nếu đã có chữ ký loại khác 1 (2, 3, 4, 5), không được ký thêm
   if (hasNonType1Signature) {

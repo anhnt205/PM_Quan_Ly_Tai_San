@@ -31,21 +31,24 @@ const StyledTextField = styled(TextField)(({ theme }) => ({
 
 interface FileAttachmentInputProps {
   formik: any;
-  field: string;
+  fileName: string;
+  filePath?: string;
+  fileField?: string;
   disabled?: boolean;
-  fileField?: string; // Để lưu file binary
+  setDocument?: (doc: any) => void;
 }
 
 const FileAttachmentInput: React.FC<FileAttachmentInputProps> = ({
   formik,
-  field,
+  fileName: fileNameField,
+  filePath,
   disabled,
-  fileField = "AttachmentFile", // Mặc định
+  fileField = "AttachmentFile",
+  setDocument,
 }) => {
-  const fileName = formik.values[field];
+  const currentFileName = formik.values[fileNameField];
   const [isConverting, setIsConverting] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-
   // Hàm convert DOCX sang PDF thông qua API
   const convertDocxToPdf = async (file: File): Promise<File | null> => {
     try {
@@ -67,7 +70,7 @@ const FileAttachmentInput: React.FC<FileAttachmentInputProps> = ({
         {
           method: "POST",
           body: formData,
-        }
+        },
       );
 
       if (!response.ok) {
@@ -75,7 +78,7 @@ const FileAttachmentInput: React.FC<FileAttachmentInputProps> = ({
         const errorData = await response.text();
         console.error("Response data:", errorData);
         throw new Error(
-          `Lỗi convert: ${response.status} ${response.statusText}`
+          `Lỗi convert: ${response.status} ${response.statusText}`,
         );
       }
 
@@ -93,7 +96,7 @@ const FileAttachmentInput: React.FC<FileAttachmentInputProps> = ({
     } catch (error) {
       console.error("Lỗi khi convert DOCX sang PDF:", error);
       setUploadError(
-        error instanceof Error ? error.message : "Lỗi chuyển đổi file"
+        error instanceof Error ? error.message : "Lỗi chuyển đổi file",
       );
       return null;
     } finally {
@@ -102,11 +105,10 @@ const FileAttachmentInput: React.FC<FileAttachmentInputProps> = ({
   };
 
   const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Kiểm tra định dạng file
       const isPdf =
         file.type === "application/pdf" ||
         file.name.toLowerCase().endsWith(".pdf");
@@ -117,28 +119,28 @@ const FileAttachmentInput: React.FC<FileAttachmentInputProps> = ({
 
       if (!isPdf && !isDocx) {
         setUploadError("Chỉ hỗ trợ file .pdf hoặc .docx");
-        formik.setFieldValue(field, "");
+        formik.setFieldValue(fileNameField, "");
         formik.setFieldValue(fileField, null);
         return;
       }
 
-      // Nếu là PDF, lưu trực tiếp
       if (isPdf) {
-        formik.setFieldValue(field, file.name);
+        formik.setFieldValue(fileNameField, file.name);
         formik.setFieldValue(fileField, file);
+        if (setDocument) setDocument(file);
         setUploadError(null);
         return;
       }
 
-      // Nếu là DOCX, convert sang PDF
       if (isDocx) {
         const pdfFile = await convertDocxToPdf(file);
         if (pdfFile) {
-          formik.setFieldValue(field, pdfFile.name);
-          formik.setFieldValue(fileField, pdfFile); // Lưu file PDF binary
+          formik.setFieldValue(fileNameField, pdfFile.name);
+          formik.setFieldValue(fileField, pdfFile);
+          if (setDocument) setDocument(pdfFile);
           setUploadError(null);
         } else {
-          formik.setFieldValue(field, "");
+          formik.setFieldValue(fileNameField, "");
           formik.setFieldValue(fileField, null);
         }
       }
@@ -156,14 +158,14 @@ const FileAttachmentInput: React.FC<FileAttachmentInputProps> = ({
 
       <Box
         display="flex"
-        alignItems="stretch" // Đảm bảo nút và input cao bằng nhau
+        alignItems="stretch"
         sx={{ width: "100%", position: "relative" }}
       >
         <StyledTextField
           fullWidth
           size="small"
           placeholder="Chưa chọn tệp"
-          value={fileName || ""}
+          value={currentFileName || ""}
           InputProps={{
             readOnly: true,
             startAdornment: (

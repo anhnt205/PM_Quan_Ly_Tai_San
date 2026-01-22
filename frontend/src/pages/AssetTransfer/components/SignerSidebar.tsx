@@ -8,26 +8,17 @@ import {
   StepLabel,
   StepContent,
   IconButton,
-  Avatar,
-  Chip,
   alpha,
   useTheme,
-  Button,
-  Fab,
 } from "@mui/material";
 import {
   CheckCircle,
   RadioButtonUnchecked,
-  Close,
-  Visibility,
   History,
-  SmartToy, // Icon cho nút Action xanh lá
-  Cancel,
   ErrorOutline,
   VisibilityOff,
 } from "@mui/icons-material";
 
-// Định nghĩa kiểu dữ liệu cho trạng thái ký
 type SignStatus = "completed" | "pending";
 
 interface SignerStepProps {

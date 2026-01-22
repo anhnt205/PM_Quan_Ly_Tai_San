@@ -1,6 +1,6 @@
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { Button } from "@mui/material";
-import React, { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction } from "react";
 
 interface Props {
   expanded: boolean;

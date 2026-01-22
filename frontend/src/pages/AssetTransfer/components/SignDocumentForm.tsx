@@ -11,15 +11,9 @@ import {
   Snackbar,
   Alert,
   CircularProgress,
-  Stack,
 } from "@mui/material";
-import {
-  Cancel,
-  CancelOutlined,
-  Close,
-  PictureAsPdf,
-} from "@mui/icons-material";
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import { CancelOutlined, Close, PictureAsPdf } from "@mui/icons-material";
+import { useState, useEffect, useRef, useMemo } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import DraggableSignature from "./DraggableSignature";
 import { useAssetTranferMutation } from "../Mutation";
@@ -32,16 +26,13 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import { SignaturesData } from "../types";
 import dayjs from "dayjs";
-import { Check, Pencil, TicketCheck } from "lucide-react";
-import { confirmPin, showErrorAlert } from "../../../components/Alert";
+import { Check, Pencil } from "lucide-react";
+import { showErrorAlert } from "../../../components/Alert";
 import { canUserSign } from "../config";
-import { toPng } from "html-to-image";
-import { createRoot } from "react-dom/client";
+
 import axios from "axios";
-import { constants } from "node:fs";
 import { ConfirmPin } from "./ConfirmPin";
 
-// --- Config Worker ---
 if (typeof window !== "undefined") {
   pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 }
@@ -444,7 +435,7 @@ export default function SignDocumentForm({
     }
     await onSign(data);
     fetchSignatures();
-    onCancel()
+    onCancel();
   };
 
   // Lấy PDF từ backend

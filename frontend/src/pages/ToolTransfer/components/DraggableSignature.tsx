@@ -1,4 +1,3 @@
-// DraggableSignature.tsx - NO STATE DURING DRAG
 import React, { useEffect, useRef } from "react";
 import { Box, IconButton } from "@mui/material";
 import { Close } from "@mui/icons-material";
@@ -10,6 +9,7 @@ interface DraggableSignatureProps {
   xRatio: number;
   yRatio: number;
   imgSrc: string;
+  width: number;
   onUpdatePosition: (id: string, xRatio: number, yRatio: number) => void;
   onUpdatePage: (id: string, newPage: number) => void; // Cập nhật page khi drag sang trang khác
   onDelete: (id: string) => void;
@@ -25,6 +25,7 @@ export default function DraggableSignature({
   id,
   initialX,
   initialY,
+  width,
   xRatio,
   yRatio,
   imgSrc,
@@ -153,7 +154,7 @@ export default function DraggableSignature({
       if (pageContainer) {
         // Tìm Box container bên trong page wrapper (cái có margin: 0 auto)
         const pageContentBox = pageContainer.querySelector(
-          '[style*="margin"], [style*="0 auto"]'
+          '[style*="margin"], [style*="0 auto"]',
         ) as HTMLElement;
 
         if (pageContentBox) {
@@ -163,7 +164,7 @@ export default function DraggableSignature({
         } else {
           // Fallback: lấy child có canvas
           const canvasParent = pageContainer.querySelector(
-            '[style*="position"]'
+            '[style*="position"]',
           ) as HTMLElement;
           if (canvasParent) {
             const pageRect = canvasParent.getBoundingClientRect();
@@ -176,7 +177,7 @@ export default function DraggableSignature({
       // Giới hạn X trong phạm vi trang PDF
       newX = Math.max(
         pageLeftBound,
-        Math.min(newX, pageRightBound - actualSigWidth)
+        Math.min(newX, pageRightBound - actualSigWidth),
       );
 
       // Giới hạn Y: từ 0 đến tổng chiều cao của tất cả pages + margins
@@ -206,7 +207,7 @@ export default function DraggableSignature({
       // Y tuyệt đối được tính từ signature's absolute top position
       // Chia cho (containerHeight + margin) để được page index (1-indexed)
       const estimatedPageIndex = Math.floor(
-        positionRef.current.y / pageHeightWithGap
+        positionRef.current.y / pageHeightWithGap,
       );
       const newPage = Math.max(1, Math.min(estimatedPageIndex + 1, totalPages));
 
@@ -217,13 +218,13 @@ export default function DraggableSignature({
       // X ratio: dựa trên position X tương đối trong trang hiện tại
       const xRatio = Math.max(
         0,
-        Math.min(positionRef.current.x / scaleX / canvasWidth, 1)
+        Math.min(positionRef.current.x / scaleX / canvasWidth, 1),
       );
 
       // Y ratio: tính từ position tương đối trong trang hiện tại
       const yRatio = Math.max(
         0,
-        Math.min(yPositionInPage / scaleY / canvasHeight, 1)
+        Math.min(yPositionInPage / scaleY / canvasHeight, 1),
       );
       onUpdatePosition(id, xRatio, yRatio);
 
@@ -263,11 +264,11 @@ export default function DraggableSignature({
       // Giới hạn resize trong phạm vi parent
       newWidth = Math.max(
         50,
-        Math.min(newWidth, actualParentRect.width - positionRef.current.x)
+        Math.min(newWidth, actualParentRect.width - positionRef.current.x),
       );
       newHeight = Math.max(
         25,
-        Math.min(newHeight, actualParentRect.height - positionRef.current.y)
+        Math.min(newHeight, actualParentRect.height - positionRef.current.y),
       );
 
       sizeRef.current = { width: newWidth, height: newHeight };

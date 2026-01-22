@@ -8,23 +8,17 @@ import {
   AccordionDetails,
   AccordionSummary,
   Box,
-  Button,
-  Checkbox,
   Grid,
-  IconButton,
-  InputAdornment,
   Paper,
-  TextField,
   Typography,
 } from "@mui/material";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
 import FieldInput from "../../../components/TextField/FieldInput";
 import { useFormik } from "formik";
 import ViewBtn from "../../../components/Button/ViewBtn";
-import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
-import AssetParents from "../../../data/AssetParent.json";
+
 import EditButton from "../../../components/Button/EditButton";
 import { UnitValidation } from "../validation/Validation";
 
