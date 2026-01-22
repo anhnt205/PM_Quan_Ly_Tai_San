@@ -1,16 +1,27 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Box, Typography, TextField, Grid } from "@mui/material";
+import InlineCell from "../../../components/common/InlineCell";
 
 interface MauSo21ContentProps {
   onContentChange?: (content: any) => void;
   selectedDeptName?: string;
   selectedYear?: string | number;
+  idCongTy?: string;
+  idNhomTaiSan?: string | number;
+  ngayBaoCao?: string;
+  fetchKey?: number;
+  onFetchSuccess?: () => void;
 }
 
 export default function MauSo21Content({
   onContentChange,
   selectedDeptName,
   selectedYear,
+  idCongTy,
+  idNhomTaiSan,
+  ngayBaoCao,
+  fetchKey,
+  onFetchSuccess,
 }: MauSo21ContentProps) {
   const [formData, setFormData] = useState({
     donVi: "",
@@ -18,6 +29,71 @@ export default function MauSo21Content({
     nam: "",
     loaiTaiSan: "",
   });
+
+  const [rows, setRows] = useState<any[]>([]);
+  const handleRowChange = (index: number, field: string, value: string) => {
+    const newRows = [...rows];
+    if (index >= 0 && index < newRows.length) {
+      newRows[index] = { ...newRows[index], [field]: value };
+      setRows(newRows);
+      onContentChange?.({ diaChi: formData.diaChi, rows: newRows, footerData });
+    }
+  };
+  const [loading, setLoading] = useState(false);
+
+  // basic picker to string
+  const fmt = (v: any) => (v === null || v === undefined ? "" : String(v));
+
+  const parseNumber = (v: any) => {
+    if (v === null || v === undefined || v === "") return 0;
+    try {
+      const s = String(v).replace(/[,\s]/g, "");
+      const n = parseFloat(s);
+      return Number.isFinite(n) ? n : 0;
+    } catch {
+      return 0;
+    }
+  };
+
+  const formatToDMY = (v: any) => {
+    if (v === null || v === undefined || v === "") return "";
+    const s = String(v).trim();
+    // If string contains an ISO date portion, extract yyyy-mm-dd directly
+    const m = s.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+    // try Date parse as last resort (may be timezone-shifted)
+    const d = new Date(s);
+    if (!Number.isNaN(d.getTime())) {
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const yyyy = d.getFullYear();
+      return `${dd}/${mm}/${yyyy}`;
+    }
+    // last resort: return original trimmed
+    return s.split(" ")[0];
+  };
+
+  const integerPartString = (v: any) => {
+    if (v === null || v === undefined || v === "") return "";
+    const s = String(v).trim();
+    // Try numeric parse first
+    const n = Number(s.replace(/[,\s]/g, ""));
+    if (Number.isFinite(n)) return String(Math.trunc(n));
+    // Fallback: split at decimal point
+    if (s.indexOf(".") >= 0) return s.split(".")[0];
+    return s;
+  };
+
+  const formatNumber = (n: number) => {
+    if (!Number.isFinite(n) || n === 0) return "";
+    return n.toLocaleString("en-US");
+  };
+
+  const { totalNguyenGia, totalKhauHaoDaTinh } = useMemo(() => {
+    const t1 = rows.reduce((s, r) => s + parseNumber(r.nguyenGia), 0);
+    const t2 = rows.reduce((s, r) => s + parseNumber(r.khauHaoDaTinh), 0);
+    return { totalNguyenGia: t1, totalKhauHaoDaTinh: t2 };
+  }, [rows]);
 
   const handleInputChange = (field: string, value: string) => {
     const newData = { ...formData, [field]: value };
@@ -80,19 +156,117 @@ export default function MauSo21Content({
     }
   }, [selectedYear, onContentChange]);
 
-  const tableHeaderStyle = {
+  const tableHeaderStyle: React.CSSProperties = {
     border: "1px solid #000",
     padding: "5px",
     verticalAlign: "middle",
     backgroundColor: "#f0f0f0",
   };
 
-  const tableCellStyle = {
+  const tableCellStyle: React.CSSProperties = {
     border: "1px solid #000",
     padding: "5px",
     height: "25px",
     verticalAlign: "middle",
+    whiteSpace: "normal",
+    overflowWrap: "break-word",
+    wordBreak: "break-word",
   };
+
+  // fetch khauhao data when parent triggers fetchKey
+  React.useEffect(() => {
+    const fetchData = async () => {
+      if (!idCongTy || !selectedYear) return;
+      setLoading(true);
+      try {
+        // derive day/month/year from ngayBaoCao if present
+        let day = 1,
+          month = 1;
+        if (ngayBaoCao) {
+          try {
+            const d = new Date(ngayBaoCao);
+            day = d.getDate() || 1;
+            month = d.getMonth() + 1 || 1;
+          } catch {}
+        }
+
+        const params: any = {
+          idcongty: idCongTy,
+          ngay: day,
+          thang: month,
+          nam: selectedYear,
+        };
+        if (idNhomTaiSan) params.idNhomTaiSan = idNhomTaiSan;
+
+        // dynamic import of api to avoid top-level change if not present
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const api = require("../../../config/api.config").default;
+        const res = await api.get("/taisan/khauhaotaisanbynhom", { params });
+        const data = res?.data || [];
+
+        // map items to table rows with robust fallbacks
+        const map = (item: any) => {
+          // Use the explicitly requested fields mapping from your sample JSON
+          // Column C: display ngayTinhKhao as dd/mm/yyyy
+          const date = formatToDMY(item?.ngayTinhKhao ?? item?.ngay ?? "");
+
+          return {
+            // B: leave empty per request (do not populate column B)
+            soHieu: "",
+            // C: ngày (ngayTinhKhao)
+            ngay: date,
+            // D: tên tài sản
+            ten: fmt(item?.tenTaiSan || ""),
+            // E: leave empty
+            nuocSanXuat: "",
+            // G: tháng/năm đưa vào sử dụng -> use 'thangKh'
+            // Prefix with 'Tháng ' for display (e.g., 'Tháng 2')
+            thangNam: (function () {
+              const raw = item?.thangKh ?? item?.thang ?? "";
+              const v = fmt(raw);
+              return v ? `Tháng ${v}` : "";
+            })(),
+            // H: số hiệu TSCĐ -> use 'soThe' per your mapping
+            soHieuTscd: fmt(item?.soThe || ""),
+            // I: nguyên giá (integer part only)
+            nguyenGia: integerPartString(item?.nguyenGia ?? ""),
+            // 2: tỷ lệ (%) khấu hao -> leave empty
+            tyLeKhauHao: "",
+            // 3: mức khấu hao -> use 'khauHaoBinhQuan' (integer part)
+            mucKhauHao: integerPartString(
+              item?.khauHaoBinhQuan ?? item?.soTien ?? "",
+            ),
+            // 4: khấu hao đã tính đến -> use 'khauHaoPsck' (integer part)
+            khauHaoDaTinh: integerPartString(item?.khauHaoPsck ?? ""),
+            __raw: item,
+          };
+        };
+
+        // batch append to avoid blocking UI for very large arrays
+        const BATCH = 200;
+        setRows([]);
+        for (let i = 0; i < data.length; i += BATCH) {
+          const chunk = data.slice(i, i + BATCH).map(map);
+          setRows((prev) => [...prev, ...chunk]);
+          // yield to event loop
+          // eslint-disable-next-line no-await-in-loop
+          await new Promise((r) => setTimeout(r, 0));
+        }
+
+        onContentChange?.({ diaChi: formData.diaChi, rows, footerData: {} });
+        onFetchSuccess?.();
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error("Fetch khauhao error", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+    // only run when fetchKey changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchKey]);
 
   return (
     <Box
@@ -260,6 +434,7 @@ export default function MauSo21Content({
               fontFamily: "'Times New Roman', Times, serif",
               fontSize: "10pt",
               minWidth: "1400px",
+              tableLayout: "fixed",
             } as React.CSSProperties
           }
         >
@@ -344,21 +519,81 @@ export default function MauSo21Content({
           </thead>
 
           <tbody>
-            {[1, 2, 3, 4, 5].map((row, index) => (
-              <tr key={index}>
+            {rows.map((r, idx) => (
+              <tr key={idx}>
                 <td style={{ ...tableCellStyle, textAlign: "center" }}>
-                  {index + 1}
+                  {idx + 1}
                 </td>
-                <td style={tableCellStyle}></td>
-                <td style={tableCellStyle}></td>
-                <td style={tableCellStyle}></td>
-                <td style={tableCellStyle}></td>
-                <td style={tableCellStyle}></td>
-                <td style={tableCellStyle}></td>
-                <td style={tableCellStyle}></td>
-                <td style={tableCellStyle}></td>
-                <td style={tableCellStyle}></td>
-                <td style={tableCellStyle}></td>
+                <td style={tableCellStyle}>
+                  <InlineCell
+                    value={r.soHieu || ""}
+                    onCommit={(v) => handleRowChange(idx, "soHieu", v)}
+                    align="left"
+                  />
+                </td>
+                <td style={tableCellStyle}>
+                  <InlineCell
+                    value={r.ngay || ""}
+                    onCommit={(v) => handleRowChange(idx, "ngay", v)}
+                    align="left"
+                  />
+                </td>
+                <td style={tableCellStyle}>
+                  <InlineCell
+                    value={r.ten || ""}
+                    onCommit={(v) => handleRowChange(idx, "ten", v)}
+                    align="left"
+                  />
+                </td>
+                <td style={tableCellStyle}>
+                  <InlineCell
+                    value={r.nuocSanXuat || ""}
+                    onCommit={(v) => handleRowChange(idx, "nuocSanXuat", v)}
+                    align="left"
+                  />
+                </td>
+                <td style={tableCellStyle}>
+                  <InlineCell
+                    value={r.thangNam || ""}
+                    onCommit={(v) => handleRowChange(idx, "thangNam", v)}
+                    align="left"
+                  />
+                </td>
+                <td style={tableCellStyle}>
+                  <InlineCell
+                    value={r.soHieuTscd || ""}
+                    onCommit={(v) => handleRowChange(idx, "soHieuTscd", v)}
+                    align="left"
+                  />
+                </td>
+                <td style={tableCellStyle}>
+                  <InlineCell
+                    value={r.nguyenGia || ""}
+                    onCommit={(v) => handleRowChange(idx, "nguyenGia", v)}
+                    align="right"
+                  />
+                </td>
+                <td style={tableCellStyle}>
+                  <InlineCell
+                    value={r.tyLeKhauHao || ""}
+                    onCommit={(v) => handleRowChange(idx, "tyLeKhauHao", v)}
+                    align="right"
+                  />
+                </td>
+                <td style={tableCellStyle}>
+                  <InlineCell
+                    value={r.mucKhauHao || ""}
+                    onCommit={(v) => handleRowChange(idx, "mucKhauHao", v)}
+                    align="right"
+                  />
+                </td>
+                <td style={tableCellStyle}>
+                  <InlineCell
+                    value={r.khauHaoDaTinh || ""}
+                    onCommit={(v) => handleRowChange(idx, "khauHaoDaTinh", v)}
+                    align="right"
+                  />
+                </td>
                 <td style={tableCellStyle}></td>
                 <td style={tableCellStyle}></td>
                 <td style={tableCellStyle}></td>
@@ -368,20 +603,24 @@ export default function MauSo21Content({
             <tr style={{ fontWeight: "bold" }}>
               <td style={{ ...tableCellStyle, textAlign: "center" }}></td>
               <td style={{ ...tableCellStyle, textAlign: "center" }}>Cộng</td>
-              <td style={{ ...tableCellStyle, textAlign: "center" }}>x</td>
-              <td style={{ ...tableCellStyle, textAlign: "center" }}>x</td>
-              <td style={{ ...tableCellStyle, textAlign: "center" }}>x</td>
+              <td style={{ ...tableCellStyle, textAlign: "center" }}></td>
+              <td style={{ ...tableCellStyle, textAlign: "center" }}></td>
+              <td style={{ ...tableCellStyle, textAlign: "center" }}></td>
               <td style={tableCellStyle}></td>
 
               <td style={{ ...tableCellStyle, textAlign: "center" }}></td>
+              <td style={{ ...tableCellStyle, textAlign: "right" }}>
+                {formatNumber(totalNguyenGia)}
+              </td>
               <td style={{ ...tableCellStyle, textAlign: "center" }}></td>
               <td style={{ ...tableCellStyle, textAlign: "center" }}></td>
-              <td style={tableCellStyle}></td>
-              <td style={tableCellStyle}></td>
+              <td style={{ ...tableCellStyle, textAlign: "right" }}>
+                {formatNumber(totalKhauHaoDaTinh)}
+              </td>
 
-              <td style={{ ...tableCellStyle, textAlign: "center" }}>x</td>
-              <td style={{ ...tableCellStyle, textAlign: "center" }}>x</td>
-              <td style={{ ...tableCellStyle, textAlign: "center" }}>x</td>
+              <td style={tableCellStyle}></td>
+              <td style={tableCellStyle}></td>
+              <td style={tableCellStyle}></td>
             </tr>
           </tbody>
         </table>

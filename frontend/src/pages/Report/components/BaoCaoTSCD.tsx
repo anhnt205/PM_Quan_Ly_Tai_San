@@ -9,6 +9,7 @@ import {
   Divider,
   Snackbar,
   Alert,
+  Tooltip,
 } from "@mui/material";
 import { useFormik } from "formik";
 import { Print, TableChart } from "@mui/icons-material";
@@ -19,10 +20,11 @@ import BaoCaoTSCDContent from "./BaoCaoTSCDContent";
 export default function BaoCaoTSCD({ title }: { title?: string }) {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
-    "success",
-  );
+  const [snackbarSeverity, setSnackbarSeverity] = useState<
+    "success" | "info" | "warning" | "error"
+  >("success");
   const [contentData, setContentData] = useState({});
+  const [fetchKey, setFetchKey] = useState(0);
 
   const handleContentChange = useCallback((data: any) => {
     setContentData(data);
@@ -34,10 +36,15 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
       NgayBaoCao: new Date().toISOString().slice(0, 19).replace("T", " "),
     },
     onSubmit: (values) => {
+      // require IdDonVi before fetching
+      if (!values.IdDonVi) {
+        setSnackbarMessage("Vui lòng chọn đơn vị trước khi lấy dữ liệu");
+        setSnackbarSeverity("error");
+        setOpenSnackbar(true);
+        return;
+      }
       console.log("Lấy dữ liệu báo cáo:", values);
-      setSnackbarMessage("Không có dữ liệu!");
-      setSnackbarSeverity("success");
-      setOpenSnackbar(true);
+      setFetchKey((k) => k + 1);
     },
   });
 
@@ -49,9 +56,29 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
   });
 
   const handleExport = () => {
-    setSnackbarMessage("Không có dữ liệu để xuất!");
-    setSnackbarSeverity("error");
-    setOpenSnackbar(true);
+    const hasContent = (data: any) => {
+      if (!data) return false;
+      if (Array.isArray(data)) return data.length > 0;
+      for (const k of Object.keys(data)) {
+        const v = (data as any)[k];
+        if (Array.isArray(v) && v.length > 0) return true;
+        if (v && typeof v === "object") {
+          for (const k2 of Object.keys(v)) {
+            const v2 = v[k2];
+            if (Array.isArray(v2) && v2.length > 0) return true;
+          }
+        }
+      }
+      return false;
+    };
+
+    if (!hasContent(contentData)) {
+      setSnackbarMessage("Chưa có dữ liệu để xuất!");
+      setSnackbarSeverity("warning");
+      setOpenSnackbar(true);
+      return;
+    }
+    // TODO: implement export when content exists
   };
 
   const selectedDeptName =
@@ -150,39 +177,43 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
             Lấy dữ liệu
           </Button>
           <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-            <Button
-              variant="contained"
-              sx={{
-                bgcolor: "#4caf50",
-                color: "white",
-                minWidth: "44px",
-                width: "44px",
-                height: "44px",
-                p: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                "&:hover": { bgcolor: "#45a049" },
-              }}
-              onClick={handleExport}
-            >
-              <TableChart />
-            </Button>
-            <Button
-              variant="contained"
-              color="info"
-              sx={{
-                minWidth: "44px",
-                width: "44px",
-                height: "44px",
-                p: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Print />
-            </Button>
+            <Tooltip title="Xuất excel">
+              <Button
+                variant="contained"
+                sx={{
+                  bgcolor: "#4caf50",
+                  color: "white",
+                  minWidth: "44px",
+                  width: "44px",
+                  height: "44px",
+                  p: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  "&:hover": { bgcolor: "#45a049" },
+                }}
+                onClick={handleExport}
+              >
+                <TableChart />
+              </Button>
+            </Tooltip>
+            <Tooltip title="In">
+              <Button
+                variant="contained"
+                color="info"
+                sx={{
+                  minWidth: "44px",
+                  width: "44px",
+                  height: "44px",
+                  p: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Print />
+              </Button>
+            </Tooltip>
           </Box>
         </Stack>
       </Box>
@@ -203,6 +234,13 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
         <BaoCaoTSCDContent
           onContentChange={handleContentChange}
           selectedDeptName={selectedDeptName}
+          idDonVi={formik.values.IdDonVi}
+          fetchKey={fetchKey}
+          onFetchSuccess={() => {
+            setSnackbarMessage("Lấy dữ liệu thành công");
+            setSnackbarSeverity("success");
+            setOpenSnackbar(true);
+          }}
         />
       </Box>
 

@@ -1,10 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import InlineCell from "../../../components/common/InlineCell";
+import api from "../../../config/api.config";
 import { Box, Typography, TextField } from "@mui/material";
 
 interface ReportS22DNContentProps {
   onContentChange?: (content: any) => void;
   selectedDeptName?: string;
   selectedYear?: string | number;
+  idDonVi?: string;
+  fetchKey?: number;
+  onFetchSuccess?: () => void;
 }
 
 interface TableRowData {
@@ -27,41 +32,123 @@ export default function ReportS22DNContent({
   onContentChange,
   selectedDeptName,
   selectedYear,
+  idDonVi,
+  fetchKey,
+  onFetchSuccess,
 }: ReportS22DNContentProps) {
   const [diaChi, setDiaChi] = useState("");
 
-  const [tableRows, setTableRows] = useState<TableRowData[]>([
-    {
+  const [tsRows, setTsRows] = useState<TableRowData[]>([]); // TSCĐ rows
+  const [ccdcRows, setCcdcRows] = useState<TableRowData[]>([]); // CCDC rows
+
+  const [loading, setLoading] = useState(false);
+
+  // helper to format number to string (no thousands sep)
+  const fmt = (v: any) => (v === null || v === undefined ? "" : String(v));
+
+  // map API item to table row
+  const mapItemToRow = (item: any, isReduce = false): TableRowData => {
+    const date = item?.ngayThang ? String(item.ngayThang).split(" ")[0] : "";
+    const id = fmt(item?.idTaiSan || item?.soHieu || "");
+    const ten = fmt(item?.tenTaiSan || item?.ten || "");
+    const dvt = fmt(item?.donViTinh || item?.dvt || "");
+    const soLuong = fmt(item?.soLuong ?? item?.sl ?? "");
+    const donGia = fmt(item?.donGia ?? item?.dg ?? "");
+    const tongTien = fmt(item?.tongTien ?? item?.thanhTien ?? "");
+    const ghiChu = fmt(item?.ghiChu || "");
+
+    if (!isReduce) {
+      // increase -> fill Ghi tăng columns
+      return {
+        ctTangSoHieu: id,
+        ctTangNgay: date,
+        tenNhanHieu: ten,
+        dvt: dvt,
+        tangSoLuong: soLuong,
+        tangDonGia: donGia,
+        tangSoTien: tongTien,
+        ctGiamSoHieu: "",
+        ctGiamNgay: "",
+        giamLyDo: "",
+        giamSoLuong: "",
+        giamSoTien: "",
+        ghiChu,
+      };
+    }
+
+    // reduce -> still put Ten and DVT into Ghi tăng C,D, other fields into Ghi giảm
+    return {
       ctTangSoHieu: "",
       ctTangNgay: "",
-      tenNhanHieu: "",
-      dvt: "",
+      tenNhanHieu: ten,
+      dvt: dvt,
       tangSoLuong: "",
       tangDonGia: "",
       tangSoTien: "",
-      ctGiamSoHieu: "",
-      ctGiamNgay: "",
+      ctGiamSoHieu: id,
+      ctGiamNgay: date,
       giamLyDo: "",
-      giamSoLuong: "",
-      giamSoTien: "",
-      ghiChu: "",
-    },
-    {
-      ctTangSoHieu: "",
-      ctTangNgay: "",
-      tenNhanHieu: "",
-      dvt: "",
-      tangSoLuong: "",
-      tangDonGia: "",
-      tangSoTien: "",
-      ctGiamSoHieu: "",
-      ctGiamNgay: "",
-      giamLyDo: "",
-      giamSoLuong: "",
-      giamSoTien: "",
-      ghiChu: "",
-    },
-  ]);
+      giamSoLuong: soLuong,
+      giamSoTien: tongTien,
+      ghiChu,
+    };
+  };
+
+  // fetch data only when parent triggers fetchKey (button click)
+  useEffect(() => {
+    const fetchData = async () => {
+      // only run when fetchKey increments and required params are present
+      if (!idDonVi || !selectedYear) return;
+      setLoading(true);
+      try {
+        // TSCĐ
+        const tsRes = await api.get("/baocao/s22dn", {
+          params: { iddonvi: idDonVi, nam: selectedYear },
+        });
+        const tsData = tsRes?.data || {};
+        const tsInc = Array.isArray(tsData.data_increase)
+          ? tsData.data_increase
+          : [];
+        const tsDec = Array.isArray(tsData.data_reduce)
+          ? tsData.data_reduce
+          : [];
+        const tsRowsNew: TableRowData[] = [];
+        tsInc.forEach((it: any) => tsRowsNew.push(mapItemToRow(it, false)));
+        tsDec.forEach((it: any) => tsRowsNew.push(mapItemToRow(it, true)));
+
+        // CCDC
+        const cRes = await api.get("/baocao/s22dn-ccdc", {
+          params: { iddonvi: idDonVi, nam: selectedYear },
+        });
+        const cData = cRes?.data || {};
+        const cInc = Array.isArray(cData.data_increase)
+          ? cData.data_increase
+          : [];
+        const cDec = Array.isArray(cData.data_reduce) ? cData.data_reduce : [];
+        const cRowsNew: TableRowData[] = [];
+        cInc.forEach((it: any) => cRowsNew.push(mapItemToRow(it, false)));
+        cDec.forEach((it: any) => cRowsNew.push(mapItemToRow(it, true)));
+
+        setTsRows(tsRowsNew);
+        setCcdcRows(cRowsNew);
+        onContentChange?.({
+          diaChi,
+          tsRows: tsRowsNew,
+          ccdcRows: cRowsNew,
+          footerData,
+        });
+        onFetchSuccess?.();
+      } catch (err) {
+        console.error("Fetch S22DN error", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+    // only run when fetchKey changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchKey]);
 
   const [footerData, setFooterData] = useState({
     soTrang: "",
@@ -75,7 +162,7 @@ export default function ReportS22DNContent({
   const handleDiaChiChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setDiaChi(value);
-    onContentChange?.({ diaChi: value, tableRows, footerData });
+    onContentChange?.({ diaChi: value, tsRows, ccdcRows, footerData });
   };
 
   const handleRowChange = (
@@ -83,10 +170,22 @@ export default function ReportS22DNContent({
     field: keyof TableRowData,
     value: string,
   ) => {
-    const newRows = [...tableRows];
-    newRows[index] = { ...newRows[index], [field]: value };
-    setTableRows(newRows);
-    onContentChange?.({ diaChi, tableRows: newRows, footerData });
+    // update both tables if editing; prefer updating tsRows when index exists there, otherwise ccdcRows
+    if (index < tsRows.length) {
+      const newRows = [...tsRows];
+      newRows[index] = { ...newRows[index], [field]: value };
+      setTsRows(newRows);
+      onContentChange?.({ diaChi, tsRows: newRows, ccdcRows, footerData });
+      return;
+    }
+    const cIndex = index - tsRows.length;
+    if (cIndex >= 0 && cIndex < ccdcRows.length) {
+      const newRows = [...ccdcRows];
+      newRows[cIndex] = { ...newRows[cIndex], [field]: value };
+      setCcdcRows(newRows);
+      onContentChange?.({ diaChi, tsRows, ccdcRows: newRows, footerData });
+      return;
+    }
   };
 
   const handleFooterChange = (
@@ -95,7 +194,7 @@ export default function ReportS22DNContent({
   ) => {
     const newData = { ...footerData, [field]: value };
     setFooterData(newData);
-    onContentChange?.({ diaChi, tableRows, footerData: newData });
+    onContentChange?.({ diaChi, tsRows, ccdcRows, footerData: newData });
   };
 
   const fontStyle = {
@@ -140,645 +239,713 @@ export default function ReportS22DNContent({
     fontSize: "12pt",
     backgroundColor: "transparent",
     textAlign: "center",
+    whiteSpace: "normal",
+    overflowWrap: "break-word",
+    wordBreak: "break-word",
   };
 
   return (
-    <Box
-      sx={{
-        width: "100%",
-        backgroundColor: "transparent",
-        p: 2,
-        ...fontStyle,
-      }}
-      id="printable-s22dn-content"
-    >
+    <>
       <Box
         sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          mb: 1,
+          width: "100%",
+          backgroundColor: "transparent",
+          p: 2,
+          ...fontStyle,
         }}
+        id="printable-s22dn-content"
       >
-        <Box sx={{ width: "55%" }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            mb: 1,
+          }}
+        >
+          <Box sx={{ width: "55%" }}>
+            <Typography
+              component="div"
+              sx={{ ...fontStyle, fontWeight: "normal" }}
+            >
+              Đơn vị:{" "}
+              <b style={{ fontWeight: "bold" }}>{selectedDeptName || ""}</b>
+            </Typography>
+            <Box sx={{ display: "flex", alignItems: "baseline" }}>
+              <Typography sx={{ ...fontStyle, whiteSpace: "nowrap" }}>
+                Địa chỉ:&nbsp;
+              </Typography>
+              <TextField
+                value={diaChi}
+                onChange={handleDiaChiChange}
+                variant="standard"
+                sx={{
+                  ...dottedInputSx,
+                  width: "200px",
+                  "& input": { textAlign: "left" },
+                }}
+              />
+            </Box>
+          </Box>
+          <Box sx={{ width: "45%", textAlign: "center" }}>
+            <Typography sx={{ ...fontStyle, fontWeight: "bold", mb: 0.5 }}>
+              Mẫu số S22-DN
+            </Typography>
+            <Typography
+              sx={{
+                ...fontStyle,
+                fontSize: "12pt",
+                fontStyle: "italic",
+                textAlign: "center",
+              }}
+            >
+              (Ban hành theo Thông tư số 200/2014/TT-BTC <br /> Ngày 22/12/2014
+              của Bộ Tài chính)
+            </Typography>
+          </Box>
+        </Box>
+
+        <Box sx={{ textAlign: "center", mt: 3, mb: 3 }}>
           <Typography
-            component="div"
-            sx={{ ...fontStyle, fontWeight: "normal" }}
+            sx={{ ...fontStyle, fontSize: "16pt", fontWeight: "bold" }}
           >
-            Đơn vị:{" "}
-            <b style={{ fontWeight: "bold" }}>
-              {selectedDeptName || ""}
-            </b>
+            Sổ Theo dõi tài sản cố định và công cụ, dụng cụ tại nơi sử dụng
           </Typography>
-          <Box sx={{ display: "flex", alignItems: "baseline" }}>
-            <Typography sx={{ ...fontStyle, whiteSpace: "nowrap" }}>
-              Địa chỉ:&nbsp;
+        </Box>
+
+        <Box sx={{ pl: 0, mb: 2 }}>
+          <Typography sx={{ ...fontStyle, mb: 1 }}>
+            Năm <b style={{ fontWeight: "bold" }}>{selectedYear || ""}</b>
+          </Typography>
+          <Typography sx={{ ...fontStyle }}>
+            Tên đơn vị (phòng, ban hoặc người sử dụng){" "}
+            <b style={{ fontWeight: "bold" }}>{selectedDeptName || ""}</b>
+          </Typography>
+        </Box>
+
+        <Box sx={{ textAlign: "center", mb: 1 }}>
+          <Typography sx={{ ...fontStyle, fontWeight: "bold" }}>
+            Bảng ghi tăng/giảm Tài sản cố định
+          </Typography>
+        </Box>
+
+        <Box sx={{ width: "100%", overflowX: "auto", mb: 4 }}>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              fontFamily: "'Times New Roman'",
+              fontSize: "12pt",
+              tableLayout: "fixed",
+            }}
+          >
+            <colgroup>
+              <col style={{ width: "60px" }} />{" "}
+              <col style={{ width: "80px" }} />{" "}
+              <col style={{ width: "150px" }} />
+              <col style={{ width: "60px" }} />{" "}
+              <col style={{ width: "60px" }} />{" "}
+              <col style={{ width: "90px" }} />
+              <col style={{ width: "90px" }} />{" "}
+              <col style={{ width: "60px" }} />{" "}
+              <col style={{ width: "80px" }} />
+              <col style={{ width: "100px" }} />{" "}
+              <col style={{ width: "60px" }} />{" "}
+              <col style={{ width: "90px" }} />
+              <col style={{ width: "100px" }} />
+            </colgroup>
+            <thead>
+              <tr>
+                <th style={headerStyle} colSpan={7}>
+                  Ghi tăng tài sản cố định
+                </th>
+                <th style={headerStyle} colSpan={5}>
+                  Ghi giảm tài sản cố định
+                </th>
+                <th style={headerStyle} rowSpan={3}>
+                  Ghi chú
+                </th>
+              </tr>
+              <tr>
+                <th style={headerStyle} colSpan={2}>
+                  Chứng từ
+                </th>
+                <th style={headerStyle} rowSpan={2}>
+                  Tên, nhãn hiệu, quy
+                  <br />
+                  cách tài sản cố định
+                </th>
+                <th style={headerStyle} rowSpan={2}>
+                  Đơn vị
+                  <br />
+                  tính
+                </th>
+                <th style={headerStyle} rowSpan={2}>
+                  Số
+                  <br />
+                  lượng
+                </th>
+                <th style={headerStyle} rowSpan={2}>
+                  Đơn giá
+                </th>
+                <th style={headerStyle} rowSpan={2}>
+                  Số tiền
+                </th>
+                <th style={headerStyle} colSpan={2}>
+                  Chứng từ
+                </th>
+                <th style={headerStyle} rowSpan={2}>
+                  Lý do
+                </th>
+                <th style={headerStyle} rowSpan={2}>
+                  Số
+                  <br />
+                  lượng
+                </th>
+                <th style={headerStyle} rowSpan={2}>
+                  Số tiền
+                </th>
+              </tr>
+              <tr>
+                <th style={headerStyle}>Số hiệu</th>
+                <th style={headerStyle}>
+                  Ngày,
+                  <br />
+                  tháng
+                </th>
+                <th style={headerStyle}>Số hiệu</th>
+                <th style={headerStyle}>
+                  Ngày,
+                  <br />
+                  tháng
+                </th>
+              </tr>
+              <tr>
+                <th style={headerStyle}>A</th> <th style={headerStyle}>B</th>{" "}
+                <th style={headerStyle}>C</th>
+                <th style={headerStyle}>D</th> <th style={headerStyle}>1</th>{" "}
+                <th style={headerStyle}>2</th>
+                <th style={headerStyle}>3</th> <th style={headerStyle}>E</th>{" "}
+                <th style={headerStyle}>G</th>
+                <th style={headerStyle}>H</th> <th style={headerStyle}>4</th>{" "}
+                <th style={headerStyle}>5</th>
+                <th style={headerStyle}>I</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tsRows.map((row, index) => (
+                <tr key={index}>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.ctTangSoHieu}
+                      onCommit={(v) =>
+                        handleRowChange(index, "ctTangSoHieu", v)
+                      }
+                      align="left"
+                    />
+                  </td>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.ctTangNgay}
+                      onCommit={(v) => handleRowChange(index, "ctTangNgay", v)}
+                      align="left"
+                    />
+                  </td>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.tenNhanHieu}
+                      onCommit={(v) => handleRowChange(index, "tenNhanHieu", v)}
+                      align="left"
+                    />
+                  </td>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.dvt}
+                      onCommit={(v) => handleRowChange(index, "dvt", v)}
+                      align="left"
+                    />
+                  </td>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.tangSoLuong}
+                      onCommit={(v) => handleRowChange(index, "tangSoLuong", v)}
+                      align="right"
+                    />
+                  </td>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.tangDonGia}
+                      onCommit={(v) => handleRowChange(index, "tangDonGia", v)}
+                      align="right"
+                    />
+                  </td>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.tangSoTien}
+                      onCommit={(v) => handleRowChange(index, "tangSoTien", v)}
+                      align="right"
+                    />
+                  </td>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.ctGiamSoHieu}
+                      onCommit={(v) =>
+                        handleRowChange(index, "ctGiamSoHieu", v)
+                      }
+                      align="left"
+                    />
+                  </td>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.ctGiamNgay}
+                      onCommit={(v) => handleRowChange(index, "ctGiamNgay", v)}
+                      align="left"
+                    />
+                  </td>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.giamLyDo}
+                      onCommit={(v) => handleRowChange(index, "giamLyDo", v)}
+                      align="left"
+                    />
+                  </td>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.giamSoLuong}
+                      onCommit={(v) => handleRowChange(index, "giamSoLuong", v)}
+                      align="right"
+                    />
+                  </td>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.giamSoTien}
+                      onCommit={(v) => handleRowChange(index, "giamSoTien", v)}
+                      align="right"
+                    />
+                  </td>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.ghiChu}
+                      onCommit={(v) => handleRowChange(index, "ghiChu", v)}
+                      align="left"
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Box>
+
+        <Box sx={{ textAlign: "center", mb: 1 }}>
+          <Typography sx={{ ...fontStyle, fontWeight: "bold" }}>
+            Bảng ghi tăng/giảm Công cụ dụng cụ cố định
+          </Typography>
+        </Box>
+
+        <Box sx={{ width: "100%", overflowX: "auto", mb: 4 }}>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              fontFamily: "'Times New Roman'",
+              fontSize: "12pt",
+              tableLayout: "fixed",
+            }}
+          >
+            <colgroup>
+              <col style={{ width: "60px" }} />{" "}
+              <col style={{ width: "80px" }} />{" "}
+              <col style={{ width: "150px" }} />
+              <col style={{ width: "60px" }} />{" "}
+              <col style={{ width: "60px" }} />{" "}
+              <col style={{ width: "90px" }} />
+              <col style={{ width: "90px" }} />{" "}
+              <col style={{ width: "60px" }} />{" "}
+              <col style={{ width: "80px" }} />
+              <col style={{ width: "100px" }} />{" "}
+              <col style={{ width: "60px" }} />{" "}
+              <col style={{ width: "90px" }} />
+              <col style={{ width: "100px" }} />
+            </colgroup>
+            <thead>
+              <tr>
+                <th style={headerStyle} colSpan={7}>
+                  Ghi tăng công cụ, dụng cụ cố định
+                </th>
+                <th style={headerStyle} colSpan={5}>
+                  Ghi giảm công cụ, dụng cụ cố định
+                </th>
+                <th style={headerStyle} rowSpan={3}>
+                  Ghi chú
+                </th>
+              </tr>
+              <tr>
+                <th style={headerStyle} colSpan={2}>
+                  Chứng từ
+                </th>
+                <th style={headerStyle} rowSpan={2}>
+                  Tên, nhãn hiệu, quy
+                  <br />
+                  cách công cụ, dụng cụ cố định
+                </th>
+                <th style={headerStyle} rowSpan={2}>
+                  Đơn vị
+                  <br />
+                  tính
+                </th>
+                <th style={headerStyle} rowSpan={2}>
+                  Số
+                  <br />
+                  lượng
+                </th>
+                <th style={headerStyle} rowSpan={2}>
+                  Đơn giá
+                </th>
+                <th style={headerStyle} rowSpan={2}>
+                  Số tiền
+                </th>
+                <th style={headerStyle} colSpan={2}>
+                  Chứng từ
+                </th>
+                <th style={headerStyle} rowSpan={2}>
+                  Lý do
+                </th>
+                <th style={headerStyle} rowSpan={2}>
+                  Số
+                  <br />
+                  lượng
+                </th>
+                <th style={headerStyle} rowSpan={2}>
+                  Số tiền
+                </th>
+              </tr>
+              <tr>
+                <th style={headerStyle}>Số hiệu</th>
+                <th style={headerStyle}>
+                  Ngày,
+                  <br />
+                  tháng
+                </th>
+                <th style={headerStyle}>Số hiệu</th>
+                <th style={headerStyle}>
+                  Ngày,
+                  <br />
+                  tháng
+                </th>
+              </tr>
+              <tr>
+                <th style={headerStyle}>A</th> <th style={headerStyle}>B</th>{" "}
+                <th style={headerStyle}>C</th>
+                <th style={headerStyle}>D</th> <th style={headerStyle}>1</th>{" "}
+                <th style={headerStyle}>2</th>
+                <th style={headerStyle}>3</th> <th style={headerStyle}>E</th>{" "}
+                <th style={headerStyle}>G</th>
+                <th style={headerStyle}>H</th> <th style={headerStyle}>4</th>{" "}
+                <th style={headerStyle}>5</th>
+                <th style={headerStyle}>I</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ccdcRows.map((row, index) => (
+                <tr key={index}>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.ctTangSoHieu}
+                      onCommit={(v) =>
+                        handleRowChange(
+                          tsRows.length + index,
+                          "ctTangSoHieu",
+                          v,
+                        )
+                      }
+                      align="left"
+                    />
+                  </td>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.ctTangNgay}
+                      onCommit={(v) =>
+                        handleRowChange(tsRows.length + index, "ctTangNgay", v)
+                      }
+                      align="left"
+                    />
+                  </td>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.tenNhanHieu}
+                      onCommit={(v) =>
+                        handleRowChange(tsRows.length + index, "tenNhanHieu", v)
+                      }
+                      align="left"
+                    />
+                  </td>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.dvt}
+                      onCommit={(v) =>
+                        handleRowChange(tsRows.length + index, "dvt", v)
+                      }
+                      align="left"
+                    />
+                  </td>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.tangSoLuong}
+                      onCommit={(v) =>
+                        handleRowChange(tsRows.length + index, "tangSoLuong", v)
+                      }
+                      align="right"
+                    />
+                  </td>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.tangDonGia}
+                      onCommit={(v) =>
+                        handleRowChange(tsRows.length + index, "tangDonGia", v)
+                      }
+                      align="right"
+                    />
+                  </td>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.tangSoTien}
+                      onCommit={(v) =>
+                        handleRowChange(tsRows.length + index, "tangSoTien", v)
+                      }
+                      align="right"
+                    />
+                  </td>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.ctGiamSoHieu}
+                      onCommit={(v) =>
+                        handleRowChange(
+                          tsRows.length + index,
+                          "ctGiamSoHieu",
+                          v,
+                        )
+                      }
+                      align="left"
+                    />
+                  </td>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.ctGiamNgay}
+                      onCommit={(v) =>
+                        handleRowChange(tsRows.length + index, "ctGiamNgay", v)
+                      }
+                      align="left"
+                    />
+                  </td>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.giamLyDo}
+                      onCommit={(v) =>
+                        handleRowChange(tsRows.length + index, "giamLyDo", v)
+                      }
+                      align="left"
+                    />
+                  </td>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.giamSoLuong}
+                      onCommit={(v) =>
+                        handleRowChange(tsRows.length + index, "giamSoLuong", v)
+                      }
+                      align="right"
+                    />
+                  </td>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.giamSoTien}
+                      onCommit={(v) =>
+                        handleRowChange(tsRows.length + index, "giamSoTien", v)
+                      }
+                      align="right"
+                    />
+                  </td>
+                  <td style={cellStyle}>
+                    <InlineCell
+                      value={row.ghiChu}
+                      onCommit={(v) =>
+                        handleRowChange(tsRows.length + index, "ghiChu", v)
+                      }
+                      align="left"
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Box>
+
+        <Box sx={{ ...fontStyle }}>
+          <Box sx={{ mb: 1, display: "flex", alignItems: "baseline" }}>
+            <Typography component="span" sx={fontStyle}>
+              - Sổ này có&nbsp;
             </Typography>
             <TextField
-              value={diaChi}
-              onChange={handleDiaChiChange}
               variant="standard"
+              value={footerData.soTrang}
+              onChange={(e) => handleFooterChange("soTrang", e.target.value)}
+              sx={{ ...dottedInputSx, width: "50px" }}
+            />
+            <Typography component="span" sx={fontStyle}>
+              &nbsp;trang, đánh số từ trang 01 đến trang&nbsp;
+            </Typography>
+            <TextField
+              variant="standard"
+              value={footerData.denTrang}
+              onChange={(e) => handleFooterChange("denTrang", e.target.value)}
+              sx={{ ...dottedInputSx, width: "50px" }}
+            />
+          </Box>
+
+          <Box sx={{ mb: 3, display: "flex", alignItems: "baseline" }}>
+            <Typography component="span" sx={fontStyle}>
+              - Ngày mở sổ:&nbsp;
+            </Typography>
+            <TextField
+              variant="standard"
+              value={footerData.ngayMoSo}
+              onChange={(e) => handleFooterChange("ngayMoSo", e.target.value)}
               sx={{
                 ...dottedInputSx,
-                width: "200px",
+                width: "150px",
                 "& input": { textAlign: "left" },
               }}
             />
           </Box>
+
+          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+            <Box sx={{ width: "30%", textAlign: "center" }}>
+              <Typography sx={{ ...fontStyle, fontWeight: "bold" }}>
+                Người ghi sổ
+              </Typography>
+              <Typography sx={{ ...fontStyle, fontStyle: "italic" }}>
+                (Ký, họ tên)
+              </Typography>
+            </Box>
+
+            <Box sx={{ width: "30%", textAlign: "center" }}>
+              <Typography sx={{ ...fontStyle, fontWeight: "bold" }}>
+                Kế toán trưởng
+              </Typography>
+              <Typography sx={{ ...fontStyle, fontStyle: "italic" }}>
+                (Ký, họ tên)
+              </Typography>
+            </Box>
+
+            <Box sx={{ width: "35%", textAlign: "center" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "baseline",
+                  mb: 0.5,
+                }}
+              >
+                <Typography sx={fontStyle}>Ngày&nbsp;</Typography>
+                <TextField
+                  variant="standard"
+                  value={footerData.ngayKy}
+                  onChange={(e) => handleFooterChange("ngayKy", e.target.value)}
+                  sx={{ ...dottedInputSx, width: "30px" }}
+                />
+                <Typography sx={fontStyle}>&nbsp;tháng&nbsp;</Typography>
+                <TextField
+                  variant="standard"
+                  value={footerData.thangKy}
+                  onChange={(e) =>
+                    handleFooterChange("thangKy", e.target.value)
+                  }
+                  sx={{ ...dottedInputSx, width: "30px" }}
+                />
+                <Typography sx={fontStyle}>&nbsp;năm&nbsp;</Typography>
+                <TextField
+                  variant="standard"
+                  value={footerData.namKy}
+                  onChange={(e) => handleFooterChange("namKy", e.target.value)}
+                  sx={{ ...dottedInputSx, width: "50px" }}
+                />
+              </Box>
+              <Typography sx={{ ...fontStyle, fontWeight: "bold" }}>
+                Giám đốc
+              </Typography>
+              <Typography sx={{ ...fontStyle, fontStyle: "italic" }}>
+                (Ký, họ tên, đóng dấu)
+              </Typography>
+            </Box>
+          </Box>
         </Box>
-        <Box sx={{ width: "45%", textAlign: "center" }}>
-          <Typography sx={{ ...fontStyle, fontWeight: "bold", mb: 0.5 }}>
-            Mẫu số S22-DN
+      </Box>
+      <Box sx={{ height: 200 }} />
+      <Box sx={{ mt: 4 }}>
+        <Box sx={{ textAlign: "center", mb: 2 }}>
+          <Typography
+            sx={{ ...fontStyle, fontSize: "16pt", fontWeight: "bold" }}
+          >
+            SỔ THEO DÕI TÀI SẢN CỐ ĐỊNH VÀ CÔNG CỤ,
+            <br /> DỤNG CỤ TẠI NƠI SỬ DỤNG
           </Typography>
           <Typography
-            sx={{
-              ...fontStyle,
-              fontSize: "12pt",
-              fontStyle: "italic",
-              textAlign: "center",
-            }}
+            sx={{ ...fontStyle, fontSize: "12pt", fontStyle: "italic" }}
           >
-            (Ban hành theo Thông tư số 200/2014/TT-BTC <br /> Ngày 22/12/2014
-            của Bộ Tài chính)
+            (Mẫu số S22-DN)
           </Typography>
         </Box>
-      </Box>
-
-      <Box sx={{ textAlign: "center", mt: 3, mb: 3 }}>
-        <Typography sx={{ ...fontStyle, fontSize: "16pt", fontWeight: "bold" }}>
-          Sổ Theo dõi tài sản cố định và công cụ, dụng cụ tại nơi sử dụng
+        <Typography sx={{ ...fontStyle, fontWeight: "bold", mb: 1 }}>
+          1. Mục đích:
         </Typography>
-      </Box>
-
-      <Box sx={{ pl: 0, mb: 2 }}>
         <Typography sx={{ ...fontStyle, mb: 1 }}>
-          Năm <b style={{ fontWeight: "bold" }}>{selectedYear || ""}</b>
+          Sổ này dùng để ghi chép tình hình tăng, giảm tài sản cố định và công
+          cụ, dụng cụ tại nơi sử dụng nhằm quản lý tài sản và dụng cụ đã được
+          cấp cho các phòng, ban; làm căn cứ đối chiếu khi tiến hành kiểm kê
+          định kỳ.
         </Typography>
-        <Typography sx={{ ...fontStyle }}>
-          Tên đơn vị (phòng, ban hoặc người sử dụng){" "}
-          <b style={{ fontWeight: "bold" }}>
-            {selectedDeptName || ""}
-          </b>
+
+        <Typography sx={{ ...fontStyle, fontWeight: "bold", mb: 1 }}>
+          2. Căn cứ và phương pháp ghi sổ:
         </Typography>
-      </Box>
-
-      <Box sx={{ textAlign: "center", mb: 1 }}>
-        <Typography sx={{ ...fontStyle, fontWeight: "bold" }}>
-          Bảng ghi tăng/giảm Tài sản cố định
+        <Typography sx={{ ...fontStyle, mb: 1 }}>
+          Mỗi đơn vị hoặc bộ phận (phân xưởng, phòng ban...) thuộc doanh nghiệp
+          phải mở một sổ để theo dõi tài sản. Căn cứ vào chứng từ gốc về tăng,
+          giảm tài sản để ghi vào sổ theo đơn vị sử dụng như sau:
         </Typography>
-      </Box>
-
-      <Box sx={{ width: "100%", overflowX: "auto", mb: 4 }}>
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            fontFamily: "'Times New Roman'",
-            fontSize: "12pt",
-          }}
-        >
-          <colgroup>
-            <col style={{ width: "60px" }} /> <col style={{ width: "80px" }} />{" "}
-            <col style={{ width: "150px" }} />
-            <col style={{ width: "60px" }} /> <col style={{ width: "60px" }} />{" "}
-            <col style={{ width: "90px" }} />
-            <col style={{ width: "90px" }} /> <col style={{ width: "60px" }} />{" "}
-            <col style={{ width: "80px" }} />
-            <col style={{ width: "100px" }} /> <col style={{ width: "60px" }} />{" "}
-            <col style={{ width: "90px" }} />
-            <col style={{ width: "100px" }} />
-          </colgroup>
-          <thead>
-            <tr>
-              <th style={headerStyle} colSpan={7}>
-                Ghi tăng tài sản cố định
-              </th>
-              <th style={headerStyle} colSpan={5}>
-                Ghi giảm tài sản cố định
-              </th>
-              <th style={headerStyle} rowSpan={3}>
-                Ghi chú
-              </th>
-            </tr>
-            <tr>
-              <th style={headerStyle} colSpan={2}>
-                Chứng từ
-              </th>
-              <th style={headerStyle} rowSpan={2}>
-                Tên, nhãn hiệu, quy
-                <br />
-                cách tài sản cố định
-              </th>
-              <th style={headerStyle} rowSpan={2}>
-                Đơn vị
-                <br />
-                tính
-              </th>
-              <th style={headerStyle} rowSpan={2}>
-                Số
-                <br />
-                lượng
-              </th>
-              <th style={headerStyle} rowSpan={2}>
-                Đơn giá
-              </th>
-              <th style={headerStyle} rowSpan={2}>
-                Số tiền
-              </th>
-              <th style={headerStyle} colSpan={2}>
-                Chứng từ
-              </th>
-              <th style={headerStyle} rowSpan={2}>
-                Lý do
-              </th>
-              <th style={headerStyle} rowSpan={2}>
-                Số
-                <br />
-                lượng
-              </th>
-              <th style={headerStyle} rowSpan={2}>
-                Số tiền
-              </th>
-            </tr>
-            <tr>
-              <th style={headerStyle}>Số hiệu</th>
-              <th style={headerStyle}>
-                Ngày,
-                <br />
-                tháng
-              </th>
-              <th style={headerStyle}>Số hiệu</th>
-              <th style={headerStyle}>
-                Ngày,
-                <br />
-                tháng
-              </th>
-            </tr>
-            <tr>
-              <th style={headerStyle}>A</th> <th style={headerStyle}>B</th>{" "}
-              <th style={headerStyle}>C</th>
-              <th style={headerStyle}>D</th> <th style={headerStyle}>1</th>{" "}
-              <th style={headerStyle}>2</th>
-              <th style={headerStyle}>3</th> <th style={headerStyle}>E</th>{" "}
-              <th style={headerStyle}>G</th>
-              <th style={headerStyle}>H</th> <th style={headerStyle}>4</th>{" "}
-              <th style={headerStyle}>5</th>
-              <th style={headerStyle}>I</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tableRows.map((row, index) => (
-              <tr key={index}>
-                <td style={cellStyle}>
-                  <input
-                    style={tableInputStyle}
-                    value={row.ctTangSoHieu}
-                    onChange={(e) =>
-                      handleRowChange(index, "ctTangSoHieu", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <input
-                    style={tableInputStyle}
-                    value={row.ctTangNgay}
-                    onChange={(e) =>
-                      handleRowChange(index, "ctTangNgay", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <input
-                    style={{ ...tableInputStyle, textAlign: "left" }}
-                    value={row.tenNhanHieu}
-                    onChange={(e) =>
-                      handleRowChange(index, "tenNhanHieu", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <input
-                    style={tableInputStyle}
-                    value={row.dvt}
-                    onChange={(e) =>
-                      handleRowChange(index, "dvt", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <input
-                    style={{ ...tableInputStyle, textAlign: "right" }}
-                    value={row.tangSoLuong}
-                    onChange={(e) =>
-                      handleRowChange(index, "tangSoLuong", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <input
-                    style={{ ...tableInputStyle, textAlign: "right" }}
-                    value={row.tangDonGia}
-                    onChange={(e) =>
-                      handleRowChange(index, "tangDonGia", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <input
-                    style={{ ...tableInputStyle, textAlign: "right" }}
-                    value={row.tangSoTien}
-                    onChange={(e) =>
-                      handleRowChange(index, "tangSoTien", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <input
-                    style={tableInputStyle}
-                    value={row.ctGiamSoHieu}
-                    onChange={(e) =>
-                      handleRowChange(index, "ctGiamSoHieu", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <input
-                    style={tableInputStyle}
-                    value={row.ctGiamNgay}
-                    onChange={(e) =>
-                      handleRowChange(index, "ctGiamNgay", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <input
-                    style={{ ...tableInputStyle, textAlign: "left" }}
-                    value={row.giamLyDo}
-                    onChange={(e) =>
-                      handleRowChange(index, "giamLyDo", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <input
-                    style={{ ...tableInputStyle, textAlign: "right" }}
-                    value={row.giamSoLuong}
-                    onChange={(e) =>
-                      handleRowChange(index, "giamSoLuong", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <input
-                    style={{ ...tableInputStyle, textAlign: "right" }}
-                    value={row.giamSoTien}
-                    onChange={(e) =>
-                      handleRowChange(index, "giamSoTien", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <input
-                    style={{ ...tableInputStyle, textAlign: "left" }}
-                    value={row.ghiChu}
-                    onChange={(e) =>
-                      handleRowChange(index, "ghiChu", e.target.value)
-                    }
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Box>
-
-      <Box sx={{ textAlign: "center", mb: 1 }}>
-        <Typography sx={{ ...fontStyle, fontWeight: "bold" }}>
-          Bảng ghi tăng/giảm Công cụ dụng cụ cố định
+        <Typography sx={{ ...fontStyle, mb: 0.5 }}>
+          - Cột A, B: Ghi số hiệu, ngày tháng của chứng từ tăng tài sản cố định
+          và công cụ, dụng cụ.
+        </Typography>
+        <Typography sx={{ ...fontStyle, mb: 0.5 }}>
+          - Cột C: Ghi tên nhãn hiệu, đặc điểm TSCĐ và công cụ, dụng cụ.
+        </Typography>
+        <Typography sx={{ ...fontStyle, mb: 0.5 }}>
+          - Cột D: Ghi đơn vị tính (cái, chiếc,...).
+        </Typography>
+        <Typography sx={{ ...fontStyle, mb: 0.5 }}>
+          - Cột 1: Ghi số lượng.
+        </Typography>
+        <Typography sx={{ ...fontStyle, mb: 0.5 }}>
+          - Cột 2: Ghi nguyên giá TSCĐ hoặc đơn giá công cụ, dụng cụ.
+        </Typography>
+        <Typography sx={{ ...fontStyle, mb: 0.5 }}>
+          - Cột 3: Ghi số tiền (Cột 3 = Cột 1 x Cột 2).
+        </Typography>
+        <Typography sx={{ ...fontStyle, mb: 0.5 }}>
+          - Cột E, G: Ghi số hiệu, ngày tháng của chứng từ ghi giảm tài sản cố
+          định và công cụ, dụng cụ.
+        </Typography>
+        <Typography sx={{ ...fontStyle, mb: 0.5 }}>
+          - Cột H: Ghi lý do giảm tài sản cố định và công cụ, dụng cụ.
+        </Typography>
+        <Typography sx={{ ...fontStyle, mb: 0.5 }}>
+          - Cột 4: Ghi số lượng tài sản/công cụ giảm.
+        </Typography>
+        <Typography sx={{ ...fontStyle, mb: 0.5 }}>
+          - Cột 5: Ghi nguyên giá tài sản cố định và giá trị công cụ, dụng cụ
+          giảm.
         </Typography>
       </Box>
-
-      <Box sx={{ width: "100%", overflowX: "auto", mb: 4 }}>
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            fontFamily: "'Times New Roman'",
-            fontSize: "12pt",
-          }}
-        >
-          <colgroup>
-            <col style={{ width: "60px" }} /> <col style={{ width: "80px" }} />{" "}
-            <col style={{ width: "150px" }} />
-            <col style={{ width: "60px" }} /> <col style={{ width: "60px" }} />{" "}
-            <col style={{ width: "90px" }} />
-            <col style={{ width: "90px" }} /> <col style={{ width: "60px" }} />{" "}
-            <col style={{ width: "80px" }} />
-            <col style={{ width: "100px" }} /> <col style={{ width: "60px" }} />{" "}
-            <col style={{ width: "90px" }} />
-            <col style={{ width: "100px" }} />
-          </colgroup>
-          <thead>
-            <tr>
-              <th style={headerStyle} colSpan={7}>
-                Ghi tăng công cụ, dụng cụ cố định
-              </th>
-              <th style={headerStyle} colSpan={5}>
-                Ghi giảm công cụ, dụng cụ cố định
-              </th>
-              <th style={headerStyle} rowSpan={3}>
-                Ghi chú
-              </th>
-            </tr>
-            <tr>
-              <th style={headerStyle} colSpan={2}>
-                Chứng từ
-              </th>
-              <th style={headerStyle} rowSpan={2}>
-                Tên, nhãn hiệu, quy
-                <br />
-                cách công cụ, dụng cụ cố định
-              </th>
-              <th style={headerStyle} rowSpan={2}>
-                Đơn vị
-                <br />
-                tính
-              </th>
-              <th style={headerStyle} rowSpan={2}>
-                Số
-                <br />
-                lượng
-              </th>
-              <th style={headerStyle} rowSpan={2}>
-                Đơn giá
-              </th>
-              <th style={headerStyle} rowSpan={2}>
-                Số tiền
-              </th>
-              <th style={headerStyle} colSpan={2}>
-                Chứng từ
-              </th>
-              <th style={headerStyle} rowSpan={2}>
-                Lý do
-              </th>
-              <th style={headerStyle} rowSpan={2}>
-                Số
-                <br />
-                lượng
-              </th>
-              <th style={headerStyle} rowSpan={2}>
-                Số tiền
-              </th>
-            </tr>
-            <tr>
-              <th style={headerStyle}>Số hiệu</th>
-              <th style={headerStyle}>
-                Ngày,
-                <br />
-                tháng
-              </th>
-              <th style={headerStyle}>Số hiệu</th>
-              <th style={headerStyle}>
-                Ngày,
-                <br />
-                tháng
-              </th>
-            </tr>
-            <tr>
-              <th style={headerStyle}>A</th> <th style={headerStyle}>B</th>{" "}
-              <th style={headerStyle}>C</th>
-              <th style={headerStyle}>D</th> <th style={headerStyle}>1</th>{" "}
-              <th style={headerStyle}>2</th>
-              <th style={headerStyle}>3</th> <th style={headerStyle}>E</th>{" "}
-              <th style={headerStyle}>G</th>
-              <th style={headerStyle}>H</th> <th style={headerStyle}>4</th>{" "}
-              <th style={headerStyle}>5</th>
-              <th style={headerStyle}>I</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tableRows.map((row, index) => (
-              <tr key={index}>
-                <td style={cellStyle}>
-                  <input
-                    style={tableInputStyle}
-                    value={row.ctTangSoHieu}
-                    onChange={(e) =>
-                      handleRowChange(index, "ctTangSoHieu", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <input
-                    style={tableInputStyle}
-                    value={row.ctTangNgay}
-                    onChange={(e) =>
-                      handleRowChange(index, "ctTangNgay", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <input
-                    style={{ ...tableInputStyle, textAlign: "left" }}
-                    value={row.tenNhanHieu}
-                    onChange={(e) =>
-                      handleRowChange(index, "tenNhanHieu", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <input
-                    style={tableInputStyle}
-                    value={row.dvt}
-                    onChange={(e) =>
-                      handleRowChange(index, "dvt", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <input
-                    style={{ ...tableInputStyle, textAlign: "right" }}
-                    value={row.tangSoLuong}
-                    onChange={(e) =>
-                      handleRowChange(index, "tangSoLuong", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <input
-                    style={{ ...tableInputStyle, textAlign: "right" }}
-                    value={row.tangDonGia}
-                    onChange={(e) =>
-                      handleRowChange(index, "tangDonGia", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <input
-                    style={{ ...tableInputStyle, textAlign: "right" }}
-                    value={row.tangSoTien}
-                    onChange={(e) =>
-                      handleRowChange(index, "tangSoTien", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <input
-                    style={tableInputStyle}
-                    value={row.ctGiamSoHieu}
-                    onChange={(e) =>
-                      handleRowChange(index, "ctGiamSoHieu", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <input
-                    style={tableInputStyle}
-                    value={row.ctGiamNgay}
-                    onChange={(e) =>
-                      handleRowChange(index, "ctGiamNgay", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <input
-                    style={{ ...tableInputStyle, textAlign: "left" }}
-                    value={row.giamLyDo}
-                    onChange={(e) =>
-                      handleRowChange(index, "giamLyDo", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <input
-                    style={{ ...tableInputStyle, textAlign: "right" }}
-                    value={row.giamSoLuong}
-                    onChange={(e) =>
-                      handleRowChange(index, "giamSoLuong", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <input
-                    style={{ ...tableInputStyle, textAlign: "right" }}
-                    value={row.giamSoTien}
-                    onChange={(e) =>
-                      handleRowChange(index, "giamSoTien", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <input
-                    style={{ ...tableInputStyle, textAlign: "left" }}
-                    value={row.ghiChu}
-                    onChange={(e) =>
-                      handleRowChange(index, "ghiChu", e.target.value)
-                    }
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Box>
-
-      <Box sx={{ ...fontStyle }}>
-        <Box sx={{ mb: 1, display: "flex", alignItems: "baseline" }}>
-          <Typography component="span" sx={fontStyle}>
-            - Sổ này có&nbsp;
-          </Typography>
-          <TextField
-            variant="standard"
-            value={footerData.soTrang}
-            onChange={(e) => handleFooterChange("soTrang", e.target.value)}
-            sx={{ ...dottedInputSx, width: "50px" }}
-          />
-          <Typography component="span" sx={fontStyle}>
-            &nbsp;trang, đánh số từ trang 01 đến trang&nbsp;
-          </Typography>
-          <TextField
-            variant="standard"
-            value={footerData.denTrang}
-            onChange={(e) => handleFooterChange("denTrang", e.target.value)}
-            sx={{ ...dottedInputSx, width: "50px" }}
-          />
-        </Box>
-
-        <Box sx={{ mb: 3, display: "flex", alignItems: "baseline" }}>
-          <Typography component="span" sx={fontStyle}>
-            - Ngày mở sổ:&nbsp;
-          </Typography>
-          <TextField
-            variant="standard"
-            value={footerData.ngayMoSo}
-            onChange={(e) => handleFooterChange("ngayMoSo", e.target.value)}
-            sx={{
-              ...dottedInputSx,
-              width: "150px",
-              "& input": { textAlign: "left" },
-            }}
-          />
-        </Box>
-
-        <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
-          <Box sx={{ width: "30%", textAlign: "center" }}>
-            <Typography sx={{ ...fontStyle, fontWeight: "bold" }}>
-              Người ghi sổ
-            </Typography>
-            <Typography sx={{ ...fontStyle, fontStyle: "italic" }}>
-              (Ký, họ tên)
-            </Typography>
-          </Box>
-
-          <Box sx={{ width: "30%", textAlign: "center" }}>
-            <Typography sx={{ ...fontStyle, fontWeight: "bold" }}>
-              Kế toán trưởng
-            </Typography>
-            <Typography sx={{ ...fontStyle, fontStyle: "italic" }}>
-              (Ký, họ tên)
-            </Typography>
-          </Box>
-
-          <Box sx={{ width: "35%", textAlign: "center" }}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "baseline",
-                mb: 0.5,
-              }}
-            >
-              <Typography sx={fontStyle}>Ngày&nbsp;</Typography>
-              <TextField
-                variant="standard"
-                value={footerData.ngayKy}
-                onChange={(e) => handleFooterChange("ngayKy", e.target.value)}
-                sx={{ ...dottedInputSx, width: "30px" }}
-              />
-              <Typography sx={fontStyle}>&nbsp;tháng&nbsp;</Typography>
-              <TextField
-                variant="standard"
-                value={footerData.thangKy}
-                onChange={(e) => handleFooterChange("thangKy", e.target.value)}
-                sx={{ ...dottedInputSx, width: "30px" }}
-              />
-              <Typography sx={fontStyle}>&nbsp;năm&nbsp;</Typography>
-              <TextField
-                variant="standard"
-                value={footerData.namKy}
-                onChange={(e) => handleFooterChange("namKy", e.target.value)}
-                sx={{ ...dottedInputSx, width: "50px" }}
-              />
-            </Box>
-            <Typography sx={{ ...fontStyle, fontWeight: "bold" }}>
-              Giám đốc
-            </Typography>
-            <Typography sx={{ ...fontStyle, fontStyle: "italic" }}>
-              (Ký, họ tên, đóng dấu)
-            </Typography>
-          </Box>
-        </Box>
-      </Box>
-    </Box>
+    </>
   );
 }

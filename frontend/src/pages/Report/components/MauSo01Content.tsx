@@ -1,8 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import api from "../../../config/api.config";
 import { Box, Typography, TextField } from "@mui/material";
+import InlineCell from "../../../components/common/InlineCell";
 
 interface MauSo01ContentProps {
   onContentChange?: (content: any) => void;
+  idDonVi?: string;
+  fetchKey?: number;
+  kyBaoCao?: string;
+  onFetchSuccess?: () => void;
 }
 
 interface TableRowData {
@@ -22,6 +28,10 @@ interface TableRowData {
 
 export default function MauSo01Content({
   onContentChange,
+  idDonVi,
+  fetchKey,
+  kyBaoCao,
+  onFetchSuccess,
 }: MauSo01ContentProps) {
   const [formData, setFormData] = useState({
     soQuyetDinh: "",
@@ -31,22 +41,117 @@ export default function MauSo01Content({
     namBaoCao: "",
   });
 
-  const [tableRows, setTableRows] = useState<TableRowData[]>(
-    Array.from({ length: 4 }).map(() => ({
-      stt: "",
-      tenNhanHieu: "",
-      donViTinh: "",
-      nuocSanXuat: "",
-      soDuDauKy: "",
-      tangSoLuong: "",
-      tangLyDo: "",
-      giamSoLuong: "",
-      giamLyDo: "",
-      soDuCuoiKy: "",
-      tinhTrang: "",
-      ghiChu: "",
-    }))
-  );
+  // start with no rows until user clicks 'Lấy dữ liệu'
+  const [tableRows, setTableRows] = useState<TableRowData[]>([]);
+
+  const pick = (obj: any, keys: string[]) => {
+    for (const k of keys) {
+      if (!obj) break;
+      const v = obj[k];
+      if (v !== undefined && v !== null && String(v) !== "") return String(v);
+    }
+    return "";
+  };
+
+  // fetch when parent triggers (fetchKey increments)
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!idDonVi) return;
+      try {
+        const res = await api.get("/baocao/tang-giam-trong-ky", {
+          params: { idPhongBan: idDonVi, thangNam: kyBaoCao },
+        });
+        const data = res?.data || {};
+        const items = Array.isArray(data) ? data : data.data || [];
+
+        const taiSan: TableRowData[] = [];
+        const ccdc: TableRowData[] = [];
+
+        items.forEach((it: any) => {
+          const mapped: TableRowData = {
+            stt: "",
+            tenNhanHieu: pick(it, ["tenTaiSan", "ten", "tentscd", "tenTSCD"]),
+            donViTinh: pick(it, ["donViTinh", "dvt", "donVi"]),
+            nuocSanXuat: pick(it, ["nuocSanXuat", "nuocSX", "nuoc"]),
+            soDuDauKy: pick(it, [
+              "soDuDauKy",
+              "soDuDauKyNhap",
+              "soDauKy",
+              "soDuDauKy",
+            ]),
+            tangSoLuong: pick(it, [
+              "soLuongTang",
+              "soLuongTangTrongKy",
+              "tangSoLuong",
+            ]),
+            tangLyDo: pick(it, ["lyDoTang", "lyDo"]),
+            giamSoLuong: pick(it, [
+              "soLuongGiam",
+              "soLuongGiamTrongKy",
+              "giamSoLuong",
+            ]),
+            giamLyDo: pick(it, ["lyDoGiam", "lyDo"]),
+            soDuCuoiKy: pick(it, ["soDuCuoiKy", "soCuoiKy", "soDuCuoiKy"]),
+            tinhTrang: pick(it, [
+              "tinhTrang",
+              "tinhTrangKyThuat",
+              "tinhTrangKT",
+            ]),
+            ghiChu: pick(it, ["ghiChu", "note", "notes"]),
+          };
+
+          if (it?.loai === "TaiSan") taiSan.push(mapped);
+          else if (it?.loai === "CCDCVatTu" || it?.loai === "CCDC")
+            ccdc.push(mapped);
+          else taiSan.push(mapped);
+        });
+
+        taiSan.forEach((r, i) => (r.stt = String(i + 1)));
+        ccdc.forEach((r, i) => (r.stt = String(i + 1)));
+
+        const newRows: TableRowData[] = [];
+        newRows.push({
+          stt: "A",
+          tenNhanHieu: "Tài sản cố định",
+          donViTinh: "",
+          nuocSanXuat: "",
+          soDuDauKy: "",
+          tangSoLuong: "",
+          tangLyDo: "",
+          giamSoLuong: "",
+          giamLyDo: "",
+          soDuCuoiKy: "",
+          tinhTrang: "",
+          ghiChu: "",
+        });
+        newRows.push(...taiSan);
+        newRows.push({
+          stt: "B",
+          tenNhanHieu: "Công cụ dụng cụ",
+          donViTinh: "",
+          nuocSanXuat: "",
+          soDuDauKy: "",
+          tangSoLuong: "",
+          tangLyDo: "",
+          giamSoLuong: "",
+          giamLyDo: "",
+          soDuCuoiKy: "",
+          tinhTrang: "",
+          ghiChu: "",
+        });
+        newRows.push(...ccdc);
+
+        setTableRows(newRows);
+        onContentChange?.({ ...formData, tableRows: newRows });
+        onFetchSuccess?.();
+      } catch (err) {
+        console.error("Fetch MauSo01 tang-giam error", err);
+      }
+    };
+
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchKey]);
 
   const handleInputChange = (field: string, value: string) => {
     const newData = { ...formData, [field]: value };
@@ -57,7 +162,7 @@ export default function MauSo01Content({
   const handleRowChange = (
     index: number,
     field: keyof TableRowData,
-    value: string
+    value: string,
   ) => {
     const newRows = [...tableRows];
     newRows[index] = { ...newRows[index], [field]: value };
@@ -112,6 +217,9 @@ export default function MauSo01Content({
     padding: "4px 2px",
     boxSizing: "border-box",
     textAlign: "center",
+    whiteSpace: "normal",
+    overflowWrap: "break-word",
+    wordBreak: "break-word",
   };
 
   return (
@@ -124,7 +232,7 @@ export default function MauSo01Content({
         backgroundColor: "transparent",
         lineHeight: 1.4,
       }}
-      id="printable-content" 
+      id="printable-content"
     >
       <Box
         sx={{
@@ -352,129 +460,131 @@ export default function MauSo01Content({
             </tr>
           </thead>
           <tbody>
-            {tableRows.map((row, index) => (
-              <tr key={index}>
-                <td style={tableCellSx}>
-                  <input
-                    style={{ ...inputTableStyle, fontWeight: "bold" }}
-                    value={row.stt}
-                    onChange={(e) =>
-                      handleRowChange(index, "stt", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={tableCellSx}>
-                  <input
-                    style={{ ...inputTableStyle, textAlign: "left" }}
-                    value={row.tenNhanHieu}
-                    onChange={(e) =>
-                      handleRowChange(index, "tenNhanHieu", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={tableCellSx}>
-                  <input
-                    style={inputTableStyle}
-                    value={row.donViTinh}
-                    onChange={(e) =>
-                      handleRowChange(index, "donViTinh", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={tableCellSx}>
-                  <input
-                    style={inputTableStyle}
-                    value={row.nuocSanXuat}
-                    onChange={(e) =>
-                      handleRowChange(index, "nuocSanXuat", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={tableCellSx}>
-                  <input
-                    style={{ ...inputTableStyle, textAlign: "right" }}
-                    value={row.soDuDauKy}
-                    onChange={(e) =>
-                      handleRowChange(index, "soDuDauKy", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={tableCellSx}>
-                  <input
-                    style={{ ...inputTableStyle, textAlign: "right" }}
-                    value={row.tangSoLuong}
-                    onChange={(e) =>
-                      handleRowChange(index, "tangSoLuong", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={tableCellSx}>
-                  <input
-                    style={{ ...inputTableStyle, textAlign: "left" }}
-                    value={row.tangLyDo}
-                    onChange={(e) =>
-                      handleRowChange(index, "tangLyDo", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={tableCellSx}>
-                  <input
-                    style={{ ...inputTableStyle, textAlign: "right" }}
-                    value={row.giamSoLuong}
-                    onChange={(e) =>
-                      handleRowChange(index, "giamSoLuong", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={tableCellSx}>
-                  <input
-                    style={{ ...inputTableStyle, textAlign: "left" }}
-                    value={row.giamLyDo}
-                    onChange={(e) =>
-                      handleRowChange(index, "giamLyDo", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={tableCellSx}>
-                  <input
-                    style={{
-                      ...inputTableStyle,
-                      textAlign: "right",
-                      fontWeight: "bold",
-                    }}
-                    value={row.soDuCuoiKy}
-                    onChange={(e) =>
-                      handleRowChange(index, "soDuCuoiKy", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={tableCellSx}>
-                  <input
-                    style={inputTableStyle}
-                    value={row.tinhTrang}
-                    onChange={(e) =>
-                      handleRowChange(index, "tinhTrang", e.target.value)
-                    }
-                  />
-                </td>
-                <td style={tableCellSx}>
-                  <input
-                    style={{ ...inputTableStyle, textAlign: "left" }}
-                    value={row.ghiChu}
-                    onChange={(e) =>
-                      handleRowChange(index, "ghiChu", e.target.value)
-                    }
-                  />
-                </td>
-              </tr>
-            ))}
+            {tableRows.map((row, index) => {
+              const titleRegex = /Tài sản cố định|Công cụ dụng cụ/;
+              const isHeader =
+                row.stt === "A" ||
+                row.stt === "B" ||
+                titleRegex.test(row.tenNhanHieu || "");
+              return (
+                <tr key={index}>
+                  <td style={tableCellSx}>
+                    <div
+                      style={{
+                        ...inputTableStyle,
+                        fontWeight: isHeader ? "bold" : "normal",
+                      }}
+                    >
+                      {row.stt}
+                    </div>
+                  </td>
+                  <td style={tableCellSx}>
+                    {isHeader ? (
+                      <div
+                        style={{
+                          ...inputTableStyle,
+                          textAlign: "left",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {row.tenNhanHieu}
+                      </div>
+                    ) : (
+                      <InlineCell
+                        value={row.tenNhanHieu}
+                        onCommit={(v) =>
+                          handleRowChange(index, "tenNhanHieu", v)
+                        }
+                        align="left"
+                      />
+                    )}
+                  </td>
+                  <td style={tableCellSx}>
+                    <InlineCell
+                      value={row.donViTinh}
+                      onCommit={(v) => handleRowChange(index, "donViTinh", v)}
+                      align="left"
+                    />
+                  </td>
+                  <td style={tableCellSx}>
+                    <InlineCell
+                      value={row.nuocSanXuat}
+                      onCommit={(v) => handleRowChange(index, "nuocSanXuat", v)}
+                      align="left"
+                    />
+                  </td>
+                  <td style={tableCellSx}>
+                    <InlineCell
+                      value={row.soDuDauKy}
+                      onCommit={(v) => handleRowChange(index, "soDuDauKy", v)}
+                      align="right"
+                      type="number"
+                    />
+                  </td>
+                  <td style={tableCellSx}>
+                    <InlineCell
+                      value={row.tangSoLuong}
+                      onCommit={(v) => handleRowChange(index, "tangSoLuong", v)}
+                      align="right"
+                      type="number"
+                    />
+                  </td>
+                  <td style={tableCellSx}>
+                    <InlineCell
+                      value={row.tangLyDo}
+                      onCommit={(v) => handleRowChange(index, "tangLyDo", v)}
+                      align="left"
+                    />
+                  </td>
+                  <td style={tableCellSx}>
+                    <InlineCell
+                      value={row.giamSoLuong}
+                      onCommit={(v) => handleRowChange(index, "giamSoLuong", v)}
+                      align="right"
+                      type="number"
+                    />
+                  </td>
+                  <td style={tableCellSx}>
+                    <InlineCell
+                      value={row.giamLyDo}
+                      onCommit={(v) => handleRowChange(index, "giamLyDo", v)}
+                      align="left"
+                    />
+                  </td>
+                  <td style={tableCellSx}>
+                    <InlineCell
+                      value={row.soDuCuoiKy}
+                      onCommit={(v) => handleRowChange(index, "soDuCuoiKy", v)}
+                      align="right"
+                      type="number"
+                    />
+                  </td>
+                  <td style={tableCellSx}>
+                    <InlineCell
+                      value={row.tinhTrang}
+                      onCommit={(v) => handleRowChange(index, "tinhTrang", v)}
+                      align="left"
+                    />
+                  </td>
+                  <td style={tableCellSx}>
+                    <InlineCell
+                      value={row.ghiChu}
+                      onCommit={(v) => handleRowChange(index, "ghiChu", v)}
+                      align="left"
+                    />
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
-      </Box>
-
-      <Box sx={{ mb: 4, px: 1 }}>
         <Typography
-          sx={{ fontFamily: "inherit", fontStyle: "italic", mb: 0.5 }}
+          sx={{
+            fontFamily: "'Times New Roman'",
+            fontSize: "12pt",
+            mt: 1,
+            fontStyle: "italic",
+          }}
         >
           Gửi kèm theo các Quyết định, biên bản giao nhận tăng giảm tài sản,
           công cụ dụng cụ trong kỳ báo cáo
@@ -489,7 +599,7 @@ export default function MauSo01Content({
           display: "flex",
           justifyContent: "space-between",
           px: 2,
-          mb: 5, 
+          mb: 5,
         }}
       >
         <Box sx={{ textAlign: "center", minWidth: "200px" }}>

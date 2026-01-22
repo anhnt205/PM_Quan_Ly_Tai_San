@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Box, Typography, TextField } from "@mui/material";
+import InlineCell from "../../../components/common/InlineCell";
 
 interface BBKiemKeContentProps {
   onContentChange?: (content: any) => void;
   selectedDeptName?: string;
+  idPhongBan?: string;
+  fetchKey?: number;
+  onFetchSuccess?: () => void;
 }
 
 interface MemberRow {
@@ -25,7 +29,85 @@ interface InventoryItem {
 export default function BBKiemKeContent({
   onContentChange,
   selectedDeptName,
+  idPhongBan,
+  fetchKey,
+  onFetchSuccess,
 }: BBKiemKeContentProps) {
+  // fetch inventory when parent triggers fetchKey
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!idPhongBan) return;
+      try {
+        const res = await (
+          await import("../../../config/api.config")
+        ).default.get("/baocao/bienban-kiemke", { params: { idPhongBan } });
+        const data = res?.data || [];
+        if (!Array.isArray(data)) return;
+
+        const BATCH = 200;
+        if (data.length <= BATCH) {
+          const mapped = data.map((it: any, idx: number) => ({
+            stt: String(idx + 1),
+            tenTaiSan: it.tenTaiSan || it.ten || "",
+            dvt: it.donViTinh || it.dvt || "",
+            nuocSx: it.nuocSx || "",
+            phuongThuc: it.phuongThucKiemKe || it.phuongThuc || "",
+            soLuong: String(it.soLuongKiemKeThucTe ?? it.soLuong ?? ""),
+            hienTrang: it.hienTrang || "",
+            ghiChu: it.ghiChu || "",
+          }));
+          setInventoryItems(mapped);
+          onContentChange?.({
+            headerInfo,
+            generalInfo,
+            members,
+            membersUnit,
+            inventoryItems: mapped,
+            closingTime,
+          });
+          onFetchSuccess?.();
+          return;
+        }
+
+        // large data: process in batches to keep UI responsive
+        setInventoryItems([]);
+        for (let i = 0; i < data.length; i += BATCH) {
+          const slice = data.slice(i, i + BATCH);
+          const mapped = slice.map((it: any, idx: number) => ({
+            stt: String(i + idx + 1),
+            tenTaiSan: it.tenTaiSan || it.ten || "",
+            dvt: it.donViTinh || it.dvt || "",
+            nuocSx: it.nuocSx || "",
+            phuongThuc: it.phuongThucKiemKe || it.phuongThuc || "",
+            soLuong: String(it.soLuongKiemKeThucTe ?? it.soLuong ?? ""),
+            hienTrang: it.hienTrang || "",
+            ghiChu: it.ghiChu || "",
+          }));
+          setInventoryItems((prev) => {
+            const next = prev.concat(mapped);
+            onContentChange?.({
+              headerInfo,
+              generalInfo,
+              members,
+              membersUnit,
+              inventoryItems: next,
+              closingTime,
+            });
+            return next;
+          });
+          // yield to event loop
+          // eslint-disable-next-line no-await-in-loop
+          await new Promise((r) => setTimeout(r, 0));
+        }
+        onFetchSuccess?.();
+      } catch (err) {
+        console.error("Fetch bienban-kiemke error", err);
+      }
+    };
+
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchKey]);
   const [headerInfo, setHeaderInfo] = useState({
     qdSo: "",
     ngayQd: "",
@@ -192,6 +274,9 @@ export default function BBKiemKeContent({
   const tableBodyCellSx = {
     ...tableCellSx,
     fontWeight: "normal", // Body thường
+    whiteSpace: "normal",
+    overflowWrap: "break-word",
+    wordBreak: "break-word",
   };
 
   const tableInputSx = {
@@ -465,117 +550,143 @@ export default function BBKiemKeContent({
               width: "100%",
               borderCollapse: "collapse",
               border: "1px solid black",
+              tableLayout: "fixed",
             }}
           >
             <thead>
               <tr>
-                <th style={{ ...tableCellSx, width: "5%" }}>STT</th>
-                <th style={{ ...tableCellSx, width: "30%" }}>
+                <th
+                  style={{
+                    ...(tableCellSx as React.CSSProperties),
+                    width: "5%",
+                  }}
+                >
+                  STT
+                </th>
+                <th
+                  style={{
+                    ...(tableCellSx as React.CSSProperties),
+                    width: "30%",
+                  }}
+                >
                   Tên tài sản, công cụ dụng cụ ( ký mã hiệu )
                 </th>
-                <th style={{ ...tableCellSx, width: "10%" }}>Đơn vị tính</th>
-                <th style={{ ...tableCellSx, width: "10%" }}>Nước sản xuất</th>
-                <th style={{ ...tableCellSx, width: "10%" }}>
+                <th
+                  style={{
+                    ...(tableCellSx as React.CSSProperties),
+                    width: "10%",
+                  }}
+                >
+                  Đơn vị tính
+                </th>
+                <th
+                  style={{
+                    ...(tableCellSx as React.CSSProperties),
+                    width: "10%",
+                  }}
+                >
+                  Nước sản xuất
+                </th>
+                <th
+                  style={{
+                    ...(tableCellSx as React.CSSProperties),
+                    width: "10%",
+                  }}
+                >
                   Phương thức kiểm kê
                 </th>
-                <th style={{ ...tableCellSx, width: "10%" }}>
+                <th
+                  style={{
+                    ...(tableCellSx as React.CSSProperties),
+                    width: "10%",
+                  }}
+                >
                   Số lượng kiểm kê thực tế
                 </th>
-                <th style={{ ...tableCellSx, width: "10%" }}>Hiện trạng</th>
-                <th style={{ ...tableCellSx, width: "15%" }}>Ghi chú</th>
+                <th
+                  style={{
+                    ...(tableCellSx as React.CSSProperties),
+                    width: "10%",
+                  }}
+                >
+                  Hiện trạng
+                </th>
+                <th
+                  style={{
+                    ...(tableCellSx as React.CSSProperties),
+                    width: "15%",
+                  }}
+                >
+                  Ghi chú
+                </th>
               </tr>
             </thead>
             <tbody>
               {inventoryItems.map((item, index) => (
                 <tr key={index}>
-                  <td style={tableBodyCellSx}>{item.stt}</td>
-                  <td style={tableBodyCellSx}>
-                    <TextField
-                      fullWidth
-                      variant="standard"
+                  <td style={tableBodyCellSx as React.CSSProperties}>
+                    {item.stt}
+                  </td>
+                  <td style={tableBodyCellSx as React.CSSProperties}>
+                    <InlineCell
                       value={item.tenTaiSan}
-                      onChange={(e) =>
-                        handleInventoryChange(
-                          index,
-                          "tenTaiSan",
-                          e.target.value,
-                        )
+                      onCommit={(v) =>
+                        handleInventoryChange(index, "tenTaiSan", v)
                       }
-                      sx={{ ...tableInputSx, "& input": { textAlign: "left" } }}
+                      align="left"
                     />
                   </td>
-                  <td style={tableBodyCellSx}>
-                    <TextField
-                      fullWidth
-                      variant="standard"
+                  <td style={tableBodyCellSx as React.CSSProperties}>
+                    <InlineCell
                       value={item.dvt}
-                      onChange={(e) =>
-                        handleInventoryChange(index, "dvt", e.target.value)
-                      }
-                      sx={tableInputSx}
+                      onCommit={(v) => handleInventoryChange(index, "dvt", v)}
+                      align="left"
                     />
                   </td>
-                  <td style={tableBodyCellSx}>
-                    <TextField
-                      fullWidth
-                      variant="standard"
+                  <td style={tableBodyCellSx as React.CSSProperties}>
+                    <InlineCell
                       value={item.nuocSx}
-                      onChange={(e) =>
-                        handleInventoryChange(index, "nuocSx", e.target.value)
+                      onCommit={(v) =>
+                        handleInventoryChange(index, "nuocSx", v)
                       }
-                      sx={tableInputSx}
+                      align="left"
                     />
                   </td>
-                  <td style={tableBodyCellSx}>
-                    <TextField
-                      fullWidth
-                      variant="standard"
+                  <td style={tableBodyCellSx as React.CSSProperties}>
+                    <InlineCell
                       value={item.phuongThuc}
-                      onChange={(e) =>
-                        handleInventoryChange(
-                          index,
-                          "phuongThuc",
-                          e.target.value,
-                        )
+                      onCommit={(v) =>
+                        handleInventoryChange(index, "phuongThuc", v)
                       }
-                      sx={tableInputSx}
+                      align="left"
                     />
                   </td>
-                  <td style={tableBodyCellSx}>
-                    <TextField
-                      fullWidth
-                      variant="standard"
+                  <td style={tableBodyCellSx as React.CSSProperties}>
+                    <InlineCell
                       value={item.soLuong}
-                      onChange={(e) =>
-                        handleInventoryChange(index, "soLuong", e.target.value)
+                      onCommit={(v) =>
+                        handleInventoryChange(index, "soLuong", v)
                       }
-                      sx={tableInputSx}
+                      align="right"
+                      type="number"
                     />
                   </td>
-                  <td style={tableBodyCellSx}>
-                    <TextField
-                      fullWidth
-                      variant="standard"
+                  <td style={tableBodyCellSx as React.CSSProperties}>
+                    <InlineCell
                       value={item.hienTrang}
-                      onChange={(e) =>
-                        handleInventoryChange(
-                          index,
-                          "hienTrang",
-                          e.target.value,
-                        )
+                      onCommit={(v) =>
+                        handleInventoryChange(index, "hienTrang", v)
                       }
-                      sx={tableInputSx}
+                      align="left"
                     />
                   </td>
-                  <td style={tableBodyCellSx}>
-                    <TextField
-                      fullWidth
-                      variant="standard"
+                  <td style={tableBodyCellSx as React.CSSProperties}>
+                    <InlineCell
                       value={item.ghiChu}
-                      onChange={(e) =>
-                        handleInventoryChange(index, "ghiChu", e.target.value)
+                      onCommit={(v) =>
+                        handleInventoryChange(index, "ghiChu", v)
                       }
-                      sx={{ ...tableInputSx, "& input": { textAlign: "left" } }}
+                      align="left"
                     />
                   </td>
                 </tr>
