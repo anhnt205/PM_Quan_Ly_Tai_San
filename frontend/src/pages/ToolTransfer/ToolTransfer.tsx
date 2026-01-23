@@ -6,7 +6,6 @@ import ToolTransferForm from "./components/ToolTransferForm";
 import SignerSidebar from "./components/SignerSidebar";
 import BienBanDialog from "./components/BienBanDialog";
 import TableCustom from "../../components/common/TableCustom";
-import { ToolTransferData } from "./types";
 import PageAction from "../../components/common/PageAction";
 import { useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -20,11 +19,12 @@ import {
   showShareStatus,
   showStatus,
   showStatusDocument,
-} from "../AssetTransfer/config";
+} from "../ToolTransfer/config";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { findById, getPermissionSigning } from "../../utils/helpers";
 import { Building, Eye, Trash2 } from "lucide-react";
 import SignDocumentForm from "../../components/common/SignDocumentForm";
+import { ToolTransferData } from "./types";
 
 export default function ToolTransfer() {
   const { user } = useSelector((state: any) => state.user);
@@ -313,19 +313,9 @@ export default function ToolTransfer() {
               <IconButton
                 size="small"
                 color="error"
-                disabled={!isCheckShowDelete(rowData, user)}
-                onClick={async (e) => {
+                onClick={(e) => {
                   e.stopPropagation();
-                  const confirm = await showConfirmAlert(
-                    `Xóa phiếu ${title} "${rowData?.soQuyetDinh}"`,
-                  );
-                  if (confirm.isConfirmed) {
-                    deleteOneMutation.mutate(rowData.soQuyetDinh);
-                  }
-                }}
-                sx={{
-                  padding: "4px",
-                  "&:hover": { bgcolor: "rgba(244, 67, 54, 0.08)" },
+                  handleDelete(rowData);
                 }}
               >
                 <Trash2 size={18} />
@@ -353,19 +343,23 @@ export default function ToolTransfer() {
                 color="success"
                 onClick={async (e) => {
                   e.stopPropagation();
-                  setSelectedDocument(rowData.tenFile);
+                  setSelectedDocument(rowData);
                   setToolTransferDetail(
                     rowData.chiTietDieuDongCCDCVatTuDTOS || [],
                   );
                   setShowSignerSidebar(false);
                   setDepartmentId(rowData.idDonViGiao);
                   setSelectedIds([rowData.id]);
-                  await handleToolTransfer(rowData.idDonViGiao);
-                  setShowSignDocument(true);
-                }}
-                sx={{
-                  padding: "4px",
-                  "&:hover": { bgcolor: "rgba(76, 175, 80, 0.08)" },
+
+                  try {
+                    await handleToolTransfer(rowData.idDonViGiao);
+                    setShowSignDocument(true);
+                  } catch (error) {
+                    console.warn(
+                      "Không lấy được danh mục gốc, sử dụng dữ liệu chi tiết có sẵn.",
+                    );
+                    setShowSignDocument(true);
+                  }
                 }}
               >
                 <Eye size={18} />
@@ -465,7 +459,8 @@ export default function ToolTransfer() {
                 overflow: "hidden",
                 border: "1px solid",
                 borderColor: "divider",
-                minHeight: "500px",
+                // 1. Cố định chiều cao ở đây
+                height: "calc(100vh)",
               }}
             >
               <Grid
@@ -474,15 +469,20 @@ export default function ToolTransfer() {
                   transition: "all 0.3s ease",
                   borderRight: showSidebar ? "1px solid" : "none",
                   borderColor: "divider",
-                  height: "100%",
-                  overflow: "hidden",
+                  height: "100%", // Chiếm 100% chiều cao cha
                   display: "flex",
                   flexDirection: "column",
+                  // 2. Cho phép scroll bên trong nếu nội dung quá dài
+                  overflow: "hidden",
                   "& .MuiPaper-root": {
                     margin: 0,
                     boxShadow: "none",
                     borderRadius: 0,
+                    display: "flex",
+                    flexDirection: "column",
                     flexGrow: 1,
+                    height: "100%", // Ép Paper chiếm hết chiều cao
+                    overflow: "hidden",
                   },
                 }}
               >
@@ -512,7 +512,8 @@ export default function ToolTransfer() {
                     flexDirection: "column",
                     bgcolor: "#fafafa",
                     height: "100%",
-                    overflow: "hidden",
+                    // 3. Sidebar cũng cần scroll riêng nếu danh sách người ký quá dài
+                    overflowY: "auto",
                   }}
                 >
                   <SignerSidebar

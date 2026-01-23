@@ -4,6 +4,8 @@ export interface ToolSignature {
   loaiKy: number;
   x: number;
   y: number;
+  isLocked: boolean;
+  page?: number;
   idNguoiKy: string;
   chuKySo: string;
   ngayKy: string;
@@ -99,6 +101,6 @@ export interface ToolTransferData {
   trinhDuyet: boolean;
 
   chuKyList: ToolSignature[];
-  chiTietDieuDongCCDCVatTuDTOS: any[];
+  chiTietDieuDongCCDCVatTuDTOS: ToolTransferDetail[];
   nguoiKyList: ToolSigner[];
 }

@@ -489,49 +489,53 @@ export const getTotalDocumentHeight = (sizes: { height: number }[]) => {
 export const localToGlobal = (
   localYRatio: number, // 0-1 trong trang hiện tại
   pageIndex: number,
-  sizes: { height: number }[]
+  sizes: { height: number }[],
 ) => {
   const totalHeight = getTotalDocumentHeight(sizes);
   let previousPagesHeight = 0;
   for (let i = 0; i < pageIndex; i++) {
     previousPagesHeight += sizes[i].height;
   }
-  
+
   // Chiều cao tính theo pixel từ đỉnh tài liệu đến điểm thả
-  const globalYPixel = previousPagesHeight + (localYRatio * sizes[pageIndex].height);
-  
+  const globalYPixel =
+    previousPagesHeight + localYRatio * sizes[pageIndex].height;
+
   // Trả về tỉ lệ 0-1 toàn cục
   return globalYPixel / totalHeight;
 };
 
 // Chuyển đổi: Tọa độ toàn cục -> Trang và Tọa độ con (Dùng khi Render và Export)
 export const globalToLocal = (
-  globalYRatio: number, 
-  sizes: { height: number }[]
+  globalYRatio: number,
+  sizes: { height: number }[],
 ) => {
   const totalHeight = getTotalDocumentHeight(sizes);
   const targetPixel = globalYRatio * totalHeight;
 
   let currentHeightAccumulator = 0;
-  
+
   for (let i = 0; i < sizes.length; i++) {
     const pageHeight = sizes[i].height;
-    
+
     // Kiểm tra xem điểm Y có nằm trong trang này không
-    if (targetPixel >= currentHeightAccumulator && targetPixel <= currentHeightAccumulator + pageHeight) {
+    if (
+      targetPixel >= currentHeightAccumulator &&
+      targetPixel <= currentHeightAccumulator + pageHeight
+    ) {
       // Tìm thấy trang!
       const localPixel = targetPixel - currentHeightAccumulator;
       return {
         pageIndex: i, // Index bắt đầu từ 0
-        localYRatio: localPixel / pageHeight
+        localYRatio: localPixel / pageHeight,
       };
     }
     currentHeightAccumulator += pageHeight;
   }
-  
+
   // Fallback (nếu y=1 hoặc lỗi làm tròn): Trả về trang cuối
   return {
     pageIndex: sizes.length - 1,
-    localYRatio: 1
+    localYRatio: 1,
   };
 };

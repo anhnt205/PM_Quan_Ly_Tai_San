@@ -146,8 +146,6 @@ const ThreadItem = ({
             position: "absolute",
             left: 10,
             top: 0,
-            // Nếu là mục D1 cuối cùng của danh sách, dừng ở giữa (50%)
-            // Nếu không, kẻ suốt (0) để nối xuống các nhóm bên dưới
             bottom: isDepth1 && !hasMoreMainBranches ? "50%" : 0,
             width: "2px",
             bgcolor: "#bdbdbd",
@@ -368,36 +366,91 @@ export default function SignerSidebar({
           isLast={false}
           hasMoreMainBranches={false}
         />
-        <Stepper orientation="vertical">
+        <Stepper
+          orientation="vertical"
+          connector={null} // Triệt tiêu connector mặc định để tránh đè đường kẻ
+          sx={{
+            px: 1,
+            "& .MuiStep-root": {
+              position: "relative",
+            },
+            "& .MuiStepContent-root": {
+              ml: 1.5, // Căn chỉnh trục dọc
+              pl: 3.5,
+              pr: 0,
+              borderLeft: "2px solid", // Khai báo border trước
+              position: "relative",
+            },
+          }}
+        >
           {dynamicSteps.map((step, index) => {
             const config = getStatusConfig(step.status);
+            const isLast = index === dynamicSteps.length - 1;
 
             return (
               <Step key={index} active={true} expanded={true}>
-                <StepLabel icon={config.icon}>
+                <StepLabel
+                  icon={config.icon}
+                  sx={{
+                    py: 0.5,
+                    "& .MuiStepLabel-label": { mt: "4px !important" },
+                  }}
+                >
                   <Typography
                     variant="caption"
                     color="text.secondary"
-                    fontWeight={600}
+                    fontWeight={700}
                   >
                     {step.label}
                   </Typography>
                 </StepLabel>
+
                 <StepContent
-                  sx={{ borderLeft: `1px solid ${theme.palette.divider}` }}
+                  sx={{
+                    // Màu sắc thay đổi động theo trạng thái của từng bước
+                    borderColor: `${config.color} !important`,
+
+                    // Xử lý nhánh ngang nối vào khung Paper
+                    "&::before": {
+                      content: '""',
+                      position: "absolute",
+                      left: 0,
+                      top: 27,
+                      width: 18,
+                      height: "2px",
+                      backgroundColor: config.color,
+                    },
+
+                    // XỬ LÝ ĐƯỜNG DỌC CHO PHẦN TỬ CUỐI
+                    ...(isLast
+                      ? {
+                          borderLeft: "none !important", // Bỏ border chính
+                          "&::after": {
+                            content: '""',
+                            position: "absolute",
+                            left: -2, // Vẽ lại đoạn ngắn dừng đúng nhánh ngang
+                            top: 0,
+                            height: 28,
+                            width: "2px",
+                            backgroundColor: config.color,
+                          },
+                        }
+                      : {}),
+                  }}
                 >
                   <Paper
                     elevation={0}
                     sx={{
                       p: 1.5,
-                      mt: 1,
-                      bgcolor: config.bgcolor,
+                      width: "100%",
+                      bgcolor: config.bgcolor, // Đồng bộ màu nền Paper
                       border: "1px solid",
                       borderColor: config.borderColor,
-                      borderRadius: 2,
+                      borderRadius: "10px",
                       display: "flex",
                       flexDirection: "column",
                       gap: 0.5,
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
                     }}
                   >
                     <Typography
@@ -408,6 +461,7 @@ export default function SignerSidebar({
                           step.status === "pending"
                             ? "text.secondary"
                             : "text.primary",
+                        lineHeight: 1.2,
                       }}
                     >
                       {step.name}
@@ -417,7 +471,12 @@ export default function SignerSidebar({
                       <Typography
                         variant="caption"
                         color="text.secondary"
-                        sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 0.5,
+                          mt: 0.5,
+                        }}
                       >
                         <History fontSize="inherit" /> {step.date}
                       </Typography>
@@ -429,7 +488,7 @@ export default function SignerSidebar({
           })}
         </Stepper>
 
-        {/* Phần Chi tiết bàn giao giữ nguyên */}
+        {/* Phần Chi tiết bàn giao */}
         {handoverNodes.map((node, index) => {
           const hasMoreMainBranches = handoverNodes
             .slice(index + 1)

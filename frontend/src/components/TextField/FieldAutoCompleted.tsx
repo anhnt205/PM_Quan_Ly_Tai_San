@@ -1,4 +1,4 @@
-import { Autocomplete, TextField } from "@mui/material";
+import { Autocomplete, TextField, Box } from "@mui/material";
 import { getIn } from "formik";
 
 interface Props {
@@ -31,6 +31,7 @@ export default function FieldAutoCompleted({
 
   const touched = field ? getIn(formik.touched, field) : false;
   const error = field ? getIn(formik.errors, field) : null;
+
   return (
     <Autocomplete
       sx={autocompleteSx}
@@ -38,12 +39,22 @@ export default function FieldAutoCompleted({
       disabled={disabled}
       fullWidth
       options={data}
-      getOptionLabel={(option: any) => option[labelkey] || ""}
+      // 1. Hiển thị trên ô Input sau khi chọn
+      getOptionLabel={(option: any) => {
+        if (typeof option === "string") return option;
+        return option[labelkey] ? `${option[labelkey]} - ${option.id}` : "";
+      }}
+      // 2. Hiển thị trong danh sách Dropdown (Dòng này giúp hiển thị đẹp hơn)
+      renderOption={(props, option) => (
+        <Box component="li" {...props} key={option.id}>
+          {option[labelkey]} - {option.id}
+        </Box>
+      )}
       isOptionEqualToValue={(option, value) => option?.id === value?.id}
       value={selectedOption}
       onChange={(e, newValue) => {
         if (formik && field) {
-          formik.setFieldValue(field, newValue?.id);
+          formik.setFieldValue(field, newValue?.id || null);
         }
         if (onChange) {
           onChange(newValue);
@@ -56,12 +67,6 @@ export default function FieldAutoCompleted({
           error={Boolean(touched && error)}
           helperText={touched ? error : ""}
           size="small"
-          // InputProps={{
-          //     ...params.InputProps,
-          //     sx: {
-          //         borderRadius: '12px'
-          //     }
-          // }}
         />
       )}
     />

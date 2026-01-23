@@ -10,8 +10,10 @@ interface DraggableSignatureProps {
   yRatio: number;
   imgSrc: string;
   width: number;
+  initialScale: number;
   onUpdatePosition: (id: string, xRatio: number, yRatio: number) => void;
-  onUpdatePage: (id: string, newPage: number) => void; // Cập nhật page khi drag sang trang khác
+  onUpdateScale: (id: string, newScale: number) => void;
+  onUpdatePage: (id: string, newPage: number) => void;
   onDelete: (id: string) => void;
   containerWidth: number;
   containerHeight: number;
@@ -19,6 +21,7 @@ interface DraggableSignatureProps {
   canvasHeight: number; // Kích thước gốc (viewport pixels)
   currentPage: number; // Trang hiện tại của chữ ký
   totalPages: number; // Tổng số trang
+  isLocked?: boolean;
 }
 
 export default function DraggableSignature({
@@ -38,15 +41,20 @@ export default function DraggableSignature({
   canvasHeight,
   currentPage,
   totalPages,
+  initialScale,
+  isLocked,
 }: DraggableSignatureProps) {
   // KHÔNG CÓ STATE - TẤT CẢ DỮ LIỆU ĐỀU LÀ REF
   const positionRef = useRef({ x: initialX, y: initialY });
-  const sizeRef = useRef({ width: 100, height: 50 });
+  const sizeRef = useRef({
+    width: width * initialScale,
+    height: width * initialScale * 0.6,
+  });
   // LƯU RATIO CỦA SIZE ĐỂ SCALE THEO CONTAINER
   // Khởi tạo ratio từ size ban đầu (100x50) dựa trên canvas GỐC
   const sizeRatioRef = useRef({
-    widthRatio: 100 / canvasWidth,
-    heightRatio: 50 / canvasHeight,
+    widthRatio: (width * initialScale) / canvasWidth,
+    heightRatio: (width * initialScale * 0.6) / canvasHeight,
   });
   const dragStartRef = useRef({ x: 0, y: 0 });
   const resizeStartRef = useRef({ x: 0, y: 0, w: 0, h: 0 });
@@ -104,17 +112,15 @@ export default function DraggableSignature({
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    if (isLocked) return;
     e.stopPropagation();
+
     const sigRect = parentBoxRef.current?.getBoundingClientRect();
     const parentElem = parentBoxRef.current?.parentElement;
     const wrapper = parentElem?.parentElement; // Wrapper chứa tất cả pages + signatures
     const wrapperRect = wrapper?.getBoundingClientRect();
 
     if (!sigRect || !wrapperRect) return;
-
-    // Tính scale hiện tại
-    const scaleX = containerWidth / canvasWidth;
-    const scaleY = containerHeight / canvasHeight;
 
     dragStartRef.current = {
       x: e.clientX - wrapperRect.left - positionRef.current.x,

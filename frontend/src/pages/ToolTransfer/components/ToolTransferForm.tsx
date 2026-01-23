@@ -374,7 +374,7 @@ export default function ToolTransferForm({
                   </Grid>
                   <Grid size={12}>
                     <FieldAutoCompleted
-                      title="Người lập biểu *"
+                      title="Người lập phiếu *"
                       labelkey="hoTen"
                       data={nvThamMuu}
                       formik={formik}

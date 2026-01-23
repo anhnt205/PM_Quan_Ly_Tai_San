@@ -184,21 +184,15 @@ export const useToolTransferMutation = (
 
   const handleToolByDonVi = async (loai: number, idDonViGiao: string) => {
     try {
-      const res = await api.get(
-        loai === 1
-          ? "/ccdcvattu/by-donvi-bandau/paged"
-          : "/ccdcvattu/by-donvi-hienthoi/paged",
-        {
-          params: {
-            idcongty: "ct001",
-            page: 0,
-            size: 999,
-            ...(loai === 1
-              ? { iddonvibandau: idDonViGiao }
-              : { iddonvihienthoi: idDonViGiao }),
-          },
+      // Swagger chỉ có 1 endpoint chung để lấy danh sách theo đơn vị
+      const res = await api.get("/ccdcvattu/paged-id-don-vi-ban-dau", {
+        params: {
+          idcongty: "ct001",
+          iddonvi: idDonViGiao,
+          page: 0,
+          size: 999,
         },
-      );
+      });
       return res.data;
     } catch (error) {
       console.error("Lỗi khi lấy công cụ theo đơn vị:", error);
