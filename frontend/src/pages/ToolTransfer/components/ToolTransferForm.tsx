@@ -205,7 +205,7 @@ export default function ToolTransferForm({
           onCancel={() => setIsPreview(false)}
           onSign={() => console.log("Ký thành công")}
           assetTransferDetail={formik.values.chiTietDieuDongCCDCVatTuDTOS}
-          allAssetsByDonVi={allToolsByDonVi}
+          // allAssetsByDonVi={allToolsByDonVi}
           allUnits={allUnits}
           staffs={staffs}
         />

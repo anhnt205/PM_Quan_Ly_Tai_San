@@ -21,10 +21,11 @@ import {
   showStatusDocument,
 } from "../ToolTransfer/config";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
-import { findById, getPermissionSigning } from "../../utils/helpers";
+import { findById } from "../../utils/helpers";
 import { Building, Eye, Trash2 } from "lucide-react";
 import SignDocumentForm from "../../components/common/SignDocumentForm";
 import { ToolTransferData } from "./types";
+import { getPermissionSigning } from "../AssetTransfer/config";
 
 export default function ToolTransfer() {
   const { user } = useSelector((state: any) => state.user);
