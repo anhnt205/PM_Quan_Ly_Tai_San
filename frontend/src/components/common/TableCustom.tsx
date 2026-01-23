@@ -30,11 +30,6 @@ import FieldDate from "../TextField/FieldDate";
 import { showConfirmAlert } from "../Alert";
 import { Dispatch, SetStateAction } from "react";
 import { FilterOption, FilterStatusGroup } from "./FilterStatusGroup";
-import {
-  canSign,
-  handleSignDocument,
-  isCheckShowShare,
-} from "../../pages/AssetTransfer/config";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 const CustomFilterPanel = (props: any) => {
@@ -62,6 +57,7 @@ interface Props {
   selectedIds?: string[];
   onSelectionChange?: (ids: string[]) => void;
   onDelete?: (ids: string[]) => void;
+  canSign?: (items: any[], user: any) => boolean;
   onSign?: (fileName: string, item: any) => void;
   searchValue?: string;
   setSearchValue?: Dispatch<SetStateAction<string>>;
@@ -76,6 +72,8 @@ interface Props {
   showDelete?: boolean;
   handleSendToSigner?: (selectedItem: any[]) => void;
   handleAssetTransfer?: (department: string) => void;
+  isCheckShowShare?: (item: any) => boolean;
+  handleSignDocument?: (item: any, user: any, onSign: () => void) => void;
 }
 
 export default function TableCustom({
@@ -93,6 +91,7 @@ export default function TableCustom({
   onSelectionChange,
   onDelete,
   onSign,
+  canSign,
   searchValue,
   setSearchValue,
   showStatusFilter = true,
@@ -104,6 +103,8 @@ export default function TableCustom({
   showDelete = true,
   handleSendToSigner,
   handleAssetTransfer,
+  isCheckShowShare,
+  handleSignDocument,
 }: Props) {
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.user);
@@ -176,21 +177,25 @@ export default function TableCustom({
             {/* <Button variant="outlined" size="small" startIcon={<Settings />}>
               Cấu hình cột
             </Button> */}
-            {selectedItem && canSign(selectedItem, user) && (
+            {selectedItem && canSign?.(selectedItem, user) && (
               <Button
                 size="small"
                 variant="contained"
                 color="primary"
                 startIcon={<Edit />}
-                onClick={(e) => {
+                onClick={async (e) => {
                   e.stopPropagation();
-                  handleSignDocument(selectedItem[0], user, onSign);
+                  handleSignDocument?.(
+                    selectedItem[0],
+                    user,
+                    ()=>onSign?.(selectedItem[0].tenFile, selectedItem[0]),
+                  );
                 }}
               >
                 Ký biên bản
               </Button>
             )}
-            {selectedItem && isCheckShowShare(selectedItem) && (
+            {selectedItem && isCheckShowShare?.(selectedItem) && (
               <Button
                 size="small"
                 variant="contained"

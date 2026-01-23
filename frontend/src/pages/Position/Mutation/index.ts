@@ -7,7 +7,7 @@ import * as XLSX from "xlsx";
 export const usePositionMutation = (
   page?: number,
   pageSize?: number,
-  searchValue?: string
+  searchValue?: string,
 ) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
@@ -21,7 +21,9 @@ export const usePositionMutation = (
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || error.message || "Tạo chức vụ thất bại"
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo chức vụ thất bại",
       );
     },
   });
@@ -37,7 +39,9 @@ export const usePositionMutation = (
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || error.message || "Sửa chức vụ thất bại"
+        error.response?.data?.message ||
+          error.message ||
+          "Sửa chức vụ thất bại",
       );
     },
   });
@@ -53,8 +57,27 @@ export const usePositionMutation = (
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || error.message || "Xóa chức vụ thất bại"
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa chức vụ thất bại",
       );
+    },
+  });
+  const getByIdMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.get(`/chucvu/${id}`);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      console.log("Lấy chức vụ thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Lấy chức vụ thất bại",
+      );
+      return null;
     },
   });
 
@@ -69,7 +92,9 @@ export const usePositionMutation = (
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || error.message || "Xóa chức vụ thất bại"
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa chức vụ thất bại",
       );
     },
   });
@@ -217,5 +242,6 @@ export const usePositionMutation = (
     positionsPage: data,
     allPositions,
     isLoading,
+    getByIdMutation
   };
 };

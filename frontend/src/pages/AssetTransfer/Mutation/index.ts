@@ -277,6 +277,23 @@ export const useAssetTranferMutation = (
     },
   });
 
+  const getByIdMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.get(`/chitietdieudongtaisan/${id}`);
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      console.log("Lấy chi tiết điều động tài sảnhành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Lấy chi tiết điều động tài sảnn thất bại",
+      );
+      return null;
+    },
+  });
   // list chu ky theo tai lieu
   const handleSignatureList = async (idTaiLieu: string) => {
     if (!idTaiLieu) return;
@@ -593,5 +610,7 @@ export const useAssetTranferMutation = (
     signMutation,
     isFetchingAssetsByDonVi,
     handleAssetByDonVi,
+    getByIdMutation,
+
   };
 };

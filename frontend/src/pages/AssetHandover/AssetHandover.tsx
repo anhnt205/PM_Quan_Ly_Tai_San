@@ -13,21 +13,42 @@ import {
   IconButton,
   Tab,
   Tabs,
+  Tooltip,
 } from "@mui/material";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import { useSearchParams } from "react-router-dom";
 
 import TableCustom from "../../components/common/TableCustom";
 import PageAction from "../../components/common/PageAction";
-import AssetHandoverForm from "./components/AssetHandoverForm/AssetHandoverForm";
-import SignDocumentForm from "../../components/common/SignDocumentForm";
-import SignerSidebar from "../AssetTransfer/components/SignerSidebar";
+import AssetHandoverForm from "./components/AssetHandoverForm";
+import SignerSidebar from "./components/SignerSidebar";
 
-import { AssetHandoverFormValues, AssetTransferData } from "./types";
+import { AssetHandoverData, AssetTransferData, SignaturesData } from "./types";
 import { useAssetHandoverMutation } from "./Mutation";
 import { Download, Eye, Trash2, ListPlus } from "lucide-react";
 import { ClassOutlined, TableChart } from "@mui/icons-material";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
+import {
+  showDownloadFile,
+  showShareStatus,
+  showStatus,
+} from "../AssetTransfer/config";
+import { useSelector } from "react-redux";
+import {
+  canSign,
+  getPermissionSigning,
+  handleSendToSigner,
+  handleSignDocument,
+  isCheckShowDelete,
+  isCheckShowShare,
+  ShowPermissionSigning,
+  StatusHandover,
+} from "./config";
+import { showConfirmAlert } from "../../components/Alert";
+import SignDocumentForm from "./components/SignDocumentForm";
+import SignDocumentTransferForm from "../AssetTransfer/components/SignDocumentForm";
+
+import dayjs from "dayjs";
 
 export default function AssetHandover() {
   const [showForm, setShowForm] = useState(false);
@@ -37,34 +58,40 @@ export default function AssetHandover() {
     pageSize: 10,
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
   const [searchValue, setSearchValue] = useState("");
   const [showSignDocument, setShowSignDocument] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [rowToDelete, setRowToDelete] = useState<any>(null);
+  const [showSignerSidebar, setShowSignerSidebar] = useState(true);
   const [readOnly, setReadOnly] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
-  console.log(selectedIds);
-  const [searchParams] = useSearchParams();
-  const type = searchParams.get("type");
   const handleEdit = () => setReadOnly(false);
-  const [previewFileName, setPreviewFileName] = useState<string | null>(null);
-  const [currentStatus, setCurrentStatus] = useState("all");
-  const [currentType, setCurrentType] = useState("all");
+  const [currentStatus, setCurrentStatus] = useState("");
+  const [currentType, setCurrentType] = useState("");
   const [showSidebar, setShowSidebar] = useState(false);
 
+  const { user } = useSelector((state: any) => state.user);
   const {
     handoverPage,
     transferPage,
     isLoading,
     createMutation,
     updateMutation,
+    updateManyMutation,
+    cancelMutation,
     deleteOneMutation,
+    staffs,
+    departments,
+    positions,
+    signMutation,
+    handleSignatureList,
     handleDownloadFile,
+    allUnits,
+    allCurrentStatus,
   } = useAssetHandoverMutation(
     paginationModel.page,
     paginationModel.pageSize,
-    searchValue
+    searchValue,
+    currentStatus ? Number(currentStatus) : undefined,
+    currentType ? Number(currentType) : undefined,
   );
 
   useEffect(() => {
@@ -72,7 +99,7 @@ export default function AssetHandover() {
     setSelectedRow(null);
     setShowForm(false);
     setShowSidebar(false);
-  }, [type, activeTab]);
+  }, [activeTab]);
 
   const handleTabChange = (_event: SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
@@ -81,84 +108,119 @@ export default function AssetHandover() {
   const statusOptions: FilterOption[] = [
     {
       label: "Tất cả",
-      count: handoverPage?.totalItems || 0,
+      count: handoverPage.totalItems,
       color: "default",
-      value: "all",
+      value: "",
     },
-    { label: "Nháp", count: 0, color: "default", value: 0 },
-    { label: "Duyệt", count: 1, color: "info", value: 1 },
-    { label: "Hủy", count: 1, color: "error", value: 2 },
-    { label: "Hoàn thành", count: 1, color: "success", value: 3 },
+    {
+      label: "Nháp",
+      count: handoverPage?.groupCounts?.["0"] ?? 0,
+      color: "default",
+      value: "0",
+    },
+    {
+      label: "Duyệt",
+      count: handoverPage?.groupCounts?.["1"] ?? 0,
+      color: "info",
+      value: "1",
+    },
+    {
+      label: "Hủy",
+      count: handoverPage?.groupCounts?.["2"] ?? 0,
+      color: "error",
+      value: "2",
+    },
+    {
+      label: "Hoàn thành",
+      count: handoverPage?.groupCounts?.["3"] ?? 0,
+      color: "success",
+      value: "3",
+    },
   ];
 
   const typeOptions: FilterOption[] = [
-    { label: "Tất cả", count: 0, color: "default", value: "all" },
-    { label: "Cấp phát", count: 0, color: "success", value: 1 },
-    { label: "Điều chuyển", count: 3, color: "info", value: 2 },
-    { label: "Thu hồi", count: 0, color: "error", value: 3 },
+    {
+      label: "Tất cả",
+      count: transferPage.totalItems,
+      color: "default",
+      value: "",
+    },
+    {
+      label: "Cấp phát",
+      count: transferPage?.loaiCounts?.["1"] ?? 0,
+      color: "success",
+      value: "1",
+    },
+    {
+      label: "Điều chuyển",
+      count: transferPage?.loaiCounts?.["2"] ?? 0,
+      color: "info",
+      value: "2",
+    },
+    {
+      label: "Thu hồi",
+      count: transferPage?.loaiCounts?.["3"] ?? 0,
+      color: "error",
+      value: "3",
+    },
   ];
 
   const handleRowClick = (params: GridRowParams) => {
     if (activeTab !== 0) return;
     window.scrollTo({ top: 140, behavior: "smooth" });
-    setSelectedRow(params.row);
+    setSelectedRow({ ...params.row, isNew: false });
     setReadOnly(true);
     setShowForm(true);
     setShowSidebar(true);
   };
 
-  const handleSave = (values: any) => {
-    const mutation = values.id ? updateMutation : createMutation;
-    mutation.mutate(values, {
-      onSuccess: () => setShowForm(false),
-    });
+  const handleCancel = async () => {
+    if (selectedRow) {
+      const confirm = await showConfirmAlert(
+        `Hủy phiếu bàn giao tài sản "${selectedRow?.id}"`,
+      );
+      if (confirm.isConfirmed) {
+        await cancelMutation.mutate(selectedRow?.id);
+        handleClose();
+      }
+    }
   };
-
-  const handleCloseForm = () => {
-    if (!selectedRow) setShowForm(false);
-    else setReadOnly(true);
-    setShowSidebar(false);
+  const handleViewSignAssets = async (fileName: string, item: any) => {
+    setShowSignDocument(true);
+    setSelectedRow(item);
+    setShowSignerSidebar(true); // Hiện sidebar khi ký
   };
-
-  const handleSignAssets = (id: string) => {
-    // 1. Xác định nguồn dữ liệu dựa trên Tab hiện tại
-    const currentData =
-      activeTab === 0 ? handoverPage?.items : transferPage?.items;
-
-    // 2. Tìm dòng dữ liệu (row) tương ứng với ID được truyền vào
-    // Lưu ý: Kiểm tra API trả về là "id" hay "Id" để khớp với field
-    const document = currentData?.find(
-      (row: any) => row.id === id || row.Id === id
-    );
-
-    if (document) {
-      setSelectedDocument(document);
-      setShowSignDocument(true);
+  const handleSend = (items: any[]) => {
+    handleSendToSigner(items, updateManyMutation.mutateAsync, handleClose);
+  };
+  const handleSave = async (values: any) => {
+    if (!values.isNew) {
+      await updateMutation.mutate(values);
+      handleClose();
     } else {
-      console.error("Không tìm thấy dữ liệu cho ID:", id);
+      await createMutation.mutate(values);
+      handleClose();
     }
   };
 
-  const handleDelete = (ids: string[]) => {
-    if (ids.length > 0) {
-      ids.forEach((id) => {
-        deleteOneMutation.mutate(id);
-      });
-    }
+  const handleClose = () => {
+    setSelectedIds([]);
+    setSearchValue("");
+    setShowSignDocument(false);
+    setSelectedRow(null);
+    setShowForm(false);
+    setShowSidebar(false);
+    setReadOnly(false);
   };
 
-  const handleConfirmDelete = () => {
-    if (rowToDelete?.id) {
-      deleteOneMutation.mutate(rowToDelete.id, {
-        onSuccess: () => {
-          setDeleteDialogOpen(false);
-          setRowToDelete(null);
-        },
-      });
-    }
+  const handleSign = (
+    data: SignaturesData[],
+    assetHandover: AssetHandoverData,
+  ) => {
+    signMutation.mutate({ data, assetHandover });
   };
 
-  const columns: GridColDef<AssetHandoverFormValues>[] = [
+  const columns: GridColDef<AssetHandoverData>[] = [
     {
       field: "soQuyetDinh",
       headerName: "Số quyết định",
@@ -208,37 +270,12 @@ export default function AssetHandover() {
       width: 200,
       headerAlign: "center",
       align: "center",
-      valueGetter: (params, row: any) => row.tenFile,
-      renderCell: (params) =>
-        params.value ? (
-          <Chip
-            label={
-              params.value.length > 15
-                ? params.value.substring(0, 12) + "..."
-                : params.value
-            }
-            size="small"
-            variant="outlined"
-            sx={{
-              color: "#2e7d32",
-              borderColor: "#2e7d32",
-              bgcolor: "#f1f8e9",
-              borderRadius: "4px",
-              width: "180px",
-              "& .MuiChip-icon": {
-                color: "#2e7d32",
-                marginRight: "2px",
-              },
-            }}
-            icon={<Download size={16} strokeWidth={2} />}
-            clickable
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDownloadFile(params.value);
-            }}
-            title={params.value}
-          />
-        ) : null,
+      renderCell: (params) => {
+        if (!params.value) return null;
+        return showDownloadFile(params.value, () =>
+          handleDownloadFile(params.value),
+        );
+      },
     },
     {
       field: "trangThaiKy",
@@ -246,46 +283,8 @@ export default function AssetHandover() {
       width: 200,
       headerAlign: "center",
       align: "center",
-      renderCell: (params) => {
-        const row = params.row; // Lúc này row tự động có kiểu AssetHandoverFormValues
-        const currentUserId = "1594";
-
-        // (1) Tìm trong nguoiKyList
-        const nguoiKyIds = row.nguoiKyList?.map((item) => item.idNguoiKy) || [];
-
-        // (2) Tìm trong id bên giao và id bên nhận
-        const sideIds = [row.idDaiDienBenGiao, row.idDaiDienBenNhan];
-
-        // (3) Tìm trong chuKyList
-        const signedIds = row.chuKyList?.map((item) => item.idNguoiKy) || [];
-
-        // Logic kiểm tra
-        const isUserAuthorized =
-          nguoiKyIds.includes(currentUserId) || sideIds.includes(currentUserId);
-        const isSigned = signedIds.includes(currentUserId);
-
-        let chipConfig = { label: "Không được phép ký", color: "#ff7043" };
-
-        if (isSigned) {
-          chipConfig = { label: "Đã ký", color: "#4caf50" };
-        } else if (isUserAuthorized) {
-          chipConfig = { label: "Cần ký", color: "#fbc02d" };
-        }
-
-        return (
-          <Chip
-            label={chipConfig.label}
-            size="small"
-            sx={{
-              bgcolor: chipConfig.color,
-              color: "#fff",
-              fontWeight: "bold",
-              borderRadius: "4px",
-              width: "170px",
-            }}
-          />
-        );
-      },
+      renderCell: (params) =>
+        ShowPermissionSigning(getPermissionSigning(params.row, user, staffs)),
     },
     {
       field: "trangThaiPhieu",
@@ -293,30 +292,7 @@ export default function AssetHandover() {
       width: 200,
       headerAlign: "center",
       align: "center",
-      valueGetter: (params, row: any) => row.trangThaiPhieu,
-      renderCell: (params) => {
-        const statusConfig: Record<number, { label: string; color: string }> = {
-          0: { label: "Chưa hoàn thành", color: "#FFC121" },
-          1: { label: "Đã hủy", color: "#d32f2f" },
-          2: { label: "Đã hoàn thành", color: "#4caf50" },
-        };
-
-        const status = statusConfig[params.value as number] || statusConfig[0];
-
-        return (
-          <Chip
-            label={status.label}
-            sx={{
-              bgcolor: status.color,
-              color: "#fff",
-              fontWeight: "bold",
-              borderRadius: "4px",
-              width: "180px",
-            }}
-            size="small"
-          />
-        );
-      },
+      renderCell: (params) => StatusHandover(params.row.trangThaiPhieu ?? 0),
     },
     {
       field: "trangThai",
@@ -324,32 +300,7 @@ export default function AssetHandover() {
       width: 150,
       headerAlign: "center",
       align: "center",
-      valueGetter: (params, row: any) => row.trangThai,
-      renderCell: (params) => {
-        const statusMap: Record<number, { label: string; color: string }> = {
-          0: { label: "Nháp", color: "#bdbdbd" },
-          1: { label: "Duyệt", color: "#FFC121" },
-          2: { label: "Hủy", color: "#ff2121ff" },
-          3: { label: "Hoàn thành", color: "#ff7043" },
-        };
-        const status = statusMap[params.value as number] || {
-          label: "Nháp",
-          color: "#bdbdbd",
-        };
-        return (
-          <Chip
-            label={status.label}
-            sx={{
-              bgcolor: status.color,
-              color: "#fff",
-              fontWeight: "bold",
-              borderRadius: "4px",
-              width: "180px",
-            }}
-            size="small"
-          />
-        );
-      },
+      renderCell: (params) => showStatus(params.row.trangThai ?? 0),
     },
     {
       field: "trinhDuyet",
@@ -357,20 +308,11 @@ export default function AssetHandover() {
       width: 100,
       headerAlign: "center",
       align: "center",
-      valueGetter: (params, row: any) => row.share,
-      renderCell: (params) => (
-        <Chip
-          label={params.value === false ? "Chưa gửi" : "Được gửi"}
-          sx={{
-            bgcolor: params.value === false ? "#f44336" : "#4caf50",
-            color: "#fff",
-            fontWeight: "bold",
-            borderRadius: "4px",
-            width: "100px",
-          }}
-          size="small"
-        />
-      ),
+      renderCell: (params) =>
+        showShareStatus(
+          params.row?.share ?? false,
+          params.row?.nguoiTao == user?.taiKhoan?.tenDangNhap,
+        ),
     },
     {
       field: "actions",
@@ -381,34 +323,47 @@ export default function AssetHandover() {
       align: "center",
       renderCell: (params) => (
         <Box sx={{ display: "flex", gap: 1 }}>
-          <IconButton
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              setRowToDelete(params.row);
-              setDeleteDialogOpen(true);
-            }}
-          >
-            <Trash2 size={20} strokeWidth={2} color="#f44336" />
-          </IconButton>
-
-          <IconButton
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (params.row.tenFile) {
-                setPreviewFileName(params.row.tenFile);
-              } else {
-                alert("Không có file để xem!");
-              }
-            }}
-          >
-            <Eye size={20} strokeWidth={2} color="#4caf50" />
-          </IconButton>
+          <Tooltip title="Xóa">
+            <IconButton
+              size="small"
+              color="error"
+              disabled={!isCheckShowDelete(params.row, user)}
+              onClick={async (e) => {
+                e.stopPropagation();
+                const confirm = await showConfirmAlert(
+                  `Xóa phiếu biên bản bàn giao "${params.row?.id}"`,
+                );
+                if (confirm.isConfirmed) {
+                  deleteOneMutation.mutate(params.row?.id);
+                }
+              }}
+            >
+              <Trash2 size={20} strokeWidth={2} />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Xem">
+            <IconButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedRow(params.row || []);
+                setShowSignerSidebar(false); // Ẩn sidebar khi xem
+                // setDepartmentId(params.row.idDonViGiao);
+                setSelectedIds([params.row.id]);
+                // await handleAssetTransfer(params.row.idDonViGiao);
+                setShowSignDocument(true);
+              }}
+            >
+              <Eye size={20} strokeWidth={2} color="#4caf50" />
+            </IconButton>
+          </Tooltip>
         </Box>
       ),
     },
   ];
+
+  const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
+  const [assetTransfer, setAssetTransfer] = useState<any | null>(null);
 
   const columnsTransfer: GridColDef<AssetTransferData>[] = [
     {
@@ -440,35 +395,12 @@ export default function AssetHandover() {
       width: 200,
       headerAlign: "center",
       align: "center",
-      renderCell: (params) =>
-        params.value ? (
-          <Chip
-            label={
-              params.value.length > 15
-                ? params.value.substring(0, 12) + "..."
-                : params.value
-            }
-            size="small"
-            variant="outlined"
-            sx={{
-              color: "#2e7d32",
-              borderColor: "#2e7d32",
-              bgcolor: "#f1f8e9",
-              borderRadius: "4px",
-              width: "180px",
-              "& .MuiChip-icon": {
-                color: "#2e7d32",
-              },
-            }}
-            icon={<Download size={16} strokeWidth={2} />}
-            clickable
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDownloadFile(params.value);
-            }}
-            title={params.value}
-          />
-        ) : null,
+      renderCell: (params) => {
+        if (!params.value) return null;
+        return showDownloadFile(params.value, () =>
+          handleDownloadFile(params.value),
+        );
+      },
     },
     {
       field: "soQuyetDinh",
@@ -481,22 +413,7 @@ export default function AssetHandover() {
       width: 150,
       headerAlign: "center",
       align: "center",
-      renderCell: (params) => {
-        const isDone = params.value === 3;
-        return (
-          <Chip
-            label={isDone ? "Hoàn thành" : "Đang xử lý"}
-            sx={{
-              bgcolor: isDone ? "#ff7043" : "#bdbdbd",
-              color: "#fff",
-              fontWeight: "bold",
-              borderRadius: "4px",
-              width: "130px",
-            }}
-            size="small"
-          />
-        );
-      },
+      renderCell: (params) => showStatus(params.row.trangThai ?? 0),
     },
     {
       field: "actions",
@@ -509,7 +426,12 @@ export default function AssetHandover() {
         <Box sx={{ display: "flex", gap: 1 }}>
           <IconButton
             size="small"
-            onClick={() => handleRowClick(params as any)}
+            onClick={async () => {
+              setSelectedDocument(params.row.tenFile);
+              setAssetTransfer(params.row);
+              setShowSignerSidebar(false); // Ẩn sidebar khi xem
+              setShowSignDocument(true);
+            }}
           >
             <Eye size={20} strokeWidth={2} color="#4caf50" />
           </IconButton>
@@ -518,6 +440,47 @@ export default function AssetHandover() {
             title="Tạo biên bản bàn giao tài sản"
             onClick={(e) => {
               e.stopPropagation();
+              window.scrollTo({ top: 140, behavior: "smooth" });
+              setSelectedRow({
+                id: "",
+                soQuyetDinh: "",
+                banGiaoTaiSan: "",
+                quyetDinhDieuDongSo: "",
+                lenhDieuDong: params.row.id,
+                idDonViGiao: params.row.idDonViGiao,
+                idDonViNhan: params.row.idDonViNhan,
+                ngayBanGiao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+                ngayQuyetDinh: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+                ngayTaoChungTu: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+                diaDiemQuyetDinh: "",
+                idGiamDoc: "",
+                idCongTy: params.row.idCongTy,
+                idLanhDao: "",
+                idDaiDiendonviBanHanhQD: "",
+                daXacNhan: false,
+                idDaiDienBenGiao: "",
+                daiDienBenGiaoXacNhan: false,
+                idDaiDienBenNhan: "",
+                daiDienBenNhanXacNhan: false,
+                trangThai: 0,
+                note: "",
+                ngayTao: "",
+                ngayCapNhat: "",
+                nguoiTao: "",
+                nguoiCapNhat: "",
+                isActive: true,
+                share: false,
+                duongDanFile: "",
+                tenFile: "",
+                byStep: false,
+                giamDocKy: false,
+                nguoiKyList: [] as any[],
+                chiTietBanGiaoTaiSan: [] as any[],
+                initialChiTiet: [] as any[],
+                isNew: true,
+              });
+              setReadOnly(false);
+              setShowForm(true);
             }}
           >
             <ListPlus size={20} strokeWidth={2} color="#4caf50" />
@@ -529,77 +492,36 @@ export default function AssetHandover() {
 
   return (
     <>
-      {/* 1. DIALOG XÁC NHẬN XÓA */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle
-          sx={{ textAlign: "center", fontWeight: 600, fontSize: 18 }}
-        >
-          Xóa {activeTab === 0 ? "biên bản bàn giao" : "quyết định điều động"}
-        </DialogTitle>
-        <DialogContent sx={{ textAlign: "center", py: 3 }}>
-          <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
-            <Box
-              sx={{
-                width: 60,
-                height: 60,
-                borderRadius: "50%",
-                bgcolor: "#ffcccc",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Trash2 size={32} color="#f44336" />
-            </Box>
-          </Box>
-          <DialogContentText>
-            Bạn có chắc muốn xóa{" "}
-            <strong>"{rowToDelete?.TenPhieu || rowToDelete?.id}"</strong>?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: "center", pb: 2, gap: 2 }}>
-          <Button onClick={() => setDeleteDialogOpen(false)} variant="outlined">
-            Không
-          </Button>
-          <Button
-            onClick={handleConfirmDelete}
-            variant="contained"
-            color="error"
-          >
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {previewFileName && (
-        <SignDocumentForm
-          fileName={previewFileName}
-          onCancel={() => setPreviewFileName(null)}
-          onDownload={handleDownloadFile}
-          showSignerSidebar={false}
-        />
-      )}
-
-      {/* 3. LOGIC HIỂN THỊ CHÍNH */}
       {showSignDocument ? (
-        <SignDocumentForm
-          selectedIds={selectedIds}
-          document={selectedDocument}
-          onCancel={() => {
-            setShowSignDocument(false);
-            setSelectedDocument([]);
-          }}
-          onSign={() => {
-            setShowSignDocument(false);
-            setSelectedIds([]);
-          }}
-          fullscreen={true}
-        />
+        activeTab === 0 ? (
+          <SignDocumentForm
+            selectedIds={selectedIds}
+            onCancel={handleClose}
+            onSign={handleSign}
+            assetHandover={selectedRow}
+            showSignerSidebar={showSignerSidebar}
+            allUnits={allUnits}
+            fullscreen={true}
+            staffs={staffs}
+            departments={departments}
+            positions={positions}
+            handleSignatureList={handleSignatureList}
+          />
+        ) : (
+          <SignDocumentTransferForm
+            selectedIds={[assetTransfer.id]}
+            document={selectedDocument}
+            onCancel={handleClose}
+            onSign={() => {}}
+            assetTransferDetail={assetTransfer.chiTietDieuDongTaiSanDTOS || []}
+            showSignerSidebar={showSignerSidebar}
+            allUnits={allUnits}
+            allCurrentStatus={allCurrentStatus}
+            fullscreen={true}
+            staffs={staffs}
+            handleSignatureList={handleSignatureList}
+          />
+        )
       ) : (
         <>
           <PageAction
@@ -617,12 +539,17 @@ export default function AssetHandover() {
               <Box sx={{ mb: 2 }}>
                 <AssetHandoverForm
                   key={selectedRow?.id || "form-key"}
-                  onCancel={handleCloseForm}
+                  onClose={handleClose}
                   onSave={handleSave}
+                  onCancel={handleCancel}
                   onEdit={handleEdit}
                   readOnly={readOnly}
-                  selectedTransfer={selectedRow}
+                  selectedAssetHandover={selectedRow}
                   label={activeTab === 0 ? "Bàn giao" : "Điều động"}
+                  departments={departments}
+                  positions={positions}
+                  allUnits={allUnits}
+                  staffs={staffs}
                 />
               </Box>
             )}
@@ -666,7 +593,10 @@ export default function AssetHandover() {
                     <Box width={108}></Box>
                     <Tab
                       icon={
-                        <Badge badgeContent={3} color="error">
+                        <Badge
+                          badgeContent={transferPage.totalItems}
+                          color="error"
+                        >
                           <TableChart />
                         </Badge>
                       }
@@ -708,16 +638,18 @@ export default function AssetHandover() {
                     if (activeTab === 0) setCurrentStatus(val);
                     else setCurrentType(val);
                   }}
-                  onSign={handleSignAssets}
+                  onSign={handleViewSignAssets}
+                  handleSignDocument={handleSignDocument}
+                  canSign={canSign}
                   paginationModel={paginationModel}
                   onPaginationModelChange={setPaginationModel}
                   onRowClick={handleRowClick}
                   selectedIds={selectedIds}
                   onSelectionChange={setSelectedIds}
-                  onDelete={(row: any) => {
-                    setRowToDelete(row);
-                    setDeleteDialogOpen(true);
-                  }}
+                  onDelete={() => {}}
+                  showDelete={false}
+                  isCheckShowShare={isCheckShowShare}
+                  handleSendToSigner={handleSend}
                 />
               </Grid>
               {/* Cột bên phải: Chứa Sidebar (Chỉ hiển thị khi đủ điều kiện) */}

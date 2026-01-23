@@ -238,7 +238,6 @@ export default function AssetTransferForm({
           showSignerSidebar={false}
           fullscreen={true}
           assetTransferDetail={formik.values.chiTietDieuDongTaiSanDTOS}
-          allAssetsByDonVi={allAssetsByDonVi.items}
           allUnits={allUnits}
           allCurrentStatus={allCurrentStatus}
         />
@@ -586,6 +585,10 @@ export default function AssetTransferForm({
                               `chiTietDieuDongTaiSanDTOS.${index}.moTa`,
                               value?.moTa,
                             );
+                             formik.setFieldValue(
+                               `chiTietDieuDongTaiSanDTOS.${index}.ghiChu`,
+                               value?.ghiChu,
+                             );
                           }}
                         />
                       </CustomTableCell>
@@ -619,7 +622,7 @@ export default function AssetTransferForm({
                         <FieldInput
                           title=""
                           formik={formik}
-                          field={`chiTietDieuDongTaiSanDTOS.${index}.moTa`}
+                          field={`chiTietDieuDongTaiSanDTOS.${index}.ghiChu`}
                         />
                       </CustomTableCell>
                       {!readOnly && (

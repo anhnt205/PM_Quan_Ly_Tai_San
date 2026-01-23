@@ -7,7 +7,7 @@ import dayjs from "dayjs";
 export const useStaffMutation = (
   page?: number,
   pageSize?: number,
-  searchValue?: string
+  searchValue?: string,
 ) => {
   const queryClient = useQueryClient();
 
@@ -78,6 +78,24 @@ export const useStaffMutation = (
           error.message ||
           "Xóa nhân viên thất bại",
       );
+    },
+  });
+
+  const getByIdMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.get(`/nhanvien/${id}`);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      console.log("Lấy nhân viên thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Lấy nhân viên thất bại",
+      );
+      return null;
     },
   });
 
@@ -212,5 +230,6 @@ export const useStaffMutation = (
     staffsPage: data,
     allStaff,
     isLoading,
+    getByIdMutation,
   };
 };

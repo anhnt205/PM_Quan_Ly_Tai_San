@@ -16,11 +16,15 @@ import PageAction from "../../components/common/PageAction";
 import { useSearchParams } from "react-router-dom";
 import { useAssetTranferMutation } from "./Mutation";
 import { useSelector } from "react-redux";
-import { findById, getPermissionSigning } from "../../utils/helpers";
+import { findById } from "../../utils/helpers";
 import {
+  canSign,
+  getPermissionSigning,
   getTypeInfo,
   handleSendToSigner,
+  handleSignDocument,
   isCheckShowDelete,
+  isCheckShowShare,
   showDownloadFile,
   ShowPermissionSigning,
   showShareStatus,
@@ -51,10 +55,9 @@ export default function AssetTransfer() {
 
   const [searchParams] = useSearchParams();
   const type = searchParams.get("type");
-  const [departmentId, setDepartmentId] = useState("");
   const [assetTransferDetail, setAssetTransferDetail] = useState<any[]>([]);
   const [status, setStatus] = useState("");
-  const [assetByDepartment, setAssetByDepartment] = useState<any[]>([]);
+  const [departmentId, setDepartmentId] = useState("");
   const {
     assetTranferPage,
     allDepartments,
@@ -135,13 +138,6 @@ export default function AssetTransfer() {
     setShowSidebar(true);
   };
 
-  const handleAssetTransfer = async (department: string) => {
-    const result = await handleAssetByDonVi(
-      type ? Number(type) : 1,
-      department,
-    );
-    setAssetByDepartment(result?.items);
-  };
 
   const handleEdit = () => {
     setReadOnly(false);
@@ -168,8 +164,6 @@ export default function AssetTransfer() {
       await createMutation.mutate(values);
       handleClose();
     }
-    setShowForm(false);
-    setSelectedRow(null);
   };
   const handleCancel = async () => {
     if (selectedRow) {
@@ -403,9 +397,7 @@ export default function AssetTransfer() {
                     rowData.chiTietDieuDongTaiSanDTOS || [],
                   );
                   setShowSignerSidebar(false); // Ẩn sidebar khi xem
-                  setDepartmentId(rowData.idDonViGiao);
                   setSelectedIds([rowData.id]);
-                  await handleAssetTransfer(rowData.idDonViGiao);
                   setShowSignDocument(true);
                 }}
                 sx={{
@@ -438,7 +430,6 @@ export default function AssetTransfer() {
           onSign={handleSign}
           assetTransferDetail={assetTransferDetail}
           showSignerSidebar={showSignerSidebar}
-          allAssetsByDonVi={assetByDepartment}
           allUnits={allUnits}
           allCurrentStatus={allCurrentStatus}
           fullscreen={true}
@@ -516,6 +507,8 @@ export default function AssetTransfer() {
                   onSelectionChange={setSelectedIds}
                   // onDelete={handleDelete}
                   onSign={handleViewSignAssets}
+                  handleSignDocument={handleSignDocument}
+                  canSign={canSign}
                   searchValue={searchValue}
                   setSearchValue={setSearchValue}
                   showStatusFilter={true}
@@ -526,7 +519,7 @@ export default function AssetTransfer() {
                     setStatus(value);
                   }}
                   statusValue={status}
-                  handleAssetTransfer={handleAssetTransfer}
+                  isCheckShowShare={isCheckShowShare}
                 />
               </Grid>
 

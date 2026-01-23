@@ -5,6 +5,7 @@ import {
   showErrorAlert,
   showSuccessAlert,
 } from "../../../components/Alert";
+import { findById } from "../../../utils/helpers";
 
 export const ShowPermissionSigning = (status: number) => {
   // Định nghĩa cấu hình cho từng trạng thái
@@ -44,6 +45,64 @@ export const ShowPermissionSigning = (status: number) => {
       }}
     />
   );
+};
+export const getPermissionSigning = (data: any, user?: any, allStaffs = []) => {
+  const signatureFlow: any[] = [];
+  if (data?.nguoiLapPhieuKyNhay === true) {
+    signatureFlow.push({
+      id: data.idNguoiKyNhay,
+      signed: data.trangThaiKyNhay === true,
+      label: `Người lập phiếu: ${
+        findById(allStaffs, data.idNguoiKyNhay)?.hoTen ?? ""
+      }`,
+    });
+  }
+
+  signatureFlow.push({
+    id: data?.idTrinhDuyetCapPhong,
+    signed: data?.trinhDuyetCapPhongXacNhan === true,
+    label: `Người duyệt: ${data?.tenTrinhDuyetCapPhong ?? ""}`,
+  });
+
+  const listLen = data?.nguoiKyList?.length ?? 0;
+  for (let i = 0; i < listLen; i++) {
+    const item = data.nguoiKyList[i];
+    signatureFlow.push({
+      id: item?.idNguoiKy,
+      signed: item?.trangThai === 1,
+      label: `Người ký ${i + 1}: ${item?.tenNguoiKy ?? ""}`,
+    });
+  }
+
+  signatureFlow.push({
+    id: data?.idTrinhDuyetGiamDoc,
+    signed: data?.trinhDuyetGiamDocXacNhan === true,
+    label: `Người phê duyệt: ${data?.tenTrinhDuyetGiamDoc ?? ""}`,
+  });
+  const filtered = signatureFlow.filter(
+    (step) => step.id != null && String(step.id).trim() !== "",
+  );
+
+  const currentIndex = filtered.findIndex(
+    (s) => s.id === user?.taiKhoan?.tenDangNhap,
+  );
+
+  if (currentIndex === -1) return 2;
+
+  if (
+    data?.nguoiTao === user?.taiKhoan?.tenDangNhap &&
+    filtered[currentIndex].signed !== -1
+  ) {
+    return filtered[currentIndex].signed === true ? 4 : 5;
+  }
+
+  if (filtered[currentIndex].signed === true) return 3;
+
+  const previousNotSigned = filtered
+    .slice(0, currentIndex)
+    .find((s) => s.signed === false);
+  if (previousNotSigned) return 1;
+  return 0;
 };
 export const getTypeInfo = (typeValue: any) => {
   switch (Number(typeValue)) {
@@ -209,7 +268,7 @@ const buildSignatureFlow = (item: any) => {
   });
 
   // 3. Danh sách người ký bổ sung
-  item.listSignatory?.forEach((sig: any) => {
+  item.nguoiKyList?.forEach((sig: any) => {
     flow.push({ id: sig.idNguoiKy, signed: sig.trangThai === 1 });
   });
 

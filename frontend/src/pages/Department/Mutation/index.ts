@@ -7,7 +7,7 @@ import * as XLSX from "xlsx";
 export const useDepartmentMutation = (
   page?: number,
   pageSize?: number,
-  searchValue?: string
+  searchValue?: string,
 ) => {
   const queryClient = useQueryClient();
 
@@ -24,7 +24,7 @@ export const useDepartmentMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Tạo phòng ban thất bại"
+          "Tạo phòng ban thất bại",
       );
     },
   });
@@ -42,7 +42,7 @@ export const useDepartmentMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Sửa phòng ban thất bại"
+          "Sửa phòng ban thất bại",
       );
     },
   });
@@ -60,7 +60,7 @@ export const useDepartmentMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa phòng ban thất bại"
+          "Xóa phòng ban thất bại",
       );
     },
   });
@@ -78,11 +78,27 @@ export const useDepartmentMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa phòng ban thất bại"
+          "Xóa phòng ban thất bại",
       );
     },
   });
-
+  const getByIdMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.get(`/phongban/${id}`);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      console.log("Lấy phòng ban thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Lấy phòng ban thất bại",
+      );
+      return null;
+    },
+  });
   const { data = { items: [], totalItems: 0 }, isLoading } = useQuery({
     queryKey: ["departmentsPage", page, pageSize, searchValue], // Key để cache dữ liệu
     queryFn: async () => {
@@ -125,8 +141,8 @@ export const useDepartmentMutation = (
             item.loaiKho === 1
               ? "Kho cấp phát"
               : item.loaiKho === 2
-              ? "Kho thu hồi"
-              : "Không phải kho", // Giá trị 0 hoặc undefined sẽ vào đây
+                ? "Kho thu hồi"
+                : "Không phải kho", // Giá trị 0 hoặc undefined sẽ vào đây
         }));
 
         const worksheet = XLSX.utils.json_to_sheet(worksheetData);
@@ -203,7 +219,7 @@ export const useDepartmentMutation = (
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || "Lỗi khi lưu dữ liệu import"
+        error.response?.data?.message || "Lỗi khi lưu dữ liệu import",
       );
     },
   });
@@ -218,5 +234,6 @@ export const useDepartmentMutation = (
     departmentsPage: data,
     allDepartments,
     isLoading,
+    getByIdMutation,
   };
 };
