@@ -139,6 +139,7 @@ export default function AssetTransferForm({
         {
           id: "",
           idDieuDongTaiSan: "",
+          tentaiSan: "",
           idTaiSan: "",
           soLuong: 0,
           ghiChu: "",
@@ -574,6 +575,10 @@ export default function AssetTransferForm({
                               value?.donViTinh,
                             );
                             formik.setFieldValue(
+                              `chiTietDieuDongTaiSanDTOS.${index}.tenTaiSan`,
+                              value?.tenTaiSan,
+                            );
+                            formik.setFieldValue(
                               `chiTietDieuDongTaiSanDTOS.${index}.soLuong`,
                               value?.soLuong,
                             );
@@ -585,10 +590,10 @@ export default function AssetTransferForm({
                               `chiTietDieuDongTaiSanDTOS.${index}.moTa`,
                               value?.moTa,
                             );
-                             formik.setFieldValue(
-                               `chiTietDieuDongTaiSanDTOS.${index}.ghiChu`,
-                               value?.ghiChu,
-                             );
+                            formik.setFieldValue(
+                              `chiTietDieuDongTaiSanDTOS.${index}.ghiChu`,
+                              value?.ghiChu,
+                            );
                           }}
                         />
                       </CustomTableCell>

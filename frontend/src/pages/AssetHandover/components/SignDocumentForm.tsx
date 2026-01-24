@@ -1122,7 +1122,7 @@ export default function SignDocumentForm({
     </Box>
   );
 }
-const renderDigitalSignatureToImage = async (
+export const renderDigitalSignatureToImage = async (
   name?: string | null,
   date?: string,
 ): Promise<string> => {

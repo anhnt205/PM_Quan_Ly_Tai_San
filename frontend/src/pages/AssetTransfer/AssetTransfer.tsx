@@ -33,6 +33,8 @@ import {
 } from "./config";
 import { showConfirmAlert } from "../../components/Alert";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
+import { Building, Trash2 } from "lucide-react";
+import { AssetHandoverData } from "../AssetHandover/types";
 
 export default function AssetTransfer() {
   const { user } = useSelector((state: any) => state.user);
@@ -73,7 +75,7 @@ export default function AssetTransfer() {
     deleteOneMutation,
     handleSignatureList,
     signMutation,
-    handleAssetByDonVi,
+    getAssetHandoverMutation,
   } = useAssetTranferMutation(
     paginationModel.page,
     paginationModel.pageSize,
@@ -138,7 +140,6 @@ export default function AssetTransfer() {
     setShowSidebar(true);
   };
 
-
   const handleEdit = () => {
     setReadOnly(false);
   };
@@ -188,9 +189,12 @@ export default function AssetTransfer() {
     setShowSignerSidebar(true); // Hiện sidebar khi ký
   };
 
-  const handleViewBienBan = (rowData: AssetTransferData) => {
-    console.log("Xem phiếu bàn giao:", rowData.id);
-    setSelectedDocument(rowData);
+  const [assetHandover, setAssetHandover] = useState<AssetHandoverData | null>(
+    null,
+  );
+  const handleViewBienBan = async (id: string) => {
+    const result: any[] = await getAssetHandoverMutation.mutateAsync(id);
+    setAssetHandover(result[0]);
     setShowBienBanDialog(true);
   };
 
@@ -367,23 +371,24 @@ export default function AssetTransfer() {
                   "&:hover": { bgcolor: "rgba(244, 67, 54, 0.08)" },
                 }}
               >
-                <DeleteIcon sx={{ fontSize: 18 }} />
+                <Trash2 size={20} strokeWidth={2} />
               </IconButton>
             </Tooltip>
 
             <Tooltip title="Xem phiếu bàn giao">
               <IconButton
                 color="primary"
+                disabled={!rowData.coPhieuBanGiao}
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleViewBienBan(rowData);
+                  handleViewBienBan(rowData.id);
                 }}
                 sx={{
                   padding: "4px",
                   "&:hover": { bgcolor: "rgba(25, 118, 210, 0.08)" },
                 }}
               >
-                <EventNoteIcon sx={{ fontSize: 18 }} />
+                <Building size={20} strokeWidth={2} />
               </IconButton>
             </Tooltip>
 
@@ -405,7 +410,7 @@ export default function AssetTransfer() {
                   "&:hover": { bgcolor: "rgba(76, 175, 80, 0.08)" },
                 }}
               >
-                <VisibilityIcon sx={{ fontSize: 18 }} />
+                <VisibilityIcon sx={{ fontSize: 20 }} />
               </IconButton>
             </Tooltip>
           </Box>
@@ -419,7 +424,8 @@ export default function AssetTransfer() {
       <BienBanDialog
         open={showBienBanDialog}
         onClose={() => setShowBienBanDialog(false)}
-        documentData={selectedDocument}
+        assetHandover={assetHandover}
+        handleSignatureList={handleSignatureList}
       />
 
       {showSignDocument ? (

@@ -294,6 +294,32 @@ export const useAssetTranferMutation = (
       return null;
     },
   });
+
+  const getAssetHandoverMutation = useMutation({
+    mutationFn: async (search: string) => {
+      if (!search) return;
+      const res = await api.get(`/bangiaotaisan/paged`, {
+        params: {
+          page: 0,
+          size: 999,
+          search: search,
+          idcongty: idCongTy,
+        },
+      });
+      return res.data.items || [];
+    },
+    onSuccess: (response, data) => {
+      console.log("Lấy biên bản bàn giao thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Lấy biên bản bàn giao tài sản thất bại",
+      );
+      return [];
+    },
+  });
   // list chu ky theo tai lieu
   const handleSignatureList = async (idTaiLieu: string) => {
     if (!idTaiLieu) return;
@@ -611,6 +637,6 @@ export const useAssetTranferMutation = (
     isFetchingAssetsByDonVi,
     handleAssetByDonVi,
     getByIdMutation,
-
+    getAssetHandoverMutation,
   };
 };
