@@ -1,158 +1,507 @@
-import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import api from "../../../config/api.config";
 
-const ID_CONG_TY = "ct001";
+import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../redux/store";
+import dayjs from "dayjs";
+import {
+  ToolSignature,
+  ToolSigner,
+  ToolTransferData,
+  ToolTransferDetail,
+} from "../types";
+import { useState } from "react";
+import axios from "axios";
 
 export const useToolTransferMutation = (
   page?: number,
   pageSize?: number,
-  search?: string,
-  type?: number | undefined,
-  userName?: string,
+  searchValue?: string,
+  loai?: number,
   trangThai?: number,
+  idDonViGiao?: string,
+  chuaBanGiaoHet?: boolean,
   selectedId?: string,
 ) => {
   const queryClient = useQueryClient();
-  const [departmentId, setDepartmentId] = useState<string>("");
+  const idCongTy = "ct001";
+  const { user } = useSelector((state: RootState) => state.user);
+  const now = dayjs(new Date()).format("YYYY-MM-DDTHH:mm:ss");
 
-  const [importErrors, setImportErrors] = useState<string[]>([]);
-  const [openErrorDialog, setOpenErrorDialog] = useState(false);
-
-  const staffQuery = useQuery({
-    queryKey: ["allStaff", ID_CONG_TY],
-    queryFn: async () => {
-      const res = await api.get("/nhanvien", {
-        params: { idcongty: ID_CONG_TY },
-      });
-      return res.data;
-    },
-  });
-
-  const departmentQuery = useQuery({
-    queryKey: ["allDepartments", ID_CONG_TY],
-    queryFn: async () => {
-      const res = await api.get("/phongban", {
-        params: { idcongty: ID_CONG_TY },
-      });
-      return res.data;
-    },
-  });
-
-  const allUnitsQuery = useQuery({
-    queryKey: ["allUnits"],
-    queryFn: async () => {
-      const res = await api.get("/donvitinh");
-      return res.data;
-    },
-  });
-
-  const allToolsByDonViQuery = useQuery({
-    queryKey: ["toolsNotHandedOver", "ct001"],
-    queryFn: async () => {
-      const res = await api.get("/dieudongccdcvattu/chua-ban-giao-het", {
-        params: { idCongTy: "ct001" },
-      });
-      return res.data.data || [];
-    },
-  });
-
-  const toolTransferPageQuery = useQuery({
-    queryKey: ["toolTransfers", type, page, pageSize, search, userName],
-    queryFn: async () => {
-      const res = await api.get("/dieudongccdcvattu/paged", {
-        params: {
-          idcongty: ID_CONG_TY,
-          page: page,
-          size: pageSize,
-          loai: type,
-          search: search,
-          userid: userName || "",
-          trangThai: undefined,
-        },
-      });
-      return res.data;
-    },
-    enabled: !!type,
-  });
-
+  const [departmentId, setDepartmentId] = useState("");
   const createMutation = useMutation({
-    mutationFn: async (payload: {
-      request: any;
-      details: any[];
-      signatories: any[];
-    }) => {
-      const resMain = await api.post("/dieudongccdcvattu", payload.request);
-
-      await api.post("/chitietdieudongccdcvattu/batch", payload.details);
-
-      if (payload.signatories && payload.signatories.length > 0) {
-        for (const signer of payload.signatories) {
-          await api.post("/nguoiky", {
-            ...signer,
-            idTaiLieu: payload.request.id,
-          });
-        }
-      }
-      return resMain.data;
+    mutationFn: async (data: ToolTransferData) => {
+      const res = await api.post("/dieudongccdcvattu", {
+        ...data,
+        ngayTao: now,
+        nguoiTao: user?.taiKhoan?.tenDangNhap,
+      });
+      return res.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["toolTransfers"] });
-      showSuccessAlert("Thêm mới phiếu điều động thành công!");
+    onSuccess: (response, data) => {
+      const idDDTS = response.data.id;
+      if (
+        data.chiTietDieuDongCCDCVatTuDTOS &&
+        data.chiTietDieuDongCCDCVatTuDTOS.length > 0
+      ) {
+        createToolTransferDetailManyMutation.mutate(
+          data.chiTietDieuDongCCDCVatTuDTOS?.map((item) => ({
+            ...item,
+            idDieuDongCCDCVatTu: idDDTS,
+          })),
+        );
+      }
+      if (data.nguoiKyList && data.nguoiKyList.length > 0) {
+        updateSignerMutation.mutate({
+          idTaiLieu: idDDTS,
+          data: data.nguoiKyList.map((item) => ({
+            ...item,
+            idTaiLieu: idDDTS,
+          })),
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
+
+      showSuccessAlert("Tạo điều động ccdc vật tư thành công");
     },
     onError: (error: any) => {
-      const errorMsg = error.response?.data?.message || "Không thể tạo phiếu.";
-      showErrorAlert(errorMsg);
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo điều động ccdc vật tư thất bại",
+      );
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: (payload: any) =>
-      api.put(`/dieudongccdcvattu/${payload.id}`, payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["toolTransfers"] });
-      showSuccessAlert("Cập nhật dữ liệu thành công!");
+    mutationFn: async (data: ToolTransferData) => {
+      const res = await api.put(`/dieudongccdcvattu/${data.id}`, {
+        ...data,
+        ngayCapNhat: now,
+        nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
+      });
+      return res.data;
     },
-    onError: (error: any) => showErrorAlert(error.response?.data?.message),
+    onSuccess: (response, data) => {
+      if (data.initialChiTiet && data.initialChiTiet.length > 0) {
+        deleteToolTransferDetailManyMutation.mutate(data.initialChiTiet);
+      }
+      if (
+        data.chiTietDieuDongCCDCVatTuDTOS &&
+        data.chiTietDieuDongCCDCVatTuDTOS.length > 0
+      ) {
+        createToolTransferDetailManyMutation.mutate(
+          data.chiTietDieuDongCCDCVatTuDTOS,
+        );
+      }
+      if (data.nguoiKyList && data.nguoiKyList.length > 0 && data.id) {
+        updateSignerMutation.mutate({
+          idTaiLieu: data.id,
+          data: data.nguoiKyList,
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
+      showSuccessAlert("Sửa điều động ccdc vật tư thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Sửa điều động ccdc vật tư thất bại",
+      );
+    },
   });
-
-  const signMutation = useMutation({
-    mutationFn: (data: { id: string; userId: string }) =>
-      api.post("/dieudongccdcvattu/capnhattrangthai", null, {
-        params: { id: data.id, userId: data.userId },
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["toolTransfers"] });
-      showSuccessAlert("Đã cập nhật trạng thái ký thành công!");
+  const updateManyMutation = useMutation({
+    mutationFn: async (data: ToolTransferData[]) => {
+      const res = await api.put(`/dieudongccdcvattu/batch`, data);
+      return res.data;
     },
-    onError: () => showErrorAlert("Lỗi khi thực hiện ký phiếu."),
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
+      console.log("Sửa điều động ccdc vật tư thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Sửa điều động ccdc vật tư thất bại",
+      );
+    },
+  });
+  const deleteOneMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.delete(`/dieudongccdcvattu/${id}`);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
+      showSuccessAlert("Xóa điều động ccdc vật tư thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa điều động ccdc vật tư thất bại",
+      );
+    },
+  });
+  const deleteManyMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const res = await api.delete(`/dieudongccdcvattu/batch`, { data: ids });
+      return res.data.message;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
+      showSuccessAlert(data || "Xóa điều động ccdc vật tư thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa điều động ccdc vật tư thất bại",
+      );
+    },
   });
 
   const cancelMutation = useMutation({
     mutationFn: async (id: string) => {
-      await api.post("/dieudongccdcvattu/huy", null, { params: { id } });
-      await api.delete(`/chuky/${id}`);
+      const res = await api.post(`/dieudongccdcvattu/huy?id=${id}`);
+      return res.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["toolTransfers"] });
-      showSuccessAlert("Phiếu đã được hủy bỏ.");
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
+      showSuccessAlert("Hủy điều động ccdc vật tư thành công");
     },
-    onError: () => showErrorAlert("Không thể hủy phiếu vào lúc này."),
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Hủy điều động ccdc vật tư thất bại",
+      );
+    },
   });
 
-  const deleteOneMutation = useMutation({
-    mutationFn: (id: string) => api.delete(`/dieudongccdcvattu/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["toolTransfers"] });
-      showSuccessAlert("Đã xóa bản ghi khỏi hệ thống.");
+  // chi tiết điều động
+
+  const createToolTransferDetailManyMutation = useMutation({
+    mutationFn: async (data: ToolTransferDetail[]) => {
+      const res = await api.post("/chitietdieudongccdcvattu/batch", data);
+      return res.data;
     },
-    onError: () => showErrorAlert("Lỗi khi xóa dữ liệu."),
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
+
+      console.log("Tạo chi tiết điều động ccdc vật tư thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo chi tiết điều động ccdc vật tư thất bại",
+      );
+    },
+  });
+  const deleteToolTransferDetailManyMutation = useMutation({
+    mutationFn: async (data: string[]) => {
+      const res = await api.delete("/chitietdieudongccdcvattu/batch", { data });
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
+
+      console.log("Tạo chi tiết điều động ccdc vật tư thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo chi tiết điều động ccdc vật tư thất bại",
+      );
+    },
+  });
+  // nguoi ky
+  const createSignerMutation = useMutation({
+    mutationFn: async (data: ToolSigner) => {
+      const res = await api.post("/chuky/nguoi-ky", data);
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
+
+      console.log("Tạo người ký thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo người ký thất bại",
+      );
+    },
+  });
+  const updateSignerMutation = useMutation({
+    mutationFn: async ({
+      idTaiLieu,
+      data,
+    }: {
+      idTaiLieu: string;
+      data: ToolSigner[];
+    }) => {
+      const res = await api.put(`/chuky/nguoi-ky/update/${idTaiLieu}`, data);
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
+
+      console.log("Cập nhật người ký thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Cập nhật người ký thất bại",
+      );
+    },
+  });
+  const deleteSignerMutation = useMutation({
+    mutationFn: async (idTaiLieu: string) => {
+      const res = await api.delete(`/chuky/update/${idTaiLieu}`);
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
+
+      console.log("XÓa người ký thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "XÓa người ký thất bại",
+      );
+    },
   });
 
+  const getByIdMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.get(`/chitietdieudongccdcvattu/${id}`);
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      console.log("Lấy chi tiết điều động ccdc vật tưhành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Lấy chi tiết điều động ccdc vật tưn thất bại",
+      );
+      return null;
+    },
+  });
+
+  const getToolHandoverMutation = useMutation({
+    mutationFn: async (search: string) => {
+      if (!search) return;
+      const res = await api.get(`/bangiaoccdcvattu/paged`, {
+        params: {
+          page: 0,
+          size: 999,
+          search: search,
+          idcongty: idCongTy,
+        },
+      });
+      return res.data.items || [];
+    },
+    onSuccess: (response, data) => {
+      console.log("Lấy biên bản bàn giao thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Lấy biên bản bàn giao tài sản thất bại",
+      );
+      return [];
+    },
+  });
+  // list chu ky theo tai lieu
+  const handleSignatureList = async (idTaiLieu: string) => {
+    if (!idTaiLieu) return;
+    try {
+      // Encode tên file để xử lý ký tự đặc biệt
+      const response = await api.get(`/chuky/${idTaiLieu}`);
+      // response.data lúc này là một đối tượng Blob (Binary Large Object)
+      return response.data;
+    } catch (error) {
+      console.log("Không thể tải chữ ký");
+      return null;
+    }
+  };
+
+  // ky tai lieu
+  const signMutation = useMutation({
+    mutationFn: async (data: ToolSignature[]) => {
+      const res = await api.post("/chuky", data);
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
+      data.forEach((item) => {
+        signStatusMutation.mutate({
+          idTaiLieu: item.idTaiLieu,
+          userId: item.idNguoiKy,
+        });
+      });
+      showSuccessAlert("Ký thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message || error.message || "Ký thất bại",
+      );
+    },
+  });
+
+  // cap nhat trang thai ky
+  // ky tai lieu
+  const signStatusMutation = useMutation({
+    mutationFn: async ({
+      idTaiLieu,
+      userId,
+    }: {
+      idTaiLieu: string;
+      userId: string;
+    }) => {
+      const res = await api.post(
+        `/dieudongccdcvattu/capnhattrangthai?id=${idTaiLieu}&userId=${userId}`,
+      );
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
+
+      console.log("Cập nhật trạng thái ký thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Cập nhật trạng thái ký thất bại",
+      );
+    },
+  });
+
+  const { data = { items: [], totalItems: 0 }, isLoading } = useQuery({
+    queryKey: [
+      "toolTransferPage",
+      page,
+      pageSize,
+      searchValue,
+      loai,
+      trangThai,
+    ], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/dieudongccdcvattu/paged", {
+        params: {
+          idcongty: idCongTy,
+          page: page,
+          size: pageSize,
+          search: searchValue,
+          loai: loai,
+          userid: user?.taiKhoan?.tenDangNhap,
+          trangThai: trangThai,
+        },
+      });
+      return res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+
+  // list phongban
+  const { data: allDepartments = [] } = useQuery({
+    queryKey: ["allDepartments"], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/phongban", {
+        params: {
+          idcongty: "ct001",
+        },
+      });
+      return res.data;
+    },
+  });
+  // list nhanvien
+  const { data: allStaff = [] } = useQuery({
+    queryKey: ["allStaff"], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/nhanvien", {
+        params: {
+          idcongty: "ct001",
+        },
+      });
+      return res.data;
+    },
+  });
+  // danh sach ccdc
+
+  const { data: allToolByDonVi = [] } = useQuery({
+    queryKey: ["allToolByDonVi", departmentId, idCongTy],
+    queryFn: async () => {
+      // Gọi cả 2 API cùng lúc để tối ưu thời gian (Parallel)
+      const [resAllTools, resToolsPage] = await Promise.all([
+        axios.get(
+          `http://42.119.110.246:8386/chitietdonvisohuu/by-donvisohuu/${departmentId}`,
+        ),
+        api.get("/ccdcvattu/paged", {
+          params: { idcongty: idCongTy, page: 0, size: 9999 },
+        }),
+      ]);
+
+      const allToolsByDonVi = resAllTools.data.data || resAllTools.data || [];
+      const toolsPageItems =
+        resToolsPage.data.data?.items || resToolsPage.data?.items || [];
+
+      // Thực hiện lọc ngay tại đây
+      const uniqueIds = new Set(
+        allToolsByDonVi.map((item: any) => item.idCCDCVT),
+      );
+      return toolsPageItems.filter((tool:any) => uniqueIds.has(tool.id));
+    },
+    enabled: !!departmentId && !!idCongTy, // Chỉ chạy khi có đủ ID
+  });
+
+  const handoverDetailsQuery = useQuery({
+    queryKey: ["handoverDetails", selectedId],
+    queryFn: async () => {
+      if (!selectedId) return [];
+      const res = await api.get(
+        `/chitietbangiaoccdcvattu/by-dieu-dong/${selectedId}`,
+      );
+      return res.data;
+    },
+    enabled: !!selectedId, // Chỉ chạy khi có selectedId
+  });
+
+  // don vi tính
+  const { data: allUnits = [] } = useQuery({
+    queryKey: ["allUnits"], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/donvitinh", {});
+      return res.data;
+    },
+  });
+  //hien trang ki thuat
+  const { data: allCurrentStatus = [] } = useQuery({
+    queryKey: ["allCurrentStatus"], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/hientrangkythuat");
+      return res.data;
+    },
+  });
+  //download file
   const handleDownloadFile = async (fileName: string) => {
     if (!fileName) return;
     try {
+      // Encode tên file để xử lý ký tự đặc biệt
       const encodedFileName = encodeURIComponent(fileName);
       const response = await api.get(`/upload/download/${encodedFileName}`, {
         responseType: "blob",
@@ -169,93 +518,94 @@ export const useToolTransferMutation = (
       showErrorAlert("Không thể tải tập tin");
     }
   };
-
+  //priview
   const handlePreview = async (fileName: string) => {
+    if (!fileName) return;
     try {
-      const response = await api.get(`/download/${fileName}`, {
+      // Encode tên file để xử lý ký tự đặc biệt
+      const encodedFileName = encodeURIComponent(fileName);
+      const response = await api.get(`/upload/preview/${encodedFileName}`, {
         responseType: "blob",
+        withCredentials: false,
       });
+      // response.data lúc này là một đối tượng Blob (Binary Large Object)
       return response.data;
     } catch (error) {
-      console.error("Lỗi khi tải file preview:", error);
-      throw error;
+      console.log("Không thể tải tập tin");
+      return null;
     }
   };
 
-  const handleToolByDonVi = async (loai: number, idDonViGiao: string) => {
+  // convert doc to execl
+
+  const convertDocxToPdf = async (file: File) => {
+    if (!file) return;
     try {
-      // Swagger chỉ có 1 endpoint chung để lấy danh sách theo đơn vị
-      const res = await api.get("/ccdcvattu/paged-id-don-vi-ban-dau", {
-        params: {
-          idcongty: "ct001",
-          iddonvi: idDonViGiao,
-          page: 0,
-          size: 999,
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await api.post(`/upload/convert/docx-to-pdf`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        responseType: "blob",
+      });
+      uploadMutation.mutate(file);
+      // response.data lúc này là một đối tượng Blob (Binary Large Object)
+      return response.data;
+    } catch (error) {
+      showErrorAlert("Không thể tải tập tin");
+      return null;
+    }
+  };
+
+  // upload file
+  const uploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await api.post(`/upload`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
         },
       });
-      return res.data;
-    } catch (error) {
-      console.error("Lỗi khi lấy công cụ theo đơn vị:", error);
-      throw error;
-    }
-  };
-
-  // list chu ky theo tai lieu
-  const handleSignatureList = async (idTaiLieu: string) => {
-    if (!idTaiLieu) return [];
-    try {
-      const res = await api.get(`/chuky/${idTaiLieu}`);
-      return res.data;
-    } catch (error) {
-      console.error("Lỗi khi lấy danh sách người ký:", error);
-      return [];
-    }
-  };
-
-  const handoverDetailsQuery = useQuery({
-    queryKey: ["handoverDetails", selectedId],
-    queryFn: async () => {
-      if (!selectedId) return [];
-      const res = await api.get(
-        `/chitietbangiaoccdcvattu/by-dieu-dong/${selectedId}`,
-      );
-      return res.data;
+      return res.data.message;
     },
-    enabled: !!selectedId, // Chỉ chạy khi có selectedId
+    onSuccess: (data) => {
+      // queryClient.invalidateQueries({ queryKey: ["staffsPage"] });
+      // showSuccessAlert(data || "Xóa nhân viên thành công");
+    },
+    onError: (error: any) => {
+      console.log(error);
+      // showErrorAlert(
+      //   error.response?.data?.message ||
+      //     error.message ||
+      //     "Xóa nhân viên thất bại"
+      // );
+    },
   });
 
   return {
-    toolTransferPage: toolTransferPageQuery.data || {
-      items: [],
-      totalItems: 0,
-    },
-    allStaff: staffQuery.data || [],
-    allDepartments: departmentQuery.data || [],
-    allToolsByDonVi: allToolsByDonViQuery.data || [],
-    handoverDetails: handoverDetailsQuery.data || [],
-    isHandoverLoading: handoverDetailsQuery.isFetching,
-    setDepartmentId,
-    handleDownloadFile,
-    handlePreview,
-    handleToolByDonVi,
-    handleSignatureList,
     createMutation,
     updateMutation,
-    signMutation,
-    cancelMutation,
     deleteOneMutation,
-    isFetching: toolTransferPageQuery.isFetching,
-    allUnits: allUnitsQuery.data || [],
-    allCurrentStatus: [
-      { id: "Mới", tenHTKT: "Mới" },
-      { id: "Cũ", tenHTKT: "Cũ" },
-      { id: "Hỏng", tenHTKT: "Hỏng" },
-      { id: "Đang sử dụng", tenHTKT: "Đang sử dụng" },
-    ],
-    errorState: {
-      errors: importErrors,
-      open: openErrorDialog,
-      onClose: () => setOpenErrorDialog(false),
-    },
+    deleteManyMutation,
+    toolTransferPage: data,
+    handleDownloadFile,
+    handlePreview,
+    convertDocxToPdf,
+    cancelMutation,
+    updateManyMutation,
+    allDepartments,
+    allStaff,
+    isLoading,
+    allToolByDonVi,
+    allUnits,
+    allCurrentStatus,
+    handleSignatureList,
+    signMutation,
+    getByIdMutation,
+    getToolHandoverMutation,
+    setDepartmentId,
+    handoverDetails: handoverDetailsQuery.data || [],
   };
 };

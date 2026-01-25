@@ -1,6 +1,12 @@
 import { Chip, Box } from "@mui/material";
 import { FileDownloadOutlined } from "@mui/icons-material";
 import { ToolTransferData } from "../types";
+import { findById } from "../../../utils/helpers";
+import {
+  showConfirmAlert,
+  showErrorAlert,
+  showSuccessAlert,
+} from "../../../components/Alert";
 
 // 1. Thông tin tiêu đề theo loại phiếu
 export const getTypeInfo = (type: string | number | null) => {
@@ -17,29 +23,40 @@ export const getTypeInfo = (type: string | number | null) => {
 };
 
 // 2. Map dữ liệu trạng thái
-export const statusMap: Record<number, { label: string; color: string }> = {
-  0: { label: "Nháp", color: "#9e9e9e" },
-  1: { label: "Đã duyệt", color: "#00bcd4" },
-  2: { label: "Đã hủy", color: "#ff5722" },
-  3: { label: "Hoàn thành", color: "#4caf50" },
+
+const getStatusDetails = (status: number) => {
+  switch (status) {
+    case 0:
+      return { label: "Nháp", color: "#9e9e9e" }; // Đỏ
+    case 1:
+      return { label: "Duyệt", color: "#ff9800" }; // Cam
+    case 2:
+      return { label: "Hủy", color: "#4caf50" }; // Xanh lá
+    case 3:
+      return { label: "Hoàn thành", color: "#68b9f0" }; // Xanh lá
+    default:
+      return { label: "Nháp", color: "#9e9e9e" }; // Xám
+  }
 };
 
-// 3. Hiển thị Chip Trạng thái phiếu
 export const showStatus = (status: number) => {
-  const config = statusMap[status] || {
-    label: "Không xác định",
-    color: "#dee4e0",
-  };
+  const { label, color } = getStatusDetails(status);
+
   return (
     <Chip
-      label={config.label}
+      label={label}
       sx={{
-        backgroundColor: config.color,
+        backgroundColor: color,
         color: "white",
         fontWeight: 500,
         fontSize: "12px",
-        borderRadius: "4px",
-        height: "22px",
+        borderRadius: "4px", // BorderRadius.circular(4)
+        height: "auto",
+        padding: "1px 5px", // EdgeInsets.symmetric(horizontal: 5, vertical: 1)
+        mb: "2px", // margin: const EdgeInsets.only(bottom: 2)
+        "& .MuiChip-label": {
+          padding: 0,
+        },
       }}
     />
   );
@@ -159,27 +176,26 @@ export const getToolSigningStatus = (
 };
 
 export const ShowPermissionSigning = (status: number) => {
-  let config = { label: "Không rõ", color: "#dee4e0" };
-  switch (status) {
-    case 0:
-      config = { label: "Đến lượt ký", color: "#00bcd4" };
-      break;
-    case 1:
-      config = { label: "Chờ người trước", color: "#ff9800" };
-      break;
-    case 2:
-      config = { label: "Chưa đến lượt", color: "#9e9e9e" };
-      break;
-    case 3:
-      config = { label: "Đã ký xong", color: "#4caf50" };
-      break;
-    case 4:
-      config = { label: "Chờ ký nháy", color: "#795548" };
-      break;
-    case 5:
-      config = { label: "Chờ xem duyệt", color: "#2196f3" };
-      break;
-  }
+  // Định nghĩa cấu hình cho từng trạng thái
+  const getStatusConfig = (status: number) => {
+    switch (status) {
+      case 1:
+        return { label: "Chưa đến lượt ký", color: "#f44336" }; // Red
+      case 2:
+        return { label: "Không được phép ký", color: "#ffab40" }; // OrangeAccent
+      case 3:
+        return { label: "Đã ký", color: "#2196f3" }; // Blue
+      case 4:
+        return { label: "Đã ký & tạo", color: "#9c27b0" }; // Purple
+      case 5:
+        return { label: "Cần ký & tạo", color: "#ff9800" }; // Orange
+      default:
+        return { label: "Cần ký", color: "#4caf50" }; // Green
+    }
+  };
+
+  const config = getStatusConfig(status);
+
   return (
     <Chip
       label={config.label}
@@ -188,11 +204,73 @@ export const ShowPermissionSigning = (status: number) => {
         color: "white",
         fontWeight: 500,
         fontSize: "12px",
-        borderRadius: "4px",
-        height: "22px",
+        borderRadius: "4px", // Bo góc theo mẫu Flutter (4)
+        height: "24px", // Tương đương với padding vertical của bạn
+        "& .MuiChip-label": {
+          paddingLeft: "5px",
+          paddingRight: "5px",
+        },
       }}
     />
   );
+};
+export const getPermissionSigning = (data: any, user?: any, allStaffs = []) => {
+  const signatureFlow: any[] = [];
+  if (data?.nguoiLapPhieuKyNhay === true) {
+    signatureFlow.push({
+      id: data.idNguoiKyNhay,
+      signed: data.trangThaiKyNhay === true,
+      label: `Người lập phiếu: ${
+        findById(allStaffs, data.idNguoiKyNhay)?.hoTen ?? ""
+      }`,
+    });
+  }
+
+  signatureFlow.push({
+    id: data?.idTrinhDuyetCapPhong,
+    signed: data?.trinhDuyetCapPhongXacNhan === true,
+    label: `Người duyệt: ${data?.tenTrinhDuyetCapPhong ?? ""}`,
+  });
+
+  const listLen = data?.nguoiKyList?.length ?? 0;
+  for (let i = 0; i < listLen; i++) {
+    const item = data.nguoiKyList[i];
+    signatureFlow.push({
+      id: item?.idNguoiKy,
+      signed: item?.trangThai === 1,
+      label: `Người ký ${i + 1}: ${item?.tenNguoiKy ?? ""}`,
+    });
+  }
+
+  signatureFlow.push({
+    id: data?.idTrinhDuyetGiamDoc,
+    signed: data?.trinhDuyetGiamDocXacNhan === true,
+    label: `Người phê duyệt: ${data?.tenTrinhDuyetGiamDoc ?? ""}`,
+  });
+  const filtered = signatureFlow.filter(
+    (step) => step.id != null && String(step.id).trim() !== "",
+  );
+
+  const currentIndex = filtered.findIndex(
+    (s) => s.id === user?.taiKhoan?.tenDangNhap,
+  );
+
+  if (currentIndex === -1) return 2;
+
+  if (
+    data?.nguoiTao === user?.taiKhoan?.tenDangNhap &&
+    filtered[currentIndex].signed !== -1
+  ) {
+    return filtered[currentIndex].signed === true ? 4 : 5;
+  }
+
+  if (filtered[currentIndex].signed === true) return 3;
+
+  const previousNotSigned = filtered
+    .slice(0, currentIndex)
+    .find((s) => s.signed === false);
+  if (previousNotSigned) return 1;
+  return 0;
 };
 
 export const canUserSign = (newSigningType: number, signatures: any[]) => {
@@ -213,4 +291,238 @@ export const canUserSign = (newSigningType: number, signatures: any[]) => {
     (img) => img.loaiKy !== 1,
   );
   return !hasNonType1Signature;
+};
+
+/**
+ * Lọc danh sách phiếu chưa trình duyệt và hiển thị thông báo nếu có phiếu đã trình duyệt rồi.
+ */
+const getNotSharedAndNotify = (items: any[]): any[] => {
+  if (!items || items.length === 0) {
+    showErrorAlert("Không có phiếu nào để trình duyệt");
+    return [];
+  }
+
+  // Lọc phiếu đã trình duyệt và chưa trình duyệt
+  const alreadyShared = items.filter((e) => e.share === true);
+  const notShared = items.filter((e) => e.share !== true);
+
+  // Trường hợp tất cả đều đã trình duyệt
+  if (notShared.length === 0) {
+    showErrorAlert("Các phiếu này đều đã được trình duyệt");
+    return [];
+  }
+
+  // Thông báo nếu trong danh sách chọn có lẫn phiếu đã trình duyệt
+  if (alreadyShared.length > 0) {
+    const names = alreadyShared
+      .map((e) => (e.tenPhieu?.trim() ? e.tenPhieu : e.id))
+      .filter(Boolean)
+      .join(", ");
+
+    const message = names
+      ? `Các phiếu đã được trình duyệt: ${names}`
+      : "Có phiếu đã được trình duyệt trong danh sách chọn";
+
+    showErrorAlert(message);
+  }
+
+  return notShared;
+};
+
+export const handleSendToSigner = async (
+  selectedItems: any[],
+  onUpdate: (data: any[]) => Promise<any>,
+  onClose: () => void,
+) => {
+  // 1. Kiểm tra rỗng
+  if (!selectedItems || selectedItems.length === 0) {
+    showErrorAlert("Không có phiếu nào để chia sẻ");
+    return;
+  }
+
+  // 2. Hiển thị Dialog xác nhận (tương tự showConfirmDialog trong Flutter)
+  const confirm = await showConfirmAlert(
+    "Bạn có chắc muốn trình duyệt cho người ký?",
+  );
+
+  if (confirm.isConfirmed) {
+    // 3. Lọc danh sách hợp lệ
+    const notSharedItems = getNotSharedAndNotify(selectedItems);
+
+    if (notSharedItems.length > 0) {
+      try {
+        const allIds = new Set<string>();
+        for (var item of selectedItems) {
+          const id1 = item.idNguoiKyNhay;
+          const id2 = item.idTrinhDuyetCapPhong;
+          const id3 = item.idTrinhDuyetGiamDoc;
+
+          if (id1 != null && id1.isNotEmpty) allIds.add(id1);
+          if (id2 != null && id2.isNotEmpty) allIds.add(id2);
+          if (id3 != null && id3.isNotEmpty) allIds.add(id3);
+          const signatories = item.nguoiKyList;
+          if (signatories != null) {
+            for (var s of signatories) {
+              const sigId = s.idNguoiKy;
+              if (sigId != null && sigId.isNotEmpty) allIds.add(sigId);
+            }
+          }
+        }
+        await onUpdate(notSharedItems.map((e) => ({ ...e, share: true })));
+        showSuccessAlert("Trình duyệt phiếu thành công!");
+        onClose();
+      } catch (error) {
+        showErrorAlert("Có lỗi xảy ra khi trình duyệt phiếu.");
+      }
+    }
+  }
+};
+// kiem tra quyền share
+export const isCheckShowShare = (items: any[]) => {
+  if (items.length === 0) {
+    return false;
+  }
+  const hasSharedItems = items.some((e) => e.share === true);
+
+  if (hasSharedItems) {
+    return false;
+  }
+
+  return items.some((e) => e.share !== true);
+};
+
+/**
+ * Xây dựng luồng ký dựa trên dữ liệu item
+ */
+const buildSignatureFlow = (item: any) => {
+  const flow: { id: string; signed: boolean }[] = [];
+
+  // 1. Người lập phiếu ký nháy
+  if (item.nguoiLapPhieuKyNhay) {
+    flow.push({ id: item.idNguoiKyNhay || "", signed: !!item.trangThaiKyNhay });
+  }
+
+  // 2. Trình duyệt cấp phòng
+  flow.push({
+    id: item.idTrinhDuyetCapPhong || "",
+    signed: !!item.trinhDuyetCapPhongXacNhan,
+  });
+
+  // 3. Danh sách người ký bổ sung
+  item.nguoiKyList?.forEach((sig: any) => {
+    flow.push({ id: sig.idNguoiKy, signed: sig.trangThai === 1 });
+  });
+
+  // 4. Trình duyệt Giám đốc
+  flow.push({
+    id: item.idTrinhDuyetGiamDoc || "",
+    signed: !!item.trinhDuyetGiamDocXacNhan,
+  });
+
+  // Lọc bỏ các bước không có ID (tương đương .where trong Dart)
+  return flow.filter((step) => step.id && step.id.trim() !== "");
+};
+/**
+ * Hàm chính để kiểm tra user hiện tại có được phép ký không
+ */
+export const canSign = (items: any[], userInfo: any): boolean => {
+  // Kiểm tra điều kiện đầu vào (userInfo và chỉ xử lý 1 item tại một thời điểm)
+  if (!userInfo || items.length !== 1) {
+    return false;
+  }
+  const item = items[0];
+  const signatureFlow = buildSignatureFlow(item);
+
+  // Tìm vị trí của người dùng hiện tại trong luồng ký
+  const currentIndex = signatureFlow.findIndex(
+    (s) => s.id === userInfo?.taiKhoan?.tenDangNhap,
+  );
+
+  // 1. Nếu không có trong luồng ký
+  // 2. Hoặc đã ký rồi (signed === true)
+  if (currentIndex === -1 || signatureFlow[currentIndex].signed) {
+    return false;
+  }
+
+  // Kiểm tra xem TẤT CẢ các người ký trước đó (currentIndex) đã ký chưa
+  // .slice(0, currentIndex) tương đương .take(currentIndex) trong Dart
+  return signatureFlow
+    .slice(0, currentIndex)
+    .every((step) => step.signed === true);
+};
+
+// hàm ký
+
+export const handleSignDocument = async (
+  item: any,
+  userInfo: any,
+  onSign?: (fileName: string, item: any) => void,
+) => {
+  // 1. Định nghĩa luồng ký theo thứ tự (giống _buildSignatureFlow)
+  const signatureFlow = [
+    ...(item.nguoiLapPhieuKyNhay
+      ? [
+          {
+            id: item.idNguoiKyNhay,
+            signed: !!item.trangThaiKyNhay,
+            label: `Người lập phiếu: ${item.tenNguoiKyNhay}`,
+          },
+        ]
+      : []),
+    {
+      id: item.idTrinhDuyetCapPhong,
+      signed: !!item.trinhDuyetCapPhongXacNhan,
+      label: `Người duyệt: ${item.tenTrinhDuyetCapPhong}`,
+    },
+    ...(item.listNguoiKy?.map((sig: any, index: number) => ({
+      id: sig.idNguoiKy,
+      signed: sig.trangThai === 1,
+      label: `Người ký ${index + 1}: ${sig.tenNguoiKy}`,
+    })) || []),
+    {
+      id: item.idTrinhDuyetGiamDoc,
+      signed: !!item.trinhDuyetGiamDocXacNhan,
+      label: `Người phê duyệt: ${item.tenTrinhDuyetGiamDoc}`,
+    },
+  ].filter((step) => step.id && step.id.trim() !== "");
+
+  // 2. Kiểm tra trạng thái hoàn thành/hủy
+  if (item.trangThai === 3 || item.trangThai === 2) {
+    const message = item.trangThai === 2 ? "Đã bị hủy" : "Đã hoàn thành";
+    showErrorAlert(`Phiếu này "${message}", không thể ký.`);
+    return;
+  }
+  // 3. Kiểm tra user có trong flow không
+  const currentIndex = signatureFlow.findIndex(
+    (s) => s.id === userInfo?.taiKhoan?.tenDangNhap,
+  );
+  if (currentIndex === -1) {
+    showErrorAlert("Bạn không có quyền ký văn bản này");
+    return;
+  }
+
+  // 4. Kiểm tra nếu đã ký rồi
+  if (signatureFlow[currentIndex].signed) {
+    showErrorAlert("Bạn đã ký rồi.");
+    return;
+  }
+
+  // 5. Kiểm tra các bước trước đó đã ký chưa (Tương đương take(currentIndex).firstWhere)
+  const previousNotSigned = signatureFlow
+    .slice(0, currentIndex)
+    .find((s) => !s.signed);
+
+  if (previousNotSigned) {
+    showErrorAlert(
+      `${previousNotSigned.label} chưa ký xác nhận, bạn chưa thể ký.`,
+    );
+    return;
+  }
+
+  // 6. Nếu vượt qua tất cả check → Load PDF và Preview
+  try {
+    onSign?.(item.tenFile || "", item);
+  } catch (error) {
+    showErrorAlert("Không thể tải tệp tin.");
+  }
 };

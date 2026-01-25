@@ -626,10 +626,11 @@ export default function SignDocumentForm({
   const handleExportPDF = async () => {
     try {
       setLoading(true);
+      if (!pdfUrl) throw new Error("Không có dữ liệu PDF để xuất");
 
       // 1. Ghép PDF ban đầu
-      const mergedBytes = await mergeBangKeWithOriginalPdf(pdfUrl);
-      const pdfDoc = await PDFDocument.load(mergedBytes);
+      const pdfBytes = await fetch(pdfUrl).then((res) => res.arrayBuffer());
+      const pdfDoc = await PDFDocument.load(pdfBytes);
 
       // 2. Lấy trang đầu
       const pages = pdfDoc.getPages();
@@ -700,8 +701,8 @@ export default function SignDocumentForm({
       }
 
       // 5. Save & download DUY NHẤT 1 LẦN
-      const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([pdfBytes.buffer as ArrayBuffer], {
+      const finalBytes = await pdfDoc.save();
+      const blob = new Blob([finalBytes.buffer as ArrayBuffer], {
         type: "application/pdf",
       });
       const url = URL.createObjectURL(blob);

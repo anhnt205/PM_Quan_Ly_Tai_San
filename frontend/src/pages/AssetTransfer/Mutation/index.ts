@@ -417,18 +417,6 @@ export const useAssetTranferMutation = (
     placeholderData: (previousData) => previousData,
   });
 
-  const { data: allData = [] } = useQuery({
-    queryKey: ["capitalSources"], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/dieudongtaisan", {
-        params: {
-          idcongty: "ct001",
-        },
-      });
-      return res.data;
-    },
-    placeholderData: (previousData) => previousData,
-  });
 
   // list phongban
   const { data: allDepartments = [] } = useQuery({
@@ -619,7 +607,6 @@ export const useAssetTranferMutation = (
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
-    allData,
     assetTranferPage: data,
     handleDownloadFile,
     handlePreview,

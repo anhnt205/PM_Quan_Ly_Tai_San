@@ -13,7 +13,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { CancelOutlined, Close, PictureAsPdf } from "@mui/icons-material";
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import DraggableSignature from "./DraggableSignature";
 import { useToolTransferMutation } from "../Mutation";
@@ -24,7 +24,7 @@ import "../../../assets/fonts/times_new_roman-normal";
 import { findById, generateSha256 } from "../../../utils/helpers";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
-import { ToolSignature, ToolTransferDetail } from "../types";
+import { ToolSignature } from "../types";
 import dayjs from "dayjs";
 import { Check, Pencil } from "lucide-react";
 import { showErrorAlert } from "../../../components/Alert";
@@ -32,37 +32,33 @@ import { canUserSign } from "../config";
 import axios from "axios";
 import { ConfirmPin } from "./ConfirmPin";
 
-// Đảm bảo Worker khớp với version của thư viện
 if (typeof window !== "undefined") {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 }
 
 interface SignDocumentFormProps {
   selectedIds: string[];
-  document?: any;
+  document?: File | string | any;
   onCancel: () => void;
   onSign: (data: ToolSignature[]) => void;
   fullscreen?: boolean;
   showSignerSidebar?: boolean;
-  toolTransferDetail?: ToolTransferDetail[];
+  toolTransferDetail?: any[];
   allUnits?: any[];
   allCurrentStatus?: any[];
-  allToolsByDonVi?: any[];
   staffs?: any[];
   handleSignatureList?: (idTaiLieu: string) => Promise<any>;
 }
 
 export default function SignDocumentForm({
   selectedIds,
-  document: documentData,
+  document: documentUrl,
   onCancel,
   onSign,
   fullscreen = true,
   showSignerSidebar = true,
-  toolTransferDetail,
+  toolTransferDetail = [],
   allUnits = [],
-  allCurrentStatus = [],
-  allToolsByDonVi = [],
   staffs = [],
   handleSignatureList,
 }: SignDocumentFormProps) {
@@ -70,8 +66,12 @@ export default function SignDocumentForm({
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const { user } = useSelector((state: RootState) => state.user);
   const employee = findById(staffs, user?.taiKhoan?.tenDangNhap);
-
+  console.log(employee);
+  // State quản lý danh sách chữ ký
   const [signatures, setSignatures] = useState<ToolSignature[]>([]);
+  const [bangKeBytes, setBangKeBytes] = useState<Uint8Array | null>(null);
+
+  // State quản lý Canvas và Loading
   const [pages, setPages] = useState<HTMLCanvasElement[]>([]);
   const [loading, setLoading] = useState(true);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -80,232 +80,647 @@ export default function SignDocumentForm({
     Record<string, string>
   >({});
   const [openConfirmPin, setOpenConfirmPin] = useState(false);
+  // login ký
+  const handleLogin = async () => {
+    const url = "https://rms.efy.com.vn/clients/login";
+    const payload = {
+      username: "rp_test",
+      password: "rp_test",
+      rpCode: "RP_TEST",
+    };
+    try {
+      const response = await axios.post(url, payload, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const token = response.data.token;
+      console.log("Đăng nhập thành công!");
+      return token;
+    } catch (error) {
+      console.log("Đăng nhập thất bại!", error);
+    }
+  };
+
+  // ký hash
+
+  const handleSigning = async (idNguoiKy: string, idTaiLieu: string) => {
+    const value = idNguoiKy + idTaiLieu;
+    const hash = generateSha256(value);
+    const token = await handleLogin();
+    if (token === null) {
+      showErrorAlert("Đăng nhập thất bại!. Không thể ký");
+      return;
+    }
+    const url = "https://rms.efy.com.vn/signing/hash";
+    const payload = {
+      agreementUUID: "02e80096-912a-4b30-a38e-334ddc110a1e",
+      authMode: "EXPLICIT/PIN",
+      authorizeCode: "efyvn@123",
+      encryption: "RSA",
+      hash: hash,
+      hashAlgorithm: "SHA-256",
+      mimeType: "application/sha256-binary",
+    };
+    try {
+      const result = await axios.post(url, payload, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return result.data.signatureValue;
+    } catch (error) {
+      return showErrorAlert("Ký không thành công!");
+    }
+  };
+
+  // 1. Cập nhật useEffect lấy danh sách chữ ký từ API
+  const fetchSignatures = async () => {
+    if (selectedIds[0] && handleSignatureList) {
+      try {
+        const data = await handleSignatureList(selectedIds[0]);
+        const initialSigs = data.map((item: any) => ({
+          ...item,
+          isLocked: true,
+        }));
+        setSignatures(initialSigs);
+      } catch (err) {
+        console.error("Lỗi lấy danh sách chữ ký:", err);
+      }
+    }
+  };
+  useEffect(() => {
+    fetchSignatures();
+  }, [selectedIds, handleSignatureList]);
+
+  const generateBangKePdf = async (): Promise<Uint8Array> => {
+    const doc = new jsPDF();
+
+    doc.setFont("times_new_roman", "normal");
+    doc.setFontSize(13);
+    doc.text("BẢNG KÊ CHI TIẾT", 105, 15, { align: "center" });
+    const tableData = (
+      Array.isArray(toolTransferDetail) ? toolTransferDetail : []
+    ).map((item: any, index: number) => {
+      // Kiểm tra an toàn: Chỉ gọi findById khi mảng là hợp lệ
+      const unit = Array.isArray(allUnits)
+        ? findById(allUnits, item?.donViTinh)
+        : null;
+      return [
+        index + 1,
+        item?.tenCCDCVatTu || "",
+        unit?.tenDonVi || "",
+        item.soLuong || 0,
+        item.soLuongXuat || 0,
+        item.soLuongDaBanGiao || 0,
+        item.ghiChu || "",
+      ];
+    });
+
+    autoTable(doc, {
+      startY: 25,
+      head: [
+        [
+          "Stt",
+          "Tên CCDC, Vật tư",
+          "Đơn vị tính",
+          "Số lượng có sẵn",
+          "Số lượng xuất kho",
+          "Số lượng đã bàn giao",
+          "Ghi chú",
+        ],
+      ],
+      body: tableData,
+      theme: "grid",
+      headStyles: {
+        fillColor: false,
+        textColor: 0,
+        lineWidth: 0.1,
+        lineColor: 0,
+        font: "times_new_roman",
+        fontStyle: "normal",
+        halign: "center",
+      },
+      bodyStyles: {
+        font: "times_new_roman",
+        fontSize: 10,
+        textColor: 0,
+        lineWidth: 0.1,
+        lineColor: 0,
+      },
+    });
+
+    return new Uint8Array(doc.output("arraybuffer"));
+  };
+
+  useEffect(() => {
+    const rebuildBangKe = async () => {
+      try {
+        const bytes = await generateBangKePdf();
+        setBangKeBytes(bytes);
+      } catch (err) {
+        console.error("Lỗi build lại Bảng kê:", err);
+      }
+    };
+    rebuildBangKe();
+  }, [toolTransferDetail, allUnits]);
+
+  const mergeBangKeWithOriginalPdf = async (
+    originalPdfUrl?: string | null,
+  ): Promise<Uint8Array> => {
+    if (!bangKeBytes) {
+      throw new Error("BangKe chưa được khởi tạo");
+    }
+    const bangKeDoc = await PDFDocument.load(bangKeBytes);
+
+    if (!originalPdfUrl) {
+      return bangKeBytes;
+    }
+
+    const originalBytes = await fetch(originalPdfUrl).then((r) =>
+      r.arrayBuffer(),
+    );
+    const originalDoc = await PDFDocument.load(originalBytes);
+
+    // 👉 Ghép BẢNG KÊ LÊN ĐẦU (chuẩn hành chính)
+    const bangKePages = await originalDoc.copyPages(
+      bangKeDoc,
+      bangKeDoc.getPageIndices(),
+    );
+
+    bangKePages.forEach((p) => originalDoc.addPage(p));
+
+    return await originalDoc.save();
+  };
+
+  // State để tracking kích thước hiển thị thực tế của các canvas pages
   const [canvasDisplaySizes, setCanvasDisplaySizes] = useState<
     { width: number; height: number }[]
   >([]);
 
+  // Ref chứa container để xử lý scroll
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const { handlePreview } = useToolTransferMutation();
 
-  // --- 1. HÀM SINH BẢNG KÊ (JS-PDF) ---
-  const generateBangKePdf = useCallback(async (): Promise<Uint8Array> => {
-    try {
-      const doc = new jsPDF();
-      // Thử dùng font mặc định nếu font Times New Roman chưa load kịp để tránh crash
-      try {
-        doc.setFont("times_new_roman", "normal");
-      } catch (e) {
-        console.warn("Font Times New Roman chưa sẵn sàng");
-      }
-
-      doc.setFontSize(13);
-      doc.text("BẢNG KÊ CHI TIẾT CCDC - VẬT TƯ", 105, 15, { align: "center" });
-
-      const tableData = (toolTransferDetail || []).map((item, index) => {
-        const tool = findById(allToolsByDonVi, item?.idCCDCVatTu);
-        return [
-          index + 1,
-          tool?.tenCCDCVatTu || item?.tenCCDCVatTu || "N/A",
-          findById(allUnits, item?.donViTinh)?.tenDonVi || "",
-          item.soLuong || 0,
-          findById(allCurrentStatus, item?.hienTrang)?.tenHTKT || "",
-          item.ghiChu || "",
-        ];
-      });
-
-      autoTable(doc, {
-        startY: 25,
-        head: [
-          [
-            "Stt",
-            "Tên CCDC - Vật tư",
-            "ĐVT",
-            "Số lượng",
-            "Tình trạng",
-            "Ghi chú",
-          ],
-        ],
-        body: tableData,
-        theme: "grid",
-        headStyles: {
-          font: "times_new_roman",
-          halign: "center",
-          fillColor: false,
-          textColor: 0,
-          lineWidth: 0.1,
-        },
-        bodyStyles: { font: "times_new_roman", fontSize: 10, textColor: 0 },
-      });
-
-      return new Uint8Array(doc.output("arraybuffer"));
-    } catch (err) {
-      console.error("Lỗi generateBangKePdf:", err);
-      throw err;
+  const handleConfirmPinDialog = async (pin: string) => {
+    if (employee?.pin !== pin) {
+      showErrorAlert("Mã pin không chính xác!");
+      return;
     }
-  }, [toolTransferDetail, allToolsByDonVi, allUnits, allCurrentStatus]);
 
-  // --- 2. HÀM GHÉP PDF (PDF-LIB) ---
-  const mergePdfs = async (
-    originalUrl: string | null,
-    bkeBytes: Uint8Array,
-  ): Promise<Uint8Array> => {
-    try {
-      const bangKeDoc = await PDFDocument.load(bkeBytes);
-      if (!originalUrl) return bkeBytes;
+    setOpenConfirmPin(false);
 
-      const originalBytes = await fetch(originalUrl).then((r) =>
-        r.arrayBuffer(),
-      );
-      const originalDoc = await PDFDocument.load(originalBytes);
+    // 👉 tiếp tục ký số
+    const result = await handleSigning(
+      user?.taiKhoan?.tenDangNhap,
+      selectedIds[0],
+    );
 
-      const bangKePages = await originalDoc.copyPages(
-        bangKeDoc,
-        bangKeDoc.getPageIndices(),
-      );
-      bangKePages.forEach((p) => originalDoc.addPage(p));
-
-      return await originalDoc.save();
-    } catch (err) {
-      console.warn("Ghép file thất bại, sử dụng Bảng kê làm dự phòng", err);
-      return bkeBytes;
+    if (!result) {
+      showErrorAlert("Ký không thành công!");
+      return;
     }
+
+    // thêm chữ ký số
+    const newSignature: ToolSignature = {
+      stt: signatures.length + 1,
+      id: `temp-${Date.now()}`,
+      idTaiLieu: selectedIds[0],
+      idNguoiKy: user?.taiKhoan?.tenDangNhap,
+      loaiKy: signatureType,
+      ngayKy: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      x: 0.5, // Giữa trang theo chiều ngang
+      y: 0.2, // Vị trí dọc chuẩn hóa
+      chuKyNhay:
+        (signatureType === 1 || signatureType === 5) && employee?.chuKyNhay,
+      chuKyThuong:
+        (signatureType === 2 || signatureType === 4) && employee?.chuKyThuong,
+      width: 120,
+      scale: 1,
+      chuKySo: result,
+      isLocked: false,
+    };
+
+    setSignatures((prev) => [...prev, newSignature]);
   };
 
-  // --- 3. HIỆU ỨNG TẢI TÀI LIỆU ---
+  // 2. Sửa hàm handleConfirmSign để tính Y chuẩn hóa
+  const handleSign = async () => {
+    if (!employee) return;
+    if (!employee?.chuKyNhay && !employee?.chuKyThuong && !employee?.chuKySo) {
+      return showErrorAlert("Không tìm thấy chữ ký");
+    }
+    if (signatureType === 0) {
+      return showErrorAlert("Chưa chọn chữ ký");
+    }
+    const hasDigitalSignature = signatures.some(
+      (img) => img.loaiKy === 3 || img.loaiKy === 4 || img.loaiKy === 5,
+    );
+
+    // Kiểm tra quyền ký
+    if (!canUserSign(signatureType, signatures)) {
+      let errorMessage;
+      if (
+        hasDigitalSignature &&
+        signatureType !== 3 &&
+        signatureType !== 4 &&
+        signatureType !== 5
+      ) {
+        errorMessage =
+          "Tài liệu đã có chữ ký số, bạn chỉ có thể ký bằng chữ ký số!";
+      } else {
+        errorMessage = "Bạn đã ký tài liệu này rồi, không thể ký thêm!";
+      }
+
+      showErrorAlert(errorMessage);
+      return;
+    }
+    let key = "";
+    if (signatureType === 3 || signatureType === 4 || signatureType === 5) {
+      if (!employee?.savePin) {
+        setOpenConfirmPin(true);
+        return;
+      }
+      const result = await handleSigning(
+        user?.taiKhoan?.tenDangNhap,
+        selectedIds[0],
+      );
+      if (!result) {
+        return showErrorAlert("Ký không thành công!");
+      }
+      key = result;
+    }
+
+    const newSignature: ToolSignature = {
+      stt: signatures.length + 1,
+      id: `temp-${Date.now()}`,
+      idTaiLieu: selectedIds[0],
+      idNguoiKy: user?.taiKhoan?.tenDangNhap,
+      loaiKy: signatureType,
+      ngayKy: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      x: 0.5, // Giữa trang theo chiều ngang
+      y: 0.2, // Vị trí dọc chuẩn hóa
+      chuKyNhay:
+        (signatureType === 1 || signatureType === 5) && employee?.chuKyNhay,
+      chuKyThuong:
+        (signatureType === 2 || signatureType === 4) && employee?.chuKyThuong,
+      width: 120,
+      scale: 1,
+      chuKySo: key,
+      isLocked: false,
+    };
+
+    setSignatures([...signatures, newSignature]);
+  };
+
   useEffect(() => {
-    let isMounted = true;
-    let currentBlobUrl: string | null = null; // Chỉ quản lý 1 URL hiển thị hiện tại
+    const renderDigitalSignatures = async () => {
+      const newMap: Record<string, string> = {};
 
-    const loadTàiLiệu = async () => {
-      try {
-        setLoading(true);
-        setPdfError(null);
-        console.log("Bắt đầu chuẩn bị tài liệu...");
+      for (const sig of signatures) {
+        if (sig.loaiKy === 3 && !digitalSignatureMap[sig.id]) {
+          const signer = findById(staffs, sig.idNguoiKy);
 
-        // A. Sinh bảng kê trước
-        const bke = await generateBangKePdf();
-
-        // B. Xác định file gốc
-        let fileName: string | null = null;
-        if (typeof documentData === "string") fileName = documentData;
-        else if (documentData?.tenFile) fileName = documentData.tenFile;
-
-        let finalBytes: Uint8Array;
-        if (fileName) {
-          try {
-            const blob = await handlePreview(fileName);
-            const originalUrl = URL.createObjectURL(blob);
-
-            finalBytes = await mergePdfs(originalUrl, bke);
-
-            URL.revokeObjectURL(originalUrl);
-          } catch (e) {
-            console.warn("Không tải được file gốc, hiện Bảng kê");
-            finalBytes = bke;
-          }
-        } else {
-          finalBytes = bke;
-        }
-
-        if (isMounted) {
-          const finalBlobUrl = URL.createObjectURL(
-            new Blob([finalBytes as any], { type: "application/pdf" }),
+          const base64 = await renderDigitalSignatureToImage(
+            signer?.hoTen,
+            dayjs(sig.ngayKy).format("DD/MM/YYYY"),
           );
 
-          currentBlobUrl = finalBlobUrl;
-          console.log("Đã tạo URL PDF thành công:", finalBlobUrl);
-          setPdfUrl(finalBlobUrl);
+          newMap[sig.id] = base64;
         }
-      } catch (err: any) {
-        if (isMounted) setPdfError("Lỗi khởi tạo PDF: " + err.message);
-      } finally {
-        if (isMounted) setLoading(false);
+      }
+
+      if (Object.keys(newMap).length > 0) {
+        setDigitalSignatureMap((prev) => ({ ...prev, ...newMap }));
       }
     };
 
-    loadTàiLiệu();
+    renderDigitalSignatures();
+  }, [signatures, staffs]);
 
-    return () => {
-      isMounted = false;
-      if (currentBlobUrl) {
-        URL.revokeObjectURL(currentBlobUrl);
-      }
-    };
-  }, [documentData, generateBangKePdf]);
+  // 3. Cập nhật hàm xử lý vị trí (Nhận ratio thay vì pixel)
+  const handleUpdatePosition = (
+    id: string,
+    newXRatio: number,
+    newYRatio: number,
+  ) => {
+    console.log("Updated Position (Normalized):", newXRatio, newYRatio);
+    setSignatures((prev) =>
+      prev.map((sig) =>
+        sig.id === id ? { ...sig, x: newXRatio, y: newYRatio } : sig,
+      ),
+    );
+  };
+  const handleUpdateScale = (id: string, newScale: number) => {
+    console.log("scale", newScale);
+    setSignatures((prev) =>
+      prev.map((sig) => (sig.id === id ? { ...sig, scale: newScale } : sig)),
+    );
+  };
 
-  // --- 4. HIỆU ỨNG RENDER PDF SANG CANVAS ---
+  const handleConfirmSign = async () => {
+    const data = signatures.filter((i) => !i.isLocked);
+    if (data.length === 0) {
+      return showErrorAlert("Chưa có chữ ký nào để lưu");
+    }
+    await onSign(data);
+    fetchSignatures();
+    onCancel();
+  };
+
+  // Lấy PDF từ backend
   useEffect(() => {
-    if (!pdfUrl) return;
+    let activeUrl: string | null = null;
 
-    const render = async () => {
+    const fetchAndPrepare = async () => {
       try {
-        console.log("Đang render PDF sang Canvas...");
-        const loadingTask = pdfjsLib.getDocument(pdfUrl);
-        const pdf = await loadingTask.promise;
-        console.log("PDF đã tải xong. Số trang:", pdf.numPages);
+        setPdfError(null);
+        setLoading(true);
 
-        const canvasList: HTMLCanvasElement[] = [];
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const viewport = page.getViewport({ scale: 1.5 });
+        if (!documentUrl) {
+          // 👉 CHỈ PREVIEW BẢNG KÊ
+          const bangKeBytes = await generateBangKePdf();
+          const blob = new Blob([bangKeBytes.buffer as ArrayBuffer], {
+            type: "application/pdf",
+          });
+          const url = URL.createObjectURL(blob);
+          setPdfUrl(url);
+          setLoading(false);
+          return;
+        }
+
+        // TRƯỜNG HỢP 1: Document là File Object (Vừa upload xong)
+        // Tương đương với việc có "path" trong Flutter
+        if (documentUrl instanceof File || documentUrl instanceof Blob) {
+          const url = URL.createObjectURL(documentUrl);
+          activeUrl = url;
+
+          const mergedBytes = await mergeBangKeWithOriginalPdf(url);
+
+          const mergedBlob = new Blob([mergedBytes.buffer as ArrayBuffer], {
+            type: "application/pdf",
+          });
+
+          const previewUrl = URL.createObjectURL(mergedBlob);
+          setPdfUrl(previewUrl);
+          return;
+        }
+
+        // TRƯỜNG HỢP 2: Document là string (Tên file từ Server)
+        let fileName: string | null = null;
+        if (typeof documentUrl === "string") {
+          fileName = documentUrl;
+        } else if (typeof documentUrl === "object") {
+          fileName =
+            documentUrl.tenFile || documentUrl.fileName || documentUrl.filePDF;
+        }
+        if (fileName) {
+          console.log("Đang tải file từ server:", fileName);
+          let originalUrl: string | null = null;
+
+          // 1. CÔ LẬP LỖI TẢI FILE GỐC
+          try {
+            const blob = await handlePreview(fileName);
+
+            // Kiểm tra xem có phải nội dung lỗi (HTML) không
+            const text = await blob.slice(0, 100).text();
+            if (text.includes("<!DOCTYPE") || text.includes("<html")) {
+              throw new Error(
+                "File trên server không tồn tại (404) hoặc sai định dạng.",
+              );
+            }
+
+            originalUrl = URL.createObjectURL(blob);
+          } catch (err) {
+            // Nếu lỗi ở đây, ta chỉ log cảnh báo, KHÔNG nhảy xuống catch tổng
+            console.warn(
+              "⚠️ Không lấy được file gốc, chuyển sang chế độ chỉ hiện Bảng kê:",
+              err,
+            );
+            originalUrl = null;
+          }
+
+          // 2. TIẾP TỤC GHÉP FILE (Dù có file gốc hay không)
+          try {
+            // Luôn gọi hàm này, truyền originalUrl (có thể là null)
+            const mergedBytes = await mergeBangKeWithOriginalPdf(originalUrl);
+
+            const mergedBlob = new Blob([mergedBytes.buffer as ArrayBuffer], {
+              type: "application/pdf",
+            });
+
+            const previewUrl = URL.createObjectURL(mergedBlob);
+            setPdfUrl(previewUrl);
+            setPdfError(null); // Xóa lỗi nếu trước đó có
+          } catch (mergeError: any) {
+            // Chỉ báo lỗi nếu ngay cả việc tạo Bảng kê cũng thất bại
+            console.error("❌ Lỗi nghiêm trọng khi tạo PDF:", mergeError);
+            setPdfError("Không thể khởi tạo tài liệu xem trước.");
+            setPdfUrl(null);
+          } finally {
+            setLoading(false);
+          }
+        }
+      } catch (error: any) {
+        console.error("Lỗi chuẩn bị PDF:", error);
+        setPdfUrl(null);
+        setPdfError(error.message);
+        setLoading(false);
+      }
+    };
+
+    fetchAndPrepare();
+
+    // Cleanup: Quan trọng để tránh tràn bộ nhớ
+    return () => {
+      if (activeUrl) URL.revokeObjectURL(activeUrl);
+    };
+  }, [documentUrl, bangKeBytes]);
+
+  // --- Render PDF ---
+  useEffect(() => {
+    const renderPDF = async () => {
+      try {
+        setLoading(true);
+        if (!pdfUrl) {
+          setLoading(false);
+          return;
+        }
+        console.log("Đang tải PDF từ URL:", pdfUrl);
+        const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
+        console.log("PDF tải thành công, số trang:", pdf.numPages);
+        const canvases: HTMLCanvasElement[] = [];
+
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
           const canvas = document.createElement("canvas");
           const context = canvas.getContext("2d")!;
-          canvas.height = viewport.height;
-          canvas.width = viewport.width;
 
-          await page.render({ canvasContext: context, viewport }).promise;
-          canvasList.push(canvas);
+          // Scale 1.5
+          const scale = 1.5;
+          const viewport = page.getViewport({ scale });
+
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+
+          // CSS width/height hiển thị
+          canvas.style.width = "100%";
+          canvas.style.height = "auto";
+          canvas.style.display = "block";
+
+          // Lưu số trang
+          canvas.dataset.page = pageNum.toString();
+
+          await page.render({
+            canvasContext: context,
+            viewport,
+          }).promise;
+
+          canvases.push(canvas);
         }
-        setPages(canvasList);
-      } catch (err: any) {
-        console.error("Lỗi render canvas:", err);
-        setPdfError("Không thể hiển thị trang PDF: " + err.message);
+
+        setPages(canvases);
+        setPdfError(null);
+        setLoading(false);
+      } catch (error: any) {
+        console.error("Lỗi render PDF:", error);
+        setPdfError(`Lỗi đọc PDF: ${error.message}`);
+        setLoading(false);
       }
     };
 
-    render();
-  }, [pdfUrl]);
+    renderPDF();
+  }, [pdfUrl, bangKeBytes]);
 
-  // Resize Observer để track kích thước thực tế (Dùng cho chữ ký kéo thả)
+  // Theo dõi kích thước hiển thị của các canvas pages
   useEffect(() => {
     if (pages.length === 0) return;
-    const obs = new ResizeObserver(() => {
-      setCanvasDisplaySizes(
-        pages.map((c) => ({
-          width: c.getBoundingClientRect().width || c.width,
-          height: c.getBoundingClientRect().height || c.height,
-        })),
-      );
+
+    const observer = new ResizeObserver(() => {
+      const sizes = pages.map((canvas) => ({
+        width: canvas.getBoundingClientRect().width || canvas.width,
+        height: canvas.getBoundingClientRect().height || canvas.height,
+      }));
+      setCanvasDisplaySizes(sizes);
     });
-    pages.forEach((p) => obs.observe(p));
-    return () => obs.disconnect();
+
+    // Observe mỗi canvas
+    pages.forEach((canvas) => {
+      observer.observe(canvas);
+    });
+
+    return () => {
+      observer.disconnect();
+    };
   }, [pages]);
 
-  // --- LOGIC KÝ VÀ EXPORT (GIỮ NGUYÊN NHƯ CŨ NHƯNG FIX TYPE) ---
-  const handleUpdatePosition = (id: string, x: number, y: number) => {
-    setSignatures((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, x, y } : s)),
-    );
-  };
-  const handleUpdateScale = (id: string, scale: number) => {
-    setSignatures((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, scale } : s)),
-    );
-  };
-  const handleUpdatePage = (id: string, page: number) => {
-    setSignatures((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, page } : s)),
-    );
-  };
+  // Xóa chữ ký
   const handleDeleteSignature = (id: string) => {
-    setSignatures((prev) => prev.filter((s) => s.id !== id));
+    setSignatures((prev) => prev.filter((sig) => sig.id !== id));
   };
 
-  if (!employee && !loading)
-    return (
-      <Alert severity="warning">
-        Không tìm thấy thông tin nhân viên để ký.
-      </Alert>
-    );
+  const handleExportPDF = async () => {
+    try {
+      setLoading(true);
+
+      // 1. Ghép PDF ban đầu
+      if (!pdfUrl) throw new Error("Không có dữ liệu PDF để xuất");
+
+      // 1. Ghép PDF ban đầu
+      const pdfBytes = await fetch(pdfUrl).then((res) => res.arrayBuffer());
+      const pdfDoc = await PDFDocument.load(pdfBytes);
+
+      // 2. Lấy trang đầu
+      const pages = pdfDoc.getPages();
+      const firstPage = pages[0];
+      const { width: pageWidth, height: pageHeight } = firstPage.getSize();
+
+      // 3. Chiều rộng hiển thị thực tế
+      const displayWidth = canvasDisplaySizes[0]?.width || 800;
+
+      // 4. Vẽ chữ ký
+      for (const sig of signatures) {
+        let imageBytes: ArrayBuffer;
+        let isPng = true;
+
+        try {
+          if (sig.loaiKy === 3) {
+            // TRƯỜNG HỢP: CHỮ KÝ SỐ (Dùng dữ liệu Base64 từ digitalSignatureMap)
+            const base64Data = digitalSignatureMap[sig.id];
+            if (!base64Data) continue;
+
+            // Chuyển Base64 thành ArrayBuffer
+            const base64Content = base64Data.split(",")[1];
+            const binaryString = window.atob(base64Content);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+              bytes[i] = binaryString.charCodeAt(i);
+            }
+            imageBytes = bytes.buffer;
+            isPng = true; // Canvas.toDataURL mặc định là PNG
+          } else {
+            // TRƯỜNG HỢP: CHỮ KÝ THƯỜNG (Tải từ Server)
+            const imgPath =
+              sig.loaiKy === 1 || sig.loaiKy === 5
+                ? sig.chuKyNhay
+                : sig.chuKyThuong;
+            if (!imgPath) continue;
+
+            const imageUrl = `${process.env.REACT_APP_URL_UPLOAD}/${imgPath}`;
+            const response = await fetch(imageUrl);
+            imageBytes = await response.arrayBuffer();
+            isPng = imgPath.toLowerCase().endsWith(".png");
+          }
+
+          const pdfImage = isPng
+            ? await pdfDoc.embedPng(imageBytes)
+            : await pdfDoc.embedJpg(imageBytes);
+
+          // --- TÍNH KÍCH THƯỚC ---
+          const widthRatio = (sig.width * (sig.scale || 1)) / displayWidth;
+
+          const pdfImageWidth = widthRatio * pageWidth;
+          const pdfImageHeight =
+            (pdfImage.height / pdfImage.width) * pdfImageWidth;
+
+          // --- TÍNH VỊ TRÍ ---
+          const x = sig.x * pageWidth;
+          const y = pageHeight - sig.y * pageHeight - pdfImageHeight;
+
+          firstPage.drawImage(pdfImage, {
+            x,
+            y,
+            width: pdfImageWidth,
+            height: pdfImageHeight,
+          });
+        } catch (err) {
+          console.error(`Không thể chèn chữ ký ${sig.id}:`, err);
+        }
+      }
+
+      // 5. Save & download DUY NHẤT 1 LẦN
+      const finalBytes = await pdfDoc.save();
+      const blob = new Blob([finalBytes.buffer as ArrayBuffer], {
+        type: "application/pdf",
+      });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `BangKe_ChiTiet_${Date.now()}.pdf`;
+      link.click();
+
+      URL.revokeObjectURL(url);
+      setOpenSnackbar(true);
+    } catch (error) {
+      console.error("Lỗi khi xuất PDF:", error);
+      setPdfError("Không thể ghép file PDF.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Box
@@ -318,84 +733,202 @@ export default function SignDocumentForm({
         ...(fullscreen && { position: "fixed", inset: 0, zIndex: 9999 }),
       }}
     >
-      {/* Header */}
-      <Box
-        sx={{
-          bgcolor: "white",
-          p: 2,
-          borderBottom: "1px solid #e0e0e0",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <Box>
-          <Typography variant="h6" fontWeight="bold">
-            Soạn & Ký Tài Liệu CCDC
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            Tổng số trang: {pages.length}
-          </Typography>
+      {/* --- Header (Giữ nguyên) --- */}
+      {fullscreen && (
+        <Box
+          sx={{
+            bgcolor: "white",
+            p: 2,
+            borderBottom: "1px solid #e0e0e0",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Box>
+            <Typography variant="h6">Soạn & Ký Tài Liệu</Typography>
+            <Typography variant="body2" color="textSecondary">
+              Tổng số trang: {pages.length}
+            </Typography>
+          </Box>
+          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={handleExportPDF}
+              sx={{
+                textTransform: "none",
+                fontSize: "0.875rem",
+                color: "#8b5cf6",
+                borderColor: "#c4b5fd",
+                fontWeight: 500,
+                "&:hover": {
+                  borderColor: "#a78bfa",
+                  backgroundColor: "rgba(139, 92, 246, 0.04)",
+                },
+              }}
+              startIcon={<PictureAsPdf />}
+            >
+              Xuất PDF
+            </Button>
+            <IconButton onClick={onCancel}>
+              <Close />
+            </IconButton>
+          </Box>
         </Box>
-        <Box sx={{ display: "flex", gap: 1 }}>
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={() => {
-              /* handleExport */
-            }}
-            startIcon={<PictureAsPdf />}
-          >
-            Xuất PDF
-          </Button>
-          <IconButton onClick={onCancel}>
-            <Close />
-          </IconButton>
-        </Box>
-      </Box>
+      )}
 
+      {/* --- Body --- */}
       <Box sx={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        {/* Sidebar Công cụ ký */}
+        {/* --- Left Sidebar (Công cụ) --- */}
         {showSignerSidebar && (
           <Paper
             sx={{
-              width: 300,
+              width: 320,
               p: 2,
               overflowY: "auto",
               borderRight: "1px solid #ddd",
-              borderRadius: 0,
             }}
           >
-            <Typography variant="subtitle1" fontWeight="bold" mb={2}>
+            <Typography variant="h6" fontWeight="bold" mb={2}>
               Công cụ ký
             </Typography>
-            {/* Render Radio Group & Buttons ở đây... */}
+
+            <RadioGroup
+              value={signatureType}
+              onChange={(e) => setSignatureType(Number(e.target.value))}
+            >
+              {employee?.kyNhay && (
+                <Box
+                  display="flex"
+                  alignItems={"center"}
+                  justifyContent={"space-between"}
+                  sx={{ mb: 2 }}
+                >
+                  <FormControlLabel
+                    value={1}
+                    control={<Radio />}
+                    label="Ký nháy"
+                  />
+                  <img
+                    src={`${process.env.REACT_APP_URL_UPLOAD}/${employee?.chuKyNhay}`}
+                    alt="sample"
+                    width={60}
+                    style={{ border: "1px solid #eee" }}
+                  />
+                </Box>
+              )}
+              {employee?.kyThuong && (
+                <Box
+                  display="flex"
+                  alignItems={"center"}
+                  justifyContent={"space-between"}
+                  sx={{ mb: 2 }}
+                >
+                  <FormControlLabel
+                    value={2}
+                    control={<Radio />}
+                    label="Ký thường"
+                  />
+                  <img
+                    src={`${process.env.REACT_APP_URL_UPLOAD}/${employee?.chuKyThuong}`}
+                    alt="sample"
+                    width={60}
+                    style={{ border: "1px solid #eee" }}
+                  />
+                </Box>
+              )}
+              {employee?.kySo && (
+                <Box sx={{ p: 1, border: "1px solid #ddd", borderRadius: 5 }}>
+                  <Typography fontWeight={600}>Chữ ký số</Typography>
+                  <Box sx={{ mb: 2 }}>
+                    {" "}
+                    <FormControlLabel
+                      value={3}
+                      control={<Radio />}
+                      label="Hiển thị mặc định"
+                    />
+                  </Box>
+                  <Box
+                    display="flex"
+                    alignItems={"center"}
+                    justifyContent={"space-between"}
+                    sx={{ mb: 2 }}
+                  >
+                    <FormControlLabel
+                      value={4}
+                      control={<Radio />}
+                      label="Hiển thị chữ kí thường"
+                    />
+                    <img
+                      src={`${process.env.REACT_APP_URL_UPLOAD}/${employee?.chuKyThuong}`}
+                      alt="chukythuong"
+                      width={60}
+                      style={{ border: "1px solid #eee" }}
+                    />
+                  </Box>
+                  <Box
+                    display="flex"
+                    alignItems={"center"}
+                    justifyContent={"space-between"}
+                    sx={{ mb: 2 }}
+                  >
+                    <FormControlLabel
+                      value={5}
+                      control={<Radio />}
+                      label="Hiển thị chữ kí nháy"
+                    />
+                    <img
+                      src={`${process.env.REACT_APP_URL_UPLOAD}/${employee?.chuKyNhay}`}
+                      alt="chukynhay"
+                      width={60}
+                      style={{ border: "1px solid #eee" }}
+                    />
+                  </Box>
+                </Box>
+              )}
+            </RadioGroup>
+            <Divider sx={{ my: 2 }} />
+
             <Button
               variant="contained"
               fullWidth
               color="success"
-              sx={{ mb: 1, color: "#fff" }}
-              startIcon={<Pencil size={18} />}
+              onClick={handleSign}
+              sx={{ mb: 1, color: "white" }}
+              startIcon={<Pencil size={16} />}
             >
-              Ký văn bản
+              Ký
             </Button>
             <Button
               variant="contained"
               fullWidth
               color="info"
-              sx={{ color: "#fff" }}
-              startIcon={<Check size={18} />}
+              onClick={handleConfirmSign}
+              sx={{ mb: 1, color: "white" }}
+              startIcon={<Check size={16} />}
             >
-              Xác nhận lưu
+              Xác nhận
+            </Button>
+            <Button
+              variant="outlined"
+              fullWidth
+              color="error"
+              onClick={onCancel}
+              sx={{ mb: 1, color: "red" }}
+              startIcon={<CancelOutlined sx={{ fontSize: 16 }} />}
+            >
+              Hủy
             </Button>
           </Paper>
         )}
 
-        {/* Vùng hiển thị PDF */}
+        {/* --- Right Content (PDF Viewer) --- */}
         <Box
+          ref={containerRef}
           sx={{
             flex: 1,
-            bgcolor: "#525659",
+            bgcolor: "#e0e0e0",
             p: 4,
             overflowY: "auto",
             display: "flex",
@@ -404,70 +937,49 @@ export default function SignDocumentForm({
           }}
         >
           {pdfError && (
-            <Alert
-              severity="error"
-              sx={{ mb: 2, width: "100%", maxWidth: 800 }}
-            >
+            <Alert severity="error" sx={{ mb: 2, maxWidth: "600px" }}>
               {pdfError}
             </Alert>
           )}
-
           {loading ? (
-            <Box
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              mt={10}
-            >
-              <CircularProgress
-                size={60}
-                thickness={4}
-                sx={{ mb: 2, color: "#fff" }}
-              />
-              <Typography color="#fff">Đang khởi tạo tài liệu...</Typography>
-            </Box>
+            <CircularProgress />
           ) : (
-            <Box
-              sx={{
-                position: "relative",
-                boxShadow: "0 0 20px rgba(0,0,0,0.5)",
-              }}
-            >
-              {pages.map((canvas, index) => {
-                const displaySize = canvasDisplaySizes[index] || {
-                  width: 800,
-                  height: 1100,
-                };
-                return (
-                  <Box
-                    key={index}
-                    sx={{ position: "relative", mb: 2, bgcolor: "#fff" }}
-                  >
-                    {/* Render Canvas thực tế */}
-                    <div
-                      ref={(el) => {
-                        if (el && !el.hasChildNodes()) el.appendChild(canvas);
-                      }}
-                    />
+            <Box sx={{ position: "relative" }}>
+              {pages.map((canvas, index) => (
+                <Box key={index} sx={{ position: "relative", mb: 3 }}>
+                  {/* Render Canvas */}
+                  <div
+                    ref={(el) => {
+                      if (el && !el.hasChildNodes()) el.appendChild(canvas);
+                    }}
+                  />
 
-                    {/* Lớp phủ chứa chữ ký */}
+                  {/* 👉 QUAN TRỌNG: Chỉ render chữ ký nếu đây là trang đầu tiên (index === 0) */}
+                  {index === 0 && signatures.length > 0 && (
                     <Box
                       sx={{
                         position: "absolute",
-                        inset: 0,
-                        pointerEvents: "auto",
+                        inset: 0, // Phủ kín trang 1
+                        pointerEvents: "none", // Để vẫn scroll/thao tác được PDF bên dưới
                       }}
                     >
-                      {signatures
-                        .filter((s) => (s.page || 1) === index + 1)
-                        .map((sig) => (
+                      {signatures.map((sig) => {
+                        const displaySize = canvasDisplaySizes[0] ?? {
+                          width: 800,
+                          height: 800 * (297 / 210),
+                        };
+
+                        // GUARD CLAUSE: Nếu PDF chưa render xong width = 0, thì không render chữ ký để tránh NaN
+                        if (displaySize.width === 0 || displaySize.height === 0)
+                          return null;
+
+                        return (
                           <DraggableSignature
                             key={sig.id}
                             id={sig.id}
+                            // Tính toán tọa độ pixel
                             initialX={sig.x * displaySize.width}
                             initialY={sig.y * displaySize.height}
-                            xRatio={sig.x}
-                            yRatio={sig.y}
                             width={sig.width}
                             initialScale={sig.scale || 1}
                             imgSrc={
@@ -475,32 +987,80 @@ export default function SignDocumentForm({
                                 ? digitalSignatureMap[sig.id]
                                 : `${process.env.REACT_APP_URL_UPLOAD}/${sig.chuKyNhay || sig.chuKyThuong}`
                             }
-                            onUpdatePosition={handleUpdatePosition}
-                            onUpdateScale={handleUpdateScale}
-                            onUpdatePage={handleUpdatePage}
-                            onDelete={handleDeleteSignature}
                             containerWidth={displaySize.width}
                             containerHeight={displaySize.height}
-                            canvasWidth={canvas.width}
-                            canvasHeight={canvas.height}
-                            currentPage={index + 1}
-                            totalPages={pages.length}
+                            onUpdatePosition={handleUpdatePosition}
+                            onUpdateScale={handleUpdateScale}
+                            onDelete={handleDeleteSignature}
                             isLocked={sig.isLocked}
                           />
-                        ))}
+                        );
+                      })}
                     </Box>
-                  </Box>
-                );
-              })}
+                  )}
+                </Box>
+              ))}
             </Box>
           )}
         </Box>
       </Box>
+
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={3000}
+        onClose={() => setOpenSnackbar(false)}
+      >
+        <Alert severity="success">Đã xuất PDF thành công</Alert>
+      </Snackbar>
       <ConfirmPin
         open={openConfirmPin}
         onClose={() => setOpenConfirmPin(false)}
-        onConfirm={() => {}}
+        onConfirm={handleConfirmPinDialog}
       />
     </Box>
   );
 }
+const renderDigitalSignatureToImage = async (
+  name?: string | null,
+  date?: string,
+): Promise<string> => {
+  // 1. Tạo một canvas ngầm
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return "";
+
+  // 2. Thiết lập kích thước (tỉ lệ 2x để nét)
+  const width = 260;
+  const height = 90;
+  const scale = 2;
+  canvas.width = width * scale;
+  canvas.height = height * scale;
+  ctx.scale(scale, scale);
+
+  // 3. Vẽ nền trắng và khung viền đỏ
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.strokeStyle = "#d32f2f";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(5, 5, width - 10, height - 10);
+
+  // 4. Vẽ Text
+  ctx.textBaseline = "top";
+
+  // Dòng 1: Tiêu đề
+  ctx.fillStyle = "#d32f2f";
+  ctx.font = "bold 20px Arial";
+  ctx.fillText("Chữ ký số", 15, 15);
+
+  // Dòng 2: Người ký
+  ctx.font = "bold 20px Arial";
+  ctx.fillText(`Ký bởi: ${name || ""}`, 15, 40);
+
+  // Dòng 3: Ngày ký
+  ctx.font = "bold 20px Arial";
+  ctx.fillText(`Ký ngày: ${date || ""}`, 15, 65);
+
+  // 5. Xuất ra Base64
+  return canvas.toDataURL("image/png");
+};

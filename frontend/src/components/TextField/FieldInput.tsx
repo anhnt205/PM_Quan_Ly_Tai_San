@@ -9,6 +9,7 @@ interface Props {
   slotProps?: any;
   disabled?: boolean;
   InputProps?: any;
+  onChange?: (newValue: any) => void;
 }
 export default function FieldInput({
   title,
@@ -18,6 +19,7 @@ export default function FieldInput({
   slotProps,
   disabled = false,
   InputProps,
+  onChange,
 }: Props) {
   const currentValue = formik && field ? getIn(formik.values, field) : "";
   return (
@@ -30,6 +32,9 @@ export default function FieldInput({
       value={currentValue}
       onChange={(e) => {
         if (field) formik.setFieldValue(field, e.target.value);
+        if (onChange) {
+          onChange(e.target.value);
+        }
       }}
       error={field && formik.touched[field] && Boolean(formik.errors[field])}
       helperText={field && formik.touched[field] && formik.errors[field]}

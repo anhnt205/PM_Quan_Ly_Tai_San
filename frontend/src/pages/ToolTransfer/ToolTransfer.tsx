@@ -9,23 +9,27 @@ import TableCustom from "../../components/common/TableCustom";
 import PageAction from "../../components/common/PageAction";
 import { useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { useToolTransferMutation } from "./Mutation";
 import { showConfirmAlert } from "../../components/Alert";
 import {
+  canSign,
+  getPermissionSigning,
   getTypeInfo,
+  handleSendToSigner,
+  handleSignDocument,
   isCheckShowDelete,
+  isCheckShowShare,
   showDownloadFile,
   ShowPermissionSigning,
   showShareStatus,
   showStatus,
   showStatusDocument,
 } from "../ToolTransfer/config";
-import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { findById } from "../../utils/helpers";
 import { Building, Eye, Trash2 } from "lucide-react";
-import SignDocumentForm from "../../components/common/SignDocumentForm";
-import { ToolTransferData } from "./types";
-import { getPermissionSigning } from "../AssetTransfer/config";
+import { ToolSignature, ToolTransferData } from "./types";
+import { useToolTransferMutation } from "./Mutation";
+import SignDocumentForm from "./components/SignDocumentForm";
+import { FilterOption } from "../../components/common/FilterStatusGroup";
 
 export default function ToolTransfer() {
   const { user } = useSelector((state: any) => state.user);
@@ -48,46 +52,75 @@ export default function ToolTransfer() {
   const [showSignerSidebar, setShowSignerSidebar] = useState(true);
   const [showBienBanDialog, setShowBienBanDialog] = useState(false);
   const [toolTransferDetail, setToolTransferDetail] = useState<any[]>([]);
-  const [toolByDepartment, setToolByDepartment] = useState<any[]>([]);
+  const [status, setStatus] = useState("");
 
   const {
     toolTransferPage,
-    allStaff,
     allDepartments,
-    handleDownloadFile,
-    handoverDetails,
-    allToolsByDonVi,
-    createMutation,
-    updateMutation,
-    deleteOneMutation,
+    allStaff,
     allUnits,
     allCurrentStatus,
-    setDepartmentId,
+    allToolByDonVi,
+    handleDownloadFile,
+    createMutation,
+    updateMutation,
+    updateManyMutation,
     cancelMutation,
-    signMutation,
-    isFetching,
-    errorState,
+    deleteOneMutation,
     handleSignatureList,
-    handleToolByDonVi,
+    signMutation,
+    getToolHandoverMutation,
+    setDepartmentId,
+    handoverDetails,
   } = useToolTransferMutation(
     paginationModel.page,
     paginationModel.pageSize,
     searchValue,
     type ? Number(type) : undefined,
-    user?.taiKhoan?.tenDangNhap,
-    undefined,
-    selectedRow?.id,
   );
 
+  const statusOptions: FilterOption[] = [
+    {
+      label: "Tất cả",
+      count: toolTransferPage.totalItems,
+      color: "default",
+      value: "",
+    },
+    {
+      label: "Nháp",
+      count: toolTransferPage?.trangThaiCounts?.["0"] ?? 0,
+      color: "default",
+      value: "0",
+    },
+    {
+      label: "Duyệt",
+      count: toolTransferPage?.trangThaiCounts?.["1"] ?? 0,
+      color: "info",
+      value: "1",
+    },
+    {
+      label: "Hủy",
+      count: toolTransferPage?.trangThaiCounts?.["2"] ?? 0,
+      color: "error",
+      value: "2",
+    },
+    {
+      label: "Hoàn thành",
+      count: toolTransferPage?.trangThaiCounts?.["3"] ?? 0,
+      color: "success",
+      value: "3",
+    },
+  ];
+
   useEffect(() => {
-    setShowForm(false);
-    setSelectedRow(null);
-    setShowSidebar(false);
-    setReadOnly(false);
     setSelectedIds([]);
+    setSelectedDocument(null);
     setSearchValue("");
     setShowSignDocument(false);
-    setSelectedDocument(null);
+    setSelectedRow(null);
+    setShowForm(false);
+    setShowSidebar(false);
+    setReadOnly(false);
   }, [type]);
 
   const { title, label } = getTypeInfo(type);
@@ -101,7 +134,9 @@ export default function ToolTransfer() {
     setSelectedIds([]);
     setShowSignDocument(false);
   };
-
+  const handleSend = (items: any[]) => {
+    handleSendToSigner(items, updateManyMutation.mutateAsync, handleClose);
+  };
   const handleRowClick = (params: GridRowParams) => {
     const data = params.row as ToolTransferData;
     setSelectedRow(data);
@@ -111,32 +146,21 @@ export default function ToolTransfer() {
   };
 
   const handleSave = async (values: any) => {
-    try {
-      // 1. Xử lý upload file binary nếu có
-      if (values.AttachmentFile) {
-        const formData = new FormData();
-        formData.append("file", values.AttachmentFile);
-        // await uploadFileMutation.mutateAsync(formData); // Giả định có mutation upload
-      }
-
-      const dataToSend = { ...values };
-      delete dataToSend.AttachmentFile;
-
-      // 3. Thực hiện lưu (Update hoặc Create)
-      if (selectedRow) {
-        await updateMutation.mutateAsync(dataToSend);
-      } else {
-        await createMutation.mutateAsync(dataToSend);
-      }
-
+    if (selectedRow) {
+      await updateMutation.mutate(values);
       handleClose();
-    } catch (error) {
-      console.error("Lỗi khi lưu phiếu:", error);
+    } else {
+      await createMutation.mutate(values);
+      handleClose();
     }
   };
 
   const handleEdit = () => {
     setReadOnly(false);
+  };
+
+  const handleSign = (data: ToolSignature[]) => {
+    signMutation.mutate(data);
   };
 
   const handleDelete = async (rowData: ToolTransferData) => {
@@ -148,22 +172,11 @@ export default function ToolTransfer() {
     }
   };
 
-  const handleSignTools = (id: string, rowData: ToolTransferData) => {
-    setSelectedDocument(rowData);
-    setShowSignerSidebar(true);
+  const handleViewSignAssets = async (fileName: string, item: any) => {
+    setSelectedDocument(fileName);
     setShowSignDocument(true);
-  };
-
-  const handleViewDocument = (rowData: ToolTransferData) => {
-    setSelectedDocument(rowData);
-    setShowSignerSidebar(false);
-    setSelectedIds([rowData.id]);
-    setShowSignDocument(true);
-  };
-
-  const handleToolTransfer = async (department: string) => {
-    const result = await handleToolByDonVi(type ? Number(type) : 1, department);
-    setToolByDepartment(result?.items);
+    setToolTransferDetail(item.chiTietDieuDongCCDCVatTuDTOS || []);
+    setShowSignerSidebar(true); // Hiện sidebar khi ký
   };
 
   const handleViewBienBan = (rowData: ToolTransferData) => {
@@ -278,23 +291,23 @@ export default function ToolTransfer() {
         ShowPermissionSigning(getPermissionSigning(params.row, user, allStaff)),
     },
     {
-      field: "trangThaiBanGiao",
+      field: "trangThaiPhieuDieuDong",
       headerName: "Trạng thái bàn giao",
       width: 140,
       headerAlign: "center",
       align: "center",
       renderCell: (params) =>
-        showStatusDocument(params.row?.trangThaiBanGiao ?? 0),
+        showStatusDocument(params.row?.trangThaiPhieuDieuDong ?? 0),
     },
     {
-      field: "trinhDuyet",
+      field: "share",
       headerName: "Trình duyệt",
       width: 140,
       headerAlign: "center",
       align: "center",
       renderCell: (params) =>
         showShareStatus(
-          params.row?.trinhDuyet ?? false,
+          params.row?.share ?? false,
           params.row?.nguoiTao == user?.taiKhoan?.tenDangNhap,
         ),
     },
@@ -314,6 +327,7 @@ export default function ToolTransfer() {
               <IconButton
                 size="small"
                 color="error"
+                disabled={!isCheckShowDelete(rowData, user)}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDelete(rowData);
@@ -326,6 +340,7 @@ export default function ToolTransfer() {
               <IconButton
                 size="small"
                 color="primary"
+                disabled={!rowData.coPhieuBanGiao}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleViewBienBan(rowData);
@@ -352,15 +367,7 @@ export default function ToolTransfer() {
                   setDepartmentId(rowData.idDonViGiao);
                   setSelectedIds([rowData.id]);
 
-                  try {
-                    await handleToolTransfer(rowData.idDonViGiao);
-                    setShowSignDocument(true);
-                  } catch (error) {
-                    console.warn(
-                      "Không lấy được danh mục gốc, sử dụng dữ liệu chi tiết có sẵn.",
-                    );
-                    setShowSignDocument(true);
-                  }
+                  setShowSignDocument(true);
                 }}
               >
                 <Eye size={18} />
@@ -374,12 +381,6 @@ export default function ToolTransfer() {
 
   return (
     <>
-      <ImportErrorDialog
-        open={errorState.open}
-        onClose={errorState.onClose}
-        errors={errorState.errors}
-      />
-
       <BienBanDialog
         open={showBienBanDialog}
         onClose={() => setShowBienBanDialog(false)}
@@ -391,9 +392,13 @@ export default function ToolTransfer() {
           selectedIds={selectedIds}
           document={selectedDocument}
           onCancel={handleClose}
-          onSign={() => signMutation.mutate}
+          onSign={handleSign}
+          toolTransferDetail={toolTransferDetail}
           showSignerSidebar={showSignerSidebar}
+          allUnits={allUnits}
           fullscreen={true}
+          staffs={allStaff}
+          handleSignatureList={handleSignatureList}
         />
       ) : (
         <>
@@ -406,126 +411,121 @@ export default function ToolTransfer() {
             }}
           />
 
-          <Box sx={{ p: 2, position: "relative" }}>
-            {isFetching && (
-              <LinearProgress
-                sx={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  zIndex: 10,
-                  height: 2,
+          {showForm && (
+            <Box sx={{ mb: 2 }}>
+              <ToolTransferForm
+                key={selectedRow ? `edit-${selectedRow.id}` : "new-form"}
+                onClose={handleClose}
+                onSave={handleSave}
+                onEdit={handleEdit}
+                onCancel={async () => {
+                  if (selectedRow) {
+                    const confirm = await showConfirmAlert(
+                      `Bạn có chắc muốn hủy phiếu "${selectedRow.tenPhieu}"?`,
+                    );
+                    if (confirm.isConfirmed)
+                      cancelMutation.mutate(selectedRow.id);
+                  }
                 }}
+                readOnly={readOnly}
+                selectedTool={selectedRow}
+                departments={allDepartments}
+                staffs={allStaff}
+                setDepartmentId={setDepartmentId}
+                allToolsByDonVi={allToolByDonVi}
+                allUnits={allUnits}
+                allCurrentStatus={allCurrentStatus}
+                label={label}
+                type={Number(type)}
               />
-            )}
+            </Box>
+          )}
 
-            {showForm && (
-              <Box sx={{ mb: 2 }}>
-                <ToolTransferForm
-                  key={selectedRow ? `edit-${selectedRow.id}` : "new-form"}
-                  onClose={handleClose}
-                  onSave={handleSave}
-                  onEdit={handleEdit}
-                  onCancel={async () => {
-                    if (selectedRow) {
-                      const confirm = await showConfirmAlert(
-                        `Bạn có chắc muốn hủy phiếu "${selectedRow.tenPhieu}"?`,
-                      );
-                      if (confirm.isConfirmed)
-                        cancelMutation.mutate(selectedRow.id);
-                    }
-                  }}
-                  readOnly={readOnly}
-                  selectedTool={selectedRow}
-                  departments={allDepartments}
-                  staffs={allStaff}
-                  setDepartmentId={setDepartmentId}
-                  allToolsByDonVi={allToolsByDonVi}
-                  allUnits={allUnits}
-                  allCurrentStatus={allCurrentStatus}
-                  label={label}
-                  type={Number(type)}
-                />
-              </Box>
-            )}
-
+          <Grid
+            container
+            sx={{
+              display: "flex",
+              alignItems: "stretch",
+              bgcolor: "background.paper",
+              borderRadius: "8px",
+              overflow: "hidden",
+              border: "1px solid",
+              borderColor: "divider",
+              // 1. Cố định chiều cao ở đây
+              height: "calc(100vh)",
+            }}
+          >
             <Grid
-              container
+              size={{ xs: showSidebar ? 9 : 12 }}
               sx={{
-                display: "flex",
-                alignItems: "stretch",
-                bgcolor: "background.paper",
-                borderRadius: "8px",
-                overflow: "hidden",
-                border: "1px solid",
+                transition: "all 0.3s ease",
+                borderRight: showSidebar ? "1px solid" : "none",
                 borderColor: "divider",
-                // 1. Cố định chiều cao ở đây
-                height: "calc(100vh)",
-              }}
-            >
-              <Grid
-                size={{ xs: showSidebar ? 9 : 12 }}
-                sx={{
-                  transition: "all 0.3s ease",
-                  borderRight: showSidebar ? "1px solid" : "none",
-                  borderColor: "divider",
-                  height: "100%", // Chiếm 100% chiều cao cha
+                height: "100%", // Chiếm 100% chiều cao cha
+                display: "flex",
+                flexDirection: "column",
+                // 2. Cho phép scroll bên trong nếu nội dung quá dài
+                overflow: "hidden",
+                "& .MuiPaper-root": {
+                  margin: 0,
+                  boxShadow: "none",
+                  borderRadius: 0,
                   display: "flex",
                   flexDirection: "column",
-                  // 2. Cho phép scroll bên trong nếu nội dung quá dài
+                  flexGrow: 1,
+                  height: "100%", // Ép Paper chiếm hết chiều cao
                   overflow: "hidden",
-                  "& .MuiPaper-root": {
-                    margin: 0,
-                    boxShadow: "none",
-                    borderRadius: 0,
-                    display: "flex",
-                    flexDirection: "column",
-                    flexGrow: 1,
-                    height: "100%", // Ép Paper chiếm hết chiều cao
-                    overflow: "hidden",
-                  },
+                },
+              }}
+            >
+              <TableCustom
+                title={`Danh sách phiếu ${label}`}
+                columns={columns}
+                rows={toolTransferPage.items || []}
+                total={toolTransferPage.totalItems || 0}
+                paginationModel={paginationModel}
+                onPaginationModelChange={setPaginationModel}
+                onRowClick={handleRowClick}
+                selectedIds={selectedIds}
+                onSelectionChange={setSelectedIds}
+                onDelete={(ids: string[]) => {}}
+                onSign={handleViewSignAssets}
+                handleSignDocument={handleSignDocument}
+                canSign={canSign}
+                searchValue={searchValue}
+                setSearchValue={setSearchValue}
+                showStatusFilter={true}
+                showDelete={false}
+                handleSendToSigner={handleSend}
+                statusOptions={statusOptions}
+                onStatusChange={(value) => {
+                  setStatus(value);
+                }}
+                statusValue={status}
+                isCheckShowShare={isCheckShowShare}
+              />
+            </Grid>
+
+            {showSidebar && (
+              <Grid
+                size={{ xs: 3 }}
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  bgcolor: "#fafafa",
+                  height: "100%",
+                  // 3. Sidebar cũng cần scroll riêng nếu danh sách người ký quá dài
+                  overflowY: "auto",
                 }}
               >
-                <TableCustom
-                  title={`Danh sách phiếu ${label}`}
-                  columns={columns}
-                  rows={toolTransferPage.items || []}
-                  total={toolTransferPage.totalItems || 0}
-                  paginationModel={paginationModel}
-                  onPaginationModelChange={setPaginationModel}
-                  onRowClick={handleRowClick}
-                  selectedIds={selectedIds}
-                  onSelectionChange={setSelectedIds}
-                  onDelete={(ids: string[]) => {}}
-                  onSign={handleSignTools}
-                  searchValue={searchValue}
-                  setSearchValue={setSearchValue}
-                  showStatusFilter={true}
+                <SignerSidebar
+                  selectedRow={selectedRow}
+                  handoverDetails={handoverDetails}
+                  onClose={() => setShowSidebar(false)}
                 />
               </Grid>
-
-              {showSidebar && (
-                <Grid
-                  size={{ xs: 3 }}
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    bgcolor: "#fafafa",
-                    height: "100%",
-                    // 3. Sidebar cũng cần scroll riêng nếu danh sách người ký quá dài
-                    overflowY: "auto",
-                  }}
-                >
-                  <SignerSidebar
-                    selectedRow={selectedRow}
-                    handoverDetails={handoverDetails}
-                    onClose={() => setShowSidebar(false)}
-                  />
-                </Grid>
-              )}
-            </Grid>
-          </Box>
+            )}
+          </Grid>
         </>
       )}
     </>

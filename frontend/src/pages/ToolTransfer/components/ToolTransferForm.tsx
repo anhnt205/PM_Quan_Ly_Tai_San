@@ -35,7 +35,8 @@ import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted
 import FieldDateTime from "../../../components/TextField/FieldDateTime";
 import CustomStepper from "../../../components/common/CustomStepper";
 import FileAttachmentInput from "./FileAttachmentInput";
-import SignDocumentForm from "../../AssetTransfer/components/SignDocumentForm";
+import SignDocumentForm from "./SignDocumentForm";
+import { generateCode } from "../../../utils/helpers";
 
 interface ToolTransferFormProps {
   onEdit: () => void;
@@ -117,27 +118,29 @@ export default function ToolTransferForm({
       tenFile: "",
       duongDanFile: "",
       nguoiKyList: [],
-      chiTietDieuDongCCDCVatTuDTOS: [
-        {
-          idCCDCVatTu: "",
-          donViTinh: "",
-          soLuong: 0,
-          soLuongXuat: 0,
-          ghiChu: "",
-          hienTrang: "",
-          moTa: "",
-        },
-      ],
+      chiTietDieuDongCCDCVatTuDTOS: [],
+      initialChiTiet: [],
     },
     onSubmit: (values) => {
       // Logic map ID tương tự nhưng dùng prefix của Tool
-      const chiTiet = values.chiTietDieuDongCCDCVatTuDTOS.map(
-        (item, index) => ({
+      const chiTietDieuDongTaiSanDTOS = values.chiTietDieuDongCCDCVatTuDTOS.map(
+        (item: any, index) => ({
           ...item,
-          idDieuDongCCDCVatTu: values.id,
+          id: `${generateCode("CTBG-")}-${index}`,
+          idDieuDongTaiSan: values.id,
         }),
       );
-      onSave({ ...values, chiTietDieuDongCCDCVatTuDTOS: chiTiet });
+      const nguoiKyList = values.nguoiKyList.map((item: any, index) => ({
+        ...item,
+        id: `${generateCode("NK-")}-${index}`,
+        idTaiLieu: values.id,
+        idPhongBan: values.idDonViDeNghi,
+      }));
+      onSave({
+        ...values,
+        chiTietDieuDongTaiSanDTOS,
+        nguoiKyList,
+      });
     },
   });
 
@@ -148,11 +151,9 @@ export default function ToolTransferForm({
         tgGnTuNgay: selectedTool.tggnTuNgay || "",
         tgGnDenNgay: selectedTool.tggnDenNgay || "",
 
-        initialChiTiet: (
-          selectedTool.chiTietDieuDongTaiSanDTOS ||
-          selectedTool.chiTietDieuDongCCDCVatTuDTOS ||
-          []
-        ).map((i: any) => i.id),
+        initialChiTiet: (selectedTool.chiTietDieuDongCCDCVatTuDTOS || []).map(
+          (i: any) => i.id,
+        ),
         initialNguoiKy: (selectedTool.nguoiKyList || []).map((i: any) => i.id),
       });
       setDocument(selectedTool.tenFile || "");
@@ -162,7 +163,6 @@ export default function ToolTransferForm({
   }, [selectedTool]);
 
   const isCapPhat = type === 1;
-  const isDieuChuyen = type === 2;
   const isThuHoi = type === 3;
 
   const dvGiao = departments.filter((i) =>
@@ -200,14 +200,18 @@ export default function ToolTransferForm({
     <>
       {isPreview && (
         <SignDocumentForm
-          selectedIds={[formik.values.id]}
+          selectedIds={[]}
           document={document}
-          onCancel={() => setIsPreview(false)}
-          onSign={() => console.log("Ký thành công")}
-          assetTransferDetail={formik.values.chiTietDieuDongCCDCVatTuDTOS}
-          // allAssetsByDonVi={allToolsByDonVi}
+          onCancel={() => {
+            setIsPreview(false);
+          }}
+          onSign={() => {
+            console.log("Ký tài liệu thành công");
+          }}
+          showSignerSidebar={false}
+          fullscreen={true}
+          toolTransferDetail={formik.values.chiTietDieuDongCCDCVatTuDTOS}
           allUnits={allUnits}
-          staffs={staffs}
         />
       )}
       <Accordion
@@ -506,7 +510,7 @@ export default function ToolTransferForm({
             {/* --- PHẦN 3: CHI TIẾT TÀI SẢN --- */}
             <Box>
               <Typography variant="subtitle1" fontWeight={600} mb={2}>
-                Chi tiết tài sản điều chuyển:
+                Chi tiết ccdc-vật tư điều chuyển:
               </Typography>
               <Table
                 size="small"
@@ -517,16 +521,19 @@ export default function ToolTransferForm({
                 <TableHead>
                   <TableRow>
                     <CustomTableHeadCell width="25%">
-                      Tài sản
+                      CCDC Vật tư
                     </CustomTableHeadCell>
                     <CustomTableHeadCell width="15%">
                       Đơn vị tính
                     </CustomTableHeadCell>
                     <CustomTableHeadCell width="15%">
-                      Số lượng
+                      Số lượng có sẵn
+                    </CustomTableHeadCell>{" "}
+                    <CustomTableHeadCell width="15%">
+                      Số lượng xuất
                     </CustomTableHeadCell>
                     <CustomTableHeadCell width="20%">
-                      Tình trạng kỹ thuật
+                      Số lượng đã bàn giao
                     </CustomTableHeadCell>
                     <CustomTableHeadCell width="20%">
                       Ghi chú
@@ -537,13 +544,13 @@ export default function ToolTransferForm({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {formik.values.chiTietDieuDongCCDCVatTuDTOS.map(
-                    (row, index) => (
+                  {(formik.values.chiTietDieuDongCCDCVatTuDTOS || []).map(
+                    (row: any, index) => (
                       <TableRow key={index}>
                         <CustomTableCell>
                           <FieldAutoCompleted
                             title=""
-                            labelkey="tenCCDCVatTu"
+                            labelkey="ten"
                             data={allToolsByDonVi}
                             formik={formik}
                             field={`chiTietDieuDongCCDCVatTuDTOS.${index}.idCCDCVatTu`}
@@ -557,7 +564,7 @@ export default function ToolTransferForm({
                                 value?.soLuong || 0,
                               );
                               formik.setFieldValue(
-                                `chiTietDieuDongCCDCVatTuDTOS.${index}.tenCCDCVatTu`,
+                                `chiTietDieuDongCCDCVatTuDTOS.${index}.ten`,
                                 value?.tenCCDCVatTu || "",
                               );
                             }}
@@ -591,6 +598,15 @@ export default function ToolTransferForm({
                             formik={formik}
                             field={`chiTietDieuDongCCDCVatTuDTOS.${index}.soLuongXuat`}
                             disabled={readOnly}
+                          />
+                        </CustomTableCell>
+                        <CustomTableCell>
+                          <FieldInput
+                            title=""
+                            type="number"
+                            formik={formik}
+                            field={`chiTietDieuDongCCDCVatTuDTOS.${index}.soLuongDaBanGiao`}
+                            disabled={true}
                           />
                         </CustomTableCell>
 
@@ -640,10 +656,11 @@ export default function ToolTransferForm({
                           idCCDCVatTu: "",
                           donViTinh: "",
                           soLuong: 0,
-                          soLuongXuat: 1,
+                          soLuongXuat: 0,
                           ghiChu: "",
                           hienTrang: "",
                           moTa: "",
+                          isActive: true,
                         },
                       ]);
                     }}

@@ -103,4 +103,5 @@ export interface ToolTransferData {
   chuKyList: ToolSignature[];
   chiTietDieuDongCCDCVatTuDTOS: ToolTransferDetail[];
   nguoiKyList: ToolSigner[];
+  initialChiTiet: string[];
 }
