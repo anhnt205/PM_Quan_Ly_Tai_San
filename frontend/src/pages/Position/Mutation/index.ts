@@ -100,14 +100,28 @@ export const usePositionMutation = (
   });
 
   const { data = { items: [], totalItems: 0 }, isLoading } = useQuery({
-    queryKey: ["positionsPage", page, pageSize, searchValue], // Key để cache dữ liệu
+    queryKey: ["positionsPage", page, pageSize, searchValue],
     queryFn: async () => {
+      // Nếu có searchValue thì gọi API search
+      if (searchValue) {
+        const res = await api.get("/chucvu/search", {
+          params: {
+            ten: searchValue,
+          },
+        });
+
+        return {
+          items: res.data?.data || [],
+          totalItems: res.data?.data?.length || 0,
+        };
+      }
+
+      // Không search thì gọi API paged như cũ
       const res = await api.get("/chucvu/congty/ct001/paged", {
         params: {
           idcongty: "ct001",
-          page: page,
+          page,
           size: pageSize,
-          search: searchValue,
         },
       });
       return res.data;
@@ -242,6 +256,6 @@ export const usePositionMutation = (
     positionsPage: data,
     allPositions,
     isLoading,
-    getByIdMutation
+    getByIdMutation,
   };
 };

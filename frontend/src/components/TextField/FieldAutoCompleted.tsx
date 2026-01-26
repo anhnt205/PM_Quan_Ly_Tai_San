@@ -8,6 +8,7 @@ interface Props {
   formik?: any;
   field?: string;
   disabled?: boolean;
+  labelOption?: string;
   onChange?: (newValue: any) => void;
   componentsProps?: any;
   autocompleteSx?: any;
@@ -21,13 +22,19 @@ export default function FieldAutoCompleted({
   field,
   disabled,
   onChange,
+  labelOption,
   componentsProps,
   autocompleteSx,
 }: Props) {
   const currentValue = formik && field ? getIn(formik.values, field) : null;
 
+  const valueKey = labelOption;
   const selectedOption =
-    data.find((i) => i.id?.toString() === currentValue?.toString()) || null;
+    valueKey && currentValue
+      ? data.find(
+          (i) => i?.[valueKey]?.toString() === currentValue?.toString(),
+        ) || null
+      : null;
 
   const touched = field ? getIn(formik.touched, field) : false;
   const error = field ? getIn(formik.errors, field) : null;
@@ -39,22 +46,23 @@ export default function FieldAutoCompleted({
       disabled={disabled}
       fullWidth
       options={data}
-      // 1. Hiển thị trên ô Input sau khi chọn
       getOptionLabel={(option: any) => {
         if (typeof option === "string") return option;
-        return option[labelkey] ? String(option[labelkey]) : "";
+        if (!labelOption) return "";
+        return option[labelkey] ?? "";
       }}
-      // 2. Hiển thị trong danh sách Dropdown (Dòng này giúp hiển thị đẹp hơn)
       renderOption={(props, option) => (
         <Box component="li" {...props} key={option.id}>
           {option[labelkey]}
         </Box>
       )}
-      isOptionEqualToValue={(option, value) => option?.id === value?.id}
+      isOptionEqualToValue={(option, value) =>
+        valueKey ? option?.[valueKey] === value?.[valueKey] : false
+      }
       value={selectedOption}
       onChange={(e, newValue) => {
-        if (formik && field) {
-          formik.setFieldValue(field, newValue?.id || null);
+        if (formik && field && valueKey) {
+          formik.setFieldValue(field, newValue?.[valueKey] || null);
         }
         if (onChange) {
           onChange(newValue);
