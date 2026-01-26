@@ -36,7 +36,6 @@ export default function ReportS22DN({ title }: { title?: string }) {
       Nam: new Date().getFullYear(),
     },
     onSubmit: (values) => {
-      // if IdDonVi not selected, show a small snackbar and do not trigger fetch
       if (!values.IdDonVi) {
         setSnackbarMessage("Vui lòng chọn đơn vị trước khi lấy dữ liệu");
         setSnackbarSeverity("error");
@@ -44,7 +43,6 @@ export default function ReportS22DN({ title }: { title?: string }) {
         return;
       }
       console.log("Lấy dữ liệu báo cáo:", values);
-      // trigger child to fetch data by bumping fetchKey
       setFetchKey((k) => k + 1);
     },
   });
@@ -67,7 +65,6 @@ export default function ReportS22DN({ title }: { title?: string }) {
       return;
     }
 
-    // --- ĐỊNH NGHĨA STYLE ---
     const borderStyle = {
       top: { style: "thin" },
       bottom: { style: "thin" },
@@ -78,28 +75,24 @@ export default function ReportS22DN({ title }: { title?: string }) {
     const fontStyle = { name: "Times New Roman", sz: 11 };
     const fontBold = { name: "Times New Roman", sz: 11, bold: true };
 
-    // Style cho tiêu đề cột (Header): In đậm, căn giữa, có viền
     const sHeader = {
       font: fontBold,
       alignment: { horizontal: "center", vertical: "center", wrapText: true },
       border: borderStyle,
     };
 
-    // Style cho dữ liệu text thường: Căn trái, có viền
     const sText = {
       font: fontStyle,
       alignment: { horizontal: "left", vertical: "center", wrapText: true },
       border: borderStyle,
     };
 
-    // Style cho dữ liệu số: Căn phải, có viền
     const sNum = {
       font: fontStyle,
       alignment: { horizontal: "right", vertical: "center" },
       border: borderStyle,
     };
 
-    // Style cho phần Tiêu đề trang (Không viền)
     const sTitle = {
       font: { name: "Times New Roman", sz: 16, bold: true },
       alignment: { horizontal: "center" },
@@ -110,8 +103,6 @@ export default function ReportS22DN({ title }: { title?: string }) {
       alignment: { horizontal: "center" },
     };
 
-    // --- HÀM HỖ TRỢ TẠO CELL ---
-    // Giúp gán style nhanh cho từng ô
     const cell = (v: any, s: any) => ({ v: v, s: s });
 
     const wb = XLSX.utils.book_new();
@@ -119,8 +110,6 @@ export default function ReportS22DN({ title }: { title?: string }) {
     let merges: any[] = [];
     let currentRow = 0;
 
-    // --- PHẦN 1: HEADER TRANG ---
-    // Dùng chuỗi thường vì phần này không cần border
     wsData.push([
       `Đơn vị: ${selectedDeptName || ""}`,
       "",
@@ -159,8 +148,6 @@ export default function ReportS22DN({ title }: { title?: string }) {
     merges.push({ s: { r: 1, c: 8 }, e: { r: 1, c: 12 } });
     merges.push({ s: { r: 2, c: 8 }, e: { r: 2, c: 12 } });
 
-    // Áp dụng style thủ công cho phần header trang (nếu cần đẹp hơn)
-    // Ở đây mình để mặc định cho đơn giản, chỉ xử lý Title chính
     currentRow = 4;
     wsData[currentRow] = Array(13).fill("");
     wsData[currentRow][0] = {
@@ -182,12 +169,10 @@ export default function ReportS22DN({ title }: { title?: string }) {
     };
     merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 12 } });
 
-    currentRow += 2; // Cách dòng
+    currentRow += 2;
 
-    // --- HÀM VẼ HEADER BẢNG (Có Border) ---
     const addTableHeader = (startRow: number, title: string) => {
-      // 1. Tên bảng (Không border hoặc border bao quanh tùy ý, ở đây để Bold Center)
-      wsData[startRow] = Array(13).fill(cell("", sHeader)); // Fill cell rỗng có border để khi merge không mất viền
+      wsData[startRow] = Array(13).fill(cell("", sHeader)); 
       wsData[startRow][0] = cell(title, {
         ...sHeader,
         alignment: { horizontal: "left", vertical: "center" },
@@ -196,13 +181,11 @@ export default function ReportS22DN({ title }: { title?: string }) {
 
       const r = startRow + 1;
 
-      // Helper tạo dòng header full border
       const createHeaderRow = () =>
         Array(13)
           .fill(null)
           .map(() => cell("", sHeader));
 
-      // Dòng 1
       const h1 = createHeaderRow();
       h1[0] = cell("Ghi tăng tài sản cố định", sHeader);
       h1[7] = cell("Ghi giảm tài sản cố định", sHeader);
@@ -212,7 +195,6 @@ export default function ReportS22DN({ title }: { title?: string }) {
       merges.push({ s: { r: r, c: 7 }, e: { r: r, c: 11 } });
       merges.push({ s: { r: r, c: 12 }, e: { r: r + 2, c: 12 } });
 
-      // Dòng 2
       const h2 = createHeaderRow();
       h2[0] = cell("Chứng từ", sHeader);
       h2[7] = cell("Chứng từ", sHeader);
@@ -226,14 +208,12 @@ export default function ReportS22DN({ title }: { title?: string }) {
       h2[9] = cell("Lý do", sHeader);
       wsData[r + 1] = h2;
 
-      merges.push({ s: { r: r + 1, c: 0 }, e: { r: r + 1, c: 1 } }); // CT Tăng
-      merges.push({ s: { r: r + 1, c: 7 }, e: { r: r + 1, c: 8 } }); // CT Giảm
-      // Merge dọc các cột khác
+      merges.push({ s: { r: r + 1, c: 0 }, e: { r: r + 1, c: 1 } }); 
+      merges.push({ s: { r: r + 1, c: 7 }, e: { r: r + 1, c: 8 } }); 
       [2, 3, 4, 5, 6, 9, 10, 11].forEach((c) =>
         merges.push({ s: { r: r + 1, c: c }, e: { r: r + 2, c: c } }),
       );
 
-      // Dòng 3
       const h3 = createHeaderRow();
       h3[0] = cell("Số hiệu", sHeader);
       h3[1] = cell("Ngày tháng", sHeader);
@@ -241,7 +221,6 @@ export default function ReportS22DN({ title }: { title?: string }) {
       h3[8] = cell("Ngày tháng", sHeader);
       wsData[r + 2] = h3;
 
-      // Dòng 4 (A, B, C...)
       const h4 = [
         "A",
         "B",
@@ -262,7 +241,6 @@ export default function ReportS22DN({ title }: { title?: string }) {
       return r + 4;
     };
 
-    // --- PHẦN 2: BẢNG TSCĐ ---
     currentRow = addTableHeader(
       currentRow,
       "Bảng ghi tăng/giảm Tài sản cố định",
@@ -288,7 +266,6 @@ export default function ReportS22DN({ title }: { title?: string }) {
 
     currentRow += 1;
 
-    // --- PHẦN 3: BẢNG CCDC ---
     currentRow = addTableHeader(
       currentRow,
       "Bảng ghi tăng/giảm Công cụ dụng cụ cố định",
@@ -314,8 +291,6 @@ export default function ReportS22DN({ title }: { title?: string }) {
 
     currentRow += 2;
 
-    // --- PHẦN 4: FOOTER (Chữ ký) ---
-    // Phần này không cần border ô, dùng text thường
     const f = data.footerData || {};
     wsData[currentRow] = [
       cell(
@@ -332,23 +307,22 @@ export default function ReportS22DN({ title }: { title?: string }) {
     currentRow += 2;
     const dateSign = `Ngày ${f.ngayKy || "..."} tháng ${f.thangKy || "..."} năm ${f.namKy || "..."}`;
 
-    // Tạo dòng chữ ký
     const signRow = Array(13).fill("");
     signRow[0] = cell("Người ghi sổ", sInfoCenter);
     signRow[5] = cell("Kế toán trưởng", sInfoCenter);
     signRow[11] = cell(dateSign, {
       ...sInfoCenter,
       font: { ...sInfoCenter.font, italic: true },
-    }); // Ngày tháng nghiêng
+    });
     wsData[currentRow] = signRow;
 
     merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 2 } });
     merges.push({ s: { r: currentRow, c: 4 }, e: { r: currentRow, c: 7 } });
-    merges.push({ s: { r: currentRow, c: 11 }, e: { r: currentRow, c: 12 } }); // Ngày tháng merge
+    merges.push({ s: { r: currentRow, c: 11 }, e: { r: currentRow, c: 12 } }); 
 
     currentRow++;
     const jobRow = Array(13).fill("");
-    jobRow[11] = cell("Giám đốc", sInfoCenter); // Giám đốc ở dòng dưới ngày tháng
+    jobRow[11] = cell("Giám đốc", sInfoCenter); 
     wsData[currentRow] = jobRow;
     merges.push({ s: { r: currentRow, c: 11 }, e: { r: currentRow, c: 12 } });
 
@@ -372,7 +346,44 @@ export default function ReportS22DN({ title }: { title?: string }) {
     merges.push({ s: { r: currentRow, c: 4 }, e: { r: currentRow, c: 7 } });
     merges.push({ s: { r: currentRow, c: 11 }, e: { r: currentRow, c: 12 } });
 
-    // --- TẠO SHEET & XUẤT ---
+    currentRow += 2;
+    wsData[currentRow] = Array(13).fill("");
+    wsData[currentRow][0] = cell(
+      "SỔ THEO DÕI TÀI SẢN CỐ ĐỊNH VÀ CÔNG CỤ, DỤNG CỤ TẠI NƠI SỬ DỤNG",
+      { ...sInfoCenter, font: { name: "Times New Roman", sz: 14, bold: true } },
+    );
+    merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 12 } });
+
+    currentRow++;
+    wsData[currentRow] = Array(13).fill("");
+    wsData[currentRow][0] = cell("(Mẫu số S22-DN)", { ...sInfoCenter });
+    merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 12 } });
+
+    currentRow += 2;
+    const descLines = [
+      "1. Mục đích:",
+      "Sổ này dùng để ghi chép tình hình tăng, giảm tài sản cố định và công cụ, dụng cụ tại nơi sử dụng nhằm quản lý tài sản và dụng cụ đã được cấp cho các phòng, ban; làm căn cứ đối chiếu khi tiến hành kiểm kê định kỳ.",
+      "2. Căn cứ và phương pháp ghi sổ:",
+      "Mỗi đơn vị hoặc bộ phận (phân xưởng, phòng ban...) thuộc doanh nghiệp phải mở một sổ để theo dõi tài sản. Căn cứ vào chứng từ gốc về tăng, giảm tài sản để ghi vào sổ theo đơn vị sử dụng như sau:",
+      "- Cột A, B: Ghi số hiệu, ngày tháng của chứng từ tăng tài sản cố định và công cụ, dụng cụ.",
+      "- Cột C: Ghi tên nhãn hiệu, đặc điểm TSCĐ và công cụ, dụng cụ.",
+      "- Cột D: Ghi đơn vị tính (cái, chiếc,...).",
+      "- Cột 1: Ghi số lượng.",
+      "- Cột 2: Ghi nguyên giá TSCĐ hoặc đơn giá công cụ, dụng cụ.",
+      "- Cột 3: Ghi số tiền (Cột 3 = Cột 1 x Cột 2).",
+      "- Cột E, G: Ghi số hiệu, ngày tháng của chứng từ ghi giảm tài sản cố định và công cụ, dụng cụ.",
+      "- Cột H: Ghi lý do giảm tài sản cố định và công cụ, dụng cụ.",
+      "- Cột 4: Ghi số lượng tài sản/công cụ giảm.",
+      "- Cột 5: Ghi nguyên giá tài sản cố định và giá trị công cụ, dụng cụ giảm.",
+    ];
+
+    descLines.forEach((txt) => {
+      currentRow++;
+      wsData[currentRow] = Array(13).fill("");
+      wsData[currentRow][0] = cell(txt, sInfo);
+      merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 12 } });
+    });
+
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     ws["!merges"] = merges;
     ws["!cols"] = [
@@ -423,7 +434,6 @@ export default function ReportS22DN({ title }: { title?: string }) {
         zIndex: 0,
       }}
     >
-      {/* Box 1: Form chọn đơn vị, năm và các nút */}
       <Box
         sx={{
           p: 3,
@@ -540,7 +550,6 @@ export default function ReportS22DN({ title }: { title?: string }) {
         </Stack>
       </Box>
 
-      {/* Box 2: Nội dung báo cáo */}
       <Box
         sx={{
           p: 3,

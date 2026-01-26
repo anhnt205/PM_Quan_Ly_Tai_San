@@ -17,10 +17,8 @@ import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted
 import FieldYearMonth from "../../../components/TextField/FieldYearMonth";
 import MauSo01Content from "./MauSo01Content";
 import { Buffer } from "buffer";
-// @ts-ignore
-import * as XLSX from "xlsx-js-style";
+import XLSX from "xlsx-js-style";
 
-// @ts-ignore
 if (typeof window !== "undefined") {
   window.Buffer = window.Buffer || Buffer;
 }
@@ -47,7 +45,6 @@ export default function MauSo01({ title }: { title?: string }) {
       )}/${new Date().getFullYear()}`,
     },
     onSubmit: (values) => {
-      // require IdDonVi before fetching
       if (!values.IdDonVi) {
         setSnackbarMessage("Vui lòng chọn đơn vị trước khi lấy dữ liệu");
         setSnackbarSeverity("error");
@@ -66,13 +63,14 @@ export default function MauSo01({ title }: { title?: string }) {
       (await api.get("/phongban", { params: { idcongty: idCongTy } })).data,
   });
 
-  // --- CHÈN HÀM NÀY VÀO TRONG COMPONENT (Trước return) ---
   const handleExport = () => {
     const data = contentData;
-    // Kiểm tra dữ liệu
     if (
       !data ||
-      (!data.tsRows?.length && !data.ccdcRows?.length && !data.rows?.length)
+      (!data.tsRows?.length &&
+        !data.ccdcRows?.length &&
+        !data.rows?.length &&
+        !data.tableRows?.length)
     ) {
       setSnackbarMessage("Chưa có dữ liệu để xuất!");
       setSnackbarSeverity("warning");
@@ -80,7 +78,13 @@ export default function MauSo01({ title }: { title?: string }) {
       return;
     }
 
-    // 1. SETUP STYLE
+    console.log("Export MauSo01 data", {
+      tsRowsLen: data.tsRows?.length,
+      ccdcRowsLen: data.ccdcRows?.length,
+      rowsLen: data.rows?.length,
+      tableRowsLen: data.tableRows?.length,
+    });
+
     const border = {
       top: { style: "thin" },
       bottom: { style: "thin" },
@@ -116,7 +120,6 @@ export default function MauSo01({ title }: { title?: string }) {
     let merges: any[] = [];
     let r = 0;
 
-    // 2. HEADER TRANG (TKV / MẪU SỐ)
     wsData[r] = Array(12).fill("");
     wsData[r][0] = cell("TẬP ĐOÀN CÔNG NGHIỆP\nTHAN – KHOÁNG SẢN VIỆT NAM", {
       font: fontB,
@@ -133,7 +136,7 @@ export default function MauSo01({ title }: { title?: string }) {
     r++;
 
     wsData[r] = Array(12).fill("");
-    r++; // Dòng trống do merge TKV
+    r++; 
 
     wsData[r] = Array(12).fill("");
     wsData[r][0] = cell("CÔNG TY THAN UÔNG BÍ - TKV", {
@@ -153,7 +156,6 @@ export default function MauSo01({ title }: { title?: string }) {
     );
     r += 2;
 
-    // 3. TIÊU ĐỀ BÁO CÁO
     wsData[r] = Array(12).fill("");
     wsData[r][0] = cell(
       "SỔ THEO DÕI TÀI SẢN CỐ ĐỊNH VÀ CÔNG CỤ DỤNG CỤ TẠI NƠI SỬ DỤNG",
@@ -179,7 +181,6 @@ export default function MauSo01({ title }: { title?: string }) {
     merges.push({ s: { r: r, c: 0 }, e: { r: r, c: 11 } });
     r += 2;
 
-    // 4. HEADER TABLE (Phức tạp nhất)
     const h1 = Array(12)
       .fill(null)
       .map(() => cell("", styleHeader));
@@ -222,17 +223,15 @@ export default function MauSo01({ title }: { title?: string }) {
       "9",
     ].map((t) => cell(t, styleHeader));
 
-    // Merge Header
     [0, 1, 2, 3, 4, 9, 10, 11].forEach((c) =>
       merges.push({ s: { r: r, c: c }, e: { r: r + 1, c: c } }),
-    ); // Merge dọc
+    );
     merges.push(
       { s: { r: r, c: 5 }, e: { r: r, c: 6 } },
       { s: { r: r, c: 7 }, e: { r: r, c: 8 } },
-    ); // Merge ngang (Tăng/Giảm)
+    ); 
     r += 3;
 
-    // 5. DATA FILLING (Có tách nhóm A/B)
     const fillRow = (row: any, stt: any) => [
       cell(stt, styleCenter),
       cell(row.tenNhanHieu, styleText),
@@ -248,36 +247,60 @@ export default function MauSo01({ title }: { title?: string }) {
       cell(row.ghiChu, styleText),
     ];
 
-    if (data.tsRows?.length) {
-      wsData[r] = Array(12).fill(cell("", { font: fontB, border }));
-      wsData[r][0] = cell("A", {
-        font: fontB,
-        border,
-        alignment: { horizontal: "center" },
-      });
-      wsData[r][1] = cell("Tài sản cố định", { font: fontB, border });
-      r++;
-      data.tsRows.forEach((row: any, i: number) => {
+    const deriveFromTable = (which: "A" | "B") => {
+      const t = data.tableRows || [];
+      const res: any[] = [];
+      let inSection = false;
+      for (const r of t) {
+        if (r.stt === which) {
+          inSection = true;
+          continue;
+        }
+        if (inSection) {
+          if (r.stt === "A" || r.stt === "B") break;
+          res.push(r);
+        }
+      }
+      return res;
+    };
+
+    const tsRows =
+      data.tsRows && data.tsRows.length ? data.tsRows : deriveFromTable("A");
+    const ccdcRows =
+      data.ccdcRows && data.ccdcRows.length
+        ? data.ccdcRows
+        : deriveFromTable("B");
+
+    wsData[r] = Array(12).fill(cell("", { font: fontB, border }));
+    wsData[r][0] = cell("A", {
+      font: fontB,
+      border,
+      alignment: { horizontal: "center" },
+    });
+    wsData[r][1] = cell("Tài sản cố định", { font: fontB, border });
+    r++;
+    if (tsRows?.length) {
+      tsRows.forEach((row: any, i: number) => {
         wsData[r] = fillRow(row, i + 1);
         r++;
       });
     }
-    if (data.ccdcRows?.length) {
-      wsData[r] = Array(12).fill(cell("", { font: fontB, border }));
-      wsData[r][0] = cell("B", {
-        font: fontB,
-        border,
-        alignment: { horizontal: "center" },
-      });
-      wsData[r][1] = cell("Công cụ dụng cụ", { font: fontB, border });
-      r++;
-      data.ccdcRows.forEach((row: any, i: number) => {
+
+    wsData[r] = Array(12).fill(cell("", { font: fontB, border }));
+    wsData[r][0] = cell("B", {
+      font: fontB,
+      border,
+      alignment: { horizontal: "center" },
+    });
+    wsData[r][1] = cell("Công cụ dụng cụ", { font: fontB, border });
+    r++;
+    if (ccdcRows?.length) {
+      ccdcRows.forEach((row: any, i: number) => {
         wsData[r] = fillRow(row, i + 1);
         r++;
       });
     }
     if (!data.tsRows && !data.ccdcRows && data.rows) {
-      // Fallback
       data.rows.forEach((row: any, i: number) => {
         wsData[r] = fillRow(row, i + 1);
         r++;
@@ -285,19 +308,47 @@ export default function MauSo01({ title }: { title?: string }) {
     }
     r++;
 
-    // 6. FOOTER (Ký tên)
+    wsData[r] = Array(12).fill("");
+    wsData[r][0] = cell(
+      "Gửi kèm theo các Quyết định, biên bản giao nhận tăng giảm tài sản, công cụ dụng cụ trong kỳ báo cáo",
+      styleText,
+    );
+    merges.push({ s: { r: r, c: 0 }, e: { r: r, c: 11 } });
+    r++;
+    wsData[r] = Array(12).fill("");
+    wsData[r][0] = cell(
+      "Lưu ý: Báo cáo tháng trước vào ngày 15 hàng tháng (tháng sau)",
+      { ...styleText, font: { name: "Times New Roman", sz: 11, italic: true } },
+    );
+    merges.push({ s: { r: r, c: 0 }, e: { r: r, c: 11 } });
+    r += 2;
+
     wsData[r] = Array(12).fill("");
     const sSign = { font: fontB, alignment: { horizontal: "center" } };
-    wsData[r][1] = cell("Thống kê phân xưởng", sSign);
-    wsData[r][5] = cell("Phó quản đốc cơ điện", sSign);
-    wsData[r][9] = cell("Quản đốc phân xưởng", sSign);
+    wsData[r][0] = cell("Thống kê phân xưởng", sSign);
+    wsData[r][4] = cell("Phó quản đốc cơ điện", sSign);
+    wsData[r][8] = cell("Quản đốc phân xưởng", sSign);
     merges.push(
       { s: { r: r, c: 0 }, e: { r: r, c: 3 } },
       { s: { r: r, c: 4 }, e: { r: r, c: 7 } },
       { s: { r: r, c: 8 }, e: { r: r, c: 11 } },
     );
 
-    // XUẤT FILE
+    r++;
+    wsData[r] = Array(12).fill("");
+    const sSignNote = {
+      font: { name: "Times New Roman", sz: 11, italic: true },
+      alignment: { horizontal: "center" },
+    };
+    wsData[r][0] = cell("(Ký, ghi rõ họ tên)", sSignNote);
+    wsData[r][4] = cell("(Ký, ghi rõ họ tên)", sSignNote);
+    wsData[r][8] = cell("(Ký, ghi rõ họ tên)", sSignNote);
+    merges.push(
+      { s: { r: r, c: 0 }, e: { r: r, c: 3 } },
+      { s: { r: r, c: 4 }, e: { r: r, c: 7 } },
+      { s: { r: r, c: 8 }, e: { r: r, c: 11 } },
+    );
+
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     ws["!merges"] = merges;
     ws["!cols"] = [
@@ -316,8 +367,20 @@ export default function MauSo01({ title }: { title?: string }) {
     ];
 
     const fileName = `Mau_So_01_${(formik.values.IdDonVi || "").replace(/ /g, "_")}_${formik.values.KyBaoCao.replace("/", "-")}.xlsx`;
-    XLSX.utils.book_append_sheet(wb, ws, "MauSo01");
-    XLSX.writeFile(wb, fileName);
+    try {
+      XLSX.utils.book_append_sheet(wb, ws, "MauSo01");
+      XLSX.writeFile(wb, fileName);
+      setSnackbarMessage("Xuất file thành công");
+      setSnackbarSeverity("success");
+      setOpenSnackbar(true);
+    } catch (err: any) {
+      console.error("Export MauSo01 error", err);
+      setSnackbarMessage(
+        err?.message ? `Lỗi xuất file: ${err.message}` : "Lỗi khi xuất file",
+      );
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+    }
   };
 
   return (

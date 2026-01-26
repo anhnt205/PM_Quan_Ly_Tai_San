@@ -42,12 +42,12 @@ export default function FieldAutoCompleted({
       // 1. Hiển thị trên ô Input sau khi chọn
       getOptionLabel={(option: any) => {
         if (typeof option === "string") return option;
-        return option[labelkey] ? `${option[labelkey]} - ${option.id}` : "";
+        return option[labelkey] ? String(option[labelkey]) : "";
       }}
       // 2. Hiển thị trong danh sách Dropdown (Dòng này giúp hiển thị đẹp hơn)
       renderOption={(props, option) => (
         <Box component="li" {...props} key={option.id}>
-          {option[labelkey]} - {option.id}
+          {option[labelkey]}
         </Box>
       )}
       isOptionEqualToValue={(option, value) => option?.id === value?.id}

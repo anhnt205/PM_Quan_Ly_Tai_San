@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "../../../config/api.config";
+import { Buffer } from "buffer";
+import XLSX from "xlsx-js-style";
 import {
   Box,
   Button,
@@ -36,7 +38,6 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
       NgayBaoCao: new Date().toISOString().slice(0, 19).replace("T", " "),
     },
     onSubmit: (values) => {
-      // require IdDonVi before fetching
       if (!values.IdDonVi) {
         setSnackbarMessage("Vui lòng chọn đơn vị trước khi lấy dữ liệu");
         setSnackbarSeverity("error");
@@ -56,29 +57,341 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
   });
 
   const handleExport = () => {
-    const hasContent = (data: any) => {
-      if (!data) return false;
-      if (Array.isArray(data)) return data.length > 0;
-      for (const k of Object.keys(data)) {
-        const v = (data as any)[k];
-        if (Array.isArray(v) && v.length > 0) return true;
-        if (v && typeof v === "object") {
-          for (const k2 of Object.keys(v)) {
-            const v2 = v[k2];
-            if (Array.isArray(v2) && v2.length > 0) return true;
-          }
-        }
-      }
-      return false;
-    };
-
-    if (!hasContent(contentData)) {
+    const data = contentData as any;
+    const items =
+      data && Array.isArray(data.inventoryItems) ? data.inventoryItems : [];
+    if (!data || items.length === 0) {
       setSnackbarMessage("Chưa có dữ liệu để xuất!");
       setSnackbarSeverity("warning");
       setOpenSnackbar(true);
       return;
     }
-    // TODO: implement export when content exists
+
+    try {
+      if (typeof window !== "undefined")
+        window.Buffer = window.Buffer || Buffer;
+
+      const { closingTime = "" } = data || {};
+      const inventory = items;
+
+      const wb = XLSX.utils.book_new();
+
+      const border = {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+      };
+      const font = { name: "Times New Roman", sz: 12 };
+      const fontB = { ...font, bold: true };
+      const fontI = { ...font, italic: true };
+
+      const sHeaderTable = {
+        font: fontB,
+        alignment: { horizontal: "center", vertical: "center", wrapText: true },
+        border,
+      };
+      const sTextTable = {
+        font,
+        alignment: { horizontal: "left", vertical: "center", wrapText: true },
+        border,
+      };
+      const sCenterTable = {
+        font,
+        alignment: { horizontal: "center", vertical: "center", wrapText: true },
+        border,
+      };
+      const sNumberCenter = { ...sCenterTable, numFmt: "#,##0" };
+
+      const cell = (v: any, s: any) => ({ v, s });
+
+      const COLS = 14; 
+      let wsData: any[][] = [];
+      let merges: any[] = [];
+      let r = 0;
+
+      wsData[r] = Array(COLS).fill("");
+      wsData[r][0] = cell("TẬP ĐOÀN CÔNG NGHIỆP\nTHAN - KHOÁNG SẢN VIỆT NAM", {
+        font: fontB,
+        alignment: { horizontal: "center", wrapText: true },
+      });
+      wsData[r][COLS - 3] = cell("Mẫu số 05-TSCĐ", {
+        font: fontB,
+        alignment: { horizontal: "center", wrapText: true },
+      });
+      merges.push({ s: { r: r, c: 0 }, e: { r: r, c: 3 } });
+      merges.push({ s: { r: r, c: COLS - 3 }, e: { r: r, c: COLS - 1 } });
+      r++;
+
+      wsData[r] = Array(COLS).fill("");
+      wsData[r][0] = cell("CÔNG TY THAN UÔNG BÍ - TKV", {
+        font: fontB,
+        alignment: { horizontal: "center", wrapText: true },
+      });
+      wsData[r][COLS - 3] = cell(
+        "Ban hành kèm theo QĐ số ............./QĐ-TUB\nngày ....../....../...... của Giám đốc Công ty",
+        {
+          font: { ...font, sz: 11, italic: true },
+          alignment: { horizontal: "center", wrapText: true },
+        },
+      );
+      merges.push({ s: { r: r, c: 0 }, e: { r: r, c: 3 } });
+      merges.push({ s: { r: r, c: COLS - 3 }, e: { r: r + 1, c: COLS - 1 } });
+      r++;
+
+      wsData[r] = Array(COLS).fill("");
+      r++;
+
+      wsData[r] = Array(COLS).fill("");
+      wsData[r][0] = cell("BIÊN BẢN KIỂM KÊ TÀI SẢN CỐ ĐỊNH", {
+        font: { ...fontB, sz: 14 },
+        alignment: { horizontal: "center", vertical: "center" },
+      });
+      merges.push({ s: { r: r, c: 0 }, e: { r: r, c: COLS - 1 } });
+      r++;
+
+      wsData[r] = Array(COLS).fill("");
+      wsData[r][0] = cell(
+        `Đơn vị: ${selectedDeptName || "...................................."}`,
+        {
+          font: fontB,
+          alignment: { horizontal: "center", vertical: "center" },
+        },
+      );
+      merges.push({ s: { r: r, c: 0 }, e: { r: r, c: COLS - 1 } });
+      r++;
+
+      wsData[r] = Array(COLS).fill("");
+      let dateTimeStr = "";
+      try {
+        const raw = String(formik.values.NgayBaoCao || "");
+        dateTimeStr = raw;
+        if (raw) {
+          const iso = raw.includes("T") ? raw : raw.replace(" ", "T");
+          const dt = new Date(iso);
+          if (!isNaN(dt.getTime())) dateTimeStr = dt.toLocaleString("vi-VN");
+        }
+      } catch (err) {}
+      
+      wsData[r][0] = cell(`Thời điểm kiểm kê: ${dateTimeStr}`, {
+        font: fontI,
+        alignment: { horizontal: "center", vertical: "center" },
+      });
+      merges.push({ s: { r: r, c: 0 }, e: { r: r, c: COLS - 1 } });
+      r++;
+
+      wsData[r] = Array(COLS).fill("");
+      r++;
+      
+      const rHeaderStart = r; 
+
+      wsData[r] = Array(COLS).fill("");
+
+      wsData[r][0] = cell("STT", sHeaderTable);
+      wsData[r][1] = cell("Tên tài sản cố định\n(Ký mã hiệu)", sHeaderTable);
+      wsData[r][2] = cell("Mã số", sHeaderTable);
+      wsData[r][3] = cell("Nơi sử\ndụng", sHeaderTable);
+      wsData[r][4] = cell("Kế toán", sHeaderTable);
+      wsData[r][7] = cell("Kiểm kê", sHeaderTable);
+      wsData[r][10] = cell("Chênh lệch", sHeaderTable);
+      wsData[r][13] = cell("Ghi chú", sHeaderTable);
+
+      wsData[r][5] = cell("", sHeaderTable);
+      wsData[r][6] = cell("", sHeaderTable);
+
+      wsData[r][8] = cell("", sHeaderTable);
+      wsData[r][9] = cell("", sHeaderTable);
+
+      wsData[r][11] = cell("", sHeaderTable);
+      wsData[r][12] = cell("", sHeaderTable);
+
+      merges.push({ s: { r: r, c: 0 }, e: { r: r + 1, c: 0 } }); 
+      merges.push({ s: { r: r, c: 1 }, e: { r: r + 1, c: 1 } }); 
+      merges.push({ s: { r: r, c: 2 }, e: { r: r + 1, c: 2 } }); 
+      merges.push({ s: { r: r, c: 3 }, e: { r: r + 1, c: 3 } }); 
+      merges.push({ s: { r: r, c: 13 }, e: { r: r + 1, c: 13 } }); 
+
+      merges.push({ s: { r: r, c: 4 }, e: { r: r, c: 6 } });   
+      merges.push({ s: { r: r, c: 7 }, e: { r: r, c: 9 } });   
+      merges.push({ s: { r: r, c: 10 }, e: { r: r, c: 12 } }); 
+      
+      r++;
+
+      wsData[r] = Array(COLS).fill("");
+      
+      const subCols = ["Số lượng", "Nguyên giá", "Giá trị còn lại"];
+
+      wsData[r][4] = cell(subCols[0], sHeaderTable);
+      wsData[r][5] = cell(subCols[1], sHeaderTable);
+      wsData[r][6] = cell(subCols[2], sHeaderTable);
+      
+      wsData[r][7] = cell(subCols[0], sHeaderTable);
+      wsData[r][8] = cell(subCols[1], sHeaderTable);
+      wsData[r][9] = cell(subCols[2], sHeaderTable);
+      
+      wsData[r][10] = cell(subCols[0], sHeaderTable);
+      wsData[r][11] = cell(subCols[1], sHeaderTable);
+      wsData[r][12] = cell(subCols[2], sHeaderTable);
+
+      [0, 1, 2, 3, 13].forEach((colIdx) => {
+         wsData[r][colIdx] = cell("", sHeaderTable); 
+      });
+
+      r++;
+      
+      (inventory || []).forEach((it: any, idx: number) => {
+        const row = Array(COLS).fill("");
+
+        const parseNum = (val: any) => {
+          if (!val) return 0;
+          const num = Number(String(val).replace(/,/g, ""));
+          return isFinite(num) ? num : 0;
+        };
+
+        row[0] = cell(it.stt || String(idx + 1), sCenterTable);
+        row[1] = cell(it.tenTSCD || it.tenTaiSan || "", sTextTable);
+        row[2] = cell(it.maso || it.maSo || "", sCenterTable);
+        row[3] = cell(it.noiSudung || "", sTextTable);
+
+        const ktSL = it.soluongkt || it.soluong; 
+        const ktNG = parseNum(it.nguyengiakt || it.nguyenGia);
+        const ktGTCL = parseNum(it.giatriconlaikt || it.giaTriConLai);
+
+        row[4] = cell(ktSL || "", sCenterTable);
+        row[5] = ktNG !== 0 ? cell(ktNG, sNumberCenter) : cell("", sCenterTable);
+        row[6] = ktGTCL !== 0 ? cell(ktGTCL, sNumberCenter) : cell("", sCenterTable);
+
+        const kkSL = it.soluongkk;
+        const kkNG = parseNum(it.nguyengiakk);
+        const kkGTCL = parseNum(it.giatriconlaikk);
+
+        row[7] = cell(kkSL || "", sCenterTable);
+        row[8] = kkNG !== 0 ? cell(kkNG, sNumberCenter) : cell("", sCenterTable);
+        row[9] = kkGTCL !== 0 ? cell(kkGTCL, sNumberCenter) : cell("", sCenterTable);
+
+        let clSL = it.soluongcl; 
+        if(clSL === undefined || clSL === null) {
+            const sl1 = Number(ktSL) || 0;
+            const sl2 = Number(kkSL) || 0;
+            if(sl1 !== sl2) clSL = sl2 - sl1;
+        }
+
+        let clNG = parseNum(it.nguyengiacl);
+        if(clNG === 0 && (kkNG !== ktNG)) clNG = kkNG - ktNG;
+
+        let clGTCL = parseNum(it.giatriconlaicl); 
+        if(clGTCL === 0 && (kkGTCL !== ktGTCL)) clGTCL = kkGTCL - ktGTCL;
+
+        row[10] = clSL ? cell(clSL, sCenterTable) : cell("", sCenterTable);
+        row[11] = clNG !== 0 ? cell(clNG, sNumberCenter) : cell("", sCenterTable);
+        row[12] = clGTCL !== 0 ? cell(clGTCL, sNumberCenter) : cell("", sCenterTable);
+
+        row[13] = cell(it.ghiChu || "", sTextTable);
+
+        wsData[r] = row;
+        r++;
+      });
+
+      if ((inventory || []).length === 0) {
+        for (let k = 0; k < 5; k++) {
+          wsData[r] = Array(COLS).fill(cell("", sTextTable));
+          r++;
+        }
+      }
+
+      r++;
+      wsData[r] = Array(COLS).fill("");
+      wsData[r][0] = cell(
+        `Biên bản được lập xong hồi ${closingTime || "......"} giờ cùng ngày, các thành viên thống nhất thông qua.`,
+        { font, alignment: { horizontal: "left" } },
+      );
+      merges.push({ s: { r: r, c: 0 }, e: { r: r, c: COLS - 1 } });
+      
+      r++; 
+      wsData[r] = Array(COLS).fill(""); 
+      r++;
+
+      wsData[r] = Array(COLS).fill("");
+
+      wsData[r][2] = cell("GIÁM ĐỐC", {
+        font: fontB,
+        alignment: { horizontal: "center", vertical: "center" },
+      });
+      merges.push({ s: { r: r, c: 2 }, e: { r: r, c: 6 } });
+
+      wsData[r][8] = cell("KẾ TOÁN", {
+        font: fontB,
+        alignment: { horizontal: "center", vertical: "center" },
+      });
+      merges.push({ s: { r: r, c: 8 }, e: { r: r, c: 11 } });
+
+      r++;
+
+      const sItalicSmall = { 
+        font: { name: "Times New Roman", sz: 11, italic: true },
+        alignment: { horizontal: "center", vertical: "top", wrapText: true } 
+      };
+
+      wsData[r] = Array(COLS).fill("");
+
+      wsData[r][2] = cell("(Ghi ý kiến giải quyết số chênh lệch)", sItalicSmall);
+      merges.push({ s: { r: r, c: 2 }, e: { r: r, c: 6 } });
+
+      wsData[r][8] = cell("(Ký, họ tên)", sItalicSmall);
+      merges.push({ s: { r: r, c: 8 }, e: { r: r, c: 11 } });
+
+      r++;
+
+      wsData[r] = Array(COLS).fill("");
+      
+      wsData[r][2] = cell("(Ký, họ tên, đóng dấu)", sItalicSmall);
+      merges.push({ s: { r: r, c: 2 }, e: { r: r, c: 6 } });
+
+      r += 4; 
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      ws["!merges"] = merges;
+
+      ws["!cols"] = [
+        { wch: 5 },  
+        { wch: 35 },
+        { wch: 12 }, 
+        { wch: 15 }, 
+        { wch: 8 },  
+        { wch: 13 }, 
+        { wch: 13 }, 
+        { wch: 8 },  
+        { wch: 13 }, 
+        { wch: 13 }, 
+        { wch: 8 }, 
+        { wch: 13 }, 
+        { wch: 13 }, 
+        { wch: 15 }, 
+      ];
+      ws["!rows"] = [
+        { hpt: 28 }, 
+        { hpt: 20 }, 
+        { hpt: 6 },  
+        { hpt: 26 }, 
+        { hpt: 18 }, 
+        { hpt: 18 }, 
+        { hpt: 10 }, 
+        { hpt: 25 }, 
+        { hpt: 25 }, 
+      ];
+
+      XLSX.utils.book_append_sheet(wb, ws, "BaoCao_TSCD");
+      const fname = `BaoCao_TSCD_${(selectedDeptName || "don_vi").replace(/[^a-zA-Z0-9]/g, "_")}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      XLSX.writeFile(wb, fname);
+      setSnackbarMessage("Xuất file thành công");
+      setSnackbarSeverity("success");
+      setOpenSnackbar(true);
+    } catch (e) {
+      console.error("Export BaoCaoTSCD error", e);
+      setSnackbarMessage("Lỗi khi xuất file");
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+    }
   };
 
   const selectedDeptName =
@@ -97,7 +410,6 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
         minHeight: "100vh",
       }}
     >
-      {/* Box 1: Form chọn đơn vị, năm và các nút */}
       <Box
         sx={{
           p: 3,
@@ -218,7 +530,6 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
         </Stack>
       </Box>
 
-      {/* Box 2: Nội dung báo cáo */}
       <Box
         sx={{
           p: 3,

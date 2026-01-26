@@ -38,15 +38,13 @@ export default function ReportS22DNContent({
 }: ReportS22DNContentProps) {
   const [diaChi, setDiaChi] = useState("");
 
-  const [tsRows, setTsRows] = useState<TableRowData[]>([]); // TSCĐ rows
-  const [ccdcRows, setCcdcRows] = useState<TableRowData[]>([]); // CCDC rows
+  const [tsRows, setTsRows] = useState<TableRowData[]>([]); 
+  const [ccdcRows, setCcdcRows] = useState<TableRowData[]>([]); 
 
   const [loading, setLoading] = useState(false);
 
-  // helper to format number to string (no thousands sep)
   const fmt = (v: any) => (v === null || v === undefined ? "" : String(v));
 
-  // map API item to table row
   const mapItemToRow = (item: any, isReduce = false): TableRowData => {
     const date = item?.ngayThang ? String(item.ngayThang).split(" ")[0] : "";
     const id = fmt(item?.idTaiSan || item?.soHieu || "");
@@ -58,7 +56,6 @@ export default function ReportS22DNContent({
     const ghiChu = fmt(item?.ghiChu || "");
 
     if (!isReduce) {
-      // increase -> fill Ghi tăng columns
       return {
         ctTangSoHieu: id,
         ctTangNgay: date,
@@ -76,7 +73,6 @@ export default function ReportS22DNContent({
       };
     }
 
-    // reduce -> still put Ten and DVT into Ghi tăng C,D, other fields into Ghi giảm
     return {
       ctTangSoHieu: "",
       ctTangNgay: "",
@@ -94,14 +90,11 @@ export default function ReportS22DNContent({
     };
   };
 
-  // fetch data only when parent triggers fetchKey (button click)
   useEffect(() => {
     const fetchData = async () => {
-      // only run when fetchKey increments and required params are present
       if (!idDonVi || !selectedYear) return;
       setLoading(true);
       try {
-        // TSCĐ
         const tsRes = await api.get("/baocao/s22dn", {
           params: { iddonvi: idDonVi, nam: selectedYear },
         });
@@ -116,7 +109,6 @@ export default function ReportS22DNContent({
         tsInc.forEach((it: any) => tsRowsNew.push(mapItemToRow(it, false)));
         tsDec.forEach((it: any) => tsRowsNew.push(mapItemToRow(it, true)));
 
-        // CCDC
         const cRes = await api.get("/baocao/s22dn-ccdc", {
           params: { iddonvi: idDonVi, nam: selectedYear },
         });
@@ -146,8 +138,6 @@ export default function ReportS22DNContent({
     };
 
     fetchData();
-    // only run when fetchKey changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchKey]);
 
   const [footerData, setFooterData] = useState({
@@ -170,7 +160,6 @@ export default function ReportS22DNContent({
     field: keyof TableRowData,
     value: string,
   ) => {
-    // update both tables if editing; prefer updating tsRows when index exists there, otherwise ccdcRows
     if (index < tsRows.length) {
       const newRows = [...tsRows];
       newRows[index] = { ...newRows[index], [field]: value };

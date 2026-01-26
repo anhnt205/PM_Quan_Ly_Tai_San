@@ -41,7 +41,6 @@ export default function MauSo21Content({
   };
   const [loading, setLoading] = useState(false);
 
-  // basic picker to string
   const fmt = (v: any) => (v === null || v === undefined ? "" : String(v));
 
   const parseNumber = (v: any) => {
@@ -58,10 +57,8 @@ export default function MauSo21Content({
   const formatToDMY = (v: any) => {
     if (v === null || v === undefined || v === "") return "";
     const s = String(v).trim();
-    // If string contains an ISO date portion, extract yyyy-mm-dd directly
     const m = s.match(/(\d{4})-(\d{2})-(\d{2})/);
     if (m) return `${m[3]}/${m[2]}/${m[1]}`;
-    // try Date parse as last resort (may be timezone-shifted)
     const d = new Date(s);
     if (!Number.isNaN(d.getTime())) {
       const dd = String(d.getDate()).padStart(2, "0");
@@ -69,17 +66,14 @@ export default function MauSo21Content({
       const yyyy = d.getFullYear();
       return `${dd}/${mm}/${yyyy}`;
     }
-    // last resort: return original trimmed
     return s.split(" ")[0];
   };
 
   const integerPartString = (v: any) => {
     if (v === null || v === undefined || v === "") return "";
     const s = String(v).trim();
-    // Try numeric parse first
     const n = Number(s.replace(/[,\s]/g, ""));
     if (Number.isFinite(n)) return String(Math.trunc(n));
-    // Fallback: split at decimal point
     if (s.indexOf(".") >= 0) return s.split(".")[0];
     return s;
   };
@@ -173,13 +167,11 @@ export default function MauSo21Content({
     wordBreak: "break-word",
   };
 
-  // fetch khauhao data when parent triggers fetchKey
   React.useEffect(() => {
     const fetchData = async () => {
       if (!idCongTy || !selectedYear) return;
       setLoading(true);
       try {
-        // derive day/month/year from ngayBaoCao if present
         let day = 1,
           month = 1;
         if (ngayBaoCao) {
@@ -198,65 +190,51 @@ export default function MauSo21Content({
         };
         if (idNhomTaiSan) params.idNhomTaiSan = idNhomTaiSan;
 
-        // dynamic import of api to avoid top-level change if not present
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
         const api = require("../../../config/api.config").default;
         const res = await api.get("/taisan/khauhaotaisanbynhom", { params });
         const data = res?.data || [];
 
-        // map items to table rows with robust fallbacks
         const map = (item: any) => {
-          // Use the explicitly requested fields mapping from your sample JSON
-          // Column C: display ngayTinhKhao as dd/mm/yyyy
           const date = formatToDMY(item?.ngayTinhKhao ?? item?.ngay ?? "");
 
           return {
-            // B: leave empty per request (do not populate column B)
             soHieu: "",
-            // C: ngày (ngayTinhKhao)
             ngay: date,
-            // D: tên tài sản
             ten: fmt(item?.tenTaiSan || ""),
-            // E: leave empty
             nuocSanXuat: "",
-            // G: tháng/năm đưa vào sử dụng -> use 'thangKh'
-            // Prefix with 'Tháng ' for display (e.g., 'Tháng 2')
             thangNam: (function () {
               const raw = item?.thangKh ?? item?.thang ?? "";
               const v = fmt(raw);
               return v ? `Tháng ${v}` : "";
             })(),
-            // H: số hiệu TSCĐ -> use 'soThe' per your mapping
             soHieuTscd: fmt(item?.soThe || ""),
-            // I: nguyên giá (integer part only)
             nguyenGia: integerPartString(item?.nguyenGia ?? ""),
-            // 2: tỷ lệ (%) khấu hao -> leave empty
             tyLeKhauHao: "",
-            // 3: mức khấu hao -> use 'khauHaoBinhQuan' (integer part)
             mucKhauHao: integerPartString(
               item?.khauHaoBinhQuan ?? item?.soTien ?? "",
             ),
-            // 4: khấu hao đã tính đến -> use 'khauHaoPsck' (integer part)
             khauHaoDaTinh: integerPartString(item?.khauHaoPsck ?? ""),
             __raw: item,
           };
         };
 
-        // batch append to avoid blocking UI for very large arrays
         const BATCH = 200;
         setRows([]);
+        const acc: any[] = [];
         for (let i = 0; i < data.length; i += BATCH) {
           const chunk = data.slice(i, i + BATCH).map(map);
+          acc.push(...chunk);
           setRows((prev) => [...prev, ...chunk]);
-          // yield to event loop
-          // eslint-disable-next-line no-await-in-loop
           await new Promise((r) => setTimeout(r, 0));
         }
 
-        onContentChange?.({ diaChi: formData.diaChi, rows, footerData: {} });
+        onContentChange?.({
+          diaChi: formData.diaChi,
+          rows: acc,
+          footerData: {},
+        });
         onFetchSuccess?.();
       } catch (err) {
-        // eslint-disable-next-line no-console
         console.error("Fetch khauhao error", err);
       } finally {
         setLoading(false);
@@ -264,8 +242,6 @@ export default function MauSo21Content({
     };
 
     fetchData();
-    // only run when fetchKey changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchKey]);
 
   return (

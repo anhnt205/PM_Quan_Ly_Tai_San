@@ -15,7 +15,13 @@ import { useFormik } from "formik";
 import { Print, TableChart } from "@mui/icons-material";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
 import FieldDateTime from "../../../components/TextField/FieldDateTime";
+import { Buffer } from "buffer";
+import XLSX from "xlsx-js-style";
 import MauSo21Content from "./MauSo21Content";
+
+if (typeof window !== "undefined") {
+  (window as any).Buffer = (window as any).Buffer || Buffer;
+}
 
 export default function MauSo21({ title }: { title?: string }) {
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -38,15 +44,13 @@ export default function MauSo21({ title }: { title?: string }) {
       NgayBaoCao: new Date().toISOString().slice(0, 19).replace("T", " "),
     },
     onSubmit: (values) => {
-      // require Loại tài sản selection
       if (!values.IdLoaiTaiSan) {
         setSnackbarMessage("Vui lòng chọn loại tài sản trước khi lấy dữ liệu");
-        setSnackbarSeverity("warning");
+        setSnackbarSeverity("error");
         setOpenSnackbar(true);
         return;
       }
       console.log("Lấy dữ liệu báo cáo:", values);
-      // trigger child fetch
       setFetchKey((k) => k + 1);
     },
   });
@@ -59,29 +63,261 @@ export default function MauSo21({ title }: { title?: string }) {
   });
 
   const handleExport = () => {
-    const hasContent = (data: any) => {
-      if (!data) return false;
-      if (Array.isArray(data)) return data.length > 0;
-      for (const k of Object.keys(data)) {
-        const v = (data as any)[k];
-        if (Array.isArray(v) && v.length > 0) return true;
-        if (v && typeof v === "object") {
-          for (const k2 of Object.keys(v)) {
-            const v2 = v[k2];
-            if (Array.isArray(v2) && v2.length > 0) return true;
-          }
-        }
-      }
-      return false;
-    };
-
-    if (!hasContent(contentData)) {
+    const data = contentData as any;
+    if (!data || !Array.isArray(data.rows) || data.rows.length === 0) {
       setSnackbarMessage("Chưa có dữ liệu để xuất!");
       setSnackbarSeverity("warning");
       setOpenSnackbar(true);
       return;
     }
-    // TODO: implement export when data is present
+
+    const border = {
+      top: { style: "thin" },
+      bottom: { style: "thin" },
+      left: { style: "thin" },
+      right: { style: "thin" },
+    };
+    const font = { name: "Times New Roman", sz: 11 };
+    const fontB = { ...font, bold: true };
+    const sHeader = {
+      font: fontB,
+      alignment: { horizontal: "center", vertical: "center", wrapText: true },
+      border,
+    };
+    const sText = {
+      font,
+      alignment: { horizontal: "left", vertical: "center", wrapText: true },
+      border,
+    };
+    const sCenter = {
+      font,
+      alignment: { horizontal: "center", vertical: "center" },
+      border,
+    };
+    const sNum = {
+      font,
+      alignment: { horizontal: "right", vertical: "center" },
+      border,
+    };
+    const cell = (v: any, s: any) => ({ v, s });
+
+    const wb = XLSX.utils.book_new();
+    let wsData: any[][] = [];
+    let merges: any[] = [];
+    let r = 0;
+
+    wsData[r] = Array(14).fill("");
+    wsData[r][0] = cell("TẬP ĐOÀN CÔNG NGHIỆP\nTHAN – KHOÁNG SẢN VIỆT NAM", {
+      font: fontB,
+      alignment: { horizontal: "center", wrapText: true },
+    });
+    wsData[r][11] = cell("Mẫu số S21-DN", {
+      font: fontB,
+      alignment: { horizontal: "center" },
+    });
+    merges.push({ s: { r: r, c: 0 }, e: { r: r + 1, c: 3 } });
+    merges.push({ s: { r: r, c: 11 }, e: { r: r + 1, c: 13 } });
+    r++;
+    wsData[r] = Array(14).fill("");
+    r++;
+
+    wsData[r] = Array(14).fill("");
+    wsData[r][0] = cell("CÔNG TY THAN UÔNG BÍ - TKV", {
+      font: fontB,
+      alignment: { horizontal: "center" },
+    });
+    wsData[r][11] = cell(
+      "(Ban hành theo Thông tư số 200/2014/TT-BTC\nngày 22/12/2014 của Bộ Tài chính)",
+      {
+        font: { ...font, italic: true },
+        alignment: { horizontal: "center", wrapText: true },
+      },
+    );
+    merges.push({ s: { r: r, c: 0 }, e: { r: r, c: 3 } });
+    merges.push({ s: { r: r, c: 11 }, e: { r: r + 1, c: 13 } });
+    r += 2;
+
+    wsData[r] = Array(14).fill("");
+    wsData[r][0] = cell("SỔ TÀI SẢN CỐ ĐỊNH", {
+      font: { name: "Times New Roman", sz: 16, bold: true },
+      alignment: { horizontal: "center" },
+    });
+    merges.push({ s: { r: r, c: 0 }, e: { r: r, c: 13 } });
+    r++;
+    wsData[r] = Array(14).fill("");
+    wsData[r][6] = cell(`Năm: ${selectedYear || ""}`, {
+      font: { ...font },
+      alignment: { horizontal: "center" },
+    });
+    merges.push({ s: { r: r, c: 4 }, e: { r: r, c: 9 } });
+    r += 2;
+
+    wsData[r] = Array(14)
+      .fill(null)
+      .map(() => cell("", sHeader));
+    wsData[r][0] = cell("STT", { ...sHeader });
+    wsData[r][1] = cell("Ghi tăng TSCĐ", { ...sHeader });
+    merges.push({ s: { r: r, c: 1 }, e: { r: r, c: 7 } });
+    wsData[r][8] = cell("Khấu hao TSCĐ", { ...sHeader });
+    merges.push({ s: { r: r, c: 8 }, e: { r: r, c: 10 } });
+    wsData[r][11] = cell("Ghi giảm TSCĐ", { ...sHeader });
+    merges.push({ s: { r: r, c: 11 }, e: { r: r, c: 13 } });
+    r++;
+
+    wsData[r] = Array(14)
+      .fill(null)
+      .map(() => cell("", sHeader));
+    wsData[r][1] = cell("Chứng từ", sHeader);
+    merges.push({ s: { r: r, c: 1 }, e: { r: r, c: 2 } });
+    wsData[r][3] = cell("Tên, đặc điểm, ký hiệu TSCĐ", sHeader);
+    merges.push({ s: { r: r, c: 3 }, e: { r: r, c: 3 } });
+    wsData[r][4] = cell("Nước sản xuất", sHeader);
+    wsData[r][5] = cell("Tháng năm đưa vào sử dụng", sHeader);
+    wsData[r][6] = cell("Số hiệu TSCĐ", sHeader);
+    wsData[r][7] = cell("Nguyên giá TSCĐ", sHeader);
+    wsData[r][8] = cell("Khấu hao", sHeader);
+    merges.push({ s: { r: r, c: 8 }, e: { r: r, c: 9 } });
+    wsData[r][10] = cell("Khấu hao đã tính đến khi ghi giảm TSCĐ", sHeader);
+    wsData[r][11] = cell("Chứng từ", sHeader);
+    merges.push({ s: { r: r, c: 11 }, e: { r: r, c: 12 } });
+    wsData[r][13] = cell("Lý do giảm TSCĐ", sHeader);
+    r++;
+
+    wsData[r] = [
+      cell("A", sHeader),
+      cell("B", sHeader),
+      cell("C", sHeader),
+      cell("D", sHeader),
+      cell("E", sHeader),
+      cell("G", sHeader),
+      cell("H", sHeader),
+      cell("I", sHeader),
+      cell("2", sHeader),
+      cell("3", sHeader),
+      cell("4", sHeader),
+      cell("K", sHeader),
+      cell("L", sHeader),
+      cell("M", sHeader),
+    ];
+    r++;
+
+    (data.rows || []).forEach((row: any, i: number) => {
+      wsData[r] = [
+        cell(i + 1, sCenter), // STT
+        cell(row.soHieu || "", sText),
+        cell(row.ngay || "", sText),
+        cell(row.ten || "", sText),
+        cell(row.nuocSanXuat || "", sText),
+        cell(row.thangNam || "", sText),
+        cell(row.soHieuTscd || "", sText),
+        cell(Number(row.nguyenGia) || row.nguyenGia || "", sNum),
+        cell(row.tyLeKhauHao || "", sNum),
+        cell(row.mucKhauHao || "", sNum),
+        cell(row.khauHaoDaTinh || "", sNum),
+        cell(row.soHieu || "", sText),
+        cell(row.ngay || "", sText),
+        cell(row.lyDoGiam || "", sText),
+      ];
+      r++;
+    });
+
+    const parseNum = (v: any) => {
+      if (v === null || v === undefined || v === "") return 0;
+      const s = String(v).replace(/[,\s]/g, "");
+      const n = parseFloat(s);
+      return Number.isFinite(n) ? n : 0;
+    };
+    const totalNguyenGia = (data.rows || []).reduce(
+      (s: number, r0: any) => s + parseNum(r0.nguyenGia),
+      0,
+    );
+    const totalKhauHaoDaTinh = (data.rows || []).reduce(
+      (s: number, r0: any) => s + parseNum(r0.khauHaoDaTinh),
+      0,
+    );
+
+    wsData[r] = Array(14).fill(cell("", sHeader));
+    wsData[r][0] = cell("", sHeader);
+    wsData[r][1] = cell("Cộng", sHeader);
+    wsData[r][7] = cell(totalNguyenGia || "", sNum);
+    wsData[r][10] = cell(totalKhauHaoDaTinh || "", sNum);
+    r++;
+
+    wsData[r] = Array(14).fill("");
+    wsData[r][0] = cell(
+      "- Sổ này có .......... trang, đánh số từ trang 01 đến trang ..........",
+      sText,
+    );
+    merges.push({ s: { r: r, c: 0 }, e: { r: r, c: 13 } });
+    r++;
+    wsData[r] = Array(14).fill("");
+    wsData[r][0] = cell("- Ngày mở sổ: ........................", sText);
+    merges.push({ s: { r: r, c: 0 }, e: { r: r, c: 13 } });
+    r += 2;
+
+    wsData[r] = Array(14).fill("");
+    wsData[r][0] = cell("Người ghi sổ", { ...sHeader, font: fontB });
+    wsData[r][5] = cell("Kế toán trưởng", { ...sHeader, font: fontB });
+    wsData[r][10] = cell("Giám đốc", { ...sHeader, font: fontB });
+    merges.push({ s: { r: r, c: 0 }, e: { r: r, c: 4 } });
+    merges.push({ s: { r: r, c: 5 }, e: { r: r, c: 9 } });
+    merges.push({ s: { r: r, c: 10 }, e: { r: r, c: 13 } });
+    r++;
+    wsData[r] = Array(14).fill("");
+    wsData[r][0] = cell("(Ký, họ tên)", {
+      font: { name: "Times New Roman", sz: 11, italic: true },
+      alignment: { horizontal: "center" },
+    });
+    wsData[r][5] = cell("(Ký, họ tên)", {
+      font: { name: "Times New Roman", sz: 11, italic: true },
+      alignment: { horizontal: "center" },
+    });
+    wsData[r][10] = cell("(Ký, họ tên, đóng dấu)", {
+      font: { name: "Times New Roman", sz: 11, italic: true },
+      alignment: { horizontal: "center" },
+    });
+    merges.push({ s: { r: r, c: 0 }, e: { r: r, c: 4 } });
+    merges.push({ s: { r: r, c: 5 }, e: { r: r, c: 9 } });
+    merges.push({ s: { r: r, c: 10 }, e: { r: r, c: 13 } });
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws["!merges"] = merges;
+    ws["!cols"] = [
+      { wch: 5 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 40 },
+      { wch: 12 },
+      { wch: 14 },
+      { wch: 12 },
+      { wch: 14 },
+      { wch: 8 },
+      { wch: 8 },
+      { wch: 14 },
+      { wch: 12 },
+      { wch: 14 },
+      { wch: 16 },
+    ];
+
+    const safeName = (selectedDeptName || "MauSo21").replace(
+      /[^a-z0-9\-_]/gi,
+      "_",
+    );
+    const fname = `Mau_So_21_${safeName}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    try {
+      XLSX.utils.book_append_sheet(wb, ws, "S21DN");
+      XLSX.writeFile(wb, fname);
+      setSnackbarMessage("Xuất file thành công");
+      setSnackbarSeverity("success");
+      setOpenSnackbar(true);
+    } catch (err: any) {
+      console.error("Export MauSo21 error", err);
+      setSnackbarMessage(
+        err?.message ? `Lỗi xuất file: ${err.message}` : "Lỗi khi xuất file",
+      );
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+    }
   };
 
   const selectedDeptName =
@@ -113,7 +349,6 @@ export default function MauSo21({ title }: { title?: string }) {
         zIndex: 0,
       }}
     >
-      {/* Box 1: Form chọn đơn vị, năm và các nút */}
       <Box
         sx={{
           p: 3,
@@ -230,7 +465,6 @@ export default function MauSo21({ title }: { title?: string }) {
         </Stack>
       </Box>
 
-      {/* Box 2: Nội dung báo cáo */}
       <Box
         sx={{
           p: 3,

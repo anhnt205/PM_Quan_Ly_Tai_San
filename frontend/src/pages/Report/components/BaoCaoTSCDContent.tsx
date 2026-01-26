@@ -70,11 +70,9 @@ export default function BaoCaoTSCDContent({
     { name: "", position: "", representing: "" },
   ]);
 
-  // start with no sample rows
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(false);
 
-  // helper to pick first available value from list of keys
   const pick = (obj: any, keys: string[]) => {
     for (const k of keys) {
       if (obj == null) break;
@@ -84,7 +82,6 @@ export default function BaoCaoTSCDContent({
     return "";
   };
 
-  // fetch inventory for selected dept when parent triggers fetchKey
   useEffect(() => {
     const fetchItems = async () => {
       if (!idDonVi) return;
@@ -96,13 +93,11 @@ export default function BaoCaoTSCDContent({
         const data = res?.data || {};
         const items = Array.isArray(data) ? data : data.data || [];
 
-        // map API items to InventoryItem
         const mapped: InventoryItem[] = items.map((it: any, idx: number) => ({
           stt: String(idx + 1),
           tenTSCD: pick(it, ["tenTaiSan", "ten", "tentscd"]),
           maso: pick(it, ["maSo", "maso", "ma"]),
           noiSudung: pick(it, ["noiSuDung", "noiSD", "noiDung"]),
-          // Kế toán columns (SoSach)
           soluongkt: pick(it, [
             "soLuongSoSach",
             "so_luong_so_sach",
@@ -119,7 +114,6 @@ export default function BaoCaoTSCDContent({
             "giaTriConLai",
             "giatri_con_lai",
           ]),
-          // Kiểm kê columns
           soluongkk: pick(it, [
             "soLuongKiemKe",
             "soLuongKK",
@@ -127,21 +121,17 @@ export default function BaoCaoTSCDContent({
           ]),
           nguyengiakk: pick(it, ["nguyenGiaKiemKe", "nguyenGiaKK"]),
           giatriconlaikk: pick(it, ["giaTriConLaiKiemKe", "giaTriConLaiKK"]),
-          // Chênh lệch columns
           soluongcl: pick(it, ["soLuongChenhLech", "soLuongCL", "soluongcl"]),
           nguyengiacl: pick(it, ["nguyenGiaChenhLech", "nguyengiacl"]),
           giatriconlaicl: pick(it, ["giaTriConLaiChenhLech", "giatriconlaicl"]),
           ghiChu: pick(it, ["ghiChu", "ghi_chu", "note", "notes"]),
         }));
 
-        // append in batches to avoid UI blocking for large lists
         const BATCH = 200;
         setInventoryItems([]);
         for (let i = 0; i < mapped.length; i += BATCH) {
           const slice = mapped.slice(i, i + BATCH);
           setInventoryItems((prev) => [...prev, ...slice]);
-          // yield to event loop
-          // eslint-disable-next-line no-await-in-loop
           await new Promise((r) => setTimeout(r, 0));
         }
 
@@ -162,7 +152,6 @@ export default function BaoCaoTSCDContent({
     };
 
     fetchItems();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchKey]);
 
   const [closingTime, setClosingTime] = useState("");

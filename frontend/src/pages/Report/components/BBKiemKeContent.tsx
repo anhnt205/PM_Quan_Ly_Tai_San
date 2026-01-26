@@ -33,7 +33,6 @@ export default function BBKiemKeContent({
   fetchKey,
   onFetchSuccess,
 }: BBKiemKeContentProps) {
-  // fetch inventory when parent triggers fetchKey
   useEffect(() => {
     const fetchData = async () => {
       if (!idPhongBan) return;
@@ -69,7 +68,6 @@ export default function BBKiemKeContent({
           return;
         }
 
-        // large data: process in batches to keep UI responsive
         setInventoryItems([]);
         for (let i = 0; i < data.length; i += BATCH) {
           const slice = data.slice(i, i + BATCH);
@@ -95,8 +93,6 @@ export default function BBKiemKeContent({
             });
             return next;
           });
-          // yield to event loop
-          // eslint-disable-next-line no-await-in-loop
           await new Promise((r) => setTimeout(r, 0));
         }
         onFetchSuccess?.();
@@ -106,7 +102,6 @@ export default function BBKiemKeContent({
     };
 
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchKey]);
   const [headerInfo, setHeaderInfo] = useState({
     qdSo: "",
@@ -133,7 +128,6 @@ export default function BBKiemKeContent({
     { name: "", position: "" },
   ]);
 
-  // Start with no sample inventory rows
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
 
   const [closingTime, setClosingTime] = useState("");
@@ -267,13 +261,13 @@ export default function BBKiemKeContent({
     padding: "4px",
     textAlign: "center" as const,
     verticalAlign: "middle" as const,
-    fontWeight: "bold", // Header đậm
+    fontWeight: "bold",
     ...fontStyle,
   };
 
   const tableBodyCellSx = {
     ...tableCellSx,
-    fontWeight: "normal", // Body thường
+    fontWeight: "normal", 
     whiteSpace: "normal",
     overflowWrap: "break-word",
     wordBreak: "break-word",
