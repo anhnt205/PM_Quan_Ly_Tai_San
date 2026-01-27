@@ -320,6 +320,28 @@ export default function MauSo21({ title }: { title?: string }) {
     }
   };
 
+  const handlePrint = () => {
+    try {
+      const marker = "s22dn-print-mode";
+      document.body.classList.remove(marker);
+      void document.body.offsetWidth;
+      document.body.classList.add(marker);
+
+      const cleanup = () => {
+        document.body.classList.remove(marker);
+        window.removeEventListener("afterprint", cleanup);
+      };
+
+      window.addEventListener("afterprint", cleanup);
+      setTimeout(cleanup, 3000);
+
+      setTimeout(() => window.print(), 80);
+    } catch (e) {
+      console.error("Print error", e);
+      window.print();
+    }
+  };
+
   const selectedDeptName =
     groups.find(
       (d: any) => d.id?.toString() === String(formik.values.IdLoaiTaiSan),
@@ -349,7 +371,85 @@ export default function MauSo21({ title }: { title?: string }) {
         zIndex: 0,
       }}
     >
+      <style>{`
+        @media print {
+          /* ensure wrapper removes scroll/borders */
+          .report-scroll-container { position: static !important; margin: 0 !important; padding: 8mm !important; width: 100% !important; box-sizing: border-box !important; height: auto !important; overflow: visible !important; border: none !important; border-radius: 0 !important; box-shadow: none !important; }
+
+          /* hide app chrome when using the marker-class */
+          body.s22dn-print-mode #app-header,
+          body.s22dn-print-mode header,
+          body.s22dn-print-mode .app-header,
+          body.s22dn-print-mode .topbar,
+          body.s22dn-print-mode .MuiAppBar-root,
+          body.s22dn-print-mode .navbar,
+          body.s22dn-print-mode .layout-header,
+          body.s22dn-print-mode .sidebar,
+          body.s22dn-print-mode .left-sidebar { display: none !important; }
+
+          /* Force printable content to not enforce large min-widths and fit page */
+          #printable-mauso21-content, #printable-mauso21-content * { min-width: 0 !important; max-width: 100% !important; }
+          #printable-mauso21-content { visibility: visible !important; padding: 6mm !important; zoom: 0.78; }
+          #printable-mauso21-content table { min-width: 0 !important; width: 100% !important; table-layout: fixed !important; font-size: 8pt !important; }
+          #printable-mauso21-content th, #printable-mauso21-content td { padding: 2px 4px !important; vertical-align: middle !important; }
+
+          thead { display: table-header-group; }
+          tr { page-break-inside: avoid; }
+          .no-print { display: none !important; }
+        }
+      `}</style>
+      <style>{`
+          @media print {
+              @page { size: A4 portrait; margin: 5mm 5mm 5mm 10mm; }
+              @page :first { margin: 0mm 5mm 5mm 10mm; }
+
+            html, body { margin: 0; padding: 0; background: white; height: 100%; }
+
+            .report-scroll-container { position: static !important; margin: 0 !important; padding: 8mm !important; width: 100% !important; box-sizing: border-box !important; height: auto !important; overflow: visible !important; border: none !important; border-radius: 0 !important; box-shadow: none !important; }
+
+            body.s22dn-print-mode #app-header,
+            body.s22dn-print-mode header,
+            body.s22dn-print-mode .app-header,
+            body.s22dn-print-mode .topbar,
+            body.s22dn-print-mode .MuiAppBar-root,
+            body.s22dn-print-mode .navbar,
+            body.s22dn-print-mode .layout-header,
+            body.s22dn-print-mode .sidebar,
+            body.s22dn-print-mode .left-sidebar { display: none !important; }
+            #printable-mauso21-content { visibility: visible !important; }
+
+            #printable-mauso21-content table {
+              width: 100% !important;
+              border-collapse: collapse;
+              page-break-inside: auto;
+              font-size: 8.5pt !important;
+              table-layout: fixed !important;
+              word-break: break-word !important;
+              white-space: normal !important;
+              max-width: 100% !important;
+            }
+
+            #printable-mauso21-content col { width: auto !important; }
+            #printable-mauso21-content table col { width: auto !important; }
+            #printable-mauso21-content th, #printable-mauso21-content td {
+              padding: 1px 4px !important;
+              vertical-align: middle !important;
+              font-size: 8.5pt !important;
+              white-space: normal !important;
+              overflow: hidden !important;
+            }
+
+            #printable-mauso21-content { zoom: 0.82; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+
+            .no-print { display: none !important; }
+          }
+        `}</style>
+
       <Box
+        className="no-print"
         sx={{
           p: 3,
           bgcolor: "white",
@@ -423,7 +523,10 @@ export default function MauSo21({ title }: { title?: string }) {
           >
             Lấy dữ liệu
           </Button>
-          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+          <Box
+            className="no-print"
+            sx={{ display: "flex", gap: 1, alignItems: "center" }}
+          >
             <Tooltip title="Xuất excel">
               <Button
                 variant="contained"
@@ -457,6 +560,7 @@ export default function MauSo21({ title }: { title?: string }) {
                   alignItems: "center",
                   justifyContent: "center",
                 }}
+                onClick={handlePrint}
               >
                 <Print />
               </Button>
@@ -466,6 +570,7 @@ export default function MauSo21({ title }: { title?: string }) {
       </Box>
 
       <Box
+        className="report-scroll-container"
         sx={{
           p: 3,
           height: "800px",

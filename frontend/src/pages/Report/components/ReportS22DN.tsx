@@ -56,6 +56,33 @@ export default function ReportS22DN({ title }: { title?: string }) {
       (await api.get("/phongban", { params: { idcongty: idCongTy } })).data,
   });
 
+  const handlePrint = () => {
+    try {
+      const marker = "s22dn-print-mode";
+      document.body.classList.remove(marker);
+      void document.body.offsetWidth;
+      document.body.classList.add(marker);
+
+      const cleanup = () => {
+        document.body.classList.remove(marker);
+        window.removeEventListener("afterprint", cleanup);
+      };
+
+      window.addEventListener("afterprint", cleanup);
+      setTimeout(cleanup, 3000);
+
+      setTimeout(() => window.print(), 80);
+    } catch (e) {
+      console.error("Print error", e);
+      window.print();
+    }
+  };
+
+  const selectedDeptName =
+    departments.find(
+      (d: any) => d.id?.toString() === String(formik.values.IdDonVi),
+    )?.tenPhongBan || "";
+  const selectedYear = formik.values.Nam;
   const handleExport = () => {
     const data = contentData as any;
     if (!data || (!data.tsRows?.length && !data.ccdcRows?.length)) {
@@ -172,7 +199,7 @@ export default function ReportS22DN({ title }: { title?: string }) {
     currentRow += 2;
 
     const addTableHeader = (startRow: number, title: string) => {
-      wsData[startRow] = Array(13).fill(cell("", sHeader)); 
+      wsData[startRow] = Array(13).fill(cell("", sHeader));
       wsData[startRow][0] = cell(title, {
         ...sHeader,
         alignment: { horizontal: "left", vertical: "center" },
@@ -208,8 +235,8 @@ export default function ReportS22DN({ title }: { title?: string }) {
       h2[9] = cell("Lý do", sHeader);
       wsData[r + 1] = h2;
 
-      merges.push({ s: { r: r + 1, c: 0 }, e: { r: r + 1, c: 1 } }); 
-      merges.push({ s: { r: r + 1, c: 7 }, e: { r: r + 1, c: 8 } }); 
+      merges.push({ s: { r: r + 1, c: 0 }, e: { r: r + 1, c: 1 } });
+      merges.push({ s: { r: r + 1, c: 7 }, e: { r: r + 1, c: 8 } });
       [2, 3, 4, 5, 6, 9, 10, 11].forEach((c) =>
         merges.push({ s: { r: r + 1, c: c }, e: { r: r + 2, c: c } }),
       );
@@ -318,11 +345,11 @@ export default function ReportS22DN({ title }: { title?: string }) {
 
     merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 2 } });
     merges.push({ s: { r: currentRow, c: 4 }, e: { r: currentRow, c: 7 } });
-    merges.push({ s: { r: currentRow, c: 11 }, e: { r: currentRow, c: 12 } }); 
+    merges.push({ s: { r: currentRow, c: 11 }, e: { r: currentRow, c: 12 } });
 
     currentRow++;
     const jobRow = Array(13).fill("");
-    jobRow[11] = cell("Giám đốc", sInfoCenter); 
+    jobRow[11] = cell("Giám đốc", sInfoCenter);
     wsData[currentRow] = jobRow;
     merges.push({ s: { r: currentRow, c: 11 }, e: { r: currentRow, c: 12 } });
 
@@ -415,12 +442,6 @@ export default function ReportS22DN({ title }: { title?: string }) {
     setOpenSnackbar(true);
   };
 
-  const selectedDeptName =
-    departments.find(
-      (d: any) => d.id?.toString() === String(formik.values.IdDonVi),
-    )?.tenPhongBan || "";
-  const selectedYear = formik.values.Nam;
-
   return (
     <Box
       sx={{
@@ -434,7 +455,84 @@ export default function ReportS22DN({ title }: { title?: string }) {
         zIndex: 0,
       }}
     >
+      {/* GLOBAL PRINT STYLES */}
+      <style>{`
+          @media print {
+              @page { size: A4 portrait; margin: 5mm 5mm 5mm 10mm; }
+              @page :first { margin: 0mm 5mm 5mm 10mm; }
+
+            html, body { margin: 0; padding: 0; background: white; height: 100%; }
+
+            /* Keep the report container visible and avoid clipping */
+            .report-scroll-container { position: static !important; margin: 0 !important; padding: 8mm !important; width: 100% !important; box-sizing: border-box !important; height: auto !important; overflow: visible !important; border: none !important; border-radius: 0 !important; box-shadow: none !important; }
+
+            /* When printing via this component we add a body class so we can hide
+              the app chrome reliably without affecting other pages. */
+            body.s22dn-print-mode #app-header,
+            body.s22dn-print-mode header,
+            body.s22dn-print-mode .app-header,
+            body.s22dn-print-mode .topbar,
+            body.s22dn-print-mode .MuiAppBar-root,
+            body.s22dn-print-mode .navbar,
+            body.s22dn-print-mode .layout-header,
+            body.s22dn-print-mode .sidebar,
+            body.s22dn-print-mode .left-sidebar { display: none !important; }
+            #printable-s22dn-content { visibility: visible !important; }
+
+            /* Table readability for print - make compact and enforce consistent
+               column widths across tables so multiple tables look identical. */
+            #printable-s22dn-content table {
+              width: 100% !important;
+              border-collapse: collapse;
+              page-break-inside: auto;
+              /* smaller font to fit more columns */
+              font-size: 8.5pt !important;
+              /* enforce consistent widths across tables */
+              table-layout: fixed !important;
+              word-break: break-word !important;
+              white-space: normal !important;
+              max-width: 100% !important;
+            }
+
+            /* Reset any fixed col widths coming from colgroup */
+            #printable-s22dn-content col { width: auto !important; }
+
+            #printable-s22dn-content table col { width: auto !important; }
+            #printable-s22dn-content table col:nth-child(1)  { width: 7%  !important; }
+            #printable-s22dn-content table col:nth-child(2)  { width: 7%  !important; }
+            #printable-s22dn-content table col:nth-child(3)  { width: 12% !important; }
+            #printable-s22dn-content table col:nth-child(4)  { width: 6%  !important; }
+            #printable-s22dn-content table col:nth-child(5)  { width: 6%  !important; }
+            #printable-s22dn-content table col:nth-child(6)  { width: 8%  !important; }
+            #printable-s22dn-content table col:nth-child(7)  { width: 8% !important; }
+            #printable-s22dn-content table col:nth-child(8)  { width: 7%  !important; }
+            #printable-s22dn-content table col:nth-child(9)  { width: 7%  !important; }
+            #printable-s22dn-content table col:nth-child(10) { width: 8% !important; }
+            #printable-s22dn-content table col:nth-child(11) { width: 6%  !important; }
+            #printable-s22dn-content table col:nth-child(12) { width: 8%  !important; }
+            #printable-s22dn-content table col:nth-child(13) { width: 10%  !important; }
+
+            #printable-s22dn-content th, #printable-s22dn-content td {
+              padding: 1px 4px !important;
+              vertical-align: middle !important;
+              font-size: 8.5pt !important;
+              white-space: normal !important;
+              overflow: hidden !important;
+            }
+
+            /* Slight overall scale so very wide tables fit better in portrait */
+            #printable-s22dn-content { zoom: 0.82; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+
+            /* Hide control-panel elements inside this component */
+            .no-print { display: none !important; }
+          }
+        `}</style>
+
       <Box
+        className="no-print"
         sx={{
           p: 3,
           bgcolor: "white",
@@ -542,6 +640,7 @@ export default function ReportS22DN({ title }: { title?: string }) {
                   alignItems: "center",
                   justifyContent: "center",
                 }}
+                onClick={handlePrint}
               >
                 <Print />
               </Button>
@@ -550,7 +649,9 @@ export default function ReportS22DN({ title }: { title?: string }) {
         </Stack>
       </Box>
 
+      {/* Report Content Container - Thêm class report-scroll-container để xử lý in */}
       <Box
+        className="report-scroll-container"
         sx={{
           p: 3,
           height: "800px",

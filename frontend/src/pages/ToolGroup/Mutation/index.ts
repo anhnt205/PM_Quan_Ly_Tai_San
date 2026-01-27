@@ -4,6 +4,9 @@ import { ToolGroupType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import * as XLSX from "xlsx";
 import { b, formatDateTime, s } from "../../../utils/helpers";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../redux/store";
+import dayjs from "dayjs";
 
 export const useToolGroupMutation = (
   page?: number,
@@ -11,13 +14,23 @@ export const useToolGroupMutation = (
   searchValue?: string,
 ) => {
   const queryClient = useQueryClient();
+  const { user } = useSelector((state: RootState) => state.user);
+  const now = dayjs(new Date()).format("YYYY-MM-DDTHH:mm:ss");
   const createMutation = useMutation({
     mutationFn: async (data: ToolGroupType) => {
-      const res = await api.post("/nhomccdc", data);
+      const currentUser = user?.taiKhoan?.tenDangNhap || "admin";
+      const res = await api.post("/nhomccdc", {
+        ...data,
+        ngayTao: now,
+        nguoiTao: currentUser,
+        ngayCapNhat: now,
+        nguoiCapNhat: currentUser,
+      });
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["tooGroups"] });
+      queryClient.invalidateQueries({ queryKey: ["toolGroups"] });
+      queryClient.invalidateQueries({ queryKey: ["toolGroupsPage"] });
       showSuccessAlert("Tạo nhóm ccdc thành công");
     },
     onError: (error: any) => {
@@ -31,11 +44,17 @@ export const useToolGroupMutation = (
 
   const updateMutation = useMutation({
     mutationFn: async (data: ToolGroupType) => {
-      const res = await api.put(`/nhomccdc/${data.id}`, data);
+      const currentUser = user?.taiKhoan?.tenDangNhap || "admin";
+      const res = await api.put(`/nhomccdc/${data.id}`, {
+        ...data,
+        ngayCapNhat: now,
+        nguoiCapNhat: currentUser,
+      });
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["tooGroups"] });
+      queryClient.invalidateQueries({ queryKey: ["toolGroups"] });
+      queryClient.invalidateQueries({ queryKey: ["toolGroupsPage"] });
       showSuccessAlert("Sửa nhóm ccdc thành công");
     },
     onError: (error: any) => {
@@ -53,7 +72,8 @@ export const useToolGroupMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["tooGroups"] });
+      queryClient.invalidateQueries({ queryKey: ["toolGroups"] });
+      queryClient.invalidateQueries({ queryKey: ["toolGroupsPage"] });
       showSuccessAlert("Xóa nhóm ccdc thành công");
     },
     onError: (error: any) => {
@@ -71,7 +91,8 @@ export const useToolGroupMutation = (
       return res.data.message;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["tooGroups"] });
+      queryClient.invalidateQueries({ queryKey: ["toolGroups"] });
+      queryClient.invalidateQueries({ queryKey: ["toolGroupsPage"] });
       showSuccessAlert(data || "Xóa nhóm ccdc thành công");
     },
     onError: (error: any) => {
@@ -211,7 +232,8 @@ export const useToolGroupMutation = (
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ccdcGroups"] });
+      queryClient.invalidateQueries({ queryKey: ["toolGroups"] });
+      queryClient.invalidateQueries({ queryKey: ["toolGroupsPage"] });
       showSuccessAlert("Import nhóm CCDC thành công");
     },
     onError: (error: any) => {

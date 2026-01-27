@@ -55,6 +55,28 @@ export default function BienBanKiemKe({ title }: { title?: string }) {
       (await api.get("/phongban", { params: { idcongty: idCongTy } })).data,
   });
 
+  const handlePrint = () => {
+    try {
+      const marker = "s22dn-print-mode";
+      document.body.classList.remove(marker);
+      void document.body.offsetWidth;
+      document.body.classList.add(marker);
+
+      const cleanup = () => {
+        document.body.classList.remove(marker);
+        window.removeEventListener("afterprint", cleanup);
+      };
+
+      window.addEventListener("afterprint", cleanup);
+      setTimeout(cleanup, 3000);
+
+      setTimeout(() => window.print(), 80);
+    } catch (e) {
+      console.error("Print error", e);
+      window.print();
+    }
+  };
+
   const selectedDeptName =
     departments.find(
       (d: any) => d.id?.toString() === String(formik.values.IdDonVi),
@@ -84,7 +106,7 @@ export default function BienBanKiemKe({ title }: { title?: string }) {
         generalInfo,
         members = [],
         membersUnit = [],
-        inventoryItems: invItems = [], 
+        inventoryItems: invItems = [],
         closingTime = "",
       } = (contentData as any) || {};
 
@@ -160,7 +182,7 @@ export default function BienBanKiemKe({ title }: { title?: string }) {
         },
       );
       merges.push({ s: { r: r, c: 0 }, e: { r: r, c: 2 } });
-      merges.push({ s: { r: r, c: COLS - 3 }, e: { r: r + 1, c: COLS - 1 } }); 
+      merges.push({ s: { r: r, c: COLS - 3 }, e: { r: r + 1, c: COLS - 1 } });
       r++;
 
       wsData[r] = Array(COLS).fill("");
@@ -230,9 +252,9 @@ export default function BienBanKiemKe({ title }: { title?: string }) {
         row[1] = cell(item.tenTaiSan || "", sTextTable);
         row[2] = cell(item.dvt || "", sCenterTable);
         row[3] = cell(item.nuocSx || "", sTextTable);
-        row[4] = cell("", sTextTable); 
+        row[4] = cell("", sTextTable);
         row[5] = cell(item.soLuong || "", sCenterTable);
-        row[6] = cell("", sTextTable); 
+        row[6] = cell("", sTextTable);
         row[7] = cell(item.ghiChu || "", sTextTable);
         wsData[r] = row;
         r++;
@@ -266,22 +288,22 @@ export default function BienBanKiemKe({ title }: { title?: string }) {
       ws["!merges"] = merges;
       ws["!rows"] = [
         { hpt: 28 },
-        { hpt: 20 }, 
-        { hpt: 6 }, 
-        { hpt: 26 }, 
-        { hpt: 18 }, 
-        { hpt: 18 }, 
+        { hpt: 20 },
+        { hpt: 6 },
+        { hpt: 26 },
+        { hpt: 18 },
+        { hpt: 18 },
       ];
 
       ws["!cols"] = [
         { wch: 5 },
-        { wch: 45 }, 
-        { wch: 10 }, 
+        { wch: 45 },
+        { wch: 10 },
         { wch: 15 },
-        { wch: 15 }, 
-        { wch: 12 }, 
-        { wch: 15 }, 
-        { wch: 20 }, 
+        { wch: 15 },
+        { wch: 12 },
+        { wch: 15 },
+        { wch: 20 },
       ];
 
       XLSX.utils.book_append_sheet(wb, ws, "BB_KiemKe");
@@ -322,7 +344,121 @@ export default function BienBanKiemKe({ title }: { title?: string }) {
         minHeight: "100vh",
       }}
     >
+      {/* GLOBAL PRINT STYLES */}
+      <style>
+        {`
+          @media print {
+              @page {
+                size: A4 portrait;
+                margin: 5mm 5mm 5mm 10mm; 
+              }
+
+              @page :first {
+                margin: 0mm 5mm 5mm 10mm;
+              }
+
+            html, body {
+              margin: 0;
+              padding: 0;
+              background: white;
+              height: 100%;
+            }
+
+            #printable-bbkiemke-content, #printable-bbkiemke-content * {
+              visibility: visible;
+            }
+
+            /* Hide app chrome when print marker is active (same logic as ReportS22DN) */
+            body.s22dn-print-mode #app-header,
+            body.s22dn-print-mode header,
+            body.s22dn-print-mode .app-header,
+            body.s22dn-print-mode .topbar,
+            body.s22dn-print-mode .MuiAppBar-root,
+            body.s22dn-print-mode .navbar,
+            body.s22dn-print-mode .layout-header,
+            body.s22dn-print-mode .sidebar,
+            body.s22dn-print-mode .left-sidebar { display: none !important; }
+
+            #printable-bbkiemke-content {
+              position: static !important;
+              width: 100% !important;
+              box-sizing: border-box !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              zoom: 78%;
+            }
+
+            /* First-child adjustments to pull page-top up when needed */
+            #printable-bbkiemke-content > *:first-child {
+              margin-top: -6mm !important;
+              padding-top: 0 !important;
+            }
+
+            #printable-bbkiemke-content .MuiTypography-root:first-of-type,
+            #printable-bbkiemke-content p:first-of-type,
+            #printable-bbkiemke-content div:first-of-type {
+              margin-top: 0 !important;
+              padding-top: 0 !important;
+            }
+
+            .no-print {
+              display: none !important;
+            }
+
+            #printable-bbkiemke-content .MuiStack-root:first-of-type {
+              margin-top: 0 !important;
+              padding-top: 0 !important;
+            }
+
+            table {
+              width: 100% !important;
+              border-collapse: collapse;
+              page-break-inside: auto;
+              font-size: 11px !important;
+            }
+
+            th, td {
+              padding: 2px 4px !important; 
+              word-wrap: break-word; 
+            }
+
+            tr {
+              page-break-inside: avoid;
+              page-break-after: auto;
+            }
+
+            /* Avoid forcing a page break after the last printed element */
+            #printable-bbkiemke-content > *:last-child {
+              page-break-after: avoid !important;
+            }
+
+            thead {
+              display: table-header-group;
+            }
+            tfoot {
+              display: table-footer-group;
+            }
+
+            .no-print {
+              display: none !important;
+            }
+
+            .report-scroll-container {
+              position: static !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              height: auto !important;
+              overflow: visible !important;
+              border: none !important;
+              box-shadow: none !important;
+              display: block !important;
+            }
+          }
+        `}
+      </style>
+
       <Box
+        className="no-print"
         sx={{
           p: 3,
           bgcolor: "white",
@@ -434,6 +570,7 @@ export default function BienBanKiemKe({ title }: { title?: string }) {
                   alignItems: "center",
                   justifyContent: "center",
                 }}
+                onClick={handlePrint}
               >
                 <Print />
               </Button>
@@ -443,6 +580,7 @@ export default function BienBanKiemKe({ title }: { title?: string }) {
       </Box>
 
       <Box
+        className="report-scroll-container"
         sx={{
           p: 3,
           height: "800px",

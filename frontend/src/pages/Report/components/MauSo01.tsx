@@ -136,7 +136,7 @@ export default function MauSo01({ title }: { title?: string }) {
     r++;
 
     wsData[r] = Array(12).fill("");
-    r++; 
+    r++;
 
     wsData[r] = Array(12).fill("");
     wsData[r][0] = cell("CÔNG TY THAN UÔNG BÍ - TKV", {
@@ -229,7 +229,7 @@ export default function MauSo01({ title }: { title?: string }) {
     merges.push(
       { s: { r: r, c: 5 }, e: { r: r, c: 6 } },
       { s: { r: r, c: 7 }, e: { r: r, c: 8 } },
-    ); 
+    );
     r += 3;
 
     const fillRow = (row: any, stt: any) => [
@@ -383,6 +383,28 @@ export default function MauSo01({ title }: { title?: string }) {
     }
   };
 
+  const handlePrint = () => {
+    try {
+      const marker = "s22dn-print-mode";
+      document.body.classList.remove(marker);
+      void document.body.offsetWidth;
+      document.body.classList.add(marker);
+
+      const cleanup = () => {
+        document.body.classList.remove(marker);
+        window.removeEventListener("afterprint", cleanup);
+      };
+
+      window.addEventListener("afterprint", cleanup);
+      setTimeout(cleanup, 3000);
+
+      setTimeout(() => window.print(), 80);
+    } catch (e) {
+      console.error("Print error", e);
+      window.print();
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -394,7 +416,59 @@ export default function MauSo01({ title }: { title?: string }) {
         minHeight: "100vh",
       }}
     >
+      {/* GLOBAL PRINT STYLES (copied from ReportS22DN, scoped to this component) */}
+      <style>{`
+          @media print {
+              @page { size: A4 portrait; margin: 5mm 5mm 5mm 10mm; }
+              @page :first { margin: 0mm 5mm 5mm 10mm; }
+
+            html, body { margin: 0; padding: 0; background: white; height: 100%; }
+
+            .report-scroll-container { position: static !important; margin: 0 !important; padding: 8mm !important; width: 100% !important; box-sizing: border-box !important; height: auto !important; overflow: visible !important; border: none !important; border-radius: 0 !important; box-shadow: none !important; }
+
+            body.s22dn-print-mode #app-header,
+            body.s22dn-print-mode header,
+            body.s22dn-print-mode .app-header,
+            body.s22dn-print-mode .topbar,
+            body.s22dn-print-mode .MuiAppBar-root,
+            body.s22dn-print-mode .navbar,
+            body.s22dn-print-mode .layout-header,
+            body.s22dn-print-mode .sidebar,
+            body.s22dn-print-mode .left-sidebar { display: none !important; }
+            #printable-mauso01-content { visibility: visible !important; }
+
+            #printable-mauso01-content table {
+              width: 100% !important;
+              border-collapse: collapse;
+              page-break-inside: auto;
+              font-size: 8.5pt !important;
+              table-layout: fixed !important;
+              word-break: break-word !important;
+              white-space: normal !important;
+              max-width: 100% !important;
+            }
+
+            #printable-mauso01-content col { width: auto !important; }
+            #printable-mauso01-content table col { width: auto !important; }
+            #printable-mauso01-content th, #printable-mauso01-content td {
+              padding: 1px 4px !important;
+              vertical-align: middle !important;
+              font-size: 8.5pt !important;
+              white-space: normal !important;
+              overflow: hidden !important;
+            }
+
+            #printable-mauso01-content { zoom: 0.82; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+
+            .no-print { display: none !important; }
+          }
+        `}</style>
+
       <Box
+        className="no-print"
         sx={{
           p: 3,
           bgcolor: "white",
@@ -502,6 +576,7 @@ export default function MauSo01({ title }: { title?: string }) {
                   alignItems: "center",
                   justifyContent: "center",
                 }}
+                onClick={handlePrint}
               >
                 <Print />
               </Button>
@@ -511,6 +586,7 @@ export default function MauSo01({ title }: { title?: string }) {
       </Box>
 
       <Box
+        className="report-scroll-container"
         sx={{
           p: 3,
           height: "800px",

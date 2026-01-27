@@ -18,7 +18,7 @@ export const useUnitMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["units"] });
+      queryClient.invalidateQueries({ queryKey: ["allUnits"] });
       showSuccessAlert("Tạo đơn vị tính thành công");
     },
     onError: (error: any) => {
@@ -36,7 +36,7 @@ export const useUnitMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["units"] });
+      queryClient.invalidateQueries({ queryKey: ["allUnits"] });
       showSuccessAlert("Sửa đơn vị tính thành công");
     },
     onError: (error: any) => {
@@ -54,7 +54,7 @@ export const useUnitMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["units"] });
+      queryClient.invalidateQueries({ queryKey: ["allUnits"] });
       showSuccessAlert("Xóa đơn vị tính thành công");
     },
     onError: (error: any) => {
@@ -72,7 +72,7 @@ export const useUnitMutation = (
       return res.data.message;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["units"] });
+      queryClient.invalidateQueries({ queryKey: ["allUnits"] });
       showSuccessAlert(data || "Xóa đơn vị tính thành công");
     },
     onError: (error: any) => {
@@ -194,7 +194,7 @@ export const useUnitMutation = (
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["units"] });
+      queryClient.invalidateQueries({ queryKey: ["allUnits"] });
       showSuccessAlert("Import đơn vị tính thành công");
     },
     onError: (error: any) => {

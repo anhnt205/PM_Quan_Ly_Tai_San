@@ -146,27 +146,15 @@ export default function AssetManagerForm({
       });
     },
   });
+  // Set or reset the whole form when the selected asset changes only.
   useEffect(() => {
     if (selectedAsset) {
+      // When editing an existing asset, initialize the form values.
       const enrichedTaiSanConList =
-        selectedAsset.taiSanConList?.map((item: any) => {
-          // Tìm thông tin từ các list danh mục có sẵn
-          const assetDetail = assetsByType.find(
-            (a) => a.id === item.idTaiSanCon
-          );
-          const unit = findById(allUnits, assetDetail?.donViTinh);
-          const status = findById(allCurrentStatus, assetDetail?.hienTrang);
-
-          return {
-            ...item,
-            // Gán sẵn tên để các FieldInput (đang disabled) hiển thị được luôn
-            donViTinh: unit ? unit.tenDonVi : "",
-            hienTrang: status ? status.tenHTKT : "",
-            soLuong: item.soLuong || assetDetail?.soLuong || 0,
-            moTa: item.moTa || assetDetail?.ghiChu || "",
-            isDeleted: false,
-          };
-        }) || [];
+        selectedAsset.taiSanConList?.map((item: any) => ({
+          ...item,
+          isDeleted: false,
+        })) || [];
 
       formik.setValues({
         ...selectedAsset,
@@ -174,9 +162,37 @@ export default function AssetManagerForm({
         taiSanConList: enrichedTaiSanConList,
       });
     } else {
+      // Only reset when selectedAsset specifically becomes null (e.g., opening "New").
       formik.resetForm();
     }
-  }, [selectedAsset, allUnits, allCurrentStatus, assetsByType]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAsset]);
+
+  // When dependent reference data change (units, current status, assetsByType)
+  // and we're editing an asset, update only the `taiSanConList` entries
+  // to enrich display fields without resetting the entire form.
+  useEffect(() => {
+    if (!selectedAsset) return;
+
+    const enrichedTaiSanConList =
+      formik.values.taiSanConList?.map((item: any) => {
+        const assetDetail = assetsByType.find((a) => a.id === item.idTaiSanCon);
+        const unit = findById(allUnits, assetDetail?.donViTinh);
+        const status = findById(allCurrentStatus, assetDetail?.hienTrang);
+
+        return {
+          ...item,
+          donViTinh: unit ? unit.tenDonVi : "",
+          hienTrang: status ? status.tenHTKT : "",
+          soLuong: item.soLuong || assetDetail?.soLuong || 0,
+          moTa: item.moTa || assetDetail?.ghiChu || "",
+          isDeleted: false,
+        };
+      }) || [];
+
+    formik.setFieldValue("taiSanConList", enrichedTaiSanConList);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assetsByType, allUnits, allCurrentStatus]);
 
   useEffect(() => {
     if (formik.values.idNhomTaiSan) {
@@ -437,7 +453,7 @@ export default function AssetManagerForm({
                     }
                     value={
                       countries.find(
-                        (i: any) => i.niceName === formik.values.nuocSanXuat
+                        (i: any) => i.niceName === formik.values.nuocSanXuat,
                       ) || null
                     }
                     onChange={(e, newValue) => {
@@ -566,29 +582,30 @@ export default function AssetManagerForm({
                           if (val) {
                             formik.setFieldValue(
                               `taiSanConList.${row.originalIndex}.idTaiSanCon`,
-                              val?.id
+                              val?.id,
                             );
 
                             formik.setFieldValue(
                               `taiSanConList.${row.originalIndex}.isActive`,
-                              val.isActive
+                              val.isActive,
                             );
 
                             formik.setFieldValue(
                               `taiSanConList.${row.originalIndex}.donViTinh`,
-                              findById(allUnits, val.donViTinh)?.tenDonVi
+                              findById(allUnits, val.donViTinh)?.tenDonVi,
                             );
                             formik.setFieldValue(
                               `taiSanConList.${row.originalIndex}.moTa`,
-                              val.ghiChu
+                              val.ghiChu,
                             );
                             formik.setFieldValue(
                               `taiSanConList.${row.originalIndex}.hienTrang`,
-                              findById(allCurrentStatus, val.hienTrang)?.tenHTKT
+                              findById(allCurrentStatus, val.hienTrang)
+                                ?.tenHTKT,
                             );
                             formik.setFieldValue(
                               `taiSanConList.${row.originalIndex}.soLuong`,
-                              val.soLuong
+                              val.soLuong,
                             );
                           }
                         }}
@@ -634,7 +651,7 @@ export default function AssetManagerForm({
                         onClick={() => {
                           formik.setFieldValue(
                             `taiSanConList.${row.originalIndex}.isDeleted`,
-                            true
+                            true,
                           );
                         }}
                         disabled={readOnly}

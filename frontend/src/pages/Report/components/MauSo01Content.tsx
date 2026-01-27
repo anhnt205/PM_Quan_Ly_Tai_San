@@ -41,7 +41,6 @@ export default function MauSo01Content({
     namBaoCao: "",
   });
 
-  // start with no rows until user clicks 'Lấy dữ liệu'
   const [tableRows, setTableRows] = useState<TableRowData[]>([]);
 
   const pick = (obj: any, keys: string[]) => {
@@ -53,7 +52,6 @@ export default function MauSo01Content({
     return "";
   };
 
-  // fetch when parent triggers (fetchKey increments)
   useEffect(() => {
     const fetchData = async () => {
       if (!idDonVi) return;
@@ -142,11 +140,11 @@ export default function MauSo01Content({
         newRows.push(...ccdc);
 
         setTableRows(newRows);
-        onContentChange?.({ 
-            ...formData, 
-            tableRows: newRows, // Dữ liệu hiển thị
-            tsRows: taiSan,     // Dữ liệu TSCĐ (cho Excel) -> Sửa lỗi "Chưa có dữ liệu"
-            ccdcRows: ccdc      // Dữ liệu CCDC (cho Excel)
+        onContentChange?.({
+          ...formData,
+          tableRows: newRows, 
+          tsRows: taiSan, 
+          ccdcRows: ccdc,
         });
         onFetchSuccess?.();
       } catch (err) {
@@ -155,20 +153,16 @@ export default function MauSo01Content({
     };
 
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchKey]);
 
-  // when parent kyBaoCao changes (format expected "MM/YYYY"), update the displayed month/year
   useEffect(() => {
     if (!kyBaoCao) return;
     const v = String(kyBaoCao || "").trim();
-    // support formats: MM/YYYY, M/YYYY, YYYY-MM, YYYY/MM
     let month = "";
     let year = "";
     if (v.includes("/")) {
       const parts = v.split("/").map((p) => p.trim());
       if (parts.length === 2) {
-        // could be MM/YYYY or YYYY/MM depending on order; detect by length
         if (parts[0].length === 4) {
           year = parts[0];
           month = parts[1];
@@ -189,16 +183,12 @@ export default function MauSo01Content({
         }
       }
     } else if (/^\d{6}$/.test(v)) {
-      // YYYYMM
       year = v.slice(0, 4);
       month = v.slice(4);
     }
 
-    // normalize month to numeric without leading dots
     month = month.replace(/^0+/, "") || month;
-    // if month still has leading zeros intended, keep as-is
     if (month === "") {
-      // try to infer from Date
       const d = new Date();
       month = String(d.getMonth() + 1);
       year = year || String(d.getFullYear());
@@ -211,7 +201,6 @@ export default function MauSo01Content({
     };
     setFormData(newData);
     onContentChange?.({ ...newData, tableRows });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kyBaoCao]);
 
   const handleInputChange = (field: string, value: string) => {
@@ -293,7 +282,7 @@ export default function MauSo01Content({
         backgroundColor: "transparent",
         lineHeight: 1.4,
       }}
-      id="printable-content"
+      id="printable-mauso01-content"
     >
       <Box
         sx={{

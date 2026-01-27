@@ -38,8 +38,8 @@ export default function ReportS22DNContent({
 }: ReportS22DNContentProps) {
   const [diaChi, setDiaChi] = useState("");
 
-  const [tsRows, setTsRows] = useState<TableRowData[]>([]); 
-  const [ccdcRows, setCcdcRows] = useState<TableRowData[]>([]); 
+  const [tsRows, setTsRows] = useState<TableRowData[]>([]);
+  const [ccdcRows, setCcdcRows] = useState<TableRowData[]>([]);
 
   const [loading, setLoading] = useState(false);
 

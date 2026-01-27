@@ -267,7 +267,7 @@ export default function BBKiemKeContent({
 
   const tableBodyCellSx = {
     ...tableCellSx,
-    fontWeight: "normal", 
+    fontWeight: "normal",
     whiteSpace: "normal",
     overflowWrap: "break-word",
     wordBreak: "break-word",
@@ -711,7 +711,9 @@ export default function BBKiemKeContent({
           </Typography>
         </Box>
 
-        <Box sx={{ mt: 5, display: "flex", justifyContent: "flex-end" }}>
+        <Box
+          sx={{ mt: 5, display: "flex", justifyContent: "flex-end" }}
+        >
           <Box sx={{ width: "50%" }}></Box>
 
           <Box sx={{ width: "50%", textAlign: "center" }}>

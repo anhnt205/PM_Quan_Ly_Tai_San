@@ -255,7 +255,7 @@ export default function MauSo21Content({
         lineHeight: 1.4,
         p: 2,
       }}
-      id="printable-content"
+      id="printable-mauso21-content"
     >
       <Box
         sx={{

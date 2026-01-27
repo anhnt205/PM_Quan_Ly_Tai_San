@@ -43,7 +43,9 @@ export default function UnitForm({
       note: "",
     },
     validationSchema: UnitValidation,
-    onSubmit(values) {},
+    onSubmit(values) {
+      onSave(values);
+    },
   });
 
   useEffect(() => {

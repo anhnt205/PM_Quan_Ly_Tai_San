@@ -105,7 +105,7 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
 
       const cell = (v: any, s: any) => ({ v, s });
 
-      const COLS = 14; 
+      const COLS = 14;
       let wsData: any[][] = [];
       let merges: any[] = [];
       let r = 0;
@@ -172,7 +172,7 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
           if (!isNaN(dt.getTime())) dateTimeStr = dt.toLocaleString("vi-VN");
         }
       } catch (err) {}
-      
+
       wsData[r][0] = cell(`Thời điểm kiểm kê: ${dateTimeStr}`, {
         font: fontI,
         alignment: { horizontal: "center", vertical: "center" },
@@ -182,8 +182,8 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
 
       wsData[r] = Array(COLS).fill("");
       r++;
-      
-      const rHeaderStart = r; 
+
+      const rHeaderStart = r;
 
       wsData[r] = Array(COLS).fill("");
 
@@ -205,40 +205,40 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
       wsData[r][11] = cell("", sHeaderTable);
       wsData[r][12] = cell("", sHeaderTable);
 
-      merges.push({ s: { r: r, c: 0 }, e: { r: r + 1, c: 0 } }); 
-      merges.push({ s: { r: r, c: 1 }, e: { r: r + 1, c: 1 } }); 
-      merges.push({ s: { r: r, c: 2 }, e: { r: r + 1, c: 2 } }); 
-      merges.push({ s: { r: r, c: 3 }, e: { r: r + 1, c: 3 } }); 
-      merges.push({ s: { r: r, c: 13 }, e: { r: r + 1, c: 13 } }); 
+      merges.push({ s: { r: r, c: 0 }, e: { r: r + 1, c: 0 } });
+      merges.push({ s: { r: r, c: 1 }, e: { r: r + 1, c: 1 } });
+      merges.push({ s: { r: r, c: 2 }, e: { r: r + 1, c: 2 } });
+      merges.push({ s: { r: r, c: 3 }, e: { r: r + 1, c: 3 } });
+      merges.push({ s: { r: r, c: 13 }, e: { r: r + 1, c: 13 } });
 
-      merges.push({ s: { r: r, c: 4 }, e: { r: r, c: 6 } });   
-      merges.push({ s: { r: r, c: 7 }, e: { r: r, c: 9 } });   
-      merges.push({ s: { r: r, c: 10 }, e: { r: r, c: 12 } }); 
-      
+      merges.push({ s: { r: r, c: 4 }, e: { r: r, c: 6 } });
+      merges.push({ s: { r: r, c: 7 }, e: { r: r, c: 9 } });
+      merges.push({ s: { r: r, c: 10 }, e: { r: r, c: 12 } });
+
       r++;
 
       wsData[r] = Array(COLS).fill("");
-      
+
       const subCols = ["Số lượng", "Nguyên giá", "Giá trị còn lại"];
 
       wsData[r][4] = cell(subCols[0], sHeaderTable);
       wsData[r][5] = cell(subCols[1], sHeaderTable);
       wsData[r][6] = cell(subCols[2], sHeaderTable);
-      
+
       wsData[r][7] = cell(subCols[0], sHeaderTable);
       wsData[r][8] = cell(subCols[1], sHeaderTable);
       wsData[r][9] = cell(subCols[2], sHeaderTable);
-      
+
       wsData[r][10] = cell(subCols[0], sHeaderTable);
       wsData[r][11] = cell(subCols[1], sHeaderTable);
       wsData[r][12] = cell(subCols[2], sHeaderTable);
 
       [0, 1, 2, 3, 13].forEach((colIdx) => {
-         wsData[r][colIdx] = cell("", sHeaderTable); 
+        wsData[r][colIdx] = cell("", sHeaderTable);
       });
 
       r++;
-      
+
       (inventory || []).forEach((it: any, idx: number) => {
         const row = Array(COLS).fill("");
 
@@ -253,38 +253,44 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
         row[2] = cell(it.maso || it.maSo || "", sCenterTable);
         row[3] = cell(it.noiSudung || "", sTextTable);
 
-        const ktSL = it.soluongkt || it.soluong; 
+        const ktSL = it.soluongkt || it.soluong;
         const ktNG = parseNum(it.nguyengiakt || it.nguyenGia);
         const ktGTCL = parseNum(it.giatriconlaikt || it.giaTriConLai);
 
         row[4] = cell(ktSL || "", sCenterTable);
-        row[5] = ktNG !== 0 ? cell(ktNG, sNumberCenter) : cell("", sCenterTable);
-        row[6] = ktGTCL !== 0 ? cell(ktGTCL, sNumberCenter) : cell("", sCenterTable);
+        row[5] =
+          ktNG !== 0 ? cell(ktNG, sNumberCenter) : cell("", sCenterTable);
+        row[6] =
+          ktGTCL !== 0 ? cell(ktGTCL, sNumberCenter) : cell("", sCenterTable);
 
         const kkSL = it.soluongkk;
         const kkNG = parseNum(it.nguyengiakk);
         const kkGTCL = parseNum(it.giatriconlaikk);
 
         row[7] = cell(kkSL || "", sCenterTable);
-        row[8] = kkNG !== 0 ? cell(kkNG, sNumberCenter) : cell("", sCenterTable);
-        row[9] = kkGTCL !== 0 ? cell(kkGTCL, sNumberCenter) : cell("", sCenterTable);
+        row[8] =
+          kkNG !== 0 ? cell(kkNG, sNumberCenter) : cell("", sCenterTable);
+        row[9] =
+          kkGTCL !== 0 ? cell(kkGTCL, sNumberCenter) : cell("", sCenterTable);
 
-        let clSL = it.soluongcl; 
-        if(clSL === undefined || clSL === null) {
-            const sl1 = Number(ktSL) || 0;
-            const sl2 = Number(kkSL) || 0;
-            if(sl1 !== sl2) clSL = sl2 - sl1;
+        let clSL = it.soluongcl;
+        if (clSL === undefined || clSL === null) {
+          const sl1 = Number(ktSL) || 0;
+          const sl2 = Number(kkSL) || 0;
+          if (sl1 !== sl2) clSL = sl2 - sl1;
         }
 
         let clNG = parseNum(it.nguyengiacl);
-        if(clNG === 0 && (kkNG !== ktNG)) clNG = kkNG - ktNG;
+        if (clNG === 0 && kkNG !== ktNG) clNG = kkNG - ktNG;
 
-        let clGTCL = parseNum(it.giatriconlaicl); 
-        if(clGTCL === 0 && (kkGTCL !== ktGTCL)) clGTCL = kkGTCL - ktGTCL;
+        let clGTCL = parseNum(it.giatriconlaicl);
+        if (clGTCL === 0 && kkGTCL !== ktGTCL) clGTCL = kkGTCL - ktGTCL;
 
         row[10] = clSL ? cell(clSL, sCenterTable) : cell("", sCenterTable);
-        row[11] = clNG !== 0 ? cell(clNG, sNumberCenter) : cell("", sCenterTable);
-        row[12] = clGTCL !== 0 ? cell(clGTCL, sNumberCenter) : cell("", sCenterTable);
+        row[11] =
+          clNG !== 0 ? cell(clNG, sNumberCenter) : cell("", sCenterTable);
+        row[12] =
+          clGTCL !== 0 ? cell(clGTCL, sNumberCenter) : cell("", sCenterTable);
 
         row[13] = cell(it.ghiChu || "", sTextTable);
 
@@ -306,9 +312,9 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
         { font, alignment: { horizontal: "left" } },
       );
       merges.push({ s: { r: r, c: 0 }, e: { r: r, c: COLS - 1 } });
-      
-      r++; 
-      wsData[r] = Array(COLS).fill(""); 
+
+      r++;
+      wsData[r] = Array(COLS).fill("");
       r++;
 
       wsData[r] = Array(COLS).fill("");
@@ -327,14 +333,17 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
 
       r++;
 
-      const sItalicSmall = { 
+      const sItalicSmall = {
         font: { name: "Times New Roman", sz: 11, italic: true },
-        alignment: { horizontal: "center", vertical: "top", wrapText: true } 
+        alignment: { horizontal: "center", vertical: "top", wrapText: true },
       };
 
       wsData[r] = Array(COLS).fill("");
 
-      wsData[r][2] = cell("(Ghi ý kiến giải quyết số chênh lệch)", sItalicSmall);
+      wsData[r][2] = cell(
+        "(Ghi ý kiến giải quyết số chênh lệch)",
+        sItalicSmall,
+      );
       merges.push({ s: { r: r, c: 2 }, e: { r: r, c: 6 } });
 
       wsData[r][8] = cell("(Ký, họ tên)", sItalicSmall);
@@ -343,41 +352,41 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
       r++;
 
       wsData[r] = Array(COLS).fill("");
-      
+
       wsData[r][2] = cell("(Ký, họ tên, đóng dấu)", sItalicSmall);
       merges.push({ s: { r: r, c: 2 }, e: { r: r, c: 6 } });
 
-      r += 4; 
+      r += 4;
 
       const ws = XLSX.utils.aoa_to_sheet(wsData);
       ws["!merges"] = merges;
 
       ws["!cols"] = [
-        { wch: 5 },  
+        { wch: 5 },
         { wch: 35 },
-        { wch: 12 }, 
-        { wch: 15 }, 
-        { wch: 8 },  
-        { wch: 13 }, 
-        { wch: 13 }, 
-        { wch: 8 },  
-        { wch: 13 }, 
-        { wch: 13 }, 
-        { wch: 8 }, 
-        { wch: 13 }, 
-        { wch: 13 }, 
-        { wch: 15 }, 
+        { wch: 12 },
+        { wch: 15 },
+        { wch: 8 },
+        { wch: 13 },
+        { wch: 13 },
+        { wch: 8 },
+        { wch: 13 },
+        { wch: 13 },
+        { wch: 8 },
+        { wch: 13 },
+        { wch: 13 },
+        { wch: 15 },
       ];
       ws["!rows"] = [
-        { hpt: 28 }, 
-        { hpt: 20 }, 
-        { hpt: 6 },  
-        { hpt: 26 }, 
-        { hpt: 18 }, 
-        { hpt: 18 }, 
-        { hpt: 10 }, 
-        { hpt: 25 }, 
-        { hpt: 25 }, 
+        { hpt: 28 },
+        { hpt: 20 },
+        { hpt: 6 },
+        { hpt: 26 },
+        { hpt: 18 },
+        { hpt: 18 },
+        { hpt: 10 },
+        { hpt: 25 },
+        { hpt: 25 },
       ];
 
       XLSX.utils.book_append_sheet(wb, ws, "BaoCao_TSCD");
@@ -391,6 +400,28 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
       setSnackbarMessage("Lỗi khi xuất file");
       setSnackbarSeverity("error");
       setOpenSnackbar(true);
+    }
+  };
+
+  const handlePrint = () => {
+    try {
+      const marker = "s22dn-print-mode";
+      document.body.classList.remove(marker);
+      void document.body.offsetWidth;
+      document.body.classList.add(marker);
+
+      const cleanup = () => {
+        document.body.classList.remove(marker);
+        window.removeEventListener("afterprint", cleanup);
+      };
+
+      window.addEventListener("afterprint", cleanup);
+      setTimeout(cleanup, 3000);
+
+      setTimeout(() => window.print(), 80);
+    } catch (e) {
+      console.error("Print error", e);
+      window.print();
     }
   };
 
@@ -411,6 +442,7 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
       }}
     >
       <Box
+        className="no-print"
         sx={{
           p: 3,
           bgcolor: "white",
@@ -419,6 +451,71 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
           boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
         }}
       >
+        {/* GLOBAL PRINT STYLES */}
+        <style>{`
+          @media print {
+              @page { size: A4 portrait; margin: 5mm 5mm 5mm 10mm; }
+              @page :first { margin: 0mm 5mm 5mm 10mm; }
+
+            html, body { margin: 0; padding: 0; background: white; height: 100%; }
+
+            .report-scroll-container { position: static !important; margin: 0 !important; padding: 8mm !important; width: 100% !important; box-sizing: border-box !important; height: auto !important; overflow: visible !important; border: none !important; border-radius: 0 !important; box-shadow: none !important; }
+
+            body.s22dn-print-mode #app-header,
+            body.s22dn-print-mode header,
+            body.s22dn-print-mode .app-header,
+            body.s22dn-print-mode .topbar,
+            body.s22dn-print-mode .MuiAppBar-root,
+            body.s22dn-print-mode .navbar,
+            body.s22dn-print-mode .layout-header,
+            body.s22dn-print-mode .sidebar,
+            body.s22dn-print-mode .left-sidebar { display: none !important; }
+            #printable-bc-tscd-content { visibility: visible !important; }
+
+            #printable-bc-tscd-content table {
+              width: 100% !important;
+              border-collapse: collapse;
+              page-break-inside: auto;
+              font-size: 8.5pt !important;
+              table-layout: fixed !important;
+              word-break: break-word !important;
+              white-space: normal !important;
+              max-width: 100% !important;
+            }
+
+            #printable-bc-tscd-content col { width: auto !important; }
+            #printable-bc-tscd-content table col { width: auto !important; }
+            #printable-bc-tscd-content table col:nth-child(1)  { width: 3%  !important; }
+            #printable-bc-tscd-content table col:nth-child(2)  { width: 19%  !important; }
+            #printable-bc-tscd-content table col:nth-child(3)  { width: 7% !important; }
+            #printable-bc-tscd-content table col:nth-child(4)  { width: 8%  !important; }
+            #printable-bc-tscd-content table col:nth-child(5)  { width: 4%  !important; }
+            #printable-bc-tscd-content table col:nth-child(6)  { width: 7%  !important; }
+            #printable-bc-tscd-content table col:nth-child(7)  { width: 7% !important; }
+            #printable-bc-tscd-content table col:nth-child(8)  { width: 4%  !important; }
+            #printable-bc-tscd-content table col:nth-child(9)  { width: 7%  !important; }
+            #printable-bc-tscd-content table col:nth-child(10) { width: 7% !important; }
+            #printable-bc-tscd-content table col:nth-child(11) { width: 4%  !important; }
+            #printable-bc-tscd-content table col:nth-child(12) { width: 7%  !important; }
+            #printable-bc-tscd-content table col:nth-child(13) { width: 7%  !important; }
+            #printable-bc-tscd-content table col:nth-child(14) { width: 8%  !important; }
+
+            #printable-bc-tscd-content th, #printable-bc-tscd-content td {
+              padding: 1px 4px !important;
+              vertical-align: middle !important;
+              font-size: 8.5pt !important;
+              white-space: normal !important;
+              overflow: hidden !important;
+            }
+
+            #printable-bc-tscd-content { zoom: 0.82; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+
+            .no-print { display: none !important; }
+          }
+        `}</style>
         {title && (
           <Box sx={{ textAlign: "center", pb: 2, mb: 2 }}>
             <Typography
@@ -522,6 +619,7 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
                   alignItems: "center",
                   justifyContent: "center",
                 }}
+                onClick={handlePrint}
               >
                 <Print />
               </Button>
@@ -531,6 +629,7 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
       </Box>
 
       <Box
+        className="report-scroll-container"
         sx={{
           p: 3,
           height: "800px",
