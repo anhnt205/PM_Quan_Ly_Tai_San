@@ -18,7 +18,7 @@ services:
       # target: development
     ports:
       # HOST_PORT:CONTAINER_PORT
-      - "9999:8888"
+      - "9999:80"
     stdin_open: true
     environment:
       - TZ=Asia/Ho_Chi_Minh

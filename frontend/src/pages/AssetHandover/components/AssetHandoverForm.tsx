@@ -401,6 +401,16 @@ export default function AssetHandoverForm({
               {/* CỘT 1 */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <Grid container spacing={2}>
+                  {!formik.values.isNew && (
+                    <Grid size={12}>
+                      <FieldInput
+                        title="Số phiếu bàn giao"
+                        formik={formik}
+                        field="id"
+                        disabled={true}
+                      />
+                    </Grid>
+                  )}
                   <Grid size={12}>
                     <FieldInput
                       title="Tên biên bản bàn giao"
@@ -448,7 +458,7 @@ export default function AssetHandoverForm({
                     <FieldInput
                       title="Số quyết định"
                       formik={formik}
-                      field="quyetDinhDieuDongSo"
+                      field="soQuyetDinh"
                       disabled={readOnly}
                     />
                   </Grid>

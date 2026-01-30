@@ -29,7 +29,7 @@ jobs:
       - name: Create an .env file in frontend for building image
         run: |
           echo "REACT_APP_BASE_API=${{ secrets.REACT_APP_BASE_API}}" > ./frontend/.env
-          echo "REACT_APP_URL_UPLOAD=${{ secrets.REACT_APP_URL_UPLOAD}}" > ./frontend/.env
+          echo "REACT_APP_URL_UPLOAD=${{ secrets.REACT_APP_URL_UPLOAD}}" >> ./frontend/.env
 
       - name: List Files
         run: ls -laR
