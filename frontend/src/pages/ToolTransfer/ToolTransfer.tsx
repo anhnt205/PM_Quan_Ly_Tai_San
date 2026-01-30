@@ -406,6 +406,7 @@ export default function ToolTransfer() {
             title={title}
             onNewClick={() => {
               setSelectedRow(null);
+              setShowSidebar(false);
               setShowForm(true);
               setReadOnly(false);
             }}

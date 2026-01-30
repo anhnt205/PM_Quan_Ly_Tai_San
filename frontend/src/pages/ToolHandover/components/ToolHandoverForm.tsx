@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -36,10 +36,15 @@ import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
 import EditButton from "../../../components/Button/EditButton";
 import CustomStepper from "../../../components/common/CustomStepper";
-import { useToolHandoverMutation } from "../Mutation";
-import { ToolHandoverFormValues } from "../types";
+import { useToolHandoverMutation, useToolTransferPageQuery } from "../Mutation";
+import { ToolHandoverData, ToolHandoverFormValues } from "../types";
 import ViewBtn from "../../../components/Button/ViewBtn";
-import SignDocumentForm from "../../../components/common/SignDocumentForm";
+import { findById, generateCode } from "../../../utils/helpers";
+import SignDocumentForm from "./SignDocumentForm";
+import PreviewBtn from "../../../components/Button/PreviewBtn";
+import { TruckElectric } from "lucide-react";
+import dayjs from "dayjs";
+import { toolHandoverValidationSchema } from "../validation";
 
 const UnderlinedInputWrapper = styled(Box)({
   width: "100%",
@@ -109,57 +114,61 @@ const CustomTableCell = styled(TableCell)(() => ({
 export default function ToolHandoverForm({
   onEdit,
   onCancel,
-  selectedTransfer,
+  onClose,
+  selectedToolHandover,
   readOnly,
   onSave,
   label,
+  allUnits = [],
+  staffs = [],
+  departments = [],
+  positions = [],
 }: {
   onEdit: () => void;
   onCancel: () => void;
-  selectedTransfer?: any;
+  onClose: () => void;
+  selectedToolHandover?: ToolHandoverData;
   readOnly?: boolean;
   onSave: (values: any) => void;
   label?: string;
+  allUnits?: any[];
+  staffs?: any[];
+  departments?: any[];
+  positions?: any[];
 }) {
-  const [document, setDocument] = useState<File | string | any>("");
-  const isNew =
-    !selectedTransfer || (!selectedTransfer.id && !selectedTransfer.Id);
+  console.log(staffs);
   const currentStatus =
-    selectedTransfer?.trangThai ?? selectedTransfer?.TrangThai ?? 0;
-  const canBeEdited = isNew || currentStatus === 0;
-  const isFormReadOnly = isNew ? false : readOnly || !canBeEdited;
-
-  const [paginationModel] = useState({ page: 0, pageSize: 10 });
-  const [searchValue] = useState("");
-  const {
-    departments,
-    staffs,
-    allTools,
-    updateMutation,
-    createMutation,
-    handleDownloadFile,
-  } = useToolHandoverMutation(
-    paginationModel.page,
-    paginationModel.pageSize,
-    searchValue,
-  );
-
+    selectedToolHandover?.trangThai ?? selectedToolHandover?.trangThai ?? 0;
+  const { data: ToolTransferData = { items: [], totalItems: 0 } } =
+    useToolTransferPageQuery({
+      page: 0,
+      pageSize: 9999,
+    });
   const [expanded, setExpanded] = useState(true);
   const [tableExpanded, setTableExpanded] = useState(true);
-  const [previewFileName, setPreviewFileName] = useState<string | null>(null);
+  const [isPreview, setIsPreview] = useState(false);
+  const [document, setDocument] = useState<File | string | any>("");
+  const [priviewDocument, setPriviewDocument] = useState(false);
+
+  const [listTools, setListTools] = useState<any[]>([]);
+  const chiTietDieuDongCCDCVatTuDTOS = useMemo(() => {
+    return (ToolTransferData.items || []).flatMap(
+      (i: any) => i.chiTietDieuDongCCDCVatTuDTOS || [],
+    );
+  }, [ToolTransferData.items]);
 
   const formik = useFormik<ToolHandoverFormValues>({
     initialValues: {
       id: "",
       soQuyetDinh: "",
-      banGiaoCCDC: "",
+      banGiaoCCDCVatTu: "",
       quyetDinhDieuDongSo: "",
       lenhDieuDong: "",
       idDonViGiao: "",
       idDonViNhan: "",
-      ngayBanGiao: "",
-      ngayQuyetDinh: "",
-      ngayTaoChungTu: "",
+      ngayBanGiao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      ngayQuyetDinh: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      ngayTaoChungTu: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       diaDiemQuyetDinh: "",
       idGiamDoc: "",
       idCongTy: "ct001",
@@ -182,696 +191,822 @@ export default function ToolHandoverForm({
       tenFile: "",
       byStep: false,
       giamDocKy: false,
-      chiTietBanGiaoCCDC: [
+      chiTietBanGiaoCCDCVatTu: [
         {
-          idCCDC: "",
-          donViTinh: "",
-          soLuong: 1,
-          hienTrang: "1",
-          ghiChu: "",
           id: "",
-          idBanGiaoCCDC: "",
+          idBanGiaoCCDCVatTu: "",
+          idCCDCVatTu: "",
+          soLuong: 0,
+          idChiTietCCDCVatTu: "",
+          ngayTao: "",
+          ngayCapNhat: "",
+          nguoiTao: "",
+          nguoiCapNhat: "",
           isActive: true,
+          idChiTietDieuDong: "",
+          hienTrang: "",
           moTa: "",
-          tenCCDC: "",
+          ghiChu: "",
         },
       ],
-      nguoiKyList: [{ idPhongBan: "", idNguoiKy: "" }],
+      nguoiKyList: [],
       chuKyList: [],
+      initialChiTiet: [],
+      isNew: true,
     },
+    validationSchema: toolHandoverValidationSchema,
     onSubmit: (values) => {
-      const payload = {
+      const chiTietBanGiaoCCDCVatTu = values.chiTietBanGiaoCCDCVatTu.map(
+        (item: any, index) => ({
+          ...item,
+          id: `${generateCode("CTBGCCDC-")}-${index}`,
+          idBanGiaoCCDCVatTu: values.id,
+        }),
+      );
+      const nguoiKyList = values.nguoiKyList.map((item: any, index) => ({
+        ...item,
+        id: `${generateCode("SIG-")}-${index}`,
+        idTaiLieu: values.id,
+      }));
+      onSave({
         ...values,
-        daXacNhan: !!values.daXacNhan,
-        giamDocKy: !!values.giamDocKy,
-        isActive: !!values.isActive,
-        share: !!values.share,
-        byStep: !!values.byStep,
-      };
-      if (values.id) updateMutation.mutate(payload);
-      else createMutation.mutate(payload);
+        quyetDinhDieuDongSo: values.lenhDieuDong,
+        chiTietBanGiaoCCDCVatTu,
+        nguoiKyList,
+      });
     },
   });
 
   useEffect(() => {
-    if (selectedTransfer) {
+    if (selectedToolHandover) {
+      const chitietList = selectedToolHandover.chiTietBanGiaoCCDCVatTu.map(
+        (i: any) => {
+          const chitiet = findById(
+            chiTietDieuDongCCDCVatTuDTOS,
+            i.idChiTietDieuDong,
+          );
+          return {
+            ...i,
+            id: i.idCCDCVatTu,
+            tenCCDCVatTu: i.tenVatTu,
+            soLuongConLai: chitiet?.soLuongConLai ?? 0,
+            soLuongXuat: chitiet?.soLuongXuat ?? 0,
+          };
+        },
+      );
       formik.setValues({
-        ...selectedTransfer,
-        ngayBanGiao: selectedTransfer.ngayBanGiao || "",
-        ngayQuyetDinh: selectedTransfer.ngayQuyetDinh || "",
-        ngayTaoChungTu: selectedTransfer.ngayTaoChungTu || "",
-        chiTietBanGiaoCCDC:
-          selectedTransfer.chiTietBanGiaoCCDC?.length > 0
-            ? selectedTransfer.chiTietBanGiaoCCDC
-            : formik.initialValues.chiTietBanGiaoCCDC,
-        nguoiKyList: selectedTransfer.nguoiKyList || [
-          { idPhongBan: "", idNguoiKy: "" },
-        ],
+        ...selectedToolHandover,
+        isNew: selectedToolHandover.isNew ?? false,
+        chiTietBanGiaoCCDCVatTu: chitietList,
+        initialChiTiet: (
+          selectedToolHandover.chiTietBanGiaoCCDCVatTu || []
+        ).map((i: any) => i.id),
       });
+      setDocument(selectedToolHandover.tenFile);
+      getListTool(selectedToolHandover.lenhDieuDong);
     } else {
       formik.resetForm();
     }
-  }, [selectedTransfer]);
+  }, [selectedToolHandover, chiTietDieuDongCCDCVatTuDTOS.length]);
+
+  const [nvGiao, setNvGiao] = useState<any[]>([]);
+  const [nvNhan, setNvNhan] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (formik.values.idDonViGiao && departments.length && staffs.length) {
+      const donvi = findById(departments, formik.values.idDonViGiao);
+      if (donvi?.isKho) {
+        const res = departments
+          .filter((d: any) => d.isKho)
+          .map((i: any) => i.id);
+        setNvGiao(staffs.filter((s: any) => res.includes(s.phongBanId)));
+      } else {
+        setNvGiao(
+          staffs.filter((s: any) => s.phongBanId === formik.values.idDonViGiao),
+        );
+      }
+    }
+  }, [formik.values.idDonViGiao, departments, staffs]);
+  useEffect(() => {
+    if (formik.values.idDonViGiao && departments.length && staffs.length) {
+      const donvi = findById(departments, formik.values.idDonViNhan);
+      if (donvi?.isKho) {
+        const res = departments
+          .filter((d: any) => d.isKho)
+          .map((i: any) => i.id);
+        setNvNhan(staffs.filter((s: any) => res.includes(s.phongBanId)));
+      } else {
+        setNvNhan(
+          staffs.filter((s: any) => s.phongBanId === formik.values.idDonViNhan),
+        );
+      }
+    }
+  }, [formik.values.idDonViNhan, departments, staffs]);
+
+  const lanhDaoDeptIds = new Set(
+    departments.filter((d: any) => d.isLanhDao).map((d: any) => d.id),
+  );
+
+  const getListTool = async (id: string) => {
+    if (!id) return;
+    const result = await findById(ToolTransferData.items || [], id);
+    setListTools(
+      (result?.chiTietDieuDongCCDCVatTuDTOS || []).map((i: any) => ({
+        ...i,
+        id: i.idCCDCVatTu,
+        idCCDCVatTu: i.idCCDCVatTu,
+        idChiTietCCDCVatTu: i.idChiTietCCDCVatTu,
+        idChiTietDieuDong: i.id,
+        moTa: i.moTa,
+        ghiChu: i.ghiChu,
+        kyHieu: i.kyHieu,
+        soKyHieu: i.soKyHieu,
+      })),
+    );
+  };
 
   return (
-    <Accordion
-      sx={{
-        background: "#f6f8f4ff",
-        boxShadow: "none",
-        margin: "0 !important",
-        "& .MuiAccordionSummary-expandIconWrapper": { display: "none" },
-      }}
-      expanded={expanded}
-    >
-      <AccordionSummary
-        expandIcon={<ViewBtn expanded={expanded} setExpanded={setExpanded} />}
-        aria-controls="panel1-content"
-        id="panel1-header"
+    <>
+      {isPreview && (
+        <SignDocumentForm
+          selectedIds={[]}
+          document={document}
+          previewDocument={priviewDocument}
+          // onClose={() => {
+          //   setIsPreview(false);
+          //   setPriviewDocument(false);
+          // }}
+          onCancel={() => {
+            setIsPreview(false);
+            setPriviewDocument(false);
+            setDocument(null);
+          }}
+          onSign={() => {
+            console.log("Ký tài liệu thành công");
+          }}
+          showSignerSidebar={false}
+          fullscreen={true}
+          staffs={staffs}
+          toolHandover={
+            selectedToolHandover
+              ? selectedToolHandover
+              : {
+                  ...formik.values,
+                  tenDonViGiao: findById(departments, formik.values.idDonViGiao)
+                    ?.tenPhongBan,
+                  tenDonViNhan: findById(departments, formik.values.idDonViNhan)
+                    ?.tenPhongBan,
+                  tenLanhDao: "",
+                  idDaiDiendonviBanHanhQD: "",
+                  tenDaiDienBanHanhQD: "",
+                  tenDaiDienBenGiao: findById(
+                    staffs,
+                    formik.values.idDaiDienBenGiao,
+                  )?.hoTen,
+                  tenDaiDienBenNhan: findById(
+                    staffs,
+                    formik.values.idDaiDienBenNhan,
+                  )?.hoTen,
+                  tenGiamDoc: findById(staffs, formik.values.idGiamDoc)?.hoTen,
+                  trangThaiPhieu: 0,
+                  chuKyList: [],
+                }
+          }
+          allUnits={allUnits}
+          departments={departments}
+          positions={positions}
+        />
+      )}
+      <Accordion
         sx={{
-          flexDirection: "row",
-          "& .MuiAccordionSummary-content": {
-            margin: "12px 0",
-          },
-          "& .MuiAccordionSummary-expandIconWrapper": {
-            display: "flex",
-            transform: "none !important",
-          },
+          background: "#f6f8f4ff",
+          boxShadow: "none",
+          margin: "0 !important",
+          "& .MuiAccordionSummary-expandIconWrapper": { display: "none" },
         }}
+        expanded={expanded}
       >
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          {expanded ? <ArrowDropUp /> : <ArrowDropDown />}
-          <Typography>Chi tiết {label}</Typography>
-        </Box>
-      </AccordionSummary>
-
-      <AccordionDetails
-        sx={{ pt: 0, pb: 2, display: "flex", flexDirection: "column" }}
-      >
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          mb={2}
-        >
-          <Box display="flex" gap={2}>
-            {/* LOGIC NÚT BẤM CHUẨN */}
-            {isNew ? (
-              // Nếu là phiếu mới: Hiện Lưu/Hủy luôn
-              <>
-                <SaveBtn onSave={formik.submitForm} />
-                <CancelBtn onClick={onCancel} />
-              </>
-            ) : (
-              // Nếu là phiếu cũ
-              <>
-                {/* 1. Nếu đang ở chế độ xem: Hiện nút Chỉnh sửa (chỉ khi là phiếu Nháp) */}
-                {readOnly && canBeEdited && <EditButton onClick={onEdit} />}
-
-                {/* 2. Nếu đang ở chế độ sửa: Hiện Lưu/Hủy */}
-                {!readOnly && canBeEdited && (
-                  <>
-                    <SaveBtn onSave={formik.submitForm} />
-                    <CancelBtn onClick={onCancel} />
-                  </>
-                )}
-              </>
-            )}
-          </Box>
-          <CustomStepper activeStep={currentStatus} />
-        </Box>
-
-        {previewFileName && (
-          <SignDocumentForm
-            fileName={previewFileName}
-            onCancel={() => setPreviewFileName(null)}
-            onDownload={handleDownloadFile}
-            showSignerSidebar={false}
-          />
-        )}
-
-        {currentStatus === 2 && (
-          <CancelStatusBadge>
-            <Cancel fontSize="small" /> Hủy phiếu {label}
-          </CancelStatusBadge>
-        )}
-
-        <Paper
+        <AccordionSummary
+          expandIcon={<ViewBtn expanded={expanded} setExpanded={setExpanded} />}
+          aria-controls="panel1-content"
+          id="panel1-header"
           sx={{
-            p: 3,
-            borderRadius: "8px",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+            flexDirection: "row",
+            "& .MuiAccordionSummary-content": {
+              margin: "12px 0",
+            },
+            "& .MuiAccordionSummary-expandIconWrapper": {
+              display: "flex",
+              transform: "none !important",
+            },
           }}
         >
-          <Grid container spacing={4}>
-            {/* CỘT 1 */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Grid container spacing={2}>
-                <Grid size={12}>
-                  <FieldInput
-                    title="Số phiếu bàn giao ccdc - vật tư"
-                    formik={formik}
-                    field="id"
-                    disabled={isFormReadOnly}
-                  />
-                </Grid>
-                <Grid size={12}>
-                  <FieldInput
-                    title="Tên biên bản bàn giao ccdc - vật tư"
-                    formik={formik}
-                    field="banGiaoCCDC"
-                    disabled={isFormReadOnly}
-                  />
-                </Grid>
-                <Grid size={12}>
-                  <FieldInput
-                    title="Lệnh điều động"
-                    formik={formik}
-                    field="lenhDieuDong"
-                    disabled={isFormReadOnly}
-                  />
-                </Grid>
-                <Grid size={12}>
-                  <FieldAutoCompleted
-                    title="Đơn vị giao"
-                    formik={formik}
-                    field="idDonViGiao"
-                    data={departments}
-                    labelkey="tenPhongBan"
-                    disabled={isFormReadOnly}
-                  />
-                </Grid>
-                <Grid size={12}>
-                  <FieldAutoCompleted
-                    title="Đơn vị nhận"
-                    formik={formik}
-                    field="idDonViNhan"
-                    data={departments}
-                    labelkey="tenPhongBan"
-                    disabled={isFormReadOnly}
-                  />
-                </Grid>
-                <Grid size={12}>
-                  <FieldInput
-                    title="Số quyết định"
-                    formik={formik}
-                    field="quyetDinhDieuDongSo"
-                    disabled={isFormReadOnly}
-                  />
-                </Grid>
-                <Grid size={12}>
-                  <FieldInput
-                    title="Địa điểm bàn giao"
-                    formik={formik}
-                    field="diaDiemQuyetDinh"
-                    disabled={isFormReadOnly}
-                  />
-                </Grid>
-                <Grid size={12}>
-                  <FieldDateTime
-                    title="Ngày quyết định"
-                    formik={formik}
-                    field="ngayQuyetDinh"
-                    disabled={isFormReadOnly}
-                  />
-                </Grid>
-                <Grid size={12}>
-                  <FieldDateTime
-                    title="Ngày bàn giao"
-                    formik={formik}
-                    field="ngayBanGiao"
-                    disabled={isFormReadOnly}
-                  />
-                </Grid>
-                <Grid size={12}>
-                  <FieldDateTime
-                    title="Ngày tạo chứng từ"
-                    formik={formik}
-                    field="ngayTaoChungTu"
-                    disabled={isFormReadOnly}
-                  />
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            {expanded ? <ArrowDropUp /> : <ArrowDropDown />}
+            <Typography>Chi tiết {label}</Typography>
+          </Box>
+        </AccordionSummary>
+
+        <AccordionDetails
+          sx={{ pt: 0, pb: 2, display: "flex", flexDirection: "column" }}
+        >
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            mb={2}
+          >
+            <Box>
+              {[0].includes(currentStatus) && (
+                <Box display="flex" gap={2}>
+                  {!readOnly && <SaveBtn onSave={formik.submitForm} />}
+                  {!readOnly && <CancelBtn onClick={onClose} />}
+                  {readOnly && <EditButton onClick={onEdit} />}
+                </Box>
+              )}
+              {![0, 2, 3].includes(currentStatus) && (
+                <Button
+                  size="small"
+                  sx={{ bgcolor: "red", color: "white" }}
+                  startIcon={<Cancel />}
+                  onClick={onCancel}
+                >
+                  Hủy phiếu {label}
+                </Button>
+              )}
+            </Box>
+            {/* Tích hợp Component CustomStepper của bạn */}
+            <CustomStepper activeStep={currentStatus} />
+          </Box>
+
+          <Paper
+            sx={{
+              p: 3,
+              borderRadius: "8px",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+            }}
+          >
+            <Grid container spacing={4}>
+              {/* CỘT 1 */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Grid container spacing={2}>
+                  {!formik.values.isNew && (
+                    <Grid size={12}>
+                      <FieldInput
+                        title="Số phiếu bàn giao ccdc - vật tư"
+                        formik={formik}
+                        field="id"
+                        disabled={true}
+                      />
+                    </Grid>
+                  )}
+                  <Grid size={12}>
+                    <FieldInput
+                      title="Tên biên bản bàn giao ccdc - vật tư"
+                      formik={formik}
+                      field="banGiaoCCDCVatTu"
+                      disabled={readOnly}
+                    />
+                  </Grid>
+                  <Grid size={12}>
+                    <FieldAutoCompleted
+                      title="Lệnh điều động"
+                      formik={formik}
+                      field="lenhDieuDong"
+                      data={ToolTransferData.items || []}
+                      labelkey="soQuyetDinh"
+                      onChange={async (value) => {
+                        formik.setFieldValue("idDonViGiao", value.idDonViGiao);
+                        formik.setFieldValue("idDonViNhan", value.idDonViNhan);
+                        getListTool(value.id);
+                      }}
+                      disabled={readOnly}
+                    />
+                  </Grid>
+                  <Grid size={12}>
+                    <FieldAutoCompleted
+                      title="Đơn vị giao"
+                      formik={formik}
+                      field="idDonViGiao"
+                      data={departments}
+                      labelkey="tenPhongBan"
+                      disabled={true}
+                    />
+                  </Grid>
+                  <Grid size={12}>
+                    <FieldAutoCompleted
+                      title="Đơn vị nhận"
+                      formik={formik}
+                      field="idDonViNhan"
+                      data={departments}
+                      labelkey="tenPhongBan"
+                      disabled={true}
+                    />
+                  </Grid>
+                  <Grid size={12}>
+                    <FieldInput
+                      title="Số quyết định"
+                      formik={formik}
+                      field="soQuyetDinh"
+                      disabled={readOnly}
+                    />
+                  </Grid>
+                  <Grid size={12}>
+                    <FieldInput
+                      title="Địa điểm bàn giao"
+                      formik={formik}
+                      field="diaDiemQuyetDinh"
+                      disabled={readOnly}
+                    />
+                  </Grid>
+                  <Grid size={12}>
+                    <FieldDateTime
+                      title="Ngày quyết định"
+                      formik={formik}
+                      field="ngayQuyetDinh"
+                      disabled={readOnly}
+                    />
+                  </Grid>
+                  <Grid size={12}>
+                    <FieldDateTime
+                      title="Ngày bàn giao"
+                      formik={formik}
+                      field="ngayBanGiao"
+                      disabled={readOnly}
+                    />
+                  </Grid>
+                  <Grid size={12}>
+                    <FieldDateTime
+                      title="Ngày tạo chứng từ"
+                      formik={formik}
+                      field="ngayTaoChungTu"
+                      disabled={readOnly}
+                    />
+                  </Grid>
                 </Grid>
               </Grid>
-            </Grid>
 
-            {/* CỘT 2 */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Grid container spacing={2}>
-                <Grid size={12}>
-                  <FieldAutoCompleted
-                    labelkey="tenPhongBan"
-                    title="Đơn vị giao (Bên A)"
-                    formik={formik}
-                    field="idDonViGiao"
-                    data={departments}
-                    disabled={isFormReadOnly}
-                  />
-                </Grid>
-                <Grid size={12}>
-                  <FieldAutoCompleted
-                    labelkey="tenPhongBan"
-                    title="Đơn vị nhận (Bên B)"
-                    formik={formik}
-                    field="idDonViNhan"
-                    data={departments}
-                    disabled={isFormReadOnly}
-                  />
-                </Grid>
+              {/* CỘT 2 */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Grid container spacing={2}>
+                  <Grid size={12}>
+                    <FieldAutoCompleted
+                      labelkey="hoTen"
+                      title="Đại diện đơn vị giao"
+                      formik={formik}
+                      field="idDaiDienBenGiao"
+                      data={nvGiao}
+                      disabled={readOnly}
+                    />
+                  </Grid>
+                  <Grid size={12}>
+                    <FieldAutoCompleted
+                      labelkey="hoTen"
+                      title="Đại diện đơn vị nhận"
+                      formik={formik}
+                      field="idDaiDienBenNhan"
+                      data={nvNhan}
+                      disabled={readOnly}
+                    />
+                  </Grid>
 
-                <FormikProvider value={formik}>
-                  <FieldArray name="nguoiKyList">
-                    {({ push, remove }) => (
-                      <Grid size={12}>
-                        <Box
-                          display="flex"
-                          alignItems="center"
-                          justifyContent="space-between"
-                          mb={1}
-                        >
-                          <Typography variant="subtitle2">
-                            Người đại diện các bên:
-                          </Typography>
-                          {!isFormReadOnly && (
+                  <FormikProvider value={formik}>
+                    <FieldArray name="nguoiKyList">
+                      {({ push, remove }) => (
+                        <Grid size={12}>
+                          {!readOnly && (
                             <Button
                               size="small"
+                              variant="contained"
                               startIcon={<Add />}
+                              sx={{ mb: 1 }}
                               onClick={() =>
-                                push({ idPhongBan: "", idNguoiKy: "" })
+                                push({
+                                  id: "",
+                                  idTaiLieu: "",
+                                  idNguoiKy: "",
+                                  tenNguoiKy: "",
+                                  idPhongBan: "",
+                                  trangThai: 0,
+                                })
                               }
                             >
                               Thêm người đại diện
                             </Button>
                           )}
-                        </Box>
-                        {(formik.values.nguoiKyList || []).map(
-                          (item: any, index: number) => (
-                            <Grid
-                              container
-                              spacing={1}
-                              key={index}
-                              sx={{ mb: 1 }}
-                            >
-                              <Grid size={5.5}>
-                                <FieldAutoCompleted
-                                  title={`Đơn vị đại diện ${index + 1}`}
-                                  formik={formik}
-                                  field={`nguoiKyList.${index}.idPhongBan`}
-                                  data={departments}
-                                  labelkey="tenPhongBan"
-                                  disabled={isFormReadOnly}
-                                />
-                              </Grid>
-                              <Grid size={5.5}>
-                                <FieldAutoCompleted
-                                  title={`Người đại diện ${index + 1}`}
-                                  formik={formik}
-                                  field={`nguoiKyList.${index}.idNguoiKy`}
-                                  data={staffs.filter(
-                                    (s: any) =>
-                                      s.phongBanId === item.idPhongBan,
-                                  )}
-                                  labelkey="hoTen"
-                                  disabled={isFormReadOnly}
-                                />
-                              </Grid>
-                              {!isFormReadOnly && index > 0 && (
-                                <Grid
-                                  size={1}
-                                  sx={{ display: "flex", alignItems: "center" }}
-                                >
-                                  <IconButton
-                                    color="error"
-                                    onClick={() => remove(index)}
-                                  >
-                                    <Delete />
-                                  </IconButton>
+                          {(formik.values.nguoiKyList || []).map(
+                            (item: any, index: number) => (
+                              <Grid
+                                container
+                                spacing={1}
+                                key={index}
+                                sx={{ mb: 1 }}
+                              >
+                                <Grid size={11}>
+                                  <FieldAutoCompleted
+                                    title={`Đơn vị đại diện ${index + 1}`}
+                                    formik={formik}
+                                    field={`nguoiKyList.${index}.idPhongBan`}
+                                    data={departments}
+                                    labelkey="tenPhongBan"
+                                    disabled={readOnly}
+                                  />
+                                  <Box p={1}></Box>
+                                  <FieldAutoCompleted
+                                    title={`Người đại diện ${index + 1}`}
+                                    formik={formik}
+                                    field={`nguoiKyList.${index}.idNguoiKy`}
+                                    data={staffs.filter(
+                                      (s: any) =>
+                                        s.phongBanId === item.idPhongBan,
+                                    )}
+                                    labelkey="hoTen"
+                                    onChange={(value) => {
+                                      formik.setFieldValue(
+                                        `nguoiKyList.${index}.tenNguoiKy`,
+                                        value.hoTen,
+                                      );
+                                    }}
+                                    disabled={readOnly}
+                                  />
                                 </Grid>
-                              )}
-                            </Grid>
-                          ),
-                        )}
-                      </Grid>
-                    )}
-                  </FieldArray>
-                </FormikProvider>
+                                {!readOnly && (
+                                  <Grid
+                                    size={1}
+                                    sx={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <IconButton
+                                      color="error"
+                                      onClick={() => remove(index)}
+                                    >
+                                      <Delete />
+                                    </IconButton>
+                                  </Grid>
+                                )}
+                              </Grid>
+                            ),
+                          )}
+                        </Grid>
+                      )}
+                    </FieldArray>
+                  </FormikProvider>
 
-                <Grid size={12} sx={{ mt: 2 }}>
-                  <FieldAutoCompleted
-                    labelkey="hoTen"
-                    title="Giám đốc xác nhận"
-                    formik={formik}
-                    field="idGiamDoc"
-                    data={staffs}
-                    disabled={isFormReadOnly}
-                  />
+                  <Grid size={12} sx={{ mt: 2 }}>
+                    <FieldAutoCompleted
+                      labelkey="hoTen"
+                      title="Giám đốc xác nhận"
+                      formik={formik}
+                      field="idGiamDoc"
+                      data={staffs.filter((s: any) =>
+                        lanhDaoDeptIds.has(s.phongBanId),
+                      )}
+                      disabled={readOnly}
+                    />
+                  </Grid>
                 </Grid>
               </Grid>
             </Grid>
-          </Grid>
 
-          {/* PHẦN 2: TÀI LIỆU QUYẾT ĐỊNH */}
-          <Box mt={4} mb={4}>
-            <Typography variant="subtitle1" fontWeight={600} mb={1}>
-              Tài liệu Quyết định
-            </Typography>
+            {/* PHẦN 2: TÀI LIỆU QUYẾT ĐỊNH */}
+            <Box mt={4} mb={4}>
+              <Typography variant="subtitle1" fontWeight={600} mb={1}>
+                Tài liệu Quyết định
+              </Typography>
 
-            {/* Khung bao ngoài màu xám để chứa input file */}
-            <Box sx={{ backgroundColor: "#f5f5f5", borderRadius: "4px", p: 2 }}>
-              <FileAttachmentInput
-                formik={formik}
-                fileName="tenFile"
-                setDocument={setDocument}
-                disabled={isFormReadOnly}
-              />
+              {/* Khung bao ngoài màu xám để chứa input file */}
+              <Box
+                sx={{ backgroundColor: "#f5f5f5", borderRadius: "4px", p: 2 }}
+              >
+                <FileAttachmentInput
+                  formik={formik}
+                  fileName="tenFile"
+                  filePath="duongDanFile"
+                  setDocument={setDocument}
+                  disabled={readOnly}
+                />
 
-              {/* Hiển thị định dạng hỗ trợ và Nút xem trước */}
-              <Box mt={1} display="flex" flexDirection="column" gap={0.5}>
-                {/* Chỉ hiện nút xem trước nếu đã có file (tên file không rỗng) */}
-                {formik.values.tenFile && (
-                  <Box
-                    display="flex"
-                    alignItems="center"
-                    gap={0.5}
-                    sx={{
-                      cursor: "pointer",
-                      color: "#1976d2",
-                      width: "fit-content",
-                      "&:hover": { textDecoration: "underline" },
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (formik.values.tenFile) {
-                        setPreviewFileName(formik.values.tenFile);
-                      } else {
-                        alert("Không có file để xem!");
-                      }
-                    }}
-                  >
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      Xem trước tài liệu
-                    </Typography>
-                    <Visibility sx={{ fontSize: 18 }} />
-                  </Box>
-                )}
+                {/* Hiển thị định dạng hỗ trợ và Nút xem trước */}
+                <PreviewBtn
+                  handleClick={() => {
+                    setDocument(formik.values.tenFile);
+                    setIsPreview(true);
+                    setPriviewDocument(true);
+                  }}
+                />
               </Box>
             </Box>
-          </Box>
 
-          {/* PHẦN 3: CHI TIẾT CCDC - VẬT TƯ BÀN GIAO */}
-          <Box
-            mt={3}
-            sx={{ backgroundColor: "#f5f5f5", borderRadius: "4px", p: 1 }}
-          >
-            {/* Header của bảng nhỏ - Hoạt động giống cái lớn */}
+            {/* PHẦN 3: CHI TIẾT CCDC - VẬT TƯ BÀN GIAO */}
             <Box
-              onClick={() => setTableExpanded(!tableExpanded)}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                cursor: "pointer",
-                px: 1,
-                py: 0.5,
-              }}
+              mt={3}
+              sx={{ backgroundColor: "#f5f5f5", borderRadius: "4px", p: 1 }}
             >
-              <Box display="flex" alignItems="center" gap={1}>
-                {tableExpanded ? (
-                  <ArrowDropUp sx={{ color: "text.secondary", fontSize: 20 }} />
-                ) : (
-                  <ArrowDropDown
-                    sx={{ color: "text.secondary", fontSize: 20 }}
-                  />
-                )}
+              {/* Header của bảng nhỏ - Hoạt động giống cái lớn */}
+              <Box
+                onClick={() => setTableExpanded(!tableExpanded)}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  cursor: "pointer",
+                  px: 1,
+                  py: 0.5,
+                }}
+              >
+                <Box display="flex" alignItems="center" gap={1}>
+                  {tableExpanded ? (
+                    <ArrowDropUp
+                      sx={{ color: "text.secondary", fontSize: 20 }}
+                    />
+                  ) : (
+                    <ArrowDropDown
+                      sx={{ color: "text.secondary", fontSize: 20 }}
+                    />
+                  )}
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "#666", fontSize: "13px" }}
+                  >
+                    Chi tiết ccdc - vật tư bàn giao
+                  </Typography>
+                </Box>
                 <Typography
                   variant="body2"
                   sx={{ color: "#666", fontSize: "13px" }}
                 >
-                  Chi tiết ccdc - vật tư bàn giao
+                  {tableExpanded ? "Thu gọn" : "Mở rộng"}
                 </Typography>
               </Box>
-              <Typography
-                variant="body2"
-                sx={{ color: "#666", fontSize: "13px" }}
-              >
-                {tableExpanded ? "Thu gọn" : "Mở rộng"}
-              </Typography>
-            </Box>
 
-            {/* Nội dung bảng bên trong lớp nền trắng */}
-            <Collapse in={tableExpanded}>
-              <TableContainer
-                component={Paper}
-                sx={{
-                  boxShadow: "none",
-                  border: "none",
-                  backgroundColor: "#fff",
-                  mt: 1,
-                }}
-              >
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <CustomTableCell
-                        width="35%"
-                        sx={{
-                          textAlign: "center",
-                          fontWeight: "bold",
-                          borderBottom: "1px solid #eee",
-                        }}
-                      >
-                        Tên ccdc - vật tư
-                      </CustomTableCell>
-                      <CustomTableCell
-                        width="15%"
-                        sx={{
-                          textAlign: "center",
-                          fontWeight: "bold",
-                          borderBottom: "1px solid #eee",
-                        }}
-                      >
-                        Đơn vị tính
-                      </CustomTableCell>
-                      <CustomTableCell
-                        width="10%"
-                        sx={{
-                          textAlign: "center",
-                          fontWeight: "bold",
-                          borderBottom: "1px solid #eee",
-                        }}
-                      >
-                        Số lượng
-                      </CustomTableCell>
-                      <CustomTableCell
-                        width="20%"
-                        sx={{
-                          textAlign: "center",
-                          fontWeight: "bold",
-                          borderBottom: "1px solid #eee",
-                        }}
-                      >
-                        Tình trạng kỹ thuật
-                      </CustomTableCell>
-                      <CustomTableCell
-                        width="20%"
-                        sx={{
-                          textAlign: "center",
-                          fontWeight: "bold",
-                          borderBottom: "1px solid #eee",
-                        }}
-                      >
-                        Ghi chú
-                      </CustomTableCell>
-                      {!isFormReadOnly && (
+              {/* Nội dung bảng bên trong lớp nền trắng */}
+              <Collapse in={tableExpanded}>
+                <TableContainer
+                  component={Paper}
+                  sx={{
+                    boxShadow: "none",
+                    border: "none",
+                    backgroundColor: "#fff",
+                    mt: 1,
+                  }}
+                >
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
                         <CustomTableCell
-                          width="45px"
-                          sx={{ borderBottom: "1px solid #eee" }}
-                        />
-                      )}
-                    </TableRow>
-                  </TableHead>
-
-                  <TableBody>
-                    {(formik.values.chiTietBanGiaoCCDC || []).map(
-                      (row: any, index: number) => (
-                        <TableRow
-                          key={index}
+                          width="35%"
                           sx={{
-                            height: "50px",
-                            "&:hover": { backgroundColor: "#fafafa" },
-                            "& td": { borderBottom: "none" },
+                            textAlign: "center",
+                            fontWeight: "bold",
+                            borderBottom: "1px solid #eee",
                           }}
                         >
-                          {/* 1. Tên ccdc - vật tư */}
+                          Tên ccdc - vật tư
+                        </CustomTableCell>
+                        <CustomTableCell
+                          width="15%"
+                          sx={{
+                            textAlign: "center",
+                            fontWeight: "bold",
+                            borderBottom: "1px solid #eee",
+                          }}
+                        >
+                          Đơn vị tính
+                        </CustomTableCell>
+                        <CustomTableCell
+                          width="10%"
+                          sx={{
+                            textAlign: "center",
+                            fontWeight: "bold",
+                            borderBottom: "1px solid #eee",
+                          }}
+                        >
+                          Số lượng cần bàn giao
+                        </CustomTableCell>
+                        <CustomTableCell
+                          width="10%"
+                          sx={{
+                            textAlign: "center",
+                            fontWeight: "bold",
+                            borderBottom: "1px solid #eee",
+                          }}
+                        >
+                          Số lượng bàn giao
+                        </CustomTableCell>
+                        <CustomTableCell
+                          width="20%"
+                          sx={{
+                            textAlign: "center",
+                            fontWeight: "bold",
+                            borderBottom: "1px solid #eee",
+                          }}
+                        >
+                          Ghi chú
+                        </CustomTableCell>
+                        {!readOnly && (
                           <CustomTableCell
-                            sx={{ py: 0.5, px: 1, verticalAlign: "bottom" }}
-                          >
-                            <UnderlinedInputWrapper>
-                              <FieldAutoCompleted
-                                labelkey="tenCCDC"
-                                title=""
-                                formik={formik}
-                                field={`chiTietBanGiaoCCDC.${index}.idCCDC`}
-                                data={allTools}
-                                disabled={isFormReadOnly}
-                                onChange={(newValue: any) => {
-                                  if (newValue) {
-                                    formik.setFieldValue(
-                                      `chiTietBanGiaoCCDC.${index}.tenCCDC`,
-                                      newValue.tenCCDC,
-                                    );
-                                    formik.setFieldValue(
-                                      `chiTietBanGiaoCCDC.${index}.donViTinh`,
-                                      newValue.donViTinh,
-                                    );
-                                    formik.setFieldValue(
-                                      `chiTietBanGiaoCCDC.${index}.hienTrang`,
-                                      newValue.hienTrang || "1",
-                                    );
-                                  }
-                                }}
-                              />
-                            </UnderlinedInputWrapper>
-                          </CustomTableCell>
+                            width="45px"
+                            sx={{ borderBottom: "1px solid #eee" }}
+                          />
+                        )}
+                      </TableRow>
+                    </TableHead>
 
-                          {/* 2. Đơn vị tính */}
-                          <CustomTableCell
-                            sx={{ py: 0.5, px: 1, verticalAlign: "bottom" }}
+                    <TableBody>
+                      {(formik.values.chiTietBanGiaoCCDCVatTu || []).map(
+                        (row: any, index: number) => (
+                          <TableRow
+                            key={index}
+                            sx={{
+                              height: "50px",
+                              "&:hover": { backgroundColor: "#fafafa" },
+                              "& td": { borderBottom: "none" },
+                            }}
                           >
-                            <UnderlinedInputWrapper>
-                              <FieldInput
-                                title=""
-                                formik={formik}
-                                field={`chiTietBanGiaoCCDC.${index}.donViTinh`}
-                                InputProps={{
-                                  value:
-                                    formik.values.chiTietBanGiaoCCDC[index]
-                                      ?.donViTinh || "",
-                                }}
-                                disabled={isFormReadOnly}
-                              />
-                            </UnderlinedInputWrapper>
-                          </CustomTableCell>
-
-                          {/* 3. Số lượng */}
-                          <CustomTableCell
-                            sx={{ py: 0.5, px: 1, verticalAlign: "bottom" }}
-                          >
-                            <UnderlinedInputWrapper>
-                              <FieldInput
-                                title=""
-                                type="number"
-                                formik={formik}
-                                field={`chiTietBanGiaoCCDC.${index}.soLuong`}
-                                InputProps={{
-                                  value:
-                                    formik.values.chiTietBanGiaoCCDC[index]
-                                      ?.soLuong ?? 0,
-                                }}
-                                disabled={isFormReadOnly}
-                              />
-                            </UnderlinedInputWrapper>
-                          </CustomTableCell>
-
-                          {/* 4. Tình trạng kỹ thuật */}
-                          <CustomTableCell
-                            sx={{ py: 0.5, px: 1, verticalAlign: "bottom" }}
-                          >
-                            <UnderlinedInputWrapper>
-                              <FieldInput
-                                title=""
-                                formik={formik}
-                                field={`chiTietBanGiaoCCDC.${index}.hienTrang`}
-                                InputProps={{
-                                  value: (() => {
-                                    const val =
-                                      formik.values.chiTietBanGiaoCCDC[index]
-                                        ?.hienTrang;
-                                    if (val === "1") return "Đang sử dụng";
-                                    return val || "";
-                                  })(),
-                                }}
-                                disabled={isFormReadOnly}
-                              />
-                            </UnderlinedInputWrapper>
-                          </CustomTableCell>
-
-                          {/* 5. Ghi chú */}
-                          <CustomTableCell
-                            sx={{ py: 0.5, px: 1, verticalAlign: "bottom" }}
-                          >
-                            <UnderlinedInputWrapper>
-                              <FieldInput
-                                title=""
-                                formik={formik}
-                                field={`chiTietBanGiaoCCDC.${index}.ghiChu`}
-                                InputProps={{
-                                  value:
-                                    formik.values.chiTietBanGiaoCCDC[index]
-                                      ?.ghiChu || "",
-                                }}
-                                disabled={isFormReadOnly}
-                              />
-                            </UnderlinedInputWrapper>
-                          </CustomTableCell>
-
-                          {/* Nút xóa - Chỉ hiện khi không phải chế độ xem */}
-                          {!isFormReadOnly && (
+                            {/* 1. Tên ccdc - vật tư */}
                             <CustomTableCell
-                              align="center"
-                              sx={{ py: 0.5, verticalAlign: "bottom" }}
+                              sx={{ py: 0.5, px: 1, verticalAlign: "bottom" }}
                             >
-                              <IconButton
-                                color="error"
-                                size="small"
-                                onClick={() => {
-                                  const newTools = [
-                                    ...formik.values.chiTietBanGiaoCCDC,
-                                  ];
-                                  newTools.splice(index, 1);
-                                  formik.setFieldValue(
-                                    "chiTietBanGiaoCCDC",
-                                    newTools,
-                                  );
-                                }}
-                              >
-                                <Delete fontSize="small" />
-                              </IconButton>
+                              <UnderlinedInputWrapper>
+                                <FieldAutoCompleted
+                                  labelkey="tenCCDCVatTu"
+                                  title=""
+                                  formik={formik}
+                                  field={`chiTietBanGiaoCCDCVatTu.${index}.idCCDCVatTu`}
+                                  labelOption="id"
+                                  data={listTools}
+                                  disabled={readOnly}
+                                  onChange={(newValue: any) => {
+                                    if (newValue) {
+                                      formik.setFieldValue(
+                                        `chiTietBanGiaoCCDCVatTu.${index}.tenCCDCVatTu`,
+                                        newValue.tenCCDCVatTu,
+                                      );
+                                      formik.setFieldValue(
+                                        `chiTietBanGiaoCCDCVatTu.${index}.donViTinh`,
+                                        newValue.donViTinh,
+                                      );
+                                      formik.setFieldValue(
+                                        `chiTietBanGiaoCCDCVatTu.${index}.soLuongConLai`,
+                                        newValue.soLuongConLai,
+                                      );
+                                      formik.setFieldValue(
+                                        `chiTietBanGiaoCCDCVatTu.${index}.idCCDCVatTu`,
+                                        newValue.id,
+                                      );
+                                      formik.setFieldValue(
+                                        `chiTietBanGiaoCCDCVatTu.${index}.idChiTietCCDCVatTu`,
+                                        newValue.idChiTietCCDCVatTu,
+                                      );
+                                      formik.setFieldValue(
+                                        `chiTietBanGiaoCCDCVatTu.${index}.idChiTietDieuDong`,
+                                        newValue.idChiTietDieuDong,
+                                      );
+                                    }
+                                  }}
+                                />
+                              </UnderlinedInputWrapper>
                             </CustomTableCell>
-                          )}
-                        </TableRow>
-                      ),
-                    )}
-                  </TableBody>
-                </Table>
 
-                {/* Nút thêm mới - chỉ hiện khi không ReadOnly */}
-                {!isFormReadOnly && (
-                  <Box p={1} display="flex" justifyContent="flex-start">
-                    <Button
-                      startIcon={<Add />}
-                      size="small"
-                      onClick={() =>
-                        formik.setFieldValue("chiTietBanGiaoCCDC", [
-                          ...formik.values.chiTietBanGiaoCCDC,
-                          {
-                            idCCDC: "",
-                            donViTinh: "",
-                            soLuong: 1,
-                            hienTrang: "1",
-                            ghiChu: "",
-                          },
-                        ])
-                      }
-                      sx={{ textTransform: "none", color: "#1976d2" }}
-                    >
-                      Thêm ccdc - vật tư
-                    </Button>
-                  </Box>
-                )}
-              </TableContainer>
-            </Collapse>
-          </Box>
-        </Paper>
-      </AccordionDetails>
-    </Accordion>
+                            {/* 2. Đơn vị tính */}
+                            <CustomTableCell
+                              sx={{ py: 0.5, px: 1, verticalAlign: "bottom" }}
+                            >
+                              <UnderlinedInputWrapper>
+                                <FieldInput
+                                  title=""
+                                  formik={formik}
+                                  field={`chiTietBanGiaoCCDCVatTu.${index}.donViTinh`}
+                                  disabled={true}
+                                />
+                              </UnderlinedInputWrapper>
+                            </CustomTableCell>
+
+                            {/* 3. Số lượng */}
+                            <CustomTableCell
+                              sx={{ py: 0.5, px: 1, verticalAlign: "bottom" }}
+                            >
+                              <UnderlinedInputWrapper>
+                                <FieldInput
+                                  title=""
+                                  type="number"
+                                  formik={formik}
+                                  field={
+                                    readOnly
+                                      ? `chiTietBanGiaoCCDCVatTu.${index}.soLuongXuat`
+                                      : `chiTietBanGiaoCCDCVatTu.${index}.soLuongConLai`
+                                  }
+                                  disabled={true}
+                                />
+                              </UnderlinedInputWrapper>
+                            </CustomTableCell>
+
+                            {/* 4. Tình trạng kỹ thuật */}
+                            <CustomTableCell
+                              sx={{ py: 0.5, px: 1, verticalAlign: "bottom" }}
+                            >
+                              <UnderlinedInputWrapper>
+                                <FieldInput
+                                  title=""
+                                  formik={formik}
+                                  field={`chiTietBanGiaoCCDCVatTu.${index}.soLuong`}
+                                  disabled={readOnly}
+                                />
+                              </UnderlinedInputWrapper>
+                            </CustomTableCell>
+
+                            {/* 5. Ghi chú */}
+                            <CustomTableCell
+                              sx={{ py: 0.5, px: 1, verticalAlign: "bottom" }}
+                            >
+                              <UnderlinedInputWrapper>
+                                <FieldInput
+                                  title=""
+                                  formik={formik}
+                                  field={`chiTietBanGiaoCCDCVatTu.${index}.ghiChu`}
+                                  disabled={readOnly}
+                                />
+                              </UnderlinedInputWrapper>
+                            </CustomTableCell>
+
+                            {/* Nút xóa - Chỉ hiện khi không phải chế độ xem */}
+                            {!readOnly && (
+                              <CustomTableCell
+                                align="center"
+                                sx={{ py: 0.5, verticalAlign: "bottom" }}
+                              >
+                                <IconButton
+                                  color="error"
+                                  size="small"
+                                  onClick={() => {
+                                    const newTools = [
+                                      ...formik.values.chiTietBanGiaoCCDCVatTu,
+                                    ];
+                                    newTools.splice(index, 1);
+                                    formik.setFieldValue(
+                                      "chiTietBanGiaoCCDCVatTu",
+                                      newTools,
+                                    );
+                                  }}
+                                >
+                                  <Delete fontSize="small" />
+                                </IconButton>
+                              </CustomTableCell>
+                            )}
+                          </TableRow>
+                        ),
+                      )}
+                    </TableBody>
+                  </Table>
+
+                  {/* Nút thêm mới - chỉ hiện khi không ReadOnly */}
+                  {!readOnly && (
+                    <Box p={1} display="flex" justifyContent="flex-start">
+                      <Button
+                        startIcon={<Add />}
+                        size="small"
+                        onClick={() =>
+                          formik.setFieldValue("chiTietBanGiaoCCDCVatTu", [
+                            ...formik.values.chiTietBanGiaoCCDCVatTu,
+                            {
+                              id: "",
+                              idBanGiaoCCDCVatTu: "",
+                              idCCDCVatTu: "",
+                              soLuong: 0,
+                              idChiTietCCDCVatTu: "",
+                              ngayTao: "",
+                              ngayCapNhat: "",
+                              nguoiTao: "",
+                              nguoiCapNhat: "",
+                              isActive: true,
+                              idChiTietDieuDong: "",
+                              hienTrang: "",
+                              moTa: "",
+                              ghiChu: "",
+                            },
+                          ])
+                        }
+                        sx={{ textTransform: "none", color: "#1976d2" }}
+                      >
+                        Thêm ccdc - vật tư
+                      </Button>
+                    </Box>
+                  )}
+                </TableContainer>
+              </Collapse>
+            </Box>
+            <PreviewBtn
+              handleClick={() => {
+                setDocument(null);
+                setIsPreview(true);
+                setPriviewDocument(false);
+              }}
+            />
+          </Paper>
+        </AccordionDetails>
+      </Accordion>
+    </>
   );
 }

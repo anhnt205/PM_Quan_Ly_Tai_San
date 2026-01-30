@@ -50,6 +50,7 @@ import { findById, generateCode } from "../../../utils/helpers";
 import { useCurrentStatusMutation } from "../../CurrentStatus/Mutation";
 import { useUnitMutation } from "../../Unit/Mutation";
 import { useAssetHandoverMutation } from "../Mutation";
+import { assetHandoverValidationSchema } from "../validation";
 
 const UnderlinedInputWrapper = styled(Box)({
   width: "100%",
@@ -178,12 +179,17 @@ export default function AssetHandoverForm({
       initialChiTiet: [] as any[],
       isNew: true,
     },
+    validationSchema: assetHandoverValidationSchema,
     onSubmit: (values) => {
       const chiTietBanGiaoTaiSan = values.chiTietBanGiaoTaiSan.map(
         (item: any, index) => ({
           ...item,
           id: `${generateCode("CTBGTS-")}-${index}`,
-          idDieuDongTaiSan: values.id,
+          idBanGiaoTaiSan: values.id,
+          idDonViGui: values.idDonViGiao,
+          idDonViNhan: values.idDonViNhan,
+          soLuongBanGiao: item.soLuong,
+          idTsCon: item.idChiTietCCDCVatTu,
         }),
       );
       const nguoiKyList = values.nguoiKyList.map((item: any, index) => ({

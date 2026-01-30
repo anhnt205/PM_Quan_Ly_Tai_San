@@ -343,7 +343,6 @@ export const useAssetHandoverMutation = (
     },
     onSuccess: (response, data) => {
       queryClient.invalidateQueries({ queryKey: [mainKey] });
-      console.log(response);
       if (response === 3) {
         updateAssetOwnershipMutation.mutate(
           data.assetHandover.chiTietBanGiaoTaiSan.map((item) => ({

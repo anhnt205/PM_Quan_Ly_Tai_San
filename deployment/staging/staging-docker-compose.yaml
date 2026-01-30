@@ -1,16 +1,16 @@
 services:
-  qlts_reverse_proxy_service:
-    image: ${REGISTRY}/qlts_reverse_proxy_img:${VERSION}
-    ports:
-      # HOST_PORT:CONTAINER_PORT
-      - "7777:8888"
-    stdin_open: true
-    environment:
-      - TZ=Asia/Ho_Chi_Minh
-    networks:
-      - frontnet
-    depends_on:
-      - qlts_frontend_service
+  # qlts_reverse_proxy_service:
+  #   image: ${REGISTRY}/qlts_reverse_proxy_img:${VERSION}
+  #   ports:
+  #     # HOST_PORT:CONTAINER_PORT
+  #     - "7777:8888"
+  #   stdin_open: true
+  #   environment:
+  #     - TZ=Asia/Ho_Chi_Minh
+  #   networks:
+  #     - frontnet
+  #   depends_on:
+  #     - qlts_frontend_service
 
   qlts_frontend_service:
     image:

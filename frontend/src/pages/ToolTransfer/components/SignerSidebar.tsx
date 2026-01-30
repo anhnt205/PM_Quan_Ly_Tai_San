@@ -88,7 +88,7 @@ const getHandoverNodes = (
   // --- PHẦN 2: CHI TIẾT BÀN GIAO (Depth 0) ---
   nodes.push({ header: "Chi tiết bàn giao", depth: 0 });
 
-  const tools = item.chiTietDieuDongCCDCVatTuDTOS || [];
+  const tools = item?.chiTietDieuDongCCDCVatTuDTOS || [];
   tools.forEach((tool: any) => {
     // Cấp 1: Tên vật tư (Màu Hồng)
     nodes.push({

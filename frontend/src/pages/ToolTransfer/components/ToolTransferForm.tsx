@@ -123,13 +123,11 @@ export default function ToolTransferForm({
     },
     onSubmit: (values) => {
       // Logic map ID tương tự nhưng dùng prefix của Tool
-      const chiTietDieuDongTaiSanDTOS = values.chiTietDieuDongCCDCVatTuDTOS.map(
-        (item: any, index) => ({
+      const chiTietDieuDongCCDCVatTuDTOS =
+        values.chiTietDieuDongCCDCVatTuDTOS.map((item: any, index) => ({
           ...item,
           id: `${generateCode("CTBG-")}-${index}`,
-          idDieuDongTaiSan: values.id,
-        }),
-      );
+        }));
       const nguoiKyList = values.nguoiKyList.map((item: any, index) => ({
         ...item,
         id: `${generateCode("NK-")}-${index}`,
@@ -138,7 +136,7 @@ export default function ToolTransferForm({
       }));
       onSave({
         ...values,
-        chiTietDieuDongTaiSanDTOS,
+        chiTietDieuDongCCDCVatTuDTOS,
         nguoiKyList,
       });
     },
@@ -196,6 +194,7 @@ export default function ToolTransferForm({
   useEffect(() => {
     setDepartmentId(formik.values.idDonViGiao);
   }, [formik.values.idDonViGiao]);
+
   return (
     <>
       {isPreview && (
@@ -290,24 +289,16 @@ export default function ToolTransferForm({
               {/* CỘT TRÁI */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <Grid container spacing={2}>
-                  {isSignedForm && (
+                  {selectedTool && (
                     <Grid size={12}>
                       <FieldInput
-                        title="Số chứng từ *"
+                        title="Số chứng từ"
                         formik={formik}
                         field="soQuyetDinh"
-                        disabled={readOnly}
+                        disabled={true}
                       />
                     </Grid>
                   )}
-                  <Grid size={12}>
-                    <FieldInput
-                      title="Số chứng từ"
-                      formik={formik}
-                      field="soQuyetDinh"
-                      disabled={readOnly}
-                    />
-                  </Grid>
                   <Grid size={12}>
                     <FieldInput
                       title="Tên phiếu *"
@@ -550,7 +541,7 @@ export default function ToolTransferForm({
                         <CustomTableCell>
                           <FieldAutoCompleted
                             title=""
-                            labelkey="ten"
+                            labelkey="tenDetailAsset"
                             data={allToolsByDonVi}
                             formik={formik}
                             field={`chiTietDieuDongCCDCVatTuDTOS.${index}.idCCDCVatTu`}
@@ -566,6 +557,10 @@ export default function ToolTransferForm({
                               formik.setFieldValue(
                                 `chiTietDieuDongCCDCVatTuDTOS.${index}.ten`,
                                 value?.tenCCDCVatTu || "",
+                              );
+                              formik.setFieldValue(
+                                `chiTietDieuDongCCDCVatTuDTOS.${index}.idChiTietCCDCVatTu`,
+                                value?.idDetaiAsset || "",
                               );
                             }}
                             disabled={readOnly}

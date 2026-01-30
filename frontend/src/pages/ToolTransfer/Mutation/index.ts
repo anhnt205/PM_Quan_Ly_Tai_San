@@ -13,6 +13,7 @@ import {
 } from "../types";
 import { useState } from "react";
 import axios from "axios";
+import { findById } from "../../../utils/helpers";
 
 export const useToolTransferMutation = (
   page?: number,
@@ -92,7 +93,10 @@ export const useToolTransferMutation = (
         data.chiTietDieuDongCCDCVatTuDTOS.length > 0
       ) {
         createToolTransferDetailManyMutation.mutate(
-          data.chiTietDieuDongCCDCVatTuDTOS,
+          data.chiTietDieuDongCCDCVatTuDTOS.map((item) => ({
+            ...item,
+            idDieuDongCCDCVatTu: data.id,
+          })),
         );
       }
       if (data.nguoiKyList && data.nguoiKyList.length > 0 && data.id) {
@@ -443,28 +447,58 @@ export const useToolTransferMutation = (
   });
   // danh sach ccdc
 
+  const { data: allCCDC = [] } = useQuery({
+    queryKey: ["allCCDC"], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/ccdcvattu/paged", {
+        params: { idcongty: idCongTy, page: 0, size: 9999 },
+      });
+      return res.data.data?.items || res.data?.items || [];
+    },
+  });
+
   const { data: allToolByDonVi = [] } = useQuery({
     queryKey: ["allToolByDonVi", departmentId, idCongTy],
     queryFn: async () => {
       // Gọi cả 2 API cùng lúc để tối ưu thời gian (Parallel)
-      const [resAllTools, resToolsPage] = await Promise.all([
-        axios.get(
-          `http://42.119.110.246:8386/chitietdonvisohuu/by-donvisohuu/${departmentId}`,
-        ),
-        api.get("/ccdcvattu/paged", {
-          params: { idcongty: idCongTy, page: 0, size: 9999 },
-        }),
-      ]);
-
-      const allToolsByDonVi = resAllTools.data.data || resAllTools.data || [];
-      const toolsPageItems =
-        resToolsPage.data.data?.items || resToolsPage.data?.items || [];
-
-      // Thực hiện lọc ngay tại đây
-      const uniqueIds = new Set(
-        allToolsByDonVi.map((item: any) => item.idCCDCVT),
+      const resAllTools = await axios.get(
+        `http://42.119.110.246:8386/chitietdonvisohuu/by-donvisohuu/${departmentId}`,
       );
-      return toolsPageItems.filter((tool:any) => uniqueIds.has(tool.id));
+      let data = [];
+      const allToolsByDonVi = resAllTools.data.data || resAllTools.data || [];
+      const listDetailAsset = allCCDC.flatMap(
+        (item: any) => item.chiTietTaiSanList || [],
+      );
+      for (const e of allToolsByDonVi) {
+        if (!e.idCCDCVT || !e.idTsCon) {
+          continue;
+        }
+        const asset = findById(allCCDC, e.idCCDCVT);
+        const detailAsset = listDetailAsset.find(
+          (i: any) => i.id === e?.idTsCon,
+        );
+        if (!asset.id || !detailAsset.id) {
+          continue;
+        }
+        data.push({
+          id: e.idCCDCVT,
+          idCCDCVatTu: e.idCCDCVT,
+          tenCCDCVatTu: asset.ten,
+          idDetaiAsset: detailAsset.id,
+          tenDetailAsset: `${asset.ten}(${detailAsset.soKyHieu}) - ${detailAsset.namSanXuat}`,
+          idDonVi: e.idDonViSoHuu,
+          donViTinh: asset.donViTinh,
+          namSanXuat: detailAsset.namSanXuat ?? 2010,
+          soLuong: e.soLuong,
+          soLuongConLai: e.soLuong,
+          ghiChu: asset.ghiChu,
+          soKyHieu: asset.soKyHieu,
+          kyHieu: asset.kyHieu,
+          soLuongDaBanGiao: 0,
+          asset: asset,
+        });
+      }
+      return data;
     },
     enabled: !!departmentId && !!idCongTy, // Chỉ chạy khi có đủ ID
   });
@@ -607,5 +641,6 @@ export const useToolTransferMutation = (
     getToolHandoverMutation,
     setDepartmentId,
     handoverDetails: handoverDetailsQuery.data || [],
+    allCCDC,
   };
 };

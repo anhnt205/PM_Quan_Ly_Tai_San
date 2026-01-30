@@ -61,12 +61,12 @@ const FileAttachmentInput: React.FC<FileAttachmentInputProps> = ({
 
       // Lấy backend URL từ biến môi trường hoặc mặc định localhost
       const backendUrl =
-        process.env.REACT_APP_API_URL || "http://localhost:8080";
+        process.env.REACT_APP_BASE_API || "http://localhost:8080";
       console.log("Converting DOCX to PDF using backend:", backendUrl);
 
       // Gọi API backend để convert
       const response = await fetch(
-        `${backendUrl}/api/upload/convert/docx-to-pdf`,
+        `${backendUrl}/upload/convert/docx-to-pdf`,
         {
           method: "POST",
           body: formData,

@@ -87,7 +87,10 @@ export const useAssetTranferMutation = (
         data.chiTietDieuDongTaiSanDTOS.length > 0
       ) {
         createAssetTransferDetailManyMutation.mutate(
-          data.chiTietDieuDongTaiSanDTOS,
+          data.chiTietDieuDongTaiSanDTOS.map((item) => ({
+            ...item,
+            idDieuDongTaiSan: data.id,
+          })),
         );
       }
       if (data.nguoiKyList && data.nguoiKyList.length > 0 && data.id) {
@@ -416,7 +419,6 @@ export const useAssetTranferMutation = (
     },
     placeholderData: (previousData) => previousData,
   });
-
 
   // list phongban
   const { data: allDepartments = [] } = useQuery({

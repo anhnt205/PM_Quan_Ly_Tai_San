@@ -22,6 +22,8 @@ export default function FieldInput({
   onChange,
 }: Props) {
   const currentValue = formik && field ? getIn(formik.values, field) : "";
+  const touched = formik && field ? getIn(formik.touched, field) : false;
+  const error = formik && field ? getIn(formik.errors, field) : "";
   return (
     <TextField
       disabled={disabled}
@@ -36,8 +38,8 @@ export default function FieldInput({
           onChange(e.target.value);
         }
       }}
-      error={field && formik.touched[field] && Boolean(formik.errors[field])}
-      helperText={field && formik.touched[field] && formik.errors[field]}
+      error={Boolean(touched && error)}
+      helperText={touched && error}
       InputProps={InputProps}
       slotProps={slotProps}
     />

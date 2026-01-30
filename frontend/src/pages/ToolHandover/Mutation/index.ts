@@ -2,74 +2,423 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../../../config/api.config";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 
+import { RootState } from "../../../redux/store";
+import { useSelector } from "react-redux";
+import dayjs from "dayjs";
+import {
+  SignaturesData,
+  Signer,
+  ToolHandoverData,
+  ToolHandoverDetail,
+  ToolHandoverFormValues,
+} from "../types";
+import axios from "axios";
+
 export const useToolHandoverMutation = (
   page?: number,
   pageSize?: number,
-  searchValue?: string
+  searchValue?: string,
+  status?: number,
+  currentType?: number,
 ) => {
   const queryClient = useQueryClient();
   const mainKey = "toolHandoverPage";
   const idCongTy = "ct001";
-
+  const { user } = useSelector((state: RootState) => state.user);
+  const now = dayjs(new Date()).format("YYYY-MM-DDTHH:mm:ss");
   // --- 1. QUERIES DANH MỤC ---
+
   const { data: departments = [] } = useQuery({
     queryKey: ["departments", idCongTy],
     queryFn: async () =>
       (await api.get("/phongban", { params: { idcongty: idCongTy } })).data,
   });
-
-  const { data: staffs = [] } = useQuery({
-    queryKey: ["staffs", idCongTy],
+  const { data: positions = [] } = useQuery({
+    queryKey: ["positions", idCongTy],
     queryFn: async () =>
-      (await api.get("/nhanvien", { params: { idcongty: idCongTy } })).data,
+      (await api.get(`/chucvu/congty/${idCongTy}`)).data.data,
   });
 
-  const { data: allTools = [] } = useQuery({
-    queryKey: ["allTools", idCongTy],
+  const { data: allAssets = [] } = useQuery({
+    queryKey: ["allAssets", idCongTy],
     queryFn: async () =>
-      (await api.get("/ccdcvattu", { params: { idcongty: idCongTy } })).data,
+      (await api.get("/taisan", { params: { idcongty: idCongTy } })).data,
+  });
+
+  // don vi tính
+  const { data: allUnits = [] } = useQuery({
+    queryKey: ["allUnits"], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/donvitinh", {});
+      return res.data;
+    },
   });
 
   // --- 2. MUTATIONS ---
   const createMutation = useMutation({
-    mutationFn: async (data: any) =>
-      (await api.post("/bangiaoccdc", data)).data,
-    onSuccess: () => {
+    mutationFn: async (data: ToolHandoverFormValues) => {
+      const res = await api.post("/bangiaoccdcvattu", {
+        ...data,
+        ngayTao: now,
+        ngayCapNhat: now,
+        nguoiTao: user?.taiKhoan?.tenDangNhap,
+      });
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      const idBGTS = response.data.id;
+      if (
+        data.chiTietBanGiaoCCDCVatTu &&
+        data.chiTietBanGiaoCCDCVatTu.length > 0
+      ) {
+        createToolHandoverDetailManyMutation.mutate(
+          data.chiTietBanGiaoCCDCVatTu?.map((item) => ({
+            ...item,
+            idBanGiaoCCDCVatTu: idBGTS,
+            ngayTao: now,
+            ngayCapNhat: now,
+            nguoiTao: user?.taiKhoan?.tenDangNhap,
+          })),
+        );
+      }
+      if (data.nguoiKyList && data.nguoiKyList.length > 0) {
+        updateSignerMutation.mutate({
+          idTaiLieu: idBGTS,
+          data: data.nguoiKyList.map((item) => ({
+            ...item,
+            idTaiLieu: idBGTS,
+          })),
+        });
+      }
       queryClient.invalidateQueries({ queryKey: [mainKey] });
-      showSuccessAlert("Thành công");
+
+      showSuccessAlert("Tạo bàn giao ccdc vật tư thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo bàn giao ccdc vật tư thất bại",
+      );
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: any) =>
-      (await api.put(`/bangiaoccdc/${data.id}`, data)).data,
-    onSuccess: () => {
+    mutationFn: async (data: ToolHandoverFormValues) => {
+      const res = await api.put(`/bangiaoccdcvattu`, {
+        ...data,
+        ngayCapNhat: now,
+        nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
+      });
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      if (data.initialChiTiet && data.initialChiTiet.length > 0) {
+        deleteToolHandoverDetailManyMutation.mutate(data.initialChiTiet);
+      }
+      if (
+        data.chiTietBanGiaoCCDCVatTu &&
+        data.chiTietBanGiaoCCDCVatTu.length > 0
+      ) {
+        createToolHandoverDetailManyMutation.mutate(
+          data.chiTietBanGiaoCCDCVatTu.map((item) => ({
+            ...item,
+            idBanGiaoCCDCVatTu: data.id,
+            ngayTao: now,
+            ngayCapNhat: now,
+            nguoiTao: user?.taiKhoan?.tenDangNhap,
+          })),
+        );
+      }
+      if (data.nguoiKyList && data.nguoiKyList.length > 0 && data.id) {
+        updateSignerMutation.mutate({
+          idTaiLieu: data.id,
+          data: data.nguoiKyList,
+        });
+      }
       queryClient.invalidateQueries({ queryKey: [mainKey] });
-      showSuccessAlert("Cập nhật thành công");
+      showSuccessAlert("Sửa bàn giao ccdc vật tư thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Sửa bàn giao ccdc vật tư thất bại",
+      );
     },
   });
 
   const deleteOneMutation = useMutation({
     mutationFn: async (id: string) =>
-      (await api.delete(`/bangiaoccdc/${id}`)).data,
+      (await api.delete(`/bangiaoccdcvattu/${id}`)).data,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [mainKey] });
       showSuccessAlert("Xóa thành công");
     },
   });
+  const updateManyMutation = useMutation({
+    mutationFn: async (data: ToolHandoverFormValues[]) => {
+      const res = await api.put(`/bangiaoccdcvattu/batch`, data);
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: [mainKey] });
+      console.log("Sửa bàn giao ccdc vật tư thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Sửa bàn giao ccdc vật tư thất bại",
+      );
+    },
+  });
+  const cancelMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.post(`/bangiaoccdcvattu/huytrangthai?id=${id}`);
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: [mainKey] });
+      showSuccessAlert("Hủy bàn giao ccdc vật tư thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Hủy bàn giao ccdc vật tư thất bại",
+      );
+    },
+  });
+
+  // chi tiết bàn giao
+
+  const createToolHandoverDetailManyMutation = useMutation({
+    mutationFn: async (data: ToolHandoverDetail[]) => {
+      const res = await api.post("/chitietbangiaoccdcvattu/batch", data);
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: [mainKey] });
+
+      console.log("Tạo chi tiết bàn giao ccdc vật tư thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo chi tiết bàn giao ccdc vật tư thất bại",
+      );
+    },
+  });
+  const deleteToolHandoverDetailManyMutation = useMutation({
+    mutationFn: async (data: string[]) => {
+      const res = await api.delete("/chitietbangiaoccdcvattu/batch", { data });
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: [mainKey] });
+
+      console.log("Tạo chi tiết bàn giao ccdc vật tư thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo chi tiết bàn giao ccdc vật tư thất bại",
+      );
+    },
+  });
+
+  const updateSignerMutation = useMutation({
+    mutationFn: async ({
+      idTaiLieu,
+      data,
+    }: {
+      idTaiLieu: string;
+      data: Signer[];
+    }) => {
+      const res = await api.put(`/chuky/nguoi-ky/update/${idTaiLieu}`, data);
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: [mainKey] });
+
+      console.log("Cập nhật người ký thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Cập nhật người ký thất bại",
+      );
+    },
+  });
 
   // --- 3. QUERIES LẤY DỮ LIỆU BẢNG ---
 
+  // list chu ky theo tai lieu
+  const handleSignatureList = async (idTaiLieu: string) => {
+    if (!idTaiLieu) return;
+    try {
+      // Encode tên file để xử lý ký tự đặc biệt
+      const response = await api.get(`/chuky/${idTaiLieu}`);
+      // response.data lúc này là một đối tượng Blob (Binary Large Object)
+      return response.data;
+    } catch (error) {
+      console.log("Không thể tải chữ ký");
+      return null;
+    }
+  };
+
+  // ky tai lieu
+  const signMutation = useMutation({
+    mutationFn: async ({
+      data,
+      assetHandover,
+    }: {
+      data: SignaturesData[];
+      assetHandover: ToolHandoverData;
+    }) => {
+      const res = await api.post("/chuky", data);
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: [mainKey] });
+      data.data.forEach((item) => {
+        signStatusMutation.mutate({
+          idTaiLieu: item.idTaiLieu,
+          userId: item.idNguoiKy,
+          assetHandover: data.assetHandover,
+        });
+      });
+      showSuccessAlert("Ký thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message || error.message || "Ký thất bại",
+      );
+    },
+  });
+
+  // cập nhật trạng thái bàn giao
+  const updateStateAssetTransferMutation = useMutation({
+    mutationFn: async ({
+      id,
+      trangThaiBanGiao,
+    }: {
+      id: string;
+      trangThaiBanGiao: boolean;
+    }) => {
+      const res = await api.post(
+        `/dieudongccdcvattu/update-trang-thai-ban-giao?id=${id}&trangThaiBanGiao=${trangThaiBanGiao}`,
+      );
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: [mainKey] });
+
+      console.log("Cập nhật trạng thái bàn giao thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Cập nhật trạng thái bàn giao thất bại",
+      );
+    },
+  });
+  // cập nhật tai sản theo đơn vị
+  const updateAssetOwnershipMutation = useMutation({
+    mutationFn: async (
+      data: {
+        idCCDCVT: string;
+        idDonViGui: string;
+        idDonViNhan: string;
+        idTsCon: string;
+        soLuongBanGiao: number;
+      }[],
+    ) => {
+      const res = await axios.post(
+        `http://42.119.110.246:8386/chitietdonvisohuu/update-so-luong/batch`,
+        data,
+      );
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: [mainKey] });
+
+      console.log("Cập nhật ccdc vật tư theo đơn vị thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Cập nhật ccdc vật tư theo đơn vị thất bại",
+      );
+    },
+  });
+
+  // cap nhat trang thai ky
+  // ky tai lieu
+  const signStatusMutation = useMutation({
+    mutationFn: async ({
+      idTaiLieu,
+      userId,
+      assetHandover,
+    }: {
+      idTaiLieu: string;
+      userId: string;
+      assetHandover: any;
+    }) => {
+      const res = await api.post(
+        `/bangiaoccdcvattu/capnhattrangthai?id=${idTaiLieu}&userId=${userId}`,
+      );
+      return res.data.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: [mainKey] });
+      if (response === 3) {
+        updateAssetOwnershipMutation.mutate(
+          data.assetHandover.chiTietBanGiaoCCDCVatTu.map((item: any) => ({
+            idCCDCVT: item.idCCDCVatTu,
+            idDonViGui: data.assetHandover.idDonViGiao,
+            idDonViNhan: data.assetHandover.idDonViNhan,
+            idTsCon: item.idChiTietCCDCVatTu,
+            soLuongBanGiao: item.soLuong,
+          })),
+        );
+        updateStateAssetTransferMutation.mutate({
+          id: data.assetHandover.lenhDieuDong,
+          trangThaiBanGiao: true,
+        });
+      }
+      console.log("Cập nhật trạng thái ký thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Cập nhật trạng thái ký thất bại",
+      );
+    },
+  });
+
   // GET Bàn giao (Paged)
-  const { data: handoverPage, isLoading: loadingHandover } = useQuery({
-    queryKey: [mainKey, page, pageSize, searchValue],
+  const {
+    data: handoverPage = { items: [], totalItems: 0 },
+    isLoading: loadingHandover,
+  } = useQuery({
+    queryKey: [mainKey, page, pageSize, searchValue, status],
     queryFn: async () => {
-      const res = await api.get("/bangiaoccdc/paged", {
+      const res = await api.get("/bangiaoccdcvattu/paged", {
         params: {
           page,
           size: pageSize,
           search: searchValue,
           idcongty: idCongTy,
+          userid: user?.taiKhoan?.tenDangNhap,
+          // trangThai: status,
         },
       });
       return res.data;
@@ -77,28 +426,36 @@ export const useToolHandoverMutation = (
     placeholderData: (previousData) => previousData,
   });
 
-  // GET Điều động (Mới thêm)
-  const { data: transferPage, isLoading: loadingTransfer } = useQuery({
-    queryKey: ["toolTransferPage", idCongTy],
+  // GET dieudong (Mới thêm)
+  const {
+    data: transferPage = { items: [], totalItems: 0 },
+    isLoading: loadingTransfer,
+  } = useQuery({
+    queryKey: ["toolTransferPage", idCongTy, currentType, page, pageSize],
     queryFn: async () => {
-      const res = await api.get("/dieudongccdc", {
-        params: { idcongty: idCongTy },
+      const res = await api.get("/dieudongccdcvattu/paged", {
+        params: {
+          idcongty: idCongTy,
+          page: page,
+          size: pageSize,
+          loai: currentType,
+          trangThai: 3,
+          // chuaBanGiaoHet: true,
+        },
       });
       // Map về cùng cấu trúc items để TableCustom đọc được
-      return { items: res.data || [], totalItems: res.data?.length || 0 };
+      return res.data;
     },
+    enabled: !!idCongTy,
   });
 
-  const handlePreviewFile = (fileName: string) => {
-    if (!fileName) return;
-    // Trình duyệt tự mở file nếu là PDF/Ảnh
-    window.open(`${api.defaults.baseURL}/upload/preview/${fileName}`, "_blank");
-  };
-
+  //download file
   const handleDownloadFile = async (fileName: string) => {
     if (!fileName) return;
     try {
-      const response = await api.get(`/upload/download/${fileName}`, {
+      // Encode tên file để xử lý ký tự đặc biệt
+      const encodedFileName = encodeURIComponent(fileName);
+      const response = await api.get(`/upload/download/${encodedFileName}`, {
         responseType: "blob",
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -113,18 +470,80 @@ export const useToolHandoverMutation = (
       showErrorAlert("Không thể tải tập tin");
     }
   };
+  //priview
+  const handlePreview = async (fileName: string) => {
+    if (!fileName) return;
+    try {
+      // Encode tên file để xử lý ký tự đặc biệt
+      const encodedFileName = encodeURIComponent(fileName);
+      const response = await api.get(`/upload/preview/${encodedFileName}`, {
+        responseType: "blob",
+        withCredentials: false,
+      });
+      // response.data lúc này là một đối tượng Blob (Binary Large Object)
+      return response.data;
+    } catch (error) {
+      console.log("Không thể tải tập tin");
+      return null;
+    }
+  };
 
   return {
     handoverPage,
     transferPage,
     departments,
-    staffs,
-    allTools,
+    positions,
+    allAssets,
     isLoading: loadingHandover || loadingTransfer,
     createMutation,
     updateMutation,
     deleteOneMutation,
-    handlePreviewFile,
+    handlePreview,
     handleDownloadFile,
+    cancelMutation,
+    updateManyMutation,
+    signMutation,
+    handleSignatureList,
+    allUnits,
   };
+};;
+
+// lenh dieu dong ccdc
+export const useToolTransferPageQuery = ({
+  page,
+  pageSize,
+  currentType,
+  chuaBanGiaoHet,
+  userid,
+}: any) => {
+  const idCongTy = "ct001";
+
+  return useQuery({
+    queryKey: ["toolTransferPage", idCongTy, page, pageSize],
+    queryFn: () =>
+      api
+        .get("/dieudongccdcvattu/paged", {
+          params: {
+            idcongty: idCongTy,
+            page,
+            size: pageSize,
+            loai: currentType,
+            trangThai: 3,
+            chuaBanGiaoHet: chuaBanGiaoHet,
+            userid: userid,
+          },
+        })
+        .then((r) => r.data),
+  });
+};
+
+//nhanvien
+export const useStaffsPageQuery = () => {
+  const idCongTy = "ct001";
+
+  return useQuery({
+    queryKey: ["staffs", idCongTy],
+    queryFn: async () =>
+      (await api.get("/nhanvien", { params: { idcongty: idCongTy } })).data,
+  });
 };

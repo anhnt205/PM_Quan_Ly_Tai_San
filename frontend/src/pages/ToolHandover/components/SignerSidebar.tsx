@@ -43,14 +43,20 @@ const getSteps = (item: any): SignerStepProps[] => {
   // 1. Đại diện đơn vị giao
   steps.push({
     label: "Đại diện đơn vị giao",
-    name: item.tenDaiDienBenGiao || "Chưa xác định",
+    name:
+      item.tenDaiDienBenGiao ||
+      item?.provider?.getNhanVienByID?.(item.idDaiDienBenGiao)?.hoTen ||
+      "Chưa xác định",
     status: item.daiDienBenGiaoXacNhan ? "completed" : "pending",
   });
 
   // 2. Đại diện đơn vị nhận
   steps.push({
     label: "Đại diện đơn vị nhận",
-    name: item.tenDaiDienBenNhan || "Chưa xác định",
+    name:
+      item.tenDaiDienBenNhan ||
+      item?.provider?.getNhanVienByID?.(item.idDaiDienBenNhan)?.hoTen ||
+      "Chưa xác định",
     status: item.daiDienBenNhanXacNhan ? "completed" : "pending",
   });
 
@@ -68,7 +74,10 @@ const getSteps = (item: any): SignerStepProps[] => {
   // 4. Giám đốc ký duyệt
   steps.push({
     label: "Giám đốc ký duyệt",
-    name: item.tenGiamDoc || "Chưa xác định",
+    name:
+      item.tenGiamDoc ||
+      item?.provider?.getNhanVienByID?.(item.idGiamDoc)?.hoTen ||
+      "Chưa xác định",
     status: item.giamDocKy ? "completed" : "pending",
   });
 

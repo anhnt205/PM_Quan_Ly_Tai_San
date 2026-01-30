@@ -28,13 +28,8 @@ export default function FieldAutoCompleted({
 }: Props) {
   const currentValue = formik && field ? getIn(formik.values, field) : null;
 
-  const valueKey = labelOption;
   const selectedOption =
-    valueKey && currentValue
-      ? data.find(
-          (i) => i?.[valueKey]?.toString() === currentValue?.toString(),
-        ) || null
-      : null;
+    data.find((i) => i.id?.toString() === currentValue?.toString()) || null;
 
   const touched = field ? getIn(formik.touched, field) : false;
   const error = field ? getIn(formik.errors, field) : null;
@@ -47,22 +42,16 @@ export default function FieldAutoCompleted({
       fullWidth
       options={data}
       getOptionLabel={(option: any) => {
-        if (typeof option === "string") return option;
-        if (!labelOption) return "";
-        return option[labelkey] ?? "";
+        if (!option) return ""; // Tránh lỗi khi option là null/undefined
+        if (typeof option === "string") return option; // Tránh lỗi nếu truyền string vào thay vì object
+
+        return `${option[labelkey] || ""} ${(labelOption && `- ${option[labelOption]}`) || ""}`.trim();
       }}
-      renderOption={(props, option) => (
-        <Box component="li" {...props} key={option.id}>
-          {option[labelkey]}
-        </Box>
-      )}
-      isOptionEqualToValue={(option, value) =>
-        valueKey ? option?.[valueKey] === value?.[valueKey] : false
-      }
+      isOptionEqualToValue={(option, value) => option?.id === value?.id}
       value={selectedOption}
       onChange={(e, newValue) => {
-        if (formik && field && valueKey) {
-          formik.setFieldValue(field, newValue?.[valueKey] || null);
+        if (formik && field) {
+          formik.setFieldValue(field, newValue?.id);
         }
         if (onChange) {
           onChange(newValue);

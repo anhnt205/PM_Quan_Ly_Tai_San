@@ -47,6 +47,12 @@ export default function FileAttachmentInput({
   const [isConverting, setIsConverting] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const currentValue = formik && fileName ? getIn(formik.values, fileName) : "";
+
+  const fieldError =
+    formik && fileName ? getIn(formik.errors, fileName) : undefined;
+
+  const fieldTouched =
+    formik && fileName ? getIn(formik.touched, fileName) : false;
   // setDocument(currentValue)
   // Giả sử hàm này lấy từ custom hook của bạn
   const { convertDocxToPdf } = useAssetTranferMutation();
@@ -71,6 +77,7 @@ export default function FileAttachmentInput({
 
     // 2. Nếu là PDF: Lưu trực tiếp
     if (isPdf) {
+      formik.setFieldTouched(fileName, true, false);
       formik.setFieldValue(fileName, file.name);
       if (filePath) formik.setFieldValue(filePath, file.name);
       return;
@@ -93,6 +100,7 @@ export default function FileAttachmentInput({
             type: "application/pdf",
           });
           // Cập nhật Formik
+          formik.setFieldTouched(fileName, true, false);
           formik.setFieldValue(fileName, newFileName);
           if (filePath) formik.setFieldValue(filePath, newFileName);
           setDocument(convertedFile);
@@ -119,12 +127,14 @@ export default function FileAttachmentInput({
         </Alert>
       )}
 
-      <Box display="flex" alignItems="stretch">
+      <Box display="flex" alignItems="flex-start">
         <StyledTextField
           fullWidth
           size="small"
           placeholder={isConverting ? "Đang xử lý..." : "Chưa chọn tệp"}
           value={currentValue}
+          error={Boolean(fieldTouched && fieldError)}
+          helperText={fieldTouched && fieldError ? fieldError : ""}
           InputProps={{
             readOnly: true,
             startAdornment: (
@@ -136,6 +146,7 @@ export default function FileAttachmentInput({
         />
 
         <Button
+          size="small"
           component="label"
           variant="contained"
           disabled={disabled || isConverting}

@@ -75,7 +75,6 @@ export const useToolManagerMutation = (
         variables.chiTietTaiSanList.length > 0
       ) {
         donViSoHuuList = variables.chiTietDonViSoHuuList || [];
-        console.log(variables.chiTietDonViSoHuuList);
         const deleteData = variables.chiTietTaiSanList
           .filter((item: any) => item.isDeleted)
           .map((item: any) => item.id);

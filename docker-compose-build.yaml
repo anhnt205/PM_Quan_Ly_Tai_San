@@ -1,9 +1,9 @@
 
 services:
-  qlts_reverse_proxy_service:
-    build:
-      context: ./reverse_proxy
-    image: ${REGISTRY}/qlts_reverse_proxy_img:${VERSION}
+  # qlts_reverse_proxy_service:
+  #   build:
+  #     context: ./reverse_proxy
+  #   image: ${REGISTRY}/qlts_reverse_proxy_img:${VERSION}
 
 
   qlts_frontend_service:
