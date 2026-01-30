@@ -175,7 +175,19 @@ export default function AssetHandoverForm({
       byStep: false,
       giamDocKy: false,
       nguoiKyList: [] as any[],
-      chiTietBanGiaoTaiSan: [] as any[],
+      chiTietBanGiaoTaiSan: [
+        {
+          id: "",
+          idBanGiaoTaiSan: "",
+          idTaiSan: "",
+          donViTinh: "",
+          soLuong: 1,
+          hienTrang: "1",
+          ghiChu: "",
+          isActive: true,
+          moTa: "",
+        },
+      ],
       initialChiTiet: [] as any[],
       isNew: true,
     },
@@ -186,10 +198,6 @@ export default function AssetHandoverForm({
           ...item,
           id: `${generateCode("CTBGTS-")}-${index}`,
           idBanGiaoTaiSan: values.id,
-          idDonViGui: values.idDonViGiao,
-          idDonViNhan: values.idDonViNhan,
-          soLuongBanGiao: item.soLuong,
-          idTsCon: item.idChiTietCCDCVatTu,
         }),
       );
       const nguoiKyList = values.nguoiKyList.map((item: any, index) => ({

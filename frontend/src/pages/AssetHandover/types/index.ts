@@ -3,14 +3,15 @@ export interface AssetHandoverDetail {
   idBanGiaoTaiSan: string;
   idTaiSan: string;
   soLuong: number;
-  ngayTao: string;
-  ngayCapNhat: string;
-  nguoiTao: string;
-  nguoiCapNhat: string;
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
   isActive: boolean;
   hienTrang: string;
-  moTa: string;
-  ghiChu: string;
+  moTa?: string;
+  donViTinh?: string;
+  ghiChu?: string;
 }
 
 export interface Signer {

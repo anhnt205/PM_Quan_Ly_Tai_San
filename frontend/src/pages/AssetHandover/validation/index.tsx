@@ -14,23 +14,14 @@ export const assetHandoverValidationSchema = yup.object({
   idDaiDienBenNhan: yup.string().required("Chọn đại diện đơn vị nhận"),
   idGiamDoc: yup.string().required("Chọn giám đốc xác nhận"),
   tenFile: yup.string().required("Chọn tài liệu quyết định"),
-  chiTietBanGiaoCCDCVatTu: yup.array().of(
+  chiTietBanGiaoTaiSan: yup.array().of(
     yup.object({
-      idCCDCVatTu: yup.string().required("Chọn ít nhất 1 vật tư"),
+      idTaiSan: yup.string().required("Chọn ít nhất 1 tài sản"),
       soLuong: yup
         .number()
         .typeError("Số lượng phải là số")
         .required("Nhập số lượng bàn giao")
-        .min(1, "Số lượng tối thiểu là 1")
-        .test(
-          "max-so-luong-con-lai",
-          "Số lượng không được vượt quá số lượng cần bàn giao",
-          function (value) {
-            const { soLuongConLai } = this.parent;
-            if (value == null || soLuongConLai == null) return true;
-            return value <= soLuongConLai;
-          },
-        ),
+        .min(1, "Số lượng tối thiểu là 1"),
     }),
   ),
 });

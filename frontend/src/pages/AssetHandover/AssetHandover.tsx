@@ -475,7 +475,19 @@ export default function AssetHandover() {
                 byStep: false,
                 giamDocKy: false,
                 nguoiKyList: [] as any[],
-                chiTietBanGiaoTaiSan: [] as any[],
+                chiTietBanGiaoTaiSan: [
+                  {
+                    id: "",
+                    idBanGiaoTaiSan: "",
+                    idTaiSan: "",
+                    donViTinh: "",
+                    soLuong: 1,
+                    hienTrang: "1",
+                    ghiChu: "",
+                    isActive: true,
+                    moTa: "",
+                  },
+                ],
                 initialChiTiet: [] as any[],
                 isNew: true,
               });
