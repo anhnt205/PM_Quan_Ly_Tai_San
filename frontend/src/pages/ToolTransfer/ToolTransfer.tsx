@@ -30,6 +30,7 @@ import { ToolSignature, ToolTransferData } from "./types";
 import { useToolTransferMutation } from "./Mutation";
 import SignDocumentForm from "./components/SignDocumentForm";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
+import { ToolHandoverData } from "../ToolHandover/types";
 
 export default function ToolTransfer() {
   const { user } = useSelector((state: any) => state.user);
@@ -75,6 +76,7 @@ export default function ToolTransfer() {
     paginationModel.pageSize,
     searchValue,
     type ? Number(type) : undefined,
+    status ? Number(status) : undefined,
   );
 
   const statusOptions: FilterOption[] = [
@@ -177,8 +179,10 @@ export default function ToolTransfer() {
     setShowSignerSidebar(true); // Hiện sidebar khi ký
   };
 
-  const handleViewBienBan = (rowData: ToolTransferData) => {
-    setSelectedDocument(rowData);
+  const [toolHandover, setToolHandover] = useState<ToolHandoverData[]>([]);
+  const handleViewBienBan = async (id: string) => {
+    const result: any[] = await getToolHandoverMutation.mutateAsync(id);
+    setToolHandover(result);
     setShowBienBanDialog(true);
   };
 
@@ -341,7 +345,7 @@ export default function ToolTransfer() {
                 disabled={!rowData.coPhieuBanGiao}
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleViewBienBan(rowData);
+                  handleViewBienBan(rowData.id);
                 }}
                 sx={{
                   padding: "4px",
@@ -382,7 +386,8 @@ export default function ToolTransfer() {
       <BienBanDialog
         open={showBienBanDialog}
         onClose={() => setShowBienBanDialog(false)}
-        documentData={selectedDocument}
+        toolHandover={toolHandover}
+        handleSignatureList={handleSignatureList}
       />
 
       {showSignDocument ? (

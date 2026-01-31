@@ -466,7 +466,6 @@ export default function BienBanDialog({
 
     if (pdfDoc) renderPage();
   }, [currentPage, pdfDoc]);
-  console.log(displaySize);
 
   const handlePrevPage = () => {
     if (currentPage > 1) setCurrentPage(currentPage - 1);

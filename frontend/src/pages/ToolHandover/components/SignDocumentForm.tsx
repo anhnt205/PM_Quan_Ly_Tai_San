@@ -333,7 +333,7 @@ export default function SignDocumentForm({
       head: [
         [
           "STT",
-          "TÊN TÀI SẢN",
+          "Tên ccdc - vật tư",
           "Mã hiệu, quy cách",
           "Nước sản xuất",
           "Đơn vị tính",
