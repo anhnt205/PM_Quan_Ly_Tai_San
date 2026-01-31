@@ -60,7 +60,6 @@ export default function ToolTransfer() {
     allStaff,
     allUnits,
     allCurrentStatus,
-    allToolByDonVi,
     handleDownloadFile,
     createMutation,
     updateMutation,
@@ -70,7 +69,6 @@ export default function ToolTransfer() {
     handleSignatureList,
     signMutation,
     getToolHandoverMutation,
-    setDepartmentId,
     handoverDetails,
   } = useToolTransferMutation(
     paginationModel.page,
@@ -364,7 +362,7 @@ export default function ToolTransfer() {
                     rowData.chiTietDieuDongCCDCVatTuDTOS || [],
                   );
                   setShowSignerSidebar(false);
-                  setDepartmentId(rowData.idDonViGiao);
+                  // setDepartmentId(rowData.idDonViGiao);
                   setSelectedIds([rowData.id]);
 
                   setShowSignDocument(true);
@@ -431,11 +429,7 @@ export default function ToolTransfer() {
                 readOnly={readOnly}
                 selectedTool={selectedRow}
                 departments={allDepartments}
-                staffs={allStaff}
-                setDepartmentId={setDepartmentId}
-                allToolsByDonVi={allToolByDonVi}
                 allUnits={allUnits}
-                allCurrentStatus={allCurrentStatus}
                 label={label}
                 type={Number(type)}
               />

@@ -34,7 +34,7 @@ import FieldInput from "../../../components/TextField/FieldInput";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
 import FieldDateTime from "../../../components/TextField/FieldDateTime";
 import CustomStepper from "../../../components/common/CustomStepper";
-import FileAttachmentInput from "./FileAttachmentInput";
+import FileAttachmentInput from "../../../components/TextField/FileAttachmentInput";
 import SignDocumentForm from "./SignDocumentForm";
 import { generateCode } from "../../../utils/helpers";
 

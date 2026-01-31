@@ -66,7 +66,6 @@ export default function SignDocumentForm({
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const { user } = useSelector((state: RootState) => state.user);
   const employee = findById(staffs, user?.taiKhoan?.tenDangNhap);
-  console.log(employee);
   // State quản lý danh sách chữ ký
   const [signatures, setSignatures] = useState<ToolSignature[]>([]);
   const [bangKeBytes, setBangKeBytes] = useState<Uint8Array | null>(null);

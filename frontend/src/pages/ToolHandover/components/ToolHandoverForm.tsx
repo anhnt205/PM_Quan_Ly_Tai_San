@@ -31,7 +31,7 @@ import { useFormik, FieldArray, FormikProvider } from "formik";
 import FieldInput from "../../../components/TextField/FieldInput";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
 import FieldDateTime from "../../../components/TextField/FieldDateTime";
-import FileAttachmentInput from "../../AssetTransfer/components/FileAttachmentInput";
+import FileAttachmentInput from "../../../components/TextField/FileAttachmentInput";
 import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
 import EditButton from "../../../components/Button/EditButton";

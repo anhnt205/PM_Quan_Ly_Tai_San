@@ -33,7 +33,11 @@ export default function FieldInput({
       label={title}
       value={currentValue}
       onChange={(e) => {
-        if (field) formik.setFieldValue(field, e.target.value);
+        if (field) {
+          formik.setFieldError(field, undefined);
+          formik.setFieldTouched(field, true, false);
+          formik.setFieldValue(field, e.target.value);
+        }
         if (onChange) {
           onChange(e.target.value);
         }

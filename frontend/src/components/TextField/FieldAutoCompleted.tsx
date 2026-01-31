@@ -10,6 +10,7 @@ interface Props {
   disabled?: boolean;
   labelOption?: string;
   onChange?: (newValue: any) => void;
+  onSearch?: (value: string) => void;
   componentsProps?: any;
   autocompleteSx?: any;
 }
@@ -22,6 +23,7 @@ export default function FieldAutoCompleted({
   field,
   disabled,
   onChange,
+  onSearch,
   labelOption,
   componentsProps,
   autocompleteSx,
@@ -51,11 +53,35 @@ export default function FieldAutoCompleted({
       value={selectedOption}
       onChange={(e, newValue) => {
         if (formik && field) {
-          formik.setFieldValue(field, newValue?.id);
+          formik.setFieldValue(field, newValue?.id, true);
+          formik.setFieldError(field, undefined);
         }
         if (onChange) {
           onChange(newValue);
         }
+      }}
+      onInputChange={(_, value) => onSearch?.(value)}
+      renderOption={(props, option, state) => {
+        const label = `${option[labelkey] || ""}${
+          labelOption ? ` - ${option[labelOption]}` : ""
+        }`;
+
+        return (
+          <li 
+            {...props}
+            key={`${option.id} - ${state.index}`}
+            title={label} // tooltip native
+            style={{
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              maxWidth: "100%",
+              display: "block",
+            }}
+          >
+            {label}
+          </li>
+        );
       }}
       renderInput={(params) => (
         <TextField
@@ -63,6 +89,11 @@ export default function FieldAutoCompleted({
           label={title}
           error={Boolean(touched && error)}
           helperText={touched ? error : ""}
+          onBlur={() => {
+            if (formik && field) {
+              formik.setFieldTouched(field, true, true);
+            }
+          }}
           size="small"
         />
       )}

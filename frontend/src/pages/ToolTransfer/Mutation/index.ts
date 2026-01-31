@@ -30,7 +30,6 @@ export const useToolTransferMutation = (
   const { user } = useSelector((state: RootState) => state.user);
   const now = dayjs(new Date()).format("YYYY-MM-DDTHH:mm:ss");
 
-  const [departmentId, setDepartmentId] = useState("");
   const createMutation = useMutation({
     mutationFn: async (data: ToolTransferData) => {
       const res = await api.post("/dieudongccdcvattu", {
@@ -447,62 +446,6 @@ export const useToolTransferMutation = (
   });
   // danh sach ccdc
 
-  const { data: allCCDC = [] } = useQuery({
-    queryKey: ["allCCDC"], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/ccdcvattu/paged", {
-        params: { idcongty: idCongTy, page: 0, size: 9999 },
-      });
-      return res.data.data?.items || res.data?.items || [];
-    },
-  });
-
-  const { data: allToolByDonVi = [] } = useQuery({
-    queryKey: ["allToolByDonVi", departmentId, idCongTy],
-    queryFn: async () => {
-      // Gọi cả 2 API cùng lúc để tối ưu thời gian (Parallel)
-      const resAllTools = await axios.get(
-        `http://42.119.110.246:8386/chitietdonvisohuu/by-donvisohuu/${departmentId}`,
-      );
-      let data = [];
-      const allToolsByDonVi = resAllTools.data.data || resAllTools.data || [];
-      const listDetailAsset = allCCDC.flatMap(
-        (item: any) => item.chiTietTaiSanList || [],
-      );
-      for (const e of allToolsByDonVi) {
-        if (!e.idCCDCVT || !e.idTsCon) {
-          continue;
-        }
-        const asset = findById(allCCDC, e.idCCDCVT);
-        const detailAsset = listDetailAsset.find(
-          (i: any) => i.id === e?.idTsCon,
-        );
-        if (!asset.id || !detailAsset.id) {
-          continue;
-        }
-        data.push({
-          id: e.idCCDCVT,
-          idCCDCVatTu: e.idCCDCVT,
-          tenCCDCVatTu: asset.ten,
-          idDetaiAsset: detailAsset.id,
-          tenDetailAsset: `${asset.ten}(${detailAsset.soKyHieu}) - ${detailAsset.namSanXuat}`,
-          idDonVi: e.idDonViSoHuu,
-          donViTinh: asset.donViTinh,
-          namSanXuat: detailAsset.namSanXuat ?? 2010,
-          soLuong: e.soLuong,
-          soLuongConLai: e.soLuong,
-          ghiChu: asset.ghiChu,
-          soKyHieu: asset.soKyHieu,
-          kyHieu: asset.kyHieu,
-          soLuongDaBanGiao: 0,
-          asset: asset,
-        });
-      }
-      return data;
-    },
-    enabled: !!departmentId && !!idCongTy, // Chỉ chạy khi có đủ ID
-  });
-
   const handoverDetailsQuery = useQuery({
     queryKey: ["handoverDetails", selectedId],
     queryFn: async () => {
@@ -632,15 +575,82 @@ export const useToolTransferMutation = (
     allDepartments,
     allStaff,
     isLoading,
-    allToolByDonVi,
     allUnits,
     allCurrentStatus,
     handleSignatureList,
     signMutation,
     getByIdMutation,
     getToolHandoverMutation,
-    setDepartmentId,
     handoverDetails: handoverDetailsQuery.data || [],
-    allCCDC,
   };
+};
+
+export const useAllToolPageQuery = () => {
+  const idCongTy = "ct001";
+
+  return useQuery({
+    queryKey: ["allTool", idCongTy],
+    queryFn: async () => {
+      const res = await api.get("/ccdcvattu/paged", {
+        params: { idcongty: idCongTy, page: 0, size: 9999 },
+      });
+      return res.data.data?.items || res.data?.items || [];
+    },
+  });
+};
+
+export const useToolByDepartmentPageQuery = ({
+  departmentId,
+}: {
+  departmentId: string;
+}) => {
+  const idCongTy = "ct001";
+
+  const { data: allTools = [] } = useAllToolPageQuery();
+
+  return useQuery({
+    queryKey: ["allToolByDonVi", departmentId, idCongTy],
+    queryFn: async () => {
+      // Gọi cả 2 API cùng lúc để tối ưu thời gian (Parallel)
+      const resAllTools = await axios.get(
+        `http://42.119.110.246:8386/chitietdonvisohuu/by-donvisohuu/${departmentId}`,
+      );
+      let data = [];
+      const allToolsByDonVi = resAllTools.data.data || resAllTools.data || [];
+      const listDetailAsset = allTools.flatMap(
+        (item: any) => item.chiTietTaiSanList || [],
+      );
+      for (const e of allToolsByDonVi) {
+        if (!e.idCCDCVT || !e.idTsCon) {
+          continue;
+        }
+        const asset = findById(allTools, e.idCCDCVT);
+        const detailAsset = listDetailAsset.find(
+          (i: any) => i.id === e?.idTsCon,
+        );
+        if (!asset.id || !detailAsset.id) {
+          continue;
+        }
+        data.push({
+          id: e.idCCDCVT,
+          idCCDCVatTu: e.idCCDCVT,
+          tenCCDCVatTu: asset.ten,
+          idDetaiAsset: detailAsset.id,
+          tenDetailAsset: `${asset.ten}(${detailAsset.soKyHieu}) - ${detailAsset.namSanXuat}`,
+          idDonVi: e.idDonViSoHuu,
+          donViTinh: asset.donViTinh,
+          namSanXuat: detailAsset.namSanXuat ?? 2010,
+          soLuong: e.soLuong,
+          soLuongConLai: e.soLuong,
+          ghiChu: asset.ghiChu,
+          soKyHieu: asset.soKyHieu,
+          kyHieu: asset.kyHieu,
+          soLuongDaBanGiao: 0,
+          asset: asset,
+        });
+      }
+      return data;
+    },
+    enabled: !!departmentId && allTools.length > 0,
+  });
 };

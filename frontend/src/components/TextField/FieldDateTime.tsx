@@ -28,9 +28,12 @@ export default function FieldDateTime({
   minutesStep?: number;
 }) {
   const value = formik && field ? getIn(formik.values, field) : selectedDate;
+  const touched = formik && field ? getIn(formik.touched, field) : false;
+  const error = formik && field ? getIn(formik.errors, field) : "";
   const setValue = (val: string) => {
     if (formik && field) {
       formik.setFieldValue(field, val);
+      formik.setFieldTouched(field, true, false);
     } else {
       setSelectedDate?.(val);
     }
@@ -56,6 +59,8 @@ export default function FieldDateTime({
             fullWidth: true,
             size: "small",
             sx: { backgroundColor: "#fff" },
+            error: Boolean(touched && error),
+            helperText: touched && error,
           },
         }}
       />

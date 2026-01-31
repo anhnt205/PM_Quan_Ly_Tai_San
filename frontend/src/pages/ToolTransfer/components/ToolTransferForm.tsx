@@ -17,7 +17,7 @@ import {
   styled,
 } from "@mui/material";
 import { useFormik } from "formik";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import {
   Add,
@@ -34,10 +34,25 @@ import FieldInput from "../../../components/TextField/FieldInput";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
 import FieldDateTime from "../../../components/TextField/FieldDateTime";
 import CustomStepper from "../../../components/common/CustomStepper";
-import FileAttachmentInput from "./FileAttachmentInput";
 import SignDocumentForm from "./SignDocumentForm";
 import { generateCode } from "../../../utils/helpers";
+import { toolTransferValidationSchema } from "../validation";
+import dayjs from "dayjs";
+import FileAttachmentInput from "../../../components/TextField/FileAttachmentInput";
+import { useStaffsPageQuery } from "../../ToolHandover/Mutation";
+import { useToolByDepartmentPageQuery } from "../Mutation";
 
+const CustomTableCell = styled(TableCell)(({ theme }) => ({
+  borderBottom: "1px solid rgba(224, 224, 224, 1)",
+  padding: "16px 8px",
+  fontSize: "14px",
+}));
+
+const CustomTableHeadCell = styled(CustomTableCell)(({ theme }) => ({
+  fontWeight: "bold",
+  color: "rgba(0, 0, 0, 0.87)",
+  backgroundColor: "transparent",
+}));
 interface ToolTransferFormProps {
   onEdit: () => void;
   onClose: () => void;
@@ -49,11 +64,7 @@ interface ToolTransferFormProps {
   label?: string;
   isSignedForm?: boolean;
   departments: any[];
-  staffs: any[];
-  setDepartmentId: (id: string) => void;
-  allToolsByDonVi: any[];
   allUnits: any[];
-  allCurrentStatus: any[];
 }
 
 export default function ToolTransferForm({
@@ -67,30 +78,18 @@ export default function ToolTransferForm({
   label,
   isSignedForm = false,
   departments,
-  staffs,
-  setDepartmentId,
-  allToolsByDonVi,
   allUnits,
-  allCurrentStatus,
 }: ToolTransferFormProps) {
   const [expanded, setExpanded] = useState(true);
   const [isPreview, setIsPreview] = useState(false);
   const [document, setDocument] = useState<File | string | any>("");
+  // const [tools, setTools] = useState<any[]>([]);
+  const [searchCCDC, setSearchValue] = useState("");
 
-  const CustomTableCell = styled(TableCell)(({ theme }) => ({
-    borderBottom: "1px solid rgba(224, 224, 224, 1)",
-    padding: "16px 8px",
-    fontSize: "14px",
-  }));
+  const { data: staffs = [] } = useStaffsPageQuery();
 
-  const CustomTableHeadCell = styled(CustomTableCell)(({ theme }) => ({
-    fontWeight: "bold",
-    color: "rgba(0, 0, 0, 0.87)",
-    backgroundColor: "transparent",
-  }));
   // Logic trạng thái
   const currentStatus = selectedTool?.trangThai ?? 0; // 0: Nháp, 1: Duyệt, 2: Hủy, 3: Hoàn thành
-
   const formik = useFormik({
     initialValues: {
       id: "",
@@ -102,8 +101,8 @@ export default function ToolTransferForm({
       trangThaiKyNhay: false,
       nguoiLapPhieuKyNhay: false,
       idDonViDeNghi: "",
-      tgGnTuNgay: "",
-      tgGnDenNgay: "",
+      tgGnTuNgay: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      tgGnDenNgay: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       idTrinhDuyetCapPhong: "",
       trinhDuyetCapPhongXacNhan: false,
       idTrinhDuyetGiamDoc: "",
@@ -118,9 +117,22 @@ export default function ToolTransferForm({
       tenFile: "",
       duongDanFile: "",
       nguoiKyList: [],
-      chiTietDieuDongCCDCVatTuDTOS: [],
+      chiTietDieuDongCCDCVatTuDTOS: [
+        {
+          idCCDCVatTu: "",
+          donViTinh: "",
+          soLuong: 0,
+          soLuongXuat: 0,
+          ghiChu: "",
+          hienTrang: "",
+          moTa: "",
+          isActive: true,
+          soLuongDaBanGiao: 0,
+        },
+      ],
       initialChiTiet: [],
     },
+    validationSchema: toolTransferValidationSchema,
     onSubmit: (values) => {
       // Logic map ID tương tự nhưng dùng prefix của Tool
       const chiTietDieuDongCCDCVatTuDTOS =
@@ -164,11 +176,11 @@ export default function ToolTransferForm({
   const isThuHoi = type === 3;
 
   const dvGiao = departments.filter((i) =>
-    isCapPhat ? i.isKho === true : i.isKho === false,
+    isCapPhat ? i.id?.toLowerCase() === "k30" : i.isKho === false,
   );
 
   const dvNhan = departments.filter((i) =>
-    isThuHoi ? i.isKho === true : i.isKho === false,
+    isThuHoi ? i.id?.toLowerCase() === "kth" : i.isKho === false,
   );
 
   const [nvThamMuu, setNVThamMuu] = useState<any[]>([]);
@@ -177,23 +189,34 @@ export default function ToolTransferForm({
   useEffect(() => {
     if (formik.values.idDonViDeNghi && departments && staffs) {
       setNVThamMuu(
-        staffs.filter((i) => i.phongBanId === formik.values.idDonViDeNghi),
+        staffs.filter((i: any) => i.phongBanId === formik.values.idDonViDeNghi),
       );
       const lanhDaoDeptIds = departments
         .filter((d) => d.isLanhDao === true)
         .map((d) => d.id);
 
       // Bước B: Lọc nhân viên có phongBanId nằm trong danh sách ID vừa tìm được
-      const filteredPGD = staffs.filter((s) =>
+      const filteredPGD = staffs.filter((s: any) =>
         lanhDaoDeptIds.includes(s.phongBanId),
       );
       setNVPGD(filteredPGD);
     }
   }, [formik.values.idDonViDeNghi, departments, staffs]);
 
-  useEffect(() => {
-    setDepartmentId(formik.values.idDonViGiao);
-  }, [formik.values.idDonViGiao]);
+  const { data: toolsByDepartment = [], isLoading } =
+    useToolByDepartmentPageQuery({
+      departmentId: formik.values.idDonViGiao, // Truyền trực tiếp ID từ formik
+    });
+  const tools = useMemo(() => {
+    if (!toolsByDepartment?.length) return [];
+    return toolsByDepartment
+      .filter((i) =>
+        i.tenDetailAsset
+          ?.toLowerCase()
+          .includes(searchCCDC.trim().toLowerCase()),
+      )
+      .slice(0, 20);
+  }, [toolsByDepartment, searchCCDC]);
 
   return (
     <>
@@ -542,9 +565,12 @@ export default function ToolTransferForm({
                           <FieldAutoCompleted
                             title=""
                             labelkey="tenDetailAsset"
-                            data={allToolsByDonVi}
+                            data={tools}
                             formik={formik}
                             field={`chiTietDieuDongCCDCVatTuDTOS.${index}.idCCDCVatTu`}
+                            onSearch={(value) => {
+                              setSearchValue(value);
+                            }}
                             onChange={(value) => {
                               formik.setFieldValue(
                                 `chiTietDieuDongCCDCVatTuDTOS.${index}.donViTinh`,
@@ -656,6 +682,7 @@ export default function ToolTransferForm({
                           hienTrang: "",
                           moTa: "",
                           isActive: true,
+                          soLuongDaBanGiao: 0,
                         },
                       ]);
                     }}

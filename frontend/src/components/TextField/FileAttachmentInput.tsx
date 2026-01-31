@@ -10,7 +10,7 @@ import {
   Alert,
 } from "@mui/material";
 import { CloudUpload, Description } from "@mui/icons-material";
-import { useAssetTranferMutation } from "../Mutation";
+import { useAssetTranferMutation } from "../../pages/AssetTransfer/Mutation";
 import { getIn } from "formik";
 
 // Style cho Input hiển thị tên file
@@ -48,8 +48,7 @@ export default function FileAttachmentInput({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const currentValue = formik && fileName ? getIn(formik.values, fileName) : "";
 
-  const fieldError =
-    formik && fileName ? getIn(formik.errors, fileName) : undefined;
+  const fieldError = formik && fileName ? getIn(formik.errors, fileName) : "";
 
   const fieldTouched =
     formik && fileName ? getIn(formik.touched, fileName) : false;
@@ -77,6 +76,7 @@ export default function FileAttachmentInput({
 
     // 2. Nếu là PDF: Lưu trực tiếp
     if (isPdf) {
+      formik.setFieldError(fileName, undefined);
       formik.setFieldTouched(fileName, true, false);
       formik.setFieldValue(fileName, file.name);
       if (filePath) formik.setFieldValue(filePath, file.name);
@@ -100,6 +100,7 @@ export default function FileAttachmentInput({
             type: "application/pdf",
           });
           // Cập nhật Formik
+          formik.setFieldError(fileName, undefined);
           formik.setFieldTouched(fileName, true, false);
           formik.setFieldValue(fileName, newFileName);
           if (filePath) formik.setFieldValue(filePath, newFileName);
