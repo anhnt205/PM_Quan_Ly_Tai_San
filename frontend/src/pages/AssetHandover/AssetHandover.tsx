@@ -602,7 +602,6 @@ export default function AssetHandover() {
                       label="Biên bản bàn giao"
                       iconPosition="top"
                     />
-                    <Box width={108}></Box>
                     <Tab
                       icon={
                         <Badge

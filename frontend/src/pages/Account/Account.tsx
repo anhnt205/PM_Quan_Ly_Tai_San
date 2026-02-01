@@ -11,6 +11,7 @@ import AccountModal from "./components/AccountModal/AccountModal";
 import PermissionModal from "./components/PermissionModal/PermissionModal";
 import EditAccountModal from "./components/EditAccountModal/EditAccountModal";
 import { useSelector } from "react-redux";
+import { findById } from "../../utils/helpers";
 
 export default function Account() {
   const [showForm, setShowForm] = useState(false);
@@ -37,6 +38,7 @@ export default function Account() {
 
   const {
     accountPage,
+    staffs,
     isLoading,
     deleteAccountMutation,
     createMutation,
@@ -45,6 +47,8 @@ export default function Account() {
     paginationModel.page,
     paginationModel.pageSize,
     searchValue,
+    undefined,
+    currentUser?.taiKhoan?.idCongTy,
   );
 
   const handleRowClick = (params: GridRowParams) => {
@@ -79,7 +83,14 @@ export default function Account() {
 
   const columns: GridColDef<AccountData>[] = [
     { field: "tenDangNhap", headerName: "Mã danh bộ", width: 120 },
-    { field: "tenPhongBan", headerName: "Phòng ban", flex: 1, minWidth: 200 },
+    {
+      field: "tenPhongBan",
+      headerName: "Phòng ban",
+      flex: 1,
+      minWidth: 200,
+      renderCell: (params) =>
+        findById(staffs, params.row.tenDangNhap)?.tenPhongBan,
+    },
     { field: "username", headerName: "Tên đăng nhập", width: 130 },
     { field: "hoTen", headerName: "Họ tên", flex: 1, minWidth: 180 },
     { field: "email", headerName: "Email", flex: 1, minWidth: 200 },

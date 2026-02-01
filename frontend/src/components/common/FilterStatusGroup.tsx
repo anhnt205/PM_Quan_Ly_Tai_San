@@ -10,16 +10,15 @@ import {
 import { Check } from "@mui/icons-material";
 
 const COLORS = {
-  default: "#424242", // Tất cả (Đen/Xám đậm)
-  success: "#4caf50", // Cấp phát (Xanh lá)
-  info: "#2196f3", // Điều chuyển (Xanh dương)
-  error: "#ff7043", // Thu hồi (Cam đỏ)
+  default: "#424242",
+  success: "#4caf50",
+  info: "#2196f3",
+  error: "#ff7043",
   primary: "#1976d2",
   secondary: "#9c27b0",
   warning: "#ed6c02",
 };
 
-// --- Styled Components cho Checkbox Custom ---
 const BpIcon = styled("span")<{ customColor: string }>(({ customColor }) => ({
   borderRadius: 3,
   width: 18,
@@ -45,13 +44,16 @@ const BpCheckedIconRoot = styled("span")<{ customcolor: string }>(
     justifyContent: "center",
     color: "#fff",
     transition: "all 0.2s",
-  })
+  }),
 );
 
 const CustomCheckbox = (
-  props: CheckboxProps & { colorKey: keyof typeof COLORS }
+  props: CheckboxProps & { colorKey: keyof typeof COLORS },
 ) => {
-  const colorHex = COLORS[props.colorKey] || COLORS.default;
+  // Bóc tách colorKey ra khỏi props để không bị truyền xuống component Checkbox/thẻ HTML
+  const { colorKey, ...otherProps } = props;
+  const colorHex = COLORS[colorKey] || COLORS.default;
+
   return (
     <Checkbox
       color="default"
@@ -65,14 +67,14 @@ const CustomCheckbox = (
         p: 0.5,
         "&.Mui-checked": { color: colorHex },
       }}
-      {...props}
+      {...otherProps} // Chỉ truyền các props hợp lệ của Checkbox
     />
   );
 };
 
-// --- Badge số lượng màu xám tròn ---
 const StatusCountBadge = ({ count }: { count: number }) => (
   <Box
+    component="span" // QUAN TRỌNG: Đổi div thành span để nằm trong Typography hợp lệ
     sx={{
       height: 22,
       minWidth: 22,
@@ -82,7 +84,7 @@ const StatusCountBadge = ({ count }: { count: number }) => (
       bgcolor: "#e0e0e0",
       color: "#333",
       fontWeight: "bold",
-      display: "flex",
+      display: "inline-flex", // inline-flex để căn chỉnh cùng dòng văn bản
       alignItems: "center",
       justifyContent: "center",
       px: 0.5,
@@ -92,7 +94,6 @@ const StatusCountBadge = ({ count }: { count: number }) => (
   </Box>
 );
 
-// --- Component Item đơn lẻ (Dynamic) ---
 const FilterItem = ({
   label,
   count,
@@ -127,6 +128,7 @@ const FilterItem = ({
       />
       <Typography
         variant="body2"
+        component="div" // QUAN TRỌNG: Đổi p thành div để chứa Badge (nếu badge là thẻ div)
         sx={{
           fontSize: "14px",
           color: "text.primary",
@@ -141,7 +143,6 @@ const FilterItem = ({
   );
 };
 
-// --- Component Group chính (Dynamic) ---
 export interface FilterOption {
   label: string;
   count: number;
@@ -175,3 +176,4 @@ export const FilterStatusGroup = ({
     </Box>
   );
 };
+

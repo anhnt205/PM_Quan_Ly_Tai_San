@@ -24,6 +24,7 @@ import Report from "./pages/Report/Report";
 import ToolTransfer from "./pages/ToolTransfer/ToolTransfer";
 import ToolHandover from "./pages/ToolHandover/ToolHandover";
 import Account from "./pages/Account/Account";
+import NotFound from "./pages/Notfound/Notfound";
 
 const ProtectedRoute = ({ allowedRoles, children }) => {
   const { user } = useSelector((state) => state.user);
@@ -31,9 +32,9 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
   if (!user) {
     return <Navigate to={ROUTES.LOGIN} />;
   }
-
-  if (!allowedRoles.includes(user.role)) {
-    return null;
+  const listRole = user?.role?.map((item) => item.permissionCode) || [];
+  if (!allowedRoles.some((r) => listRole.includes(r))) {
+    return <Navigate to={ROUTES.NOT_FOUND} />;
   }
 
   return typeof children === "function" ? children(user.role) : children;
@@ -48,32 +49,114 @@ function App() {
           path={ROUTES.LOGIN}
           element={!user ? <Login /> : <Navigate to="/" />}
         />
-        <Route path={ROUTES.MAIN} element={<Main />}>
+        <Route path={ROUTES.NOT_FOUND} element={<NotFound />} />
+        <Route
+          path={ROUTES.MAIN}
+          element={user ? <Main /> : <Navigate to={ROUTES.LOGIN} />}
+        >
           <Route index element={<DashBoard />} />
-          <Route path={ROUTES.STAFF} element={<Staff />} />
-          <Route path={ROUTES.DEPARTMENT} element={<Department />} />
+          <Route
+            path={ROUTES.STAFF}
+            element={
+              <ProtectedRoute allowedRoles={["NHANVIEN"]}>
+                <Staff />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={ROUTES.DEPARTMENT}
+            element={
+              <ProtectedRoute allowedRoles={["PHONGBAN"]}>
+                <Department />
+              </ProtectedRoute>
+            }
+          />
           <Route path={ROUTES.POSITION} element={<Position />} />
-          <Route path={ROUTES.PROJECT} element={<Project />} />
-          <Route path={ROUTES.CAPITALSOURCE} element={<CapitalSource />} />
+          <Route
+            path={ROUTES.PROJECT}
+            element={
+              <ProtectedRoute allowedRoles={["DUAN"]}>
+                <Project />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={ROUTES.CAPITALSOURCE}
+            element={
+              <ProtectedRoute allowedRoles={["NGUONVON"]}>
+                <CapitalSource />
+              </ProtectedRoute>
+            }
+          />
           <Route path={ROUTES.TYPEASSET} element={<TypeAsset />} />
           <Route path={ROUTES.TOOLGROUP} element={<ToolGroup />} />
           <Route path={ROUTES.TOOLTYPE} element={<ToolType />} />
           <Route path={ROUTES.UNIT} element={<Unit />} />
           <Route path={ROUTES.REASONINCREASE} element={<ReasonIncrease />} />
           <Route path={ROUTES.CURRENTSTATUS} element={<CurrentStatus />} />
-          <Route path={ROUTES.ASSETMANAGER} element={<AssetManager />} />
-          <Route path={ROUTES.ASSETHANDOVER} element={<AssetHandover />} />
-          <Route path={ROUTES.ASSETTRANSFER} element={<AssetTransfer />} />
+          <Route
+            path={ROUTES.ASSETMANAGER}
+            element={
+              <ProtectedRoute allowedRoles={["TAISAN"]}>
+                <AssetManager />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={ROUTES.ASSETHANDOVER}
+            element={
+              <ProtectedRoute allowedRoles={["BANGIAO_TAISAN"]}>
+                <AssetHandover />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={ROUTES.ASSETTRANSFER}
+            element={
+              <ProtectedRoute allowedRoles={["DIEUDONG_TAISAN"]}>
+                <AssetTransfer />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path={ROUTES.ASSETDEPRECIATION}
             element={<AssetDepreciation />}
           />
-          <Route path={ROUTES.TOOLMANAGER} element={<ToolManager />} />
-          <Route path={ROUTES.TOOLTRANSFER} element={<ToolTransfer />} />
-          <Route path={ROUTES.TOOLHANDOVER} element={<ToolHandover />} />
-          <Route path={ROUTES.REPORT} element={<Report />} />
+          <Route
+            path={ROUTES.TOOLMANAGER}
+            element={
+              <ProtectedRoute allowedRoles={["CCDCVT"]}>
+                <ToolManager />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={ROUTES.TOOLTRANSFER}
+            element={
+              <ProtectedRoute allowedRoles={["DIEUDONG_CCDC"]}>
+                <ToolTransfer />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={ROUTES.TOOLHANDOVER}
+            element={
+              <ProtectedRoute allowedRoles={["BANGIAO_CCDC"]}>
+                <ToolHandover />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={ROUTES.REPORT}
+            element={
+              <ProtectedRoute allowedRoles={["BAOCAO"]}>
+                <Report />
+              </ProtectedRoute>
+            }
+          />
           <Route path={ROUTES.ACCOUNT} element={<Account />} />
         </Route>
+        <Route path="*" element={<Navigate to={ROUTES.NOT_FOUND} replace />} />
       </Routes>
     </BrowserRouter>
   );

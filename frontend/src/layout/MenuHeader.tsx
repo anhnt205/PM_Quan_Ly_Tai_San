@@ -102,9 +102,14 @@ export default function Menuheader() {
   const { user } = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const permissions = user?.role?.map((r: any) => r.permissionCode) || [];
+  const hasPermission = (code?: string) => {
+    if (!code) return true; // menu không yêu cầu quyền
+    return permissions.includes(code);
+  };
 
   const [anchorElSetting, setAnchorElSetting] = useState<null | HTMLElement>(
-    null
+    null,
   );
   const [openExpirationDialog, setOpenExpirationDialog] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -127,14 +132,14 @@ export default function Menuheader() {
 
   const handleConfirmExpiration = (
     expirationDays: number,
-    warningDays: number
+    warningDays: number,
   ) => {
     // TODO: Gọi API lưu cài đặt ở đây
     console.log(
       "Expiration days:",
       expirationDays,
       "Warning days:",
-      warningDays
+      warningDays,
     );
     setOpenSnackbar(true);
   };
@@ -152,10 +157,14 @@ export default function Menuheader() {
       icon: <ArrowRight color="primary" />,
       path: "#",
       subMenu: [
-        { text: "Quản lý nhân viên", path: ROUTES.STAFF },
-        { text: "Quản lý phòng ban", path: ROUTES.DEPARTMENT },
+        { text: "Quản lý nhân viên", path: ROUTES.STAFF, code: "NHANVIEN" },
+        {
+          text: "Quản lý phòng ban",
+          path: ROUTES.DEPARTMENT,
+          code: "PHONGBAN",
+        },
         { text: "Quản lý chức vụ", path: ROUTES.POSITION },
-        { text: "Quản lý dự án", path: ROUTES.PROJECT },
+        { text: "Quản lý dự án", path: ROUTES.PROJECT, code: "DUAN" },
         { text: "Quản lý nguồn vốn", path: ROUTES.CAPITALSOURCE },
         { text: "Loại tài sản", path: ROUTES.TYPEASSET },
         { text: "Nhóm ccdc", path: ROUTES.TOOLGROUP },
@@ -163,19 +172,22 @@ export default function Menuheader() {
         { text: "Đơn vị tính", path: ROUTES.UNIT },
         { text: "Lý do tăng", path: ROUTES.REASONINCREASE },
         { text: "Hiện trạng", path: ROUTES.CURRENTSTATUS },
-      ],
+      ].filter((sub) => hasPermission(sub.code)),
     },
     {
       text: "Quản lý tài sản",
       path: ROUTES.ASSETMANAGER,
+      code: "TAISAN",
     },
     {
       text: "Quản lý CCDC-Vật tư",
       path: ROUTES.TOOLMANAGER,
+      code: "CCDCVT",
     },
     {
       text: "Điều động tài sản",
       path: "/",
+      code: "DIEUDONG_TAISAN",
       subMenu: [
         { text: "Cấp phát tài sản", path: `${ROUTES.ASSETTRANSFER}?type=1` },
         { text: "Điều chuyển tài sản", path: `${ROUTES.ASSETTRANSFER}?type=2` },
@@ -185,6 +197,7 @@ export default function Menuheader() {
     {
       text: "Điều động CCDC - vật tư",
       path: "/",
+      code: "DIEUDONG_CCDC",
       subMenu: [
         {
           text: "Cấp phát CCDC - vật tư",
@@ -203,14 +216,17 @@ export default function Menuheader() {
     {
       text: "Bàn giao tài sản",
       path: "/ban_giao_tai_san",
+      code: "BANGIAO_TAISAN",
     },
     {
       text: "Bàn giao CCDC-Vật tư",
       path: ROUTES.TOOLHANDOVER,
+      code: "BANGIAO_CCDC",
     },
     {
       text: "Báo cáo",
       path: "/",
+      code: "BAOCAO",
       subMenu: [
         { text: "Báo cáo S22-DN", path: `${ROUTES.REPORT}?type=1` },
         { text: "Biên bản kiểm kê", path: `${ROUTES.REPORT}?type=2` },
@@ -222,7 +238,17 @@ export default function Menuheader() {
         { text: "Mẫu số-21", path: `${ROUTES.REPORT}?type=5` },
       ],
     },
-  ].filter(Boolean);
+  ].filter((item) => {
+    // 1. Kiểm tra quyền của menu chính
+    const canSeeMenu = hasPermission(item.code);
+
+    // 2. Nếu menu chính có subMenu, chỉ hiện menu chính nếu có ít nhất 1 subMenu bên trong
+    if (item.subMenu) {
+      return canSeeMenu && item.subMenu.length > 0;
+    }
+
+    return canSeeMenu;
+  });
 
   return (
     <Box

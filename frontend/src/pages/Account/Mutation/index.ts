@@ -24,7 +24,7 @@ export const useAccountMutation = (
   });
 
   const { data: accountPage, isLoading: loadingAccount } = useQuery({
-    queryKey: [mainKey, page, pageSize, searchValue],
+    queryKey: [mainKey, page, pageSize, searchValue, staffs],
     queryFn: async () => {
       const res = await api.get("/taikhoan/paged", {
         params: {
@@ -33,16 +33,7 @@ export const useAccountMutation = (
           search: searchValue,
         },
       });
-
-      const mappedItems = res.data.items.map((acc: any) => {
-        const staff = staffs.find((s: any) => s.id === acc.tenDangNhap);
-        return {
-          ...acc,
-          tenPhongBan: staff ? staff.tenPhongBan : "",
-        };
-      });
-
-      return { ...res.data, items: mappedItems };
+      return res.data;
     },
     enabled: !!staffs,
   });

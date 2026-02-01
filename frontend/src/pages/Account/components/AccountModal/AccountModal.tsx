@@ -34,6 +34,10 @@ export default function AccountModal({ open, onClose }: Props) {
   const [selectedStaff, setSelectedStaff] = useState<any>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 20,
+  });
 
   const currentUser = useSelector((state: any) => state.user.user);
 
@@ -45,13 +49,17 @@ export default function AccountModal({ open, onClose }: Props) {
     currentUser?.taiKhoan?.idCongTy,
   );
   const staffWithStatus = useMemo(() => {
-    return staffs.map((staff: any) => {
-      const hasAccount = accountPage?.items?.some(
-        (acc: any) => acc.tenDangNhap === staff.id,
-      );
-      return { ...staff, hasAccount };
-    });
-  }, [staffs, accountPage]);
+    return staffs
+      .filter((i: any) =>
+        i.hoTen.toLowerCase().includes(searchValue.toLowerCase()),
+      )
+      .map((staff: any) => {
+        const hasAccount = accountPage?.items?.some(
+          (acc: any) => acc.tenDangNhap === staff.id,
+        );
+        return { ...staff, hasAccount };
+      });
+  }, [staffs, accountPage, searchValue]);
 
   const formik = useFormik({
     initialValues: {
@@ -221,6 +229,8 @@ export default function AccountModal({ open, onClose }: Props) {
               setSearchValue={setSearchValue}
               paginationMode="client"
               checkboxSelection={false}
+              paginationModel={paginationModel}
+              onPaginationModelChange={setPaginationModel}
             />
           </Box>
         </Slide>

@@ -1,5 +1,6 @@
 export const ROUTES = {
   LOGIN: "/login",
+  NOT_FOUND: "/not_found",
   MAIN: "/",
   STAFF: "/nhan_vien",
   DEPARTMENT: "/phong_ban",
