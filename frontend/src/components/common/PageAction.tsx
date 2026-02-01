@@ -15,6 +15,7 @@ interface Props {
   onNewClick: () => void;
   onExport?: () => void; // Thêm prop xuất file
   onImport?: (file: File) => void; // Thêm prop nhập file
+  showExcel?: boolean;
 }
 
 export default function PageAction({
@@ -22,6 +23,7 @@ export default function PageAction({
   onNewClick,
   onExport,
   onImport,
+  showExcel = false,
 }: Props) {
   const [anchorElExcel, setAnchorElExcel] = useState<null | HTMLElement>(null);
 
@@ -65,9 +67,11 @@ export default function PageAction({
       <NewButton onClick={onNewClick} />
       <Typography>{title}</Typography>
 
-      <IconButton onClick={handleOpenElExcel}>
-        <Settings color="success" />
-      </IconButton>
+      {showExcel && (
+        <IconButton onClick={handleOpenElExcel}>
+          <Settings color="success" />
+        </IconButton>
+      )}
 
       {/* Input file ẩn để phục vụ Import */}
       <input

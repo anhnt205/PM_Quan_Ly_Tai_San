@@ -134,6 +134,7 @@ export default function ToolType() {
         }}
         onExport={() => exportMutation.mutate(toolTypes)}
         onImport={handleImport}
+        showExcel={true}
       />
 
       <ImportErrorDialog

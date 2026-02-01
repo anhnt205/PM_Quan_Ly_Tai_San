@@ -506,7 +506,7 @@ export const useToolHandoverMutation = (
     handleSignatureList,
     allUnits,
   };
-};;
+};
 
 // lenh dieu dong ccdc
 export const useToolTransferPageQuery = ({
@@ -519,7 +519,7 @@ export const useToolTransferPageQuery = ({
   const idCongTy = "ct001";
 
   return useQuery({
-    queryKey: ["toolTransferPage", idCongTy, page, pageSize],
+    queryKey: ["toolTransferPage", idCongTy, page, pageSize, currentType],
     queryFn: () =>
       api
         .get("/dieudongccdcvattu/paged", {

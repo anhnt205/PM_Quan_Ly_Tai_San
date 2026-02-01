@@ -133,6 +133,7 @@ export default function Unit() {
         }}
         onExport={() => exportMutation.mutate(allUnits)}
         onImport={handleImport}
+        showExcel={true}
       />
 
       <ImportErrorDialog

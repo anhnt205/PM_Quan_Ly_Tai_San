@@ -117,7 +117,7 @@ export default function ToolHandover() {
     useToolTransferPageQuery({
       page: paginationModel.page,
       pageSize: paginationModel.pageSize,
-      currentype: currentType ? Number(currentType) : undefined,
+      currentType: currentType ? Number(currentType) : undefined,
     });
 
   const { data: staffs = [] } = useStaffsPageQuery();

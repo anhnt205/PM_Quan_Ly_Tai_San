@@ -155,6 +155,7 @@ export default function ToolGroup() {
         }}
         onExport={() => exportMutation.mutate(allData)}
         onImport={handleImport}
+        showExcel={true}
       />
       <ImportErrorDialog
         open={showErrorDialog}

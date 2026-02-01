@@ -162,6 +162,7 @@ export default function Account() {
           }
           setShowAccountModal(true);
         }}
+        showExcel={true}
       />
 
       <Box

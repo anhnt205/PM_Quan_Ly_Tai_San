@@ -120,6 +120,7 @@ export default function Department() {
         }}
         onExport={() => exportMutation.mutate(allDepartments)}
         onImport={(file) => importExcelMutation.mutate(file)}
+        showExcel={true}
       />
       <Box p={2}>
         <Dialog

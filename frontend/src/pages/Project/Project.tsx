@@ -143,6 +143,7 @@ export default function Project() {
         }}
         onExport={() => exportMutation.mutate(allProjects)}
         onImport={(file) => importExcelMutation.mutate(file)}
+        showExcel={true}
       />
       <Box p={2}>
         <Dialog

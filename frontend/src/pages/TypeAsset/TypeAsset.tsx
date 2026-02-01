@@ -42,7 +42,7 @@ export default function TypeAsset() {
   } = useTypeAssetMutation(
     paginationModel.page,
     paginationModel.pageSize,
-    searchValue
+    searchValue,
   );
 
   const handleImport = (file: File) => {
@@ -133,6 +133,7 @@ export default function TypeAsset() {
         }}
         onExport={() => exportMutation.mutate(allTypeAssets)}
         onImport={handleImport}
+        showExcel={true}
       />
       <Box p={2}>
         <ImportErrorDialog

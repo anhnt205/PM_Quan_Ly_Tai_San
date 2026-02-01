@@ -214,6 +214,7 @@ export default function Position() {
         }}
         onExport={() => exportMutation.mutate(allPositions)}
         onImport={(file) => importExcelMutation.mutate(file)}
+        showExcel={true}
       />
       <Box p={2}>
         <Dialog

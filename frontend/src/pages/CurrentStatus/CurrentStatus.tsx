@@ -126,6 +126,7 @@ export default function CurrentStatus() {
         }}
         onExport={() => exportMutation.mutate(allCurrentStatus)}
         onImport={handleImport}
+        showExcel={true}
       />
 
       <ImportErrorDialog

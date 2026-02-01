@@ -41,7 +41,7 @@ export default function CapitalSource() {
   } = useCapitalSourceMutation(
     paginationModel.page,
     paginationModel.pageSize,
-    searchValue
+    searchValue,
   );
 
   const handleRowClick = (params: GridRowParams) => {
@@ -164,6 +164,7 @@ export default function CapitalSource() {
         }}
         onExport={() => exportMutation.mutate(allData)}
         onImport={(file) => importExcelMutation.mutate(file)}
+        showExcel={true}
       />
       <Box p={2}>
         <Dialog

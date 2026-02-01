@@ -44,7 +44,7 @@ export default function ToolManager() {
     (messages) => {
       setImportErrors(messages);
       setOpenErrorModal(true);
-    }
+    },
   );
   const { allDepartments } = useDepartmentMutation();
   const { toolTypes } = useToolTypeMutation();
@@ -96,6 +96,7 @@ export default function ToolManager() {
         }}
         onExport={() => exportExcelMutation.mutate()}
         onImport={(file) => importExcelMutation.mutate(file)}
+        showExcel={true}
       />
       <Box p={2}>
         {showForm && (

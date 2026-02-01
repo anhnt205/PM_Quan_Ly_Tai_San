@@ -146,6 +146,7 @@ export default function ReasonIncrease() {
         }}
         onExport={() => exportMutation.mutate(allReasonIncreases)}
         onImport={handleImport}
+        showExcel={true}
       />
 
       <ImportErrorDialog

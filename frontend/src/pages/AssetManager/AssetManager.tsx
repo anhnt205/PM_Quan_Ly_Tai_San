@@ -65,7 +65,7 @@ export default function AssetManager() {
     (messages) => {
       setImportErrors(messages); // Lưu mảng lỗi vào state
       setOpenErrorModal(true); // Mở Modal MUI hiển thị danh sách lỗi
-    }
+    },
   );
   const { allDepartments } = useDepartmentMutation();
   const { allCurrentStatus } = useCurrentStatusMutation();
@@ -94,7 +94,7 @@ export default function AssetManager() {
       updateMutation.mutate(values);
       if (values.taiSanConList.some((item: any) => item.isInsert)) {
         const newChildAssets = values.taiSanConList.filter(
-          (item: any) => item.isInsert
+          (item: any) => item.isInsert,
         );
         createChildAssetBulkMutation.mutate(newChildAssets);
       } else if (values.taiSanConList.some((item: any) => item.isDeleted)) {
@@ -297,6 +297,7 @@ export default function AssetManager() {
         }}
         onExport={() => exportAssetMutation.mutate()}
         onImport={(file) => importAssetMutation.mutate(file)}
+        showExcel={true}
       />
       <Box p={2}>
         {showForm && (

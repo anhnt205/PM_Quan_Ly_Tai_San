@@ -44,7 +44,7 @@ export default function Staff() {
   } = useStaffMutation(
     paginationModel.page,
     paginationModel.pageSize,
-    searchValue
+    searchValue,
   );
 
   const handleRowClick = (params: GridRowParams) => {
@@ -77,7 +77,7 @@ export default function Staff() {
         } else {
           // Nếu không có mảng lỗi cụ thể, hiện alert lỗi chung như cũ
           showErrorAlert(
-            error.response?.data?.message || "Lỗi khi nhập dữ liệu"
+            error.response?.data?.message || "Lỗi khi nhập dữ liệu",
           );
         }
       },
@@ -218,6 +218,7 @@ export default function Staff() {
         }}
         onExport={() => exportMutation.mutate()}
         onImport={handleImport}
+        showExcel={true}
       />
       <Box p={2}>
         <Dialog
