@@ -65,7 +65,11 @@ export default function BienBanDialog({
 
   // 1. Cập nhật useEffect lấy danh sách chữ ký từ API
   const fetchSignatures = async () => {
-    if (toolHandover && handleSignatureList && currentIndex) {
+    if (
+      toolHandover.length > 0 &&
+      handleSignatureList &&
+      toolHandover[currentIndex]
+    ) {
       try {
         const data = await handleSignatureList(toolHandover[currentIndex].id);
         setSignatures(data);

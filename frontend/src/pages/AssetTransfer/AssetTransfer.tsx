@@ -54,6 +54,7 @@ export default function AssetTransfer() {
   const [showSignerSidebar, setShowSignerSidebar] = useState(true);
   const [showBienBanDialog, setShowBienBanDialog] = useState(false);
   const [readOnly, setReadOnly] = useState(false);
+  const [assetHandover, setAssetHandover] = useState<AssetHandoverData[]>([]);
 
   const [searchParams] = useSearchParams();
   const type = searchParams.get("type");
@@ -152,6 +153,7 @@ export default function AssetTransfer() {
     setShowForm(false);
     setShowSidebar(false);
     setReadOnly(false);
+    setAssetHandover([]);
   };
 
   const handleSend = (items: any[]) => {
@@ -189,12 +191,9 @@ export default function AssetTransfer() {
     setShowSignerSidebar(true); // Hiện sidebar khi ký
   };
 
-  const [assetHandover, setAssetHandover] = useState<AssetHandoverData | null>(
-    null,
-  );
   const handleViewBienBan = async (id: string) => {
     const result: any[] = await getAssetHandoverMutation.mutateAsync(id);
-    setAssetHandover(result[0]);
+    setAssetHandover(result);
     setShowBienBanDialog(true);
   };
 

@@ -15,19 +15,17 @@ import {
 } from "@mui/icons-material";
 import React, { useState, useEffect, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";
-import "../../../assets/fonts/times_new_roman-normal";
-import "../../../assets/fonts/times_new_roman-bold";
-import { AssetHandoverData } from "../../AssetHandover/types";
-import { SignaturesData } from "../types";
 import { findById, formatted } from "../../../utils/helpers";
 import { useStaffMutation } from "../../Staff/Mutation";
 import { useDepartmentMutation } from "../../Department/Mutation";
 import { usePositionMutation } from "../../Position/Mutation";
+import { useUnitMutation } from "../../Unit/Mutation";
+import { ToolHandoverData } from "../../ToolHandover/types";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { useUnitMutation } from "../../Unit/Mutation";
-import dayjs from "dayjs";
 import { renderDigitalSignatureToImage } from "../../AssetHandover/components/SignDocumentForm";
+import dayjs from "dayjs";
+import { SignaturesData } from "../types";
 
 // Config Worker
 if (typeof window !== "undefined") {
@@ -37,7 +35,7 @@ if (typeof window !== "undefined") {
 interface BienBanDialogProps {
   open: boolean;
   onClose: () => void;
-  assetHandover?: AssetHandoverData | null;
+  assetHandover: any[];
   handleSignatureList?: (idTaiLieu: string) => Promise<any>;
 }
 
@@ -47,29 +45,34 @@ export default function BienBanDialog({
   assetHandover,
   handleSignatureList,
 }: BienBanDialogProps) {
-  const [pdfDoc, setPdfDoc] = useState<any>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string>("");
-  const canvasRef = useRef<HTMLCanvasElement>(null); // Ref trỏ thẳng vào thẻ canvas
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const totalPages = assetHandover.length;
+  const [pdfUrl, setPdfUrl] = useState<string>("");
+  const [loading, setLoading] = useState(true);
   const [signatures, setSignatures] = useState<SignaturesData[]>([]);
   const [digitalSignatureMap, setDigitalSignatureMap] = useState<
     Record<string, string>
   >({});
+  const [displaySize, setDisplaySize] = useState<
+    {
+      width: number;
+      height: number;
+    }[]
+  >([]);
+  const [pages, setPages] = useState<HTMLCanvasElement[]>([]);
 
   // 1. Cập nhật useEffect lấy danh sách chữ ký từ API
   const fetchSignatures = async () => {
-    if (assetHandover && handleSignatureList) {
+    if (
+      assetHandover.length > 0 &&
+      handleSignatureList &&
+      assetHandover[currentIndex]
+    ) {
       try {
-        const data = await handleSignatureList(assetHandover.id);
-        const initialSigs = data.map((item: any) => ({
-          ...item,
-          isLocked: true,
-        }));
-        setSignatures(initialSigs);
+        const data = await handleSignatureList(assetHandover[currentIndex].id);
+        setSignatures(data);
       } catch (err) {
         console.error("Lỗi lấy danh sách chữ ký:", err);
       }
@@ -77,7 +80,7 @@ export default function BienBanDialog({
   };
   useEffect(() => {
     fetchSignatures();
-  }, [assetHandover, handleSignatureList]);
+  }, [assetHandover, handleSignatureList, currentIndex]);
 
   const staffs = useStaffMutation().allStaff;
   const departments = useDepartmentMutation().allDepartments;
@@ -99,7 +102,7 @@ export default function BienBanDialog({
     const phongBan = await findById(departments, nhanVien?.phongBanId ?? "");
     return phongBan?.isKho == true;
   };
-  const listSigneInfo = async (item?: AssetHandoverData | null) => {
+  const listSigneInfo = async (item?: ToolHandoverData) => {
     if (!item) return [];
 
     const result: any[] = [];
@@ -160,8 +163,10 @@ export default function BienBanDialog({
     return result;
   };
 
-  const generateBienBanPdf = async (): Promise<Uint8Array> => {
-    const listSigneInfos: any[] = await listSigneInfo(assetHandover);
+  const generateBienBanPdf = async (
+    handover: ToolHandoverData,
+  ): Promise<Uint8Array> => {
+    const listSigneInfos = await listSigneInfo(handover);
     const doc = new jsPDF("p", "mm", "a4");
 
     // Đảm bảo font times_new_roman đã được add trước đó
@@ -190,14 +195,14 @@ export default function BienBanDialog({
     doc.setFontSize(11);
 
     let y = 50;
-    const canCuText = `Căn cứ QĐ số: ${assetHandover?.soQuyetDinh ?? "........."} ${formatted(assetHandover?.ngayQuyetDinh ?? "")} của Giám đốc Công ty V/v điều động tài sản từ PX ${assetHandover?.tenDonViGiao ?? "...................."} đến PX ${assetHandover?.tenDonViNhan ?? "...................."}.`;
+    const canCuText = `Căn cứ QĐ số: ${handover?.soQuyetDinh ?? "........."} ${formatted(handover?.ngayQuyetDinh ?? "")} của Giám đốc Công ty V/v điều động tài sản từ PX ${handover?.tenDonViGiao ?? "...................."} đến PX ${handover?.tenDonViNhan ?? "...................."}.`;
 
     const splitCanCu = doc.splitTextToSize(canCuText, 170);
     doc.text(splitCanCu, 25, y);
 
     y += splitCanCu.length * 7;
     doc.text(
-      `Hôm nay, ${formatted(assetHandover?.ngayBanGiao ?? "")} tại ${assetHandover?.diaDiemQuyetDinh ?? "..........."}.`,
+      `Hôm nay, ${formatted(handover?.ngayBanGiao ?? "")} tại ${handover?.diaDiemQuyetDinh ?? "..........."}.`,
       25,
       y,
     );
@@ -235,14 +240,14 @@ export default function BienBanDialog({
 
     // ===== MÔ TẢ GIAO NHẬN =====
     y += 5;
-    const moTaGiaoNhan = `Tiến hành giao nhận tài sản từ phân xưởng ${assetHandover?.tenDonViGiao ?? "........"} giao cho phân xưởng ${assetHandover?.tenDonViNhan ?? "........"} cụ thể như sau:`;
+    const moTaGiaoNhan = `Tiến hành giao nhận tài sản từ phân xưởng ${handover?.tenDonViGiao ?? "........"} giao cho phân xưởng ${handover?.tenDonViNhan ?? "........"} cụ thể như sau:`;
     doc.text(doc.splitTextToSize(moTaGiaoNhan, 175), 20, y);
 
     // ===== TABLE =====
-    const tableData = (assetHandover?.chiTietBanGiaoTaiSan ?? []).map(
+    const tableData = (handover?.chiTietBanGiaoCCDCVatTu ?? []).map(
       (item: any, index: number) => [
         index + 1,
-        item.tenTaiSan ?? "",
+        item.tenCCDCVatTu || item.tenVatTu || "",
         item.kyHieu ?? "",
         item.moTa ?? "",
         findById(allUnits, item.donViTinh)?.tenDonVi ?? "",
@@ -257,7 +262,7 @@ export default function BienBanDialog({
       head: [
         [
           "STT",
-          "TÊN TÀI SẢN",
+          "Tên tài sản",
           "Mã hiệu, quy cách",
           "Nước sản xuất",
           "Đơn vị tính",
@@ -347,26 +352,31 @@ export default function BienBanDialog({
 
     return new Uint8Array(doc.output("arraybuffer"));
   };
-  useEffect(() => {
-    if (!open || !assetHandover) return;
 
+  // Lấy PDF từ backend
+  useEffect(() => {
     const preparePdf = async () => {
       try {
         setLoading(true);
         setErrorMessage("");
 
+        // Quan trọng: Xóa URL cũ trước khi tạo cái mới để tránh render đè
         if (pdfUrl) {
           URL.revokeObjectURL(pdfUrl);
-          setPdfUrl(null);
+          setPdfUrl("");
         }
 
-        const bytes = await generateBienBanPdf();
-        const blob = new Blob([bytes.buffer as ArrayBuffer], {
+        let finalBytes: Uint8Array;
+
+        // 👉 TRƯỜNG HỢP 2: KHÔNG CÓ DOCUMENT HOẶC previewDocument = false → DÙNG BẢNG KÊ
+        finalBytes = await generateBienBanPdf(assetHandover[currentIndex]);
+
+        // Chỉ thực hiện tạo Blob 1 lần duy nhất sau khi đã xác định được nguồn
+        const newBlob = new Blob([finalBytes.buffer as ArrayBuffer], {
           type: "application/pdf",
         });
-        const url = URL.createObjectURL(blob);
-
-        setPdfUrl(url);
+        const newUrl = URL.createObjectURL(newBlob);
+        setPdfUrl(newUrl);
       } catch (err) {
         console.error(err);
         setErrorMessage("Không thể khởi tạo tài liệu");
@@ -374,41 +384,84 @@ export default function BienBanDialog({
         setLoading(false);
       }
     };
+    if (assetHandover.length > 0) preparePdf();
 
-    preparePdf();
-
+    // Cleanup function để tránh rò rỉ bộ nhớ
     return () => {
       if (pdfUrl) URL.revokeObjectURL(pdfUrl);
     };
-  }, [open, assetHandover]);
-
-  // Render PDF
-  // --- Render PDF ---
+  }, [currentIndex, assetHandover]);
   useEffect(() => {
-    const loadPdf = async () => {
+    const renderPDF = async () => {
       try {
-        if (!pdfUrl) return;
-
         setLoading(true);
+        if (!pdfUrl) {
+          setLoading(false);
+          return;
+        }
+        console.log("Đang tải PDF từ URL:", pdfUrl);
+        const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
+        console.log("PDF tải thành công, số trang:", pdf.numPages);
+        const canvases: HTMLCanvasElement[] = [];
 
-        const loadingTask = pdfjsLib.getDocument(pdfUrl);
-        const pdf = await loadingTask.promise;
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const canvas = document.createElement("canvas");
+          const context = canvas.getContext("2d")!;
 
-        setPdfDoc(pdf);
-        setTotalPages(pdf.numPages);
-        setCurrentPage(1); // reset page khi load pdf mới
+          // Scale 1.5
+          const scale = 1.5;
+          const viewport = page.getViewport({ scale });
+
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+
+          // CSS width/height hiển thị
+          canvas.style.width = "100%";
+          canvas.style.height = "auto";
+          canvas.style.display = "block";
+          canvas.dataset.scale = scale.toString();
+
+          // Lưu số trang
+          canvas.dataset.page = pageNum.toString();
+
+          await page.render({
+            canvasContext: context,
+            viewport,
+          }).promise;
+
+          canvases.push(canvas);
+        }
+
+        setPages(canvases);
         setErrorMessage("");
-      } catch (err: any) {
-        console.error("Lỗi load PDF:", err);
-        setErrorMessage(`Lỗi đọc PDF: ${err.message}`);
-      } finally {
+        setLoading(false);
+      } catch (error: any) {
+        console.error("Lỗi render PDF:", error);
+        setErrorMessage(`Lỗi đọc PDF: ${error.message}`);
         setLoading(false);
       }
     };
 
-    loadPdf();
+    renderPDF();
   }, [pdfUrl]);
 
+  // Theo dõi kích thước hiển thị của các canvas pages
+  useEffect(() => {
+    if (pages.length === 0) return;
+
+    const observer = new ResizeObserver((entries) => {
+      // Cập nhật lại toàn bộ mảng size của các trang
+      const newSizes = entries.map((entry) => ({
+        width: entry.contentRect.width,
+        height: entry.contentRect.height,
+      }));
+      setDisplaySize(newSizes);
+    });
+
+    pages.forEach((canvas) => observer.observe(canvas));
+    return () => observer.disconnect();
+  }, [pages]);
   useEffect(() => {
     const renderDigitalSignatures = async () => {
       const newMap: Record<string, string> = {};
@@ -434,51 +487,19 @@ export default function BienBanDialog({
     renderDigitalSignatures();
   }, [signatures, staffs]);
 
-  const [displaySize, setDisplaySize] = useState({
-    width: 0,
-    height: 0,
-  });
-  // Render current page
-  useEffect(() => {
-    const renderPage = async () => {
-      if (!pdfDoc || !canvasRef.current) return;
-
-      try {
-        const page = await pdfDoc.getPage(currentPage);
-        const canvas = canvasRef.current;
-        const context = canvas.getContext("2d")!;
-
-        const scale = 1.5;
-        const viewport = page.getViewport({ scale });
-
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-
-        await page.render({ canvasContext: context, viewport }).promise;
-
-        // Cập nhật kích thước hiển thị thực tế để layer chữ ký khớp theo
-        const rect = canvas.getBoundingClientRect();
-        setDisplaySize({ width: rect.width, height: rect.height });
-      } catch (err) {
-        console.error("Lỗi render PDF:", err);
-      }
-    };
-
-    if (pdfDoc) renderPage();
-  }, [currentPage, pdfDoc]);
-
   const handlePrevPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
+    if (currentIndex > 0) setCurrentIndex((i) => i - 1);
   };
 
   const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+    if (currentIndex < totalPages - 1) setCurrentIndex((i) => i + 1);
   };
 
   return (
     <Dialog
       open={open}
       onClose={onClose}
+      maxWidth="sm"
       fullWidth
       PaperProps={{
         sx: {
@@ -486,8 +507,6 @@ export default function BienBanDialog({
           height: "90vh",
           display: "flex",
           flexDirection: "column",
-          maxWidth: "950px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
         },
       }}
     >
@@ -531,13 +550,23 @@ export default function BienBanDialog({
             >
               Danh sách biên bản bàn giao
             </Typography>
+            {/*<Typography
+              variant="caption"
+              sx={{
+                color: "#6b7280",
+                mt: 0.5,
+                display: "block",
+              }}
+            >
+              Tài liệu giao nhận tài sản
+            </Typography>*/}
           </Box>
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <IconButton
               onClick={handlePrevPage}
-              disabled={currentPage === 1}
+              disabled={currentIndex === 0}
               size="small"
               sx={{
                 color: "#ff8400ff",
@@ -565,12 +594,12 @@ export default function BienBanDialog({
                   fontSize: "14px",
                 }}
               >
-                {currentPage}/{totalPages}
+                {currentIndex + 1}/{totalPages}
               </Typography>
             </Box>
             <IconButton
               onClick={handleNextPage}
-              disabled={currentPage === totalPages}
+              disabled={currentIndex === totalPages - 1}
               size="small"
               sx={{
                 color: "#ff8400ff",
@@ -602,6 +631,8 @@ export default function BienBanDialog({
         sx={{
           flex: 1,
           display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
           justifyContent: "center",
           bgcolor: "#f5f5f5",
           p: 2,
@@ -610,63 +641,78 @@ export default function BienBanDialog({
       >
         {loading ? (
           <CircularProgress />
+        ) : errorMessage ? (
+          <Box sx={{ textAlign: "center" }}>
+            <Typography color="error" variant="body1" sx={{ mb: 1 }}>
+              Không thể tải file PDF
+            </Typography>
+            <Typography color="textSecondary" variant="caption">
+              Lỗi: {errorMessage}
+            </Typography>
+          </Box>
         ) : totalPages > 0 ? (
           <Box
-            ref={wrapperRef}
             sx={{
-              position: "relative", // Làm gốc tọa độ cho chữ ký
-              display: "inline-block",
               bgcolor: "white",
               boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-              lineHeight: 0, // Khử khoảng trắng thừa dưới canvas
+              borderRadius: "4px",
+              p: 0,
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "flex-start",
+              overflow: "auto",
             }}
           >
-            {/* LAYER 1: PDF CANVAS (Do React quản lý, không bị innerHTML xóa) */}
-            <canvas
-              ref={canvasRef}
-              style={{
-                width: "100%",
-                height: "auto",
-                display: "block",
-              }}
-            />
+            {pages.map((canvas, index) => (
+              <Box key={index} sx={{ position: "relative", mb: 3 }}>
+                {/* Render Canvas */}
+                <div
+                  ref={(el) => {
+                    if (el && !el.hasChildNodes()) el.appendChild(canvas);
+                  }}
+                />
 
-            {/* LAYER 2: SIGNATURES (Nằm đè lên trên) */}
-            {displaySize.width > 0 &&
-              signatures.map((sig) => {
-                const imgSrc =
-                  sig.loaiKy === 3
-                    ? digitalSignatureMap[sig.id]
-                    : `${process.env.REACT_APP_URL_UPLOAD}/${sig.chuKyNhay || sig.chuKyThuong}`;
+                {/* LAYER 2: SIGNATURES (Nằm đè lên trên) */}
+                {signatures.map((sig) => {
+                  const imgSrc =
+                    sig.loaiKy === 3
+                      ? digitalSignatureMap[sig.id]
+                      : `${process.env.REACT_APP_URL_UPLOAD}/${sig.chuKyNhay || sig.chuKyThuong}`;
 
-                if (!imgSrc) return null;
-
-                return (
-                  <Box
-                    key={sig.id}
-                    sx={{
-                      position: "absolute",
-                      // ⭐ Dùng % để ổn định tuyệt đối vị trí
-                      left: `${sig.x * displaySize.width}px`,
-                      top: `${sig.y * displaySize.height}px`,
-                      width: `${sig.width * (sig.scale || 1)}px`,
-                      pointerEvents: "none",
-                      zIndex: 10,
-                    }}
-                  >
-                    <img
-                      src={imgSrc}
-                      style={{
-                        width: "100%",
-                        height: "auto",
-                        objectFit: "contain",
+                  if (!imgSrc) return null;
+                  const currentCanvas = pages[index];
+                  const currentDisplay = displaySize[index];
+                  if (!currentCanvas || !currentDisplay) return null;
+                  const scale = currentDisplay.width / currentCanvas.width;
+                  return (
+                    <Box
+                      key={sig.id}
+                      sx={{
+                        position: "absolute",
+                        left: `${sig.x * currentDisplay.width}px`,
+                        top: `${sig.y * currentDisplay.height}px`,
+                        width: `${sig.width * (sig.scale || 1) * scale}px`,
+                        pointerEvents: "none",
+                        zIndex: 10,
                       }}
-                      alt="signature"
-                      onError={(e) => console.error("Lỗi load ảnh:", imgSrc)}
-                    />
-                  </Box>
-                );
-              })}
+                    >
+                      <img
+                        src={imgSrc}
+                        style={{
+                          width: "100%",
+                          height: "auto",
+                          objectFit: "contain",
+                        }}
+                        alt="signature"
+                        onError={(e) => console.error("Lỗi load ảnh:", imgSrc)}
+                      />
+                    </Box>
+                  );
+                })}
+              </Box>
+            ))}
           </Box>
         ) : (
           <Typography color="error">Không thể tải file PDF</Typography>
