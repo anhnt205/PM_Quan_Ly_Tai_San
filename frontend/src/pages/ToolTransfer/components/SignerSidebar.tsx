@@ -99,9 +99,10 @@ const getHandoverNodes = (
     });
 
     // Cấp 2: Các phiếu bàn giao con (Lọc từ API mới dựa trên idCCDCVatTu)
-    const subItems = handoverDetails.filter(
-      (detail) => detail.idCCDCVatTu === tool.idCCDCVatTu,
-    );
+    const subItems = handoverDetails.filter((detail) => {
+      console.log("So sánh:", detail.idCCDCVatTu, "với", tool.idCCDCVatTu);
+      return String(detail.idCCDCVatTu) === String(tool.idCCDCVatTu);
+    });
 
     subItems.forEach((sub) => {
       nodes.push({

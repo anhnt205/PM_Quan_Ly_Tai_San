@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Box, Grid, IconButton, Tooltip, LinearProgress } from "@mui/material";
+import { Box, Grid, IconButton, Tooltip } from "@mui/material";
 
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import ToolTransferForm from "./components/ToolTransferForm";
@@ -79,6 +79,8 @@ export default function ToolTransfer() {
     status ? Number(status) : undefined,
   );
 
+  console.log("AAAAAAAAAAAAAAAAAAAAAAAAA", handoverDetails);
+
   const statusOptions: FilterOption[] = [
     {
       label: "Tất cả",
@@ -137,12 +139,21 @@ export default function ToolTransfer() {
   const handleSend = (items: any[]) => {
     handleSendToSigner(items, updateManyMutation.mutateAsync, handleClose);
   };
-  const handleRowClick = (params: GridRowParams) => {
+
+  const handleRowClick = async (params: GridRowParams) => {
     const data = params.row as ToolTransferData;
     setSelectedRow(data);
-    setShowForm(true);
     setReadOnly(true);
-    setShowSidebar(true);
+
+    try {
+      await getToolHandoverMutation.mutateAsync(data.id);
+
+      setShowSidebar(true);
+      setShowForm(true);
+    } catch (error) {
+      console.error("Lỗi khi lấy chi tiết bàn giao:", error);
+      setShowSidebar(true);
+    }
   };
 
   const handleSave = async (values: any) => {
@@ -514,7 +525,6 @@ export default function ToolTransfer() {
                   flexDirection: "column",
                   bgcolor: "#fafafa",
                   height: "100%",
-                  // 3. Sidebar cũng cần scroll riêng nếu danh sách người ký quá dài
                   overflowY: "auto",
                 }}
               >

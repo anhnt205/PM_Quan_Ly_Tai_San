@@ -11,9 +11,11 @@ import {
   Snackbar,
   Alert,
   CircularProgress,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { CancelOutlined, Close, PictureAsPdf } from "@mui/icons-material";
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import DraggableSignature from "./DraggableSignature";
 import { useAssetHandoverMutation } from "../Mutation";
@@ -33,7 +35,6 @@ import { canUserSign } from "../config";
 import axios from "axios";
 import { ConfirmPin } from "../../AssetTransfer/components/ConfirmPin";
 
-// --- Config Worker ---
 if (typeof window !== "undefined") {
   pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 }
@@ -85,6 +86,14 @@ export default function SignDocumentForm({
   >({});
   const [openConfirmPin, setOpenConfirmPin] = useState(false);
   const [sourcePdfBytes, setSourcePdfBytes] = useState<Uint8Array | null>(null);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
+  const [sidebarHeight, setSidebarHeight] = useState(250);
+  const isDraggingSidebar = useRef(false);
+  const startYSidebar = useRef(0);
+  const startHeightSidebar = useRef(0);
 
   // login ký
   const handleLogin = async () => {
@@ -810,6 +819,40 @@ export default function SignDocumentForm({
     }
   };
 
+  const handleTouchStartSidebar = (e: React.TouchEvent) => {
+    if (!isMobile) return;
+    isDraggingSidebar.current = true;
+    startYSidebar.current = e.touches[0].clientY;
+    startHeightSidebar.current = sidebarHeight;
+  };
+
+  const handleTouchMoveSidebar = (e: TouchEvent) => {
+    if (!isDraggingSidebar.current || !isMobile) return;
+    const deltaY = startYSidebar.current - e.touches[0].clientY;
+    const newHeight = Math.min(
+      Math.max(startHeightSidebar.current + deltaY, 100),
+      window.innerHeight * 0.8,
+    );
+    setSidebarHeight(newHeight);
+  };
+
+  const handleTouchEndSidebar = () => {
+    isDraggingSidebar.current = false;
+  };
+
+  useEffect(() => {
+    if (isMobile) {
+      window.addEventListener("touchmove", handleTouchMoveSidebar, {
+        passive: false,
+      });
+      window.addEventListener("touchend", handleTouchEndSidebar);
+    }
+    return () => {
+      window.removeEventListener("touchmove", handleTouchMoveSidebar);
+      window.removeEventListener("touchend", handleTouchEndSidebar);
+    };
+  }, [isMobile]);
+
   return (
     <Box
       sx={{
@@ -867,17 +910,56 @@ export default function SignDocumentForm({
       )}
 
       {/* --- Body --- */}
-      <Box sx={{ display: "flex", flex: 1, overflow: "hidden" }}>
+      <Box
+        sx={{
+          display: "flex",
+          flex: 1,
+          overflow: "hidden",
+          flexDirection: isMobile ? "column-reverse" : "row",
+        }}
+      >
         {/* --- Left Sidebar (Công cụ) --- */}
         {showSignerSidebar && (
           <Paper
+            elevation={6}
             sx={{
-              width: 320,
+              width: isMobile ? "100%" : 320,
               p: 2,
+              borderRight: isMobile ? "none" : "1px solid #e0e0e0",
+              borderTop: isMobile ? "2px solid #ddd" : "none",
+              position: isMobile ? "fixed" : "relative",
+              bottom: isMobile ? 0 : "auto",
+              left: 0,
+              zIndex: 1200,
+              height: isMobile ? `${sidebarHeight}px` : "100%",
+              maxHeight: isMobile ? "80vh" : "100%",
               overflowY: "auto",
-              borderRight: "1px solid #ddd",
+              borderRadius: isMobile ? "24px 24px 0 0" : 0,
+              transition: isDraggingSidebar.current
+                ? "none"
+                : "height 0.3s ease",
+              display: "flex",
+              flexDirection: "column",
             }}
           >
+            {isMobile && (
+              <Box
+                onTouchStart={handleTouchStartSidebar}
+                sx={{
+                  width: "40px",
+                  height: "5px",
+                  bgcolor: "#ccc",
+                  borderRadius: "10px",
+                  margin: "0 auto 15px auto",
+                  cursor: "ns-resize",
+                  flexShrink: 0,
+                  p: 1, // Tăng vùng chạm cho dễ kéo
+                  boxSizing: "content-box",
+                  backgroundClip: "content-box",
+                }}
+              />
+            )}
+
             <Typography variant="h6" fontWeight="bold" mb={2}>
               Công cụ ký
             </Typography>
@@ -1046,7 +1128,11 @@ export default function SignDocumentForm({
           {loading ? (
             <CircularProgress />
           ) : (
-            <Box sx={{ position: "relative" }}>
+            <Box
+              sx={{
+                position: "relative",
+              }}
+            >
               {pages.map((canvas, index) => (
                 <Box key={index} sx={{ position: "relative", mb: 3 }}>
                   {/* Render Canvas */}
@@ -1056,7 +1142,7 @@ export default function SignDocumentForm({
                     }}
                   />
 
-                  {/* 👉 QUAN TRỌNG: Chỉ render chữ ký nếu đây là trang đầu tiên (index === 0) */}
+                  {/*  Chỉ render chữ ký nếu đây là trang đầu tiên (index === 0) */}
                   {index === 0 && signatures.length > 0 && (
                     <Box
                       sx={{
@@ -1071,7 +1157,7 @@ export default function SignDocumentForm({
                           height: 800 * (297 / 210),
                         };
 
-                        // GUARD CLAUSE: Nếu PDF chưa render xong width = 0, thì không render chữ ký để tránh NaN
+                        //  Nếu PDF chưa render xong width = 0, thì không render chữ ký để tránh NaN
                         if (displaySize.width === 0 || displaySize.height === 0)
                           return null;
                         const currentCanvas = pages[index];
@@ -1081,7 +1167,6 @@ export default function SignDocumentForm({
                           <DraggableSignature
                             key={sig.id}
                             id={sig.id}
-                            // Tính toán tọa độ pixel
                             initialX={sig.x * displaySize.width}
                             initialY={sig.y * displaySize.height}
                             width={sig.width * scale}

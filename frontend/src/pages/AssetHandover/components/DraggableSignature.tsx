@@ -31,7 +31,6 @@ export default function DraggableSignature({
   onDelete,
   isLocked = false,
 }: DraggableSignatureProps) {
-
   // 1. Đồng bộ state scale
   const [scale, setScale] = useState(initialScale);
   useEffect(() => {
