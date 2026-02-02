@@ -11,6 +11,8 @@ import {
   Snackbar,
   Alert,
   CircularProgress,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { CancelOutlined, Close, PictureAsPdf } from "@mui/icons-material";
 import React, { useState, useEffect, useRef } from "react";
@@ -69,6 +71,9 @@ export default function SignDocumentForm({
   // State quản lý danh sách chữ ký
   const [signatures, setSignatures] = useState<ToolSignature[]>([]);
   const [bangKeBytes, setBangKeBytes] = useState<Uint8Array | null>(null);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   // State quản lý Canvas và Loading
   const [pages, setPages] = useState<HTMLCanvasElement[]>([]);
@@ -782,11 +787,19 @@ export default function SignDocumentForm({
         {/* --- Left Sidebar (Công cụ) --- */}
         {showSignerSidebar && (
           <Paper
+            elevation={3}
             sx={{
-              width: 320,
+              width: isMobile ? "100%" : 320,
               p: 2,
+              borderRight: isMobile ? "none" : "1px solid #e0e0e0",
+              borderTop: isMobile ? "1px solid #e0e0e0" : "none",
+              position: isMobile ? "fixed" : "relative",
+              bottom: isMobile ? 0 : "auto",
+              left: 0,
+              zIndex: 1200,
+              maxHeight: isMobile ? "55vh" : "100%",
               overflowY: "auto",
-              borderRight: "1px solid #ddd",
+              borderRadius: isMobile ? "16px 16px 0 0" : 0,
             }}
           >
             <Typography variant="h6" fontWeight="bold" mb={2}>
@@ -798,31 +811,41 @@ export default function SignDocumentForm({
               onChange={(e) => setSignatureType(Number(e.target.value))}
             >
               {employee?.kyNhay && (
-                <Box
-                  display="flex"
-                  alignItems={"center"}
-                  justifyContent={"space-between"}
-                  sx={{ mb: 2 }}
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: 1.5,
+                    mb: 1,
+                    borderRadius: 2,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
                 >
                   <FormControlLabel
                     value={1}
                     control={<Radio />}
-                    label="Ký nháy"
+                    label={<Typography fontWeight={500}>Ký nháy</Typography>}
                   />
                   <img
                     src={`${process.env.REACT_APP_URL_UPLOAD}/${employee?.chuKyNhay}`}
-                    alt="sample"
-                    width={60}
-                    style={{ border: "1px solid #eee" }}
+                    width={56}
+                    style={{ borderRadius: 6 }}
                   />
-                </Box>
+                </Paper>
               )}
+
               {employee?.kyThuong && (
-                <Box
-                  display="flex"
-                  alignItems={"center"}
-                  justifyContent={"space-between"}
-                  sx={{ mb: 2 }}
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: 1.5,
+                    mb: 1,
+                    borderRadius: 2,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
                 >
                   <FormControlLabel
                     value={2}
@@ -835,87 +858,77 @@ export default function SignDocumentForm({
                     width={60}
                     style={{ border: "1px solid #eee" }}
                   />
-                </Box>
+                </Paper>
               )}
               {employee?.kySo && (
-                <Box sx={{ p: 1, border: "1px solid #ddd", borderRadius: 5 }}>
-                  <Typography fontWeight={600}>Chữ ký số</Typography>
-                  <Box sx={{ mb: 2 }}>
-                    {" "}
-                    <FormControlLabel
-                      value={3}
-                      control={<Radio />}
-                      label="Hiển thị mặc định"
-                    />
-                  </Box>
-                  <Box
-                    display="flex"
-                    alignItems={"center"}
-                    justifyContent={"space-between"}
-                    sx={{ mb: 2 }}
-                  >
-                    <FormControlLabel
-                      value={4}
-                      control={<Radio />}
-                      label="Hiển thị chữ kí thường"
-                    />
-                    <img
-                      src={`${process.env.REACT_APP_URL_UPLOAD}/${employee?.chuKyThuong}`}
-                      alt="chukythuong"
-                      width={60}
-                      style={{ border: "1px solid #eee" }}
-                    />
-                  </Box>
-                  <Box
-                    display="flex"
-                    alignItems={"center"}
-                    justifyContent={"space-between"}
-                    sx={{ mb: 2 }}
-                  >
-                    <FormControlLabel
-                      value={5}
-                      control={<Radio />}
-                      label="Hiển thị chữ kí nháy"
-                    />
-                    <img
-                      src={`${process.env.REACT_APP_URL_UPLOAD}/${employee?.chuKyNhay}`}
-                      alt="chukynhay"
-                      width={60}
-                      style={{ border: "1px solid #eee" }}
-                    />
-                  </Box>
-                </Box>
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: 2,
+                    borderRadius: 2,
+                    background: "linear-gradient(135deg,#ede9fe,#f5f3ff)",
+                    mb: 2,
+                  }}
+                >
+                  <Typography fontWeight={600} mb={1}>
+                    Chữ ký số
+                  </Typography>
+
+                  <FormControlLabel
+                    value={3}
+                    control={<Radio />}
+                    label="Hiển thị mặc định"
+                  />
+
+                  <Divider sx={{ my: 1 }} />
+
+                  <FormControlLabel
+                    value={4}
+                    control={<Radio />}
+                    label="Hiển thị chữ ký thường"
+                  />
+                  <FormControlLabel
+                    value={5}
+                    control={<Radio />}
+                    label="Hiển thị chữ ký nháy"
+                  />
+                </Paper>
               )}
             </RadioGroup>
             <Divider sx={{ my: 2 }} />
 
             <Button
-              variant="contained"
               fullWidth
+              size="large"
+              variant="contained"
               color="success"
+              startIcon={<Pencil />}
               onClick={handleSign}
-              sx={{ mb: 1, color: "white" }}
-              startIcon={<Pencil size={16} />}
+              sx={{ mb: 1, borderRadius: 2 }}
             >
-              Ký
+              Ký tài liệu
             </Button>
+
             <Button
-              variant="contained"
               fullWidth
+              size="large"
+              variant="contained"
               color="info"
+              startIcon={<Check />}
               onClick={handleConfirmSign}
-              sx={{ mb: 1, color: "white" }}
-              startIcon={<Check size={16} />}
+              sx={{ mb: 1, borderRadius: 2 }}
             >
               Xác nhận
             </Button>
+
             <Button
-              variant="outlined"
               fullWidth
+              size="large"
+              variant="outlined"
               color="error"
+              startIcon={<CancelOutlined />}
               onClick={onCancel}
-              sx={{ mb: 1, color: "red" }}
-              startIcon={<CancelOutlined sx={{ fontSize: 16 }} />}
+              sx={{ borderRadius: 2 }}
             >
               Hủy
             </Button>
@@ -981,7 +994,7 @@ export default function SignDocumentForm({
                             // Tính toán tọa độ pixel
                             initialX={sig.x * displaySize.width}
                             initialY={sig.y * displaySize.height}
-                            width={sig.width*scale}
+                            width={sig.width * scale}
                             initialScale={sig.scale || 1}
                             imgSrc={
                               sig.loaiKy === 3
