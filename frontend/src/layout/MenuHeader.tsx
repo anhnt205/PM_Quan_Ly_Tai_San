@@ -98,7 +98,9 @@ const NavMenuItem = ({ item }: { item: any }) => {
               sx={{ fontSize: "14px", display: "flex", gap: 2 }}
             >
               {subItem.text}
-              <ShowCountInSubMenu count={subItem.count} />
+              {subItem.count > 0 && (
+                <ShowCountInSubMenu count={subItem.count} />
+              )}
             </MenuItem>
           ))}
         </Menu>
