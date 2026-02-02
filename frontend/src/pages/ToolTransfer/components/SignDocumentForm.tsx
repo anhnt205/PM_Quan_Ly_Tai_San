@@ -971,7 +971,9 @@ export default function SignDocumentForm({
                         // GUARD CLAUSE: Nếu PDF chưa render xong width = 0, thì không render chữ ký để tránh NaN
                         if (displaySize.width === 0 || displaySize.height === 0)
                           return null;
-
+                        const currentCanvas = pages[index];
+                        if (!currentCanvas || !displaySize) return null;
+                        const scale = displaySize.width / currentCanvas.width;
                         return (
                           <DraggableSignature
                             key={sig.id}
@@ -979,7 +981,7 @@ export default function SignDocumentForm({
                             // Tính toán tọa độ pixel
                             initialX={sig.x * displaySize.width}
                             initialY={sig.y * displaySize.height}
-                            width={sig.width}
+                            width={sig.width*scale}
                             initialScale={sig.scale || 1}
                             imgSrc={
                               sig.loaiKy === 3

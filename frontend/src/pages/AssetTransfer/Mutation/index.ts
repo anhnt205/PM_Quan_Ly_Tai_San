@@ -629,3 +629,21 @@ export const useAssetTranferMutation = (
     getAssetHandoverMutation,
   };
 };
+
+export const useAssetTransferAllQuery = () => {
+  const idCongTy = "ct001";
+
+  return useQuery({
+    queryKey: ["assetTranferAll"], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/dieudongtaisan/paged", {
+        params: {
+          page: 0,
+          size: 99999,
+          idcongty: idCongTy,
+        },
+      });
+      return res.data.items;
+    },
+  });
+};

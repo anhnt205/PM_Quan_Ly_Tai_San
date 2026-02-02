@@ -11,6 +11,7 @@ import {
 import { RootState } from "../../../redux/store";
 import { useSelector } from "react-redux";
 import dayjs from "dayjs";
+import { ContactlessOutlined } from "@mui/icons-material";
 
 export const useAssetHandoverMutation = (
   page?: number,
@@ -487,4 +488,23 @@ export const useAssetHandoverMutation = (
     allUnits,
     allCurrentStatus,
   };
+};
+export const useAssetHandoverAllQuery = () => {
+  const idCongTy = "ct001";
+
+  return useQuery({
+    queryKey: ["assetHandoverAll"], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/bangiaotaisan/paged", {
+        params: {
+          page: 0,
+          size: 99999,
+          idcongty: idCongTy,
+        },
+      });
+        console.log("useAssetHandoverAllQuery");
+
+      return res.data.items;
+    },
+  });
 };

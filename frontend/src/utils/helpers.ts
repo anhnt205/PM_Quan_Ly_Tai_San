@@ -1,6 +1,10 @@
 import { sha256 } from "js-sha256";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
+import { AssetTransferData } from "../pages/AssetTransfer/types";
+import { ToolTransferData } from "../pages/ToolTransfer/types";
+import { AssetHandoverData } from "../pages/AssetHandover/types";
+import { ToolHandoverData } from "../pages/ToolHandover/types";
 
 dayjs.extend(customParseFormat);
 
@@ -68,3 +72,279 @@ export function formatted(date?: string | null): string {
   console.debug("formatted", `Failed to parse date: ${date}`);
   return "";
 }
+
+export function getAssetTransferCount(
+  type: number,
+  userTenDangNhap: string,
+  assetTransferList: AssetTransferData[],
+) {
+  if (!assetTransferList || assetTransferList.length === 0) return 0;
+
+  return assetTransferList.filter((item) => {
+    // ===== Filter 1: share hoặc người tạo =====
+    if (item.share !== true && item.nguoiTao !== userTenDangNhap) {
+      return false;
+    }
+
+    // ===== Filter 2: loại =====
+    if (item.loai !== type) {
+      return false;
+    }
+
+    // ===== Build signature group =====
+    const idSignatureGroup = [];
+
+    // 1. Người lập phiếu ký nhảy
+    if (item.nguoiLapPhieuKyNhay === true) {
+      idSignatureGroup.push({
+        id: item.idNguoiKyNhay,
+        signed: item.trangThaiKyNhay === true,
+      });
+    }
+
+    // 2. Trình duyệt cấp phòng
+    idSignatureGroup.push({
+      id: item.idTrinhDuyetCapPhong,
+      signed: item.trinhDuyetCapPhongXacNhan === true,
+    });
+
+    // 3. Danh sách người ký (sort theo id)
+    if (Array.isArray(item.nguoiKyList) && item.nguoiKyList.length > 0) {
+      const sortedSignatories = [...item.nguoiKyList].sort((a, b) =>
+        (a.id ?? "").localeCompare(b.id ?? ""),
+      );
+
+      sortedSignatories.forEach((signatory) => {
+        idSignatureGroup.push({
+          id: signatory.idNguoiKy,
+          signed: signatory.trangThai === 1,
+        });
+      });
+    }
+
+    // 4. Trình duyệt giám đốc
+    idSignatureGroup.push({
+      id: item.idTrinhDuyetGiamDoc,
+      signed: item.trinhDuyetGiamDocXacNhan === true,
+    });
+
+    // ===== Check user =====
+    const userIndex = idSignatureGroup.findIndex(
+      (e) => e.id === userTenDangNhap,
+    );
+
+    // Không có trong danh sách ký
+    if (userIndex === -1) return false;
+
+    // User đã ký rồi
+    if (idSignatureGroup[userIndex].signed === true) return false;
+
+    // Tất cả người ký trước user phải đã ký
+    for (let i = 0; i < userIndex; i++) {
+      if (idSignatureGroup[i].signed !== true) {
+        return false;
+      }
+    }
+
+    return true;
+  }).length;
+}
+
+export const getToolTransferCount = (
+  type: number,
+  userTenDangNhap: string,
+  toolAndMaterialList?: ToolTransferData[],
+): number => {
+  if (!toolAndMaterialList || toolAndMaterialList.length === 0) return 0;
+
+  return toolAndMaterialList.filter((item) => {
+    // ===== Filter 1: loại =====
+    if (item.loai !== type) return false;
+
+    // ===== Filter 2: share hoặc người tạo =====
+    if (item.share !== true && item.nguoiTao !== userTenDangNhap) {
+      return false;
+    }
+
+    // ===== Build signature group =====
+    const idSignatureGroup: { id?: string; signed: boolean }[] = [];
+
+    // 1. Người lập phiếu ký nhảy
+    if (item.nguoiLapPhieuKyNhay === true) {
+      idSignatureGroup.push({
+        id: item.idNguoiKyNhay,
+        signed: item.trangThaiKyNhay === true,
+      });
+    }
+
+    // 2. Trình duyệt cấp phòng
+    idSignatureGroup.push({
+      id: item.idTrinhDuyetCapPhong,
+      signed: item.trinhDuyetCapPhongXacNhan === true,
+    });
+
+    // 3. Danh sách người ký (sort theo id)
+    if (item.nguoiKyList && item.nguoiKyList.length > 0) {
+      const sortedSignatories = [...item.nguoiKyList].sort((a, b) =>
+        (a.id ?? "").localeCompare(b.id ?? ""),
+      );
+
+      sortedSignatories.forEach((signatory) => {
+        idSignatureGroup.push({
+          id: signatory.idNguoiKy,
+          signed: signatory.trangThai === 1,
+        });
+      });
+    }
+
+    // 4. Trình duyệt giám đốc
+    idSignatureGroup.push({
+      id: item.idTrinhDuyetGiamDoc,
+      signed: item.trinhDuyetGiamDocXacNhan === true,
+    });
+
+    // ===== Check user =====
+    const userIndex = idSignatureGroup.findIndex(
+      (e) => e.id === userTenDangNhap,
+    );
+
+    // User không có trong danh sách ký
+    if (userIndex === -1) return false;
+
+    // User đã ký
+    if (idSignatureGroup[userIndex].signed) return false;
+
+    // Tất cả người ký trước user phải đã ký
+    for (let i = 0; i < userIndex; i++) {
+      if (idSignatureGroup[i].signed !== true) {
+        return false;
+      }
+    }
+
+    return true;
+  }).length;
+};
+
+const isUserPendingSignatureHandover = (
+  signatureFlow: any[],
+  userTenDangNhap: string,
+): boolean => {
+  const userIndex = signatureFlow.findIndex((e) => e.id === userTenDangNhap);
+
+  // User không nằm trong flow
+  if (userIndex === -1) return false;
+
+  // User đã ký rồi
+  if (signatureFlow[userIndex].signed) return false;
+
+  // Tất cả người trước user phải đã ký
+  for (let i = 0; i < userIndex; i++) {
+    if (signatureFlow[i].signed !== true) {
+      return false;
+    }
+  }
+
+  return true;
+};
+export const getAssetHandoverCount = (
+  userTenDangNhap: string,
+  assetHandoverList?: AssetHandoverData[],
+): number => {
+  if (!assetHandoverList || assetHandoverList.length === 0) return 0;
+
+  return assetHandoverList.filter((item) => {
+    if (item.share !== true && item.nguoiTao !== userTenDangNhap) {
+      return false;
+    }
+
+    const signatureFlow: any[] = [];
+
+    if (item.idDaiDienBenGiao) {
+      signatureFlow.push({
+        id: item.idDaiDienBenGiao,
+        signed: item.daiDienBenGiaoXacNhan === true,
+      });
+    }
+
+    if (item.idDaiDienBenNhan) {
+      signatureFlow.push({
+        id: item.idDaiDienBenNhan,
+        signed: item.daiDienBenNhanXacNhan === true,
+      });
+    }
+
+    if (item.nguoiKyList?.length) {
+      item.nguoiKyList.forEach((s) => {
+        if (s.idNguoiKy) {
+          signatureFlow.push({
+            id: s.idNguoiKy,
+            signed: s.trangThai === 1,
+          });
+        }
+      });
+    }
+
+    if (item.idGiamDoc) {
+      signatureFlow.push({
+        id: item.idGiamDoc,
+        signed: item.giamDocKy === true,
+      });
+    }
+
+    return isUserPendingSignatureHandover(signatureFlow, userTenDangNhap);
+  }).length;
+};
+
+export const getToolHandoverCount = (
+  userTenDangNhap: string,
+  handoverList?: ToolHandoverData[],
+): number => {
+  if (!handoverList || handoverList.length === 0) return 0;
+
+  return handoverList.filter((item) => {
+    // Filter 1: share hoặc người tạo
+    if (item.share !== true && item.nguoiTao !== userTenDangNhap) {
+      return false;
+    }
+
+    const signatureFlow: any[] = [];
+
+    // 1. Đại diện đơn vị giao
+    if (item.idDaiDienBenGiao) {
+      signatureFlow.push({
+        id: item.idDaiDienBenGiao,
+        signed: item.daiDienBenGiaoXacNhan === true,
+      });
+    }
+
+    // 2. Đại diện đơn vị nhận
+    if (item.idDaiDienBenNhan) {
+      signatureFlow.push({
+        id: item.idDaiDienBenNhan,
+        signed: item.daiDienBenNhanXacNhan === true,
+      });
+    }
+
+    // 3. Danh sách người ký (GIỮ NGUYÊN THỨ TỰ)
+    if (item.nguoiKyList?.length) {
+      item.nguoiKyList.forEach((s) => {
+        if (s.idNguoiKy) {
+          signatureFlow.push({
+            id: s.idNguoiKy,
+            signed: s.trangThai === 1,
+          });
+        }
+      });
+    }
+
+    // 4. Giám đốc
+    if (item.idGiamDoc) {
+      signatureFlow.push({
+        id: item.idGiamDoc,
+        signed: item.giamDocKy === true,
+      });
+    }
+
+    return isUserPendingSignatureHandover(signatureFlow, userTenDangNhap);
+  }).length;
+};

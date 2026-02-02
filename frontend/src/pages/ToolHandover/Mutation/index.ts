@@ -547,3 +547,21 @@ export const useStaffsPageQuery = () => {
       (await api.get("/nhanvien", { params: { idcongty: idCongTy } })).data,
   });
 };
+
+export const useToolHandoverAllQuery = () => {
+  const idCongTy = "ct001";
+
+  return useQuery({
+    queryKey: ["toolHandoverAll"], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/bangiaoccdcvattu/paged", {
+        params: {
+          page: 0,
+          size: 99999,
+          idcongty: idCongTy,
+        },
+      });
+      return res.data.items;
+    },
+  });
+};

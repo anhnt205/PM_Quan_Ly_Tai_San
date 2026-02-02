@@ -25,6 +25,18 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import { logout } from "../redux/userSlice";
 import { ROUTES } from "../utils/routes";
 import ExpirationSettingDialog from "../components/common/ExpirationSettingDialog";
+import { useAssetTransferAllQuery } from "../pages/AssetTransfer/Mutation";
+import {
+  getAssetHandoverCount,
+  getAssetTransferCount,
+  getToolHandoverCount,
+  getToolTransferCount,
+} from "../utils/helpers";
+import { ShowCount } from "../components/common/ShowCount";
+import { ShowCountInSubMenu } from "../components/common/ShowCountInSubMenu";
+import { useToolTransferAllQuery } from "../pages/ToolTransfer/Mutation";
+import { useToolHandoverAllQuery } from "../pages/ToolHandover/Mutation";
+import { useAssetHandoverAllQuery } from "../pages/AssetHandover/Mutation";
 
 const NavMenuItem = ({ item }: { item: any }) => {
   const navigate = useNavigate();
@@ -49,6 +61,7 @@ const NavMenuItem = ({ item }: { item: any }) => {
     whiteSpace: "nowrap", // QUAN TRỌNG: Không cho text xuống dòng
     minWidth: "auto", // Đảm bảo nút co giãn theo độ dài text
     px: 2, // Padding ngang cho thoáng
+    position: "relative",
   };
 
   // Xử lý khi click vào item con
@@ -68,6 +81,7 @@ const NavMenuItem = ({ item }: { item: any }) => {
           sx={buttonStyle}
         >
           {item.text}
+          {item.count > 0 && <ShowCount count={item.count} />}
         </Button>
         <Menu
           anchorEl={anchorEl}
@@ -81,9 +95,10 @@ const NavMenuItem = ({ item }: { item: any }) => {
             <MenuItem
               key={index}
               onClick={() => handleSubItemClick(subItem.path)}
-              sx={{ fontSize: "14px" }}
+              sx={{ fontSize: "14px", display: "flex", gap: 2 }}
             >
               {subItem.text}
+              <ShowCountInSubMenu count={subItem.count} />
             </MenuItem>
           ))}
         </Menu>
@@ -95,6 +110,7 @@ const NavMenuItem = ({ item }: { item: any }) => {
   return (
     <Button onClick={() => navigate(item.path)} sx={buttonStyle}>
       {item.text}
+      {item.count > 0 && <ShowCount count={item.count} />}
     </Button>
   );
 };
@@ -147,6 +163,52 @@ export default function Menuheader() {
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
   };
+
+  const { data: assetTransfer = [] } = useAssetTransferAllQuery();
+  const { data: toolTransfer = [] } = useToolTransferAllQuery();
+  const { data: toolHandover = [] } = useToolHandoverAllQuery();
+  const { data: assetHandover = [] } = useAssetHandoverAllQuery();
+
+  const assetTransferCount1 = getAssetTransferCount(
+    1,
+    user?.taiKhoan?.tenDangNhap,
+    assetTransfer,
+  );
+  const assetTransferCount2 = getAssetTransferCount(
+    2,
+    user?.taiKhoan?.tenDangNhap,
+    assetTransfer,
+  );
+  const assetTransferCount3 = getAssetTransferCount(
+    3,
+    user?.taiKhoan?.tenDangNhap,
+    assetTransfer,
+  );
+
+  const toolTransferCount1 = getToolTransferCount(
+    1,
+    user?.taiKhoan?.tenDangNhap,
+    toolTransfer,
+  );
+  const toolTransferCount2 = getToolTransferCount(
+    2,
+    user?.taiKhoan?.tenDangNhap,
+    toolTransfer,
+  );
+  const toolTransferCount3 = getToolTransferCount(
+    3,
+    user?.taiKhoan?.tenDangNhap,
+    toolTransfer,
+  );
+
+  const assetHandoverCount = getAssetHandoverCount(
+    user?.taiKhoan?.tenDangNhap,
+    assetHandover,
+  );
+  const toolHandoverCount = getToolHandoverCount(
+    user?.taiKhoan?.tenDangNhap,
+    toolHandover,
+  );
   const menuItems = [
     {
       text: "Tổng quan",
@@ -188,28 +250,45 @@ export default function Menuheader() {
       text: "Điều động tài sản",
       path: "/",
       code: "DIEUDONG_TAISAN",
+      count: assetTransferCount1 + assetTransferCount2 + assetTransferCount3,
       subMenu: [
-        { text: "Cấp phát tài sản", path: `${ROUTES.ASSETTRANSFER}?type=1` },
-        { text: "Điều chuyển tài sản", path: `${ROUTES.ASSETTRANSFER}?type=2` },
-        { text: "Thu hồi tài sản", path: `${ROUTES.ASSETTRANSFER}?type=3` },
+        {
+          text: "Cấp phát tài sản",
+          path: `${ROUTES.ASSETTRANSFER}?type=1`,
+          count: assetTransferCount1,
+        },
+        {
+          text: "Điều chuyển tài sản",
+          path: `${ROUTES.ASSETTRANSFER}?type=2`,
+          count: assetTransferCount2,
+        },
+        {
+          text: "Thu hồi tài sản",
+          path: `${ROUTES.ASSETTRANSFER}?type=3`,
+          count: assetTransferCount3,
+        },
       ],
     },
     {
       text: "Điều động CCDC - vật tư",
       path: "/",
       code: "DIEUDONG_CCDC",
+      count: toolTransferCount1 + toolTransferCount2 + toolTransferCount3,
       subMenu: [
         {
           text: "Cấp phát CCDC - vật tư",
           path: `${ROUTES.TOOLTRANSFER}?type=1`,
+          count: toolTransferCount1,
         },
         {
           text: "Điều chuyển CCDC - vật tư",
           path: `${ROUTES.TOOLTRANSFER}?type=2`,
+          count: toolTransferCount2,
         },
         {
           text: "Thu hồi CCDC - vật tư",
           path: `${ROUTES.TOOLTRANSFER}?type=3`,
+          count: toolTransferCount3,
         },
       ],
     },
@@ -217,11 +296,13 @@ export default function Menuheader() {
       text: "Bàn giao tài sản",
       path: "/ban_giao_tai_san",
       code: "BANGIAO_TAISAN",
+      count: assetHandoverCount,
     },
     {
       text: "Bàn giao CCDC-Vật tư",
       path: ROUTES.TOOLHANDOVER,
       code: "BANGIAO_CCDC",
+      count: toolHandoverCount,
     },
     {
       text: "Báo cáo",

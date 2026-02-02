@@ -654,3 +654,21 @@ export const useToolByDepartmentPageQuery = ({
     enabled: !!departmentId && allTools.length > 0,
   });
 };
+
+export const useToolTransferAllQuery = () => {
+  const idCongTy = "ct001";
+
+  return useQuery({
+    queryKey: ["toolTranferAll"], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/dieudongccdcvattu/paged", {
+        params: {
+          page: 0,
+          size: 99999,
+          idcongty: idCongTy,
+        },
+      });
+      return res.data.items;
+    },
+  });
+};
