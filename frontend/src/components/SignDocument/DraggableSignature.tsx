@@ -31,6 +31,8 @@ export default function DraggableSignature({
   onDelete,
   isLocked = false,
 }: DraggableSignatureProps) {
+  const [showMobileControls, setShowMobileControls] = useState(false);
+  const lastTapRef = useRef<number>(0);
   // 1. Đồng bộ state scale
   const [scale, setScale] = useState(initialScale);
   useEffect(() => {
@@ -113,10 +115,62 @@ export default function DraggableSignature({
     window.addEventListener("mouseup", handleMouseUp);
   };
 
+  // Logic Dragging cho Điện thoại (Touch)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (isLocked) return;
+
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300;
+
+    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+      // Nếu chạm 2 lần nhanh -> Đảo ngược trạng thái hiện menu
+      setShowMobileControls(!showMobileControls);
+    }
+    lastTapRef.current = now;
+
+    const touch = e.touches[0];
+    const startTouchX = touch.clientX;
+    const startTouchY = touch.clientY;
+    const startPosX = positionRef.current.x;
+    const startPosY = positionRef.current.y;
+
+    const handleTouchMove = (moveEvent: TouchEvent) => {
+      if (moveEvent.cancelable) moveEvent.preventDefault();
+
+      const touchMove = moveEvent.touches[0];
+      const dx = touchMove.clientX - startTouchX;
+      const dy = touchMove.clientY - startTouchY;
+
+      let newX = startPosX + dx;
+      let newY = startPosY + dy;
+
+      const currentWidth = width * scale;
+      newX = Math.max(0, Math.min(newX, containerWidth - currentWidth));
+
+      positionRef.current = { x: newX, y: newY };
+      updateDOMPosition();
+    };
+
+    const handleTouchEnd = () => {
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
+
+      if (containerWidth > 0 && containerHeight > 0) {
+        const xRatio = positionRef.current.x / containerWidth;
+        const yRatio = positionRef.current.y / containerHeight;
+        onUpdatePosition(id, xRatio, yRatio);
+      }
+    };
+
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("touchend", handleTouchEnd);
+  };
+
   return (
     <Box
       ref={parentBoxRef}
       onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
       sx={{
         position: "absolute",
         left: safeInitialX,
@@ -125,6 +179,7 @@ export default function DraggableSignature({
         zIndex: 100,
         padding: 0, // 1. Xóa padding để ảnh sát viền
         margin: 0,
+        touchAction: "none",
         // 👉 Logic style khi Locked vs Unlocked
         cursor: isLocked ? "default" : "grab", // Locked thì chuột bình thường
         border: isLocked ? "none" : "1px dashed #1976d2", // Locked thì ẩn viền
@@ -135,8 +190,15 @@ export default function DraggableSignature({
         // 👉 Chỉ hiện Controls khi hover VÀ chưa bị khóa
         "&:hover": {
           borderColor: isLocked ? "transparent" : "#1565c0",
+          // Menu hiện khi hover (Desktop)
           "& .controls": { display: isLocked ? "none" : "flex" },
         },
+        borderColor:
+          showMobileControls && !isLocked
+            ? "#1565c0"
+            : isLocked
+              ? "transparent"
+              : "1px dashed #1976d2",
       }}
     >
       <img
@@ -150,7 +212,6 @@ export default function DraggableSignature({
           // --- QUAN TRỌNG: NGĂN TRÌNH DUYỆT KÉO ẢNH RA NGOÀI ---
           pointerEvents: "none", // Ảnh không bắt sự kiện, để Box cha bắt
           userSelect: "none",
-          // ----------------------------------------------------
         }}
       />
 
@@ -159,7 +220,7 @@ export default function DraggableSignature({
         <Box
           className="controls"
           sx={{
-            display: "none",
+            display: showMobileControls ? "flex" : "none",
             position: "absolute",
             top: -45,
             left: "50%",
@@ -176,6 +237,7 @@ export default function DraggableSignature({
             // --- Đảm bảo Toolbar cũng bấm được ---
             pointerEvents: "auto",
           }}
+          onTouchStart={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
         >
           <Tooltip title="Giảm">
