@@ -11,9 +11,11 @@ import {
   Snackbar,
   Alert,
   CircularProgress,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { CancelOutlined, Close, PictureAsPdf } from "@mui/icons-material";
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import DraggableSignature from "./DraggableSignature";
 import { useToolHandoverMutation } from "../Mutation";
@@ -32,6 +34,10 @@ import { showErrorAlert } from "../../../components/Alert";
 import { canUserSign } from "../config";
 import axios from "axios";
 import { ConfirmPin } from "../../AssetTransfer/components/ConfirmPin";
+import { SignHeader } from "../../../components/SignDocument/SignHeader";
+import CollapsibleSidebar from "../../../components/SignDocument/CollapsibleSidebar";
+import SidebarContent from "../../../components/SignDocument/SidebarContent";
+import { PdfViewer } from "../../../components/SignDocument/PdfViewer";
 
 // --- Config Worker ---
 if (typeof window !== "undefined") {
@@ -85,6 +91,9 @@ export default function SignDocumentForm({
   >({});
   const [openConfirmPin, setOpenConfirmPin] = useState(false);
   const [sourcePdfBytes, setSourcePdfBytes] = useState<Uint8Array | null>(null);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   // login ký
   const handleLogin = async () => {
@@ -810,6 +819,15 @@ export default function SignDocumentForm({
     }
   };
 
+  const sidebarProps = {
+    signatureType,
+    setSignatureType,
+    employee,
+    handleSign,
+    handleConfirmSign,
+    onCancel,
+  };
+
   return (
     <Box
       sx={{
@@ -821,217 +839,52 @@ export default function SignDocumentForm({
         ...(fullscreen && { position: "fixed", inset: 0, zIndex: 9999 }),
       }}
     >
-      {/* --- Header (Giữ nguyên) --- */}
+      {/* --- 1. Header dùng chung --- */}
       {fullscreen && (
-        <Box
-          sx={{
-            bgcolor: "white",
-            p: 2,
-            borderBottom: "1px solid #e0e0e0",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Box>
-            <Typography variant="h6">Soạn & Ký Tài Liệu</Typography>
-            <Typography variant="body2" color="textSecondary">
-              Tổng số trang: {pages.length}
-            </Typography>
-          </Box>
-          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={handleExportPDF}
-              sx={{
-                textTransform: "none",
-                fontSize: "0.875rem",
-                color: "#8b5cf6",
-                borderColor: "#c4b5fd",
-                fontWeight: 500,
-                "&:hover": {
-                  borderColor: "#a78bfa",
-                  backgroundColor: "rgba(139, 92, 246, 0.04)",
-                },
-              }}
-              startIcon={<PictureAsPdf />}
-            >
-              Xuất PDF
-            </Button>
-            <IconButton onClick={onCancel}>
-              <Close />
-            </IconButton>
-          </Box>
-        </Box>
+        <SignHeader
+          pagesCount={pages.length}
+          handleExportPDF={handleExportPDF}
+          onCancel={onCancel}
+        />
       )}
 
-      {/* --- Body --- */}
-      <Box sx={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        {/* --- Left Sidebar (Công cụ) --- */}
-        {showSignerSidebar && (
-          <Paper
-            sx={{
-              width: 320,
-              p: 2,
-              overflowY: "auto",
-              borderRight: "1px solid #ddd",
-            }}
-          >
-            <Typography variant="h6" fontWeight="bold" mb={2}>
-              Công cụ ký
-            </Typography>
+      {/* --- 2. Body --- */}
+      <Box
+        sx={{
+          display: "flex",
+          flex: 1,
+          overflow: "hidden",
+          flexDirection: isMobile ? "column-reverse" : "row",
+        }}
+      >
+        {/* --- Sidebar Công cụ --- */}
+        {showSignerSidebar &&
+          (isMobile ? (
+            <CollapsibleSidebar>
+              <SidebarContent {...sidebarProps} />
+            </CollapsibleSidebar>
+          ) : (
+            <Paper
+              elevation={6}
+              sx={{
+                width: 320,
+                p: 2,
+                borderRight: "1px solid #e0e0e0",
+                height: "100%",
+                overflowY: "auto",
+              }}
+            >
+              <SidebarContent {...sidebarProps} />
+            </Paper>
+          ))}
 
-            <RadioGroup
-              value={signatureType}
-              onChange={(e) => setSignatureType(Number(e.target.value))}
-            >
-              {employee.kyNhay && (
-                <Box
-                  display="flex"
-                  alignItems={"center"}
-                  justifyContent={"space-between"}
-                  sx={{ mb: 2 }}
-                >
-                  <FormControlLabel
-                    value={1}
-                    control={<Radio />}
-                    label="Ký nháy"
-                  />
-                  <img
-                    src={`${process.env.REACT_APP_URL_UPLOAD}/${employee.chuKyNhay}`}
-                    alt="sample"
-                    width={60}
-                    height={30}
-                    style={{ border: "1px solid #eee", objectFit: "contain" }}
-                  />
-                </Box>
-              )}
-              {employee.kyThuong && (
-                <Box
-                  display="flex"
-                  alignItems={"center"}
-                  justifyContent={"space-between"}
-                  sx={{ mb: 2 }}
-                >
-                  <FormControlLabel
-                    value={2}
-                    control={<Radio />}
-                    label="Ký thường"
-                  />
-                  <img
-                    src={`${process.env.REACT_APP_URL_UPLOAD}/${employee.chuKyThuong}`}
-                    alt="sample"
-                    width={60}
-                    height={30}
-                    style={{ border: "1px solid #eee", objectFit: "contain" }}
-                  />
-                </Box>
-              )}
-              {employee.kySo && (
-                <Box sx={{ p: 1, border: "1px solid #ddd", borderRadius: 5 }}>
-                  <Typography fontWeight={600}>Chữ ký số</Typography>
-                  <Box sx={{ mb: 2 }}>
-                    {" "}
-                    <FormControlLabel
-                      value={3}
-                      control={<Radio />}
-                      label="Hiển thị mặc định"
-                    />
-                  </Box>
-                  {employee.chuKyThuong && (
-                    <Box
-                      display="flex"
-                      alignItems={"center"}
-                      justifyContent={"space-between"}
-                      sx={{ mb: 2 }}
-                    >
-                      <FormControlLabel
-                        value={4}
-                        control={<Radio />}
-                        label="Hiển thị chữ kí thường"
-                      />
-                      <img
-                        src={`${process.env.REACT_APP_URL_UPLOAD}/${employee.chuKyThuong}`}
-                        alt="chukythuong"
-                        width={60}
-                        height={30}
-                        style={{
-                          border: "1px solid #eee",
-                          objectFit: "contain",
-                        }}
-                      />
-                    </Box>
-                  )}
-                  {employee.chuKyNhay && (
-                    <Box
-                      display="flex"
-                      alignItems={"center"}
-                      justifyContent={"space-between"}
-                      sx={{ mb: 2 }}
-                    >
-                      <FormControlLabel
-                        value={5}
-                        control={<Radio />}
-                        label="Hiển thị chữ kí nháy"
-                      />
-                      <img
-                        src={`${process.env.REACT_APP_URL_UPLOAD}/${employee.chuKyNhay}`}
-                        alt="chukynhay"
-                        width={60}
-                        height={30}
-                        style={{
-                          border: "1px solid #eee",
-                          objectFit: "contain",
-                        }}
-                      />
-                    </Box>
-                  )}
-                </Box>
-              )}
-            </RadioGroup>
-            <Divider sx={{ my: 2 }} />
-
-            <Button
-              variant="contained"
-              fullWidth
-              color="success"
-              onClick={handleSign}
-              sx={{ mb: 1, color: "white" }}
-              startIcon={<Pencil size={16} />}
-            >
-              Ký
-            </Button>
-            <Button
-              variant="contained"
-              fullWidth
-              color="info"
-              onClick={handleConfirmSign}
-              sx={{ mb: 1, color: "white" }}
-              startIcon={<Check size={16} />}
-            >
-              Xác nhận
-            </Button>
-            <Button
-              variant="outlined"
-              fullWidth
-              color="error"
-              onClick={onCancel}
-              sx={{ mb: 1, color: "red" }}
-              startIcon={<CancelOutlined sx={{ fontSize: 16 }} />}
-            >
-              Hủy
-            </Button>
-          </Paper>
-        )}
-
-        {/* --- Right Content (PDF Viewer) --- */}
+        {/* --- 3. PDF Viewer dùng chung --- */}
         <Box
           ref={containerRef}
           sx={{
             flex: 1,
             bgcolor: "#e0e0e0",
-            p: 4,
+            p: isMobile ? 1 : 4, // Mobile giảm padding để canvas to hơn
             overflowY: "auto",
             display: "flex",
             flexDirection: "column",
@@ -1043,72 +896,24 @@ export default function SignDocumentForm({
               {pdfError}
             </Alert>
           )}
+
           {loading ? (
-            <CircularProgress />
+            <CircularProgress sx={{ mt: 10 }} />
           ) : (
-            <Box sx={{ position: "relative" }}>
-              {pages.map((canvas, index) => (
-                <Box key={index} sx={{ position: "relative", mb: 3 }}>
-                  {/* Render Canvas */}
-                  <div
-                    ref={(el) => {
-                      if (el && !el.hasChildNodes()) el.appendChild(canvas);
-                    }}
-                  />
-
-                  {/* 👉 QUAN TRỌNG: Chỉ render chữ ký nếu đây là trang đầu tiên (index === 0) */}
-                  {index === 0 && signatures.length > 0 && (
-                    <Box
-                      sx={{
-                        position: "absolute",
-                        inset: 0, // Phủ kín trang 1
-                        pointerEvents: "none", // Để vẫn scroll/thao tác được PDF bên dưới
-                      }}
-                    >
-                      {signatures.map((sig) => {
-                        const displaySize = canvasDisplaySizes[0] ?? {
-                          width: 800,
-                          height: 800 * (297 / 210),
-                        };
-
-                        // GUARD CLAUSE: Nếu PDF chưa render xong width = 0, thì không render chữ ký để tránh NaN
-                        if (displaySize.width === 0 || displaySize.height === 0)
-                          return null;
-                        const currentCanvas = pages[index];
-                        if (!currentCanvas || !displaySize) return null;
-                        const scale = displaySize.width / currentCanvas.width;
-                        return (
-                          <DraggableSignature
-                            key={sig.id}
-                            id={sig.id}
-                            // Tính toán tọa độ pixel
-                            initialX={sig.x * displaySize.width}
-                            initialY={sig.y * displaySize.height}
-                            width={sig.width * scale}
-                            initialScale={sig.scale || 1}
-                            imgSrc={
-                              sig.loaiKy === 3
-                                ? digitalSignatureMap[sig.id]
-                                : `${process.env.REACT_APP_URL_UPLOAD}/${sig.chuKyNhay || sig.chuKyThuong}`
-                            }
-                            containerWidth={displaySize.width}
-                            containerHeight={displaySize.height}
-                            onUpdatePosition={handleUpdatePosition}
-                            onUpdateScale={handleUpdateScale}
-                            onDelete={handleDeleteSignature}
-                            isLocked={sig.isLocked}
-                          />
-                        );
-                      })}
-                    </Box>
-                  )}
-                </Box>
-              ))}
-            </Box>
+            <PdfViewer
+              pages={pages}
+              signatures={signatures}
+              canvasDisplaySizes={canvasDisplaySizes}
+              digitalSignatureMap={digitalSignatureMap}
+              handleUpdatePosition={handleUpdatePosition}
+              handleUpdateScale={handleUpdateScale}
+              handleDeleteSignature={handleDeleteSignature}
+            />
           )}
         </Box>
       </Box>
 
+      {/* --- 4. Overlays --- */}
       <Snackbar
         open={openSnackbar}
         autoHideDuration={3000}
@@ -1116,6 +921,7 @@ export default function SignDocumentForm({
       >
         <Alert severity="success">Đã xuất PDF thành công</Alert>
       </Snackbar>
+
       <ConfirmPin
         open={openConfirmPin}
         onClose={() => setOpenConfirmPin(false)}
@@ -1124,6 +930,7 @@ export default function SignDocumentForm({
     </Box>
   );
 }
+
 export const renderDigitalSignatureToImage = async (
   name?: string | null,
   date?: string,
