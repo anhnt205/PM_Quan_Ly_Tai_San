@@ -1,23 +1,14 @@
 import {
   Box,
-  Button,
   Paper,
-  Radio,
-  FormControlLabel,
-  RadioGroup,
-  Typography,
-  Divider,
-  IconButton,
   Snackbar,
   Alert,
   CircularProgress,
   useTheme,
   useMediaQuery,
 } from "@mui/material";
-import { CancelOutlined, Close, PictureAsPdf } from "@mui/icons-material";
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";
-import DraggableSignature from "./DraggableSignature";
 import { useToolTransferMutation } from "../Mutation";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -28,7 +19,6 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import { ToolSignature } from "../types";
 import dayjs from "dayjs";
-import { Check, Pencil } from "lucide-react";
 import { showErrorAlert } from "../../../components/Alert";
 import { canUserSign } from "../config";
 import axios from "axios";

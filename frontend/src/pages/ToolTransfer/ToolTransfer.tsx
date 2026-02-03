@@ -31,6 +31,7 @@ import { useToolTransferMutation } from "./Mutation";
 import SignDocumentForm from "./components/SignDocumentForm";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
 import { ToolHandoverData } from "../ToolHandover/types";
+import { useToolHandoverDetailsQuery } from "../ToolHandover/Mutation";
 
 export default function ToolTransfer() {
   const { user } = useSelector((state: any) => state.user);
@@ -79,7 +80,9 @@ export default function ToolTransfer() {
     status ? Number(status) : undefined,
   );
 
-  console.log("AAAAAAAAAAAAAAAAAAAAAAAAA", handoverDetails);
+  const { data: detailData = [] } = useToolHandoverDetailsQuery(
+    selectedRow?.id || "",
+  );
 
   const statusOptions: FilterOption[] = [
     {
@@ -530,7 +533,7 @@ export default function ToolTransfer() {
               >
                 <SignerSidebar
                   selectedRow={selectedRow}
-                  handoverDetails={handoverDetails}
+                  handoverDetails={detailData}
                   onClose={() => setShowSidebar(false)}
                 />
               </Grid>

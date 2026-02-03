@@ -14,6 +14,20 @@ import {
 } from "../types";
 import axios from "axios";
 
+export const useToolHandoverDetailsQuery = (idDieuDong: string) => {
+  return useQuery({
+    queryKey: ["toolHandoverDetails", idDieuDong],
+    queryFn: async () => {
+      if (!idDieuDong) return [];
+      const res = await api.get(
+        `/chitietbangiaoccdcvattu/by-dieu-dong/${idDieuDong}`,
+      );
+      return res.data; // Giả định res.data trả về mảng các chi tiết
+    },
+    enabled: !!idDieuDong,
+  });
+};
+
 export const useToolHandoverMutation = (
   page?: number,
   pageSize?: number,
