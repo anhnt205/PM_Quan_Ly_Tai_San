@@ -83,25 +83,6 @@ export const useReasonIncreaseMutation = (
     },
   });
 
-  const { data = { items: [], totalItems: 0 }, isLoading } = useQuery({
-    queryKey: ["reasonIncreases", "paged", page, pageSize, searchValue],
-    queryFn: async () => {
-      const res = await api.get("/lydotang/paged-mini", {
-        params: { page, size: pageSize, search: searchValue },
-      });
-      return res.data;
-    },
-    placeholderData: (previousData) => previousData,
-  });
-
-  const { data: allReasonIncreases = [] } = useQuery({
-    queryKey: ["reasonIncreases", "all"],
-    queryFn: async () => {
-      const res = await api.get("/lydotang");
-      return Array.isArray(res.data) ? res.data : res.data.data || [];
-    },
-  });
-
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: ReasonIncreaseType[]) => {
       const payload = dataToExport.map((item) => ({
@@ -211,8 +192,38 @@ export const useReasonIncreaseMutation = (
     deleteManyMutation,
     exportMutation,
     importExcelMutation,
-    reasonIncreasesPage: data,
-    allReasonIncreases,
-    isLoading,
   };
+};
+
+export const useReasonIncreasePageQuery = (
+  page?: number,
+  pageSize?: number,
+  searchValue?: string,
+) => {
+  return useQuery({
+    queryKey: ["reasonIncreasesPage", page, pageSize, searchValue],
+    queryFn: async () => {
+      const res = await api.get("/lydotang/paged", {
+        params: {
+          page,
+          size: pageSize,
+          search: searchValue,
+        },
+      });
+      return res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};
+
+export const useAllReasonIncreaseQuery = (
+) => {
+  return useQuery({
+    queryKey: ["reasonIncreasesPage"],
+    queryFn: async () => {
+      const res = await api.get("/lydotang");
+      return res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
 };

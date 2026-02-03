@@ -82,55 +82,10 @@ export const useDepartmentMutation = (
       );
     },
   });
-  const getByIdMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await api.get(`/phongban/${id}`);
-      return res.data;
-    },
-    onSuccess: (data) => {
-      console.log("Lấy phòng ban thành công");
-    },
-    onError: (error: any) => {
-      console.log(
-        error.response?.data?.message ||
-          error.message ||
-          "Lấy phòng ban thất bại",
-      );
-      return null;
-    },
-  });
-  const { data = { items: [], totalItems: 0 }, isLoading } = useQuery({
-    queryKey: ["departmentsPage", page, pageSize, searchValue], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/phongban/paged", {
-        params: {
-          idcongty: "ct001",
-          page: page,
-          size: pageSize,
-          search: searchValue,
-        },
-      });
-      return res.data;
-    },
-    placeholderData: (previousData) => previousData,
-  });
-
-  const { data: allDepartments = [] } = useQuery({
-    queryKey: ["allDepartments"], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/phongban", {
-        params: {
-          idcongty: "ct001",
-        },
-      });
-      return res.data;
-    },
-  });
-
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: DepartmentType[]) => {
       return new Promise((resolve) => {
-        const worksheetData = dataToExport.map((item) => ({
+        const worksheetData = dataToExport.map((item: any) => ({
           "Mã phòng ban": item.id || "",
           "Tên phòng ban": item.tenPhongBan || "",
           "Mã phòng cấp trên": item.phongCapTren || "",
@@ -231,9 +186,46 @@ export const useDepartmentMutation = (
     deleteManyMutation,
     importExcelMutation,
     exportMutation,
-    departmentsPage: data,
-    allDepartments,
-    isLoading,
-    getByIdMutation,
   };
+};
+
+export const useDepartmentsPageQuery = (
+  page: number,
+  pageSize: number,
+  searchValue?: string,
+) => {
+  return useQuery({
+    queryKey: ["departmentsPage", page, pageSize, searchValue],
+    queryFn: async () => {
+      const res = await api.get("/phongban/paged", {
+        params: {
+          idcongty: "ct001",
+          page,
+          size: pageSize,
+          search: searchValue,
+        },
+      });
+      return res.data;
+    },
+  });
+};
+
+export const useAllDepartmentsQuery = () => {
+  return useQuery({
+    queryKey: ["departmentsAll"],
+    queryFn: async () => {
+      const res = await api.get("/phongban", { params: { idcongty: "ct001" } });
+      return res.data;
+    },
+  });
+};
+
+export const useDepartmentByIdQuery = (id: string) => {
+  return useQuery({
+    queryKey: ["departmentById", id],
+    queryFn: async () => {
+      const res = await api.get(`/phongban/${id}`);
+      return res.data;
+    },
+  });
 };

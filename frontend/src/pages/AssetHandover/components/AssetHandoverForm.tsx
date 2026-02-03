@@ -47,7 +47,7 @@ import { useDepartmentMutation } from "../../Department/Mutation";
 import { useStaffMutation } from "../../Staff/Mutation";
 import PreviewBtn from "../../../components/Button/PreviewBtn";
 import { findById, generateCode } from "../../../utils/helpers";
-import { useCurrentStatusMutation } from "../../CurrentStatus/Mutation";
+import { useAllCurrentStatusQuery, useCurrentStatusMutation } from "../../CurrentStatus/Mutation";
 import { useUnitMutation } from "../../Unit/Mutation";
 import { useAssetHandoverMutation } from "../Mutation";
 import { assetHandoverValidationSchema } from "../validation";
@@ -138,7 +138,7 @@ export default function AssetHandoverForm({
 
   const [listASsets, setListAssets] = useState<any[]>([]);
   const AssetTransferData = useAssetHandoverMutation().transferPage;
-  const currentStatusData = useCurrentStatusMutation().allCurrentStatus;
+  const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
 
   const formik = useFormik<AssetHandoverFormValues>({
     initialValues: {
@@ -870,7 +870,7 @@ export default function AssetHandoverForm({
                               <UnderlinedInputWrapper>
                                 <FieldAutoCompleted
                                   labelkey="tenHTKT"
-                                  data={currentStatusData}
+                                  data={allCurrentStatus}
                                   title=""
                                   formik={formik}
                                   field={`chiTietBanGiaoTaiSan.${index}.hienTrang`}

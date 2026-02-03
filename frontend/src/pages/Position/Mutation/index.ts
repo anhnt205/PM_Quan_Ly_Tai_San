@@ -99,44 +99,6 @@ export const usePositionMutation = (
     },
   });
 
-  const { data = { items: [], totalItems: 0 }, isLoading } = useQuery({
-    queryKey: ["positionsPage", page, pageSize, searchValue],
-    queryFn: async () => {
-      // Nếu có searchValue thì gọi API search
-      if (searchValue) {
-        const res = await api.get("/chucvu/search", {
-          params: {
-            ten: searchValue,
-          },
-        });
-
-        return {
-          items: res.data?.data || [],
-          totalItems: res.data?.data?.length || 0,
-        };
-      }
-
-      // Không search thì gọi API paged như cũ
-      const res = await api.get("/chucvu/congty/ct001/paged", {
-        params: {
-          idcongty: "ct001",
-          page,
-          size: pageSize,
-        },
-      });
-      return res.data;
-    },
-    placeholderData: (previousData) => previousData,
-  });
-
-  const { data: allPositions = [] } = useQuery({
-    queryKey: ["allPositions"],
-    queryFn: async () => {
-      const res = await api.get("/chucvu/congty/ct001");
-      return res.data?.data || [];
-    },
-  });
-
   // 1. Chuyển EXPORT thành Mutation
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: PositionType[]) => {
@@ -253,9 +215,43 @@ export const usePositionMutation = (
     deleteManyMutation,
     importExcelMutation,
     exportMutation,
-    positionsPage: data,
-    allPositions,
-    isLoading,
     getByIdMutation,
   };
+};
+
+export const usePositionsPageQuery = (
+  page?: number,
+  pageSize?: number,
+  searchValue?: string,
+) => {
+  return useQuery({
+    queryKey: ["positionsPage", page, pageSize, searchValue],
+    queryFn: async () => {
+      const res = await api.get("/chucvu/congty/ct001/paged", {
+        params: {
+          idcongty: "ct001",
+          page,
+          size: pageSize,
+          search: searchValue,
+        },
+      });
+      return res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};
+
+export const useAllPositionsQuery = () => {
+  return useQuery({
+    queryKey: ["allPositions"],
+    queryFn: async () => {
+      const res = await api.get("/chucvu/congty/ct001", {
+        params: {
+          idcongty: "ct001",
+        },
+      });
+      return res.data.data || [];
+    },
+    placeholderData: (previousData) => previousData,
+  });
 };

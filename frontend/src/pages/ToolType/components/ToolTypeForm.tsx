@@ -22,7 +22,10 @@ import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted
 import ToolGroups from "../../../data/ToolGroup.json";
 import EditButton from "../../../components/Button/EditButton";
 import { ToolTypeValidation } from "../validation/Validation";
-import { useToolGroupMutation } from "../../ToolGroup/Mutation";
+import {
+  useAllToolGroupQuery,
+  useToolGroupMutation,
+} from "../../ToolGroup/Mutation";
 
 export default function ToolTypeForm({
   onEdit,
@@ -38,7 +41,7 @@ export default function ToolTypeForm({
   onSave: (values: any) => void;
 }) {
   const [expanded, setExpanded] = useState(true);
-  const { allData } = useToolGroupMutation();
+  const { data: allToolGroup = [] } = useAllToolGroupQuery();
   const formik = useFormik({
     initialValues: {
       id: "",
@@ -100,7 +103,7 @@ export default function ToolTypeForm({
             <Grid size={{ xs: 12 }}>
               <FieldAutoCompleted
                 title="Mã loại CCDC cha *"
-                data={allData}
+                data={allToolGroup}
                 labelkey="ten"
                 formik={formik}
                 field="idLoaiCCDC"

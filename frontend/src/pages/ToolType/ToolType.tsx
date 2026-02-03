@@ -12,9 +12,14 @@ import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import TypeAssetForm from "./components/ToolTypeForm";
-import { useToolTypeMutation } from "./Mutation";
+import {
+  useAllToolTypeQuery,
+  useToolTypeMutation,
+  useToolTypePageQuery,
+} from "./Mutation";
 import { showConfirmAlert } from "../../components/Alert";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
+import { useDebounce } from "../../hook/useDebounce";
 
 export default function ToolType() {
   const [showForm, setShowForm] = useState(false);
@@ -32,20 +37,25 @@ export default function ToolType() {
   });
 
   const {
-    toolTypes,
-    toolTypesPage,
     createMutation,
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
     importExcelMutation,
     exportMutation,
-    isLoading,
   } = useToolTypeMutation(
     paginationModel.page,
     paginationModel.pageSize,
     searchValue,
   );
+  const debouncedSearchValue = useDebounce(searchValue, 600);
+  const { data: toolTypesPage = { items: [], totalItems: 0 }, isLoading } =
+    useToolTypePageQuery(
+      paginationModel.page,
+      paginationModel.pageSize,
+      debouncedSearchValue,
+    );
+  const { data: allToolTypes = [] } = useAllToolTypeQuery();
 
   const handleImport = (file: File) => {
     importExcelMutation.mutate(file, {
@@ -132,7 +142,7 @@ export default function ToolType() {
           setSelectedToolType(null);
           setReadOnly(false);
         }}
-        onExport={() => exportMutation.mutate(toolTypes)}
+        onExport={() => exportMutation.mutate(allToolTypes)}
         onImport={handleImport}
         showExcel={true}
       />
@@ -173,8 +183,8 @@ export default function ToolType() {
         <TableCustom
           title="Quản lý loại CCDC"
           columns={columns}
-          rows={toolTypes}
-          total={toolTypes.length}
+          rows={toolTypesPage.items}
+          total={toolTypesPage.totalItems}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
           loading={isLoading}
@@ -184,7 +194,6 @@ export default function ToolType() {
           onDelete={deleteManyMutation.mutate}
           searchValue={searchValue}
           setSearchValue={setSearchValue}
-          paginationMode="client"
         />
       </Box>
     </Box>

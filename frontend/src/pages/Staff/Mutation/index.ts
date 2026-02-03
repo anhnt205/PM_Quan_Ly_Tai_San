@@ -124,22 +124,6 @@ export const useStaffMutation = (
     },
   });
 
-  const { data = { items: [], totalItems: 0 }, isLoading } = useQuery({
-    queryKey: ["staffsPage", page, pageSize, searchValue], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/nhanvien/paged", {
-        params: {
-          idcongty: "ct001",
-          page: page,
-          size: pageSize,
-          search: searchValue,
-        },
-      });
-      return res.data;
-    },
-    placeholderData: (previousData) => previousData,
-  });
-
   const exportMutation = useMutation({
     mutationFn: async () => {
       const listRes = await api.get("/nhanvien", {
@@ -227,9 +211,40 @@ export const useStaffMutation = (
     deleteOneMutation,
     deleteManyMutation,
     uploadMutation,
-    staffsPage: data,
     allStaff,
-    isLoading,
     getByIdMutation,
   };
+};
+
+export const useStaffPagesQuery = (
+  page?: number,
+  pageSize?: number,
+  searchValue?: string,
+) => {
+  return useQuery({
+    queryKey: ["staffsPage", page, pageSize, searchValue], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/nhanvien/paged", {
+        params: {
+          idcongty: "ct001",
+          page: page,
+          size: pageSize,
+          search: searchValue,
+        },
+      });
+      return res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};
+export const useAllStaffsQuery = (
+) => {
+  return useQuery({
+    queryKey: ["allStaffs"], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/nhanvien");
+      return res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
 };

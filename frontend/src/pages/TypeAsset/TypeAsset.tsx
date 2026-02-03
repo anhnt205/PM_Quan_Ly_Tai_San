@@ -13,8 +13,14 @@ import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import TypeAssetForm from "./components/TypeAssetForm";
 import { showConfirmAlert } from "../../components/Alert";
-import { useTypeAssetMutation } from "./Mutation";
+import {
+  useAllAssetGroupQuery,
+  useAllTypeAssetQuery,
+  useTypeAssetMutation,
+  useTypeAssetPageQuery,
+} from "./Mutation";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
+import { useDebounce } from "../../hook/useDebounce";
 
 export default function TypeAsset() {
   const [showForm, setShowForm] = useState(false);
@@ -31,19 +37,27 @@ export default function TypeAsset() {
   });
 
   const {
-    allTypeAssets,
     createMutation,
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
     importExcelMutation,
     exportMutation,
-    isLoading,
   } = useTypeAssetMutation(
     paginationModel.page,
     paginationModel.pageSize,
     searchValue,
   );
+
+  const debouncedSearchValue = useDebounce(searchValue, 600);
+  const { data: typeAssetPage = { items: [], totalItems: 0 }, isLoading } =
+    useTypeAssetPageQuery(
+      paginationModel.page,
+      paginationModel.pageSize,
+      debouncedSearchValue,
+    );
+  const { data: allTypeAssets = [] } = useAllTypeAssetQuery();
+  const { data: assetGroups = [] } = useAllAssetGroupQuery();
 
   const handleImport = (file: File) => {
     importExcelMutation.mutate(file, {
@@ -180,8 +194,8 @@ export default function TypeAsset() {
         <TableCustom
           title="Quản lý loại tài sản"
           columns={columns}
-          rows={allTypeAssets}
-          total={allTypeAssets.length}
+          rows={typeAssetPage.items}
+          total={typeAssetPage.totalItems}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
           loading={isLoading}
@@ -191,7 +205,6 @@ export default function TypeAsset() {
           onDelete={deleteManyMutation.mutate}
           searchValue={searchValue}
           setSearchValue={setSearchValue}
-          paginationMode="client"
         />
       </Box>
     </Box>

@@ -12,9 +12,14 @@ import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import CurrentStatusForm from "./components/CurrentStatusForm";
-import { useCurrentStatusMutation } from "./Mutation";
+import {
+  useAllCurrentStatusQuery,
+  useCurrentStatusMutation,
+  useCurrentStatusPageQuery,
+} from "./Mutation";
 import { showConfirmAlert } from "../../components/Alert";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
+import { useDebounce } from "../../hook/useDebounce";
 
 export default function CurrentStatus() {
   const [showForm, setShowForm] = useState(false);
@@ -32,20 +37,27 @@ export default function CurrentStatus() {
   });
 
   const {
-    currentStatus,
     createMutation,
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
-    allCurrentStatus,
     importExcelMutation,
     exportMutation,
-    isLoading,
   } = useCurrentStatusMutation(
     paginationModel.page,
     paginationModel.pageSize,
     searchValue,
   );
+
+  const debouncedSearchValue = useDebounce(searchValue, 600);
+  const { data: currentStatusPage = { items: [], totalItems: 0 }, isLoading } =
+    useCurrentStatusPageQuery(
+      paginationModel.page,
+      paginationModel.pageSize,
+      debouncedSearchValue,
+    );
+
+  const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
 
   const handleImport = (file: File) => {
     importExcelMutation.mutate(file, {
@@ -175,8 +187,8 @@ export default function CurrentStatus() {
         <TableCustom
           title="Quản lý hiện trạng"
           columns={columns}
-          rows={currentStatus.items}
-          total={currentStatus.totalItems}
+          rows={currentStatusPage.items}
+          total={currentStatusPage.totalItems}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
           loading={isLoading}

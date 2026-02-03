@@ -84,53 +84,6 @@ export const useTypeAssetMutation = (
     },
   });
 
-  const { data = { items: [], totalItems: 0 }, isLoading } = useQuery({
-    queryKey: ["typeAssetsPage", page, pageSize, searchValue], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/loaitaisancon/paged", {
-        params: {
-          idcongty: "ct001",
-          page: page,
-          size: pageSize,
-          search: searchValue,
-        },
-      });
-      return res.data;
-    },
-    placeholderData: (previousData) => previousData,
-  });
-
-  const { data: allTypeAssets = [] } = useQuery({
-    queryKey: ["allTypeAssets"], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/loaitaisancon");
-      return res.data;
-    },
-    placeholderData: (previousData) => previousData,
-  });
-
-  const { data: typeAssetsByAssetGroup = [] } = useQuery({
-    queryKey: ["typeAssetsByAssetGroup", assetGroup], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get(`/loaitaisancon/byloaitaisan/${assetGroup}`);
-      return res.data;
-    },
-    enabled: !!assetGroup,
-  });
-
-  const { data: assetGroups = [] } = useQuery({
-    queryKey: ["assetGroups"], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/nhomtaisan", {
-        params: {
-          idcongty: "ct001",
-        },
-      });
-      return res.data;
-    },
-    placeholderData: (previousData) => previousData,
-  });
-
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: TypeAssetType[]) => {
       const payload = dataToExport.map((item) => ({
@@ -159,7 +112,17 @@ export const useTypeAssetMutation = (
   });
 
   const importExcelMutation = useMutation({
-    mutationFn: (file: File) => {
+    mutationFn: async (file: File) => {
+      const assetGroups =
+        (await queryClient.ensureQueryData({
+          queryKey: ["allTypeAssetsGroup"],
+          queryFn: async () => {
+            const res = await api.get("/nhomtaisan", {
+              params: { idcongty: "ct001" },
+            });
+            return res.data;
+          },
+        })) || [];
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = async (e) => {
@@ -249,10 +212,62 @@ export const useTypeAssetMutation = (
     deleteManyMutation,
     importExcelMutation,
     exportMutation,
-    allTypeAssets,
-    typeAssets: data,
-    isLoading,
-    assetGroups,
-    typeAssetsByAssetGroup,
   };
+};
+
+export const useAllTypeAssetQuery = () => {
+  return useQuery({
+    queryKey: ["allTypeAssets"],
+    queryFn: async () => {
+      const res = await api.get("/loaitaisancon");
+      return res.data;
+    },
+  });
+};
+
+export const useAllTypeAssetByGroupQuery = (assetGroup: string) => {
+  return useQuery({
+    queryKey: ["typeAssetsByAssetGroup", assetGroup],
+    queryFn: async () => {
+      const res = await api.get(`/loaitaisancon/byloaitaisan/${assetGroup}`);
+      return res.data || [];
+    },
+    enabled: !!assetGroup,
+  });
+};
+
+export const useAllAssetGroupQuery = () => {
+  return useQuery({
+    queryKey: ["allTypeAssetsGroup"],
+    queryFn: async () => {
+      const res = await api.get(`/nhomtaisan`, {
+        params: {
+          idcongty: "ct001",
+        },
+      });
+      return res.data;
+    },
+  });
+};
+
+export const useTypeAssetPageQuery = (
+  page?: number,
+  pageSize?: number,
+  searchValue?: string,
+) => {
+  return useQuery({
+    queryKey: ["typeAssetsPage", page, pageSize, searchValue], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/loaitaisancon/paged", {
+        params: {
+          idcongty: "ct001",
+          page: page,
+          size: pageSize,
+          search: searchValue,
+        },
+      });
+      return res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
 };

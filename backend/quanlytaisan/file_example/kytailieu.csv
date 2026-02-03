@@ -1,4 +1,0 @@
-Id,IdTaiLieu,LoaiKy,X,Y,IdNguoiKy,ChuKySo,NgayKy,Stt
-ktl001,tailieu001,1,100.5,200.3,nk001,base64_signature_1,2024-01-15 10:30:00,1
-ktl002,tailieu001,2,300.5,400.3,nk002,base64_signature_2,2024-01-15 11:30:00,2
-ktl003,tailieu002,1,150.0,250.0,nk003,base64_signature_3,2024-01-16 09:15:00,1

@@ -17,13 +17,24 @@ import AssetGroupItem from "./components/AssetGroupItem";
 import { showConfirmAlert } from "../../components/Alert";
 import { useAssetManagerMutation } from "./Mutation";
 import { findById } from "../../utils/helpers";
-import { useDepartmentMutation } from "../Department/Mutation";
-import { useCurrentStatusMutation } from "../CurrentStatus/Mutation";
-import { useTypeAssetMutation } from "../TypeAsset/Mutation";
-import { useUnitMutation } from "../Unit/Mutation";
+import {
+  useAllDepartmentsQuery,
+  useDepartmentMutation,
+} from "../Department/Mutation";
+import { useAllCurrentStatusQuery, useCurrentStatusMutation } from "../CurrentStatus/Mutation";
+import {
+  useAllAssetGroupQuery,
+  useAllTypeAssetByGroupQuery,
+  useAllTypeAssetQuery,
+  useTypeAssetMutation,
+} from "../TypeAsset/Mutation";
+import { useAllUnitsQuery, useUnitMutation } from "../Unit/Mutation";
 import { useAssetModelMutation } from "../AssetModel/Mutation";
-import { useProjectMutation } from "../Project/Mutation";
-import { useReasonIncreaseMutation } from "../ReasonIncrease/Mutation";
+import { useAllProjectsQuery, useProjectMutation } from "../Project/Mutation";
+import {
+  useAllReasonIncreaseQuery,
+  useReasonIncreaseMutation,
+} from "../ReasonIncrease/Mutation";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 
 export default function AssetManager() {
@@ -67,14 +78,16 @@ export default function AssetManager() {
       setOpenErrorModal(true); // Mở Modal MUI hiển thị danh sách lỗi
     },
   );
-  const { allDepartments } = useDepartmentMutation();
-  const { allCurrentStatus } = useCurrentStatusMutation();
-  const { allTypeAssets, typeAssetsByAssetGroup, assetGroups } =
-    useTypeAssetMutation(undefined, undefined, "", selectedAssetGroup);
-  const { allUnits } = useUnitMutation();
+  const { data: allDepartments = [] } = useAllDepartmentsQuery();
+  const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
+  const { data: assetGroups = [] } = useAllAssetGroupQuery();
+  const { data: typeAssetsByAssetGroup = [] } =
+    useAllTypeAssetByGroupQuery(selectedGroup);
+  const { data: allTypeAssets = [] } = useAllTypeAssetQuery();
+  const { data: allUnits = [] } = useAllUnitsQuery();
   const { allAssetModel } = useAssetModelMutation();
-  const { allProjects } = useProjectMutation();
-  const { allReasonIncreases } = useReasonIncreaseMutation();
+  const { data: allProjects = [] } = useAllProjectsQuery();
+  const { data: allReasonIncreases = [] } = useAllReasonIncreaseQuery();
 
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [openErrorModal, setOpenErrorModal] = useState(false);

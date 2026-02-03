@@ -21,7 +21,7 @@ import ViewBtn from "../../../components/Button/ViewBtn";
 import { TypeAssetValidation } from "../validation/Validation";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
 import EditButton from "../../../components/Button/EditButton";
-import { useTypeAssetMutation } from "../Mutation";
+import { useAllAssetGroupQuery, useTypeAssetMutation } from "../Mutation";
 
 export default function TypeAssetForm({
   onEdit,
@@ -37,7 +37,7 @@ export default function TypeAssetForm({
   onSave: (values: any) => void;
 }) {
   const [expanded, setExpanded] = useState(true);
-  const { assetGroups } = useTypeAssetMutation();
+  const { data: assetGroups = [] } = useAllAssetGroupQuery();
   const formik = useFormik({
     initialValues: {
       id: "",
@@ -100,7 +100,7 @@ export default function TypeAssetForm({
               <FieldAutoCompleted
                 title="Mã loại tài sản cha *"
                 data={assetGroups}
-                labelkey="tenLoaiTaiSan"
+                labelkey="tenNhom"
                 formik={formik}
                 field="idLoaiTs"
                 disabled={readOnly}

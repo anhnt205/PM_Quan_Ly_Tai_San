@@ -1,3 +1,0 @@
-id,idDonVi,ten,ngayNhap,donViTinh,soLuong,idNhomCCDC,giaTri,soKyHieu,kyHieu,congSuat,nuocSanXuat,namSanXuat,ghiChu,idCongTy,ngayTao,ngayCapNhat,nguoiTao,nguoiCapNhat,isActive
-CCDC01,DV01,Vật tư A,2025-01-01 08:00:00,Cái,10,NCCDC01,1000,SK01,K01,50KW,Viet Nam,2020,Ghi chú 1,CT01,2025-01-01 08:00:00,2025-01-05 09:00:00,admin,admin,true
-CCDC02,DV02,Vật tư B,2025-02-01 09:00:00,Chiếc,5,NCCDC02,500,SK02,K02,30KW,Viet Nam,2021,Ghi chú 2,CT01,2025-02-01 09:00:00,2025-02-05 10:00:00,user1,user2,true

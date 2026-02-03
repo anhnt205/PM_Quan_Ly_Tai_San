@@ -81,35 +81,6 @@ export const useCapitalSourceMutation = (
     },
   });
 
-  const { data = { items: [], totalItems: 0 }, isLoading } = useQuery({
-    queryKey: ["capitalSourcesPage", page, pageSize, searchValue], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/nguonvon/paged", {
-        params: {
-          idcongty: "ct001",
-          page: page,
-          size: pageSize,
-          search: searchValue,
-        },
-      });
-      return res.data;
-    },
-    placeholderData: (previousData) => previousData,
-  });
-
-  const { data: allData = [] } = useQuery({
-    queryKey: ["capitalSources"], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/nguonvon", {
-        params: {
-          idcongty: "ct001",
-        },
-      });
-      return res.data;
-    },
-    placeholderData: (previousData) => previousData,
-  });
-
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: CapitalSourceType[]) => {
       const payload = dataToExport.map((item) => ({
@@ -232,8 +203,42 @@ export const useCapitalSourceMutation = (
     deleteManyMutation,
     exportMutation,
     importExcelMutation,
-    allData,
-    capitalSourcesPage: data,
-    isLoading,
   };
+};
+
+export const useCapitalSourcePageQuery = (
+  page: number,
+  pageSize: number,
+  searchValue: string,
+) => {
+  return useQuery({
+    queryKey: ["capitalSourcesPage", page, pageSize, searchValue], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/nguonvon/paged", {
+        params: {
+          idCongTy: "ct001",
+          page: page,
+          size: pageSize,
+          search: searchValue,
+        },
+      });
+      return res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};
+
+export const useAllCapitalSourceQuery = () => {
+  return useQuery({
+    queryKey: ["capitalSources"],
+    queryFn: async () => {
+      const res = await api.get("/nguonvon", {
+        params: {
+          idcongty: "ct001",
+        },
+      });
+      return res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
 };

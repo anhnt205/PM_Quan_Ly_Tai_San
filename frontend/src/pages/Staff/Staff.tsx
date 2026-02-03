@@ -13,9 +13,10 @@ import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import StaffForm from "./components/StaffForm";
-import { useStaffMutation } from "./Mutation";
+import { useStaffMutation, useStaffPagesQuery } from "./Mutation";
 import { showConfirmAlert, showErrorAlert } from "../../components/Alert";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
+import { useDebounce } from "../../hook/useDebounce";
 
 export default function Staff() {
   const [showForm, setShowForm] = useState(false);
@@ -32,13 +33,11 @@ export default function Staff() {
   const [openErrorDialog, setOpenErrorDialog] = useState(false);
 
   const {
-    staffsPage,
     createMutation,
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
     uploadMutation,
-    isLoading,
     exportMutation,
     importExcelMutation,
   } = useStaffMutation(
@@ -46,6 +45,14 @@ export default function Staff() {
     paginationModel.pageSize,
     searchValue,
   );
+
+  const debouncedSearchValue = useDebounce(searchValue, 600);
+  const { data: staffsPage = { items: [], totalItems: 0 }, isLoading } =
+    useStaffPagesQuery(
+      paginationModel.page,
+      paginationModel.pageSize,
+      debouncedSearchValue,
+    );
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedStaff(params.row);

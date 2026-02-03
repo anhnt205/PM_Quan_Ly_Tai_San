@@ -13,9 +13,14 @@ import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import ReasonIncreaseForm from "./components/ReasonIncreaseForm";
-import { useReasonIncreaseMutation } from "./Mutation";
+import {
+  useAllReasonIncreaseQuery,
+  useReasonIncreaseMutation,
+  useReasonIncreasePageQuery,
+} from "./Mutation";
 import { showConfirmAlert } from "../../components/Alert";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
+import { useDebounce } from "../../hook/useDebounce";
 
 export default function ReasonIncrease() {
   const [showForm, setShowForm] = useState(false);
@@ -34,20 +39,26 @@ export default function ReasonIncrease() {
   });
 
   const {
-    // reasonIncreasesPage,
-    allReasonIncreases,
     createMutation,
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
     importExcelMutation,
     exportMutation,
-    // isLoading,
   } = useReasonIncreaseMutation(
     paginationModel.page,
     paginationModel.pageSize,
     searchValue,
   );
+
+  const debouncedSearchValue = useDebounce(searchValue, 600);
+  const { data: reasonIncreasesPage = { items: [], totalItems: 0 }, isLoading } =
+    useReasonIncreasePageQuery(
+      paginationModel.page,
+      paginationModel.pageSize,
+      debouncedSearchValue,
+    );
+  const { data: allReasonIncreases = [] } = useAllReasonIncreaseQuery();
 
   const handleImport = (file: File) => {
     importExcelMutation.mutate(file, {
@@ -195,18 +206,17 @@ export default function ReasonIncrease() {
         <TableCustom
           title="Danh sách lý do tăng"
           columns={columns}
-          rows={allReasonIncreases}
-          total={allReasonIncreases.length}
+          rows={reasonIncreasesPage.items}
+          total={reasonIncreasesPage.totalItems}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
-          // loading={isLoading}
+          loading={isLoading}
           onRowClick={handleRowClick}
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
           onDelete={deleteManyMutation.mutate}
           searchValue={searchValue}
           setSearchValue={setSearchValue}
-          paginationMode="client"
         />
       </Box>
     </Box>

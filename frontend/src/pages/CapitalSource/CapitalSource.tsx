@@ -13,8 +13,13 @@ import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import CapitalSourceForm from "./components/CapitalSourceForm";
-import { useCapitalSourceMutation } from "./Mutation";
+import {
+  useAllCapitalSourceQuery,
+  useCapitalSourceMutation,
+  useCapitalSourcePageQuery,
+} from "./Mutation";
 import { showConfirmAlert } from "../../components/Alert";
+import { useDebounce } from "../../hook/useDebounce";
 
 export default function CapitalSource() {
   const [showForm, setShowForm] = useState(false);
@@ -29,20 +34,23 @@ export default function CapitalSource() {
   });
 
   const {
-    capitalSourcesPage,
     createMutation,
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
     importExcelMutation,
     exportMutation,
-    allData,
-    isLoading,
-  } = useCapitalSourceMutation(
-    paginationModel.page,
-    paginationModel.pageSize,
-    searchValue,
-  );
+  } = useCapitalSourceMutation();
+
+  const debouncedSearchValue = useDebounce(searchValue, 600);
+  const { data: capitalSourcesPage = { items: [], totalItems: 0 }, isLoading } =
+    useCapitalSourcePageQuery(
+      paginationModel.page,
+      paginationModel.pageSize,
+      debouncedSearchValue,
+    );
+
+  const { data: allCapitalSources = [] } = useAllCapitalSourceQuery();
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedCapitalSource(params.row);
@@ -162,7 +170,7 @@ export default function CapitalSource() {
           setSelectedCapitalSource(null);
           setReadOnly(false);
         }}
-        onExport={() => exportMutation.mutate(allData)}
+        onExport={() => exportMutation.mutate(allCapitalSources)}
         onImport={(file) => importExcelMutation.mutate(file)}
         showExcel={true}
       />

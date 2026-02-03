@@ -13,8 +13,13 @@ import DepartmentForm from "./components/DepartmentForm";
 import { Delete } from "@mui/icons-material";
 import { useState } from "react";
 
-import { useDepartmentMutation } from "./Mutation";
+import {
+  useAllDepartmentsQuery,
+  useDepartmentMutation,
+  useDepartmentsPageQuery,
+} from "./Mutation";
 import { showConfirmAlert } from "../../components/Alert";
+import { useDebounce } from "../../hook/useDebounce";
 
 export default function Department() {
   const [showForm, setShowForm] = useState(false);
@@ -29,13 +34,10 @@ export default function Department() {
   });
 
   const {
-    departmentsPage,
-    allDepartments,
     createMutation,
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
-    isLoading,
     importExcelMutation,
     exportMutation,
   } = useDepartmentMutation(
@@ -44,6 +46,15 @@ export default function Department() {
     searchValue,
   );
 
+  const debouncedSearchValue = useDebounce(searchValue, 600);
+  const { data: departmentsPage = { items: [], totalItems: 0 }, isLoading } =
+    useDepartmentsPageQuery(
+      paginationModel.page,
+      paginationModel.pageSize,
+      debouncedSearchValue,
+    );
+
+  const { data: allDepartment } = useAllDepartmentsQuery();
   const handleRowClick = (params: GridRowParams) => {
     setSelectedDepartment(params.row);
     setReadOnly(true); // Set readOnly to true when viewing details
@@ -118,7 +129,7 @@ export default function Department() {
           setSelectedDepartment(null);
           setReadOnly(false);
         }}
-        onExport={() => exportMutation.mutate(allDepartments)}
+        onExport={() => exportMutation.mutate(allDepartment)}
         onImport={(file) => importExcelMutation.mutate(file)}
         showExcel={true}
       />

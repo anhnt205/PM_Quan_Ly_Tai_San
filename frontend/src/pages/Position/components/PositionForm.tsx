@@ -42,8 +42,8 @@ export default function PositionForm({
   const [expanded, setExpanded] = useState(true);
   const formik = useFormik({
     initialValues: {
-      id: "ct001",
-      tenChucVu: "ct001",
+      id: "",
+      tenChucVu: "",
       quanLyNhanVien: false,
       quanLyPhongBan: false,
       quanLyDuAn: false,

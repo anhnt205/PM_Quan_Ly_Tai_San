@@ -81,29 +81,6 @@ export const useCurrentStatusMutation = (
     },
   });
 
-  const { data = { items: [], totalItems: 0 }, isLoading } = useQuery({
-    queryKey: ["currentStatus", page, pageSize, searchValue], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/hientrangkythuat/paged", {
-        params: {
-          page: page,
-          size: pageSize,
-          search: searchValue,
-        },
-      });
-      return res.data;
-    },
-    placeholderData: (previousData) => previousData,
-  });
-
-  const { data: allCurrentStatus } = useQuery({
-    queryKey: ["allCurrentStatus"], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/hientrangkythuat");
-      return res.data;
-    },
-  });
-
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: CurrentStatusType[]) => {
       const payload = dataToExport.map((item) => ({
@@ -218,8 +195,38 @@ export const useCurrentStatusMutation = (
     deleteManyMutation,
     importExcelMutation,
     exportMutation,
-    currentStatus: data,
-    allCurrentStatus,
-    isLoading,
   };
+};
+
+export const useCurrentStatusPageQuery = (
+  page: number,
+  pageSize: number,
+  searchValue: string,
+) => {
+  return useQuery({
+    queryKey: ["currentStatusPage", page, pageSize, searchValue], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/hientrangkythuat/paged", {
+        params: {
+          idCongTy: "ct001",
+          page: page,
+          size: pageSize,
+          search: searchValue,
+        },
+      });
+      return res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};
+
+export const useAllCurrentStatusQuery = () => {
+  return useQuery({
+    queryKey: ["allCurrentStatus"],
+    queryFn: async () => {
+      const res = await api.get("/hientrangkythuat");
+      return res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
 };

@@ -1,3 +1,0 @@
-id,idCongTy,banGiaoTaiSan,quyetDinhDieuDongSo,lenhDieuDong,idDonViGiao,idDonViNhan,ngayBanGiao,idLanhDao,idDaiDiendonviBanHanhQD,daXacNhan,idDaiDienBenGiao,daiDienBenGiaoXacNhan,idDaiDienBenNhan,daiDienBenNhanXacNhan,trangThai,note,ngayTao,ngayCapNhat,nguoiTao,nguoiCapNhat,isActive,share,duongDanFile,tenFile
-BGTS01,CT01,Ban giao TS 1,QD01,Lenh01,DV01,DV02,2025-01-01 08:00:00,LD01,DD01,true,DVBG01,true,DVBN01,true,1,Ghi chú 1,2025-01-01 08:00:00,2025-01-05 09:00:00,admin,admin,true,true,/files/bgts1.pdf,BGTS1.pdf
-BGTS02,CT01,Ban giao TS 2,QD02,Lenh02,DV02,DV03,2025-02-01 09:00:00,LD02,DD02,true,DVBG02,true,DVBN02,true,2,Ghi chú 2,2025-02-01 09:00:00,2025-02-05 10:00:00,user1,user2,true,true,/files/bgts2.pdf,BGTS2.pdf

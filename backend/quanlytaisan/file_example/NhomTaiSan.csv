@@ -1,3 +1,0 @@
-id,tenNhom,hieuLuc,idCongTy,ngayTao,ngayCapNhat,nguoiTao,nguoiCapNhat,isActive
-NTS01,Nhóm Tài Sản Cố Định,true,CT01,2025-09-06 09:00:00,2025-09-06 09:30:00,admin,system,true
-NTS02,Nhóm Tài Sản Ngắn Hạn,false,CT01,2025-09-06 10:00:00,2025-09-06 10:15:00,admin,system,true

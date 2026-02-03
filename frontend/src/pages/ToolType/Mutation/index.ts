@@ -4,6 +4,7 @@ import { ToolTypeType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import * as XLSX from "xlsx";
 import { s } from "../../../utils/helpers";
+import { useAllToolGroupQuery } from "../../ToolGroup/Mutation";
 
 export const useToolTypeMutation = (
   page?: number,
@@ -84,44 +85,7 @@ export const useToolTypeMutation = (
     },
   });
 
-  const { data = { items: [], totalItems: 0 }, isLoading } = useQuery({
-    queryKey: ["toolTypesPage", page, pageSize, searchValue], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/loaiccdccon/paged-mini", {
-        params: {
-          idcongty: "ct001",
-          page: page,
-          size: pageSize,
-          search: searchValue,
-        },
-      });
-      return res.data;
-    },
-    placeholderData: (previousData) => previousData,
-  });
-
-  const { data: toolTypes = [] } = useQuery({
-    queryKey: ["toolTypes", page, pageSize, searchValue], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/loaiccdccon", {
-        params: {
-          idcongty: "ct001",
-        },
-      });
-      return res.data;
-    },
-    placeholderData: (previousData) => previousData,
-  });
-
-  const { data: ccdcGroups = [] } = useQuery({
-    queryKey: ["ccdcGroups"],
-    queryFn: async () => {
-      const res = await api.get("/nhomccdc", {
-        params: { idcongty: "ct001" },
-      });
-      return res.data;
-    },
-  });
+  const { data: ccdcGroups = [] } = useAllToolGroupQuery();
 
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: ToolTypeType[]) => {
@@ -239,8 +203,36 @@ export const useToolTypeMutation = (
     deleteManyMutation,
     exportMutation,
     importExcelMutation,
-    toolTypes,
-    toolTypesPage: data,
-    isLoading,
   };
+};
+
+export const useAllToolTypeQuery = () => {
+  return useQuery({
+    queryKey: ["allToolTypes"],
+    queryFn: async () => {
+      const res = await api.get("/loaiccdccon");
+      return res.data;
+    },
+  });
+};
+export const useToolTypePageQuery = (
+  page?: number,
+  pageSize?: number,
+  searchValue?: string,
+) => {
+  return useQuery({
+    queryKey: ["toolTypesPage", page, pageSize, searchValue], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/loaiccdccon/paged", {
+        params: {
+          idcongty: "ct001",
+          page: page,
+          size: pageSize,
+          search: searchValue,
+        },
+      });
+      return res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
 };

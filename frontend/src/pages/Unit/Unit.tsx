@@ -12,9 +12,14 @@ import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import TypeAssetForm from "./components/UnitForm";
-import { useUnitMutation } from "./Mutation";
+import {
+  useAllUnitsQuery,
+  useUnitMutation,
+  useUnitPagesQuery,
+} from "./Mutation";
 import { showConfirmAlert } from "../../components/Alert";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
+import { useDebounce } from "../../hook/useDebounce";
 
 export default function Unit() {
   const [showForm, setShowForm] = useState(false);
@@ -34,17 +39,19 @@ export default function Unit() {
   const {
     createMutation,
     updateMutation,
-    allUnits,
     importExcelMutation,
     exportMutation,
     deleteOneMutation,
     deleteManyMutation,
-    isLoading,
-  } = useUnitMutation(
-    paginationModel.page,
-    paginationModel.pageSize,
-    searchValue,
-  );
+  } = useUnitMutation();
+  const debouncedSearchValue = useDebounce(searchValue, 600);
+  const { data: unitPages = { items: [], totalItems: 0 }, isLoading } =
+    useUnitPagesQuery(
+      paginationModel.page,
+      paginationModel.pageSize,
+      debouncedSearchValue,
+    );
+  const { data: allUnits = [] } = useAllUnitsQuery();
 
   const handleImport = (file: File) => {
     importExcelMutation.mutate(file, {
@@ -173,8 +180,8 @@ export default function Unit() {
         <TableCustom
           title="Quản lý đơn vị tính"
           columns={columns}
-          rows={allUnits}
-          total={allUnits.length}
+          rows={unitPages.items}
+          total={unitPages.totalItems}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
           loading={isLoading}
@@ -184,7 +191,6 @@ export default function Unit() {
           onDelete={deleteManyMutation.mutate}
           searchValue={searchValue}
           setSearchValue={setSearchValue}
-          paginationMode="client"
         />
       </Box>
     </Box>

@@ -29,8 +29,14 @@ import { StaffValidation } from "../validation/Validation";
 import UploadButton from "../../../components/Button/UploadButton";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import EditButton from "../../../components/Button/EditButton";
-import { usePositionMutation } from "../../Position/Mutation";
-import { useDepartmentMutation } from "../../Department/Mutation";
+import {
+  useAllPositionsQuery,
+  usePositionMutation,
+} from "../../Position/Mutation";
+import {
+  useAllDepartmentsQuery,
+  useDepartmentMutation,
+} from "../../Department/Mutation";
 
 export default function StaffForm({
   onEdit,
@@ -49,8 +55,8 @@ export default function StaffForm({
 }) {
   const [showPin, setShowPin] = useState(false);
   const [expanded, setExpanded] = useState(true);
-  const { positionsPage } = usePositionMutation();
-  const { departmentsPage } = useDepartmentMutation(0, 99999);
+  const { data: allPositions } = useAllPositionsQuery();
+  const { data: allDepartments = [] } = useAllDepartmentsQuery();
 
   const formik = useFormik({
     initialValues: {
@@ -196,7 +202,7 @@ export default function StaffForm({
                 <Grid size={{ xs: 12 }}>
                   <FieldAutoCompleted
                     title="Chức vụ *"
-                    data={positionsPage.items}
+                    data={allPositions}
                     labelkey="tenChucVu"
                     formik={formik}
                     field="chucVu"
@@ -206,7 +212,7 @@ export default function StaffForm({
                 <Grid size={{ xs: 12 }}>
                   <FieldAutoCompleted
                     title="Phòng ban/Bộ phận *"
-                    data={departmentsPage.items}
+                    data={allDepartments}
                     labelkey="tenPhongBan"
                     formik={formik}
                     field="boPhan"

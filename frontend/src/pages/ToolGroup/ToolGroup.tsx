@@ -12,9 +12,14 @@ import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import { Delete } from "@mui/icons-material";
 import ToolGroupForm from "./components/ToolGroupForm";
 import { useState } from "react";
-import { useToolGroupMutation } from "./Mutation";
+import {
+  useAllToolGroupQuery,
+  useToolGroupMutation,
+  useToolGroupPageQuery,
+} from "./Mutation";
 import { showConfirmAlert } from "../../components/Alert";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
+import { useDebounce } from "../../hook/useDebounce";
 
 export default function ToolGroup() {
   const [showForm, setShowForm] = useState(false);
@@ -32,20 +37,26 @@ export default function ToolGroup() {
   });
 
   const {
-    tooGroups,
-    allData,
     createMutation,
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
     importExcelMutation,
     exportMutation,
-    isLoading,
   } = useToolGroupMutation(
     paginationModel.page,
     paginationModel.pageSize,
     searchValue,
   );
+
+  const debouncedSearchValue = useDebounce(searchValue, 600);
+  const { data: toolGroupPage = { items: [], totalItems: 0 }, isLoading } =
+    useToolGroupPageQuery(
+      paginationModel.page,
+      paginationModel.pageSize,
+      debouncedSearchValue,
+    );
+  const { data: allToolGroup = [] } = useAllToolGroupQuery();
 
   const handleImport = (file: File) => {
     importExcelMutation.mutate(file, {
@@ -153,7 +164,7 @@ export default function ToolGroup() {
           setSelectedToolGroup(null);
           setReadOnly(false);
         }}
-        onExport={() => exportMutation.mutate(allData)}
+        onExport={() => exportMutation.mutate(allToolGroup)}
         onImport={handleImport}
         showExcel={true}
       />
@@ -203,8 +214,8 @@ export default function ToolGroup() {
         <TableCustom
           title="Quản lý nhóm ccdc"
           columns={columns}
-          rows={tooGroups.items}
-          total={tooGroups.totalItems}
+          rows={toolGroupPage.items}
+          total={toolGroupPage.totalItems}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
           loading={isLoading}

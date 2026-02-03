@@ -2,11 +2,11 @@ import React from "react";
 import { Paper, Typography, Box } from "@mui/material";
 import { Inventory, AttachMoney } from "@mui/icons-material";
 import PieChart, { COLORS } from "../components/PieChart";
-import { useTypeAssetMutation } from "../../TypeAsset/Mutation";
+import { useAllAssetGroupQuery, useTypeAssetMutation } from "../../TypeAsset/Mutation";
 
 export default function TaisanGroupCard({ taiSanPieData, statistics }: any) {
   // If `taiSanPieData` not provided, fallback to assetGroups from typeAsset hook
-  const { assetGroups = [] } = useTypeAssetMutation();
+  const { data: assetGroups = [] } = useAllAssetGroupQuery();
 
   // Prefer prop data; otherwise build from assetGroups
   let pieData = taiSanPieData || [];
@@ -32,7 +32,7 @@ export default function TaisanGroupCard({ taiSanPieData, statistics }: any) {
       (it: any) =>
         !it.ten ||
         String(it.ten).trim() === "" ||
-        String(it.ten).trim() === "Chưa xác định"
+        String(it.ten).trim() === "Chưa xác định",
     );
 
   const displayData = allEmptyGroup

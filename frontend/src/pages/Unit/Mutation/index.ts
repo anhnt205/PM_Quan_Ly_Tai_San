@@ -84,30 +84,6 @@ export const useUnitMutation = (
     },
   });
 
-  // const { data = { items: [], totalItems: 0 },  } = useQuery({
-  //   queryKey: ["units", page, pageSize, searchValue], // Key để cache dữ liệu
-  //   queryFn: async () => {
-  //     const res = await api.get("/donvitinh/paged-mini", {
-  //       params: {
-  //         page: page,
-  //         size: pageSize,
-  //         search: searchValue,
-  //       },
-  //     });
-  //     return res.data;
-  //   },
-  //
-  // });
-
-  const { data: allUnits = [], isLoading } = useQuery({
-    queryKey: ["allUnits"], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/donvitinh", {});
-      return res.data;
-    },
-    placeholderData: (previousData) => previousData,
-  });
-
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: UnitType[]) => {
       const payload = dataToExport.map((item) => ({
@@ -209,8 +185,38 @@ export const useUnitMutation = (
     deleteManyMutation,
     exportMutation,
     importExcelMutation,
-    // units: data,
-    allUnits,
-    isLoading,
   };
+};
+
+export const useUnitPagesQuery = (
+  page?: number,
+  pageSize?: number,
+  search?: string,
+) => {
+  return useQuery({
+    queryKey: ["allUnits", page, pageSize, search],
+    queryFn: async () => {
+      const res = await api.get("/donvitinh/paged", {
+        params: {
+          page,
+          size: pageSize,
+          search,
+        },
+      });
+      return res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};
+
+export const useAllUnitsQuery = (
+) => {
+  return useQuery({
+    queryKey: ["allUnits"],
+    queryFn: async () => {
+      const res = await api.get("/donvitinh");
+      return res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
 };

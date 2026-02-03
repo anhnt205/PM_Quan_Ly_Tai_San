@@ -1,3 +1,0 @@
-id,hoTen,diDong,emailCongViec,kyNhay,kyThuong,kySo,chuKyNhay,chuKyThuong,agreementUUId,pin,boPhan,chucVu,nguoiQuanLy,laQuanLy,avatar,idCongTy,diaChiLamViec,hinhThucLamViec,gioLamViec,muiGio,nguoiTao,nguoiCapNhat,isActive,ngayTao,ngayCapNhat
-NV01,Nguyen Van A,0909123456,a.nguyen@company.com,true,false,true,chuKyA,chuKyThuongA,AG001,1234,Phòng Kế Toán,Kế Toán Trưởng,NV02,true,/images/nv01.png,CT01,Hà Nội,Toàn thời gian,8h-17h,Asia/Ho_Chi_Minh,admin,system,true,2025-09-06 08:30:00,2025-09-06 09:00:00
-NV02,Tran Thi B,0909345678,b.tran@company.com,false,true,false,chuKyB,chuKyThuongB,AG002,5678,Phòng Nhân Sự,Trưởng phòng,NV01,false,/images/nv02.png,CT01,Hồ Chí Minh,Bán thời gian,9h-16h,Asia/Ho_Chi_Minh,admin,system,true,2025-09-06 09:15:00,2025-09-06 09:45:00

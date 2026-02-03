@@ -7,9 +7,12 @@ import ToolTableCustom from "./components/ToolTableCustom";
 import ToolDetailSidebar from "./components/ToolDetailSidebar";
 import { useToolManagerMutation } from "./Mutation";
 import { DEFAULT_COLUMNS } from "./columnConfig";
-import { useDepartmentMutation } from "../Department/Mutation";
-import { useToolTypeMutation } from "../ToolType/Mutation";
-import { useUnitMutation } from "../Unit/Mutation";
+import {
+  useAllDepartmentsQuery,
+  useDepartmentMutation,
+} from "../Department/Mutation";
+import { useAllToolTypeQuery, useToolTypeMutation } from "../ToolType/Mutation";
+import { useAllUnitsQuery, useUnitMutation } from "../Unit/Mutation";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 
 export default function ToolManager() {
@@ -46,9 +49,9 @@ export default function ToolManager() {
       setOpenErrorModal(true);
     },
   );
-  const { allDepartments } = useDepartmentMutation();
-  const { toolTypes } = useToolTypeMutation();
-  const { allUnits } = useUnitMutation();
+  const { data: allDepartments = [] } = useAllDepartmentsQuery();
+  const { data: toolTypes = [] } = useAllToolTypeQuery();
+  const { data: allUnits = [] } = useAllUnitsQuery();
 
   const [columns, setColumns] = useState(DEFAULT_COLUMNS);
 

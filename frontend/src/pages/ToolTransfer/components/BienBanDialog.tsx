@@ -17,9 +17,16 @@ import React, { useState, useEffect, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import { findById, formatted } from "../../../utils/helpers";
 import { useStaffMutation } from "../../Staff/Mutation";
-import { useDepartmentMutation } from "../../Department/Mutation";
-import { usePositionMutation } from "../../Position/Mutation";
-import { useUnitMutation } from "../../Unit/Mutation";
+import {
+  useAllDepartmentsQuery,
+  useDepartmentMutation,
+} from "../../Department/Mutation";
+import { useAllPositionsQuery, usePositionMutation } from "../../Position/Mutation";
+import {
+  useAllUnitsQuery,
+  useUnitMutation,
+  useUnitPagesQuery,
+} from "../../Unit/Mutation";
 import { ToolHandoverData } from "../../ToolHandover/types";
 import { ToolSignature } from "../types";
 import jsPDF from "jspdf";
@@ -83,9 +90,9 @@ export default function BienBanDialog({
   }, [toolHandover, handleSignatureList, currentIndex]);
 
   const staffs = useStaffMutation().allStaff;
-  const departments = useDepartmentMutation().allDepartments;
-  const positions = usePositionMutation().allPositions;
-  const allUnits = useUnitMutation().allUnits;
+  const { data: departments = [] } = useAllDepartmentsQuery();
+  const { data: positions=[] } = useAllPositionsQuery();
+  const { data: allUnits = [] } = useAllUnitsQuery();
 
   const getChucVu = async (idUser: string) => {
     const nhanVien = await findById(staffs, idUser);

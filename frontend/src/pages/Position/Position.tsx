@@ -14,7 +14,12 @@ import ProjectForm from "./components/PositionForm";
 import { Delete } from "@mui/icons-material";
 import { useState } from "react";
 import { showConfirmAlert } from "../../components/Alert";
-import { usePositionMutation } from "./Mutation";
+import {
+  useAllPositionsQuery,
+  usePositionMutation,
+  usePositionsPageQuery,
+} from "./Mutation";
+import { useDebounce } from "../../hook/useDebounce";
 
 export default function Position() {
   const [showForm, setShowForm] = useState(false);
@@ -29,20 +34,26 @@ export default function Position() {
   });
 
   const {
-    positionsPage,
     createMutation,
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
     importExcelMutation,
     exportMutation,
-    isLoading,
-    allPositions,
   } = usePositionMutation(
     paginationModel.page,
     paginationModel.pageSize,
     searchValue,
   );
+
+  const debouncedSearchValue = useDebounce(searchValue, 600);
+  const { data: positionsPage = { items: [], totalItems: 0 }, isLoading } =
+    usePositionsPageQuery(
+      paginationModel.page,
+      paginationModel.pageSize,
+      debouncedSearchValue,
+    );
+  const { data: allPositions = [] } = useAllPositionsQuery();
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedPosition(params.row);

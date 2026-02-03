@@ -73,33 +73,6 @@ export const useProjectMutation = (
     },
   });
 
-  const { data = { items: [], totalItems: 0 }, isLoading } = useQuery({
-    queryKey: ["projectsPage", page, pageSize, searchValue], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/duan/paged", {
-        params: {
-          idcongty: "ct001",
-          page: page,
-          size: pageSize,
-          search: searchValue,
-        },
-      });
-      return res.data;
-    },
-    placeholderData: (previousData) => previousData,
-  });
-
-  const { data: allProjects = [] } = useQuery({
-    queryKey: ["allProjects"],
-    queryFn: async () => {
-      const res = await api.get("/duan", {
-        params: { idcongty: "ct001" }, // Truyền idcongty qua query string
-      });
-      // Swagger cho thấy trả về trực tiếp mảng dự án
-      return res.data || [];
-    },
-  });
-
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: ProjectType[]) => {
       const payload = dataToExport.map((item) => ({
@@ -201,10 +174,44 @@ export const useProjectMutation = (
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
-    allProjects,
-    projectsPage: data,
     exportMutation,
     importExcelMutation,
-    isLoading,
   };
+};
+
+export const useProjectsPageQuery = (
+  page?: number,
+  pageSize?: number,
+  searchValue?: string,
+) => {
+  return useQuery({
+    queryKey: ["projectsPage", page, pageSize, searchValue], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/duan/paged", {
+        params: {
+          idcongty: "ct001",
+          page: page,
+          size: pageSize,
+          search: searchValue,
+        },
+      });
+      return res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};
+
+export const useAllProjectsQuery = () => {
+  return useQuery({
+    queryKey: ["allProjects"], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/duan", {
+        params: {
+          idcongty: "ct001",
+        },
+      });
+      return res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
 };

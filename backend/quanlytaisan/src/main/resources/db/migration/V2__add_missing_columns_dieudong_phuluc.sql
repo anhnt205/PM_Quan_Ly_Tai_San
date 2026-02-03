@@ -1,2 +1,0 @@
-ALTER TABLE DieuDongPhuLucTaiSan
-    ADD COLUMN Dieu4 TEXT AFTER Dieu3;

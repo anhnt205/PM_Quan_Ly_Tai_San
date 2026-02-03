@@ -1,2 +1,0 @@
-ALTER TABLE DieuDongPhuLucTaiSan
-DROP COLUMN Dieu4;

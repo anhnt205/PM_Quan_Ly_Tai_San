@@ -13,8 +13,13 @@ import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import ProjectForm from "./components/ProjectForm";
 import { Delete } from "@mui/icons-material";
 import { useState } from "react";
-import { useProjectMutation } from "./Mutation";
+import {
+  useAllProjectsQuery,
+  useProjectMutation,
+  useProjectsPageQuery,
+} from "./Mutation";
 import { showConfirmAlert } from "../../components/Alert";
+import { useDebounce } from "../../hook/useDebounce";
 
 export default function Project() {
   const [showForm, setShowForm] = useState(false);
@@ -29,20 +34,26 @@ export default function Project() {
   });
 
   const {
-    projectsPage,
     createMutation,
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
     exportMutation,
     importExcelMutation,
-    allProjects,
-    isLoading,
   } = useProjectMutation(
     paginationModel.page,
     paginationModel.pageSize,
     searchValue,
   );
+
+  const debouncedSearchValue = useDebounce(searchValue, 600);
+  const { data: projectsPage = { items: [], totalItems: 0 }, isLoading } =
+    useProjectsPageQuery(
+      paginationModel.page,
+      paginationModel.pageSize,
+      debouncedSearchValue,
+    );
+  const { data: allProjects = [] } = useAllProjectsQuery();
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedProject(params.row);

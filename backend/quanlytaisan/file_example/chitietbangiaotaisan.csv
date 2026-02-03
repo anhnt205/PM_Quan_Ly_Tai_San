@@ -1,3 +1,0 @@
-id,idBanGiaoTaiSan,idTaiSan,soLuong,ngayTao,ngayCapNhat,nguoiTao,nguoiCapNhat,isActive
-CTBGTS01,BGTS01,TS01,10,2025-01-01 08:00:00,2025-01-05 09:00:00,admin,admin,true
-CTBGTS02,BGTS02,TS02,5,2025-02-01 09:00:00,2025-02-05 10:00:00,user1,user2,true
