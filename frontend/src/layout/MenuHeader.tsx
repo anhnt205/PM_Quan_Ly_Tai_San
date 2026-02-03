@@ -37,6 +37,8 @@ import { ShowCountInSubMenu } from "../components/common/ShowCountInSubMenu";
 import { useToolTransferAllQuery } from "../pages/ToolTransfer/Mutation";
 import { useToolHandoverAllQuery } from "../pages/ToolHandover/Mutation";
 import { useAssetHandoverAllQuery } from "../pages/AssetHandover/Mutation";
+import api from "../config/api.config";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const NavMenuItem = ({ item }: { item: any }) => {
   const navigate = useNavigate();
@@ -116,6 +118,7 @@ const NavMenuItem = ({ item }: { item: any }) => {
     </Button>
   );
 };
+
 export default function Menuheader() {
   const { user } = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
@@ -125,6 +128,7 @@ export default function Menuheader() {
     if (!code) return true; // menu không yêu cầu quyền
     return permissions.includes(code);
   };
+  const queryClient = useQueryClient();
 
   const [anchorElSetting, setAnchorElSetting] = useState<null | HTMLElement>(
     null,
@@ -148,18 +152,54 @@ export default function Menuheader() {
     setOpenExpirationDialog(false);
   };
 
-  const handleConfirmExpiration = (
+  // 1. Lấy dữ liệu cấu hình cũ (nếu có)
+  const { data: config } = useQuery({
+    queryKey: ["expirationConfig", user?.id],
+    queryFn: async () => (await api.get(`/config/expiration/${user?.id}`)).data,
+    enabled: !!user?.id,
+  });
+
+  // 2. Mutation để lưu dữ liệu (Tương đương ConfigReponsitory bên Flutter)
+  const updateConfigMutation = useMutation({
+    mutationFn: async (newConfig: {
+      thoiHanTaiLieu: number;
+      ngayBaoHetHan: number;
+    }) =>
+      // POST /api/config với đúng 3 trường Swagger yêu cầu
+      await api.post("/config", {
+        idAccount: user?.taiKhoan?.tenDangNhap, // Sử dụng tenDangNhap làm ID account như bản Flutter
+        thoiHanTaiLieu: newConfig.thoiHanTaiLieu,
+        ngayBaoHetHan: newConfig.ngayBaoHetHan,
+      }),
+    onSuccess: () => {
+      // Làm tươi lại cache config
+      queryClient.invalidateQueries({
+        queryKey: ["expirationConfig", user?.id],
+      });
+      setOpenSnackbar(true);
+      handleCloseExpirationDialog();
+    },
+    onError: (error: any) => {
+      console.error("Lỗi POST config:", error);
+    },
+  });
+
+  const handleConfirmExpiration = async (
     expirationDays: number,
     warningDays: number,
   ) => {
-    // TODO: Gọi API lưu cài đặt ở đây
-    console.log(
-      "Expiration days:",
-      expirationDays,
-      "Warning days:",
-      warningDays,
-    );
-    setOpenSnackbar(true);
+    // Kiểm tra nếu có thay đổi mới gọi API (giống logic Flutter)
+    if (
+      config?.thoiHanTaiLieu !== expirationDays ||
+      config?.ngayBaoHetHan !== warningDays
+    ) {
+      updateConfigMutation.mutate({
+        thoiHanTaiLieu: expirationDays,
+        ngayBaoHetHan: warningDays,
+      });
+    } else {
+      handleCloseExpirationDialog();
+    }
   };
 
   const handleCloseSnackbar = () => {
@@ -446,6 +486,8 @@ export default function Menuheader() {
         open={openExpirationDialog}
         onClose={handleCloseExpirationDialog}
         onConfirm={handleConfirmExpiration}
+        initialConfig={config}
+        loading={updateConfigMutation.isPending}
       />
 
       {/* Snackbar thông báo thành công */}

@@ -7,23 +7,37 @@ import {
   IconButton,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface ExpirationSettingDialogProps {
   open: boolean;
   onClose: () => void;
-  onConfirm?: (expirationDays: number, warningDays: number) => void;
+  initialConfig?: { thoiHanTaiLieu: number; ngayBaoHetHan: number };
+  onConfirm?: (
+    expirationDays: number,
+    warningDays: number,
+  ) => void | Promise<void>;
+  loading?: boolean;
 }
 
 export default function ExpirationSettingDialog({
   open,
   onClose,
+  initialConfig,
   onConfirm,
+  loading = false,
 }: ExpirationSettingDialogProps) {
-  const [expirationDays, setExpirationDays] = useState<string>("19");
-  const [warningDays, setWarningDays] = useState<string>("13");
+  const [expirationDays, setExpirationDays] = useState<string>("0");
+  const [warningDays, setWarningDays] = useState<string>("0");
   const [expirationFocused, setExpirationFocused] = useState(false);
   const [warningFocused, setWarningFocused] = useState(false);
+
+  useEffect(() => {
+    if (open && initialConfig) {
+      setExpirationDays(String(initialConfig.thoiHanTaiLieu));
+      setWarningDays(String(initialConfig.ngayBaoHetHan));
+    }
+  }, [open, initialConfig]);
 
   const MIN_VALUE = 1;
   const MAX_VALUE = 999;
@@ -83,9 +97,18 @@ export default function ExpirationSettingDialog({
     }
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    const exp = parseInt(expirationDays) || 0;
+    const warn = parseInt(warningDays) || 0;
+
+    if (warn > exp) {
+      // Bạn có thể dùng Alert của dự án tại đây
+      alert("Số ngày báo trước không được lớn hơn thời hạn tài liệu!");
+      return;
+    }
+
     if (onConfirm) {
-      onConfirm(parseInt(expirationDays) || 0, parseInt(warningDays) || 0);
+      await onConfirm(exp, warn);
     }
     onClose();
   };
@@ -293,11 +316,12 @@ export default function ExpirationSettingDialog({
           </IconButton>
         </Box>
 
-        {/* Nút Xác nhận */}
+        {/* --- SỬA 3: Nút bấm có trạng thái Loading --- */}
         <Button
           fullWidth
           variant="contained"
           onClick={handleConfirm}
+          disabled={loading} // Tránh click tặc khi đang gọi API
           sx={{
             backgroundColor: "#1b8a4a",
             color: "white",
@@ -311,7 +335,7 @@ export default function ExpirationSettingDialog({
             },
           }}
         >
-          XÁC NHẬN
+          {loading ? "ĐANG XỬ LÝ..." : "XÁC NHẬN"}
         </Button>
       </DialogContent>
     </Dialog>
