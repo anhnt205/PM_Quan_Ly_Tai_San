@@ -2,7 +2,6 @@ import {
   ArrowRight,
   KeyboardArrowDown,
   Logout,
-  ManageAccounts,
   Person,
   Settings,
 } from "@mui/icons-material";
@@ -21,7 +20,7 @@ import logo from "../assets/images/logo_1.png";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../redux/store";
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { logout } from "../redux/userSlice";
 import { ROUTES } from "../utils/routes";
 import ExpirationSettingDialog from "../components/common/ExpirationSettingDialog";
@@ -39,6 +38,7 @@ import { useToolHandoverAllQuery } from "../pages/ToolHandover/Mutation";
 import { useAssetHandoverAllQuery } from "../pages/AssetHandover/Mutation";
 import api from "../config/api.config";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import React from "react";
 
 const NavMenuItem = ({ item }: { item: any }) => {
   const navigate = useNavigate();
@@ -152,12 +152,32 @@ export default function Menuheader() {
     setOpenExpirationDialog(false);
   };
 
-  // 1. Lấy dữ liệu cấu hình cũ (nếu có)
-  const { data: config } = useQuery({
-    queryKey: ["expirationConfig", user?.id],
-    queryFn: async () => (await api.get(`/config/expiration/${user?.id}`)).data,
-    enabled: !!user?.id,
+  // 1. Lấy dữ liệu cấu hình (Gọi endpoint chung /config)
+  const { data: configResponse } = useQuery({
+    queryKey: ["expirationConfig", user?.taiKhoan?.tenDangNhap],
+    queryFn: async () => {
+      const res = await api.get("/config"); // Không truyền ID lên URL nữa
+      return res.data;
+    },
+    enabled: !!user?.taiKhoan?.tenDangNhap,
   });
+
+  // 2. Bóc tách dữ liệu:
+  // Vì gọi /config thường trả về mảng hoặc object chứa data,
+  // ta cần tìm đúng config của user hiện tại trong mảng đó.
+  const config = React.useMemo(() => {
+    const rawData = configResponse?.data || configResponse;
+    console.log("Dữ liệu thô từ API:", rawData); // Thêm dòng này
+
+    if (Array.isArray(rawData)) {
+      // Nếu là mảng, tìm cái nào có idAccount khớp với user đang đăng nhập
+      return rawData.find(
+        (item: any) => item.idAccount === user?.taiKhoan?.tenDangNhap,
+      );
+    }
+    // Nếu là object đơn lẻ (Trường hợp Server tự lọc theo Token)
+    return rawData;
+  }, [configResponse, user]);
 
   // 2. Mutation để lưu dữ liệu (Tương đương ConfigReponsitory bên Flutter)
   const updateConfigMutation = useMutation({
@@ -165,16 +185,14 @@ export default function Menuheader() {
       thoiHanTaiLieu: number;
       ngayBaoHetHan: number;
     }) =>
-      // POST /api/config với đúng 3 trường Swagger yêu cầu
       await api.post("/config", {
-        idAccount: user?.taiKhoan?.tenDangNhap, // Sử dụng tenDangNhap làm ID account như bản Flutter
+        idAccount: user?.taiKhoan?.tenDangNhap,
         thoiHanTaiLieu: newConfig.thoiHanTaiLieu,
         ngayBaoHetHan: newConfig.ngayBaoHetHan,
       }),
     onSuccess: () => {
-      // Làm tươi lại cache config
       queryClient.invalidateQueries({
-        queryKey: ["expirationConfig", user?.id],
+        queryKey: ["expirationConfig", user?.taiKhoan?.tenDangNhap],
       });
       setOpenSnackbar(true);
       handleCloseExpirationDialog();

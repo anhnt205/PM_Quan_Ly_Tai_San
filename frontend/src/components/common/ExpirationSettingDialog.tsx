@@ -27,15 +27,25 @@ export default function ExpirationSettingDialog({
   onConfirm,
   loading = false,
 }: ExpirationSettingDialogProps) {
-  const [expirationDays, setExpirationDays] = useState<string>("0");
-  const [warningDays, setWarningDays] = useState<string>("0");
+  const [expirationDays, setExpirationDays] = useState<string>("60");
+  const [warningDays, setWarningDays] = useState<string>("3");
+
   const [expirationFocused, setExpirationFocused] = useState(false);
   const [warningFocused, setWarningFocused] = useState(false);
 
   useEffect(() => {
+    // Chỉ cập nhật khi Dialog mở và initialConfig thực sự có dữ liệu
     if (open && initialConfig) {
-      setExpirationDays(String(initialConfig.thoiHanTaiLieu));
-      setWarningDays(String(initialConfig.ngayBaoHetHan));
+      console.log("Dialog nhận được config:", initialConfig);
+
+      const data = (initialConfig as any).data || initialConfig;
+
+      if (data.thoiHanTaiLieu !== undefined && data.thoiHanTaiLieu !== null) {
+        setExpirationDays(String(data.thoiHanTaiLieu));
+      }
+      if (data.ngayBaoHetHan !== undefined && data.ngayBaoHetHan !== null) {
+        setWarningDays(String(data.ngayBaoHetHan));
+      }
     }
   }, [open, initialConfig]);
 

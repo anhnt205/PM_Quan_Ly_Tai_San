@@ -4,10 +4,6 @@ import {
   ArrowDropUp,
   Delete,
   InfoOutlineRounded,
-  Visibility,
-  VisibilityOff,
-  Lock,
-  Drafts,
 } from "@mui/icons-material";
 import {
   Accordion,
@@ -15,32 +11,25 @@ import {
   AccordionSummary,
   Box,
   Button,
-  Checkbox,
   Grid,
   IconButton,
-  InputAdornment,
   Paper,
-  Select,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableRow,
-  TextField,
   Typography,
-  Chip,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
 import FieldInput from "../../../components/TextField/FieldInput";
 import { useFormik } from "formik";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
-import ToolType from "../../../data/ToolType.json";
 import FieldDateTime from "../../../components/TextField/FieldDateTime";
 import EditButton from "../../../components/Button/EditButton";
-import dayjs from "dayjs";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 
@@ -97,32 +86,48 @@ export default function ToolForm({
     onSubmit(values) {
       onSave({
         ...values,
-        chiTietTaiSanList: values.chiTietTaiSanList.map(
-          (item: any, index: number) => ({
-            ...item,
-            idDonVi: values.idDonVi,
-            idTaiSan: values.id,
-          })
-        ),
+        // Đảm bảo số lượng tổng của CCDC cũng là số
+        soLuong: Number(values.soLuong || 0),
+        giaTri: Number(values.giaTri || 0),
+
+        chiTietTaiSanList: values.chiTietTaiSanList.map((item: any) => ({
+          ...item,
+          // Ép kiểu số cho từng dòng chi tiết để tránh lỗi Backend
+          soLuong: Number(item.soLuong || 0),
+          namSanXuat: Number(item.namSanXuat || 0),
+
+          // Giữ nguyên logic mapping ID
+          idDonVi: values.idDonVi,
+          idTaiSan: values.id,
+        })),
       });
     },
   });
+
   useEffect(() => {
     if (selectedTool) {
       formik.setValues({
         ...selectedTool,
         chiTietTaiSanList: selectedTool.chiTietTaiSanList.map(
-          (item: any, index: number) => ({
-            ...item,
-            stt: index + 1,
-            isInserted: true,
-          })
+          (item: any, index: number) => {
+            const ownerRecord = selectedTool.chiTietDonViSoHuuList?.find(
+              (o: any) => o.idTsCon === item.id,
+            );
+
+            return {
+              ...item,
+              stt: index + 1,
+              idOwnerRecord: ownerRecord?.id || "",
+              ngayTaoRecord: ownerRecord?.ngayTao || "",
+              isUpdated: false,
+            };
+          },
         ),
       });
     } else {
       formik.resetForm();
     }
-  }, [selectedTool, readOnly]);
+  }, [selectedTool]);
 
   useEffect(() => {
     const soLuong = formik.values.chiTietTaiSanList
@@ -130,6 +135,18 @@ export default function ToolForm({
       .reduce((sum: number, item: any) => sum + Number(item.soLuong || 0), 0);
     formik.setFieldValue("soLuong", soLuong);
   }, [formik.values.chiTietTaiSanList]);
+
+  const handleFieldChange = (e: any, originalIndex: number) => {
+    formik.handleChange(e);
+    const currentRow = formik.values.chiTietTaiSanList[originalIndex] as any;
+    if (!currentRow?.isInserted) {
+      formik.setFieldValue(
+        `chiTietTaiSanList.${originalIndex}.isUpdated`,
+        true,
+      );
+    }
+  };
+
   return (
     <Accordion sx={{ background: "#f6f8f4ff" }} expanded={expanded}>
       <AccordionSummary
@@ -368,10 +385,14 @@ export default function ToolForm({
             </TableHead>
             <TableBody>
               {formik.values.chiTietTaiSanList
-                .map((row: any, originalIndex) => ({ ...row, originalIndex }))
-                .filter((row) => !row.isDeleted)
-                .map((row) => (
+                .map((row: any, originalIndex: number) => ({
+                  ...row,
+                  originalIndex,
+                }))
+                .filter((row: any) => !row.isDeleted)
+                .map((row: any) => (
                   <TableRow key={row.originalIndex}>
+                    {/* STT - Chỉ đọc */}
                     <TableCell>
                       <FieldInput
                         formik={formik}
@@ -379,53 +400,91 @@ export default function ToolForm({
                         disabled={true}
                       />
                     </TableCell>
+
+                    {/* Số ký hiệu */}
                     <TableCell>
                       <FieldInput
                         formik={formik}
                         field={`chiTietTaiSanList.${row.originalIndex}.soKyHieu`}
                         disabled={readOnly}
+                        onChange={(e) =>
+                          handleFieldChange(e, row.originalIndex)
+                        }
                       />
                     </TableCell>
+
+                    {/* Số lượng */}
                     <TableCell>
                       <FieldInput
                         formik={formik}
                         field={`chiTietTaiSanList.${row.originalIndex}.soLuong`}
+                        type="number"
                         disabled={readOnly}
+                        onChange={(e) =>
+                          handleFieldChange(e, row.originalIndex)
+                        }
                       />
                     </TableCell>
+
+                    {/* Công suất */}
                     <TableCell>
                       <FieldInput
                         formik={formik}
                         field={`chiTietTaiSanList.${row.originalIndex}.congSuat`}
                         disabled={readOnly}
+                        onChange={(e) =>
+                          handleFieldChange(e, row.originalIndex)
+                        }
                       />
                     </TableCell>
+
+                    {/* Nước sản xuất */}
                     <TableCell>
                       <FieldInput
                         formik={formik}
                         field={`chiTietTaiSanList.${row.originalIndex}.nuocSanXuat`}
                         disabled={readOnly}
+                        onChange={(e) =>
+                          handleFieldChange(e, row.originalIndex)
+                        }
                       />
                     </TableCell>
+
+                    {/* Năm sản xuất */}
                     <TableCell>
                       <FieldInput
                         formik={formik}
                         field={`chiTietTaiSanList.${row.originalIndex}.namSanXuat`}
+                        type="number"
                         disabled={readOnly}
+                        onChange={(e) =>
+                          handleFieldChange(e, row.originalIndex)
+                        }
                       />
                     </TableCell>
+
+                    {/* Nút Xóa */}
                     <TableCell>
                       <IconButton
                         color="error"
                         onClick={() => {
-                          formik.setFieldValue(
-                            `chiTietTaiSanList.${row.originalIndex}.isDeleted`,
-                            true
-                          );
-                          formik.setFieldValue(
-                            `chiTietTaiSanList.${row.originalIndex}.isInserted`,
-                            false
-                          );
+                          const currentRow = formik.values.chiTietTaiSanList[
+                            row.originalIndex
+                          ] as any;
+                          if (currentRow.isInserted) {
+                            // Nếu là dòng vừa nhấn "Thêm" thì xóa hẳn khỏi danh sách
+                            const newList = [
+                              ...formik.values.chiTietTaiSanList,
+                            ];
+                            newList.splice(row.originalIndex, 1);
+                            formik.setFieldValue("chiTietTaiSanList", newList);
+                          } else {
+                            // Nếu là dòng cũ từ DB thì đánh dấu xóa để Mutation gọi API Delete
+                            formik.setFieldValue(
+                              `chiTietTaiSanList.${row.originalIndex}.isDeleted`,
+                              true,
+                            );
+                          }
                         }}
                         disabled={readOnly}
                       >

@@ -1,12 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../../../config/api.config";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
-import { AssetDetailType, OwnerUnitType, ToolType } from "../types";
+import { AssetDetailType, OwnerUnitType } from "../types";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import dayjs from "dayjs";
 import axios from "axios";
 import * as XLSX from "xlsx";
+import { generateCode } from "../../../utils/helpers";
 let donViSoHuuList: any[] = [];
 
 const getColumnLetter = (colIndex: number): string => {
@@ -22,7 +23,7 @@ export const useToolManagerMutation = (
   page?: number,
   pageSize?: number,
   searchValue?: string,
-  onValidationError?: (messages: string[]) => void
+  onValidationError?: (messages: string[]) => void,
 ) => {
   const queryClient = useQueryClient();
   const idCongTy = "ct001";
@@ -39,17 +40,17 @@ export const useToolManagerMutation = (
       });
       return res.data;
     },
-    onSuccess: (responseData, variables) => {
+    onSuccess: (_responseData, variables) => {
       queryClient.invalidateQueries({ queryKey: ["toolsPage"] });
       if (
         variables.chiTietTaiSanList &&
         variables.chiTietTaiSanList.length > 0
       ) {
         createManyAssetDetailMutation.mutate(
-          variables.chiTietTaiSanList.map((item: any, index: number) => ({
+          variables.chiTietTaiSanList.map((item: any) => ({
             ...item,
-            id: item.idTaiSan + "-STT-" + index,
-          }))
+            id: generateCode(item.idTaiSan + "-"),
+          })),
         );
       }
       showSuccessAlert("Tạo CCDC/Vật tư thành công");
@@ -58,7 +59,7 @@ export const useToolManagerMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Tạo CCDC/Vật tư thất bại"
+          "Tạo CCDC/Vật tư thất bại",
       );
     },
   });
@@ -68,28 +69,41 @@ export const useToolManagerMutation = (
       const res = await api.put(`/ccdcvattu/${data.id}`, data);
       return res.data;
     },
-    onSuccess: (response, variables) => {
+    onSuccess: (_response, variables) => {
       queryClient.invalidateQueries({ queryKey: ["toolsPage"] });
+
       if (
         variables.chiTietTaiSanList &&
         variables.chiTietTaiSanList.length > 0
       ) {
-        donViSoHuuList = variables.chiTietDonViSoHuuList || [];
+        // 1. Xử lý XÓA
         const deleteData = variables.chiTietTaiSanList
-          .filter((item: any) => item.isDeleted)
+          .filter((item: any) => item.isDeleted && !item.isInserted) // Chỉ xóa nếu đã có trên server
           .map((item: any) => item.id);
         if (deleteData.length > 0) {
-          // prepare owner-unit list first so it's available when deleteMany completes
-          deleteManyAssetDetailMutation.mutate(deleteData);
+          deleteManyAssetDetailMutation.mutate({
+            ids: deleteData,
+            ownerList: variables.chiTietDonViSoHuuList,
+          });
         }
-        const updateData = variables.chiTietTaiSanList
-          .filter((item: any) => item.isInserted)
-          .map((i: any, index: number) => ({
+
+        // 2. Xử lý THÊM MỚI (Dòng mới bấm nút "Thêm một dòng")
+        const insertData = variables.chiTietTaiSanList
+          .filter((item: any) => item.isInserted && !item.isDeleted)
+          .map((i: any) => ({
             ...i,
-            id: i.idTaiSan + "-STT-" + index,
+            id: generateCode(i.idTaiSan + "-"), // Sinh ID mới
           }));
+        if (insertData.length > 0) {
+          createManyAssetDetailMutation.mutate(insertData);
+        }
+
+        // 3. Xử lý CẬP NHẬT (Dòng cũ bị sửa thông tin)
+        const updateData = variables.chiTietTaiSanList.filter(
+          (item: any) => item.isUpdated && !item.isInserted && !item.isDeleted,
+        );
         if (updateData.length > 0) {
-          createManyAssetDetailMutation.mutate(updateData);
+          updateManyAssetDetailMutation.mutate(updateData);
         }
       }
       showSuccessAlert("Cập nhật CCDC/Vật tư thành công");
@@ -98,7 +112,7 @@ export const useToolManagerMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Cập nhật CCDC/Vật tư thất bại"
+          "Cập nhật CCDC/Vật tư thất bại",
       );
     },
   });
@@ -116,7 +130,7 @@ export const useToolManagerMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa CCDC/Vật tư thất bại"
+          "Xóa CCDC/Vật tư thất bại",
       );
     },
   });
@@ -134,7 +148,7 @@ export const useToolManagerMutation = (
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa CCDC/Vật tư thất bại"
+          "Xóa CCDC/Vật tư thất bại",
       );
     },
   });
@@ -173,7 +187,7 @@ export const useToolManagerMutation = (
     mutationFn: async (data: OwnerUnitType) => {
       const res = await axios.post(
         "http://42.119.110.246:8386/chitietdonvisohuu",
-        data
+        data,
       );
       return res.data;
     },
@@ -184,7 +198,7 @@ export const useToolManagerMutation = (
       console.log(
         error.response?.data?.message ||
           error.message ||
-          "Tạo chi tiết đơn vị sở hữu thất bại"
+          "Tạo chi tiết đơn vị sở hữu thất bại",
       );
     },
   });
@@ -193,7 +207,7 @@ export const useToolManagerMutation = (
     mutationFn: async (data: OwnerUnitType[]) => {
       const res = await axios.post(
         "http://42.119.110.246:8386/chitietdonvisohuu/batch",
-        data
+        data,
       );
       return res.data;
     },
@@ -204,7 +218,7 @@ export const useToolManagerMutation = (
       console.log(
         error.response?.data?.message ||
           error.message ||
-          "Tạo chi tiết đơn vị sở hữu thất bại"
+          "Tạo chi tiết đơn vị sở hữu thất bại",
       );
     },
   });
@@ -213,18 +227,19 @@ export const useToolManagerMutation = (
     mutationFn: async (data: any) => {
       const res = await axios.put(
         "http://42.119.110.246:8386/chitietdonvisohuu/batch",
-        data
+        data,
       );
       return res.data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["toolsPage"] });
       console.log("Cập nhật chi tiết đơn vị sở hữu thành công");
     },
     onError: (error: any) => {
       console.log(
         error.response?.data?.message ||
           error.message ||
-          "Cập nhật chi tiết đơn vị sở hữu thất bại"
+          "Cập nhật chi tiết đơn vị sở hữu thất bại",
       );
     },
   });
@@ -232,7 +247,7 @@ export const useToolManagerMutation = (
   const deleteOneOwnerUnitMutation = useMutation({
     mutationFn: async (id: any) => {
       const res = await axios.delete(
-        `http://42.119.110.246:8386/chitietdonvisohuu/${id}`
+        `http://42.119.110.246:8386/chitietdonvisohuu/${id}`,
       );
       return res.data;
     },
@@ -243,7 +258,7 @@ export const useToolManagerMutation = (
       console.log(
         error.response?.data?.message ||
           error.message ||
-          "Xóa chi tiết đơn vị sở hữu thất bại"
+          "Xóa chi tiết đơn vị sở hữu thất bại",
       );
     },
   });
@@ -261,7 +276,7 @@ export const useToolManagerMutation = (
       console.log(
         error.response?.data?.message ||
           error.message ||
-          "Tạo chi tiết tài sản thất bại"
+          "Tạo chi tiết tài sản thất bại",
       );
     },
   });
@@ -282,7 +297,7 @@ export const useToolManagerMutation = (
           ngayTao: now,
           nguoiTao: user?.tailkhoan?.tenDangNhap || "",
           idTsCon: item?.id,
-        }))
+        })),
       );
       console.log("Tạo chi tiết tài sản thành công");
     },
@@ -290,7 +305,7 @@ export const useToolManagerMutation = (
       console.log(
         error.response?.data?.message ||
           error.message ||
-          "Tạo chi tiết tài sản thất bại"
+          "Tạo chi tiết tài sản thất bại",
       );
     },
   });
@@ -301,53 +316,63 @@ export const useToolManagerMutation = (
       return res.data;
     },
     onSuccess: (response, variables) => {
-      createManyOwnerUnitMutation.mutate(
+      updateManyOwnerUnitMutation.mutate(
         variables.map((item: any) => ({
-          id: "",
+          id: item.idOwnerRecord,
           idCCDCVT: item?.idTaiSan,
           idDonViSoHuu: item?.idDonVi,
-          soLuong: item?.soLuong,
-          thoiGianBanGiao: now,
-          ngayTao: now,
-          nguoiTao: user?.tailkhoan?.tenDangNhap || "",
-          idTsCon: item?.id,
-        }))
+          soLuong: Number(item?.soLuong), // Bắt buộc là kiểu Number
+          thoiGianBanGiao: now, // Đảm bảo định dạng YYYY-MM-DDTHH:mm:ss
+          ngayTao: item?.ngayTao || now, // Backend yêu cầu ngayTao, không phải ngayCapNhat
+          nguoiTao: user?.tailkhoan?.tenDangNhap || "", // Khớp với Schema
+          idTsCon: item?.id, // ID của tài sản con
+        })),
       );
-      console.log("Cập nhật chi tiết tài sản thành công");
+
+      // 2. Refresh lại dữ liệu bảng chính ngay lập tức
+      queryClient.invalidateQueries({ queryKey: ["toolsPage"] });
+
+      console.log(
+        "Cập nhật chi tiết tài sản và đồng bộ đơn vị sở hữu thành công",
+      );
     },
     onError: (error: any) => {
-      console.log(
-        error.response?.data?.message ||
-          error.message ||
-          "Tạo chi tiết tài sản thất bại"
-      );
+      showErrorAlert("Cập nhật chi tiết tài sản thất bại");
     },
   });
 
   const deleteManyAssetDetailMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await api.delete("/chitiettaisan/batch", { data });
-      return res.data;
+    // Nhận tham số là một object chứa ids và ownerList
+    mutationFn: async ({
+      ids,
+      ownerList,
+    }: {
+      ids: string[];
+      ownerList: any[];
+    }) => {
+      const res = await api.delete("/chitiettaisan/batch", { data: ids });
+      // Trả về dữ liệu để dùng trong onSuccess
+      return { deletedIds: ids, ownerList };
     },
-    onSuccess: (response, variables) => {
-      console.log(donViSoHuuList);
-      console.log(variables);
-      donViSoHuuList = donViSoHuuList.filter((item: any) =>
-        variables.includes(item.idTsCon)
-      );
-      donViSoHuuList.forEach((item: any) => {
-        if (item && item.id) {
-          deleteOneOwnerUnitMutation.mutate(item.id);
-        }
-      });
-      console.log("Xóa chi tiết tài sản thành công");
+    onSuccess: (data) => {
+      const { deletedIds, ownerList } = data;
+
+      // Tìm ID bản ghi ở bảng vàng dựa vào idTsCon (mã vật tư chi tiết)
+      const ownerUnitsToDelete = ownerList
+        ?.filter((owner: any) => deletedIds.includes(owner.idTsCon))
+        .map((owner: any) => owner.id); // Lấy UUID thực tế (ví dụ: cf59a412...)
+
+      // Thực hiện lệnh xóa dây chuyền lên server
+      if (ownerUnitsToDelete && ownerUnitsToDelete.length > 0) {
+        ownerUnitsToDelete.forEach((id: string) => {
+          if (id) deleteOneOwnerUnitMutation.mutate(id);
+        });
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["toolsPage"] });
     },
     onError: (error: any) => {
-      console.log(
-        error.response?.data?.message ||
-          error.message ||
-          "Xóa chi tiết tài sản thất bại"
-      );
+      console.error("Xóa chi tiết tài sản thất bại:", error);
     },
   });
 
@@ -367,7 +392,7 @@ export const useToolManagerMutation = (
       link.href = url;
       link.setAttribute(
         "download",
-        `CCDC_VatTu_${dayjs().format("YYYYMMDD")}.xlsx`
+        `CCDC_VatTu_${dayjs().format("YYYYMMDD")}.xlsx`,
       );
       document.body.appendChild(link);
       link.click();
@@ -411,6 +436,7 @@ export const useToolManagerMutation = (
       errors: rowErrors,
     };
   };
+
   const importExcelMutation = useMutation({
     mutationFn: async (file: File) => {
       return new Promise((resolve, reject) => {
@@ -438,28 +464,28 @@ export const useToolManagerMutation = (
 
               if (!idNhom) {
                 errorMessages.push(
-                  `Cột F - Hàng ${rowIndex}: Mã nhóm CCDC đang bỏ trống`
+                  `Cột F - Hàng ${rowIndex}: Mã nhóm CCDC đang bỏ trống`,
                 );
               } else if (!groupExists) {
                 errorMessages.push(
-                  `Cột F - Hàng ${rowIndex}: Mã nhóm [${idNhom}] không tồn tại`
+                  `Cột F - Hàng ${rowIndex}: Mã nhóm [${idNhom}] không tồn tại`,
                 );
               }
 
               // 2. Kiểm tra các trường bắt buộc khác
               if (!item["Mã công cụ dụng cụ"])
                 errorMessages.push(
-                  `Cột A - Hàng ${rowIndex}: Mã CCDC đang bỏ trống`
+                  `Cột A - Hàng ${rowIndex}: Mã CCDC đang bỏ trống`,
                 );
               if (!item["Tên công cụ dụng cụ"])
                 errorMessages.push(
-                  `Cột C - Hàng ${rowIndex}: Tên CCDC đang bỏ trống`
+                  `Cột C - Hàng ${rowIndex}: Tên CCDC đang bỏ trống`,
                 );
 
               // 3. Kiểm tra giới hạn lỗi (Giống hệt Flutter)
               if (errorMessages.length >= maxErrorsBeforeExit) {
                 errorMessages.push(
-                  `... Đã dừng kiểm tra sớm do quá nhiều lỗi (>${maxErrorsBeforeExit} lỗi).`
+                  `... Đã dừng kiểm tra sớm do quá nhiều lỗi (>${maxErrorsBeforeExit} lỗi).`,
                 );
                 break;
               }
@@ -522,7 +548,7 @@ export const useToolManagerMutation = (
 
               header.soLuong = header.chiTietTaiSanList.reduce(
                 (sum: number, d: any) => sum + d.soLuong,
-                0
+                0,
               );
 
               return header;
@@ -555,7 +581,7 @@ export const useToolManagerMutation = (
         }
       } else {
         showErrorAlert(
-          error.response?.data?.message || "Lỗi khi đọc hoặc gửi file"
+          error.response?.data?.message || "Lỗi khi đọc hoặc gửi file",
         );
       }
     },
