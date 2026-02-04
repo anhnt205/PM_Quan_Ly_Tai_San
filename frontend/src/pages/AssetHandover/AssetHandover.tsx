@@ -24,6 +24,7 @@ import {
   showDownloadFile,
   showShareStatus,
   showStatus,
+  showStatusDocument,
 } from "../AssetTransfer/config";
 import { useSelector } from "react-redux";
 import {
@@ -405,7 +406,8 @@ export default function AssetHandover() {
       width: 150,
       headerAlign: "center",
       align: "center",
-      renderCell: (params) => showStatus(params.row.trangThai ?? 0),
+      renderCell: (params) =>
+        showStatusDocument(params.row?.trangThaiPhieuDieuDong ?? 0),
     },
     {
       field: "actions",

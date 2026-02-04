@@ -28,45 +28,12 @@ export const useToolHandoverDetailsQuery = (idDieuDong: string) => {
   });
 };
 
-export const useToolHandoverMutation = (
-  page?: number,
-  pageSize?: number,
-  searchValue?: string,
-  status?: number,
-  currentType?: number,
-) => {
+export const useToolHandoverMutation = () => {
   const queryClient = useQueryClient();
   const mainKey = "toolHandoverPage";
   const idCongTy = "ct001";
   const { user } = useSelector((state: RootState) => state.user);
   const now = dayjs(new Date()).format("YYYY-MM-DDTHH:mm:ss");
-  // --- 1. QUERIES DANH MỤC ---
-
-  const { data: departments = [] } = useQuery({
-    queryKey: ["departments", idCongTy],
-    queryFn: async () =>
-      (await api.get("/phongban", { params: { idcongty: idCongTy } })).data,
-  });
-  const { data: positions = [] } = useQuery({
-    queryKey: ["positions", idCongTy],
-    queryFn: async () =>
-      (await api.get(`/chucvu/congty/${idCongTy}`)).data.data,
-  });
-
-  const { data: allAssets = [] } = useQuery({
-    queryKey: ["allAssets", idCongTy],
-    queryFn: async () =>
-      (await api.get("/taisan", { params: { idcongty: idCongTy } })).data,
-  });
-
-  // don vi tính
-  const { data: allUnits = [] } = useQuery({
-    queryKey: ["allUnits"], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/donvitinh", {});
-      return res.data;
-    },
-  });
 
   // --- 2. MUTATIONS ---
   const createMutation = useMutation({
@@ -418,51 +385,6 @@ export const useToolHandoverMutation = (
     },
   });
 
-  // GET Bàn giao (Paged)
-  const {
-    data: handoverPage = { items: [], totalItems: 0 },
-    isLoading: loadingHandover,
-  } = useQuery({
-    queryKey: [mainKey, page, pageSize, searchValue, status],
-    queryFn: async () => {
-      const res = await api.get("/bangiaoccdcvattu/paged", {
-        params: {
-          page,
-          size: pageSize,
-          search: searchValue,
-          idcongty: idCongTy,
-          userid: user?.taiKhoan?.tenDangNhap,
-          // trangThai: status,
-        },
-      });
-      return res.data;
-    },
-    placeholderData: (previousData) => previousData,
-  });
-
-  // GET dieudong (Mới thêm)
-  const {
-    data: transferPage = { items: [], totalItems: 0 },
-    isLoading: loadingTransfer,
-  } = useQuery({
-    queryKey: ["toolTransferPage", idCongTy, currentType, page, pageSize],
-    queryFn: async () => {
-      const res = await api.get("/dieudongccdcvattu/paged", {
-        params: {
-          idcongty: idCongTy,
-          page: page,
-          size: pageSize,
-          loai: currentType,
-          trangThai: 3,
-          // chuaBanGiaoHet: true,
-        },
-      });
-      // Map về cùng cấu trúc items để TableCustom đọc được
-      return res.data;
-    },
-    enabled: !!idCongTy,
-  });
-
   //download file
   const handleDownloadFile = async (fileName: string) => {
     if (!fileName) return;
@@ -503,12 +425,6 @@ export const useToolHandoverMutation = (
   };
 
   return {
-    handoverPage,
-    transferPage,
-    departments,
-    positions,
-    allAssets,
-    isLoading: loadingHandover || loadingTransfer,
     createMutation,
     updateMutation,
     deleteOneMutation,
@@ -518,7 +434,6 @@ export const useToolHandoverMutation = (
     updateManyMutation,
     signMutation,
     handleSignatureList,
-    allUnits,
   };
 };
 
@@ -529,14 +444,39 @@ export const useToolHandoverAllQuery = () => {
   return useQuery({
     queryKey: ["toolHandoverAll"], // Key để cache dữ liệu
     queryFn: async () => {
-      const res = await api.get("/bangiaoccdcvattu/paged", {
+      const res = await api.get("/bangiaoccdcvattu", {
         params: {
-          page: 0,
-          size: 99999,
           idcongty: idCongTy,
         },
       });
       return res.data.items;
     },
+  });
+};
+export const useToolHandoverPageQuery = (
+  page?: number,
+  pageSize?: number,
+  searchValue?: string,
+  status?: number,
+) => {
+  const idCongTy = "ct001";
+  const { user } = useSelector((state: RootState) => state.user);
+
+  return useQuery({
+    queryKey: ["toolHandoverPage", page, pageSize, searchValue, status],
+    queryFn: async () => {
+      const res = await api.get("/bangiaoccdcvattu/paged", {
+        params: {
+          page,
+          size: pageSize,
+          search: searchValue,
+          idcongty: idCongTy,
+          userid: user?.taiKhoan?.tenDangNhap,
+          trangThai: status,
+        },
+      });
+      return res.data;
+    },
+    placeholderData: (previousData) => previousData,
   });
 };

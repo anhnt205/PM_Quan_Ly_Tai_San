@@ -122,6 +122,7 @@ export interface ToolHandoverData {
   soQuyetDinh: string;
   ngayQuyetDinh: string;
   diaDiemQuyetDinh: string;
+  trangThaiPhieuDieuDong?: number;
   isNew: boolean;
 }
 

@@ -37,7 +37,7 @@ export interface SignaturesData {
   chuKyThuong: string;
   scale: number;
   width: number;
-  isLocked:boolean
+  isLocked: boolean;
 }
 
 export interface AssetTransferData {
@@ -45,19 +45,26 @@ export interface AssetTransferData {
   soQuyetDinh: string;
   tenPhieu: string;
   idDonViGiao: string;
+  tenDonViGiao: string;
   idDonViNhan: string;
+  tenDonViNhan: string;
   idNguoiKyNhay: string;
   trangThaiKyNhay: boolean;
   nguoiLapPhieuKyNhay: boolean;
+  tenNguoiKyNhay: string;
   idDonViDeNghi: string;
-  tgGnTuNgay: string;
-  tgGnDenNgay: string;
+  tenDonViDeNghi: string;
+  tggnTuNgay: string;
+  tggnDenNgay: string;
   idTrinhDuyetCapPhong: string;
+  tenTrinhDuyetCapPhong: string;
   trinhDuyetCapPhongXacNhan: boolean;
   idTrinhDuyetGiamDoc: string;
   trinhDuyetGiamDocXacNhan: boolean;
-  diaDiemGiaoNhan: string;
+  tenTrinhDuyetGiamDoc: string;
   idPhongBanXemPhieu: string;
+  tenPhongBanXemPhieu: string;
+  diaDiemGiaoNhan: string;
   noiNhan: string;
   trangThai: number;
   idCongTy: string;
@@ -75,6 +82,9 @@ export interface AssetTransferData {
   daBanGiao: boolean;
   byStep: boolean;
   coPhieuBanGiao: boolean;
+  trangThaiPhieu: number;
+  trangThaiPhieuDieuDong?: number;
+
   chiTietDieuDongTaiSanDTOS?: AssetTransferDetail[];
   nguoiKyList?: Signer[];
   initialChiTiet?: string[];

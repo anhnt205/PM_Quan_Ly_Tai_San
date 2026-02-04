@@ -25,7 +25,7 @@ import {
   ToolHandoverData,
   ToolHandoverFormValues,
 } from "./types";
-import { useToolHandoverMutation } from "./Mutation";
+import { useToolHandoverMutation, useToolHandoverPageQuery } from "./Mutation";
 import { Download, Eye, Trash2, ListPlus } from "lucide-react";
 import { ClassOutlined, TableChart } from "@mui/icons-material";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
@@ -33,6 +33,7 @@ import {
   showDownloadFile,
   showShareStatus,
   showStatus,
+  showStatusDocument,
 } from "../ToolTransfer/config";
 import {
   canSign,
@@ -53,6 +54,10 @@ import SignerSidebar from "./components/SignerSidebar";
 import dayjs from "dayjs";
 import { useAllStaffsQuery } from "../Staff/Mutation";
 import { useToolTransferPageQuery } from "../ToolTransfer/Mutation";
+import { useDebounce } from "../../hooks/useDebounce";
+import { useAllDepartmentsQuery } from "../Department/Mutation";
+import { useAllUnitsQuery } from "../Unit/Mutation";
+import { useAllPositionsQuery } from "../Position/Mutation";
 
 export default function ToolHandover() {
   const [showForm, setShowForm] = useState(false);
@@ -79,27 +84,15 @@ export default function ToolHandover() {
   const { user } = useSelector((state: RootState) => state.user);
 
   const {
-    handoverPage,
-    // transferPage,
-    isLoading,
     createMutation,
     updateMutation,
     updateManyMutation,
     cancelMutation,
     deleteOneMutation,
-    departments,
-    positions,
     signMutation,
     handleSignatureList,
     handleDownloadFile,
-    allUnits,
-  } = useToolHandoverMutation(
-    paginationModel.page,
-    paginationModel.pageSize,
-    searchValue,
-    currentStatus ? Number(currentStatus) : undefined,
-    type ? Number(type) : undefined,
-  );
+  } = useToolHandoverMutation();
   useEffect(() => {
     setSelectedIds([]);
     setSelectedRow(null);
@@ -111,6 +104,15 @@ export default function ToolHandover() {
     setActiveTab(newValue);
   };
 
+  const searchDebounce = useDebounce(searchValue, 600);
+  const { data: handoverPage = { items: [], totalItems: 0 }, isLoading } =
+    useToolHandoverPageQuery(
+      paginationModel.page,
+      paginationModel.pageSize,
+      searchDebounce,
+      currentStatus ? Number(currentStatus) : undefined,
+    );
+
   const { data: transferPage = { items: [], totalItems: 0 } } =
     useToolTransferPageQuery(
       paginationModel.page,
@@ -121,6 +123,9 @@ export default function ToolHandover() {
     );
 
   const { data: staffs = [] } = useAllStaffsQuery();
+  const { data: departments = [] } = useAllDepartmentsQuery();
+  const { data: allUnits = [] } = useAllUnitsQuery();
+  const { data: positions = [] } = useAllPositionsQuery();
 
   const statusOptions: FilterOption[] = [
     {
@@ -424,7 +429,8 @@ export default function ToolHandover() {
       width: 150,
       headerAlign: "center",
       align: "center",
-      renderCell: (params) => showStatus(params.row.trangThai ?? 0),
+      renderCell: (params) =>
+        showStatusDocument(params.row?.trangThaiPhieuDieuDong ?? 0),
     },
     {
       field: "actions",

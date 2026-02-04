@@ -160,7 +160,7 @@ export const useToolManagerMutation = (
   const createOwnerUnitMutation = useMutation({
     mutationFn: async (data: OwnerUnitType) => {
       const res = await axios.post(
-        "http://42.119.110.246:8386/chitietdonvisohuu",
+        "http://1.52.29.243:8386/chitietdonvisohuu",
         data,
       );
       return res.data;
@@ -180,7 +180,7 @@ export const useToolManagerMutation = (
   const createManyOwnerUnitMutation = useMutation({
     mutationFn: async (data: OwnerUnitType[]) => {
       const res = await axios.post(
-        "http://42.119.110.246:8386/chitietdonvisohuu/batch",
+        "http://1.52.29.243:8386/chitietdonvisohuu/batch",
         data,
       );
       return res.data;
@@ -200,7 +200,7 @@ export const useToolManagerMutation = (
   const updateManyOwnerUnitMutation = useMutation({
     mutationFn: async (data: any) => {
       const res = await axios.put(
-        "http://42.119.110.246:8386/chitietdonvisohuu/batch",
+        "http://1.52.29.243:8386/chitietdonvisohuu/batch",
         data,
       );
       return res.data;
@@ -221,7 +221,7 @@ export const useToolManagerMutation = (
   const deleteOneOwnerUnitMutation = useMutation({
     mutationFn: async (id: any) => {
       const res = await axios.delete(
-        `http://42.119.110.246:8386/chitietdonvisohuu/${id}`,
+        `http://1.52.29.243:8386/chitietdonvisohuu/${id}`,
       );
       return res.data;
     },

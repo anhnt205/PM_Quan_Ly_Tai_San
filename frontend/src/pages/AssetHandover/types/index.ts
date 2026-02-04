@@ -175,6 +175,7 @@ export interface AssetTransferData {
   daBanGiao: boolean;
   byStep: boolean;
   coPhieuBanGiao: boolean;
+  trangThaiPhieuDieuDong?: number;
   chiTietDieuDongTaiSanDTOS?: AssetTransferDetail[];
   nguoiKyList?: Signer[];
   chuKyList?: SignaturesData[];
