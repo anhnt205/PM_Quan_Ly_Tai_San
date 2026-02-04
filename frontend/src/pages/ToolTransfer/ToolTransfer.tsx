@@ -31,9 +31,7 @@ import { useToolTransferMutation, useToolTransferPageQuery } from "./Mutation";
 import SignDocumentForm from "./components/SignDocumentForm";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
 import { ToolHandoverData } from "../ToolHandover/types";
-import {
-  useToolHandoverDetailsQuery,
-} from "../ToolHandover/Mutation";
+import { useToolHandoverDetailsQuery } from "../ToolHandover/Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useAllStaffsQuery } from "../Staff/Mutation";
 import { useAllDepartmentsQuery } from "../Department/Mutation";
@@ -92,6 +90,7 @@ export default function ToolTransfer() {
     paginationModel.page,
     paginationModel.pageSize,
     searchDebounce,
+    user?.taiKhoan?.tenDangNhap,
     type ? Number(type) : undefined,
     status ? Number(status) : undefined,
   );

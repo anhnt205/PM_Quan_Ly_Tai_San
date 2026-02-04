@@ -117,9 +117,11 @@ export default function ToolHandover() {
     useToolTransferPageQuery(
       paginationModel.page,
       paginationModel.pageSize,
+      searchDebounce,
       undefined,
       currentType ? Number(currentType) : undefined,
       3,
+      true,
     );
 
   const { data: staffs = [] } = useAllStaffsQuery();
@@ -677,6 +679,8 @@ export default function ToolHandover() {
                   showDelete={false}
                   isCheckShowShare={isCheckShowShare}
                   handleSendToSigner={handleSend}
+                  setSearchValue={setSearchValue}
+                  searchValue={searchValue}
                 />
               </Grid>
 

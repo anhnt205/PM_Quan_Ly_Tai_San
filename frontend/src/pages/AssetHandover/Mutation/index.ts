@@ -14,40 +14,12 @@ import dayjs from "dayjs";
 import { ContactlessOutlined } from "@mui/icons-material";
 
 export const useAssetHandoverMutation = (
-  page?: number,
-  pageSize?: number,
-  searchValue?: string,
-  status?: number,
-  currentType?: number,
 ) => {
   const queryClient = useQueryClient();
   const mainKey = "assetHandoverPage";
   const idCongTy = "ct001";
   const { user } = useSelector((state: RootState) => state.user);
   const now = dayjs(new Date()).format("YYYY-MM-DDTHH:mm:ss");
-  // --- 1. QUERIES DANH MỤC ---
-
-  const { data: staffs = [] } = useQuery({
-    queryKey: ["staffs", idCongTy],
-    queryFn: async () =>
-      (await api.get("/nhanvien", { params: { idcongty: idCongTy } })).data,
-  });
-  const { data: departments = [] } = useQuery({
-    queryKey: ["departments", idCongTy],
-    queryFn: async () =>
-      (await api.get("/phongban", { params: { idcongty: idCongTy } })).data,
-  });
-  const { data: positions = [] } = useQuery({
-    queryKey: ["positions", idCongTy],
-    queryFn: async () =>
-      (await api.get(`/chucvu/congty/${idCongTy}`)).data.data,
-  });
-
-  const { data: allAssets = [] } = useQuery({
-    queryKey: ["allAssets", idCongTy],
-    queryFn: async () =>
-      (await api.get("/taisan", { params: { idcongty: idCongTy } })).data,
-  });
 
   // --- 2. MUTATIONS ---
   const createMutation = useMutation({
@@ -367,68 +339,6 @@ export const useAssetHandoverMutation = (
     },
   });
 
-  // GET Bàn giao (Paged)
-  const {
-    data: handoverPage = { items: [], totalItems: 0 },
-    isLoading: loadingHandover,
-  } = useQuery({
-    queryKey: [mainKey, page, pageSize, searchValue, status],
-    queryFn: async () => {
-      const res = await api.get("/bangiaotaisan/paged", {
-        params: {
-          page,
-          size: pageSize,
-          search: searchValue,
-          idcongty: idCongTy,
-          userid: user?.taiKhoan?.tenDangNhap,
-          trangThai: status,
-        },
-      });
-      return res.data;
-    },
-    placeholderData: (previousData) => previousData,
-  });
-
-  // GET dieudong (Mới thêm)
-  const {
-    data: transferPage = { items: [], totalItems: 0 },
-    isLoading: loadingTransfer,
-  } = useQuery({
-    queryKey: ["assetTransferPage", idCongTy, currentType],
-    queryFn: async () => {
-      const res = await api.get("/dieudongtaisan/paged", {
-        params: {
-          idcongty: idCongTy,
-          page: page,
-          size: pageSize,
-          loai: currentType,
-          trangThai: 3,
-          chuaBanGiaoHet: true,
-        },
-      });
-      // Map về cùng cấu trúc items để TableCustom đọc được
-      return res.data;
-    },
-    enabled: !!idCongTy,
-  });
-
-  // don vi tính
-  const { data: allUnits = [] } = useQuery({
-    queryKey: ["allUnits"], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/donvitinh", {});
-      return res.data;
-    },
-  });
-  //hien trang ki thuat
-  const { data: allCurrentStatus = [] } = useQuery({
-    queryKey: ["allCurrentStatus"], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/hientrangkythuat");
-      return res.data;
-    },
-  });
-
   //download file
   const handleDownloadFile = async (fileName: string) => {
     if (!fileName) return;
@@ -469,13 +379,6 @@ export const useAssetHandoverMutation = (
   };
 
   return {
-    handoverPage,
-    transferPage,
-    staffs,
-    departments,
-    positions,
-    allAssets,
-    isLoading: loadingHandover || loadingTransfer,
     createMutation,
     updateMutation,
     deleteOneMutation,
@@ -485,8 +388,6 @@ export const useAssetHandoverMutation = (
     updateManyMutation,
     signMutation,
     handleSignatureList,
-    allUnits,
-    allCurrentStatus,
   };
 };
 export const useAssetHandoverAllQuery = () => {
@@ -495,16 +396,50 @@ export const useAssetHandoverAllQuery = () => {
   return useQuery({
     queryKey: ["assetHandoverAll"], // Key để cache dữ liệu
     queryFn: async () => {
-      const res = await api.get("/bangiaotaisan/paged", {
+      const res = await api.get("/bangiaotaisan", {
         params: {
-          page: 0,
-          size: 99999,
           idcongty: idCongTy,
         },
       });
-        console.log("useAssetHandoverAllQuery");
+      console.log("useAssetHandoverAllQuery");
 
-      return res.data.items;
+      return res.data;
     },
   });
 };
+
+export const useAssetHandoverPageQuery = (
+  page?: number,
+  pageSize?: number,
+  searchValue?: string,
+  userid?: string,
+  status?: number,
+) => {
+  const idCongTy = "ct001";
+
+  return useQuery({
+    queryKey: [
+      "assetHandoverPage",
+      page,
+      pageSize,
+      searchValue,
+      status,
+      userid,
+    ],
+    queryFn: async () => {
+      const res = await api.get("/bangiaotaisan/paged", {
+        params: {
+          page,
+          size: pageSize,
+          search: searchValue,
+          idcongty: idCongTy,
+          userid: userid,
+          trangThai: status,
+        },
+      });
+      return res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};
+

@@ -447,7 +447,20 @@ export const useAssetPageQuery = (
     placeholderData: (previousData) => previousData,
   });
 };
-
+export const useAllAssetsQuery = () => {
+  return useQuery({
+    queryKey: ["allAssets"], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/taisan", {
+        params: {
+          idcongty: "ct001",
+        },
+      });
+      return res.data.data || res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};
 export const useAssetByTypeQuery = (idloaitaisan?: string) => {
   return useQuery({
     queryKey: ["assetsByType", idloaitaisan], // Key để cache dữ liệu

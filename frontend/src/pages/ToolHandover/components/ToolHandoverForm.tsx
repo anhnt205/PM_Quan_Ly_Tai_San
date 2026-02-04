@@ -43,7 +43,10 @@ import SignDocumentForm from "./SignDocumentForm";
 import PreviewBtn from "../../../components/Button/PreviewBtn";
 import dayjs from "dayjs";
 import { toolHandoverValidationSchema } from "../validation";
-import { useToolTransferAllQuery } from "../../ToolTransfer/Mutation";
+import {
+  useToolTransferAllQuery,
+  useToolTransferPageQuery,
+} from "../../ToolTransfer/Mutation";
 
 const UnderlinedInputWrapper = styled(Box)({
   width: "100%",
@@ -138,7 +141,16 @@ export default function ToolHandoverForm({
   console.log(staffs);
   const currentStatus =
     selectedToolHandover?.trangThai ?? selectedToolHandover?.trangThai ?? 0;
-  const { data: ToolTransferData = [] } = useToolTransferAllQuery();
+  const { data: ToolTransferData = { items: [], totalItems: 0 } } =
+    useToolTransferPageQuery(
+      0,
+      9999,
+      undefined,
+      undefined,
+      undefined,
+      3,
+      selectedToolHandover ? undefined : true,
+    );
   const [expanded, setExpanded] = useState(true);
   const [tableExpanded, setTableExpanded] = useState(true);
   const [isPreview, setIsPreview] = useState(false);
@@ -147,10 +159,10 @@ export default function ToolHandoverForm({
 
   const [listTools, setListTools] = useState<any[]>([]);
   const chiTietDieuDongCCDCVatTuDTOS = useMemo(() => {
-    return (ToolTransferData || []).flatMap(
+    return (ToolTransferData.items || []).flatMap(
       (i: any) => i.chiTietDieuDongCCDCVatTuDTOS || [],
     );
-  }, [ToolTransferData.length]);
+  }, [ToolTransferData.totalItems]);
 
   const formik = useFormik<ToolHandoverFormValues>({
     initialValues: {
@@ -304,7 +316,7 @@ export default function ToolHandoverForm({
 
   const getListTool = async (id: string) => {
     if (!id) return;
-    const result = await findById(ToolTransferData || [], id);
+    const result = await findById(ToolTransferData.items || [], id);
     setListTools(
       (result?.chiTietDieuDongCCDCVatTuDTOS || []).map((i: any) => ({
         ...i,
@@ -468,7 +480,7 @@ export default function ToolHandoverForm({
                       title="Lệnh điều động"
                       formik={formik}
                       field="lenhDieuDong"
-                      data={ToolTransferData || []}
+                      data={ToolTransferData.items || []}
                       labelkey="soQuyetDinh"
                       onChange={async (value) => {
                         formik.setFieldValue("idDonViGiao", value.idDonViGiao);

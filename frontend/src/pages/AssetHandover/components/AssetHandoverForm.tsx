@@ -40,17 +40,24 @@ import EditButton from "../../../components/Button/EditButton";
 import CustomStepper from "../../../components/common/CustomStepper";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import { AssetHandoverData, AssetHandoverFormValues } from "../types";
-import { useAssetTranferMutation } from "../../AssetTransfer/Mutation";
+import {
+  useAssetTranferMutation,
+  useAssetTransferPageQuery,
+} from "../../AssetTransfer/Mutation";
 import dayjs from "dayjs";
 import SignDocumentForm from "./SignDocumentForm";
 import { useDepartmentMutation } from "../../Department/Mutation";
 import { useStaffMutation } from "../../Staff/Mutation";
 import PreviewBtn from "../../../components/Button/PreviewBtn";
 import { findById, generateCode } from "../../../utils/helpers";
-import { useAllCurrentStatusQuery, useCurrentStatusMutation } from "../../CurrentStatus/Mutation";
+import {
+  useAllCurrentStatusQuery,
+  useCurrentStatusMutation,
+} from "../../CurrentStatus/Mutation";
 import { useUnitMutation } from "../../Unit/Mutation";
 import { useAssetHandoverMutation } from "../Mutation";
 import { assetHandoverValidationSchema } from "../validation";
+import { useAllAssetsQuery } from "../../AssetManager/Mutation";
 
 const UnderlinedInputWrapper = styled(Box)({
   width: "100%",
@@ -137,7 +144,16 @@ export default function AssetHandoverForm({
   const [priviewDocument, setPriviewDocument] = useState(false);
 
   const [listASsets, setListAssets] = useState<any[]>([]);
-  const AssetTransferData = useAssetHandoverMutation().transferPage;
+  const { data: AssetTransferData = { items: [] } } = useAssetTransferPageQuery(
+    0,
+    9999,
+    undefined,
+    undefined,
+    undefined,
+    3,
+    undefined,
+    selectedAssetHandover ? undefined : true,
+  );
   const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
 
   const formik = useFormik<AssetHandoverFormValues>({

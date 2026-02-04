@@ -16,7 +16,10 @@ import AssetHandoverForm from "./components/AssetHandoverForm";
 import SignerSidebar from "./components/SignerSidebar";
 
 import { AssetHandoverData, AssetTransferData, SignaturesData } from "./types";
-import { useAssetHandoverMutation } from "./Mutation";
+import {
+  useAssetHandoverMutation,
+  useAssetHandoverPageQuery,
+} from "./Mutation";
 import { Eye, Trash2, ListPlus } from "lucide-react";
 import { ClassOutlined, TableChart } from "@mui/icons-material";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
@@ -42,6 +45,13 @@ import SignDocumentForm from "./components/SignDocumentForm";
 import SignDocumentTransferForm from "../AssetTransfer/components/SignDocumentForm";
 
 import dayjs from "dayjs";
+import { useAssetTransferPageQuery } from "../AssetTransfer/Mutation";
+import { useDebounce } from "../../hooks/useDebounce";
+import { useAllStaffsQuery } from "../Staff/Mutation";
+import { useAllDepartmentsQuery } from "../Department/Mutation";
+import { useAllUnitsQuery } from "../Unit/Mutation";
+import { useAllPositionsQuery } from "../Position/Mutation";
+import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
 
 export default function AssetHandover() {
   const [showForm, setShowForm] = useState(false);
@@ -63,29 +73,43 @@ export default function AssetHandover() {
 
   const { user } = useSelector((state: any) => state.user);
   const {
-    handoverPage,
-    transferPage,
-    isLoading,
     createMutation,
     updateMutation,
     updateManyMutation,
     cancelMutation,
     deleteOneMutation,
-    staffs,
-    departments,
-    positions,
     signMutation,
     handleSignatureList,
     handleDownloadFile,
-    allUnits,
-    allCurrentStatus,
-  } = useAssetHandoverMutation(
-    paginationModel.page,
-    paginationModel.pageSize,
-    searchValue,
-    currentStatus ? Number(currentStatus) : undefined,
-    currentType ? Number(currentType) : undefined,
-  );
+  } = useAssetHandoverMutation();
+
+  const searchDebounce = useDebounce(searchValue, 600);
+  const { data: handoverPage = { items: [], totalItems: 0 }, isLoading } =
+    useAssetHandoverPageQuery(
+      paginationModel.page,
+      paginationModel.pageSize,
+      searchDebounce,
+      user.taiKhoan?.tenDangNhap,
+      currentStatus ? Number(currentStatus) : undefined,
+    );
+
+  const { data: transferPage = { items: [], totalItems: 0 } } =
+    useAssetTransferPageQuery(
+      paginationModel.page,
+      paginationModel.pageSize,
+      searchDebounce,
+      currentType ? Number(currentType) : undefined,
+      undefined,
+      3,
+      undefined,
+      true,
+    );
+
+  const { data: staffs = [] } = useAllStaffsQuery();
+  const { data: departments = [] } = useAllDepartmentsQuery();
+  const { data: allUnits = [] } = useAllUnitsQuery();
+  const { data: positions = [] } = useAllPositionsQuery();
+  const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
 
   useEffect(() => {
     setSelectedIds([]);
