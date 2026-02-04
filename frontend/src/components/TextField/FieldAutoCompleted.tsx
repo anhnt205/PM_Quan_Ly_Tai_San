@@ -17,7 +17,7 @@ interface Props {
 
 export default function FieldAutoCompleted({
   title,
-  data=[],
+  data = [],
   labelkey,
   formik,
   field,

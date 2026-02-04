@@ -87,7 +87,7 @@ export default function ToolTransfer() {
   const statusOptions: FilterOption[] = [
     {
       label: "Tất cả",
-      count: toolTransferPage.totalItems,
+      count: toolTransferPage.loaiCounts?.[`${type}`] ?? 0,
       color: "default",
       value: "",
     },

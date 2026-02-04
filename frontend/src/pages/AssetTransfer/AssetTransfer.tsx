@@ -14,9 +14,8 @@ import TableCustom from "../../components/common/TableCustom";
 import { AssetTransferData, SignaturesData } from "./types";
 import PageAction from "../../components/common/PageAction";
 import { useSearchParams } from "react-router-dom";
-import { useAssetTranferMutation } from "./Mutation";
+import { useAssetTranferMutation, useAssetTransferPageQuery } from "./Mutation";
 import { useSelector } from "react-redux";
-import { findById } from "../../utils/helpers";
 import {
   canSign,
   getPermissionSigning,
@@ -35,6 +34,11 @@ import { showConfirmAlert } from "../../components/Alert";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
 import { Building, Trash2 } from "lucide-react";
 import { AssetHandoverData } from "../AssetHandover/types";
+import { useDebounce } from "../../hooks/useDebounce";
+import { useAllStaffsQuery } from "../Staff/Mutation";
+import { useAllDepartmentsQuery } from "../Department/Mutation";
+import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
+import { useAllUnitsQuery } from "../Unit/Mutation";
 
 export default function AssetTransfer() {
   const { user } = useSelector((state: any) => state.user);
@@ -60,14 +64,7 @@ export default function AssetTransfer() {
   const type = searchParams.get("type");
   const [assetTransferDetail, setAssetTransferDetail] = useState<any[]>([]);
   const [status, setStatus] = useState("");
-  const [departmentId, setDepartmentId] = useState("");
   const {
-    assetTranferPage,
-    allDepartments,
-    allStaff,
-    allUnits,
-    allCurrentStatus,
-    allAssetsByDonVi,
     handleDownloadFile,
     createMutation,
     updateMutation,
@@ -77,20 +74,32 @@ export default function AssetTransfer() {
     handleSignatureList,
     signMutation,
     getAssetHandoverMutation,
-  } = useAssetTranferMutation(
+  } = useAssetTranferMutation();
+
+  const debouncedSearchValue = useDebounce(searchValue, 600);
+  const {
+    data: assetTranferPage = {
+      items: [],
+      totalItems: 0,
+      loaiCounts: {},
+      trangThaiCounts: {},
+    },
+    isLoading,
+  } = useAssetTransferPageQuery(
     paginationModel.page,
     paginationModel.pageSize,
-    searchValue,
-    type ? Number(type) : 1,
-    user?.taiKhoan?.tenDangNhap,
-    status ? Number(status) : undefined,
-    departmentId,
+    debouncedSearchValue,
   );
+
+  const { data: allStaffs = [] } = useAllStaffsQuery();
+  const { data: allDepartments = [] } = useAllDepartmentsQuery();
+  const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
+  const { data: allUnits = [] } = useAllUnitsQuery();
 
   const statusOptions: FilterOption[] = [
     {
       label: "Tất cả",
-      count: assetTranferPage.totalItems,
+      count: assetTranferPage.loaiCounts?.[`${type}`] ?? 0,
       color: "default",
       value: "",
     },
@@ -281,22 +290,18 @@ export default function AssetTransfer() {
     },
 
     {
-      field: "idDonViGiao",
+      field: "tenDonViGiao",
       headerName: "Đơn vị giao",
       width: 180,
       headerAlign: "center",
       align: "center",
-      renderCell: (params) =>
-        findById(allDepartments, params.value)?.tenPhongBan,
     },
     {
-      field: "idDonViNhan",
+      field: "tenDonViNhan",
       headerName: "Đơn vị nhận",
       width: 180,
       headerAlign: "center",
       align: "center",
-      renderCell: (params) =>
-        findById(allDepartments, params.value)?.tenPhongBan,
     },
     {
       field: "trangThai",
@@ -314,7 +319,9 @@ export default function AssetTransfer() {
       headerAlign: "center",
       align: "center",
       renderCell: (params) =>
-        ShowPermissionSigning(getPermissionSigning(params.row, user, allStaff)),
+        ShowPermissionSigning(
+          getPermissionSigning(params.row, user, allStaffs),
+        ),
     },
 
     {
@@ -438,7 +445,7 @@ export default function AssetTransfer() {
           allUnits={allUnits}
           allCurrentStatus={allCurrentStatus}
           fullscreen={true}
-          staffs={allStaff}
+          staffs={allStaffs}
           handleSignatureList={handleSignatureList}
         />
       ) : (
@@ -446,9 +453,7 @@ export default function AssetTransfer() {
           <PageAction
             title={title}
             onNewClick={() => {
-              setShowForm(true);
-              setSelectedRow(null);
-              setReadOnly(false);
+              handleClose();
             }}
           />
           <Box sx={{ p: 2 }}>
@@ -466,9 +471,7 @@ export default function AssetTransfer() {
                   label={label}
                   isSignedForm={!!selectedRow && !showForm}
                   departments={allDepartments}
-                  staffs={allStaff}
-                  setDepartmentId={setDepartmentId}
-                  allAssetsByDonVi={allAssetsByDonVi}
+                  staffs={allStaffs}
                   allUnits={allUnits}
                   allCurrentStatus={allCurrentStatus}
                 />

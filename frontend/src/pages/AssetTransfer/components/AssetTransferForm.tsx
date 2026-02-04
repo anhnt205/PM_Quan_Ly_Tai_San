@@ -37,6 +37,7 @@ import CustomStepper from "../../../components/common/CustomStepper";
 import FileAttachmentInput from "../../../components/TextField/FileAttachmentInput";
 import SignDocumentForm from "./SignDocumentForm";
 import { generateCode } from "../../../utils/helpers";
+import { useAssetByDonViQuery } from "../Mutation";
 
 export default function AssetTransferForm({
   onEdit,
@@ -50,8 +51,6 @@ export default function AssetTransferForm({
   isSignedForm = false,
   departments,
   staffs,
-  setDepartmentId,
-  allAssetsByDonVi,
   allUnits,
   allCurrentStatus,
 }: {
@@ -66,8 +65,6 @@ export default function AssetTransferForm({
   isSignedForm?: boolean;
   departments: any[];
   staffs: any[];
-  setDepartmentId: Dispatch<SetStateAction<string>>;
-  allAssetsByDonVi: { items: any[] };
   allUnits: any[];
   allCurrentStatus: any[];
 }) {
@@ -221,9 +218,10 @@ export default function AssetTransferForm({
     }
   }, [formik.values.idDonViDeNghi, departments, staffs]);
 
-  useEffect(() => {
-    setDepartmentId(formik.values.idDonViGiao);
-  }, [formik.values.idDonViGiao]);
+  const { data: allAssetsByDonVi = { items: [] } } = useAssetByDonViQuery(
+    type,
+    formik.values.idDonViGiao,
+  );
   return (
     <>
       {isPreview && (
@@ -566,7 +564,15 @@ export default function AssetTransferForm({
                         <FieldAutoCompleted
                           title=""
                           labelkey="tenTaiSan"
-                          data={allAssetsByDonVi.items}
+                          data={[
+                            ...allAssetsByDonVi.items,
+                            ...(
+                              selectedTransfer.chiTietDieuDongTaiSanDTOS || []
+                            ).map((i: any) => ({
+                              ...i,
+                              id: i.idTaiSan,
+                            })),
+                          ]}
                           formik={formik}
                           field={`chiTietDieuDongTaiSanDTOS.${index}.idTaiSan`}
                           onChange={(value) => {
@@ -595,6 +601,7 @@ export default function AssetTransferForm({
                               value?.ghiChu,
                             );
                           }}
+                          disabled={readOnly}
                         />
                       </CustomTableCell>
                       <CustomTableCell>
@@ -604,6 +611,7 @@ export default function AssetTransferForm({
                           data={allUnits}
                           formik={formik}
                           field={`chiTietDieuDongTaiSanDTOS.${index}.donViTinh`}
+                          disabled={readOnly}
                         />
                       </CustomTableCell>
                       <CustomTableCell>
@@ -612,6 +620,7 @@ export default function AssetTransferForm({
                           type="number"
                           formik={formik}
                           field={`chiTietDieuDongTaiSanDTOS.${index}.soLuong`}
+                          disabled={readOnly}
                         />
                       </CustomTableCell>
                       <CustomTableCell>
@@ -621,6 +630,7 @@ export default function AssetTransferForm({
                           data={allCurrentStatus}
                           formik={formik}
                           field={`chiTietDieuDongTaiSanDTOS.${index}.hienTrang`}
+                          disabled={readOnly}
                         />
                       </CustomTableCell>
                       <CustomTableCell>
@@ -628,6 +638,7 @@ export default function AssetTransferForm({
                           title=""
                           formik={formik}
                           field={`chiTietDieuDongTaiSanDTOS.${index}.ghiChu`}
+                          disabled={readOnly}
                         />
                       </CustomTableCell>
                       {!readOnly && (

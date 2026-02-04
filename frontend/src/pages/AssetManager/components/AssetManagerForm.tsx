@@ -278,7 +278,10 @@ export default function AssetManagerForm({
                         "phuongPhapKhauHao",
                         newValue?.phuongPhapKhauHao,
                       );
-                      formik.setFieldValue("soKyKhauHao", newValue?.kyKhauHao);
+                      formik.setFieldValue(
+                        "soKyKhauHao",
+                        newValue?.kyKhauHao ?? 0,
+                      );
                       formik.setFieldValue(
                         "taiKhoanTaiSan",
                         newValue?.taiKhoanTaiSan,

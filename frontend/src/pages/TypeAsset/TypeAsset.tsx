@@ -99,8 +99,8 @@ export default function TypeAsset() {
       headerAlign: "center",
     },
     {
-      field: "idLoaiTs",
-      headerName: "Mã loại tài sản cha",
+      field: "tenLoaiTs",
+      headerName: "Loại tài sản cha",
       flex: 1,
       minWidth: 200,
       align: "center",

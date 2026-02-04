@@ -237,12 +237,15 @@ export const useStaffPagesQuery = (
     placeholderData: (previousData) => previousData,
   });
 };
-export const useAllStaffsQuery = (
-) => {
+export const useAllStaffsQuery = () => {
   return useQuery({
     queryKey: ["allStaffs"], // Key để cache dữ liệu
     queryFn: async () => {
-      const res = await api.get("/nhanvien");
+      const res = await api.get("/nhanvien", {
+        params: {
+          idcongty: "ct001",
+        },
+      });
       return res.data;
     },
     placeholderData: (previousData) => previousData,

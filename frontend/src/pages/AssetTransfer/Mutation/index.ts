@@ -11,16 +11,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import dayjs from "dayjs";
 
-export const useAssetTranferMutation = (
-  page?: number,
-  pageSize?: number,
-  searchValue?: string,
-  loai?: number,
-  userid?: string,
-  trangThai?: number,
-  idDonViGiao?: string,
-  chuaBanGiaoHet?: boolean,
-) => {
+export const useAssetTranferMutation = () => {
   const queryClient = useQueryClient();
   const idCongTy = "ct001";
   const { user } = useSelector((state: RootState) => state.user);
@@ -389,92 +380,6 @@ export const useAssetTranferMutation = (
     },
   });
 
-  const { data = { items: [], totalItems: 0 }, isLoading } = useQuery({
-    queryKey: [
-      "assetTranferPage",
-      page,
-      pageSize,
-      searchValue,
-      loai,
-      userid,
-      trangThai,
-      idDonViGiao,
-      chuaBanGiaoHet,
-    ], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/dieudongtaisan/paged", {
-        params: {
-          idcongty: idCongTy,
-          page: page,
-          size: pageSize,
-          search: searchValue,
-          loai: loai,
-          userid: userid,
-          trangThai: trangThai,
-          idDonViGiao: idDonViGiao,
-          chuaBanGiaoHet: chuaBanGiaoHet,
-        },
-      });
-      return res.data;
-    },
-    placeholderData: (previousData) => previousData,
-  });
-
-  // list phongban
-  const { data: allDepartments = [] } = useQuery({
-    queryKey: ["allDepartments"], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/phongban", {
-        params: {
-          idcongty: "ct001",
-        },
-      });
-      return res.data;
-    },
-  });
-  // list nhanvien
-  const { data: allStaff = [] } = useQuery({
-    queryKey: ["allStaff"], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/nhanvien", {
-        params: {
-          idcongty: "ct001",
-        },
-      });
-      return res.data;
-    },
-  });
-  // danh sach tai san
-
-  const {
-    data: allAssetsByDonVi = { items: [] },
-    isLoading: isLoadingAssetsByDonVi,
-    isFetching: isFetchingAssetsByDonVi,
-  } = useQuery({
-    queryKey: ["allAssetsByDonVi", loai, idDonViGiao], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get(
-        loai === 1
-          ? "/taisan/by-donvi-bandau/paged"
-          : "/taisan/by-donvi-hienthoi/paged",
-        {
-          params: {
-            idcongty: "ct001",
-            page: 0,
-            size: 999,
-            ...(loai === 1
-              ? {
-                  iddonvibandau: idDonViGiao,
-                }
-              : { iddonvihienthoi: idDonViGiao }),
-          },
-        },
-      );
-      return res.data.data || res.data;
-    },
-    enabled: !!idDonViGiao && !!loai,
-  });
-
   const handleAssetByDonVi = async (loai: number, idDonViGiao: string) => {
     try {
       // Encode tên file để xử lý ký tự đặc biệt
@@ -501,22 +406,7 @@ export const useAssetTranferMutation = (
       return { items: [] };
     }
   };
-  // don vi tính
-  const { data: allUnits = [] } = useQuery({
-    queryKey: ["allUnits"], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/donvitinh", {});
-      return res.data;
-    },
-  });
-  //hien trang ki thuat
-  const { data: allCurrentStatus = [] } = useQuery({
-    queryKey: ["allCurrentStatus"], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/hientrangkythuat");
-      return res.data;
-    },
-  });
+
   //download file
   const handleDownloadFile = async (fileName: string) => {
     if (!fileName) return;
@@ -609,21 +499,13 @@ export const useAssetTranferMutation = (
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
-    assetTranferPage: data,
     handleDownloadFile,
     handlePreview,
     convertDocxToPdf,
     cancelMutation,
     updateManyMutation,
-    allDepartments,
-    allStaff,
-    isLoading,
-    allAssetsByDonVi,
-    allUnits,
-    allCurrentStatus,
     handleSignatureList,
     signMutation,
-    isFetchingAssetsByDonVi,
     handleAssetByDonVi,
     getByIdMutation,
     getAssetHandoverMutation,
@@ -645,5 +527,79 @@ export const useAssetTransferAllQuery = () => {
       });
       return res.data.items;
     },
+  });
+};
+export const useAssetTransferPageQuery = (
+  page?: number,
+  pageSize?: number,
+  searchValue?: string,
+  loai?: number,
+  userid?: string,
+  trangThai?: number,
+  idDonViGiao?: string,
+  chuaBanGiaoHet?: boolean,
+) => {
+  const idCongTy = "ct001";
+
+  return useQuery({
+    queryKey: [
+      "assetTranferPage",
+      page,
+      pageSize,
+      searchValue,
+      loai,
+      userid,
+      trangThai,
+      idDonViGiao,
+      chuaBanGiaoHet,
+    ], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/dieudongtaisan/paged", {
+        params: {
+          idcongty: idCongTy,
+          page: page,
+          size: pageSize,
+          search: searchValue,
+          loai: loai,
+          userid: userid,
+          trangThai: trangThai,
+          idDonViGiao: idDonViGiao,
+          chuaBanGiaoHet: chuaBanGiaoHet,
+        },
+      });
+      return res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};
+// danh sach tai san
+
+export const useAssetByDonViQuery = (
+  loai?: number,
+  idDonViGiao?: string,
+) => {
+  return useQuery({
+    queryKey: ["allAssetsByDonVi", loai, idDonViGiao], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get(
+        loai === 1
+          ? "/taisan/by-donvi-bandau/paged"
+          : "/taisan/by-donvi-hienthoi/paged",
+        {
+          params: {
+            idcongty: "ct001",
+            page: 0,
+            size: 9999,
+            ...(loai === 1
+              ? {
+                  iddonvibandau: idDonViGiao,
+                }
+              : { iddonvihienthoi: idDonViGiao }),
+          },
+        },
+      );
+      return res.data.data || res.data;
+    },
+    enabled: !!idDonViGiao && !!loai,
   });
 };
