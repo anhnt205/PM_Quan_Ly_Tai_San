@@ -36,15 +36,14 @@ import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
 import EditButton from "../../../components/Button/EditButton";
 import CustomStepper from "../../../components/common/CustomStepper";
-import { useToolHandoverMutation, useToolTransferPageQuery } from "../Mutation";
 import { ToolHandoverData, ToolHandoverFormValues } from "../types";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import { findById, generateCode } from "../../../utils/helpers";
 import SignDocumentForm from "./SignDocumentForm";
 import PreviewBtn from "../../../components/Button/PreviewBtn";
-import { TruckElectric } from "lucide-react";
 import dayjs from "dayjs";
 import { toolHandoverValidationSchema } from "../validation";
+import { useToolTransferAllQuery } from "../../ToolTransfer/Mutation";
 
 const UnderlinedInputWrapper = styled(Box)({
   width: "100%",
@@ -139,11 +138,7 @@ export default function ToolHandoverForm({
   console.log(staffs);
   const currentStatus =
     selectedToolHandover?.trangThai ?? selectedToolHandover?.trangThai ?? 0;
-  const { data: ToolTransferData = { items: [], totalItems: 0 } } =
-    useToolTransferPageQuery({
-      page: 0,
-      pageSize: 9999,
-    });
+  const { data: ToolTransferData = [] } = useToolTransferAllQuery();
   const [expanded, setExpanded] = useState(true);
   const [tableExpanded, setTableExpanded] = useState(true);
   const [isPreview, setIsPreview] = useState(false);
@@ -152,10 +147,10 @@ export default function ToolHandoverForm({
 
   const [listTools, setListTools] = useState<any[]>([]);
   const chiTietDieuDongCCDCVatTuDTOS = useMemo(() => {
-    return (ToolTransferData.items || []).flatMap(
+    return (ToolTransferData || []).flatMap(
       (i: any) => i.chiTietDieuDongCCDCVatTuDTOS || [],
     );
-  }, [ToolTransferData.items]);
+  }, [ToolTransferData.length]);
 
   const formik = useFormik<ToolHandoverFormValues>({
     initialValues: {
@@ -309,7 +304,7 @@ export default function ToolHandoverForm({
 
   const getListTool = async (id: string) => {
     if (!id) return;
-    const result = await findById(ToolTransferData.items || [], id);
+    const result = await findById(ToolTransferData || [], id);
     setListTools(
       (result?.chiTietDieuDongCCDCVatTuDTOS || []).map((i: any) => ({
         ...i,
@@ -473,7 +468,7 @@ export default function ToolHandoverForm({
                       title="Lệnh điều động"
                       formik={formik}
                       field="lenhDieuDong"
-                      data={ToolTransferData.items || []}
+                      data={ToolTransferData || []}
                       labelkey="soQuyetDinh"
                       onChange={async (value) => {
                         formik.setFieldValue("idDonViGiao", value.idDonViGiao);

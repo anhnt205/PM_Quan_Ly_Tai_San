@@ -5,7 +5,7 @@ import { GridRowParams } from "@mui/x-data-grid";
 import ToolForm from "./components/ToolForm";
 import ToolTableCustom from "./components/ToolTableCustom";
 import ToolDetailSidebar from "./components/ToolDetailSidebar";
-import { useToolManagerMutation } from "./Mutation";
+import { useToolManagerMutation, useToolPageQuery } from "./Mutation";
 import { DEFAULT_COLUMNS } from "./columnConfig";
 import {
   useAllDepartmentsQuery,
@@ -14,6 +14,7 @@ import {
 import { useAllToolTypeQuery, useToolTypeMutation } from "../ToolType/Mutation";
 import { useAllUnitsQuery, useUnitMutation } from "../Unit/Mutation";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
+import { useDebounce } from "../../hooks/useDebounce";
 
 export default function ToolManager() {
   const [showForm, setShowForm] = useState(false);
@@ -32,22 +33,22 @@ export default function ToolManager() {
   });
 
   const {
-    toolsPage,
     toolGroups,
-    isLoading,
     createMutation,
     updateMutation,
     deleteManyMutation,
     exportExcelMutation,
     importExcelMutation,
-  } = useToolManagerMutation(
+  } = useToolManagerMutation((messages) => {
+    setImportErrors(messages);
+    setOpenErrorModal(true);
+  });
+
+  const searchDebounce = useDebounce(searchValue, 600);
+  const { data: toolsPage, isLoading } = useToolPageQuery(
     paginationModel.page,
     paginationModel.pageSize,
-    searchValue,
-    (messages) => {
-      setImportErrors(messages);
-      setOpenErrorModal(true);
-    },
+    searchDebounce,
   );
   const { data: allDepartments = [] } = useAllDepartmentsQuery();
   const { data: toolTypes = [] } = useAllToolTypeQuery();

@@ -64,6 +64,7 @@ export default function AssetManager() {
       paginationModel.page,
       paginationModel.pageSize,
       valueDebounce,
+      selectedGroup,
     );
   const { data: allDepartments = [] } = useAllDepartmentsQuery();
   const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();

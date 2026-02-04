@@ -27,11 +27,17 @@ import {
 import { findById } from "../../utils/helpers";
 import { Building, Eye, Trash2 } from "lucide-react";
 import { ToolSignature, ToolTransferData } from "./types";
-import { useToolTransferMutation } from "./Mutation";
+import { useToolTransferMutation, useToolTransferPageQuery } from "./Mutation";
 import SignDocumentForm from "./components/SignDocumentForm";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
 import { ToolHandoverData } from "../ToolHandover/types";
-import { useToolHandoverDetailsQuery } from "../ToolHandover/Mutation";
+import {
+  useToolHandoverDetailsQuery,
+} from "../ToolHandover/Mutation";
+import { useDebounce } from "../../hooks/useDebounce";
+import { useAllStaffsQuery } from "../Staff/Mutation";
+import { useAllDepartmentsQuery } from "../Department/Mutation";
+import { useAllUnitsQuery } from "../Unit/Mutation";
 
 export default function ToolTransfer() {
   const { user } = useSelector((state: any) => state.user);
@@ -57,11 +63,6 @@ export default function ToolTransfer() {
   const [status, setStatus] = useState("");
 
   const {
-    toolTransferPage,
-    allDepartments,
-    allStaff,
-    allUnits,
-    allCurrentStatus,
     handleDownloadFile,
     createMutation,
     updateMutation,
@@ -72,17 +73,32 @@ export default function ToolTransfer() {
     signMutation,
     getToolHandoverMutation,
     handoverDetails,
-  } = useToolTransferMutation(
-    paginationModel.page,
-    paginationModel.pageSize,
-    searchValue,
-    type ? Number(type) : undefined,
-    status ? Number(status) : undefined,
-  );
+  } = useToolTransferMutation();
 
   const { data: detailData = [] } = useToolHandoverDetailsQuery(
     selectedRow?.id || "",
   );
+
+  const searchDebounce = useDebounce(searchValue, 600);
+  const {
+    data: toolTransferPage = {
+      items: [],
+      totalItems: 0,
+      trangThaiCounts: {},
+      loaiCounts: {},
+    },
+    isLoading,
+  } = useToolTransferPageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchDebounce,
+    type ? Number(type) : undefined,
+    status ? Number(status) : undefined,
+  );
+
+  const { data: allStaffs = [] } = useAllStaffsQuery();
+  const { data: allDepartments = [] } = useAllDepartmentsQuery();
+  const { data: allUnits = [] } = useAllUnitsQuery();
 
   const statusOptions: FilterOption[] = [
     {
@@ -272,22 +288,18 @@ export default function ToolTransfer() {
         value ? new Date(value).toLocaleString("vi-VN") : "",
     },
     {
-      field: "idDonViGiao",
+      field: "tenDonViGiao",
       headerName: "Đơn vị giao",
       width: 180,
       headerAlign: "center",
       align: "center",
-      renderCell: (params) =>
-        findById(allDepartments, params.value)?.tenPhongBan,
     },
     {
-      field: "idDonViNhan",
+      field: "tenDonViNhan",
       headerName: "Đơn vị nhận",
       width: 180,
       headerAlign: "center",
       align: "center",
-      renderCell: (params) =>
-        findById(allDepartments, params.value)?.tenPhongBan,
     },
     {
       field: "trangThai",
@@ -304,7 +316,9 @@ export default function ToolTransfer() {
       headerAlign: "center",
       align: "center",
       renderCell: (params) =>
-        ShowPermissionSigning(getPermissionSigning(params.row, user, allStaff)),
+        ShowPermissionSigning(
+          getPermissionSigning(params.row, user, allStaffs),
+        ),
     },
     {
       field: "trangThaiPhieuDieuDong",
@@ -414,7 +428,7 @@ export default function ToolTransfer() {
           showSignerSidebar={showSignerSidebar}
           allUnits={allUnits}
           fullscreen={true}
-          staffs={allStaff}
+          staffs={allStaffs}
           handleSignatureList={handleSignatureList}
         />
       ) : (
@@ -517,6 +531,7 @@ export default function ToolTransfer() {
                 }}
                 statusValue={status}
                 isCheckShowShare={isCheckShowShare}
+                loading={isLoading}
               />
             </Grid>
 

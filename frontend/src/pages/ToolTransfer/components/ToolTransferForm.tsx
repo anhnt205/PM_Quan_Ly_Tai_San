@@ -39,8 +39,8 @@ import { generateCode } from "../../../utils/helpers";
 import { toolTransferValidationSchema } from "../validation";
 import dayjs from "dayjs";
 import FileAttachmentInput from "../../../components/TextField/FileAttachmentInput";
-import { useStaffsPageQuery } from "../../ToolHandover/Mutation";
 import { useToolByDepartmentPageQuery } from "../Mutation";
+import { useAllStaffsQuery } from "../../Staff/Mutation";
 
 const CustomTableCell = styled(TableCell)(({ theme }) => ({
   borderBottom: "1px solid rgba(224, 224, 224, 1)",
@@ -86,7 +86,7 @@ export default function ToolTransferForm({
   // const [tools, setTools] = useState<any[]>([]);
   const [searchCCDC, setSearchValue] = useState("");
 
-  const { data: staffs = [] } = useStaffsPageQuery();
+  const { data: staffs = [] } = useAllStaffsQuery();
 
   // Logic trạng thái
   const currentStatus = selectedTool?.trangThai ?? 0; // 0: Nháp, 1: Duyệt, 2: Hủy, 3: Hoàn thành
@@ -203,14 +203,19 @@ export default function ToolTransferForm({
     }
   }, [formik.values.idDonViDeNghi, departments, staffs]);
 
-  const { data: toolsByDepartment = [], isLoading } =
-    useToolByDepartmentPageQuery({
-      departmentId: formik.values.idDonViGiao, // Truyền trực tiếp ID từ formik
-    });
+  const {
+    data: toolsByDepartment = [],
+    isLoading,
+    isFetching,
+    status,
+  } = useToolByDepartmentPageQuery({
+    departmentId: formik.values.idDonViGiao,
+  });
+
   const tools = useMemo(() => {
     if (!toolsByDepartment?.length) return [];
     return toolsByDepartment
-      .filter((i) =>
+      .filter((i: any) =>
         i.tenDetailAsset
           ?.toLowerCase()
           .includes(searchCCDC.trim().toLowerCase()),

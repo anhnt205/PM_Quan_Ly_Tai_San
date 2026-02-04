@@ -25,11 +25,7 @@ import {
   ToolHandoverData,
   ToolHandoverFormValues,
 } from "./types";
-import {
-  useStaffsPageQuery,
-  useToolHandoverMutation,
-  useToolTransferPageQuery,
-} from "./Mutation";
+import { useToolHandoverMutation } from "./Mutation";
 import { Download, Eye, Trash2, ListPlus } from "lucide-react";
 import { ClassOutlined, TableChart } from "@mui/icons-material";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
@@ -55,6 +51,8 @@ import { ToolTransferData } from "../ToolTransfer/types";
 import SignDocumentForm from "./components/SignDocumentForm";
 import SignerSidebar from "./components/SignerSidebar";
 import dayjs from "dayjs";
+import { useAllStaffsQuery } from "../Staff/Mutation";
+import { useToolTransferPageQuery } from "../ToolTransfer/Mutation";
 
 export default function ToolHandover() {
   const [showForm, setShowForm] = useState(false);
@@ -114,13 +112,15 @@ export default function ToolHandover() {
   };
 
   const { data: transferPage = { items: [], totalItems: 0 } } =
-    useToolTransferPageQuery({
-      page: paginationModel.page,
-      pageSize: paginationModel.pageSize,
-      currentType: currentType ? Number(currentType) : undefined,
-    });
+    useToolTransferPageQuery(
+      paginationModel.page,
+      paginationModel.pageSize,
+      undefined,
+      currentType ? Number(currentType) : undefined,
+      3,
+    );
 
-  const { data: staffs = [] } = useStaffsPageQuery();
+  const { data: staffs = [] } = useAllStaffsQuery();
 
   const statusOptions: FilterOption[] = [
     {

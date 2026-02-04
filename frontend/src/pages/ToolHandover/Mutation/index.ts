@@ -522,46 +522,7 @@ export const useToolHandoverMutation = (
   };
 };
 
-// lenh dieu dong ccdc
-export const useToolTransferPageQuery = ({
-  page,
-  pageSize,
-  currentType,
-  chuaBanGiaoHet,
-  userid,
-}: any) => {
-  const idCongTy = "ct001";
-
-  return useQuery({
-    queryKey: ["toolTransferPage", idCongTy, page, pageSize, currentType],
-    queryFn: () =>
-      api
-        .get("/dieudongccdcvattu/paged", {
-          params: {
-            idcongty: idCongTy,
-            page,
-            size: pageSize,
-            loai: currentType,
-            trangThai: 3,
-            chuaBanGiaoHet: chuaBanGiaoHet,
-            userid: userid,
-          },
-        })
-        .then((r) => r.data),
-  });
-};
-
 //nhanvien
-export const useStaffsPageQuery = () => {
-  const idCongTy = "ct001";
-
-  return useQuery({
-    queryKey: ["staffs", idCongTy],
-    queryFn: async () =>
-      (await api.get("/nhanvien", { params: { idcongty: idCongTy } })).data,
-  });
-};
-
 export const useToolHandoverAllQuery = () => {
   const idCongTy = "ct001";
 

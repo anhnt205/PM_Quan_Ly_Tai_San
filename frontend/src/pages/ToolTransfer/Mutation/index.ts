@@ -14,6 +14,7 @@ import {
 import { useState } from "react";
 import axios from "axios";
 import { findById } from "../../../utils/helpers";
+import { useAllToolQuery } from "../../ToolManager/Mutation";
 
 export const useToolTransferMutation = (
   page?: number,
@@ -394,56 +395,6 @@ export const useToolTransferMutation = (
     },
   });
 
-  const { data = { items: [], totalItems: 0 }, isLoading } = useQuery({
-    queryKey: [
-      "toolTransferPage",
-      page,
-      pageSize,
-      searchValue,
-      loai,
-      trangThai,
-    ], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/dieudongccdcvattu/paged", {
-        params: {
-          idcongty: idCongTy,
-          page: page,
-          size: pageSize,
-          search: searchValue,
-          loai: loai,
-          userid: user?.taiKhoan?.tenDangNhap,
-          trangThai: trangThai,
-        },
-      });
-      return res.data;
-    },
-    placeholderData: (previousData) => previousData,
-  });
-
-  // list phongban
-  const { data: allDepartments = [] } = useQuery({
-    queryKey: ["allDepartments"], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/phongban", {
-        params: {
-          idcongty: "ct001",
-        },
-      });
-      return res.data;
-    },
-  });
-  // list nhanvien
-  const { data: allStaff = [] } = useQuery({
-    queryKey: ["allStaff"], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/nhanvien", {
-        params: {
-          idcongty: "ct001",
-        },
-      });
-      return res.data;
-    },
-  });
   // danh sach ccdc
 
   const handoverDetailsQuery = useQuery({
@@ -458,22 +409,6 @@ export const useToolTransferMutation = (
     enabled: !!selectedId, // Chỉ chạy khi có selectedId
   });
 
-  // don vi tính
-  const { data: allUnits = [] } = useQuery({
-    queryKey: ["allUnits"], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/donvitinh", {});
-      return res.data;
-    },
-  });
-  //hien trang ki thuat
-  const { data: allCurrentStatus = [] } = useQuery({
-    queryKey: ["allCurrentStatus"], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/hientrangkythuat");
-      return res.data;
-    },
-  });
   //download file
   const handleDownloadFile = async (fileName: string) => {
     if (!fileName) return;
@@ -566,17 +501,11 @@ export const useToolTransferMutation = (
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
-    toolTransferPage: data,
     handleDownloadFile,
     handlePreview,
     convertDocxToPdf,
     cancelMutation,
     updateManyMutation,
-    allDepartments,
-    allStaff,
-    isLoading,
-    allUnits,
-    allCurrentStatus,
     handleSignatureList,
     signMutation,
     getByIdMutation,
@@ -585,17 +514,39 @@ export const useToolTransferMutation = (
   };
 };
 
-export const useAllToolPageQuery = () => {
+export const useToolTransferPageQuery = (
+  page?: number,
+  pageSize?: number,
+  searchValue?: string,
+  loai?: number,
+  trangThai?: number,
+) => {
+  const { user } = useSelector((state: RootState) => state.user);
   const idCongTy = "ct001";
-
   return useQuery({
-    queryKey: ["allTool", idCongTy],
+    queryKey: [
+      "toolTransferPage",
+      page,
+      pageSize,
+      searchValue,
+      loai,
+      trangThai,
+    ], // Key để cache dữ liệu
     queryFn: async () => {
-      const res = await api.get("/ccdcvattu/paged", {
-        params: { idcongty: idCongTy, page: 0, size: 9999 },
+      const res = await api.get("/dieudongccdcvattu/paged", {
+        params: {
+          idcongty: idCongTy,
+          page: page,
+          size: pageSize,
+          search: searchValue,
+          loai: loai,
+          userid: user?.taiKhoan?.tenDangNhap,
+          trangThai: trangThai,
+        },
       });
-      return res.data.data?.items || res.data?.items || [];
+      return res.data;
     },
+    placeholderData: (previousData) => previousData,
   });
 };
 
@@ -605,53 +556,66 @@ export const useToolByDepartmentPageQuery = ({
   departmentId: string;
 }) => {
   const idCongTy = "ct001";
-
-  const { data: allTools = [] } = useAllToolPageQuery();
+  const { data: allTools = [] } = useAllToolQuery();
 
   return useQuery({
     queryKey: ["allToolByDonVi", departmentId, idCongTy],
     queryFn: async () => {
-      // Gọi cả 2 API cùng lúc để tối ưu thời gian (Parallel)
+      // 1. Kiểm tra an toàn ngay từ đầu
+      if (!departmentId) return [];
+
       const resAllTools = await axios.get(
         `http://42.119.110.246:8386/chitietdonvisohuu/by-donvisohuu/${departmentId}`,
       );
-      let data = [];
-      const allToolsByDonVi = resAllTools.data.data || resAllTools.data || [];
+
+      // 2. Xử lý fallback cho response data
+      const allToolsByDonVi = resAllTools.data?.data || resAllTools.data || [];
+
+      if (!allToolsByDonVi.length) return [];
+
       const listDetailAsset = allTools.flatMap(
-        (item: any) => item.chiTietTaiSanList || [],
+        (item: any) => item?.chiTietTaiSanList || [],
       );
-      for (const e of allToolsByDonVi) {
-        if (!e.idCCDCVT || !e.idTsCon) {
-          continue;
-        }
+
+      // 3. Sử dụng .reduce hoặc map để tránh lỗi vòng lặp
+      const processedData = allToolsByDonVi.reduce((acc: any[], e: any) => {
+        if (!e?.idCCDCVT || !e?.idTsCon) return acc;
+
+        // Dùng Optional Chaining để tránh crash nếu findById trả về undefined
         const asset = findById(allTools, e.idCCDCVT);
         const detailAsset = listDetailAsset.find(
-          (i: any) => i.id === e?.idTsCon,
+          (i: any) => i?.id === e?.idTsCon,
         );
-        if (!asset.id || !detailAsset.id) {
-          continue;
+
+        // 4. Chỉ push khi chắc chắn cả hai object đều tồn tại và có ID
+        if (asset?.id && detailAsset?.id) {
+          acc.push({
+            id: e.idCCDCVT,
+            idCCDCVatTu: e.idCCDCVT,
+            tenCCDCVatTu: asset.ten || "N/A",
+            idDetaiAsset: detailAsset.id,
+            tenDetailAsset: `${asset.ten || "N/A"} (${detailAsset.soKyHieu || ""}) - ${detailAsset.namSanXuat || ""}`,
+            idDonVi: e.idDonViSoHuu,
+            donViTinh: asset.donViTinh,
+            namSanXuat: detailAsset.namSanXuat ?? 2010,
+            soLuong: e.soLuong || 0,
+            soLuongConLai: e.soLuong || 0,
+            ghiChu: asset.ghiChu,
+            soKyHieu: asset.soKyHieu,
+            kyHieu: asset.kyHieu,
+            soLuongDaBanGiao: 0,
+            asset: asset,
+          });
         }
-        data.push({
-          id: e.idCCDCVT,
-          idCCDCVatTu: e.idCCDCVT,
-          tenCCDCVatTu: asset.ten,
-          idDetaiAsset: detailAsset.id,
-          tenDetailAsset: `${asset.ten}(${detailAsset.soKyHieu}) - ${detailAsset.namSanXuat}`,
-          idDonVi: e.idDonViSoHuu,
-          donViTinh: asset.donViTinh,
-          namSanXuat: detailAsset.namSanXuat ?? 2010,
-          soLuong: e.soLuong,
-          soLuongConLai: e.soLuong,
-          ghiChu: asset.ghiChu,
-          soKyHieu: asset.soKyHieu,
-          kyHieu: asset.kyHieu,
-          soLuongDaBanGiao: 0,
-          asset: asset,
-        });
-      }
-      return data;
+        return acc;
+      }, []);
+
+      return processedData;
     },
-    enabled: !!departmentId && allTools.length > 0,
+    // 5. Query chỉ chạy khi có ID phòng ban
+    enabled: !!departmentId,
+    // Tránh việc văng lỗi trắng màn hình nếu API lỗi
+    retry: 1,
   });
 };
 
@@ -661,14 +625,12 @@ export const useToolTransferAllQuery = () => {
   return useQuery({
     queryKey: ["toolTranferAll"], // Key để cache dữ liệu
     queryFn: async () => {
-      const res = await api.get("/dieudongccdcvattu/paged", {
+      const res = await api.get("/dieudongccdcvattu", {
         params: {
-          page: 0,
-          size: 99999,
           idcongty: idCongTy,
         },
       });
-      return res.data.items;
+      return res.data;
     },
   });
 };

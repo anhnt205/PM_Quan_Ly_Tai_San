@@ -8,6 +8,7 @@ import dayjs from "dayjs";
 import axios from "axios";
 import * as XLSX from "xlsx";
 import { generateCode } from "../../../utils/helpers";
+import { useAllToolGroupQuery } from "../../ToolGroup/Mutation";
 let donViSoHuuList: any[] = [];
 
 const getColumnLetter = (colIndex: number): string => {
@@ -20,9 +21,6 @@ const getColumnLetter = (colIndex: number): string => {
 };
 
 export const useToolManagerMutation = (
-  page?: number,
-  pageSize?: number,
-  searchValue?: string,
   onValidationError?: (messages: string[]) => void,
 ) => {
   const queryClient = useQueryClient();
@@ -154,33 +152,9 @@ export const useToolManagerMutation = (
   });
 
   // --- QUERIES ---
-  const { data: toolsPage = { items: [], totalItems: 0 }, isLoading } =
-    useQuery({
-      queryKey: ["toolsPage", page, pageSize, searchValue],
-      queryFn: async () => {
-        const res = await api.get("/ccdcvattu/paged", {
-          params: {
-            idcongty: idCongTy,
-            page: page,
-            size: pageSize,
-            search: searchValue,
-          },
-        });
-        return res.data.data || res.data;
-      },
-      placeholderData: (previousData) => previousData,
-    });
 
   // Lấy danh sách nhóm CCDC
-  const { data: toolGroups = [] } = useQuery({
-    queryKey: ["toolGroups", idCongTy],
-    queryFn: async () => {
-      const res = await api.get("/nhomccdc", {
-        params: { idcongty: idCongTy },
-      });
-      return res.data;
-    },
-  });
+  const { data: toolGroups = [] } = useAllToolGroupQuery();
 
   // chi tiet don vi so huu
   const createOwnerUnitMutation = useMutation({
@@ -588,9 +562,7 @@ export const useToolManagerMutation = (
   });
 
   return {
-    toolsPage,
     toolGroups,
-    isLoading,
     createMutation,
     updateMutation,
     deleteOneMutation,
@@ -604,4 +576,42 @@ export const useToolManagerMutation = (
     exportExcelMutation,
     importExcelMutation,
   };
+};
+
+export const useToolPageQuery = (
+  page?: number,
+  pageSize?: number,
+  searchValue?: string,
+) => {
+  const idcongty = "ct001";
+  return useQuery({
+    queryKey: ["toolsPage", page, pageSize, searchValue],
+    queryFn: async () => {
+      const res = await api.get("/ccdcvattu/paged", {
+        params: {
+          idcongty: idcongty,
+          page: page,
+          size: pageSize,
+          search: searchValue,
+        },
+      });
+      return res.data.data || res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};
+export const useAllToolQuery = () => {
+  const idcongty = "ct001";
+  return useQuery({
+    queryKey: ["allTools"],
+    queryFn: async () => {
+      const res = await api.get("/ccdcvattu", {
+        params: {
+          idcongty: idcongty,
+        },
+      });
+      return res.data.data || res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
 };

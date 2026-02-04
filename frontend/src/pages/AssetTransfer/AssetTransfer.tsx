@@ -454,6 +454,7 @@ export default function AssetTransfer() {
             title={title}
             onNewClick={() => {
               handleClose();
+              setShowForm(true);
             }}
           />
           <Box sx={{ p: 2 }}>

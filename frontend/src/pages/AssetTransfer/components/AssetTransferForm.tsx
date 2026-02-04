@@ -567,7 +567,7 @@ export default function AssetTransferForm({
                           data={[
                             ...allAssetsByDonVi.items,
                             ...(
-                              selectedTransfer.chiTietDieuDongTaiSanDTOS || []
+                              selectedTransfer?.chiTietDieuDongTaiSanDTOS || []
                             ).map((i: any) => ({
                               ...i,
                               id: i.idTaiSan,
