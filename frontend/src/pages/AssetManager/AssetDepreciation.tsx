@@ -6,7 +6,10 @@ import Assets from "../../data/Assets.json";
 import AssetDepreciationForm from "./components/AssetDepreciationForm";
 import { Link } from "react-router-dom";
 import { ROUTES } from "../../utils/routes";
-import { useAssetManagerMutation } from "./Mutation";
+import {
+  useAssetDepreciationsQuery,
+  useAssetManagerMutation,
+} from "./Mutation";
 import dayjs from "dayjs";
 
 export default function AssetDepreciation() {
@@ -14,7 +17,7 @@ export default function AssetDepreciation() {
   const [selectedAsset, setSelectedAsset] = useState<any>(null);
   const [readOnly, setReadOnly] = useState(false);
   const [selectedDate, setSelectedDate] = useState(
-    dayjs(new Date()).toISOString()
+    dayjs(new Date()).toISOString(),
   );
   const [searchValue, setSearchValue] = useState("");
   const [paginationModel, setPaginationModel] = useState({
@@ -22,13 +25,8 @@ export default function AssetDepreciation() {
     page: 0,
   });
 
-  const { assetDepreciations } = useAssetManagerMutation(
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    selectedDate
-  );
+  const { data: assetDepreciations = [] } =
+    useAssetDepreciationsQuery(selectedDate);
   const handleRowClick = (params: GridRowParams) => {
     setSelectedAsset(params.row);
     setReadOnly(true);

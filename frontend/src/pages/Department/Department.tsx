@@ -19,7 +19,7 @@ import {
   useDepartmentsPageQuery,
 } from "./Mutation";
 import { showConfirmAlert } from "../../components/Alert";
-import { useDebounce } from "../../hook/useDebounce";
+import { useDebounce } from "../../hooks/useDebounce";
 
 export default function Department() {
   const [showForm, setShowForm] = useState(false);

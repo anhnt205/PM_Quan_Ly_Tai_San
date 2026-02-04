@@ -7,6 +7,7 @@ import * as XLSX from "xlsx";
 import dayjs from "dayjs";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
+import { generateCode } from "../../../utils/helpers";
 
 const getColumnLetter = (colIndex: number): string => {
   let letter = "";
@@ -18,15 +19,8 @@ const getColumnLetter = (colIndex: number): string => {
 };
 
 export const useAssetManagerMutation = (
-  tab?: number,
-  page?: number,
-  pageSize?: number,
-  searchValue?: string,
-  date?: string,
-  idNhomTaiSan?: string,
-  idloaitaisan?: string,
   onValidationError?: (messages: string[]) => void,
-  onErrorImport?: (messages: string[]) => void
+  onErrorImport?: (messages: string[]) => void,
 ) => {
   const queryClient = useQueryClient();
   const idCongTy = "ct001";
@@ -36,32 +30,76 @@ export const useAssetManagerMutation = (
   //taisan
   const createMutation = useMutation({
     mutationFn: async (data: AssetType) => {
-      const res = await api.post("/taisan", data);
+      const res = await api.post("/taisan", {
+        ...data,
+        nguoiTao: user?.taiKhoan?.tenDangNhap || "",
+        ngayTao: now,
+      });
       return res.data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data, payload) => {
       queryClient.invalidateQueries({ queryKey: ["assetsPage"], exact: false });
+      createChildAssetBulkMutation.mutate(
+        (payload?.taiSanConList || []).map((i) => ({
+          ...i,
+          id: generateCode(i.idTaiSanCon + "-"),
+          nguoiTao: user?.taiKhoan?.tenDangNhap || "",
+          ngayTao: now,
+        })),
+      );
       showSuccessAlert("Tạo tài sản thành công");
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || error.message || "Tạo tài sản thất bại"
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo tài sản thất bại",
       );
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: async (data: AssetType) => {
-      const res = await api.put(`/taisan/${data.id}`, data);
+      const res = await api.put(`/taisan/${data.id}`, {
+        ...data,
+        nguoiCapNhat: user?.taiKhoan?.tenDangNhap || "",
+        ngayCapNhat: now,
+      });
       return res.data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data, payload) => {
+      console.log(payload);
+      const listDeleted = (payload?.taiSanConList || []).filter(
+        (i) => i.isDeleted,
+      );
+      const listUpdated = (payload?.taiSanConList || []).filter(
+        (i) => i.isInsert,
+      );
+      if (listUpdated.length > 0) {
+        createChildAssetBulkMutation.mutate(
+          (listUpdated || []).map((i) => ({
+            ...i,
+            id: i.id ? i.id : generateCode(i.idTaiSanCon + "-"),
+            nguoiCapNhat: user?.taiKhoan?.tenDangNhap || "",
+            ngayCapNhat: now,
+          })),
+        );
+      }
+      if (listDeleted.length > 0) {
+        (listDeleted || [])
+          .filter((i) => i.id)
+          .forEach((i) => {
+            deleteOneChildAsssetMutation.mutate(i.id);
+          });
+      }
       queryClient.invalidateQueries({ queryKey: ["assetsPage"], exact: false });
       showSuccessAlert("Sửa tài sản thành công");
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || error.message || "Sửa tài sản thất bại"
+        error.response?.data?.message ||
+          error.message ||
+          "Sửa tài sản thất bại",
       );
     },
   });
@@ -76,7 +114,9 @@ export const useAssetManagerMutation = (
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || error.message || "Xóa tài sản thất bại"
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa tài sản thất bại",
       );
     },
   });
@@ -91,53 +131,16 @@ export const useAssetManagerMutation = (
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || error.message || "Xóa tài sản thất bại"
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa tài sản thất bại",
       );
     },
-  });
-
-  const { data = { items: [], totalItems: 0 }, isLoading } = useQuery({
-    queryKey: ["assetsPage", page, pageSize, searchValue, idNhomTaiSan, tab], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get(
-        tab === 0
-          ? "/taisan/by-donvi-hienthoi/paged"
-          : tab === 1
-          ? "/taisan/paged-da-ban-giao"
-          : tab === 2
-          ? "/taisan/paged-chua-ban-giao"
-          : "/taisan/by-donvi-hienthoi/paged",
-        {
-          params: {
-            idcongty: "ct001",
-            page: page,
-            size: pageSize,
-            search: searchValue,
-            idNhomTaiSan: idNhomTaiSan,
-            ...(tab === 0 && { iddonvihienthoi: "kth" }),
-          },
-        }
-      );
-      return res.data.data || res.data;
-    },
-    placeholderData: (previousData) => previousData,
-  });
-  const { data: assetsByType = [] } = useQuery({
-    queryKey: ["assetsByType", idloaitaisan], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/taisan/loaitaisan/", {
-        params: {
-          idloataisan: idloaitaisan,
-        },
-      });
-      return res.data;
-    },
-    enabled: !!idloaitaisan,
   });
 
   // taisancon
   const createChildAssetBulkMutation = useMutation({
-    mutationFn: async (data: AssetChildType) => {
+    mutationFn: async (data: AssetChildType[]) => {
       const res = await api.post("/taisan/taisancon/bulk", data);
       return res.data;
     },
@@ -149,7 +152,7 @@ export const useAssetManagerMutation = (
       console.log(
         error.response?.data?.message ||
           error.message ||
-          "Tạo tài sản con thất bại"
+          "Tạo tài sản con thất bại",
       );
     },
   });
@@ -167,33 +170,10 @@ export const useAssetManagerMutation = (
     },
     onError: (error: any) => {
       console.log(
-        error.response?.data?.message || error.message || "Xóa tài sản thất bại"
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa tài sản thất bại",
       );
-    },
-  });
-
-  // khauhaotaisan
-  const { data: assetDepreciations = [] } = useQuery({
-    queryKey: ["assetDepreciationsPage", date], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/taisan/khauhaotaisan", {
-        params: {
-          idcongty: "ct001",
-          ngay: date ? new Date(date).getDate() : undefined,
-          thang: date ? new Date(date).getMonth() + 1 : undefined,
-          nam: date ? new Date(date).getFullYear() : undefined,
-        },
-      });
-      return res.data.data || res.data;
-    },
-    enabled: !!date,
-    placeholderData: (previousData) => previousData,
-  });
-  const { data: countries = [] } = useQuery({
-    queryKey: ["countries"], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await axios.get("https://open.oapi.vn/location/countries");
-      return res.data.data;
     },
   });
 
@@ -212,7 +192,7 @@ export const useAssetManagerMutation = (
       link.href = url;
       link.setAttribute(
         "download",
-        `Danh_Sach_Tai_San_${dayjs().format("YYYYMMDD")}.xlsx`
+        `Danh_Sach_Tai_San_${dayjs().format("YYYYMMDD")}.xlsx`,
       );
       document.body.appendChild(link);
       link.click();
@@ -252,38 +232,38 @@ export const useAssetManagerMutation = (
               // 1. Kiểm tra mã nhóm tài sản
               const maNhomExcel = String(item["Mã nhóm tài sản"] || "").trim();
               const groupExists = currentAssetGroups.some(
-                (g: any) => g.id === maNhomExcel
+                (g: any) => g.id === maNhomExcel,
               );
 
               if (!maNhomExcel) {
                 errorMessages.push(
-                  `Cột H - Hàng ${rowIndex}: Mã nhóm tài sản đang bỏ trống`
+                  `Cột H - Hàng ${rowIndex}: Mã nhóm tài sản đang bỏ trống`,
                 );
               } else if (!groupExists) {
                 errorMessages.push(
-                  `Cột H - Hàng ${rowIndex}: Mã nhóm [${maNhomExcel}] không tồn tại`
+                  `Cột H - Hàng ${rowIndex}: Mã nhóm [${maNhomExcel}] không tồn tại`,
                 );
               }
 
               // 2. Kiểm tra các trường bắt buộc khác
               if (!item["Mã tài sản"]) {
                 errorMessages.push(
-                  `Cột B - Hàng ${rowIndex}: ID tài sản đang bỏ trống`
+                  `Cột B - Hàng ${rowIndex}: ID tài sản đang bỏ trống`,
                 );
               }
               if (!item["Số thẻ tài sản"]) {
                 errorMessages.push(
-                  `Cột C - Hàng ${rowIndex}: Số thẻ tài sản đang bỏ trống`
+                  `Cột C - Hàng ${rowIndex}: Số thẻ tài sản đang bỏ trống`,
                 );
               }
               if (!item["Tên tài sản"]) {
                 errorMessages.push(
-                  `Cột D - Hàng ${rowIndex}: Tên tài sản đang bỏ trống`
+                  `Cột D - Hàng ${rowIndex}: Tên tài sản đang bỏ trống`,
                 );
               }
               if (!item["Mã đơn vị hiện thời"]) {
                 errorMessages.push(
-                  `Cột AF - Hàng ${rowIndex}: Mã đơn vị hiện thời đang bỏ trống`
+                  `Cột AF - Hàng ${rowIndex}: Mã đơn vị hiện thời đang bỏ trống`,
                 );
               }
 
@@ -298,7 +278,7 @@ export const useAssetManagerMutation = (
                 const val = String(item[field] || "").trim();
                 if (val && isNaN(Number(val.replace(/[^0-9.]/g, "")))) {
                   errorMessages.push(
-                    `Hàng ${rowIndex}: Cột ${field} phải là số, không được là chữ: "${val}"`
+                    `Hàng ${rowIndex}: Cột ${field} phải là số, không được là chữ: "${val}"`,
                   );
                 }
               });
@@ -306,7 +286,7 @@ export const useAssetManagerMutation = (
               // Kiểm tra giới hạn lỗi
               if (errorMessages.length >= maxErrorsBeforeExit) {
                 errorMessages.push(
-                  `... Đã dừng kiểm tra sớm do quá nhiều lỗi (>${maxErrorsBeforeExit} lỗi).`
+                  `... Đã dừng kiểm tra sớm do quá nhiều lỗi (>${maxErrorsBeforeExit} lỗi).`,
                 );
                 break;
               }
@@ -329,11 +309,11 @@ export const useAssetManagerMutation = (
                 0;
               const vonVay =
                 Number(
-                  String(item["Vốn vay"] || "0").replace(/[^0-9.]/g, "")
+                  String(item["Vốn vay"] || "0").replace(/[^0-9.]/g, ""),
                 ) || 0;
               const vonKhac =
                 Number(
-                  String(item["Vốn khác"] || "0").replace(/[^0-9.]/g, "")
+                  String(item["Vốn khác"] || "0").replace(/[^0-9.]/g, ""),
                 ) || 0;
 
               allAssets.push({
@@ -381,8 +361,8 @@ export const useAssetManagerMutation = (
                 idCongTy: idCongTy,
                 ngayTao: now,
                 ngayCapNhat: now,
-                nguoiTao: user?.tailkhoan?.tenDangNhap || "",
-                nguoiCapNhat: user?.tailkhoan?.tenDangNhap || "",
+                nguoiTao: user?.taikhoan?.tenDangNhap || "",
+                nguoiCapNhat: user?.taikhoan?.tenDangNhap || "",
                 isActive: true,
                 isTaiSanCon: false,
               });
@@ -415,7 +395,7 @@ export const useAssetManagerMutation = (
         }
       } else {
         showErrorAlert(
-          error.response?.data?.message || "Lỗi khi gửi dữ liệu lên máy chủ"
+          error.response?.data?.message || "Lỗi khi gửi dữ liệu lên máy chủ",
         );
       }
     },
@@ -430,10 +410,82 @@ export const useAssetManagerMutation = (
     importAssetMutation,
     createChildAssetBulkMutation,
     deleteOneChildAsssetMutation,
-    assetsPage: data,
-    assetsByType,
-    countries,
-    assetDepreciations,
-    isLoading,
   };
+};
+
+export const useAssetPageQuery = (
+  tab?: number,
+  page?: number,
+  pageSize?: number,
+  searchValue?: string,
+  idNhomTaiSan?: string,
+) => {
+  return useQuery({
+    queryKey: ["assetsPage", page, pageSize, searchValue, idNhomTaiSan, tab], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get(
+        tab === 0
+          ? "/taisan/by-donvi-hienthoi/paged"
+          : tab === 1
+            ? "/taisan/paged-da-ban-giao"
+            : tab === 2
+              ? "/taisan/paged-chua-ban-giao"
+              : "/taisan/by-donvi-hienthoi/paged",
+        {
+          params: {
+            idcongty: "ct001",
+            page: page,
+            size: pageSize,
+            search: searchValue,
+            idNhomTaiSan: idNhomTaiSan,
+            ...(tab === 0 && { iddonvihienthoi: "kth" }),
+          },
+        },
+      );
+      return res.data.data || res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};
+
+export const useAssetByTypeQuery = (idloaitaisan?: string) => {
+  return useQuery({
+    queryKey: ["assetsByType", idloaitaisan], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/taisan/loaitaisan/", {
+        params: {
+          idloataisan: idloaitaisan,
+        },
+      });
+      return res.data;
+    },
+    enabled: !!idloaitaisan,
+  });
+};
+export const useAssetDepreciationsQuery = (date?: string) => {
+  return useQuery({
+    queryKey: ["assetDepreciationsPage", date], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/taisan/khauhaotaisan", {
+        params: {
+          idcongty: "ct001",
+          ngay: date ? new Date(date).getDate() : undefined,
+          thang: date ? new Date(date).getMonth() + 1 : undefined,
+          nam: date ? new Date(date).getFullYear() : undefined,
+        },
+      });
+      return res.data.data || res.data;
+    },
+    enabled: !!date,
+    placeholderData: (previousData) => previousData,
+  });
+};
+export const useCountriesQuery = () => {
+  return useQuery({
+    queryKey: ["countries"], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await axios.get("https://open.oapi.vn/location/countries");
+      return res.data.data;
+    },
+  });
 };

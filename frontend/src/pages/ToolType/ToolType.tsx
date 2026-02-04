@@ -19,7 +19,7 @@ import {
 } from "./Mutation";
 import { showConfirmAlert } from "../../components/Alert";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
-import { useDebounce } from "../../hook/useDebounce";
+import { useDebounce } from "../../hooks/useDebounce";
 
 export default function ToolType() {
   const [showForm, setShowForm] = useState(false);

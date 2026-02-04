@@ -9,6 +9,7 @@ interface Props {
   slotProps?: any;
   disabled?: boolean;
   InputProps?: any;
+  InputLabelProps?: any;
   onChange?: (newValue: any) => void;
 }
 export default function FieldInput({
@@ -19,6 +20,7 @@ export default function FieldInput({
   slotProps,
   disabled = false,
   InputProps,
+  InputLabelProps,
   onChange,
 }: Props) {
   const currentValue = formik && field ? getIn(formik.values, field) : "";
@@ -45,6 +47,7 @@ export default function FieldInput({
       error={Boolean(touched && error)}
       helperText={touched && error}
       InputProps={InputProps}
+      InputLabelProps={InputLabelProps}
       slotProps={slotProps}
     />
   );

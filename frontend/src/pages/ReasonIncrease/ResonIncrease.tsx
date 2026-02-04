@@ -20,7 +20,7 @@ import {
 } from "./Mutation";
 import { showConfirmAlert } from "../../components/Alert";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
-import { useDebounce } from "../../hook/useDebounce";
+import { useDebounce } from "../../hooks/useDebounce";
 
 export default function ReasonIncrease() {
   const [showForm, setShowForm] = useState(false);
@@ -52,12 +52,14 @@ export default function ReasonIncrease() {
   );
 
   const debouncedSearchValue = useDebounce(searchValue, 600);
-  const { data: reasonIncreasesPage = { items: [], totalItems: 0 }, isLoading } =
-    useReasonIncreasePageQuery(
-      paginationModel.page,
-      paginationModel.pageSize,
-      debouncedSearchValue,
-    );
+  const {
+    data: reasonIncreasesPage = { items: [], totalItems: 0 },
+    isLoading,
+  } = useReasonIncreasePageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    debouncedSearchValue,
+  );
   const { data: allReasonIncreases = [] } = useAllReasonIncreaseQuery();
 
   const handleImport = (file: File) => {

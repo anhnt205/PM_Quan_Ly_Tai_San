@@ -17,7 +17,7 @@ interface Props {
 
 export default function FieldAutoCompleted({
   title,
-  data,
+  data=[],
   labelkey,
   formik,
   field,
@@ -67,7 +67,7 @@ export default function FieldAutoCompleted({
         }`;
 
         return (
-          <li 
+          <li
             {...props}
             key={`${option.id} - ${state.index}`}
             title={label} // tooltip native

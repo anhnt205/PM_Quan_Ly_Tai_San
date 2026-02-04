@@ -15,13 +15,16 @@ import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import AssetManagerForm from "./components/AssetManagerForm";
 import AssetGroupItem from "./components/AssetGroupItem";
 import { showConfirmAlert } from "../../components/Alert";
-import { useAssetManagerMutation } from "./Mutation";
+import { useAssetManagerMutation, useAssetPageQuery } from "./Mutation";
 import { findById } from "../../utils/helpers";
 import {
   useAllDepartmentsQuery,
   useDepartmentMutation,
 } from "../Department/Mutation";
-import { useAllCurrentStatusQuery, useCurrentStatusMutation } from "../CurrentStatus/Mutation";
+import {
+  useAllCurrentStatusQuery,
+  useCurrentStatusMutation,
+} from "../CurrentStatus/Mutation";
 import {
   useAllAssetGroupQuery,
   useAllTypeAssetByGroupQuery,
@@ -36,6 +39,7 @@ import {
   useReasonIncreaseMutation,
 } from "../ReasonIncrease/Mutation";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
+import { useDebounce } from "../../hooks/useDebounce";
 
 export default function AssetManager() {
   const [tab, setTab] = React.useState(0);
@@ -45,7 +49,6 @@ export default function AssetManager() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("");
-  const [selectedAssetGroup, setSelectedAssetGroup] = useState("");
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
@@ -53,40 +56,31 @@ export default function AssetManager() {
   });
 
   const {
-    assetsPage,
-    assetsByType,
     createMutation,
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
-    createChildAssetBulkMutation,
-    deleteOneChildAsssetMutation,
-    isLoading,
-    countries,
     exportAssetMutation,
     importAssetMutation,
-  } = useAssetManagerMutation(
-    tab,
-    paginationModel.page,
-    paginationModel.pageSize,
-    searchValue,
-    undefined,
-    selectedGroup,
-    selectedAssetGroup,
-    (messages) => {
-      setImportErrors(messages); // Lưu mảng lỗi vào state
-      setOpenErrorModal(true); // Mở Modal MUI hiển thị danh sách lỗi
-    },
-  );
+  } = useAssetManagerMutation((messages) => {
+    setImportErrors(messages); // Lưu mảng lỗi vào state
+    setOpenErrorModal(true); // Mở Modal MUI hiển thị danh sách lỗi
+  });
+  const valueDebounce = useDebounce(searchValue, 600);
+
+  const { data: assetsPage = { items: [], totalItems: 0 }, isLoading } =
+    useAssetPageQuery(
+      tab,
+      paginationModel.page,
+      paginationModel.pageSize,
+      valueDebounce,
+    );
   const { data: allDepartments = [] } = useAllDepartmentsQuery();
   const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
   const { data: assetGroups = [] } = useAllAssetGroupQuery();
-  const { data: typeAssetsByAssetGroup = [] } =
-    useAllTypeAssetByGroupQuery(selectedGroup);
   const { data: allTypeAssets = [] } = useAllTypeAssetQuery();
   const { data: allUnits = [] } = useAllUnitsQuery();
   const { allAssetModel } = useAssetModelMutation();
-  const { data: allProjects = [] } = useAllProjectsQuery();
   const { data: allReasonIncreases = [] } = useAllReasonIncreaseQuery();
 
   const [importErrors, setImportErrors] = useState<string[]>([]);
@@ -105,19 +99,8 @@ export default function AssetManager() {
   const handleSave = (values: any) => {
     if (selectedAsset) {
       updateMutation.mutate(values);
-      if (values.taiSanConList.some((item: any) => item.isInsert)) {
-        const newChildAssets = values.taiSanConList.filter(
-          (item: any) => item.isInsert,
-        );
-        createChildAssetBulkMutation.mutate(newChildAssets);
-      } else if (values.taiSanConList.some((item: any) => item.isDeleted)) {
-        values.taiSanConList
-          .filter((item: any) => item.isDeleted)
-          .map((item: any) => deleteOneChildAsssetMutation.mutate(item.id));
-      }
     } else {
       createMutation.mutate(values);
-      createChildAssetBulkMutation.mutate(values.taiSanConList);
     }
     setShowForm(false);
     setSelectedAsset(null);
@@ -328,14 +311,9 @@ export default function AssetManager() {
               allAssetModel={allAssetModel}
               allCurrentStatus={allCurrentStatus}
               assetGroups={assetGroups}
-              allProjects={allProjects}
               allDepartments={allDepartments}
-              typeAssetsByAssetGroup={typeAssetsByAssetGroup}
-              assetsByType={assetsByType}
               allUnits={allUnits}
               allReasonIncreases={allReasonIncreases}
-              countries={countries}
-              setSelectedAssetGroup={setSelectedAssetGroup}
             />
           </Box>
         )}

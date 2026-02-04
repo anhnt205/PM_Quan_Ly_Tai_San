@@ -216,13 +216,12 @@ export const useReasonIncreasePageQuery = (
   });
 };
 
-export const useAllReasonIncreaseQuery = (
-) => {
+export const useAllReasonIncreaseQuery = () => {
   return useQuery({
-    queryKey: ["reasonIncreasesPage"],
+    queryKey: ["allReasonIncreases"],
     queryFn: async () => {
       const res = await api.get("/lydotang");
-      return res.data;
+      return res.data.data;
     },
     placeholderData: (previousData) => previousData,
   });

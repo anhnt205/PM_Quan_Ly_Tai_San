@@ -16,7 +16,7 @@ import StaffForm from "./components/StaffForm";
 import { useStaffMutation, useStaffPagesQuery } from "./Mutation";
 import { showConfirmAlert, showErrorAlert } from "../../components/Alert";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
-import { useDebounce } from "../../hook/useDebounce";
+import { useDebounce } from "../../hooks/useDebounce";
 
 export default function Staff() {
   const [showForm, setShowForm] = useState(false);

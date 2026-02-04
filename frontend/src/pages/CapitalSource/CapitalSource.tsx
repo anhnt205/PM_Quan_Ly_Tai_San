@@ -19,7 +19,7 @@ import {
   useCapitalSourcePageQuery,
 } from "./Mutation";
 import { showConfirmAlert } from "../../components/Alert";
-import { useDebounce } from "../../hook/useDebounce";
+import { useDebounce } from "../../hooks/useDebounce";
 
 export default function CapitalSource() {
   const [showForm, setShowForm] = useState(false);

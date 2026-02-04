@@ -34,6 +34,10 @@ import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted
 import FieldDateTime from "../../../components/TextField/FieldDateTime";
 import EditButton from "../../../components/Button/EditButton";
 import { findById } from "../../../utils/helpers";
+import { useAssetByTypeQuery, useCountriesQuery } from "../Mutation";
+import { useAllTypeAssetByGroupQuery } from "../../TypeAsset/Mutation";
+import { useAllProjectsQuery } from "../../Project/Mutation";
+import dayjs from "dayjs";
 
 export default function AssetManagerForm({
   onEdit,
@@ -44,14 +48,9 @@ export default function AssetManagerForm({
   allAssetModel,
   allCurrentStatus,
   assetGroups,
-  allProjects,
   allDepartments,
-  typeAssetsByAssetGroup,
-  assetsByType,
   allUnits,
   allReasonIncreases,
-  countries,
-  setSelectedAssetGroup,
 }: {
   onEdit: () => void;
   onCancel: () => void;
@@ -61,16 +60,12 @@ export default function AssetManagerForm({
   allAssetModel: any[];
   allCurrentStatus: any[];
   assetGroups: any[];
-  allProjects: any[];
   allDepartments: any[];
-  typeAssetsByAssetGroup: [];
-  assetsByType: any[];
   allUnits: any[];
   allReasonIncreases: any[];
-  countries: any[];
-  setSelectedAssetGroup: Dispatch<SetStateAction<string>>;
 }) {
   const [expanded, setExpanded] = useState(true);
+
   const formik = useFormik({
     initialValues: {
       id: "",
@@ -87,8 +82,8 @@ export default function AssetManagerForm({
       taiKhoanKhauHao: 0,
       taiKhoanChiPhi: 0,
       idNhomTaiSan: "",
-      ngayVaoSo: "",
-      ngaySuDung: "",
+      ngayVaoSo: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      ngaySuDung: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       idDuDan: "",
       idNguonVon: "",
       kyHieu: "",
@@ -98,7 +93,7 @@ export default function AssetManagerForm({
       namSanXuat: 0,
       lyDoTang: "",
       hienTrang: 0,
-      soLuong: 0,
+      soLuong: 1,
       donViTinh: "",
       ghiChu: "",
       idDonViBanDau: "",
@@ -129,7 +124,7 @@ export default function AssetManagerForm({
           donViTinh: "",
           soLuong: 0,
           hienTrang: "",
-          moTa: "",
+          ghiChu: "",
           isDeleted: false,
           isInsert: true,
         },
@@ -139,6 +134,7 @@ export default function AssetManagerForm({
       onSave({
         ...values,
         idLoaiTaiSan: values.idNhomTaiSan,
+        moTa: values?.moTa,
         taiSanConList: values.taiSanConList.map((item: any) => ({
           ...item,
           idTaiSanCha: values.id,
@@ -146,14 +142,27 @@ export default function AssetManagerForm({
       });
     },
   });
-  // Set or reset the whole form when the selected asset changes only.
+
+  const { data: assetsByType = [] } = useAssetByTypeQuery(
+    formik.values.idNhomTaiSan,
+  );
+  const { data: countries = [] } = useCountriesQuery();
+  const { data: typeAssetsByAssetGroup = [] } = useAllTypeAssetByGroupQuery(
+    formik.values.idNhomTaiSan,
+  );
+  const { data: allProjects = [] } = useAllProjectsQuery();
+
   useEffect(() => {
     if (selectedAsset) {
-      // When editing an existing asset, initialize the form values.
       const enrichedTaiSanConList =
         selectedAsset.taiSanConList?.map((item: any) => ({
           ...item,
+          donViTinh: findById(assetsByType, item.idTaiSanCon)?.donViTinh,
+          soLuong: findById(assetsByType, item.idTaiSanCon)?.soLuong,
+          hienTrang: findById(assetsByType, item.idTaiSanCon)?.hienTrang || -1,
+          ghiChu: findById(assetsByType, item.idTaiSanCon)?.ghiChu,
           isDeleted: false,
+          isInsert: true,
         })) || [];
 
       formik.setValues({
@@ -162,43 +171,11 @@ export default function AssetManagerForm({
         taiSanConList: enrichedTaiSanConList,
       });
     } else {
-      // Only reset when selectedAsset specifically becomes null (e.g., opening "New").
       formik.resetForm();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAsset]);
+  }, [selectedAsset, assetsByType.length]);
 
-  // When dependent reference data change (units, current status, assetsByType)
-  // and we're editing an asset, update only the `taiSanConList` entries
-  // to enrich display fields without resetting the entire form.
-  useEffect(() => {
-    if (!selectedAsset) return;
-
-    const enrichedTaiSanConList =
-      formik.values.taiSanConList?.map((item: any) => {
-        const assetDetail = assetsByType.find((a) => a.id === item.idTaiSanCon);
-        const unit = findById(allUnits, assetDetail?.donViTinh);
-        const status = findById(allCurrentStatus, assetDetail?.hienTrang);
-
-        return {
-          ...item,
-          donViTinh: unit ? unit.tenDonVi : "",
-          hienTrang: status ? status.tenHTKT : "",
-          soLuong: item.soLuong || assetDetail?.soLuong || 0,
-          moTa: item.moTa || assetDetail?.ghiChu || "",
-          isDeleted: false,
-        };
-      }) || [];
-
-    formik.setFieldValue("taiSanConList", enrichedTaiSanConList);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [assetsByType, allUnits, allCurrentStatus]);
-
-  useEffect(() => {
-    if (formik.values.idNhomTaiSan) {
-      setSelectedAssetGroup(formik.values.idNhomTaiSan);
-    }
-  }, [formik.values.idNhomTaiSan]);
   return (
     <Accordion sx={{ background: "#f6f8f4ff" }} expanded={expanded}>
       <AccordionSummary
@@ -260,7 +237,7 @@ export default function AssetManagerForm({
                     type="number"
                     formik={formik}
                     field="nguyenGia"
-                    disabled={readOnly}
+                    disabled={true}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -297,40 +274,66 @@ export default function AssetManagerForm({
                     labelkey="tenMoHinh"
                     formik={formik}
                     field="idMoHinhTaiSan"
+                    onChange={(newValue) => {
+                      formik.setFieldValue(
+                        "phuongPhapKhauHao",
+                        newValue?.phuongPhapKhauHao,
+                      );
+                      formik.setFieldValue("soKyKhauHao", newValue?.kyKhauHao);
+                      formik.setFieldValue(
+                        "taiKhoanTaiSan",
+                        newValue?.taiKhoanTaiSan,
+                      );
+                      formik.setFieldValue(
+                        "taiKhoanChiPhi",
+                        newValue?.taiKhoanChiPhi,
+                      );
+                      formik.setFieldValue(
+                        "taiKhoanKhauHao",
+                        newValue?.taiKhoanKhauHao,
+                      );
+                    }}
                     disabled={readOnly}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
-                  <FieldInput
-                    title="Phương pháp khấu hao"
-                    formik={formik}
-                    field="phuongPhapKhauHao"
-                    disabled={readOnly}
+                  <TextField
+                    size="small"
+                    fullWidth
+                    label="Phương pháp khấu hao"
+                    value={
+                      formik.values.phuongPhapKhauHao === 1
+                        ? "Đường thẳng"
+                        : "Khác"
+                    }
+                    disabled={true}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <FieldInput
                     title="Số kỳ khấu hao"
-                    type="number"
                     formik={formik}
                     field="soKyKhauHao"
-                    disabled={readOnly}
+                    InputLabelProps={{
+                      shrink: true, // Giúp label luôn nhảy lên trên
+                    }}
+                    disabled={true}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <FieldInput
-                    title="Tên tài sản"
+                    title="Tài khoản tài sản"
                     formik={formik}
-                    field="tenTaiSan"
-                    disabled={readOnly}
+                    field="taiKhoanTaiSan"
+                    disabled={true}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <FieldInput
-                    title="Tên khoản khấu hao"
+                    title="Tài khoản khấu hao"
                     formik={formik}
                     field="taiKhoanKhauHao"
-                    disabled={readOnly}
+                    disabled={true}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -338,7 +341,7 @@ export default function AssetManagerForm({
                     title="Tài khoản chi phí"
                     formik={formik}
                     field="taiKhoanChiPhi"
-                    disabled={readOnly}
+                    disabled={true}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -398,6 +401,14 @@ export default function AssetManagerForm({
                     formik={formik}
                     field="nvNS"
                     disabled={readOnly}
+                    onChange={(newValue) => {
+                      formik.setFieldValue(
+                        "nguyenGia",
+                        Number(formik.values.vonVay ?? 0) +
+                          Number(formik.values.vonKhac ?? 0) +
+                          Number(newValue ?? 0),
+                      );
+                    }}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -407,6 +418,14 @@ export default function AssetManagerForm({
                     formik={formik}
                     field="vonVay"
                     disabled={readOnly}
+                    onChange={(newValue) => {
+                      formik.setFieldValue(
+                        "nguyenGia",
+                        Number(newValue ?? 0) +
+                          Number(formik.values.vonKhac ?? 0) +
+                          Number(formik.values.nvNS ?? 0),
+                      );
+                    }}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -416,6 +435,14 @@ export default function AssetManagerForm({
                     formik={formik}
                     field="vonKhac"
                     disabled={readOnly}
+                    onChange={(newValue) => {
+                      formik.setFieldValue(
+                        "nguyenGia",
+                        Number(formik.values.vonVay ?? 0) +
+                          Number(newValue ?? 0) +
+                          Number(formik.values.nvNS ?? 0),
+                      );
+                    }}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -504,7 +531,7 @@ export default function AssetManagerForm({
                     type="number"
                     formik={formik}
                     field="soLuong"
-                    disabled={readOnly}
+                    disabled={true}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -521,7 +548,7 @@ export default function AssetManagerForm({
                   <FieldInput
                     title="Ghi chú"
                     formik={formik}
-                    field="moTa"
+                    field="ghiChu"
                     disabled={readOnly}
                   />
                 </Grid>
@@ -529,7 +556,7 @@ export default function AssetManagerForm({
                 <Grid size={{ xs: 12 }}>
                   <FieldAutoCompleted
                     title="Kho"
-                    data={allDepartments.filter((i) => i.id === "K30")}
+                    data={allDepartments.filter((i) => i.isKho)}
                     labelkey="tenPhongBan"
                     formik={formik}
                     field="idDonViBanDau"
@@ -549,148 +576,157 @@ export default function AssetManagerForm({
               </Grid>
             </Grid>
           </Grid>
-          <Typography fontSize={14} py={2}>
-            Chi tiết tài sản con:
-          </Typography>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ width: "25%" }}>Tài sản</TableCell>
-                <TableCell sx={{ width: "15%" }}>Đơn vị tính</TableCell>
-                <TableCell sx={{ width: "20%" }}>Số lượng</TableCell>
-                <TableCell sx={{ width: "20%" }}>Tình trạng kỹ thuật</TableCell>
-                <TableCell sx={{ width: "20%" }}>Ghi chú</TableCell>
-                <TableCell width={50}></TableCell>
-              </TableRow>
-            </TableHead>
-
-            <TableBody>
-              {formik.values.taiSanConList
-                .map((row, originalIndex) => ({ ...row, originalIndex }))
-                .filter((row) => !row.isDeleted)
-                .map((row) => (
-                  <TableRow key={row.id || row.originalIndex}>
-                    <TableCell>
-                      <FieldAutoCompleted
-                        title=""
-                        data={assetsByType}
-                        labelkey="tenTaiSan"
-                        formik={formik}
-                        field={`taiSanConList.${row.originalIndex}.id`}
-                        disabled={readOnly}
-                        onChange={(val) => {
-                          if (val) {
-                            formik.setFieldValue(
-                              `taiSanConList.${row.originalIndex}.idTaiSanCon`,
-                              val?.id,
-                            );
-
-                            formik.setFieldValue(
-                              `taiSanConList.${row.originalIndex}.isActive`,
-                              val.isActive,
-                            );
-
-                            formik.setFieldValue(
-                              `taiSanConList.${row.originalIndex}.donViTinh`,
-                              findById(allUnits, val.donViTinh)?.tenDonVi,
-                            );
-                            formik.setFieldValue(
-                              `taiSanConList.${row.originalIndex}.moTa`,
-                              val.ghiChu,
-                            );
-                            formik.setFieldValue(
-                              `taiSanConList.${row.originalIndex}.hienTrang`,
-                              findById(allCurrentStatus, val.hienTrang)
-                                ?.tenHTKT,
-                            );
-                            formik.setFieldValue(
-                              `taiSanConList.${row.originalIndex}.soLuong`,
-                              val.soLuong,
-                            );
-                          }
-                        }}
-                      />
+          {formik.values.donViTinh.toLocaleLowerCase() === "ht" && (
+            <Box>
+              <Typography fontSize={14} py={2}>
+                Chi tiết tài sản con:
+              </Typography>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ width: "25%" }}>Tài sản</TableCell>
+                    <TableCell sx={{ width: "15%" }}>Đơn vị tính</TableCell>
+                    <TableCell sx={{ width: "20%" }}>Số lượng</TableCell>
+                    <TableCell sx={{ width: "20%" }}>
+                      Tình trạng kỹ thuật
                     </TableCell>
-
-                    <TableCell>
-                      <FieldInput
-                        formik={formik}
-                        field={`taiSanConList.${row.originalIndex}.donViTinh`}
-                        disabled
-                      />
-                    </TableCell>
-
-                    <TableCell>
-                      <FieldInput
-                        type="number"
-                        formik={formik}
-                        field={`taiSanConList.${row.originalIndex}.soLuong`}
-                        disabled
-                      />
-                    </TableCell>
-
-                    <TableCell>
-                      <FieldInput
-                        formik={formik}
-                        field={`taiSanConList.${row.originalIndex}.hienTrang`}
-                        disabled
-                      />
-                    </TableCell>
-
-                    <TableCell>
-                      <FieldInput
-                        formik={formik}
-                        field={`taiSanConList.${row.originalIndex}.moTa`}
-                        disabled
-                      />
-                    </TableCell>
-
-                    <TableCell>
-                      <IconButton
-                        color="error"
-                        onClick={() => {
-                          formik.setFieldValue(
-                            `taiSanConList.${row.originalIndex}.isDeleted`,
-                            true,
-                          );
-                        }}
-                        disabled={readOnly}
-                      >
-                        <Delete />
-                      </IconButton>
-                    </TableCell>
+                    <TableCell sx={{ width: "20%" }}>Ghi chú</TableCell>
+                    <TableCell width={50}></TableCell>
                   </TableRow>
-                ))}
-              {!readOnly && (
-                <TableRow>
-                  <TableCell colSpan={6}>
-                    {" "}
-                    {/* colSpan bằng tổng số cột của bạn */}
-                    <Button
-                      size="small"
-                      startIcon={<Add />}
-                      onClick={() => {
-                        formik.setFieldValue("taiSanConList", [
-                          ...formik.values.taiSanConList,
-                          {
-                            id: "",
-                            idTaiSanCha: "",
-                            idTaiSanCon: "",
-                            isActive: true,
-                            isInsert: true,
-                            isDeleted: false,
-                          },
-                        ]);
-                      }}
-                      variant="text"
-                    >
-                      Thêm một dòng
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                </TableHead>
+
+                <TableBody>
+                  {formik.values.taiSanConList
+                    .map((row, originalIndex) => ({ ...row, originalIndex }))
+                    .filter((row) => !row.isDeleted)
+                    .map((row) => (
+                      <TableRow key={row.id || row.originalIndex}>
+                        <TableCell>
+                          <FieldAutoCompleted
+                            title=""
+                            data={assetsByType}
+                            labelkey="tenTaiSan"
+                            formik={formik}
+                            field={`taiSanConList.${row.originalIndex}.idTaiSanCon`}
+                            disabled={readOnly}
+                            onChange={(val) => {
+                              if (val) {
+                                // formik.setFieldValue(
+                                //   `taiSanConList.${row.originalIndex}.idTaiSanCon`,
+                                //   val?.id,
+                                // );
+
+                                formik.setFieldValue(
+                                  `taiSanConList.${row.originalIndex}.isActive`,
+                                  val.isActive,
+                                );
+
+                                formik.setFieldValue(
+                                  `taiSanConList.${row.originalIndex}.soLuong`,
+                                  val.soLuong,
+                                );
+                                formik.setFieldValue(
+                                  `taiSanConList.${row.originalIndex}.donViTinh`,
+                                  val.donViTinh,
+                                );
+                                formik.setFieldValue(
+                                  `taiSanConList.${row.originalIndex}.hienTrang`,
+                                  val.hienTrang,
+                                );
+                              }
+                            }}
+                          />
+                        </TableCell>
+
+                        <TableCell>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            value={findById(allUnits, row.donViTinh)?.tenDonVi}
+                            disabled
+                          />
+                        </TableCell>
+
+                        <TableCell>
+                          <FieldInput
+                            type="number"
+                            formik={formik}
+                            field={`taiSanConList.${row.originalIndex}.soLuong`}
+                            disabled
+                          />
+                        </TableCell>
+
+                        <TableCell>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            value={
+                              findById(allCurrentStatus, row.hienTrang)?.tenHTKT
+                            }
+                            disabled
+                          />
+                        </TableCell>
+
+                        <TableCell>
+                          <FieldInput
+                            formik={formik}
+                            field={`taiSanConList.${row.originalIndex}.ghiChu`}
+                            disabled
+                          />
+                        </TableCell>
+
+                        <TableCell>
+                          <IconButton
+                            color="error"
+                            onClick={() => {
+                              formik.setFieldValue(
+                                `taiSanConList.${row.originalIndex}.isDeleted`,
+                                true,
+                              );
+                              formik.setFieldValue(
+                                `taiSanConList.${row.originalIndex}.isInsert`,
+                                false,
+                              );
+                            }}
+                            disabled={readOnly}
+                          >
+                            <Delete />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  {!readOnly && (
+                    <TableRow>
+                      <TableCell colSpan={6}>
+                        {" "}
+                        {/* colSpan bằng tổng số cột của bạn */}
+                        <Button
+                          size="small"
+                          startIcon={<Add />}
+                          onClick={() => {
+                            formik.setFieldValue("taiSanConList", [
+                              ...formik.values.taiSanConList,
+                              {
+                                id: "",
+                                idTaiSanCha: "",
+                                idTaiSanCon: "",
+                                isActive: true,
+                                isDeleted: false,
+                                isInsert: true,
+                              },
+                            ]);
+                          }}
+                          variant="text"
+                        >
+                          Thêm một dòng
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </Box>
+          )}
         </Paper>
       </AccordionDetails>
     </Accordion>

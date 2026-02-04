@@ -19,7 +19,7 @@ import {
   usePositionMutation,
   usePositionsPageQuery,
 } from "./Mutation";
-import { useDebounce } from "../../hook/useDebounce";
+import { useDebounce } from "../../hooks/useDebounce";
 
 export default function Position() {
   const [showForm, setShowForm] = useState(false);

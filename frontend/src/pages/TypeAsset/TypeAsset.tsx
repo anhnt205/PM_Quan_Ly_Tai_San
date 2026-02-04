@@ -20,7 +20,7 @@ import {
   useTypeAssetPageQuery,
 } from "./Mutation";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
-import { useDebounce } from "../../hook/useDebounce";
+import { useDebounce } from "../../hooks/useDebounce";
 
 export default function TypeAsset() {
   const [showForm, setShowForm] = useState(false);

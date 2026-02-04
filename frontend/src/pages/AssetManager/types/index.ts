@@ -42,6 +42,7 @@ export interface AssetType {
   nvNS: number;
   vonVay: number;
   vonKhac: number;
+  taiSanConList?: AssetChildType[];
 }
 
 export interface AssetChildType {
@@ -53,4 +54,6 @@ export interface AssetChildType {
   nguoiTao: string;
   nguoiCapNhat: string;
   isActive: string;
+  isDeleted?:boolean,
+  isInsert?:boolean,
 }
