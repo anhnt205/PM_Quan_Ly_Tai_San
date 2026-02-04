@@ -221,7 +221,8 @@ export const useAllReasonIncreaseQuery = () => {
     queryKey: ["allReasonIncreases"],
     queryFn: async () => {
       const res = await api.get("/lydotang");
-      return res.data.data;
+
+      return res.data.data || [];
     },
     placeholderData: (previousData) => previousData,
   });

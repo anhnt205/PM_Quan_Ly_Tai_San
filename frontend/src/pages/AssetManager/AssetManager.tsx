@@ -17,28 +17,18 @@ import AssetGroupItem from "./components/AssetGroupItem";
 import { showConfirmAlert } from "../../components/Alert";
 import { useAssetManagerMutation, useAssetPageQuery } from "./Mutation";
 import { findById } from "../../utils/helpers";
-import {
-  useAllDepartmentsQuery,
-  useDepartmentMutation,
-} from "../Department/Mutation";
-import {
-  useAllCurrentStatusQuery,
-  useCurrentStatusMutation,
-} from "../CurrentStatus/Mutation";
+import { useAllDepartmentsQuery } from "../Department/Mutation";
+import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
 import {
   useAllAssetGroupQuery,
   useAllTypeAssetByGroupQuery,
   useAllTypeAssetQuery,
-  useTypeAssetMutation,
 } from "../TypeAsset/Mutation";
-import { useAllUnitsQuery, useUnitMutation } from "../Unit/Mutation";
-import { useAssetModelMutation } from "../AssetModel/Mutation";
-import { useAllProjectsQuery, useProjectMutation } from "../Project/Mutation";
-import {
-  useAllReasonIncreaseQuery,
-  useReasonIncreaseMutation,
-} from "../ReasonIncrease/Mutation";
+import { useAllUnitsQuery } from "../Unit/Mutation";
+import { useAllProjectsQuery } from "../Project/Mutation";
+import { useAllReasonIncreaseQuery } from "../ReasonIncrease/Mutation";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
+import { useAllModelAssetQuery } from "../ModelAsset/Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
 
 export default function AssetManager() {
@@ -78,9 +68,14 @@ export default function AssetManager() {
   const { data: allDepartments = [] } = useAllDepartmentsQuery();
   const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
   const { data: assetGroups = [] } = useAllAssetGroupQuery();
+
+  const { data: typeAssetsByAssetGroup = [] } =
+    useAllTypeAssetByGroupQuery(selectedGroup);
   const { data: allTypeAssets = [] } = useAllTypeAssetQuery();
   const { data: allUnits = [] } = useAllUnitsQuery();
-  const { allAssetModel } = useAssetModelMutation();
+  const { data: allModelAsset = [] } = useAllModelAssetQuery();
+  console.log("allModelAsset", allModelAsset);
+  const { data: allProjects = [] } = useAllProjectsQuery();
   const { data: allReasonIncreases = [] } = useAllReasonIncreaseQuery();
 
   const [importErrors, setImportErrors] = useState<string[]>([]);
@@ -308,7 +303,7 @@ export default function AssetManager() {
               readOnly={readOnly}
               onEdit={handleEdit}
               onSave={handleSave}
-              allAssetModel={allAssetModel}
+              allAssetModel={allModelAsset}
               allCurrentStatus={allCurrentStatus}
               assetGroups={assetGroups}
               allDepartments={allDepartments}

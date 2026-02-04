@@ -8,13 +8,8 @@ import {
   AccordionDetails,
   AccordionSummary,
   Box,
-  Button,
-  Checkbox,
   Grid,
-  IconButton,
-  InputAdornment,
   Paper,
-  TextField,
   Typography,
   MenuItem,
   Select,
@@ -22,7 +17,7 @@ import {
   InputLabel,
   FormHelperText,
 } from "@mui/material";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
 import FieldInput from "../../../components/TextField/FieldInput";
@@ -62,6 +57,11 @@ export default function ModelAssetForm({
       onSave(values);
     },
   });
+
+  const phuongPhapOptions = [
+    { value: 1, label: "Đường thẳng" },
+    { value: 0, label: "Khác" },
+  ];
 
   useEffect(() => {
     if (selectedModelAsset) {

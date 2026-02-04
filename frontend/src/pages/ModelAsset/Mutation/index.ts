@@ -107,112 +107,159 @@ export const useModelAssetMutation = (
   });
 
   const exportMutation = useMutation({
-    mutationFn: async (dataToExport: ModelAssetType[]) => {
-      const payload = dataToExport.map((item) => ({
-        "Mã mô hình": item.id || "",
-        "Tên mô hình": item.tenMoHinh || "",
-        "Phương pháp khấu hao": item.phuongPhapKhauHao || "",
-        "Kỳ khấu hao": item.kyKhauHao || "",
-        "Loại kỳ khấu hao": item.loaiKyKhauHao || "",
-        "Tài khoản tài sản": item.taiKhoanTaiSan || "",
-        "Tài khoản khấu hao": item.taiKhoanKhauHao || "",
-        "Tài khoản chi phí": item.taiKhoanChiPhi || "",
-        "Ngày tạo": item.ngayTao
-          ? item.ngayTao.replace("T", " ").split(".")[0]
-          : "",
-        "Ngày cập nhật": item.ngayCapNhat
-          ? item.ngayCapNhat.replace("T", " ").split(".")[0]
-          : "",
+    mutationFn: async () => {
+      const res = await api.get("/mohinhtaisan", {
+        params: { idcongty: "ct001" },
+      });
+
+      const rawData = res.data || [];
+      if (rawData.length === 0) {
+        throw new Error("Không có dữ liệu để xuất file");
+      }
+
+      // 2. Mapping dữ liệu sang tiêu đề Tiếng Việt cho Excel
+      const payload = rawData.map((item: any) => ({
+        "Mã mô hình": s(item.id),
+        "Tên mô hình": s(item.tenMoHinh),
+        "Phương pháp khấu hao":
+          item.phuongPhapKhauHao === 1 ? "Đường thẳng" : "Khác",
+        "Kỳ khấu hao": Number(item.kyKhauHao || 0),
+        "Tài khoản tài sản": s(item.taiKhoanTaiSan),
+        "Tài khoản khấu hao": s(item.taiKhoanKhauHao),
+        "Tài khoản chi phí": s(item.taiKhoanChiPhi),
+        "Ngày tạo": formatDateTime(item.ngayTao),
+        "Ngày cập nhật": formatDateTime(item.ngayCapNhat),
       }));
 
+      // 3. Đẩy dữ liệu qua cổng Export dùng chung của hệ thống
       const response = await api.post("/upload/export", payload, {
+        params: { sheetName: "Mô hình tài sản" },
         responseType: "blob",
       });
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      // 4. Xử lý tải file về máy
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "danh_sach_mo_hinh_tai_san.xlsx");
+      link.download = `Danh_sach_mo_hinh_tai_san_${dayjs().format("YYYYMMDD")}.xlsx`;
       document.body.appendChild(link);
       link.click();
-
-      document.body.removeChild(link);
+      link.remove();
       window.URL.revokeObjectURL(url);
-      return true;
     },
-    onSuccess: () => showSuccessAlert("Xuất file mô hình tài sản thành công"),
-    onError: () => showErrorAlert("Lỗi khi kết nối server để xuất file"),
+    onSuccess: () => showSuccessAlert("Xuất file thành công"),
+    onError: (error: any) => {
+      // Hiện thông báo lỗi cụ thể (ví dụ: Không có dữ liệu)
+      showErrorAlert(error.message || "Lỗi khi kết nối server để xuất file");
+    },
   });
 
   const importExcelMutation = useMutation({
-    mutationFn: (file: File) => {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-          try {
-            const data = new Uint8Array(e.target?.result as ArrayBuffer);
-            const workbook = XLSX.read(data, { type: "array" });
-            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+    mutationFn: async (file: File) => {
+      const currentUser = user?.taiKhoan?.tenDangNhap || "admin";
 
-            const jsonData: any[][] = XLSX.utils.sheet_to_json(worksheet, {
-              header: 1,
-              defval: "",
-            });
+      return new Promise(async (resolve, reject) => {
+        try {
+          const reader = new FileReader();
 
-            const listImport: ModelAssetType[] = [];
-            const errorMessages: string[] = [];
-            const currentUser = "admin";
+          reader.onload = async (e) => {
+            try {
+              const data = new Uint8Array(e.target?.result as ArrayBuffer);
+              const workbook = XLSX.read(data, { type: "array" });
+              const worksheet = workbook.Sheets[workbook.SheetNames[0]];
 
-            for (let i = 1; i < jsonData.length; i++) {
-              const row = jsonData[i];
+              const jsonData: any[][] = XLSX.utils.sheet_to_json(worksheet, {
+                header: 1,
+                defval: "",
+              });
 
-              if (!row[0] && !row[1]) continue;
+              const listImport: any[] = [];
+              const errorMessages: string[] = [];
 
-              const id = s(row[0]);
-              const tenMoHinh = s(row[1]);
+              // Duyệt từ dòng 2 (index = 1)
+              for (let i = 1; i < jsonData.length; i++) {
+                const row = jsonData[i];
 
-              const rowErrors: string[] = [];
-              if (!id) rowErrors.push("Mã mô hình không được để trống");
-              if (!tenMoHinh) rowErrors.push("Tên mô hình không được để trống");
+                // Bỏ qua dòng trống hoàn toàn
+                if (row.every((cell) => s(cell) === "")) continue;
 
-              if (rowErrors.length > 0) {
-                errorMessages.push(`Dòng ${i + 1}: ${rowErrors.join(", ")}`);
-              } else {
+                const id = s(row[0]); // Cột A
+                const tenMoHinh = s(row[1]); // Cột B
+
+                // ---- Phương pháp khấu hao (Cột C) ----
+                const rawPPKH = s(row[2]).trim().toLowerCase();
+                let phuongPhapKhauHao = 0; // 0 = Khác (default)
+
+                if (rawPPKH === "1" || rawPPKH.includes("đường thẳng")) {
+                  phuongPhapKhauHao = 1;
+                } else if (rawPPKH === "0" || rawPPKH.includes("khác")) {
+                  phuongPhapKhauHao = 0;
+                }
+
+                // ---- Validate ----
+                const rowErrors: string[] = [];
+                if (!id) rowErrors.push("Mã mô hình không được để trống");
+                if (!tenMoHinh)
+                  rowErrors.push("Tên mô hình không được để trống");
+
+                if (rowErrors.length > 0) {
+                  errorMessages.push(`Dòng ${i + 1}: ${rowErrors.join(", ")}`);
+                  continue;
+                }
+
+                // ---- Mapping dữ liệu ----
                 listImport.push({
                   id,
                   tenMoHinh,
+                  phuongPhapKhauHao,
+                  kyKhauHao: Number(s(row[3]) || 0), // Cột D
+                  loaiKyKhauHao: "1",
+                  taiKhoanTaiSan: s(row[4]), // Cột E
+                  taiKhoanKhauHao: s(row[5]), // Cột F
+                  taiKhoanChiPhi: s(row[6]), // Cột G
                   idCongTy: "ct001",
-                  ngayTao: formatDateTime(row[9]),
-                  ngayCapNhat: formatDateTime(row[10]),
-                  nguoiTao: currentUser,
-                  nguoiCapNhat: currentUser,
+                  ngayTao: formatDateTime(row[7]), // Cột H
+                  ngayCapNhat: formatDateTime(row[8]), // Cột I
+                  nguoiTao: s(row[9]) || currentUser, // Cột J
+                  nguoiCapNhat: s(row[10]) || currentUser, // Cột K
+                  isActive: true,
                 });
               }
-            }
 
-            if (errorMessages.length > 0) {
-              reject(new Error(errorMessages.join("\n")));
-            } else if (listImport.length > 0) {
+              // ---- Kết thúc ----
+              if (errorMessages.length > 0) {
+                reject(new Error(errorMessages.join("\n")));
+                return;
+              }
+
+              if (listImport.length === 0) {
+                reject(new Error("File không có dữ liệu hợp lệ để import"));
+                return;
+              }
+
               const res = await api.post("/mohinhtaisan/batch", listImport);
               resolve(res.data);
-            } else {
-              reject(new Error("File không có dữ liệu hợp lệ"));
+            } catch (err) {
+              reject(new Error("Lỗi hệ thống khi đọc file Excel"));
             }
-          } catch (err) {
-            reject(new Error("Lỗi đọc file hoặc lỗi hệ thống"));
-          }
-        };
-        reader.readAsArrayBuffer(file);
+          };
+
+          reader.readAsArrayBuffer(file);
+        } catch (err) {
+          reject(new Error("Không thể đọc file"));
+        }
       });
     },
+
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["modelAssets"] });
       queryClient.invalidateQueries({ queryKey: ["modelAssetsPage"] });
       showSuccessAlert("Import mô hình tài sản thành công");
     },
-    onError: (error: any) => {
-      showErrorAlert(`Import dữ liệu thất bại: \n${error.message}`);
-    },
+
+    // onError đã được handle ở component cha
   });
 
   return {
@@ -235,7 +282,7 @@ export const useModelAssetPageQuery = (
     queryFn: async () => {
       const res = await api.get("/mohinhtaisan/paged", {
         params: {
-          idCongTy: "ct001",
+          idcongty: "ct001",
           page: page,
           size: pageSize,
           search: searchValue,
@@ -251,11 +298,9 @@ export const useAllModelAssetQuery = () => {
   return useQuery({
     queryKey: ["allModelAssets"],
     queryFn: async () => {
-      const res = await api.get("/mohinhtaisan/paged", {
+      const res = await api.get("/mohinhtaisan", {
         params: {
-          idCongTy: "ct001",
-          page: 1,
-          size: 1000,
+          idcongty: "ct001",
         },
       });
       return res.data;

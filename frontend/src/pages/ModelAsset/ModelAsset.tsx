@@ -16,7 +16,7 @@ import {
   useModelAssetMutation,
   useModelAssetPageQuery,
 } from "./Mutation";
-import { showConfirmAlert } from "../../components/Alert";
+import { showConfirmAlert, showErrorAlert } from "../../components/Alert";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useDebounce } from "../../hooks/useDebounce";
 import ModelAssetForm from "./components/ModelAssetForm";
@@ -56,7 +56,6 @@ export default function ModelAsset() {
       paginationModel.pageSize,
       debouncedSearchValue,
     );
-  const { data: allModelAsset = [] } = useAllModelAssetQuery();
 
   const handleImport = (file: File) => {
     importExcelMutation.mutate(file, {
@@ -218,7 +217,7 @@ export default function ModelAsset() {
           setSelectedModelAsset(null);
           setReadOnly(false);
         }}
-        onExport={() => exportMutation.mutate(allModelAsset)}
+        onExport={() => exportMutation.mutate()}
         onImport={handleImport}
         showExcel={true}
       />

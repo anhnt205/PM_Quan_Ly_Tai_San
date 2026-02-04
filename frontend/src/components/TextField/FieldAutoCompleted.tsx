@@ -30,6 +30,7 @@ export default function FieldAutoCompleted({
 }: Props) {
   const currentValue = formik && field ? getIn(formik.values, field) : null;
 
+  console.log("data:", data, "field:", field);
   const selectedOption =
     data.find((i) => i.id?.toString() === currentValue?.toString()) || null;
 
