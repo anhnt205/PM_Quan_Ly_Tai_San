@@ -7,6 +7,8 @@ export const ROUTES = {
   POSITION: "/chuc_vu",
   PROJECT: "/du_an",
   CAPITALSOURCE: "/nguon_von",
+  ASSETGROUP: "/nhom_tai_san",
+  MODELASSET: "/mo_hinh_tai_san",
   TYPEASSET: "/loai_tai_san",
   TOOLGROUP: "/nhom_ccdc",
   TOOLTYPE: "/loai_ccdc",

@@ -10,6 +10,8 @@ import Project from "./pages/Project/Project";
 import CapitalSource from "./pages/CapitalSource/CapitalSource";
 import Position from "./pages/Position/Position";
 import TypeAsset from "./pages/TypeAsset/TypeAsset";
+import ModelAsset from "./pages/ModelAsset/ModelAsset";
+import AssetGroup from "./pages/AssetGroup/AssetGroup";
 import ToolGroup from "./pages/ToolGroup/ToolGroup";
 import AssetManager from "./pages/AssetManager/AssetManager";
 import AssetTransfer from "./pages/AssetTransfer/AssetTransfer";
@@ -88,6 +90,8 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path={ROUTES.ASSETGROUP} element={<AssetGroup />} />
+          <Route path={ROUTES.MODELASSET} element={<ModelAsset />} />
           <Route path={ROUTES.TYPEASSET} element={<TypeAsset />} />
           <Route path={ROUTES.TOOLGROUP} element={<ToolGroup />} />
           <Route path={ROUTES.TOOLTYPE} element={<ToolType />} />

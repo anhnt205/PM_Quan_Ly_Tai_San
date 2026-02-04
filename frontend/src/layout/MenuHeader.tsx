@@ -270,6 +270,8 @@ export default function Menuheader() {
         { text: "Quản lý chức vụ", path: ROUTES.POSITION },
         { text: "Quản lý dự án", path: ROUTES.PROJECT, code: "DUAN" },
         { text: "Quản lý nguồn vốn", path: ROUTES.CAPITALSOURCE },
+        { text: "Nhóm tài sản", path: ROUTES.ASSETGROUP },
+        { text: "Mô hình tài sản", path: ROUTES.MODELASSET },
         { text: "Loại tài sản", path: ROUTES.TYPEASSET },
         { text: "Nhóm ccdc", path: ROUTES.TOOLGROUP },
         { text: "Loại ccdc", path: ROUTES.TOOLTYPE },
