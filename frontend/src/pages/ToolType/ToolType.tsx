@@ -96,8 +96,8 @@ export default function ToolType() {
       headerAlign: "center",
     },
     {
-      field: "idLoaiCCDC",
-      headerName: "Mã loại CCDC cha",
+      field: "tenLoaiCCDC",
+      headerName: "Loại CCDC cha",
       flex: 1,
       minWidth: 200,
       align: "center",

@@ -112,8 +112,8 @@ export default function ToolHandover() {
       searchDebounce,
       currentStatus ? Number(currentStatus) : undefined,
     );
-
-  const { data: transferPage = { items: [], totalItems: 0 } } =
+  const [storedLoaiCounts, setStoredLoaiCounts] = useState<any>({});
+  const { data: transferPage = { items: [], totalItems: 0, loaiCounts: {} } } =
     useToolTransferPageQuery(
       paginationModel.page,
       paginationModel.pageSize,
@@ -123,6 +123,11 @@ export default function ToolHandover() {
       3,
       true,
     );
+  useEffect(() => {
+    if (!currentType && transferPage.loaiCounts) {
+      setStoredLoaiCounts(transferPage.loaiCounts);
+    }
+  }, [transferPage.loaiCounts, currentType]);
 
   const { data: staffs = [] } = useAllStaffsQuery();
   const { data: departments = [] } = useAllDepartmentsQuery();
@@ -132,7 +137,11 @@ export default function ToolHandover() {
   const statusOptions: FilterOption[] = [
     {
       label: "Tất cả",
-      count: handoverPage.totalItems,
+      count:
+        (handoverPage?.groupCounts?.["0"] ?? 0) +
+        (handoverPage?.groupCounts?.["1"] ?? 0) +
+        (handoverPage?.groupCounts?.["2"] ?? 0) +
+        (handoverPage?.groupCounts?.["3"] ?? 0),
       color: "default",
       value: "",
     },
@@ -165,25 +174,28 @@ export default function ToolHandover() {
   const typeOptions: FilterOption[] = [
     {
       label: "Tất cả",
-      count: transferPage.totalItems,
+      count:
+        (storedLoaiCounts?.["1"] ?? 0) +
+        (storedLoaiCounts?.["2"] ?? 0) +
+        (storedLoaiCounts?.["3"] ?? 0),
       color: "default",
       value: "",
     },
     {
       label: "Cấp phát",
-      count: transferPage?.loaiCounts?.["1"] ?? 0,
+      count: storedLoaiCounts?.["1"] ?? 0,
       color: "success",
       value: "1",
     },
     {
       label: "Điều chuyển",
-      count: transferPage?.loaiCounts?.["2"] ?? 0,
+      count: storedLoaiCounts?.["2"] ?? 0,
       color: "info",
       value: "2",
     },
     {
       label: "Thu hồi",
-      count: transferPage?.loaiCounts?.["3"] ?? 0,
+      count: storedLoaiCounts?.["3"] ?? 0,
       color: "error",
       value: "3",
     },
@@ -335,7 +347,7 @@ export default function ToolHandover() {
       renderCell: (params) =>
         showShareStatus(
           params.row?.share ?? false,
-          params.row?.nguoiTao == user?.taiKhoan?.tenDangNhap,
+          params.row?.nguoiTao === user?.taiKhoan?.tenDangNhap,
         ),
     },
     {

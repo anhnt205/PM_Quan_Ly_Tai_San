@@ -93,6 +93,7 @@ export default function AssetHandover() {
       currentStatus ? Number(currentStatus) : undefined,
     );
 
+  const [storedLoaiCounts, setStoredLoaiCounts] = useState<any>({});
   const { data: transferPage = { items: [], totalItems: 0 } } =
     useAssetTransferPageQuery(
       paginationModel.page,
@@ -104,6 +105,11 @@ export default function AssetHandover() {
       undefined,
       true,
     );
+     useEffect(() => {
+       if (!currentType && transferPage.loaiCounts) {
+         setStoredLoaiCounts(transferPage.loaiCounts);
+       }
+     }, [transferPage.loaiCounts, currentType]);
 
   const { data: staffs = [] } = useAllStaffsQuery();
   const { data: departments = [] } = useAllDepartmentsQuery();
@@ -125,7 +131,11 @@ export default function AssetHandover() {
   const statusOptions: FilterOption[] = [
     {
       label: "Tất cả",
-      count: handoverPage.totalItems,
+      count:
+        (handoverPage?.groupCounts?.["0"] ?? 0) +
+        (handoverPage?.groupCounts?.["1"] ?? 0) +
+        (handoverPage?.groupCounts?.["2"] ?? 0) +
+        (handoverPage?.groupCounts?.["3"] ?? 0),
       color: "default",
       value: "",
     },
@@ -158,7 +168,10 @@ export default function AssetHandover() {
   const typeOptions: FilterOption[] = [
     {
       label: "Tất cả",
-      count: transferPage.totalItems,
+      count:
+        (storedLoaiCounts?.["1"] ?? 0) +
+        (storedLoaiCounts?.["2"] ?? 0) +
+        (storedLoaiCounts?.["3"] ?? 0),
       color: "default",
       value: "",
     },

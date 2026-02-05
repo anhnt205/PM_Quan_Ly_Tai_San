@@ -89,6 +89,9 @@ export default function AssetTransfer() {
     paginationModel.page,
     paginationModel.pageSize,
     debouncedSearchValue,
+    type ? Number(type) : undefined,
+    user?.taiKhoan?.tenDangNhap,
+    status ? Number(status) : undefined,
   );
 
   const { data: allStaffs = [] } = useAllStaffsQuery();
@@ -343,7 +346,7 @@ export default function AssetTransfer() {
       renderCell: (params) =>
         showShareStatus(
           params.row?.share ?? false,
-          params.row?.nguoiTao == user?.taiKhoan?.tenDangNhap,
+          params.row?.nguoiTao === user?.taiKhoan?.tenDangNhap,
         ),
     },
 
@@ -529,6 +532,7 @@ export default function AssetTransfer() {
                   }}
                   statusValue={status}
                   isCheckShowShare={isCheckShowShare}
+                  loading={isLoading}
                 />
               </Grid>
 
