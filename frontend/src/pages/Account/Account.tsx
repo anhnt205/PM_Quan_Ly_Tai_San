@@ -116,7 +116,13 @@ export default function Account() {
               size="small"
               onClick={(e) => {
                 e.stopPropagation();
-                setEditModal({ open: true, data: params.row });
+                if (
+                  currentUser?.taiKhoan?.tenDangNhap === "admin" ||
+                  currentUser?.taiKhoan?.tenDangNhap === params.row.tenDangNhap
+                ) {
+                  setEditModal({ open: true, data: params.row });
+                }
+                return showErrorAlert("Bạn không có quyền sửa tài khoản này");
               }}
               sx={{ border: "1px solid #e0e0e0", bgcolor: "#f1f8e9" }}
             >
@@ -128,6 +134,11 @@ export default function Account() {
                 size="small"
                 onClick={async (e) => {
                   e.stopPropagation();
+                  if (currentUser?.taiKhoan?.tenDangNhap !== "admin") {
+                    return showErrorAlert(
+                      "Bạn không có quyền xóa tài khoản này",
+                    );
+                  }
                   const confirm = await showConfirmAlert(
                     `Xác nhận xóa tài khoản "${params.row.hoTen}"?`,
                   );
@@ -141,19 +152,21 @@ export default function Account() {
               </IconButton>
             )}
 
-            <Tooltip title="Phân quyền">
-              <IconButton
-                size="small"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // 3. Kích hoạt mở Modal phân quyền bằng cách set ID
-                  setPermissionUserId(params.row.id);
-                }}
-                sx={{ border: "1px solid #e0e0e0", bgcolor: "#fff3e0" }}
-              >
-                <ShieldCheck size={18} color="#ff9800" />
-              </IconButton>
-            </Tooltip>
+            {currentUser?.taiKhoan?.tenDangNhap === "admin" && (
+              <Tooltip title="Phân quyền">
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // 3. Kích hoạt mở Modal phân quyền bằng cách set ID
+                    setPermissionUserId(params.row.id);
+                  }}
+                  sx={{ border: "1px solid #e0e0e0", bgcolor: "#fff3e0" }}
+                >
+                  <ShieldCheck size={18} color="#ff9800" />
+                </IconButton>
+              </Tooltip>
+            )}
           </Box>
         );
       },

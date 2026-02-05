@@ -475,9 +475,14 @@ export const useAssetByTypeQuery = (idloaitaisan?: string) => {
     enabled: !!idloaitaisan,
   });
 };
-export const useAssetDepreciationsQuery = (date?: string) => {
+export const useAssetDepreciationsQuery = (
+  date?: string,
+  page?: number,
+  pageSize?: number,
+  searchValue?: string,
+) => {
   return useQuery({
-    queryKey: ["assetDepreciationsPage", date], // Key để cache dữ liệu
+    queryKey: ["assetDepreciationsPage", date,page,pageSize,searchValue], // Key để cache dữ liệu
     queryFn: async () => {
       const res = await api.get("/taisan/khauhaotaisan", {
         params: {
@@ -485,6 +490,9 @@ export const useAssetDepreciationsQuery = (date?: string) => {
           ngay: date ? new Date(date).getDate() : undefined,
           thang: date ? new Date(date).getMonth() + 1 : undefined,
           nam: date ? new Date(date).getFullYear() : undefined,
+          page,
+          size: pageSize,
+          search: searchValue,
         },
       });
       return res.data.data || res.data;

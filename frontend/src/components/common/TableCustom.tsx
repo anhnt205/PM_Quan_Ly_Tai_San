@@ -105,6 +105,8 @@ export default function TableCustom({
   handleAssetTransfer,
   isCheckShowShare,
   handleSignDocument,
+  selectedDate,
+  setSelectedDate,
 }: Props) {
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.user);
@@ -165,7 +167,13 @@ export default function TableCustom({
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 2 }}>
-          {isFilterDate && <FieldDate title="Chọn thời gian khấu hao" />}
+          {isFilterDate && (
+            <FieldDate
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+              title="Chọn thời gian khấu hao"
+            />
+          )}
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
           <Box
@@ -185,10 +193,8 @@ export default function TableCustom({
                 startIcon={<Edit />}
                 onClick={async (e) => {
                   e.stopPropagation();
-                  handleSignDocument?.(
-                    selectedItem[0],
-                    user,
-                    ()=>onSign?.(selectedItem[0].tenFile, selectedItem[0]),
+                  handleSignDocument?.(selectedItem[0], user, () =>
+                    onSign?.(selectedItem[0].tenFile, selectedItem[0]),
                   );
                 }}
               >

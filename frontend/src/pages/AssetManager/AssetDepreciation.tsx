@@ -11,6 +11,7 @@ import {
   useAssetManagerMutation,
 } from "./Mutation";
 import dayjs from "dayjs";
+import { useDebounce } from "../../hooks/useDebounce";
 
 export default function AssetDepreciation() {
   const [showForm, setShowForm] = useState(false);
@@ -24,9 +25,14 @@ export default function AssetDepreciation() {
     pageSize: 10,
     page: 0,
   });
-
-  const { data: assetDepreciations = [] } =
-    useAssetDepreciationsQuery(selectedDate);
+  const searchDebounce = useDebounce(searchValue, 600);
+  const { data: assetDepreciations = { items: [], totalItems: 0 } } =
+    useAssetDepreciationsQuery(
+      selectedDate,
+      paginationModel.page,
+      paginationModel.pageSize,
+      searchDebounce,
+    );
   const handleRowClick = (params: GridRowParams) => {
     setSelectedAsset(params.row);
     setReadOnly(true);
@@ -321,16 +327,16 @@ export default function AssetDepreciation() {
       <TableCustom
         title="Danh sách khấu hao tài sản"
         columns={columns}
-        rows={assetDepreciations}
-        total={assetDepreciations.length}
+        rows={assetDepreciations.items}
+        total={assetDepreciations.totalItems}
         onRowClick={handleRowClick}
         isFilterDate={true}
         searchValue={searchValue}
         setSearchValue={setSearchValue}
         selectedDate={selectedDate}
         setSelectedDate={setSelectedDate}
+        onPaginationModelChange={setPaginationModel}
         paginationModel={paginationModel}
-        paginationMode="client"
       />
     </Box>
   );
