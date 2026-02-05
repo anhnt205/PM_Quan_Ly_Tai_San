@@ -23,6 +23,37 @@ import FieldInput from "../../../../components/TextField/FieldInput";
 import SaveBtn from "../../../../components/Button/SaveBtn";
 import CancelBtn from "../../../../components/Button/CancelBtn";
 import { useSelector } from "react-redux";
+import { showConfirmAlert } from "../../../../components/Alert";
+
+const generateCredentials = (fullName: string) => {
+  if (!fullName) return { username: "", password: "" };
+
+  // 1. Chuyển về chữ thường và bỏ dấu
+  const normalized = fullName
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .trim();
+
+  const parts = normalized.split(/\s+/);
+  if (parts.length < 1) return { username: "", password: "" };
+
+  // 2. Lấy tên chính (phần tử cuối)
+  const firstName = parts[parts.length - 1];
+
+  // 3. Lấy các chữ cái đầu của họ và tên đệm
+  const initials = parts
+    .slice(0, parts.length - 1)
+    .map((p) => p[0])
+    .join("");
+
+  const username = firstName + initials;
+  return {
+    username: username,
+    password: `${username}123`,
+  };
+};
 
 interface Props {
   open: boolean;
@@ -49,6 +80,7 @@ export default function AccountModal({ open, onClose }: Props) {
     currentUser?.taiKhoan?.idCongTy,
   );
   const staffWithStatus = useMemo(() => {
+    if (!staffs) return [];
     return staffs
       .filter((i: any) =>
         i.hoTen.toLowerCase().includes(searchValue.toLowerCase()),
@@ -73,10 +105,23 @@ export default function AccountModal({ open, onClose }: Props) {
       nguoiTao: currentUser?.taiKhoan?.hoTen || "",
       isActive: true,
     },
-    onSubmit: (values) => {
-      createMutation.mutate(values, {
-        onSuccess: () => handleClose(),
-      });
+    onSubmit: async (values) => {
+      // THÊM MODAL XÁC NHẬN TẠI ĐÂY
+      const confirm = await showConfirmAlert(
+        `Bạn có chắc chắn muốn tạo tài khoản cho nhân viên "${selectedStaff?.hoTen}" không?`,
+      );
+
+      if (confirm.isConfirmed) {
+        createMutation.mutate(
+          {
+            values: values,
+            staff: selectedStaff,
+          },
+          {
+            onSuccess: () => handleClose(),
+          },
+        );
+      }
     },
   });
 
@@ -105,10 +150,14 @@ export default function AccountModal({ open, onClose }: Props) {
               disabled={params.row.hasAccount}
               onClick={() => {
                 setSelectedStaff(params.row);
+                const { username, password } = generateCredentials(
+                  params.row.hoTen,
+                );
                 formik.setValues({
                   ...formik.initialValues,
                   tenDangNhap: params.row.id,
-                  username: params.row.id,
+                  username: username,
+                  matKhau: password,
                   hoTen: params.row.hoTen,
                   email: params.row.emailCongViec,
                   soDienThoai: params.row.diDong,

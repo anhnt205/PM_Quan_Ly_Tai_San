@@ -121,6 +121,7 @@ export default function Account() {
                   currentUser?.taiKhoan?.tenDangNhap === params.row.tenDangNhap
                 ) {
                   setEditModal({ open: true, data: params.row });
+                  return;
                 }
                 return showErrorAlert("Bạn không có quyền sửa tài khoản này");
               }}
