@@ -222,6 +222,7 @@ export const useAllTypeAssetQuery = () => {
       const res = await api.get("/loaitaisancon");
       return res.data;
     },
+    placeholderData: (placeholderData) => placeholderData,
   });
 };
 
@@ -232,6 +233,7 @@ export const useAllTypeAssetByGroupQuery = (assetGroup: string) => {
       const res = await api.get(`/loaitaisancon/byloaitaisan/${assetGroup}`);
       return res.data || [];
     },
+    placeholderData: (placeholderData) => placeholderData,
     enabled: !!assetGroup,
   });
 };
@@ -247,6 +249,7 @@ export const useAllAssetGroupQuery = () => {
       });
       return res.data;
     },
+    placeholderData: (placeholderData) => placeholderData,
   });
 };
 

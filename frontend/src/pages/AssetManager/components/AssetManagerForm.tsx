@@ -95,7 +95,7 @@ export default function AssetManagerForm({
       soLuong: 1,
       donViTinh: "",
       ghiChu: "",
-      idDonViBanDau: "",
+      idDonViBanDau: "K30",
       idDonViHienThoi: "",
       moTa: "",
       idCongTy: "ct001",
@@ -558,11 +558,13 @@ export default function AssetManagerForm({
                 <Grid size={{ xs: 12 }}>
                   <FieldAutoCompleted
                     title="Kho"
-                    data={allDepartments.filter((i) => i.isKho)}
+                    data={allDepartments.filter(
+                      (i) => i.id?.toLocaleLowerCase() === "k30",
+                    )}
                     labelkey="tenPhongBan"
                     formik={formik}
                     field="idDonViBanDau"
-                    disabled={readOnly}
+                    disabled={true}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>

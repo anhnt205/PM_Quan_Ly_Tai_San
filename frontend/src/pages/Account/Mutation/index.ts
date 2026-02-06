@@ -36,6 +36,7 @@ export const useAccountMutation = (
       return (await api.get("/nhanvien", { params: { idcongty: idCongTy } }))
         .data;
     },
+    placeholderData: (placeholderData) => placeholderData,
     enabled: !!idCongTy,
   });
 
@@ -51,6 +52,7 @@ export const useAccountMutation = (
       });
       return res.data;
     },
+    placeholderData: (placeholderData) => placeholderData,
     enabled: !!staffs,
   });
 

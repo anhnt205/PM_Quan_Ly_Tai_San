@@ -648,5 +648,6 @@ export const useToolTransferAllQuery = () => {
       });
       return res.data;
     },
+    placeholderData: (placeholderData) => placeholderData,
   });
 };

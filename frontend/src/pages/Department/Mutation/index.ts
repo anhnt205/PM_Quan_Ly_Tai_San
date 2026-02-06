@@ -207,6 +207,7 @@ export const useDepartmentsPageQuery = (
       });
       return res.data;
     },
+    placeholderData: (placeholderData) => placeholderData,
   });
 };
 
@@ -217,6 +218,7 @@ export const useAllDepartmentsQuery = () => {
       const res = await api.get("/phongban", { params: { idcongty: "ct001" } });
       return res.data;
     },
+    placeholderData: (placeholderData) => placeholderData,
   });
 };
 

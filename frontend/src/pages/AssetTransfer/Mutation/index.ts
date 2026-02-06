@@ -574,10 +574,7 @@ export const useAssetTransferPageQuery = (
 };
 // danh sach tai san
 
-export const useAssetByDonViQuery = (
-  loai?: number,
-  idDonViGiao?: string,
-) => {
+export const useAssetByDonViQuery = (loai?: number, idDonViGiao?: string) => {
   return useQuery({
     queryKey: ["allAssetsByDonVi", loai, idDonViGiao], // Key để cache dữ liệu
     queryFn: async () => {
@@ -600,6 +597,7 @@ export const useAssetByDonViQuery = (
       );
       return res.data.data || res.data;
     },
+    placeholderData: (placeholderData) => placeholderData,
     enabled: !!idDonViGiao && !!loai,
   });
 };

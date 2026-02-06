@@ -13,8 +13,7 @@ import { useSelector } from "react-redux";
 import dayjs from "dayjs";
 import { ContactlessOutlined } from "@mui/icons-material";
 
-export const useAssetHandoverMutation = (
-) => {
+export const useAssetHandoverMutation = () => {
   const queryClient = useQueryClient();
   const mainKey = "assetHandoverPage";
   const idCongTy = "ct001";
@@ -405,6 +404,7 @@ export const useAssetHandoverAllQuery = () => {
 
       return res.data;
     },
+    placeholderData: (placeholderData) => placeholderData,
   });
 };
 
@@ -442,4 +442,3 @@ export const useAssetHandoverPageQuery = (
     placeholderData: (previousData) => previousData,
   });
 };
-

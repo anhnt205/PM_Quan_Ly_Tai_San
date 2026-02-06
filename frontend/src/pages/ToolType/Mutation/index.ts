@@ -213,6 +213,7 @@ export const useAllToolTypeQuery = () => {
       const res = await api.get("/loaiccdccon");
       return res.data;
     },
+    placeholderData: (placeholderData) => placeholderData,
   });
 };
 export const useToolTypePageQuery = (

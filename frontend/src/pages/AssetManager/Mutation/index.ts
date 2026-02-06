@@ -470,8 +470,9 @@ export const useAssetByTypeQuery = (idloaitaisan?: string) => {
           idloataisan: idloaitaisan,
         },
       });
-      return res.data;
+      return res.data.data || res.data || [];
     },
+    placeholderData: (placeholderData) => placeholderData,
     enabled: !!idloaitaisan,
   });
 };
@@ -482,7 +483,7 @@ export const useAssetDepreciationsQuery = (
   searchValue?: string,
 ) => {
   return useQuery({
-    queryKey: ["assetDepreciationsPage", date,page,pageSize,searchValue], // Key để cache dữ liệu
+    queryKey: ["assetDepreciationsPage", date, page, pageSize, searchValue], // Key để cache dữ liệu
     queryFn: async () => {
       const res = await api.get("/taisan/khauhaotaisan", {
         params: {
@@ -508,5 +509,6 @@ export const useCountriesQuery = () => {
       const res = await axios.get("https://open.oapi.vn/location/countries");
       return res.data.data;
     },
+    placeholderData: (placeholderData) => placeholderData,
   });
 };

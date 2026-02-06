@@ -433,6 +433,7 @@ export const useToolHandoverDetailsQuery = (idDieuDong: string) => {
       );
       return res.data; // Giả định res.data trả về mảng các chi tiết
     },
+    placeholderData: (placeholderData) => placeholderData,
     enabled: !!idDieuDong,
   });
 };
@@ -449,6 +450,7 @@ export const useToolHandoverAllQuery = () => {
       });
       return res.data;
     },
+    placeholderData: (placeholderData) => placeholderData,
   });
 };
 export const useToolHandoverPageQuery = (
