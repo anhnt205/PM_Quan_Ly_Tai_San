@@ -11,7 +11,7 @@ import {
   ToolTransferData,
   ToolTransferDetail,
 } from "../types";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import axios from "axios";
 import { findById } from "../../../utils/helpers";
 import { useAllToolQuery } from "../../ToolManager/Mutation";
@@ -561,7 +561,21 @@ export const useToolByDepartmentPageQuery = ({
   departmentId: string;
 }) => {
   const idCongTy = "ct001";
-  const { data: allTools = [] } = useAllToolQuery();
+  const { data: allTools = [], isLoading } = useAllToolQuery();
+
+  const detailAssetMap = useMemo(() => {
+    const map = new Map();
+    allTools.forEach((item: any) => {
+      item?.chiTietTaiSanList?.forEach((detail: any) => {
+        map.set(detail.id, {
+          ...detail,
+          assetTen: item.ten,
+          assetDonVi: item.donViTinh,
+        });
+      });
+    });
+    return map;
+  }, [allTools]);
 
   return useQuery({
     queryKey: ["allToolByDonVi", departmentId, idCongTy],
@@ -578,19 +592,15 @@ export const useToolByDepartmentPageQuery = ({
 
       if (!allToolsByDonVi.length) return [];
 
-      const listDetailAsset = allTools.flatMap(
-        (item: any) => item?.chiTietTaiSanList || [],
-      );
-
       // 3. Sử dụng .reduce hoặc map để tránh lỗi vòng lặp
       const processedData = allToolsByDonVi.reduce((acc: any[], e: any) => {
         if (!e?.idCCDCVT || !e?.idTsCon) return acc;
 
         // Dùng Optional Chaining để tránh crash nếu findById trả về undefined
         const asset = findById(allTools, e.idCCDCVT);
-        const detailAsset = listDetailAsset.find(
-          (i: any) => i?.id === e?.idTsCon,
-        );
+
+        // Lúc này trong vòng lặp reduce, bạn chỉ cần:
+        const detailAsset = detailAssetMap.get(e?.idTsCon);
 
         // 4. Chỉ push khi chắc chắn cả hai object đều tồn tại và có ID
         if (asset?.id && detailAsset?.id) {
@@ -618,7 +628,8 @@ export const useToolByDepartmentPageQuery = ({
       return processedData;
     },
     // 5. Query chỉ chạy khi có ID phòng ban
-    enabled: !!departmentId,
+    enabled: !!departmentId && !isLoading,
+    placeholderData: (previousData) => previousData,
     // Tránh việc văng lỗi trắng màn hình nếu API lỗi
     retry: 1,
   });

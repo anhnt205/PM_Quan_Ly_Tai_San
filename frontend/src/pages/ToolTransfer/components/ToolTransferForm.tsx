@@ -41,6 +41,7 @@ import dayjs from "dayjs";
 import FileAttachmentInput from "../../../components/TextField/FileAttachmentInput";
 import { useToolByDepartmentPageQuery } from "../Mutation";
 import { useAllStaffsQuery } from "../../Staff/Mutation";
+import DialogLoading from "../../../components/common/DialogLoading";
 
 const CustomTableCell = styled(TableCell)(({ theme }) => ({
   borderBottom: "1px solid rgba(224, 224, 224, 1)",
@@ -225,6 +226,10 @@ export default function ToolTransferForm({
 
   return (
     <>
+      <DialogLoading
+        loading={isLoading || isFetching}
+        title="Đang tải ccdc ..."
+      />
       {isPreview && (
         <SignDocumentForm
           selectedIds={[]}
@@ -570,7 +575,11 @@ export default function ToolTransferForm({
                           <FieldAutoCompleted
                             title=""
                             labelkey="tenDetailAsset"
-                            data={tools}
+                            data={[
+                              ...tools,
+                              ...(selectedTool?.chiTietDieuDongCCDCVatTuDTOS ||
+                                []),
+                            ]}
                             formik={formik}
                             field={`chiTietDieuDongCCDCVatTuDTOS.${index}.idCCDCVatTu`}
                             onSearch={(value) => {

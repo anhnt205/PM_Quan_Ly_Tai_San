@@ -218,10 +218,11 @@ export default function AssetTransferForm({
     }
   }, [formik.values.idDonViDeNghi, departments, staffs]);
 
-  const { data: allAssetsByDonVi = { items: [] } } = useAssetByDonViQuery(
-    type,
-    formik.values.idDonViGiao,
-  );
+  const {
+    data: allAssetsByDonVi = { items: [] },
+    isFetching,
+    isLoading,
+  } = useAssetByDonViQuery(type, formik.values.idDonViGiao);
   return (
     <>
       {isPreview && (
@@ -532,7 +533,9 @@ export default function AssetTransferForm({
               <Table
                 size="small"
                 sx={{
-                  "& .MuiTableCell-root": { borderBottom: "1px solid #e0e0e0" },
+                  "& .MuiTableCell-root": {
+                    borderBottom: "1px solid #e0e0e0",
+                  },
                 }}
               >
                 <TableHead>
