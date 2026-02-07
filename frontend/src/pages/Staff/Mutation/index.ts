@@ -208,18 +208,19 @@ export const useStaffMutation = (
       let contentType = "application/pdf";
 
       if (type === "chuky") {
-        // 1. Nếu là chữ ký: Nén và chuyển sang webp như cũ
+        // 1. Chuyển sang PNG để pdf-lib có thể đọc trực tiếp (embedPng)
         fileToUpload = await imageCompression(file, {
           maxWidthOrHeight: 300,
           maxSizeMB: 1,
+          fileType: "image/png", // ÉP BUỘC ĐỊNH DẠNG PNG
         });
-        ext = "webp";
-        contentType = "image/webp";
+        ext = "png";
+        contentType = "image/png";
       } else {
         // 2. Nếu là tài liệu: Giữ nguyên file PDF
         if (file.type !== "application/pdf") {
           alert("Vui lòng chọn định dạng file PDF cho tài liệu");
-          return;
+          throw new Error("Invalid file type"); // Nên throw lỗi để mutation nhận biết
         }
         fileToUpload = file;
         ext = "pdf";
@@ -229,8 +230,7 @@ export const useStaffMutation = (
       // Tạo fileName ngẫu nhiên
       const fileName = `${name.split(".")?.[0] || "file"}-${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
 
-      // 3. Gọi API Spring Boot để lấy Presigned URL
-      // Lưu ý: URL backend mới là /api/s3/put như đã cấu hình cho Swagger
+      // 3. Gọi API Spring Boot
       const res = await api.get(`/s3/put`, {
         params: { fileName, type },
       });
@@ -244,7 +244,7 @@ export const useStaffMutation = (
         body: fileToUpload,
       });
 
-      // 5. Trả về key (đường dẫn tương đối) để lưu DB
+      // 5. Trả về key
       const key = url.split(".amazonaws.com/")[1].split("?")[0];
       return key || "";
     },

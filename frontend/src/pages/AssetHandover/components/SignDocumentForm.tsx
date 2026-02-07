@@ -29,6 +29,7 @@ import SidebarContent from "../../../components/SignDocument/SidebarContent";
 import { PdfViewer } from "../../../components/SignDocument/PdfViewer";
 import { SignHeader } from "../../../components/SignDocument/SignHeader";
 import { useGetFileQuery, useStaffMutation } from "../../Staff/Mutation";
+import api from "../../../config/api.config";
 
 if (typeof window !== "undefined") {
   pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
@@ -776,11 +777,20 @@ export default function SignDocumentForm({
 
           if (!path) continue;
 
-          const res = await fetch(
-            `${process.env.REACT_APP_URL_UPLOAD}/${path}`,
-          );
-          imageBytes = await res.arrayBuffer();
+          const res = await api.get(`/s3/get?key=${path}`);
+          const s3Url = res.data.data;
+
+          if (!s3Url) continue;
+
+          const response = await fetch(s3Url);
+
+          if (!response.ok) {
+            continue;
+          }
+
+          imageBytes = await response.arrayBuffer();
         }
+        if (!imageBytes) continue;
 
         const img = await pdfDoc.embedPng(imageBytes);
 

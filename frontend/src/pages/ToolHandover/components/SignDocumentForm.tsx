@@ -39,6 +39,7 @@ import CollapsibleSidebar from "../../../components/SignDocument/CollapsibleSide
 import SidebarContent from "../../../components/SignDocument/SidebarContent";
 import { PdfViewer } from "../../../components/SignDocument/PdfViewer";
 import { useStaffMutation } from "../../Staff/Mutation";
+import api from "../../../config/api.config";
 
 // --- Config Worker ---
 if (typeof window !== "undefined") {
@@ -782,12 +783,20 @@ export default function SignDocumentForm({
 
           if (!path) continue;
 
-          const res = await fetch(
-            `${process.env.REACT_APP_URL_UPLOAD}/${path}`,
-          );
-          imageBytes = await res.arrayBuffer();
-        }
+          const res = await api.get(`/s3/get?key=${path}`);
+          const s3Url = res.data.data;
 
+          if (!s3Url) continue;
+
+          const response = await fetch(s3Url);
+
+          if (!response.ok) {
+            continue;
+          }
+
+          imageBytes = await response.arrayBuffer();
+        }
+        if (!imageBytes) continue;
         const img = await pdfDoc.embedPng(imageBytes);
 
         const pdfW = ((sig.width * sig.scale) / displayWidth) * width;

@@ -28,6 +28,7 @@ import CollapsibleSidebar from "../../../components/SignDocument/CollapsibleSide
 import SidebarContent from "../../../components/SignDocument/SidebarContent";
 import { PdfViewer } from "../../../components/SignDocument/PdfViewer";
 import { useStaffMutation } from "../../Staff/Mutation";
+import api from "../../../config/api.config";
 
 if (typeof window !== "undefined") {
   pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
@@ -477,7 +478,9 @@ export default function SignDocumentForm({
           fileName = documentUrl;
         } else if (typeof documentUrl === "object") {
           fileName =
-            documentUrl.duongDanFile || documentUrl.fileName || documentUrl.filePDF;
+            documentUrl.duongDanFile ||
+            documentUrl.fileName ||
+            documentUrl.filePDF;
         }
         if (fileName) {
           console.log("Đang tải file từ server:", fileName);
@@ -669,15 +672,22 @@ export default function SignDocumentForm({
                 : sig.chuKyThuong;
             if (!imgPath) continue;
 
-            const imageUrl = `${process.env.REACT_APP_URL_UPLOAD}/${imgPath}`;
-            const response = await fetch(imageUrl);
-            imageBytes = await response.arrayBuffer();
-            isPng = imgPath.toLowerCase().endsWith(".png");
-          }
+            const res = await api.get(`/s3/get?key=${imgPath}`);
+            const s3Url = res.data.data;
 
-          const pdfImage = isPng
-            ? await pdfDoc.embedPng(imageBytes)
-            : await pdfDoc.embedJpg(imageBytes);
+            if (!s3Url) continue;
+
+            const response = await fetch(s3Url);
+
+            if (!response.ok) {
+              continue;
+            }
+
+            imageBytes = await response.arrayBuffer();
+          }
+          if (!imageBytes) continue;
+
+          const pdfImage = await pdfDoc.embedPng(imageBytes);
 
           // --- TÍNH KÍCH THƯỚC ---
           const widthRatio = (sig.width * (sig.scale || 1)) / displayWidth;
