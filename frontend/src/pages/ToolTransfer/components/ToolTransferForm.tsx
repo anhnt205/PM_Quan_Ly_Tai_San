@@ -129,6 +129,9 @@ export default function ToolTransferForm({
           moTa: "",
           isActive: true,
           soLuongDaBanGiao: 0,
+          soKyHieu: "",
+          kyHieu: "",
+          namSanXuat: "",
         },
       ],
       initialChiTiet: [],
@@ -167,7 +170,7 @@ export default function ToolTransferForm({
         ),
         initialNguoiKy: (selectedTool.nguoiKyList || []).map((i: any) => i.id),
       });
-      setDocument(selectedTool.tenFile || "");
+      setDocument(selectedTool.duongDanFile || "");
     } else {
       formik.resetForm();
     }
@@ -224,10 +227,18 @@ export default function ToolTransferForm({
       .slice(0, 20);
   }, [toolsByDepartment, searchCCDC]);
 
+  console.log(
+    (selectedTool?.chiTietDieuDongCCDCVatTuDTOS || []).map((i: any) => ({
+      ...i,
+      id: i.idCCDCVatTu,
+      tenDetailAsset: i.tenCCDCVatTu,
+    })),
+  );
+
   return (
     <>
       <DialogLoading
-        loading={isLoading || isFetching}
+        loading={(isLoading || isFetching) && toolsByDepartment.length === 0}
         title="Đang tải ccdc ..."
       />
       {isPreview && (
@@ -577,8 +588,13 @@ export default function ToolTransferForm({
                             labelkey="tenDetailAsset"
                             data={[
                               ...tools,
-                              ...(selectedTool?.chiTietDieuDongCCDCVatTuDTOS ||
-                                []),
+                              ...(
+                                selectedTool?.chiTietDieuDongCCDCVatTuDTOS || []
+                              ).map((i: any) => ({
+                                ...i,
+                                id: i.idCCDCVatTu,
+                                tenDetailAsset: `${i.tenCCDCVatTu} - (${i.soKyHieu || ""}) - ${i.namSanXuat || ""}`,
+                              })),
                             ]}
                             formik={formik}
                             field={`chiTietDieuDongCCDCVatTuDTOS.${index}.idCCDCVatTu`}
@@ -595,8 +611,20 @@ export default function ToolTransferForm({
                                 value?.soLuong || 0,
                               );
                               formik.setFieldValue(
-                                `chiTietDieuDongCCDCVatTuDTOS.${index}.ten`,
+                                `chiTietDieuDongCCDCVatTuDTOS.${index}.tenCCDCVatTu`,
                                 value?.tenCCDCVatTu || "",
+                              );
+                              formik.setFieldValue(
+                                `chiTietDieuDongCCDCVatTuDTOS.${index}.namSanXuat`,
+                                value?.namSanXuat || "",
+                              );
+                              formik.setFieldValue(
+                                `chiTietDieuDongCCDCVatTuDTOS.${index}.kyHieu`,
+                                value?.kyHieu || "",
+                              );
+                              formik.setFieldValue(
+                                `chiTietDieuDongCCDCVatTuDTOS.${index}.soKyHieu`,
+                                value?.soKyHieu || "",
                               );
                               formik.setFieldValue(
                                 `chiTietDieuDongCCDCVatTuDTOS.${index}.idChiTietCCDCVatTu`,

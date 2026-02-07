@@ -35,7 +35,11 @@ import { FilterOption } from "../../components/common/FilterStatusGroup";
 import { Building, Trash2 } from "lucide-react";
 import { AssetHandoverData } from "../AssetHandover/types";
 import { useDebounce } from "../../hooks/useDebounce";
-import { useAllStaffsQuery } from "../Staff/Mutation";
+import {
+  useAllStaffsQuery,
+  useGetFileQuery,
+  useStaffMutation,
+} from "../Staff/Mutation";
 import { useAllDepartmentsQuery } from "../Department/Mutation";
 import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
 import { useAllUnitsQuery } from "../Unit/Mutation";
@@ -98,6 +102,7 @@ export default function AssetTransfer() {
   const { data: allDepartments = [] } = useAllDepartmentsQuery();
   const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
   const { data: allUnits = [] } = useAllUnitsQuery();
+  const { handleDownloadS3 } = useStaffMutation();
 
   const statusOptions: FilterOption[] = [
     {
@@ -253,9 +258,10 @@ export default function AssetTransfer() {
       headerAlign: "center",
       align: "center",
       renderCell: (params) => {
-        if (!params.value) return null;
-        return showDownloadFile(params.value, () =>
-          handleDownloadFile(params.value),
+        return showDownloadFile(
+          params.value,
+          () => handleDownloadS3(params.row.duongDanFile),
+          // handleDownloadFile(params.value),
         );
       },
     },
@@ -406,7 +412,7 @@ export default function AssetTransfer() {
                 color="success"
                 onClick={async (e) => {
                   e.stopPropagation();
-                  setSelectedDocument(rowData.tenFile);
+                  setSelectedDocument(rowData.duongDanFile);
                   setAssetTransferDetail(
                     rowData.chiTietDieuDongTaiSanDTOS || [],
                   );

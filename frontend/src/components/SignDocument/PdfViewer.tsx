@@ -1,5 +1,6 @@
 import { Box } from "@mui/material";
 import DraggableSignature from "./DraggableSignature";
+import { useGetFileQuery } from "../../pages/Staff/Mutation";
 
 export const PdfViewer = ({
   pages,
@@ -51,11 +52,8 @@ export const PdfViewer = ({
                   initialY={sig.y * displaySize.height}
                   width={sig.width * scale}
                   initialScale={sig.scale || 1}
-                  imgSrc={
-                    sig.loaiKy === 3
-                      ? digitalSignatureMap[sig.id]
-                      : `${process.env.REACT_APP_URL_UPLOAD}/${sig.chuKyNhay || sig.chuKyThuong}`
-                  }
+                  sig={sig}
+                  digitalSignatureMap={digitalSignatureMap}
                   containerWidth={displaySize.width}
                   containerHeight={displaySize.height}
                   onUpdatePosition={handleUpdatePosition}

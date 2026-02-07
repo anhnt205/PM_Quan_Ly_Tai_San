@@ -52,7 +52,7 @@ import { ToolTransferData } from "../ToolTransfer/types";
 import SignDocumentForm from "./components/SignDocumentForm";
 import SignerSidebar from "./components/SignerSidebar";
 import dayjs from "dayjs";
-import { useAllStaffsQuery } from "../Staff/Mutation";
+import { useAllStaffsQuery, useStaffMutation } from "../Staff/Mutation";
 import { useToolTransferPageQuery } from "../ToolTransfer/Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useAllDepartmentsQuery } from "../Department/Mutation";
@@ -82,6 +82,7 @@ export default function ToolHandover() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [showSignerSidebar, setShowSignerSidebar] = useState(true);
   const { user } = useSelector((state: RootState) => state.user);
+  const { handleDownloadS3 } = useStaffMutation();
 
   const {
     createMutation,
@@ -314,7 +315,7 @@ export default function ToolHandover() {
       renderCell: (params) => {
         if (!params.value) return null;
         return showDownloadFile(params.value, () =>
-          handleDownloadFile(params.value),
+          handleDownloadS3(params.row.duongDanFile),
         );
       },
     },
@@ -433,7 +434,7 @@ export default function ToolHandover() {
       renderCell: (params) => {
         if (!params.value) return null;
         return showDownloadFile(params.value, () =>
-          handleDownloadFile(params.value),
+          handleDownloadS3(params.row.duongDanFile),
         );
       },
     },
@@ -463,7 +464,7 @@ export default function ToolHandover() {
           <IconButton
             size="small"
             onClick={async () => {
-              setSelectedDocument(params.row.tenFile);
+              setSelectedDocument(params.row.duongDanFile);
               setToolTransfer(params.row);
               setShowSignerSidebar(false); // Ẩn sidebar khi xem
               setShowSignDocument(true);

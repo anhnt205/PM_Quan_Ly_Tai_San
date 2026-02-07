@@ -269,7 +269,7 @@ export default function ToolHandoverForm({
           selectedToolHandover.chiTietBanGiaoCCDCVatTu || []
         ).map((i: any) => i.id),
       });
-      setDocument(selectedToolHandover.tenFile);
+      setDocument(selectedToolHandover.duongDanFile);
       getListTool(selectedToolHandover.lenhDieuDong);
     } else {
       formik.resetForm();
@@ -331,7 +331,6 @@ export default function ToolHandoverForm({
       })),
     );
   };
-
   return (
     <>
       {isPreview && (
@@ -698,7 +697,7 @@ export default function ToolHandoverForm({
                 {/* Hiển thị định dạng hỗ trợ và Nút xem trước */}
                 <PreviewBtn
                   handleClick={() => {
-                    setDocument(formik.values.tenFile);
+                    setDocument(formik.values.duongDanFile);
                     setIsPreview(true);
                     setPriviewDocument(true);
                   }}

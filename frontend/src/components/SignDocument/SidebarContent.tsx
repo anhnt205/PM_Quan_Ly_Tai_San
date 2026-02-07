@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import { Check, Pencil } from "lucide-react";
 import { CancelOutlined } from "@mui/icons-material";
+import { useGetFileQuery } from "../../pages/Staff/Mutation";
 
 interface SidebarContentProps {
   signatureType: number;
@@ -28,6 +29,8 @@ const SidebarContent = ({
   handleConfirmSign,
   onCancel,
 }: SidebarContentProps) => {
+  const { data: fileUrlNhay } = useGetFileQuery(employee.chuKyNhay);
+  const { data: fileUrlThuong } = useGetFileQuery(employee.chuKyThuong);
   return (
     <>
       <Typography variant="h6" fontWeight="bold" mb={2}>
@@ -47,7 +50,7 @@ const SidebarContent = ({
           >
             <FormControlLabel value={1} control={<Radio />} label="Ký nháy" />
             <img
-              src={`${process.env.REACT_APP_URL_UPLOAD}/${employee.chuKyNhay}`}
+              src={fileUrlNhay}
               alt="sample"
               width={60}
               height={30}
@@ -65,7 +68,7 @@ const SidebarContent = ({
           >
             <FormControlLabel value={2} control={<Radio />} label="Ký thường" />
             <img
-              src={`${process.env.REACT_APP_URL_UPLOAD}/${employee.chuKyThuong}`}
+              src={fileUrlThuong}
               alt="sample"
               width={60}
               height={30}
@@ -100,7 +103,7 @@ const SidebarContent = ({
                   label="Hiển thị chữ kí thường"
                 />
                 <img
-                  src={`${process.env.REACT_APP_URL_UPLOAD}/${employee.chuKyThuong}`}
+                  src={fileUrlThuong}
                   alt="chukythuong"
                   width={60}
                   height={30}
@@ -121,7 +124,7 @@ const SidebarContent = ({
                   label="Hiển thị chữ kí nháy"
                 />
                 <img
-                  src={`${process.env.REACT_APP_URL_UPLOAD}/${employee.chuKyNhay}`}
+                  src={fileUrlNhay}
                   alt="chukynhay"
                   width={60}
                   height={30}

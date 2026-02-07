@@ -3,6 +3,7 @@ import api from "../../../config/api.config";
 import { StaffType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import dayjs from "dayjs";
+import imageCompression from "browser-image-compression";
 
 export const useStaffMutation = (
   page?: number,
@@ -192,17 +193,100 @@ export const useStaffMutation = (
     },
   });
 
-  const { data: allStaff = [] } = useQuery({
-    queryKey: ["staffsPage"], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await api.get("/nhanvien", {
-        params: {
-          idcongty: "ct001",
-        },
+  const handleUploadFileS3 = useMutation({
+    mutationFn: async ({
+      name,
+      file,
+      type,
+    }: {
+      name: string;
+      file: File;
+      type: "tailieu" | "chuky";
+    }) => {
+      let fileToUpload: File | Blob = file;
+      let ext = "pdf";
+      let contentType = "application/pdf";
+
+      if (type === "chuky") {
+        // 1. Nếu là chữ ký: Nén và chuyển sang webp như cũ
+        fileToUpload = await imageCompression(file, {
+          maxWidthOrHeight: 300,
+          maxSizeMB: 1,
+        });
+        ext = "webp";
+        contentType = "image/webp";
+      } else {
+        // 2. Nếu là tài liệu: Giữ nguyên file PDF
+        if (file.type !== "application/pdf") {
+          alert("Vui lòng chọn định dạng file PDF cho tài liệu");
+          return;
+        }
+        fileToUpload = file;
+        ext = "pdf";
+        contentType = "application/pdf";
+      }
+
+      // Tạo fileName ngẫu nhiên
+      const fileName = `${name.split(".")?.[0] || "file"}-${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+
+      // 3. Gọi API Spring Boot để lấy Presigned URL
+      // Lưu ý: URL backend mới là /api/s3/put như đã cấu hình cho Swagger
+      const res = await api.get(`/s3/put`, {
+        params: { fileName, type },
       });
-      return res.data;
+
+      const url = res.data?.data;
+
+      // 4. Upload trực tiếp lên S3
+      await fetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": contentType },
+        body: fileToUpload,
+      });
+
+      // 5. Trả về key (đường dẫn tương đối) để lưu DB
+      const key = url.split(".amazonaws.com/")[1].split("?")[0];
+      return key || "";
     },
   });
+  const handleDownloadS3 = async (currentKey: string) => {
+    if (!currentKey) return;
+    try {
+      // Encode tên file để xử lý ký tự đặc biệt
+      const fileName = decodeURIComponent(
+        currentKey.split("/").pop() || "file",
+      );
+      const response = await api.get(`/s3/download?key=${currentKey}`, {
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      showErrorAlert("Không thể tải tập tin");
+    }
+  };
+
+  const handlePreviewS3 = async (key: string) => {
+    if (!key) return;
+    try {
+      // Encode tên file để xử lý ký tự đặc biệt
+      const response = await api.get(`/s3/preview?key=${key}`, {
+        responseType: "blob",
+      });
+      // response.data lúc này là một đối tượng Blob (Binary Large Object)
+      return response.data;
+    } catch (error) {
+      console.log("Không thể tải tập tin");
+      return null;
+    }
+  };
+
   return {
     exportMutation,
     importExcelMutation,
@@ -211,8 +295,10 @@ export const useStaffMutation = (
     deleteOneMutation,
     deleteManyMutation,
     uploadMutation,
-    allStaff,
     getByIdMutation,
+    handleUploadFileS3,
+    handleDownloadS3,
+    handlePreviewS3,
   };
 };
 
@@ -249,5 +335,16 @@ export const useAllStaffsQuery = () => {
       return res.data;
     },
     placeholderData: (previousData) => previousData,
+  });
+};
+export const useGetFileQuery = (currentKey?: string) => {
+  return useQuery({
+    queryKey: ["file", currentKey], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get(`/s3/get?key=${currentKey}`);
+      return (res.data.data as string) || "";
+    },
+    placeholderData: (previousData) => previousData,
+    enabled: !!currentKey,
   });
 };

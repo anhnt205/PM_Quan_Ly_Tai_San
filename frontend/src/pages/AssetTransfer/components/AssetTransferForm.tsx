@@ -38,6 +38,7 @@ import FileAttachmentInput from "../../../components/TextField/FileAttachmentInp
 import SignDocumentForm from "./SignDocumentForm";
 import { generateCode } from "../../../utils/helpers";
 import { useAssetByDonViQuery } from "../Mutation";
+import dayjs from "dayjs";
 
 export default function AssetTransferForm({
   onEdit,
@@ -97,8 +98,8 @@ export default function AssetTransferForm({
       trangThaiKyNhay: false,
       nguoiLapPhieuKyNhay: false,
       idDonViDeNghi: "",
-      tgGnTuNgay: "",
-      tgGnDenNgay: "",
+      tgGnTuNgay: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      tgGnDenNgay: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       idTrinhDuyetCapPhong: "",
       trinhDuyetCapPhongXacNhan: false,
       idTrinhDuyetGiamDoc: "",
@@ -122,16 +123,7 @@ export default function AssetTransferForm({
       daBanGiao: false,
       byStep: false,
       coPhieuBanGiao: false,
-      nguoiKyList: [
-        {
-          id: "",
-          idTaiLieu: "",
-          idNguoiKy: "",
-          tenNguoiKy: "",
-          idPhongBan: "",
-          trangThai: 0,
-        },
-      ],
+      nguoiKyList: [],
       chiTietDieuDongTaiSanDTOS: [
         {
           id: "",
@@ -161,7 +153,7 @@ export default function AssetTransferForm({
           idDieuDongTaiSan: values.id,
         }),
       );
-      const nguoiKyList = values.nguoiKyList.map((item, index) => ({
+      const nguoiKyList = values.nguoiKyList.map((item: any, index) => ({
         ...item,
         id: `${generateCode("NK-")}-${index}`,
         idTaiLieu: values.id,
@@ -185,7 +177,7 @@ export default function AssetTransferForm({
         ),
         initialNguoiKy: selectedTransfer.nguoiKyList.map((i: any) => i.id),
       });
-      setDocument(selectedTransfer.tenFile);
+      setDocument(selectedTransfer.duongDanFile || "");
     } else formik.resetForm();
   }, [selectedTransfer]);
 

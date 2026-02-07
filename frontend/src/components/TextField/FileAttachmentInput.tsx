@@ -12,6 +12,9 @@ import {
 import { CloudUpload, Description } from "@mui/icons-material";
 import { useAssetTranferMutation } from "../../pages/AssetTransfer/Mutation";
 import { getIn } from "formik";
+import imageCompression from "browser-image-compression";
+import api from "../../config/api.config";
+import { useStaffMutation } from "../../pages/Staff/Mutation";
 
 // Style cho Input hiển thị tên file
 const StyledTextField = styled(TextField)({
@@ -56,6 +59,7 @@ export default function FileAttachmentInput({
   // Giả sử hàm này lấy từ custom hook của bạn
   const { convertDocxToPdf } = useAssetTranferMutation();
 
+  const { handleUploadFileS3 } = useStaffMutation();
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -76,10 +80,15 @@ export default function FileAttachmentInput({
 
     // 2. Nếu là PDF: Lưu trực tiếp
     if (isPdf) {
+      const key = await handleUploadFileS3.mutateAsync({
+        name: file.name,
+        file: file,
+        type: "tailieu", // Hoặc logic để xác định loại file
+      });
       formik.setFieldError(fileName, undefined);
       formik.setFieldTouched(fileName, true, false);
       formik.setFieldValue(fileName, file.name);
-      if (filePath) formik.setFieldValue(filePath, file.name);
+      if (key) formik.setFieldValue(filePath, key);
       return;
     }
 
@@ -99,11 +108,18 @@ export default function FileAttachmentInput({
           const convertedFile = new File([blobData], newFileName, {
             type: "application/pdf",
           });
+
+          // Gọi hàm upload với file đã convert
+          const key = await handleUploadFileS3.mutateAsync({
+            name: file.name,
+            file: convertedFile,
+            type: "tailieu", // Hoặc logic để xác định loại file
+          });
           // Cập nhật Formik
           formik.setFieldError(fileName, undefined);
           formik.setFieldTouched(fileName, true, false);
           formik.setFieldValue(fileName, newFileName);
-          if (filePath) formik.setFieldValue(filePath, newFileName);
+          if (filePath) formik.setFieldValue(filePath, key);
           setDocument(convertedFile);
         }
       } catch (error) {

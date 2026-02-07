@@ -664,7 +664,7 @@ export default function AssetHandoverForm({
                 />
                 <PreviewBtn
                   handleClick={() => {
-                    setDocument(formik.values.tenFile);
+                    setDocument(formik.values.duongDanFile);
                     setIsPreview(true);
                     setPriviewDocument(true);
                   }}

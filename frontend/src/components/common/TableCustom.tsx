@@ -194,7 +194,7 @@ export default function TableCustom({
                 onClick={async (e) => {
                   e.stopPropagation();
                   handleSignDocument?.(selectedItem[0], user, () =>
-                    onSign?.(selectedItem[0].tenFile, selectedItem[0]),
+                    onSign?.(selectedItem[0].duongDanFile, selectedItem[0]),
                   );
                 }}
               >

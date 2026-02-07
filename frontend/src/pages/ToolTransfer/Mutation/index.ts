@@ -461,9 +461,9 @@ export const useToolTransferMutation = (
         },
         responseType: "blob",
       });
-      uploadMutation.mutate(file);
+      const data = response.data;
       // response.data lúc này là một đối tượng Blob (Binary Large Object)
-      return response.data;
+      return data;
     } catch (error) {
       showErrorAlert("Không thể tải tập tin");
       return null;

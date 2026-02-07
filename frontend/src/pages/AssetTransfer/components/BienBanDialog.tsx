@@ -16,12 +16,15 @@ import {
 import React, { useState, useEffect, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import { findById, formatted } from "../../../utils/helpers";
-import { useStaffMutation } from "../../Staff/Mutation";
+import { useAllStaffsQuery, useStaffMutation } from "../../Staff/Mutation";
 import {
   useAllDepartmentsQuery,
   useDepartmentMutation,
 } from "../../Department/Mutation";
-import { useAllPositionsQuery, usePositionMutation } from "../../Position/Mutation";
+import {
+  useAllPositionsQuery,
+  usePositionMutation,
+} from "../../Position/Mutation";
 import { useAllUnitsQuery, useUnitMutation } from "../../Unit/Mutation";
 import { ToolHandoverData } from "../../ToolHandover/types";
 import jsPDF from "jspdf";
@@ -29,6 +32,7 @@ import autoTable from "jspdf-autotable";
 import { renderDigitalSignatureToImage } from "../../AssetHandover/components/SignDocumentForm";
 import dayjs from "dayjs";
 import { SignaturesData } from "../types";
+import BoxSignatureImg from "../../../components/SignDocument/BoxSignatureImg";
 
 // Config Worker
 if (typeof window !== "undefined") {
@@ -85,9 +89,9 @@ export default function BienBanDialog({
     fetchSignatures();
   }, [assetHandover, handleSignatureList, currentIndex]);
 
-  const staffs = useStaffMutation().allStaff;
+  const { data: staffs = [] } = useAllStaffsQuery();
   const { data: departments = [] } = useAllDepartmentsQuery();
-  const { data: positions } = useAllPositionsQuery();
+  const { data: positions = [] } = useAllPositionsQuery();
   const { data: allUnits = [] } = useAllUnitsQuery();
 
   const getChucVu = async (idUser: string) => {
@@ -521,7 +525,8 @@ export default function BienBanDialog({
           alignItems: "center",
           borderBottom: "1px solid #e0e0e0",
           p: 3,
-          backgroundColor: "#fed7aa",
+          background:
+            "linear-gradient(to right,rgb(0, 158, 96, 1) 0%,rgb(2, 110, 66, 1) 100%)",
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -547,7 +552,7 @@ export default function BienBanDialog({
               variant="h5"
               sx={{
                 fontWeight: 700,
-                color: "#1f2937",
+                color: "#f3f4f6",
                 letterSpacing: "-0.5px",
               }}
             >
@@ -617,7 +622,7 @@ export default function BienBanDialog({
             onClick={onClose}
             size="small"
             sx={{
-              color: "#6b7280",
+              color: "#f3f4f6",
               "&:hover": {
                 bgcolor: "#f3f4f6",
                 color: "#1f2937",
@@ -679,39 +684,18 @@ export default function BienBanDialog({
 
                 {/* LAYER 2: SIGNATURES (Nằm đè lên trên) */}
                 {signatures.map((sig) => {
-                  const imgSrc =
-                    sig.loaiKy === 3
-                      ? digitalSignatureMap[sig.id]
-                      : `${process.env.REACT_APP_URL_UPLOAD}/${sig.chuKyNhay || sig.chuKyThuong}`;
-
-                  if (!imgSrc) return null;
                   const currentCanvas = pages[index];
                   const currentDisplay = displaySize[index];
                   if (!currentCanvas || !currentDisplay) return null;
                   const scale = currentDisplay.width / currentCanvas.width;
                   return (
-                    <Box
+                    <BoxSignatureImg
                       key={sig.id}
-                      sx={{
-                        position: "absolute",
-                        left: `${sig.x * currentDisplay.width}px`,
-                        top: `${sig.y * currentDisplay.height}px`,
-                        width: `${sig.width * (sig.scale || 1) * scale}px`,
-                        pointerEvents: "none",
-                        zIndex: 10,
-                      }}
-                    >
-                      <img
-                        src={imgSrc}
-                        style={{
-                          width: "100%",
-                          height: "auto",
-                          objectFit: "contain",
-                        }}
-                        alt="signature"
-                        onError={(e) => console.error("Lỗi load ảnh:", imgSrc)}
-                      />
-                    </Box>
+                      scale={scale}
+                      digitalSignatureMap={digitalSignatureMap}
+                      sig={sig}
+                      currentDisplay={currentDisplay}
+                    />
                   );
                 })}
               </Box>

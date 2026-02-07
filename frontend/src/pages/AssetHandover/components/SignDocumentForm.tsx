@@ -28,6 +28,7 @@ import CollapsibleSidebar from "../../../components/SignDocument/CollapsibleSide
 import SidebarContent from "../../../components/SignDocument/SidebarContent";
 import { PdfViewer } from "../../../components/SignDocument/PdfViewer";
 import { SignHeader } from "../../../components/SignDocument/SignHeader";
+import { useGetFileQuery, useStaffMutation } from "../../Staff/Mutation";
 
 if (typeof window !== "undefined") {
   pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
@@ -435,7 +436,7 @@ export default function SignDocumentForm({
   // Ref chứa container để xử lý scroll
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { handlePreview } = useAssetHandoverMutation();
+  const { handlePreviewS3 } = useStaffMutation();
 
   const handleConfirmPinDialog = async (pin: string) => {
     if (employee.pin !== pin) {
@@ -630,7 +631,7 @@ export default function SignDocumentForm({
 
             if (!fileName) throw new Error("Không xác định được file");
 
-            const blob = await handlePreview(fileName);
+            const blob = await handlePreviewS3(fileName);
             finalBytes = new Uint8Array(await blob.arrayBuffer());
           }
         }

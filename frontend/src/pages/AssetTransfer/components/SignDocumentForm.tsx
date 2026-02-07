@@ -27,6 +27,7 @@ import { SignHeader } from "../../../components/SignDocument/SignHeader";
 import CollapsibleSidebar from "../../../components/SignDocument/CollapsibleSidebar";
 import SidebarContent from "../../../components/SignDocument/SidebarContent";
 import { PdfViewer } from "../../../components/SignDocument/PdfViewer";
+import { useStaffMutation } from "../../Staff/Mutation";
 
 if (typeof window !== "undefined") {
   pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
@@ -264,7 +265,7 @@ export default function SignDocumentForm({
   // Ref chứa container để xử lý scroll
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { handlePreview } = useAssetTranferMutation();
+  const { handlePreviewS3 } = useStaffMutation();
 
   const handleConfirmPinDialog = async (pin: string) => {
     if (employee.pin !== pin) {
@@ -476,7 +477,7 @@ export default function SignDocumentForm({
           fileName = documentUrl;
         } else if (typeof documentUrl === "object") {
           fileName =
-            documentUrl.tenFile || documentUrl.fileName || documentUrl.filePDF;
+            documentUrl.duongDanFile || documentUrl.fileName || documentUrl.filePDF;
         }
         if (fileName) {
           console.log("Đang tải file từ server:", fileName);
@@ -484,7 +485,7 @@ export default function SignDocumentForm({
 
           // 1. CÔ LẬP LỖI TẢI FILE GỐC
           try {
-            const blob = await handlePreview(fileName);
+            const blob = await handlePreviewS3(fileName);
 
             // Kiểm tra xem có phải nội dung lỗi (HTML) không
             const text = await blob.slice(0, 100).text();

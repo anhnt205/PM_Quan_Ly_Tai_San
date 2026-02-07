@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Box, IconButton, Slider, Tooltip } from "@mui/material";
 import { Close, Add, Remove } from "@mui/icons-material";
+import { useGetFileQuery } from "../../pages/Staff/Mutation";
 
 interface DraggableSignatureProps {
   id: string;
@@ -8,7 +9,8 @@ interface DraggableSignatureProps {
   initialY: number;
   initialScale?: number;
   width: number;
-  imgSrc: string;
+  sig: any;
+  digitalSignatureMap: any;
   containerWidth: number;
   containerHeight: number;
   onUpdatePosition: (id: string, xRatio: number, yRatio: number) => void;
@@ -23,7 +25,8 @@ export default function DraggableSignature({
   initialY,
   initialScale = 1,
   width,
-  imgSrc,
+  sig,
+  digitalSignatureMap,
   containerWidth,
   containerHeight,
   onUpdatePosition,
@@ -40,6 +43,8 @@ export default function DraggableSignature({
       setScale(initialScale);
     }
   }, [initialScale]);
+
+  const { data: fileUrl } = useGetFileQuery(sig.chuKyNhay || sig.chuKyThuong);
 
   // 2. Xử lý vị trí an toàn
   const safeInitialX = isNaN(initialX) ? 0 : initialX;
@@ -202,7 +207,7 @@ export default function DraggableSignature({
       }}
     >
       <img
-        src={imgSrc}
+        src={sig.loaiKy === 3 ? digitalSignatureMap[id] : fileUrl}
         alt="signature"
         style={{
           width: "100%",

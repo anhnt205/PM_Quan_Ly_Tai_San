@@ -38,6 +38,7 @@ import { SignHeader } from "../../../components/SignDocument/SignHeader";
 import CollapsibleSidebar from "../../../components/SignDocument/CollapsibleSidebar";
 import SidebarContent from "../../../components/SignDocument/SidebarContent";
 import { PdfViewer } from "../../../components/SignDocument/PdfViewer";
+import { useStaffMutation } from "../../Staff/Mutation";
 
 // --- Config Worker ---
 if (typeof window !== "undefined") {
@@ -441,7 +442,7 @@ export default function SignDocumentForm({
   // Ref chứa container để xử lý scroll
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { handlePreview } = useToolHandoverMutation();
+  const { handlePreviewS3 } = useStaffMutation();
 
   const handleConfirmPinDialog = async (pin: string) => {
     if (employee.pin !== pin) {
@@ -632,11 +633,11 @@ export default function SignDocumentForm({
             let fileName =
               typeof documentUrl === "string"
                 ? documentUrl
-                : documentUrl?.tenFile || documentUrl?.filePDF;
+                : documentUrl?.duongDanFile || documentUrl?.filePDF;
 
             if (!fileName) throw new Error("Không xác định được file");
 
-            const blob = await handlePreview(fileName);
+            const blob = await handlePreviewS3(fileName);
             finalBytes = new Uint8Array(await blob.arrayBuffer());
           }
         }

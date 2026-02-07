@@ -77,27 +77,27 @@ export default function StaffForm({
       idCongTy: "ct001",
       isActive: true,
       savePin: false,
-      tempFileKyNhay: null as File | null,
-      tempFileKyThuong: null as File | null,
+      // tempFileKyNhay: null as File | null,
+      // tempFileKyThuong: null as File | null,
     },
     validationSchema: StaffValidation,
     onSubmit: async (values) => {
       try {
         // 1. Kiểm tra và Upload Chữ ký nháy (nếu có file mới)
-        if (values.tempFileKyNhay) {
-          await onUpload(values.tempFileKyNhay);
-        }
+        // if (values.tempFileKyNhay) {
+        //   await onUpload(values.tempFileKyNhay);
+        // }
 
-        // 2. Kiểm tra và Upload Chữ ký thường (nếu có file mới)
-        if (values.tempFileKyThuong) {
-          await onUpload(values.tempFileKyThuong);
-        }
+        // // 2. Kiểm tra và Upload Chữ ký thường (nếu có file mới)
+        // if (values.tempFileKyThuong) {
+        //   await onUpload(values.tempFileKyThuong);
+        // }
 
         // 3. Chuẩn bị dữ liệu để Save (Loại bỏ 2 trường temp file thừa)
-        const { tempFileKyNhay, tempFileKyThuong, ...dataToSave } = values;
+        // const { tempFileKyNhay, tempFileKyThuong, ...dataToSave } = values;
 
         // 4. Gọi hàm Save cuối cùng
-        onSave(dataToSave);
+        onSave(values);
       } catch (error) {
         console.error("Lỗi khi upload file:", error);
         // Có thể show alert lỗi ở đây nếu cần
@@ -120,19 +120,19 @@ export default function StaffForm({
 
   // Hàm xử lý chung cho input file
   const handleFileSelect = (
-    file: File | null, // Nhận trực tiếp File hoặc null từ UploadButton
+    file: string, // Nhận trực tiếp File hoặc null từ UploadButton
     fieldName: "chuKyNhay" | "chuKyThuong",
     tempFieldName: "tempFileKyNhay" | "tempFileKyThuong",
   ) => {
     if (file) {
       // Lưu tên file vào Formik để hiển thị/gửi DB
-      formik.setFieldValue(fieldName, file.name);
+      formik.setFieldValue(fieldName, file);
       // Lưu file thực tế vào trường tạm để chờ submit
-      formik.setFieldValue(tempFieldName, file);
+      // formik.setFieldValue(tempFieldName, file);
     } else {
       // Nếu xóa file (handleRemove từ nút Delete)
       formik.setFieldValue(fieldName, "");
-      formik.setFieldValue(tempFieldName, null);
+      // formik.setFieldValue(tempFieldName, null);
     }
   };
 

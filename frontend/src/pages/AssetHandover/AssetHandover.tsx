@@ -47,7 +47,7 @@ import SignDocumentTransferForm from "../AssetTransfer/components/SignDocumentFo
 import dayjs from "dayjs";
 import { useAssetTransferPageQuery } from "../AssetTransfer/Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
-import { useAllStaffsQuery } from "../Staff/Mutation";
+import { useAllStaffsQuery, useStaffMutation } from "../Staff/Mutation";
 import { useAllDepartmentsQuery } from "../Department/Mutation";
 import { useAllUnitsQuery } from "../Unit/Mutation";
 import { useAllPositionsQuery } from "../Position/Mutation";
@@ -72,6 +72,7 @@ export default function AssetHandover() {
   const [showSidebar, setShowSidebar] = useState(false);
 
   const { user } = useSelector((state: any) => state.user);
+  const { handleDownloadS3 } = useStaffMutation();
   const {
     createMutation,
     updateMutation,
@@ -105,11 +106,16 @@ export default function AssetHandover() {
       undefined,
       true,
     );
-     useEffect(() => {
-       if (!currentType && transferPage.loaiCounts) {
-         setStoredLoaiCounts(transferPage.loaiCounts);
-       }
-     }, [transferPage.loaiCounts, currentType]);
+  useEffect(() => {
+    if (!currentType && transferPage?.loaiCounts) {
+      if (
+        JSON.stringify(transferPage.loaiCounts) !==
+        JSON.stringify(storedLoaiCounts)
+      ) {
+        setStoredLoaiCounts(transferPage.loaiCounts);
+      }
+    }
+  }, [transferPage.loaiCounts, currentType, storedLoaiCounts]);
 
   const { data: staffs = [] } = useAllStaffsQuery();
   const { data: departments = [] } = useAllDepartmentsQuery();
@@ -303,7 +309,7 @@ export default function AssetHandover() {
       renderCell: (params) => {
         if (!params.value) return null;
         return showDownloadFile(params.value, () =>
-          handleDownloadFile(params.value),
+          handleDownloadS3(params.row.duongDanFile),
         );
       },
     },
@@ -428,7 +434,7 @@ export default function AssetHandover() {
       renderCell: (params) => {
         if (!params.value) return null;
         return showDownloadFile(params.value, () =>
-          handleDownloadFile(params.value),
+          handleDownloadS3(params.row.duongDanFile),
         );
       },
     },
@@ -458,7 +464,7 @@ export default function AssetHandover() {
           <IconButton
             size="small"
             onClick={async () => {
-              setSelectedDocument(params.row.tenFile);
+              setSelectedDocument(params.row.duongDanFile);
               setAssetTransfer(params.row);
               setShowSignerSidebar(false); // Ẩn sidebar khi xem
               setShowSignDocument(true);

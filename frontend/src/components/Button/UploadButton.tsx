@@ -1,6 +1,9 @@
 import { UploadFile, Delete } from "@mui/icons-material";
 import { Box, Button, IconButton, Typography } from "@mui/material";
+import imageCompression from "browser-image-compression";
 import React, { ChangeEvent, useState } from "react";
+import api from "../../config/api.config";
+import { useGetFileQuery, useStaffMutation } from "../../pages/Staff/Mutation";
 
 interface Props {
   label?: string; // Text hiển thị (VD: Nhấn để chọn file...)
@@ -21,11 +24,27 @@ export default function UploadButton({
 }: Props) {
   const [fileName, setFileName] = useState<string | null | undefined>(nameFile);
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const { handleUploadFileS3 } = useStaffMutation();
+
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      setFileName(file.name);
-      if (onChange) onChange(file);
+      if (file) {
+        try {
+          const key = await handleUploadFileS3.mutateAsync({
+            name: file.name,
+            file: file,
+            type: "chuky", // Hoặc logic để xác định loại file
+          });
+
+          if (key) {
+            setFileName(key);
+            if (onChange) onChange(key);
+          }
+        } catch (error) {
+          console.error("Upload thất bại:", error);
+        }
+      }
     }
   };
 
@@ -35,14 +54,12 @@ export default function UploadButton({
     setFileName(null);
     if (onChange) onChange(null);
   };
+
+  const { data: fileUrl } = useGetFileQuery(nameFile);
   return (
     <Box>
       {disabled ? (
-        <img
-          src={`${process.env.REACT_APP_URL_UPLOAD}/${fileName}`}
-          alt=""
-          height={30}
-        />
+        <img src={fileUrl} alt="" height={30} />
       ) : (
         <Button
           component="label" // Biến button thành label để kích hoạt input hidden
