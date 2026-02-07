@@ -124,10 +124,15 @@ export default function ToolHandover() {
       true,
     );
   useEffect(() => {
-    if (!currentType && transferPage.loaiCounts) {
-      setStoredLoaiCounts(transferPage.loaiCounts);
+    if (!currentType && transferPage?.loaiCounts) {
+      if (
+        JSON.stringify(transferPage.loaiCounts) !==
+        JSON.stringify(storedLoaiCounts)
+      ) {
+        setStoredLoaiCounts(transferPage.loaiCounts);
+      }
     }
-  }, [transferPage.loaiCounts, currentType]);
+  }, [transferPage.loaiCounts, currentType, storedLoaiCounts]);
 
   const { data: staffs = [] } = useAllStaffsQuery();
   const { data: departments = [] } = useAllDepartmentsQuery();

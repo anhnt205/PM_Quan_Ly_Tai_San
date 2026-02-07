@@ -296,7 +296,6 @@ export default function TableCustom({
             },
           }}
           getRowHeight={() => "auto"}
-          getEstimatedRowHeight={() => 80}
           sx={{
             fontSize: "14px",
             "& .MuiDataGrid-columnHeader": {
