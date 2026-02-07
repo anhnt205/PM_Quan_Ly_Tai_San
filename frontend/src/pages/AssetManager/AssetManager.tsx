@@ -6,6 +6,7 @@ import {
   Paper,
   Tab,
   Tabs,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import React, { useState } from "react";
@@ -30,6 +31,8 @@ import { useAllReasonIncreaseQuery } from "../ReasonIncrease/Mutation";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useAllModelAssetQuery } from "../ModelAsset/Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
+import { HistoryIcon } from "lucide-react";
+import AssetHistoryModal from "./components/AssetHistoryModal";
 
 export default function AssetManager() {
   const [tab, setTab] = React.useState(0);
@@ -75,12 +78,17 @@ export default function AssetManager() {
   const { data: allTypeAssets = [] } = useAllTypeAssetQuery();
   const { data: allUnits = [] } = useAllUnitsQuery();
   const { data: allModelAsset = [] } = useAllModelAssetQuery();
-  console.log("allModelAsset", allModelAsset);
   const { data: allProjects = [] } = useAllProjectsQuery();
   const { data: allReasonIncreases = [] } = useAllReasonIncreaseQuery();
 
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [openErrorModal, setOpenErrorModal] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
+  const handleOpenHistory = (asset: any) => {
+    setSelectedAsset(asset);
+    setIsHistoryOpen(true);
+  };
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedAsset(params.row);
@@ -257,17 +265,36 @@ export default function AssetManager() {
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
-        <IconButton
-          onClick={async (e) => {
-            e.stopPropagation();
-            const confirm = await showConfirmAlert("Xác nhận xóa!");
-            if (confirm.isConfirmed) {
-              deleteOneMutation.mutate(params.row.id);
-            }
-          }}
-        >
-          <Delete color="error" />
-        </IconButton>
+        <>
+          <IconButton
+            onClick={async (e) => {
+              e.stopPropagation();
+              const confirm = await showConfirmAlert("Xác nhận xóa!");
+              if (confirm.isConfirmed) {
+                deleteOneMutation.mutate(params.row.id);
+              }
+            }}
+          >
+            <Delete color="error" />
+          </IconButton>
+          <Tooltip title="Xem lịch sử điều chuyển">
+            <IconButton
+              size="small"
+              onClick={() => handleOpenHistory(params.row)}
+              sx={{
+                color: "#4F46E5",
+                bgcolor: "#EEF2FF",
+                "&:hover": {
+                  bgcolor: "#E0E7FF",
+                  transform: "scale(1.1)",
+                },
+                transition: "all 0.2s",
+              }}
+            >
+              <HistoryIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </>
       ),
     },
   ];
@@ -392,6 +419,42 @@ export default function AssetManager() {
           />
         </Box>
       </Box>
+      <AssetHistoryModal
+        open={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        assetName={""}
+        historyData={mockHistoryData}
+      />
     </Box>
   );
 }
+const mockHistoryData = [
+  { 
+    id: "hist-004",
+    fromDepartment: "Phòng Dự Án",
+    toDepartment: "Phòng Hành Chính",
+    transferDate: "05/02/2026",
+    note: "Điều chuyển tài sản sau khi kết thúc dự án chung cư BlueSky.",
+  },
+  {
+    id: "hist-003",
+    fromDepartment: "Kho Kỹ Thuật",
+    toDepartment: "Phòng Dự Án",
+    transferDate: "20/12/2025",
+    note: "Cấp phát thiết bị phục vụ triển khai công trình tại hiện trường.",
+  },
+  {
+    id: "hist-002",
+    fromDepartment: "Kho Tổng",
+    toDepartment: "Kho Kỹ Thuật",
+    transferDate: "15/11/2025",
+    note: "Luân chuyển hàng hóa định kỳ giữa các kho chi nhánh.",
+  },
+  {
+    id: "hist-001",
+    fromDepartment: "Nhà Cung Cấp",
+    toDepartment: "Kho Tổng",
+    transferDate: "01/10/2025",
+    note: "Nhập kho tài sản mới mua theo quyết định số 123/QĐ-TS.",
+  },
+];
