@@ -679,7 +679,9 @@ export default function SignDocumentForm({
 
             const response = await fetch(s3Url);
 
-            if (!response.ok) {
+            const contentType = response.headers.get("Content-Type");
+            if (!response.ok || contentType !== "image/png") {
+              console.warn("File không phải PNG hoặc không tải được:", s3Url);
               continue;
             }
 

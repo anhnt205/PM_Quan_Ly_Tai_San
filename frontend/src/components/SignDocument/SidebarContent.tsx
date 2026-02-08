@@ -51,7 +51,7 @@ const SidebarContent = ({
             <FormControlLabel value={1} control={<Radio />} label="Ký nháy" />
             <img
               src={fileUrlNhay}
-              alt="sample"
+              alt={fileUrlNhay ? "Chữ ký nháy" : "Lỗi chữ ký"}
               width={60}
               height={30}
               style={{ border: "1px solid #eee", objectFit: "contain" }}
@@ -69,7 +69,7 @@ const SidebarContent = ({
             <FormControlLabel value={2} control={<Radio />} label="Ký thường" />
             <img
               src={fileUrlThuong}
-              alt="sample"
+              alt={fileUrlThuong ? "Chữ ký thường" : "Lỗi chữ ký"}
               width={60}
               height={30}
               style={{ border: "1px solid #eee", objectFit: "contain" }}
@@ -104,7 +104,7 @@ const SidebarContent = ({
                 />
                 <img
                   src={fileUrlThuong}
-                  alt="chukythuong"
+                  alt={fileUrlThuong ? "Chữ ký thường" : "Lỗi chữ ký"}
                   width={60}
                   height={30}
                   style={{ border: "1px solid #eee", objectFit: "contain" }}
@@ -125,7 +125,7 @@ const SidebarContent = ({
                 />
                 <img
                   src={fileUrlNhay}
-                  alt="chukynhay"
+                  alt={fileUrlNhay ? "Chữ ký nháy" : "Lỗi chữ ký"}
                   width={60}
                   height={30}
                   style={{ border: "1px solid #eee", objectFit: "contain" }}
