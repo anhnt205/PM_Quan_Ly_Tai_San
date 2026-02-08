@@ -140,8 +140,10 @@ export default function SignDocumentForm({
           Authorization: `Bearer ${token}`,
         },
       });
+      console.log(result)
       return result.data.signatureValue;
     } catch (error) {
+      console.log(error);
       return showErrorAlert("Ký không thành công!");
     }
   };

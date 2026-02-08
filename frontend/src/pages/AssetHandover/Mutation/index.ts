@@ -12,6 +12,8 @@ import { RootState } from "../../../redux/store";
 import { useSelector } from "react-redux";
 import dayjs from "dayjs";
 import { ContactlessOutlined } from "@mui/icons-material";
+import { useAssetManagerMutation } from "../../AssetManager/Mutation";
+import { generateCode } from "../../../utils/helpers";
 
 export const useAssetHandoverMutation = () => {
   const queryClient = useQueryClient();
@@ -295,7 +297,7 @@ export const useAssetHandoverMutation = () => {
       );
     },
   });
-
+  const { createManyHistoryAssetMutation } = useAssetManagerMutation();
   // cap nhat trang thai ky
   // ky tai lieu
   const signStatusMutation = useMutation({
@@ -326,6 +328,16 @@ export const useAssetHandoverMutation = () => {
           id: data.assetHandover.lenhDieuDong,
           trangThaiBanGiao: true,
         });
+        createManyHistoryAssetMutation.mutate(
+          data.assetHandover.chiTietBanGiaoTaiSan.map((item, index) => ({
+            id: generateCode("LSDCTS-") + `${index}`,
+            idBanGiaoTaiSan: data.assetHandover.id,
+            idTaiSan: item.idTaiSan,
+            idDonViNhan: data.assetHandover.idDonViNhan,
+            idDonViGiao: data.assetHandover.idDonViGiao,
+            thoiGianBanGiao: dayjs(new Date()).format("YYYY-MM-DD"),
+          })),
+        );
       }
       console.log("Cập nhật trạng thái ký thành công");
     },

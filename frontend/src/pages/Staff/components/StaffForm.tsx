@@ -104,7 +104,7 @@ export default function StaffForm({
       }
     },
   });
-
+  console.log("formik.errors", formik.values);
   useEffect(() => {
     if (selectedStaff) {
       formik.setValues({
@@ -334,8 +334,17 @@ export default function StaffForm({
                       <Typography>Lưu mã PIN :</Typography>
                       <Checkbox
                         name="savePin"
-                        checked={formik.values.savePin}
-                        onChange={!readOnly ? formik.handleChange : undefined}
+                        checked={formik.values.savePin || false}
+                        onChange={
+                          !readOnly
+                            ? (e) => {
+                                formik.setFieldValue(
+                                  "savePin",
+                                  e.target.checked,
+                                );
+                              }
+                            : undefined
+                        }
                         disabled={readOnly}
                         sx={{
                           "& .MuiSvgIcon-root": { fontSize: 28 },

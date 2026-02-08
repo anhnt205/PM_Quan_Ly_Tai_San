@@ -27,28 +27,32 @@ import {
   TimelineOppositeContent,
   timelineOppositeContentClasses,
 } from "@mui/lab";
-
-interface TransferHistory {
-  id: string;
-  fromDepartment: string;
-  toDepartment: string;
-  transferDate: string;
-  note?: string;
-}
+import { useHistoryAssethandoverQuery } from "../Mutation";
+import dayjs from "dayjs";
 
 interface AssetHistoryModalProps {
   open: boolean;
   onClose: () => void;
-  assetName: string;
-  historyData: TransferHistory[];
+  selectedAsset: any;
 }
 
 export default function AssetHistoryModal({
   open,
   onClose,
-  assetName,
-  historyData,
+  selectedAsset,
 }: AssetHistoryModalProps) {
+  const [paginationModel, setPaginationModel] = React.useState({
+    page: 0,
+    pageSize: 10,
+  });
+  const { data: historyData = { items: [], totalItems: 0 } } =
+    useHistoryAssethandoverQuery(
+      paginationModel.page,
+      paginationModel.pageSize,
+      undefined,
+      undefined,
+      selectedAsset?.id,
+    );
   return (
     <Dialog
       open={open}
@@ -88,7 +92,7 @@ export default function AssetHistoryModal({
                 Nhật ký điều chuyển
               </Typography>
               <Typography variant="body2" sx={{ color: "#6B7280" }}>
-                {assetName}
+                {selectedAsset?.tenTaiSan}
               </Typography>
             </Box>
           </Stack>
@@ -101,35 +105,46 @@ export default function AssetHistoryModal({
       <DialogContent sx={{ p: 3, pt: 0 }}>
         <Divider sx={{ mb: 3, opacity: 0.6 }} />
 
-        {historyData.length > 0 ? (
+        {historyData.totalItems > 0 ? (
           <Timeline
             sx={{
               p: 0,
               [`& .${timelineOppositeContentClasses.root}`]: {
-                flex: 0.25,
+                flex: 0.2,
                 paddingLeft: 0,
-                fontSize: "0.8rem",
-                fontWeight: 600,
-                color: "#6B7280",
+                textAlign: "right",
+                paddingRight: 2,
               },
             }}
           >
-            {historyData.map((item, index) => (
+            {historyData.items.map((item: any, index: number) => (
               <TimelineItem key={item.id}>
                 <TimelineOppositeContent>
-                  {item.transferDate}
+                  <Typography
+                    variant="body2"
+                    fontWeight={700}
+                    color="text.primary"
+                    sx={{ lineHeight: 1.2 }}
+                  >
+                    {dayjs(item.thoiGianBanGiao).format("DD/MM")}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {dayjs(item.thoiGianBanGiao).format("YYYY")}
+                  </Typography>
                 </TimelineOppositeContent>
 
                 <TimelineSeparator>
                   <TimelineDot
-                    variant="outlined"
                     sx={{
-                      borderColor: "#4F46E5",
-                      borderWidth: 2,
-                      bgcolor: "transparent",
+                      bgcolor: "primary.main",
+                      boxShadow: "0 0 0 4px #EEF2FF",
+                      m: "12px 0",
+                      p: 0.5,
                     }}
-                  />
-                  {index !== historyData.length - 1 && (
+                  >
+                    {/* <HistoryIcon sx={{ fontSize: 14, color: "white" }} /> */}
+                  </TimelineDot>
+                  {index !== historyData.totalItems - 1 && (
                     <TimelineConnector sx={{ bgcolor: "#E5E7EB", width: 2 }} />
                   )}
                 </TimelineSeparator>
@@ -138,47 +153,93 @@ export default function AssetHistoryModal({
                   <Paper
                     elevation={0}
                     sx={{
-                      p: 2,
+                      p: 2.5,
                       borderRadius: "16px",
                       border: "1px solid",
-                      borderColor: "#E0E7FF",
-                      bgcolor: "#eee7e7",
-                      mb: 1,
+                      borderColor: "divider",
+                      bgcolor: "background.paper",
+                      boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.05)",
+                      transition: "transform 0.2s ease-in-out",
+                      "&:hover": {
+                        transform: "translateY(-2px)",
+                        borderColor: "primary.main",
+                      },
                     }}
                   >
-                    {/* Luồng điều chuyển */}
-                    <Stack direction="row" spacing={1.5} alignItems="center">
-                      <Typography
-                        variant="body2"
-                        sx={{ fontWeight: 600, color: "#374151" }}
-                      >
-                        {item.fromDepartment}
-                      </Typography>
-                      <EastIcon sx={{ fontSize: 16, color: "#9CA3AF" }} />
-                      <Typography
-                        variant="body2"
-                        sx={{ fontWeight: 700, color: "#4F46E5" }}
-                      >
-                        {item.toDepartment}
-                      </Typography>
-                    </Stack>
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      spacing={2}
+                    >
+                      {/* Từ đơn vị */}
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.5,
+                            mb: 0.5,
+                          }}
+                        >
+                          <LocationIcon sx={{ fontSize: 14 }} /> Từ đơn vị
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          fontWeight={600}
+                          color="text.primary"
+                          noWrap
+                          title={item?.tenDonViGiao}
+                        >
+                          {item?.tenDonViGiao}
+                        </Typography>
+                      </Box>
 
-                    {/* Ghi chú nếu có */}
-                    {/* {item.note && (
-                      <Typography
-                        variant="caption"
-                        display="block"
+                      {/* Icon mũi tên */}
+                      <Box
                         sx={{
-                          color: "#6B7280",
-                          bgcolor: "#F3F4F6",
-                          p: 1,
-                          borderRadius: "8px",
-                          mt: 1,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: "primary.main",
+                          bgcolor: "#EEF2FF",
+                          borderRadius: "50%",
+                          width: 32,
+                          height: 32,
+                          flexShrink: 0,
                         }}
                       >
-                        {item.note}
-                      </Typography>
-                    )} */}
+                        <EastIcon sx={{ fontSize: 18 }} />
+                      </Box>
+
+                      {/* Đến đơn vị */}
+                      <Box sx={{ flex: 1, minWidth: 0, textAlign: "right" }}>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "flex-end",
+                            gap: 0.5,
+                            mb: 0.5,
+                          }}
+                        >
+                          Đến đơn vị <LocationIcon sx={{ fontSize: 14 }} />
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          fontWeight={600}
+                          color="primary.main"
+                          noWrap
+                          title={item?.tenDonViNhan}
+                        >
+                          {item?.tenDonViNhan}
+                        </Typography>
+                      </Box>
+                    </Stack>
                   </Paper>
                 </TimelineContent>
               </TimelineItem>

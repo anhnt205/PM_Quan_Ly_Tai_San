@@ -54,6 +54,15 @@ export interface AssetChildType {
   nguoiTao: string;
   nguoiCapNhat: string;
   isActive: string;
-  isDeleted?:boolean,
-  isInsert?:boolean,
+  isDeleted?: boolean;
+  isInsert?: boolean;
+}
+
+export interface HistoryAssetType {
+  id: string;
+  idBanGiaoTaiSan: string;
+  idTaiSan: string;
+  idDonViGiao: string;
+  idDonViNhan: string;
+  thoiGianBanGiao: string;
 }

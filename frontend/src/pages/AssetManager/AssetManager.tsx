@@ -421,40 +421,13 @@ export default function AssetManager() {
       </Box>
       <AssetHistoryModal
         open={isHistoryOpen}
-        onClose={() => setIsHistoryOpen(false)}
-        assetName={""}
-        historyData={mockHistoryData}
+        onClose={() => {
+          setIsHistoryOpen(false);
+          setSelectedAsset(null);
+          setShowForm(false);
+        }}
+        selectedAsset={selectedAsset}
       />
     </Box>
   );
 }
-const mockHistoryData = [
-  { 
-    id: "hist-004",
-    fromDepartment: "Phòng Dự Án",
-    toDepartment: "Phòng Hành Chính",
-    transferDate: "05/02/2026",
-    note: "Điều chuyển tài sản sau khi kết thúc dự án chung cư BlueSky.",
-  },
-  {
-    id: "hist-003",
-    fromDepartment: "Kho Kỹ Thuật",
-    toDepartment: "Phòng Dự Án",
-    transferDate: "20/12/2025",
-    note: "Cấp phát thiết bị phục vụ triển khai công trình tại hiện trường.",
-  },
-  {
-    id: "hist-002",
-    fromDepartment: "Kho Tổng",
-    toDepartment: "Kho Kỹ Thuật",
-    transferDate: "15/11/2025",
-    note: "Luân chuyển hàng hóa định kỳ giữa các kho chi nhánh.",
-  },
-  {
-    id: "hist-001",
-    fromDepartment: "Nhà Cung Cấp",
-    toDepartment: "Kho Tổng",
-    transferDate: "01/10/2025",
-    note: "Nhập kho tài sản mới mua theo quyết định số 123/QĐ-TS.",
-  },
-];

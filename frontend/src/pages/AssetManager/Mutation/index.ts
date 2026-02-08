@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../../../config/api.config";
-import { AssetChildType, AssetType } from "../types";
+import { AssetChildType, AssetType, HistoryAssetType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import axios from "axios";
 import * as XLSX from "xlsx";
@@ -173,6 +173,23 @@ export const useAssetManagerMutation = (
         error.response?.data?.message ||
           error.message ||
           "Xóa tài sản thất bại",
+      );
+    },
+  });
+
+  const createManyHistoryAssetMutation = useMutation({
+    mutationFn: async (data: HistoryAssetType[]) => {
+      const res = await api.post(`/lichsudieuchuyentaisan/batch`, data);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      console.log("Tạo lịch sử điều chuyển thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo lịch sử điều chuyển thất bại",
       );
     },
   });
@@ -410,6 +427,7 @@ export const useAssetManagerMutation = (
     importAssetMutation,
     createChildAssetBulkMutation,
     deleteOneChildAsssetMutation,
+    createManyHistoryAssetMutation
   };
 };
 
@@ -510,5 +528,37 @@ export const useCountriesQuery = () => {
       return res.data.data;
     },
     placeholderData: (placeholderData) => placeholderData,
+  });
+};
+export const useHistoryAssethandoverQuery = (
+  page?: number,
+  pageSize?: number,
+  fromDate?: string,
+  toDate?: string,
+  idTaiSan?: string,
+) => {
+  return useQuery({
+    queryKey: [
+      "historyAssetHandover",
+      page,
+      pageSize,
+      fromDate,
+      toDate,
+      idTaiSan,
+    ], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/lichsudieuchuyentaisan", {
+        params: {
+          page,
+          size: pageSize,
+          fromDate,
+          toDate,
+          idTaiSan,
+        },
+      });
+      return res.data;
+    },
+    placeholderData: (placeholderData) => placeholderData,
+    enabled: !!idTaiSan,
   });
 };
