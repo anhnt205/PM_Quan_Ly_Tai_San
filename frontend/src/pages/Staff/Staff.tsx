@@ -278,6 +278,7 @@ export default function Staff() {
           onDelete={deleteManyMutation.mutate}
           searchValue={searchValue}
           setSearchValue={setSearchValue}
+          titleSearch="Tìm kiếm theo tên nhân viên, mã nhân viên, ..."
         />
       </Box>
       <ImportErrorDialog

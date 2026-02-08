@@ -74,6 +74,7 @@ interface Props {
   handleAssetTransfer?: (department: string) => void;
   isCheckShowShare?: (item: any) => boolean;
   handleSignDocument?: (item: any, user: any, onSign: () => void) => void;
+  titleSearch?: string;
 }
 
 export default function TableCustom({
@@ -107,6 +108,7 @@ export default function TableCustom({
   handleSignDocument,
   selectedDate,
   setSelectedDate,
+  titleSearch = "Tìm kiếm ...",
 }: Props) {
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.user);
@@ -151,7 +153,7 @@ export default function TableCustom({
       <Grid container spacing={2} p={2}>
         <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
-            label="Tìm kiếm"
+            label={titleSearch}
             fullWidth
             size="small"
             value={searchValue}
