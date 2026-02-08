@@ -29,19 +29,8 @@ export const useAccountMutation = (
   const mainKey = "accountPage";
   const permissionKey = "userPermissions";
 
-  const { data: staffs = [] } = useQuery({
-    queryKey: ["staffs", idCongTy],
-    queryFn: async () => {
-      if (!idCongTy) return [];
-      return (await api.get("/nhanvien", { params: { idcongty: idCongTy } }))
-        .data;
-    },
-    placeholderData: (placeholderData) => placeholderData,
-    enabled: !!idCongTy,
-  });
-
   const { data: accountPage, isLoading: loadingAccount } = useQuery({
-    queryKey: [mainKey, page, pageSize, searchValue, staffs],
+    queryKey: [mainKey, page, pageSize, searchValue],
     queryFn: async () => {
       const res = await api.get("/taikhoan/paged", {
         params: {
@@ -53,7 +42,6 @@ export const useAccountMutation = (
       return res.data;
     },
     placeholderData: (placeholderData) => placeholderData,
-    enabled: !!staffs,
   });
 
   const { data: userPermissions, isLoading: loadingPermissions } = useQuery({
@@ -165,7 +153,6 @@ export const useAccountMutation = (
 
   return {
     accountPage,
-    staffs,
     userPermissions,
     isLoading: loadingAccount || loadingPermissions,
     createMutation,

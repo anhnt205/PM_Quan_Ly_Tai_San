@@ -193,15 +193,18 @@ export default function ToolTransferForm({
   useEffect(() => {
     if (formik.values.idDonViDeNghi && departments && staffs) {
       setNVThamMuu(
-        staffs.filter((i: any) => i.phongBanId === formik.values.idDonViDeNghi),
+        staffs.filter(
+          (i: any) =>
+            i.hasAccount && i.phongBanId === formik.values.idDonViDeNghi,
+        ),
       );
       const lanhDaoDeptIds = departments
         .filter((d) => d.isLanhDao === true)
         .map((d) => d.id);
 
       // Bước B: Lọc nhân viên có phongBanId nằm trong danh sách ID vừa tìm được
-      const filteredPGD = staffs.filter((s: any) =>
-        lanhDaoDeptIds.includes(s.phongBanId),
+      const filteredPGD = staffs.filter(
+        (s: any) => s.hasAccount && lanhDaoDeptIds.includes(s.phongBanId),
       );
       setNVPGD(filteredPGD);
     }

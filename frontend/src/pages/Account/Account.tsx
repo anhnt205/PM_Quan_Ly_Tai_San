@@ -12,6 +12,7 @@ import PermissionModal from "./components/PermissionModal/PermissionModal";
 import EditAccountModal from "./components/EditAccountModal/EditAccountModal";
 import { useSelector } from "react-redux";
 import { findById } from "../../utils/helpers";
+import { useAllStaffsQuery } from "../Staff/Mutation";
 
 export default function Account() {
   const [showForm, setShowForm] = useState(false);
@@ -38,7 +39,6 @@ export default function Account() {
 
   const {
     accountPage,
-    staffs,
     isLoading,
     deleteAccountMutation,
     createMutation,
@@ -50,7 +50,7 @@ export default function Account() {
     undefined,
     currentUser?.taiKhoan?.idCongTy,
   );
-
+  const { data: staffs } = useAllStaffsQuery();
   const handleRowClick = (params: GridRowParams) => {
     setSelectedAccount(params.row);
     setReadOnly(true);

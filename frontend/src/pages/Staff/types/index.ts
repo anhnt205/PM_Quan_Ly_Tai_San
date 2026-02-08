@@ -26,4 +26,5 @@ export interface StaffType {
   ngayTao: "";
   ngayCapNhat: "";
   savePin: boolean;
+  hasAccount?: boolean;
 }

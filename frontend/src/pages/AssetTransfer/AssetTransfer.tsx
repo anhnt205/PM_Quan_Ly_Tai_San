@@ -481,7 +481,9 @@ export default function AssetTransfer() {
                   label={label}
                   isSignedForm={!!selectedRow && !showForm}
                   departments={allDepartments}
-                  staffs={allStaffs}
+                  staffs={(allStaffs || []).filter(
+                    (staff: any) => staff.hasAccount,
+                  )}
                   allUnits={allUnits}
                   allCurrentStatus={allCurrentStatus}
                 />

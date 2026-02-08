@@ -598,7 +598,9 @@ export default function AssetHandover() {
                   departments={departments}
                   positions={positions}
                   allUnits={allUnits}
-                  staffs={staffs}
+                  staffs={(staffs || []).filter(
+                    (staff: any) => staff.hasAccount,
+                  )}
                 />
               </Box>
             )}

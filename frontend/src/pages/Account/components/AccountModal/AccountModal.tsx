@@ -24,6 +24,8 @@ import SaveBtn from "../../../../components/Button/SaveBtn";
 import CancelBtn from "../../../../components/Button/CancelBtn";
 import { useSelector } from "react-redux";
 import { showConfirmAlert } from "../../../../components/Alert";
+import { useStaffPagesQuery } from "../../../Staff/Mutation";
+import { useDebounce } from "../../../../hooks/useDebounce";
 
 const generateCredentials = (fullName: string) => {
   if (!fullName) return { username: "", password: "" };
@@ -72,26 +74,19 @@ export default function AccountModal({ open, onClose }: Props) {
 
   const currentUser = useSelector((state: any) => state.user.user);
 
-  const { accountPage, staffs, createMutation } = useAccountMutation(
+  const { accountPage, createMutation } = useAccountMutation(
     undefined,
     undefined,
     undefined,
     null,
     currentUser?.taiKhoan?.idCongTy,
   );
-  const staffWithStatus = useMemo(() => {
-    if (!staffs) return [];
-    return staffs
-      .filter((i: any) =>
-        i.hoTen.toLowerCase().includes(searchValue.toLowerCase()),
-      )
-      .map((staff: any) => {
-        const hasAccount = accountPage?.items?.some(
-          (acc: any) => acc.tenDangNhap === staff.id,
-        );
-        return { ...staff, hasAccount };
-      });
-  }, [staffs, accountPage, searchValue]);
+  const searchDebounce = useDebounce(searchValue, 600);
+  const { data: staffs = {} } = useStaffPagesQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchDebounce,
+  );
 
   const formik = useFormik({
     initialValues: {
@@ -272,11 +267,10 @@ export default function AccountModal({ open, onClose }: Props) {
             <TableCustom
               title={"Danh sách nhân viên"}
               columns={columns}
-              rows={staffWithStatus}
-              total={staffWithStatus.length}
+              rows={staffs?.items || []}
+              total={staffs?.totalItems || 0}
               searchValue={searchValue}
               setSearchValue={setSearchValue}
-              paginationMode="client"
               checkboxSelection={false}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
