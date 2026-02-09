@@ -32,6 +32,7 @@ import FieldDateTime from "../../../components/TextField/FieldDateTime";
 import EditButton from "../../../components/Button/EditButton";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
+import dayjs from "dayjs";
 
 export default function ToolForm({
   onEdit,
@@ -61,7 +62,7 @@ export default function ToolForm({
       id: "",
       idDonVi: "",
       ten: "",
-      ngayNhap: "",
+      ngayNhap: dayjs(new Date()).format("YYYY-MM-DDTHH:mm:ss"),
       donViTinh: "",
       soLuong: 0,
       idNhomCCDC: "",

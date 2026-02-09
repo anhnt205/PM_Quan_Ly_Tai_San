@@ -5,7 +5,6 @@ import { AssetDetailType, OwnerUnitType } from "../types";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import dayjs from "dayjs";
-import axios from "axios";
 import * as XLSX from "xlsx";
 import { generateCode } from "../../../utils/helpers";
 import { useAllToolGroupQuery } from "../../ToolGroup/Mutation";
@@ -159,8 +158,8 @@ export const useToolManagerMutation = (
   // chi tiet don vi so huu
   const createOwnerUnitMutation = useMutation({
     mutationFn: async (data: OwnerUnitType) => {
-      const res = await axios.post(
-        "http://1.52.29.243:8386/chitietdonvisohuu",
+      const res = await api.post(
+        "/chitietdonvisohuu",
         data,
       );
       return res.data;
@@ -179,8 +178,8 @@ export const useToolManagerMutation = (
 
   const createManyOwnerUnitMutation = useMutation({
     mutationFn: async (data: OwnerUnitType[]) => {
-      const res = await axios.post(
-        "http://1.52.29.243:8386/chitietdonvisohuu/batch",
+      const res = await api.post(
+        "/chitietdonvisohuu/batch",
         data,
       );
       return res.data;
@@ -199,8 +198,8 @@ export const useToolManagerMutation = (
 
   const updateManyOwnerUnitMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await axios.put(
-        "http://1.52.29.243:8386/chitietdonvisohuu/batch",
+      const res = await api.put(
+        "/chitietdonvisohuu/batch",
         data,
       );
       return res.data;
@@ -220,8 +219,8 @@ export const useToolManagerMutation = (
 
   const deleteOneOwnerUnitMutation = useMutation({
     mutationFn: async (id: any) => {
-      const res = await axios.delete(
-        `http://1.52.29.243:8386/chitietdonvisohuu/${id}`,
+      const res = await api.delete(
+        `/chitietdonvisohuu/${id}`,
       );
       return res.data;
     },

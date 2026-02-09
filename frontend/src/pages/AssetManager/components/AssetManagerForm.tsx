@@ -173,7 +173,7 @@ export default function AssetManagerForm({
       formik.resetForm();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAsset, assetsByType.length]);
+  }, [selectedAsset]);
 
   return (
     <Accordion sx={{ background: "#f6f8f4ff" }} expanded={expanded}>
@@ -328,6 +328,9 @@ export default function AssetManagerForm({
                     formik={formik}
                     field="taiKhoanTaiSan"
                     disabled={true}
+                    InputLabelProps={{
+                      shrink: true, // Giúp label luôn nhảy lên trên
+                    }}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -336,6 +339,9 @@ export default function AssetManagerForm({
                     formik={formik}
                     field="taiKhoanKhauHao"
                     disabled={true}
+                    InputLabelProps={{
+                      shrink: true, // Giúp label luôn nhảy lên trên
+                    }}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -344,6 +350,9 @@ export default function AssetManagerForm({
                     formik={formik}
                     field="taiKhoanChiPhi"
                     disabled={true}
+                    InputLabelProps={{
+                      shrink: true, // Giúp label luôn nhảy lên trên
+                    }}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -403,6 +412,9 @@ export default function AssetManagerForm({
                     formik={formik}
                     field="nvNS"
                     disabled={readOnly}
+                    InputLabelProps={{
+                      shrink: true, // Giúp label luôn nhảy lên trên
+                    }}
                     onChange={(newValue) => {
                       formik.setFieldValue(
                         "nguyenGia",
