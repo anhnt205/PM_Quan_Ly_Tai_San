@@ -43,3 +43,14 @@ export interface AssetDetailType {
   namSanXuat: number;
   soLuong: number;
 }
+
+export interface HistoryToolType {
+  id: string;
+  idBanGiaoCCDCVatTu: string;
+  idCCDCVatTu: string;
+  idChiTietCCDCVatTu: string;
+  idDonViGiao: string;
+  idDonViNhan: string;
+  soLuong: number;
+  thoiGianBanGiao: string;
+}

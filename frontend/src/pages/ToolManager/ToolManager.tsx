@@ -6,7 +6,7 @@ import ToolForm from "./components/ToolForm";
 import ToolTableCustom from "./components/ToolTableCustom";
 import ToolDetailSidebar from "./components/ToolDetailSidebar";
 import { useToolManagerMutation, useToolPageQuery } from "./Mutation";
-import { DEFAULT_COLUMNS } from "./columnConfig";
+import { createColumns } from "./columnConfig";
 import {
   useAllDepartmentsQuery,
   useDepartmentMutation,
@@ -15,6 +15,7 @@ import { useAllToolTypeQuery, useToolTypeMutation } from "../ToolType/Mutation";
 import { useAllUnitsQuery, useUnitMutation } from "../Unit/Mutation";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useDebounce } from "../../hooks/useDebounce";
+import AssetHistoryModal from "./components/ToolHistoryModal";
 
 export default function ToolManager() {
   const [showForm, setShowForm] = useState(false);
@@ -23,6 +24,8 @@ export default function ToolManager() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
+  const [openHistory, setOpenHistory] = useState(false);
+  const [selectedHistoryTool, setSelectedHistoryTool] = useState<any>(null);
 
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [openErrorModal, setOpenErrorModal] = useState(false);
@@ -54,7 +57,14 @@ export default function ToolManager() {
   const { data: toolTypes = [] } = useAllToolTypeQuery();
   const { data: allUnits = [] } = useAllUnitsQuery();
 
-  const [columns, setColumns] = useState(DEFAULT_COLUMNS);
+  const handleOpenHistory = (tool: any) => {
+    setSelectedHistoryTool(tool);
+    setOpenHistory(true);
+  };
+
+  const [columns, setColumns] = useState(() =>
+    createColumns(handleOpenHistory),
+  );
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedTool(params.row);
@@ -86,6 +96,11 @@ export default function ToolManager() {
 
   return (
     <Box sx={{ width: "100%" }}>
+      <AssetHistoryModal
+        open={openHistory}
+        onClose={() => setOpenHistory(false)}
+        selectedTool={selectedHistoryTool}
+      />
       <ImportErrorDialog
         open={openErrorModal}
         onClose={() => setOpenErrorModal(false)}
@@ -166,6 +181,7 @@ export default function ToolManager() {
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
               loading={isLoading}
+              allDepartments={allDepartments}
             />
           </Box>
 

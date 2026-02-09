@@ -330,7 +330,7 @@ export const useAssetHandoverMutation = () => {
         });
         createManyHistoryAssetMutation.mutate(
           data.assetHandover.chiTietBanGiaoTaiSan.map((item, index) => ({
-            id: generateCode("LSDCTS-") + `${index}`,
+            id: generateCode("LSDCTS-") + `${item.idTaiSan} -`,
             idBanGiaoTaiSan: data.assetHandover.id,
             idTaiSan: item.idTaiSan,
             idDonViNhan: data.assetHandover.idDonViNhan,

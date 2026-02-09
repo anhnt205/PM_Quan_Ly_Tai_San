@@ -13,6 +13,8 @@ import {
   ToolHandoverFormValues,
 } from "../types";
 import axios from "axios";
+import { useToolManagerMutation } from "../../ToolManager/Mutation";
+import { generateCode } from "../../../utils/helpers";
 
 export const useToolHandoverMutation = () => {
   const queryClient = useQueryClient();
@@ -304,10 +306,11 @@ export const useToolHandoverMutation = () => {
         idDonViNhan: string;
         idTsCon: string;
         soLuongBanGiao: number;
+        thoiGianBanGiao: string;
       }[],
     ) => {
-      const res = await axios.post(
-        `http://42.119.110.246:8386/chitietdonvisohuu/update-so-luong/batch`,
+      const res = await api.post(
+        `/chitietdonvisohuu/update-so-luong/batch`,
         data,
       );
       return res.data;
@@ -326,6 +329,7 @@ export const useToolHandoverMutation = () => {
     },
   });
 
+  const { createManyHistoryToolMutation } = useToolManagerMutation();
   // cap nhat trang thai ky
   // ky tai lieu
   const signStatusMutation = useMutation({
@@ -353,12 +357,25 @@ export const useToolHandoverMutation = () => {
             idDonViNhan: data.assetHandover.idDonViNhan,
             idTsCon: item.idChiTietCCDCVatTu,
             soLuongBanGiao: item.soLuong,
+            thoiGianBanGiao: now,
           })),
         );
         updateStateAssetTransferMutation.mutate({
           id: data.assetHandover.lenhDieuDong,
           trangThaiBanGiao: true,
         });
+        createManyHistoryToolMutation.mutate(
+          data.assetHandover.chiTietBanGiaoCCDCVatTu.map((item: any) => ({
+            id: generateCode("LSDCCCDC-") + `${item.idCCDCVatTu} -`,
+            idBanGiaoCCDCVatTu: data.assetHandover.id,
+            idCCDCVatTu: item.idCCDCVatTu,
+            idChiTietCCDCVatTu: item.idChiTietCCDCVatTu,
+            idDonViNhan: data.assetHandover.idDonViNhan,
+            idDonViGiao: data.assetHandover.idDonViGiao,
+            soLuong: item.soLuong,
+            thoiGianBanGiao: now,
+          })),
+        );
       }
       console.log("Cập nhật trạng thái ký thành công");
     },

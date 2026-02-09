@@ -25,6 +25,7 @@ import {
 } from "@mui/icons-material";
 import { ColumnConfig } from "../columnConfig";
 import ColumnConfigMenu from "./ColumnConfig";
+import { findById } from "../../../utils/helpers";
 
 interface Props {
   title: string;
@@ -41,6 +42,7 @@ interface Props {
   paginationModel?: { page: number; pageSize: number };
   onPaginationModelChange?: (model: any) => void;
   loading?: boolean;
+  allDepartments?: any[];
 }
 
 export default function ToolTableCustom({
@@ -58,9 +60,10 @@ export default function ToolTableCustom({
   paginationModel,
   onPaginationModelChange,
   loading = false,
+  allDepartments = [],
 }: Props) {
   const [expandedRows, setExpandedRows] = useState<Set<string | number>>(
-    new Set()
+    new Set(),
   );
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -142,14 +145,14 @@ export default function ToolTableCustom({
   // Visible columns used for sizing and colSpan calculations
   const visibleColumns = useMemo(
     () => columns.filter((c) => c.visible && c.isShow),
-    [columns]
+    [columns],
   );
 
   // Compute a reasonable minWidth for the table so it can overflow horizontally
   const tableMinWidth = useMemo(() => {
     const colsWidth = visibleColumns.reduce(
       (s, c) => s + (c.width ? Number((c as any).width) : 150),
-      0
+      0,
     );
     // extra space for expand + checkbox columns and paddings
     const extra = 120;
@@ -192,7 +195,7 @@ export default function ToolTableCustom({
           const rawValue = row[col.key];
           const displayValue = col.render
             ? col.render(rawValue, row)
-            : rawValue ?? "-";
+            : (rawValue ?? "-");
 
           return (
             <TableCell
@@ -205,7 +208,7 @@ export default function ToolTableCustom({
             </TableCell>
           );
         })}
-      </TableRow>
+      </TableRow>,
     );
 
     // Expanded detail row
@@ -299,10 +302,11 @@ export default function ToolTableCustom({
                             {detail.idTsCon || "-"}
                           </TableCell>
                           <TableCell sx={{ border: "1px solid #e0e0e0" }}>
-                            {detail.idDonViSoHuu || "-"}
+                            {findById(allDepartments, detail.idDonViSoHuu)
+                              ?.tenPhongBan || "-"}
                           </TableCell>
                           <TableCell sx={{ border: "1px solid #e0e0e0" }}>
-                            {detail.soLuong || "-"}
+                            {detail.soLuong || 0}
                           </TableCell>
                           <TableCell sx={{ border: "1px solid #e0e0e0" }}>
                             {detail.thoiGianBanGiao || "-"}
@@ -321,7 +325,7 @@ export default function ToolTableCustom({
               </Box>
             </Box>
           </TableCell>
-        </TableRow>
+        </TableRow>,
       );
     }
   });
@@ -347,7 +351,7 @@ export default function ToolTableCustom({
 
       // Sử dụng columnsRef.current để đảm bảo danh sách các cột khác không bị mất dữ liệu
       const updatedColumns = columnsRef.current.map((col) =>
-        col.key === colKey ? { ...col, width: newWidth } : col
+        col.key === colKey ? { ...col, width: newWidth } : col,
       );
 
       onColumnsChange?.(updatedColumns);

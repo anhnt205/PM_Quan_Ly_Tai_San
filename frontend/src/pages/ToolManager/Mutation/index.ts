@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../../../config/api.config";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
-import { AssetDetailType, OwnerUnitType } from "../types";
+import { AssetDetailType, HistoryToolType, OwnerUnitType } from "../types";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import dayjs from "dayjs";
@@ -158,10 +158,7 @@ export const useToolManagerMutation = (
   // chi tiet don vi so huu
   const createOwnerUnitMutation = useMutation({
     mutationFn: async (data: OwnerUnitType) => {
-      const res = await api.post(
-        "/chitietdonvisohuu",
-        data,
-      );
+      const res = await api.post("/chitietdonvisohuu", data);
       return res.data;
     },
     onSuccess: () => {
@@ -178,10 +175,7 @@ export const useToolManagerMutation = (
 
   const createManyOwnerUnitMutation = useMutation({
     mutationFn: async (data: OwnerUnitType[]) => {
-      const res = await api.post(
-        "/chitietdonvisohuu/batch",
-        data,
-      );
+      const res = await api.post("/chitietdonvisohuu/batch", data);
       return res.data;
     },
     onSuccess: () => {
@@ -198,10 +192,7 @@ export const useToolManagerMutation = (
 
   const updateManyOwnerUnitMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await api.put(
-        "/chitietdonvisohuu/batch",
-        data,
-      );
+      const res = await api.put("/chitietdonvisohuu/batch", data);
       return res.data;
     },
     onSuccess: () => {
@@ -219,9 +210,7 @@ export const useToolManagerMutation = (
 
   const deleteOneOwnerUnitMutation = useMutation({
     mutationFn: async (id: any) => {
-      const res = await api.delete(
-        `/chitietdonvisohuu/${id}`,
-      );
+      const res = await api.delete(`/chitietdonvisohuu/${id}`);
       return res.data;
     },
     onSuccess: () => {
@@ -560,6 +549,23 @@ export const useToolManagerMutation = (
     },
   });
 
+  const createManyHistoryToolMutation = useMutation({
+    mutationFn: async (data: HistoryToolType[]) => {
+      const res = await api.post(`/lichsudieuchuyenccdcvattu/batch`, data);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      console.log("Tạo lịch sử điều chuyển thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo lịch sử điều chuyển thất bại",
+      );
+    },
+  });
+
   return {
     toolGroups,
     createMutation,
@@ -574,6 +580,7 @@ export const useToolManagerMutation = (
     deleteManyAssetDetailMutation,
     exportExcelMutation,
     importExcelMutation,
+    createManyHistoryToolMutation,
   };
 };
 
@@ -612,5 +619,38 @@ export const useAllToolQuery = () => {
       return res.data.data || res.data;
     },
     placeholderData: (previousData) => previousData,
+  });
+};
+
+export const useHistoryAssethandoverQuery = (
+  page?: number,
+  pageSize?: number,
+  fromDate?: string,
+  toDate?: string,
+  idCCDCVatTu?: string,
+) => {
+  return useQuery({
+    queryKey: [
+      "historyToolHandover",
+      page,
+      pageSize,
+      fromDate,
+      toDate,
+      idCCDCVatTu,
+    ], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("/lichsudieuchuyenccdcvattu", {
+        params: {
+          page,
+          size: pageSize,
+          fromDate,
+          toDate,
+          idCCDCVatTu,
+        },
+      });
+      return res.data;
+    },
+    placeholderData: (placeholderData) => placeholderData,
+    enabled: !!idCCDCVatTu,
   });
 };
