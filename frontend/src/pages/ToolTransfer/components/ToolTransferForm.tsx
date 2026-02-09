@@ -42,6 +42,8 @@ import FileAttachmentInput from "../../../components/TextField/FileAttachmentInp
 import { useToolByDepartmentPageQuery } from "../Mutation";
 import { useAllStaffsQuery } from "../../Staff/Mutation";
 import DialogLoading from "../../../components/common/DialogLoading";
+import { RootState } from "../../../redux/store";
+import { useSelector } from "react-redux";
 
 const CustomTableCell = styled(TableCell)(({ theme }) => ({
   borderBottom: "1px solid rgba(224, 224, 224, 1)",
@@ -81,6 +83,7 @@ export default function ToolTransferForm({
   departments,
   allUnits,
 }: ToolTransferFormProps) {
+  const { user } = useSelector((state: RootState) => state.user);
   const [expanded, setExpanded] = useState(true);
   const [isPreview, setIsPreview] = useState(false);
   const [document, setDocument] = useState<File | string | any>("");
@@ -96,12 +99,12 @@ export default function ToolTransferForm({
       id: "",
       soQuyetDinh: "",
       tenPhieu: "",
-      idDonViGiao: "",
-      idDonViNhan: "",
+      idDonViGiao: type===1? "K30" : "",
+      idDonViNhan: type===3? "kth" : "",
       idNguoiKyNhay: "",
       trangThaiKyNhay: false,
       nguoiLapPhieuKyNhay: false,
-      idDonViDeNghi: "",
+      idDonViDeNghi: user?.taiKhoan?.phongBanId || "",
       tgGnTuNgay: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       tgGnDenNgay: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       idTrinhDuyetCapPhong: "",

@@ -50,7 +50,7 @@ export default function Account() {
     undefined,
     currentUser?.taiKhoan?.idCongTy,
   );
-  const { data: staffs } = useAllStaffsQuery();
+  const { data: staffs = [] } = useAllStaffsQuery();
   const handleRowClick = (params: GridRowParams) => {
     setSelectedAccount(params.row);
     setReadOnly(true);

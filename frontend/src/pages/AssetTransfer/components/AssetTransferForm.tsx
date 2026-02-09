@@ -39,6 +39,8 @@ import SignDocumentForm from "./SignDocumentForm";
 import { generateCode } from "../../../utils/helpers";
 import { useAssetByDonViQuery } from "../Mutation";
 import dayjs from "dayjs";
+import { RootState } from "../../../redux/store";
+import { useSelector } from "react-redux";
 
 export default function AssetTransferForm({
   onEdit,
@@ -72,6 +74,7 @@ export default function AssetTransferForm({
   const [expanded, setExpanded] = useState(true);
   const [isPreview, setIsPreview] = useState(false);
   const [document, setDocument] = useState<File | string | any>("");
+  const { user } = useSelector((state: RootState) => state.user);
 
   const CustomTableCell = styled(TableCell)(({ theme }) => ({
     borderBottom: "1px solid rgba(224, 224, 224, 1)",
@@ -92,12 +95,12 @@ export default function AssetTransferForm({
       id: "",
       soQuyetDinh: "",
       tenPhieu: "",
-      idDonViGiao: "",
-      idDonViNhan: "",
+      idDonViGiao: type===1? "K30" : "",
+      idDonViNhan: type===3? "kth" : "",
       idNguoiKyNhay: "",
       trangThaiKyNhay: false,
       nguoiLapPhieuKyNhay: false,
-      idDonViDeNghi: "",
+      idDonViDeNghi: user?.taiKhoan?.phongBanId || "",
       tgGnTuNgay: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       tgGnDenNgay: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       idTrinhDuyetCapPhong: "",

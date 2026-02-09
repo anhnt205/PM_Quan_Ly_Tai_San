@@ -89,9 +89,8 @@ export default function EditAccountModal({ open, onClose, data }: Props) {
             <Grid size={{ xs: 6 }}>
               <FieldInput
                 title="Tên đăng nhập"
-                field="tenDangNhap"
+                field="username"
                 formik={formik}
-                disabled // Theo ảnh mẫu trường này bị mờ
               />
             </Grid>
             <Grid size={{ xs: 6 }}>
