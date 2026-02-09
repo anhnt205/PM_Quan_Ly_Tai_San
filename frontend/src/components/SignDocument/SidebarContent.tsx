@@ -301,11 +301,11 @@ const SidebarContent = ({
             fontWeight: 600,
             color: "#ef4444",
             borderColor: "#fecaca",
-            borderWidth: "2px !important", // 👈 FIX: Force border width
+            borderWidth: "2px !important",
             "&:hover": {
               borderColor: "#fca5a5",
               bgcolor: alpha("#ef4444", 0.04),
-              borderWidth: "2px !important", // 👈 FIX: Maintain border on hover
+              borderWidth: "2px !important",
             },
           }}
         >
