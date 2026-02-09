@@ -6,10 +6,12 @@ import {
   Search,
   Edit,
   TableChart,
+  Mail,
 } from "@mui/icons-material";
 import {
   Box,
   Button,
+  colors,
   Grid,
   IconButton,
   Paper,
@@ -207,8 +209,9 @@ export default function TableCustom({
               <Button
                 size="small"
                 variant="contained"
-                color="primary"
-                startIcon={<Edit />}
+                color="warning"
+                sx={{color: "#fff"}}
+                startIcon={<Mail />}
                 onClick={async (e) => {
                   e.stopPropagation();
                   await handleSendToSigner?.(selectedItem);

@@ -1,5 +1,5 @@
-import { Close, PictureAsPdf } from "@mui/icons-material";
-import { Box, Button, IconButton, Typography } from "@mui/material";
+import { Close, PictureAsPdf, Description } from "@mui/icons-material";
+import { Box, Button, IconButton, Typography, Chip } from "@mui/material";
 
 export const SignHeader = ({
   pagesCount,
@@ -13,41 +13,98 @@ export const SignHeader = ({
   <Box
     sx={{
       bgcolor: "white",
-      p: 2,
-      borderBottom: "1px solid #e0e0e0",
+      px: 3,
+      py: 2,
+      borderBottom: "1px solid #e5e7eb",
       display: "flex",
       justifyContent: "space-between",
       alignItems: "center",
+      boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)",
     }}
   >
-    <Box>
-      <Typography variant="h6">Soạn & Ký Tài Liệu</Typography>
-      <Typography variant="body2" color="textSecondary">
-        Tổng số trang: {pagesCount}
-      </Typography>
+    {/* Left Section */}
+    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+      <Box
+        sx={{
+          width: 40,
+          height: 40,
+          borderRadius: "10px",
+          bgcolor: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Description sx={{ color: "white", fontSize: 22 }} />
+      </Box>
+      
+      <Box>
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            fontWeight: 600,
+            fontSize: "1.125rem",
+            color: "#111827",
+            mb: 0.25,
+          }}
+        >
+          Soạn & Ký Tài Liệu
+        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Chip
+            label={`${pagesCount} trang`}
+            size="small"
+            sx={{
+              height: 20,
+              fontSize: "0.75rem",
+              fontWeight: 500,
+              bgcolor: "#f3f4f6",
+              color: "#6b7280",
+              "& .MuiChip-label": { px: 1 },
+            }}
+          />
+        </Box>
+      </Box>
     </Box>
-    <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+
+    {/* Right Section */}
+    <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
       <Button
-        variant="outlined"
-        size="small"
+        variant="contained"
+        size="medium"
         onClick={handleExportPDF}
+        startIcon={<PictureAsPdf sx={{ fontSize: 18 }} />}
         sx={{
           textTransform: "none",
           fontSize: "0.875rem",
-          color: "#8b5cf6",
-          borderColor: "#c4b5fd",
-          fontWeight: 500,
+          fontWeight: 600,
+          px: 2.5,
+          py: 1,
+          borderRadius: "8px",
+          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          boxShadow: "0 2px 8px rgba(102, 126, 234, 0.3)",
           "&:hover": {
-            borderColor: "#a78bfa",
-            backgroundColor: "rgba(139, 92, 246, 0.04)",
+            background: "linear-gradient(135deg, #5568d3 0%, #6941a0 100%)",
+            boxShadow: "0 4px 12px rgba(102, 126, 234, 0.4)",
           },
         }}
-        startIcon={<PictureAsPdf />}
       >
         Xuất PDF
       </Button>
-      <IconButton onClick={onCancel}>
-        <Close />
+      
+      <IconButton
+        onClick={onCancel}
+        sx={{
+          width: 36,
+          height: 36,
+          bgcolor: "#f3f4f6",
+          "&:hover": {
+            bgcolor: "#e5e7eb",
+          },
+        }}
+      >
+        <Close sx={{ fontSize: 20, color: "#6b7280" }} />
       </IconButton>
     </Box>
   </Box>
