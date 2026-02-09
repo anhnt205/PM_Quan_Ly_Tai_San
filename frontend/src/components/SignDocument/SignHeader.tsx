@@ -38,11 +38,11 @@ export const SignHeader = ({
       >
         <Description sx={{ color: "white", fontSize: 22 }} />
       </Box>
-      
+
       <Box>
-        <Typography 
-          variant="h6" 
-          sx={{ 
+        <Typography
+          variant="h6"
+          sx={{
             fontWeight: 600,
             fontSize: "1.125rem",
             color: "#111827",
@@ -82,17 +82,17 @@ export const SignHeader = ({
           px: 2.5,
           py: 1,
           borderRadius: "8px",
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          boxShadow: "0 2px 8px rgba(102, 126, 234, 0.3)",
+          background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+          boxShadow: "0 2px 8px rgba(16, 185, 129, 0.3)",
           "&:hover": {
-            background: "linear-gradient(135deg, #5568d3 0%, #6941a0 100%)",
-            boxShadow: "0 4px 12px rgba(102, 126, 234, 0.4)",
+            background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
+            boxShadow: "0 4px 12px rgba(16, 185, 129, 0.4)",
           },
         }}
       >
         Xuất PDF
       </Button>
-      
+
       <IconButton
         onClick={onCancel}
         sx={{
