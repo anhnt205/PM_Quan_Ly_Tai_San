@@ -23,7 +23,7 @@ const BpIcon = styled("span")<{ customColor: string }>(({ customColor }) => ({
   borderRadius: 3,
   width: 18,
   height: 18,
-  boxShadow: `inset 0 0 0 1px ${customColor}`,
+  boxShadow: `inset 0 0 0 2px ${customColor}`,
   backgroundColor: "#fff",
   transition: "all 0.2s",
   "input:hover ~ &": {
@@ -50,7 +50,6 @@ const BpCheckedIconRoot = styled("span")<{ customcolor: string }>(
 const CustomCheckbox = (
   props: CheckboxProps & { colorKey: keyof typeof COLORS },
 ) => {
-  // Bóc tách colorKey ra khỏi props để không bị truyền xuống component Checkbox/thẻ HTML
   const { colorKey, ...otherProps } = props;
   const colorHex = COLORS[colorKey] || COLORS.default;
 
