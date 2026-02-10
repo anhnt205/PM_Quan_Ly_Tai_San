@@ -1,6 +1,7 @@
 export interface AssetHandoverDetail {
   id: string;
   idBanGiaoTaiSan: string;
+  tenTaiSan?: string;
   idTaiSan: string;
   soLuong: number;
   ngayTao?: string;
@@ -88,6 +89,7 @@ export interface AssetHandoverData {
 
 export interface AssetHandoverFormValues {
   id: string;
+  tenTaiSan?: string;
   idCongTy: string;
   banGiaoTaiSan: string;
   quyetDinhDieuDongSo: string;

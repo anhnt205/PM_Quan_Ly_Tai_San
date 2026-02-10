@@ -24,7 +24,6 @@ import {
   Add,
   Delete,
   Cancel,
-  Visibility,
 } from "@mui/icons-material";
 import { useFormik, FieldArray, FormikProvider } from "formik";
 
@@ -43,10 +42,7 @@ import SignDocumentForm from "./SignDocumentForm";
 import PreviewBtn from "../../../components/Button/PreviewBtn";
 import dayjs from "dayjs";
 import { toolHandoverValidationSchema } from "../validation";
-import {
-  useToolTransferAllQuery,
-  useToolTransferPageQuery,
-} from "../../ToolTransfer/Mutation";
+import { useToolTransferPageQuery } from "../../ToolTransfer/Mutation";
 
 const UnderlinedInputWrapper = styled(Box)({
   width: "100%",
@@ -201,6 +197,7 @@ export default function ToolHandoverForm({
       chiTietBanGiaoCCDCVatTu: [
         {
           id: "",
+          tenVatTu: "",
           idBanGiaoCCDCVatTu: "",
           idCCDCVatTu: "",
           soLuong: 0,
@@ -321,6 +318,7 @@ export default function ToolHandoverForm({
       (result?.chiTietDieuDongCCDCVatTuDTOS || []).map((i: any) => ({
         ...i,
         id: i.idCCDCVatTu,
+        tenVatTu: i.tenVatTu,
         idCCDCVatTu: i.idCCDCVatTu,
         idChiTietCCDCVatTu: i.idChiTietCCDCVatTu,
         idChiTietDieuDong: i.id,
@@ -331,6 +329,14 @@ export default function ToolHandoverForm({
       })),
     );
   };
+
+  console.log(">>> SOURCE DATA:", {
+    idGiao: formik.values.idDaiDienBenGiao,
+    idNhan: formik.values.idDaiDienBenNhan,
+    idGD: formik.values.idGiamDoc,
+    selected: selectedToolHandover,
+  });
+
   return (
     <>
       {isPreview && (
@@ -353,31 +359,37 @@ export default function ToolHandoverForm({
           showSignerSidebar={false}
           fullscreen={true}
           staffs={staffs}
-          toolHandover={
-            selectedToolHandover
-              ? selectedToolHandover
-              : {
-                  ...formik.values,
-                  tenDonViGiao: findById(departments, formik.values.idDonViGiao)
-                    ?.tenPhongBan,
-                  tenDonViNhan: findById(departments, formik.values.idDonViNhan)
-                    ?.tenPhongBan,
-                  tenLanhDao: "",
-                  idDaiDiendonviBanHanhQD: "",
-                  tenDaiDienBanHanhQD: "",
-                  tenDaiDienBenGiao: findById(
-                    staffs,
-                    formik.values.idDaiDienBenGiao,
-                  )?.hoTen,
-                  tenDaiDienBenNhan: findById(
-                    staffs,
-                    formik.values.idDaiDienBenNhan,
-                  )?.hoTen,
-                  tenGiamDoc: findById(staffs, formik.values.idGiamDoc)?.hoTen,
-                  trangThaiPhieu: 0,
-                  chuKyList: [],
-                }
-          }
+          toolHandover={{
+            ...formik.values,
+            chiTietBanGiaoCCDCVatTu: (
+              formik.values.chiTietBanGiaoCCDCVatTu || []
+            ).map((item) => {
+              const toolInfo = findById(listTools, item.idCCDCVatTu);
+              return {
+                ...item,
+                tenCCDCVatTu: toolInfo?.tenCCDCVatTu || "",
+                tenVatTu: toolInfo?.tenVatTu || "",
+                donViTinh: toolInfo?.donViTinh || "",
+                kyHieu: toolInfo?.kyHieu || "",
+                moTa: toolInfo?.moTa || "",
+              };
+            }),
+            tenDonViGiao:
+              findById(departments, formik.values.idDonViGiao)?.tenPhongBan ||
+              "",
+            tenDonViNhan:
+              findById(departments, formik.values.idDonViNhan)?.tenPhongBan ||
+              "",
+            tenDaiDienBenGiao:
+              findById(staffs, formik.values.idDaiDienBenGiao)?.hoTen || "",
+            tenDaiDienBenNhan:
+              findById(staffs, formik.values.idDaiDienBenNhan)?.hoTen || "",
+            tenGiamDoc: findById(staffs, formik.values.idGiamDoc)?.hoTen || "",
+            idDaiDiendonviBanHanhQD: "",
+            tenDaiDienBanHanhQD: "",
+            trangThaiPhieu: 0,
+            chuKyList: [],
+          }}
           allUnits={allUnits}
           departments={departments}
           positions={positions}

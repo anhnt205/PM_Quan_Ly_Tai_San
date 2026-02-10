@@ -89,6 +89,7 @@ export default function FileAttachmentInput({
       formik.setFieldTouched(fileName, true, false);
       formik.setFieldValue(fileName, file.name);
       if (key) formik.setFieldValue(filePath, key);
+      setDocument(file);
       return;
     }
 

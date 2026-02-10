@@ -512,19 +512,20 @@ export default function AssetHandover() {
                 byStep: false,
                 giamDocKy: false,
                 nguoiKyList: [] as any[],
-                chiTietBanGiaoTaiSan: [
-                  {
-                    id: "",
-                    idBanGiaoTaiSan: "",
-                    idTaiSan: "",
-                    donViTinh: "",
-                    soLuong: 1,
-                    hienTrang: "1",
-                    ghiChu: "",
-                    isActive: true,
-                    moTa: "",
-                  },
-                ],
+                chiTietBanGiaoTaiSan: params.row.chiTietDieuDongTaiSanDTOS
+                  ? params.row.chiTietDieuDongTaiSanDTOS.map((item: any) => ({
+                      id: "",
+                      tenTaiSan: item.tenTaiSan,
+                      idBanGiaoTaiSan: "",
+                      idTaiSan: item.idTaiSan,
+                      donViTinh: item.donViTinh,
+                      soLuong: item.soLuong,
+                      hienTrang: item.hienTrang || "1",
+                      ghiChu: item.ghiChu || "",
+                      isActive: true,
+                      moTa: item.moTa || "",
+                    }))
+                  : [],
                 initialChiTiet: [] as any[],
                 isNew: true,
               });

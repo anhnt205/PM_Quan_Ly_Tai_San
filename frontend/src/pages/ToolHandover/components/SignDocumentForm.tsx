@@ -1,24 +1,14 @@
 import {
   Box,
-  Button,
   Paper,
-  Radio,
-  FormControlLabel,
-  RadioGroup,
-  Typography,
-  Divider,
-  IconButton,
   Snackbar,
   Alert,
   CircularProgress,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { CancelOutlined, Close, PictureAsPdf } from "@mui/icons-material";
 import { useState, useEffect, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";
-import DraggableSignature from "./DraggableSignature";
-import { useToolHandoverMutation } from "../Mutation";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { PDFDocument } from "pdf-lib";
@@ -29,7 +19,6 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import { ToolHandoverData, SignaturesData } from "../types";
 import dayjs from "dayjs";
-import { Check, Pencil } from "lucide-react";
 import { showErrorAlert } from "../../../components/Alert";
 import { canUserSign } from "../config";
 import axios from "axios";
@@ -176,16 +165,19 @@ export default function SignDocumentForm({
     const chucVu = await findById(positions, nhanVien?.chucVuId ?? "");
     return chucVu?.tenChucVu ?? "";
   };
+
   const getDonVi = async (idUser: string) => {
     const nhanVien = await findById(staffs, idUser);
     const donVi = await findById(departments, nhanVien?.phongBanId ?? "");
     return donVi?.tenPhongBan ?? "";
   };
+
   const isCheckKho = async (idUser: string) => {
     const nhanVien = await findById(staffs, idUser);
     const phongBan = await findById(departments, nhanVien?.phongBanId ?? "");
     return phongBan?.isKho == true;
   };
+
   const listSigneInfo = async (item?: ToolHandoverData) => {
     if (!item) return [];
 
@@ -248,7 +240,12 @@ export default function SignDocumentForm({
   };
 
   const generateBienBanPdf = async (): Promise<Uint8Array> => {
+    console.log(">>> CHECK toolHandover inside PDF:", toolHandover);
+    console.log(">>> CHECK allUnits:", allUnits);
+
     const listSigneInfos: any[] = await listSigneInfo(toolHandover);
+    console.log(">>> CHECK listSigneInfos:", listSigneInfos);
+
     const doc = new jsPDF("p", "mm", "a4");
 
     // Đảm bảo font times_new_roman đã được add trước đó

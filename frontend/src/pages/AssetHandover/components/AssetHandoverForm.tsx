@@ -196,6 +196,7 @@ export default function AssetHandoverForm({
           id: "",
           idBanGiaoTaiSan: "",
           idTaiSan: "",
+          tenTaiSan: "",
           donViTinh: "",
           soLuong: 1,
           hienTrang: "1",
@@ -321,31 +322,23 @@ export default function AssetHandoverForm({
           showSignerSidebar={false}
           fullscreen={true}
           staffs={staffs}
-          assetHandover={
-            selectedAssetHandover
-              ? selectedAssetHandover
-              : {
-                  ...formik.values,
-                  tenDonViGiao: findById(departments, formik.values.idDonViGiao)
-                    ?.tenPhongBan,
-                  tenDonViNhan: findById(departments, formik.values.idDonViNhan)
-                    ?.tenPhongBan,
-                  tenLanhDao: "",
-                  idDaiDiendonviBanHanhQD: "",
-                  tenDaiDienBanHanhQD: "",
-                  tenDaiDienBenGiao: findById(
-                    staffs,
-                    formik.values.idDaiDienBenGiao,
-                  )?.hoTen,
-                  tenDaiDienBenNhan: findById(
-                    staffs,
-                    formik.values.idDaiDienBenNhan,
-                  )?.hoTen,
-                  tenGiamDoc: findById(staffs, formik.values.idGiamDoc)?.hoTen,
-                  trangThaiPhieu: 0,
-                  chuKyList: [],
-                }
-          }
+          assetHandover={{
+            ...formik.values,
+            tenDonViGiao: findById(departments, formik.values.idDonViGiao)
+              ?.tenPhongBan,
+            tenDonViNhan: findById(departments, formik.values.idDonViNhan)
+              ?.tenPhongBan,
+            tenLanhDao: "",
+            idDaiDiendonviBanHanhQD: "",
+            tenDaiDienBanHanhQD: "",
+            tenDaiDienBenGiao: findById(staffs, formik.values.idDaiDienBenGiao)
+              ?.hoTen,
+            tenDaiDienBenNhan: findById(staffs, formik.values.idDaiDienBenNhan)
+              ?.hoTen,
+            tenGiamDoc: findById(staffs, formik.values.idGiamDoc)?.hoTen,
+            trangThaiPhieu: 0,
+            chuKyList: [],
+          }}
           allUnits={allUnits}
           departments={departments}
           positions={positions}
