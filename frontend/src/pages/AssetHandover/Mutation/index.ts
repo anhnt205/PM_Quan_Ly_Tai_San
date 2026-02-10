@@ -14,6 +14,9 @@ import dayjs from "dayjs";
 import { ContactlessOutlined } from "@mui/icons-material";
 import { useAssetManagerMutation } from "../../AssetManager/Mutation";
 import { generateCode } from "../../../utils/helpers";
+import { listNguoiKy } from "../config";
+import socketService from "../../../services/socketService";
+import { MessageTypeFunctions } from "../../../utils/const";
 
 export const useAssetHandoverMutation = () => {
   const queryClient = useQueryClient();
@@ -32,7 +35,7 @@ export const useAssetHandoverMutation = () => {
       });
       return res.data;
     },
-    onSuccess: (response, data) => {
+    onSuccess: async (response, data) => {
       const idBGTS = response.data.id;
       if (data.chiTietBanGiaoTaiSan && data.chiTietBanGiaoTaiSan.length > 0) {
         createAssetHandoverDetailManyMutation.mutate(
@@ -51,6 +54,12 @@ export const useAssetHandoverMutation = () => {
           })),
         });
       }
+
+      const list = await listNguoiKy([data]);
+      socketService.send({
+        type: MessageTypeFunctions.ASSET_HANDOVER,
+        recieve: list,
+      });
       queryClient.invalidateQueries({ queryKey: [mainKey] });
 
       showSuccessAlert("Tạo bàn giao tài sản thành công");
@@ -73,7 +82,7 @@ export const useAssetHandoverMutation = () => {
       });
       return res.data;
     },
-    onSuccess: (response, data) => {
+    onSuccess: async (response, data) => {
       if (data.initialChiTiet && data.initialChiTiet.length > 0) {
         deleteAssetHandoverDetailManyMutation.mutate(data.initialChiTiet);
       }
@@ -86,6 +95,11 @@ export const useAssetHandoverMutation = () => {
           data: data.nguoiKyList,
         });
       }
+      const list = await listNguoiKy([data]);
+      socketService.send({
+        type: MessageTypeFunctions.ASSET_HANDOVER,
+        recieve: list,
+      });
       queryClient.invalidateQueries({ queryKey: [mainKey] });
       showSuccessAlert("Sửa bàn giao tài sản thành công");
     },
@@ -99,9 +113,15 @@ export const useAssetHandoverMutation = () => {
   });
 
   const deleteOneMutation = useMutation({
-    mutationFn: async (id: string) =>
-      (await api.delete(`/bangiaotaisan/${id}`)).data,
-    onSuccess: () => {
+    mutationFn: async (data: any) =>
+      (await api.delete(`/bangiaotaisan/${data.id}`)).data,
+    onSuccess: async (response, data) => {
+      deleteSignerMutation.mutate(data.id);
+      const list = await listNguoiKy([data]);
+      socketService.send({
+        type: MessageTypeFunctions.ASSET_HANDOVER,
+        recieve: list,
+      });
       queryClient.invalidateQueries({ queryKey: [mainKey] });
       showSuccessAlert("Xóa thành công");
     },
@@ -124,12 +144,18 @@ export const useAssetHandoverMutation = () => {
     },
   });
   const cancelMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await api.post(`/bangiaotaisan/huytrangthai?id=${id}`);
+    mutationFn: async (data: any) => {
+      const res = await api.post(`/bangiaotaisan/huytrangthai?id=${data.id}`);
       return res.data;
     },
-    onSuccess: (response, data) => {
+    onSuccess: async (response, data) => {
       queryClient.invalidateQueries({ queryKey: [mainKey] });
+      deleteSignerMutation.mutate(data.id);
+      const list = await listNguoiKy([data]);
+      socketService.send({
+        type: MessageTypeFunctions.ASSET_HANDOVER,
+        recieve: list,
+      });
       showSuccessAlert("Hủy bàn giao tài sản thành công");
     },
     onError: (error: any) => {
@@ -204,7 +230,24 @@ export const useAssetHandoverMutation = () => {
       );
     },
   });
+  const deleteSignerMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.delete(`/chuky/${id}`);
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: [mainKey] });
 
+      console.log("Xóa người ký thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa người ký thất bại",
+      );
+    },
+  });
   // --- 3. QUERIES LẤY DỮ LIỆU BẢNG ---
 
   // list chu ky theo tai lieu

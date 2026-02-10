@@ -197,7 +197,7 @@ export default function ToolTransfer() {
       `Xóa phiếu ${title} "${rowData.tenPhieu}"`,
     );
     if (confirm.isConfirmed) {
-      deleteOneMutation.mutate(rowData.id);
+      deleteOneMutation.mutate(rowData);
     }
   };
 
@@ -455,7 +455,7 @@ export default function ToolTransfer() {
                       `Bạn có chắc muốn hủy phiếu "${selectedRow.tenPhieu}"?`,
                     );
                     if (confirm.isConfirmed)
-                      cancelMutation.mutate(selectedRow.id);
+                      cancelMutation.mutate(selectedRow);
                   }
                 }}
                 readOnly={readOnly}

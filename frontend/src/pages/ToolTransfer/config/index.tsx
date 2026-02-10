@@ -7,6 +7,8 @@ import {
   showErrorAlert,
   showSuccessAlert,
 } from "../../../components/Alert";
+import { MessageTypeFunctions } from "../../../utils/const";
+import socketService from "../../../services/socketService";
 
 // 1. Thông tin tiêu đề theo loại phiếu
 export const getTypeInfo = (type: string | number | null) => {
@@ -351,24 +353,12 @@ export const handleSendToSigner = async (
 
     if (notSharedItems.length > 0) {
       try {
-        const allIds = new Set<string>();
-        for (var item of selectedItems) {
-          const id1 = item.idNguoiKyNhay;
-          const id2 = item.idTrinhDuyetCapPhong;
-          const id3 = item.idTrinhDuyetGiamDoc;
-
-          if (id1 != null && id1.isNotEmpty) allIds.add(id1);
-          if (id2 != null && id2.isNotEmpty) allIds.add(id2);
-          if (id3 != null && id3.isNotEmpty) allIds.add(id3);
-          const signatories = item.nguoiKyList;
-          if (signatories != null) {
-            for (var s of signatories) {
-              const sigId = s.idNguoiKy;
-              if (sigId != null && sigId.isNotEmpty) allIds.add(sigId);
-            }
-          }
-        }
         await onUpdate(notSharedItems.map((e) => ({ ...e, share: true })));
+        const list = await listNguoiKy(selectedItems);
+        socketService.send({
+          type: MessageTypeFunctions.TOOL_TRANSFER,
+          recieve: list,
+        });
         showSuccessAlert("Trình duyệt phiếu thành công!");
         onClose();
       } catch (error) {
@@ -376,6 +366,25 @@ export const handleSendToSigner = async (
       }
     }
   }
+};
+
+export const listNguoiKy = (selectedItem: any) => {
+  const allIds = new Set<string>();
+  const id1 = selectedItem.idNguoiKyNhay;
+  const id2 = selectedItem.idTrinhDuyetCapPhong;
+  const id3 = selectedItem.idTrinhDuyetGiamDoc;
+
+  if (id1 != null && id1.isNotEmpty) allIds.add(id1);
+  if (id2 != null && id2.isNotEmpty) allIds.add(id2);
+  if (id3 != null && id3.isNotEmpty) allIds.add(id3);
+  const signatories = selectedItem.nguoiKyList;
+  if (signatories != null) {
+    for (var s of signatories) {
+      const sigId = s.idNguoiKy;
+      if (sigId != null && sigId.isNotEmpty) allIds.add(sigId);
+    }
+  }
+  return Array.from(allIds);
 };
 // kiem tra quyền share
 export const isCheckShowShare = (items: any[]) => {

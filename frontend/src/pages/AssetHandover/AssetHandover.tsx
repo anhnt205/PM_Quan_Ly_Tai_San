@@ -216,7 +216,7 @@ export default function AssetHandover() {
         `Hủy phiếu bàn giao tài sản "${selectedRow?.id}"`,
       );
       if (confirm.isConfirmed) {
-        await cancelMutation.mutate(selectedRow?.id);
+        await cancelMutation.mutate(selectedRow);
         handleClose();
       }
     }
@@ -370,7 +370,7 @@ export default function AssetHandover() {
                   `Xóa phiếu biên bản bàn giao "${params.row?.id}"`,
                 );
                 if (confirm.isConfirmed) {
-                  deleteOneMutation.mutate(params.row?.id);
+                  deleteOneMutation.mutate(params.row);
                 }
               }}
             >

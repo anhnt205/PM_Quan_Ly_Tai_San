@@ -10,6 +10,9 @@ import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import dayjs from "dayjs";
+import { listNguoiKy } from "../config";
+import socketService from "../../../services/socketService";
+import { MessageTypeActions, MessageTypeFunctions } from "../../../utils/const";
 
 export const useAssetTranferMutation = () => {
   const queryClient = useQueryClient();
@@ -25,7 +28,7 @@ export const useAssetTranferMutation = () => {
       });
       return res.data;
     },
-    onSuccess: (response, data) => {
+    onSuccess: async (response, data) => {
       const idDDTS = response.data.id;
       if (
         data.chiTietDieuDongTaiSanDTOS &&
@@ -47,6 +50,11 @@ export const useAssetTranferMutation = () => {
           })),
         });
       }
+      const list = await listNguoiKy([data]);
+      socketService.send({
+        type: MessageTypeFunctions.ASSET_TRANSFER,
+        recieve: list,
+      });
       queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
 
       showSuccessAlert("Tạo điều động tài sản thành công");
@@ -69,7 +77,7 @@ export const useAssetTranferMutation = () => {
       });
       return res.data;
     },
-    onSuccess: (response, data) => {
+    onSuccess: async (response, data) => {
       if (data.initialChiTiet && data.initialChiTiet.length > 0) {
         deleteAssetTransferDetailManyMutation.mutate(data.initialChiTiet);
       }
@@ -90,6 +98,11 @@ export const useAssetTranferMutation = () => {
           data: data.nguoiKyList,
         });
       }
+      const list = await listNguoiKy([data]);
+      socketService.send({
+        type: MessageTypeFunctions.ASSET_TRANSFER,
+        recieve: list,
+      });
       queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
       showSuccessAlert("Sửa điều động tài sản thành công");
     },
@@ -119,11 +132,17 @@ export const useAssetTranferMutation = () => {
     },
   });
   const deleteOneMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await api.delete(`/dieudongtaisan/${id}`);
+    mutationFn: async (data: any) => {
+      const res = await api.delete(`/dieudongtaisan/${data.id}`);
       return res.data;
     },
-    onSuccess: (data) => {
+    onSuccess: async (_, data) => {
+      deleteSignerMutation.mutate(data.id);
+      const list = await listNguoiKy([data]);
+      socketService.send({
+        type: MessageTypeFunctions.ASSET_TRANSFER,
+        recieve: list,
+      });
       queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
       showSuccessAlert("Xóa điều động tài sản thành công");
     },
@@ -154,12 +173,18 @@ export const useAssetTranferMutation = () => {
   });
 
   const cancelMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await api.post(`/dieudongtaisan/huy?id=${id}`);
+    mutationFn: async (data: any) => {
+      const res = await api.post(`/dieudongtaisan/huy?id=${data.id}`);
       return res.data;
     },
-    onSuccess: (response, data) => {
+    onSuccess: async (response, data) => {
       queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
+      deleteSignerMutation.mutate(data.id);
+      const list = await listNguoiKy([data]);
+      socketService.send({
+        type: MessageTypeFunctions.ASSET_TRANSFER,
+        recieve: list,
+      });
       showSuccessAlert("Hủy điều động tài sản thành công");
     },
     onError: (error: any) => {
@@ -253,20 +278,20 @@ export const useAssetTranferMutation = () => {
     },
   });
   const deleteSignerMutation = useMutation({
-    mutationFn: async (idTaiLieu: string) => {
-      const res = await api.delete(`/chuky/update/${idTaiLieu}`);
+    mutationFn: async (id: string) => {
+      const res = await api.delete(`/chuky/${id}`);
       return res.data;
     },
     onSuccess: (response, data) => {
       queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
 
-      console.log("XÓa người ký thành công");
+      console.log("Xóa người ký thành công");
     },
     onError: (error: any) => {
       console.log(
         error.response?.data?.message ||
           error.message ||
-          "XÓa người ký thất bại",
+          "Xóa người ký thất bại",
       );
     },
   });
@@ -525,6 +550,7 @@ export const useAssetTransferAllQuery = () => {
           idcongty: idCongTy,
         },
       });
+      console.log("Fetched asset transfer all data:", res.data);
       return res.data.items;
     },
   });
@@ -567,6 +593,7 @@ export const useAssetTransferPageQuery = (
           chuaBanGiaoHet: chuaBanGiaoHet,
         },
       });
+      console.log("Fetched asset transfer page data:", res.data);
       return res.data;
     },
     placeholderData: (previousData) => previousData,

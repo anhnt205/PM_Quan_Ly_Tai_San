@@ -6,6 +6,10 @@ import {
   showSuccessAlert,
 } from "../../../components/Alert";
 import { findById } from "../../../utils/helpers";
+import socketService from "../../../services/socketService";
+import { MessageTypeFunctions } from "../../../utils/const";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../redux/store";
 
 export const ShowPermissionSigning = (status: number) => {
   // Định nghĩa cấu hình cho từng trạng thái
@@ -471,24 +475,12 @@ export const handleSendToSigner = async (
 
     if (notSharedItems.length > 0) {
       try {
-        const allIds = new Set<string>();
-        for (var item of selectedItems) {
-          const id1 = item.idNguoiKyNhay;
-          const id2 = item.idTrinhDuyetCapPhong;
-          const id3 = item.idTrinhDuyetGiamDoc;
-
-          if (id1 != null && id1.isNotEmpty) allIds.add(id1);
-          if (id2 != null && id2.isNotEmpty) allIds.add(id2);
-          if (id3 != null && id3.isNotEmpty) allIds.add(id3);
-          const signatories = item.nguoiKyList;
-          if (signatories != null) {
-            for (var s of signatories) {
-              const sigId = s.idNguoiKy;
-              if (sigId != null && sigId.isNotEmpty) allIds.add(sigId);
-            }
-          }
-        }
+        const list = await listNguoiKy(selectedItems);
         await onUpdate(notSharedItems.map((e) => ({ ...e, share: true })));
+        await socketService.send({
+          type: MessageTypeFunctions.ASSET_TRANSFER,
+          recieve: list,
+        });
         showSuccessAlert("Trình duyệt phiếu thành công!");
         onClose();
       } catch (error) {
@@ -497,7 +489,26 @@ export const handleSendToSigner = async (
     }
   }
 };
+export const listNguoiKy = (selectedItems: any[]) => {
+  const allIds = new Set<string>();
+  for (var item of selectedItems) {
+    const id1 = item.idNguoiKyNhay;
+    const id2 = item.idTrinhDuyetCapPhong;
+    const id3 = item.idTrinhDuyetGiamDoc;
 
+    if (id1) allIds.add(id1);
+    if (id2) allIds.add(id2);
+    if (id3) allIds.add(id3);
+    const signatories = item.nguoiKyList;
+    if (signatories != null) {
+      for (var s of signatories) {
+        const sigId = s.idNguoiKy;
+        if (sigId) allIds.add(sigId);
+      }
+    }
+  }
+  return Array.from(allIds);
+};
 // ===== Kiểm tra xem user hiện tại có được phép ký không =====
 export const canUserSign = (newSigningType: number, images: any[]) => {
   // Kiểm tra xem tài liệu đã có chữ ký số (loaiKy = 3, 4, 5) chưa

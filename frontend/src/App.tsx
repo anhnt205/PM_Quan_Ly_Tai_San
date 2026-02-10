@@ -27,23 +27,80 @@ import ToolTransfer from "./pages/ToolTransfer/ToolTransfer";
 import ToolHandover from "./pages/ToolHandover/ToolHandover";
 import Account from "./pages/Account/Account";
 import NotFound from "./pages/Notfound/Notfound";
+import { useEffect } from "react";
+import socketService, { SocketMessage } from "./services/socketService";
+import { RootState } from "./redux/store";
+import { useQueryClient } from "@tanstack/react-query";
+import { MessageTypeFunctions } from "./utils/const";
 
-const ProtectedRoute = ({ allowedRoles, children }) => {
-  const { user } = useSelector((state) => state.user);
+const ProtectedRoute = ({
+  allowedRoles,
+  children,
+}: {
+  allowedRoles: string[];
+  children: any;
+}) => {
+  const { user } = useSelector((state: RootState) => state.user);
 
   if (!user) {
     return <Navigate to={ROUTES.LOGIN} />;
   }
-  const listRole = user?.role?.map((item) => item.permissionCode) || [];
-  if (!allowedRoles.some((r) => listRole.includes(r))) {
+  const listRole = user?.role?.map((item: any) => item.permissionCode) || [];
+  if (!allowedRoles.some((r: any) => listRole.includes(r))) {
     return <Navigate to={ROUTES.NOT_FOUND} />;
   }
 
   return typeof children === "function" ? children(user.role) : children;
 };
 function App() {
-  const { user } = useSelector((state) => state.user);
+  const { user } = useSelector((state: RootState) => state.user);
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (user?.taiKhoan?.tenDangNhap) {
+      socketService.connect(user.taiKhoan.tenDangNhap);
+    }
+    // Lắng nghe notification từ socket
+    socketService.onNotification((data: SocketMessage) => {
+      if (
+        (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
+          user?.taiKhoan?.tenDangNhap === "admin") &&
+        data.type === MessageTypeFunctions.ASSET_TRANSFER
+      ) {
+        console.log("Handling socket message in App.tsx:", data);
+        queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
+        queryClient.invalidateQueries({ queryKey: ["assetTranferAll"] });
+      } else if (
+        (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
+          user?.taiKhoan?.tenDangNhap === "admin") &&
+        data.type === MessageTypeFunctions.TOOL_TRANSFER
+      ) {
+        console.log("Handling socket message in App.tsx:", data);
+        queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
+        queryClient.invalidateQueries({ queryKey: ["toolTranferAll"] });
+      } else if (
+        (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
+          user?.taiKhoan?.tenDangNhap === "admin") &&
+        data.type === MessageTypeFunctions.ASSET_HANDOVER
+      ) {
+        console.log("Handling socket message in App.tsx:", data);
+        queryClient.invalidateQueries({ queryKey: ["assetHandoverPage"] });
+        queryClient.invalidateQueries({ queryKey: ["assetHandoverAll"] });
+      } else if (
+        (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
+          user?.taiKhoan?.tenDangNhap === "admin") &&
+        data.type === MessageTypeFunctions.TOOL_HANDOVER
+      ) {
+        console.log("Handling socket message in App.tsx:", data);
+        queryClient.invalidateQueries({ queryKey: ["toolHandoverPage"] });
+        queryClient.invalidateQueries({ queryKey: ["toolHandoverAll"] });
+      }
+    });
 
+    // Cleanup khi component unmount
+    return () => {
+      socketService.disconnect();
+    };
+  }, [user]);
   return (
     <BrowserRouter>
       <Routes>

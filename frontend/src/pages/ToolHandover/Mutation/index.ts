@@ -15,6 +15,9 @@ import {
 import axios from "axios";
 import { useToolManagerMutation } from "../../ToolManager/Mutation";
 import { generateCode } from "../../../utils/helpers";
+import { listNguoiKy } from "../config";
+import socketService from "../../../services/socketService";
+import { MessageTypeFunctions } from "../../../utils/const";
 
 export const useToolHandoverMutation = () => {
   const queryClient = useQueryClient();
@@ -34,7 +37,7 @@ export const useToolHandoverMutation = () => {
       });
       return res.data;
     },
-    onSuccess: (response, data) => {
+    onSuccess: async (response, data) => {
       const idBGTS = response.data.id;
       if (
         data.chiTietBanGiaoCCDCVatTu &&
@@ -59,6 +62,12 @@ export const useToolHandoverMutation = () => {
           })),
         });
       }
+
+      const list = await listNguoiKy([data]);
+      socketService.send({
+        type: MessageTypeFunctions.TOOL_HANDOVER,
+        recieve: list,
+      });
       queryClient.invalidateQueries({ queryKey: [mainKey] });
 
       showSuccessAlert("Tạo bàn giao ccdc vật tư thành công");
@@ -81,7 +90,7 @@ export const useToolHandoverMutation = () => {
       });
       return res.data;
     },
-    onSuccess: (response, data) => {
+    onSuccess: async (response, data) => {
       if (data.initialChiTiet && data.initialChiTiet.length > 0) {
         deleteToolHandoverDetailManyMutation.mutate(data.initialChiTiet);
       }
@@ -105,6 +114,11 @@ export const useToolHandoverMutation = () => {
           data: data.nguoiKyList,
         });
       }
+      const list = await listNguoiKy([data]);
+      socketService.send({
+        type: MessageTypeFunctions.TOOL_HANDOVER,
+        recieve: list,
+      });
       queryClient.invalidateQueries({ queryKey: [mainKey] });
       showSuccessAlert("Sửa bàn giao ccdc vật tư thành công");
     },
@@ -118,9 +132,15 @@ export const useToolHandoverMutation = () => {
   });
 
   const deleteOneMutation = useMutation({
-    mutationFn: async (id: string) =>
-      (await api.delete(`/bangiaoccdcvattu/${id}`)).data,
-    onSuccess: () => {
+    mutationFn: async (data: any) =>
+      (await api.delete(`/bangiaoccdcvattu/${data.id}`)).data,
+    onSuccess: async (response, data) => {
+      const list = await listNguoiKy([data]);
+      socketService.send({
+        type: MessageTypeFunctions.TOOL_HANDOVER,
+        recieve: list,
+      });
+      deleteSignerMutation.mutate(data.id);
       queryClient.invalidateQueries({ queryKey: [mainKey] });
       showSuccessAlert("Xóa thành công");
     },
@@ -143,12 +163,20 @@ export const useToolHandoverMutation = () => {
     },
   });
   const cancelMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await api.post(`/bangiaoccdcvattu/huytrangthai?id=${id}`);
+    mutationFn: async (data: any) => {
+      const res = await api.post(
+        `/bangiaoccdcvattu/huytrangthai?id=${data.id}`,
+      );
       return res.data;
     },
-    onSuccess: (response, data) => {
+    onSuccess: async (response, data) => {
+      const list = await listNguoiKy([data]);
+      socketService.send({
+        type: MessageTypeFunctions.TOOL_HANDOVER,
+        recieve: list,
+      });
       queryClient.invalidateQueries({ queryKey: [mainKey] });
+      deleteSignerMutation.mutate(data.id);
       showSuccessAlert("Hủy bàn giao ccdc vật tư thành công");
     },
     onError: (error: any) => {
@@ -223,7 +251,24 @@ export const useToolHandoverMutation = () => {
       );
     },
   });
+  const deleteSignerMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.delete(`/chuky/${id}`);
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: [mainKey] });
 
+      console.log("Xóa người ký thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa người ký thất bại",
+      );
+    },
+  });
   // --- 3. QUERIES LẤY DỮ LIỆU BẢNG ---
 
   // list chu ky theo tai lieu

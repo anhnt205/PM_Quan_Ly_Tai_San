@@ -33,6 +33,7 @@ import { useAllModelAssetQuery } from "../ModelAsset/Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
 import { HistoryIcon } from "lucide-react";
 import AssetHistoryModal from "./components/AssetHistoryModal";
+import socketService from "../../services/socketService";
 
 export default function AssetManager() {
   const [tab, setTab] = React.useState(0);

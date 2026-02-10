@@ -15,6 +15,9 @@ import { useMemo, useState } from "react";
 import axios from "axios";
 import { findById } from "../../../utils/helpers";
 import { useAllToolQuery } from "../../ToolManager/Mutation";
+import { MessageTypeActions, MessageTypeFunctions } from "../../../utils/const";
+import { listNguoiKy } from "../config";
+import socketService from "../../../services/socketService";
 
 export const useToolTransferMutation = (
   page?: number,
@@ -40,7 +43,7 @@ export const useToolTransferMutation = (
       });
       return res.data;
     },
-    onSuccess: (response, data) => {
+    onSuccess: async (response, data) => {
       const idDDTS = response.data.id;
       if (
         data.chiTietDieuDongCCDCVatTuDTOS &&
@@ -62,6 +65,11 @@ export const useToolTransferMutation = (
           })),
         });
       }
+      const list = await listNguoiKy([data]);
+      socketService.send({
+        type: MessageTypeFunctions.TOOL_TRANSFER,
+        recieve: list,
+      });
       queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
 
       showSuccessAlert("Tạo điều động ccdc vật tư thành công");
@@ -84,7 +92,7 @@ export const useToolTransferMutation = (
       });
       return res.data;
     },
-    onSuccess: (response, data) => {
+    onSuccess: async (response, data) => {
       if (data.initialChiTiet && data.initialChiTiet.length > 0) {
         deleteToolTransferDetailManyMutation.mutate(data.initialChiTiet);
       }
@@ -105,6 +113,11 @@ export const useToolTransferMutation = (
           data: data.nguoiKyList,
         });
       }
+      const list = await listNguoiKy([data]);
+      socketService.send({
+        type: MessageTypeFunctions.TOOL_TRANSFER,
+        recieve: list,
+      });
       queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
       showSuccessAlert("Sửa điều động ccdc vật tư thành công");
     },
@@ -134,11 +147,17 @@ export const useToolTransferMutation = (
     },
   });
   const deleteOneMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await api.delete(`/dieudongccdcvattu/${id}`);
+    mutationFn: async (data: any) => {
+      const res = await api.delete(`/dieudongccdcvattu/${data.id}`);
       return res.data;
     },
-    onSuccess: (data) => {
+    onSuccess: async (_, data) => {
+      deleteSignerMutation.mutate(data.id);
+      const list = await listNguoiKy([data]);
+      socketService.send({
+        type: MessageTypeFunctions.TOOL_TRANSFER,
+        recieve: list,
+      });
       queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
       showSuccessAlert("Xóa điều động ccdc vật tư thành công");
     },
@@ -169,12 +188,18 @@ export const useToolTransferMutation = (
   });
 
   const cancelMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await api.post(`/dieudongccdcvattu/huy?id=${id}`);
+    mutationFn: async (data: any) => {
+      const res = await api.post(`/dieudongccdcvattu/huy?id=${data.id}`);
       return res.data;
     },
-    onSuccess: (response, data) => {
+    onSuccess: async (response, data) => {
       queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
+      deleteSignerMutation.mutate(data.id);
+      const list = await listNguoiKy([data]);
+      socketService.send({
+        type: MessageTypeFunctions.TOOL_TRANSFER,
+        recieve: list,
+      });
       showSuccessAlert("Hủy điều động ccdc vật tư thành công");
     },
     onError: (error: any) => {
@@ -268,20 +293,20 @@ export const useToolTransferMutation = (
     },
   });
   const deleteSignerMutation = useMutation({
-    mutationFn: async (idTaiLieu: string) => {
-      const res = await api.delete(`/chuky/update/${idTaiLieu}`);
+    mutationFn: async (id: string) => {
+      const res = await api.delete(`/chuky/${id}`);
       return res.data;
     },
     onSuccess: (response, data) => {
       queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
 
-      console.log("XÓa người ký thành công");
+      console.log("Xóa người ký thành công");
     },
     onError: (error: any) => {
       console.log(
         error.response?.data?.message ||
           error.message ||
-          "XÓa người ký thất bại",
+          "Xóa người ký thất bại",
       );
     },
   });
@@ -583,8 +608,8 @@ export const useToolByDepartmentPageQuery = ({
       // 1. Kiểm tra an toàn ngay từ đầu
       if (!departmentId) return [];
 
-      const resAllTools = await axios.get(
-        `http://42.119.110.246:8386/chitietdonvisohuu/by-donvisohuu/${departmentId}`,
+      const resAllTools = await api.get(
+        `/chitietdonvisohuu/by-donvisohuu/${departmentId}`,
       );
 
       // 2. Xử lý fallback cho response data

@@ -191,7 +191,7 @@ export default function AssetTransfer() {
         `Hủy phiếu ${title} "${selectedRow?.id}"`,
       );
       if (confirm.isConfirmed) {
-        await cancelMutation.mutate(selectedRow?.id);
+        await cancelMutation.mutate(selectedRow);
         handleClose();
       }
     }
@@ -378,7 +378,7 @@ export default function AssetTransfer() {
                     `Xóa phiếu ${title} "${rowData?.id}"`,
                   );
                   if (confirm.isConfirmed) {
-                    deleteOneMutation.mutate(rowData.id);
+                    deleteOneMutation.mutate(rowData);
                   }
                 }}
                 sx={{

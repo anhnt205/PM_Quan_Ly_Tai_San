@@ -5,6 +5,8 @@ import {
   showErrorAlert,
   showSuccessAlert,
 } from "../../../components/Alert";
+import socketService from "../../../services/socketService";
+import { MessageTypeFunctions } from "../../../utils/const";
 
 export const getStatusHandoverText = (status: number) => {
   switch (status) {
@@ -173,6 +175,11 @@ export const handleSendToSigner = async (
     if (notSharedItems.length > 0) {
       try {
         await onUpdate(notSharedItems.map((e) => ({ ...e, share: true })));
+         const list = await listNguoiKy(items);
+         socketService.send({
+           type: MessageTypeFunctions.ASSET_HANDOVER,
+           recieve: list,
+         });
         showSuccessAlert("Trình duyệt phiếu thành công!");
         onClose();
       } catch (error) {
@@ -180,6 +187,30 @@ export const handleSendToSigner = async (
       }
     }
   }
+};
+
+export const listNguoiKy = (selectedItems: any[]) => {
+  const allIds = new Set<string>();
+  for (var item of selectedItems) {
+    const id1 = item.idDaiDiendonviBanHanhQD;
+    const id2 = item.idDaiDienBenGiao;
+    const id3 = item.idDaiDienBenNhan;
+    const id4 = item.idGiamDoc;
+
+    if (id1) allIds.add(id1);
+    if (id2) allIds.add(id2);
+    if (id3) allIds.add(id3);
+    if (id4) allIds.add(id4);
+
+    const signatories = item.nguoiKyList;
+    if (signatories != null) {
+      for (var s of signatories) {
+        const sigId = s.idNguoiKy;
+        if (sigId) allIds.add(sigId);
+      }
+    }
+  }
+  return Array.from(allIds);
 };
 
 export const getNotSharedAndNotify = (

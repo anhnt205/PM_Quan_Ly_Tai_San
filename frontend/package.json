@@ -12,6 +12,7 @@
     "@mui/x-date-pickers": "^8.22.1",
     "@react-pdf-viewer/default-layout": "^3.12.0",
     "@reduxjs/toolkit": "^2.11.2",
+    "@stomp/stompjs": "^7.3.0",
     "@tanstack/react-query": "^5.90.12",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
@@ -42,6 +43,7 @@
     "react-router-dom": "^7.11.0",
     "react-scripts": "5.0.1",
     "redux-persist": "^6.0.0",
+    "sockjs-client": "^1.6.1",
     "sweetalert2": "^11.26.10",
     "web-vitals": "^2.1.4",
     "xlsx": "^0.18.5",
@@ -74,6 +76,7 @@
   },
   "devDependencies": {
     "@types/pdfjs-dist": "^2.10.377",
-    "@types/redux-persist": "^4.0.0"
+    "@types/redux-persist": "^4.0.0",
+    "@types/sockjs-client": "^1.5.4"
   }
 }
