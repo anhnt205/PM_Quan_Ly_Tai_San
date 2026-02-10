@@ -34,9 +34,9 @@ import { ToolHandoverData } from "../../ToolHandover/types";
 import { ToolSignature } from "../types";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { renderDigitalSignatureToImage } from "../../AssetHandover/components/SignDocumentForm";
 import dayjs from "dayjs";
 import BoxSignatureImg from "../../../components/SignDocument/BoxSignatureImg";
+import renderDigitalSignatureToImage from "../../../components/SignDocument/DigitalSignatureToImage";
 
 // Config Worker
 if (typeof window !== "undefined") {

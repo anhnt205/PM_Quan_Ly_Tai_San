@@ -29,10 +29,10 @@ import { useAllUnitsQuery, useUnitMutation } from "../../Unit/Mutation";
 import { ToolHandoverData } from "../../ToolHandover/types";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { renderDigitalSignatureToImage } from "../../AssetHandover/components/SignDocumentForm";
 import dayjs from "dayjs";
 import { SignaturesData } from "../types";
 import BoxSignatureImg from "../../../components/SignDocument/BoxSignatureImg";
+import renderDigitalSignatureToImage from "../../../components/SignDocument/DigitalSignatureToImage";
 
 // Config Worker
 if (typeof window !== "undefined") {

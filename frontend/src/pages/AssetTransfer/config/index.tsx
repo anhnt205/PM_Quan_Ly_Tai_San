@@ -168,10 +168,10 @@ const getStatusDocument = (status: number) => {
       return { label: "Đã bàn giao hết", color: "#0fadfc" }; // Xanh lá
     case 4:
       return { label: "Sắp quá hạn bàn giao", color: "#d40ffc" }; // Xanh lá
-    case 4:
+    case 5:
       return { label: "Đã quá hạn bàn giao", color: "#08f433" }; // Xanh lá
     default:
-      return { label: "Không xác định", color: "#dee4e0" }; // Xám
+      return { label: "Không xác định", color: "#dee4e0" }; // Xám  
   }
 };
 export const showStatusDocument = (status: number) => {

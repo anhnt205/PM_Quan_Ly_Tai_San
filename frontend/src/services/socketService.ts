@@ -16,9 +16,7 @@ class SocketService {
       // URL kết nối tới endpoint "/ws" đã định nghĩa trong WebSocketConfig.java
       // Nếu dùng SockJS, ta dùng webSocketFactory thay vì brokerURL
       webSocketFactory: () =>
-        new SockJS(
-          process.env.REACT_APP_SOCKET_API || "http://localhost:8080/ws",
-        ),
+        new SockJS(import.meta.env.VITE_SOCKET_API || "http://localhost:8080/ws"),
 
       // Cấu hình debug để xem log
       debug: (str) => {
