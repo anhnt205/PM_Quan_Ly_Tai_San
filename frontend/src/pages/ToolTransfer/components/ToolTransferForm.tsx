@@ -44,6 +44,9 @@ import { useAllStaffsQuery } from "../../Staff/Mutation";
 import DialogLoading from "../../../components/common/DialogLoading";
 import { RootState } from "../../../redux/store";
 import { useSelector } from "react-redux";
+import { generateBangKePdf } from "../config";
+import S3Service from "../../../services/S3Service";
+import { mergeBangKeWithOriginalPdf } from "../../AssetTransfer/config";
 
 const CustomTableCell = styled(TableCell)(({ theme }) => ({
   borderBottom: "1px solid rgba(224, 224, 224, 1)",
@@ -99,8 +102,8 @@ export default function ToolTransferForm({
       id: "",
       soQuyetDinh: "",
       tenPhieu: "",
-      idDonViGiao: type===1? "K30" : "",
-      idDonViNhan: type===3? "kth" : "",
+      idDonViGiao: type === 1 ? "K30" : "",
+      idDonViNhan: type === 3 ? "kth" : "",
       idNguoiKyNhay: "",
       trangThaiKyNhay: false,
       nguoiLapPhieuKyNhay: false,
@@ -120,6 +123,7 @@ export default function ToolTransferForm({
       trichYeu: "",
       tenFile: "",
       duongDanFile: "",
+      taiLieuCuoi: "",
       nguoiKyList: [],
       chiTietDieuDongCCDCVatTuDTOS: [
         {
@@ -140,7 +144,7 @@ export default function ToolTransferForm({
       initialChiTiet: [],
     },
     validationSchema: toolTransferValidationSchema,
-    onSubmit: (values) => {
+    onSubmit: async(values) => {
       // Logic map ID tương tự nhưng dùng prefix của Tool
       const chiTietDieuDongCCDCVatTuDTOS =
         values.chiTietDieuDongCCDCVatTuDTOS.map((item: any, index) => ({
@@ -153,10 +157,46 @@ export default function ToolTransferForm({
         idTaiLieu: values.id,
         idPhongBan: values.idDonViDeNghi,
       }));
+      const bangKeBytes = await generateBangKePdf(
+        values.chiTietDieuDongCCDCVatTuDTOS,
+        allUnits,
+      );
+
+      // 2. Xử lý Key tài liệu gốc (duongDanFile)
+      let keyTailieu = values.duongDanFile;
+      let keyTaiLieuCuoi = values.taiLieuCuoi;
+
+      // Nếu 'document' là File (người dùng vừa chọn file mới)
+      if (document instanceof File) {
+        keyTailieu = await S3Service.put({
+          name: document.name,
+          file: document,
+          type: "tailieu",
+        });
+      }
+
+      // 3. Merge và Upload tài liệu cuối (taiLieuCuoi)
+      const mergePdf = await mergeBangKeWithOriginalPdf(
+        keyTailieu,
+        bangKeBytes,
+      );
+      if (!mergePdf) throw new Error("Không thể tạo tài liệu");
+
+      if (!keyTaiLieuCuoi) {
+        keyTaiLieuCuoi = await S3Service.put({
+          name: `DDTS_${values.tenPhieu}.pdf`,
+          file: mergePdf,
+          type: "tailieu",
+        });
+      } else {
+        await S3Service.updatePresignedPutUrl(keyTaiLieuCuoi, mergePdf);
+      }
       onSave({
         ...values,
         chiTietDieuDongCCDCVatTuDTOS,
         nguoiKyList,
+        duongDanFile: keyTailieu,
+        taiLieuCuoi: keyTaiLieuCuoi,
       });
     },
   });
@@ -173,7 +213,7 @@ export default function ToolTransferForm({
         ),
         initialNguoiKy: (selectedTool.nguoiKyList || []).map((i: any) => i.id),
       });
-      setDocument(selectedTool.duongDanFile || "");
+      setDocument(selectedTool.taiLieuCuoi || "");
     } else {
       formik.resetForm();
     }
@@ -261,6 +301,7 @@ export default function ToolTransferForm({
           fullscreen={true}
           toolTransferDetail={formik.values.chiTietDieuDongCCDCVatTuDTOS}
           allUnits={allUnits}
+          isEdit={[0].includes(selectedTool?.trangThai ?? 0) ? true : false}
         />
       )}
       <Accordion

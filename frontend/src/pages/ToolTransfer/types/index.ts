@@ -91,6 +91,7 @@ export interface ToolTransferData {
   trichYeu: string;
   duongDanFile: string;
   tenFile: string;
+  taiLieuCuoi: string;
   ngayKy: string;
   daBanGiao: boolean;
   byStep: boolean;

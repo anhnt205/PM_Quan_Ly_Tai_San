@@ -9,6 +9,8 @@ import {
 } from "../../../components/Alert";
 import { MessageTypeFunctions } from "../../../utils/const";
 import socketService from "../../../services/socketService";
+import autoTable from "jspdf-autotable";
+import jsPDF from "jspdf";
 
 // 1. Thông tin tiêu đề theo loại phiếu
 export const getTypeInfo = (type: string | number | null) => {
@@ -534,4 +536,67 @@ export const handleSignDocument = async (
   } catch (error) {
     showErrorAlert("Không thể tải tệp tin.");
   }
+};
+
+export const generateBangKePdf = async (
+  toolTransferDetail: any[],
+  allUnits: any[],
+): Promise<Uint8Array> => {
+  const doc = new jsPDF();
+
+  doc.setFont("times_new_roman", "normal");
+  doc.setFontSize(13);
+  doc.text("BẢNG KÊ CHI TIẾT", 105, 15, { align: "center" });
+  const tableData = (
+    Array.isArray(toolTransferDetail) ? toolTransferDetail : []
+  ).map((item: any, index: number) => {
+    // Kiểm tra an toàn: Chỉ gọi findById khi mảng là hợp lệ
+    const unit = Array.isArray(allUnits)
+      ? findById(allUnits, item?.donViTinh)
+      : null;
+    return [
+      index + 1,
+      item?.tenCCDCVatTu || "",
+      unit?.tenDonVi || "",
+      item.soLuong || 0,
+      item.soLuongXuat || 0,
+      item.soLuongDaBanGiao || 0,
+      item.ghiChu || "",
+    ];
+  });
+
+  autoTable(doc, {
+    startY: 25,
+    head: [
+      [
+        "Stt",
+        "Tên CCDC, Vật tư",
+        "Đơn vị tính",
+        "Số lượng có sẵn",
+        "Số lượng xuất kho",
+        "Số lượng đã bàn giao",
+        "Ghi chú",
+      ],
+    ],
+    body: tableData,
+    theme: "grid",
+    headStyles: {
+      fillColor: false,
+      textColor: 0,
+      lineWidth: 0.1,
+      lineColor: 0,
+      font: "times_new_roman",
+      fontStyle: "normal",
+      halign: "center",
+    },
+    bodyStyles: {
+      font: "times_new_roman",
+      fontSize: 10,
+      textColor: 0,
+      lineWidth: 0.1,
+      lineColor: 0,
+    },
+  });
+
+  return new Uint8Array(doc.output("arraybuffer"));
 };

@@ -388,7 +388,7 @@ export default function ToolTransfer() {
                 color="success"
                 onClick={async (e) => {
                   e.stopPropagation();
-                  setSelectedDocument(rowData);
+                  setSelectedDocument(rowData.taiLieuCuoi);
                   setToolTransferDetail(
                     rowData.chiTietDieuDongCCDCVatTuDTOS || [],
                   );
@@ -429,6 +429,7 @@ export default function ToolTransfer() {
           fullscreen={true}
           staffs={allStaffs}
           handleSignatureList={handleSignatureList}
+          isEdit={false}
         />
       ) : (
         <>
@@ -454,8 +455,7 @@ export default function ToolTransfer() {
                     const confirm = await showConfirmAlert(
                       `Bạn có chắc muốn hủy phiếu "${selectedRow.tenPhieu}"?`,
                     );
-                    if (confirm.isConfirmed)
-                      cancelMutation.mutate(selectedRow);
+                    if (confirm.isConfirmed) cancelMutation.mutate(selectedRow);
                   }
                 }}
                 readOnly={readOnly}

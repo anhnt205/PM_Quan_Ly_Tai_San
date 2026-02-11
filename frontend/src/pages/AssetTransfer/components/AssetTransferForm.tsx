@@ -275,7 +275,9 @@ export default function AssetTransferForm({
           assetTransferDetail={formik.values.chiTietDieuDongTaiSanDTOS}
           allUnits={allUnits}
           allCurrentStatus={allCurrentStatus}
-          isEdit={true}
+          isEdit={
+            [0].includes(selectedTransfer?.trangThai ?? 0) ? true : false
+          }
         />
       )}
       <Accordion
