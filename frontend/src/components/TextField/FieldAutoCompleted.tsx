@@ -1,5 +1,6 @@
 import { Autocomplete, TextField, Box } from "@mui/material";
 import { getIn } from "formik";
+import { useMemo } from "react";
 
 interface Props {
   title: string;
@@ -29,11 +30,36 @@ export default function FieldAutoCompleted({
   autocompleteSx,
 }: Props) {
   const currentValue = formik && field ? getIn(formik.values, field) : null;
-  const selectedOption =
-    data.find((i) => i.id?.toString() === currentValue?.toString()) || null;
-
   const touched = field ? getIn(formik.touched, field) : false;
   const error = field ? getIn(formik.errors, field) : null;
+
+  const selectedOption = useMemo(() => {
+    // 1. Tìm trong data trước (Logic gốc)
+    const found = data.find(
+      (i) => i.id?.toString() === currentValue?.toString(),
+    );
+    if (found) return found;
+
+    // 2. Logic dự phòng: Nếu không thấy trong data nhưng có currentValue và formik
+    if (currentValue && formik && field) {
+      const parentPath = field.includes(".")
+        ? field.substring(0, field.lastIndexOf("."))
+        : "";
+
+      // Nếu là mảng (có parentPath), tìm field label cùng cấp
+      // Nếu không có parentPath (field đơn), thì labelValue sẽ khó tìm hơn nên trả về null
+      const labelPath = parentPath ? `${parentPath}.${labelkey}` : "";
+      const labelValue = labelPath ? getIn(formik.values, labelPath) : null;
+
+      if (labelValue) {
+        // Trả về object "giả" để Autocomplete có cái mà hiển thị nhãn
+        return { id: currentValue, [labelkey]: labelValue };
+      }
+    }
+
+    return null;
+    // Thêm data vào dependency để khi listAssets từ API về, nó sẽ tính toán lại và khớp với hàng thật
+  }, [currentValue, data, formik?.values, field, labelkey]);
 
   return (
     <Autocomplete
@@ -48,7 +74,10 @@ export default function FieldAutoCompleted({
 
         return `${option[labelkey] || ""} ${(labelOption && `- ${option[labelOption]}`) || ""}`.trim();
       }}
-      isOptionEqualToValue={(option, value) => option?.id === value?.id}
+      isOptionEqualToValue={(option, value) => {
+        if (!value) return false;
+        return option?.id?.toString() === (value?.id || value)?.toString();
+      }}
       value={selectedOption}
       onChange={(e, newValue) => {
         if (formik && field) {

@@ -217,6 +217,7 @@ export default function AssetHandoverForm({
           idBanGiaoTaiSan: values.id,
         }),
       );
+
       const nguoiKyList = values.nguoiKyList.map((item: any, index) => ({
         ...item,
         id: `${generateCode("SIG-")}-${index}`,
@@ -229,6 +230,12 @@ export default function AssetHandoverForm({
       });
     },
   });
+
+  console.log(
+    "formik.values.chiTietBanGiaoTaiSan",
+    formik.values.chiTietBanGiaoTaiSan,
+  );
+
   useEffect(() => {
     if (selectedAssetHandover) {
       formik.setValues({

@@ -13,8 +13,7 @@ import {
 import {
   Close as CloseIcon,
   History as HistoryIcon,
-  East as EastIcon, // Icon mũi tên thanh mảnh hơn
-  CalendarMonth as CalendarIcon,
+  East as EastIcon,
   LocationOn as LocationIcon,
 } from "@mui/icons-material";
 import {
