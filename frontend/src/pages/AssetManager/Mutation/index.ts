@@ -427,7 +427,7 @@ export const useAssetManagerMutation = (
     importAssetMutation,
     createChildAssetBulkMutation,
     deleteOneChildAsssetMutation,
-    createManyHistoryAssetMutation
+    createManyHistoryAssetMutation,
   };
 };
 
@@ -462,7 +462,7 @@ export const useAssetPageQuery = (
       );
       return res.data.data || res.data;
     },
-    placeholderData: (previousData) => previousData,
+    enabled: tab !== undefined && tab >= 0,
   });
 };
 export const useAllAssetsQuery = () => {

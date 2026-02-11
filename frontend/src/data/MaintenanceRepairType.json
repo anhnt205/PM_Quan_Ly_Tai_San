@@ -1,0 +1,18 @@
+[
+  {
+    "id": "SC001",
+    "tenLoaiSuaChua": "Bảo dưỡng định kỳ"
+  },
+  {
+    "id": "SC002",
+    "tenLoaiSuaChua": "Sửa chữa đột xuất"
+  },
+  {
+    "id": "SC003",
+    "tenLoaiSuaChua": "Đại tu"
+  },
+  {
+    "id": "SC004",
+    "tenLoaiSuaChua": "Khắc phục sự cố"
+  }
+]

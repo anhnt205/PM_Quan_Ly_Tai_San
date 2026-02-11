@@ -293,6 +293,7 @@ export default function Menuheader() {
         { text: "Loại tài sản", path: ROUTES.TYPEASSET },
         { text: "Nhóm ccdc", path: ROUTES.TOOLGROUP },
         { text: "Loại ccdc", path: ROUTES.TOOLTYPE },
+        { text: "Loại sửa chữa bảo dưỡng", path: ROUTES.MAINTENANCEREPAIRTYPE },
         { text: "Đơn vị tính", path: ROUTES.UNIT },
         { text: "Lý do tăng", path: ROUTES.REASONINCREASE },
         { text: "Hiện trạng", path: ROUTES.CURRENTSTATUS },
@@ -365,6 +366,10 @@ export default function Menuheader() {
       path: ROUTES.TOOLHANDOVER,
       code: "BANGIAO_CCDC",
       count: toolHandoverCount,
+    },
+    {
+      text: "Sửa chữa bảo dưỡng",
+      path: ROUTES.MAINTENANCEREPAIR,
     },
     {
       text: "Báo cáo",

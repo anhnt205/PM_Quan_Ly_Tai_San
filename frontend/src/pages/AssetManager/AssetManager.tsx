@@ -1,6 +1,11 @@
 import { Delete, Inventory2 } from "@mui/icons-material";
 import {
   Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
   IconButton,
   Paper,
@@ -31,7 +36,7 @@ import { useAllReasonIncreaseQuery } from "../ReasonIncrease/Mutation";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useAllModelAssetQuery } from "../ModelAsset/Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
-import { HistoryIcon } from "lucide-react";
+import { Eye } from "lucide-react";
 import AssetHistoryModal from "./components/AssetHistoryModal";
 import socketService from "../../services/socketService";
 
@@ -64,12 +69,44 @@ export default function AssetManager() {
 
   const { data: assetsPage = { items: [], totalItems: 0 }, isLoading } =
     useAssetPageQuery(
-      tab,
+      tab < 3 ? tab : -1,
       paginationModel.page,
       paginationModel.pageSize,
       valueDebounce,
       selectedGroup,
     );
+
+  // Sample data for Maintenance/Repair tab (tab 3)
+  const sampleMaintenanceData = {
+    items: [
+      {
+        id: "SAMPLE001",
+        soThe: "SAMPLE001",
+        tenTaiSan: "Máy móc mẫu - Sửa chữa bảo dưỡng",
+        ngayVaoSo: new Date().toISOString(),
+        ngaySuDung: new Date().toISOString(),
+        nvNS: 10000000,
+        vonVay: 0,
+        vonKhac: 0,
+        giaTriThanhLy: 0,
+        hienTrang: 1,
+        idDonViHienThoi: "K30",
+        idNhomTaiSan: "NH001",
+        tenNhom: "Nhóm mẫu",
+        idLoaiTaiSanCon: "LTS001",
+        taiSanConList: [],
+        soLuong: 1,
+        donViTinh: "cai",
+        kyHieu: "KM",
+        soKyHieu: "001",
+      },
+    ],
+    totalItems: 1,
+  };
+
+  // Use sample data for tab 3, real data for other tabs
+  const displayData = tab === 3 ? sampleMaintenanceData : assetsPage;
+
   const { data: allDepartments = [] } = useAllDepartmentsQuery();
   const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
   const { data: assetGroups = [] } = useAllAssetGroupQuery();
@@ -85,6 +122,7 @@ export default function AssetManager() {
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [openErrorModal, setOpenErrorModal] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [openViewModal, setOpenViewModal] = useState(false);
 
   const handleOpenHistory = (asset: any) => {
     setSelectedAsset(asset);
@@ -278,10 +316,13 @@ export default function AssetManager() {
           >
             <Delete color="error" />
           </IconButton>
-          <Tooltip title="Xem lịch sử điều chuyển">
+          <Tooltip title="Xem">
             <IconButton
               size="small"
-              onClick={() => handleOpenHistory(params.row)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpenViewModal(true);
+              }}
               sx={{
                 color: "#4F46E5",
                 bgcolor: "#EEF2FF",
@@ -292,7 +333,7 @@ export default function AssetManager() {
                 transition: "all 0.2s",
               }}
             >
-              <HistoryIcon fontSize="small" />
+              <Eye fontSize={16} />
             </IconButton>
           </Tooltip>
         </>
@@ -400,16 +441,29 @@ export default function AssetManager() {
                 icon={<Inventory2 fontSize="small" />}
                 sx={{ fontSize: 12 }}
               />
+              <Tab
+                label="Sửa chữa bảo dưỡng"
+                icon={<Inventory2 fontSize="small" />}
+                sx={{ fontSize: 12 }}
+              />
             </Tabs>
           </Box>
           <TableCustom
-            title="Quản lý tài sản"
+            title={
+              tab === 0
+                ? "Quản lý tài sản - Kho thu hồi"
+                : tab === 1
+                  ? "Quản lý tài sản - Tài sản đã bàn giao"
+                  : tab === 2
+                    ? "Quản lý tài sản - Kho công ty"
+                    : "Sửa chữa bảo dưỡng"
+            }
             columns={columns}
-            rows={assetsPage.items}
-            total={assetsPage.totalItems}
+            rows={displayData.items}
+            total={displayData.totalItems}
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
-            loading={isLoading}
+            loading={tab < 3 ? isLoading : false}
             onRowClick={handleRowClick}
             selectedIds={selectedIds}
             onSelectionChange={setSelectedIds}
@@ -429,6 +483,97 @@ export default function AssetManager() {
         }}
         selectedAsset={selectedAsset}
       />
+      <Dialog
+        open={openViewModal}
+        onClose={() => setOpenViewModal(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: "12px",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.15)",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(135deg, #04b46e 0%, #03a05a 100%)",
+            color: "white",
+            fontWeight: 600,
+            fontSize: "1.2rem",
+            padding: "20px",
+          }}
+        >
+          Xem Ghi Chú
+        </DialogTitle>
+        <DialogContent
+          sx={{
+            padding: "24px",
+            minHeight: "180px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+          }}
+        >
+          <Box
+            sx={{
+              background: "#f5f5f5",
+              border: "1px solid #e0e0e0",
+              borderRadius: "8px",
+              padding: "16px",
+              minHeight: "100px",
+              display: "flex",
+              alignItems: "flex-start",
+            }}
+          >
+            <Typography
+              sx={{
+                color: "#666",
+                fontSize: "1rem",
+                lineHeight: "1.6",
+                fontStyle: "italic",
+              }}
+            >
+              Ghi chú hiện ở đây...
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions
+          sx={{
+            padding: "16px 24px",
+            gap: "8px",
+            borderTop: "1px solid #e0e0e0",
+          }}
+        >
+          <Button
+            onClick={() => setOpenViewModal(false)}
+            variant="outlined"
+            sx={{
+              textTransform: "none",
+              fontSize: "1rem",
+              padding: "8px 24px",
+              color: "#666",
+            }}
+          >
+            Hủy
+          </Button>
+          <Button
+            onClick={() => setOpenViewModal(false)}
+            variant="contained"
+            sx={{
+              textTransform: "none",
+              fontSize: "1rem",
+              padding: "8px 24px",
+              background: "linear-gradient(135deg, #04b46e 0%, #03a05a 100%)",
+              "&:hover": {
+                background: "linear-gradient(135deg, #039b5f 0%, #038050 100%)",
+              },
+            }}
+          >
+            Xác nhận
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

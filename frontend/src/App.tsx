@@ -17,6 +17,7 @@ import AssetManager from "./pages/AssetManager/AssetManager";
 import AssetTransfer from "./pages/AssetTransfer/AssetTransfer";
 import AssetDepreciation from "./pages/AssetManager/AssetDepreciation";
 import ToolType from "./pages/ToolType/ToolType";
+import MaintenanceRepairType from "./pages/MaintenanceRepairType/MaintenanceRepairType";
 import Unit from "./pages/Unit/Unit";
 import ReasonIncrease from "./pages/ReasonIncrease/ResonIncrease";
 import CurrentStatus from "./pages/CurrentStatus/CurrentStatus";
@@ -25,6 +26,7 @@ import AssetHandover from "./pages/AssetHandover/AssetHandover";
 import Report from "./pages/Report/Report";
 import ToolTransfer from "./pages/ToolTransfer/ToolTransfer";
 import ToolHandover from "./pages/ToolHandover/ToolHandover";
+import MaintenanceRepair from "./pages/MaintenanceRepair/MaintenanceRepair";
 import Account from "./pages/Account/Account";
 import NotFound from "./pages/Notfound/Notfound";
 import { useEffect } from "react";
@@ -152,6 +154,7 @@ function App() {
           <Route path={ROUTES.TYPEASSET} element={<TypeAsset />} />
           <Route path={ROUTES.TOOLGROUP} element={<ToolGroup />} />
           <Route path={ROUTES.TOOLTYPE} element={<ToolType />} />
+          <Route path={ROUTES.MAINTENANCEREPAIRTYPE} element={<MaintenanceRepairType />} />
           <Route path={ROUTES.UNIT} element={<Unit />} />
           <Route path={ROUTES.REASONINCREASE} element={<ReasonIncrease />} />
           <Route path={ROUTES.CURRENTSTATUS} element={<CurrentStatus />} />
@@ -206,6 +209,10 @@ function App() {
                 <ToolHandover />
               </ProtectedRoute>
             }
+          />
+          <Route
+            path={ROUTES.MAINTENANCEREPAIR}
+            element={<MaintenanceRepair />}
           />
           <Route
             path={ROUTES.REPORT}
