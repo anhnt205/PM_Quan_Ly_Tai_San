@@ -30,6 +30,7 @@ import { PdfViewer } from "../../../components/SignDocument/PdfViewer";
 import { useStaffMutation } from "../../Staff/Mutation";
 import api from "../../../config/api.config";
 import renderDigitalSignatureToImage from "../../../components/SignDocument/DigitalSignatureToImage";
+import S3Service from "../../../services/S3Service";
 
 // --- Config Worker ---
 if (typeof window !== "undefined") {
@@ -441,8 +442,6 @@ export default function SignDocumentForm({
   // Ref chứa container để xử lý scroll
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { handlePreviewS3 } = useStaffMutation();
-
   const handleConfirmPinDialog = async (pin: string) => {
     if (employee.pin !== pin) {
       showErrorAlert("Mã pin không chính xác!");
@@ -781,8 +780,7 @@ export default function SignDocumentForm({
 
           if (!path) continue;
 
-          const res = await api.get(`/s3/get?key=${path}`);
-          const s3Url = res.data.data;
+          const s3Url = await S3Service.presignedGetUrl(path);
 
           if (!s3Url) continue;
 
@@ -940,5 +938,3 @@ export default function SignDocumentForm({
     </Box>
   );
 }
-
-

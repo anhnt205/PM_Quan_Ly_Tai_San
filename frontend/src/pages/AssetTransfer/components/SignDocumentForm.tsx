@@ -9,9 +9,6 @@ import {
 } from "@mui/material";
 import { useState, useEffect, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";
-import { useAssetTranferMutation } from "../Mutation";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
 import { PDFDocument } from "pdf-lib";
 import "../../../assets/fonts/times_new_roman-normal";
 import { findById, generateSha256 } from "../../../utils/helpers";
@@ -20,7 +17,11 @@ import { RootState } from "../../../redux/store";
 import { SignaturesData } from "../types";
 import dayjs from "dayjs";
 import { showErrorAlert } from "../../../components/Alert";
-import { canUserSign } from "../config";
+import {
+  canUserSign,
+  generateBangKePdf,
+  mergeBangKeWithOriginalPdf,
+} from "../config";
 import axios from "axios";
 import { ConfirmPin } from "./ConfirmPin";
 import { SignHeader } from "../../../components/SignDocument/SignHeader";
@@ -30,6 +31,7 @@ import { PdfViewer } from "../../../components/SignDocument/PdfViewer";
 import { useStaffMutation } from "../../Staff/Mutation";
 import api from "../../../config/api.config";
 import renderDigitalSignatureToImage from "../../../components/SignDocument/DigitalSignatureToImage";
+import S3Service from "../../../services/S3Service";
 
 if (typeof window !== "undefined") {
   pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
@@ -46,7 +48,7 @@ interface SignDocumentFormProps {
   allUnits?: any[];
   allCurrentStatus?: any[];
   staffs?: any[];
-  handleSignatureList?: (idTaiLieu: string) => Promise<any>;
+  isEdit?: boolean;
 }
 
 export default function SignDocumentForm({
@@ -60,7 +62,7 @@ export default function SignDocumentForm({
   allUnits = [],
   allCurrentStatus = [],
   staffs = [],
-  handleSignatureList,
+  isEdit = false,
 }: SignDocumentFormProps) {
   const [signatureType, setSignatureType] = useState(0);
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -138,91 +140,14 @@ export default function SignDocumentForm({
     }
   };
 
-  // 1. Cập nhật useEffect lấy danh sách chữ ký từ API
-  const fetchSignatures = async () => {
-    if (selectedIds[0] && handleSignatureList) {
-      try {
-        const data = await handleSignatureList(selectedIds[0]);
-        const initialSigs = data.map((item: any) => ({
-          ...item,
-          isLocked: true,
-        }));
-        setSignatures(initialSigs);
-      } catch (err) {
-        console.error("Lỗi lấy danh sách chữ ký:", err);
-      }
-    }
-  };
-  useEffect(() => {
-    fetchSignatures();
-  }, [selectedIds, handleSignatureList]);
-
-  const generateBangKePdf = async (): Promise<Uint8Array> => {
-    const doc = new jsPDF();
-
-    doc.setFont("times_new_roman", "normal");
-    doc.setFontSize(13);
-    doc.text("BẢNG KÊ CHI TIẾT", 105, 15, { align: "center" });
-    const tableData = (
-      Array.isArray(assetTransferDetail) ? assetTransferDetail : []
-    ).map((item: any, index: number) => {
-      // Kiểm tra an toàn: Chỉ gọi findById khi mảng là hợp lệ
-      const unit = Array.isArray(allUnits)
-        ? findById(allUnits, item?.donViTinh)
-        : null;
-      const status = Array.isArray(allCurrentStatus)
-        ? findById(allCurrentStatus, item?.hienTrang)
-        : null;
-
-      return [
-        index + 1,
-        item?.tenTaiSan || "",
-        unit?.tenDonVi || "",
-        item.soLuong || 0,
-        status?.tenHTKT || "",
-        item.ghiChu || "",
-      ];
-    });
-
-    autoTable(doc, {
-      startY: 25,
-      head: [
-        [
-          "Stt",
-          "Tên tài sản",
-          "Đơn vị tính",
-          "Số lượng",
-          "Tình trạng kĩ thuật",
-          "Ghi chú",
-        ],
-      ],
-      body: tableData,
-      theme: "grid",
-      headStyles: {
-        fillColor: false,
-        textColor: 0,
-        lineWidth: 0.1,
-        lineColor: 0,
-        font: "times_new_roman",
-        fontStyle: "normal",
-        halign: "center",
-      },
-      bodyStyles: {
-        font: "times_new_roman",
-        fontSize: 10,
-        textColor: 0,
-        lineWidth: 0.1,
-        lineColor: 0,
-      },
-    });
-
-    return new Uint8Array(doc.output("arraybuffer"));
-  };
-
   useEffect(() => {
     const rebuildBangKe = async () => {
       try {
-        const bytes = await generateBangKePdf();
+        const bytes = await generateBangKePdf(
+          assetTransferDetail,
+          allUnits,
+          allCurrentStatus,
+        );
         setBangKeBytes(bytes);
       } catch (err) {
         console.error("Lỗi build lại Bảng kê:", err);
@@ -231,34 +156,6 @@ export default function SignDocumentForm({
     rebuildBangKe();
   }, [assetTransferDetail, allUnits, allCurrentStatus]);
 
-  const mergeBangKeWithOriginalPdf = async (
-    originalPdfUrl?: string | null,
-  ): Promise<Uint8Array> => {
-    if (!bangKeBytes) {
-      throw new Error("BangKe chưa được khởi tạo");
-    }
-    const bangKeDoc = await PDFDocument.load(bangKeBytes);
-
-    if (!originalPdfUrl) {
-      return bangKeBytes;
-    }
-
-    const originalBytes = await fetch(originalPdfUrl).then((r) =>
-      r.arrayBuffer(),
-    );
-    const originalDoc = await PDFDocument.load(originalBytes);
-
-    // 👉 Ghép BẢNG KÊ LÊN ĐẦU (chuẩn hành chính)
-    const bangKePages = await originalDoc.copyPages(
-      bangKeDoc,
-      bangKeDoc.getPageIndices(),
-    );
-
-    bangKePages.forEach((p) => originalDoc.addPage(p));
-
-    return await originalDoc.save();
-  };
-
   // State để tracking kích thước hiển thị thực tế của các canvas pages
   const [canvasDisplaySizes, setCanvasDisplaySizes] = useState<
     { width: number; height: number }[]
@@ -266,8 +163,6 @@ export default function SignDocumentForm({
 
   // Ref chứa container để xử lý scroll
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const { handlePreviewS3 } = useStaffMutation();
 
   const handleConfirmPinDialog = async (pin: string) => {
     if (employee.pin !== pin) {
@@ -426,13 +321,90 @@ export default function SignDocumentForm({
   };
 
   const handleConfirmSign = async () => {
-    const data = signatures.filter((i) => !i.isLocked);
-    if (data.length === 0) {
+    const newSignatures = signatures.filter((i) => !i.isLocked);
+    if (newSignatures.length === 0) {
       return showErrorAlert("Chưa có chữ ký nào để lưu");
     }
-    await onSign(data);
-    fetchSignatures();
-    onCancel();
+
+    setLoading(true);
+    try {
+      // Step 1: Generate new PDF with all signatures burned in.
+      if (!pdfUrl) throw new Error("Không có dữ liệu PDF để xử lý");
+
+      const existingPdfBytes = await fetch(pdfUrl).then((res) =>
+        res.arrayBuffer(),
+      );
+      const pdfDoc = await PDFDocument.load(existingPdfBytes);
+      const pages = pdfDoc.getPages();
+      const firstPage = pages[0];
+      const { width: pageWidth, height: pageHeight } = firstPage.getSize();
+      const displayWidth = canvasDisplaySizes[0]?.width || 800;
+
+      for (const sig of signatures) {
+        let imageBytes: ArrayBuffer | undefined;
+        try {
+          if (sig.loaiKy === 3) {
+            const base64Data = digitalSignatureMap[sig.id];
+            if (!base64Data) continue;
+            const base64Content = base64Data.split(",")[1];
+            const binaryString = window.atob(base64Content);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+              bytes[i] = binaryString.charCodeAt(i);
+            }
+            imageBytes = bytes.buffer;
+          } else {
+            const imgPath = sig.chuKyNhay || sig.chuKyThuong;
+            if (!imgPath) continue;
+
+            const s3Url = await S3Service.presignedGetUrl(imgPath);
+            if (!s3Url) continue;
+
+            const response = await fetch(s3Url);
+            if (!response.ok) continue;
+            imageBytes = await response.arrayBuffer();
+          }
+
+          if (!imageBytes) continue;
+
+          const pdfImage = await pdfDoc.embedPng(imageBytes);
+          const widthRatio = (sig.width * (sig.scale || 1)) / displayWidth;
+          const pdfImageWidth = widthRatio * pageWidth;
+          const pdfImageHeight =
+            (pdfImage.height / pdfImage.width) * pdfImageWidth;
+          const x = sig.x * pageWidth;
+          const y = pageHeight - sig.y * pageHeight - pdfImageHeight;
+
+          firstPage.drawImage(pdfImage, {
+            x,
+            y,
+            width: pdfImageWidth,
+            height: pdfImageHeight,
+          });
+        } catch (err) {
+          console.error(`Không thể chèn chữ ký ${sig.id}:`, err);
+        }
+      }
+
+      const finalPdfBytes = await pdfDoc.save();
+
+      // Step 2: Save signature metadata and pass the new file bytes to the parent
+      await onSign(newSignatures);
+      const pdfBlob = new Blob([finalPdfBytes.buffer as ArrayBuffer], {
+        type: "application/pdf",
+      });
+      await S3Service.updatePresignedPutUrl(documentUrl, pdfBlob);
+
+      setOpenSnackbar(true);
+      onCancel();
+    } catch (error: any) {
+      console.error("Lỗi khi ký và cập nhật file:", error);
+      showErrorAlert(
+        `Có lỗi xảy ra: ${error.message || "Không thể ký và cập nhật file."}`,
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Lấy PDF từ backend
@@ -441,110 +413,39 @@ export default function SignDocumentForm({
 
     const fetchAndPrepare = async () => {
       try {
-        setPdfError(null);
         setLoading(true);
 
-        if (!documentUrl) {
-          // 👉 CHỈ PREVIEW BẢNG KÊ
-          const bangKeBytes = await generateBangKePdf();
-          const blob = new Blob([bangKeBytes.buffer as ArrayBuffer], {
-            type: "application/pdf",
-          });
-          const url = URL.createObjectURL(blob);
-          setPdfUrl(url);
-          setLoading(false);
-          return;
+        // NHÁNH 1: Nếu có tài liệu cuối và KHÔNG phải đang edit -> Load thẳng S3
+        if (!isEdit && documentUrl) {
+          console.log("📂 Load trực tiếp từ S3 (Sign/View Mode)");
+          const blob = await S3Service.preview(documentUrl);
+          activeUrl = URL.createObjectURL(blob);
+          setPdfUrl(activeUrl);
         }
-
-        // TRƯỜNG HỢP 1: Document là File Object (Vừa upload xong)
-        // Tương đương với việc có "path" trong Flutter
-        if (documentUrl instanceof File || documentUrl instanceof Blob) {
-          const url = URL.createObjectURL(documentUrl);
-          activeUrl = url;
-
-          const mergedBytes = await mergeBangKeWithOriginalPdf(url);
-
-          const mergedBlob = new Blob([mergedBytes.buffer as ArrayBuffer], {
-            type: "application/pdf",
-          });
-
-          const previewUrl = URL.createObjectURL(mergedBlob);
-          setPdfUrl(previewUrl);
-          return;
-        }
-
-        // TRƯỜNG HỢP 2: Document là string (Tên file từ Server)
-        let fileName: string | null = null;
-        if (typeof documentUrl === "string") {
-          fileName = documentUrl;
-        } else if (typeof documentUrl === "object") {
-          fileName =
-            documentUrl.duongDanFile ||
-            documentUrl.fileName ||
-            documentUrl.filePDF;
-        }
-        if (fileName) {
-          console.log("Đang tải file từ server:", fileName);
-          let originalUrl: string | null = null;
-
-          // 1. CÔ LẬP LỖI TẢI FILE GỐC
-          try {
-            const blob = await handlePreviewS3(fileName);
-
-            // Kiểm tra xem có phải nội dung lỗi (HTML) không
-            const text = await blob.slice(0, 100).text();
-            if (text.includes("<!DOCTYPE") || text.includes("<html")) {
-              throw new Error(
-                "File trên server không tồn tại (404) hoặc sai định dạng.",
-              );
-            }
-
-            originalUrl = URL.createObjectURL(blob);
-          } catch (err) {
-            // Nếu lỗi ở đây, ta chỉ log cảnh báo, KHÔNG nhảy xuống catch tổng
-            console.warn(
-              "⚠️ Không lấy được file gốc, chuyển sang chế độ chỉ hiện Bảng kê:",
-              err,
-            );
-            originalUrl = null;
-          }
-
-          // 2. TIẾP TỤC GHÉP FILE (Dù có file gốc hay không)
-          try {
-            // Luôn gọi hàm này, truyền originalUrl (có thể là null)
-            const mergedBytes = await mergeBangKeWithOriginalPdf(originalUrl);
-
-            const mergedBlob = new Blob([mergedBytes.buffer as ArrayBuffer], {
-              type: "application/pdf",
-            });
-
-            const previewUrl = URL.createObjectURL(mergedBlob);
-            setPdfUrl(previewUrl);
-            setPdfError(null); // Xóa lỗi nếu trước đó có
-          } catch (mergeError: any) {
-            // Chỉ báo lỗi nếu ngay cả việc tạo Bảng kê cũng thất bại
-            console.error("❌ Lỗi nghiêm trọng khi tạo PDF:", mergeError);
-            setPdfError("Không thể khởi tạo tài liệu xem trước.");
-            setPdfUrl(null);
-          } finally {
-            setLoading(false);
+        // NHÁNH 2: Đang edit hoặc chưa có file merge -> Build PDF động
+        else {
+          console.log("🛠 Build PDF preview (Create/Edit Mode)");
+          const mergedFile = await mergeBangKeWithOriginalPdf(
+            documentUrl,
+            bangKeBytes,
+          );
+          if (mergedFile) {
+            activeUrl = URL.createObjectURL(mergedFile);
+            setPdfUrl(activeUrl);
           }
         }
-      } catch (error: any) {
-        console.error("Lỗi chuẩn bị PDF:", error);
-        setPdfUrl(null);
-        setPdfError(error.message);
+      } catch (error) {
+        setPdfError("Lỗi hiển thị tài liệu.");
+      } finally {
         setLoading(false);
       }
     };
 
     fetchAndPrepare();
-
-    // Cleanup: Quan trọng để tránh tràn bộ nhớ
     return () => {
       if (activeUrl) URL.revokeObjectURL(activeUrl);
     };
-  }, [documentUrl, bangKeBytes]);
+  }, [isEdit, documentUrl, bangKeBytes]);
 
   // --- Render PDF ---
   useEffect(() => {
@@ -673,8 +574,7 @@ export default function SignDocumentForm({
                 : sig.chuKyThuong;
             if (!imgPath) continue;
 
-            const res = await api.get(`/s3/get?key=${imgPath}`);
-            const s3Url = res.data.data;
+            const s3Url = await S3Service.presignedGetUrl(imgPath);
 
             if (!s3Url) continue;
 

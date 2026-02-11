@@ -41,6 +41,8 @@ import { useAssetByDonViQuery } from "../Mutation";
 import dayjs from "dayjs";
 import { RootState } from "../../../redux/store";
 import { useSelector } from "react-redux";
+import { generateBangKePdf, mergeBangKeWithOriginalPdf } from "../config";
+import S3Service from "../../../services/S3Service";
 
 export default function AssetTransferForm({
   onEdit,
@@ -95,8 +97,8 @@ export default function AssetTransferForm({
       id: "",
       soQuyetDinh: "",
       tenPhieu: "",
-      idDonViGiao: type===1? "K30" : "",
-      idDonViNhan: type===3? "kth" : "",
+      idDonViGiao: type === 1 ? "K30" : "",
+      idDonViNhan: type === 3 ? "kth" : "",
       idNguoiKyNhay: "",
       trangThaiKyNhay: false,
       nguoiLapPhieuKyNhay: false,
@@ -126,6 +128,7 @@ export default function AssetTransferForm({
       daBanGiao: false,
       byStep: false,
       coPhieuBanGiao: false,
+      taiLieuCuoi: "",
       nguoiKyList: [],
       chiTietDieuDongTaiSanDTOS: [
         {
@@ -148,7 +151,7 @@ export default function AssetTransferForm({
       initialChiTiet: [],
       initialNguoiKy: [],
     },
-    onSubmit: (values) => {
+    onSubmit: async (values) => {
       const chiTietDieuDongTaiSanDTOS = values.chiTietDieuDongTaiSanDTOS.map(
         (item, index) => ({
           ...item,
@@ -162,10 +165,47 @@ export default function AssetTransferForm({
         idTaiLieu: values.id,
         idPhongBan: values.idDonViDeNghi,
       }));
+      const bangKeBytes = await generateBangKePdf(
+        values.chiTietDieuDongTaiSanDTOS,
+        allUnits,
+        allCurrentStatus,
+      );
+
+      // 2. Xử lý Key tài liệu gốc (duongDanFile)
+      let keyTailieu = values.duongDanFile;
+      let keyTaiLieuCuoi = values.taiLieuCuoi;
+
+      // Nếu 'document' là File (người dùng vừa chọn file mới)
+      if (document instanceof File) {
+        keyTailieu = await S3Service.put({
+          name: document.name,
+          file: document,
+          type: "tailieu",
+        });
+      }
+
+      // 3. Merge và Upload tài liệu cuối (taiLieuCuoi)
+      const mergePdf = await mergeBangKeWithOriginalPdf(
+        keyTailieu,
+        bangKeBytes,
+      );
+      if (!mergePdf) throw new Error("Không thể tạo tài liệu");
+
+      if (!keyTaiLieuCuoi) {
+        keyTaiLieuCuoi = await S3Service.put({
+          name: `DDTS_${values.tenPhieu}.pdf`,
+          file: mergePdf,
+          type: "tailieu",
+        });
+      } else {
+        await S3Service.updatePresignedPutUrl(keyTaiLieuCuoi, mergePdf);
+      }
       onSave({
         ...values,
         chiTietDieuDongTaiSanDTOS,
         nguoiKyList,
+        duongDanFile: keyTailieu,
+        taiLieuCuoi: keyTaiLieuCuoi,
       });
     },
   });
@@ -235,6 +275,7 @@ export default function AssetTransferForm({
           assetTransferDetail={formik.values.chiTietDieuDongTaiSanDTOS}
           allUnits={allUnits}
           allCurrentStatus={allCurrentStatus}
+          isEdit={true}
         />
       )}
       <Accordion

@@ -43,6 +43,7 @@ import {
 import { useAllDepartmentsQuery } from "../Department/Mutation";
 import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
 import { useAllUnitsQuery } from "../Unit/Mutation";
+import S3Service from "../../services/S3Service";
 
 export default function AssetTransfer() {
   const { user } = useSelector((state: any) => state.user);
@@ -102,7 +103,6 @@ export default function AssetTransfer() {
   const { data: allDepartments = [] } = useAllDepartmentsQuery();
   const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
   const { data: allUnits = [] } = useAllUnitsQuery();
-  const { handleDownloadS3 } = useStaffMutation();
 
   const statusOptions: FilterOption[] = [
     {
@@ -260,7 +260,7 @@ export default function AssetTransfer() {
       renderCell: (params) => {
         return showDownloadFile(
           params.value,
-          () => handleDownloadS3(params.row.duongDanFile),
+          () => S3Service.download(params.row.duongDanFile),
           // handleDownloadFile(params.value),
         );
       },
@@ -412,7 +412,7 @@ export default function AssetTransfer() {
                 color="success"
                 onClick={async (e) => {
                   e.stopPropagation();
-                  setSelectedDocument(rowData.duongDanFile);
+                  setSelectedDocument(rowData.taiLieuCuoi);
                   setAssetTransferDetail(
                     rowData.chiTietDieuDongTaiSanDTOS || [],
                   );
@@ -455,7 +455,7 @@ export default function AssetTransfer() {
           allCurrentStatus={allCurrentStatus}
           fullscreen={true}
           staffs={allStaffs}
-          handleSignatureList={handleSignatureList}
+          isEdit={false}
         />
       ) : (
         <>

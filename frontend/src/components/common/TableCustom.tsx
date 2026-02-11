@@ -198,7 +198,11 @@ export default function TableCustom({
                 onClick={async (e) => {
                   e.stopPropagation();
                   handleSignDocument?.(selectedItem[0], user, () =>
-                    onSign?.(selectedItem[0].duongDanFile, selectedItem[0]),
+                    onSign?.(
+                      selectedItem[0]?.taiLieuCuoi ||
+                        selectedItem[0]?.taiLieuBangKe,
+                      selectedItem[0],
+                    ),
                   );
                 }}
               >
@@ -210,7 +214,7 @@ export default function TableCustom({
                 size="small"
                 variant="contained"
                 color="warning"
-                sx={{color: "#fff"}}
+                sx={{ color: "#fff" }}
                 startIcon={<Mail />}
                 onClick={async (e) => {
                   e.stopPropagation();

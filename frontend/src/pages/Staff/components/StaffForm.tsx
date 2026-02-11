@@ -240,7 +240,7 @@ export default function StaffForm({
                         label="Nhấn để chọn file chữ ký (.png, .jpg...)"
                         disabled={readOnly}
                         name="chuKyNhay"
-                        onChange={(file: any) =>
+                        onChange={(file: string) =>
                           handleFileSelect(file, "chuKyNhay", "tempFileKyNhay")
                         }
                         nameFile={formik.values.chuKyNhay}

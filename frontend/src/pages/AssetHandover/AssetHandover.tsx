@@ -52,6 +52,7 @@ import { useAllDepartmentsQuery } from "../Department/Mutation";
 import { useAllUnitsQuery } from "../Unit/Mutation";
 import { useAllPositionsQuery } from "../Position/Mutation";
 import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
+import S3Service from "../../services/S3Service";
 
 export default function AssetHandover() {
   const [showForm, setShowForm] = useState(false);
@@ -72,7 +73,6 @@ export default function AssetHandover() {
   const [showSidebar, setShowSidebar] = useState(false);
 
   const { user } = useSelector((state: any) => state.user);
-  const { handleDownloadS3 } = useStaffMutation();
   const {
     createMutation,
     updateMutation,
@@ -309,7 +309,7 @@ export default function AssetHandover() {
       renderCell: (params) => {
         if (!params.value) return null;
         return showDownloadFile(params.value, () =>
-          handleDownloadS3(params.row.duongDanFile),
+          S3Service.download(params.row.duongDanFile),
         );
       },
     },
@@ -434,7 +434,7 @@ export default function AssetHandover() {
       renderCell: (params) => {
         if (!params.value) return null;
         return showDownloadFile(params.value, () =>
-          handleDownloadS3(params.row.duongDanFile),
+          S3Service.download(params.row.duongDanFile),
         );
       },
     },
@@ -569,7 +569,7 @@ export default function AssetHandover() {
             allCurrentStatus={allCurrentStatus}
             fullscreen={true}
             staffs={staffs}
-            handleSignatureList={handleSignatureList}
+            // handleSignatureList={handleSignatureList}
           />
         )
       ) : (

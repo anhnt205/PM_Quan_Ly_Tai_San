@@ -171,7 +171,7 @@ const getStatusDocument = (status: number) => {
     case 5:
       return { label: "Đã quá hạn bàn giao", color: "#08f433" }; // Xanh lá
     default:
-      return { label: "Không xác định", color: "#dee4e0" }; // Xám  
+      return { label: "Không xác định", color: "#dee4e0" }; // Xám
   }
 };
 export const showStatusDocument = (status: number) => {
@@ -608,4 +608,129 @@ export const globalToLocal = (
     pageIndex: sizes.length - 1,
     localYRatio: 1,
   };
+};
+
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { PDFDocument } from "pdf-lib";
+import S3Service from "../../../services/S3Service";
+
+export const generateBangKePdf = async (
+  assetTransferDetail?: any[],
+  allUnits?: any[],
+  allCurrentStatus?: any[],
+): Promise<Uint8Array> => {
+  const doc = new jsPDF();
+
+  doc.setFont("times_new_roman", "normal");
+  doc.setFontSize(13);
+  doc.text("BẢNG KÊ CHI TIẾT", 105, 15, { align: "center" });
+  const tableData = (
+    Array.isArray(assetTransferDetail) ? assetTransferDetail : []
+  ).map((item: any, index: number) => {
+    // Kiểm tra an toàn: Chỉ gọi findById khi mảng là hợp lệ
+    const unit = Array.isArray(allUnits)
+      ? findById(allUnits, item?.donViTinh)
+      : null;
+    const status = Array.isArray(allCurrentStatus)
+      ? findById(allCurrentStatus, item?.hienTrang)
+      : null;
+
+    return [
+      index + 1,
+      item?.tenTaiSan || "",
+      unit?.tenDonVi || "",
+      item.soLuong || 0,
+      status?.tenHTKT || "",
+      item.ghiChu || "",
+    ];
+  });
+
+  autoTable(doc, {
+    startY: 25,
+    head: [
+      [
+        "Stt",
+        "Tên tài sản",
+        "Đơn vị tính",
+        "Số lượng",
+        "Tình trạng kĩ thuật",
+        "Ghi chú",
+      ],
+    ],
+    body: tableData,
+    theme: "grid",
+    headStyles: {
+      fillColor: false,
+      textColor: 0,
+      lineWidth: 0.1,
+      lineColor: 0,
+      font: "times_new_roman",
+      fontStyle: "normal",
+      halign: "center",
+    },
+    bodyStyles: {
+      font: "times_new_roman",
+      fontSize: 10,
+      textColor: 0,
+      lineWidth: 0.1,
+      lineColor: 0,
+    },
+  });
+
+  return new Uint8Array(doc.output("arraybuffer"));
+};
+
+export const mergeBangKeWithOriginalPdf = async (
+  tailieu?: File | Blob | string | null,
+  bangKeBytes?: Uint8Array | null,
+): Promise<File | null> => {
+  if (!bangKeBytes) return null;
+
+  try {
+    const mergedPdf = await PDFDocument.create();
+    if (tailieu) {
+      let existingPdfBytes: ArrayBuffer;
+      // 1. Xử lý lấy dữ liệu từ tailieu
+      if (typeof tailieu === "string") {
+        // Nếu là string, giả định là URL/Key từ S3
+        const s3Url = await S3Service.presignedGetUrl(tailieu);
+        const response = await fetch(s3Url);
+        if (!response.ok) throw new Error("Không thể tải tài liệu quyết định");
+        existingPdfBytes = await response.arrayBuffer();
+      } else {
+        // Nếu là File object
+        existingPdfBytes = await tailieu.arrayBuffer();
+      }
+      // 2. Load và Merge file gốc
+      const pdf1 = await PDFDocument.load(existingPdfBytes);
+      const copiedPages1 = await mergedPdf.copyPages(
+        pdf1,
+        pdf1.getPageIndices(),
+      );
+      copiedPages1.forEach((page) => mergedPdf.addPage(page));
+    }
+
+    // 3. Load và Merge file Bảng kê
+    const pdf2 = await PDFDocument.load(bangKeBytes);
+    const copiedPages2 = await mergedPdf.copyPages(pdf2, pdf2.getPageIndices());
+    copiedPages2.forEach((page) => mergedPdf.addPage(page));
+
+    // 4. Xuất file cuối cùng
+    const finalPdfBytes = await mergedPdf.save();
+
+    // 5. Tạo đối tượng File để sẵn sàng upload lại S3
+    const finalFile = new File(
+      [finalPdfBytes.buffer as ArrayBuffer],
+      "merged_document.pdf",
+      {
+        type: "application/pdf",
+      },
+    );
+
+    return finalFile;
+  } catch (error) {
+    console.error("Lỗi khi merge PDF:", error);
+    return null;
+  }
 };

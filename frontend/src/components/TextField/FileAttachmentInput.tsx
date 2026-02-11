@@ -15,6 +15,7 @@ import { getIn } from "formik";
 import imageCompression from "browser-image-compression";
 import api from "../../config/api.config";
 import { useStaffMutation } from "../../pages/Staff/Mutation";
+import S3Service from "../../services/S3Service";
 
 // Style cho Input hiển thị tên file
 const StyledTextField = styled(TextField)({
@@ -59,7 +60,6 @@ export default function FileAttachmentInput({
   // Giả sử hàm này lấy từ custom hook của bạn
   const { convertDocxToPdf } = useAssetTranferMutation();
 
-  const { handleUploadFileS3 } = useStaffMutation();
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -80,15 +80,18 @@ export default function FileAttachmentInput({
 
     // 2. Nếu là PDF: Lưu trực tiếp
     if (isPdf) {
-      const key = await handleUploadFileS3.mutateAsync({
-        name: file.name,
-        file: file,
-        type: "tailieu", // Hoặc logic để xác định loại file
-      });
+      // const key = await S3Service.put({
+      //   name: file.name,
+      //   file: file,
+      //   type: "tailieu", // Hoặc logic để xác định loại file
+      // });
+      // Store the File object directly, S3 upload will happen on form submission
+      // const key = await S3Service.put({ name: file.name, file: file, type: "tailieu" });
+
       formik.setFieldError(fileName, undefined);
       formik.setFieldTouched(fileName, true, false);
       formik.setFieldValue(fileName, file.name);
-      if (key) formik.setFieldValue(filePath, key);
+      // if (key) formik.setFieldValue(filePath, key);
       setDocument(file);
       return;
     }
@@ -111,16 +114,17 @@ export default function FileAttachmentInput({
           });
 
           // Gọi hàm upload với file đã convert
-          const key = await handleUploadFileS3.mutateAsync({
-            name: file.name,
-            file: convertedFile,
-            type: "tailieu", // Hoặc logic để xác định loại file
-          });
+          // const key = await S3Service.put({
+          //   name: file.name,
+          //   file: convertedFile,
+          //   type: "tailieu", // Hoặc logic để xác định loại file
+          // });
           // Cập nhật Formik
+          // Store the converted File object directly, S3 upload will happen on form submission
           formik.setFieldError(fileName, undefined);
           formik.setFieldTouched(fileName, true, false);
           formik.setFieldValue(fileName, newFileName);
-          if (filePath) formik.setFieldValue(filePath, key);
+          // if (filePath) formik.setFieldValue(filePath, key);
           setDocument(convertedFile);
         }
       } catch (error) {

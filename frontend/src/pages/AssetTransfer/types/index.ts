@@ -84,6 +84,7 @@ export interface AssetTransferData {
   coPhieuBanGiao: boolean;
   trangThaiPhieu: number;
   trangThaiPhieuDieuDong?: number;
+  taiLieuCuoi?: string;
 
   chiTietDieuDongTaiSanDTOS?: AssetTransferDetail[];
   nguoiKyList?: Signer[];

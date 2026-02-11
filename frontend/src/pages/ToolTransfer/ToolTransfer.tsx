@@ -36,6 +36,7 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { useAllStaffsQuery, useStaffMutation } from "../Staff/Mutation";
 import { useAllDepartmentsQuery } from "../Department/Mutation";
 import { useAllUnitsQuery } from "../Unit/Mutation";
+import S3Service from "../../services/S3Service";
 
 export default function ToolTransfer() {
   const { user } = useSelector((state: any) => state.user);
@@ -59,7 +60,6 @@ export default function ToolTransfer() {
   const [showBienBanDialog, setShowBienBanDialog] = useState(false);
   const [toolTransferDetail, setToolTransferDetail] = useState<any[]>([]);
   const [status, setStatus] = useState("");
-  const { handleDownloadS3 } = useStaffMutation();
   const {
     handleDownloadFile,
     createMutation,
@@ -257,7 +257,7 @@ export default function ToolTransfer() {
       renderCell: (params) => {
         if (!params.value) return null;
         return showDownloadFile(params.value, () =>
-          handleDownloadS3(params.row.duongDanFile),
+          S3Service.download(params.row.duongDanFile),
         );
       },
     },

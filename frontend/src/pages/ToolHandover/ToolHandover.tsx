@@ -58,6 +58,7 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { useAllDepartmentsQuery } from "../Department/Mutation";
 import { useAllUnitsQuery } from "../Unit/Mutation";
 import { useAllPositionsQuery } from "../Position/Mutation";
+import S3Service from "../../services/S3Service";
 
 export default function ToolHandover() {
   const [showForm, setShowForm] = useState(false);
@@ -82,7 +83,6 @@ export default function ToolHandover() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [showSignerSidebar, setShowSignerSidebar] = useState(true);
   const { user } = useSelector((state: RootState) => state.user);
-  const { handleDownloadS3 } = useStaffMutation();
 
   const {
     createMutation,
@@ -315,7 +315,7 @@ export default function ToolHandover() {
       renderCell: (params) => {
         if (!params.value) return null;
         return showDownloadFile(params.value, () =>
-          handleDownloadS3(params.row.duongDanFile),
+          S3Service.download(params.row.duongDanFile),
         );
       },
     },
@@ -434,7 +434,7 @@ export default function ToolHandover() {
       renderCell: (params) => {
         if (!params.value) return null;
         return showDownloadFile(params.value, () =>
-          handleDownloadS3(params.row.duongDanFile),
+          S3Service.download(params.row.duongDanFile),
         );
       },
     },

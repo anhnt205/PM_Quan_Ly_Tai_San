@@ -31,6 +31,7 @@ import { SignHeader } from "../../../components/SignDocument/SignHeader";
 import { useGetFileQuery, useStaffMutation } from "../../Staff/Mutation";
 import api from "../../../config/api.config";
 import renderDigitalSignatureToImage from "../../../components/SignDocument/DigitalSignatureToImage";
+import S3Service from "../../../services/S3Service";
 
 if (typeof window !== "undefined") {
   pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
@@ -440,7 +441,6 @@ export default function SignDocumentForm({
   // Ref chứa container để xử lý scroll
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { handlePreviewS3 } = useStaffMutation();
 
   const handleConfirmPinDialog = async (pin: string) => {
     if (employee.pin !== pin) {
@@ -635,7 +635,7 @@ export default function SignDocumentForm({
 
             if (!fileName) throw new Error("Không xác định được file");
 
-            const blob = await handlePreviewS3(fileName);
+            const blob = await S3Service.preview(fileName);
             finalBytes = new Uint8Array(await blob.arrayBuffer());
           }
         }
@@ -780,8 +780,7 @@ export default function SignDocumentForm({
 
           if (!path) continue;
 
-          const res = await api.get(`/s3/get?key=${path}`);
-          const s3Url = res.data.data;
+          const s3Url = await S3Service.presignedGetUrl(path);
 
           if (!s3Url) continue;
 

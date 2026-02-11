@@ -4,10 +4,11 @@ import imageCompression from "browser-image-compression";
 import React, { ChangeEvent, useState } from "react";
 import api from "../../config/api.config";
 import { useGetFileQuery, useStaffMutation } from "../../pages/Staff/Mutation";
+import S3Service from "../../services/S3Service";
 
 interface Props {
   label?: string; // Text hiển thị (VD: Nhấn để chọn file...)
-  onChange?: (file: File | null) => void; // Hàm callback trả file về cha
+  onChange?: (file: string) => void; // Hàm callback trả file về cha
   accept?: string; // Định dạng file cho phép (VD: .png, .jpg)
   name?: string; // Tên field (dùng cho formik)
   disabled?: boolean; // Vô hiệu hóa nút upload
@@ -24,14 +25,12 @@ export default function UploadButton({
 }: Props) {
   const [fileName, setFileName] = useState<string | null | undefined>(nameFile);
 
-  const { handleUploadFileS3 } = useStaffMutation();
-
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       if (file) {
         try {
-          const key = await handleUploadFileS3.mutateAsync({
+          const key = await S3Service.put({
             name: file.name,
             file: file,
             type: "chuky", // Hoặc logic để xác định loại file
@@ -52,7 +51,7 @@ export default function UploadButton({
     e.preventDefault();
     e.stopPropagation(); // Ngăn kích hoạt lại input file
     setFileName(null);
-    if (onChange) onChange(null);
+    if (onChange) onChange("");
   };
 
   const { data: fileUrl } = useGetFileQuery(nameFile);
