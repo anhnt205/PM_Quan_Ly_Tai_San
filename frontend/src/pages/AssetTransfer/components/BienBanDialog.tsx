@@ -33,6 +33,8 @@ import dayjs from "dayjs";
 import { SignaturesData } from "../types";
 import BoxSignatureImg from "../../../components/SignDocument/BoxSignatureImg";
 import renderDigitalSignatureToImage from "../../../components/SignDocument/DigitalSignatureToImage";
+import S3Service from "../../../services/S3Service";
+import { AssetHandoverData } from "../../AssetHandover/types";
 
 // Config Worker
 if (typeof window !== "undefined") {
@@ -42,7 +44,7 @@ if (typeof window !== "undefined") {
 interface BienBanDialogProps {
   open: boolean;
   onClose: () => void;
-  assetHandover: any[];
+  assetHandover: AssetHandoverData[];
   handleSignatureList?: (idTaiLieu: string) => Promise<any>;
 }
 
@@ -70,296 +72,6 @@ export default function BienBanDialog({
   >([]);
   const [pages, setPages] = useState<HTMLCanvasElement[]>([]);
 
-  // 1. Cập nhật useEffect lấy danh sách chữ ký từ API
-  const fetchSignatures = async () => {
-    if (
-      assetHandover.length > 0 &&
-      handleSignatureList &&
-      assetHandover[currentIndex]
-    ) {
-      try {
-        const data = await handleSignatureList(assetHandover[currentIndex].id);
-        setSignatures(data);
-      } catch (err) {
-        console.error("Lỗi lấy danh sách chữ ký:", err);
-      }
-    }
-  };
-  useEffect(() => {
-    fetchSignatures();
-  }, [assetHandover, handleSignatureList, currentIndex]);
-
-  const { data: staffs = [] } = useAllStaffsQuery();
-  const { data: departments = [] } = useAllDepartmentsQuery();
-  const { data: positions = [] } = useAllPositionsQuery();
-  const { data: allUnits = [] } = useAllUnitsQuery();
-
-  const getChucVu = async (idUser: string) => {
-    const nhanVien = await findById(staffs, idUser);
-    const chucVu = await findById(positions, nhanVien?.chucVuId ?? "");
-    return chucVu?.tenChucVu ?? "";
-  };
-  const getDonVi = async (idUser: string) => {
-    const nhanVien = await findById(staffs, idUser);
-    const donVi = await findById(departments, nhanVien?.phongBanId ?? "");
-    return donVi?.tenPhongBan ?? "";
-  };
-  const isCheckKho = async (idUser: string) => {
-    const nhanVien = await findById(staffs, idUser);
-    const phongBan = await findById(departments, nhanVien?.phongBanId ?? "");
-    return phongBan?.isKho == true;
-  };
-  const listSigneInfo = async (item?: ToolHandoverData) => {
-    if (!item) return [];
-
-    const result: any[] = [];
-
-    // ===== ĐẠI DIỆN BÊN GIAO =====
-    const isKhoGiao = await isCheckKho(item.idDaiDienBenGiao ?? "");
-    const donViGiao = isKhoGiao
-      ? ((await findById(departments, item.idDonViGiao ?? ""))?.tenPhongBan ??
-        "")
-      : await getDonVi(item.idDaiDienBenGiao ?? "");
-
-    result.push({
-      idNhanVien: item.idDaiDienBenGiao ?? "",
-      title: "Đại diện đơn vị bên giao",
-      hoTen: item.tenDaiDienBenGiao ?? "",
-      chucVu: await getChucVu(item.idDaiDienBenGiao ?? ""),
-      donVi: donViGiao,
-    });
-
-    // ===== ĐẠI DIỆN BÊN NHẬN =====
-    const isKhoNhan = await isCheckKho(item.idDaiDienBenNhan ?? "");
-    const donViNhan = isKhoNhan
-      ? ((await findById(departments, item.idDonViNhan ?? ""))?.tenPhongBan ??
-        "")
-      : await getDonVi(item.idDaiDienBenNhan ?? "");
-
-    result.push({
-      idNhanVien: item.idDaiDienBenNhan ?? "",
-      title: "Đại diện đơn vị bên nhận",
-      hoTen: item.tenDaiDienBenNhan ?? "",
-      chucVu: await getChucVu(item.idDaiDienBenNhan ?? ""),
-      donVi: donViNhan,
-    });
-
-    // ===== NGƯỜI KÝ BỔ SUNG =====
-    if (item.nguoiKyList?.length) {
-      for (let i = 0; i < item.nguoiKyList.length; i++) {
-        const sign = item.nguoiKyList[i];
-        result.push({
-          idNhanVien: sign.idNguoiKy ?? "",
-          title: `Đại diện ký ${i + 1}`,
-          hoTen: sign.tenNguoiKy ?? "",
-          chucVu: await getChucVu(sign.idNguoiKy ?? ""),
-          donVi: await getDonVi(sign.idNguoiKy ?? ""),
-        });
-      }
-    }
-
-    // ===== GIÁM ĐỐC =====
-    result.push({
-      idNhanVien: item.idGiamDoc ?? "",
-      title: "Giám đốc ký duyệt",
-      hoTen: item.tenGiamDoc ?? "",
-      chucVu: await getChucVu(item.idGiamDoc ?? ""),
-      donVi: await getDonVi(item.idGiamDoc ?? ""),
-    });
-
-    return result;
-  };
-
-  const generateBienBanPdf = async (
-    handover: ToolHandoverData,
-  ): Promise<Uint8Array> => {
-    const listSigneInfos = await listSigneInfo(handover);
-    const doc = new jsPDF("p", "mm", "a4");
-
-    // Đảm bảo font times_new_roman đã được add trước đó
-    doc.setFont("times_new_roman", "normal");
-
-    // ===== HEADER =====
-    doc.setFontSize(11);
-    doc.text("TẬP ĐOÀN CÔNG NGHIỆP", 50, 20, { align: "center" });
-    doc.text("THAN - KHOÁNG SẢN VIỆT NAM", 50, 26, { align: "center" });
-
-    doc.setFont("times_new_roman", "bold");
-    doc.text("CÔNG TY THAN UÔNG BÍ - TKV", 50, 32, { align: "center" });
-    doc.line(40, 34, 80, 34); // Đường kẻ dưới tên công ty
-
-    doc.setFont("times_new_roman", "normal");
-    doc.setFontSize(10);
-    doc.text("Mẫu số 17/BBGN-TS", 190, 20, { align: "right" });
-
-    doc.setFont("times_new_roman", "bold");
-    doc.setFontSize(13);
-    doc.text("BIÊN BẢN", 140, 30, { align: "center" });
-    doc.text("GIAO NHẬN TÀI SẢN", 140, 36, { align: "center" });
-
-    // ===== CĂN CỨ =====
-    doc.setFont("times_new_roman", "normal");
-    doc.setFontSize(11);
-
-    let y = 50;
-    const canCuText = `Căn cứ QĐ số: ${handover?.soQuyetDinh ?? "........."} ${formatted(handover?.ngayQuyetDinh ?? "")} của Giám đốc Công ty V/v điều động tài sản từ PX ${handover?.tenDonViGiao ?? "...................."} đến PX ${handover?.tenDonViNhan ?? "...................."}.`;
-
-    const splitCanCu = doc.splitTextToSize(canCuText, 170);
-    doc.text(splitCanCu, 25, y);
-
-    y += splitCanCu.length * 7;
-    doc.text(
-      `Hôm nay, ${formatted(handover?.ngayBanGiao ?? "")} tại ${handover?.diaDiemQuyetDinh ?? "..........."}.`,
-      25,
-      y,
-    );
-
-    // ===== DANH SÁCH NGƯỜI KÝ =====
-    y += 10;
-    doc.setFont("times_new_roman", "bold");
-    doc.text("Chúng tôi gồm:", 20, y);
-    doc.setFont("times_new_roman", "bold");
-
-    y += 7;
-    // Giả sử signatures là mảng đối tượng có { hoTen, chucVu, phongBan }
-    listSigneInfos?.forEach((s, index) => {
-      const nameText = doc.splitTextToSize(
-        `${index + 1}. Ông (bà): ${s.hoTen}`,
-        55,
-      );
-
-      const chucVuText = doc.splitTextToSize(`Chức vụ: ${s.chucVu}`, 45);
-
-      const phongText = doc.splitTextToSize(`Phòng: ${s.donVi}`, 50);
-
-      doc.text(nameText, 25, y);
-      doc.text(chucVuText, 85, y);
-      doc.text(phongText, 135, y);
-
-      // 👉 Tăng y theo dòng cao nhất
-      const maxLines = Math.max(
-        nameText.length,
-        chucVuText.length,
-        phongText.length,
-      );
-      y += maxLines * 7;
-    });
-
-    // ===== MÔ TẢ GIAO NHẬN =====
-    y += 5;
-    const moTaGiaoNhan = `Tiến hành giao nhận tài sản từ phân xưởng ${handover?.tenDonViGiao ?? "........"} giao cho phân xưởng ${handover?.tenDonViNhan ?? "........"} cụ thể như sau:`;
-    doc.text(doc.splitTextToSize(moTaGiaoNhan, 175), 20, y);
-
-    // ===== TABLE =====
-    const tableData = (handover?.chiTietBanGiaoCCDCVatTu ?? []).map(
-      (item: any, index: number) => [
-        index + 1,
-        item.tenCCDCVatTu || item.tenVatTu || "",
-        item.kyHieu ?? "",
-        item.moTa ?? "",
-        findById(allUnits, item.donViTinh)?.tenDonVi ?? "",
-        item.soLuong || 1,
-        item.ghiChu ?? "",
-      ],
-    );
-
-    autoTable(doc, {
-      startY: y + 5,
-      margin: { left: 20, right: 20 },
-      head: [
-        [
-          "STT",
-          "Tên tài sản",
-          "Mã hiệu, quy cách",
-          "Nước sản xuất",
-          "Đơn vị tính",
-          "Số lượng",
-          "Ghi chú",
-        ],
-      ],
-      body: tableData,
-      theme: "grid",
-      headStyles: {
-        fillColor: false,
-        textColor: 0,
-        lineWidth: 0.1,
-        lineColor: 0,
-        font: "times_new_roman",
-        fontStyle: "bold",
-        halign: "center",
-      },
-      bodyStyles: {
-        font: "times_new_roman",
-        fontSize: 10,
-        textColor: 0,
-        lineWidth: 0.1,
-        lineColor: 0,
-      },
-      columnStyles: {
-        0: { cellWidth: 12, halign: "center" },
-        4: { cellWidth: 20, halign: "center" },
-        5: { cellWidth: 15, halign: "center" },
-      },
-    });
-
-    // ===== KẾT LUẬN & CHỮ KÝ =====
-    let finalY = (doc as any).lastAutoTable.finalY + 10;
-    doc.text(
-      "Sau khi hai bên kiểm tra kỹ lưỡng tình trạng và thống nhất ký tên vào biên bản.",
-      20,
-      finalY,
-    );
-
-    finalY += 15;
-
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const marginX = 40; // Lề trái và lề phải (giống lề của bảng phía trên)
-    const printableWidth = pageWidth - 2 * marginX; // Chiều rộng thực tế dùng để chia cột
-
-    const colWidth = 45; // Độ rộng vùng text mỗi chữ ký
-    const maxPerRow = 5; // Tối đa 4 chữ ký / hàng
-    const rowGap = 70;
-    const baseY = finalY;
-
-    listSigneInfos?.forEach((s, index) => {
-      const rowIndex = Math.floor(index / maxPerRow);
-      const colIndex = index % maxPerRow;
-
-      // Xác định số lượng chữ ký thực tế của hàng này
-      const itemsInRow = Math.min(
-        maxPerRow,
-        listSigneInfos.length - rowIndex * maxPerRow,
-      );
-
-      let x;
-      if (itemsInRow === 1) {
-        // 1 người: Căn giữa trang
-        x = pageWidth / 2;
-      } else {
-        // Từ 2 người trở lên: Chia đều khoảng cách để 2 người ngoài cùng sát lề marginX
-        // Công thức: Lề trái + (vị trí cột * (chiều rộng khả dụng / số khoảng trống giữa các cột))
-        const gapSize = printableWidth / (itemsInRow - 1);
-        x = marginX + colIndex * gapSize;
-      }
-
-      const y = baseY + rowIndex * rowGap;
-
-      // 1️⃣ Đơn vị (Phòng ban/Phân xưởng)
-      // Dùng fontSize nhỏ hơn một chút nếu cần giống ảnh mẫu
-      doc.setFontSize(10);
-      const donViLines = doc.splitTextToSize(s?.donVi || "", colWidth);
-      doc.text(donViLines, x, y, { align: "center" });
-
-      // 2️⃣ Họ tên người ký
-      // Cố định khoảng cách nameY để tạo khoảng trống cho chữ ký tay
-      const nameY = y + 35;
-      const hoTenLines = doc.splitTextToSize(s?.hoTen || "", colWidth);
-      doc.text(hoTenLines, x, nameY, { align: "center" });
-    });
-
-    return new Uint8Array(doc.output("arraybuffer"));
-  };
-
   // Lấy PDF từ backend
   useEffect(() => {
     const preparePdf = async () => {
@@ -373,15 +85,11 @@ export default function BienBanDialog({
           setPdfUrl("");
         }
 
-        let finalBytes: Uint8Array;
-
         // 👉 TRƯỜNG HỢP 2: KHÔNG CÓ DOCUMENT HOẶC previewDocument = false → DÙNG BẢNG KÊ
-        finalBytes = await generateBienBanPdf(assetHandover[currentIndex]);
+        const newBlob = await S3Service.preview(
+          assetHandover[currentIndex].taiLieuBangKe,
+        );
 
-        // Chỉ thực hiện tạo Blob 1 lần duy nhất sau khi đã xác định được nguồn
-        const newBlob = new Blob([finalBytes.buffer as ArrayBuffer], {
-          type: "application/pdf",
-        });
         const newUrl = URL.createObjectURL(newBlob);
         setPdfUrl(newUrl);
       } catch (err) {
@@ -469,30 +177,6 @@ export default function BienBanDialog({
     pages.forEach((canvas) => observer.observe(canvas));
     return () => observer.disconnect();
   }, [pages]);
-  useEffect(() => {
-    const renderDigitalSignatures = async () => {
-      const newMap: Record<string, string> = {};
-
-      for (const sig of signatures) {
-        if (sig.loaiKy === 3 && !digitalSignatureMap[sig.id]) {
-          const signer = findById(staffs, sig.idNguoiKy);
-
-          const base64 = await renderDigitalSignatureToImage(
-            signer?.hoTen,
-            dayjs(sig.ngayKy).format("DD/MM/YYYY"),
-          );
-
-          newMap[sig.id] = base64;
-        }
-      }
-
-      if (Object.keys(newMap).length > 0) {
-        setDigitalSignatureMap((prev) => ({ ...prev, ...newMap }));
-      }
-    };
-
-    renderDigitalSignatures();
-  }, [signatures, staffs]);
 
   const handlePrevPage = () => {
     if (currentIndex > 0) setCurrentIndex((i) => i - 1);

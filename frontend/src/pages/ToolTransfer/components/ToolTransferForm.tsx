@@ -184,7 +184,7 @@ export default function ToolTransferForm({
 
       if (!keyTaiLieuCuoi) {
         keyTaiLieuCuoi = await S3Service.put({
-          name: `DDTS_${values.tenPhieu}.pdf`,
+          name: `DDCCDC_${values.tenPhieu}.pdf`,
           file: mergePdf,
           type: "tailieu",
         });

@@ -81,6 +81,7 @@ export interface AssetHandoverData {
   soQuyetDinh: string;
   ngayQuyetDinh: string;
   diaDiemQuyetDinh: string;
+  taiLieuBangKe: string;
   chiTietBanGiaoTaiSan: AssetHandoverDetail[];
   chuKyList: SignaturesData[];
   nguoiKyList: Signer[];
@@ -114,6 +115,7 @@ export interface AssetHandoverFormValues {
   share: boolean;
   duongDanFile: string;
   tenFile: string;
+  taiLieuBangKe: string;
   byStep: boolean;
   ngayTaoChungTu: string;
   idGiamDoc: string;
@@ -173,6 +175,7 @@ export interface AssetTransferData {
   trichYeu: string;
   duongDanFile: string;
   tenFile: string;
+  taiLieuCuoi: string;
   ngayKy: string;
   daBanGiao: boolean;
   byStep: boolean;

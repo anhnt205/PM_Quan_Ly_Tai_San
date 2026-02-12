@@ -58,6 +58,8 @@ import { useUnitMutation } from "../../Unit/Mutation";
 import { useAssetHandoverMutation } from "../Mutation";
 import { assetHandoverValidationSchema } from "../validation";
 import { useAllAssetsQuery } from "../../AssetManager/Mutation";
+import { generateBienBanPdf } from "../config";
+import S3Service from "../../../services/S3Service";
 
 const UnderlinedInputWrapper = styled(Box)({
   width: "100%",
@@ -141,6 +143,7 @@ export default function AssetHandoverForm({
   const [tableExpanded, setTableExpanded] = useState(true);
   const [isPreview, setIsPreview] = useState(false);
   const [document, setDocument] = useState<File | string | any>("");
+  const [bangKe, setBangKe] = useState<File | string | any>("");
   const [priviewDocument, setPriviewDocument] = useState(false);
 
   const [listASsets, setListAssets] = useState<any[]>([]);
@@ -190,6 +193,7 @@ export default function AssetHandoverForm({
       tenFile: "",
       byStep: false,
       giamDocKy: false,
+      taiLieuBangKe: "",
       nguoiKyList: [] as any[],
       chiTietBanGiaoTaiSan: [
         {
@@ -209,7 +213,7 @@ export default function AssetHandoverForm({
       isNew: true,
     },
     validationSchema: assetHandoverValidationSchema,
-    onSubmit: (values) => {
+    onSubmit: async (values) => {
       const chiTietBanGiaoTaiSan = values.chiTietBanGiaoTaiSan.map(
         (item: any, index) => ({
           ...item,
@@ -223,10 +227,69 @@ export default function AssetHandoverForm({
         id: `${generateCode("SIG-")}-${index}`,
         idTaiLieu: values.id,
       }));
+
+      const bangKeBytes = await generateBienBanPdf(
+        {
+          ...values,
+          tenDonViGiao: findById(departments, formik.values.idDonViGiao)
+            ?.tenPhongBan,
+          tenDonViNhan: findById(departments, formik.values.idDonViNhan)
+            ?.tenPhongBan,
+          tenLanhDao: "",
+          idDaiDiendonviBanHanhQD: "",
+          tenDaiDienBanHanhQD: "",
+          tenDaiDienBenGiao: findById(staffs, formik.values.idDaiDienBenGiao)
+            ?.hoTen,
+          tenDaiDienBenNhan: findById(staffs, formik.values.idDaiDienBenNhan)
+            ?.hoTen,
+          tenGiamDoc: findById(staffs, formik.values.idGiamDoc)?.hoTen,
+          trangThaiPhieu: 0,
+          chuKyList: [],
+        },
+        allUnits,
+        staffs,
+        departments,
+        positions,
+      );
+      const bobBangKe = new Blob([bangKeBytes.buffer as ArrayBuffer], {
+        type: "application/pdf",
+      });
+      const fileBangeKe = new File(
+        [bangKeBytes.buffer as ArrayBuffer],
+        `BienBan_${values.soQuyetDinh}.pdf`,
+        {
+          type: "application/pdf",
+        },
+      );
+
+      // 2. Xử lý Key tài liệu gốc (duongDanFile)
+      let keyTailieu = values.duongDanFile;
+      let keyTaiLieuBangKe = values.taiLieuBangKe;
+
+      // Nếu 'document' là File (người dùng vừa chọn file mới)
+      if (document instanceof File) {
+        keyTailieu = await S3Service.put({
+          name: document.name,
+          file: document,
+          type: "tailieu",
+        });
+      }
+
+      if (!keyTaiLieuBangKe) {
+        keyTaiLieuBangKe = await S3Service.put({
+          name: `BGTS_${values.banGiaoTaiSan}.pdf`,
+          file: fileBangeKe,
+          type: "tailieu",
+        });
+      } else {
+        await S3Service.updatePresignedPutUrl(keyTaiLieuBangKe, bobBangKe);
+      }
       onSave({
         ...values,
         chiTietBanGiaoTaiSan,
         nguoiKyList,
+        duongDanFile: keyTailieu,
+        taiLieuBangKe: keyTaiLieuBangKe,
       });
     },
   });
@@ -313,6 +376,7 @@ export default function AssetHandoverForm({
         <SignDocumentForm
           selectedIds={[]}
           document={document}
+          bangKe={bangKe}
           previewDocument={priviewDocument}
           // onClose={() => {
           //   setIsPreview(false);
@@ -321,7 +385,6 @@ export default function AssetHandoverForm({
           onCancel={() => {
             setIsPreview(false);
             setPriviewDocument(false);
-            setDocument(null);
           }}
           onSign={() => {
             console.log("Ký tài liệu thành công");
@@ -664,7 +727,7 @@ export default function AssetHandoverForm({
                 />
                 <PreviewBtn
                   handleClick={() => {
-                    setDocument(formik.values.duongDanFile);
+                    setDocument(formik.values.duongDanFile || document);
                     setIsPreview(true);
                     setPriviewDocument(true);
                   }}
@@ -968,7 +1031,7 @@ export default function AssetHandoverForm({
             </Box>
             <PreviewBtn
               handleClick={() => {
-                setDocument(null);
+                setBangKe(formik.values.taiLieuBangKe);
                 setIsPreview(true);
                 setPriviewDocument(false);
               }}

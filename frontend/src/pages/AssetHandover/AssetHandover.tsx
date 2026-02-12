@@ -464,7 +464,7 @@ export default function AssetHandover() {
           <IconButton
             size="small"
             onClick={async () => {
-              setSelectedDocument(params.row.duongDanFile);
+              setSelectedDocument(params.row.taiLieuCuoi);
               setAssetTransfer(params.row);
               setShowSignerSidebar(false); // Ẩn sidebar khi xem
               setShowSignDocument(true);
@@ -511,6 +511,7 @@ export default function AssetHandover() {
                 tenFile: "",
                 byStep: false,
                 giamDocKy: false,
+                taiLieuBangKe: "",
                 nguoiKyList: [] as any[],
                 chiTietBanGiaoTaiSan: params.row.chiTietDieuDongTaiSanDTOS
                   ? params.row.chiTietDieuDongTaiSanDTOS.map((item: any) => ({
@@ -556,6 +557,8 @@ export default function AssetHandover() {
             departments={departments}
             positions={positions}
             handleSignatureList={handleSignatureList}
+            isEdit={false}
+            bangKe={selectedRow.taiLieuBangKe}
           />
         ) : (
           <SignDocumentTransferForm
@@ -569,6 +572,7 @@ export default function AssetHandover() {
             allCurrentStatus={allCurrentStatus}
             fullscreen={true}
             staffs={staffs}
+            isEdit={false}
             // handleSignatureList={handleSignatureList}
           />
         )
