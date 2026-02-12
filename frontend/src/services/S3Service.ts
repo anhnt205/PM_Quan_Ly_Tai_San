@@ -19,7 +19,7 @@ class S3Service {
     return res.data.data || "";
   }
   public async download(currentKey: string): Promise<any> {
-    if (!currentKey) return;
+    if (!currentKey) return showErrorAlert("Không tìm thấy tài liệu");
     try {
       // Encode tên file để xử lý ký tự đặc biệt
       const fileName = decodeURIComponent(

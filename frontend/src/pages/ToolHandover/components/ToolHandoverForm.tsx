@@ -43,6 +43,8 @@ import PreviewBtn from "../../../components/Button/PreviewBtn";
 import dayjs from "dayjs";
 import { toolHandoverValidationSchema } from "../validation";
 import { useToolTransferPageQuery } from "../../ToolTransfer/Mutation";
+import { generateBienBanPdf } from "../config";
+import S3Service from "../../../services/S3Service";
 
 const UnderlinedInputWrapper = styled(Box)({
   width: "100%",
@@ -151,6 +153,7 @@ export default function ToolHandoverForm({
   const [tableExpanded, setTableExpanded] = useState(true);
   const [isPreview, setIsPreview] = useState(false);
   const [document, setDocument] = useState<File | string | any>("");
+  const [bangKe, setBangKe] = useState<File | string | any>("");
   const [priviewDocument, setPriviewDocument] = useState(false);
 
   const [listTools, setListTools] = useState<any[]>([]);
@@ -194,13 +197,14 @@ export default function ToolHandoverForm({
       tenFile: "",
       byStep: false,
       giamDocKy: false,
+      taiLieuBangKe: "",
       chiTietBanGiaoCCDCVatTu: [
         {
           id: "",
           tenVatTu: "",
           idBanGiaoCCDCVatTu: "",
           idCCDCVatTu: "",
-          soLuong: 0,
+          soLuong: 1,
           idChiTietCCDCVatTu: "",
           ngayTao: "",
           ngayCapNhat: "",
@@ -219,7 +223,7 @@ export default function ToolHandoverForm({
       isNew: true,
     },
     validationSchema: toolHandoverValidationSchema,
-    onSubmit: (values) => {
+    onSubmit: async (values) => {
       const chiTietBanGiaoCCDCVatTu = values.chiTietBanGiaoCCDCVatTu.map(
         (item: any, index) => ({
           ...item,
@@ -232,11 +236,69 @@ export default function ToolHandoverForm({
         id: `${generateCode("SIG-")}-${index}`,
         idTaiLieu: values.id,
       }));
+      const bangKeBytes = await generateBienBanPdf(
+        {
+          ...values,
+          tenDonViGiao: findById(departments, formik.values.idDonViGiao)
+            ?.tenPhongBan,
+          tenDonViNhan: findById(departments, formik.values.idDonViNhan)
+            ?.tenPhongBan,
+          tenLanhDao: "",
+          idDaiDiendonviBanHanhQD: "",
+          tenDaiDienBanHanhQD: "",
+          tenDaiDienBenGiao: findById(staffs, formik.values.idDaiDienBenGiao)
+            ?.hoTen,
+          tenDaiDienBenNhan: findById(staffs, formik.values.idDaiDienBenNhan)
+            ?.hoTen,
+          tenGiamDoc: findById(staffs, formik.values.idGiamDoc)?.hoTen,
+          trangThaiPhieu: 0,
+          chuKyList: [],
+        },
+        allUnits,
+        staffs,
+        departments,
+        positions,
+      );
+      const bobBangKe = new Blob([bangKeBytes.buffer as ArrayBuffer], {
+        type: "application/pdf",
+      });
+      const fileBangeKe = new File(
+        [bangKeBytes.buffer as ArrayBuffer],
+        `BienBan_${values.banGiaoCCDCVatTu}.pdf`,
+        {
+          type: "application/pdf",
+        },
+      );
+
+      // 2. Xử lý Key tài liệu gốc (duongDanFile)
+      let keyTailieu = values.duongDanFile;
+      let keyTaiLieuBangKe = values.taiLieuBangKe;
+
+      // Nếu 'document' là File (người dùng vừa chọn file mới)
+      if (document instanceof File) {
+        keyTailieu = await S3Service.put({
+          name: document.name,
+          file: document,
+          type: "tailieu",
+        });
+      }
+
+      if (!keyTaiLieuBangKe) {
+        keyTaiLieuBangKe = await S3Service.put({
+          name: `BGCCDC_${values.banGiaoCCDCVatTu}.pdf`,
+          file: fileBangeKe,
+          type: "tailieu",
+        });
+      } else {
+        await S3Service.updatePresignedPutUrl(keyTaiLieuBangKe, bobBangKe);
+      }
       onSave({
         ...values,
         quyetDinhDieuDongSo: values.lenhDieuDong,
         chiTietBanGiaoCCDCVatTu,
         nguoiKyList,
+        duongDanFile: keyTailieu,
+        taiLieuBangKe: keyTaiLieuBangKe,
       });
     },
   });
@@ -330,19 +392,13 @@ export default function ToolHandoverForm({
     );
   };
 
-  console.log(">>> SOURCE DATA:", {
-    idGiao: formik.values.idDaiDienBenGiao,
-    idNhan: formik.values.idDaiDienBenNhan,
-    idGD: formik.values.idGiamDoc,
-    selected: selectedToolHandover,
-  });
-
   return (
     <>
       {isPreview && (
         <SignDocumentForm
           selectedIds={[]}
           document={document}
+          bangKe={bangKe}
           previewDocument={priviewDocument}
           // onClose={() => {
           //   setIsPreview(false);
@@ -351,7 +407,6 @@ export default function ToolHandoverForm({
           onCancel={() => {
             setIsPreview(false);
             setPriviewDocument(false);
-            setDocument(null);
           }}
           onSign={() => {
             console.log("Ký tài liệu thành công");
@@ -393,6 +448,7 @@ export default function ToolHandoverForm({
           allUnits={allUnits}
           departments={departments}
           positions={positions}
+          isEdit={[0].includes(selectedToolHandover?.trangThai ?? 0) ? true : false}
         />
       )}
       <Accordion
@@ -709,7 +765,7 @@ export default function ToolHandoverForm({
                 {/* Hiển thị định dạng hỗ trợ và Nút xem trước */}
                 <PreviewBtn
                   handleClick={() => {
-                    setDocument(formik.values.duongDanFile);
+                    setDocument(formik.values.duongDanFile || document);
                     setIsPreview(true);
                     setPriviewDocument(true);
                   }}
@@ -1017,7 +1073,7 @@ export default function ToolHandoverForm({
             </Box>
             <PreviewBtn
               handleClick={() => {
-                setDocument(null);
+                setBangKe(formik.values.taiLieuBangKe);
                 setIsPreview(true);
                 setPriviewDocument(false);
               }}

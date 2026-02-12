@@ -124,6 +124,7 @@ export interface ToolHandoverData {
   diaDiemQuyetDinh: string;
   trangThaiPhieuDieuDong?: number;
   isNew: boolean;
+  taiLieuBangKe:string
 }
 
 export interface ToolHandoverFormValues extends ToolHandoverData {

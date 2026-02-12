@@ -15,24 +15,8 @@ import {
 } from "@mui/icons-material";
 import React, { useState, useEffect, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";
-import { findById, formatted } from "../../../utils/helpers";
-import { useAllStaffsQuery, useStaffMutation } from "../../Staff/Mutation";
-import {
-  useAllDepartmentsQuery,
-  useDepartmentMutation,
-} from "../../Department/Mutation";
-import {
-  useAllPositionsQuery,
-  usePositionMutation,
-} from "../../Position/Mutation";
-import { useAllUnitsQuery, useUnitMutation } from "../../Unit/Mutation";
-import { ToolHandoverData } from "../../ToolHandover/types";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import dayjs from "dayjs";
 import { SignaturesData } from "../types";
 import BoxSignatureImg from "../../../components/SignDocument/BoxSignatureImg";
-import renderDigitalSignatureToImage from "../../../components/SignDocument/DigitalSignatureToImage";
 import S3Service from "../../../services/S3Service";
 import { AssetHandoverData } from "../../AssetHandover/types";
 

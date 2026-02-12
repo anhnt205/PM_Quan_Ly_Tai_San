@@ -40,24 +40,13 @@ import EditButton from "../../../components/Button/EditButton";
 import CustomStepper from "../../../components/common/CustomStepper";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import { AssetHandoverData, AssetHandoverFormValues } from "../types";
-import {
-  useAssetTranferMutation,
-  useAssetTransferPageQuery,
-} from "../../AssetTransfer/Mutation";
+import { useAssetTransferPageQuery } from "../../AssetTransfer/Mutation";
 import dayjs from "dayjs";
 import SignDocumentForm from "./SignDocumentForm";
-import { useDepartmentMutation } from "../../Department/Mutation";
-import { useStaffMutation } from "../../Staff/Mutation";
 import PreviewBtn from "../../../components/Button/PreviewBtn";
 import { findById, generateCode } from "../../../utils/helpers";
-import {
-  useAllCurrentStatusQuery,
-  useCurrentStatusMutation,
-} from "../../CurrentStatus/Mutation";
-import { useUnitMutation } from "../../Unit/Mutation";
-import { useAssetHandoverMutation } from "../Mutation";
+import { useAllCurrentStatusQuery } from "../../CurrentStatus/Mutation";
 import { assetHandoverValidationSchema } from "../validation";
-import { useAllAssetsQuery } from "../../AssetManager/Mutation";
 import { generateBienBanPdf } from "../config";
 import S3Service from "../../../services/S3Service";
 
@@ -256,7 +245,7 @@ export default function AssetHandoverForm({
       });
       const fileBangeKe = new File(
         [bangKeBytes.buffer as ArrayBuffer],
-        `BienBan_${values.soQuyetDinh}.pdf`,
+        `BienBan_${values.banGiaoTaiSan}.pdf`,
         {
           type: "application/pdf",
         },
@@ -412,6 +401,7 @@ export default function AssetHandoverForm({
           allUnits={allUnits}
           departments={departments}
           positions={positions}
+          isEdit={[0].includes(selectedAssetHandover?.trangThai ?? 0) ? true : false}
         />
       )}
       <Accordion

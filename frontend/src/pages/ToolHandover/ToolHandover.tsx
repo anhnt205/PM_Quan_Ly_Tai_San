@@ -464,7 +464,7 @@ export default function ToolHandover() {
           <IconButton
             size="small"
             onClick={async () => {
-              setSelectedDocument(params.row.duongDanFile);
+              setSelectedDocument(params.row.taiLieuCuoi);
               setToolTransfer(params.row);
               setShowSignerSidebar(false); // Ẩn sidebar khi xem
               setShowSignDocument(true);
@@ -560,6 +560,8 @@ export default function ToolHandover() {
             departments={departments}
             positions={positions}
             handleSignatureList={handleSignatureList}
+            isEdit={false}
+            bangKe={selectedRow.taiLieuBangKe}
           />
         ) : (
           <SignDocumentTransferForm
@@ -573,6 +575,7 @@ export default function ToolHandover() {
             fullscreen={true}
             staffs={staffs}
             handleSignatureList={handleSignatureList}
+            isEdit={false}
           />
         )
       ) : (

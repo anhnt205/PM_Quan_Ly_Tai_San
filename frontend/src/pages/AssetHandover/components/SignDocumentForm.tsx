@@ -350,17 +350,17 @@ export default function SignDocumentForm({
             imageBytes = bytes.buffer;
           } else {
             const imgPath = sig.chuKyNhay || sig.chuKyThuong;
-            if (!imgPath) continue;
+            if (!imgPath) return showErrorAlert("Không tìm thấy chữ kí");
 
             const s3Url = await S3Service.presignedGetUrl(imgPath);
-            if (!s3Url) continue;
+            if (!s3Url) return showErrorAlert("Lỗi tải chữ kí");
 
             const response = await fetch(s3Url);
-            if (!response.ok) continue;
+            if (!response.ok) return showErrorAlert("Lỗi tải chữ kí");
             imageBytes = await response.arrayBuffer();
           }
 
-          if (!imageBytes) continue;
+          if (!imageBytes) return showErrorAlert("Lỗi tải chữ kí");
 
           const pdfImage = await pdfDoc.embedPng(imageBytes);
           const widthRatio = (sig.width * (sig.scale || 1)) / displayWidth;
@@ -444,10 +444,14 @@ export default function SignDocumentForm({
         }
 
         // 👉 TRƯỜNG HỢP 2: XỬ LÝ BIÊN BẢN/BẢNG KÊ (previewDocument = false)
-        if (!isEdit && bangKe && typeof bangKe === "string") {
-          // Chế độ SIGN/VIEW: Tải file đã chốt từ S3
-          const blob = await S3Service.preview(bangKe);
-          finalBytes = new Uint8Array(await blob.arrayBuffer());
+        if (!isEdit) {
+          if (bangKe && typeof bangKe === "string") {
+            // Chế độ SIGN/VIEW: Tải file đã chốt từ S3
+            const blob = await S3Service.preview(bangKe);
+            finalBytes = new Uint8Array(await blob.arrayBuffer());
+          } else {
+            return showErrorAlert("Không có tài liệu đính kèm để hiển thị");
+          }
         } else {
           // Chế độ CREATE/EDIT: Tự động generate PDF từ dữ liệu hiện tại
           finalBytes = await generateBienBanPdf(
