@@ -262,7 +262,7 @@ export default function SignDocumentForm({
       chuKyThuong:
         (signatureType === 2 || signatureType === 4) && employee.chuKyThuong,
       width: 120,
-      scale: 1,
+      scale: 2,
       chuKySo: key,
       isLocked: false,
     };
@@ -363,7 +363,7 @@ export default function SignDocumentForm({
           if (!imageBytes) return showErrorAlert("Lỗi tải chữ kí");
 
           const pdfImage = await pdfDoc.embedPng(imageBytes);
-          const widthRatio = (sig.width * (sig.scale || 1)) / displayWidth;
+          const widthRatio = (sig.width * (sig.scale || 2)) / displayWidth;
           const pdfImageWidth = widthRatio * pageWidth;
           const pdfImageHeight =
             (pdfImage.height / pdfImage.width) * pdfImageWidth;

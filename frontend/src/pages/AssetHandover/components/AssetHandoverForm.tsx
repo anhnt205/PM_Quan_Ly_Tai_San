@@ -275,6 +275,7 @@ export default function AssetHandoverForm({
       }
       onSave({
         ...values,
+        quyetDinhDieuDongSo: values.lenhDieuDong,
         chiTietBanGiaoTaiSan,
         nguoiKyList,
         duongDanFile: keyTailieu,
@@ -401,7 +402,9 @@ export default function AssetHandoverForm({
           allUnits={allUnits}
           departments={departments}
           positions={positions}
-          isEdit={[0].includes(selectedAssetHandover?.trangThai ?? 0) ? true : false}
+          isEdit={
+            [0].includes(selectedAssetHandover?.trangThai ?? 0) ? true : false
+          }
         />
       )}
       <Accordion

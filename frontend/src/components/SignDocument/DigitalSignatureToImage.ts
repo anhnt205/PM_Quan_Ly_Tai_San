@@ -2,44 +2,37 @@ const renderDigitalSignatureToImage = async (
   name?: string | null,
   date?: string,
 ): Promise<string> => {
-  // 1. Tạo một canvas ngầm
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) return "";
 
-  // 2. Thiết lập kích thước (tỉ lệ 2x để nét)
-  const width = 260;
-  const height = 90;
+  const width = 500;
+  const height = 120;
   const scale = 2;
+
   canvas.width = width * scale;
   canvas.height = height * scale;
+
+  // Fix blur
+  canvas.style.width = `${width}px`;
+  canvas.style.height = `${height}px`;
+
   ctx.scale(scale, scale);
 
-  // 3. Vẽ nền trắng và khung viền đỏ
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, width, height);
-
-  ctx.strokeStyle = "#d32f2f";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(5, 5, width - 10, height - 10);
-
-  // 4. Vẽ Text
   ctx.textBaseline = "top";
+  ctx.fillStyle = "#2b40b5";
 
-  // Dòng 1: Tiêu đề
-  ctx.fillStyle = "#d32f2f";
-  ctx.font = "bold 20px Arial";
-  ctx.fillText("Chữ ký số", 15, 15);
+  const fontStyle = "Arial";
 
-  // Dòng 2: Người ký
-  ctx.font = "bold 20px Arial";
-  ctx.fillText(`Ký bởi: ${name || ""}`, 15, 40);
+  ctx.font = `600 28px ${fontStyle}`;
+  ctx.fillText("Chữ ký số / Digitally signed", 10, 10);
 
-  // Dòng 3: Ngày ký
-  ctx.font = "bold 20px Arial";
-  ctx.fillText(`Ký ngày: ${date || ""}`, 15, 65);
+  ctx.font = `600 26px ${fontStyle}`;
+  ctx.fillText(`Ký bởi / Signed by: ${name || ""}`, 30, 40);
 
-  // 5. Xuất ra Base64
+  ctx.font = `600 26px ${fontStyle}`;
+  ctx.fillText(`Ngày ký / Sign date: ${date || ""}`, 30, 70);
+
   return canvas.toDataURL("image/png");
 };
 

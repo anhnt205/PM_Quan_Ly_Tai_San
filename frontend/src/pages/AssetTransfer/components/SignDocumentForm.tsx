@@ -198,7 +198,7 @@ export default function SignDocumentForm({
       chuKyThuong:
         (signatureType === 2 || signatureType === 4) && employee.chuKyThuong,
       width: 120,
-      scale: 1,
+      scale: 2,
       chuKySo: result,
       isLocked: false,
     };
