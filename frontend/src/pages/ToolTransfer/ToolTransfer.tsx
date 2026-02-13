@@ -189,7 +189,10 @@ export default function ToolTransfer() {
   };
 
   const handleSign = (data: ToolSignature[]) => {
-    signMutation.mutate(data);
+    signMutation.mutate({
+      SignaturesData: data,
+      toolTransfer: selectedRow,
+    });
   };
 
   const handleDelete = async (rowData: ToolTransferData) => {
@@ -204,6 +207,7 @@ export default function ToolTransfer() {
   const handleViewSignAssets = async (fileName: string, item: any) => {
     setSelectedDocument(fileName);
     setShowSignDocument(true);
+    setSelectedRow(item);
     setToolTransferDetail(item.chiTietDieuDongCCDCVatTuDTOS || []);
     setShowSignerSidebar(true); // Hiện sidebar khi ký
   };

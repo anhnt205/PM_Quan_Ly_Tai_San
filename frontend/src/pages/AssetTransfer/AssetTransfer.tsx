@@ -198,12 +198,16 @@ export default function AssetTransfer() {
   };
 
   const handleSign = (data: SignaturesData[]) => {
-    signMutation.mutate(data);
+    signMutation.mutate({
+      SignaturesData: data,
+      asset:selectedRow
+    });
   };
 
   const handleViewSignAssets = async (fileName: string, item: any) => {
     setSelectedDocument(fileName);
     setShowSignDocument(true);
+    setSelectedRow(item);
     setAssetTransferDetail(item.chiTietDieuDongTaiSanDTOS);
     setShowSignerSidebar(true); // Hiện sidebar khi ký
   };

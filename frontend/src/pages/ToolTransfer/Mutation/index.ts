@@ -370,19 +370,30 @@ export const useToolTransferMutation = (
 
   // ky tai lieu
   const signMutation = useMutation({
-    mutationFn: async (data: ToolSignature[]) => {
-      const res = await api.post("/chuky", data);
+    mutationFn: async ({
+      SignaturesData,
+      toolTransfer,
+    }: {
+      SignaturesData: ToolSignature[];
+      toolTransfer: any;
+    }) => {
+      const res = await api.post("/chuky", SignaturesData);
       return res.data;
     },
-    onSuccess: (response, data) => {
-      queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
-      data.forEach((item) => {
+    onSuccess: async (response, data) => {
+      data.SignaturesData.forEach((item) => {
         signStatusMutation.mutate({
           idTaiLieu: item.idTaiLieu,
           userId: item.idNguoiKy,
         });
       });
+      const list = await listNguoiKy([data.toolTransfer]);
+      socketService.send({
+        type: MessageTypeFunctions.ASSET_TRANSFER,
+        recieve: list,
+      });
       showSuccessAlert("Ký thành công");
+      queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
     },
     onError: (error: any) => {
       showErrorAlert(

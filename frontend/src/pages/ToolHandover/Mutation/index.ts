@@ -297,7 +297,7 @@ export const useToolHandoverMutation = () => {
       const res = await api.post("/chuky", data);
       return res.data;
     },
-    onSuccess: (response, data) => {
+    onSuccess: async (response, data) => {
       queryClient.invalidateQueries({ queryKey: [mainKey] });
       data.data.forEach((item) => {
         signStatusMutation.mutate({
@@ -305,6 +305,11 @@ export const useToolHandoverMutation = () => {
           userId: item.idNguoiKy,
           assetHandover: data.assetHandover,
         });
+      });
+      const list = await listNguoiKy([data.assetHandover]);
+      socketService.send({
+        type: MessageTypeFunctions.ASSET_TRANSFER,
+        recieve: list,
       });
       showSuccessAlert("Ký thành công");
     },

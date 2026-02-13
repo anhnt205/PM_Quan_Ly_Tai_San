@@ -355,17 +355,28 @@ export const useAssetTranferMutation = () => {
 
   // ky tai lieu
   const signMutation = useMutation({
-    mutationFn: async (data: SignaturesData[]) => {
-      const res = await api.post("/chuky", data);
+    mutationFn: async ({
+      SignaturesData,
+      asset,
+    }: {
+      SignaturesData: SignaturesData[];
+      asset: any;
+    }) => {
+      const res = await api.post("/chuky", SignaturesData);
       return res.data;
     },
-    onSuccess: (response, data) => {
+    onSuccess: async (response, data) => {
       queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
-      data.forEach((item) => {
+      data.SignaturesData.forEach((item) => {
         signStatusMutation.mutate({
           idTaiLieu: item.idTaiLieu,
           userId: item.idNguoiKy,
         });
+      });
+      const list = await listNguoiKy([data.asset]);
+      socketService.send({
+        type: MessageTypeFunctions.ASSET_TRANSFER,
+        recieve: list,
       });
       showSuccessAlert("Ký thành công");
     },

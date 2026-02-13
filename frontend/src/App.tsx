@@ -154,7 +154,10 @@ function App() {
           <Route path={ROUTES.TYPEASSET} element={<TypeAsset />} />
           <Route path={ROUTES.TOOLGROUP} element={<ToolGroup />} />
           <Route path={ROUTES.TOOLTYPE} element={<ToolType />} />
-          <Route path={ROUTES.MAINTENANCEREPAIRTYPE} element={<MaintenanceRepairType />} />
+          <Route
+            path={ROUTES.MAINTENANCEREPAIRTYPE}
+            element={<MaintenanceRepairType />}
+          />
           <Route path={ROUTES.UNIT} element={<Unit />} />
           <Route path={ROUTES.REASONINCREASE} element={<ReasonIncrease />} />
           <Route path={ROUTES.CURRENTSTATUS} element={<CurrentStatus />} />
