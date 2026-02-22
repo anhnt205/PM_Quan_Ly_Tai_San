@@ -4,6 +4,8 @@ import {
   Logout,
   Person,
   Settings,
+  ChevronRight,
+  ChevronLeft,
 } from "@mui/icons-material";
 import {
   Avatar,
@@ -135,6 +137,9 @@ export default function Menuheader() {
   );
   const [openExpirationDialog, setOpenExpirationDialog] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const menuScrollRef = React.useRef<HTMLDivElement>(null);
 
   const handleOpenSettingMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElSetting(event.currentTarget);
@@ -398,6 +403,52 @@ export default function Menuheader() {
     return canSeeMenu;
   });
 
+  // Hàm kiểm tra xem có thể cuộn hay không
+  const checkScroll = () => {
+    if (menuScrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = menuScrollRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  // Hàm cuộn menu sang phải
+  const handleScrollRight = () => {
+    if (menuScrollRef.current) {
+      menuScrollRef.current.scrollBy({
+        left: 200,
+        behavior: "smooth",
+      });
+      setTimeout(checkScroll, 300);
+    }
+  };
+
+  // Hàm cuộn menu sang trái
+  const handleScrollLeft = () => {
+    if (menuScrollRef.current) {
+      menuScrollRef.current.scrollBy({
+        left: -200,
+        behavior: "smooth",
+      });
+      setTimeout(checkScroll, 300);
+    }
+  };
+
+  // Kiểm tra cuộn khi component mount hoặc khi menuItems thay đổi
+  React.useEffect(() => {
+    checkScroll();
+    const ref = menuScrollRef.current;
+    if (ref) {
+      ref.addEventListener("scroll", checkScroll);
+      window.addEventListener("resize", checkScroll);
+
+      return () => {
+        ref.removeEventListener("scroll", checkScroll);
+        window.removeEventListener("resize", checkScroll);
+      };
+    }
+  }, [menuItems]);
+
   return (
     <Box
       sx={{
@@ -409,7 +460,26 @@ export default function Menuheader() {
           "linear-gradient(to right,rgb(0, 158, 96, 1) 0%,rgb(2, 110, 66, 1) 100%)",
       }}
     >
+      {/* Nút cuộn trái */}
+      {canScrollLeft && (
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <IconButton
+            onClick={handleScrollLeft}
+            sx={{
+              color: "white",
+              p: 0.5,
+              "&:hover": {
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+              },
+            }}
+          >
+            <ChevronLeft />
+          </IconButton>
+        </Box>
+      )}
+
       <Box
+        ref={menuScrollRef}
         sx={{
           flexGrow: 1,
           display: "flex",
@@ -427,6 +497,24 @@ export default function Menuheader() {
           <NavMenuItem key={index} item={item} />
         ))}
       </Box>
+
+      {/* Nút cuộn phải */}
+      {canScrollRight && (
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <IconButton
+            onClick={handleScrollRight}
+            sx={{
+              color: "white",
+              p: 0.5,
+              "&:hover": {
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+              },
+            }}
+          >
+            <ChevronRight />
+          </IconButton>
+        </Box>
+      )}
       <Box sx={{ flexGrow: 0 }}>
         <IconButton
           sx={{ display: "flex", gap: 2 }}
