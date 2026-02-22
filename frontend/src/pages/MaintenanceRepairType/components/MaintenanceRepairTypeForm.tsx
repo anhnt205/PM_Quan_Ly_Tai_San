@@ -38,8 +38,7 @@ export default function MaintenanceRepairTypeForm({
   const formik = useFormik({
     initialValues: {
       id: "",
-      tenLoaiSuaChua: "",
-      idCongTy: "ct001",
+      ten: "",
     },
     validationSchema: MaintenanceRepairTypeValidation,
     onSubmit(values) {
@@ -97,7 +96,7 @@ export default function MaintenanceRepairTypeForm({
               <FieldInput
                 title="Tên loại sửa chữa *"
                 formik={formik}
-                field="tenLoaiSuaChua"
+                field="ten"
                 disabled={readOnly}
               />
             </Grid>

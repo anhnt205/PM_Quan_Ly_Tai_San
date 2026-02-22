@@ -18,11 +18,7 @@ import {
   showErrorAlert,
 } from "../../components/Alert";
 import { useDebounce } from "../../hooks/useDebounce";
-import {
-  getMaintenanceRepairTypesFromStorage,
-  saveMaintenanceRepairTypesToStorage,
-} from "./useMaintenanceRepairTypes";
-import MaintenanceRepairTypesData from "../../data/MaintenanceRepairType.json";
+import { useLoaiSCBDMutation, useloaiscbdPageQuery } from "./Mutation";
 
 export default function MaintenanceRepairType() {
   const [showForm, setShowForm] = useState(false);
@@ -30,22 +26,29 @@ export default function MaintenanceRepairType() {
   const [readOnly, setReadOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
-  const [maintenanceRepairTypes, setMaintenanceRepairTypes] = useState<any[]>(
-    [],
-  );
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Load data from JSON file on mount
-  useEffect(() => {
-    setMaintenanceRepairTypes(MaintenanceRepairTypesData);
-  }, []);
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
     page: 0,
   });
 
+  const {
+    createMutation,
+    updateMutation,
+    deleteOneMutation,
+    deleteManyMutation,
+  } = useLoaiSCBDMutation();
+
   const debouncedSearchValue = useDebounce(searchValue, 600);
+
+  const {
+    data: maintenanceRepairTypes = { items: [], totalItems: 0 },
+    isLoading,
+  } = useloaiscbdPageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    debouncedSearchValue,
+  );
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedRepairType(params.row);
@@ -58,27 +61,15 @@ export default function MaintenanceRepairType() {
 
     if (selectedRepairType) {
       // Update existing record
-      updatedData = maintenanceRepairTypes.map((item) =>
-        item.id === selectedRepairType.id ? values : item,
-      );
+      updateMutation.mutate(values);
+
     } else {
       // Create new record - check if ID already exists
-      if (maintenanceRepairTypes.some((item) => item.id === values.id)) {
-        showErrorAlert("Mã loại sửa chữa đã tồn tại!");
-        return;
-      }
-      updatedData = [...maintenanceRepairTypes, values];
+      createMutation.mutate(values);
     }
 
-    // Save to localStorage
-    saveMaintenanceRepairTypesToStorage(updatedData);
-    setMaintenanceRepairTypes(updatedData);
     setShowForm(false);
     setSelectedRepairType(null);
-
-    showSuccessAlert(
-      selectedRepairType ? "Cập nhật thành công!" : "Tạo mới thành công!",
-    );
   };
 
   const handleEdit = () => {
@@ -94,7 +85,7 @@ export default function MaintenanceRepairType() {
       headerAlign: "center",
     },
     {
-      field: "tenLoaiSuaChua",
+      field: "ten",
       headerName: "Tên loại sửa chữa",
       flex: 1,
       minWidth: 200,
@@ -112,14 +103,9 @@ export default function MaintenanceRepairType() {
           onClick={async (e) => {
             e.stopPropagation();
             const confirm = await showConfirmAlert("Xác nhận xóa!");
-            if (confirm.isConfirmed) {
-              const updatedData = maintenanceRepairTypes.filter(
-                (item) => item.id !== params.row.id,
-              );
-              saveMaintenanceRepairTypesToStorage(updatedData);
-              setMaintenanceRepairTypes(updatedData);
-              showSuccessAlert("Xóa thành công!");
-            }
+             if (confirm.isConfirmed) {
+               deleteOneMutation.mutate(params.row.id);
+             }
           }}
         >
           <Delete color="error" />
@@ -177,23 +163,15 @@ export default function MaintenanceRepairType() {
         <TableCustom
           title="Quản lý loại sửa chữa"
           columns={columns}
-          rows={maintenanceRepairTypes}
-          total={maintenanceRepairTypes.length}
+          rows={maintenanceRepairTypes.items}
+          total={maintenanceRepairTypes.totalItems}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
           loading={isLoading}
           onRowClick={handleRowClick}
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
-          onDelete={(ids) => {
-            const updatedData = maintenanceRepairTypes.filter(
-              (item) => !ids.includes(item.id),
-            );
-            saveMaintenanceRepairTypesToStorage(updatedData);
-            setMaintenanceRepairTypes(updatedData);
-            setSelectedIds([]);
-            showSuccessAlert("Xóa thành công!");
-          }}
+          onDelete={deleteManyMutation.mutate}  
           searchValue={searchValue}
           setSearchValue={setSearchValue}
         />
