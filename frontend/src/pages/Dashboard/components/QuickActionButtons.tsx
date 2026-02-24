@@ -20,42 +20,42 @@ export const QuickActionButtons = () => {
 
   const actions = [
     {
-      label: "Tạo mới tài sản",
+      label: "+ tài sản",
       icon: <InventoryIcon fontSize="large" />,
       path: ROUTES.ASSETMANAGER,
     },
     {
-      label: "Tạo mới CCDC-VT",
+      label: "+ CCDC-VT",
       icon: <BuildIcon fontSize="large" />,
       path: ROUTES.TOOLMANAGER,
     },
     {
-      label: "Tạo mới cấp phát TS",
+      label: "+ cấp phát TS",
       icon: <LocalShippingIcon fontSize="large" />,
       path: `${ROUTES.ASSETTRANSFER}?type=1`,
     },
     {
-      label: "Tạo mới Điều chuyển TS",
+      label: "+ Điều chuyển TS",
       icon: <SwapHorizIcon fontSize="large" />,
       path: `${ROUTES.ASSETTRANSFER}?type=2`,
     },
     {
-      label: "Tạo mới thu hồi TS",
+      label: "+ thu hồi TS",
       icon: <AssignmentReturnIcon fontSize="large" />,
       path: `${ROUTES.ASSETTRANSFER}?type=3`,
     },
     {
-      label: "Tạo mới cấp phát CCDC-VT",
+      label: "+ cấp phát CCDC-VT",
       icon: <LocalShippingIcon fontSize="large" />,
       path: `${ROUTES.TOOLTRANSFER}?type=1`,
     },
     {
-      label: "Tạo mới điều chuyển CCDC-VT",
+      label: "+ điều chuyển CCDC-VT",
       icon: <SwapHorizIcon fontSize="large" />,
       path: `${ROUTES.TOOLTRANSFER}?type=2`,
     },
     {
-      label: "Tạo mới thu hồi CCDC-VT",
+      label: "+ thu hồi CCDC-VT",
       icon: <AssignmentReturnIcon fontSize="large" />,
       path: `${ROUTES.TOOLTRANSFER}?type=3`,
     },
