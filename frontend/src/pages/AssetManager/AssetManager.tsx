@@ -14,7 +14,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
@@ -39,6 +39,7 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { Eye } from "lucide-react";
 import AssetHistoryModal from "./components/AssetHistoryModal";
 import socketService from "../../services/socketService";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function AssetManager() {
   const [tab, setTab] = React.useState(0);
@@ -48,6 +49,8 @@ export default function AssetManager() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("");
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
@@ -123,6 +126,16 @@ export default function AssetManager() {
   const [openErrorModal, setOpenErrorModal] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [openViewModal, setOpenViewModal] = useState(false);
+
+  useEffect(() => {
+    if (location.state?.autoCreate) {
+      setShowForm(true);
+      setSelectedAsset(null);
+      setReadOnly(false);
+
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location, navigate]);
 
   const handleOpenHistory = (asset: any) => {
     setSelectedAsset(asset);

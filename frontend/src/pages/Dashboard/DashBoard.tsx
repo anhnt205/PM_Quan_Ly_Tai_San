@@ -11,6 +11,7 @@ import TaisanTypeCard from "./sections/TaisanTypeCard";
 import TaisanMonthlyCard from "./sections/TaisanMonthlyCard";
 import Top5Panel from "./sections/Top5Panel";
 import NearDepreciationPanel from "./sections/NearDepreciationPanel";
+import { QuickActionButtons } from "./components/QuickActionButtons";
 
 export default function DashBoard() {
   const currentYear = new Date().getFullYear();
@@ -159,6 +160,8 @@ export default function DashBoard() {
             </Typography>
           </Box>
         </Box>
+
+        <QuickActionButtons />
 
         <Grid container spacing={2}>
           <Grid size={{ xs: 3 }}>

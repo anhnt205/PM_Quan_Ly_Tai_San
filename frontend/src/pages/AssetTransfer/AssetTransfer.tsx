@@ -13,7 +13,7 @@ import BienBanDialog from "./components/BienBanDialog";
 import TableCustom from "../../components/common/TableCustom";
 import { AssetTransferData, SignaturesData } from "./types";
 import PageAction from "../../components/common/PageAction";
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useAssetTranferMutation, useAssetTransferPageQuery } from "./Mutation";
 import { useSelector } from "react-redux";
 import {
@@ -56,6 +56,10 @@ export default function AssetTransfer() {
     page: 0,
     pageSize: 10,
   });
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
   const [searchValue, setSearchValue] = useState("");
@@ -148,6 +152,21 @@ export default function AssetTransfer() {
     setReadOnly(false);
   }, [type]);
 
+  useEffect(() => {
+    if (location.state?.autoCreate) {
+      setShowForm(true);
+      setSelectedRow(null);
+      setReadOnly(false);
+
+      navigate(location.pathname + location.search, { replace: true });
+    }
+  }, [
+    location.state?.autoCreate,
+    location.pathname,
+    location.search,
+    navigate,
+  ]);
+
   const { title, label } = getTypeInfo(type);
 
   const handleRowClick = (params: GridRowParams) => {
@@ -200,7 +219,7 @@ export default function AssetTransfer() {
   const handleSign = (data: SignaturesData[]) => {
     signMutation.mutate({
       SignaturesData: data,
-      asset:selectedRow
+      asset: selectedRow,
     });
   };
 

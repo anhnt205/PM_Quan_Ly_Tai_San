@@ -7,7 +7,7 @@ import SignerSidebar from "./components/SignerSidebar";
 import BienBanDialog from "./components/BienBanDialog";
 import TableCustom from "../../components/common/TableCustom";
 import PageAction from "../../components/common/PageAction";
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { showConfirmAlert } from "../../components/Alert";
 import {
@@ -52,6 +52,10 @@ export default function ToolTransfer() {
     page: 0,
     pageSize: 10,
   });
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const [showSignDocument, setShowSignDocument] = useState(false);
@@ -142,6 +146,22 @@ export default function ToolTransfer() {
     setShowSidebar(false);
     setReadOnly(false);
   }, [type]);
+
+  useEffect(() => {
+    if (location.state?.autoCreate) {
+      setSelectedRow(null);
+      setShowSidebar(false);
+      setShowForm(true);
+      setReadOnly(false);
+
+      navigate(location.pathname + location.search, { replace: true });
+    }
+  }, [
+    location.state?.autoCreate,
+    location.pathname,
+    location.search,
+    navigate,
+  ]);
 
   const { title, label } = getTypeInfo(type);
 

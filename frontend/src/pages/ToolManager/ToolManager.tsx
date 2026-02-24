@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PageAction from "../../components/common/PageAction";
 import { GridRowParams } from "@mui/x-data-grid";
 import ToolForm from "./components/ToolForm";
@@ -16,6 +16,7 @@ import { useAllUnitsQuery, useUnitMutation } from "../Unit/Mutation";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useDebounce } from "../../hooks/useDebounce";
 import AssetHistoryModal from "./components/ToolHistoryModal";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function ToolManager() {
   const [showForm, setShowForm] = useState(false);
@@ -34,6 +35,19 @@ export default function ToolManager() {
     pageSize: 10,
     page: 0,
   });
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (location.state?.autoCreate) {
+      setShowForm(true);
+      setSelectedTool(null);
+      setReadOnly(false);
+
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location, navigate]);
 
   const {
     toolGroups,
