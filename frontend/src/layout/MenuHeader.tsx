@@ -32,12 +32,14 @@ import {
   getAssetTransferCount,
   getToolHandoverCount,
   getToolTransferCount,
+  getMaintenanceRepairCount,
 } from "../utils/helpers";
 import { ShowCount } from "../components/common/ShowCount";
 import { ShowCountInSubMenu } from "../components/common/ShowCountInSubMenu";
 import { useToolTransferAllQuery } from "../pages/ToolTransfer/Mutation";
 import { useToolHandoverAllQuery } from "../pages/ToolHandover/Mutation";
 import { useAssetHandoverAllQuery } from "../pages/AssetHandover/Mutation";
+import { useMaintenanceRepairAllQuery } from "../pages/MaintenanceRepair/Mutation";
 import api from "../config/api.config";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React from "react";
@@ -233,6 +235,7 @@ export default function Menuheader() {
   const { data: toolTransfer = [] } = useToolTransferAllQuery();
   const { data: toolHandover = [] } = useToolHandoverAllQuery();
   const { data: assetHandover = [] } = useAssetHandoverAllQuery();
+  const { data: maintenanceRepair = [] } = useMaintenanceRepairAllQuery();
 
   const assetTransferCount1 = getAssetTransferCount(
     1,
@@ -273,6 +276,17 @@ export default function Menuheader() {
   const toolHandoverCount = getToolHandoverCount(
     user?.taiKhoan?.tenDangNhap,
     toolHandover,
+  );
+
+  const maintenanceRepairCount1 = getMaintenanceRepairCount(
+    1,
+    user?.taiKhoan?.tenDangNhap,
+    maintenanceRepair,
+  );
+  const maintenanceRepairCount2 = getMaintenanceRepairCount(
+    2,
+    user?.taiKhoan?.tenDangNhap,
+    maintenanceRepair,
   );
   const menuItems = [
     {
@@ -374,7 +388,20 @@ export default function Menuheader() {
     },
     {
       text: "Sửa chữa bảo dưỡng",
-      path: ROUTES.MAINTENANCEREPAIR,
+      path: "/",
+      count: maintenanceRepairCount1 + maintenanceRepairCount2,
+      subMenu: [
+        {
+          text: "Lập kế hoạch sửa chữa bảo dưỡng",
+          path: `${ROUTES.MAINTENANCEREPAIR}?type=2`,
+          count: maintenanceRepairCount2,
+        },
+        {
+          text: "Sửa chữa bảo dưỡng",
+          path: `${ROUTES.MAINTENANCEREPAIR}?type=1`,
+          count: maintenanceRepairCount1,
+        },
+      ],
     },
     {
       text: "Báo cáo",

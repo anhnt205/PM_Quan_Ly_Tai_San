@@ -35,7 +35,7 @@ import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted
 import FileAttachmentInput from "../../../components/TextField/FileAttachmentInput";
 import CustomStepper from "../../../components/common/CustomStepper";
 import { generateCode } from "../../../utils/helpers";
-import MaintenanceRepairTypesData from "../../../data/MaintenanceRepairType.json";
+import { useAllLoaiSCBDQuery } from "../../MaintenanceRepairType/Mutation";
 
 export default function MaintenanceRepairForm({
   onEdit,
@@ -62,14 +62,7 @@ export default function MaintenanceRepairForm({
 }) {
   const [expanded, setExpanded] = useState(true);
   const [document, setDocument] = useState<File | string | any>("");
-  const [maintenanceRepairTypes, setMaintenanceRepairTypes] = useState<any[]>(
-    [],
-  );
-
-  // Load maintenance repair types data
-  useEffect(() => {
-    setMaintenanceRepairTypes(MaintenanceRepairTypesData);
-  }, []);
+  const { data: maintenanceRepairTypes = [] } = useAllLoaiSCBDQuery();
 
   const CustomTableCell = styled(TableCell)(({ theme }) => ({
     borderBottom: "1px solid rgba(224, 224, 224, 1)",
@@ -119,6 +112,7 @@ export default function MaintenanceRepairForm({
       tenFile: "",
       duongDanFile: "",
       nguoiKyList: [],
+      ghiChuKhac: "",
       chiTietSuaChuaBaoDuongDTOS: [
         {
           id: "",
@@ -286,7 +280,7 @@ export default function MaintenanceRepairForm({
                   <Grid size={12}>
                     <FieldAutoCompleted
                       title="Loại sửa chữa *"
-                      labelkey="tenLoaiSuaChua"
+                      labelkey="ten"
                       data={maintenanceRepairTypes}
                       formik={formik}
                       field="idLoaiSuaChua"
@@ -526,164 +520,198 @@ export default function MaintenanceRepairForm({
 
             {/* CHI TIẾT TÀI SẢN */}
             <Box>
-              <Typography variant="subtitle1" fontWeight={600} mb={2}>
-                Chi tiết tài sản sửa chữa bảo dưỡng:
-              </Typography>
-              <Table
-                size="small"
-                sx={{
-                  "& .MuiTableCell-root": {
-                    borderBottom: "1px solid #e0e0e0",
-                  },
-                }}
-              >
-                <TableHead>
-                  <TableRow>
-                    <CustomTableHeadCell width="5%">STT</CustomTableHeadCell>
-                    <CustomTableHeadCell width="25%">
-                      Tài sản
-                    </CustomTableHeadCell>
-                    <CustomTableHeadCell width="15%">
-                      Đơn vị tính
-                    </CustomTableHeadCell>
-                    <CustomTableHeadCell width="15%">
-                      Số lượng
-                    </CustomTableHeadCell>
-                    <CustomTableHeadCell width="20%">
-                      Trạng thái
-                    </CustomTableHeadCell>
-                    <CustomTableHeadCell width="20%">
-                      Ghi chú
-                    </CustomTableHeadCell>
-                    {!readOnly && (
-                      <CustomTableHeadCell width="5%"></CustomTableHeadCell>
-                    )}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {formik.values.chiTietSuaChuaBaoDuongDTOS.map(
-                    (row, index) => (
-                      <TableRow key={index}>
-                        <CustomTableCell>{index + 1}</CustomTableCell>
-                        <CustomTableCell>
-                          <FieldAutoCompleted
-                            title=""
-                            labelkey="tenTaiSan"
-                            data={[]}
-                            formik={formik}
-                            field={`chiTietSuaChuaBaoDuongDTOS.${index}.idTaiSan`}
-                            onChange={(value) => {
-                              formik.setFieldValue(
-                                `chiTietSuaChuaBaoDuongDTOS.${index}.donViTinh`,
-                                value?.donViTinh,
-                              );
-                              formik.setFieldValue(
-                                `chiTietSuaChuaBaoDuongDTOS.${index}.tentaiSan`,
-                                value?.tenTaiSan,
-                              );
-                              formik.setFieldValue(
-                                `chiTietSuaChuaBaoDuongDTOS.${index}.soLuong`,
-                                value?.soLuong,
-                              );
-                              formik.setFieldValue(
-                                `chiTietSuaChuaBaoDuongDTOS.${index}.hienTrang`,
-                                value?.hienTrang,
-                              );
-                              formik.setFieldValue(
-                                `chiTietSuaChuaBaoDuongDTOS.${index}.moTa`,
-                                value?.moTa,
-                              );
-                              formik.setFieldValue(
-                                `chiTietSuaChuaBaoDuongDTOS.${index}.ghiChu`,
-                                value?.ghiChu,
-                              );
-                            }}
-                            disabled={readOnly}
-                          />
-                        </CustomTableCell>
-                        <CustomTableCell>
-                          <FieldAutoCompleted
-                            title=""
-                            labelkey="tenDonVi"
-                            data={allUnits}
-                            formik={formik}
-                            field={`chiTietSuaChuaBaoDuongDTOS.${index}.donViTinh`}
-                            disabled={readOnly}
-                          />
-                        </CustomTableCell>
-                        <CustomTableCell>
-                          <FieldInput
-                            title=""
-                            type="number"
-                            formik={formik}
-                            field={`chiTietSuaChuaBaoDuongDTOS.${index}.soLuong`}
-                            disabled={readOnly}
-                          />
-                        </CustomTableCell>
-                        <CustomTableCell>
-                          <FieldInput
-                            title=""
-                            formik={formik}
-                            field={`chiTietSuaChuaBaoDuongDTOS.${index}.hienTrang`}
-                            disabled={readOnly}
-                          />
-                        </CustomTableCell>
-                        <CustomTableCell>
-                          <FieldInput
-                            title=""
-                            formik={formik}
-                            field={`chiTietSuaChuaBaoDuongDTOS.${index}.ghiChu`}
-                            disabled={readOnly}
-                          />
-                        </CustomTableCell>
+              {(() => {
+                const isKhac =
+                  maintenanceRepairTypes.find(
+                    (t: any) => t.id === formik.values.idLoaiSuaChua,
+                  )?.ten === "Khác";
+                return (
+                  <>
+                    <Typography variant="subtitle1" fontWeight={600} mb={2}>
+                      {isKhac
+                        ? "Chi tiết sửa chữa bảo dưỡng khác:"
+                        : "Chi tiết tài sản sửa chữa bảo dưỡng:"}
+                    </Typography>
+                    {isKhac ? (
+                      <TextField
+                        multiline
+                        minRows={4}
+                        fullWidth
+                        label="Ghi chú"
+                        value={formik.values.ghiChuKhac}
+                        onChange={(e) =>
+                          formik.setFieldValue("ghiChuKhac", e.target.value)
+                        }
+                        disabled={readOnly}
+                      />
+                    ) : (
+                      <>
+                        <Table
+                          size="small"
+                          sx={{
+                            "& .MuiTableCell-root": {
+                              borderBottom: "1px solid #e0e0e0",
+                            },
+                          }}
+                        >
+                          <TableHead>
+                            <TableRow>
+                              <CustomTableHeadCell width="5%">
+                                STT
+                              </CustomTableHeadCell>
+                              <CustomTableHeadCell width="25%">
+                                Tài sản
+                              </CustomTableHeadCell>
+                              <CustomTableHeadCell width="15%">
+                                Đơn vị tính
+                              </CustomTableHeadCell>
+                              <CustomTableHeadCell width="15%">
+                                Số lượng
+                              </CustomTableHeadCell>
+                              <CustomTableHeadCell width="20%">
+                                Trạng thái
+                              </CustomTableHeadCell>
+                              <CustomTableHeadCell width="20%">
+                                Ghi chú
+                              </CustomTableHeadCell>
+                              {!readOnly && (
+                                <CustomTableHeadCell width="5%"></CustomTableHeadCell>
+                              )}
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {formik.values.chiTietSuaChuaBaoDuongDTOS.map(
+                              (row, index) => (
+                                <TableRow key={index}>
+                                  <CustomTableCell>{index + 1}</CustomTableCell>
+                                  <CustomTableCell>
+                                    <FieldAutoCompleted
+                                      title=""
+                                      labelkey="tenTaiSan"
+                                      data={[]}
+                                      formik={formik}
+                                      field={`chiTietSuaChuaBaoDuongDTOS.${index}.idTaiSan`}
+                                      onChange={(value) => {
+                                        formik.setFieldValue(
+                                          `chiTietSuaChuaBaoDuongDTOS.${index}.donViTinh`,
+                                          value?.donViTinh,
+                                        );
+                                        formik.setFieldValue(
+                                          `chiTietSuaChuaBaoDuongDTOS.${index}.tentaiSan`,
+                                          value?.tenTaiSan,
+                                        );
+                                        formik.setFieldValue(
+                                          `chiTietSuaChuaBaoDuongDTOS.${index}.soLuong`,
+                                          value?.soLuong,
+                                        );
+                                        formik.setFieldValue(
+                                          `chiTietSuaChuaBaoDuongDTOS.${index}.hienTrang`,
+                                          value?.hienTrang,
+                                        );
+                                        formik.setFieldValue(
+                                          `chiTietSuaChuaBaoDuongDTOS.${index}.moTa`,
+                                          value?.moTa,
+                                        );
+                                        formik.setFieldValue(
+                                          `chiTietSuaChuaBaoDuongDTOS.${index}.ghiChu`,
+                                          value?.ghiChu,
+                                        );
+                                      }}
+                                      disabled={readOnly}
+                                    />
+                                  </CustomTableCell>
+                                  <CustomTableCell>
+                                    <FieldAutoCompleted
+                                      title=""
+                                      labelkey="tenDonVi"
+                                      data={allUnits}
+                                      formik={formik}
+                                      field={`chiTietSuaChuaBaoDuongDTOS.${index}.donViTinh`}
+                                      disabled={readOnly}
+                                    />
+                                  </CustomTableCell>
+                                  <CustomTableCell>
+                                    <FieldInput
+                                      title=""
+                                      type="number"
+                                      formik={formik}
+                                      field={`chiTietSuaChuaBaoDuongDTOS.${index}.soLuong`}
+                                      disabled={readOnly}
+                                    />
+                                  </CustomTableCell>
+                                  <CustomTableCell>
+                                    <FieldInput
+                                      title=""
+                                      formik={formik}
+                                      field={`chiTietSuaChuaBaoDuongDTOS.${index}.hienTrang`}
+                                      disabled={readOnly}
+                                    />
+                                  </CustomTableCell>
+                                  <CustomTableCell>
+                                    <FieldInput
+                                      title=""
+                                      formik={formik}
+                                      field={`chiTietSuaChuaBaoDuongDTOS.${index}.ghiChu`}
+                                      disabled={readOnly}
+                                    />
+                                  </CustomTableCell>
+                                  {!readOnly && (
+                                    <CustomTableCell align="center">
+                                      <IconButton
+                                        color="error"
+                                        size="small"
+                                        onClick={() => {
+                                          const newAssets = [
+                                            ...formik.values
+                                              .chiTietSuaChuaBaoDuongDTOS,
+                                          ];
+                                          newAssets.splice(index, 1);
+                                          formik.setFieldValue(
+                                            "chiTietSuaChuaBaoDuongDTOS",
+                                            newAssets,
+                                          );
+                                        }}
+                                      >
+                                        <Delete fontSize="small" />
+                                      </IconButton>
+                                    </CustomTableCell>
+                                  )}
+                                </TableRow>
+                              ),
+                            )}
+                          </TableBody>
+                        </Table>
                         {!readOnly && (
-                          <CustomTableCell align="center">
-                            <IconButton
-                              color="error"
-                              size="small"
+                          <Box mt={2}>
+                            <Button
+                              startIcon={<Add />}
+                              variant="text"
                               onClick={() => {
-                                const newAssets = [
-                                  ...formik.values.chiTietSuaChuaBaoDuongDTOS,
-                                ];
-                                newAssets.splice(index, 1);
                                 formik.setFieldValue(
                                   "chiTietSuaChuaBaoDuongDTOS",
-                                  newAssets,
+                                  [
+                                    ...formik.values.chiTietSuaChuaBaoDuongDTOS,
+                                    {
+                                      assetId: "",
+                                      uom: "",
+                                      quantity: 1,
+                                      status: "Đang sử dụng",
+                                      note: "",
+                                    },
+                                  ],
                                 );
                               }}
+                              sx={{ textTransform: "none" }}
                             >
-                              <Delete fontSize="small" />
-                            </IconButton>
-                          </CustomTableCell>
+                              Thêm một dòng
+                            </Button>
+                          </Box>
                         )}
-                      </TableRow>
-                    ),
-                  )}
-                </TableBody>
-              </Table>
-              {!readOnly && (
-                <Box mt={2}>
-                  <Button
-                    startIcon={<Add />}
-                    variant="text"
-                    onClick={() => {
-                      formik.setFieldValue("chiTietSuaChuaBaoDuongDTOS", [
-                        ...formik.values.chiTietSuaChuaBaoDuongDTOS,
-                        {
-                          assetId: "",
-                          uom: "",
-                          quantity: 1,
-                          status: "Đang sử dụng",
-                          note: "",
-                        },
-                      ]);
-                    }}
-                    sx={{ textTransform: "none" }}
-                  >
-                    Thêm một dòng
-                  </Button>
-                </Box>
-              )}
+                      </>
+                    )}
+                  </>
+                );
+              })()}
             </Box>
           </Paper>
         </AccordionDetails>

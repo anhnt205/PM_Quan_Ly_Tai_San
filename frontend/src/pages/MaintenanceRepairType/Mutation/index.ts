@@ -186,10 +186,10 @@ export const useloaiscbdPageQuery = (
 
 export const useAllLoaiSCBDQuery = () => {
   return useQuery({
-    queryKey: ["allProjects"], // Key để cache dữ liệu
+    queryKey: ["allLoaiSCBD"], // Key để cache dữ liệu
     queryFn: async () => {
       const res = await api.get("/loaiscbd");
-      return res.data;
+      return res.data.data;
     },
     placeholderData: (previousData) => previousData,
   });

@@ -1,4 +1,4 @@
-import { Delete, Inventory2 } from "@mui/icons-material";
+import { Delete, Inventory2, Build } from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -456,7 +456,7 @@ export default function AssetManager() {
               />
               <Tab
                 label="Sửa chữa bảo dưỡng"
-                icon={<Inventory2 fontSize="small" />}
+                icon={<Build fontSize="small" />}
                 sx={{ fontSize: 12 }}
               />
             </Tabs>

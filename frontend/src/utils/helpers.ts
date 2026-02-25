@@ -5,6 +5,7 @@ import { AssetTransferData } from "../pages/AssetTransfer/types";
 import { ToolTransferData } from "../pages/ToolTransfer/types";
 import { AssetHandoverData } from "../pages/AssetHandover/types";
 import { ToolHandoverData } from "../pages/ToolHandover/types";
+import { MaintenanceRepairData } from "../pages/MaintenanceRepair/types";
 
 dayjs.extend(customParseFormat);
 
@@ -346,5 +347,80 @@ export const getToolHandoverCount = (
     }
 
     return isUserPendingSignatureHandover(signatureFlow, userTenDangNhap);
+  }).length;
+};
+
+export const getMaintenanceRepairCount = (
+  type: number,
+  userTenDangNhap: string,
+  maintenanceRepairList?: MaintenanceRepairData[],
+): number => {
+  if (!maintenanceRepairList || maintenanceRepairList.length === 0) return 0;
+
+  return maintenanceRepairList.filter((item) => {
+    // ===== Filter 1: loại =====
+    if (item.loai !== type) return false;
+
+    // ===== Filter 2: share hoặc người tạo =====
+    if (item.share !== true && item.nguoiTao !== userTenDangNhap) {
+      return false;
+    }
+
+    // ===== Build signature group =====
+    const idSignatureGroup: { id?: string; signed: boolean }[] = [];
+
+    // 1. Người lập phiếu ký nhảy
+    if (item.nguoiLapPhieuKyNhay === true) {
+      idSignatureGroup.push({
+        id: item.idNguoiKyNhay,
+        signed: item.trangThaiKyNhay === true,
+      });
+    }
+
+    // 2. Trình duyệt cấp phòng
+    idSignatureGroup.push({
+      id: item.idTrinhDuyetCapPhong,
+      signed: item.trinhDuyetCapPhongXacNhan === true,
+    });
+
+    // 3. Danh sách người ký (sort theo id)
+    if (item.nguoiKyList && item.nguoiKyList.length > 0) {
+      const sortedSignatories = [...item.nguoiKyList].sort((a, b) =>
+        (a.id ?? "").localeCompare(b.id ?? ""),
+      );
+
+      sortedSignatories.forEach((signatory) => {
+        idSignatureGroup.push({
+          id: signatory.idNguoiKy,
+          signed: signatory.trangThai === 1,
+        });
+      });
+    }
+
+    // 4. Trình duyệt giám đốc
+    idSignatureGroup.push({
+      id: item.idTrinhDuyetGiamDoc,
+      signed: item.trinhDuyetGiamDocXacNhan === true,
+    });
+
+    // ===== Check user =====
+    const userIndex = idSignatureGroup.findIndex(
+      (e) => e.id === userTenDangNhap,
+    );
+
+    // User không có trong danh sách ký
+    if (userIndex === -1) return false;
+
+    // User đã ký
+    if (idSignatureGroup[userIndex].signed) return false;
+
+    // Tất cả người ký trước user phải đã ký
+    for (let i = 0; i < userIndex; i++) {
+      if (idSignatureGroup[i].signed !== true) {
+        return false;
+      }
+    }
+
+    return true;
   }).length;
 };
