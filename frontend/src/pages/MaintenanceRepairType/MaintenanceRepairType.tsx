@@ -59,7 +59,7 @@ export default function MaintenanceRepairType() {
       setSelectedRepairType(null);
       setReadOnly(false);
 
-      navigate(location.pathname, { replace: true });
+      navigate(location.pathname + location.search, { replace: true });
     }
   }, [location, navigate]);
 

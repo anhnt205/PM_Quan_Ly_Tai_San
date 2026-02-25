@@ -87,13 +87,22 @@ export default function MaintenanceRepair() {
 
   useEffect(() => {
     if (location.state?.autoCreate) {
-      setShowForm(true);
-      setSelectedRepair(null);
-      setReadOnly(false);
+      if (type === "2") {
+        setShowPlanningForm(false);
+        setReadOnly(false);
+        setShowPlanningForm(true);
+      } else {
+        setSelectedRepair(null);
+        setShowResultForm(false);
+        setShowSidebar(false);
+        setReadOnly(false);
+        setShowForm(false);
+        setShowForm(true);
+      }
 
-      navigate(location.pathname, { replace: true });
+      navigate(location.pathname + location.search, { replace: true });
     }
-  }, [location, navigate]);
+  }, [location, navigate, type]);
 
   // Assets & Tools for planning
   const { data: rawAssets = [] } = useAllAssetsQuery();
