@@ -26,29 +26,38 @@ export default function CcdcTypeCard({
         bgcolor: "#f0faf5",
       }}
     >
-      <Typography
-        variant="subtitle1"
-        sx={{ color: "#04b46e", fontWeight: 600, mb: 2 }}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 2,
+        }}
       >
-        Phân bố CCDC theo loại
-      </Typography>
-
-      <FormControl size="small" sx={{ mb: 2, minWidth: 150 }}>
-        <Select
-          value={selectedNhomCCDC ?? ""}
-          onChange={(e) => {
-            const val = String(e.target.value);
-            setSelectedNhomCCDC(val === "" ? undefined : val);
-          }}
-          displayEmpty
+        <Typography
+          variant="subtitle1"
+          sx={{ color: "success.main", fontWeight: 600 }}
         >
-          {(uniqueNhomCCDC || []).map((nhom: any) => (
-            <MenuItem key={nhom.id} value={nhom.id}>
-              {nhom.tenNhom}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+          Phân bố CCDC theo loại
+        </Typography>
+
+        <FormControl size="small" sx={{ minWidth: 150 }}>
+          <Select
+            value={selectedNhomCCDC ?? ""}
+            onChange={(e) => {
+              const val = String(e.target.value);
+              setSelectedNhomCCDC(val === "" ? undefined : val);
+            }}
+            displayEmpty
+          >
+            {(uniqueNhomCCDC || []).map((nhom: any) => (
+              <MenuItem key={nhom.id} value={nhom.id}>
+                {nhom.tenNhom}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
 
       <Box sx={{ height: 200 }}>
         <BarChart data={ccdcBarData} height={200} barColor="#FF9800" />

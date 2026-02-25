@@ -20,17 +20,17 @@ export const QuickActionButtons = () => {
 
   const actions = [
     {
-      label: "+ tài sản",
+      label: "+ Tài sản",
       icon: <InventoryIcon fontSize="large" />,
       path: ROUTES.ASSETMANAGER,
     },
     {
       label: "+ CCDC-VT",
-      icon: <BuildIcon fontSize="large" />,
+      icon: <InventoryIcon fontSize="large" />,
       path: ROUTES.TOOLMANAGER,
     },
     {
-      label: "+ cấp phát TS",
+      label: "+ Cấp phát TS",
       icon: <LocalShippingIcon fontSize="large" />,
       path: `${ROUTES.ASSETTRANSFER}?type=1`,
     },
@@ -40,24 +40,34 @@ export const QuickActionButtons = () => {
       path: `${ROUTES.ASSETTRANSFER}?type=2`,
     },
     {
-      label: "+ thu hồi TS",
+      label: "+ Thu hồi TS",
       icon: <AssignmentReturnIcon fontSize="large" />,
       path: `${ROUTES.ASSETTRANSFER}?type=3`,
     },
     {
-      label: "+ cấp phát CCDC-VT",
+      label: "+ Cấp phát CCDC-VT",
       icon: <LocalShippingIcon fontSize="large" />,
       path: `${ROUTES.TOOLTRANSFER}?type=1`,
     },
     {
-      label: "+ điều chuyển CCDC-VT",
+      label: "+ Điều chuyển CCDC-VT",
       icon: <SwapHorizIcon fontSize="large" />,
       path: `${ROUTES.TOOLTRANSFER}?type=2`,
     },
     {
-      label: "+ thu hồi CCDC-VT",
+      label: "+ Thu hồi CCDC-VT",
       icon: <AssignmentReturnIcon fontSize="large" />,
       path: `${ROUTES.TOOLTRANSFER}?type=3`,
+    },
+    {
+      label: "+ Kế hoạch sửa chữa bảo dưỡng",
+      icon: <BuildIcon fontSize="large" />,
+      path: `${ROUTES.MAINTENANCEREPAIR}?type=2`,
+    },
+    {
+      label: "+ Sửa chữa bảo dưỡng",
+      icon: <BuildIcon fontSize="large" />,
+      path: `${ROUTES.MAINTENANCEREPAIR}?type=1`,
     },
   ];
 
@@ -162,7 +172,7 @@ export const QuickActionButtons = () => {
 
   return (
     <Box sx={{ mb: 3 }}>
-      <Grid container spacing={2} columns={8}>
+      <Grid container spacing={2} columns={10}>
         {actions.map((action, index) => (
           <Grid size={{ xs: 1 }} key={index}>
             <Box

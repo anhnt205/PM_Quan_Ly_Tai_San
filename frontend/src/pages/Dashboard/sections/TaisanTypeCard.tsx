@@ -1,6 +1,7 @@
 import React from "react";
 import { Paper, Typography, Box } from "@mui/material";
 import BarChart from "../components/BarChart";
+import CustomLoading from "../../../components/loading/CustomLoading/CustomLoading";
 
 export default function TaisanTypeCard({ taiSanBarData }: any) {
   return (
@@ -35,19 +36,7 @@ export default function TaisanTypeCard({ taiSanBarData }: any) {
               color: "text.secondary",
             }}
           >
-            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-              <path
-                d="M24 8L8 16V32L24 40L40 32V16L24 8Z"
-                stroke="#9E9E9E"
-                strokeWidth="2"
-              />
-              <path
-                d="M24 8V24M24 24L8 16M24 24L40 16"
-                stroke="#9E9E9E"
-                strokeWidth="2"
-              />
-              <path d="M24 24V40" stroke="#9E9E9E" strokeWidth="2" />
-            </svg>
+            <CustomLoading />
             <Typography variant="body2" sx={{ mt: 1 }}>
               Không có dữ liệu nhóm tài sản
             </Typography>

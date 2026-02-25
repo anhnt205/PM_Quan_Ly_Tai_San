@@ -11,7 +11,6 @@ import {
 import {
   Box,
   Button,
-  colors,
   Grid,
   IconButton,
   Paper,
@@ -34,6 +33,7 @@ import { Dispatch, SetStateAction } from "react";
 import { FilterOption, FilterStatusGroup } from "./FilterStatusGroup";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
+
 const CustomFilterPanel = (props: any) => {
   return (
     <GridFilterPanel
@@ -278,12 +278,18 @@ export default function TableCustom({
           }
           onRowSelectionModelChange={(newSelection: any) => {
             let result: string[] = [];
-
-            if (newSelection?.ids && newSelection.ids.size > 0) {
-              // Set model: { type: "include", ids: Set }
-              result = Array.from(newSelection.ids as Set<string>);
+            if (newSelection?.type === "exclude") {
+              const excludedIds = Array.from(newSelection.ids as Set<string>);
+              result = rows
+                .map((row) => row.Id || row.id || row.soThe)
+                .filter((id) => !excludedIds.includes(id as string));
+            } else if (newSelection?.type === "include") {
+              if (newSelection.ids && newSelection.ids.size > 0) {
+                result = Array.from(newSelection.ids as Set<string>);
+              }
+            } else if (Array.isArray(newSelection)) {
+              result = newSelection;
             }
-
             onSelectionChange?.(result);
             const selectedRows = rows.filter((row) => {
               const rowId = row.Id || row.id || row.soThe;

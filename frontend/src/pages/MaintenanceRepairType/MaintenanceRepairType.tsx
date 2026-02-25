@@ -19,6 +19,7 @@ import {
 } from "../../components/Alert";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useLoaiSCBDMutation, useloaiscbdPageQuery } from "./Mutation";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function MaintenanceRepairType() {
   const [showForm, setShowForm] = useState(false);
@@ -26,6 +27,8 @@ export default function MaintenanceRepairType() {
   const [readOnly, setReadOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
@@ -50,6 +53,16 @@ export default function MaintenanceRepairType() {
     debouncedSearchValue,
   );
 
+  useEffect(() => {
+    if (location.state?.autoCreate) {
+      setShowForm(true);
+      setSelectedRepairType(null);
+      setReadOnly(false);
+
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location, navigate]);
+
   const handleRowClick = (params: GridRowParams) => {
     setSelectedRepairType(params.row);
     setReadOnly(true); // Set readOnly to true when viewing details
@@ -62,7 +75,6 @@ export default function MaintenanceRepairType() {
     if (selectedRepairType) {
       // Update existing record
       updateMutation.mutate(values);
-
     } else {
       // Create new record - check if ID already exists
       createMutation.mutate(values);
@@ -103,9 +115,9 @@ export default function MaintenanceRepairType() {
           onClick={async (e) => {
             e.stopPropagation();
             const confirm = await showConfirmAlert("Xác nhận xóa!");
-             if (confirm.isConfirmed) {
-               deleteOneMutation.mutate(params.row.id);
-             }
+            if (confirm.isConfirmed) {
+              deleteOneMutation.mutate(params.row.id);
+            }
           }}
         >
           <Delete color="error" />
@@ -171,7 +183,7 @@ export default function MaintenanceRepairType() {
           onRowClick={handleRowClick}
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
-          onDelete={deleteManyMutation.mutate}  
+          onDelete={deleteManyMutation.mutate}
           searchValue={searchValue}
           setSearchValue={setSearchValue}
         />

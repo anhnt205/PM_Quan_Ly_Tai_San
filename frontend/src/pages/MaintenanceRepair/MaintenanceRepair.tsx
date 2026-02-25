@@ -25,7 +25,7 @@ import { Trash2, FileText, FileCheck } from "lucide-react";
 import { SignHeader } from "../../components/SignDocument/SignHeader";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
 import { showStatus, showShareStatus } from "./config";
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { MaintenancePlanData } from "./types/planning";
 import {
   useMaintenancePlanningPageQuery,
@@ -39,6 +39,8 @@ export default function MaintenanceRepair() {
   const { user } = useSelector((state: any) => state.user);
   const [searchParams] = useSearchParams();
   const type = searchParams.get("type");
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const [showForm, setShowForm] = useState(false);
   const [showPlanningForm, setShowPlanningForm] = useState(false);
@@ -69,6 +71,16 @@ export default function MaintenanceRepair() {
   const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
   const { data: allStaffs = [] } = useAllStaffsQuery();
   const staffMutation = useStaffMutation();
+
+  useEffect(() => {
+    if (location.state?.autoCreate) {
+      setShowForm(true);
+      setSelectedRepair(null);
+      setReadOnly(false);
+
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location, navigate]);
 
   // Assets & Tools for planning
   const { data: rawAssets = [] } = useAllAssetsQuery();
