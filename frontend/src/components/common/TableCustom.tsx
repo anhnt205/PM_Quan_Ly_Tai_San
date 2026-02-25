@@ -321,6 +321,15 @@ export default function TableCustom({
             getRowHeight={() => "auto"}
             sx={{
               fontSize: "14px",
+              "& .MuiDataGrid-toolbarContainer .MuiButton-root": {
+                color: "#1FA463",
+                fontWeight: 600,
+                // Hiệu ứng hover cho nút trong toolbar
+                "&:hover": {
+                  backgroundColor: "rgba(31, 164, 99, 0.04)",
+                },
+              },
+
               "& .MuiDataGrid-columnHeader": {
                 backgroundColor: "#1FA463",
               },
