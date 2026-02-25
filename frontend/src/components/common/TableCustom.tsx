@@ -77,6 +77,8 @@ interface Props {
   isCheckShowShare?: (item: any) => boolean;
   handleSignDocument?: (item: any, user: any, onSign: () => void) => void;
   titleSearch?: string;
+  extraActions?: React.ReactNode;
+  customContent?: React.ReactNode;
 }
 
 export default function TableCustom({
@@ -111,6 +113,8 @@ export default function TableCustom({
   selectedDate,
   setSelectedDate,
   titleSearch = "Tìm kiếm ...",
+  extraActions,
+  customContent,
 }: Props) {
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.user);
@@ -255,100 +259,105 @@ export default function TableCustom({
                 Khấu hao tài sản
               </Button>
             )}
+            {extraActions}
           </Box>
         </Grid>
       </Grid>
       <Box sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGrid
-          getRowId={(row) => row.Id || row.id || row.soThe}
-          onRowClick={onRowClick}
-          columns={columns}
-          rows={rows}
-          rowCount={total}
-          paginationMode={paginationMode}
-          paginationModel={paginationModel}
-          onPaginationModelChange={onPaginationModelChange}
-          pageSizeOptions={[10, 20, 50]}
-          loading={loading}
-          checkboxSelection={checkboxSelection}
-          rowSelectionModel={
-            selectedIds && selectedIds.length > 0
-              ? { type: "include" as const, ids: new Set(selectedIds) }
-              : { type: "include" as const, ids: new Set() }
-          }
-          onRowSelectionModelChange={(newSelection: any) => {
-            let result: string[] = [];
-            if (newSelection?.type === "exclude") {
-              const excludedIds = Array.from(newSelection.ids as Set<string>);
-              result = rows
-                .map((row) => row.Id || row.id || row.soThe)
-                .filter((id) => !excludedIds.includes(id as string));
-            } else if (newSelection?.type === "include") {
-              if (newSelection.ids && newSelection.ids.size > 0) {
-                result = Array.from(newSelection.ids as Set<string>);
-              }
-            } else if (Array.isArray(newSelection)) {
-              result = newSelection;
+        {customContent ? (
+          customContent
+        ) : (
+          <DataGrid
+            getRowId={(row) => row.Id || row.id || row.soThe}
+            onRowClick={onRowClick}
+            columns={columns}
+            rows={rows}
+            rowCount={total}
+            paginationMode={paginationMode}
+            paginationModel={paginationModel}
+            onPaginationModelChange={onPaginationModelChange}
+            pageSizeOptions={[10, 20, 50]}
+            loading={loading}
+            checkboxSelection={checkboxSelection}
+            rowSelectionModel={
+              selectedIds && selectedIds.length > 0
+                ? { type: "include" as const, ids: new Set(selectedIds) }
+                : { type: "include" as const, ids: new Set() }
             }
-            onSelectionChange?.(result);
-            const selectedRows = rows.filter((row) => {
-              const rowId = row.Id || row.id || row.soThe;
-              return result.includes(rowId);
-            });
-            setSelectedItem(selectedRows);
-            handleAssetTransfer?.(selectedRows[0]?.idDonViGiao);
-          }}
-          disableRowSelectionOnClick
-          showToolbar
-          slots={{ toolbar: GridToolbar, filterPanel: CustomFilterPanel }}
-          localeText={viVN.components.MuiDataGrid.defaultProps.localeText}
-          // disableVirtualization={true}
-          slotProps={{
-            filterPanel: { disableAddFilterButton: false },
-            toolbar: {
-              csvOptions: { disableToolbarButton: true },
-              printOptions: { disableToolbarButton: true },
-            },
-          }}
-          getRowHeight={() => "auto"}
-          sx={{
-            fontSize: "14px",
-            "& .MuiDataGrid-columnHeader": {
-              backgroundColor: "#1FA463",
-            },
+            onRowSelectionModelChange={(newSelection: any) => {
+              let result: string[] = [];
+              if (newSelection?.type === "exclude") {
+                const excludedIds = Array.from(newSelection.ids as Set<string>);
+                result = rows
+                  .map((row) => row.Id || row.id || row.soThe)
+                  .filter((id) => !excludedIds.includes(id as string));
+              } else if (newSelection?.type === "include") {
+                if (newSelection.ids && newSelection.ids.size > 0) {
+                  result = Array.from(newSelection.ids as Set<string>);
+                }
+              } else if (Array.isArray(newSelection)) {
+                result = newSelection;
+              }
+              onSelectionChange?.(result);
+              const selectedRows = rows.filter((row) => {
+                const rowId = row.Id || row.id || row.soThe;
+                return result.includes(rowId);
+              });
+              setSelectedItem(selectedRows);
+              handleAssetTransfer?.(selectedRows[0]?.idDonViGiao);
+            }}
+            disableRowSelectionOnClick
+            showToolbar
+            slots={{ toolbar: GridToolbar, filterPanel: CustomFilterPanel }}
+            localeText={viVN.components.MuiDataGrid.defaultProps.localeText}
+            // disableVirtualization={true}
+            slotProps={{
+              filterPanel: { disableAddFilterButton: false },
+              toolbar: {
+                csvOptions: { disableToolbarButton: true },
+                printOptions: { disableToolbarButton: true },
+              },
+            }}
+            getRowHeight={() => "auto"}
+            sx={{
+              fontSize: "14px",
+              "& .MuiDataGrid-columnHeader": {
+                backgroundColor: "#1FA463",
+              },
 
-            "& .MuiDataGrid-columnHeaderTitle": {
-              color: "#fff",
-              fontWeight: 700,
-            },
-            "& .MuiDataGrid-columnHeader .MuiDataGrid-sortButton": {
-              background: "#1FA463",
-              color: "black",
-            },
-            "& .MuiDataGrid-iconButtonContainer": {
-              visibility: "visible",
-            },
+              "& .MuiDataGrid-columnHeaderTitle": {
+                color: "#fff",
+                fontWeight: 700,
+              },
+              "& .MuiDataGrid-columnHeader .MuiDataGrid-sortButton": {
+                background: "#1FA463",
+                color: "black",
+              },
+              "& .MuiDataGrid-iconButtonContainer": {
+                visibility: "visible",
+              },
 
-            "& .MuiDataGrid-sortIcon": {
-              opacity: 1,
-              color: "#fff",
-            },
+              "& .MuiDataGrid-sortIcon": {
+                opacity: 1,
+                color: "#fff",
+              },
 
-            "& .MuiDataGrid-menuIcon": {
-              opacity: 1,
-              color: "#fff",
-            },
+              "& .MuiDataGrid-menuIcon": {
+                opacity: 1,
+                color: "#fff",
+              },
 
-            // Checkbox header
-            "& .MuiDataGrid-columnHeaderCheckbox .MuiCheckbox-root": {
-              color: "#fff",
-            },
-            "& .MuiDataGrid-cell": {
-              display: "flex",
-              alignItems: "center",
-            },
-          }}
-        />
+              // Checkbox header
+              "& .MuiDataGrid-columnHeaderCheckbox .MuiCheckbox-root": {
+                color: "#fff",
+              },
+              "& .MuiDataGrid-cell": {
+                display: "flex",
+                alignItems: "center",
+              },
+            }}
+          />
+        )}
       </Box>
     </Paper>
   );

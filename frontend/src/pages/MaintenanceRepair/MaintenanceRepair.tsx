@@ -1,36 +1,43 @@
 import {
   Box,
+  Button,
   Grid,
   IconButton,
   Tooltip,
-  Button,
   Dialog,
   Typography,
+  Tab,
+  Tabs,
+  Badge,
 } from "@mui/material";
+import { ClassOutlined, TableChart } from "@mui/icons-material";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import PageAction from "../../components/common/PageAction";
 import MaintenanceRepairForm from "./components/MaintenanceRepairForm";
 import MaintenanceRepairResultForm from "./components/MaintenanceRepairResultForm";
 import MaintenanceRepairDetailSidebar from "./components/MaintenanceRepairDetailSidebar";
+import MaintenancePlanCalendar from "./components/MaintenancePlanCalendar";
 import MaintenancePlanningForm from "./components/MaintenancePlanningForm";
 import TableCustom from "../../components/common/TableCustom";
 import { useSelector } from "react-redux";
 import { useAllDepartmentsQuery } from "../Department/Mutation";
 import { useAllUnitsQuery } from "../Unit/Mutation";
 import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
-import { useAllStaffsQuery, useStaffMutation } from "../Staff/Mutation";
+import { useAllStaffsQuery } from "../Staff/Mutation";
 import { showConfirmAlert } from "../../components/Alert";
 import { GridColDef } from "@mui/x-data-grid";
-import { Trash2, FileText, FileCheck } from "lucide-react";
+import { Trash2, FileText, FileCheck, Calendar } from "lucide-react";
 import { SignHeader } from "../../components/SignDocument/SignHeader";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
 import { showStatus, showShareStatus } from "./config";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { MaintenancePlanData } from "./types/planning";
 import {
+  useMaintenanceRepairPageQuery,
+  useMaintenanceRepairMutation,
   useMaintenancePlanningPageQuery,
   useMaintenancePlanningMutation,
-  useMaintenancePlanningAllQuery,
+  useRepairResultPageQuery,
 } from "./Mutation";
 import { useAllAssetsQuery } from "../AssetManager/Mutation";
 import { useAllToolQuery } from "../ToolManager/Mutation";
@@ -58,9 +65,16 @@ export default function MaintenanceRepair() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showSignDocument, setShowSignDocument] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
+  const [showCalendar, setShowCalendar] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<MaintenancePlanData | null>(
     null,
   );
+  const [activeTabRepair, setActiveTabRepair] = useState(0);
+  const [repairResults, setRepairResults] = useState<any[]>([]);
+  const [resultPaginationModel, setResultPaginationModel] = useState({
+    pageSize: 10,
+    page: 0,
+  });
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
     page: 0,
@@ -70,7 +84,6 @@ export default function MaintenanceRepair() {
   const { data: allUnits = [] } = useAllUnitsQuery();
   const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
   const { data: allStaffs = [] } = useAllStaffsQuery();
-  const staffMutation = useStaffMutation();
 
   useEffect(() => {
     if (location.state?.autoCreate) {
@@ -100,6 +113,63 @@ export default function MaintenanceRepair() {
     ],
     [rawAssets, rawTools],
   );
+
+  // API queries — load data from server
+  const { data: repairPageData } = useMaintenanceRepairPageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    undefined,
+    type !== "2" ? 1 : undefined,
+    status !== "" ? parseInt(status) : undefined,
+  );
+
+  const { data: repairResultPageData } = useRepairResultPageQuery(
+    resultPaginationModel.page,
+    resultPaginationModel.pageSize,
+  );
+
+  const { data: planPageData } = useMaintenancePlanningPageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    undefined,
+    status !== "" ? parseInt(status) : undefined,
+  );
+
+  useEffect(() => {
+    if (repairPageData) {
+      const items = Array.isArray(repairPageData)
+        ? repairPageData
+        : (repairPageData?.content ?? []);
+      setMaintenanceRepairs(items);
+    }
+  }, [repairPageData]);
+
+  useEffect(() => {
+    if (planPageData) {
+      const items = Array.isArray(planPageData)
+        ? planPageData
+        : (planPageData?.content ?? []);
+      setMaintenancePlans(items);
+    }
+  }, [planPageData]);
+
+  useEffect(() => {
+    if (repairResultPageData) {
+      const items = Array.isArray(repairResultPageData)
+        ? repairResultPageData
+        : (repairResultPageData?.content ?? repairResultPageData?.items ?? []);
+      setRepairResults(items);
+    }
+  }, [repairResultPageData]);
+
+  // Repair mutations
+  const {
+    createMutation: createRepairMutation,
+    updateMutation: updateRepairMutation,
+    updateStatusMutation: updateRepairStatusMutation,
+    deleteMutation: deleteRepairMutation,
+    deleteManyMutation: deleteManyRepairMutation,
+  } = useMaintenanceRepairMutation();
 
   // Maintenance Planning mutations
   const {
@@ -369,83 +439,6 @@ export default function MaintenanceRepair() {
     },
   ];
 
-  // Initialize with sample/test data for both types
-  useEffect(() => {
-    if (
-      maintenanceRepairs.length === 0 &&
-      allDepartments.length > 0 &&
-      allStaffs.length > 0 &&
-      type === "1" // Only initialize for maintenance repair
-    ) {
-      const firstDept = allDepartments[0];
-      const secondDept =
-        allDepartments.length > 1 ? allDepartments[1] : firstDept;
-      const firstStaff = allStaffs[0];
-
-      const sampleData = {
-        id: "SCB-TEST-001",
-        soQuyetDinh: "QD-001/2026",
-        tenPhieu: "Phiếu sửa chữa bảo dưỡng mẫu",
-        idLoaiSuaChua: "LSC-001",
-        loai: 1, // type=1 for "Sửa chữa bảo dưỡng"
-        idPhanXuong: firstDept?.id || "",
-        ngayYeuCauHoanThanh: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split("T")[0],
-        idDonViTiepNhanTaiSan: secondDept?.id || "",
-        idDonViGiao: firstDept?.id || "",
-        idDonViNhan: secondDept?.id || "",
-        tenDonViGiao: firstDept?.tenPhongBan || "Phòng Công nghệ thông tin",
-        tenDonViNhan: secondDept?.tenPhongBan || "Phòng Vật tư cơ khí",
-        idNguoiKyNhay: firstStaff?.id || "",
-        trangThaiKyNhay: false,
-        nguoiLapPhieuKyNhay: false,
-        idDonViDeNghi: firstDept?.id || "",
-        idTrinhDuyetCapPhong: firstStaff?.id || "",
-        trinhDuyetCapPhongXacNhan: false,
-        idTrinhDuyetGiamDoc: firstStaff?.id || "",
-        tenTrinhDuyetGiamDoc: firstStaff?.hoTen || "Nguyễn Văn A",
-        trinhDuyetGiamDocXacNhan: false,
-        diaDiemGiaoNhan: "Kho lưu trữ",
-        idPhongBanXemPhieu: firstDept?.id || "",
-        noiNhan: "Kho công ty",
-        trangThai: 0,
-        idCongTy: "ct001",
-        ngayTao: new Date().toLocaleString("vi-VN"),
-        ngayCapNhat: new Date().toLocaleString("vi-VN"),
-        nguoiTao: user?.taiKhoan?.tenDangNhap || "admin",
-        nguoiCapNhat: "",
-        coHieuLuc: 1,
-        share: false,
-        daBanGiao: false,
-        byStep: false,
-        coPhieuBanGiao: false,
-        tenFile: "sample-repair-form.pdf",
-        duongDanFile: "/files/sample-repair-form.pdf",
-        nguoiKyList: [],
-        chiTietSuaChuaBaoDuongDTOS: [
-          {
-            id: "CTSC-TEST-001",
-            idSuaChuaBaoDuong: "SCB-TEST-001",
-            tentaiSan: "Máy tính để bàn",
-            idTaiSan: "TS-001",
-            soLuong: 0,
-            ghiChu: "",
-            ngayTao: new Date().toLocaleString("vi-VN"),
-            ngayCapNhat: new Date().toLocaleString("vi-VN"),
-            nguoiTao: user?.taiKhoan?.tenDangNhap || "admin",
-            nguoiCapNhat: "",
-            isActive: true,
-            hienTrang: "",
-            moTa: "Bảo dưỡng định kỳ hàng quý",
-          },
-        ],
-      };
-
-      setMaintenanceRepairs([sampleData]);
-    }
-  }, [allDepartments, allStaffs, user, type]);
-
   const statusOptions: FilterOption[] = useMemo(
     () => [
       {
@@ -501,14 +494,6 @@ export default function MaintenanceRepair() {
       result = result.filter((item) => item.trangThai === parseInt(status));
     }
 
-    console.log(
-      "filteredRepairs recalculated:",
-      result.length,
-      "items, status:",
-      status,
-      "type:",
-      type,
-    );
     return result;
   }, [maintenanceRepairs, status, type]);
 
@@ -561,31 +546,20 @@ export default function MaintenanceRepair() {
             ?.hoTen || "",
       };
 
-      setMaintenanceRepairs((prev) => {
-        const existingIndex = prev.findIndex((p) => p.id === values.id);
-        if (existingIndex >= 0) {
-          const updated = [...prev];
-          updated[existingIndex] = {
-            ...updated[existingIndex],
-            ...enrichedValues,
-          };
-          console.log("Cập nhật:", enrichedValues);
-          return updated;
-        } else {
-          const newRepair = {
-            ...enrichedValues,
-            id: `SCB-${Date.now()}`,
-            ngayTao: new Date().toLocaleString("vi-VN"),
-            trangThai: 0,
-            nguoiTao: user?.taiKhoan?.tenDangNhap || "",
-          };
-          console.log("Tạo mới:", newRepair);
-          return [newRepair, ...prev];
-        }
-      });
+      if (values.id) {
+        updateRepairMutation.mutate(enrichedValues);
+      } else {
+        createRepairMutation.mutate(enrichedValues);
+      }
       handleClose();
     },
-    [allDepartments, allStaffs, user, handleClose],
+    [
+      allDepartments,
+      allStaffs,
+      updateRepairMutation,
+      createRepairMutation,
+      handleClose,
+    ],
   );
 
   const handleCancel = useCallback(async () => {
@@ -594,92 +568,47 @@ export default function MaintenanceRepair() {
         `Hủy phiếu sửa chữa bảo dưỡng "${selectedRepair?.id}"`,
       );
       if (confirm && confirm.isConfirmed) {
-        setMaintenanceRepairs((prev) =>
-          prev.map((item) =>
-            item.id === selectedRepair.id ? { ...item, trangThai: 3 } : item,
-          ),
+        updateRepairStatusMutation.mutate(
+          { id: selectedRepair.id, trangThai: 3 },
+          { onSuccess: handleClose },
         );
-        console.log("Hủy:", selectedRepair?.id);
-        handleClose();
       }
     }
-  }, [selectedRepair, handleClose]);
+  }, [selectedRepair, handleClose, updateRepairStatusMutation]);
 
   const handleDeleteSelected = useCallback(
     (ids: string[]) => {
-      console.log("handleDeleteSelected called with IDs:", ids);
-      setMaintenanceRepairs((prev) => {
-        const filtered = prev.filter((item) => !ids.includes(item.id));
-        console.log(
-          "Deleted",
-          ids.length,
-          "items. Remaining:",
-          filtered.length,
-        );
-        return filtered;
+      deleteManyRepairMutation.mutate(ids, {
+        onSuccess: () => {
+          setSelectedIds([]);
+          if (selectedRepair && ids.includes(selectedRepair.id)) {
+            handleClose();
+          }
+        },
       });
-      setSelectedIds([]);
-      if (selectedRepair && ids.includes(selectedRepair.id)) {
-        handleClose();
-      }
     },
-    [selectedRepair, handleClose],
+    [selectedRepair, handleClose, deleteManyRepairMutation],
   );
 
   const handleDelete = useCallback(
     async (rowId: string) => {
-      console.log("handleDelete called with rowId:", rowId);
       const confirm = await showConfirmAlert(
         `Xóa phiếu sửa chữa bảo dưỡng "${rowId}"`,
       );
-      console.log(
-        "Delete confirm result:",
-        confirm,
-        "IsConfirmed:",
-        confirm?.isConfirmed,
-      );
-
       if (confirm?.isConfirmed) {
-        console.log("Confirmed delete for:", rowId);
-
-        setMaintenanceRepairs((prev) => {
-          console.log("Before delete - total items:", prev.length);
-          const filtered = prev.filter((item) => item.id !== rowId);
-          console.log("After delete - total items:", filtered.length);
-          console.log(
-            "Remaining IDs:",
-            filtered.map((i) => i.id),
-          );
-          return filtered;
+        deleteRepairMutation.mutate(rowId, {
+          onSuccess: () => {
+            if (selectedRepair?.id === rowId) handleClose();
+          },
         });
-
-        setSelectedRepair((current: any) => {
-          if (current?.id === rowId) {
-            console.log("Closing form because deleted item was selected");
-            handleClose();
-          }
-          return current;
-        });
-      } else {
-        console.log("Delete cancelled");
       }
     },
-    [handleClose],
+    [handleClose, selectedRepair, deleteRepairMutation],
   );
 
   const handleViewPdf = useCallback(
-    async (fileName: string, filePath: string) => {
-      try {
-        // TODO: Implement S3 file preview
-        // const blob = await handlePreviewS3(filePath);
-        // if (blob) {
-        //   const url = window.URL.createObjectURL(blob);
-        //   setSelectedDocument(url);
-        //   setShowSignDocument(true);
-        // }
-      } catch (error) {
-        console.error("Error loading file:", error);
-      }
+    async (_fileName: string, _filePath: string) => {
+      // TODO: Implement S3 file preview
     },
     [],
   );
@@ -873,6 +802,91 @@ export default function MaintenanceRepair() {
     [user, allDepartments, handleRowClick, handleDelete, handleViewPdf],
   );
 
+  const repairResultColumns: GridColDef[] = useMemo(
+    () => [
+      {
+        field: "id",
+        headerName: "Mã phiếu kết quả",
+        width: 160,
+        headerAlign: "center",
+        align: "center",
+      },
+      {
+        field: "idPhieuScbd",
+        headerName: "Mã phiếu SCBD",
+        width: 160,
+        headerAlign: "center",
+        align: "center",
+      },
+      {
+        field: "ngayHoanThanh",
+        headerName: "Ngày hoàn thành",
+        width: 160,
+        headerAlign: "center",
+        align: "center",
+        renderCell: (params) => {
+          if (!params.value) return "";
+          const d = new Date(params.value);
+          return isNaN(d.getTime()) ? params.value : d.toLocaleString("vi-VN");
+        },
+      },
+      {
+        field: "idPhanXuong",
+        headerName: "Phân xưởng",
+        width: 160,
+        headerAlign: "center",
+        align: "center",
+        renderCell: (params) => {
+          const dept = allDepartments.find(
+            (d: any) => d.id === params.row?.idPhanXuong,
+          );
+          return dept?.tenPhongBan || params.value || "";
+        },
+      },
+      {
+        field: "tongChiPhi",
+        headerName: "Tổng chi phí",
+        width: 140,
+        headerAlign: "center",
+        align: "right",
+        renderCell: (params) => {
+          if (params.value == null) return "";
+          return Number(params.value).toLocaleString("vi-VN") + " đ";
+        },
+      },
+      {
+        field: "ketQuaText",
+        headerName: "Kết quả",
+        width: 150,
+        headerAlign: "center",
+        align: "center",
+      },
+      {
+        field: "ghiChu",
+        headerName: "Ghi chú",
+        flex: 1,
+        minWidth: 160,
+        headerAlign: "center",
+        align: "left",
+      },
+      {
+        field: "ngayTao",
+        headerName: "Ngày tạo",
+        width: 160,
+        headerAlign: "center",
+        align: "center",
+        renderCell: (params) => {
+          if (!params.value) return "";
+          const d = new Date(params.value);
+          return isNaN(d.getTime())
+            ? params.value
+            : d.toLocaleDateString("vi-VN");
+        },
+      },
+    ],
+    [allDepartments],
+  );
+
   return (
     <>
       {!showSignDocument ? (
@@ -887,7 +901,7 @@ export default function MaintenanceRepair() {
               if (type === "2") {
                 handlePlanningClose();
                 setShowPlanningForm(true);
-              } else {
+              } else if (activeTabRepair === 0) {
                 handleClose();
                 setShowForm(true);
               }
@@ -939,8 +953,7 @@ export default function MaintenanceRepair() {
                             selectedRepairForResult?.idNguoiPhuTrach || "",
                         }}
                         readOnly={false}
-                        onSave={(data) => {
-                          console.log("Phiếu kết quả bảo trì đã lưu:", data);
+                        onSave={(_data) => {
                           setShowResultForm(false);
                           setSelectedRepairForResult(null);
                         }}
@@ -1029,6 +1042,37 @@ export default function MaintenanceRepair() {
                       }}
                       onDelete={handleDeleteSelectedPlanning}
                       showDelete={true}
+                      extraActions={
+                        <Button
+                          variant="contained"
+                          size="small"
+                          startIcon={<Calendar size={16} />}
+                          sx={{
+                            bgcolor: showCalendar
+                              ? "success.dark"
+                              : "success.main",
+                            "&:hover": { bgcolor: "success.dark" },
+                          }}
+                          onClick={() => setShowCalendar((v) => !v)}
+                        >
+                          {showCalendar ? "Bảng" : "Lịch"}
+                        </Button>
+                      }
+                      customContent={
+                        showCalendar ? (
+                          <MaintenancePlanCalendar
+                            onClose={() => setShowCalendar(false)}
+                            plans={maintenancePlans}
+                            onPlanClick={(plan) => {
+                              setSelectedPlan(plan);
+                              setReadOnly(true);
+                              setShowPlanningForm(true);
+                              setShowSidebar(true);
+                              setShowCalendar(false);
+                            }}
+                          />
+                        ) : undefined
+                      }
                     />
                   </Grid>
 
@@ -1223,7 +1267,7 @@ export default function MaintenanceRepair() {
               </>
             ) : (
               <>
-                {showForm && !showResultForm && (
+                {activeTabRepair === 0 && showForm && !showResultForm && (
                   <Box sx={{ mb: 2 }}>
                     <MaintenanceRepairForm
                       key={showForm ? "new-form" : `edit-${selectedRepair?.id}`}
@@ -1243,44 +1287,97 @@ export default function MaintenanceRepair() {
                   </Box>
                 )}
 
-                {showResultForm && selectedRepairForResult && !showForm && (
-                  <Box sx={{ mb: 2 }}>
-                    <MaintenanceRepairResultForm
-                      key={`result-form-${selectedRepairForResult?.id}`}
-                      onClose={() => setShowResultForm(false)}
-                      selectedRepair={selectedRepairForResult}
-                      readOnly={false}
-                      onSave={(data) => {
-                        console.log("Result form saved:", data);
-                        // TODO: Implement API call to save result
-                        setShowResultForm(false);
-                      }}
-                      onCancel={() => setShowResultForm(false)}
-                      departments={allDepartments}
-                      staffs={(allStaffs || []).filter(
-                        (staff: any) => staff.hasAccount,
-                      )}
-                    />
-                  </Box>
-                )}
+                {activeTabRepair === 0 &&
+                  showResultForm &&
+                  selectedRepairForResult &&
+                  !showForm && (
+                    <Box sx={{ mb: 2 }}>
+                      <MaintenanceRepairResultForm
+                        key={`result-form-${selectedRepairForResult?.id}`}
+                        onClose={() => setShowResultForm(false)}
+                        selectedRepair={selectedRepairForResult}
+                        readOnly={false}
+                        onSave={(_data) => {
+                          // TODO: Implement API call to save result
+                          setShowResultForm(false);
+                        }}
+                        onCancel={() => setShowResultForm(false)}
+                        departments={allDepartments}
+                        staffs={(allStaffs || []).filter(
+                          (staff: any) => staff.hasAccount,
+                        )}
+                      />
+                    </Box>
+                  )}
 
                 <Grid
                   container
                   sx={{
-                    display: "flex",
-                    alignItems: "stretch",
-                    bgcolor: "background.paper",
+                    border: "1px solid #e0e0e0",
                     borderRadius: "8px",
                     overflow: "hidden",
-                    border: "1px solid",
-                    borderColor: "divider",
+                    bgcolor: "background.paper",
                   }}
                 >
+                  {/* Tab header row */}
+                  <Grid size={{ xs: 12 }}>
+                    <Box
+                      sx={{
+                        borderBottom: 1,
+                        borderColor: "divider",
+                        bgcolor: "#fff",
+                        display: "flex",
+                        justifyContent: "flex-end",
+                      }}
+                    >
+                      <Tabs
+                        value={activeTabRepair}
+                        onChange={(_e, v) => {
+                          setActiveTabRepair(v);
+                          setShowForm(false);
+                          setShowResultForm(false);
+                          setShowSidebar(false);
+                        }}
+                        sx={{
+                          "& .MuiTab-root": {
+                            textTransform: "none",
+                            fontWeight: "bold",
+                            minHeight: "64px",
+                          },
+                        }}
+                      >
+                        <Tab
+                          icon={<ClassOutlined />}
+                          label="Phếu sửa chữa bảo dưỡng"
+                          iconPosition="top"
+                        />
+                        <Tab
+                          icon={
+                            <Badge
+                              badgeContent={repairResults.length}
+                              color="error"
+                            >
+                              <TableChart />
+                            </Badge>
+                          }
+                          label="Kết quả sửa chữa bảo dưỡng"
+                          iconPosition="top"
+                        />
+                      </Tabs>
+                    </Box>
+                  </Grid>
+
+                  {/* Table row */}
                   <Grid
-                    size={{ xs: showSidebar ? 9 : 12 }}
+                    size={{
+                      xs: activeTabRepair === 0 && showSidebar ? 9 : 12,
+                    }}
                     sx={{
                       transition: "all 0.3s ease",
-                      borderRight: showSidebar ? "1px solid" : "none",
+                      borderRight:
+                        activeTabRepair === 0 && showSidebar
+                          ? "1px solid"
+                          : "none",
                       borderColor: "divider",
                       "& .MuiPaper-root": {
                         margin: 0,
@@ -1289,36 +1386,52 @@ export default function MaintenanceRepair() {
                       },
                     }}
                   >
-                    <TableCustom
-                      title={pageTitle}
-                      columns={columns}
-                      rows={filteredRepairs}
-                      total={filteredRepairs.length}
-                      paginationModel={paginationModel}
-                      onPaginationModelChange={setPaginationModel}
-                      onRowClick={handleRowClick}
-                      showStatusFilter={true}
-                      statusOptions={statusOptions}
-                      onStatusChange={(value) => {
-                        setStatus(value);
-                      }}
-                      statusValue={status}
-                      selectedIds={selectedIds}
-                      onSelectionChange={(ids) => {
-                        setSelectedIds(ids);
-                      }}
-                      onDelete={handleDeleteSelected}
-                      showDelete={true}
-                    />
+                    {activeTabRepair === 0 ? (
+                      <TableCustom
+                        title={pageTitle}
+                        columns={columns}
+                        rows={filteredRepairs}
+                        total={filteredRepairs.length}
+                        paginationModel={paginationModel}
+                        onPaginationModelChange={setPaginationModel}
+                        onRowClick={handleRowClick}
+                        showStatusFilter={true}
+                        statusOptions={statusOptions}
+                        onStatusChange={(value) => {
+                          setStatus(value);
+                        }}
+                        statusValue={status}
+                        selectedIds={selectedIds}
+                        onSelectionChange={(ids) => {
+                          setSelectedIds(ids);
+                        }}
+                        onDelete={handleDeleteSelected}
+                        showDelete={true}
+                      />
+                    ) : (
+                      <TableCustom
+                        title="Kết quả sửa chữa bảo dưỡng"
+                        columns={repairResultColumns}
+                        rows={repairResults}
+                        total={repairResults.length}
+                        paginationModel={resultPaginationModel}
+                        onPaginationModelChange={setResultPaginationModel}
+                        checkboxSelection={false}
+                        showDelete={false}
+                        showStatusFilter={false}
+                      />
+                    )}
                   </Grid>
 
-                  {showSidebar && (
+                  {/* Sidebar - only for tab 0 */}
+                  {activeTabRepair === 0 && showSidebar && (
                     <Grid
                       size={{ xs: 3 }}
                       sx={{
                         display: "flex",
                         flexDirection: "column",
                         bgcolor: "#fafafa",
+                        borderLeft: "1px solid #e0e0e0",
                       }}
                     >
                       <MaintenanceRepairDetailSidebar

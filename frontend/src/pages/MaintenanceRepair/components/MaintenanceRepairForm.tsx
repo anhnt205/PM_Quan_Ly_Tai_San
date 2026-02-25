@@ -13,6 +13,8 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
   TextField,
   styled,
@@ -36,6 +38,8 @@ import FileAttachmentInput from "../../../components/TextField/FileAttachmentInp
 import CustomStepper from "../../../components/common/CustomStepper";
 import { generateCode } from "../../../utils/helpers";
 import { useAllLoaiSCBDQuery } from "../../MaintenanceRepairType/Mutation";
+import { useAllAssetsQuery } from "../../AssetManager/Mutation";
+import { useAllToolQuery } from "../../ToolManager/Mutation";
 
 export default function MaintenanceRepairForm({
   onEdit,
@@ -62,7 +66,12 @@ export default function MaintenanceRepairForm({
 }) {
   const [expanded, setExpanded] = useState(true);
   const [document, setDocument] = useState<File | string | any>("");
+  const [activeDetailTab, setActiveDetailTab] = useState<"taisan" | "ccdc">(
+    "taisan",
+  );
   const { data: maintenanceRepairTypes = [] } = useAllLoaiSCBDQuery();
+  const { data: allAssets = [] } = useAllAssetsQuery();
+  const { data: allTools = [] } = useAllToolQuery();
 
   const CustomTableCell = styled(TableCell)(({ theme }) => ({
     borderBottom: "1px solid rgba(224, 224, 224, 1)",
@@ -546,6 +555,73 @@ export default function MaintenanceRepairForm({
                       />
                     ) : (
                       <>
+                        {/* TOGGLE TÀI SẢN / CCDC */}
+                        <Box mb={2}>
+                          <ToggleButtonGroup
+                            value={activeDetailTab}
+                            exclusive
+                            onChange={(_, val) => {
+                              if (val) setActiveDetailTab(val);
+                            }}
+                            size="small"
+                            disabled={readOnly}
+                            sx={{
+                              bgcolor: "#f0f0f0",
+                              borderRadius: "20px",
+                              p: "3px",
+                              gap: "2px",
+                              "& .MuiToggleButtonGroup-grouped": {
+                                border: "none",
+                                borderRadius: "16px !important",
+                              },
+                            }}
+                          >
+                            <ToggleButton
+                              value="taisan"
+                              sx={{
+                                textTransform: "none",
+                                fontWeight: 500,
+                                fontSize: "0.8rem",
+                                px: 2.5,
+                                py: 0.5,
+                                borderRadius: "16px",
+                                color: "text.secondary",
+                                "&.Mui-selected": {
+                                  bgcolor: "white",
+                                  color: "success.main",
+                                  fontWeight: 600,
+                                  boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
+                                  "&:hover": { bgcolor: "white" },
+                                },
+                                "&:hover": { bgcolor: "transparent" },
+                              }}
+                            >
+                              Tài sản
+                            </ToggleButton>
+                            <ToggleButton
+                              value="ccdc"
+                              sx={{
+                                textTransform: "none",
+                                fontWeight: 500,
+                                fontSize: "0.8rem",
+                                px: 2.5,
+                                py: 0.5,
+                                borderRadius: "16px",
+                                color: "text.secondary",
+                                "&.Mui-selected": {
+                                  bgcolor: "white",
+                                  color: "success.main",
+                                  fontWeight: 600,
+                                  boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
+                                  "&:hover": { bgcolor: "white" },
+                                },
+                                "&:hover": { bgcolor: "transparent" },
+                              }}
+                            >
+                              CCDC - Vật tư
+                            </ToggleButton>
+                          </ToggleButtonGroup>
+                        </Box>
                         <Table
                           size="small"
                           sx={{
@@ -560,7 +636,9 @@ export default function MaintenanceRepairForm({
                                 STT
                               </CustomTableHeadCell>
                               <CustomTableHeadCell width="25%">
-                                Tài sản
+                                {activeDetailTab === "taisan"
+                                  ? "Tài sản"
+                                  : "CCDC - Vật tư"}
                               </CustomTableHeadCell>
                               <CustomTableHeadCell width="15%">
                                 Đơn vị tính
@@ -587,8 +665,16 @@ export default function MaintenanceRepairForm({
                                   <CustomTableCell>
                                     <FieldAutoCompleted
                                       title=""
-                                      labelkey="tenTaiSan"
-                                      data={[]}
+                                      labelkey={
+                                        activeDetailTab === "taisan"
+                                          ? "tenTaiSan"
+                                          : "ten"
+                                      }
+                                      data={
+                                        activeDetailTab === "taisan"
+                                          ? allAssets
+                                          : allTools
+                                      }
                                       formik={formik}
                                       field={`chiTietSuaChuaBaoDuongDTOS.${index}.idTaiSan`}
                                       onChange={(value) => {
@@ -598,7 +684,9 @@ export default function MaintenanceRepairForm({
                                         );
                                         formik.setFieldValue(
                                           `chiTietSuaChuaBaoDuongDTOS.${index}.tentaiSan`,
-                                          value?.tenTaiSan,
+                                          activeDetailTab === "taisan"
+                                            ? value?.tenTaiSan
+                                            : value?.ten,
                                         );
                                         formik.setFieldValue(
                                           `chiTietSuaChuaBaoDuongDTOS.${index}.soLuong`,
