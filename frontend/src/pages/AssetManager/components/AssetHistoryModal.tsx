@@ -44,6 +44,7 @@ export default function AssetHistoryModal({
     page: 0,
     pageSize: 10,
   });
+  console.log(selectedAsset);
   const { data: historyData = { items: [], totalItems: 0 } } =
     useHistoryAssethandoverQuery(
       paginationModel.page,

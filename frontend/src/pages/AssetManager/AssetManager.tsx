@@ -36,7 +36,7 @@ import { useAllReasonIncreaseQuery } from "../ReasonIncrease/Mutation";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useAllModelAssetQuery } from "../ModelAsset/Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
-import { Eye } from "lucide-react";
+import { Eye, HistoryIcon } from "lucide-react";
 import AssetHistoryModal from "./components/AssetHistoryModal";
 import socketService from "../../services/socketService";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -313,7 +313,7 @@ export default function AssetManager() {
     {
       field: "action",
       headerName: "Hành động",
-      width: 100,
+      width: 150,
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
@@ -329,6 +329,7 @@ export default function AssetManager() {
           >
             <Delete color="error" />
           </IconButton>
+
           <Tooltip title="Xem">
             <IconButton
               size="small"
@@ -347,6 +348,27 @@ export default function AssetManager() {
               }}
             >
               <Eye fontSize={16} />
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title="Xem lịch sử điều chuyển">
+            <IconButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleOpenHistory(params.row.id);
+              }}
+              sx={{
+                color: "#4F46E5",
+                bgcolor: "#EEF2FF",
+                "&:hover": {
+                  bgcolor: "#E0E7FF",
+                  transform: "scale(1.1)",
+                },
+                transition: "all 0.2s",
+              }}
+            >
+              <HistoryIcon fontSize="small" />
             </IconButton>
           </Tooltip>
         </>

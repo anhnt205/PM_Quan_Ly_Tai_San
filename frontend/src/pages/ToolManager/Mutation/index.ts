@@ -163,6 +163,7 @@ export const useToolManagerMutation = (
     },
     onSuccess: () => {
       console.log("Tạo chi tiết đơn vị sở hữu thành công");
+      queryClient.invalidateQueries({ queryKey: ["toolsPage"] });
     },
     onError: (error: any) => {
       console.log(
@@ -180,6 +181,7 @@ export const useToolManagerMutation = (
     },
     onSuccess: () => {
       console.log("Tạo chi tiết đơn vị sở hữu thành công");
+      queryClient.invalidateQueries({ queryKey: ["toolsPage"] });
     },
     onError: (error: any) => {
       console.log(
@@ -215,6 +217,7 @@ export const useToolManagerMutation = (
     },
     onSuccess: () => {
       console.log("Xóa chi tiết đơn vị sở hữu thành công");
+      queryClient.invalidateQueries({ queryKey: ["toolsPage"] });
     },
     onError: (error: any) => {
       console.log(
@@ -233,6 +236,7 @@ export const useToolManagerMutation = (
     },
     onSuccess: () => {
       console.log("Tạo chi tiết tài sản thành công");
+      queryClient.invalidateQueries({ queryKey: ["toolsPage"] });
     },
     onError: (error: any) => {
       console.log(
@@ -262,6 +266,7 @@ export const useToolManagerMutation = (
         })),
       );
       console.log("Tạo chi tiết tài sản thành công");
+      queryClient.invalidateQueries({ queryKey: ["toolsPage"] });
     },
     onError: (error: any) => {
       console.log(
@@ -304,7 +309,6 @@ export const useToolManagerMutation = (
   });
 
   const deleteManyAssetDetailMutation = useMutation({
-    // Nhận tham số là một object chứa ids và ownerList
     mutationFn: async ({
       ids,
       ownerList,
@@ -340,15 +344,13 @@ export const useToolManagerMutation = (
 
   const exportExcelMutation = useMutation({
     mutationFn: async () => {
-      // Sử dụng 'api' instance để tự động ăn theo baseURL và Port trong config
       const res = await api.get("/ccdcvattu/export/excel", {
         params: { idcongty: idCongTy },
-        responseType: "blob", // Quan trọng: Để nhận dữ liệu file nhị phân
+        responseType: "blob",
       });
       return res.data;
     },
     onSuccess: (data) => {
-      // Tạo một đường dẫn ảo để trình duyệt kích hoạt tải file
       const url = window.URL.createObjectURL(new Blob([data]));
       const link = document.createElement("a");
       link.href = url;
@@ -359,7 +361,6 @@ export const useToolManagerMutation = (
       document.body.appendChild(link);
       link.click();
 
-      // Dọn dẹp sau khi tải xong
       link.remove();
       window.URL.revokeObjectURL(url);
       showSuccessAlert("Xuất file Excel thành công");
