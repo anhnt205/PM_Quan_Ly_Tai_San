@@ -33,6 +33,7 @@ import EditButton from "../../../components/Button/EditButton";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import dayjs from "dayjs";
+import { ToolValidation } from "../validation";
 
 export default function ToolForm({
   onEdit,
@@ -84,7 +85,9 @@ export default function ToolForm({
       chiTietTaiSanList: [],
       chiTietDonViSoHuuList: [],
     },
+    validationSchema: ToolValidation,
     onSubmit(values) {
+      console.log(values);
       onSave({
         ...values,
         // Đảm bảo số lượng tổng của CCDC cũng là số
@@ -304,7 +307,7 @@ export default function ToolForm({
                   <FieldDateTime
                     title="Ngày nhập"
                     formik={formik}
-                    field="ngayTao"
+                    field="ngayNhap"
                     disabled={readOnly}
                   />
                 </Grid>

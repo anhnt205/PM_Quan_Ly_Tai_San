@@ -43,6 +43,7 @@ import { RootState } from "../../../redux/store";
 import { useSelector } from "react-redux";
 import { generateBangKePdf, mergeBangKeWithOriginalPdf } from "../config";
 import S3Service from "../../../services/S3Service";
+import { assetTransferValidationSchema } from "../validation";
 
 export default function AssetTransferForm({
   onEdit,
@@ -151,6 +152,7 @@ export default function AssetTransferForm({
       initialChiTiet: [],
       initialNguoiKy: [],
     },
+    validationSchema: assetTransferValidationSchema,
     onSubmit: async (values) => {
       const chiTietDieuDongTaiSanDTOS = values.chiTietDieuDongTaiSanDTOS.map(
         (item, index) => ({
@@ -275,9 +277,7 @@ export default function AssetTransferForm({
           assetTransferDetail={formik.values.chiTietDieuDongTaiSanDTOS}
           allUnits={allUnits}
           allCurrentStatus={allCurrentStatus}
-          isEdit={
-            [0].includes(selectedTransfer?.trangThai ?? 0) ? true : false
-          }
+          isEdit={[0].includes(selectedTransfer?.trangThai ?? 0) ? true : false}
         />
       )}
       <Accordion

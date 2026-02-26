@@ -37,6 +37,7 @@ import { useAssetByTypeQuery, useCountriesQuery } from "../Mutation";
 import { useAllTypeAssetByGroupQuery } from "../../TypeAsset/Mutation";
 import { useAllProjectsQuery } from "../../Project/Mutation";
 import dayjs from "dayjs";
+import { AssetValidation } from "../validation";
 
 export default function AssetManagerForm({
   onEdit,
@@ -129,6 +130,7 @@ export default function AssetManagerForm({
         },
       ],
     },
+    validationSchema:AssetValidation,
     onSubmit(values) {
       onSave({
         ...values,
