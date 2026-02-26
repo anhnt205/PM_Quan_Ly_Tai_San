@@ -9,9 +9,6 @@ import {
 } from "@mui/material";
 import { useState, useEffect, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";
-import { useToolTransferMutation } from "../Mutation";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
 import { PDFDocument } from "pdf-lib";
 import "../../../assets/fonts/times_new_roman-normal";
 import { findById, generateSha256 } from "../../../utils/helpers";
@@ -27,8 +24,6 @@ import { SignHeader } from "../../../components/SignDocument/SignHeader";
 import CollapsibleSidebar from "../../../components/SignDocument/CollapsibleSidebar";
 import SidebarContent from "../../../components/SignDocument/SidebarContent";
 import { PdfViewer } from "../../../components/SignDocument/PdfViewer";
-import { useStaffMutation } from "../../Staff/Mutation";
-import api from "../../../config/api.config";
 import renderDigitalSignatureToImage from "../../../components/SignDocument/DigitalSignatureToImage";
 import S3Service from "../../../services/S3Service";
 import { mergeBangKeWithOriginalPdf } from "../../AssetTransfer/config";

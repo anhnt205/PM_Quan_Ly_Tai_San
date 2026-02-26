@@ -92,7 +92,7 @@ const getHandoverNodes = (
   tools.forEach((tool: any) => {
     // Cấp 1: Tên vật tư (Màu Hồng)
     nodes.push({
-      header: `${tool.tenCCDCVatTu} -- SLX: ${tool.soLuongXuat}`,
+      header: `${tool.tenCCDCVatTu} - SLX: ${tool.soLuongXuat}`,
       subInfo: `Số lượng đã bàn giao: ${tool.soLuongDaBanGiao || 0}`,
       depth: 1,
       status: "info",

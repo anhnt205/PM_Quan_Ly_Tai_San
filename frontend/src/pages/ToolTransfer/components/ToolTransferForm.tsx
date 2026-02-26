@@ -91,7 +91,7 @@ export default function ToolTransferForm({
   const [isPreview, setIsPreview] = useState(false);
   const [document, setDocument] = useState<File | string | any>("");
   // const [tools, setTools] = useState<any[]>([]);
-  const [searchCCDC, setSearchValue] = useState("");
+  // const [searchCCDC, setSearchValue] = useState("");
 
   const { data: staffs = [] } = useAllStaffsQuery();
 
@@ -144,7 +144,7 @@ export default function ToolTransferForm({
       initialChiTiet: [],
     },
     validationSchema: toolTransferValidationSchema,
-    onSubmit: async(values) => {
+    onSubmit: async (values) => {
       // Logic map ID tương tự nhưng dùng prefix của Tool
       const chiTietDieuDongCCDCVatTuDTOS =
         values.chiTietDieuDongCCDCVatTuDTOS.map((item: any, index) => ({
@@ -264,14 +264,12 @@ export default function ToolTransferForm({
 
   const tools = useMemo(() => {
     if (!toolsByDepartment?.length) return [];
-    return toolsByDepartment
-      .filter((i: any) =>
-        i.tenDetailAsset
-          ?.toLowerCase()
-          .includes(searchCCDC.trim().toLowerCase()),
-      )
-      .slice(0, 20);
-  }, [toolsByDepartment, searchCCDC]);
+
+    return toolsByDepartment.map((i: any) => ({
+      ...i,
+      id: i.idDetaiAsset || i.id,
+    }));
+  }, [toolsByDepartment]);
 
   console.log(
     (selectedTool?.chiTietDieuDongCCDCVatTuDTOS || []).map((i: any) => ({
@@ -639,16 +637,24 @@ export default function ToolTransferForm({
                                 selectedTool?.chiTietDieuDongCCDCVatTuDTOS || []
                               ).map((i: any) => ({
                                 ...i,
-                                id: i.idCCDCVatTu,
+                                id:
+                                  i.idChiTietCCDCVatTu ||
+                                  i.idDetaiAsset ||
+                                  i.idCCDCVatTu,
                                 tenDetailAsset: `${i.tenCCDCVatTu} - (${i.soKyHieu || ""}) - ${i.namSanXuat || ""}`,
                               })),
                             ]}
                             formik={formik}
-                            field={`chiTietDieuDongCCDCVatTuDTOS.${index}.idCCDCVatTu`}
-                            onSearch={(value) => {
-                              setSearchValue(value);
-                            }}
+                            field={`chiTietDieuDongCCDCVatTuDTOS.${index}.idChiTietCCDCVatTu`}
                             onChange={(value) => {
+                              // Component FieldAutoCompleted đã tự động lưu value.id vào 'idChiTietCCDCVatTu' ở trên.
+                              // Ta cần lưu bù id cha vào 'idCCDCVatTu' để payload gửi xuống backend không bị thiếu.
+                              formik.setFieldValue(
+                                `chiTietDieuDongCCDCVatTuDTOS.${index}.idCCDCVatTu`,
+                                value?.idCCDCVatTu || value?.idTaiSan || "",
+                              );
+
+                              // Các setFieldValue khác giữ nguyên như cũ của bạn
                               formik.setFieldValue(
                                 `chiTietDieuDongCCDCVatTuDTOS.${index}.donViTinh`,
                                 value?.donViTinh || "",
@@ -659,7 +665,7 @@ export default function ToolTransferForm({
                               );
                               formik.setFieldValue(
                                 `chiTietDieuDongCCDCVatTuDTOS.${index}.tenCCDCVatTu`,
-                                value?.tenCCDCVatTu || "",
+                                value?.tenDetailAsset || "",
                               );
                               formik.setFieldValue(
                                 `chiTietDieuDongCCDCVatTuDTOS.${index}.namSanXuat`,
@@ -672,10 +678,6 @@ export default function ToolTransferForm({
                               formik.setFieldValue(
                                 `chiTietDieuDongCCDCVatTuDTOS.${index}.soKyHieu`,
                                 value?.soKyHieu || "",
-                              );
-                              formik.setFieldValue(
-                                `chiTietDieuDongCCDCVatTuDTOS.${index}.idChiTietCCDCVatTu`,
-                                value?.idDetaiAsset || "",
                               );
                             }}
                             disabled={readOnly}
