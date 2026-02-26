@@ -40,7 +40,7 @@ services:
     ports:
       - "8386:8386"
     networks:
-      - qlts_backnet
+      - backnet
     restart: unless-stopped
 
   qlts_mysql:
