@@ -1,0 +1,217 @@
+{
+  "info": {
+    "name": "ChucVuController",
+    "description": "API collection for ChucVu management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create ChucVu",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"CV001\",\n  \"tenChucVu\": \"Giám đốc\",\n  \"quanLyNhanVien\": true,\n  \"quanLyPhongBan\": true,\n  \"quanLyDuAn\": true,\n  \"quanLyNguonVon\": true,\n  \"quanLyMoHinhTaiSan\": true,\n  \"quanLyNhomTaiSan\": true,\n  \"quanLyTaiSan\": true,\n  \"quanLyCCDCVatTu\": true,\n  \"dieuDongTaiSan\": true,\n  \"dieuDongCCDCVatTu\": true,\n  \"banGiaoTaiSan\": true,\n  \"banGiaoCCDCVatTu\": true,\n  \"baoCao\": true,\n  \"idCongTy\": \"CT001\",\n  \"ngayTao\": \"2024-01-01T00:00:00\",\n  \"ngayCapNhat\": \"2024-01-01T00:00:00\",\n  \"nguoiTao\": \"admin\",\n  \"nguoiCapNhat\": \"admin\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/chucvu",
+          "host": ["{{base_url}}"],
+          "path": ["api", "chucvu"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update ChucVu",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"CV001\",\n  \"tenChucVu\": \"Giám đốc Updated\",\n  \"quanLyNhanVien\": true,\n  \"quanLyPhongBan\": true,\n  \"quanLyDuAn\": true,\n  \"quanLyNguonVon\": true,\n  \"quanLyMoHinhTaiSan\": true,\n  \"quanLyNhomTaiSan\": true,\n  \"quanLyTaiSan\": true,\n  \"quanLyCCDCVatTu\": true,\n  \"dieuDongTaiSan\": true,\n  \"dieuDongCCDCVatTu\": true,\n  \"banGiaoTaiSan\": true,\n  \"banGiaoCCDCVatTu\": true,\n  \"baoCao\": true,\n  \"idCongTy\": \"CT001\",\n  \"ngayTao\": \"2024-01-01T00:00:00\",\n  \"ngayCapNhat\": \"2024-01-01T00:00:00\",\n  \"nguoiTao\": \"admin\",\n  \"nguoiCapNhat\": \"admin\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/chucvu/{{id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "chucvu", "{{id}}"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "CV001"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Batch ChucVu",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  {\n    \"id\": \"CV001\",\n    \"tenChucVu\": \"Giám đốc\",\n    \"quanLyNhanVien\": true,\n    \"quanLyPhongBan\": true,\n    \"quanLyDuAn\": true,\n    \"quanLyNguonVon\": true,\n    \"quanLyMoHinhTaiSan\": true,\n    \"quanLyNhomTaiSan\": true,\n    \"quanLyTaiSan\": true,\n    \"quanLyCCDCVatTu\": true,\n    \"dieuDongTaiSan\": true,\n    \"dieuDongCCDCVatTu\": true,\n    \"banGiaoTaiSan\": true,\n    \"banGiaoCCDCVatTu\": true,\n    \"baoCao\": true,\n    \"idCongTy\": \"CT001\",\n    \"ngayTao\": \"2024-01-01T00:00:00\",\n    \"ngayCapNhat\": \"2024-01-01T00:00:00\",\n    \"nguoiTao\": \"admin\",\n    \"nguoiCapNhat\": \"admin\"\n  },\n  {\n    \"id\": \"CV002\",\n    \"tenChucVu\": \"Trưởng phòng\",\n    \"quanLyNhanVien\": false,\n    \"quanLyPhongBan\": true,\n    \"quanLyDuAn\": true,\n    \"quanLyNguonVon\": false,\n    \"quanLyMoHinhTaiSan\": false,\n    \"quanLyNhomTaiSan\": false,\n    \"quanLyTaiSan\": true,\n    \"quanLyCCDCVatTu\": true,\n    \"dieuDongTaiSan\": true,\n    \"dieuDongCCDCVatTu\": true,\n    \"banGiaoTaiSan\": true,\n    \"banGiaoCCDCVatTu\": true,\n    \"baoCao\": true,\n    \"idCongTy\": \"CT001\",\n    \"ngayTao\": \"2024-01-01T00:00:00\",\n    \"ngayCapNhat\": \"2024-01-01T00:00:00\",\n    \"nguoiTao\": \"admin\",\n    \"nguoiCapNhat\": \"admin\"\n  }\n]"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/chucvu/batch",
+          "host": ["{{base_url}}"],
+          "path": ["api", "chucvu", "batch"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete ChucVu",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/chucvu/{{id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "chucvu", "{{id}}"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "CV001"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Batch ChucVu",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\"CV001\", \"CV002\"]"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/chucvu/batch",
+          "host": ["{{base_url}}"],
+          "path": ["api", "chucvu", "batch"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get All ChucVu by CongTy",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/chucvu/congty/{{idCongTy}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "chucvu", "congty", "{{idCongTy}}"],
+          "variable": [
+            {
+              "key": "idCongTy",
+              "value": "CT001"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get ChucVu by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/chucvu/{{id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "chucvu", "{{id}}"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "CV001"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Search ChucVu by Ten",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/chucvu/search?ten={{ten}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "chucvu", "search"],
+          "query": [
+            {
+              "key": "ten",
+              "value": "{{ten}}",
+              "description": "Tên chức vụ cần tìm"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Upload File ChucVu",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "path/to/file.csv"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/chucvu/upload",
+          "host": ["{{base_url}}"],
+          "path": ["api", "chucvu", "upload"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "idCongTy",
+      "value": "CT001"
+    },
+    {
+      "key": "ten",
+      "value": "Giám đốc"
+    }
+  ]
+}

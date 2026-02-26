@@ -1,0 +1,4 @@
+Id,IdTaiLieu,IdNguoiKy,TenNguoiKy,IdPhongBan,TrangThai
+nk001,tailieu001,user001,Nguyễn Văn A,pb001,0
+nk002,tailieu001,user002,Trần Thị B,pb002,1
+nk003,tailieu002,user003,Lê Văn C,pb001,0

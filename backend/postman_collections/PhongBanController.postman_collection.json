@@ -1,0 +1,194 @@
+{
+  "info": {
+    "name": "PhongBanController",
+    "description": "API collection for PhongBan management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get All PhongBan",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/phongban?idcongty={{idcongty}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "phongban"],
+          "query": [
+            {
+              "key": "idcongty",
+              "value": "{{idcongty}}",
+              "description": "ID của công ty"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get PhongBan by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/phongban/{{id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "phongban", "{{id}}"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "PB001"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create PhongBan",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"PB001\",\n  \"idNhomDonvi\": \"NDV001\",\n  \"tenPhongBan\": \"Phòng IT\",\n  \"idQuanLy\": \"NV001\",\n  \"idCongTy\": \"CT001\",\n  \"phongCapTren\": \"PB002\",\n  \"mauSac\": \"#FF5733\",\n  \"ngayTao\": \"2024-01-01T00:00:00\",\n  \"ngayCapNhat\": \"2024-01-01T00:00:00\",\n  \"nguoiTao\": \"admin\",\n  \"nguoiCapNhat\": \"admin\",\n  \"isActive\": true\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/phongban",
+          "host": ["{{base_url}}"],
+          "path": ["api", "phongban"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update PhongBan",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"PB001\",\n  \"idNhomDonvi\": \"NDV001\",\n  \"tenPhongBan\": \"Phòng IT Updated\",\n  \"idQuanLy\": \"NV001\",\n  \"idCongTy\": \"CT001\",\n  \"phongCapTren\": \"PB002\",\n  \"mauSac\": \"#33FF57\",\n  \"ngayTao\": \"2024-01-01T00:00:00\",\n  \"ngayCapNhat\": \"2024-01-01T00:00:00\",\n  \"nguoiTao\": \"admin\",\n  \"nguoiCapNhat\": \"admin\",\n  \"isActive\": true\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/phongban/{{id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "phongban", "{{id}}"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "PB001"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Batch PhongBan",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  {\n    \"id\": \"PB001\",\n    \"idNhomDonvi\": \"NDV001\",\n    \"tenPhongBan\": \"Phòng IT\",\n    \"idQuanLy\": \"NV001\",\n    \"idCongTy\": \"CT001\",\n    \"phongCapTren\": \"PB002\",\n    \"mauSac\": \"#FF5733\",\n    \"ngayTao\": \"2024-01-01T00:00:00\",\n    \"ngayCapNhat\": \"2024-01-01T00:00:00\",\n    \"nguoiTao\": \"admin\",\n    \"nguoiCapNhat\": \"admin\",\n    \"isActive\": true\n  },\n  {\n    \"id\": \"PB002\",\n    \"idNhomDonvi\": \"NDV001\",\n    \"tenPhongBan\": \"Phòng HR\",\n    \"idQuanLy\": \"NV002\",\n    \"idCongTy\": \"CT001\",\n    \"phongCapTren\": \"\",\n    \"mauSac\": \"#3357FF\",\n    \"ngayTao\": \"2024-01-01T00:00:00\",\n    \"ngayCapNhat\": \"2024-01-01T00:00:00\",\n    \"nguoiTao\": \"admin\",\n    \"nguoiCapNhat\": \"admin\",\n    \"isActive\": true\n  }\n]"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/phongban/batch",
+          "host": ["{{base_url}}"],
+          "path": ["api", "phongban", "batch"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete PhongBan",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/phongban/{{id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "phongban", "{{id}}"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "PB001"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Batch PhongBan",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\"PB001\", \"PB002\"]"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/phongban/batch",
+          "host": ["{{base_url}}"],
+          "path": ["api", "phongban", "batch"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Upload File PhongBan",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "path/to/file.csv"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/phongban/upload",
+          "host": ["{{base_url}}"],
+          "path": ["api", "phongban", "upload"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "idcongty",
+      "value": "CT001"
+    }
+  ]
+}

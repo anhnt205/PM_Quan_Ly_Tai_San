@@ -1,0 +1,65 @@
+package com.ecotel.quanlytaisan.model;
+
+import lombok.Data;
+
+import java.util.List;
+
+@Data
+public class TaiSanDTO {
+    private String id;
+    private String tenTaiSan;
+    private Double nguyenGia;
+    private Double giaTriKhauHaoBanDau;
+    private Integer kyKhauHaoBanDau;
+    private Double giaTriThanhLy;
+
+    private String idMoHinhTaiSan;
+    private String tenMoHinh;
+
+    private String idNhomTaiSan;
+    private String tenNhom;
+
+    private String idDuAn;
+    private String tenDuAn;
+
+    private String idNguonVon;
+    private String tenNguonKinhPhi;
+
+    private Integer phuongPhapKhauHao;
+    private Integer soKyKhauHao;
+    private Integer taiKhoanTaiSan;
+    private Integer taiKhoanKhauHao;
+    private Integer taiKhoanChiPhi;
+    private String ngayVaoSo;
+    private String ngaySuDung;
+    private String kyHieu;
+    private String soKyHieu;
+    private String congSuat;
+    private String nuocSanXuat;
+    private Integer namSanXuat;
+    private String lyDoTang;
+    private Integer hienTrang;
+    private Integer soLuong;
+    private String donViTinh;
+    private String ghiChu;
+    private String idDonViBanDau;
+    private String idDonViHienThoi;
+    private String moTa;
+    private String idCongTy;
+    private String ngayTao;
+    private String ngayCapNhat;
+    private String nguoiTao;
+    private String nguoiCapNhat;
+    private Boolean isActive;
+    private String idTaiSanCon;
+    private Boolean isTaiSanCon;
+    private List<ChiTietTaiSan> chiTietTaiSanList;
+    private List<TaiSanCon> taiSanConList;
+    private String idLoaiTaiSanCon;
+    private String soThe;
+    private Double nvNS;
+    private Double vonVay;
+    private Double vonKhac;
+    private List<NguonKinhPhi> nguonKinhPhiList;
+    private List<SetNguonKinhPhi>setNguonKinhPhiList;
+}

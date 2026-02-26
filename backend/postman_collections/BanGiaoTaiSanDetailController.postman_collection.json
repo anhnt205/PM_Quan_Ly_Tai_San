@@ -1,0 +1,136 @@
+{
+	"info": {
+		"_postman_id": "ban-giao-tai-san-detail-api",
+		"name": "BanGiaoTaiSanDetailController",
+		"description": "API collection cho BanGiaoTaiSanDetailController - Lấy chi tiết bàn giao tài sản kèm ký tài liệu",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get BanGiaoTaiSan Detail",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/bangiaotaisan/{{idBanGiaoTaiSan}}/detail",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"bangiaotaisan",
+						"{{idBanGiaoTaiSan}}",
+						"detail"
+					]
+				},
+				"description": "Lấy chi tiết bàn giao tài sản bao gồm thông tin chính, chi tiết bàn giao và ký tài liệu"
+			},
+			"response": [
+				{
+					"name": "Success Response",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/bangiaotaisan/{{idBanGiaoTaiSan}}/detail",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"bangiaotaisan",
+								"{{idBanGiaoTaiSan}}",
+								"detail"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"Lấy chi tiết bàn giao tài sản thành công\",\n    \"data\": {\n        \"banGiaoTaiSan\": {\n            \"id\": \"bgts001\",\n            \"banGiaoTaiSan\": \"Biên bản bàn giao tài sản số 001\",\n            \"quyetDinhDieuDongSo\": \"QD001\",\n            \"lenhDieuDong\": \"LD001\",\n            \"idDonViGiao\": \"dv001\",\n            \"tenDonViGiao\": \"Phòng IT\",\n            \"idDonViNhan\": \"dv002\",\n            \"tenDonViNhan\": \"Phòng Kế toán\",\n            \"ngayBanGiao\": \"2024-01-15T10:00:00\",\n            \"idLanhDao\": \"nv001\",\n            \"tenLanhDao\": \"Nguyễn Văn A\",\n            \"idDaiDiendonviBanHanhQD\": \"nv002\",\n            \"tenDaiDienBanHanhQD\": \"Trần Thị B\",\n            \"daXacNhan\": true,\n            \"idDaiDienBenGiao\": \"nv003\",\n            \"tenDaiDienBenGiao\": \"Lê Văn C\",\n            \"daiDienBenGiaoXacNhan\": true,\n            \"idDaiDienBenNhan\": \"nv004\",\n            \"tenDaiDienBenNhan\": \"Phạm Thị D\",\n            \"daiDienBenNhanXacNhan\": true,\n            \"trangThai\": 3,\n            \"note\": \"Bàn giao hoàn tất\",\n            \"ngayTao\": \"2024-01-15T09:00:00\",\n            \"ngayCapNhat\": \"2024-01-15T10:30:00\",\n            \"nguoiTao\": \"nv001\",\n            \"nguoiCapNhat\": \"nv001\",\n            \"isActive\": true,\n            \"share\": false,\n            \"duongDanFile\": \"/files/bangiao001.pdf\",\n            \"tenFile\": \"bangiao001.pdf\",\n            \"byStep\": true\n        },\n        \"chiTietBanGiaoTaiSan\": [\n            {\n                \"id\": \"ct001\",\n                \"idBanGiaoTaiSan\": \"bgts001\",\n                \"banGiaoTaiSan\": \"Biên bản bàn giao tài sản số 001\",\n                \"quyetDinhDieuDongSo\": \"QD001\",\n                \"idTaiSan\": \"ts001\",\n                \"tenTaiSan\": \"Máy tính Dell\",\n                \"donViTinh\": \"Cái\",\n                \"kyHieu\": \"MT001\",\n                \"soKyHieu\": \"DELL-001\",\n                \"hienTrang\": \"Tốt\",\n                \"moTa\": \"Máy tính để bàn\",\n                \"soLuong\": 5,\n                \"ngayTao\": \"2024-01-15T09:00:00\",\n                \"ngayCapNhat\": \"2024-01-15T10:00:00\",\n                \"nguoiTao\": \"nv001\",\n                \"nguoiCapNhat\": \"nv001\",\n                \"isActive\": true\n            },\n            {\n                \"id\": \"ct002\",\n                \"idBanGiaoTaiSan\": \"bgts001\",\n                \"banGiaoTaiSan\": \"Biên bản bàn giao tài sản số 001\",\n                \"quyetDinhDieuDongSo\": \"QD001\",\n                \"idTaiSan\": \"ts002\",\n                \"tenTaiSan\": \"Máy in HP\",\n                \"donViTinh\": \"Cái\",\n                \"kyHieu\": \"MI001\",\n                \"soKyHieu\": \"HP-001\",\n                \"hienTrang\": \"Tốt\",\n                \"moTa\": \"Máy in laser\",\n                \"soLuong\": 2,\n                \"ngayTao\": \"2024-01-15T09:00:00\",\n                \"ngayCapNhat\": \"2024-01-15T10:00:00\",\n                \"nguoiTao\": \"nv001\",\n                \"nguoiCapNhat\": \"nv001\",\n                \"isActive\": true\n            }\n        ],\n        \"kyTaiLieu\": [\n            {\n                \"id\": \"kt001\",\n                \"idTaiLieu\": \"bgts001\",\n                \"loaiKy\": 1,\n                \"x\": 100.5,\n                \"y\": 200.3,\n                \"idNguoiKy\": \"nv001\",\n                \"chuKySo\": \"chu_ky_so_1\",\n                \"ngayKy\": \"2024-01-15T10:15:00\",\n                \"stt\": 1\n            },\n            {\n                \"id\": \"kt002\",\n                \"idTaiLieu\": \"bgts001\",\n                \"loaiKy\": 2,\n                \"x\": 150.0,\n                \"y\": 250.0,\n                \"idNguoiKy\": \"nv002\",\n                \"chuKySo\": \"chu_ky_so_2\",\n                \"ngayKy\": \"2024-01-15T10:20:00\",\n                \"stt\": 2\n            }\n        ]\n    },\n    \"totalRecords\": 5\n}"
+				}
+			]
+		},
+		{
+			"name": "Get BanGiaoTaiSan Detail - Not Found",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/bangiaotaisan/invalid-id/detail",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"bangiaotaisan",
+						"invalid-id",
+						"detail"
+					]
+				},
+				"description": "Test case khi không tìm thấy bàn giao tài sản"
+			},
+			"response": [
+				{
+					"name": "Not Found Response",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/bangiaotaisan/invalid-id/detail",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"bangiaotaisan",
+								"invalid-id",
+								"detail"
+							]
+						}
+					},
+					"status": "Internal Server Error",
+					"code": 500,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": false,\n    \"message\": \"Lỗi hệ thống: Không tìm thấy bàn giao tài sản với ID: invalid-id\",\n    \"data\": null\n}"
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "idBanGiaoTaiSan",
+			"value": "your-ban-giao-tai-san-id",
+			"type": "string"
+		}
+	]
+}

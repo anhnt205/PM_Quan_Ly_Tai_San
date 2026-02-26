@@ -1,0 +1,572 @@
+{
+	"info": {
+		"_postman_id": "dashboard-controller-collection",
+		"name": "DashboardController",
+		"description": "API collection for Dashboard statistics endpoints with percentage calculations",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get All Statistics",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/dashboard/statistics",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"dashboard",
+						"statistics"
+					]
+				},
+				"description": "Lấy tất cả thống kê dashboard"
+			},
+			"response": [
+				{
+					"name": "Success Response",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/dashboard/statistics",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"dashboard",
+								"statistics"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"success\": true,\n  \"message\": \"Lấy thống kê dashboard thành công\",\n  \"data\": {\n    \"tongTaiSan\": 150,\n    \"tongNguyenGia\": 5000000000,\n    \"tongCCDC\": 200,\n    \"tongGiaTriCCDC\": 1000000000,\n    \"tongPhongBan\": 10,\n    \"tongNhanVien\": 50,\n    \"tongDuAn\": 5,\n    \"tongCongTy\": 3,\n    \"taiSanTheoLoaiConPhanTram\": [\n      {\n        \"ten\": \"Máy tính\",\n        \"soLuong\": 50,\n        \"tongGiaTri\": 2000000000,\n        \"phanTramSoLuong\": 33.33,\n        \"phanTramGiaTri\": 40.0\n      }\n    ]\n  },\n  \"affectedRows\": null\n}"
+				}
+			]
+		},
+		{
+			"name": "Get Tong Quan",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/dashboard/tong-quan",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"dashboard",
+						"tong-quan"
+					]
+				},
+				"description": "Lấy thống kê tổng quan"
+			}
+		},
+		{
+			"name": "Get Thong Ke Theo Loai",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/dashboard/theo-loai",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"dashboard",
+						"theo-loai"
+					]
+				},
+				"description": "Lấy thống kê theo loại"
+			}
+		},
+		{
+			"name": "Get Thong Ke Theo Loai Phan Tram",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/dashboard/theo-loai-phan-tram",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"dashboard",
+						"theo-loai-phan-tram"
+					]
+				},
+				"description": "Lấy thống kê theo loại với phần trăm"
+			}
+		},
+		{
+			"name": "Get Thong Ke Theo Phong Ban",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/dashboard/theo-phong-ban",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"dashboard",
+						"theo-phong-ban"
+					]
+				},
+				"description": "Lấy thống kê theo phòng ban"
+			}
+		},
+		{
+			"name": "Get Thong Ke Theo Phong Ban Phan Tram",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/dashboard/theo-phong-ban-phan-tram",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"dashboard",
+						"theo-phong-ban-phan-tram"
+					]
+				},
+				"description": "Lấy thống kê theo phòng ban với phần trăm"
+			}
+		},
+		{
+			"name": "Get Thong Ke Gia Tri",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/dashboard/gia-tri",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"dashboard",
+						"gia-tri"
+					]
+				},
+				"description": "Lấy thống kê giá trị"
+			}
+		},
+		{
+			"name": "Get Thong Ke Gia Tri Phan Tram",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/dashboard/gia-tri-phan-tram",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"dashboard",
+						"gia-tri-phan-tram"
+					]
+				},
+				"description": "Lấy thống kê giá trị với phần trăm"
+			}
+		},
+		{
+			"name": "Get Thong Ke Thoi Gian",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/dashboard/thoi-gian",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"dashboard",
+						"thoi-gian"
+					]
+				},
+				"description": "Lấy thống kê thời gian"
+			}
+		},
+		{
+			"name": "Get Thong Ke Dieu Dong Ban Giao",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/dashboard/dieu-dong-ban-giao",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"dashboard",
+						"dieu-dong-ban-giao"
+					]
+				},
+				"description": "Lấy thống kê điều động/bàn giao"
+			}
+		},
+		{
+			"name": "Get Thong Ke Mo Rong",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/dashboard/mo-rong",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"dashboard",
+						"mo-rong"
+					]
+				},
+				"description": "Lấy thống kê mở rộng"
+			}
+		},
+		{
+			"name": "Get Tai San Theo Loai Con Phan Tram",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/dashboard/tai-san-theo-loai-con-phan-tram",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"dashboard",
+						"tai-san-theo-loai-con-phan-tram"
+					]
+				},
+				"description": "Lấy thống kê tài sản theo loại con với phần trăm"
+			}
+		},
+		{
+			"name": "Get CCDC Theo Loai Con Phan Tram",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/dashboard/ccdc-theo-loai-con-phan-tram",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"dashboard",
+						"ccdc-theo-loai-con-phan-tram"
+					]
+				},
+				"description": "Lấy thống kê CCDC theo loại con với phần trăm"
+			}
+		},
+		{
+			"name": "Get Tai San Theo Loai Chinh Phan Tram",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/dashboard/tai-san-theo-loai-chinh-phan-tram",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"dashboard",
+						"tai-san-theo-loai-chinh-phan-tram"
+					]
+				},
+				"description": "Lấy thống kê tài sản theo loại chính với phần trăm"
+			}
+		},
+		{
+			"name": "Get Tai San Theo Nhom Phan Tram",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/dashboard/tai-san-theo-nhom-phan-tram",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"dashboard",
+						"tai-san-theo-nhom-phan-tram"
+					]
+				},
+				"description": "Lấy thống kê tài sản theo nhóm với phần trăm"
+			}
+		},
+		{
+			"name": "Get Tai San Theo Trang Thai Phan Tram",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/dashboard/tai-san-theo-trang-thai-phan-tram",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"dashboard",
+						"tai-san-theo-trang-thai-phan-tram"
+					]
+				},
+				"description": "Lấy thống kê tài sản theo trạng thái với phần trăm"
+			}
+		},
+		{
+			"name": "Get Tai San Theo Phong Ban Phan Tram",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/dashboard/tai-san-theo-phong-ban-phan-tram",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"dashboard",
+						"tai-san-theo-phong-ban-phan-tram"
+					]
+				},
+				"description": "Lấy thống kê tài sản theo phòng ban với phần trăm"
+			}
+		},
+		{
+			"name": "Get CCDC Theo Phong Ban Phan Tram",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/dashboard/ccdc-theo-phong-ban-phan-tram",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"dashboard",
+						"ccdc-theo-phong-ban-phan-tram"
+					]
+				},
+				"description": "Lấy thống kê CCDC theo phòng ban với phần trăm"
+			}
+		},
+		{
+			"name": "Get Tai San Theo Nguon Von Phan Tram",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/dashboard/tai-san-theo-nguon-von-phan-tram",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"dashboard",
+						"tai-san-theo-nguon-von-phan-tram"
+					]
+				},
+				"description": "Lấy thống kê tài sản theo nguồn vốn với phần trăm"
+			}
+		},
+		{
+			"name": "Get Tai San Theo Du An Phan Tram",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/dashboard/tai-san-theo-du-an-phan-tram",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"dashboard",
+						"tai-san-theo-du-an-phan-tram"
+					]
+				},
+				"description": "Lấy thống kê tài sản theo dự án với phần trăm"
+			}
+		},
+		{
+			"name": "Get Tai San Theo Cong Ty Phan Tram",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/dashboard/tai-san-theo-cong-ty-phan-tram",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"dashboard",
+						"tai-san-theo-cong-ty-phan-tram"
+					]
+				},
+				"description": "Lấy thống kê tài sản theo công ty với phần trăm"
+			}
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		}
+	]
+}

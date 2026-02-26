@@ -10,3 +10,8 @@ services:
     build:
       context: ./frontend
     image: ${REGISTRY}/qlts_frontend_img:${VERSION}
+
+  qlts_backend_service:
+    build:
+      context: ./backend
+    image: ${REGISTRY}/qlts_backend_img:${VERSION}

@@ -1,0 +1,3 @@
+id,tenChucVu,quanLyNhanVien,quanLyPhongBan,quanLyDuAn,quanLyNguonVon,quanLyMoHinhTaiSan,quanLyNhomTaiSan,quanLyTaiSan,quanLyCCDCVatTu,dieuDongTaiSan,dieuDongCCDCVatTu,banGiaoTaiSan,banGiaoCCDCVatTu,baoCao,idCongTy,ngayTao,ngayCapNhat,nguoiTao,nguoiCapNhat
+CV01,Trưởng phòng,true,true,true,false,true,false,true,false,true,false,true,false,true,CT01,2025-01-01 08:00:00,2025-01-05 09:00:00,admin,admin
+CV02,Nhân viên,true,false,false,false,false,false,false,false,false,false,false,false,false,CT01,2025-02-01 08:00:00,2025-02-05 09:00:00,user1,user2

@@ -1,0 +1,3 @@
+id,tenNhom,ngayTao,ngayCapNhat,nguoiTao,nguoiCapNhat,idCongTy,isActive
+NDV01,Nhóm Đơn Vị Kinh Doanh,2025-09-06 08:30:00,2025-09-06 09:00:00,admin,system,CT01,true
+NDV02,Nhóm Đơn Vị Sản Xuất,2025-09-06 09:15:00,2025-09-06 09:45:00,admin,system,CT01,true

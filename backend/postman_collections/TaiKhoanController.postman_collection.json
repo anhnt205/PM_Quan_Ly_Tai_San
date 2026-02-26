@@ -1,0 +1,216 @@
+{
+  "info": {
+    "name": "TaiKhoanController",
+    "description": "API collection for TaiKhoan management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get All TaiKhoan",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/taikhoan",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taikhoan"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get TaiKhoan by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/taikhoan/{{id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taikhoan", "{{id}}"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "TK001"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create TaiKhoan",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"TK001\",\n  \"tenDangNhap\": \"admin\",\n  \"matKhau\": \"password123\",\n  \"hoTen\": \"Administrator\",\n  \"email\": \"admin@company.com\",\n  \"soDienThoai\": \"0123456789\",\n  \"vaiTro\": \"ADMIN\",\n  \"trangThai\": true,\n  \"ngayTao\": \"2024-01-01T00:00:00\",\n  \"ngayCapNhat\": \"2024-01-01T00:00:00\",\n  \"nguoiTao\": \"system\",\n  \"nguoiCapNhat\": \"system\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/taikhoan",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taikhoan"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update TaiKhoan",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"TK001\",\n  \"tenDangNhap\": \"admin\",\n  \"matKhau\": \"newpassword123\",\n  \"hoTen\": \"Administrator Updated\",\n  \"email\": \"admin@company.com\",\n  \"soDienThoai\": \"0123456789\",\n  \"vaiTro\": \"ADMIN\",\n  \"trangThai\": true,\n  \"ngayTao\": \"2024-01-01T00:00:00\",\n  \"ngayCapNhat\": \"2024-01-01T00:00:00\",\n  \"nguoiTao\": \"system\",\n  \"nguoiCapNhat\": \"system\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/taikhoan/{{id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taikhoan", "{{id}}"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "TK001"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Batch TaiKhoan",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  {\n    \"id\": \"TK001\",\n    \"tenDangNhap\": \"admin\",\n    \"matKhau\": \"password123\",\n    \"hoTen\": \"Administrator\",\n    \"email\": \"admin@company.com\",\n    \"soDienThoai\": \"0123456789\",\n    \"vaiTro\": \"ADMIN\",\n    \"trangThai\": true,\n    \"ngayTao\": \"2024-01-01T00:00:00\",\n    \"ngayCapNhat\": \"2024-01-01T00:00:00\",\n    \"nguoiTao\": \"system\",\n    \"nguoiCapNhat\": \"system\"\n  },\n  {\n    \"id\": \"TK002\",\n    \"tenDangNhap\": \"user1\",\n    \"matKhau\": \"password123\",\n    \"hoTen\": \"User One\",\n    \"email\": \"user1@company.com\",\n    \"soDienThoai\": \"0987654321\",\n    \"vaiTro\": \"USER\",\n    \"trangThai\": true,\n    \"ngayTao\": \"2024-01-01T00:00:00\",\n    \"ngayCapNhat\": \"2024-01-01T00:00:00\",\n    \"nguoiTao\": \"admin\",\n    \"nguoiCapNhat\": \"admin\"\n  }\n]"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/taikhoan/batch",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taikhoan", "batch"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete TaiKhoan",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/taikhoan/{{id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taikhoan", "{{id}}"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "TK001"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Batch TaiKhoan",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\"TK001\", \"TK002\"]"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/taikhoan/batch",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taikhoan", "batch"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/taikhoan/login?tenDangNhap={{tenDangNhap}}&matKhau={{matKhau}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taikhoan", "login"],
+          "query": [
+            {
+              "key": "tenDangNhap",
+              "value": "{{tenDangNhap}}",
+              "description": "Tên đăng nhập"
+            },
+            {
+              "key": "matKhau",
+              "value": "{{matKhau}}",
+              "description": "Mật khẩu"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Upload File TaiKhoan",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "path/to/file.csv"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/taikhoan/upload",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taikhoan", "upload"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "tenDangNhap",
+      "value": "admin"
+    },
+    {
+      "key": "matKhau",
+      "value": "password123"
+    }
+  ]
+}

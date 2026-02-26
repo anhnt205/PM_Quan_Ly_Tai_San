@@ -1,0 +1,1049 @@
+{
+  "info": {
+    "name": "Permission API Collection",
+    "description": "API collection for permission management system",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "userId",
+      "value": "USER123",
+      "type": "string"
+    },
+    {
+      "key": "roleId",
+      "value": "ROLE001",
+      "type": "string"
+    },
+    {
+      "key": "permissionId",
+      "value": "PERM001",
+      "type": "string"
+    },
+    {
+      "key": "permissionCode",
+      "value": "TAISAN",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "User Permission Management",
+      "item": [
+        {
+          "name": "Get User Permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/userpermission/user/{{userId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "userpermission", "user", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Check Create Permission",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/userpermission/user/{{userId}}/cancreate/{{permissionCode}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "userpermission", "user", "{{userId}}", "cancreate", "{{permissionCode}}"]
+            }
+          }
+        },
+        {
+          "name": "Check Read Permission",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/userpermission/user/{{userId}}/canread/{{permissionCode}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "userpermission", "user", "{{userId}}", "canread", "{{permissionCode}}"]
+            }
+          }
+        },
+        {
+          "name": "Check Update Permission",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/userpermission/user/{{userId}}/canupdate/{{permissionCode}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "userpermission", "user", "{{userId}}", "canupdate", "{{permissionCode}}"]
+            }
+          }
+        },
+        {
+          "name": "Check Delete Permission",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/userpermission/user/{{userId}}/candelete/{{permissionCode}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "userpermission", "user", "{{userId}}", "candelete", "{{permissionCode}}"]
+            }
+          }
+        },
+        {
+          "name": "Check General Permission",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/userpermission/user/{{userId}}/check/{{permissionCode}}/CanCreate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "userpermission", "user", "{{userId}}", "check", "{{permissionCode}}", "CanCreate"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Role Management",
+      "item": [
+        {
+          "name": "Get All Roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/role",
+              "host": ["{{base_url}}"],
+              "path": ["api", "role"]
+            }
+          }
+        },
+        {
+          "name": "Get Role by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/role/{{roleId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "role", "{{roleId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Role by Code",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/role/code/ADMIN",
+              "host": ["{{base_url}}"],
+              "path": ["api", "role", "code", "ADMIN"]
+            }
+          }
+        },
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"ROLE005\",\n  \"roleName\": \"Custom Role\",\n  \"roleCode\": \"CUSTOM\",\n  \"description\": \"Custom role for testing\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/role",
+              "host": ["{{base_url}}"],
+              "path": ["api", "role"]
+            }
+          }
+        },
+        {
+          "name": "Update Role",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleName\": \"Updated Custom Role\",\n  \"roleCode\": \"CUSTOM\",\n  \"description\": \"Updated custom role\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/role/{{roleId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "role", "{{roleId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Role",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/role/{{roleId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "role", "{{roleId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Permission Management",
+      "item": [
+        {
+          "name": "Get All Permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/permission",
+              "host": ["{{base_url}}"],
+              "path": ["api", "permission"]
+            }
+          }
+        },
+        {
+          "name": "Get Permission by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/permission/{{permissionId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "permission", "{{permissionId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Permission by Code",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/permission/code/{{permissionCode}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "permission", "code", "{{permissionCode}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Permission",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"PERM018\",\n  \"permissionName\": \"Custom Permission\",\n  \"permissionCode\": \"CUSTOM_PERM\",\n  \"description\": \"Custom permission for testing\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/permission",
+              "host": ["{{base_url}}"],
+              "path": ["api", "permission"]
+            }
+          }
+        },
+        {
+          "name": "Update Permission",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionName\": \"Updated Custom Permission\",\n  \"permissionCode\": \"CUSTOM_PERM\",\n  \"description\": \"Updated custom permission\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/permission/{{permissionId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "permission", "{{permissionId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Permission",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/permission/{{permissionId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "permission", "{{permissionId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Role Management",
+      "item": [
+        {
+          "name": "Get All User Roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/userrole",
+              "host": ["{{base_url}}"],
+              "path": ["api", "userrole"]
+            }
+          }
+        },
+        {
+          "name": "Get User Roles by User ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/userrole/user/{{userId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "userrole", "user", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get User Roles by Role ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/userrole/role/{{roleId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "userrole", "role", "{{roleId}}"]
+            }
+          }
+        },
+        {
+          "name": "Assign Role to User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"UR001\",\n  \"userId\": \"{{userId}}\",\n  \"roleId\": \"{{roleId}}\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/userrole",
+              "host": ["{{base_url}}"],
+              "path": ["api", "userrole"]
+            }
+          }
+        },
+        {
+          "name": "Update User Role",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleId\": \"{{roleId}}\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/userrole/UR001",
+              "host": ["{{base_url}}"],
+              "path": ["api", "userrole", "UR001"]
+            }
+          }
+        },
+        {
+          "name": "Remove User Role",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/userrole/UR001",
+              "host": ["{{base_url}}"],
+              "path": ["api", "userrole", "UR001"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Role Permission Management",
+      "item": [
+        {
+          "name": "Get All Role Permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/rolepermission",
+              "host": ["{{base_url}}"],
+              "path": ["api", "rolepermission"]
+            }
+          }
+        },
+        {
+          "name": "Get Role Permissions by Role ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/rolepermission/role/{{roleId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "rolepermission", "role", "{{roleId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Role Permissions by Permission ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/rolepermission/permission/{{permissionId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "rolepermission", "permission", "{{permissionId}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Role Permission",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"RP001\",\n  \"roleId\": \"{{roleId}}\",\n  \"permissionId\": \"{{permissionId}}\",\n  \"canCreate\": true,\n  \"canRead\": true,\n  \"canUpdate\": false,\n  \"canDelete\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/rolepermission",
+              "host": ["{{base_url}}"],
+              "path": ["api", "rolepermission"]
+            }
+          }
+        },
+        {
+          "name": "Update Role Permission",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"canCreate\": true,\n  \"canRead\": true,\n  \"canUpdate\": true,\n  \"canDelete\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/rolepermission/RP001",
+              "host": ["{{base_url}}"],
+              "path": ["api", "rolepermission", "RP001"]
+            }
+          }
+        },
+        {
+          "name": "Delete Role Permission",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/rolepermission/RP001",
+              "host": ["{{base_url}}"],
+              "path": ["api", "rolepermission", "RP001"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Permission Management (Advanced)",
+      "item": [
+        {
+          "name": "Assign Role to User (Management)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/permission-management/assign-role?userId={{userId}}&roleId={{roleId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "permission-management", "assign-role"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                },
+                {
+                  "key": "roleId",
+                  "value": "{{roleId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Remove Role from User (Management)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/permission-management/remove-role?userId={{userId}}&roleId={{roleId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "permission-management", "remove-role"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                },
+                {
+                  "key": "roleId",
+                  "value": "{{roleId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Assign Permission to Role (Management)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/permission-management/assign-permission-to-role?roleId={{roleId}}&permissionId={{permissionId}}&canCreate=true&canRead=true&canUpdate=false&canDelete=false",
+              "host": ["{{base_url}}"],
+              "path": ["api", "permission-management", "assign-permission-to-role"],
+              "query": [
+                {
+                  "key": "roleId",
+                  "value": "{{roleId}}"
+                },
+                {
+                  "key": "permissionId",
+                  "value": "{{permissionId}}"
+                },
+                {
+                  "key": "canCreate",
+                  "value": "true"
+                },
+                {
+                  "key": "canRead",
+                  "value": "true"
+                },
+                {
+                  "key": "canUpdate",
+                  "value": "false"
+                },
+                {
+                  "key": "canDelete",
+                  "value": "false"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Role Permission (Management)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/permission-management/update-role-permission?roleId={{roleId}}&permissionId={{permissionId}}&canCreate=true&canRead=true&canUpdate=true&canDelete=false",
+              "host": ["{{base_url}}"],
+              "path": ["api", "permission-management", "update-role-permission"],
+              "query": [
+                {
+                  "key": "roleId",
+                  "value": "{{roleId}}"
+                },
+                {
+                  "key": "permissionId",
+                  "value": "{{permissionId}}"
+                },
+                {
+                  "key": "canCreate",
+                  "value": "true"
+                },
+                {
+                  "key": "canRead",
+                  "value": "true"
+                },
+                {
+                  "key": "canUpdate",
+                  "value": "true"
+                },
+                {
+                  "key": "canDelete",
+                  "value": "false"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Check User Permission (Management)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/permission-management/user/{{userId}}/check-permission?permissionCode={{permissionCode}}&action=CanCreate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "permission-management", "user", "{{userId}}", "check-permission"],
+              "query": [
+                {
+                  "key": "permissionCode",
+                  "value": "{{permissionCode}}"
+                },
+                {
+                  "key": "action",
+                  "value": "CanCreate"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User Permissions (Management)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/permission-management/user/{{userId}}/permissions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "permission-management", "user", "{{userId}}", "permissions"]
+            }
+          }
+        },
+        {
+          "name": "Get User Roles (Management)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/permission-management/user/{{userId}}/roles",
+              "host": ["{{base_url}}"],
+              "path": ["api", "permission-management", "user", "{{userId}}", "roles"]
+            }
+          }
+        },
+        {
+          "name": "Get Role Permissions (Management)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{userId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/permission-management/role/{{roleId}}/permissions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "permission-management", "role", "{{roleId}}", "permissions"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

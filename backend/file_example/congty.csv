@@ -1,0 +1,3 @@
+id,tenCongTy,tenVietTat,email,quocGiaTruSoChinh,tinhThanhTruSoChinh,xaPhuongTruSoChinh,diaChiKhacTruSoChinh,logoCongTy,maSoThue,website,soDienThoai,nguoiTao,nguoiCapNhat,ngayTao,ngayCapNhat,isActive
+CT01,Công ty TNHH ABC,ABC,info@abc.com,Viet Nam,Hà Nội,Phường A,Đường B,/logos/logo1.png,0102030405,www.abc.com,0123456789,admin,admin,2025-01-01 08:00:00,2025-01-05 10:00:00,true
+CT02,Công ty CP XYZ,XYZ,contact@xyz.com,Viet Nam,Hồ Chí Minh,Phường X,Đường Y,/logos/logo2.png,0504030201,www.xyz.com,0987654321,user1,user2,2025-02-01 09:00:00,2025-02-05 11:00:00,true

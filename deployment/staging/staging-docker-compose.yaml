@@ -1,16 +1,18 @@
 services:
-  # qlts_reverse_proxy_service:
-  #   image: ${REGISTRY}/qlts_reverse_proxy_img:${VERSION}
-  #   ports:
-  #     # HOST_PORT:CONTAINER_PORT
-  #     - "7777:8888"
-  #   stdin_open: true
-  #   environment:
-  #     - TZ=Asia/Ho_Chi_Minh
-  #   networks:
-  #     - frontnet
-  #   depends_on:
-  #     - qlts_frontend_service
+  qlts_reverse_proxy_service:
+    image: ${REGISTRY}/qlts_reverse_proxy_img:${VERSION}
+    ports:
+      # HOST_PORT:CONTAINER_PORT
+      - "7777:8888"
+    stdin_open: true
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+    networks:
+      - frontnet
+      - backnet
+    depends_on:
+      - qlts_frontend_service
+      - qlts_backend_service
 
   qlts_frontend_service:
     image:
@@ -29,5 +31,40 @@ services:
     networks:
       - frontnet
 
+  qlts_backend_service:
+    env_file:
+      - .env_backend
+    image: ${REGISTRY}/qlts_backend_img:${VERSION}
+    depends_on:
+      - qlts_mysql
+    ports:
+      - "8386:8386"
+    networks:
+      - qlts_backnet
+    restart: unless-stopped
+
+  qlts_mysql:
+    image: mysql:8.0.36
+    command: --lower_case_table_names=1
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: QuanLyTaiSan
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+    ports:
+      - "3311:3306"
+    volumes:
+      - qlts_mysql_data:/var/lib/mysql
+    networks:
+      - backnet
+
+volumes:
+ qlts_mysql_data: # ✅ Cho postgres
+    driver: local
+    driver_opts:
+      type: none
+      device: /mnt/hdd/qlts_mysql_data
+      o: bind
 networks:
   frontnet:
+  backnet:

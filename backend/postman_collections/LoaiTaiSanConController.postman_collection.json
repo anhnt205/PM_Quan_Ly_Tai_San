@@ -1,0 +1,307 @@
+{
+	"info": {
+		"_postman_id": "loaitaisancon-controller",
+		"name": "LoaiTaiSanCon Controller API",
+		"description": "API collection for LoaiTaiSanCon CRUD operations",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get All LoaiTaiSanCon",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/loaitaisancon",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"loaitaisancon"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get LoaiTaiSanCon By ID",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/loaitaisancon/{{loaitaisanconId}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"loaitaisancon",
+						"{{loaitaisanconId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get LoaiTaiSanCon By IdLoaiTs",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/loaitaisancon/byloaitaisan/{{idLoaiTs}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"loaitaisancon",
+						"byloaitaisan",
+						"{{idLoaiTs}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create LoaiTaiSanCon",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"id\": \"LTS_CON_001\",\n  \"idLoaiTs\": \"LTS_001\",\n  \"tenLoaiTsCon\": \"Máy tính xách tay\",\n  \"moTa\": \"Máy tính xách tay cho nhân viên\",\n  \"isActive\": true\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/loaitaisancon",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"loaitaisancon"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Batch LoaiTaiSanCon",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n  {\n    \"id\": \"LTS_CON_002\",\n    \"idLoaiTs\": \"LTS_001\",\n    \"tenLoaiTsCon\": \"Máy tính để bàn\",\n    \"moTa\": \"Máy tính để bàn cho nhân viên\",\n    \"isActive\": true\n  },\n  {\n    \"id\": \"LTS_CON_003\",\n    \"idLoaiTs\": \"LTS_001\",\n    \"tenLoaiTsCon\": \"Máy in\",\n    \"moTa\": \"Máy in văn phòng\",\n    \"isActive\": true\n  }\n]"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/loaitaisancon/batch",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"loaitaisancon",
+						"batch"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update LoaiTaiSanCon",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"idLoaiTs\": \"LTS_001\",\n  \"tenLoaiTsCon\": \"Máy tính xách tay cập nhật\",\n  \"moTa\": \"Máy tính xách tay cho nhân viên - đã cập nhật\",\n  \"isActive\": true\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/loaitaisancon/{{loaitaisanconId}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"loaitaisancon",
+						"{{loaitaisanconId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete LoaiTaiSanCon",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/loaitaisancon/{{loaitaisanconId}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"loaitaisancon",
+						"{{loaitaisanconId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Batch LoaiTaiSanCon",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n  \"LTS_CON_002\",\n  \"LTS_CON_003\"\n]"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/loaitaisancon/batch",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"loaitaisancon",
+						"batch"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "USER123",
+			"type": "string"
+		},
+		{
+			"key": "loaitaisanconId",
+			"value": "LTS_CON_001",
+			"type": "string"
+		},
+		{
+			"key": "idLoaiTs",
+			"value": "LTS_001",
+			"type": "string"
+		}
+	]
+}
