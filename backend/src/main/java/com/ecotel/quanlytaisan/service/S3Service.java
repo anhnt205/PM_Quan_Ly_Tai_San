@@ -1,6 +1,7 @@
 package com.ecotel.quanlytaisan.service;
 
 import org.springframework.beans.factory.annotation.Value;
+import software.amazon.awssdk.core.sync.RequestBody;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -15,6 +16,7 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 import java.time.Duration;
+import java.util.UUID;
 import java.util.Map;
 
 @Service
@@ -130,5 +132,28 @@ public class S3Service {
     public String getContentType(String fileName) {
         String ext = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
         return contentTypes.getOrDefault(ext, "application/octet-stream");
+    }
+
+    /**
+     * Tải file trực tiếp lên S3 và trả về key của file.
+     *
+     * @param data Dữ liệu file dưới dạng byte array.
+     * @param extension Phần mở rộng của file (ví dụ: "png", "pdf").
+     * @return Key của file trên S3.
+     */
+    public String uploadFile(byte[] data, String extension) {
+        String uniqueFileName = UUID.randomUUID().toString() + "." + extension; // Use the provided extension directly
+        String fileKey = "chuky/" + uniqueFileName; // Giả định đây là chữ ký, có thể điều chỉnh prefix
+        String contentType = contentTypes.getOrDefault(extension.toLowerCase(), "application/octet-stream");
+
+        PutObjectRequest objectRequest = PutObjectRequest.builder()
+                .bucket(bucketName)
+                .key(fileKey)
+                .contentType(contentType)
+                .build();
+
+        s3Client.putObject(objectRequest, RequestBody.fromBytes(data));
+
+        return fileKey;
     }
 }

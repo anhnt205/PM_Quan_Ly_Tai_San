@@ -29,9 +29,8 @@ public class NhanVienService {
     @Autowired
     private NhanVienDao nhanVienDao;
 
-    public NhanVienService() {
-        nhanVienDao = new NhanVienDao();
-    }
+    @Autowired
+    private S3Service s3Service;
 
     public List<NhanVienDTO> getAll(String idCongTy) {
         return nhanVienDao.findAll(idCongTy);
@@ -109,46 +108,53 @@ public class NhanVienService {
         return list;
     }
 
-    public int insertNhanVienFromExcel(MultipartFile file) throws Exception {
-        List<Map<String, Object>> list = processExcelFile(file);
-        int count = 0;
+   public int insertNhanVienFromExcel(MultipartFile file) throws Exception {
+    int count = 0;
+    try (InputStream is = file.getInputStream();
+         XSSFWorkbook workbook = new XSSFWorkbook(is)) {
+        
+        XSSFSheet sheet = workbook.getSheetAt(0);
+        List<NhanVien> listNhanVien = new ArrayList<>();
 
-        for (Map<String, Object> map : list) {
-            try {
-                NhanVien nhanVien = new NhanVien();
+        // 1. Đọc dữ liệu text trực tiếp vào Object NhanVien
+        for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+            Row row = sheet.getRow(i);
+            if (row == null) continue;
+            
+            NhanVien nv = NhanVien.mapToNhanVien(row); // Dùng hàm đã sửa ở Bước 1
+            nv.setIdCongTy("CT001");
+            listNhanVien.add(nv);
+        }
+           
+        // 2. Xử lý ảnh nhúng (nếu có) và tải lên S3
+        if (sheet.getDrawingPatriarch() != null) {
+            for (XSSFShape shape : sheet.getDrawingPatriarch().getShapes()) {
+                if (shape instanceof XSSFPicture) {
+                    XSSFPicture pic = (XSSFPicture) shape;
+                    XSSFClientAnchor anchor = (XSSFClientAnchor) pic.getAnchor();
+                    int rowIndex = anchor.getRow1();
+                    int colIndex = anchor.getCol1();
 
-                nhanVien.setId((String) map.get("id"));
-                nhanVien.setHoTen((String) map.get("hoTen"));
-                nhanVien.setDiDong((String) map.get("diDong"));
-                nhanVien.setEmailCongViec((String) map.get("email"));
-                String chuKyNhay = (String) map.get("chuKyNhay");
-                String chuKyThuong = (String) map.get("chuKyThuong");
-                nhanVien.setChuKyNhay(chuKyNhay);         // ảnh cột E
-                nhanVien.setChuKyThuong(chuKyThuong);     // ảnh cột F
-                nhanVien.setKyNhay(chuKyNhay != null && !chuKyNhay.trim().isEmpty());
-                nhanVien.setKyThuong(chuKyThuong != null && !chuKyThuong.trim().isEmpty());
+                    if (rowIndex <= 0 || rowIndex > listNhanVien.size()) continue;
+                    NhanVien nv = listNhanVien.get(rowIndex - 1);
 
+                    byte[] data = pic.getPictureData().getData();
+                    String s3Key = s3Service.uploadFile(data, "png");
 
-                String uuid = (String) map.get("uuid");
-                nhanVien.setAgreementUUId(uuid);
-                nhanVien.setPin((String) map.get("maPin"));
-                nhanVien.setKySo(uuid != null && !uuid.trim().isEmpty());
-                nhanVien.setBoPhan((String) map.get("maphongban"));
-                nhanVien.setChucVu((String) map.get("machucvu"));
-                nhanVien.setNgayTao((String) map.get("ngaytao"));
-                nhanVien.setNgayCapNhat((String) map.get("ngaycapnhat"));
-                nhanVien.setIdCongTy("CT001");
-
-                nhanVienDao.insert(nhanVien);
-                count++;
-            } catch (Exception e) {
-                // Ghi log lỗi, nhưng không dừng toàn bộ quá trình
-                System.err.println("Lỗi khi insert nhân viên: " + e.getMessage());
+                    if (colIndex == 5) nv.setChuKyNhay(s3Key);   // Cột F
+                    if (colIndex == 7) nv.setChuKyThuong(s3Key); // Cột H
+                }
             }
         }
 
-        return count;
+        // 3. Lưu vào Database
+        for (NhanVien nv : listNhanVien) {
+            nhanVienDao.insert(nv);
+            count++;
+        }
     }
+    return count;
+}
 
     public List<Map<String, Object>> processExcelFile(MultipartFile file) throws Exception {
         List<Map<String, Object>> result = new ArrayList<>();
@@ -172,19 +178,23 @@ public class NhanVienService {
                 emp.put("hoTen", getCellValueAsString(row.getCell(1)));
                 emp.put("diDong", getCellValueAsString(row.getCell(2)));
                 emp.put("email", getCellValueAsString(row.getCell(3)));
-                emp.put("chuKyNhay", "");      // cột E
-                emp.put("chuKyThuong", "");    // cột F
-                emp.put("uuid", getCellValueAsString(row.getCell(6)));
-                emp.put("maPin", getCellValueAsString(row.getCell(7)));
-                emp.put("maphongban", getCellValueAsString(row.getCell(8)));
-                emp.put("machucvu", getCellValueAsString(row.getCell(9)));
-                emp.put("ngaytao", getCellValueAsString(row.getCell(10)));
-                emp.put("ngaycapnhat", getCellValueAsString(row.getCell(11)));
+                emp.put("kyNhay", getCellValueAsString(row.getCell(4)));
+                emp.put("chuKyNhay", getCellValueAsString(row.getCell(5)));
+                emp.put("kyThuong", getCellValueAsString(row.getCell(6)));
+                emp.put("chuKyThuong", getCellValueAsString(row.getCell(7)));  
+                emp.put("kySo", getCellValueAsString(row.getCell(8)));
+                emp.put("uuid", getCellValueAsString(row.getCell(9)));
+                emp.put("maPin", getCellValueAsString(row.getCell(10)));
+                emp.put("savePin", getCellValueAsString(row.getCell(11)));
+                emp.put("maphongban", getCellValueAsString(row.getCell(12)));
+                emp.put("machucvu", getCellValueAsString(row.getCell(13)));
+                emp.put("ngaytao", getCellValueAsString(row.getCell(14)));
+                emp.put("ngaycapnhat", getCellValueAsString(row.getCell(15)));
 
                 result.add(emp);
             }
 
-            // ---- Đọc ảnh nhúng ----
+           // ---- Đọc ảnh nhúng ----
             if (sheet.getDrawingPatriarch() != null) {
                 for (XSSFShape shape : sheet.getDrawingPatriarch().getShapes()) {
                     if (shape instanceof XSSFPicture) {
@@ -194,22 +204,28 @@ public class NhanVienService {
                         int rowIndex = anchor.getRow1(); // hàng
                         int colIndex = anchor.getCol1(); // cột
 
-                        // bỏ hàng tiêu đề
+                        // bỏ header
                         if (rowIndex <= 0 || rowIndex > result.size()) continue;
 
                         byte[] data = pic.getPictureData().getData();
                         String ext = pic.getPictureData().suggestFileExtension();
-                        String imgName = java.util.UUID.randomUUID().toString() + "." + ext;
-                        Path imgPath = uploadDir.resolve(imgName);
-                        Files.write(imgPath, data);
 
-                        // Cột E (index 4) → chuKyNhay
-                        // Cột F (index 5) → chuKyThuong
                         Map<String, Object> emp = result.get(rowIndex - 1);
-                        if (colIndex == 4) {
-                            emp.put("chuKyNhay", imgName.toString());
-                        } else if (colIndex == 5) {
-                            emp.put("chuKyThuong", imgName.toString());
+                        // Cột F (index 5) → chuKyNhay (Ảnh nhúng được neo vào cột F)
+                        if (colIndex == 5) { 
+                            String existing = (String) emp.get("chuKyNhay");
+                            if (existing == null || existing.trim().isEmpty()) {
+                                String s3Key = s3Service.uploadFile(data, ext);
+                                emp.put("chuKyNhay", s3Key);
+                            }
+                        }
+                        // Cột H (index 7) → chuKyThuong (Ảnh nhúng được neo vào cột H)
+                        else if (colIndex == 7) { 
+                            String existing = (String) emp.get("chuKyThuong");
+                            if (existing == null || existing.trim().isEmpty()) {
+                                String s3Key = s3Service.uploadFile(data, ext);
+                                emp.put("chuKyThuong", s3Key);
+                            }
                         }
                     }
                 }
@@ -250,15 +266,8 @@ public class NhanVienService {
     }
 
 
-
-
-
-
     public void deleteAll() {
         nhanVienDao.deleteAll();
     }
-
-
-
 
 }
