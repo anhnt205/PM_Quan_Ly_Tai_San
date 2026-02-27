@@ -174,6 +174,7 @@ export default function ToolManager() {
             }}
           >
             <ToolTableCustom
+              tableId="toolManager"
               title="Quản lý CCDC - Vật tư"
               rows={toolsPage?.items || []}
               total={toolsPage?.totalItems || 0}

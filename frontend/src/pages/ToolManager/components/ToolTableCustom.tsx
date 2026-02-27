@@ -28,6 +28,7 @@ import ColumnConfigMenu from "./ColumnConfig";
 import { findById } from "../../../utils/helpers";
 
 interface Props {
+  tableId?: string;
   title: string;
   rows: any[];
   total: number;
@@ -46,6 +47,7 @@ interface Props {
 }
 
 export default function ToolTableCustom({
+  tableId,
   title,
   rows,
   total,
@@ -68,6 +70,30 @@ export default function ToolTableCustom({
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
+
+  useEffect(() => {
+    if (tableId && columns.length > 0) {
+      const saved = localStorage.getItem(`table_columns_${tableId}`);
+      if (saved) {
+        try {
+          const parsedColumns = JSON.parse(saved);
+          onColumnsChange?.(parsedColumns);
+        } catch (error) {
+          console.error("Lỗi khi đọc cấu hình cột:", error);
+        }
+      }
+    }
+  }, [tableId]);
+
+  const handleColumnsChange = (newColumns: ColumnConfig[]) => {
+    onColumnsChange?.(newColumns);
+    if (tableId) {
+      localStorage.setItem(
+        `table_columns_${tableId}`,
+        JSON.stringify(newColumns),
+      );
+    }
+  };
 
   useEffect(() => {
     const updateWidth = () => {
@@ -354,7 +380,7 @@ export default function ToolTableCustom({
         col.key === colKey ? { ...col, width: newWidth } : col,
       );
 
-      onColumnsChange?.(updatedColumns);
+      handleColumnsChange(updatedColumns);
     };
 
     const onMouseUp = () => {
@@ -433,7 +459,7 @@ export default function ToolTableCustom({
       <Box display="flex" justifyContent="flex-start" gap={2}>
         <ColumnConfigMenu
           columns={columns.filter((col) => col.isShow)}
-          onChange={onColumnsChange}
+          onChange={handleColumnsChange}
         />
       </Box>
       {/* Table */}
