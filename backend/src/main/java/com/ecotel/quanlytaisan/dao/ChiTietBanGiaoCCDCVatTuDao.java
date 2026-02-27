@@ -33,10 +33,10 @@ public class ChiTietBanGiaoCCDCVatTuDao {
                        ccdc.Ten            AS TenVatTu,
                        ccdc.DonVitinh,
                        ccdc.KyHieu,
-                       ccdc.SoKyHieu,
-                       ccdc.CongSuat,
-                       ccdc.NuocSanXuat,
-                       ccdc.NamSanXuat,
+                       ts_info.SoKyHieu,
+                       ts_info.CongSuat,
+                       ts_info.NuocSanXuat,
+                       ts_info.NamSanXuat,
                        ct.SoLuong,
                        ct.NgayTao,
                        ct.NgayCapNhat,
@@ -52,6 +52,15 @@ public class ChiTietBanGiaoCCDCVatTuDao {
                 FROM ChiTietBanGiaoCCDCVatTu AS ct
                          INNER JOIN BanGiaoCCDCVatTu AS bg ON ct.IdBanGiaoCCDCVatTu = bg.Id
                          INNER JOIN CCDCVatTu AS ccdc ON ct.IdCCDCVatTu = ccdc.Id
+                         LEFT JOIN (
+                        SELECT IdTaiSan, 
+                       MAX(CongSuat) as CongSuat, 
+                       MAX(NuocSanXuat) as NuocSanXuat, 
+                       MAX(SoKyHieu) as SoKyHieu, 
+                       MAX(NamSanXuat) as NamSanXuat
+                        FROM ChiTietTaiSan
+                        GROUP BY IdTaiSan 
+                    ) AS ts_info ON ct.IdCCDCVatTu = ts_info.IdTaiSan
 
                 WHERE  ct.IdBanGiaoCCDCVatTu=?""";
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(ChiTietBanGiaoCCDCVatTuDTO.class), idBanGiaoCCDCVatTu);
@@ -66,10 +75,10 @@ public class ChiTietBanGiaoCCDCVatTuDao {
                        ccdc.Ten            AS TenVatTu,
                        ccdc.DonVitinh,
                        ccdc.KyHieu,
-                       ccdc.SoKyHieu,
-                       ccdc.CongSuat,
-                       ccdc.NuocSanXuat,
-                       ccdc.NamSanXuat,
+                       ts_info.SoKyHieu,
+                       ts_info.CongSuat,
+                       ts_info.NuocSanXuat,
+                       ts_info.NamSanXuat,
                        ct.SoLuong,
                        ct.NgayTao,
                        ct.NgayCapNhat,
@@ -85,7 +94,15 @@ public class ChiTietBanGiaoCCDCVatTuDao {
                 FROM ChiTietBanGiaoCCDCVatTu AS ct
                          INNER JOIN BanGiaoCCDCVatTu AS bg ON ct.IdBanGiaoCCDCVatTu = bg.Id
                          INNER JOIN CCDCVatTu AS ccdc ON ct.IdCCDCVatTu = ccdc.Id
-
+                         LEFT JOIN (
+                        SELECT IdTaiSan, 
+                       MAX(CongSuat) as CongSuat, 
+                       MAX(NuocSanXuat) as NuocSanXuat, 
+                       MAX(SoKyHieu) as SoKyHieu, 
+                       MAX(NamSanXuat) as NamSanXuat
+                        FROM ChiTietTaiSan
+                        GROUP BY IdTaiSan 
+                    ) AS ts_info ON ct.IdCCDCVatTu = ts_info.IdTaiSan
                 WHERE ct.Id=?""";
         return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(ChiTietBanGiaoCCDCVatTuDTO.class), id);
     }

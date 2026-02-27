@@ -30,11 +30,11 @@ public class ChiTietDieuDongCCDCVatTuDao {
                   ct.IdCCDCVatTu,
                   ccdc.Ten AS TenCCDCVatTu,
                   ccdc.DonVitinh,
-                  ccdc.CongSuat,
-                  ccdc.NuocSanXuat,
-                  ccdc.SoKyHieu,
+                  ts_info.CongSuat,
+                  ts_info.NuocSanXuat,
+                  ts_info.SoKyHieu,
                   ccdc.KyHieu,
-                  ccdc.NamSanXuat,
+                  ts_info.NamSanXuat,
                 
                   ct.SoLuong,
                   ct.SoLuongXuat,
@@ -55,6 +55,15 @@ public class ChiTietDieuDongCCDCVatTuDao {
                    DieuDongCCDCVatTu AS dd ON ct.IdDieuDongCCDCVatTu = dd.Id
                        INNER JOIN
                    CCDCVatTu AS ccdc ON ct.IdCCDCVatTu = ccdc.Id
+                    LEFT JOIN (
+                        SELECT IdTaiSan, 
+                       MAX(CongSuat) as CongSuat, 
+                       MAX(NuocSanXuat) as NuocSanXuat, 
+                       MAX(SoKyHieu) as SoKyHieu, 
+                       MAX(NamSanXuat) as NamSanXuat
+                        FROM ChiTietTaiSan
+                        GROUP BY IdTaiSan 
+                    ) AS ts_info ON ct.IdCCDCVatTu = ts_info.IdTaiSan
                 where ct.IdDieuDongCCDCVatTu=?""";
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(ChiTietDieuDongCCDCVatTuDTO.class), IdDieuDongCCDCVatTu);
     }
@@ -76,11 +85,11 @@ public class ChiTietDieuDongCCDCVatTuDao {
                        ct.IdCCDCVatTu,
                        ccdc.Ten AS TenCCDCVatTu,
                        ccdc.DonVitinh,
-                       ccdc.CongSuat,
-                       ccdc.NuocSanXuat,
-                       ccdc.SoKyHieu,
+                       ts_info.CongSuat,
+                       ts_info.NuocSanXuat,
+                       ts_info.SoKyHieu,
                        ccdc.KyHieu,
-                       ccdc.NamSanXuat,
+                       ts_info.NamSanXuat,
                 
                        ct.SoLuong,
                        ct.SoLuongXuat,
@@ -101,6 +110,15 @@ public class ChiTietDieuDongCCDCVatTuDao {
                      DieuDongCCDCVatTu AS dd ON ct.IdDieuDongCCDCVatTu = dd.Id
                          INNER JOIN
                      CCDCVatTu AS ccdc ON ct.IdCCDCVatTu = ccdc.Id
+                      LEFT JOIN (
+                        SELECT IdTaiSan, 
+                       MAX(CongSuat) as CongSuat, 
+                       MAX(NuocSanXuat) as NuocSanXuat, 
+                       MAX(SoKyHieu) as SoKyHieu, 
+                       MAX(NamSanXuat) as NamSanXuat
+                        FROM ChiTietTaiSan
+                        GROUP BY IdTaiSan 
+                    ) AS ts_info ON ct.IdCCDCVatTu = ts_info.IdTaiSan
                 WHERE  ct.Id=?""";
         return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(ChiTietDieuDongCCDCVatTuDTO.class), id);
     }
@@ -162,11 +180,11 @@ public class ChiTietDieuDongCCDCVatTuDao {
                   ct.IdCCDCVatTu,
                   ccdc.Ten AS TenCCDCVatTu,
                   ccdc.DonVitinh,
-                  ccdc.CongSuat,
-                  ccdc.NuocSanXuat,
-                  ccdc.SoKyHieu,
+                  ts_info.CongSuat,
+                  ts_info.NuocSanXuat,
+                  ts_info.SoKyHieu,
                   ccdc.KyHieu,
-                  ccdc.NamSanXuat,
+                  ts_info.NamSanXuat,
 
                   ct.SoLuong,
                   ct.SoLuongXuat,
@@ -185,6 +203,15 @@ public class ChiTietDieuDongCCDCVatTuDao {
                 FROM ChiTietDieuDongCCDCVatTu AS ct
                    INNER JOIN DieuDongCCDCVatTu AS dd ON ct.IdDieuDongCCDCVatTu = dd.Id
                    INNER JOIN CCDCVatTu AS ccdc ON ct.IdCCDCVatTu = ccdc.Id
+                   LEFT JOIN (
+                        SELECT IdTaiSan, 
+                       MAX(CongSuat) as CongSuat, 
+                       MAX(NuocSanXuat) as NuocSanXuat, 
+                       MAX(SoKyHieu) as SoKyHieu, 
+                       MAX(NamSanXuat) as NamSanXuat
+                        FROM ChiTietTaiSan
+                        GROUP BY IdTaiSan 
+                    ) AS ts_info ON ct.IdCCDCVatTu = ts_info.IdTaiSan
                 WHERE ct.IdDieuDongCCDCVatTu = ?
                   AND ct.IsActive = 1
                   AND COALESCE(ct.SoLuongConLai, 0) > 0

@@ -313,13 +313,17 @@ export default function ToolHandoverForm({
           );
           return {
             ...i,
-            id: i.idCCDCVatTu,
-            tenCCDCVatTu: i.tenVatTu,
+            id: i.idChiTietCCDCVatTu,
+            tenVatTu: i.tenVatTu + `- (${i.soKyHieu}) -` + i.namSanXuat,
             soLuongConLai: chitiet?.soLuongConLai ?? 0,
             soLuongXuat: chitiet?.soLuongXuat ?? 0,
+            kyHieu: i.soKyHieu,
+            nuocSanXuat: i.nuocSanXuat,
+            donViTinh: i.donViTinh,
           };
         },
       );
+      console.log(chitietList);
       formik.setValues({
         ...selectedToolHandover,
         isNew: selectedToolHandover.isNew ?? false,
@@ -379,8 +383,8 @@ export default function ToolHandoverForm({
     setListTools(
       (result?.chiTietDieuDongCCDCVatTuDTOS || []).map((i: any) => ({
         ...i,
-        id: i.idCCDCVatTu,
-        tenVatTu: i.tenVatTu,
+        id: i.idChiTietCCDCVatTu,
+        tenVatTu: i.tenCCDCVatTu + `- (${i.soKyHieu}) -` + i.namSanXuat,
         idCCDCVatTu: i.idCCDCVatTu,
         idChiTietCCDCVatTu: i.idChiTietCCDCVatTu,
         idChiTietDieuDong: i.id,
@@ -388,10 +392,11 @@ export default function ToolHandoverForm({
         ghiChu: i.ghiChu,
         kyHieu: i.kyHieu,
         soKyHieu: i.soKyHieu,
+        nuocSanXuat: i.nuocSanXuat,
+        donViTinh: i.donViTinh,
       })),
     );
   };
-
   return (
     <>
       {isPreview && (
@@ -419,14 +424,14 @@ export default function ToolHandoverForm({
             chiTietBanGiaoCCDCVatTu: (
               formik.values.chiTietBanGiaoCCDCVatTu || []
             ).map((item) => {
-              const toolInfo = findById(listTools, item.idCCDCVatTu);
               return {
                 ...item,
-                tenCCDCVatTu: toolInfo?.tenCCDCVatTu || "",
-                tenVatTu: toolInfo?.tenVatTu || "",
-                donViTinh: toolInfo?.donViTinh || "",
-                kyHieu: toolInfo?.kyHieu || "",
-                moTa: toolInfo?.moTa || "",
+                // tenCCDCVatTu: toolInfo?.tenCCDCVatTu || "",
+                tenVatTu: item?.tenVatTu || "",
+                donViTinh: item?.donViTinh || "",
+                kyHieu: item?.soKyHieu || "",
+                moTa: item?.moTa || "",
+                nuocSanXuat: item?.nuocSanXuat || "",
               };
             }),
             tenDonViGiao:
@@ -448,7 +453,9 @@ export default function ToolHandoverForm({
           allUnits={allUnits}
           departments={departments}
           positions={positions}
-          isEdit={[0].includes(selectedToolHandover?.trangThai ?? 0) ? true : false}
+          isEdit={
+            [0].includes(selectedToolHandover?.trangThai ?? 0) ? true : false
+          }
         />
       )}
       <Accordion
@@ -905,18 +912,21 @@ export default function ToolHandoverForm({
                             >
                               <UnderlinedInputWrapper>
                                 <FieldAutoCompleted
-                                  labelkey="tenCCDCVatTu"
+                                  labelkey="tenVatTu"
                                   title=""
                                   formik={formik}
-                                  field={`chiTietBanGiaoCCDCVatTu.${index}.idCCDCVatTu`}
-                                  labelOption="id"
+                                  field={`chiTietBanGiaoCCDCVatTu.${index}.idChiTietCCDCVatTu`}
                                   data={listTools}
                                   disabled={readOnly}
                                   onChange={(newValue: any) => {
                                     if (newValue) {
                                       formik.setFieldValue(
-                                        `chiTietBanGiaoCCDCVatTu.${index}.tenCCDCVatTu`,
+                                        `chiTietBanGiaoCCDCVatTu.${index}.tenVatTu`,
                                         newValue.tenCCDCVatTu,
+                                      );
+                                      formik.setFieldValue(
+                                        `chiTietBanGiaoCCDCVatTu.${index}.nuocSanXuat`,
+                                        newValue.nuocSanXuat,
                                       );
                                       formik.setFieldValue(
                                         `chiTietBanGiaoCCDCVatTu.${index}.donViTinh`,
@@ -928,12 +938,12 @@ export default function ToolHandoverForm({
                                       );
                                       formik.setFieldValue(
                                         `chiTietBanGiaoCCDCVatTu.${index}.idCCDCVatTu`,
-                                        newValue.id,
+                                        newValue.idCCDCVatTu,
                                       );
-                                      formik.setFieldValue(
-                                        `chiTietBanGiaoCCDCVatTu.${index}.idChiTietCCDCVatTu`,
-                                        newValue.idChiTietCCDCVatTu,
-                                      );
+                                      // formik.setFieldValue(
+                                      //   `chiTietBanGiaoCCDCVatTu.${index}.idChiTietCCDCVatTu`,
+                                      //   newValue.idChiTietCCDCVatTu,
+                                      // );
                                       formik.setFieldValue(
                                         `chiTietBanGiaoCCDCVatTu.${index}.idChiTietDieuDong`,
                                         newValue.idChiTietDieuDong,
