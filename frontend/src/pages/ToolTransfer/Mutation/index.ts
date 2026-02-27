@@ -591,84 +591,73 @@ export const useToolTransferPageQuery = (
   });
 };
 
-export const useToolByDepartmentPageQuery = ({
-  departmentId,
-}: {
-  departmentId: string;
-}) => {
-  const idCongTy = "ct001";
-  const { data: allTools = [], isLoading } = useAllToolQuery();
+export const useToolByDepartmentPageQuery = ({ departmentId }: { departmentId: string }) => {
+  const allToolsQuery = useAllToolQuery(); // đã được cache ở nhiều nơi
 
-  const detailAssetMap = useMemo(() => {
-    const map = new Map();
-    allTools.forEach((item: any) => {
-      item?.chiTietTaiSanList?.forEach((detail: any) => {
-        map.set(detail.id, {
+  const detailQuery = useQuery({
+    queryKey: ["chitietdonvisohuu", departmentId],
+    queryFn: async () => {
+      if (!departmentId) return [];
+      const res = await api.get(`/chitietdonvisohuu/by-donvisohuu/${departmentId}`);
+      return res.data?.data || res.data || [];
+    },
+    enabled: !!departmentId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const processedData = useMemo(() => {
+    // Ép kiểu tạm thời thành any[] để tránh lỗi TypeScript
+    const allTools = (allToolsQuery.data || []) as any[];
+    const details = (detailQuery.data || []) as any[];
+    if (!details.length || !allTools.length) return [];
+
+    // Tạo Map để lookup nhanh
+    const toolMap = new Map(allTools.map((tool: any) => [tool.id, tool]));
+    const detailMap = new Map();
+    allTools.forEach((tool: any) => {
+      tool?.chiTietTaiSanList?.forEach((detail: any) => {
+        detailMap.set(detail.id, {
           ...detail,
-          assetTen: item.ten,
-          assetDonVi: item.donViTinh,
+          assetTen: tool.ten,
+          assetDonVi: tool.donViTinh,
         });
       });
     });
-    return map;
-  }, [allTools]);
 
-  return useQuery({
-    queryKey: ["allToolByDonVi", departmentId, idCongTy],
-    queryFn: async () => {
-      // 1. Kiểm tra an toàn ngay từ đầu
-      if (!departmentId) return [];
+    return details.reduce((acc: any[], e: any) => {
+      if (!e?.idCCDCVT || !e?.idTsCon) return acc;
+      const asset = toolMap.get(e.idCCDCVT) as any;
+      const detailAsset = detailMap.get(e.idTsCon) as any;
+      if (asset?.id && detailAsset?.id) {
+        acc.push({
+          id: e.idCCDCVT,
+          idCCDCVatTu: e.idCCDCVT,
+          tenCCDCVatTu: asset.ten || "N/A",
+          idDetaiAsset: detailAsset.id,
+          tenDetailAsset: `${asset.ten || "N/A"} (${detailAsset.soKyHieu || ""}) - ${detailAsset.namSanXuat || ""}`,
+          idDonVi: e.idDonViSoHuu,
+          donViTinh: detailAsset.donViTinh,
+          namSanXuat: detailAsset.namSanXuat ?? 2010,
+          soLuong: e.soLuong || 0,
+          soLuongConLai: e.soLuong || 0,
+          ghiChu: detailAsset.ghiChu,
+          soKyHieu: detailAsset.soKyHieu,
+          kyHieu: asset.kyHieu,
+          soLuongDaBanGiao: 0,
+          asset: asset,
+        });
+      }
+      return acc;
+    }, []);
+  }, [allToolsQuery.data, detailQuery.data]);
 
-      const resAllTools = await api.get(
-        `/chitietdonvisohuu/by-donvisohuu/${departmentId}`,
-      );
-
-      // 2. Xử lý fallback cho response data
-      const allToolsByDonVi = resAllTools.data?.data || resAllTools.data || [];
-
-      if (!allToolsByDonVi.length) return [];
-
-      // 3. Sử dụng .reduce hoặc map để tránh lỗi vòng lặp
-      const processedData = allToolsByDonVi.reduce((acc: any[], e: any) => {
-        if (!e?.idCCDCVT || !e?.idTsCon) return acc;
-
-        // Dùng Optional Chaining để tránh crash nếu findById trả về undefined
-        const asset = findById(allTools, e.idCCDCVT);
-
-        // Lúc này trong vòng lặp reduce, bạn chỉ cần:
-        const detailAsset = detailAssetMap.get(e?.idTsCon);
-
-        // 4. Chỉ push khi chắc chắn cả hai object đều tồn tại và có ID
-        if (asset?.id && detailAsset?.id) {
-          acc.push({
-            id: e.idCCDCVT,
-            idCCDCVatTu: e.idCCDCVT,
-            tenCCDCVatTu: asset.ten || "N/A",
-            idDetaiAsset: detailAsset.id,
-            tenDetailAsset: `${asset.ten || "N/A"} (${detailAsset.soKyHieu || ""}) - ${detailAsset.namSanXuat || ""}`,
-            idDonVi: e.idDonViSoHuu,
-            donViTinh: asset.donViTinh,
-            namSanXuat: detailAsset.namSanXuat ?? 2010,
-            soLuong: e.soLuong || 0,
-            soLuongConLai: e.soLuong || 0,
-            ghiChu: asset.ghiChu,
-            soKyHieu: asset.soKyHieu,
-            kyHieu: asset.kyHieu,
-            soLuongDaBanGiao: 0,
-            asset: asset,
-          });
-        }
-        return acc;
-      }, []);
-
-      return processedData;
-    },
-    // 5. Query chỉ chạy khi có ID phòng ban
-    enabled: !!departmentId && !isLoading,
-    placeholderData: (previousData) => previousData,
-    // Tránh việc văng lỗi trắng màn hình nếu API lỗi
-    retry: 1,
-  });
+  return {
+    data: processedData,
+    isLoading: allToolsQuery.isLoading || detailQuery.isLoading,
+    isError: detailQuery.isError,
+    error: detailQuery.error,
+    refetch: detailQuery.refetch,
+  };
 };
 
 export const useToolTransferAllQuery = () => {

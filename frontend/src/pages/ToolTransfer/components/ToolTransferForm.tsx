@@ -255,9 +255,7 @@ export default function ToolTransferForm({
 
   const {
     data: toolsByDepartment = [],
-    isLoading,
-    isFetching,
-    status,
+    isLoading
   } = useToolByDepartmentPageQuery({
     departmentId: formik.values.idDonViGiao,
   });
@@ -282,7 +280,7 @@ export default function ToolTransferForm({
   return (
     <>
       <DialogLoading
-        loading={(isLoading || isFetching) && toolsByDepartment.length === 0}
+        loading={(isLoading) && toolsByDepartment.length === 0}
         title="Đang tải ccdc ..."
       />
       {isPreview && (

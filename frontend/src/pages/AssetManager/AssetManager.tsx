@@ -108,7 +108,6 @@ export default function AssetManager() {
   };
 
   // Use sample data for tab 3, real data for other tabs
-  const displayData = tab === 3 ? sampleMaintenanceData : assetsPage;
 
   const { data: allDepartments = [] } = useAllDepartmentsQuery();
   const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
@@ -356,7 +355,7 @@ export default function AssetManager() {
               size="small"
               onClick={(e) => {
                 e.stopPropagation();
-                handleOpenHistory(params.row.id);
+                handleOpenHistory(params.row);
               }}
               sx={{
                 color: "#4F46E5",
@@ -494,8 +493,8 @@ export default function AssetManager() {
                     : "Sửa chữa bảo dưỡng"
             }
             columns={columns}
-            rows={displayData.items}
-            total={displayData.totalItems}
+            rows={assetsPage.items}
+            total={assetsPage.totalItems}
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
             loading={tab < 3 ? isLoading : false}

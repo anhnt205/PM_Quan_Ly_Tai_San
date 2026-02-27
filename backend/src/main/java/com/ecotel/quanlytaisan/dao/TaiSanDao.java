@@ -24,130 +24,67 @@ public class TaiSanDao {
     @Autowired
     private SetNguonKinhPhiDao setNguonKinhPhiDao;
 
-    private static List<TaiSanDTO> cache = new ArrayList<>();
-
-    @PostConstruct
-    public void init() {
-        CompletableFuture.runAsync(this::refreshCache);
-    }
-
-    private void refreshCache() {
-        String sql = """
-                SELECT 
-                    ts.Id,
-                    ts.TenTaiSan,
-                    ts.NguyenGia,
-                    ts.GiaTriKhauHaoBanDau,
-                    ts.KyKhauHaoBanDau,
-                    ts.GiaTriThanhLy,
-                
-                    -- Thông tin mô hình tài sản
-                    ts.IdMoHinhTaiSan,
-                    mhts.TenMoHinh,
-                
-                    -- Thông tin nhóm tài sản
-                    ts.IdNhomTaiSan,
-                    nts.TenNhom,
-                
-                    -- Thông tin dự án
-                    ts.IdDuDan as idDuAn,
-                    da.TenDuAn,
-                
-                    -- Thông tin nguồn vốn
-                    ts.IdNguonVon,
-                    nv.TenNguonKinhPhi,
-                
-                    ts.PhuongPhapKhauHao,
-                    ts.SoKyKhauHao,
-                    ts.TaiKhoanTaiSan,
-                    ts.TaiKhoanKhauHao,
-                    ts.TaiKhoanChiPhi,
-                    ts.NgayVaoSo,
-                    ts.NgaySuDung,
-                    ts.KyHieu,
-                    ts.SoKyHieu,
-                    ts.CongSuat,
-                    ts.NuocSanXuat,
-                    ts.NamSanXuat,
-                    ts.LyDoTang,
-                    ts.HienTrang,
-                    ts.SoLuong,
-                    ts.DonViTinh,
-                    ts.GhiChu,
-                    ts.IdDonViBanDau,
-                    ts.IdDonViHienThoi,
-                    ts.MoTa,
-                    ts.IdCongTy,
-                    ts.NgayTao,
-                    ts.NgayCapNhat,
-                    ts.NguoiTao,
-                    ts.NguoiCapNhat,
-                    ts.IsActive,
-                    ts.IsTaiSanCon,
-                    ts.IdLoaiTaiSanCon, 
-                    ts.SoThe,
-                    ts.nvNS,
-                    ts.vonVay,
-                    ts.vonKhac
-                FROM 
-                    TaiSan AS ts
-                LEFT JOIN 
-                    MoHinhTaiSan AS mhts ON ts.IdMoHinhTaiSan = mhts.Id
-                LEFT JOIN 
-                    NhomTaiSan AS nts ON ts.IdNhomTaiSan = nts.Id
-                LEFT JOIN 
-                    DuAn AS da ON ts.IdDuDan = da.Id
-                LEFT JOIN 
-                    NguonVon AS nv ON ts.IdNguonVon = nv.Id
-                """;
-        try {
-            List<TaiSanDTO> taiSanDTOList = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(TaiSanDTO.class));
-
-            List<String> soTheList = taiSanDTOList.stream().map(TaiSanDTO::getSoThe).filter(s -> s != null && !s.isEmpty()).distinct().collect(Collectors.toList());
-
-            if (!soTheList.isEmpty()) {
-                CompletableFuture<List<SetNguonKinhPhi>> setNguonFuture = CompletableFuture.supplyAsync(() -> setNguonKinhPhiDao.getSetNguonKinhPhiTaiSanIds(soTheList));
-
-                CompletableFuture<List<Map<String, Object>>> nguonFuture = CompletableFuture.supplyAsync(() -> setNguonKinhPhiDao.getNguonKinhPhiWithTaiSanId(soTheList));
-
-                CompletableFuture.allOf(setNguonFuture, nguonFuture).join();
-
-                List<SetNguonKinhPhi> allSetNguon = setNguonFuture.get();
-                List<Map<String, Object>> allNguonRaw = nguonFuture.get();
-
-                Map<String, List<SetNguonKinhPhi>> setNguonMap = allSetNguon.stream().collect(Collectors.groupingBy(SetNguonKinhPhi::getIdTaiSan));
-
-                Map<String, List<NguonKinhPhi>> nguonMap = new java.util.HashMap<>();
-                for (Map<String, Object> row : allNguonRaw) {
-                    String idTaiSan = (String) row.get("IdTaiSan");
-                    NguonKinhPhi nkp = new NguonKinhPhi();
-                    nkp.setId((String) row.get("Id"));
-                    nkp.setTen((String) row.get("Ten"));
-                    nkp.setNote((String) row.get("Note"));
-                    nguonMap.computeIfAbsent(idTaiSan, k -> new ArrayList<>()).add(nkp);
-                }
-
-                for (TaiSanDTO dto : taiSanDTOList) {
-                    if (dto.getSoThe() != null) {
-                        dto.setSetNguonKinhPhiList(setNguonMap.getOrDefault(dto.getSoThe(), new ArrayList<>()));
-                        dto.setNguonKinhPhiList(nguonMap.getOrDefault(dto.getSoThe(), new ArrayList<>()));
-                    }
-                }
-            }
-
-            cache = taiSanDTOList;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+    private final String SELECT_TAISAN_DTO = """
+            SELECT 
+                ts.*, 
+                mhts.TenMoHinh, 
+                nts.TenNhom, 
+                da.TenDuAn, 
+                nv.TenNguonKinhPhi,
+                ts.IdDuDan as idDuAn
+            FROM TaiSan AS ts
+            LEFT JOIN MoHinhTaiSan AS mhts ON ts.IdMoHinhTaiSan = mhts.Id
+            LEFT JOIN NhomTaiSan AS nts ON ts.IdNhomTaiSan = nts.Id
+            LEFT JOIN DuAn AS da ON ts.IdDuDan = da.Id
+            LEFT JOIN NguonVon AS nv ON ts.IdNguonVon = nv.Id
+            """;
 
 
     public List<TaiSanDTO> findAll(String idCongTy) {
-        if (cache == null || cache.isEmpty()) {
-            System.out.println("cache null");
-            refreshCache();
+        String sql = SELECT_TAISAN_DTO + " WHERE ts.IdCongTy = ?";
+        List<TaiSanDTO> list = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(TaiSanDTO.class), idCongTy);
+        
+        // Load thêm các thông tin phụ nếu cần (Nguồn kinh phí)
+        attachAdditionalData(list);
+        return list;
+    }
+
+    /**
+     * Hàm phụ trợ để load thêm dữ liệu quan hệ (Nguồn kinh phí) cho DTO
+     */
+    private void attachAdditionalData(List<TaiSanDTO> taiSanDTOList) {
+        if (taiSanDTOList == null || taiSanDTOList.isEmpty()) return;
+
+        List<String> soTheList = taiSanDTOList.stream()
+                .map(TaiSanDTO::getSoThe)
+                .filter(s -> s != null && !s.isEmpty())
+                .distinct()
+                .collect(Collectors.toList());
+
+        if (!soTheList.isEmpty()) {
+            // Lấy dữ liệu từ các DAO khác
+            List<SetNguonKinhPhi> allSetNguon = setNguonKinhPhiDao.getSetNguonKinhPhiTaiSanIds(soTheList);
+            List<Map<String, Object>> allNguonRaw = setNguonKinhPhiDao.getNguonKinhPhiWithTaiSanId(soTheList);
+
+            Map<String, List<SetNguonKinhPhi>> setNguonMap = allSetNguon.stream()
+                    .collect(Collectors.groupingBy(SetNguonKinhPhi::getIdTaiSan));
+
+            Map<String, List<NguonKinhPhi>> nguonMap = new java.util.HashMap<>();
+            for (Map<String, Object> row : allNguonRaw) {
+                String idTaiSan = (String) row.get("IdTaiSan");
+                NguonKinhPhi nkp = new NguonKinhPhi();
+                nkp.setId((String) row.get("Id"));
+                nkp.setTen((String) row.get("Ten"));
+                nguonMap.computeIfAbsent(idTaiSan, k -> new ArrayList<>()).add(nkp);
+            }
+
+            for (TaiSanDTO dto : taiSanDTOList) {
+                if (dto.getSoThe() != null) {
+                    dto.setSetNguonKinhPhiList(setNguonMap.getOrDefault(dto.getSoThe(), new ArrayList<>()));
+                    dto.setNguonKinhPhiList(nguonMap.getOrDefault(dto.getSoThe(), new ArrayList<>()));
+                }
+            }
         }
-        return cache.stream().filter(item -> idCongTy.equals(item.getIdCongTy())).collect(Collectors.toList());
     }
 
     public long countByCongTy(String idCongTy) {
@@ -693,9 +630,9 @@ public class TaiSanDao {
             // Nếu chưa tồn tại thì insert
             String sql = "INSERT INTO TaiSan (Id, IdLoaiTaiSan, TenTaiSan, NguyenGia, GiaTriKhauHaoBanDau, KyKhauHaoBanDau, " + "GiaTriThanhLy, IdMoHinhTaiSan, PhuongPhapKhauHao, SoKyKhauHao, TaiKhoanTaiSan, TaiKhoanKhauHao, TaiKhoanChiPhi, " + "IdNhomTaiSan, NgayVaoSo, NgaySuDung, IdDuDan, IdNguonVon, KyHieu, SoKyHieu, CongSuat, NuocSanXuat, NamSanXuat, " + "LyDoTang, HienTrang, SoLuong, DonViTinh, GhiChu, IdDonViBanDau, IdDonViHienThoi, MoTa, IdCongTy, NgayTao, " + "NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive,  IsTaiSanCon,IdLoaiTaiSanCon, SoThe, nvNS, vonVay, vonKhac) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?, ?, ?, ?)";
             int result = jdbcTemplate.update(sql, taiSan.getId(), taiSan.getIdLoaiTaiSan(), taiSan.getTenTaiSan(), taiSan.getNguyenGia(), taiSan.getGiaTriKhauHaoBanDau(), taiSan.getKyKhauHaoBanDau(), taiSan.getGiaTriThanhLy(), taiSan.getIdMoHinhTaiSan(), taiSan.getPhuongPhapKhauHao(), taiSan.getSoKyKhauHao(), taiSan.getTaiKhoanTaiSan(), taiSan.getTaiKhoanKhauHao(), taiSan.getTaiKhoanChiPhi(), taiSan.getIdNhomTaiSan(), taiSan.getNgayVaoSo(), taiSan.getNgaySuDung(), taiSan.getIdDuDan(), taiSan.getIdNguonVon(), taiSan.getKyHieu(), taiSan.getSoKyHieu(), taiSan.getCongSuat(), taiSan.getNuocSanXuat(), taiSan.getNamSanXuat(), taiSan.getLyDoTang(), taiSan.getHienTrang(), taiSan.getSoLuong(), taiSan.getDonViTinh(), taiSan.getGhiChu(), taiSan.getIdDonViBanDau(), taiSan.getIdDonViHienThoi(), taiSan.getMoTa(), taiSan.getIdCongTy(), taiSan.getNgayTao(), taiSan.getNgayCapNhat(), taiSan.getNguoiTao(), taiSan.getNguoiCapNhat(), taiSan.getIsActive(), taiSan.getIsTaiSanCon(), taiSan.getIdLoaiTaiSanCon(), taiSan.getSoThe(), taiSan.getNvNS(), taiSan.getVonVay(), taiSan.getVonKhac());
-            if (result > 0) {
-                CompletableFuture.runAsync(this::refreshCache);
-            }
+            // if (result > 0) {
+            //     refreshCache();
+            // }
             return result;
         }
     }
@@ -716,9 +653,9 @@ public class TaiSanDao {
         int result = jdbcTemplate.update(sql, taiSan.getIdLoaiTaiSan(), taiSan.getTenTaiSan(), taiSan.getNguyenGia(), taiSan.getGiaTriKhauHaoBanDau(), taiSan.getKyKhauHaoBanDau(), taiSan.getGiaTriThanhLy(), taiSan.getIdMoHinhTaiSan(), taiSan.getPhuongPhapKhauHao(), taiSan.getSoKyKhauHao(), taiSan.getTaiKhoanTaiSan(), taiSan.getTaiKhoanKhauHao(), taiSan.getTaiKhoanChiPhi(), taiSan.getIdNhomTaiSan(), taiSan.getNgayVaoSo(),   // fix
                 taiSan.getNgaySuDung(), // fix
                 taiSan.getIdDuDan(), taiSan.getIdNguonVon(), taiSan.getKyHieu(), taiSan.getSoKyHieu(), taiSan.getCongSuat(), taiSan.getNuocSanXuat(), taiSan.getNamSanXuat(), taiSan.getLyDoTang(), taiSan.getHienTrang(), taiSan.getSoLuong(), taiSan.getDonViTinh(), taiSan.getGhiChu(), taiSan.getIdDonViBanDau(), taiSan.getIdDonViHienThoi(), taiSan.getMoTa(), taiSan.getIdCongTy(), taiSan.getNgayCapNhat(), taiSan.getNguoiTao(), taiSan.getNguoiCapNhat(), taiSan.getIsActive() != null ? (taiSan.getIsActive() ? 1 : 0) : 1, taiSan.getIsTaiSanCon(), taiSan.getIdLoaiTaiSanCon(), taiSan.getSoThe(), taiSan.getNvNS(), taiSan.getVonVay(), taiSan.getVonKhac(), taiSan.getId());
-        if (result > 0) {
-            CompletableFuture.runAsync(this::refreshCache);
-        }
+        // if (result > 0) {
+        //     CompletableFuture.runAsync(this::refreshCache);
+        // }
         return result;
     }
 
@@ -728,27 +665,27 @@ public class TaiSanDao {
         String sql = """
                 update TaiSan set IsTaiSanCon =? where Id = ?""";
         int result = jdbcTemplate.update(sql, isTaiSanCon ? 1 : 0, isTaiSanCon ? 1 : 0, id);
-        if (result > 0) {
-            CompletableFuture.runAsync(this::refreshCache);
-        }
+        // if (result > 0) {
+        //     CompletableFuture.runAsync(this::refreshCache);
+        // }
         return result;
     }
 
     public int updateDonViSoHuu(String id, String idDonViHienThoi) {
         String sql = "UPDATE TaiSan SET IdDonViHienThoi=? WHERE Id=?";
         int result = jdbcTemplate.update(sql, idDonViHienThoi, id);
-        if (result > 0) {
-            CompletableFuture.runAsync(this::refreshCache);
-        }
+        // if (result > 0) {
+        //     CompletableFuture.runAsync(this::refreshCache);
+        // }
         return result;
     }
 
     public int delete(String id) {
         String sql = "DELETE FROM TaiSan WHERE Id=?";
         int result = jdbcTemplate.update(sql, id);
-        if (result > 0) {
-            CompletableFuture.runAsync(this::refreshCache);
-        }
+        // if (result > 0) {
+        //     CompletableFuture.runAsync(this::refreshCache);
+        // }
         return result;
     }
 

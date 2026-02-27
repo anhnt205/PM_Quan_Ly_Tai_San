@@ -38,7 +38,6 @@ export const useAssetManagerMutation = (
       return res.data;
     },
     onSuccess: (data, payload) => {
-      queryClient.invalidateQueries({ queryKey: ["assetsPage"], exact: false });
       createChildAssetBulkMutation.mutate(
         (payload?.taiSanConList || []).map((i) => ({
           ...i,
@@ -47,6 +46,7 @@ export const useAssetManagerMutation = (
           ngayTao: now,
         })),
       );
+      queryClient.invalidateQueries({ queryKey: ["assetsPage"], exact: false });
       showSuccessAlert("Tạo tài sản thành công");
     },
     onError: (error: any) => {
@@ -109,7 +109,7 @@ export const useAssetManagerMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["assetsPage"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["assetsPage"]});
       showSuccessAlert("Xóa tài sản thành công");
     },
     onError: (error: any) => {
@@ -126,7 +126,7 @@ export const useAssetManagerMutation = (
       return res.data.message;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["assetsPage"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["assetsPage"]});
       showSuccessAlert(data || "Xóa tài sản thành công");
     },
     onError: (error: any) => {
