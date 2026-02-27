@@ -211,6 +211,7 @@ export default function CapitalSource() {
           </Box>
         )}
         <TableCustom
+          tableId="capitalSource"
           title="Quản lý nguồn vốn"
           columns={columns}
           rows={capitalSourcesPage.items}

@@ -483,6 +483,7 @@ export default function AssetManager() {
             </Tabs>
           </Box>
           <TableCustom
+            tableId="assetManager"
             title={
               tab === 0
                 ? "Quản lý tài sản - Kho thu hồi"

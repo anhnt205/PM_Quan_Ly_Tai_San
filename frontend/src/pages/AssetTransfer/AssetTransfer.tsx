@@ -539,6 +539,7 @@ export default function AssetTransfer() {
                 }}
               >
                 <TableCustom
+                  tableId="assetTransfer"
                   title={`Phiếu duyệt ${label}`}
                   columns={columns}
                   rows={assetTranferPage.items}

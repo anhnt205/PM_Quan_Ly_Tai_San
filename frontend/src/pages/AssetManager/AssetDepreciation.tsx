@@ -325,6 +325,7 @@ export default function AssetDepreciation() {
       )}
 
       <TableCustom
+        tableId="assetDepreciation"
         title="Danh sách khấu hao tài sản"
         columns={columns}
         rows={assetDepreciations.items}

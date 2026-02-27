@@ -201,6 +201,7 @@ export default function Account() {
         }}
       >
         <TableCustom
+          tableId="account"
           title="Danh sách tài khoản"
           columns={columns}
           rows={accountPage?.items || []}

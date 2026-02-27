@@ -264,6 +264,7 @@ export default function Position() {
           </Box>
         )}
         <TableCustom
+          tableId="position"
           title="Quản lý chức vụ"
           columns={columns}
           rows={positionsPage.items}

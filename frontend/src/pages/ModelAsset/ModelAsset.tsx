@@ -261,6 +261,7 @@ export default function ModelAsset() {
           </Box>
         )}
         <TableCustom
+          tableId="modelAsset"
           title="Quản lý mô hình tài sản"
           columns={columns}
           rows={modelAssetPage.items}

@@ -212,6 +212,7 @@ export default function ToolGroup() {
           </Box>
         )}
         <TableCustom
+          tableId="toolGroup"
           title="Quản lý nhóm ccdc"
           columns={columns}
           rows={toolGroupPage.items}

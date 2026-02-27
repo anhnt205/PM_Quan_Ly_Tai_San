@@ -192,6 +192,7 @@ export default function TypeAsset() {
           </Box>
         )}
         <TableCustom
+          tableId="typeAssset"
           title="Quản lý loại tài sản"
           columns={columns}
           rows={typeAssetPage.items}

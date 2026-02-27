@@ -170,6 +170,7 @@ export default function Department() {
           </Box>
         )}
         <TableCustom
+          tableId="department"
           title="Quản lý phòng ban"
           columns={columns}
           rows={departmentsPage.items}

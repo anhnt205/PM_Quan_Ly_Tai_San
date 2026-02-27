@@ -666,6 +666,7 @@ export default function ToolHandover() {
                 </Box>
 
                 <TableCustom
+                  tableId="toolHandover"
                   loading={isLoading}
                   title={
                     activeTab === 0

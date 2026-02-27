@@ -265,6 +265,7 @@ export default function Staff() {
           </Box>
         )}
         <TableCustom
+          tableId="staff"
           title="Quản lý nhân viên"
           columns={columns}
           rows={staffsPage.items}

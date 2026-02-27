@@ -178,6 +178,7 @@ export default function Unit() {
           </Box>
         )}
         <TableCustom
+          tableId="unit"
           title="Quản lý đơn vị tính"
           columns={columns}
           rows={unitPages.items}

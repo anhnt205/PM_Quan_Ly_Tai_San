@@ -185,6 +185,7 @@ export default function CurrentStatus() {
           </Box>
         )}
         <TableCustom
+          tableId="currentStatus"
           title="Quản lý hiện trạng"
           columns={columns}
           rows={currentStatusPage.items}

@@ -193,6 +193,7 @@ export default function Project() {
           </Box>
         )}
         <TableCustom
+          tableId="project"
           title="Quản lý dự án"
           columns={columns}
           rows={projectsPage.items}

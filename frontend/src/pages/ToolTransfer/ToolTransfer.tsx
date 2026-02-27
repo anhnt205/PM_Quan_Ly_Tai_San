@@ -530,6 +530,7 @@ export default function ToolTransfer() {
               }}
             >
               <TableCustom
+                tableId="toolTransfer"
                 title={`Danh sách phiếu ${label}`}
                 columns={columns}
                 rows={toolTransferPage.items || []}

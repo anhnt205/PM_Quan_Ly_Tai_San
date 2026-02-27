@@ -206,6 +206,7 @@ export default function ReasonIncrease() {
           </Box>
         )}
         <TableCustom
+          tableId="réonIncrease"
           title="Danh sách lý do tăng"
           columns={columns}
           rows={reasonIncreasesPage.items}

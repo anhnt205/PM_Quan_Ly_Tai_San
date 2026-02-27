@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   BarChart,
   Close,
@@ -22,6 +22,7 @@ import {
   GridColDef,
   GridToolbar,
   GridFilterPanel,
+  GridColumnVisibilityModel,
   GridFeatureMode,
 } from "@mui/x-data-grid";
 import { viVN } from "@mui/x-data-grid/locales";
@@ -46,6 +47,7 @@ const CustomFilterPanel = (props: any) => {
 };
 
 interface Props {
+  tableId?: string;
   title: string;
   columns: GridColDef[];
   rows: any[];
@@ -82,6 +84,7 @@ interface Props {
 }
 
 export default function TableCustom({
+  tableId,
   title,
   columns,
   rows,
@@ -119,6 +122,35 @@ export default function TableCustom({
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.user);
   const [selectedItem, setSelectedItem] = useState<any[]>([]);
+  const [columnVisibilityModel, setColumnVisibilityModel] =
+    useState<GridColumnVisibilityModel>({});
+
+  useEffect(() => {
+    if (tableId) {
+      const savedColumns = localStorage.getItem(`table_columns_${tableId}`);
+      if (savedColumns) {
+        try {
+          setColumnVisibilityModel(JSON.parse(savedColumns));
+        } catch (error) {
+          console.error("Lỗi khi đọc cấu hình cột:", error);
+        }
+      }
+    }
+  }, [tableId]);
+
+  // Hàm xử lý khi người dùng thay đổi trạng thái ẩn/hiện cột
+  const handleColumnVisibilityChange = (
+    newModel: GridColumnVisibilityModel,
+  ) => {
+    setColumnVisibilityModel(newModel);
+    if (tableId) {
+      localStorage.setItem(
+        `table_columns_${tableId}`,
+        JSON.stringify(newModel),
+      );
+    }
+  };
+
   return (
     <Paper sx={{ my: 2, width: "100%" }}>
       <Box
@@ -279,6 +311,8 @@ export default function TableCustom({
             pageSizeOptions={[10, 20, 50]}
             loading={loading}
             checkboxSelection={checkboxSelection}
+            columnVisibilityModel={columnVisibilityModel}
+            onColumnVisibilityModelChange={handleColumnVisibilityChange}
             rowSelectionModel={
               selectedIds && selectedIds.length > 0
                 ? { type: "include" as const, ids: new Set(selectedIds) }

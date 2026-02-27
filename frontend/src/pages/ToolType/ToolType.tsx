@@ -181,6 +181,7 @@ export default function ToolType() {
           </Box>
         )}
         <TableCustom
+          tableId="toolType"
           title="Quản lý loại CCDC"
           columns={columns}
           rows={toolTypesPage.items}

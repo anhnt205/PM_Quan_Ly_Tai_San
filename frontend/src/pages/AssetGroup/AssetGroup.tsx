@@ -212,6 +212,7 @@ export default function AssetGroup() {
           </Box>
         )}
         <TableCustom
+          tableId="assetGroup"
           title="Quản lý nhóm tài sản"
           columns={columns}
           rows={assetGroupPage.items}

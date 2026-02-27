@@ -669,6 +669,7 @@ export default function AssetHandover() {
                 }}
               >
                 <TableCustom
+                  tableId="assetHandover"
                   loading={isLoading}
                   title={
                     activeTab === 0
