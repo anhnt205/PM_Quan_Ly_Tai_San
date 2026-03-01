@@ -261,8 +261,8 @@ export default function AssetTransfer() {
       headerAlign: "center",
       align: "center",
       renderCell(params) {
-        if (!params.row?.tggnTuNgay) return "";
-        return new Date(params.row?.tggnTuNgay).toLocaleString("vi-VN");
+        if (!params.row?.tgGnTuNgay) return "";
+        return new Date(params.row?.tgGnTuNgay).toLocaleString("vi-VN");
       },
     },
 
@@ -298,7 +298,7 @@ export default function AssetTransfer() {
     },
 
     {
-      field: "tggnTuNgay",
+      field: "tgGnTuNgay",
       headerName: "Thời gian giao nhận từ ngày",
       width: 160,
       headerAlign: "center",
@@ -310,7 +310,7 @@ export default function AssetTransfer() {
     },
 
     {
-      field: "tggnDenNgay",
+      field: "tgGnDenNgay",
       headerName: "Thời gian giao nhận đến ngày",
       width: 160,
       headerAlign: "center",

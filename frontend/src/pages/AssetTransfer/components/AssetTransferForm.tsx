@@ -215,8 +215,6 @@ export default function AssetTransferForm({
     if (selectedTransfer) {
       formik.setValues({
         ...selectedTransfer,
-        tgGnTuNgay: selectedTransfer.tggnTuNgay,
-        tgGnDenNgay: selectedTransfer.tggnDenNgay,
         initialChiTiet: selectedTransfer.chiTietDieuDongTaiSanDTOS.map(
           (i: any) => i.id,
         ),

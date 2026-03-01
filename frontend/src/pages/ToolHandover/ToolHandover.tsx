@@ -123,6 +123,7 @@ export default function ToolHandover() {
       currentType ? Number(currentType) : undefined,
       3,
       true,
+      user.taiKhoan?.phongBanId,
     );
   useEffect(() => {
     if (!currentType && transferPage?.loaiCounts) {

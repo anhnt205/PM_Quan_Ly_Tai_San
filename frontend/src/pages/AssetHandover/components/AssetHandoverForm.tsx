@@ -49,6 +49,7 @@ import { useAllCurrentStatusQuery } from "../../CurrentStatus/Mutation";
 import { assetHandoverValidationSchema } from "../validation";
 import { generateBienBanPdf } from "../config";
 import S3Service from "../../../services/S3Service";
+import { useSelector } from "react-redux";
 
 const UnderlinedInputWrapper = styled(Box)({
   width: "100%",
@@ -125,6 +126,7 @@ export default function AssetHandoverForm({
   departments?: any[];
   positions?: any[];
 }) {
+  const { user } = useSelector((state: any) => state.user);
   const currentStatus =
     selectedAssetHandover?.trangThai ?? selectedAssetHandover?.trangThai ?? 0;
 
@@ -143,7 +145,7 @@ export default function AssetHandoverForm({
     undefined,
     undefined,
     3,
-    undefined,
+    user.taiKhoan?.phongBanId,
     selectedAssetHandover ? undefined : true,
   );
   const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();

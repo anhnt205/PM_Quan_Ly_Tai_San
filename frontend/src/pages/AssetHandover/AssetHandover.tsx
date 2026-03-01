@@ -103,7 +103,7 @@ export default function AssetHandover() {
       currentType ? Number(currentType) : undefined,
       undefined,
       3,
-      undefined,
+      user.taiKhoan?.phongBanId,
       true,
     );
   useEffect(() => {

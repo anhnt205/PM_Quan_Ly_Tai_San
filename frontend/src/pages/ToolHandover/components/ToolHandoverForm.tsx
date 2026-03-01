@@ -45,6 +45,7 @@ import { toolHandoverValidationSchema } from "../validation";
 import { useToolTransferPageQuery } from "../../ToolTransfer/Mutation";
 import { generateBienBanPdf } from "../config";
 import S3Service from "../../../services/S3Service";
+import { useSelector } from "react-redux";
 
 const UnderlinedInputWrapper = styled(Box)({
   width: "100%",
@@ -136,7 +137,7 @@ export default function ToolHandoverForm({
   departments?: any[];
   positions?: any[];
 }) {
-  console.log(staffs);
+  const { user } = useSelector((state: any) => state.user);
   const currentStatus =
     selectedToolHandover?.trangThai ?? selectedToolHandover?.trangThai ?? 0;
   const { data: ToolTransferData = { items: [], totalItems: 0 } } =
@@ -148,6 +149,7 @@ export default function ToolHandoverForm({
       undefined,
       3,
       selectedToolHandover ? undefined : true,
+      user.taiKhoan?.phongBanId,
     );
   const [expanded, setExpanded] = useState(true);
   const [tableExpanded, setTableExpanded] = useState(true);

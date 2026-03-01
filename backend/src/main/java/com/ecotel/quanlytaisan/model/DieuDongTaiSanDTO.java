@@ -24,8 +24,8 @@ public class DieuDongTaiSanDTO {
     private String idDonViDeNghi;
     private String tenDonViDeNghi;
     //    tggn
-    private String tggnTuNgay;
-    private String tggnDenNgay;
+    private String tgGnTuNgay;
+    private String tgGnDenNgay;
     //trinh duyet cap phong
     private String idTrinhDuyetCapPhong;
     private String tenTrinhDuyetCapPhong;

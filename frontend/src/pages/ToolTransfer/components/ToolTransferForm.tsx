@@ -205,9 +205,6 @@ export default function ToolTransferForm({
     if (selectedTool) {
       formik.setValues({
         ...selectedTool,
-        tgGnTuNgay: selectedTool.tggnTuNgay || "",
-        tgGnDenNgay: selectedTool.tggnDenNgay || "",
-
         initialChiTiet: (selectedTool.chiTietDieuDongCCDCVatTuDTOS || []).map(
           (i: any) => i.id,
         ),

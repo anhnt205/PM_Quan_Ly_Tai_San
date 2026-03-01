@@ -54,8 +54,8 @@ export interface AssetTransferData {
   tenNguoiKyNhay: string;
   idDonViDeNghi: string;
   tenDonViDeNghi: string;
-  tggnTuNgay: string;
-  tggnDenNgay: string;
+  tgGnTuNgay: string;
+  tgGnDenNgay: string;
   idTrinhDuyetCapPhong: string;
   tenTrinhDuyetCapPhong: string;
   trinhDuyetCapPhongXacNhan: boolean;
