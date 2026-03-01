@@ -45,14 +45,10 @@ public class DashboardService {
     }
 
     // Tài sản theo nhóm và loại con với phần trăm (có tham số)
-    public Map<String, List<Map<String, Object>>> getTaiSanTheoNhomLoaiConPhanTram() {
-        List<NhomTaiSan> nhomTaiSanList = nhomTaiSanDao.findAll("");
-        Map<String, List<Map<String, Object>>> result = new HashMap<>();
-        for (NhomTaiSan nhomTaiSan : nhomTaiSanList) {
-            result.put(nhomTaiSan.getTenNhom(), repo.getTaiSanTheoNhomLoaiConPhanTram(nhomTaiSan.getId()));
-        }
-
-        return result;
+    public List<Map<String, Object>> getTaiSanTheoNhomLoaiConPhanTram(
+        String idCongTy, String idNhomTaiSan
+        ) {
+        return repo.getThongKeTaiSanTheoLoaiCon(idCongTy, idNhomTaiSan);
     }
 
     // CCDC theo nhóm và loại con với phần trăm (có tham số)

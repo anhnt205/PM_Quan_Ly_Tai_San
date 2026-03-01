@@ -3,7 +3,7 @@ package com.ecotel.quanlytaisan.dao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -186,7 +186,29 @@ public class DashboardDao {
                         ORDER BY soLuong DESC
                         """);
     }
+    public List<Map<String, Object>> getThongKeTaiSanTheoLoaiCon(String idCongTy, String idNhomTaiSan) {
+            StringBuilder sql = new StringBuilder("""
+            SELECT 
+                ltsc.Id AS idLoai,
+                ltsc.TenLoai AS tenLoai,
+                COUNT(ts.Id) AS soLuong
+            FROM TaiSan ts
+            LEFT JOIN LoaiTaiSanCon ltsc ON ts.IdLoaiTaiSanCon = ltsc.Id
+            WHERE ts.IdCongTy = ?
+        """);
 
+        List<Object> params = new ArrayList<>();
+        params.add(idCongTy);
+
+        if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
+            sql.append(" AND ts.IdNhomTaiSan = ?");
+            params.add(idNhomTaiSan);
+        }
+
+        sql.append(" GROUP BY ltsc.Id, ltsc.TenLoai");
+
+        return jdbc.queryForList(sql.toString(), params.toArray());
+    }
     // Thống kê tài sản theo loại chính với phần trăm
     public List<Map<String, Object>> getTaiSanTheoLoaiChinhPhanTram() {
         return jdbc.queryForList(

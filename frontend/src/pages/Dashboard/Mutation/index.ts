@@ -29,9 +29,13 @@ const fetchNhomCCDCList = async () => {
   return res.data;
 };
 
+const fetchNhomTaiSanList = async () => {
+  const res = await api.get("/nhomtaisan", { params: { idcongty: "ct001" } });
+  return res.data;
+};
+
 const fetchAllCCDC = async () => {
   const res = await api.get("/ccdcvattu/paged", {
-    // request a sufficiently large page size so frontend receives all CCDC
     params: { idcongty: "ct001", page: 0, size: 10000 },
   });
   return res.data;
@@ -51,11 +55,13 @@ const fetchAllTaiSan = async () => {
 
 const fetchTaiSanTheoLoai = async (nhomId?: string) => {
   const res = await api.get("/dashboard/tai-san-theo-nhom-loai-con-phan-tram", {
-    params: nhomId ? { nhomId } : {},
+    params: {
+      idcongty: "ct001",
+      ...(nhomId ? { nhomId } : {}),
+    },
   });
   return res.data;
 };
-
 const fetchCCDCTheoLoai = async (nhomId?: string) => {
   const res = await api.get("/dashboard/ccdc-theo-nhom-loai-con-phan-tram", {
     params: nhomId ? { nhomId } : {},
@@ -69,7 +75,13 @@ export const useDashboardMutation = (
   namTaiSan: number = new Date().getFullYear(),
   namCCDC: number = new Date().getFullYear(),
 ) => {
-  // queries
+  // ✅ nhomTaiSanData query đặt TRONG hook
+  const { data: nhomTaiSanData } = useQuery({
+    queryKey: ["nhom-tai-san-list"],
+    queryFn: fetchNhomTaiSanList,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const { data: statistics, isLoading: isLoadingStatistics } = useQuery({
     queryKey: ["dashboard-statistics"],
     queryFn: fetchStatistics,
@@ -166,7 +178,6 @@ export const useDashboardMutation = (
     );
   }, [statistics]);
 
-  // helpers
   const nhomCCDCMap = React.useMemo(() => {
     const map = new Map<string, any>();
     const nhomList = Array.isArray(nhomCCDCList)
@@ -441,7 +452,17 @@ export const useDashboardMutation = (
       .sort((a, b) => (a.nam !== b.nam ? a.nam - b.nam : a.thang - b.thang));
   }, [allTaiSanData, extractTaiSanItems]);
 
-  const nhomTaiSanList = [] as any[];
+  // ✅ nhomTaiSanList được build từ nhomTaiSanData (query ở trên)
+  const nhomTaiSanList = React.useMemo(() => {
+    if (!nhomTaiSanData) return [];
+    const list = Array.isArray(nhomTaiSanData)
+      ? nhomTaiSanData
+      : nhomTaiSanData.data || [];
+    return list.map((n: any) => ({
+      id: String(n.id),
+      tenNhom: n.tenNhom || n.ten || n.name || "",
+    }));
+  }, [nhomTaiSanData]);
 
   const isLoading =
     isLoadingStatistics ||
@@ -531,7 +552,16 @@ export const useDashboardMutation = (
     tongGiaTriCCDC,
     ccdcTheoThangByNgayNhap,
     taiSanTheoThangByNgayVaoSo,
-    taiSanTheoLoai: taiSanTheoLoai?.data || [],
+    taiSanTheoLoai: (
+      Array.isArray(taiSanTheoLoai?.data)
+        ? taiSanTheoLoai.data
+        : Array.isArray(taiSanTheoLoai)
+          ? taiSanTheoLoai
+          : []
+    ).map((it: any) => ({
+      label: it.tenLoai || it.ten || it.label || "",
+      value: Number(it.soLuong ?? it.count ?? it.value ?? 0),
+    })),
     ccdcTheoLoai: ccdcTheoLoaiNormalized || [],
     taiSanTheoThang: taiSanTheoThangFromStats || [],
     ccdcTheoThang: ccdcTheoThangFromStats || [],

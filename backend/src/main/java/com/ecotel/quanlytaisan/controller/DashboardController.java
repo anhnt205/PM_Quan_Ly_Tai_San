@@ -69,9 +69,11 @@ public class DashboardController {
     }
 
     @GetMapping("/tai-san-theo-nhom-loai-con-phan-tram")
-    public ResponseEntity<ApiResponse<Object>> getTaiSanTheoNhomLoaiConPhanTram() {
+    public ResponseEntity<ApiResponse<Object>> getTaiSanTheoNhomLoaiConPhanTram(
+        @RequestParam(required = false) String nhomId,
+        @RequestParam String idcongty) {
         try {
-            Map<String, List<Map<String, Object>>> data = service.getTaiSanTheoNhomLoaiConPhanTram();
+             List<Map<String, Object>> data = service.getTaiSanTheoNhomLoaiConPhanTram(idcongty, nhomId);
             return ResponseEntity.ok(ApiResponse.success("Lấy thống kê tài sản theo nhóm và loại con với phần trăm thành công", data, data.size()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

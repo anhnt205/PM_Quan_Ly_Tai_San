@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Box, Typography, Grid } from "@mui/material";
 import { Dashboard as DashboardIcon } from "@mui/icons-material";
 import { useDashboardMutation } from "./Mutation";
@@ -48,7 +48,11 @@ export default function DashBoard() {
     yearCCDC,
   );
 
-  React.useEffect(() => {
+  console.log("API taiSanTheoLoai:", taiSanTheoLoai);
+  console.log("API ccdcTheoLoai:", ccdcTheoLoai);
+
+  // Tự động chọn nhóm CCDC đầu tiên nếu chưa chọn
+  useEffect(() => {
     if (
       !selectedNhomCCDC &&
       Array.isArray(uniqueNhomCCDC) &&
@@ -57,10 +61,23 @@ export default function DashBoard() {
       const first = uniqueNhomCCDC[0];
       if (first && first.id) setSelectedNhomCCDC(String(first.id));
     }
-  }, [uniqueNhomCCDC, selectedNhomCCDC, setSelectedNhomCCDC]);
+  }, [uniqueNhomCCDC, selectedNhomCCDC]);
+
+  // Tự động chọn nhóm tài sản đầu tiên nếu chưa chọn
+  useEffect(() => {
+    if (
+      !selectedNhomTaiSan &&
+      Array.isArray(nhomTaiSanList) &&
+      nhomTaiSanList.length > 0
+    ) {
+      const first = nhomTaiSanList[0];
+      if (first?.id) setSelectedNhomTaiSan(String(first.id));
+    }
+  }, [nhomTaiSanList, selectedNhomTaiSan]);
 
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
+  // Dữ liệu biểu đồ tròn CCDC
   let ccdcPieData = (ccdcTheoNhom || []).map((item: any, index: number) => ({
     ten: item.tenNhom || item.ten,
     soLuong: item.soLuong,
@@ -84,13 +101,7 @@ export default function DashBoard() {
     hideCcdcLegend = true;
   }
 
-  console.log(
-    "ccdcPieData for PieChart:",
-    ccdcPieData,
-    "hideLegend:",
-    hideCcdcLegend,
-  );
-
+  // Dữ liệu biểu đồ tròn tài sản
   const taiSanPieData = (taiSanTheoNhom || []).map(
     (item: any, index: number) => ({
       ten: item.ten || item.tenNhom,
@@ -100,14 +111,13 @@ export default function DashBoard() {
     }),
   );
 
+  // Dữ liệu biểu đồ cột CCDC (đã được chuẩn hóa từ hook)
   const ccdcBarData =
     ccdcTheoLoai && ccdcTheoLoai.length > 0 ? ccdcTheoLoai : [];
 
-  const taiSanBarData = (taiSanTheoLoai || []).map((item: any) => ({
-    label: item.tenLoai || item.ten,
-    value: item.soLuong,
-  }));
+const taiSanBarData = taiSanTheoLoai || [];
 
+  // Dữ liệu tháng CCDC
   const rawCcdcMonthly =
     ccdcTheoThang && ccdcTheoThang.length > 0
       ? ccdcTheoThang
@@ -116,6 +126,7 @@ export default function DashBoard() {
     .filter((item: any) => item.nam === yearCCDC)
     .sort((a: any, b: any) => a.thang - b.thang);
 
+  // Dữ liệu tháng tài sản
   const rawTaiSanMonthly =
     taiSanTheoThang && taiSanTheoThang.length > 0
       ? taiSanTheoThang
@@ -123,8 +134,6 @@ export default function DashBoard() {
   const taiSanMonthlyData = (rawTaiSanMonthly || [])
     .filter((item: any) => item.nam === yearTaiSan)
     .sort((a: any, b: any) => a.thang - b.thang);
-
-  const getMonthName = (month: number) => `Tháng ${month}`;
 
   const maxCCDC = Math.max(
     ...(ccdcMonthlyData || []).map((d: any) => d.soLuong || 0),
@@ -164,6 +173,7 @@ export default function DashBoard() {
         <QuickActionButtons />
 
         <Grid container spacing={2}>
+          {/* CCDC Cards */}
           <Grid size={{ xs: 3 }}>
             <CcdcGroupCard
               ccdcPieData={ccdcPieData}
@@ -190,6 +200,7 @@ export default function DashBoard() {
             />
           </Grid>
 
+          {/* Tài sản Cards */}
           <Grid size={{ xs: 3 }}>
             <TaisanGroupCard
               taiSanPieData={taiSanPieData}
@@ -197,7 +208,12 @@ export default function DashBoard() {
             />
           </Grid>
           <Grid size={{ xs: 4.5 }}>
-            <TaisanTypeCard taiSanBarData={taiSanBarData} />
+            <TaisanTypeCard
+              taiSanBarData={taiSanBarData}            // Đã chuẩn hóa
+              selectedNhomTaiSan={selectedNhomTaiSan}
+              setSelectedNhomTaiSan={setSelectedNhomTaiSan}
+              uniqueNhomTaiSan={nhomTaiSanList}        // Danh sách nhóm
+            />
           </Grid>
           <Grid size={{ xs: 4.5 }}>
             <TaisanMonthlyCard
