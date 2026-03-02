@@ -9,6 +9,7 @@ import {
   Mail,
 } from "@mui/icons-material";
 import {
+  Autocomplete,
   Box,
   Button,
   Grid,
@@ -81,6 +82,10 @@ interface Props {
   titleSearch?: string;
   extraActions?: React.ReactNode;
   customContent?: React.ReactNode;
+  departments?: any[];
+  selectedDepartment?: string;
+  setSelectedDepartment?: Dispatch<SetStateAction<string>>;
+  isFilterDepartment?: boolean;
 }
 
 export default function TableCustom({
@@ -118,6 +123,10 @@ export default function TableCustom({
   titleSearch = "Tìm kiếm ...",
   extraActions,
   customContent,
+  departments,
+  selectedDepartment,
+  setSelectedDepartment,
+  isFilterDepartment = false,
 }: Props) {
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.user);
@@ -206,7 +215,22 @@ export default function TableCustom({
             }}
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 2 }}>
+        <Grid size={{ xs: 12, sm: 3 }}>
+          {isFilterDepartment && (
+            <Autocomplete
+              options={departments || []}
+              value={
+                departments?.find((d) => d.id === selectedDepartment) || null
+              }
+              getOptionLabel={(option) => option.tenPhongBan || ""}
+              onChange={(e, newValue) => {
+                setSelectedDepartment?.(newValue ? newValue.id : null);
+              }}
+              renderInput={(params) => (
+                <TextField {...params} fullWidth label="Tìm kiếm theo phòng ban..." size="small" />
+              )}
+            />
+          )}
           {isFilterDate && (
             <FieldDate
               selectedDate={selectedDate}
@@ -215,7 +239,7 @@ export default function TableCustom({
             />
           )}
         </Grid>
-        <Grid size={{ xs: 12, sm: 6 }}>
+        <Grid size={{ xs: 12, sm: 5 }}>
           <Box
             display={"flex"}
             justifyContent={"flex-end"}

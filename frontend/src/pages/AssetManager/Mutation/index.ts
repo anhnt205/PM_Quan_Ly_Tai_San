@@ -109,7 +109,7 @@ export const useAssetManagerMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["assetsPage"]});
+      queryClient.invalidateQueries({ queryKey: ["assetsPage"] });
       showSuccessAlert("Xóa tài sản thành công");
     },
     onError: (error: any) => {
@@ -126,7 +126,7 @@ export const useAssetManagerMutation = (
       return res.data.message;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["assetsPage"]});
+      queryClient.invalidateQueries({ queryKey: ["assetsPage"] });
       showSuccessAlert(data || "Xóa tài sản thành công");
     },
     onError: (error: any) => {
@@ -437,9 +437,18 @@ export const useAssetPageQuery = (
   pageSize?: number,
   searchValue?: string,
   idNhomTaiSan?: string,
+  idDonViHienThoi?: string,
 ) => {
   return useQuery({
-    queryKey: ["assetsPage", page, pageSize, searchValue, idNhomTaiSan, tab], // Key để cache dữ liệu
+    queryKey: [
+      "assetsPage",
+      page,
+      pageSize,
+      searchValue,
+      idNhomTaiSan,
+      tab,
+      idDonViHienThoi,
+    ], // Key để cache dữ liệu
     queryFn: async () => {
       const res = await api.get(
         tab === 0
@@ -456,7 +465,7 @@ export const useAssetPageQuery = (
             size: pageSize,
             search: searchValue,
             idNhomTaiSan: idNhomTaiSan,
-            ...(tab === 0 && { iddonvihienthoi: "kth" }),
+            iddonvihienthoi: tab === 0 ? "kth" : idDonViHienThoi,
           },
         },
       );

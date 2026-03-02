@@ -48,6 +48,7 @@ export default function AssetManager() {
   const [readOnly, setReadOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
+  const [selectedDepartment, setSelectedDepartment] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
@@ -77,35 +78,8 @@ export default function AssetManager() {
       paginationModel.pageSize,
       valueDebounce,
       selectedGroup,
+      selectedDepartment,
     );
-
-  // Sample data for Maintenance/Repair tab (tab 3)
-  const sampleMaintenanceData = {
-    items: [
-      {
-        id: "SAMPLE001",
-        soThe: "SAMPLE001",
-        tenTaiSan: "Máy móc mẫu - Sửa chữa bảo dưỡng",
-        ngayVaoSo: new Date().toISOString(),
-        ngaySuDung: new Date().toISOString(),
-        nvNS: 10000000,
-        vonVay: 0,
-        vonKhac: 0,
-        giaTriThanhLy: 0,
-        hienTrang: 1,
-        idDonViHienThoi: "K30",
-        idNhomTaiSan: "NH001",
-        tenNhom: "Nhóm mẫu",
-        idLoaiTaiSanCon: "LTS001",
-        taiSanConList: [],
-        soLuong: 1,
-        donViTinh: "cai",
-        kyHieu: "KM",
-        soKyHieu: "001",
-      },
-    ],
-    totalItems: 1,
-  };
 
   // Use sample data for tab 3, real data for other tabs
 
@@ -118,7 +92,6 @@ export default function AssetManager() {
   const { data: allTypeAssets = [] } = useAllTypeAssetQuery();
   const { data: allUnits = [] } = useAllUnitsQuery();
   const { data: allModelAsset = [] } = useAllModelAssetQuery();
-  const { data: allProjects = [] } = useAllProjectsQuery();
   const { data: allReasonIncreases = [] } = useAllReasonIncreaseQuery();
 
   const [importErrors, setImportErrors] = useState<string[]>([]);
@@ -506,6 +479,10 @@ export default function AssetManager() {
             searchValue={searchValue}
             setSearchValue={setSearchValue}
             isDepreciation={true}
+            departments={allDepartments}
+            isFilterDepartment={tab === 1}
+            selectedDepartment={selectedDepartment}
+            setSelectedDepartment={setSelectedDepartment}
           />
         </Box>
       </Box>

@@ -1070,9 +1070,7 @@ public class TaiSanDao {
         if (idDonViHienThoi != null && !idDonViHienThoi.trim().isEmpty()) {
             whereClause.append(" AND (ts.IdDonViHienThoi LIKE ?) ");
             String searchPattern = "%" + idDonViHienThoi + "%";
-            for (int i = 0; i < 9; i++) {
                 params.add(searchPattern);
-            }
         }
 
         String sql = """
