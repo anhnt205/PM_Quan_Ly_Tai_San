@@ -38,6 +38,7 @@ import { useAllTypeAssetByGroupQuery } from "../../TypeAsset/Mutation";
 import { useAllProjectsQuery } from "../../Project/Mutation";
 import dayjs from "dayjs";
 import { AssetValidation } from "../validation";
+import TextFieldNumber from "../../../components/TextField/TextFieldNumber";
 
 export default function AssetManagerForm({
   onEdit,
@@ -130,7 +131,7 @@ export default function AssetManagerForm({
         },
       ],
     },
-    validationSchema:AssetValidation,
+    validationSchema: AssetValidation,
     onSubmit(values) {
       onSave({
         ...values,
@@ -233,39 +234,35 @@ export default function AssetManagerForm({
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
-                  <FieldInput
+                  <TextFieldNumber
                     title="Nguyên giá tài sản"
-                    type="number"
                     formik={formik}
                     field="nguyenGia"
                     disabled={true}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
-                  <FieldInput
+                  <TextFieldNumber
                     title="Giá trị khấu hao ban đầu"
-                    type="number"
                     formik={formik}
                     field="giaTriKhauHaoBanDau"
-                    disabled={readOnly}
+                    disabled={true}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
-                  <FieldInput
+                  <TextFieldNumber
                     title="Kỳ khấu hao ban đầu"
-                    type="number"
                     formik={formik}
                     field="kyKhauHaoBanDau"
-                    disabled={readOnly}
+                    disabled={true}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
-                  <FieldInput
+                  <TextFieldNumber
                     title="Giá trị thanh lý"
-                    type="number"
                     formik={formik}
                     field="giaTriThanhLy"
-                    disabled={readOnly}
+                    disabled={true}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -408,15 +405,11 @@ export default function AssetManagerForm({
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
-                  <FieldInput
+                  <TextFieldNumber
                     title="Vốn NS"
-                    type="number"
                     formik={formik}
                     field="nvNS"
                     disabled={readOnly}
-                    InputLabelProps={{
-                      shrink: true, // Giúp label luôn nhảy lên trên
-                    }}
                     onChange={(newValue) => {
                       formik.setFieldValue(
                         "nguyenGia",
@@ -428,26 +421,24 @@ export default function AssetManagerForm({
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
-                  <FieldInput
+                  <TextFieldNumber
                     title="Vốn vay"
-                    type="number"
                     formik={formik}
                     field="vonVay"
                     disabled={readOnly}
                     onChange={(newValue) => {
                       formik.setFieldValue(
                         "nguyenGia",
-                        Number(newValue ?? 0) +
+                        Number(formik.values.vonVay ?? 0) +
                           Number(formik.values.vonKhac ?? 0) +
-                          Number(formik.values.nvNS ?? 0),
+                          Number(newValue ?? 0),
                       );
                     }}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
-                  <FieldInput
+                  <TextFieldNumber
                     title="Vốn khác"
-                    type="number"
                     formik={formik}
                     field="vonKhac"
                     disabled={readOnly}
@@ -455,8 +446,8 @@ export default function AssetManagerForm({
                       formik.setFieldValue(
                         "nguyenGia",
                         Number(formik.values.vonVay ?? 0) +
-                          Number(newValue ?? 0) +
-                          Number(formik.values.nvNS ?? 0),
+                          Number(formik.values.vonKhac ?? 0) +
+                          Number(newValue ?? 0),
                       );
                     }}
                   />

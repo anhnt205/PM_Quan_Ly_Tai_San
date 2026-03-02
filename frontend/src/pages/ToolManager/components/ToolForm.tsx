@@ -34,6 +34,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import dayjs from "dayjs";
 import { ToolValidation } from "../validation";
+import TextFieldNumber from "../../../components/TextField/TextFieldNumber";
 
 export default function ToolForm({
   onEdit,
@@ -140,10 +141,20 @@ export default function ToolForm({
     formik.setFieldValue("soLuong", soLuong);
   }, [formik.values.chiTietTaiSanList]);
 
-  const handleFieldChange = (e: any, originalIndex: number) => {
-    formik.handleChange(e);
+  const handleFieldChange = (eOrValue: any, originalIndex: number) => {
+    // 1. Cập nhật giá trị vào Formik
+    if (eOrValue?.target) {
+      // Nếu là Event (từ FieldInput cũ)
+      formik.handleChange(eOrValue);
+    } else {
+      // Nếu là giá trị số trực tiếp (từ TextFieldNumber mới)
+      // Lưu ý: TextFieldNumber của bạn đã tự setFieldValue bên trong rồi,
+      // nên ở đây ta có thể bỏ qua hoặc set lại cho chắc chắn.
+    }
+
+    // 2. Logic đánh dấu isUpdated (Dùng chung cho cả 2)
     const currentRow = formik.values.chiTietTaiSanList[originalIndex] as any;
-    if (!currentRow?.isInserted) {
+    if (!currentRow.isInserted) {
       formik.setFieldValue(
         `chiTietTaiSanList.${originalIndex}.isUpdated`,
         true,
@@ -344,18 +355,16 @@ export default function ToolForm({
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
-                  <FieldInput
+                  <TextFieldNumber
                     title="Số lượng"
-                    type="number"
                     formik={formik}
                     field="soLuong"
-                    disabled
+                    disabled={true}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
-                  <FieldInput
+                  <TextFieldNumber
                     title="Giá trị *"
-                    type="number"
                     formik={formik}
                     field="giaTri"
                     disabled={readOnly}
@@ -419,10 +428,19 @@ export default function ToolForm({
 
                     {/* Số lượng */}
                     <TableCell>
-                      <FieldInput
+                      {/* <FieldInput
                         formik={formik}
                         field={`chiTietTaiSanList.${row.originalIndex}.soLuong`}
                         type="number"
+                        disabled={readOnly}
+                        onChange={(e) =>
+                          handleFieldChange(e, row.originalIndex)
+                        }
+                      /> */}
+                      <TextFieldNumber
+                        title="Giá trị *"
+                        formik={formik}
+                        field={`chiTietTaiSanList.${row.originalIndex}.soLuong`}
                         disabled={readOnly}
                         onChange={(e) =>
                           handleFieldChange(e, row.originalIndex)

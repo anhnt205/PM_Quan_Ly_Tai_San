@@ -546,7 +546,17 @@ export default function Menuheader() {
           sx={{ display: "flex", gap: 2 }}
           onClick={handleOpenSettingMenu}
         >
-          <Typography sx={{ color: "white", fontSize: 14 }}>
+          <Typography
+            noWrap
+            sx={{
+              color: "white",
+              fontSize: 12,
+              maxWidth: "150px", // Hoặc độ rộng bạn muốn (ví dụ: 100%, 200px)
+              display: "block", // Đảm bảo nó nhận thuộc tính width/maxWidth
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
             {user?.taiKhoan?.hoTen}
           </Typography>
           <Avatar src={logo} />
