@@ -41,7 +41,7 @@ public class TaiSanService {
         return taiSanDTOList;
     }
 
-    public PageResponse<TaiSanDTO> getAllPaged(String idCongTy, int page, int size, String sortBy, String sortDir, String search, String idNhomTaiSan, String idLoaiTaiSan) {
+    public PageResponse<TaiSanDTO> getAllPaged(String idCongTy, int page, int size, String sortBy, String sortDir, String search, String idNhomTaiSan, String idLoaiTaiSan, String idDonViHienThoi) {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
 
@@ -59,6 +59,10 @@ public class TaiSanService {
                             && !idLoaiTaiSan.equals(item.getIdLoaiTaiSanCon())) {
                         continue;
                     }
+                    if (idDonViHienThoi != null && !idDonViHienThoi.trim().isEmpty()
+                            && !idDonViHienThoi.equals(item.getIdDonViHienThoi())) {
+                        continue;
+                    }
                     if (matchesTaiSanSearch(item, q)) {
                         filtered.add(item);
                     }
@@ -70,7 +74,7 @@ public class TaiSanService {
             List<TaiSanDTO> items = filtered.subList(from, to);
 
             // ĐẾM THỰC TẾ theo filter hiện tại
-            Map<String, Long> groupCounts = taiSanDao.getCountByNhomTaiSanWithBanGiaoStatus(idCongTy, null, search);
+            Map<String, Long> groupCounts = taiSanDao.getCountByNhomTaiSanWithBanGiaoStatus(idCongTy, null, search,idDonViHienThoi);
 
             PageResponse<TaiSanDTO> response = new PageResponse<>(items, total, page, size);
             response.setGroupCounts(groupCounts);
@@ -713,7 +717,7 @@ public class TaiSanService {
      */
     public Map<String, Object> getAllPagedWithBanGiaoStatus(String idCongTy, int page, int size,
                                                             String sortBy, String sortDir,
-                                                            String search, String idNhomTaiSan) {
+                                                            String search, String idNhomTaiSan,String idDonViHienThoi) {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
 
@@ -754,9 +758,9 @@ public class TaiSanService {
         enrichTaiSanDTOList(chuaBanGiaoItems);
 
         // ĐẾM THỰC TẾ riêng cho từng tab với filter search
-        Map<String, Long> groupCountsDaBanGiao = taiSanDao.getCountByNhomTaiSanWithBanGiaoStatus(idCongTy, true, search);
-        Map<String, Long> groupCountsChuaBanGiao = taiSanDao.getCountByNhomTaiSanWithBanGiaoStatus(idCongTy, false, search);
-        Map<String, Long> groupCountsAll = taiSanDao.getCountByNhomTaiSanWithBanGiaoStatus(idCongTy, null, search);
+        Map<String, Long> groupCountsDaBanGiao = taiSanDao.getCountByNhomTaiSanWithBanGiaoStatus(idCongTy, true, search,idDonViHienThoi);
+        Map<String, Long> groupCountsChuaBanGiao = taiSanDao.getCountByNhomTaiSanWithBanGiaoStatus(idCongTy, false, search,idDonViHienThoi);
+        Map<String, Long> groupCountsAll = taiSanDao.getCountByNhomTaiSanWithBanGiaoStatus(idCongTy, null, search,idDonViHienThoi);
 
         PageResponse<TaiSanDTO> daBanGiaoResponse = new PageResponse<>(daBanGiaoItems, filteredDaBanGiao.size(), page, size);
         daBanGiaoResponse.setGroupCounts(groupCountsDaBanGiao);
@@ -775,7 +779,7 @@ public class TaiSanService {
 
     public PageResponse<TaiSanDTO> getPagedByBanGiaoStatus(String idCongTy, int page, int size,
                                                            String sortBy, String sortDir,
-                                                           String search, String idNhomTaiSan, boolean isBanGiao) {
+                                                           String search, String idNhomTaiSan,String idDonViHienThoi, boolean isBanGiao) {
         System.out.println("\n========== DEBUG getPagedByBanGiaoStatus START ==========");
         System.out.println("Input Parameters:");
         System.out.println("  - idCongTy: " + idCongTy);
@@ -811,6 +815,10 @@ public class TaiSanService {
                     && !idNhomTaiSan.equals(item.getIdNhomTaiSan())) {
                 continue;
             }
+            if (idDonViHienThoi != null && !idDonViHienThoi.trim().isEmpty()
+                    && !idDonViHienThoi.equals(item.getIdDonViHienThoi())) {
+                continue;
+            }
 
             // Lọc theo từ khóa tìm kiếm
             if (q != null && !matchesTaiSanSearch(item, q)) {
@@ -830,7 +838,7 @@ public class TaiSanService {
 
         enrichTaiSanDTOList(items);
 
-        Map<String, Long> groupCounts = taiSanDao.getCountByNhomTaiSanWithBanGiaoStatus(idCongTy, isBanGiao, search);
+        Map<String, Long> groupCounts = taiSanDao.getCountByNhomTaiSanWithBanGiaoStatus(idCongTy, isBanGiao, search,idDonViHienThoi);
 
         PageResponse<TaiSanDTO> response = new PageResponse<>(items, filtered.size(), page, size);
         response.setGroupCounts(groupCounts);

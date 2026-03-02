@@ -1043,7 +1043,8 @@ public class TaiSanDao {
     public Map<String, Long> getCountByNhomTaiSanWithBanGiaoStatus(
             String idCongTy,
             Boolean daBanGiao,
-            String search
+            String search,
+            String idDonViHienThoi
     ) {
         StringBuilder whereClause = new StringBuilder(" WHERE ts.IdCongTy = ? ");
         List<Object> params = new ArrayList<>();
@@ -1062,6 +1063,13 @@ public class TaiSanDao {
         if (search != null && !search.trim().isEmpty()) {
             whereClause.append(" AND (ts.Id LIKE ? OR ts.TenTaiSan LIKE ? OR ts.SoThe LIKE ? OR ts.KyHieu LIKE ? OR ts.SoKyHieu LIKE ? OR ts.CongSuat LIKE ? OR ts.NuocSanXuat LIKE ? OR ts.DonViTinh LIKE ? OR ts.MoTa LIKE ?) ");
             String searchPattern = "%" + search + "%";
+            for (int i = 0; i < 9; i++) {
+                params.add(searchPattern);
+            }
+        }
+        if (idDonViHienThoi != null && !idDonViHienThoi.trim().isEmpty()) {
+            whereClause.append(" AND (ts.IdDonViHienThoi LIKE ?) ");
+            String searchPattern = "%" + idDonViHienThoi + "%";
             for (int i = 0; i < 9; i++) {
                 params.add(searchPattern);
             }

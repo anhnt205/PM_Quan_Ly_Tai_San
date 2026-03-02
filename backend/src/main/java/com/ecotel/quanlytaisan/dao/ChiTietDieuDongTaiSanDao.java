@@ -41,7 +41,7 @@ public class ChiTietDieuDongTaiSanDao {
                      DieuDongTaiSan AS ddts ON ctddts.IdDieuDongTaiSan = ddts.Id
                          INNER JOIN TaiSan AS ts
                                    ON ctddts.IdTaiSan = ts.Id
-                WHERE ctddts.IdDieuDongTaiSan = ?;
+                WHERE ctddts.IdDieuDongTaiSan = ?
                 """;
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(ChiTietDieuDongTaiSanDTO.class),idDieuDongTaiSan);
     }
@@ -75,7 +75,7 @@ public class ChiTietDieuDongTaiSanDao {
                          LEFT JOIN TaiSan AS ts
                                    ON ctddts.IdTaiSan = ts.Id
                 WHERE
-                    ctddts.Id=?;
+                    ctddts.Id=?
                 """;
         return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(ChiTietDieuDongTaiSanDTO.class),id);
     }
@@ -171,7 +171,7 @@ public class ChiTietDieuDongTaiSanDao {
                                    ON ctddts.IdTaiSan = ts.Id
                 WHERE ctddts.IdDieuDongTaiSan = ?
                   AND ctddts.IsActive = 1
-                  AND (ctddts.DaBanGiao = 0 OR ctddts.DaBanGiao IS NULL);
+                  AND (ctddts.DaBanGiao = 0 OR ctddts.DaBanGiao IS NULL)
                 """;
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(ChiTietDieuDongTaiSanDTO.class), idDieuDongTaiSan);
     }

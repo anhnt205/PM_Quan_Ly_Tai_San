@@ -68,36 +68,36 @@ public class TaiSanController {
         }
     }
     @GetMapping("/paged")
-    public ResponseEntity<ApiResponse<Object>> getAllPaged(@RequestParam String idcongty, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size, @RequestParam(required = false) String sortBy, @RequestParam(required = false) String sortDir, @RequestParam(required = false) String search, @RequestParam(required = false) String idNhomTaiSan, @RequestParam(required = false) String idLoaiTaiSan) {
+    public ResponseEntity<ApiResponse<Object>> getAllPaged(@RequestParam String idcongty, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size, @RequestParam(required = false) String sortBy, @RequestParam(required = false) String sortDir, @RequestParam(required = false) String search, @RequestParam(required = false) String idNhomTaiSan, @RequestParam(required = false) String idLoaiTaiSan,@RequestParam(required = false) String idDonViHienThoi) {
         try {
-            PageResponse<TaiSanDTO> result = taiSanService.getAllPaged(idcongty, page, size, sortBy, sortDir, search, idNhomTaiSan, idLoaiTaiSan);
+            PageResponse<TaiSanDTO> result = taiSanService.getAllPaged(idcongty, page, size, sortBy, sortDir, search, idNhomTaiSan, idLoaiTaiSan,idDonViHienThoi);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách tài sản phân trang thành công", result, null));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
         }
     }
     @GetMapping("/paged-ban-giao")
-    public ResponseEntity<ApiResponse<Object>> getAllPagedWithBanGiaoStatus(@RequestParam String idcongty, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size, @RequestParam(required = false) String sortBy, @RequestParam(required = false) String sortDir, @RequestParam(required = false) String search, @RequestParam(required = false) String idNhomTaiSan) {
+    public ResponseEntity<ApiResponse<Object>> getAllPagedWithBanGiaoStatus(@RequestParam String idcongty, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size, @RequestParam(required = false) String sortBy, @RequestParam(required = false) String sortDir, @RequestParam(required = false) String search, @RequestParam(required = false) String idNhomTaiSan,@RequestParam(required = false) String idDonViHienThoi) {
         try {
-            Map<String, Object> result = taiSanService.getAllPagedWithBanGiaoStatus(idcongty, page, size, sortBy, sortDir, search, idNhomTaiSan);
+            Map<String, Object> result = taiSanService.getAllPagedWithBanGiaoStatus(idcongty, page, size, sortBy, sortDir, search, idNhomTaiSan,idDonViHienThoi);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách tài sản theo trạng thái bàn giao thành công", result, null));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
         }
     }
     @GetMapping("/paged-da-ban-giao")
-    public ResponseEntity<ApiResponse<Object>> getPagedDaBanGiao(@RequestParam String idcongty, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size, @RequestParam(required = false) String sortBy, @RequestParam(required = false) String sortDir, @RequestParam(required = false) String search, @RequestParam(required = false) String idNhomTaiSan) {
+    public ResponseEntity<ApiResponse<Object>> getPagedDaBanGiao(@RequestParam String idcongty, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size, @RequestParam(required = false) String sortBy, @RequestParam(required = false) String sortDir, @RequestParam(required = false) String search, @RequestParam(required = false) String idNhomTaiSan,@RequestParam(required = false) String idDonViHienThoi) {
         try {
-            PageResponse<TaiSanDTO> result = taiSanService.getPagedByBanGiaoStatus(idcongty, page, size, sortBy, sortDir, search, idNhomTaiSan, true);
+            PageResponse<TaiSanDTO> result = taiSanService.getPagedByBanGiaoStatus(idcongty, page, size, sortBy, sortDir, search, idNhomTaiSan,idDonViHienThoi, true);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách tài sản đã bàn giao thành công", result, null));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
         }
     }
     @GetMapping("/paged-chua-ban-giao")
-    public ResponseEntity<ApiResponse<Object>> getPagedChuaBanGiao(@RequestParam String idcongty, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size, @RequestParam(required = false) String sortBy, @RequestParam(required = false) String sortDir, @RequestParam(required = false) String search, @RequestParam(required = false) String idNhomTaiSan) {
+    public ResponseEntity<ApiResponse<Object>> getPagedChuaBanGiao(@RequestParam String idcongty, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size, @RequestParam(required = false) String sortBy, @RequestParam(required = false) String sortDir, @RequestParam(required = false) String search, @RequestParam(required = false) String idNhomTaiSan,@RequestParam(required = false) String idDonViHienThoi) {
         try {
-            PageResponse<TaiSanDTO> result = taiSanService.getPagedByBanGiaoStatus(idcongty, page, size, sortBy, sortDir, search, idNhomTaiSan, false);
+            PageResponse<TaiSanDTO> result = taiSanService.getPagedByBanGiaoStatus(idcongty, page, size, sortBy, sortDir, search, idNhomTaiSan,idDonViHienThoi, false);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách tài sản chưa bàn giao thành công", result, null));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
