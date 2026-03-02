@@ -3,8 +3,7 @@ export interface MaintenancePlanData {
   tenKeHoach?: string;
   loaiKeHoach?: "thiet_bi" | "chu_ky_thoi_gian" | "gio_may"; // thiết bị, chu kỳ thời gian, giờ máy
   chu_ky?: "thang" | "quy" | "nam"; // tháng/quý/năm
-  idThietBi?: string;
-  tenThietBi?: string;
+  loaiThietBi?: "taisan" | "ccdc"; // tài sản hoặc CCDC
   chu_ky_thoi_gian?: number; // số ngày/tháng
   gio_may_bao_duong?: number; // giờ máy
   ngayBatDau?: string;
@@ -44,7 +43,7 @@ export interface MaintenancePlanAssetItem {
   idKeHoach?: string;
   idThietBi?: string;
   tenThietBi?: string;
-  loaiThietBi?: "tai_san" | "ccdc"; // tài sản hoặc CCDC
+  loaiThietBi?: "taisan" | "ccdc"; // tài sản hoặc CCDC
   ghiChu?: string;
   ngayTao?: string;
   ngayCapNhat?: string;

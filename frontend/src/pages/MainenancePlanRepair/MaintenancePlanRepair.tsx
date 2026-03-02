@@ -1,0 +1,664 @@
+import {
+  Box,
+  Button,
+  Grid,
+  IconButton,
+  Tooltip,
+  Dialog,
+  Typography,
+  Tab,
+  Tabs,
+  Badge,
+} from "@mui/material";
+import { ClassOutlined, TableChart } from "@mui/icons-material";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import PageAction from "../../components/common/PageAction";
+import MaintenancePlanCalendar from "./components/MaintenancePlanCalendar";
+import MaintenancePlanningForm from "./components/MaintenancePlanningForm";
+import TableCustom from "../../components/common/TableCustom";
+import { useSelector } from "react-redux";
+import { useAllUnitsQuery } from "../Unit/Mutation";
+import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
+import { useAllStaffsQuery } from "../Staff/Mutation";
+import { showConfirmAlert } from "../../components/Alert";
+import { GridColDef } from "@mui/x-data-grid";
+import { Trash2, FileText, FileCheck, Calendar } from "lucide-react";
+import { SignHeader } from "../../components/SignDocument/SignHeader";
+import { FilterOption } from "../../components/common/FilterStatusGroup";
+import { showStatus, showShareStatus } from "./config";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { MaintenancePlanData } from "./types";
+import {
+  useMaintenanceRepairPageQuery,
+  useMaintenanceRepairMutation,
+  useMaintenancePlanningPageQuery,
+  useMaintenancePlanningMutation,
+  useRepairResultPageQuery,
+} from "./Mutation";
+import { useAllAssetsQuery } from "../AssetManager/Mutation";
+import { useAllToolQuery } from "../ToolManager/Mutation";
+
+export default function MaintenancePlanRepair() {
+  const { user } = useSelector((state: any) => state.user);
+  const [showForm, setShowForm] = useState(false);
+  const [readOnly, setReadOnly] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [maintenancePlans, setMaintenancePlans] = useState<
+    MaintenancePlanData[]
+  >([]);
+  const [status, setStatus] = useState("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<MaintenancePlanData | null>(
+    null,
+  );
+  const [paginationModel, setPaginationModel] = useState({
+    pageSize: 10,
+    page: 0,
+  });
+
+  const { data: allUnits = [] } = useAllUnitsQuery();
+  const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
+  const { data: allStaffs = [] } = useAllStaffsQuery();
+
+  // Assets & Tools for planning
+  const { data: rawAssets = [] } = useAllAssetsQuery();
+  const { data: rawTools = [] } = useAllToolQuery();
+  const allEquipment = useMemo(
+    () => [
+      ...rawAssets.map((a: any) => ({
+        ...a,
+        ten: a.tenTaiSan || a.ten || "",
+        loaiThietBi: "tai_san",
+      })),
+      ...rawTools.map((t: any) => ({
+        ...t,
+        ten: t.ten || "",
+        loaiThietBi: "ccdc",
+      })),
+    ],
+    [rawAssets, rawTools],
+  );
+
+  const { data: planPageData } = useMaintenancePlanningPageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    undefined,
+    status !== "" ? parseInt(status) : undefined,
+  );
+
+
+  useEffect(() => {
+    if (planPageData) {
+      const items = Array.isArray(planPageData)
+        ? planPageData
+        : (planPageData?.content ?? []);
+      setMaintenancePlans(items);
+    }
+  }, [planPageData]);
+
+
+
+  // Maintenance Planning mutations
+  const {
+    createMutation: createPlanMutation,
+    updateMutation: updatePlanMutation,
+    deleteMutation: deletePlanMutation,
+  } = useMaintenancePlanningMutation();
+
+  // Handlers for maintenance planning
+  const handlePlanningClose = () => {
+    setShowForm(false);
+    setReadOnly(false);
+    // Không xóa selectedPlan → sidebar vẫn hiển thị sau khi đóng form
+  };
+
+  const handlePlanningEdit = () => {
+    setReadOnly(false);
+  };
+
+  const handlePlanningSave = (planData: MaintenancePlanData) => {
+    if (selectedPlan?.id) {
+      // Cập nhật local state ngay lập tức (không chờ API)
+      setMaintenancePlans((prev) =>
+        prev.map((plan) => (plan.id === planData.id ? planData : plan)),
+      );
+      setSelectedPlan(planData);
+      setShowForm(false);
+      setReadOnly(false);
+      // Tự động gọi API nếu có (bất đồng bộ, không chặn UI)
+      updatePlanMutation.mutate(planData, {
+        onError: (error) => {
+          console.warn(
+            "API update failed (local state already updated):",
+            error,
+          );
+        },
+      });
+    } else {
+      // Tạo mới
+      const newPlan = {
+        ...planData,
+        id: planData.id || `KH-${Date.now()}`,
+      };
+      setMaintenancePlans((prev) => [newPlan, ...prev]);
+      setShowForm(false);
+      setReadOnly(false);
+      createPlanMutation.mutate(newPlan, {
+        onError: (error) => {
+          console.warn(
+            "API create failed (local state already updated):",
+            error,
+          );
+        },
+      });
+    }
+  };
+
+  const handleDeleteSelectedPlanning = () => {
+    selectedIds.forEach((id) => {
+      deletePlanMutation.mutate(id, {
+        onSuccess: () => {
+          setMaintenancePlans((prev) => prev.filter((plan) => plan.id !== id));
+        },
+        onError: (error) => {
+          console.error("Error deleting plan:", error);
+        },
+      });
+    });
+    setSelectedIds([]);
+  };
+
+  // Define planning table columns
+  const planningColumns = [
+    {
+      field: "tenKeHoach",
+      headerName: "Tên kế hoạch",
+      flex: 2,
+      minWidth: 160,
+      editable: false,
+    },
+    {
+      field: "loaiKeHoach",
+      headerName: "Loại kế hoạch",
+      flex: 1.5,
+      minWidth: 130,
+      editable: false,
+      renderCell: (params: any) => {
+        const types: Record<string, string> = {
+          thiet_bi: "Theo thiết bị",
+          chu_ky_thoi_gian: "Theo chu kỳ",
+          gio_may: "Theo giờ máy",
+        };
+        return types[params.value as string] || params.value;
+      },
+    },
+    {
+      field: "kyText",
+      headerName: "Thuộc kỳ",
+      flex: 1,
+      minWidth: 100,
+      editable: false,
+    },
+    {
+      field: "tenDonVi",
+      headerName: "Đơn vị",
+      flex: 1.5,
+      minWidth: 130,
+      editable: false,
+    },
+    {
+      field: "tenNguoiPhuTrach",
+      headerName: "Người phụ trách",
+      flex: 1.5,
+      minWidth: 120,
+      editable: false,
+    },
+    {
+      field: "ngayBatDau",
+      headerName: "Ngày bắt đầu",
+      flex: 1,
+      minWidth: 100,
+      editable: false,
+    },
+    {
+      field: "ngayKetThuc",
+      headerName: "Ngày kết thúc",
+      flex: 1,
+      minWidth: 100,
+      editable: false,
+    },
+    {
+      field: "trangThaiText",
+      headerName: "Trạng thái",
+      flex: 1.2,
+      minWidth: 120,
+      editable: false,
+      renderCell: (params: any) => {
+        const statusMap: Record<
+          string,
+          { label: string; bg: string; color: string }
+        > = {
+          "Chưa thực hiện": {
+            label: "Chưa thực hiện",
+            bg: "#fff3e0",
+            color: "#e65100",
+          },
+          "Đang thực hiện": {
+            label: "Đang thực hiện",
+            bg: "#e3f2fd",
+            color: "#0277bd",
+          },
+          "Đã hoàn thành": {
+            label: "Đã hoàn thành",
+            bg: "#e8f5e9",
+            color: "#2e7d32",
+          },
+        };
+        const s = statusMap[params.value as string];
+        if (!s) return params.value || "";
+        return (
+          <Box
+            sx={{
+              display: "inline-flex",
+              alignItems: "center",
+              px: 1.5,
+              py: 0.5,
+              borderRadius: "16px",
+              bgcolor: s.bg,
+              color: s.color,
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {s.label}
+          </Box>
+        );
+      },
+    },
+    {
+      field: "ngayTaoFormatted",
+      headerName: "Ngày tạo",
+      flex: 1,
+      minWidth: 100,
+      editable: false,
+    },
+    {
+      field: "actions",
+      headerName: "Hành động",
+      width: 100,
+      editable: false,
+      renderCell: (params: any) => (
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Tooltip title="Xóa kế hoạch">
+            <IconButton
+              size="small"
+              color="error"
+              onClick={async (e) => {
+                e.stopPropagation();
+                const confirm = await showConfirmAlert(
+                  `Xóa kế hoạch "${params.row.tenKeHoach}"?`,
+                );
+                if (confirm?.isConfirmed) {
+                  setMaintenancePlans((prev) =>
+                    prev.filter((p) => p.id !== params.row.id),
+                  );
+                  if (selectedPlan?.id === params.row.id) {
+                    setSelectedPlan(null);
+                    setShowForm(false);
+                    setShowSidebar(false);
+                  }
+                }
+              }}
+            >
+              <Trash2 size={16} />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      ),
+    },
+  ];
+
+  // Planning status filter options
+  const planningStatusOptions: FilterOption[] = [
+    {
+      label: "Tất cả",
+      value: "",
+      count: maintenancePlans.length,
+      color: "primary",
+    },
+    {
+      label: "Chưa thực hiện",
+      value: "0",
+      count: maintenancePlans.filter((plan) => plan.trangThai === 0).length,
+      color: "warning",
+    },
+    {
+      label: "Đang thực hiện",
+      value: "1",
+      count: maintenancePlans.filter((plan) => plan.trangThai === 1).length,
+      color: "info",
+    },
+    {
+      label: "Đã hoàn thành",
+      value: "2",
+      count: maintenancePlans.filter((plan) => plan.trangThai === 2).length,
+      color: "success",
+    },
+  ];
+
+
+
+  const handleClose = useCallback(() => {
+    setShowForm(false);
+    setReadOnly(false);
+    setShowSidebar(false);
+  }, []);
+
+
+
+  return (
+    <>
+      <PageAction
+        title={"Lập kế hoạch sửa chữa bảo dưỡng"}
+        onNewClick={() => {
+            handlePlanningClose();
+            setShowForm(true);
+        }}
+      />
+      <Box sx={{ p: 2 }}>
+        {showForm && (
+          <Box sx={{ mb: 2 }}>
+            <MaintenancePlanningForm
+              key={
+                selectedPlan
+                  ? `view-planning-${selectedPlan.id}`
+                  : "new-planning-form"
+              }
+              onClose={handlePlanningClose}
+              readOnly={readOnly}
+              onEdit={handlePlanningEdit}
+              onSave={handlePlanningSave}
+              selectedPlan={selectedPlan}
+              staffs={allStaffs}
+              assets={allEquipment}
+            />
+          </Box>
+        )}
+
+        <Grid container spacing={2} sx={{ height: "100vh" }}>
+          <Grid size={{ xs: showSidebar ? 9 : 12 }}>
+            <TableCustom
+              title="Danh sách kế hoạch"
+              rows={maintenancePlans
+                .filter((plan) =>
+                  status === "" ? true : plan.trangThai === parseInt(status),
+                )
+                .map((plan) => {
+                  const d = plan.ngayBatDau ? new Date(plan.ngayBatDau) : null;
+                  const thang = d ? d.getMonth() + 1 : null;
+                  const nam = d ? d.getFullYear() : null;
+                  const quy = thang ? Math.ceil(thang / 3) : null;
+                  const kyText = d ? `T${thang}/${nam} · Q${quy}/${nam}` : "—";
+                  return {
+                    ...plan,
+                    kyText,
+                    trangThaiText:
+                      plan.trangThai === 0
+                        ? "Chưa thực hiện"
+                        : plan.trangThai === 1
+                          ? "Đang thực hiện"
+                          : plan.trangThai === 2
+                            ? "Đã hoàn thành"
+                            : "Không xác định",
+                    ngayTaoFormatted: plan.ngayTao
+                      ? (() => {
+                          const d = new Date(plan.ngayTao);
+                          return isNaN(d.getTime())
+                            ? plan.ngayTao.split(",")[0]
+                            : d.toLocaleDateString("vi-VN");
+                        })()
+                      : "N/A",
+                  };
+                })}
+              columns={planningColumns}
+              total={
+                status === ""
+                  ? maintenancePlans.length
+                  : maintenancePlans.filter(
+                      (p) => p.trangThai === parseInt(status),
+                    ).length
+              }
+              paginationModel={paginationModel}
+              onPaginationModelChange={setPaginationModel}
+              checkboxSelection
+              onRowClick={(params) => {
+                const fullPlan = maintenancePlans.find(
+                  (p) => p.id === params.row.id,
+                );
+                setSelectedPlan(fullPlan || params.row);
+                setReadOnly(true);
+                setShowForm(true);
+                setShowSidebar(true);
+              }}
+              statusOptions={planningStatusOptions}
+              statusValue={status}
+              onStatusChange={(value: string) => {
+                setStatus(value);
+              }}
+              selectedIds={selectedIds}
+              onSelectionChange={(ids) => {
+                setSelectedIds(ids);
+              }}
+              onDelete={handleDeleteSelectedPlanning}
+              showDelete={true}
+              extraActions={
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<Calendar size={16} />}
+                  sx={{
+                    bgcolor: showCalendar ? "success.dark" : "success.main",
+                    "&:hover": { bgcolor: "success.dark" },
+                  }}
+                  onClick={() => setShowCalendar((v) => !v)}
+                >
+                  {showCalendar ? "Bảng" : "Lịch"}
+                </Button>
+              }
+              customContent={
+                showCalendar ? (
+                  <MaintenancePlanCalendar
+                    onClose={() => setShowCalendar(false)}
+                    plans={maintenancePlans}
+                    onPlanClick={(plan) => {
+                      setSelectedPlan(plan);
+                      setReadOnly(true);
+                      setShowForm(true);
+                      setShowSidebar(true);
+                      setShowCalendar(false);
+                    }}
+                  />
+                ) : undefined
+              }
+            />
+          </Grid>
+
+          {showSidebar && selectedPlan && (
+            <Grid
+              size={{ xs: 3 }}
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                bgcolor: "#fafafa",
+                borderLeft: "1px solid",
+                borderColor: "divider",
+                p: 2,
+                overflowY: "auto",
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 2,
+                }}
+              >
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Chi tiết kế hoạch
+                </Typography>
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    setShowSidebar(false);
+                    // Xóa plan chỉ khi form cũng không mở
+                    if (!showForm) setSelectedPlan(null);
+                  }}
+                >
+                  <Trash2 size={16} />
+                </IconButton>
+              </Box>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 1.5,
+                }}
+              >
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Tên kế hoạch
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {selectedPlan?.tenKeHoach || "—"}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Loại kế hoạch
+                  </Typography>
+                  <Typography variant="body2">
+                    {selectedPlan?.loaiKeHoach === "thiet_bi"
+                      ? "Theo thiết bị"
+                      : selectedPlan?.loaiKeHoach === "chu_ky_thoi_gian"
+                        ? "Chu kỳ thời gian"
+                        : selectedPlan?.loaiKeHoach === "gio_may"
+                          ? "Giờ máy"
+                          : "—"}
+                  </Typography>
+                </Box>
+                {selectedPlan?.ngayBatDau &&
+                  (() => {
+                    const d = new Date(selectedPlan.ngayBatDau);
+                    const thang = d.getMonth() + 1;
+                    const quy = Math.ceil(thang / 3);
+                    const nam = d.getFullYear();
+                    return (
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Thuộc kỳ
+                        </Typography>
+                        <Typography variant="body2">
+                          Tháng {thang} · Quý {quy} · Năm {nam}
+                        </Typography>
+                      </Box>
+                    );
+                  })()}
+                {selectedPlan?.loaiKeHoach === "chu_ky_thoi_gian" && (
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Chu kỳ (ngày)
+                    </Typography>
+                    <Typography variant="body2">
+                      {selectedPlan?.chu_ky_thoi_gian} ngày
+                    </Typography>
+                  </Box>
+                )}
+                {selectedPlan?.loaiKeHoach === "gio_may" && (
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Mốc giờ máy
+                    </Typography>
+                    <Typography variant="body2">
+                      {selectedPlan?.gio_may_bao_duong} giờ
+                    </Typography>
+                  </Box>
+                )}
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Đơn vị thực hiện
+                  </Typography>
+                  <Typography variant="body2">
+                    {selectedPlan?.tenDonVi || "—"}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Người phụ trách
+                  </Typography>
+                  <Typography variant="body2">
+                    {selectedPlan?.tenNguoiPhuTrach || "—"}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Ngày bắt đầu
+                  </Typography>
+                  <Typography variant="body2">
+                    {selectedPlan?.ngayBatDau || "—"}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Ngày kết thúc
+                  </Typography>
+                  <Typography variant="body2">
+                    {selectedPlan?.ngayKetThuc || "—"}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Trạng thái
+                  </Typography>
+                  <Typography variant="body2">
+                    {selectedPlan?.trangThai === 0
+                      ? "❓ Chưa thực hiện"
+                      : selectedPlan?.trangThai === 1
+                        ? "⏳ Đang thực hiện"
+                        : "✅ Đã hoàn thành"}
+                  </Typography>
+                </Box>
+                {selectedPlan?.ghiChu && (
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Ghi chú
+                    </Typography>
+                    <Typography variant="body2">
+                      {selectedPlan.ghiChu}
+                    </Typography>
+                  </Box>
+                )}
+                {selectedPlan?.danhSachThietBi &&
+                  selectedPlan.danhSachThietBi.length > 0 && (
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">
+                        Thiết bị ({selectedPlan.danhSachThietBi.length})
+                      </Typography>
+                      {selectedPlan.danhSachThietBi.map((tb, i) => (
+                        <Typography key={i} variant="body2">
+                          • {tb.tenThietBi || tb.idThietBi}
+                        </Typography>
+                      ))}
+                    </Box>
+                  )}
+              </Box>
+            </Grid>
+          )}
+        </Grid>
+      </Box>
+    </>
+  );
+}

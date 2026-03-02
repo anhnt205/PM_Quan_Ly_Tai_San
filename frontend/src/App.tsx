@@ -34,6 +34,7 @@ import socketService, { SocketMessage } from "./services/socketService";
 import { RootState } from "./redux/store";
 import { useQueryClient } from "@tanstack/react-query";
 import { MessageTypeFunctions } from "./utils/const";
+import MaintenancePlanRepair from "./pages/MainenancePlanRepair/MaintenancePlanRepair";
 
 const ProtectedRoute = ({
   allowedRoles,
@@ -212,6 +213,10 @@ function App() {
                 <ToolHandover />
               </ProtectedRoute>
             }
+          />
+          <Route
+            path={ROUTES.MAINTENANCEPLANREPAIR}
+            element={<MaintenancePlanRepair />}
           />
           <Route
             path={ROUTES.MAINTENANCEREPAIR}

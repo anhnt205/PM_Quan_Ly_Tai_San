@@ -24,6 +24,7 @@ export const ROUTES = {
   TOOLTRANSFER: "/dieu_dong_ccdc",
   TOOLHANDOVER: "/ban_giao_ccdc",
   MAINTENANCEREPAIR: "/sua_chua_bao_duong",
+  MAINTENANCEPLANREPAIR: "/ke_hoach_sua_chua_bao_duong",
   REPORT: "/bao_cao",
   ACCOUNT: "/tai_khoan",
   DASHBOARD: "/dashboard",

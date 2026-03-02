@@ -393,8 +393,7 @@ export default function Menuheader() {
       subMenu: [
         {
           text: "Kế hoạch sửa chữa bảo dưỡng",
-          path: `${ROUTES.MAINTENANCEREPAIR}?type=2`,
-          count: maintenanceRepairCount2,
+          path: `${ROUTES.MAINTENANCEPLANREPAIR}`,
         },
         {
           text: "Phiếu sửa chữa bảo dưỡng",

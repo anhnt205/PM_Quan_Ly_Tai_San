@@ -26,6 +26,8 @@ import {
   DialogContent,
   DialogActions,
   Divider,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
 import {
   Add,
@@ -46,8 +48,10 @@ import {
   MaintenancePlanData,
   MaintenancePlanDetailItem,
   MaintenancePlanAssetItem,
-} from "../types/planning";
+} from "../types";
 import { MaintenancePlanValidation } from "../validation/Validation";
+import { useDepartmentsPageQuery } from "../../Department/Mutation";
+import dayjs from "dayjs";
 
 interface MaintenancePlanningFormProps {
   onEdit: () => void;
@@ -56,7 +60,6 @@ interface MaintenancePlanningFormProps {
   readOnly?: boolean;
   onSave: (data: MaintenancePlanData) => void;
   onCancel?: () => void;
-  departments?: any[];
   staffs?: any[];
   assets?: any[];
 }
@@ -68,7 +71,6 @@ export default function MaintenancePlanningForm({
   readOnly = false,
   onSave,
   onCancel,
-  departments = [],
   staffs = [],
   assets = [],
 }: MaintenancePlanningFormProps) {
@@ -78,6 +80,12 @@ export default function MaintenancePlanningForm({
   const [editWorkValues, setEditWorkValues] = useState<
     Partial<MaintenancePlanDetailItem>
   >({});
+
+  const { data: allDepartments = { items: [] } } = useDepartmentsPageQuery(
+    0,
+    10,
+    "sửa chữa",
+  );
 
   useEffect(() => {
     if (editingWork) {
@@ -102,17 +110,16 @@ export default function MaintenancePlanningForm({
       tenKeHoach: "",
       loaiKeHoach: "thiet_bi",
       chu_ky: "thang",
-      idThietBi: "",
-      tenThietBi: "",
+      loaiThietBi: "taisan" as "taisan" | "ccdc",
       chu_ky_thoi_gian: 30,
       gio_may_bao_duong: 100,
-      ngayBatDau: "",
-      ngayKetThuc: "",
+      ngayBatDau: dayjs(new Date()).format("YYYY-MM-DD"),
+      ngayKetThuc: dayjs(new Date()).format("YYYY-MM-DD"),
       ghiChu: "",
       trangThai: 0,
       idNguoiPhuTrach: "",
       tenNguoiPhuTrach: "",
-      idDonVi: "",
+      idDonVi: allDepartments.items[0]?.id || "",
       tenDonVi: "",
       coHieuLuc: 1,
       idCongTy: "ct001",
@@ -147,8 +154,7 @@ export default function MaintenancePlanningForm({
         tenKeHoach: selectedPlan.tenKeHoach || "",
         loaiKeHoach: selectedPlan.loaiKeHoach || "thiet_bi",
         chu_ky: selectedPlan.chu_ky || "thang",
-        idThietBi: selectedPlan.idThietBi || "",
-        tenThietBi: selectedPlan.tenThietBi || "",
+        loaiThietBi: selectedPlan.loaiThietBi || "taisan",
         chu_ky_thoi_gian: selectedPlan.chu_ky_thoi_gian || 30,
         gio_may_bao_duong: selectedPlan.gio_may_bao_duong || 100,
         ngayBatDau: selectedPlan.ngayBatDau || "",
@@ -187,31 +193,13 @@ export default function MaintenancePlanningForm({
     }
   };
 
-  const handleStaffChange = (staffId: string) => {
-    const selectedStaff = staffs.find((s) => s.id === staffId);
-    formik.setFieldValue("idNguoiPhuTrach", staffId);
-    formik.setFieldValue("tenNguoiPhuTrach", selectedStaff?.hoTen || "");
-  };
-
-  const handleDepartmentChange = (deptId: string) => {
-    const selectedDept = departments.find((d) => d.id === deptId);
-    formik.setFieldValue("idDonVi", deptId);
-    formik.setFieldValue("tenDonVi", selectedDept?.tenPhongBan || "");
-  };
-
-  const handleAssetChange = (assetId: string) => {
-    const selectedAsset = assets.find((a) => a.id === assetId);
-    formik.setFieldValue("idThietBi", assetId);
-    formik.setFieldValue("tenThietBi", selectedAsset?.ten || "");
-  };
-
   const handleAddAsset = () => {
     const newAsset: MaintenancePlanAssetItem = {
       id: `asset-${Date.now()}`,
       idKeHoach: formik.values.id || "",
       idThietBi: "",
       tenThietBi: "",
-      loaiThietBi: "tai_san",
+      loaiThietBi: "taisan",
       ghiChu: "",
       ngayTao: new Date().toLocaleString("vi-VN"),
       ngayCapNhat: new Date().toLocaleString("vi-VN"),
@@ -362,16 +350,26 @@ export default function MaintenancePlanningForm({
                 </Grid>
               )}
 
-              {/* Thiết bị / CCDC chính - luôn hiển thị */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <FieldAutoCompleted
-                  title="Thiết bị / CCDC chính"
-                  data={assets}
-                  labelkey="ten"
+                  title="Đơn vị thực hiện *"
+                  data={allDepartments.items}
+                  labelkey="tenPhongBan"
                   formik={formik}
-                  field="idThietBi"
+                  field="idDonVi"
                   disabled={readOnly}
-                  onChange={handleAssetChange}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <FieldAutoCompleted
+                  title="Người phụ trách *"
+                  data={staffs.filter(
+                    (i) => i.phongBanId === formik.values.idDonVi,
+                  )}
+                  labelkey="hoTen"
+                  formik={formik}
+                  field="idNguoiPhuTrach"
+                  disabled={readOnly}
                 />
               </Grid>
 
@@ -394,30 +392,6 @@ export default function MaintenancePlanningForm({
                   field="ngayKetThuc"
                   disabled={readOnly}
                   InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 6 }}>
-                <FieldAutoCompleted
-                  title="Người phụ trách *"
-                  data={staffs}
-                  labelkey="hoTen"
-                  formik={formik}
-                  field="idNguoiPhuTrach"
-                  disabled={readOnly}
-                  onChange={handleStaffChange}
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 6 }}>
-                <FieldAutoCompleted
-                  title="Đơn vị thực hiện *"
-                  data={departments}
-                  labelkey="tenPhongBan"
-                  formik={formik}
-                  field="idDonVi"
-                  disabled={readOnly}
-                  onChange={handleDepartmentChange}
                 />
               </Grid>
 
@@ -447,7 +421,9 @@ export default function MaintenancePlanningForm({
             >
               <Box display={"flex"} alignItems={"center"} gap={2}>
                 <InfoOutlineRounded color="primary" />
-                <Typography>Danh sách thiết bị / CCDC cần bảo trì</Typography>
+                <Typography>
+                  Danh sách thiết bị tài sản/ ccdc cần bảo trì
+                </Typography>
               </Box>
               {!readOnly && (
                 <Button
@@ -459,6 +435,72 @@ export default function MaintenancePlanningForm({
                   Thêm thiết bị
                 </Button>
               )}
+            </Box>
+            <Box mb={2}>
+              <ToggleButtonGroup
+                value={formik.values.loaiThietBi}
+                exclusive
+                onChange={(_, val) => {
+                  if (val) formik.setFieldValue("loaiThietBi", val);
+                }}
+                size="small"
+                disabled={readOnly}
+                sx={{
+                  bgcolor: "#f0f0f0",
+                  borderRadius: "20px",
+                  p: "3px",
+                  gap: "2px",
+                  "& .MuiToggleButtonGroup-grouped": {
+                    border: "none",
+                    borderRadius: "16px !important",
+                  },
+                }}
+              >
+                <ToggleButton
+                  value="taisan"
+                  sx={{
+                    textTransform: "none",
+                    fontWeight: 500,
+                    fontSize: "0.8rem",
+                    px: 2.5,
+                    py: 0.5,
+                    borderRadius: "16px",
+                    color: "text.secondary",
+                    "&.Mui-selected": {
+                      bgcolor: "white",
+                      color: "success.main",
+                      fontWeight: 600,
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
+                      "&:hover": { bgcolor: "white" },
+                    },
+                    "&:hover": { bgcolor: "transparent" },
+                  }}
+                >
+                  Tài sản
+                </ToggleButton>
+                <ToggleButton
+                  value="ccdc"
+                  sx={{
+                    textTransform: "none",
+                    fontWeight: 500,
+                    fontSize: "0.8rem",
+                    px: 2.5,
+                    py: 0.5,
+                    borderRadius: "16px",
+                    color: "text.secondary",
+                    "&.Mui-selected": {
+                      bgcolor: "white",
+                      color: "success.main",
+                      fontWeight: 600,
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
+                      "&:hover": { bgcolor: "white" },
+                    },
+                    "&:hover": { bgcolor: "transparent" },
+                  }}
+                >
+                  CCDC - Vật tư
+                </ToggleButton>
+              </ToggleButtonGroup>
             </Box>
 
             <TableContainer component={Paper} variant="outlined">
