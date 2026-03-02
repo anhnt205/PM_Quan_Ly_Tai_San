@@ -35,7 +35,7 @@ public class ChiTietDieuDongTaiSanDao {
                        ctddts.NguoiTao,
                        ctddts.NguoiCapNhat,
                        ctddts.IsActive,
-                       ctddts.DaBanGiao
+                       ddts.DaBanGiao
                 FROM ChiTietDieuDongTaiSan AS ctddts
                          INNER JOIN
                      DieuDongTaiSan AS ddts ON ctddts.IdDieuDongTaiSan = ddts.Id
