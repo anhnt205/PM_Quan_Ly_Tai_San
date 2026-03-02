@@ -188,7 +188,7 @@ public class DieuDongTaiSanDao {
     }
 
     public List<DieuDongTaiSanDTO> findAllPaged(String idCongTy, int offset, int limit, String sortBy, String sortDir) {
-        String normalizedSortBy = sortBy != null ? sortBy.trim().toLowerCase() : "ngaycapnhat";
+        String normalizedSortBy = sortBy != null ? sortBy.trim().toLowerCase() : "ngaytao";
         String orderColumn;
         switch (normalizedSortBy) {
             case "tenphieu":

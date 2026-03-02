@@ -19,7 +19,7 @@ export const useToolTypeMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["toolTypes"] });
+      queryClient.invalidateQueries({ queryKey: ["toolTypesPage"] });
       showSuccessAlert("Tạo loại ccdc thành công");
     },
     onError: (error: any) => {
@@ -37,7 +37,7 @@ export const useToolTypeMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["toolTypes"] });
+      queryClient.invalidateQueries({ queryKey: ["toolTypesPage"] });
       showSuccessAlert("Sửa loại ccdc thành công");
     },
     onError: (error: any) => {
@@ -55,7 +55,7 @@ export const useToolTypeMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["toolTypes"] });
+      queryClient.invalidateQueries({ queryKey: ["toolTypesPage"] });
       showSuccessAlert("Xóa loại ccdc thành công");
     },
     onError: (error: any) => {
@@ -73,7 +73,7 @@ export const useToolTypeMutation = (
       return res.data.message;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["toolTypes"] });
+      queryClient.invalidateQueries({ queryKey: ["toolTypesPage"] });
       showSuccessAlert(data || "Xóa loại ccdc thành công");
     },
     onError: (error: any) => {
@@ -187,8 +187,8 @@ export const useToolTypeMutation = (
       });
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["allToolTypes"] });
       queryClient.invalidateQueries({ queryKey: ["toolTypesPage"] });
-      queryClient.invalidateQueries({ queryKey: ["toolTypes"] });
       showSuccessAlert("Import loại CCDC thành công");
     },
     onError: (error: any) => {

@@ -286,6 +286,19 @@ CREATE TABLE NhomTaiSan
     IsActive     TINYINT(1) DEFAULT 1
 );
 
+CREATE TABLE NhomCCDC
+(
+    Id           VARCHAR(50) PRIMARY KEY,
+    Ten      VARCHAR(500),
+    HieuLuc      TINYINT(1),
+    IdCongTy     TEXT,
+    NgayTao      TEXT,
+    NgayCapNhat  TEXT,
+    NguoiTao     TEXT,
+    NguoiCapNhat TEXT,
+    IsActive     TINYINT(1) DEFAULT 1
+);
+
 CREATE TABLE PhuLucTaiSan
 (
     Id                       VARCHAR(50) PRIMARY KEY,
