@@ -76,12 +76,11 @@ public class DieuDongTaiSanService {
         }
 
         // Filter by idDonViGiao if provided
-        // Filter by idDonViGiao if provided
         if (idDonViGiao != null && !idDonViGiao.trim().isEmpty()) {
             // 1. Kiểm tra đơn vị truyền vào có phải là Kho Loại 1 hay không
             PhongBanDTO phongBanTarget = phongBanService.getById(idDonViGiao);
-            boolean isKhoLoai1Target = phongBanTarget != null 
-                    && Boolean.TRUE.equals(phongBanTarget.getIsKho()) 
+            boolean isKhoLoai1Target = phongBanTarget != null
+                    && Boolean.TRUE.equals(phongBanTarget.getIsKho())
                     && Integer.valueOf(1).equals(phongBanTarget.getLoaiKho());
 
             List<DieuDongTaiSanDTO> donViGiaoFiltered = new ArrayList<>();
@@ -90,9 +89,9 @@ public class DieuDongTaiSanService {
                 // 2. Nếu là Kho Loại 1: Lấy tất cả các phiếu mà đơn vị giao cũng là Kho Loại 1
                 for (DieuDongTaiSanDTO item : sourceList) {
                     PhongBanDTO pbItem = phongBanService.getById(item.getIdDonViGiao());
-                    if (pbItem != null 
-                        && Boolean.TRUE.equals(pbItem.getIsKho()) 
-                        && Integer.valueOf(1).equals(pbItem.getLoaiKho())) {
+                    if (pbItem != null
+                            && Boolean.TRUE.equals(pbItem.getIsKho())
+                            && Integer.valueOf(1).equals(pbItem.getLoaiKho())) {
                         donViGiaoFiltered.add(item);
                     }
                 }
@@ -187,8 +186,34 @@ public class DieuDongTaiSanService {
         return response;
     }
 
+    /**
+     * Comparator for sorting DieuDongTaiSanDTO.
+     * - If sortBy is null or empty: default sort by status priority (0,1,3,2) then creation date descending.
+     * - Otherwise sort by the specified field and direction.
+     */
     private Comparator<DieuDongTaiSanDTO> getComparator(String sortBy, String sortDir) {
-        String normalizedSortBy = sortBy != null ? sortBy.trim().toLowerCase() : "ngaycapnhat";
+        // Nếu không có sortBy, dùng sắp xếp mặc định: theo trạng thái ưu tiên, rồi ngày tạo giảm dần
+        if (sortBy == null || sortBy.trim().isEmpty()) {
+            Map<Integer, Integer> priorityMap = new HashMap<>();
+            priorityMap.put(0, 1); // Nháp
+            priorityMap.put(1, 2); // Duyệt
+            priorityMap.put(3, 3); // Hoàn thành
+            priorityMap.put(2, 4); // Hủy
+
+            Comparator<DieuDongTaiSanDTO> comparator = Comparator.comparingInt(
+                    item -> priorityMap.getOrDefault(item.getTrangThai(), 5)
+            );
+
+            // Sau đó so sánh theo ngày tạo (mới nhất trước)
+            comparator = comparator.thenComparing(
+                    item -> item.getNgayTao() != null ? item.getNgayTao() : "",
+                    Comparator.nullsLast(Comparator.reverseOrder())
+            );
+            return comparator;
+        }
+
+        // Nếu có sortBy, xử lý như cũ
+        String normalizedSortBy = sortBy.trim().toLowerCase();
         boolean ascending = sortDir != null && sortDir.equalsIgnoreCase("asc");
 
         Comparator<DieuDongTaiSanDTO> comparator = null;
@@ -240,7 +265,6 @@ public class DieuDongTaiSanService {
         }
 
         if (comparator == null) {
-            // Default to ngayCapNhat
             comparator = Comparator.comparing(
                     item -> item.getNgayCapNhat() != null ? item.getNgayCapNhat() : "",
                     Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)
