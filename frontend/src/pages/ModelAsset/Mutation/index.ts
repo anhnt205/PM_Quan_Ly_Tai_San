@@ -106,6 +106,24 @@ export const useModelAssetMutation = (
     },
   });
 
+   const deleteAllMutation = useMutation({
+     mutationFn: async () => {
+       const res = await api.delete(`/mohinhtaisan/delete-all`);
+       return res.data.message;
+     },
+     onSuccess: (data) => {
+       queryClient.invalidateQueries({ queryKey: ["modelAssetsPage"] });
+       showSuccessAlert(data || "Xóa mô hình tài sản thành công");
+     },
+     onError: (error: any) => {
+       showErrorAlert(
+         error.response?.data?.message ||
+           error.message ||
+           "Xóa mô hình tài sản thất bại",
+       );
+     },
+   });
+
   const exportMutation = useMutation({
     mutationFn: async () => {
       const res = await api.get("/mohinhtaisan", {
@@ -269,6 +287,7 @@ export const useModelAssetMutation = (
     deleteManyMutation,
     exportMutation,
     importExcelMutation,
+    deleteAllMutation,
   };
 };
 

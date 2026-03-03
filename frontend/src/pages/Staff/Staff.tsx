@@ -17,6 +17,8 @@ import { useStaffMutation, useStaffPagesQuery } from "./Mutation";
 import { showConfirmAlert, showErrorAlert } from "../../components/Alert";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useDebounce } from "../../hooks/useDebounce";
+import { useSelector } from "react-redux";
+import { RootState } from "../../redux/store";
 
 export default function Staff() {
   const [showForm, setShowForm] = useState(false);
@@ -24,6 +26,7 @@ export default function Staff() {
   const [readOnly, setReadOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
+  const { user } = useSelector((state: RootState) => state.user);
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
@@ -40,6 +43,7 @@ export default function Staff() {
     uploadMutation,
     exportMutation,
     importExcelMutation,
+    deleteAllMutation,
   } = useStaffMutation(
     paginationModel.page,
     paginationModel.pageSize,
@@ -280,6 +284,8 @@ export default function Staff() {
           searchValue={searchValue}
           setSearchValue={setSearchValue}
           titleSearch="Tìm kiếm theo tên nhân viên, mã nhân viên, ..."
+          onDeleteAll={deleteAllMutation.mutate}
+          showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
         />
       </Box>
       <ImportErrorDialog

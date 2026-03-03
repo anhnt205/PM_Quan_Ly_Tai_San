@@ -18,7 +18,7 @@ export const useUnitMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["allUnits"] });
+      queryClient.invalidateQueries({ queryKey: ["unitsPage"] });
       showSuccessAlert("Tạo đơn vị tính thành công");
     },
     onError: (error: any) => {
@@ -36,7 +36,7 @@ export const useUnitMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["allUnits"] });
+      queryClient.invalidateQueries({ queryKey: ["unitsPage"] });
       showSuccessAlert("Sửa đơn vị tính thành công");
     },
     onError: (error: any) => {
@@ -54,7 +54,7 @@ export const useUnitMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["allUnits"] });
+      queryClient.invalidateQueries({ queryKey: ["unitsPage"] });
       showSuccessAlert("Xóa đơn vị tính thành công");
     },
     onError: (error: any) => {
@@ -72,7 +72,7 @@ export const useUnitMutation = (
       return res.data.message;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["allUnits"] });
+      queryClient.invalidateQueries({ queryKey: ["unitsPage"] });
       showSuccessAlert(data || "Xóa đơn vị tính thành công");
     },
     onError: (error: any) => {
@@ -83,6 +83,24 @@ export const useUnitMutation = (
       );
     },
   });
+
+   const deleteAllMutation = useMutation({
+     mutationFn: async () => {
+       const res = await api.delete(`/donvitinh/delete-all`);
+       return res.data.message;
+     },
+     onSuccess: (data) => {
+       queryClient.invalidateQueries({ queryKey: ["unitsPage"] });
+       showSuccessAlert(data || "Xóa đơn vị tính thành công");
+     },
+     onError: (error: any) => {
+       showErrorAlert(
+         error.response?.data?.message ||
+           error.message ||
+           "Xóa đơn vị tính thất bại",
+       );
+     },
+   });
 
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: UnitType[]) => {
@@ -170,7 +188,7 @@ export const useUnitMutation = (
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["allUnits"] });
+      queryClient.invalidateQueries({ queryKey: ["unitsPage"] });
       showSuccessAlert("Import đơn vị tính thành công");
     },
     onError: (error: any) => {
@@ -185,6 +203,7 @@ export const useUnitMutation = (
     deleteManyMutation,
     exportMutation,
     importExcelMutation,
+    deleteAllMutation,
   };
 };
 
@@ -194,7 +213,7 @@ export const useUnitPagesQuery = (
   search?: string,
 ) => {
   return useQuery({
-    queryKey: ["allUnits", page, pageSize, search],
+    queryKey: ["unitsPage", page, pageSize, search],
     queryFn: async () => {
       const res = await api.get("/donvitinh/paged", {
         params: {
@@ -209,8 +228,7 @@ export const useUnitPagesQuery = (
   });
 };
 
-export const useAllUnitsQuery = (
-) => {
+export const useAllUnitsQuery = () => {
   return useQuery({
     queryKey: ["allUnits"],
     queryFn: async () => {

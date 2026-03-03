@@ -81,6 +81,24 @@ export const useCurrentStatusMutation = (
     },
   });
 
+   const deleteAllMutation = useMutation({
+     mutationFn: async () => {
+       const res = await api.delete(`/hientrangkythuat/delete-all`);
+       return res.data.message;
+     },
+     onSuccess: (data) => {
+       queryClient.invalidateQueries({ queryKey: ["currentStatus"] });
+       showSuccessAlert(data || "Xóa hiện trạng thành công");
+     },
+     onError: (error: any) => {
+       showErrorAlert(
+         error.response?.data?.message ||
+           error.message ||
+           "Xóa hiện trạng thất bại",
+       );
+     },
+   });
+
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: CurrentStatusType[]) => {
       const payload = dataToExport.map((item) => ({
@@ -195,6 +213,7 @@ export const useCurrentStatusMutation = (
     deleteManyMutation,
     importExcelMutation,
     exportMutation,
+    deleteAllMutation,
   };
 };
 

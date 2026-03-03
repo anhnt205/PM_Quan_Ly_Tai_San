@@ -105,6 +105,24 @@ export const useAssetGroupMutation = (
     },
   });
 
+   const deleteAllMutation = useMutation({
+     mutationFn: async () => {
+       const res = await api.delete(`/nhomtaisan/delete-all`);
+       return res.data.message;
+     },
+     onSuccess: (data) => {
+       queryClient.invalidateQueries({ queryKey: ["assetGroupsPage"] });
+       showSuccessAlert(data || "Xóa nhóm tài sản thành công");
+     },
+     onError: (error: any) => {
+       showErrorAlert(
+         error.response?.data?.message ||
+           error.message ||
+           "Xóa nhóm tài sản thất bại",
+       );
+     },
+   });
+
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: AssetGroupType[]) => {
       const payload = dataToExport.map((item) => ({
@@ -220,6 +238,7 @@ export const useAssetGroupMutation = (
     deleteManyMutation,
     exportMutation,
     importExcelMutation,
+    deleteAllMutation,
   };
 };
 

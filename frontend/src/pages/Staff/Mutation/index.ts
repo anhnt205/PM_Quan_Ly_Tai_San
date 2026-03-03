@@ -64,6 +64,23 @@ export const useStaffMutation = (
       );
     },
   });
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.delete(`/nhanvien/delete-all`);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["staffsPage"] });
+      showSuccessAlert("Xóa nhân viên thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa nhân viên thất bại",
+      );
+    },
+  });
   const deleteManyMutation = useMutation({
     mutationFn: async (ids: string[]) => {
       const res = await api.delete(`/nhanvien/batch`, { data: ids });
@@ -300,6 +317,7 @@ export const useStaffMutation = (
     deleteManyMutation,
     uploadMutation,
     getByIdMutation,
+    deleteAllMutation,
     // handleUploadFileS3,
     // handleDownloadS3,
     // handlePreviewS3,

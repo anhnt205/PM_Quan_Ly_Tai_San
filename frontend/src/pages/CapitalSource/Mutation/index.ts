@@ -81,6 +81,23 @@ export const useCapitalSourceMutation = (
     },
   });
 
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.delete(`/nguonvon/delete-all`);
+      return res.data.message;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["capitalSourcesPage"] });
+      showSuccessAlert(data || "Xóa nguồn vốn thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa nguồn vốn thất bại",
+      );
+    },
+  });
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: CapitalSourceType[]) => {
       const payload = dataToExport.map((item) => ({
@@ -203,6 +220,7 @@ export const useCapitalSourceMutation = (
     deleteManyMutation,
     exportMutation,
     importExcelMutation,
+    deleteAllMutation,
   };
 };
 

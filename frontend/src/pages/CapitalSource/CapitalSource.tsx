@@ -20,6 +20,8 @@ import {
 } from "./Mutation";
 import { showConfirmAlert } from "../../components/Alert";
 import { useDebounce } from "../../hooks/useDebounce";
+import { useSelector } from "react-redux";
+import { RootState } from "../../redux/store";
 
 export default function CapitalSource() {
   const [showForm, setShowForm] = useState(false);
@@ -27,6 +29,7 @@ export default function CapitalSource() {
   const [readOnly, setReadOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
+  const { user } = useSelector((state: RootState) => state.user);
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
@@ -40,6 +43,7 @@ export default function CapitalSource() {
     deleteManyMutation,
     importExcelMutation,
     exportMutation,
+    deleteAllMutation
   } = useCapitalSourceMutation();
 
   const debouncedSearchValue = useDebounce(searchValue, 600);
@@ -225,6 +229,8 @@ export default function CapitalSource() {
           onDelete={deleteManyMutation.mutate}
           searchValue={searchValue}
           setSearchValue={setSearchValue}
+          onDeleteAll={deleteAllMutation.mutate}
+          showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
         />
       </Box>
     </Box>

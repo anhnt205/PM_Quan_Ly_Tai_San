@@ -21,6 +21,8 @@ import {
 } from "./Mutation";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useDebounce } from "../../hooks/useDebounce";
+import { useSelector } from "react-redux";
+import { RootState } from "../../redux/store";
 
 export default function TypeAsset() {
   const [showForm, setShowForm] = useState(false);
@@ -30,6 +32,7 @@ export default function TypeAsset() {
   const [searchValue, setSearchValue] = useState("");
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const { user } = useSelector((state: RootState) => state.user);
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
@@ -43,6 +46,7 @@ export default function TypeAsset() {
     deleteManyMutation,
     importExcelMutation,
     exportMutation,
+    deleteAllMutation
   } = useTypeAssetMutation(
     paginationModel.page,
     paginationModel.pageSize,
@@ -206,6 +210,8 @@ export default function TypeAsset() {
           onDelete={deleteManyMutation.mutate}
           searchValue={searchValue}
           setSearchValue={setSearchValue}
+          onDeleteAll={deleteAllMutation.mutate}
+          showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
         />
       </Box>
     </Box>

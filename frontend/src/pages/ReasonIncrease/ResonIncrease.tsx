@@ -21,6 +21,8 @@ import {
 import { showConfirmAlert } from "../../components/Alert";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useDebounce } from "../../hooks/useDebounce";
+import { useSelector } from "react-redux";
+import { RootState } from "../../redux/store";
 
 export default function ReasonIncrease() {
   const [showForm, setShowForm] = useState(false);
@@ -29,6 +31,7 @@ export default function ReasonIncrease() {
   const [readOnly, setReadOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
+  const { user } = useSelector((state: RootState) => state.user);
 
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
@@ -45,6 +48,7 @@ export default function ReasonIncrease() {
     deleteManyMutation,
     importExcelMutation,
     exportMutation,
+    deleteAllMutation
   } = useReasonIncreaseMutation(
     paginationModel.page,
     paginationModel.pageSize,
@@ -220,6 +224,8 @@ export default function ReasonIncrease() {
           onDelete={deleteManyMutation.mutate}
           searchValue={searchValue}
           setSearchValue={setSearchValue}
+          onDeleteAll={deleteAllMutation.mutate}
+          showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
         />
       </Box>
     </Box>

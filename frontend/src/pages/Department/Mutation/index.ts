@@ -111,6 +111,25 @@ export const useDepartmentMutation = (
     onError: () => showErrorAlert("Lỗi khi xuất file"),
   });
 
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.delete(`/phongban/delete-all`);
+      return res.data.message;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["departmentsPage"] });
+      showSuccessAlert(data || "Xóa phòng ban thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa phòng ban thất bại",
+      );
+    },
+  });
+
+
   const importExcelMutation = useMutation({
     mutationFn: (file: File) => {
       return new Promise((resolve, reject) => {
@@ -186,6 +205,7 @@ export const useDepartmentMutation = (
     deleteManyMutation,
     importExcelMutation,
     exportMutation,
+    deleteAllMutation,
   };
 };
 

@@ -20,6 +20,8 @@ import {
 import { useDebounce } from "../../hooks/useDebounce";
 import { useLoaiSCBDMutation, useloaiscbdPageQuery } from "./Mutation";
 import { useLocation, useNavigate } from "react-router-dom";
+import { RootState } from "../../redux/store";
+import { useSelector } from "react-redux";
 
 export default function MaintenanceRepairType() {
   const [showForm, setShowForm] = useState(false);
@@ -27,6 +29,7 @@ export default function MaintenanceRepairType() {
   const [readOnly, setReadOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
+  const { user } = useSelector((state: RootState) => state.user);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -40,6 +43,7 @@ export default function MaintenanceRepairType() {
     updateMutation,
     deleteOneMutation,
     deleteManyMutation,
+    deleteAllMutation
   } = useLoaiSCBDMutation();
 
   const debouncedSearchValue = useDebounce(searchValue, 600);
@@ -186,6 +190,8 @@ export default function MaintenanceRepairType() {
           onDelete={deleteManyMutation.mutate}
           searchValue={searchValue}
           setSearchValue={setSearchValue}
+          onDeleteAll={deleteAllMutation.mutate}
+          showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
         />
       </Box>
     </Box>

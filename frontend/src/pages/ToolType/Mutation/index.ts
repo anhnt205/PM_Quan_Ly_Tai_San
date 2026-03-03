@@ -85,6 +85,24 @@ export const useToolTypeMutation = (
     },
   });
 
+   const deleteAllMutation = useMutation({
+     mutationFn: async () => {
+       const res = await api.delete(`/loaiccdccon/delete-all`);
+       return res.data.message;
+     },
+     onSuccess: (data) => {
+       queryClient.invalidateQueries({ queryKey: ["toolTypesPage"] });
+       showSuccessAlert(data || "Xóa loại ccdc thành công");
+     },
+     onError: (error: any) => {
+       showErrorAlert(
+         error.response?.data?.message ||
+           error.message ||
+           "Xóa loại ccdc thất bại",
+       );
+     },
+   });
+
   const { data: ccdcGroups = [] } = useAllToolGroupQuery();
 
   const exportMutation = useMutation({
@@ -203,6 +221,7 @@ export const useToolTypeMutation = (
     deleteManyMutation,
     exportMutation,
     importExcelMutation,
+    deleteAllMutation,
   };
 };
 

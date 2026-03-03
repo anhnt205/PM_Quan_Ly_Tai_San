@@ -83,6 +83,24 @@ export const useReasonIncreaseMutation = (
     },
   });
 
+   const deleteAllMutation = useMutation({
+     mutationFn: async () => {
+       const res = await api.delete(`/lydotang/delete-all`);
+       return res.data.message;
+     },
+     onSuccess: (data) => {
+       queryClient.invalidateQueries({ queryKey: ["reasonIncreasesPage"] });
+       showSuccessAlert(data || "Xóa lý do tăng thành công");
+     },
+     onError: (error: any) => {
+       showErrorAlert(
+         error.response?.data?.message ||
+           error.message ||
+           "Xóa lý do tăng thất bại",
+       );
+     },
+   });
+
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: ReasonIncreaseType[]) => {
       const payload = dataToExport.map((item) => ({
@@ -192,6 +210,7 @@ export const useReasonIncreaseMutation = (
     deleteManyMutation,
     exportMutation,
     importExcelMutation,
+    deleteAllMutation,
   };
 };
 

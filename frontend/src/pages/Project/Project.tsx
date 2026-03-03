@@ -20,6 +20,8 @@ import {
 } from "./Mutation";
 import { showConfirmAlert } from "../../components/Alert";
 import { useDebounce } from "../../hooks/useDebounce";
+import { useSelector } from "react-redux";
+import { RootState } from "../../redux/store";
 
 export default function Project() {
   const [showForm, setShowForm] = useState(false);
@@ -27,6 +29,7 @@ export default function Project() {
   const [readOnly, setReadOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
+  const { user } = useSelector((state: RootState) => state.user);
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
@@ -40,6 +43,7 @@ export default function Project() {
     deleteManyMutation,
     exportMutation,
     importExcelMutation,
+    deleteAllMutation
   } = useProjectMutation(
     paginationModel.page,
     paginationModel.pageSize,
@@ -207,6 +211,8 @@ export default function Project() {
           onDelete={deleteManyMutation.mutate}
           searchValue={searchValue}
           setSearchValue={setSearchValue}
+          onDeleteAll={deleteAllMutation.mutate}
+          showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
         />
       </Box>
     </Box>

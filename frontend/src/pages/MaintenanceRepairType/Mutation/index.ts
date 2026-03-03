@@ -69,6 +69,24 @@ export const useLoaiSCBDMutation = () => {
     },
   });
 
+   const deleteAllMutation = useMutation({
+     mutationFn: async () => {
+       const res = await api.delete(`/loaiscbd/delete-all`);
+       return res.data.message;
+     },
+     onSuccess: (data) => {
+       queryClient.invalidateQueries({ queryKey: ["loaiscbdPage"] });
+       showSuccessAlert(data || "Xóa loại đơn vị sửa chữa thành công");
+     },
+     onError: (error: any) => {
+       showErrorAlert(
+         error.response?.data?.message ||
+           error.message ||
+           "Xóa loại đơn vị sửa chữa thất bại",
+       );
+     },
+   });
+
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: MaintenanceRepairType[]) => {
       const payload = dataToExport.map((item) => ({
@@ -160,6 +178,7 @@ export const useLoaiSCBDMutation = () => {
     deleteManyMutation,
     exportMutation,
     importExcelMutation,
+    deleteAllMutation,
   };
 };
 

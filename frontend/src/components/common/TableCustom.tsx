@@ -86,6 +86,8 @@ interface Props {
   selectedDepartment?: string;
   setSelectedDepartment?: Dispatch<SetStateAction<string>>;
   isFilterDepartment?: boolean;
+  showDeleteAll?: boolean;
+  onDeleteAll?: () => void;
 }
 
 export default function TableCustom({
@@ -127,6 +129,8 @@ export default function TableCustom({
   selectedDepartment,
   setSelectedDepartment,
   isFilterDepartment = false,
+  showDeleteAll = false,
+  onDeleteAll,
 }: Props) {
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.user);
@@ -227,7 +231,12 @@ export default function TableCustom({
                 setSelectedDepartment?.(newValue ? newValue.id : null);
               }}
               renderInput={(params) => (
-                <TextField {...params} fullWidth label="Tìm kiếm theo phòng ban..." size="small" />
+                <TextField
+                  {...params}
+                  fullWidth
+                  label="Tìm kiếm theo phòng ban..."
+                  size="small"
+                />
               )}
             />
           )}
@@ -283,6 +292,26 @@ export default function TableCustom({
                 }}
               >
                 Trình duyệt người ký ({selectedItem.length})
+              </Button>
+            )}
+            {showDeleteAll && (
+              <Button
+                size="small"
+                variant="contained"
+                color="error"
+                startIcon={<Delete />}
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const confirm = await showConfirmAlert(
+                    `Xác nhận xóa tất cả bản ghi?. bạn không thể hoàn tác!.`,
+                  );
+                  if (confirm.isConfirmed) {
+                    onDeleteAll?.();
+                    onSelectionChange?.([]);
+                  }
+                }}
+              >
+                Xóa tất cả
               </Button>
             )}
             {selectedIds.length > 0 && showDelete && (

@@ -73,6 +73,24 @@ export const useProjectMutation = (
     },
   });
 
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.delete(`/duan/delete-all`);
+      return res.data.message;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["projectsPage"] });
+      showSuccessAlert(data || "Xóa dự án thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa dự án thất bại",
+      );
+    },
+  });
+
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: ProjectType[]) => {
       const payload = dataToExport.map((item) => ({
@@ -176,6 +194,7 @@ export const useProjectMutation = (
     deleteManyMutation,
     exportMutation,
     importExcelMutation,
+    deleteAllMutation,
   };
 };
 

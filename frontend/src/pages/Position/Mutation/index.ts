@@ -99,6 +99,24 @@ export const usePositionMutation = (
     },
   });
 
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.delete(`/chucvu/delete-all`);
+      return res.data.message;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["positionsPage"] });
+      showSuccessAlert(data || "Xóa chức vụ thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa chức vụ thất bại",
+      );
+    },
+  });
+
   // 1. Chuyển EXPORT thành Mutation
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: PositionType[]) => {
@@ -216,6 +234,7 @@ export const usePositionMutation = (
     importExcelMutation,
     exportMutation,
     getByIdMutation,
+    deleteAllMutation
   };
 };
 

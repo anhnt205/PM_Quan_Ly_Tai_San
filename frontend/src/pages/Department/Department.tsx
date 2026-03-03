@@ -20,6 +20,8 @@ import {
 } from "./Mutation";
 import { showConfirmAlert } from "../../components/Alert";
 import { useDebounce } from "../../hooks/useDebounce";
+import { useSelector } from "react-redux";
+import { RootState } from "../../redux/store";
 
 export default function Department() {
   const [showForm, setShowForm] = useState(false);
@@ -27,10 +29,11 @@ export default function Department() {
   const [readOnly, setReadOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
+  const { user } = useSelector((state: RootState) => state.user);
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
-    page: 0,
+    page: 0, 
   });
 
   const {
@@ -40,6 +43,7 @@ export default function Department() {
     deleteManyMutation,
     importExcelMutation,
     exportMutation,
+    deleteAllMutation
   } = useDepartmentMutation(
     paginationModel.page,
     paginationModel.pageSize,
@@ -184,6 +188,8 @@ export default function Department() {
           onDelete={deleteManyMutation.mutate}
           searchValue={searchValue}
           setSearchValue={setSearchValue}
+          onDeleteAll={deleteAllMutation.mutate}
+          showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
         />
       </Box>
     </Box>

@@ -19,13 +19,13 @@ export const useTypeAssetMutation = (
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["allTypeAssets"] });
-      showSuccessAlert("Tạo loại ccdc thành công");
+      showSuccessAlert("Tạo loại tài sản thành công");
     },
     onError: (error: any) => {
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Tạo loại ccdc thất bại",
+          "Tạo loại tài sản thất bại",
       );
     },
   });
@@ -37,13 +37,13 @@ export const useTypeAssetMutation = (
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["allTypeAssets"] });
-      showSuccessAlert("Sửa loại ccdc thành công");
+      showSuccessAlert("Sửa loại tài sản thành công");
     },
     onError: (error: any) => {
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Sửa loại ccdc thất bại",
+          "Sửa loại tài sản thất bại",
       );
     },
   });
@@ -73,16 +73,33 @@ export const useTypeAssetMutation = (
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["allTypeAssets"] });
-      showSuccessAlert(data || "Xóa loại ccdc thành công");
+      showSuccessAlert(data || "Xóa loại tài sản thành công");
     },
     onError: (error: any) => {
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa loại ccdc thất bại",
+          "Xóa loại tài sản thất bại",
       );
     },
   });
+   const deleteAllMutation = useMutation({
+     mutationFn: async () => {
+       const res = await api.delete(`/loaitaisan/delete-all`);
+       return res.data.message;
+     },
+     onSuccess: (data) => {
+       queryClient.invalidateQueries({ queryKey: ["typeAssetsPage"] });
+       showSuccessAlert(data || "Xóa loại tài sản thành công");
+     },
+     onError: (error: any) => {
+       showErrorAlert(
+         error.response?.data?.message ||
+           error.message ||
+           "Xóa loại tài sản thất bại",
+       );
+     },
+   });
 
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: TypeAssetType[]) => {
@@ -212,6 +229,7 @@ export const useTypeAssetMutation = (
     deleteManyMutation,
     importExcelMutation,
     exportMutation,
+    deleteAllMutation,
   };
 };
 

@@ -104,6 +104,24 @@ export const useToolGroupMutation = (
     },
   });
 
+   const deleteAllMutation = useMutation({
+     mutationFn: async () => {
+       const res = await api.delete(`/nhomccdc/delete-all`);
+       return res.data.message;
+     },
+     onSuccess: (data) => {
+       queryClient.invalidateQueries({ queryKey: ["toolGroupsPage"] });
+       showSuccessAlert(data || "Xóa nhóm ccdc thành công");
+     },
+     onError: (error: any) => {
+       showErrorAlert(
+         error.response?.data?.message ||
+           error.message ||
+           "Xóa nhóm ccdc thất bại",
+       );
+     },
+   });
+
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: ToolGroupType[]) => {
       const payload = dataToExport.map((item) => ({
@@ -219,6 +237,7 @@ export const useToolGroupMutation = (
     deleteManyMutation,
     exportMutation,
     importExcelMutation,
+    deleteAllMutation
   };
 };
 
