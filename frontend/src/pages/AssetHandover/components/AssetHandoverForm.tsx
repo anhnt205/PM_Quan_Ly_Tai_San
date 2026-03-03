@@ -867,6 +867,7 @@ export default function AssetHandoverForm({
                                 ) : (
                                   <FieldAutoCompleted
                                     labelkey="tenTaiSan"
+                                    labelOption="id"
                                     title=""
                                     formik={formik}
                                     field={`chiTietBanGiaoTaiSan.${index}.idTaiSan`}

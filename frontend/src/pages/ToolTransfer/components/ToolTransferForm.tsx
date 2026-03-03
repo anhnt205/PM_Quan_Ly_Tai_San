@@ -638,6 +638,7 @@ export default function ToolTransferForm({
                             ]}
                             formik={formik}
                             field={`chiTietDieuDongCCDCVatTuDTOS.${index}.idChiTietCCDCVatTu`}
+                            labelOption="idCCDCVatTu"
                             onChange={(value) => {
                               // Component FieldAutoCompleted đã tự động lưu value.id vào 'idChiTietCCDCVatTu' ở trên.
                               // Ta cần lưu bù id cha vào 'idCCDCVatTu' để payload gửi xuống backend không bị thiếu.

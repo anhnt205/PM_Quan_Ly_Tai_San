@@ -915,6 +915,7 @@ export default function ToolHandoverForm({
                               <UnderlinedInputWrapper>
                                 <FieldAutoCompleted
                                   labelkey="tenVatTu"
+                                  labelOption="idCCDCVatTu"
                                   title=""
                                   formik={formik}
                                   field={`chiTietBanGiaoCCDCVatTu.${index}.idChiTietCCDCVatTu`}

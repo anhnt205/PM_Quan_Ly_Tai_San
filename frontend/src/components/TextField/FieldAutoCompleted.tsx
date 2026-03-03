@@ -86,7 +86,7 @@ export default function FieldAutoCompleted({
         if (!option) return ""; // Tránh lỗi khi option là null/undefined
         if (typeof option === "string") return option; // Tránh lỗi nếu truyền string vào thay vì object
 
-        return `${option[labelkey] || ""} ${(labelOption && `- ${option[labelOption]}`) || ""}`.trim();
+        return `${(labelOption && `${option[labelOption]} -`) || ""} ${option[labelkey] || ""}`.trim();
       }}
       isOptionEqualToValue={(option, value) => {
         if (!value) return false;
@@ -104,9 +104,9 @@ export default function FieldAutoCompleted({
       }}
       onInputChange={(_, value) => onSearch?.(value)}
       renderOption={(props, option, state) => {
-        const label = `${option[labelkey] || ""}${
-          labelOption ? ` - ${option[labelOption]}` : ""
-        }`;
+        const label = `${
+          labelOption ? `${option[labelOption]} -` : ""
+        } ${option[labelkey] || ""}`;
 
         return (
           <li

@@ -608,6 +608,7 @@ export default function AssetTransferForm({
                         <FieldAutoCompleted
                           title=""
                           labelkey="tenTaiSan"
+                          labelOption="id"
                           data={[
                             ...allAssetsByDonVi.items,
                             ...(
