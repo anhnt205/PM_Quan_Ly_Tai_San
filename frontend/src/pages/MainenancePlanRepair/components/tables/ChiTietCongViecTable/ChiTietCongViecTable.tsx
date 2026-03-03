@@ -1,0 +1,310 @@
+import { useState } from "react"; // Đã bỏ useEffect vì không cần tự thêm dòng
+import {
+  Box,
+  Button,
+  IconButton,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+  Collapse,
+  Chip,
+} from "@mui/material";
+import {
+  Add,
+  Delete,
+  Edit,
+  InfoOutlineRounded,
+  Visibility,
+  VisibilityOff,
+} from "@mui/icons-material";
+
+interface Props {
+  formik: any;
+  readOnly?: boolean;
+  setEditingWork: (work: any) => void;
+}
+
+export default function ChiTietCongViecTable({
+  formik,
+  readOnly = false,
+  setEditingWork,
+}: Props) {
+  const [tableExpanded, setTableExpanded] = useState(true);
+
+  const currentData = formik.values.chiTietCongViec || [];
+  const hasData = currentData.length > 0;
+
+  // Logic Add: Chèn dòng mới lên đầu mảng và mở bảng nếu đang đóng
+  const handleAddWork = () => {
+    const newWork = {
+      id: `work-${Date.now()}`,
+      idKeHoach: formik.values.id || "",
+      tenCongViec: "",
+      moTa: "",
+      thoiGianDuKien: 60,
+      ngayThucHien: new Date().toISOString().split("T")[0],
+      trangThai: 0,
+      ghiChu: "",
+      nguoiThucHien: "",
+      ngayTao: new Date().toLocaleString("vi-VN"),
+      ngayCapNhat: new Date().toLocaleString("vi-VN"),
+    };
+    formik.setFieldValue("chiTietCongViec", [newWork, ...currentData]);
+    if (!tableExpanded) setTableExpanded(true);
+
+    setEditingWork(newWork);
+  };
+
+  // Logic Delete
+  const handleDeleteWork = (index: number) => {
+    const updated = [...currentData];
+    updated.splice(index, 1);
+    formik.setFieldValue("chiTietCongViec", updated);
+  };
+
+  const getStatusLabel = (status: number) => {
+    switch (status) {
+      case 0:
+        return (
+          <Chip
+            label="Chưa thực hiện"
+            color="default"
+            size="small"
+            sx={{ borderRadius: "6px" }}
+          />
+        );
+      case 1:
+        return (
+          <Chip
+            label="Đang thực hiện"
+            color="warning"
+            size="small"
+            sx={{ borderRadius: "6px" }}
+          />
+        );
+      case 2:
+        return (
+          <Chip
+            label="Đã hoàn thành"
+            color="success"
+            size="small"
+            sx={{ borderRadius: "6px" }}
+          />
+        );
+      default:
+        return (
+          <Chip
+            label="Chưa thực hiện"
+            color="default"
+            size="small"
+            sx={{ borderRadius: "6px" }}
+          />
+        );
+    }
+  };
+
+  // Style Header đồng bộ với bảng Thiết bị
+  const headerStyle = {
+    bgcolor: "success.main",
+    color: "white",
+    fontWeight: "bold",
+    borderBottom: "none",
+  };
+
+  return (
+    <Paper
+      sx={{
+        mt: 2,
+        p: 2,
+        borderRadius: "12px",
+        border: "1px solid",
+        borderColor: "divider",
+        boxShadow: "none",
+      }}
+    >
+      {/* Header cho phép Click để Collapse */}
+      <Box
+        onClick={() => setTableExpanded(!tableExpanded)}
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          cursor: "pointer",
+          userSelect: "none",
+          mb: tableExpanded ? 2 : 0,
+        }}
+      >
+        {/* Cụm bên trái: Icon Info + Tiêu đề */}
+        <Box display="flex" alignItems="center" gap={1}>
+          <InfoOutlineRounded color="primary" />
+          <Typography fontWeight={500}>Chi tiết công việc bảo trì</Typography>
+        </Box>
+
+        {/* Cụm bên phải: Chữ Thu gọn/Mở rộng + Icon Mắt */}
+        <Box display="flex" alignItems="center" gap={1}>
+          <Typography
+            variant="body2"
+            sx={{ color: "text.secondary", fontSize: "13px" }}
+          >
+            {tableExpanded ? "Thu gọn" : "Mở rộng"}
+          </Typography>
+          {tableExpanded ? (
+            <Visibility sx={{ color: "text.secondary", fontSize: 20 }} />
+          ) : (
+            <VisibilityOff sx={{ color: "text.secondary", fontSize: 20 }} />
+          )}
+        </Box>
+      </Box>
+
+      <Collapse in={tableExpanded}>
+        <TableContainer
+          component={Paper}
+          variant="outlined"
+          sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2 }}
+        >
+          {/* Ép tableLayout: "fixed" để không giật khung */}
+          <Table size="small" sx={{ tableLayout: "fixed", width: "100%" }}>
+            <TableHead>
+              <TableRow>
+                <TableCell align="center" sx={{ ...headerStyle, width: "25%" }}>
+                  Tên công việc
+                </TableCell>
+                <TableCell align="center" sx={{ ...headerStyle, width: "25%" }}>
+                  Mô tả
+                </TableCell>
+                <TableCell align="center" sx={{ ...headerStyle, width: 150 }}>
+                  TG dự kiến (phút)
+                </TableCell>
+                <TableCell align="center" sx={{ ...headerStyle, width: 140 }}>
+                  Ngày thực hiện
+                </TableCell>
+                <TableCell align="center" sx={{ ...headerStyle, width: 140 }}>
+                  Trạng thái
+                </TableCell>
+                {!readOnly && (
+                  <TableCell align="center" sx={{ ...headerStyle, width: 100 }}>
+                    Hành động
+                  </TableCell>
+                )}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {/* Nút inline Thêm công việc nét đứt (Chỉ hiện khi chế độ Sửa) */}
+              {!readOnly && (
+                <TableRow>
+                  <TableCell
+                    colSpan={6}
+                    sx={{
+                      p: 1,
+                      borderBottom: hasData ? "1px solid" : "none",
+                      borderColor: "divider",
+                    }}
+                  >
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      startIcon={<Add />}
+                      onClick={handleAddWork}
+                      sx={{
+                        py: 0.75,
+                        borderStyle: "dashed",
+                        "&:hover": {
+                          borderStyle: "dashed",
+                          bgcolor: "action.hover",
+                        },
+                      }}
+                    >
+                      Thêm công việc
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              )}
+
+              {/* Render danh sách công việc */}
+              {hasData &&
+                currentData.map((work: any, index: number) => (
+                  <TableRow key={work.id || index}>
+                    <TableCell>
+                      {work.tenCongViec || (
+                        <Typography
+                          color="text.secondary"
+                          fontStyle="italic"
+                          fontSize="0.875rem"
+                        >
+                          Chưa đặt tên
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {work.moTa || "-"}
+                    </TableCell>
+                    <TableCell align="center">
+                      {work.thoiGianDuKien || 0}
+                    </TableCell>
+                    <TableCell align="center">
+                      {work.ngayThucHien || "-"}
+                    </TableCell>
+                    <TableCell align="center">
+                      {getStatusLabel(work.trangThai || 0)}
+                    </TableCell>
+                    {!readOnly && (
+                      <TableCell align="center">
+                        <Box
+                          sx={{
+                            display: "flex",
+                            gap: 0.5,
+                            justifyContent: "center",
+                          }}
+                        >
+                          {/* Nút Sửa */}
+                          <IconButton
+                            size="small"
+                            onClick={() => setEditingWork(work)}
+                            color="primary"
+                          >
+                            <Edit fontSize="small" />
+                          </IconButton>
+                          {/* Nút Xóa - Cho phép xóa tự do, không chặn khi chỉ còn 1 dòng */}
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDeleteWork(index)}
+                            color="error"
+                          >
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+
+              {/* Thông báo trống: Chỉ hiện khi đang ở chế độ readOnly (vì chế độ Sửa đã có nút Thêm nét đứt bù đắp) */}
+              {readOnly && !hasData && (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    align="center"
+                    sx={{ py: 4, color: "text.secondary" }}
+                  >
+                    Chưa có công việc nào được thêm
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Collapse>
+    </Paper>
+  );
+}

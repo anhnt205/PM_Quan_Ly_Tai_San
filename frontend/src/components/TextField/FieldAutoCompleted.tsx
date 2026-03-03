@@ -1,4 +1,9 @@
-import { Autocomplete, TextField, Box } from "@mui/material";
+import {
+  Autocomplete,
+  TextField,
+  Box,
+  createFilterOptions,
+} from "@mui/material";
 import { getIn } from "formik";
 import { useMemo } from "react";
 
@@ -14,6 +19,7 @@ interface Props {
   onSearch?: (value: string) => void;
   componentsProps?: any;
   autocompleteSx?: any;
+  limitOptions?: number;
 }
 
 export default function FieldAutoCompleted({
@@ -28,10 +34,17 @@ export default function FieldAutoCompleted({
   labelOption,
   componentsProps,
   autocompleteSx,
+  limitOptions,
 }: Props) {
   const currentValue = formik && field ? getIn(formik.values, field) : null;
   const touched = field ? getIn(formik.touched, field) : false;
   const error = field ? getIn(formik.errors, field) : null;
+
+  const filter = useMemo(() => {
+    return limitOptions
+      ? createFilterOptions<any>({ limit: limitOptions })
+      : undefined;
+  }, [limitOptions]);
 
   const selectedOption = useMemo(() => {
     // 1. Tìm trong data trước (Logic gốc)
@@ -68,6 +81,7 @@ export default function FieldAutoCompleted({
       disabled={disabled}
       fullWidth
       options={data}
+      {...(filter ? { filterOptions: filter } : {})}
       getOptionLabel={(option: any) => {
         if (!option) return ""; // Tránh lỗi khi option là null/undefined
         if (typeof option === "string") return option; // Tránh lỗi nếu truyền string vào thay vì object

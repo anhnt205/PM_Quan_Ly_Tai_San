@@ -52,6 +52,8 @@ import {
 import { MaintenancePlanValidation } from "../validation/Validation";
 import { useDepartmentsPageQuery } from "../../Department/Mutation";
 import dayjs from "dayjs";
+import ThietBiBaoTriTable from "./tables/ThietBiBaoTriTable/ThietBiBaoTriTable";
+import ChiTietCongViecTable from "./tables/ChiTietCongViecTable/ChiTietCongViecTable";
 
 interface MaintenancePlanningFormProps {
   onEdit: () => void;
@@ -303,7 +305,17 @@ export default function MaintenancePlanningForm({
                 />
               </Grid>
 
-              <Grid size={{ xs: 12, md: 3 }}>
+              {/* Loại kế hoạch - Tự động co dãn size dựa trên điều kiện */}
+              <Grid
+                size={{
+                  xs: 12,
+                  md:
+                    formik.values.loaiKeHoach === "thiet_bi" ||
+                    !formik.values.loaiKeHoach
+                      ? 6
+                      : 3,
+                }}
+              >
                 <FormControl fullWidth disabled={readOnly} size="small">
                   <InputLabel>Loại kế hoạch</InputLabel>
                   <Select
@@ -410,280 +422,18 @@ export default function MaintenancePlanningForm({
           </Paper>
 
           {/* Danh sách thiết bị / CCDC */}
-          <Paper sx={{ mt: 2, p: 2, borderRadius: "12px" }}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mb: 2,
-              }}
-            >
-              <Box display={"flex"} alignItems={"center"} gap={2}>
-                <InfoOutlineRounded color="primary" />
-                <Typography>
-                  Danh sách thiết bị tài sản/ ccdc cần bảo trì
-                </Typography>
-              </Box>
-              {!readOnly && (
-                <Button
-                  variant="outlined"
-                  startIcon={<Add />}
-                  onClick={handleAddAsset}
-                  size="small"
-                >
-                  Thêm thiết bị
-                </Button>
-              )}
-            </Box>
-            <Box mb={2}>
-              <ToggleButtonGroup
-                value={formik.values.loaiThietBi}
-                exclusive
-                onChange={(_, val) => {
-                  if (val) formik.setFieldValue("loaiThietBi", val);
-                }}
-                size="small"
-                disabled={readOnly}
-                sx={{
-                  bgcolor: "#f0f0f0",
-                  borderRadius: "20px",
-                  p: "3px",
-                  gap: "2px",
-                  "& .MuiToggleButtonGroup-grouped": {
-                    border: "none",
-                    borderRadius: "16px !important",
-                  },
-                }}
-              >
-                <ToggleButton
-                  value="taisan"
-                  sx={{
-                    textTransform: "none",
-                    fontWeight: 500,
-                    fontSize: "0.8rem",
-                    px: 2.5,
-                    py: 0.5,
-                    borderRadius: "16px",
-                    color: "text.secondary",
-                    "&.Mui-selected": {
-                      bgcolor: "white",
-                      color: "success.main",
-                      fontWeight: 600,
-                      boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
-                      "&:hover": { bgcolor: "white" },
-                    },
-                    "&:hover": { bgcolor: "transparent" },
-                  }}
-                >
-                  Tài sản
-                </ToggleButton>
-                <ToggleButton
-                  value="ccdc"
-                  sx={{
-                    textTransform: "none",
-                    fontWeight: 500,
-                    fontSize: "0.8rem",
-                    px: 2.5,
-                    py: 0.5,
-                    borderRadius: "16px",
-                    color: "text.secondary",
-                    "&.Mui-selected": {
-                      bgcolor: "white",
-                      color: "success.main",
-                      fontWeight: 600,
-                      boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
-                      "&:hover": { bgcolor: "white" },
-                    },
-                    "&:hover": { bgcolor: "transparent" },
-                  }}
-                >
-                  CCDC - Vật tư
-                </ToggleButton>
-              </ToggleButtonGroup>
-            </Box>
-
-            <TableContainer component={Paper} variant="outlined">
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Thiết bị / CCDC</TableCell>
-                    <TableCell width={120}>Loại</TableCell>
-                    <TableCell>Ghi chú</TableCell>
-                    {!readOnly && <TableCell width={80}>Xóa</TableCell>}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {formik.values.danhSachThietBi &&
-                  formik.values.danhSachThietBi.length > 0 ? (
-                    formik.values.danhSachThietBi.map((item, index) => (
-                      <TableRow key={item.id || index}>
-                        <TableCell>
-                          {readOnly ? (
-                            item.tenThietBi || "—"
-                          ) : (
-                            <FormControl fullWidth size="small">
-                              <Select
-                                value={item.idThietBi || ""}
-                                displayEmpty
-                                onChange={(e) =>
-                                  handleAssetItemChange(
-                                    index,
-                                    e.target.value,
-                                    assets,
-                                  )
-                                }
-                              >
-                                <MenuItem value="">
-                                  <em>-- Chọn thiết bị --</em>
-                                </MenuItem>
-                                {assets.map((a: any) => (
-                                  <MenuItem key={a.id} value={a.id}>
-                                    {a.ten}
-                                  </MenuItem>
-                                ))}
-                              </Select>
-                            </FormControl>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {item.loaiThietBi === "ccdc" ? "CCDC" : "Tài sản"}
-                        </TableCell>
-                        <TableCell>
-                          {readOnly ? (
-                            item.ghiChu || "—"
-                          ) : (
-                            <TextField
-                              size="small"
-                              fullWidth
-                              value={item.ghiChu || ""}
-                              onChange={(e) =>
-                                formik.setFieldValue(
-                                  `danhSachThietBi[${index}].ghiChu`,
-                                  e.target.value,
-                                )
-                              }
-                            />
-                          )}
-                        </TableCell>
-                        {!readOnly && (
-                          <TableCell>
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => handleDeleteAsset(item.id || "")}
-                            >
-                              <Delete fontSize="small" />
-                            </IconButton>
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell
-                        colSpan={readOnly ? 3 : 4}
-                        align="center"
-                        sx={{ py: 4, color: "text.secondary" }}
-                      >
-                        Chưa có thiết bị nào được thêm vào kế hoạch
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
+          <ThietBiBaoTriTable
+            formik={formik}
+            readOnly={readOnly}
+            assets={assets}
+          />
 
           {/* Chi tiết công việc */}
-          <Paper sx={{ mt: 2, p: 2, borderRadius: "12px" }}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mb: 2,
-              }}
-            >
-              <Box display={"flex"} alignItems={"center"} gap={2}>
-                <InfoOutlineRounded color="primary" />
-                <Typography>Chi tiết công việc bảo trì</Typography>
-              </Box>
-              {!readOnly && (
-                <Button
-                  variant="outlined"
-                  startIcon={<Add />}
-                  onClick={handleAddWork}
-                  size="small"
-                >
-                  Thêm công việc
-                </Button>
-              )}
-            </Box>
-
-            <TableContainer component={Paper} variant="outlined">
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Tên công việc</TableCell>
-                    <TableCell>Mô tả</TableCell>
-                    <TableCell>Thời gian dự kiến (phút)</TableCell>
-                    <TableCell>Ngày thực hiện</TableCell>
-                    <TableCell>Trạng thái</TableCell>
-                    {!readOnly && <TableCell width={100}>Hành động</TableCell>}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {formik.values.chiTietCongViec &&
-                  formik.values.chiTietCongViec.length > 0 ? (
-                    formik.values.chiTietCongViec.map((work, index) => (
-                      <TableRow key={work.id || index}>
-                        <TableCell>
-                          {work.tenCongViec || "Chưa đặt tên"}
-                        </TableCell>
-                        <TableCell>{work.moTa || ""}</TableCell>
-                        <TableCell>{work.thoiGianDuKien || 0} phút</TableCell>
-                        <TableCell>{work.ngayThucHien || ""}</TableCell>
-                        <TableCell>
-                          {getStatusLabel(work.trangThai || 0)}
-                        </TableCell>
-                        {!readOnly && (
-                          <TableCell>
-                            <Box sx={{ display: "flex", gap: 1 }}>
-                              <IconButton
-                                size="small"
-                                onClick={() => setEditingWork(work)}
-                                color="primary"
-                              >
-                                <Edit fontSize="small" />
-                              </IconButton>
-                              <IconButton
-                                size="small"
-                                onClick={() => handleDeleteWork(work.id || "")}
-                                color="error"
-                              >
-                                <Delete fontSize="small" />
-                              </IconButton>
-                            </Box>
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell
-                        colSpan={6}
-                        align="center"
-                        sx={{ py: 4, color: "text.secondary" }}
-                      >
-                        Chưa có công việc nào được thêm
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
+          <ChiTietCongViecTable
+            formik={formik}
+            readOnly={readOnly}
+            setEditingWork={setEditingWork}
+          />
         </AccordionDetails>
       </Accordion>
 
