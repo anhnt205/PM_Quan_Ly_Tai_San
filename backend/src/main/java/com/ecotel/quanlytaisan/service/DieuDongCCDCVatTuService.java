@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,8 +44,8 @@ public class DieuDongCCDCVatTuService {
     }
 
     public PageResponse<DieuDongCCDCVatTuDTO> findAllPaged(String idCongTy, int page, int size, String sortBy,
-            String sortDir, String search, Integer loai, String userid, Integer trangThai, String idDonViGiao,
-            Boolean chuaBanGiaoHet) throws SQLException {
+                                                           String sortDir, String search, Integer loai, String userid, Integer trangThai, String idDonViGiao,
+                                                           Boolean chuaBanGiaoHet) throws SQLException {
         if (page < 0)
             page = 0;
         if (size <= 0)
@@ -80,8 +81,8 @@ public class DieuDongCCDCVatTuService {
         if (idDonViGiao != null && !idDonViGiao.trim().isEmpty()) {
             // 1. Kiểm tra đơn vị truyền vào có phải là Kho Loại 1 hay không
             PhongBanDTO phongBanTarget = phongBanService.getById(idDonViGiao);
-            boolean isKhoLoai1Target = phongBanTarget != null 
-                    && Boolean.TRUE.equals(phongBanTarget.getIsKho()) 
+            boolean isKhoLoai1Target = phongBanTarget != null
+                    && Boolean.TRUE.equals(phongBanTarget.getIsKho())
                     && Integer.valueOf(1).equals(phongBanTarget.getLoaiKho());
 
             List<DieuDongCCDCVatTuDTO> donViGiaoFiltered = new ArrayList<>();
@@ -90,9 +91,9 @@ public class DieuDongCCDCVatTuService {
                 // 2. Nếu là Kho Loại 1: Lấy tất cả các phiếu mà đơn vị giao cũng là Kho Loại 1
                 for (DieuDongCCDCVatTuDTO item : sourceList) {
                     PhongBanDTO pbItem = phongBanService.getById(item.getIdDonViGiao());
-                    if (pbItem != null 
-                        && Boolean.TRUE.equals(pbItem.getIsKho()) 
-                        && Integer.valueOf(1).equals(pbItem.getLoaiKho())) {
+                    if (pbItem != null
+                            && Boolean.TRUE.equals(pbItem.getIsKho())
+                            && Integer.valueOf(1).equals(pbItem.getLoaiKho())) {
                         donViGiaoFiltered.add(item);
                     }
                 }
@@ -186,8 +187,34 @@ public class DieuDongCCDCVatTuService {
         return response;
     }
 
+    /**
+     * Comparator cho DieuDongCCDCVatTuDTO.
+     * - Nếu sortBy null hoặc rỗng: sắp xếp mặc định theo trạng thái ưu tiên (0,1,3,2) rồi ngày tạo giảm dần.
+     * - Ngược lại, sắp xếp theo trường được chỉ định.
+     */
     private Comparator<DieuDongCCDCVatTuDTO> getComparator(String sortBy, String sortDir) {
-        String normalizedSortBy = sortBy != null ? sortBy.trim().toLowerCase() : "ngaycapnhat";
+        // Nếu không có sortBy, dùng sắp xếp mặc định: theo trạng thái ưu tiên, rồi ngày tạo giảm dần
+        if (sortBy == null || sortBy.trim().isEmpty()) {
+            Map<Integer, Integer> priorityMap = new HashMap<>();
+            priorityMap.put(0, 1); // Nháp
+            priorityMap.put(1, 2); // Duyệt
+            priorityMap.put(3, 3); // Hoàn thành
+            priorityMap.put(2, 4); // Hủy
+
+            Comparator<DieuDongCCDCVatTuDTO> comparator = Comparator.comparingInt(
+                    item -> priorityMap.getOrDefault(item.getTrangThai(), 5)
+            );
+
+            // Sau đó so sánh theo ngày tạo (mới nhất trước)
+            comparator = comparator.thenComparing(
+                    item -> item.getNgayTao() != null ? item.getNgayTao() : "",
+                    Comparator.nullsLast(Comparator.reverseOrder())
+            );
+            return comparator;
+        }
+
+        // Nếu có sortBy, xử lý như cũ
+        String normalizedSortBy = sortBy.trim().toLowerCase();
         boolean ascending = sortDir != null && sortDir.equalsIgnoreCase("asc");
 
         Comparator<DieuDongCCDCVatTuDTO> comparator = null;
