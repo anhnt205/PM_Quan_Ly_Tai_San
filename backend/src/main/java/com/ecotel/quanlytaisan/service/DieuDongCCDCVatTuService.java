@@ -78,30 +78,33 @@ public class DieuDongCCDCVatTuService {
         }
 
         if (idDonViGiao != null && !idDonViGiao.trim().isEmpty()) {
-            // Check if idDonViGiao is a warehouse department (IsKho = true)
-            PhongBanDTO phongBan = phongBanService.getById(idDonViGiao);
-            boolean isKho = phongBan != null && phongBan.getIsKho() != null && phongBan.getIsKho();
-            if (isKho) {
-                List<DieuDongCCDCVatTuDTO> donViGiaoFiltered = new ArrayList<>();
-                for (DieuDongCCDCVatTuDTO item : sourceList) {
-                    String idDonViGiaoTemp = item.getIdDonViGiao();
-                    phongBan = phongBanService.getById(idDonViGiaoTemp);
-                    isKho = phongBan != null && phongBan.getIsKho() != null && phongBan.getIsKho();
-                    if (isKho) {
-                        donViGiaoFiltered.add(item);
-                    }
-                }
-                sourceList = donViGiaoFiltered;
-            } else {
-                List<DieuDongCCDCVatTuDTO> donViGiaoFiltered = new ArrayList<>();
-                for (DieuDongCCDCVatTuDTO item : sourceList) {
-                    if (item.getIdDonViGiao().equalsIgnoreCase(idDonViGiao)) {
-                        donViGiaoFiltered.add(item);
-                    }
-                }
-                sourceList = donViGiaoFiltered;
-            }
+            // 1. Kiểm tra đơn vị truyền vào có phải là Kho Loại 1 hay không
+            PhongBanDTO phongBanTarget = phongBanService.getById(idDonViGiao);
+            boolean isKhoLoai1Target = phongBanTarget != null 
+                    && Boolean.TRUE.equals(phongBanTarget.getIsKho()) 
+                    && Integer.valueOf(1).equals(phongBanTarget.getLoaiKho());
 
+            List<DieuDongCCDCVatTuDTO> donViGiaoFiltered = new ArrayList<>();
+
+            if (isKhoLoai1Target) {
+                // 2. Nếu là Kho Loại 1: Lấy tất cả các phiếu mà đơn vị giao cũng là Kho Loại 1
+                for (DieuDongCCDCVatTuDTO item : sourceList) {
+                    PhongBanDTO pbItem = phongBanService.getById(item.getIdDonViGiao());
+                    if (pbItem != null 
+                        && Boolean.TRUE.equals(pbItem.getIsKho()) 
+                        && Integer.valueOf(1).equals(pbItem.getLoaiKho())) {
+                        donViGiaoFiltered.add(item);
+                    }
+                }
+            } else {
+                // 3. Nếu không phải Kho Loại 1: Lọc chính xác theo ID đơn vị như cũ
+                for (DieuDongCCDCVatTuDTO item : sourceList) {
+                    if (idDonViGiao.equalsIgnoreCase(item.getIdDonViGiao())) {
+                        donViGiaoFiltered.add(item);
+                    }
+                }
+            }
+            sourceList = donViGiaoFiltered;
         }
 
         if (search != null && !search.trim().isEmpty()) {

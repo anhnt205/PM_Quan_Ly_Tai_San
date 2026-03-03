@@ -220,11 +220,10 @@ export default function ToolTransferForm({
   const isThuHoi = type === 3;
 
   const dvGiao = departments.filter((i) =>
-    isCapPhat ? i.id?.toLowerCase() === "k30" : i.isKho === false,
+    isCapPhat ? i.isKho === true && i.loaiKho === 1 : i.isKho === false,
   );
-
   const dvNhan = departments.filter((i) =>
-    isThuHoi ? i.id?.toLowerCase() === "kth" : i.isKho === false,
+    isThuHoi ? i.isKho === true && i.loaiKho === 2 : i.isKho === false,
   );
 
   const [nvThamMuu, setNVThamMuu] = useState<any[]>([]);
@@ -250,12 +249,10 @@ export default function ToolTransferForm({
     }
   }, [formik.values.idDonViDeNghi, departments, staffs]);
 
-  const {
-    data: toolsByDepartment = [],
-    isLoading
-  } = useToolByDepartmentPageQuery({
-    departmentId: formik.values.idDonViGiao,
-  });
+  const { data: toolsByDepartment = [], isLoading } =
+    useToolByDepartmentPageQuery({
+      departmentId: formik.values.idDonViGiao,
+    });
 
   const tools = useMemo(() => {
     if (!toolsByDepartment?.length) return [];
@@ -277,7 +274,7 @@ export default function ToolTransferForm({
   return (
     <>
       <DialogLoading
-        loading={(isLoading) && toolsByDepartment.length === 0}
+        loading={isLoading && toolsByDepartment.length === 0}
         title="Đang tải ccdc ..."
       />
       {isPreview && (

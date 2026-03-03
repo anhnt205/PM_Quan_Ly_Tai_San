@@ -577,7 +577,6 @@ export const useAssetTransferPageQuery = (
   chuaBanGiaoHet?: boolean,
 ) => {
   const idCongTy = "ct001";
-  console.log(idDonViGiao);
 
   return useQuery({
     queryKey: [

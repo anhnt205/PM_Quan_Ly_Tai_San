@@ -278,11 +278,11 @@ export const useAssetManagerMutation = (
                   `Cột D - Hàng ${rowIndex}: Tên tài sản đang bỏ trống`,
                 );
               }
-              if (!item["Mã đơn vị hiện thời"]) {
-                errorMessages.push(
-                  `Cột AF - Hàng ${rowIndex}: Mã đơn vị hiện thời đang bỏ trống`,
-                );
-              }
+              // if (!item["Mã đơn vị hiện thời"]) {
+              //   errorMessages.push(
+              //     `Cột AF - Hàng ${rowIndex}: Mã đơn vị hiện thời đang bỏ trống`,
+              //   );
+              // }
 
               // 3. Kiểm tra định dạng số cho các nguồn vốn
               const fieldsToCheck = [

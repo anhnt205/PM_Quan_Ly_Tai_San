@@ -238,6 +238,11 @@ export default function AssetTransferForm({
 
   useEffect(() => {
     if (formik.values.idDonViDeNghi && departments && staffs) {
+      console.log(
+        "donvidenghi",
+        staffs.filter((i) => i.phongBanId === formik.values.idDonViDeNghi),
+      );
+      console.log("staffs", staffs);
       setNVThamMuu(
         staffs.filter((i) => i.phongBanId === formik.values.idDonViDeNghi),
       );
