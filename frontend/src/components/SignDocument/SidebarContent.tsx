@@ -115,7 +115,9 @@ const SidebarContent = ({
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       {/* Header */}
       <Box sx={{ mb: 1 }}>
-        <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, mb: 0.5 }}>
+        <Box
+          sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, mb: 0.5 }}
+        >
           <Box
             sx={{
               width: 32,
@@ -163,11 +165,7 @@ const SidebarContent = ({
         sx={{ flex: 1, mb: 2 }}
       >
         {employee?.kyNhay && (
-          <SignatureOption
-            value={1}
-            label="Ký nháy"
-            imageUrl={fileUrlNhay}
-          />
+          <SignatureOption value={1} label="Ký nháy" imageUrl={fileUrlNhay} />
         )}
 
         {employee?.kyThuong && (
@@ -221,7 +219,7 @@ const SidebarContent = ({
               showImage={false}
             />
 
-            {employee.chuKyThuong && (
+            {employee.kyThuong && (
               <SignatureOption
                 value={4}
                 label="Kèm chữ ký thường"
@@ -229,7 +227,7 @@ const SidebarContent = ({
               />
             )}
 
-            {employee.chuKyNhay && (
+            {employee.kyNhay && (
               <SignatureOption
                 value={5}
                 label="Kèm chữ ký nháy"

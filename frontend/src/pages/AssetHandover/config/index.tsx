@@ -617,7 +617,7 @@ export const generateBienBanPdf = async (
       index + 1,
       item.tenTaiSan ?? "",
       item.kyHieu ?? "",
-      item.moTa ?? "",
+      item.nuocSanXuat ?? "",
       findById(allUnits, item.donViTinh)?.tenDonVi ?? "",
       item.soLuong || 1,
       item.ghiChu ?? "",

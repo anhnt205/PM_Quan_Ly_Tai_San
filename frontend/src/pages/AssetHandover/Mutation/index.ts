@@ -287,7 +287,7 @@ export const useAssetHandoverMutation = () => {
       });
       const list = await listNguoiKy([data.assetHandover]);
       socketService.send({
-        type: MessageTypeFunctions.ASSET_TRANSFER,
+        type: MessageTypeFunctions.ASSET_HANDOVER,
         recieve: list,
       });
       showSuccessAlert("Ký thành công");

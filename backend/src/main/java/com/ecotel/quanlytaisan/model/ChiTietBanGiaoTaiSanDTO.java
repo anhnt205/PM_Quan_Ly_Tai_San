@@ -13,6 +13,7 @@ public class ChiTietBanGiaoTaiSanDTO {
     private String donViTinh;
     private String kyHieu;
     private String soKyHieu;
+    private String nuocSanXuat;
     private String hienTrang;
     private String moTa;
     private Integer soLuong;

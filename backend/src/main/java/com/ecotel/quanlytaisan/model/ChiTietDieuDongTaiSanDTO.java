@@ -10,6 +10,8 @@ public class ChiTietDieuDongTaiSanDTO {
     private String tenPhieu;
     private String idTaiSan;
     private String tenTaiSan;
+    private String kyHieu;
+    private String nuocSanXuat;
     private String donViTinh;
     private String hienTrang;
     private String moTa;

@@ -29,6 +29,7 @@ public class ChiTietBanGiaoTaiSanDao {
                        ts.DonViTinh,
                        ts.KyHieu,
                        ts.SoKyHieu,
+                       ts.NuocSanXuat,
                        ct.HienTrang,
                        ct.MoTa,
 
@@ -61,6 +62,7 @@ public class ChiTietBanGiaoTaiSanDao {
                        ts.DonViTinh,
                        ts.KyHieu,
                        ts.SoKyHieu,
+                       ts.NuocSanXuat,
                        ct.HienTrang,
                        ct.MoTa,
 

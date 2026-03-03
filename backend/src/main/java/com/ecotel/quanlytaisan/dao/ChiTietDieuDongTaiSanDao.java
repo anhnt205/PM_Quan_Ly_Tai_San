@@ -24,6 +24,8 @@ public class ChiTietDieuDongTaiSanDao {
                        ctddts.IdTaiSan,
                        ts.TenTaiSan,
                        ts.DonViTinh,
+                       ts.KyHieu,
+                       ts.NuocSanXuat,
                        ctddts.HienTrang,
                        ctddts.MoTa,
 
@@ -57,6 +59,8 @@ public class ChiTietDieuDongTaiSanDao {
                     ctddts.IdTaiSan,
                     ts.TenTaiSan,
                     ts.DonViTinh,
+                    ts.KyHieu,
+                    ts.NuocSanXuat,
                     ctddts.HienTrang,
                     ctddts.MoTa,
 
@@ -152,6 +156,8 @@ public class ChiTietDieuDongTaiSanDao {
                        ctddts.IdTaiSan,
                        ts.TenTaiSan,
                        ts.DonViTinh,
+                       ts.KyHieu,
+                       ts.NuocSanXuat,
                        ctddts.HienTrang,
                        ctddts.MoTa,
 

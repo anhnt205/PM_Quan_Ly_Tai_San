@@ -192,6 +192,8 @@ export default function AssetHandoverForm({
           idBanGiaoTaiSan: "",
           idTaiSan: "",
           tenTaiSan: "",
+          kyHieu: "",
+          nuocSanXuat: "",
           donViTinh: "",
           soLuong: 1,
           hienTrang: "1",
@@ -285,11 +287,6 @@ export default function AssetHandoverForm({
       });
     },
   });
-
-  console.log(
-    "formik.values.chiTietBanGiaoTaiSan",
-    formik.values.chiTietBanGiaoTaiSan,
-  );
 
   useEffect(() => {
     if (selectedAssetHandover) {
@@ -880,6 +877,14 @@ export default function AssetHandoverForm({
                                         formik.setFieldValue(
                                           `chiTietBanGiaoTaiSan.${index}.tenTaiSan`,
                                           newValue.tenTaiSan,
+                                        );
+                                        formik.setFieldValue(
+                                          `chiTietBanGiaoTaiSan.${index}.nuocSanXuat`,
+                                          newValue.nuocSanXuat,
+                                        );
+                                        formik.setFieldValue(
+                                          `chiTietBanGiaoTaiSan.${index}.kyHieu`,
+                                          newValue.kyHieu,
                                         );
                                         formik.setFieldValue(
                                           `chiTietBanGiaoTaiSan.${index}.donViTinh`,

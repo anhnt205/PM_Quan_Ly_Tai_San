@@ -525,6 +525,8 @@ export default function AssetHandover() {
                       ghiChu: item.ghiChu || "",
                       isActive: true,
                       moTa: item.moTa || "",
+                      kyHieu: item.kyHieu || "",
+                      nuocSanXuat: item.nuocSanXuat || "",
                     }))
                   : [],
                 initialChiTiet: [] as any[],

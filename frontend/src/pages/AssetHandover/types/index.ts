@@ -3,6 +3,8 @@ export interface AssetHandoverDetail {
   idBanGiaoTaiSan: string;
   tenTaiSan?: string;
   idTaiSan: string;
+  kyHieu?: string;
+  nuocSanXuat?: string;
   soLuong: number;
   ngayTao?: string;
   ngayCapNhat?: string;

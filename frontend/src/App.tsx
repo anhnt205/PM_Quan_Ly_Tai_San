@@ -87,6 +87,9 @@ function App() {
       ) {
         console.log("Handling socket message in App.tsx:", data);
         queryClient.invalidateQueries({ queryKey: ["assetHandoverPage"] });
+                queryClient.invalidateQueries({
+                  queryKey: ["assetTranferPage"],
+                });
         queryClient.invalidateQueries({ queryKey: ["assetHandoverAll"] });
       } else if (
         (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
@@ -95,6 +98,7 @@ function App() {
       ) {
         console.log("Handling socket message in App.tsx:", data);
         queryClient.invalidateQueries({ queryKey: ["toolHandoverPage"] });
+        queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
         queryClient.invalidateQueries({ queryKey: ["toolHandoverAll"] });
       }
     });
