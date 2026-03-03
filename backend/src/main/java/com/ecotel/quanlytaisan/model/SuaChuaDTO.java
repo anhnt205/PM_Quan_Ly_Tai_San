@@ -14,6 +14,8 @@ import java.util.List;
 public class SuaChuaDTO {
     private String id;
     private String idCongTy;
+    private String idKeHoach;
+    private String tenKeHoach;
     private String maSuaChua;
     private String tenSuaChua;
     private String mucDoSuCo;
@@ -70,6 +72,10 @@ public class SuaChuaDTO {
     private Integer trangThai;
     private List<KyTaiLieu> chuKyList;
     private List<NguoiKy> nguoiKyList;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
+    private Date ngayCapNhat;
+
 
     // Custom getters
     public Boolean getTrangThaiKyNhay() {

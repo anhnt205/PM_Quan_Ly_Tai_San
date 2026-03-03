@@ -16,6 +16,7 @@ import static com.ecotel.quanlytaisan.utils.ParserHelper.*;
 public class SuaChua {
     private String id;
     private String idCongTy;
+    private String idKeHoach;
     private String maSuaChua;
     private String tenSuaChua;
     private String mucDoSuCo;          // 'NANG', 'TRUNG_BINH', 'NHE'
@@ -62,6 +63,9 @@ public class SuaChua {
     private String tenTrinhDuyetGiamDoc;
 
     private Integer trangThai; // 0: nháp, 1: chờ duyệt, 2: hủy, 3: hoàn thành
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
+    private Date ngayCapNhat;
 
     // Custom getters for null safety
     public Boolean getTrangThaiKyNhay() {
@@ -128,6 +132,7 @@ public class SuaChua {
         sc.setCoPhieuBanGiao(parseBoolean(safeGet(row, 26)));
         sc.setTaiLieuCuoi(safeGet(row, 27));
         sc.setLoai(parseInt(safeGet(row, 28)));
+        sc.setIdKeHoach(safeGet(row, 29));
         return sc;
     }
 
@@ -169,6 +174,7 @@ public class SuaChua {
         sc.setCoPhieuBanGiao(getCellBooleanValue(row.getCell(26)));
         sc.setTaiLieuCuoi(getCellStringValue(row.getCell(27)));
         sc.setLoai((int) parseDouble(getCellStringValue(row.getCell(28))));
+        sc.setIdKeHoach(getCellStringValue(row.getCell(29)));
         return sc;
     }
 

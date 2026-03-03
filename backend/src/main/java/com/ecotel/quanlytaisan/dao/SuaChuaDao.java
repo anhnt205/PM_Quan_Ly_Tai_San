@@ -47,6 +47,10 @@ public class SuaChuaDao {
             SELECT 
                 sc.Id,
                 sc.IdCongTy,
+                
+                sc.IdKeHoach,
+                keHoach.TenKeHoach AS tenKeHoach,
+                
                 sc.MaSuaChua,
                 sc.TenSuaChua,
                 sc.MucDoSuCo,
@@ -92,6 +96,7 @@ public class SuaChuaDao {
                 LEFT JOIN PhongBan pbDeNghi ON sc.IdDonViDeNghi = pbDeNghi.Id
                 LEFT JOIN NhanVien nvCapPhong ON sc.IdTrinhDuyetCapPhong = nvCapPhong.Id
                 LEFT JOIN NhanVien nvGiamDoc ON sc.IdTrinhDuyetGiamDoc = nvGiamDoc.Id
+                LEFT JOIN KeHoachSuaChua keHoach ON sc.IdKeHoach = keHoach.Id
         """;
         try {
             cache = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(SuaChuaDTO.class));
@@ -316,8 +321,9 @@ public class SuaChuaDao {
                 NgayKetThucDuKien, IdTrinhDuyetCapPhong, TrinhDuyetCapPhongXacNhan,
                 IdTrinhDuyetGiamDoc, TrinhDuyetGiamDocXacNhan, IdDonViDeNghi,
                 DuongDanFile, TenFile, TaiLieuBanGhi, ByStep, SoQuyetDinh,
-                NguoiTao, Share, NgayTao, DaBanGiao, CoPhieuBanGiao, TaiLieuCuoi, Loai
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                NguoiTao, Share, NgayTao, NgayCapNhat, DaBanGiao, CoPhieuBanGiao, TaiLieuCuoi, Loai, TrangThai,
+                IdKeHoach
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """;
         int result = jdbcTemplate.update(sql,
                 entity.getId(), entity.getIdCongTy(), entity.getMaSuaChua(), entity.getTenSuaChua(),
@@ -330,8 +336,8 @@ public class SuaChuaDao {
                 entity.getIdDonViDeNghi(),
                 entity.getDuongDanFile(), entity.getTenFile(), entity.getTaiLieuBanGhi(),
                 entity.getByStep(), entity.getSoQuyetDinh(), entity.getNguoiTao(),
-                entity.getShare(), entity.getNgayTao(),
-                entity.getDaBanGiao(), entity.getCoPhieuBanGiao(), entity.getTaiLieuCuoi(), entity.getLoai()
+                entity.getShare(), entity.getNgayTao(), entity.getNgayCapNhat(),
+                entity.getDaBanGiao(), entity.getCoPhieuBanGiao(), entity.getTaiLieuCuoi(), entity.getLoai(), entity.getIdKeHoach()
         );
         if (result > 0) {
             CompletableFuture.runAsync(this::refreshCache);
@@ -342,6 +348,7 @@ public class SuaChuaDao {
 
     public SuaChua update(SuaChua entity) {
         // Không có NgayCapNhat, nên không cập nhật
+        entity.setNgayCapNhat(new Date());
         String sql = """
             UPDATE SuaChua SET
                 MaSuaChua = ?, TenSuaChua = ?, MucDoSuCo = ?, MucDoUuTien = ?,
@@ -351,7 +358,8 @@ public class SuaChuaDao {
                 IdTrinhDuyetGiamDoc = ?, TrinhDuyetGiamDocXacNhan = ?,
                 IdDonViDeNghi = ?, DuongDanFile = ?, TenFile = ?, TaiLieuBanGhi = ?,
                 ByStep = ?, SoQuyetDinh = ?, NguoiTao = ?, Share = ?,
-                DaBanGiao = ?, CoPhieuBanGiao = ?, TaiLieuCuoi = ?, Loai = ?
+                NgayCapNhat = ?, DaBanGiao = ?, CoPhieuBanGiao = ?, TaiLieuCuoi = ?, Loai = ?, TrangThai = ?,
+                IdKeHoach = ?
             WHERE Id = ?
         """;
         int result = jdbcTemplate.update(sql,
@@ -364,7 +372,9 @@ public class SuaChuaDao {
                 entity.getIdDonViDeNghi(),
                 entity.getDuongDanFile(), entity.getTenFile(), entity.getTaiLieuBanGhi(),
                 entity.getByStep(), entity.getSoQuyetDinh(), entity.getNguoiTao(), entity.getShare(),
-                entity.getDaBanGiao(), entity.getCoPhieuBanGiao(), entity.getTaiLieuCuoi(), entity.getLoai(),
+                entity.getNgayCapNhat(),
+                entity.getDaBanGiao(), entity.getCoPhieuBanGiao(), entity.getTaiLieuCuoi(), entity.getLoai(), entity.getTrangThai(),
+                entity.getIdKeHoach(),
                 entity.getId()
         );
         if (result > 0) {
