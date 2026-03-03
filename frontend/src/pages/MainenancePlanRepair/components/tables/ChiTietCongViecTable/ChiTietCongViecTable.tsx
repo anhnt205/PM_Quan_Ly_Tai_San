@@ -1,4 +1,4 @@
-import { useState } from "react"; // Đã bỏ useEffect vì không cần tự thêm dòng
+import { useEffect, useState } from "react"; // Đã bỏ useEffect vì không cần tự thêm dòng
 import {
   Box,
   Button,
@@ -13,6 +13,17 @@ import {
   Typography,
   Collapse,
   Chip,
+  Dialog,
+  DialogTitle,
+  Divider,
+  DialogContent,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  DialogActions,
+  Autocomplete,
 } from "@mui/material";
 import {
   Add,
@@ -22,39 +33,60 @@ import {
   Visibility,
   VisibilityOff,
 } from "@mui/icons-material";
+import { MaintenancePlanDetailItem } from "../../../types";
+import { Formik } from "formik";
 
 interface Props {
   formik: any;
   readOnly?: boolean;
-  setEditingWork: (work: any) => void;
+  staffs?: any[];
 }
 
 export default function ChiTietCongViecTable({
   formik,
   readOnly = false,
-  setEditingWork,
+  staffs = [],
 }: Props) {
-  const [tableExpanded, setTableExpanded] = useState(true);
+ const [tableExpanded, setTableExpanded] = useState(true);
+ const [editingWork, setEditingWork] =
+   useState<MaintenancePlanDetailItem | null>(null);
 
-  const currentData = formik.values.chiTietCongViec || [];
+ // 1. Logic Save: Nhận values từ Inner Formik và đẩy vào Main Formik
+ const handleSaveWork = (values: MaintenancePlanDetailItem) => {
+  console.log(values);
+   if (!editingWork) return;
+
+   const currentCongViecs = formik.values.congViecs || [];
+
+   // Nếu là sửa dòng cũ: tìm theo ID hoặc so sánh object reference nếu là dòng mới tạo
+   const isNew =
+     !editingWork.id &&
+     !currentCongViecs.some((w: any) => w.id === editingWork.id);
+
+   const updated = currentCongViecs.map((w: any) =>
+     w === editingWork ? { ...values } : w,
+   );
+
+   formik.setFieldValue("congViecs", updated);
+   setEditingWork(null);
+ };
+  const currentData = formik.values.congViecs || [];
   const hasData = currentData.length > 0;
 
   // Logic Add: Chèn dòng mới lên đầu mảng và mở bảng nếu đang đóng
   const handleAddWork = () => {
     const newWork = {
-      id: `work-${Date.now()}`,
-      idKeHoach: formik.values.id || "",
+      id: "",
+      idKeHoach: "",
       tenCongViec: "",
       moTa: "",
-      thoiGianDuKien: 60,
-      ngayThucHien: new Date().toISOString().split("T")[0],
-      trangThai: 0,
-      ghiChu: "",
       nguoiThucHien: "",
-      ngayTao: new Date().toLocaleString("vi-VN"),
-      ngayCapNhat: new Date().toLocaleString("vi-VN"),
+      thoiGianDuKien: 0,
+      ngayThucHien: "",
+      ngayTao: "",
+      ngayCapNhat: "",
     };
-    formik.setFieldValue("chiTietCongViec", [newWork, ...currentData]);
+    formik.setFieldValue("congViecs", [newWork, ...currentData]);
     if (!tableExpanded) setTableExpanded(true);
 
     setEditingWork(newWork);
@@ -64,7 +96,7 @@ export default function ChiTietCongViecTable({
   const handleDeleteWork = (index: number) => {
     const updated = [...currentData];
     updated.splice(index, 1);
-    formik.setFieldValue("chiTietCongViec", updated);
+    formik.setFieldValue("congViecs", updated);
   };
 
   const getStatusLabel = (status: number) => {
@@ -184,7 +216,7 @@ export default function ChiTietCongViecTable({
                   Ngày thực hiện
                 </TableCell>
                 <TableCell align="center" sx={{ ...headerStyle, width: 140 }}>
-                  Trạng thái
+                  Người thực hiện
                 </TableCell>
                 {!readOnly && (
                   <TableCell align="center" sx={{ ...headerStyle, width: 100 }}>
@@ -256,7 +288,7 @@ export default function ChiTietCongViecTable({
                       {work.ngayThucHien || "-"}
                     </TableCell>
                     <TableCell align="center">
-                      {getStatusLabel(work.trangThai || 0)}
+                      {work.nguoiThucHien || "-"}
                     </TableCell>
                     {!readOnly && (
                       <TableCell align="center">
@@ -305,6 +337,103 @@ export default function ChiTietCongViecTable({
           </Table>
         </TableContainer>
       </Collapse>
+      {/* Dialog chỉnh sửa công việc */}
+      <Dialog
+        open={editingWork !== null}
+        onClose={() => setEditingWork(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Chỉnh sửa công việc bảo trì</DialogTitle>
+        <Divider />
+
+        {editingWork && (
+          <Formik
+            initialValues={editingWork} // Khởi tạo bằng dữ liệu của dòng đang chọn
+            enableReinitialize // Quan trọng: để cập nhật lại khi chọn dòng khác
+            onSubmit={(values) => handleSaveWork(values)}
+          >
+            {({ values, handleChange, setFieldValue, submitForm }) => (
+              <>
+                <DialogContent sx={{ pt: 2 }}>
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+                  >
+                    <TextField
+                      name="tenCongViec" // Dùng name để handleChange tự bắt
+                      label="Tên công việc"
+                      value={values.tenCongViec}
+                      onChange={handleChange}
+                      fullWidth
+                      size="small"
+                      required
+                    />
+
+                    <TextField
+                      name="moTa"
+                      label="Mô tả"
+                      value={values.moTa}
+                      onChange={handleChange}
+                      fullWidth
+                      size="small"
+                      multiline
+                      rows={2}
+                    />
+
+                    <Box sx={{ display: "flex", gap: 2 }}>
+                      <TextField
+                        name="thoiGianDuKien"
+                        label="Thời gian dự kiến (phút)"
+                        type="number"
+                        value={values.thoiGianDuKien}
+                        onChange={handleChange}
+                        fullWidth
+                        size="small"
+                      />
+                      <TextField
+                        name="ngayThucHien"
+                        label="Ngày thực hiện"
+                        type="date"
+                        value={values.ngayThucHien}
+                        onChange={handleChange}
+                        fullWidth
+                        size="small"
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Box>
+
+                    <Box sx={{ display: "flex", gap: 2 }}>
+
+                      <TextField
+                        name="nguoiThucHien"
+                        label="Người thực hiện"
+                        value={values.nguoiThucHien}
+                        onChange={handleChange}
+                        fullWidth
+                        size="small"
+                      />
+                    </Box>
+                  </Box>
+                </DialogContent>
+
+                <Divider />
+                <DialogActions sx={{ px: 3, py: 1.5 }}>
+                  <Button onClick={() => setEditingWork(null)} color="inherit">
+                    Hủy
+                  </Button>
+                  <Button
+                    onClick={submitForm} // Gọi submit của Inner Formik
+                    variant="contained"
+                    disabled={!values.tenCongViec?.trim()}
+                  >
+                    Lưu
+                  </Button>
+                </DialogActions>
+              </>
+            )}
+          </Formik>
+        )}
+      </Dialog>
     </Paper>
   );
 }

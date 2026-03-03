@@ -28,6 +28,7 @@ import {
 } from "@mui/icons-material";
 import { useState } from "react";
 import FieldAutoCompleted from "../../../../../components/TextField/FieldAutoCompleted";
+import { Devicetype } from "../../../../../utils/const";
 
 interface Props {
   formik: any;
@@ -42,32 +43,29 @@ export default function ThietBiBaoTriTable({
 }: Props) {
   const [tableExpanded, setTableExpanded] = useState(true);
 
-  const currentData = formik.values.danhSachThietBi || [];
+  const currentData = formik.values.chiTiets || [];
   const hasData = currentData.length > 0;
 
   const handleAddAsset = () => {
     const newAsset = {
-      id: `asset-${Date.now()}`,
-      idKeHoach: formik.values.id || "",
-      idThietBi: "",
-      tenThietBi: "",
-      loaiThietBi: formik.values.loaiThietBi || "taisan",
+      id: "",
+      idKeHoach: "",
+      idTaiSan: "",
+      idCCDC: "",
       ghiChu: "",
-      ngayTao: new Date().toLocaleString("vi-VN"),
-      ngayCapNhat: new Date().toLocaleString("vi-VN"),
     };
-    formik.setFieldValue("danhSachThietBi", [newAsset, ...currentData]);
+    formik.setFieldValue("chiTiets", [newAsset, ...currentData]);
   };
 
   const handleDeleteAsset = (index: number) => {
     const updated = currentData.filter((_: any, i: number) => i !== index);
-    formik.setFieldValue("danhSachThietBi", updated);
+    formik.setFieldValue("chiTiets", updated);
   };
 
   // Helper validation cho ô đầu tiên
   const getErrorForRow = (index: number) => {
-    const value = formik.values.danhSachThietBi?.[index]?.idThietBi;
-    const touched = formik.touched.danhSachThietBi?.[index]?.idThietBi;
+    const value = formik.values.chiTiets?.[index]?.idThietBi;
+    const touched = formik.touched.chiTiets?.[index]?.idThietBi;
     if (!touched) return false;
     return !value || value.trim() === "";
   };
@@ -120,10 +118,10 @@ export default function ThietBiBaoTriTable({
         <Box mb={2}>
           {/* ToggleButtonGroup kiểu pill với sliding background */}
           <ToggleButtonGroup
-            value={formik.values.loaiThietBi || "taisan"}
+            value={formik.values.LoaiDoiTuong || Devicetype.ASSET}
             exclusive
             onChange={(_, val) => {
-              if (val) formik.setFieldValue("loaiThietBi", val);
+              if (val) formik.setFieldValue("LoaiDoiTuong", val);
             }}
             disabled={readOnly || hasData}
             sx={{
@@ -178,26 +176,26 @@ export default function ThietBiBaoTriTable({
 
                 // Đổi hình dáng của khối nền trượt cho khớp với nút bên dưới
                 borderRadius:
-                  formik.values.loaiThietBi === "ccdc"
+                  formik.values.LoaiDoiTuong === Devicetype.TOOL
                     ? "0 46px 46px 0"
                     : "46px 0 0 46px",
 
                 // Trượt sang phải một khoảng bằng chính chiều rộng của nó (100%)
                 transform:
-                  formik.values.loaiThietBi === "ccdc"
+                  formik.values.LoaiDoiTuong === Devicetype.TOOL
                     ? "translateX(100%)"
                     : "translateX(0)",
               },
             }}
           >
             <ToggleButton
-              value="taisan"
+              value={Devicetype.ASSET}
               sx={{
                 width: 200,
               }}
             >
               <Box display="flex" alignItems="center" gap={1}>
-                {hasData && formik.values.loaiThietBi === "taisan" && (
+                {hasData && formik.values.LoaiDoiTuong === Devicetype.ASSET && (
                   <Tooltip
                     title="Chỉ được chọn 1 trong 2 loại, vui lòng xóa tất cả các dòng đã thêm để có thể đổi loại"
                     placement="top"
@@ -211,13 +209,13 @@ export default function ThietBiBaoTriTable({
             </ToggleButton>
 
             <ToggleButton
-              value="ccdc"
+              value={Devicetype.TOOL}
               sx={{
                 width: 200,
               }}
             >
               <Box display="flex" alignItems="center" gap={1}>
-                {hasData && formik.values.loaiThietBi === "ccdc" && (
+                {hasData && formik.values.LoaiDoiTuong === Devicetype.TOOL && (
                   <Tooltip
                     title="Chỉ được chọn 1 trong 2 loại, vui lòng xóa tất cả các dòng đã thêm để có thể đổi loại"
                     placement="top"
@@ -244,7 +242,7 @@ export default function ThietBiBaoTriTable({
                   align="center"
                   sx={{ color: "white", fontWeight: 600, width: "50%" }}
                 >
-                  Thiết bị / CCDC
+                  Thiết bị
                 </TableCell>
                 <TableCell
                   align="center"
@@ -307,44 +305,39 @@ export default function ThietBiBaoTriTable({
                   <TableRow key={item.id || index}>
                     <TableCell sx={{ minWidth: 250 }}>
                       {readOnly ? (
-                        item.tenThietBi || "-"
+                        formik.values.LoaiDoiTuong === Devicetype.TOOL ? (
+                          item.tenCCDC || "-"
+                        ) : (
+                          item.tenTaiSan || "-"
+                        )
                       ) : (
                         <FieldAutoCompleted
-                          title="Chọn thiết bị/CCDC"
+                          title={
+                            formik.values.LoaiDoiTuong === Devicetype.TOOL
+                              ? "Chọn thiết bị ccdc"
+                              : "Chọn thiết bị tài sản"
+                          }
                           data={assets}
-                          labelkey="ten"
+                          labelkey={
+                            formik.values.LoaiDoiTuong === Devicetype.TOOL
+                              ? "tenCCDC"
+                              : "tenTaiSan"
+                          }
                           formik={formik}
-                          field={`danhSachThietBi[${index}].idThietBi`}
+                          field={
+                            formik.values.LoaiDoiTuong === Devicetype.TOOL
+                              ? `chiTiets[${index}].idCCDC`
+                              : `chiTiets[${index}].idTaiSan`
+                          }
                           disabled={readOnly}
                           limitOptions={20}
-                          onChange={(newValue: any) => {
-                            if (newValue) {
-                              formik.setFieldValue(
-                                `danhSachThietBi[${index}].tenThietBi`,
-                                newValue.ten || "",
-                              );
-                              formik.setFieldValue(
-                                `danhSachThietBi[${index}].loaiThietBi`,
-                                newValue.loaiThietBi || "taisan",
-                              );
-                            } else {
-                              formik.setFieldValue(
-                                `danhSachThietBi[${index}].tenThietBi`,
-                                "",
-                              );
-                            }
-                            formik.setFieldTouched(
-                              `danhSachThietBi[${index}].idThietBi`,
-                              true,
-                            );
-                          }}
                         />
                       )}
                     </TableCell>
 
                     {/* Cột Loại dạng Chip vuông góc */}
                     <TableCell align="center">
-                      {item.loaiThietBi === "ccdc" ? (
+                      {formik.values.LoaiDoiTuong === Devicetype.TOOL ? (
                         <Chip
                           icon={<Inventory fontSize="small" />}
                           label="CCDC - VT"
@@ -381,7 +374,7 @@ export default function ThietBiBaoTriTable({
                           value={item.ghiChu || ""}
                           onChange={(e) =>
                             formik.setFieldValue(
-                              `danhSachThietBi[${index}].ghiChu`,
+                              `chiTiets[${index}].ghiChu`,
                               e.target.value,
                             )
                           }

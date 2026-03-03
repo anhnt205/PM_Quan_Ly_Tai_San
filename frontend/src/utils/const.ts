@@ -10,3 +10,8 @@ export const MessageTypeActions = {
   UPDATE: "UPDATE",
   DELETE: "DELETE",
 };
+
+export const Devicetype = {
+  ASSET: "TAI_SAN",
+  TOOL: "CCDC",
+};

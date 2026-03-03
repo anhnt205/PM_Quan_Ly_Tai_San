@@ -29,14 +29,12 @@ import { showStatus, showShareStatus } from "./config";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { MaintenancePlanData } from "./types";
 import {
-  useMaintenanceRepairPageQuery,
-  useMaintenanceRepairMutation,
   useMaintenancePlanningPageQuery,
   useMaintenancePlanningMutation,
-  useRepairResultPageQuery,
 } from "./Mutation";
 import { useAllAssetsQuery } from "../AssetManager/Mutation";
 import { useAllToolQuery } from "../ToolManager/Mutation";
+import { useDebounce } from "../../hooks/useDebounce";
 
 export default function MaintenancePlanRepair() {
   const { user } = useSelector((state: any) => state.user);
@@ -47,6 +45,7 @@ export default function MaintenancePlanRepair() {
     MaintenancePlanData[]
   >([]);
   const [status, setStatus] = useState("");
+  const [searchValue, setSearchValue] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<MaintenancePlanData | null>(
@@ -57,8 +56,6 @@ export default function MaintenancePlanRepair() {
     page: 0,
   });
 
-  const { data: allUnits = [] } = useAllUnitsQuery();
-  const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
   const { data: allStaffs = [] } = useAllStaffsQuery();
 
   // Assets & Tools for planning
@@ -79,25 +76,14 @@ export default function MaintenancePlanRepair() {
     ],
     [rawAssets, rawTools],
   );
-
-  const { data: planPageData } = useMaintenancePlanningPageQuery(
-    paginationModel.page,
-    paginationModel.pageSize,
-    undefined,
-    status !== "" ? parseInt(status) : undefined,
-  );
-
-
-  useEffect(() => {
-    if (planPageData) {
-      const items = Array.isArray(planPageData)
-        ? planPageData
-        : (planPageData?.content ?? []);
-      setMaintenancePlans(items);
-    }
-  }, [planPageData]);
-
-
+  const searchDebounce = useDebounce(searchValue, 600);
+  const { data: planPageData = { items: [], totalItems: 0 } } =
+    useMaintenancePlanningPageQuery(
+      paginationModel.page,
+      paginationModel.pageSize,
+      searchDebounce,
+      status !== "" ? parseInt(status) : undefined,
+    );
 
   // Maintenance Planning mutations
   const {
@@ -325,30 +311,28 @@ export default function MaintenancePlanRepair() {
     {
       label: "Tất cả",
       value: "",
-      count: maintenancePlans.length,
+      count: planPageData.totalItems,
       color: "primary",
     },
     {
       label: "Chưa thực hiện",
       value: "0",
-      count: maintenancePlans.filter((plan) => plan.trangThai === 0).length,
+      count: planPageData?.trangThaiCounts?.["0"] ?? 0,
       color: "warning",
     },
     {
       label: "Đang thực hiện",
       value: "1",
-      count: maintenancePlans.filter((plan) => plan.trangThai === 1).length,
+      count: planPageData?.trangThaiCounts?.["1"] ?? 0,
       color: "info",
     },
     {
       label: "Đã hoàn thành",
       value: "2",
-      count: maintenancePlans.filter((plan) => plan.trangThai === 2).length,
+      count: planPageData?.trangThaiCounts?.["2"] ?? 0,
       color: "success",
     },
   ];
-
-
 
   const handleClose = useCallback(() => {
     setShowForm(false);
@@ -356,15 +340,13 @@ export default function MaintenancePlanRepair() {
     setShowSidebar(false);
   }, []);
 
-
-
   return (
     <>
       <PageAction
         title={"Lập kế hoạch sửa chữa bảo dưỡng"}
         onNewClick={() => {
-            handlePlanningClose();
-            setShowForm(true);
+          handlePlanningClose();
+          setShowForm(true);
         }}
       />
       <Box sx={{ p: 2 }}>
@@ -391,53 +373,14 @@ export default function MaintenancePlanRepair() {
           <Grid size={{ xs: showSidebar ? 9 : 12 }}>
             <TableCustom
               title="Danh sách kế hoạch"
-              rows={maintenancePlans
-                .filter((plan) =>
-                  status === "" ? true : plan.trangThai === parseInt(status),
-                )
-                .map((plan) => {
-                  const d = plan.ngayBatDau ? new Date(plan.ngayBatDau) : null;
-                  const thang = d ? d.getMonth() + 1 : null;
-                  const nam = d ? d.getFullYear() : null;
-                  const quy = thang ? Math.ceil(thang / 3) : null;
-                  const kyText = d ? `T${thang}/${nam} · Q${quy}/${nam}` : "—";
-                  return {
-                    ...plan,
-                    kyText,
-                    trangThaiText:
-                      plan.trangThai === 0
-                        ? "Chưa thực hiện"
-                        : plan.trangThai === 1
-                          ? "Đang thực hiện"
-                          : plan.trangThai === 2
-                            ? "Đã hoàn thành"
-                            : "Không xác định",
-                    ngayTaoFormatted: plan.ngayTao
-                      ? (() => {
-                          const d = new Date(plan.ngayTao);
-                          return isNaN(d.getTime())
-                            ? plan.ngayTao.split(",")[0]
-                            : d.toLocaleDateString("vi-VN");
-                        })()
-                      : "N/A",
-                  };
-                })}
+              rows={planPageData.items}
               columns={planningColumns}
-              total={
-                status === ""
-                  ? maintenancePlans.length
-                  : maintenancePlans.filter(
-                      (p) => p.trangThai === parseInt(status),
-                    ).length
-              }
+              total={planPageData.totalItems}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
               checkboxSelection
               onRowClick={(params) => {
-                const fullPlan = maintenancePlans.find(
-                  (p) => p.id === params.row.id,
-                );
-                setSelectedPlan(fullPlan || params.row);
+                setSelectedPlan(params.row);
                 setReadOnly(true);
                 setShowForm(true);
                 setShowSidebar(true);
@@ -541,11 +484,11 @@ export default function MaintenancePlanRepair() {
                     Loại kế hoạch
                   </Typography>
                   <Typography variant="body2">
-                    {selectedPlan?.loaiKeHoach === "thiet_bi"
+                    {selectedPlan?.loaiKeHoach === "THIET_BI"
                       ? "Theo thiết bị"
-                      : selectedPlan?.loaiKeHoach === "chu_ky_thoi_gian"
+                      : selectedPlan?.loaiKeHoach === "CHU_KY"
                         ? "Chu kỳ thời gian"
-                        : selectedPlan?.loaiKeHoach === "gio_may"
+                        : selectedPlan?.loaiKeHoach === "GIO_MAY"
                           ? "Giờ máy"
                           : "—"}
                   </Typography>
@@ -567,23 +510,23 @@ export default function MaintenancePlanRepair() {
                       </Box>
                     );
                   })()}
-                {selectedPlan?.loaiKeHoach === "chu_ky_thoi_gian" && (
+                {selectedPlan?.loaiKeHoach === "CHU_KY" && (
                   <Box>
                     <Typography variant="caption" color="text.secondary">
                       Chu kỳ (ngày)
                     </Typography>
                     <Typography variant="body2">
-                      {selectedPlan?.chu_ky_thoi_gian} ngày
+                      {selectedPlan?.chuKyNgay} ngày
                     </Typography>
                   </Box>
                 )}
-                {selectedPlan?.loaiKeHoach === "gio_may" && (
+                {selectedPlan?.loaiKeHoach === "GIO_MAY" && (
                   <Box>
                     <Typography variant="caption" color="text.secondary">
                       Mốc giờ máy
                     </Typography>
                     <Typography variant="body2">
-                      {selectedPlan?.gio_may_bao_duong} giờ
+                      {selectedPlan?.mocGioMay} giờ
                     </Typography>
                   </Box>
                 )}
@@ -592,7 +535,7 @@ export default function MaintenancePlanRepair() {
                     Đơn vị thực hiện
                   </Typography>
                   <Typography variant="body2">
-                    {selectedPlan?.tenDonVi || "—"}
+                    {selectedPlan?.tenDonViThucHien || "—"}
                   </Typography>
                 </Box>
                 <Box>
@@ -641,19 +584,21 @@ export default function MaintenancePlanRepair() {
                     </Typography>
                   </Box>
                 )}
-                {selectedPlan?.danhSachThietBi &&
-                  selectedPlan.danhSachThietBi.length > 0 && (
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Thiết bị ({selectedPlan.danhSachThietBi.length})
+                {selectedPlan?.chiTiets && selectedPlan.chiTiets.length > 0 && (
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Thiết bị ({selectedPlan.chiTiets.length})
+                    </Typography>
+                    {selectedPlan.chiTiets.map((tb, i) => (
+                      <Typography key={i} variant="body2">
+                        •{" "}
+                        {selectedPlan.loaiDoiTuong === "TAI_SAN"
+                          ? tb.tenTaiSan || tb.idTaiSan
+                          : tb.tenCCDC || tb.idCCDC}
                       </Typography>
-                      {selectedPlan.danhSachThietBi.map((tb, i) => (
-                        <Typography key={i} variant="body2">
-                          • {tb.tenThietBi || tb.idThietBi}
-                        </Typography>
-                      ))}
-                    </Box>
-                  )}
+                    ))}
+                  </Box>
+                )}
               </Box>
             </Grid>
           )}

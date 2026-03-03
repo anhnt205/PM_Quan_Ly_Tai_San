@@ -1,49 +1,44 @@
 export interface MaintenancePlanData {
-  id?: string;
-  tenKeHoach?: string;
-  loaiKeHoach?: "thiet_bi" | "chu_ky_thoi_gian" | "gio_may"; // thiết bị, chu kỳ thời gian, giờ máy
-  chu_ky?: "thang" | "quy" | "nam"; // tháng/quý/năm
-  loaiThietBi?: "taisan" | "ccdc"; // tài sản hoặc CCDC
-  chu_ky_thoi_gian?: number; // số ngày/tháng
-  gio_may_bao_duong?: number; // giờ máy
-  ngayBatDau?: string;
-  ngayKetThuc?: string;
-  ghiChu?: string;
-  trangThai?: number; // 0: chưa thực hiện, 1: đang thực hiện, 2: đã hoàn thành
-  idNguoiPhuTrach?: string;
+  id: string;
+  idCongTy: string;
+  tenKeHoach: string;
+  loaiKeHoach: "THIET_BI" | "CHU_KY" | "GIO_MAY";
+  chuKyNgay?: number;
+  mocGioMay?: number;
+  idDonViThucHien: string;
+  tenDonViThucHien?: string;
+  idNguoiPhuTrach: string;
   tenNguoiPhuTrach?: string;
-  idDonVi?: string;
-  tenDonVi?: string;
+  ngayBatDau: string;
+  ngayKetThuc: string;
+  loaiDoiTuong: "TAI_SAN" | "CCDC";
   ngayTao?: string;
   ngayCapNhat?: string;
-  nguoiTao?: string;
-  nguoiCapNhat?: string;
-  coHieuLuc?: number;
-  idCongTy?: string;
-  chiTietCongViec?: MaintenancePlanDetailItem[];
-  danhSachThietBi?: MaintenancePlanAssetItem[];
+  ghiChu?: string;
+  trangThai?: number;
+  congViecs?: MaintenancePlanDetailItem[];
+  chiTiets?: MaintenancePlanAssetItem[];
 }
 
 export interface MaintenancePlanDetailItem {
-  id?: string;
-  idKeHoach?: string;
-  tenCongViec?: string;
+  id: string;
+  idKeHoach: string;
+  tenCongViec: string;
   moTa?: string;
-  thoiGianDuKien?: number; // phút
-  ngayThucHien?: string;
-  trangThai?: number; // 0: chưa làm, 1: đang làm, 2: hoàn thành
-  ghiChu?: string;
   nguoiThucHien?: string;
+  thoiGianDuKien?: number;
+  ngayThucHien?: string;
   ngayTao?: string;
   ngayCapNhat?: string;
 }
 
 export interface MaintenancePlanAssetItem {
-  id?: string;
-  idKeHoach?: string;
-  idThietBi?: string;
-  tenThietBi?: string;
-  loaiThietBi?: "taisan" | "ccdc"; // tài sản hoặc CCDC
+  id: string;
+  idKeHoach: string;
+  idTaiSan?: string;
+  tenTaiSan?: string;
+  idCCDC?: string;
+  tenCCDC?: string;
   ghiChu?: string;
   ngayTao?: string;
   ngayCapNhat?: string;

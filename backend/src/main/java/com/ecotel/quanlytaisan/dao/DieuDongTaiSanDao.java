@@ -506,7 +506,7 @@ public class DieuDongTaiSanDao {
         }
 
         // Chỉ tính trạng thái bàn giao cho phiếu đã hoàn thành (trangThai = 3) và loại điều động (loai = 2)
-        if (dto.getTrangThai() != 3 || dto.getLoai() != 2) {
+        if (dto.getTrangThai() != 3) {
             return 1; // Mặc định: chưa tạo phiếu bàn giao
         }
 
