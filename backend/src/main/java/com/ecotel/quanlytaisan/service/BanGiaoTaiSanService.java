@@ -136,8 +136,34 @@ public class BanGiaoTaiSanService {
         return response;
     }
 
+    /**
+     * Comparator cho BanGiaoTaiSanDTO.
+     * - Nếu sortBy null hoặc rỗng: sắp xếp mặc định theo trạng thái ưu tiên (0,1,3,2) rồi ngày tạo giảm dần.
+     * - Ngược lại, sắp xếp theo trường được chỉ định.
+     */
     private Comparator<BanGiaoTaiSanDTO> getComparator(String sortBy, String sortDir) {
-        String normalizedSortBy = sortBy != null ? sortBy.trim().toLowerCase() : "ngaytao";
+        // Nếu không có sortBy, dùng sắp xếp mặc định: theo trạng thái ưu tiên, rồi ngày tạo giảm dần
+        if (sortBy == null || sortBy.trim().isEmpty()) {
+            Map<Integer, Integer> priorityMap = new HashMap<>();
+            priorityMap.put(0, 1); // Nháp
+            priorityMap.put(1, 2); // Duyệt
+            priorityMap.put(3, 3); // Hoàn thành
+            priorityMap.put(2, 4); // Hủy
+
+            Comparator<BanGiaoTaiSanDTO> comparator = Comparator.comparingInt(
+                    item -> priorityMap.getOrDefault(item.getTrangThai(), 5)
+            );
+
+            // Sau đó so sánh theo ngày tạo (mới nhất trước)
+            comparator = comparator.thenComparing(
+                    item -> item.getNgayTao() != null ? item.getNgayTao() : "",
+                    Comparator.nullsLast(Comparator.reverseOrder())
+            );
+            return comparator;
+        }
+
+        // Nếu có sortBy, xử lý như cũ
+        String normalizedSortBy = sortBy.trim().toLowerCase();
         boolean ascending = sortDir != null && sortDir.equalsIgnoreCase("asc");
 
         Comparator<BanGiaoTaiSanDTO> comparator = null;
