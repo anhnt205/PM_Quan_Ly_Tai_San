@@ -198,6 +198,7 @@ export const getToolTransferCount = (
     });
 
     // 3. Danh sách người ký (sort theo id)
+    console.log(item);
     if (item.nguoiKyList && item.nguoiKyList.length > 0) {
       const sortedSignatories = [...item.nguoiKyList].sort((a, b) =>
         (a.id ?? "").localeCompare(b.id ?? ""),
@@ -209,6 +210,7 @@ export const getToolTransferCount = (
           signed: signatory.trangThai === 1,
         });
       });
+      console.log(sortedSignatories);
     }
 
     // 4. Trình duyệt giám đốc

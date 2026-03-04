@@ -26,7 +26,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { logout } from "../redux/userSlice";
 import { ROUTES } from "../utils/routes";
 import ExpirationSettingDialog from "../components/common/ExpirationSettingDialog";
-import { useAssetTransferAllQuery } from "../pages/AssetTransfer/Mutation";
+import {
+  useAssetTransferAllQuery,
+  useAssetTransferPageQuery,
+} from "../pages/AssetTransfer/Mutation";
 import {
   getAssetHandoverCount,
   getAssetTransferCount,
@@ -36,9 +39,18 @@ import {
 } from "../utils/helpers";
 import { ShowCount } from "../components/common/ShowCount";
 import { ShowCountInSubMenu } from "../components/common/ShowCountInSubMenu";
-import { useToolTransferAllQuery } from "../pages/ToolTransfer/Mutation";
-import { useToolHandoverAllQuery } from "../pages/ToolHandover/Mutation";
-import { useAssetHandoverAllQuery } from "../pages/AssetHandover/Mutation";
+import {
+  useToolTransferAllQuery,
+  useToolTransferPageQuery,
+} from "../pages/ToolTransfer/Mutation";
+import {
+  useToolHandoverAllQuery,
+  useToolHandoverPageQuery,
+} from "../pages/ToolHandover/Mutation";
+import {
+  useAssetHandoverAllQuery,
+  useAssetHandoverPageQuery,
+} from "../pages/AssetHandover/Mutation";
 import { useMaintenanceRepairAllQuery } from "../pages/MaintenanceRepair/Mutation";
 import api from "../config/api.config";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -231,51 +243,63 @@ export default function Menuheader() {
     setOpenSnackbar(false);
   };
 
-  const { data: assetTransfer = [] } = useAssetTransferAllQuery();
-  const { data: toolTransfer = [] } = useToolTransferAllQuery();
-  const { data: toolHandover = [] } = useToolHandoverAllQuery();
-  const { data: assetHandover = [] } = useAssetHandoverAllQuery();
+  const { data: assetTransfer = { items: [] } } = useAssetTransferPageQuery(
+    0,
+    999999,
+  );
+  const { data: toolTransfer = { items: [] } } = useToolTransferPageQuery(
+    0,
+    999999,
+  );
+  const { data: toolHandover = { items: [] } } = useToolHandoverPageQuery(
+    0,
+    999999,
+  );
+  const { data: assetHandover = { items: [] } } = useAssetHandoverPageQuery(
+    0,
+    999999,
+  );
   const { data: maintenanceRepair = [] } = useMaintenanceRepairAllQuery();
 
   const assetTransferCount1 = getAssetTransferCount(
     1,
     user?.taiKhoan?.tenDangNhap,
-    assetTransfer,
+    assetTransfer.items,
   );
   const assetTransferCount2 = getAssetTransferCount(
     2,
     user?.taiKhoan?.tenDangNhap,
-    assetTransfer,
+    assetTransfer.items,
   );
   const assetTransferCount3 = getAssetTransferCount(
     3,
     user?.taiKhoan?.tenDangNhap,
-    assetTransfer,
+    assetTransfer.items,
   );
 
   const toolTransferCount1 = getToolTransferCount(
     1,
     user?.taiKhoan?.tenDangNhap,
-    toolTransfer,
+    toolTransfer.items,
   );
   const toolTransferCount2 = getToolTransferCount(
     2,
     user?.taiKhoan?.tenDangNhap,
-    toolTransfer,
+    toolTransfer.items,
   );
   const toolTransferCount3 = getToolTransferCount(
     3,
     user?.taiKhoan?.tenDangNhap,
-    toolTransfer,
+    toolTransfer.items,
   );
 
   const assetHandoverCount = getAssetHandoverCount(
     user?.taiKhoan?.tenDangNhap,
-    assetHandover,
+    assetHandover.items,
   );
   const toolHandoverCount = getToolHandoverCount(
     user?.taiKhoan?.tenDangNhap,
-    toolHandover,
+    toolHandover.items,
   );
 
   const maintenanceRepairCount1 = getMaintenanceRepairCount(

@@ -338,7 +338,7 @@ export const handleSignDocument = async (
       signed: !!item.trinhDuyetCapPhongXacNhan,
       label: `Người duyệt: ${item.tenTrinhDuyetCapPhong}`,
     },
-    ...(item.listNguoiKy?.map((sig: any, index: number) => ({
+    ...(item.nguoiKyList?.map((sig: any, index: number) => ({
       id: sig.idNguoiKy,
       signed: sig.trangThai === 1,
       label: `Người ký ${index + 1}: ${sig.tenNguoiKy}`,
