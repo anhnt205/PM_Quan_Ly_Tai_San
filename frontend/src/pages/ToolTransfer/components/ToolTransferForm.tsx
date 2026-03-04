@@ -266,10 +266,7 @@ export default function ToolTransferForm({
 
   return (
     <>
-      <DialogLoading
-        loading={isLoading && toolsByDepartment.length === 0}
-        title="Đang tải ccdc ..."
-      />
+      <DialogLoading loading={isLoading} title="Đang tải ccdc ..." />
       {isPreview && (
         <SignDocumentForm
           selectedIds={[]}
@@ -514,16 +511,6 @@ export default function ToolTransferForm({
                       Thêm người ký
                     </Button>
                   </Grid>
-                  <Grid size={12}>
-                    <FieldAutoCompleted
-                      title="Người phê duyệt *"
-                      labelkey="hoTen"
-                      data={nvPGD}
-                      formik={formik}
-                      field={`idTrinhDuyetGiamDoc`}
-                      disabled={readOnly}
-                    />
-                  </Grid>
                   {formik.values.nguoiKyList.map((row, index) => (
                     <Grid size={12}>
                       <Box display="flex">
@@ -553,6 +540,16 @@ export default function ToolTransferForm({
                       </Box>
                     </Grid>
                   ))}
+                  <Grid size={12}>
+                    <FieldAutoCompleted
+                      title="Người phê duyệt *"
+                      labelkey="hoTen"
+                      data={nvPGD}
+                      formik={formik}
+                      field={`idTrinhDuyetGiamDoc`}
+                      disabled={readOnly}
+                    />
+                  </Grid>
                 </Grid>
               </Grid>
             </Grid>

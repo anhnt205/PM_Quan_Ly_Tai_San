@@ -508,16 +508,7 @@ export default function AssetTransferForm({
                       Thêm người ký
                     </Button>
                   </Grid>
-                  <Grid size={12}>
-                    <FieldAutoCompleted
-                      title="Người phê duyệt *"
-                      labelkey="hoTen"
-                      data={nvPGD}
-                      formik={formik}
-                      field={`idTrinhDuyetGiamDoc`}
-                      disabled={readOnly}
-                    />
-                  </Grid>
+
                   {formik.values.nguoiKyList.map((row, index) => (
                     <Grid size={12}>
                       <Box display="flex">
@@ -547,6 +538,16 @@ export default function AssetTransferForm({
                       </Box>
                     </Grid>
                   ))}
+                  <Grid size={12}>
+                    <FieldAutoCompleted
+                      title="Người phê duyệt *"
+                      labelkey="hoTen"
+                      data={nvPGD}
+                      formik={formik}
+                      field={`idTrinhDuyetGiamDoc`}
+                      disabled={readOnly}
+                    />
+                  </Grid>
                 </Grid>
               </Grid>
             </Grid>
