@@ -76,14 +76,32 @@ export default function ToolTableCustom({
       const saved = localStorage.getItem(`table_columns_${tableId}`);
       if (saved) {
         try {
-          const parsedColumns = JSON.parse(saved);
-          onColumnsChange?.(parsedColumns);
+          const parsedSavedColumns = JSON.parse(saved);
+
+          // Hợp nhất: Lấy hàm render từ 'columns' mới (props)
+          // và lấy trạng thái visible/width từ 'saved'
+          const mergedColumns = columns.map((col) => {
+            const savedCol = parsedSavedColumns.find(
+              (s: any) => s.key === col.key,
+            );
+            if (savedCol) {
+              return {
+                ...col, // Giữ lại render, align... từ code mới
+                visible: savedCol.visible,
+                isShow: savedCol.isShow,
+                width: savedCol.width,
+              };
+            }
+            return col;
+          });
+
+          onColumnsChange?.(mergedColumns);
         } catch (error) {
-          console.error("Lỗi khi đọc cấu hình cột:", error);
+          console.error("Lỗi khi hợp nhất cấu hình cột:", error);
         }
       }
     }
-  }, [tableId]);
+  }, [tableId]); // Chỉ chạy khi tableId thay đổi hoặc load lần đầu
 
   const handleColumnsChange = (newColumns: ColumnConfig[]) => {
     onColumnsChange?.(newColumns);
