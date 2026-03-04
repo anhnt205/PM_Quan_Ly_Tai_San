@@ -575,7 +575,7 @@ export default function AssetManagerForm({
                 <Grid size={{ xs: 12 }}>
                   <FieldAutoCompleted
                     title="Đơn vị hiện thời"
-                    data={allDepartments.filter((i) => !i.isKho)}
+                    data={allDepartments}
                     labelkey="tenPhongBan"
                     formik={formik}
                     field="idDonViHienThoi"
