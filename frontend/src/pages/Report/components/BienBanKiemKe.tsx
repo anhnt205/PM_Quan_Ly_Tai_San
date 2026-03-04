@@ -19,6 +19,7 @@ import BBKiemKeContent from "./BBKiemKeContent";
 import { useQuery } from "@tanstack/react-query";
 import api from "../../../config/api.config";
 import ExportExcelButton from "../../../components/Button/ExportExcelButton";
+import { CongTy } from "../../../utils/const";
 
 export default function BienBanKiemKe({ title }: { title?: string }) {
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -49,7 +50,7 @@ export default function BienBanKiemKe({ title }: { title?: string }) {
     },
   });
 
-  const idCongTy = "ct001";
+  const idCongTy = CongTy.CT001;
   const { data: departments = [] } = useQuery({
     queryKey: ["departments", idCongTy],
     queryFn: async () =>

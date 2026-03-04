@@ -123,8 +123,8 @@ const buildSignatureFlow = (item: any): SignatureStep[] => {
       signed: item.daiDienBenNhanXacNhan === true,
     },
 
-    ...(Array.isArray(item.listSignatory)
-      ? item.listSignatory.map((e: any) => ({
+    ...(Array.isArray(item.nguoiKyList)
+      ? item.nguoiKyList.map((e: any) => ({
           id: e.idNguoiKy,
           signed: e.trangThai === 1,
         }))

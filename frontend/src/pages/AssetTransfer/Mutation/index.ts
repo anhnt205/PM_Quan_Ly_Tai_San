@@ -12,11 +12,11 @@ import { RootState } from "../../../redux/store";
 import dayjs from "dayjs";
 import { listNguoiKy } from "../config";
 import socketService from "../../../services/socketService";
-import { MessageTypeActions, MessageTypeFunctions } from "../../../utils/const";
+import { CongTy, MessageTypeActions, MessageTypeFunctions } from "../../../utils/const";
 
 export const useAssetTranferMutation = () => {
   const queryClient = useQueryClient();
-  const idCongTy = "ct001";
+  const idCongTy = CongTy.CT001;
   const { user } = useSelector((state: RootState) => state.user);
   const now = dayjs(new Date()).format("YYYY-MM-DDTHH:mm:ss");
   const createMutation = useMutation({
@@ -425,7 +425,7 @@ export const useAssetTranferMutation = () => {
           : "/taisan/by-donvi-hienthoi/paged",
         {
           params: {
-            idcongty: "ct001",
+            idcongty: CongTy.CT001,
             page: 0,
             size: 999,
             ...(loai === 1
@@ -549,7 +549,7 @@ export const useAssetTranferMutation = () => {
 };
 
 export const useAssetTransferAllQuery = () => {
-  const idCongTy = "ct001";
+  const idCongTy = CongTy.CT001;
 
   return useQuery({
     queryKey: ["assetTranferAll"], // Key để cache dữ liệu
@@ -576,7 +576,7 @@ export const useAssetTransferPageQuery = (
   idDonViGiao?: string,
   chuaBanGiaoHet?: boolean,
 ) => {
-  const idCongTy = "ct001";
+  const idCongTy = CongTy.CT001;
 
   return useQuery({
     queryKey: [
@@ -622,7 +622,7 @@ export const useAssetByDonViQuery = (loai?: number, idDonViGiao?: string) => {
           : "/taisan/by-donvi-hienthoi/paged",
         {
           params: {
-            idcongty: "ct001",
+            idcongty: CongTy.CT001,
             page: 0,
             size: 9999,
             ...(loai === 1

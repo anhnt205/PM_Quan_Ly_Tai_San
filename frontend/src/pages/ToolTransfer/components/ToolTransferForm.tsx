@@ -47,6 +47,7 @@ import { useSelector } from "react-redux";
 import { generateBangKePdf } from "../config";
 import S3Service from "../../../services/S3Service";
 import { mergeBangKeWithOriginalPdf } from "../../AssetTransfer/config";
+import { CongTy } from "../../../utils/const";
 
 const CustomTableCell = styled(TableCell)(({ theme }) => ({
   borderBottom: "1px solid rgba(224, 224, 224, 1)",
@@ -118,7 +119,7 @@ export default function ToolTransferForm({
       idPhongBanXemPhieu: "",
       noiNhan: "",
       trangThai: 0,
-      idCongTy: "ct001",
+      idCongTy: CongTy.CT001,
       loai: type,
       trichYeu: "",
       tenFile: "",

@@ -35,6 +35,7 @@ import { RootState } from "../../../redux/store";
 import dayjs from "dayjs";
 import { ToolValidation } from "../validation";
 import TextFieldNumber from "../../../components/TextField/TextFieldNumber";
+import { CongTy } from "../../../utils/const";
 
 export default function ToolForm({
   onEdit,
@@ -75,7 +76,7 @@ export default function ToolForm({
       nuocSanXuat: "",
       namSanXuat: 0,
       ghiChu: "",
-      idCongTy: "ct001",
+      idCongTy: CongTy.CT001,
       ngayTao: "",
       ngayCapNhat: "",
       nguoiTao: "",

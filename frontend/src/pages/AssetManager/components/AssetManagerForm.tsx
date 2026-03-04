@@ -39,6 +39,7 @@ import { useAllProjectsQuery } from "../../Project/Mutation";
 import dayjs from "dayjs";
 import { AssetValidation } from "../validation";
 import TextFieldNumber from "../../../components/TextField/TextFieldNumber";
+import { CongTy } from "../../../utils/const";
 
 export default function AssetManagerForm({
   onEdit,
@@ -100,7 +101,7 @@ export default function AssetManagerForm({
       idDonViBanDau: "K30",
       idDonViHienThoi: "",
       moTa: "",
-      idCongTy: "ct001",
+      idCongTy: CongTy.CT001,
       ngayTao: "",
       ngayCapNhat: "",
       nguoiTao: "",

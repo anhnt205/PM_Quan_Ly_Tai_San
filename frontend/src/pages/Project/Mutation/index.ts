@@ -4,6 +4,7 @@ import { ProjectType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import * as XLSX from "xlsx";
 import { b, s } from "../../../utils/helpers";
+import { CongTy } from "../../../utils/const";
 
 export const useProjectMutation = (
   page?: number,
@@ -156,7 +157,7 @@ export const useProjectMutation = (
                   tenDuAn,
                   ghiChu,
                   hieuLuc,
-                  idCongTy: "ct001",
+                  idCongTy: CongTy.CT001,
                   isActive: true,
                   nguoiTao: "admin",
                   nguoiCapNhat: "admin",
@@ -208,7 +209,7 @@ export const useProjectsPageQuery = (
     queryFn: async () => {
       const res = await api.get("/duan/paged", {
         params: {
-          idcongty: "ct001",
+          idcongty: CongTy.CT001,
           page: page,
           size: pageSize,
           search: searchValue,
@@ -226,7 +227,7 @@ export const useAllProjectsQuery = () => {
     queryFn: async () => {
       const res = await api.get("/duan", {
         params: {
-          idcongty: "ct001",
+          idcongty: CongTy.CT001,
         },
       });
       return res.data;

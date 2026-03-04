@@ -36,6 +36,7 @@ import {
   useAllDepartmentsQuery,
   useDepartmentMutation,
 } from "../../Department/Mutation";
+import { CongTy } from "../../../utils/const";
 
 export default function StaffForm({
   onEdit,
@@ -73,7 +74,7 @@ export default function StaffForm({
       boPhan: "",
       chucVu: "",
       laQuanLy: true,
-      idCongTy: "ct001",
+      idCongTy: CongTy.CT001,
       isActive: true,
       savePin: false,
       // tempFileKyNhay: null as File | null,

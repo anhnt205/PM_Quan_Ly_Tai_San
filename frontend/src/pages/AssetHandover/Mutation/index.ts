@@ -16,12 +16,12 @@ import { useAssetManagerMutation } from "../../AssetManager/Mutation";
 import { generateCode } from "../../../utils/helpers";
 import { listNguoiKy } from "../config";
 import socketService from "../../../services/socketService";
-import { MessageTypeFunctions } from "../../../utils/const";
+import { CongTy, MessageTypeFunctions } from "../../../utils/const";
 
 export const useAssetHandoverMutation = () => {
   const queryClient = useQueryClient();
   const mainKey = "assetHandoverPage";
-  const idCongTy = "ct001";
+  const idCongTy = CongTy.CT001;
   const { user } = useSelector((state: RootState) => state.user);
   const now = dayjs(new Date()).format("YYYY-MM-DDTHH:mm:ss");
 
@@ -450,7 +450,7 @@ export const useAssetHandoverMutation = () => {
   };
 };
 export const useAssetHandoverAllQuery = () => {
-  const idCongTy = "ct001";
+  const idCongTy = CongTy.CT001;
 
   return useQuery({
     queryKey: ["assetHandoverAll"], // Key để cache dữ liệu
@@ -475,7 +475,7 @@ export const useAssetHandoverPageQuery = (
   userid?: string,
   status?: number,
 ) => {
-  const idCongTy = "ct001";
+  const idCongTy = CongTy.CT001;
 
   return useQuery({
     queryKey: [

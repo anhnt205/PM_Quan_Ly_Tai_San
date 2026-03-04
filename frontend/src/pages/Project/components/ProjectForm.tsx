@@ -25,6 +25,7 @@ import { useFormik } from "formik";
 import { ProjectValidation } from "../validation/Validation";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import EditButton from "../../../components/Button/EditButton";
+import { CongTy } from "../../../utils/const";
 
 export default function ProjectForm({
   onEdit,
@@ -45,7 +46,7 @@ export default function ProjectForm({
       id: "",
       tenDuAn: "",
       ghiChu: "",
-      idCongTy: "ct001",
+      idCongTy: CongTy.CT001,
       hieuLuc: true,
       isActive: true,
     },

@@ -3,6 +3,7 @@ import api from "../../../config/api.config";
 import { PositionType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import * as XLSX from "xlsx";
+import { CongTy } from "../../../utils/const";
 
 export const usePositionMutation = (
   page?: number,
@@ -195,7 +196,7 @@ export const usePositionMutation = (
                 banGiaoTaiSan: b(row[12]),
                 banGiaoCCDCVatTu: b(row[13]),
                 baoCao: b(row[14]),
-                idCongTy: "ct001",
+                idCongTy: CongTy.CT001,
                 ngayTao: row[15]?.toString() || new Date().toISOString(),
                 ngayCapNhat: row[16]?.toString() || new Date().toISOString(),
                 nguoiTao: "admin",
@@ -248,7 +249,7 @@ export const usePositionsPageQuery = (
     queryFn: async () => {
       const res = await api.get("/chucvu/congty/ct001/paged", {
         params: {
-          idcongty: "ct001",
+          idcongty: CongTy.CT001,
           page,
           size: pageSize,
           search: searchValue,
@@ -266,7 +267,7 @@ export const useAllPositionsQuery = () => {
     queryFn: async () => {
       const res = await api.get("/chucvu/congty/ct001", {
         params: {
-          idcongty: "ct001",
+          idcongty: CongTy.CT001,
         },
       });
       return res.data.data || [];

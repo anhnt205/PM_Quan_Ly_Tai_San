@@ -4,6 +4,7 @@ import { StaffType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import dayjs from "dayjs";
 import imageCompression from "browser-image-compression";
+import { CongTy } from "../../../utils/const";
 
 export const useStaffMutation = (
   page?: number,
@@ -145,7 +146,7 @@ export const useStaffMutation = (
   const exportMutation = useMutation({
     mutationFn: async () => {
       const listRes = await api.get("/nhanvien", {
-        params: { idcongty: "ct001" },
+        params: { idcongty: CongTy.CT001 },
       });
       const allStaffs = listRes.data;
 
@@ -334,7 +335,7 @@ export const useStaffPagesQuery = (
     queryFn: async () => {
       const res = await api.get("/nhanvien/paged", {
         params: {
-          idcongty: "ct001",
+          idcongty: CongTy.CT001,
           page: page,
           size: pageSize,
           search: searchValue,
@@ -351,7 +352,7 @@ export const useAllStaffsQuery = () => {
     queryFn: async () => {
       const res = await api.get("/nhanvien", {
         params: {
-          idcongty: "ct001",
+          idcongty: CongTy.CT001,
         },
       });
       return res.data;

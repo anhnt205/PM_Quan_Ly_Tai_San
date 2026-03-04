@@ -7,6 +7,7 @@ import { b, formatDateTime, s } from "../../../utils/helpers";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import dayjs from "dayjs";
+import { CongTy } from "../../../utils/const";
 
 export const useAssetGroupMutation = (
   page?: number,
@@ -197,7 +198,7 @@ export const useAssetGroupMutation = (
                   id,
                   tenNhom,
                   hieuLuc,
-                  idCongTy: "ct001",
+                  idCongTy: CongTy.CT001,
                   ngayTao,
                   ngayCapNhat,
                   nguoiTao: currentUser,
@@ -252,7 +253,7 @@ export const useAssetGroupPageQuery = (
     queryFn: async () => {
       const res = await api.get("/nhomtaisan/paged", {
         params: {
-          idCongTy: "ct001",
+          idCongTy: CongTy.CT001,
           page: page,
           size: pageSize,
           search: searchValue,
@@ -270,7 +271,7 @@ export const useAllAssetGroupQuery = () => {
     queryFn: async () => {
       const res = await api.get("/nhomtaisan", {
         params: {
-          idcongty: "ct001",
+          idcongty: CongTy.CT001,
         },
       });
       return res.data;

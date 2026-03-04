@@ -49,6 +49,7 @@ import {
 import { generateBienBanPdf } from "../config";
 import S3Service from "../../../services/S3Service";
 import { useSelector } from "react-redux";
+import { CongTy } from "../../../utils/const";
 
 const UnderlinedInputWrapper = styled(Box)({
   width: "100%",
@@ -180,7 +181,7 @@ export default function ToolHandoverForm({
       ngayTaoChungTu: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       diaDiemQuyetDinh: "",
       idGiamDoc: "",
-      idCongTy: "ct001",
+      idCongTy: CongTy.CT001,
       idLanhDao: "",
       idDaiDiendonviBanHanhQD: "",
       daXacNhan: false,

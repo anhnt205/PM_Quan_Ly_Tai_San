@@ -18,6 +18,7 @@ import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted
 import FieldYear from "../../../components/TextField/FieldYear";
 import ReportS22DNContent from "./ReportS22DNContent";
 import ExportExcelButton from "../../../components/Button/ExportExcelButton";
+import { CongTy } from "../../../utils/const";
 
 export default function ReportS22DN({ title }: { title?: string }) {
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -50,7 +51,7 @@ export default function ReportS22DN({ title }: { title?: string }) {
 
   const [fetchKey, setFetchKey] = useState(0);
 
-  const idCongTy = "ct001";
+  const idCongTy = CongTy.CT001;
   const { data: departments = [] } = useQuery({
     queryKey: ["departments", idCongTy],
     queryFn: async () =>

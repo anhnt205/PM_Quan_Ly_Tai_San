@@ -7,6 +7,7 @@ import { b, formatDateTime, s } from "../../../utils/helpers";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import dayjs from "dayjs";
+import { CongTy } from "../../../utils/const";
 
 export const useModelAssetMutation = (
   page?: number,
@@ -22,7 +23,7 @@ export const useModelAssetMutation = (
       const currentUser = user?.taiKhoan?.tenDangNhap || "admin";
       const res = await api.post("/mohinhtaisan", {
         ...data,
-        idCongTy: "ct001",
+        idCongTy: CongTy.CT001,
         ngayTao: now,
         nguoiTao: currentUser,
         ngayCapNhat: now,
@@ -127,7 +128,7 @@ export const useModelAssetMutation = (
   const exportMutation = useMutation({
     mutationFn: async () => {
       const res = await api.get("/mohinhtaisan", {
-        params: { idcongty: "ct001" },
+        params: { idcongty: CongTy.CT001 },
       });
 
       const rawData = res.data || [];
@@ -238,7 +239,7 @@ export const useModelAssetMutation = (
                   taiKhoanTaiSan: s(row[4]), // Cột E
                   taiKhoanKhauHao: s(row[5]), // Cột F
                   taiKhoanChiPhi: s(row[6]), // Cột G
-                  idCongTy: "ct001",
+                  idCongTy: CongTy.CT001,
                   ngayTao: formatDateTime(row[7]), // Cột H
                   ngayCapNhat: formatDateTime(row[8]), // Cột I
                   nguoiTao: s(row[9]) || currentUser, // Cột J
@@ -301,7 +302,7 @@ export const useModelAssetPageQuery = (
     queryFn: async () => {
       const res = await api.get("/mohinhtaisan/paged", {
         params: {
-          idcongty: "ct001",
+          idcongty: CongTy.CT001,
           page: page,
           size: pageSize,
           search: searchValue,
@@ -319,7 +320,7 @@ export const useAllModelAssetQuery = () => {
     queryFn: async () => {
       const res = await api.get("/mohinhtaisan", {
         params: {
-          idcongty: "ct001",
+          idcongty: CongTy.CT001,
         },
       });
       return res.data;

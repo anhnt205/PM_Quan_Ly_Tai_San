@@ -3,6 +3,7 @@ import api from "../../../config/api.config";
 import { DepartmentType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import * as XLSX from "xlsx";
+import { CongTy } from "../../../utils/const";
 
 export const useDepartmentMutation = (
   page?: number,
@@ -158,7 +159,7 @@ export const useDepartmentMutation = (
                 id: row[0]?.toString() || "",
                 tenPhongBan: row[1]?.toString() || "",
                 phongCapTren: row[2]?.toString() || "",
-                idCongTy: "ct001",
+                idCongTy: CongTy.CT001,
                 isKho:
                   row[3] === true ||
                   row[3]?.toString().toUpperCase() === "TRUE",
@@ -219,7 +220,7 @@ export const useDepartmentsPageQuery = (
     queryFn: async () => {
       const res = await api.get("/phongban/paged", {
         params: {
-          idcongty: "ct001",
+          idcongty: CongTy.CT001,
           page,
           size: pageSize,
           search: searchValue,
@@ -235,7 +236,7 @@ export const useAllDepartmentsQuery = () => {
   return useQuery({
     queryKey: ["departmentsAll"],
     queryFn: async () => {
-      const res = await api.get("/phongban", { params: { idcongty: "ct001" } });
+      const res = await api.get("/phongban", { params: { idcongty: CongTy.CT001 } });
       return res.data;
     },
     placeholderData: (placeholderData) => placeholderData,

@@ -55,7 +55,7 @@ import dayjs from "dayjs";
 import ThietBiBaoTriTable from "./tables/ThietBiBaoTriTable/ThietBiBaoTriTable";
 import ChiTietCongViecTable from "./tables/ChiTietCongViecTable/ChiTietCongViecTable";
 import FieldDateTime from "../../../components/TextField/FieldDateTime";
-import { Devicetype } from "../../../utils/const";
+import { CongTy, Devicetype } from "../../../utils/const";
 import { generateCode } from "../../../utils/helpers";
 
 interface MaintenancePlanningFormProps {
@@ -90,7 +90,7 @@ export default function MaintenancePlanningForm({
   const formik = useFormik({
     initialValues: {
       id: "",
-      idCongTy: "",
+      idCongTy: CongTy.CT001,
       tenKeHoach: "",
       loaiKeHoach: "THIET_BI" as "THIET_BI" | "CHU_KY" | "GIO_MAY",
       chuKyNgay: 0,
@@ -106,11 +106,7 @@ export default function MaintenancePlanningForm({
     },
     validationSchema: MaintenancePlanValidation,
     onSubmit: (values) => {
-      console.log("Form submitted:", values)
-      onSave({
-        ...values,
-        id:generateCode("KHSCBD-"),
-      });
+      onSave(values);
     },
   });
 
@@ -128,7 +124,7 @@ export default function MaintenancePlanningForm({
         ghiChu: selectedPlan.ghiChu || "",
         idDonViThucHien: selectedPlan.idDonViThucHien || "",
         idNguoiPhuTrach: selectedPlan.idNguoiPhuTrach || "",
-        idCongTy: selectedPlan.idCongTy || "ct001",
+        idCongTy: selectedPlan.idCongTy || CongTy.CT001,
         congViecs: selectedPlan.congViecs || [],
         chiTiets: selectedPlan.chiTiets || [],
       });

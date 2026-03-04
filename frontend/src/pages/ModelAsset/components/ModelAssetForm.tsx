@@ -25,6 +25,7 @@ import { useFormik } from "formik";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import { ModelAssetValidation } from "../validation/Validation";
 import EditButton from "../../../components/Button/EditButton";
+import { CongTy } from "../../../utils/const";
 
 export default function ModelAssetForm({
   onEdit,
@@ -50,7 +51,7 @@ export default function ModelAssetForm({
       taiKhoanTaiSan: "",
       taiKhoanKhauHao: "",
       taiKhoanChiPhi: "",
-      idCongTy: "ct001",
+      idCongTy: CongTy.CT001,
     },
     validationSchema: ModelAssetValidation,
     onSubmit(values) {

@@ -8,6 +8,7 @@ import dayjs from "dayjs";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import { generateCode } from "../../../utils/helpers";
+import { CongTy } from "../../../utils/const";
 
 const getColumnLetter = (colIndex: number): string => {
   let letter = "";
@@ -23,7 +24,7 @@ export const useAssetManagerMutation = (
   onErrorImport?: (messages: string[]) => void,
 ) => {
   const queryClient = useQueryClient();
-  const idCongTy = "ct001";
+  const idCongTy = CongTy.CT001;
   const { user } = useSelector((state: RootState) => state.user);
   const now = dayjs().format("YYYY-MM-DDTHH:mm:ss");
 
@@ -460,7 +461,7 @@ export const useAssetPageQuery = (
               : "/taisan/by-donvi-hienthoi/paged",
         {
           params: {
-            idcongty: "ct001",
+            idcongty: CongTy.CT001,
             page: page,
             size: pageSize,
             search: searchValue,
@@ -480,7 +481,7 @@ export const useAllAssetsQuery = () => {
     queryFn: async () => {
       const res = await api.get("/taisan", {
         params: {
-          idcongty: "ct001",
+          idcongty: CongTy.CT001,
         },
       });
       return res.data.data || res.data;
@@ -514,7 +515,7 @@ export const useAssetDepreciationsQuery = (
     queryFn: async () => {
       const res = await api.get("/taisan/khauhaotaisan", {
         params: {
-          idcongty: "ct001",
+          idcongty: CongTy.CT001,
           ngay: date ? new Date(date).getDate() : undefined,
           thang: date ? new Date(date).getMonth() + 1 : undefined,
           nam: date ? new Date(date).getFullYear() : undefined,

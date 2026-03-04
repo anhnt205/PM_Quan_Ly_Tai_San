@@ -7,6 +7,7 @@ import { b, formatDateTime, s } from "../../../utils/helpers";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import dayjs from "dayjs";
+import { CongTy } from "../../../utils/const";
 
 export const useToolGroupMutation = (
   page?: number,
@@ -196,7 +197,7 @@ export const useToolGroupMutation = (
                   id,
                   ten,
                   hieuLuc,
-                  idCongTy: "ct001",
+                  idCongTy: CongTy.CT001,
                   ngayTao,
                   ngayCapNhat,
                   nguoiTao: currentUser,
@@ -251,7 +252,7 @@ export const useToolGroupPageQuery = (
     queryFn: async () => {
       const res = await api.get("/nhomccdc/paged", {
         params: {
-          idCongTy: "ct001",
+          idCongTy: CongTy.CT001,
           page: page,
           size: pageSize,
           search: searchValue,
@@ -268,7 +269,7 @@ export const useAllToolGroupQuery = () => {
     queryFn: async () => {
       const res = await api.get("/nhomccdc", {
         params: {
-          idcongty: "ct001",
+          idcongty: CongTy.CT001,
         },
       });
       return res.data;

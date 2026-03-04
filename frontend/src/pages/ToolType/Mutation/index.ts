@@ -5,6 +5,7 @@ import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import * as XLSX from "xlsx";
 import { s } from "../../../utils/helpers";
 import { useAllToolGroupQuery } from "../../ToolGroup/Mutation";
+import { CongTy } from "../../../utils/const";
 
 export const useToolTypeMutation = (
   page?: number,
@@ -245,7 +246,7 @@ export const useToolTypePageQuery = (
     queryFn: async () => {
       const res = await api.get("/loaiccdccon/paged", {
         params: {
-          idcongty: "ct001",
+          idcongty: CongTy.CT001,
           page: page,
           size: pageSize,
           search: searchValue,

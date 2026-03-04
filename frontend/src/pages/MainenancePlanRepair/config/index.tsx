@@ -1,19 +1,16 @@
 import { Chip } from "@mui/material";
+import { PlanType } from "../../../utils/const";
 
 const getStatusDetails = (status: number) => {
   switch (status) {
     case 0:
-      return { label: "Nháp", color: "#9e9e9e" }; // Xám
+      return { label: "Chưa thực hiện", color: "#9e9e9e" }; // Xám
     case 1:
-      return { label: "Duyệt", color: "#ff9800" }; // Cam
+      return { label: "Đang thực hiện", color: "#9c27b0" }; // Cam
     case 2:
-      return { label: "Đang sửa chữa", color: "#9c27b0" }; // Tím
-    case 3:
-      return { label: "Hủy", color: "#f44336" }; // Đỏ
-    case 4:
-      return { label: "Hoàn thành", color: "#4caf50" }; // Xanh lá
+      return { label: "Đã hoàn thành", color: "#4caf50" }; // Xanh lá
     default:
-      return { label: "Nháp", color: "#9e9e9e" }; // Xám
+      return { label: "Chưa thực hiện", color: "#9e9e9e" }; // Xám
   }
 };
 
@@ -40,23 +37,36 @@ export const showStatus = (status: number) => {
   );
 };
 
-export const showShareStatus = (isShare: boolean, isMyCreated: boolean) => {
-  return (
-    <Chip
-      label={isShare ? (isMyCreated ? "Đã gửi" : "Được gửi") : "Chưa gửi"}
-      sx={{
-        backgroundColor: isShare ? "#4caf50" : "#f30d0d",
-        color: "white",
-        fontWeight: 500,
-        fontSize: "12px",
-        borderRadius: "4px",
-        height: "auto",
-        padding: "1px 5px",
-        mb: "2px",
-        "& .MuiChip-label": {
-          padding: 0,
-        },
-      }}
-    />
-  );
+export const showPlanType = (type: string) => {
+  const label = () => {
+    switch (type) {
+      case PlanType.DEVICE:
+        return "Theo thiết bị";
+      case PlanType.WORK:
+        return "Theo chu kỳ thời gian";
+      case PlanType.TIME:
+        return "Theo giờ máy";
+      default:
+        return "";
+    }
+  };
+
+  return <p>{label()}</p>;
+};
+
+export const showPeriod = (time: string) => {
+  if (!time) return "";
+
+  const date = new Date(time);
+
+  // Kiểm tra nếu string truyền vào không đúng định dạng ngày tháng
+  if (isNaN(date.getTime())) return "Thời gian không hợp lệ";
+
+  const month = date.getMonth() + 1; // getMonth() trả về 0-11
+  const year = date.getFullYear();
+
+  // Tính Quý: Tháng 1,2,3 -> Quý 1; Tháng 4,5,6 -> Quý 2...
+  const quarter = Math.ceil(month / 3);
+
+  return `Tháng ${month}. Quý ${quarter}. Năm ${year}`;
 };

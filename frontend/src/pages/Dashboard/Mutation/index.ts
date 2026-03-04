@@ -1,6 +1,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "../../../config/api.config";
+import { CongTy } from "../../../utils/const";
 
 const fetchStatistics = async () => {
   const res = await api.get("/dashboard/statistics");
@@ -19,36 +20,36 @@ const fetchTaiSanTheoNhom = async () => {
 
 const fetchCCDCTheoNhom = async (nam: number) => {
   const res = await api.get("/dashboard/ccdc-theo-nhom-phan-tram-chi-tiet", {
-    params: { idcongty: "ct001", nam },
+    params: { idcongty: CongTy.CT001, nam },
   });
   return res.data;
 };
 
 const fetchNhomCCDCList = async () => {
-  const res = await api.get("/nhomccdc", { params: { idcongty: "ct001" } });
+  const res = await api.get("/nhomccdc", { params: { idcongty: CongTy.CT001 } });
   return res.data;
 };
 
 const fetchNhomTaiSanList = async () => {
-  const res = await api.get("/nhomtaisan", { params: { idcongty: "ct001" } });
+  const res = await api.get("/nhomtaisan", { params: { idcongty: CongTy.CT001 } });
   return res.data;
 };
 
 const fetchAllCCDC = async () => {
   const res = await api.get("/ccdcvattu/paged", {
-    params: { idcongty: "ct001", page: 0, size: 10000 },
+    params: { idcongty: CongTy.CT001, page: 0, size: 10000 },
   });
   return res.data;
 };
 
 const fetchAllLoaiCCDC = async () => {
-  const res = await api.get("/loaiccdccon", { params: { idcongty: "ct001" } });
+  const res = await api.get("/loaiccdccon", { params: { idcongty: CongTy.CT001 } });
   return res.data;
 };
 
 const fetchAllTaiSan = async () => {
   const res = await api.get("/taisan/paged", {
-    params: { idcongty: "ct001", page: 0, size: 10000 },
+    params: { idcongty: CongTy.CT001, page: 0, size: 10000 },
   });
   return res.data;
 };
@@ -56,7 +57,7 @@ const fetchAllTaiSan = async () => {
 const fetchTaiSanTheoLoai = async (nhomId?: string) => {
   const res = await api.get("/dashboard/tai-san-theo-nhom-loai-con-phan-tram", {
     params: {
-      idcongty: "ct001",
+      idcongty: CongTy.CT001,
       ...(nhomId ? { nhomId } : {}),
     },
   });

@@ -15,7 +15,7 @@ import { useMemo, useState } from "react";
 import axios from "axios";
 import { findById } from "../../../utils/helpers";
 import { useAllToolQuery } from "../../ToolManager/Mutation";
-import { MessageTypeActions, MessageTypeFunctions } from "../../../utils/const";
+import { CongTy, MessageTypeActions, MessageTypeFunctions } from "../../../utils/const";
 import { listNguoiKy } from "../config";
 import socketService from "../../../services/socketService";
 
@@ -30,7 +30,7 @@ export const useToolTransferMutation = (
   selectedId?: string,
 ) => {
   const queryClient = useQueryClient();
-  const idCongTy = "ct001";
+  const idCongTy = CongTy.CT001;
   const { user } = useSelector((state: RootState) => state.user);
   const now = dayjs(new Date()).format("YYYY-MM-DDTHH:mm:ss");
 
@@ -579,7 +579,7 @@ export const useToolTransferPageQuery = (
   idDonViGiao?: string,
 ) => {
   const { user } = useSelector((state: RootState) => state.user);
-  const idCongTy = "ct001";
+  const idCongTy = CongTy.CT001;
   return useQuery({
     queryKey: [
       "toolTransferPage",
@@ -688,7 +688,7 @@ export const useToolByDepartmentPageQuery = ({
 };
 
 export const useToolTransferAllQuery = () => {
-  const idCongTy = "ct001";
+  const idCongTy = CongTy.CT001;
 
   return useQuery({
     queryKey: ["toolTranferAll"], // Key để cache dữ liệu

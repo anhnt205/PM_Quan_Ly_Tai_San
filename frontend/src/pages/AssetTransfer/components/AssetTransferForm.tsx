@@ -44,6 +44,7 @@ import { useSelector } from "react-redux";
 import { generateBangKePdf, mergeBangKeWithOriginalPdf } from "../config";
 import S3Service from "../../../services/S3Service";
 import { assetTransferValidationSchema } from "../validation";
+import { CongTy } from "../../../utils/const";
 
 export default function AssetTransferForm({
   onEdit,
@@ -114,7 +115,7 @@ export default function AssetTransferForm({
       idPhongBanXemPhieu: "",
       noiNhan: "",
       trangThai: 0,
-      idCongTy: "ct001",
+      idCongTy: CongTy.CT001,
       ngayTao: "",
       ngayCapNhat: "",
       nguoiTao: "",

@@ -17,12 +17,12 @@ import { useToolManagerMutation } from "../../ToolManager/Mutation";
 import { generateCode } from "../../../utils/helpers";
 import { listNguoiKy } from "../config";
 import socketService from "../../../services/socketService";
-import { MessageTypeFunctions } from "../../../utils/const";
+import { CongTy, MessageTypeFunctions } from "../../../utils/const";
 
 export const useToolHandoverMutation = () => {
   const queryClient = useQueryClient();
   const mainKey = "toolHandoverPage";
-  const idCongTy = "ct001";
+  const idCongTy = CongTy.CT001;
   const { user } = useSelector((state: RootState) => state.user);
   const now = dayjs(new Date()).format("YYYY-MM-DDTHH:mm:ss");
 
@@ -505,7 +505,7 @@ export const useToolHandoverDetailsQuery = (idDieuDong: string) => {
   });
 };
 export const useToolHandoverAllQuery = () => {
-  const idCongTy = "ct001";
+  const idCongTy = CongTy.CT001;
 
   return useQuery({
     queryKey: ["toolHandoverAll"], // Key để cache dữ liệu
@@ -526,7 +526,7 @@ export const useToolHandoverPageQuery = (
   searchValue?: string,
   status?: number,
 ) => {
-  const idCongTy = "ct001";
+  const idCongTy = CongTy.CT001;
   const { user } = useSelector((state: RootState) => state.user);
 
   return useQuery({

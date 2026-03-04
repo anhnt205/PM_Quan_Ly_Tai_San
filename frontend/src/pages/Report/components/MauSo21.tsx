@@ -19,6 +19,7 @@ import { Buffer } from "buffer";
 import XLSX from "xlsx-js-style";
 import MauSo21Content from "./MauSo21Content";
 import ExportExcelButton from "../../../components/Button/ExportExcelButton";
+import { CongTy } from "../../../utils/const";
 
 if (typeof window !== "undefined") {
   (window as any).Buffer = (window as any).Buffer || Buffer;
@@ -56,7 +57,7 @@ export default function MauSo21({ title }: { title?: string }) {
     },
   });
 
-  const idCongTy = "ct001";
+  const idCongTy = CongTy.CT001;
   const { data: groups = [] } = useQuery({
     queryKey: ["nhomtaisan", idCongTy],
     queryFn: async () =>

@@ -15,3 +15,12 @@ export const Devicetype = {
   ASSET: "TAI_SAN",
   TOOL: "CCDC",
 };
+export const PlanType = {
+  DEVICE: "THIET_BI",
+  WORK: "CHU_KY",
+  TIME: "GIO_MAY",
+};
+
+export const CongTy = {
+  CT001: "CT001",
+};

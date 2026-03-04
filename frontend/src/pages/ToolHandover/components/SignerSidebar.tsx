@@ -61,8 +61,8 @@ const getSteps = (item: any): SignerStepProps[] => {
   });
 
   // 3. Danh sách người đại diện (listSignatory)
-  if (Array.isArray(item.listSignatory)) {
-    item.listSignatory.forEach((e: any) => {
+  if (Array.isArray(item.nguoiKyList)) {
+    item.nguoiKyList.forEach((e: any) => {
       steps.push({
         label: "Người đại diện",
         name: e.tenNguoiKy || "Chưa xác định",

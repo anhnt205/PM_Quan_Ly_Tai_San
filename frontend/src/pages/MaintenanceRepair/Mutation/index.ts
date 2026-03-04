@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../../../config/api.config";
 import { MaintenancePlanData } from "../types/planning";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
+import { CongTy } from "../../../utils/const";
 
 export const useMaintenanceRepairPageQuery = (
   page?: number,
@@ -41,7 +42,7 @@ export const useMaintenanceRepairAllQuery = () => {
     queryFn: async () => {
       const res = await api.get("/sua_chua_bao_duong", {
         params: {
-          idcongty: "ct001",
+          idcongty: CongTy.CT001,
         },
       });
       return res.data;
@@ -86,7 +87,7 @@ export const useMaintenancePlanningAllQuery = () => {
     queryFn: async () => {
       const res = await api.get("/maintenance_planning", {
         params: {
-          idcongty: "ct001",
+          idcongty: CongTy.CT001,
         },
       });
       return res.data;

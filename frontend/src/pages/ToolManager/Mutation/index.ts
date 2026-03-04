@@ -8,6 +8,7 @@ import dayjs from "dayjs";
 import * as XLSX from "xlsx";
 import { generateCode } from "../../../utils/helpers";
 import { useAllToolGroupQuery } from "../../ToolGroup/Mutation";
+import { CongTy } from "../../../utils/const";
 let donViSoHuuList: any[] = [];
 
 const getColumnLetter = (colIndex: number): string => {
@@ -23,7 +24,7 @@ export const useToolManagerMutation = (
   onValidationError?: (messages: string[]) => void,
 ) => {
   const queryClient = useQueryClient();
-  const idCongTy = "ct001";
+  const idCongTy = CongTy.CT001;
   const { user } = useSelector((state: RootState) => state.user);
   const now = dayjs(new Date()).format("YYYY-MM-DDTHH:mm:ss");
 
@@ -590,7 +591,7 @@ export const useToolPageQuery = (
   pageSize?: number,
   searchValue?: string,
 ) => {
-  const idcongty = "ct001";
+  const idcongty = CongTy.CT001;
   return useQuery({
     queryKey: ["toolsPage", page, pageSize, searchValue],
     queryFn: async () => {
@@ -608,7 +609,7 @@ export const useToolPageQuery = (
   });
 };
 export const useAllToolQuery = () => {
-  const idcongty = "ct001";
+  const idcongty = CongTy.CT001;
   return useQuery({
     queryKey: ["allTools"],
     queryFn: async () => {

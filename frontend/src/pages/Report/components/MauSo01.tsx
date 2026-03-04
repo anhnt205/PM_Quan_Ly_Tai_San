@@ -19,6 +19,7 @@ import MauSo01Content from "./MauSo01Content";
 import { Buffer } from "buffer";
 import XLSX from "xlsx-js-style";
 import ExportExcelButton from "../../../components/Button/ExportExcelButton";
+import { CongTy } from "../../../utils/const";
 
 if (typeof window !== "undefined") {
   window.Buffer = window.Buffer || Buffer;
@@ -57,7 +58,7 @@ export default function MauSo01({ title }: { title?: string }) {
     },
   });
 
-  const idCongTy = "ct001";
+  const idCongTy = CongTy.CT001;
   const { data: departments = [] } = useQuery({
     queryKey: ["departments", idCongTy],
     queryFn: async () =>

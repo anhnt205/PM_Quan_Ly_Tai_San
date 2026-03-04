@@ -25,6 +25,7 @@ import { useFormik } from "formik";
 import { DepartmentValidation } from "../validation";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import EditButton from "../../../components/Button/EditButton";
+import { CongTy } from "../../../utils/const";
 
 export default function DepartmentForm({
   onEdit,
@@ -44,7 +45,7 @@ export default function DepartmentForm({
     initialValues: {
       id: "",
       tenPhongBan: "",
-      idCongTy: "ct001",
+      idCongTy: CongTy.CT001,
       isKho: false,
       isLanhDao: false,
       loaiKho: undefined as Number | undefined,

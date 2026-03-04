@@ -21,6 +21,7 @@ import { useFormik } from "formik";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import { PositionValidation } from "../validation/Validation";
 import EditButton from "../../../components/Button/EditButton";
+import { CongTy } from "../../../utils/const";
 
 export default function PositionForm({
   onEdit,
@@ -53,7 +54,7 @@ export default function PositionForm({
       banGiaoTaiSan: false,
       banGiaoCCDCVatTu: false,
       baoCao: false,
-      idCongTy: "ct001",
+      idCongTy: CongTy.CT001,
     },
     validationSchema: PositionValidation,
     onSubmit(values) {

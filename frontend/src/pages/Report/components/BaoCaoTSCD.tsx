@@ -21,6 +21,7 @@ import BaoCaoTSCDContent from "./BaoCaoTSCDContent";
 import ExcelLogo from "../../../assets/icons/excel.png";
 import WExcelLogo from "../../../assets/icons/w_excel.png";
 import ExportExcelButton from "../../../components/Button/ExportExcelButton";
+import { CongTy } from "../../../utils/const";
 
 export default function BaoCaoTSCD({ title }: { title?: string }) {
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -53,7 +54,7 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
     },
   });
 
-  const idCongTy = "ct001";
+  const idCongTy = CongTy.CT001;
   const { data: departments = [] } = useQuery({
     queryKey: ["departments", idCongTy],
     queryFn: async () =>

@@ -4,6 +4,7 @@ import { TypeAssetType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import * as XLSX from "xlsx";
 import { s } from "../../../utils/helpers";
+import { CongTy } from "../../../utils/const";
 
 export const useTypeAssetMutation = (
   page?: number,
@@ -135,7 +136,7 @@ export const useTypeAssetMutation = (
           queryKey: ["allTypeAssetsGroup"],
           queryFn: async () => {
             const res = await api.get("/nhomtaisan", {
-              params: { idcongty: "ct001" },
+              params: { idcongty: CongTy.CT001 },
             });
             return res.data;
           },
@@ -262,7 +263,7 @@ export const useAllAssetGroupQuery = () => {
     queryFn: async () => {
       const res = await api.get(`/nhomtaisan`, {
         params: {
-          idcongty: "ct001",
+          idcongty: CongTy.CT001,
         },
       });
       return res.data;
@@ -281,7 +282,7 @@ export const useTypeAssetPageQuery = (
     queryFn: async () => {
       const res = await api.get("/loaitaisancon/paged", {
         params: {
-          idcongty: "ct001",
+          idcongty: CongTy.CT001,
           page: page,
           size: pageSize,
           search: searchValue,

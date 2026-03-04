@@ -40,6 +40,7 @@ import { generateCode } from "../../../utils/helpers";
 import { useAllLoaiSCBDQuery } from "../../MaintenanceRepairType/Mutation";
 import { useAllAssetsQuery } from "../../AssetManager/Mutation";
 import { useAllToolQuery } from "../../ToolManager/Mutation";
+import { CongTy } from "../../../utils/const";
 
 export default function MaintenanceRepairForm({
   onEdit,
@@ -108,7 +109,7 @@ export default function MaintenanceRepairForm({
       idPhongBanXemPhieu: "",
       noiNhan: "",
       trangThai: 0,
-      idCongTy: "ct001",
+      idCongTy: CongTy.CT001,
       ngayTao: "",
       ngayCapNhat: "",
       nguoiTao: "",

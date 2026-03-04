@@ -4,6 +4,7 @@ import { CurrentStatusType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import { s } from "../../../utils/helpers";
 import * as XLSX from "xlsx";
+import { CongTy } from "../../../utils/const";
 
 export const useCurrentStatusMutation = (
   page?: number,
@@ -227,7 +228,7 @@ export const useCurrentStatusPageQuery = (
     queryFn: async () => {
       const res = await api.get("/hientrangkythuat/paged", {
         params: {
-          idCongTy: "ct001",
+          idCongTy: CongTy.CT001,
           page: page,
           size: pageSize,
           search: searchValue,

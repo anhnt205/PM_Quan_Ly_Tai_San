@@ -4,29 +4,18 @@ import {
   Grid,
   IconButton,
   Tooltip,
-  Dialog,
   Typography,
-  Tab,
-  Tabs,
-  Badge,
 } from "@mui/material";
-import { ClassOutlined, TableChart } from "@mui/icons-material";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import PageAction from "../../components/common/PageAction";
 import MaintenancePlanCalendar from "./components/MaintenancePlanCalendar";
 import MaintenancePlanningForm from "./components/MaintenancePlanningForm";
 import TableCustom from "../../components/common/TableCustom";
 import { useSelector } from "react-redux";
-import { useAllUnitsQuery } from "../Unit/Mutation";
-import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
 import { useAllStaffsQuery } from "../Staff/Mutation";
 import { showConfirmAlert } from "../../components/Alert";
-import { GridColDef } from "@mui/x-data-grid";
-import { Trash2, FileText, FileCheck, Calendar } from "lucide-react";
-import { SignHeader } from "../../components/SignDocument/SignHeader";
+import { Trash2, Calendar } from "lucide-react";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
-import { showStatus, showShareStatus } from "./config";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { MaintenancePlanData } from "./types";
 import {
   useMaintenancePlanningPageQuery,
@@ -35,6 +24,7 @@ import {
 import { useAllAssetsQuery } from "../AssetManager/Mutation";
 import { useAllToolQuery } from "../ToolManager/Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
+import { showPeriod, showPlanType, showStatus } from "./config";
 
 export default function MaintenancePlanRepair() {
   const { user } = useSelector((state: any) => state.user);
@@ -66,12 +56,10 @@ export default function MaintenancePlanRepair() {
       ...rawAssets.map((a: any) => ({
         ...a,
         ten: a.tenTaiSan || a.ten || "",
-        loaiThietBi: "tai_san",
       })),
       ...rawTools.map((t: any) => ({
         ...t,
         ten: t.ten || "",
-        loaiThietBi: "ccdc",
       })),
     ],
     [rawAssets, rawTools],
@@ -104,42 +92,10 @@ export default function MaintenancePlanRepair() {
   };
 
   const handlePlanningSave = (planData: MaintenancePlanData) => {
-    console.log("Form submitted:", planData);
-
     if (selectedPlan?.id) {
-      // Cập nhật local state ngay lập tức (không chờ API)
-      setMaintenancePlans((prev) =>
-        prev.map((plan) => (plan.id === planData.id ? planData : plan)),
-      );
-      setSelectedPlan(planData);
-      setShowForm(false);
-      setReadOnly(false);
-      // Tự động gọi API nếu có (bất đồng bộ, không chặn UI)
-      updatePlanMutation.mutate(planData, {
-        onError: (error) => {
-          console.warn(
-            "API update failed (local state already updated):",
-            error,
-          );
-        },
-      });
+      updatePlanMutation.mutate(planData);
     } else {
-      // Tạo mới
-      const newPlan = {
-        ...planData,
-        id: planData.id || `KH-${Date.now()}`,
-      };
-      setMaintenancePlans((prev) => [newPlan, ...prev]);
-      setShowForm(false);
-      setReadOnly(false);
-      createPlanMutation.mutate(newPlan, {
-        onError: (error) => {
-          console.warn(
-            "API create failed (local state already updated):",
-            error,
-          );
-        },
-      });
+      createPlanMutation.mutate(planData);
     }
   };
 
@@ -172,24 +128,18 @@ export default function MaintenancePlanRepair() {
       flex: 1.5,
       minWidth: 130,
       editable: false,
-      renderCell: (params: any) => {
-        const types: Record<string, string> = {
-          thiet_bi: "Theo thiết bị",
-          chu_ky_thoi_gian: "Theo chu kỳ",
-          gio_may: "Theo giờ máy",
-        };
-        return types[params.value as string] || params.value;
-      },
+      renderCell: (params: any) => showPlanType(params.value),
     },
     {
-      field: "kyText",
+      field: "thuocKy",
       headerName: "Thuộc kỳ",
       flex: 1,
       minWidth: 100,
       editable: false,
+      renderCell: (params: any) => showPeriod(params.row.ngayBatDau),
     },
     {
-      field: "tenDonVi",
+      field: "tenDonViThucHien",
       headerName: "Đơn vị",
       flex: 1.5,
       minWidth: 130,
@@ -217,56 +167,15 @@ export default function MaintenancePlanRepair() {
       editable: false,
     },
     {
-      field: "trangThaiText",
+      field: "trangThai",
       headerName: "Trạng thái",
       flex: 1.2,
       minWidth: 120,
       editable: false,
-      renderCell: (params: any) => {
-        const statusMap: Record<
-          string,
-          { label: string; bg: string; color: string }
-        > = {
-          "Chưa thực hiện": {
-            label: "Chưa thực hiện",
-            bg: "#fff3e0",
-            color: "#e65100",
-          },
-          "Đang thực hiện": {
-            label: "Đang thực hiện",
-            bg: "#e3f2fd",
-            color: "#0277bd",
-          },
-          "Đã hoàn thành": {
-            label: "Đã hoàn thành",
-            bg: "#e8f5e9",
-            color: "#2e7d32",
-          },
-        };
-        const s = statusMap[params.value as string];
-        if (!s) return params.value || "";
-        return (
-          <Box
-            sx={{
-              display: "inline-flex",
-              alignItems: "center",
-              px: 1.5,
-              py: 0.5,
-              borderRadius: "16px",
-              bgcolor: s.bg,
-              color: s.color,
-              fontSize: "0.75rem",
-              fontWeight: 600,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {s.label}
-          </Box>
-        );
-      },
+      renderCell: (params: any) => showStatus(params.value),
     },
     {
-      field: "ngayTaoFormatted",
+      field: "ngayTao",
       headerName: "Ngày tạo",
       flex: 1,
       minWidth: 100,

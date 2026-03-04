@@ -25,6 +25,7 @@ import { useFormik } from "formik";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import { AssetGroupValidation } from "../validation/Validation";
 import EditButton from "../../../components/Button/EditButton";
+import { CongTy } from "../../../utils/const";
 
 export default function AssetGroupForm({
   onEdit,
@@ -44,7 +45,7 @@ export default function AssetGroupForm({
     initialValues: {
       id: "",
       tenNhom: "",
-      idCongTy: "ct001",
+      idCongTy: CongTy.CT001,
     },
     validationSchema: AssetGroupValidation,
     onSubmit(values) {
