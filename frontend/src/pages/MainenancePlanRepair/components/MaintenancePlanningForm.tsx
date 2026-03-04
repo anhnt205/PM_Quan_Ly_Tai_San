@@ -55,6 +55,8 @@ import dayjs from "dayjs";
 import ThietBiBaoTriTable from "./tables/ThietBiBaoTriTable/ThietBiBaoTriTable";
 import ChiTietCongViecTable from "./tables/ChiTietCongViecTable/ChiTietCongViecTable";
 import FieldDateTime from "../../../components/TextField/FieldDateTime";
+import { Devicetype } from "../../../utils/const";
+import { generateCode } from "../../../utils/helpers";
 
 interface MaintenancePlanningFormProps {
   onEdit: () => void;
@@ -85,7 +87,6 @@ export default function MaintenancePlanningForm({
     "sửa chữa",
   );
 
-
   const formik = useFormik({
     initialValues: {
       id: "",
@@ -105,7 +106,11 @@ export default function MaintenancePlanningForm({
     },
     validationSchema: MaintenancePlanValidation,
     onSubmit: (values) => {
-      onSave(values);
+      console.log("Form submitted:", values)
+      onSave({
+        ...values,
+        id:generateCode("KHSCBD-"),
+      });
     },
   });
 
@@ -117,7 +122,7 @@ export default function MaintenancePlanningForm({
         loaiKeHoach: selectedPlan.loaiKeHoach || "THIET_BI",
         chuKyNgay: selectedPlan?.chuKyNgay ?? 0,
         mocGioMay: selectedPlan?.mocGioMay ?? 0,
-        loaiDoiTuong: selectedPlan.loaiDoiTuong || "tai_san",
+        loaiDoiTuong: selectedPlan.loaiDoiTuong || Devicetype.ASSET,
         ngayBatDau: selectedPlan.ngayBatDau || "",
         ngayKetThuc: selectedPlan.ngayKetThuc || "",
         ghiChu: selectedPlan.ghiChu || "",
@@ -132,7 +137,6 @@ export default function MaintenancePlanningForm({
       formik.resetForm();
     }
   }, [selectedPlan, readOnly]); // Add readOnly to dependencies
-
 
   return (
     <>

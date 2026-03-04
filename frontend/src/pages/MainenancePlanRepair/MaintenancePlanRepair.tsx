@@ -104,6 +104,8 @@ export default function MaintenancePlanRepair() {
   };
 
   const handlePlanningSave = (planData: MaintenancePlanData) => {
+    console.log("Form submitted:", planData);
+
     if (selectedPlan?.id) {
       // Cập nhật local state ngay lập tức (không chờ API)
       setMaintenancePlans((prev) =>

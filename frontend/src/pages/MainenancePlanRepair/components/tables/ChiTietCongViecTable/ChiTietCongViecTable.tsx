@@ -35,6 +35,7 @@ import {
 } from "@mui/icons-material";
 import { MaintenancePlanDetailItem } from "../../../types";
 import { Formik } from "formik";
+import dayjs from "dayjs";
 
 interface Props {
   formik: any;
@@ -47,29 +48,29 @@ export default function ChiTietCongViecTable({
   readOnly = false,
   staffs = [],
 }: Props) {
- const [tableExpanded, setTableExpanded] = useState(true);
- const [editingWork, setEditingWork] =
-   useState<MaintenancePlanDetailItem | null>(null);
+  const [tableExpanded, setTableExpanded] = useState(true);
+  const [editingWork, setEditingWork] =
+    useState<MaintenancePlanDetailItem | null>(null);
 
- // 1. Logic Save: Nhận values từ Inner Formik và đẩy vào Main Formik
- const handleSaveWork = (values: MaintenancePlanDetailItem) => {
-  console.log(values);
-   if (!editingWork) return;
+  // 1. Logic Save: Nhận values từ Inner Formik và đẩy vào Main Formik
+  const handleSaveWork = (values: MaintenancePlanDetailItem) => {
+    console.log(values);
+    if (!editingWork) return;
 
-   const currentCongViecs = formik.values.congViecs || [];
+    const currentCongViecs = formik.values.congViecs || [];
 
-   // Nếu là sửa dòng cũ: tìm theo ID hoặc so sánh object reference nếu là dòng mới tạo
-   const isNew =
-     !editingWork.id &&
-     !currentCongViecs.some((w: any) => w.id === editingWork.id);
+    // Nếu là sửa dòng cũ: tìm theo ID hoặc so sánh object reference nếu là dòng mới tạo
+    const isNew =
+      !editingWork.id &&
+      !currentCongViecs.some((w: any) => w.id === editingWork.id);
 
-   const updated = currentCongViecs.map((w: any) =>
-     w === editingWork ? { ...values } : w,
-   );
+    const updated = currentCongViecs.map((w: any) =>
+      w === editingWork ? { ...values } : w,
+    );
 
-   formik.setFieldValue("congViecs", updated);
-   setEditingWork(null);
- };
+    formik.setFieldValue("congViecs", updated);
+    setEditingWork(null);
+  };
   const currentData = formik.values.congViecs || [];
   const hasData = currentData.length > 0;
 
@@ -82,7 +83,7 @@ export default function ChiTietCongViecTable({
       moTa: "",
       nguoiThucHien: "",
       thoiGianDuKien: 0,
-      ngayThucHien: "",
+      ngayThucHien: dayjs(new Date()).format("YYYY-MM-DD"),
       ngayTao: "",
       ngayCapNhat: "",
     };
@@ -97,47 +98,6 @@ export default function ChiTietCongViecTable({
     const updated = [...currentData];
     updated.splice(index, 1);
     formik.setFieldValue("congViecs", updated);
-  };
-
-  const getStatusLabel = (status: number) => {
-    switch (status) {
-      case 0:
-        return (
-          <Chip
-            label="Chưa thực hiện"
-            color="default"
-            size="small"
-            sx={{ borderRadius: "6px" }}
-          />
-        );
-      case 1:
-        return (
-          <Chip
-            label="Đang thực hiện"
-            color="warning"
-            size="small"
-            sx={{ borderRadius: "6px" }}
-          />
-        );
-      case 2:
-        return (
-          <Chip
-            label="Đã hoàn thành"
-            color="success"
-            size="small"
-            sx={{ borderRadius: "6px" }}
-          />
-        );
-      default:
-        return (
-          <Chip
-            label="Chưa thực hiện"
-            color="default"
-            size="small"
-            sx={{ borderRadius: "6px" }}
-          />
-        );
-    }
   };
 
   // Style Header đồng bộ với bảng Thiết bị
@@ -403,7 +363,6 @@ export default function ChiTietCongViecTable({
                     </Box>
 
                     <Box sx={{ display: "flex", gap: 2 }}>
-
                       <TextField
                         name="nguoiThucHien"
                         label="Người thực hiện"
