@@ -438,7 +438,7 @@ export default function ToolForm({
                         }
                       /> */}
                       <TextFieldNumber
-                        title="Giá trị *"
+                        title=""
                         formik={formik}
                         field={`chiTietTaiSanList.${row.originalIndex}.soLuong`}
                         disabled={readOnly}

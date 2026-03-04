@@ -389,7 +389,7 @@ export const useToolTransferMutation = (
       });
       const list = await listNguoiKy([data.toolTransfer]);
       socketService.send({
-        type: MessageTypeFunctions.ASSET_TRANSFER,
+        type: MessageTypeFunctions.TOOL_TRANSFER,
         recieve: list,
       });
       showSuccessAlert("Ký thành công");
@@ -594,18 +594,24 @@ export const useToolTransferPageQuery = (
   });
 };
 
-export const useToolByDepartmentPageQuery = ({ departmentId }: { departmentId: string }) => {
+export const useToolByDepartmentPageQuery = ({
+  departmentId,
+}: {
+  departmentId: string;
+}) => {
   const allToolsQuery = useAllToolQuery(); // đã được cache ở nhiều nơi
 
   const detailQuery = useQuery({
     queryKey: ["chitietdonvisohuu", departmentId],
     queryFn: async () => {
       if (!departmentId) return [];
-      const res = await api.get(`/chitietdonvisohuu/by-donvisohuu/${departmentId}`);
+      const res = await api.get(
+        `/chitietdonvisohuu/by-donvisohuu/${departmentId}`,
+      );
       return res.data?.data || res.data || [];
     },
     enabled: !!departmentId,
-    staleTime: 5 * 60 * 1000,
+    // staleTime: 5 * 60 * 1000,
   });
 
   const processedData = useMemo(() => {
@@ -639,7 +645,7 @@ export const useToolByDepartmentPageQuery = ({ departmentId }: { departmentId: s
           idDetaiAsset: detailAsset.id,
           tenDetailAsset: `${asset.ten || "N/A"} (${detailAsset.soKyHieu || ""}) - ${detailAsset.namSanXuat || ""}`,
           idDonVi: e.idDonViSoHuu,
-          donViTinh: detailAsset.donViTinh,
+          donViTinh: asset.donViTinh,
           namSanXuat: detailAsset.namSanXuat ?? 2010,
           soLuong: e.soLuong || 0,
           soLuongConLai: e.soLuong || 0,

@@ -263,13 +263,6 @@ export default function ToolTransferForm({
     }));
   }, [toolsByDepartment]);
 
-  console.log(
-    (selectedTool?.chiTietDieuDongCCDCVatTuDTOS || []).map((i: any) => ({
-      ...i,
-      id: i.idCCDCVatTu,
-      tenDetailAsset: i.tenCCDCVatTu,
-    })),
-  );
 
   return (
     <>
