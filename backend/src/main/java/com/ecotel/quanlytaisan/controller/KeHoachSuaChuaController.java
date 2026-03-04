@@ -1,5 +1,6 @@
 package com.ecotel.quanlytaisan.controller;
 
+import com.ecotel.quanlytaisan.model.BulkKeHoachSuaChuaRequest;
 import com.ecotel.quanlytaisan.model.KeHoachSuaChua;
 import com.ecotel.quanlytaisan.model.KeHoachSuaChuaDTO;
 import com.ecotel.quanlytaisan.model.PageResponse;
@@ -41,6 +42,27 @@ public class KeHoachSuaChuaController {
                 loaiKeHoach, loaiDoiTuong, idDonViThucHien
         );
         return ResponseEntity.ok(response);
+    }
+
+    // Bulk Create
+    @PostMapping("/bulk-create")
+    public ResponseEntity<?> bulkCreate(@RequestBody List<KeHoachSuaChua> list) throws SQLException {
+        keHoachSuaChuaService.bulkCreate(list);
+        return ResponseEntity.ok().build();
+    }
+
+    // Bulk Update
+    @PutMapping("/bulk-update")
+    public ResponseEntity<?> bulkUpdate(@RequestBody List<KeHoachSuaChua> list) throws SQLException {
+        keHoachSuaChuaService.bulkUpdate(list);
+        return ResponseEntity.ok().build();
+    }
+
+    // Bulk Delete
+    @DeleteMapping("/bulk-delete")
+    public ResponseEntity<?> bulkDelete(@RequestBody List<String> ids) throws SQLException {
+        keHoachSuaChuaService.bulkDelete(ids);
+        return ResponseEntity.ok().build();
     }
 
     /**

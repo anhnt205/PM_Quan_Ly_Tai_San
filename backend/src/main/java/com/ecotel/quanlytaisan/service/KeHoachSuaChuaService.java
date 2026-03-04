@@ -6,6 +6,7 @@ import com.ecotel.quanlytaisan.dao.KeHoachSuaChuaDao;
 import com.ecotel.quanlytaisan.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -35,6 +36,27 @@ public class KeHoachSuaChuaService {
             dto.setChiTiets(chiTiets);
         }
         return list;
+    }
+
+    @Transactional
+    public void bulkCreate(List<KeHoachSuaChua> list) {
+        if (list == null || list.isEmpty()) return;
+        keHoachSuaChuaDao.batchInsert(list);
+    }
+
+    @Transactional
+    public void bulkUpdate(List<KeHoachSuaChua> list) {
+        if (list == null || list.isEmpty()) return;
+        keHoachSuaChuaDao.batchUpdate(list);
+    }
+
+    @Transactional
+    public void bulkDelete(List<String> ids) {
+        if (ids == null || ids.isEmpty()) return;
+
+        keHoachCongViecSuaChuaDao.deleteByIdKeHoachIn(ids);
+        keHoachChiTietSuaChuaDao.deleteByIdKeHoachIn(ids);
+        keHoachSuaChuaDao.batchDelete(ids);
     }
 
     // Phân trang có lọc

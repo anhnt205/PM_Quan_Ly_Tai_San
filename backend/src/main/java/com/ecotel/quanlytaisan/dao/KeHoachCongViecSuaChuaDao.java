@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -83,5 +84,11 @@ public class KeHoachCongViecSuaChuaDao {
     public int deleteByIdKeHoach(String idKeHoach) {
         String sql = "DELETE FROM KeHoachCongViecSuaChua WHERE IdKeHoach = ?";
         return jdbcTemplate.update(sql, idKeHoach);
+    }
+
+    public void deleteByIdKeHoachIn(List<String> ids) {
+        String inSql = String.join(",", Collections.nCopies(ids.size(), "?"));
+        String sql = "DELETE FROM KeHoachCongViecSuaChua WHERE IdKeHoach IN (" + inSql + ")";
+        jdbcTemplate.update(sql, ids.toArray());
     }
 }
