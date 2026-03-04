@@ -14,10 +14,13 @@ import {
   Tooltip,
 } from "@mui/material";
 import { useFormik } from "formik";
-import { Print, TableChart } from "@mui/icons-material";
+import { Print } from "@mui/icons-material";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
 import FieldDateTime from "../../../components/TextField/FieldDateTime";
 import BaoCaoTSCDContent from "./BaoCaoTSCDContent";
+import ExcelLogo from "../../../assets/icons/excel.png";
+import WExcelLogo from "../../../assets/icons/w_excel.png";
+import ExportExcelButton from "../../../components/Button/ExportExcelButton";
 
 export default function BaoCaoTSCD({ title }: { title?: string }) {
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -27,6 +30,7 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
   >("success");
   const [contentData, setContentData] = useState({});
   const [fetchKey, setFetchKey] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleContentChange = useCallback((data: any) => {
     setContentData(data);
@@ -586,26 +590,7 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
             Lấy dữ liệu
           </Button>
           <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-            <Tooltip title="Xuất excel">
-              <Button
-                variant="contained"
-                sx={{
-                  bgcolor: "#4caf50",
-                  color: "white",
-                  minWidth: "44px",
-                  width: "44px",
-                  height: "44px",
-                  p: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  "&:hover": { bgcolor: "#45a049" },
-                }}
-                onClick={handleExport}
-              >
-                <TableChart />
-              </Button>
-            </Tooltip>
+            <ExportExcelButton onClick={handleExport} />
             <Tooltip title="In">
               <Button
                 variant="contained"

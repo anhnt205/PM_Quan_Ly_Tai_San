@@ -17,6 +17,7 @@ import { Print, TableChart } from "@mui/icons-material";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
 import FieldYear from "../../../components/TextField/FieldYear";
 import ReportS22DNContent from "./ReportS22DNContent";
+import ExportExcelButton from "../../../components/Button/ExportExcelButton";
 
 export default function ReportS22DN({ title }: { title?: string }) {
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -607,26 +608,7 @@ export default function ReportS22DN({ title }: { title?: string }) {
             Lấy dữ liệu
           </Button>
           <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-            <Tooltip title="Xuất excel">
-              <Button
-                variant="contained"
-                sx={{
-                  bgcolor: "#4caf50",
-                  color: "white",
-                  minWidth: "44px",
-                  width: "44px",
-                  height: "44px",
-                  p: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  "&:hover": { bgcolor: "#45a049" },
-                }}
-                onClick={handleExport}
-              >
-                <TableChart />
-              </Button>
-            </Tooltip>
+            <ExportExcelButton onClick={handleExport} />
             <Tooltip title="In">
               <Button
                 variant="contained"

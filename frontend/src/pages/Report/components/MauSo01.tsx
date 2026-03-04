@@ -18,6 +18,7 @@ import FieldYearMonth from "../../../components/TextField/FieldYearMonth";
 import MauSo01Content from "./MauSo01Content";
 import { Buffer } from "buffer";
 import XLSX from "xlsx-js-style";
+import ExportExcelButton from "../../../components/Button/ExportExcelButton";
 
 if (typeof window !== "undefined") {
   window.Buffer = window.Buffer || Buffer;
@@ -543,26 +544,7 @@ export default function MauSo01({ title }: { title?: string }) {
             Lấy dữ liệu
           </Button>
           <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-            <Tooltip title="Xuất excel">
-              <Button
-                variant="contained"
-                sx={{
-                  bgcolor: "#4caf50",
-                  color: "white",
-                  minWidth: "44px",
-                  width: "44px",
-                  height: "44px",
-                  p: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  "&:hover": { bgcolor: "#45a049" },
-                }}
-                onClick={handleExport}
-              >
-                <TableChart />
-              </Button>
-            </Tooltip>
+            <ExportExcelButton onClick={handleExport} />
             <Tooltip title="In">
               <Button
                 variant="contained"

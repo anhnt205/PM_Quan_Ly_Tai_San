@@ -18,6 +18,7 @@ import FieldDateTime from "../../../components/TextField/FieldDateTime";
 import BBKiemKeContent from "./BBKiemKeContent";
 import { useQuery } from "@tanstack/react-query";
 import api from "../../../config/api.config";
+import ExportExcelButton from "../../../components/Button/ExportExcelButton";
 
 export default function BienBanKiemKe({ title }: { title?: string }) {
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -537,26 +538,7 @@ export default function BienBanKiemKe({ title }: { title?: string }) {
             Lấy dữ liệu
           </Button>
           <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-            <Tooltip title="Xuất excel">
-              <Button
-                variant="contained"
-                sx={{
-                  bgcolor: "#4caf50",
-                  color: "white",
-                  minWidth: "44px",
-                  width: "44px",
-                  height: "44px",
-                  p: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  "&:hover": { bgcolor: "#45a049" },
-                }}
-                onClick={handleExport}
-              >
-                <TableChart />
-              </Button>
-            </Tooltip>
+            <ExportExcelButton onClick={handleExport} />
             <Tooltip title="In">
               <Button
                 variant="contained"

@@ -18,6 +18,7 @@ import FieldDateTime from "../../../components/TextField/FieldDateTime";
 import { Buffer } from "buffer";
 import XLSX from "xlsx-js-style";
 import MauSo21Content from "./MauSo21Content";
+import ExportExcelButton from "../../../components/Button/ExportExcelButton";
 
 if (typeof window !== "undefined") {
   (window as any).Buffer = (window as any).Buffer || Buffer;
@@ -527,26 +528,7 @@ export default function MauSo21({ title }: { title?: string }) {
             className="no-print"
             sx={{ display: "flex", gap: 1, alignItems: "center" }}
           >
-            <Tooltip title="Xuất excel">
-              <Button
-                variant="contained"
-                sx={{
-                  bgcolor: "#4caf50",
-                  color: "white",
-                  minWidth: "44px",
-                  width: "44px",
-                  height: "44px",
-                  p: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  "&:hover": { bgcolor: "#45a049" },
-                }}
-                onClick={handleExport}
-              >
-                <TableChart />
-              </Button>
-            </Tooltip>
+            <ExportExcelButton onClick={handleExport} />
             <Tooltip title="In">
               <Button
                 variant="contained"
