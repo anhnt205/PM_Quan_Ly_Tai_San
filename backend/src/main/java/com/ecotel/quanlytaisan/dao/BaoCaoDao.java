@@ -148,7 +148,7 @@ public class BaoCaoDao {
     public List<Map<String, Object>> getS22DnIncrease(String idDonVi, String nam) {
         String sql = """
                 SELECT
-                    bg.QuyetDinhDieuDongSo AS idTaiSan,
+                    bg.Id AS idTaiSan,
                     bg.NgayBanGiao AS ngayThang,
                     ts.TenTaiSan AS tenTaiSan,
                     ts.DonViTinh AS donViTinh,
@@ -167,7 +167,7 @@ public class BaoCaoDao {
     public List<Map<String, Object>> getS22DnDecrease(String idDonVi, String nam) {
         String sql = """
                 SELECT
-                    bg.QuyetDinhDieuDongSo AS idTaiSan,
+                    bg.Id AS idTaiSan,
                     bg.NgayBanGiao AS ngayThang,
                     ts.TenTaiSan AS tenTaiSan,
                     ts.DonViTinh AS donViTinh,
@@ -186,7 +186,7 @@ public class BaoCaoDao {
     public List<Map<String, Object>> getS22DnIncreaseCCDC(String idDonVi, String nam) {
         String sql = """
                 SELECT
-                    bg.QuyetDinhDieuDongSo AS idTaiSan,
+                    bg.Id AS idTaiSan,
                     bg.NgayBanGiao AS ngayThang,
                     ts.Ten AS tenTaiSan,
                     ts.DonVitinh AS donViTinh,
@@ -205,7 +205,7 @@ public class BaoCaoDao {
     public List<Map<String, Object>> getS22DnDecreaseCCDC(String idDonVi, String nam) {
         String sql = """
                 SELECT
-                    bg.QuyetDinhDieuDongSo AS idTaiSan,
+                    bg.Id AS idTaiSan,
                     bg.NgayBanGiao AS ngayThang,
                     ts.Ten AS tenTaiSan,
                     ts.DonVitinh AS donViTinh,

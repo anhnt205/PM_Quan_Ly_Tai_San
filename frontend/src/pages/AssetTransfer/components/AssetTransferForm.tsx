@@ -46,6 +46,17 @@ import S3Service from "../../../services/S3Service";
 import { assetTransferValidationSchema } from "../validation";
 import { CongTy } from "../../../utils/const";
 
+const CustomTableCell = styled(TableCell)(({ theme }) => ({
+  borderBottom: "1px solid rgba(224, 224, 224, 1)",
+  padding: "16px 8px",
+  fontSize: "14px",
+}));
+
+const CustomTableHeadCell = styled(CustomTableCell)(({ theme }) => ({
+  fontWeight: "bold",
+  color: "rgba(0, 0, 0, 0.87)",
+  backgroundColor: "transparent",
+}));
 export default function AssetTransferForm({
   onEdit,
   onClose,
@@ -80,17 +91,6 @@ export default function AssetTransferForm({
   const [document, setDocument] = useState<File | string | any>("");
   const { user } = useSelector((state: RootState) => state.user);
 
-  const CustomTableCell = styled(TableCell)(({ theme }) => ({
-    borderBottom: "1px solid rgba(224, 224, 224, 1)",
-    padding: "16px 8px",
-    fontSize: "14px",
-  }));
-
-  const CustomTableHeadCell = styled(CustomTableCell)(({ theme }) => ({
-    fontWeight: "bold",
-    color: "rgba(0, 0, 0, 0.87)",
-    backgroundColor: "transparent",
-  }));
   // Logic trạng thái
   const currentStatus = selectedTransfer?.trangThai ?? 0; // 0: Nháp, 1: Duyệt, 2: Hủy, 3: Hoàn thành
 

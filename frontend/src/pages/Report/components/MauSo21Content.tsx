@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Box, Typography, TextField, Grid } from "@mui/material";
 import InlineCell from "../../../components/common/InlineCell";
+import api from "../../../config/api.config";
 
 interface MauSo21ContentProps {
   onContentChange?: (content: any) => void;
@@ -190,9 +191,8 @@ export default function MauSo21Content({
         };
         if (idNhomTaiSan) params.idNhomTaiSan = idNhomTaiSan;
 
-        const api = require("../../../config/api.config").default;
         const res = await api.get("/taisan/khauhaotaisanbynhom", { params });
-        const data = res?.data || [];
+        const data = res?.data?.data?.items || [];
 
         const map = (item: any) => {
           const date = formatToDMY(item?.ngayTinhKhao ?? item?.ngay ?? "");
