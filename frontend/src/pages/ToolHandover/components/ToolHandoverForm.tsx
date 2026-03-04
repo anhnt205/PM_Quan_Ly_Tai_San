@@ -42,7 +42,10 @@ import SignDocumentForm from "./SignDocumentForm";
 import PreviewBtn from "../../../components/Button/PreviewBtn";
 import dayjs from "dayjs";
 import { toolHandoverValidationSchema } from "../validation";
-import { useToolTransferPageQuery } from "../../ToolTransfer/Mutation";
+import {
+  useToolTransferMutation,
+  useToolTransferPageQuery,
+} from "../../ToolTransfer/Mutation";
 import { generateBienBanPdf } from "../config";
 import S3Service from "../../../services/S3Service";
 import { useSelector } from "react-redux";
@@ -159,11 +162,9 @@ export default function ToolHandoverForm({
   const [priviewDocument, setPriviewDocument] = useState(false);
 
   const [listTools, setListTools] = useState<any[]>([]);
-  const chiTietDieuDongCCDCVatTuDTOS = useMemo(() => {
-    return (ToolTransferData.items || []).flatMap(
-      (i: any) => i.chiTietDieuDongCCDCVatTuDTOS || [],
-    );
-  }, [ToolTransferData.totalItems]);
+
+  const { toolTransferDetailMutation, toolTransferDetailAllMutation } =
+    useToolTransferMutation();
 
   const formik = useFormik<ToolHandoverFormValues>({
     initialValues: {
@@ -231,6 +232,7 @@ export default function ToolHandoverForm({
           ...item,
           id: `${generateCode("CTBGCCDC-")}-${index}`,
           idBanGiaoCCDCVatTu: values.id,
+          kyHieu: item.soKyHieu,
         }),
       );
       const nguoiKyList = values.nguoiKyList.map((item: any, index) => ({
@@ -306,40 +308,48 @@ export default function ToolHandoverForm({
   });
 
   useEffect(() => {
-    if (selectedToolHandover) {
-      const chitietList = selectedToolHandover.chiTietBanGiaoCCDCVatTu.map(
-        (i: any) => {
-          const chitiet = findById(
-            chiTietDieuDongCCDCVatTuDTOS,
-            i.idChiTietDieuDong,
-          );
-          return {
-            ...i,
-            id: i.idChiTietCCDCVatTu,
-            tenVatTu: i.tenVatTu + `- (${i.soKyHieu}) -` + i.namSanXuat,
-            soLuongConLai: chitiet?.soLuongConLai ?? 0,
-            soLuongXuat: chitiet?.soLuongXuat ?? 0,
-            kyHieu: i.soKyHieu,
-            nuocSanXuat: i.nuocSanXuat,
-            donViTinh: i.donViTinh,
-          };
-        },
-      );
-      console.log(chitietList);
-      formik.setValues({
-        ...selectedToolHandover,
-        isNew: selectedToolHandover.isNew ?? false,
-        chiTietBanGiaoCCDCVatTu: chitietList,
-        initialChiTiet: (
-          selectedToolHandover.chiTietBanGiaoCCDCVatTu || []
-        ).map((i: any) => i.id),
-      });
-      setDocument(selectedToolHandover.duongDanFile);
-      getListTool(selectedToolHandover.lenhDieuDong);
-    } else {
-      formik.resetForm();
-    }
-  }, [selectedToolHandover, chiTietDieuDongCCDCVatTuDTOS.length]);
+    const fetchData = async () => {
+      if (selectedToolHandover) {
+        const chitietList = await Promise.all(
+          selectedToolHandover.chiTietBanGiaoCCDCVatTu.map(async (i: any) => {
+            try {
+              // Gọi mutation thủ công
+              const chitiet = await toolTransferDetailMutation.mutateAsync(
+                i.idChiTietDieuDong,
+              );
+
+              return {
+                ...i,
+                id: i.idChiTietCCDCVatTu,
+                tenVatTu: i.tenVatTu + `- (${i.soKyHieu}) -` + i.namSanXuat,
+                soLuongConLai: chitiet?.soLuongConLai ?? 0,
+                soLuongXuat: chitiet?.soLuongXuat ?? 0,
+                kyHieu: i.soKyHieu,
+                nuocSanXuat: i.nuocSanXuat,
+                donViTinh: i.donViTinh,
+              };
+            } catch (error) {
+              console.error("Lỗi lấy chi tiết:", error);
+              return i; // Trả về item gốc nếu lỗi
+            }
+          }),
+        );
+        formik.setValues({
+          ...selectedToolHandover,
+          isNew: selectedToolHandover.isNew ?? false,
+          chiTietBanGiaoCCDCVatTu: chitietList,
+          initialChiTiet: (
+            selectedToolHandover.chiTietBanGiaoCCDCVatTu || []
+          ).map((i: any) => i.id),
+        });
+        setDocument(selectedToolHandover.duongDanFile);
+        getListTool(selectedToolHandover.lenhDieuDong);
+      } else {
+        formik.resetForm();
+      }
+    };
+    fetchData();
+  }, [selectedToolHandover]);
 
   const [nvGiao, setNvGiao] = useState<any[]>([]);
   const [nvNhan, setNvNhan] = useState<any[]>([]);
@@ -381,9 +391,9 @@ export default function ToolHandoverForm({
 
   const getListTool = async (id: string) => {
     if (!id) return;
-    const result = await findById(ToolTransferData.items || [], id);
+    const result = await toolTransferDetailAllMutation.mutateAsync(id);
     setListTools(
-      (result?.chiTietDieuDongCCDCVatTuDTOS || []).map((i: any) => ({
+      (result || []).map((i: any) => ({
         ...i,
         id: i.idChiTietCCDCVatTu,
         tenVatTu: i.tenCCDCVatTu + `- (${i.soKyHieu}) -` + i.namSanXuat,
@@ -561,6 +571,7 @@ export default function ToolHandoverForm({
                       onChange={async (value) => {
                         formik.setFieldValue("idDonViGiao", value.idDonViGiao);
                         formik.setFieldValue("idDonViNhan", value.idDonViNhan);
+                        formik.setFieldValue("chiTietBanGiaoCCDCVatTu", []);
                         getListTool(value.id);
                       }}
                       disabled={readOnly}
@@ -926,6 +937,10 @@ export default function ToolHandoverForm({
                                       formik.setFieldValue(
                                         `chiTietBanGiaoCCDCVatTu.${index}.tenVatTu`,
                                         newValue.tenCCDCVatTu,
+                                      );
+                                      formik.setFieldValue(
+                                        `chiTietBanGiaoCCDCVatTu.${index}.soKyHieu`,
+                                        newValue.soKyHieu,
                                       );
                                       formik.setFieldValue(
                                         `chiTietBanGiaoCCDCVatTu.${index}.nuocSanXuat`,

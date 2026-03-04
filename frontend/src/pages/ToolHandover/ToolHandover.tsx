@@ -478,6 +478,7 @@ export default function ToolHandover() {
             title="Tạo biên bản bàn giao ccdc - vật tư"
             onClick={(e) => {
               e.stopPropagation();
+              console.log(params.row.chiTietDieuDongCCDCVatTuDTOS);
               window.scrollTo({ top: 140, behavior: "smooth" });
               setSelectedRow({
                 id: "",
@@ -513,24 +514,33 @@ export default function ToolHandover() {
                 byStep: false,
                 giamDocKy: false,
                 nguoiKyList: [] as any[],
-                chiTietBanGiaoCCDCVatTu: [
-                  {
-                    id: "",
-                    idBanGiaoCCDCVatTu: "",
-                    idCCDCVatTu: "",
-                    soLuong: 0,
-                    idChiTietCCDCVatTu: "",
-                    ngayTao: "",
-                    ngayCapNhat: "",
-                    nguoiTao: "",
-                    nguoiCapNhat: "",
-                    isActive: true,
-                    idChiTietDieuDong: "",
-                    hienTrang: "",
-                    moTa: "",
-                    ghiChu: "",
-                  },
-                ],
+                chiTietBanGiaoCCDCVatTu: params.row.chiTietDieuDongCCDCVatTuDTOS
+                  ? params.row.chiTietDieuDongCCDCVatTuDTOS.map(
+                      (item: any) => ({
+                        id: "",
+                        idBanGiaoCCDCVatTu: "",
+                        idCCDCVatTu: item?.idCCDCVatTu || "",
+                        soLuong: 0,
+                        tenVatTu: item?.tenCCDCVatTu || "",
+                        soLuongXuat: item?.soLuongXuat,
+                        soLuongConLai: item?.soLuongConLai,
+                        idChiTietCCDCVatTu: item?.idChiTietCCDCVatTu,
+                        donViTinh: item?.donViTinh,
+                        soKyHieu: item?.soKyHieu,
+                        nuocSanXuat: item?.nuocSanXuat,
+                        namSanXuat: item?.namSanXuat,
+                        ngayTao: "",
+                        ngayCapNhat: "",
+                        nguoiTao: "",
+                        nguoiCapNhat: "",
+                        isActive: true,
+                        idChiTietDieuDong: item?.id,
+                        hienTrang: "",
+                        moTa: "",
+                        ghiChu: "",
+                      }),
+                    )
+                  : [],
                 initialChiTiet: [] as any[],
                 isNew: true,
               });

@@ -354,6 +354,22 @@ export const useToolTransferMutation = (
       return [];
     },
   });
+  const toolTransferDetailMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.get(`/chitietdieudongccdcvattu/${id}`);
+      return res.data;
+    },
+  });
+  const toolTransferDetailAllMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.get(`/chitietdieudongccdcvattu`, {
+        params: {
+          iddieudongccdcvattu: id,
+        },
+      });
+      return res.data;
+    },
+  });
   // list chu ky theo tai lieu
   const handleSignatureList = async (idTaiLieu: string) => {
     if (!idTaiLieu) return;
@@ -547,6 +563,8 @@ export const useToolTransferMutation = (
     getByIdMutation,
     getToolHandoverMutation,
     handoverDetails: handoverDetailsQuery.data || [],
+    toolTransferDetailMutation,
+    toolTransferDetailAllMutation,
   };
 };
 
