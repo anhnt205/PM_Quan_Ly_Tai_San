@@ -23,6 +23,9 @@ public class KeHoachCongViecSuaChuaService {
     }
 
     public int insert(KeHoachCongViecSuaChua entity) {
+        if (entity.getNguoiThucHien() == null || entity.getNguoiThucHien().trim().isEmpty()){
+            throw new IllegalArgumentException("Nguoi thuc hien dang khong duoc de trong");
+        }
         return keHoachCongViecSuaChuaDao.insert(entity);
     }
 

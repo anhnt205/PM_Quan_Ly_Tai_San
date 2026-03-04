@@ -11,6 +11,7 @@ public class KeHoachCongViecSuaChuaDTO {
     private String tenCongViec;
     private String moTa;
     private Integer thoiGianDuKien;       // phút
+    private String nguoiThucHien;
 
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Ho_Chi_Minh")
     private Date ngayThucHien;

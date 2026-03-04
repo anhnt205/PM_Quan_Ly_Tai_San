@@ -49,13 +49,14 @@ public class KeHoachCongViecSuaChuaDao {
         String sql = """
             INSERT INTO KeHoachCongViecSuaChua (
                 Id, IdKeHoach, TenCongViec, MoTa, ThoiGianDuKien, NgayThucHien,
-                NgayTao, NgayCapNhat, TrangThai
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                NgayTao, NgayCapNhat, TrangThai, NguoiThucHien
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """;
         return jdbcTemplate.update(sql,
                 entity.getId(), entity.getIdKeHoach(), entity.getTenCongViec(), entity.getMoTa(),
                 entity.getThoiGianDuKien(), entity.getNgayThucHien(),
-                entity.getNgayTao(), entity.getNgayCapNhat(), entity.getTrangThai()
+                entity.getNgayTao(), entity.getNgayCapNhat(), entity.getTrangThai(),
+                entity.getNguoiThucHien()
         );
     }
 
@@ -64,12 +65,12 @@ public class KeHoachCongViecSuaChuaDao {
         String sql = """
             UPDATE KeHoachCongViecSuaChua SET
                 TenCongViec = ?, MoTa = ?, ThoiGianDuKien = ?, NgayThucHien = ?,
-                NgayCapNhat = ?, TrangThai = ?
+                NgayCapNhat = ?, TrangThai = ?, NguoiThucHien = ?
             WHERE Id = ?
         """;
         return jdbcTemplate.update(sql,
                 entity.getTenCongViec(), entity.getMoTa(), entity.getThoiGianDuKien(), entity.getNgayThucHien(),
-                entity.getNgayCapNhat(), entity.getTrangThai(),
+                entity.getNgayCapNhat(), entity.getTrangThai(), entity.getNguoiThucHien(),
                 entity.getId()
         );
     }

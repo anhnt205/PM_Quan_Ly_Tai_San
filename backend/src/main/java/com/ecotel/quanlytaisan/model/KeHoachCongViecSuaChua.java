@@ -2,6 +2,8 @@ package com.ecotel.quanlytaisan.model;
 
 import lombok.Data;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.poi.ss.usermodel.Row;
 import java.util.Date;
 import java.time.LocalDateTime;
@@ -9,12 +11,15 @@ import java.time.ZoneId;
 import static com.ecotel.quanlytaisan.utils.ParserHelper.*;
 
 @Data
+@Getter
+@Setter
 public class KeHoachCongViecSuaChua {
     private String id;
     private String idKeHoach;
     private String tenCongViec;
     private String moTa;
     private Integer thoiGianDuKien;       // phút
+    private String nguoiThucHien;
 
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Ho_Chi_Minh")
     private Date ngayThucHien;
@@ -48,6 +53,7 @@ public class KeHoachCongViecSuaChua {
         cv.setNgayTao(parseDate(safeGet(row, 6), "yyyy-MM-dd HH:mm:ss"));
         cv.setNgayCapNhat(parseDate(safeGet(row, 7), "yyyy-MM-dd HH:mm:ss"));
         cv.setTrangThai(parseInt(safeGet(row, 8)));
+        cv.setNguoiThucHien(safeGet(row, 9));
         return cv;
     }
 
@@ -70,6 +76,7 @@ public class KeHoachCongViecSuaChua {
         cv.setNgayCapNhat(ngayCapNhat != null ? Date.from(ngayCapNhat.atZone(ZoneId.systemDefault()).toInstant()) : null);
 
         cv.setTrangThai(parseInt(getCellStringValue(row.getCell(8))));
+        cv.setNguoiThucHien(getCellStringValue(row.getCell(9)));
         return cv;
     }
 
