@@ -16,8 +16,7 @@ import java.util.UUID;
 public class KeHoachCongViecSuaChuaDao {
 
     @Autowired
-    private JdbcTemplate jdbcTemplate
-            ;
+    private JdbcTemplate jdbcTemplate;
     private String upper(String value) {
         return value == null ? null : value.trim().toUpperCase();
     }

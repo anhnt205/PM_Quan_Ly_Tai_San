@@ -2,12 +2,14 @@ package com.ecotel.quanlytaisan.controller;
 
 import com.ecotel.quanlytaisan.model.KeHoachChiTietSuaChua;
 import com.ecotel.quanlytaisan.model.KeHoachChiTietSuaChuaDTO;
+import com.ecotel.quanlytaisan.model.KeHoachCongViecSuaChua;
 import com.ecotel.quanlytaisan.service.KeHoachChiTietSuaChuaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLException;
 import java.util.List;
 
 @RestController
@@ -47,6 +49,13 @@ public class KeHoachChiTietSuaChuaController {
         return new ResponseEntity<>(result, HttpStatus.CREATED);
     }
 
+    // Bulk Create
+    @PostMapping("/bulk-create")
+    public ResponseEntity<?> bulkCreate(@RequestBody List<KeHoachChiTietSuaChua> list) throws SQLException {
+        keHoachChiTietSuaChuaService.bulkCreate(list);
+        return ResponseEntity.ok().build();
+    }
+
     /**
      * Cập nhật chi tiết
      */
@@ -60,6 +69,13 @@ public class KeHoachChiTietSuaChuaController {
         return ResponseEntity.ok(result);
     }
 
+    // Bulk Update
+    @PutMapping("/bulk-update")
+    public ResponseEntity<?> bulkUpdate(@RequestBody List<KeHoachChiTietSuaChua> list) throws SQLException {
+        keHoachChiTietSuaChuaService.bulkUpdate(list);
+        return ResponseEntity.ok().build();
+    }
+
     /**
      * Xóa chi tiết
      */
@@ -70,6 +86,13 @@ public class KeHoachChiTietSuaChuaController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.noContent().build();
+    }
+
+    // Bulk Delete
+    @DeleteMapping("/bulk-delete")
+    public ResponseEntity<?> bulkDelete(@RequestBody List<String> ids) throws SQLException {
+        keHoachChiTietSuaChuaService.bulkDelete(ids);
+        return ResponseEntity.ok().build();
     }
 
     /**

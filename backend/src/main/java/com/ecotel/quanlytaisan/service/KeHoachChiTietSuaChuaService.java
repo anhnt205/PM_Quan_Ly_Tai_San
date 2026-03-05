@@ -26,12 +26,33 @@ public class KeHoachChiTietSuaChuaService {
         return keHoachChiTietSuaChuaDao.insert(entity);
     }
 
+    public void bulkCreate(List<KeHoachChiTietSuaChua> list) {
+
+        if (list == null || list.isEmpty()) return;
+
+        keHoachChiTietSuaChuaDao.batchInsert(list);
+    }
+
     public int update(KeHoachChiTietSuaChua entity) {
         return keHoachChiTietSuaChuaDao.update(entity);
     }
 
+    public void bulkUpdate(List<KeHoachChiTietSuaChua> list) {
+
+        if (list == null || list.isEmpty()) return;
+
+        keHoachChiTietSuaChuaDao.batchUpdate(list);
+    }
+
     public int delete(String id) {
         return keHoachChiTietSuaChuaDao.delete(id);
+    }
+
+    public void bulkDelete(List<String> ids) {
+
+        if (ids == null || ids.isEmpty()) return;
+
+        keHoachChiTietSuaChuaDao.batchDelete(ids);
     }
 
     public int deleteByIdKeHoach(String idKeHoach) {
