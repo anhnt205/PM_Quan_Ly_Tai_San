@@ -72,6 +72,7 @@ export default function ModelAsset() {
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedModelAsset(params.row);
+    window.scrollTo({ top: 140, behavior: "smooth" });
     setReadOnly(true);
     setShowForm(true);
   };

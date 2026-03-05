@@ -70,7 +70,8 @@ export default function MaintenanceRepairType() {
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedRepairType(params.row);
-    setReadOnly(true); // Set readOnly to true when viewing details
+    window.scrollTo({ top: 140, behavior: "smooth" });
+    setReadOnly(true);
     setShowForm(true);
   };
 

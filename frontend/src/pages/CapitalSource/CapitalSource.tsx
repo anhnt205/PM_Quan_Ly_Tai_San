@@ -59,6 +59,7 @@ export default function CapitalSource() {
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedCapitalSource(params.row);
+    window.scrollTo({ top: 140, behavior: "smooth" });
     setReadOnly(true);
     setShowForm(true);
   };

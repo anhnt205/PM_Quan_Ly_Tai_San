@@ -77,6 +77,7 @@ export default function AssetGroup() {
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedAssetGroup(params.row);
+    window.scrollTo({ top: 140, behavior: "smooth" });
     setReadOnly(true);
     setShowForm(true);
   };

@@ -180,15 +180,39 @@ export default function AssetManagerForm({
   }, [selectedAsset]);
 
   return (
-    <Accordion sx={{ background: "#f6f8f4ff" }} expanded={expanded}>
+    <Accordion
+      sx={{
+        background: "#f6f8f4ff",
+        overflow: expanded ? "visible" : "hidden",
+        "& .MuiCollapse-root": {
+          overflow: expanded ? "visible !important" : "hidden",
+        },
+      }}
+      expanded={expanded}
+    >
       <AccordionSummary
         expandIcon={<ViewBtn expanded={expanded} setExpanded={setExpanded} />}
         aria-controls="panel1-content"
         id="panel1-header"
         sx={{
-          "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
-            transform: "none", // Ngăn không cho xoay
+          position: "sticky",
+          top: 112,
+          zIndex: 11,
+          background: "#f6f8f4ff",
+          minHeight: "56px",
+          "&.Mui-expanded": {
+            minHeight: "56px",
+            margin: 0,
           },
+          "& .MuiAccordionSummary-content.Mui-expanded": {
+            margin: "12px 0",
+          },
+          "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
+            transform: "none",
+          },
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -196,13 +220,38 @@ export default function AssetManagerForm({
           <Typography>Chi tiết tài sản</Typography>
         </Box>
       </AccordionSummary>
-      <AccordionDetails>
-        <Box display="flex" gap={2}>
-          {!readOnly && <SaveBtn onSave={formik.submitForm} />}
-          {!readOnly && <CancelBtn onClick={onCancel} />}
-          {readOnly && <EditButton onClick={onEdit} />}
+
+      <AccordionDetails sx={{ pt: 0 }}>
+        <Box
+          sx={{
+            position: "sticky",
+            top: 168,
+            zIndex: 10,
+            background: "#f6f8f4ff",
+            pb: 2,
+            display: "flex",
+            alignItems: "center",
+            mb: 2,
+          }}
+        >
+          <Box display="flex" gap={2}>
+            {!readOnly && <SaveBtn onSave={formik.submitForm} />}
+            {!readOnly && <CancelBtn onClick={onCancel} />}
+            {readOnly && <EditButton onClick={onEdit} />}
+          </Box>
         </Box>
-        <Paper sx={{ mt: 2, p: 2, borderRadius: "12px" }}>
+
+        <Paper
+          elevation={0}
+          sx={{
+            mt: 2,
+            p: 2,
+            borderRadius: "12px",
+            position: "relative",
+            zIndex: 1,
+            boxShadow: "none",
+          }}
+        >
           <Box display={"flex"} alignItems={"center"} gap={2}>
             <InfoOutlineRounded color="primary" />
             <Typography>Thông tin tài sản</Typography>

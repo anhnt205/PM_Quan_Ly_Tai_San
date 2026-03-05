@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../../utils/routes";
 import { Box, Grid, Typography, useTheme } from "@mui/material";
 import * as React from "react";
+import { Engineering } from "@mui/icons-material";
 
 /**
  * Nâng cấp giao diện:
@@ -61,12 +62,12 @@ export const QuickActionButtons = () => {
     },
     {
       label: "+ Kế hoạch sửa chữa bảo dưỡng",
-      icon: <BuildIcon fontSize="large" />,
+      icon: <Engineering fontSize="large" />,
       path: `${ROUTES.MAINTENANCEREPAIR}?type=2`,
     },
     {
       label: "+ Sửa chữa bảo dưỡng",
-      icon: <BuildIcon fontSize="large" />,
+      icon: <Engineering fontSize="large" />,
       path: `${ROUTES.MAINTENANCEREPAIR}?type=1`,
     },
   ];

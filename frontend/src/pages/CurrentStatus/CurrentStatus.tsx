@@ -95,6 +95,7 @@ export default function CurrentStatus() {
   const handleEdit = () => {
     setReadOnly(false);
   };
+
   const columns: GridColDef[] = [
     {
       field: "id",
