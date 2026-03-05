@@ -12,6 +12,7 @@ import static com.ecotel.quanlytaisan.utils.ParserHelper.*;
 public class KeHoachChiTietSuaChua {
     private String id;
     private String idKeHoach;
+    private String idChiTietTaiSan;
     private String idTaiSan;          // NULL nếu là CCDC
     private String idCCDC;             // NULL nếu là Tài sản
     private String ghiChu;
@@ -36,6 +37,7 @@ public class KeHoachChiTietSuaChua {
         ct.setGhiChu(safeGet(row, 4));
         ct.setNgayTao(parseDate(safeGet(row, 5), "yyyy-MM-dd HH:mm:ss"));
         ct.setNgayCapNhat(parseDate(safeGet(row, 6), "yyyy-MM-dd HH:mm:ss"));
+        ct.setIdChiTietTaiSan(safeGet(row, 7));
         return ct;
     }
 
@@ -53,6 +55,8 @@ public class KeHoachChiTietSuaChua {
 
         LocalDateTime ngayCapNhat = getCellDate(row.getCell(6));
         ct.setNgayCapNhat(ngayCapNhat != null ? Date.from(ngayCapNhat.atZone(ZoneId.systemDefault()).toInstant()) : null);
+
+        ct.setIdChiTietTaiSan(getCellStringValue(row.getCell(7)));
 
         return ct;
     }

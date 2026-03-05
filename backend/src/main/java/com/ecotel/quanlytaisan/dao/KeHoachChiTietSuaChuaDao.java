@@ -70,12 +70,12 @@ public class KeHoachChiTietSuaChuaDao {
         entity.setNgayCapNhat(entity.getNgayTao());
         String sql = """
             INSERT INTO KeHoachChiTietSuaChua (
-                Id, IdKeHoach, IdTaiSan, IdCCDC, GhiChu, NgayTao, NgayCapNhat
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                   Id, IdKeHoach, IdTaiSan, IdCCDC, IdChiTietTaiSan, GhiChu, NgayTao, NgayCapNhat
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """;
         return jdbcTemplate.update(sql,
                 entity.getId(), entity.getIdKeHoach(), entity.getIdTaiSan(), entity.getIdCCDC(),
-                entity.getGhiChu(), entity.getNgayTao(), entity.getNgayCapNhat()
+                entity.getIdChiTietTaiSan(), entity.getGhiChu(), entity.getNgayTao(), entity.getNgayCapNhat()
         );
     }
 
@@ -83,8 +83,8 @@ public class KeHoachChiTietSuaChuaDao {
 
         String sql = """
         INSERT INTO KeHoachChiTietSuaChua (
-            Id, IdKeHoach, IdTaiSan, IdCCDC, GhiChu, NgayTao, NgayCapNhat
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            Id, IdKeHoach, IdTaiSan, IdCCDC, IdChiTietTaiSan, GhiChu, NgayTao, NgayCapNhat
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """;
 
         Date now = new Date();
@@ -98,7 +98,7 @@ public class KeHoachChiTietSuaChuaDao {
             entity.setIdKeHoach(upper(entity.getIdKeHoach()));
             entity.setIdTaiSan(upper(entity.getIdTaiSan()));
             entity.setIdCCDC(upper(entity.getIdCCDC()));
-
+            entity.setIdChiTietTaiSan(upper(entity.getIdChiTietTaiSan()));
             entity.setNgayTao(now);
             entity.setNgayCapNhat(now);
 
@@ -106,9 +106,10 @@ public class KeHoachChiTietSuaChuaDao {
             ps.setString(2, entity.getIdKeHoach());
             ps.setString(3, entity.getIdTaiSan());
             ps.setString(4, entity.getIdCCDC());
-            ps.setString(5, entity.getGhiChu());
-            ps.setObject(6, entity.getNgayTao());
-            ps.setObject(7, entity.getNgayCapNhat());
+            ps.setString(5, entity.getIdChiTietTaiSan());
+            ps.setString(6, entity.getGhiChu());
+            ps.setObject(7, entity.getNgayTao());
+            ps.setObject(8, entity.getNgayCapNhat());
         });
     }
 
@@ -116,11 +117,11 @@ public class KeHoachChiTietSuaChuaDao {
         entity.setNgayCapNhat(new Date());
         String sql = """
             UPDATE KeHoachChiTietSuaChua SET
-                IdTaiSan = ?, IdCCDC = ?, GhiChu = ?, NgayCapNhat = ?
+                IdTaiSan = ?, IdCCDC = ?, IdChiTietTaiSan = ?, GhiChu = ?, NgayCapNhat = ?
             WHERE Id = ?
         """;
         return jdbcTemplate.update(sql,
-                entity.getIdTaiSan(), entity.getIdCCDC(), entity.getGhiChu(),
+                entity.getIdTaiSan(), entity.getIdCCDC(), entity.getIdChiTietTaiSan(), entity.getGhiChu(),
                 entity.getNgayCapNhat(), entity.getId()
         );
     }
@@ -129,7 +130,7 @@ public class KeHoachChiTietSuaChuaDao {
 
         String sql = """
         UPDATE KeHoachChiTietSuaChua SET
-            IdTaiSan = ?, IdCCDC = ?, GhiChu = ?, NgayCapNhat = ?
+            IdTaiSan = ?, IdCCDC = ?, IdChiTietTaiSan = ?, GhiChu = ?, NgayCapNhat = ?
         WHERE Id = ?
     """;
 
@@ -140,12 +141,14 @@ public class KeHoachChiTietSuaChuaDao {
             entity.setIdTaiSan(upper(entity.getIdTaiSan()));
             entity.setIdCCDC(upper(entity.getIdCCDC()));
             entity.setNgayCapNhat(now);
+            entity.setIdChiTietTaiSan(entity.getIdChiTietTaiSan());
 
             ps.setString(1, entity.getIdTaiSan());
             ps.setString(2, entity.getIdCCDC());
-            ps.setString(3, entity.getGhiChu());
-            ps.setObject(4, entity.getNgayCapNhat());
-            ps.setString(5, entity.getId());
+            ps.setString(3, entity.getIdChiTietTaiSan());
+            ps.setString(4, entity.getGhiChu());
+            ps.setObject(5, entity.getNgayCapNhat());
+            ps.setString(6, entity.getId());
         });
     }
 
