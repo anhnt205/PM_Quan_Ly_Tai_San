@@ -70,22 +70,22 @@ public class KeHoachChiTietSuaChuaDao {
         entity.setNgayCapNhat(entity.getNgayTao());
         String sql = """
             INSERT INTO KeHoachChiTietSuaChua (
-                   Id, IdKeHoach, IdTaiSan, IdCCDC, IdChiTietTaiSan, GhiChu, NgayTao, NgayCapNhat
+                   Id, IdKeHoach, IdTaiSan, IdCCDC, IdChiTietCCDC, GhiChu, NgayTao, NgayCapNhat
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """;
         return jdbcTemplate.update(sql,
                 entity.getId(), entity.getIdKeHoach(), entity.getIdTaiSan(), entity.getIdCCDC(),
-                entity.getIdChiTietTaiSan(), entity.getGhiChu(), entity.getNgayTao(), entity.getNgayCapNhat()
+                entity.getIdChiTietCCDC(), entity.getGhiChu(), entity.getNgayTao(), entity.getNgayCapNhat()
         );
     }
 
     public void batchInsert(List<KeHoachChiTietSuaChua> list) {
 
         String sql = """
-        INSERT INTO KeHoachChiTietSuaChua (
-            Id, IdKeHoach, IdTaiSan, IdCCDC, IdChiTietTaiSan, GhiChu, NgayTao, NgayCapNhat
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """;
+            INSERT INTO KeHoachChiTietSuaChua (
+                Id, IdKeHoach, IdTaiSan, IdCCDC, IdChiTietCCDC, GhiChu, NgayTao, NgayCapNhat
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """;
 
         Date now = new Date();
 
@@ -98,7 +98,7 @@ public class KeHoachChiTietSuaChuaDao {
             entity.setIdKeHoach(upper(entity.getIdKeHoach()));
             entity.setIdTaiSan(upper(entity.getIdTaiSan()));
             entity.setIdCCDC(upper(entity.getIdCCDC()));
-            entity.setIdChiTietTaiSan(upper(entity.getIdChiTietTaiSan()));
+            entity.setIdChiTietCCDC(upper(entity.getIdChiTietCCDC()));
             entity.setNgayTao(now);
             entity.setNgayCapNhat(now);
 
@@ -106,7 +106,7 @@ public class KeHoachChiTietSuaChuaDao {
             ps.setString(2, entity.getIdKeHoach());
             ps.setString(3, entity.getIdTaiSan());
             ps.setString(4, entity.getIdCCDC());
-            ps.setString(5, entity.getIdChiTietTaiSan());
+            ps.setString(5, entity.getIdChiTietCCDC());
             ps.setString(6, entity.getGhiChu());
             ps.setObject(7, entity.getNgayTao());
             ps.setObject(8, entity.getNgayCapNhat());
@@ -117,11 +117,11 @@ public class KeHoachChiTietSuaChuaDao {
         entity.setNgayCapNhat(new Date());
         String sql = """
             UPDATE KeHoachChiTietSuaChua SET
-                IdTaiSan = ?, IdCCDC = ?, IdChiTietTaiSan = ?, GhiChu = ?, NgayCapNhat = ?
+                IdTaiSan = ?, IdCCDC = ?, IdChiTietCCDC = ?, GhiChu = ?, NgayCapNhat = ?
             WHERE Id = ?
         """;
         return jdbcTemplate.update(sql,
-                entity.getIdTaiSan(), entity.getIdCCDC(), entity.getIdChiTietTaiSan(), entity.getGhiChu(),
+                entity.getIdTaiSan(), entity.getIdCCDC(), entity.getIdChiTietCCDC(), entity.getGhiChu(),
                 entity.getNgayCapNhat(), entity.getId()
         );
     }
@@ -129,10 +129,10 @@ public class KeHoachChiTietSuaChuaDao {
     public void batchUpdate(List<KeHoachChiTietSuaChua> list) {
 
         String sql = """
-        UPDATE KeHoachChiTietSuaChua SET
-            IdTaiSan = ?, IdCCDC = ?, IdChiTietTaiSan = ?, GhiChu = ?, NgayCapNhat = ?
-        WHERE Id = ?
-    """;
+            UPDATE KeHoachChiTietSuaChua SET
+                IdTaiSan = ?, IdCCDC = ?, IdChiTietCCDC = ?, GhiChu = ?, NgayCapNhat = ?
+            WHERE Id = ?
+        """;
 
         Date now = new Date();
 
@@ -141,11 +141,11 @@ public class KeHoachChiTietSuaChuaDao {
             entity.setIdTaiSan(upper(entity.getIdTaiSan()));
             entity.setIdCCDC(upper(entity.getIdCCDC()));
             entity.setNgayCapNhat(now);
-            entity.setIdChiTietTaiSan(entity.getIdChiTietTaiSan());
+            entity.setIdChiTietCCDC(entity.getIdChiTietCCDC());
 
             ps.setString(1, entity.getIdTaiSan());
             ps.setString(2, entity.getIdCCDC());
-            ps.setString(3, entity.getIdChiTietTaiSan());
+            ps.setString(3, entity.getIdChiTietCCDC());
             ps.setString(4, entity.getGhiChu());
             ps.setObject(5, entity.getNgayCapNhat());
             ps.setString(6, entity.getId());
