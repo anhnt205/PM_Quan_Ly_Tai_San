@@ -40,4 +40,32 @@ public class KeHoachCongViecSuaChuaService {
     public int deleteByIdKeHoach(String idKeHoach) {
         return keHoachCongViecSuaChuaDao.deleteByIdKeHoach(idKeHoach);
     }
+
+    public void bulkCreate(List<KeHoachCongViecSuaChua> list) {
+
+        if (list == null || list.isEmpty()) return;
+
+        for (KeHoachCongViecSuaChua e : list) {
+            if (e.getNguoiThucHien() == null || e.getNguoiThucHien().trim().isEmpty()) {
+                throw new IllegalArgumentException("Nguoi thuc hien khong duoc de trong");
+            }
+        }
+
+        keHoachCongViecSuaChuaDao.batchInsert(list);
+    }
+
+    public void bulkUpdate(List<KeHoachCongViecSuaChua> list) {
+
+        if (list == null || list.isEmpty()) return;
+
+        keHoachCongViecSuaChuaDao.batchUpdate(list);
+    }
+
+    public void bulkDelete(List<String> ids) {
+
+        if (ids == null || ids.isEmpty()) return;
+
+        keHoachCongViecSuaChuaDao.batchDelete(ids);
+    }
+
 }

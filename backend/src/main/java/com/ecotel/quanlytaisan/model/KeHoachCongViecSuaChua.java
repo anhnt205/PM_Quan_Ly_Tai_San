@@ -30,16 +30,12 @@ public class KeHoachCongViecSuaChua {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
     private Date ngayCapNhat;
 
-    private Integer trangThai;             // 0: Chưa TH, 1: Đang TH, 2: Hoàn thành, 3: Hủy
 
     // Custom getters
     public Integer getThoiGianDuKien() {
         return thoiGianDuKien != null ? thoiGianDuKien : 0;
     }
 
-    public Integer getTrangThai() {
-        return trangThai != null ? trangThai : 0;
-    }
 
     // Map từ mảng String (import CSV)
     public static KeHoachCongViecSuaChua mapToKeHoachCongViecSuaChua(String[] row) {
@@ -52,8 +48,7 @@ public class KeHoachCongViecSuaChua {
         cv.setNgayThucHien(parseDate(safeGet(row, 5), "yyyy-MM-dd"));
         cv.setNgayTao(parseDate(safeGet(row, 6), "yyyy-MM-dd HH:mm:ss"));
         cv.setNgayCapNhat(parseDate(safeGet(row, 7), "yyyy-MM-dd HH:mm:ss"));
-        cv.setTrangThai(parseInt(safeGet(row, 8)));
-        cv.setNguoiThucHien(safeGet(row, 9));
+        cv.setNguoiThucHien(safeGet(row, 8));
         return cv;
     }
 
@@ -75,8 +70,7 @@ public class KeHoachCongViecSuaChua {
         LocalDateTime ngayCapNhat = getCellDate(row.getCell(7));
         cv.setNgayCapNhat(ngayCapNhat != null ? Date.from(ngayCapNhat.atZone(ZoneId.systemDefault()).toInstant()) : null);
 
-        cv.setTrangThai(parseInt(getCellStringValue(row.getCell(8))));
-        cv.setNguoiThucHien(getCellStringValue(row.getCell(9)));
+        cv.setNguoiThucHien(getCellStringValue(row.getCell(8)));
         return cv;
     }
 
