@@ -43,8 +43,25 @@ export const useMaintenancePlanningMutation = () => {
       const res = await api.post("/kehoach-suachua", data);
       return res.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["maintenancePlanningPage"] });
+    onSuccess: (response, variables) => {
+      if (variables.chiTiets && variables.chiTiets?.length > 0) {
+        variables.chiTiets.forEach(async (item: any) => {
+          if (item.id) {
+            await updateDetailMutation.mutate({
+              ...item,
+              idKeHoach: response.id,
+            });
+          } else {
+            await createDetailMutation.mutate({
+              ...item,
+              idKeHoach: response.id,
+            });
+          }
+        });
+      }
+      queryClient.invalidateQueries({
+        queryKey: ["maintenancePlanningPage"],
+      });
       showSuccessAlert("Tạo kế hoạch sửa chữa thành công");
     },
     onError: (error: any) => {
@@ -61,7 +78,22 @@ export const useMaintenancePlanningMutation = () => {
       const res = await api.put(`/kehoach-suachua/${data.id}`, data);
       return res.data;
     },
-    onSuccess: () => {
+    onSuccess: (response, variables) => {
+      if (variables.chiTiets && variables.chiTiets?.length > 0) {
+        variables.chiTiets.forEach(async (item: any) => {
+          if (item.id) {
+            await updateDetailMutation.mutate({
+              ...item,
+              idKeHoach: response.id,
+            });
+          } else {
+            await createDetailMutation.mutate({
+              ...item,
+              idKeHoach: response.id,
+            });
+          }
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ["maintenancePlanningPage"] });
       showSuccessAlert("Cập nhật kế hoạch bảo trì thành công");
     },

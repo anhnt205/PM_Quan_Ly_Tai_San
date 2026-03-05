@@ -35,9 +35,9 @@ export interface MaintenancePlanDetailItem {
 export interface MaintenancePlanAssetItem {
   id: string;
   idKeHoach: string;
-  idTaiSan?: string;
+  idTaiSan: string | null;
   tenTaiSan?: string;
-  idCCDC?: string;
+  idCCDC: string | null;
   tenCCDC?: string;
   ghiChu?: string;
   ngayTao?: string;

@@ -106,7 +106,14 @@ export default function MaintenancePlanningForm({
     },
     validationSchema: MaintenancePlanValidation,
     onSubmit: (values) => {
-      onSave(values);
+      const chiTiets = values.chiTiets.map((item) => {
+        return {
+          ...item,
+          idTaiSan: item.idTaiSan ?? null,
+          idCCDC: item.idCCDC ?? null,
+        };
+      });
+      onSave({ ...values, chiTiets });
     },
   });
 

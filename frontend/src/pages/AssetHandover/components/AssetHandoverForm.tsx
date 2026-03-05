@@ -40,7 +40,10 @@ import EditButton from "../../../components/Button/EditButton";
 import CustomStepper from "../../../components/common/CustomStepper";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import { AssetHandoverData, AssetHandoverFormValues } from "../types";
-import { useAssetTransferPageQuery } from "../../AssetTransfer/Mutation";
+import {
+  useAssetTranferMutation,
+  useAssetTransferPageQuery,
+} from "../../AssetTransfer/Mutation";
 import dayjs from "dayjs";
 import SignDocumentForm from "./SignDocumentForm";
 import PreviewBtn from "../../../components/Button/PreviewBtn";
@@ -150,6 +153,7 @@ export default function AssetHandoverForm({
     selectedAssetHandover ? undefined : true,
   );
   const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
+  const { assetTransferDetailAllMutation } = useAssetTranferMutation();
 
   const formik = useFormik<AssetHandoverFormValues>({
     initialValues: {
@@ -348,10 +352,10 @@ export default function AssetHandoverForm({
 
   const getListAsset = async (id: string) => {
     if (!id) return;
-    const result = await findById(AssetTransferData.items || [], id);
+    const result = await assetTransferDetailAllMutation.mutateAsync(id);
 
     setListAssets(
-      (result?.chiTietDieuDongTaiSanDTOS || []).map((i: any) => ({
+      (result || []).map((i: any) => ({
         ...i,
         id: i.idTaiSan,
         moTa: i.moTa,

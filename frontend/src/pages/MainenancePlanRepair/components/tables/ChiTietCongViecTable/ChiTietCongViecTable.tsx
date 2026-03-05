@@ -54,7 +54,6 @@ export default function ChiTietCongViecTable({
 
   // 1. Logic Save: Nhận values từ Inner Formik và đẩy vào Main Formik
   const handleSaveWork = (values: MaintenancePlanDetailItem) => {
-    console.log(values);
     if (!editingWork) return;
 
     const currentCongViecs = formik.values.congViecs || [];

@@ -50,8 +50,8 @@ export default function ThietBiBaoTriTable({
     const newAsset = {
       id: "",
       idKeHoach: "",
-      idTaiSan: "",
-      idCCDC: "",
+      idTaiSan: null,
+      idCCDC: null,
       ghiChu: "",
     };
     formik.setFieldValue("chiTiets", [newAsset, ...currentData]);

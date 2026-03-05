@@ -12,7 +12,11 @@ import { RootState } from "../../../redux/store";
 import dayjs from "dayjs";
 import { listNguoiKy } from "../config";
 import socketService from "../../../services/socketService";
-import { CongTy, MessageTypeActions, MessageTypeFunctions } from "../../../utils/const";
+import {
+  CongTy,
+  MessageTypeActions,
+  MessageTypeFunctions,
+} from "../../../utils/const";
 
 export const useAssetTranferMutation = () => {
   const queryClient = useQueryClient();
@@ -232,6 +236,17 @@ export const useAssetTranferMutation = () => {
           error.message ||
           "Tạo chi tiết điều động tài sản thất bại",
       );
+    },
+  });
+
+  const assetTransferDetailAllMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.get(`/chitietdieudongtaisan`, {
+        params: {
+          iddieudongtaisan: id,
+        },
+      });
+      return res.data;
     },
   });
   // nguoi ky
@@ -545,6 +560,7 @@ export const useAssetTranferMutation = () => {
     handleAssetByDonVi,
     getByIdMutation,
     getAssetHandoverMutation,
+    assetTransferDetailAllMutation,
   };
 };
 
