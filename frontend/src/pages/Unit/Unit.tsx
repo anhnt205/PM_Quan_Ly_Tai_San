@@ -71,6 +71,7 @@ export default function Unit() {
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedUnit(params.row);
+    window.scrollTo({ top: 140, behavior: "smooth" });
     setReadOnly(true);
     setShowForm(true);
   };

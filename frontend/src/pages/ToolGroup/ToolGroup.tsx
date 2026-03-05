@@ -77,7 +77,8 @@ export default function ToolGroup() {
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedToolGroup(params.row);
-    setReadOnly(true); // Set readOnly to true when viewing details
+    window.scrollTo({ top: 140, behavior: "smooth" });
+    setReadOnly(true);
     setShowForm(true);
   };
 

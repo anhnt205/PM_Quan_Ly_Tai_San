@@ -62,7 +62,8 @@ export default function Position() {
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedPosition(params.row);
-    setReadOnly(true); // Set readOnly to true when viewing details
+    window.scrollTo({ top: 140, behavior: "smooth" });
+    setReadOnly(true);
     setShowForm(true);
   };
 

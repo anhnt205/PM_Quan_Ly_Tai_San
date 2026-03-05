@@ -62,7 +62,6 @@ export default function TypeAsset() {
       debouncedSearchValue,
     );
   const { data: allTypeAssets = [] } = useAllTypeAssetQuery();
-  const { data: assetGroups = [] } = useAllAssetGroupQuery();
 
   const handleImport = (file: File) => {
     importExcelMutation.mutate(file, {
@@ -78,6 +77,7 @@ export default function TypeAsset() {
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedTypeAsset(params.row);
+    window.scrollTo({ top: 140, behavior: "smooth" });
     setReadOnly(true);
     setShowForm(true);
   };

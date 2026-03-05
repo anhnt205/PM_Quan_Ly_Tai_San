@@ -6,6 +6,14 @@ import {
   Settings,
   ChevronRight,
   ChevronLeft,
+  Dashboard,
+  Category,
+  Inventory,
+  SwapHoriz,
+  LocalShipping,
+  Handshake,
+  Engineering,
+  Assessment,
 } from "@mui/icons-material";
 import {
   Avatar,
@@ -26,10 +34,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { logout } from "../redux/userSlice";
 import { ROUTES } from "../utils/routes";
 import ExpirationSettingDialog from "../components/common/ExpirationSettingDialog";
-import {
-  useAssetTransferAllQuery,
-  useAssetTransferPageQuery,
-} from "../pages/AssetTransfer/Mutation";
+import { useAssetTransferPageQuery } from "../pages/AssetTransfer/Mutation";
 import {
   getAssetHandoverCount,
   getAssetTransferCount,
@@ -39,18 +44,9 @@ import {
 } from "../utils/helpers";
 import { ShowCount } from "../components/common/ShowCount";
 import { ShowCountInSubMenu } from "../components/common/ShowCountInSubMenu";
-import {
-  useToolTransferAllQuery,
-  useToolTransferPageQuery,
-} from "../pages/ToolTransfer/Mutation";
-import {
-  useToolHandoverAllQuery,
-  useToolHandoverPageQuery,
-} from "../pages/ToolHandover/Mutation";
-import {
-  useAssetHandoverAllQuery,
-  useAssetHandoverPageQuery,
-} from "../pages/AssetHandover/Mutation";
+import { useToolTransferPageQuery } from "../pages/ToolTransfer/Mutation";
+import { useToolHandoverPageQuery } from "../pages/ToolHandover/Mutation";
+import { useAssetHandoverPageQuery } from "../pages/AssetHandover/Mutation";
 import { useMaintenanceRepairAllQuery } from "../pages/MaintenanceRepair/Mutation";
 import api from "../config/api.config";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -61,12 +57,10 @@ const NavMenuItem = ({ item }: { item: any }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
-  // Xử lý mở submenu
   const handleOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
-  // Xử lý đóng submenu
   const handleClose = () => {
     setAnchorEl(null);
   };
@@ -76,13 +70,12 @@ const NavMenuItem = ({ item }: { item: any }) => {
     textTransform: "none",
     fontSize: "14px",
     fontWeight: 500,
-    whiteSpace: "nowrap", // QUAN TRỌNG: Không cho text xuống dòng
-    minWidth: "auto", // Đảm bảo nút co giãn theo độ dài text
-    px: 2, // Padding ngang cho thoáng
+    whiteSpace: "nowrap",
+    minWidth: "auto",
+    px: 2,
     position: "relative",
   };
 
-  // Xử lý khi click vào item con
   const handleSubItemClick = (path: string) => {
     navigate(path);
     handleClose();
@@ -95,7 +88,8 @@ const NavMenuItem = ({ item }: { item: any }) => {
         <Button
           color="inherit"
           onClick={handleOpen}
-          endIcon={<KeyboardArrowDown />} // Icon mũi tên chỉ xuống
+          startIcon={item.icon} // THÊM DÒNG NÀY ĐỂ HIỂN THỊ ICON
+          endIcon={<KeyboardArrowDown />}
           sx={buttonStyle}
         >
           {item.text}
@@ -128,7 +122,11 @@ const NavMenuItem = ({ item }: { item: any }) => {
 
   // Trường hợp 2: Menu đơn (không có con)
   return (
-    <Button onClick={() => navigate(item.path)} sx={buttonStyle}>
+    <Button
+      onClick={() => navigate(item.path)}
+      startIcon={item.icon} // THÊM DÒNG NÀY ĐỂ HIỂN THỊ ICON
+      sx={buttonStyle}
+    >
       {item.text}
       {item.count > 0 && <ShowCount count={item.count} />}
     </Button>
@@ -315,11 +313,12 @@ export default function Menuheader() {
   const menuItems = [
     {
       text: "Tổng quan",
+      icon: <Dashboard fontSize="small" />,
       path: ROUTES.MAIN,
     },
     {
       text: "Danh mục",
-      icon: <ArrowRight color="primary" />,
+      icon: <Category fontSize="small" />,
       path: "#",
       subMenu: [
         { text: "Quản lý nhân viên", path: ROUTES.STAFF, code: "NHANVIEN" },
@@ -344,16 +343,19 @@ export default function Menuheader() {
     },
     {
       text: "Quản lý tài sản",
+      icon: <Inventory fontSize="small" />,
       path: ROUTES.ASSETMANAGER,
       code: "TAISAN",
     },
     {
       text: "Quản lý CCDC-Vật tư",
+      icon: <Inventory fontSize="small" />,
       path: ROUTES.TOOLMANAGER,
       code: "CCDCVT",
     },
     {
       text: "Điều động tài sản",
+      icon: <LocalShipping fontSize="small" />,
       path: "/",
       code: "DIEUDONG_TAISAN",
       count: assetTransferCount1 + assetTransferCount2 + assetTransferCount3,
@@ -377,6 +379,7 @@ export default function Menuheader() {
     },
     {
       text: "Điều động CCDC - vật tư",
+      icon: <LocalShipping fontSize="small" />,
       path: "/",
       code: "DIEUDONG_CCDC",
       count: toolTransferCount1 + toolTransferCount2 + toolTransferCount3,
@@ -400,18 +403,21 @@ export default function Menuheader() {
     },
     {
       text: "Bàn giao tài sản",
+      icon: <Handshake fontSize="small" />,
       path: "/ban_giao_tai_san",
       code: "BANGIAO_TAISAN",
       count: assetHandoverCount,
     },
     {
       text: "Bàn giao CCDC-Vật tư",
+      icon: <Handshake fontSize="small" />,
       path: ROUTES.TOOLHANDOVER,
       code: "BANGIAO_CCDC",
       count: toolHandoverCount,
     },
     {
       text: "Sửa chữa bảo dưỡng",
+      icon: <Engineering fontSize="small" />,
       path: "/",
       count: maintenanceRepairCount1 + maintenanceRepairCount2,
       subMenu: [
@@ -428,6 +434,7 @@ export default function Menuheader() {
     },
     {
       text: "Báo cáo",
+      icon: <Assessment fontSize="small" />,
       path: "/",
       code: "BAOCAO",
       subMenu: [
@@ -444,12 +451,10 @@ export default function Menuheader() {
   ].filter((item) => {
     // 1. Kiểm tra quyền của menu chính
     const canSeeMenu = hasPermission(item.code);
-
     // 2. Nếu menu chính có subMenu, chỉ hiện menu chính nếu có ít nhất 1 subMenu bên trong
     if (item.subMenu) {
       return canSeeMenu && item.subMenu.length > 0;
     }
-
     return canSeeMenu;
   });
 

@@ -81,6 +81,7 @@ export default function ReasonIncrease() {
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedReasonIncrease(params.row);
+    window.scrollTo({ top: 140, behavior: "smooth" });
     setReadOnly(true);
     setShowForm(true);
   };

@@ -61,7 +61,8 @@ export default function Staff() {
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedStaff(params.row);
-    setReadOnly(true); // Set readOnly to true when viewing details
+    window.scrollTo({ top: 140, behavior: "smooth" });
+    setReadOnly(true);
     setShowForm(true);
   };
 

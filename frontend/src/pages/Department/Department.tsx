@@ -60,9 +60,11 @@ export default function Department() {
     );
 
   const { data: allDepartment } = useAllDepartmentsQuery();
+
   const handleRowClick = (params: GridRowParams) => {
     setSelectedDepartment(params.row);
-    setReadOnly(true); // Set readOnly to true when viewing details
+    window.scrollTo({ top: 140, behavior: "smooth" });
+    setReadOnly(true);
     setShowForm(true);
   };
 
