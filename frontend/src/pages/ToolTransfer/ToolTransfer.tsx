@@ -466,118 +466,119 @@ export default function ToolTransfer() {
               setReadOnly(false);
             }}
           />
-
-          {showForm && (
-            <Box sx={{ mb: 2 }}>
-              <ToolTransferForm
-                key={selectedRow ? `edit-${selectedRow.id}` : "new-form"}
-                onClose={handleClose}
-                onSave={handleSave}
-                onEdit={handleEdit}
-                onCancel={async () => {
-                  if (selectedRow) {
-                    const confirm = await showConfirmAlert(
-                      `Bạn có chắc muốn hủy phiếu "${selectedRow.tenPhieu}"?`,
-                    );
-                    if (confirm.isConfirmed) cancelMutation.mutate(selectedRow);
-                  }
-                }}
-                readOnly={readOnly}
-                selectedTool={selectedRow}
-                departments={allDepartments}
-                allUnits={allUnits}
-                label={label}
-                type={Number(type)}
-              />
-            </Box>
-          )}
-
-          <Grid
-            container
-            sx={{
-              display: "flex",
-              alignItems: "stretch",
-              bgcolor: "background.paper",
-              borderRadius: "8px",
-              overflow: "hidden",
-              border: "1px solid",
-              borderColor: "divider",
-              // 1. Cố định chiều cao ở đây
-              height: "calc(100vh)",
-            }}
-          >
+          <Box sx={{ p: 2 }}>
+            {showForm && (
+              <Box sx={{ mb: 2 }}>
+                <ToolTransferForm
+                  key={selectedRow ? `edit-${selectedRow.id}` : "new-form"}
+                  onClose={handleClose}
+                  onSave={handleSave}
+                  onEdit={handleEdit}
+                  onCancel={async () => {
+                    if (selectedRow) {
+                      const confirm = await showConfirmAlert(
+                        `Bạn có chắc muốn hủy phiếu "${selectedRow.tenPhieu}"?`,
+                      );
+                      if (confirm.isConfirmed)
+                        cancelMutation.mutate(selectedRow);
+                    }
+                  }}
+                  readOnly={readOnly}
+                  selectedTool={selectedRow}
+                  departments={allDepartments}
+                  allUnits={allUnits}
+                  label={label}
+                  type={Number(type)}
+                />
+              </Box>
+            )}
             <Grid
-              size={{ xs: showSidebar ? 9 : 12 }}
+              container
               sx={{
-                transition: "all 0.3s ease",
-                borderRight: showSidebar ? "1px solid" : "none",
-                borderColor: "divider",
-                height: "100%", // Chiếm 100% chiều cao cha
                 display: "flex",
-                flexDirection: "column",
-                // 2. Cho phép scroll bên trong nếu nội dung quá dài
+                alignItems: "stretch",
+                bgcolor: "background.paper",
+                borderRadius: "8px",
                 overflow: "hidden",
-                "& .MuiPaper-root": {
-                  margin: 0,
-                  boxShadow: "none",
-                  borderRadius: 0,
-                  display: "flex",
-                  flexDirection: "column",
-                  flexGrow: 1,
-                  height: "100%", // Ép Paper chiếm hết chiều cao
-                  overflow: "hidden",
-                },
+                border: "1px solid",
+                borderColor: "divider",
+                // 1. Cố định chiều cao ở đây
+                height: "calc(100vh)",
               }}
             >
-              <TableCustom
-                tableId="toolTransfer"
-                title={`Danh sách phiếu ${label}`}
-                columns={columns}
-                rows={toolTransferPage.items || []}
-                total={toolTransferPage.totalItems || 0}
-                paginationModel={paginationModel}
-                onPaginationModelChange={setPaginationModel}
-                onRowClick={handleRowClick}
-                selectedIds={selectedIds}
-                onSelectionChange={setSelectedIds}
-                onDelete={(ids: string[]) => {}}
-                onSign={handleViewSignAssets}
-                handleSignDocument={handleSignDocument}
-                canSign={canSign}
-                searchValue={searchValue}
-                setSearchValue={setSearchValue}
-                showStatusFilter={true}
-                showDelete={false}
-                handleSendToSigner={handleSend}
-                statusOptions={statusOptions}
-                onStatusChange={(value) => {
-                  setStatus(value);
-                }}
-                statusValue={status}
-                isCheckShowShare={isCheckShowShare}
-                loading={isLoading}
-              />
-            </Grid>
-
-            {showSidebar && (
               <Grid
-                size={{ xs: 3 }}
+                size={{ xs: showSidebar ? 9 : 12 }}
                 sx={{
+                  transition: "all 0.3s ease",
+                  borderRight: showSidebar ? "1px solid" : "none",
+                  borderColor: "divider",
+                  height: "100%", // Chiếm 100% chiều cao cha
                   display: "flex",
                   flexDirection: "column",
-                  bgcolor: "#fafafa",
-                  height: "100%",
-                  overflowY: "auto",
+                  // 2. Cho phép scroll bên trong nếu nội dung quá dài
+                  overflow: "hidden",
+                  "& .MuiPaper-root": {
+                    margin: 0,
+                    boxShadow: "none",
+                    borderRadius: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    flexGrow: 1,
+                    height: "100%", // Ép Paper chiếm hết chiều cao
+                    overflow: "hidden",
+                  },
                 }}
               >
-                <SignerSidebar
-                  selectedRow={selectedRow}
-                  handoverDetails={detailData}
-                  onClose={() => setShowSidebar(false)}
+                <TableCustom
+                  tableId="toolTransfer"
+                  title={`Danh sách phiếu ${label}`}
+                  columns={columns}
+                  rows={toolTransferPage.items || []}
+                  total={toolTransferPage.totalItems || 0}
+                  paginationModel={paginationModel}
+                  onPaginationModelChange={setPaginationModel}
+                  onRowClick={handleRowClick}
+                  selectedIds={selectedIds}
+                  onSelectionChange={setSelectedIds}
+                  onDelete={(ids: string[]) => {}}
+                  onSign={handleViewSignAssets}
+                  handleSignDocument={handleSignDocument}
+                  canSign={canSign}
+                  searchValue={searchValue}
+                  setSearchValue={setSearchValue}
+                  showStatusFilter={true}
+                  showDelete={false}
+                  handleSendToSigner={handleSend}
+                  statusOptions={statusOptions}
+                  onStatusChange={(value) => {
+                    setStatus(value);
+                  }}
+                  statusValue={status}
+                  isCheckShowShare={isCheckShowShare}
+                  loading={isLoading}
                 />
               </Grid>
-            )}
-          </Grid>
+
+              {showSidebar && (
+                <Grid
+                  size={{ xs: 3 }}
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    bgcolor: "#fafafa",
+                    height: "100%",
+                    overflowY: "auto",
+                  }}
+                >
+                  <SignerSidebar
+                    selectedRow={selectedRow}
+                    handoverDetails={detailData}
+                    onClose={() => setShowSidebar(false)}
+                  />
+                </Grid>
+              )}
+            </Grid>
+          </Box>
         </>
       )}
     </>

@@ -25,6 +25,7 @@ import { useAllAssetsQuery } from "../AssetManager/Mutation";
 import { useAllToolQuery } from "../ToolManager/Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
 import { showPeriod, showPlanType, showStatus } from "./config";
+import { StatusPlan } from "../../utils/const";
 
 export default function MaintenancePlanRepair() {
   const { user } = useSelector((state: any) => state.user);
@@ -70,7 +71,7 @@ export default function MaintenancePlanRepair() {
       paginationModel.page,
       paginationModel.pageSize,
       searchDebounce,
-      status !== "" ? parseInt(status) : undefined,
+      status,
     );
 
   // Maintenance Planning mutations
@@ -93,24 +94,18 @@ export default function MaintenancePlanRepair() {
 
   const handlePlanningSave = (planData: MaintenancePlanData) => {
     if (selectedPlan?.id) {
-      updatePlanMutation.mutate(planData);
-    } else {
-      createPlanMutation.mutate(planData);
-    }
-  };
-
-  const handleDeleteSelectedPlanning = () => {
-    selectedIds.forEach((id) => {
-      deletePlanMutation.mutate(id, {
+      updatePlanMutation.mutate(planData, {
         onSuccess: () => {
-          setMaintenancePlans((prev) => prev.filter((plan) => plan.id !== id));
-        },
-        onError: (error) => {
-          console.error("Error deleting plan:", error);
+          handleClose();
         },
       });
-    });
-    setSelectedIds([]);
+    } else {
+      createPlanMutation.mutate(planData, {
+        onSuccess: () => {
+          handleClose();
+        },
+      });
+    }
   };
 
   // Define planning table columns
@@ -198,14 +193,7 @@ export default function MaintenancePlanRepair() {
                   `Xóa kế hoạch "${params.row.tenKeHoach}"?`,
                 );
                 if (confirm?.isConfirmed) {
-                  setMaintenancePlans((prev) =>
-                    prev.filter((p) => p.id !== params.row.id),
-                  );
-                  if (selectedPlan?.id === params.row.id) {
-                    setSelectedPlan(null);
-                    setShowForm(false);
-                    setShowSidebar(false);
-                  }
+                  deletePlanMutation.mutate(params.row);
                 }
               }}
             >
@@ -222,41 +210,47 @@ export default function MaintenancePlanRepair() {
     {
       label: "Tất cả",
       value: "",
-      count: planPageData.totalItems,
+      count:
+        planPageData?.groupCounts?.[StatusPlan.PENDING] +
+        planPageData?.groupCounts?.[StatusPlan.PROGRESS] +
+        planPageData?.groupCounts?.[StatusPlan.COMPLETED],
       color: "primary",
     },
     {
       label: "Chưa thực hiện",
-      value: "0",
-      count: planPageData?.trangThaiCounts?.["0"] ?? 0,
+      value: StatusPlan.PENDING,
+      count: planPageData?.groupCounts?.[StatusPlan.PENDING] ?? 0,
       color: "warning",
     },
     {
       label: "Đang thực hiện",
-      value: "1",
-      count: planPageData?.trangThaiCounts?.["1"] ?? 0,
+      value: StatusPlan.PROGRESS,
+      count: planPageData?.groupCounts?.[StatusPlan.PROGRESS] ?? 0,
       color: "info",
     },
     {
       label: "Đã hoàn thành",
-      value: "2",
-      count: planPageData?.trangThaiCounts?.["2"] ?? 0,
+      value: StatusPlan.COMPLETED,
+      count: planPageData?.groupCounts?.[StatusPlan.COMPLETED] ?? 0,
       color: "success",
     },
   ];
 
-  const handleClose = useCallback(() => {
+  const handleClose = () => {
+    setSelectedIds([]);
+    setSearchValue("");
+    setSelectedPlan(null);
     setShowForm(false);
-    setReadOnly(false);
     setShowSidebar(false);
-  }, []);
+    setReadOnly(false);
+  };
 
   return (
     <>
       <PageAction
         title={"Lập kế hoạch sửa chữa bảo dưỡng"}
         onNewClick={() => {
-          handlePlanningClose();
+          handleClose();
           setShowForm(true);
         }}
       />
@@ -305,8 +299,10 @@ export default function MaintenancePlanRepair() {
               onSelectionChange={(ids) => {
                 setSelectedIds(ids);
               }}
-              onDelete={handleDeleteSelectedPlanning}
-              showDelete={true}
+              setSearchValue={setSearchValue}
+              searchValue={searchValue}
+              onDelete={() => {}}
+              showDelete={false}
               extraActions={
                 <Button
                   variant="contained"
@@ -325,7 +321,7 @@ export default function MaintenancePlanRepair() {
                 showCalendar ? (
                   <MaintenancePlanCalendar
                     onClose={() => setShowCalendar(false)}
-                    plans={maintenancePlans}
+                    plans={planPageData.items}
                     onPlanClick={(plan) => {
                       setSelectedPlan(plan);
                       setReadOnly(true);
@@ -478,9 +474,9 @@ export default function MaintenancePlanRepair() {
                     Trạng thái
                   </Typography>
                   <Typography variant="body2">
-                    {selectedPlan?.trangThai === 0
+                    {selectedPlan?.trangThai === StatusPlan.PENDING
                       ? "❓ Chưa thực hiện"
-                      : selectedPlan?.trangThai === 1
+                      : selectedPlan?.trangThai === StatusPlan.PROGRESS
                         ? "⏳ Đang thực hiện"
                         : "✅ Đã hoàn thành"}
                   </Typography>

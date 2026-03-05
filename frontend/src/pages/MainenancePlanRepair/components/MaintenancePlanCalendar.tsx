@@ -20,28 +20,33 @@ import {
   User,
   Building2,
 } from "lucide-react";
-import { MaintenancePlanData } from "../types/planning";
+import { MaintenancePlanData } from "../types";
+import { StatusPlan, StatusPlanType } from "../../../utils/const";
+import { showPlanType } from "../config";
 
 dayjs.locale("vi");
 
 /* ─── Status config ──────────────────────────────────────────────── */
 const STATUS: Record<
-  number,
+  StatusPlanType,
   { label: string; bg: string; border: string; color: string }
 > = {
-  0: {
+  [StatusPlan.PENDING]: {
+    // Dùng dấu ngoặc vuông để lấy giá trị của Enum/Constant làm key
     label: "Chưa thực hiện",
     bg: "#fff3e0",
     border: "#fb8c00",
     color: "#e65100",
   },
-  1: {
+  [StatusPlan.PROGRESS]: {
+    // Giả sử 1 là StatusPlan.DOING
     label: "Đang thực hiện",
     bg: "#e3f2fd",
     border: "#1976d2",
     color: "#0d47a1",
   },
-  2: {
+  [StatusPlan.COMPLETED]: {
+    // Giả sử 2 là StatusPlan.DONE
     label: "Đã hoàn thành",
     bg: "#e8f5e9",
     border: "#388e3c",
@@ -256,11 +261,6 @@ function PlanPopover({
 }) {
   if (!plan) return null;
   const cfg = STATUS[plan.trangThai ?? 0] ?? STATUS[0];
-  const loaiMap: Record<string, string> = {
-    thiet_bi: "Theo thiết bị",
-    chu_ky_thoi_gian: "Theo chu kỳ",
-    gio_may: "Theo giờ máy",
-  };
 
   return (
     <Popover
@@ -360,7 +360,7 @@ function PlanPopover({
                 Loại kế hoạch
               </Typography>
               <Typography sx={{ fontSize: "0.82rem", fontWeight: 500 }}>
-                {loaiMap[plan.loaiKeHoach] ?? plan.loaiKeHoach}
+                {showPlanType(plan.loaiKeHoach)}
               </Typography>
             </Box>
           </Box>
@@ -385,7 +385,7 @@ function PlanPopover({
         )}
 
         {/* Dept */}
-        {plan.tenDonVi && (
+        {plan.tenDonViThucHien && (
           <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
             <Building2
               size={15}
@@ -396,7 +396,7 @@ function PlanPopover({
                 Đơn vị
               </Typography>
               <Typography sx={{ fontSize: "0.82rem", fontWeight: 500 }}>
-                {plan.tenDonVi}
+                {plan.tenDonViThucHien}
               </Typography>
             </Box>
           </Box>

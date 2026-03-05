@@ -46,7 +46,7 @@ import FieldInput from "../../../components/TextField/FieldInput";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
 import {
   MaintenancePlanData,
-  MaintenancePlanDetailItem,
+  MaintenancePlanWorkItem,
   MaintenancePlanAssetItem,
 } from "../types";
 import { MaintenancePlanValidation } from "../validation/Validation";
@@ -55,8 +55,15 @@ import dayjs from "dayjs";
 import ThietBiBaoTriTable from "./tables/ThietBiBaoTriTable/ThietBiBaoTriTable";
 import ChiTietCongViecTable from "./tables/ChiTietCongViecTable/ChiTietCongViecTable";
 import FieldDateTime from "../../../components/TextField/FieldDateTime";
-import { CongTy, Devicetype } from "../../../utils/const";
+import {
+  Action,
+  CongTy,
+  Devicetype,
+  StatusPlan,
+  StatusPlanType,
+} from "../../../utils/const";
 import { generateCode } from "../../../utils/helpers";
+import FieldDate from "../../../components/TextField/FieldDate";
 
 interface MaintenancePlanningFormProps {
   onEdit: () => void;
@@ -97,11 +104,11 @@ export default function MaintenancePlanningForm({
       mocGioMay: 0,
       idDonViThucHien: "",
       idNguoiPhuTrach: "",
-      ngayBatDau: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-      ngayKetThuc: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      ngayBatDau: dayjs(new Date()).format("YYYY-MM-DD"),
+      ngayKetThuc: dayjs(new Date()).format("YYYY-MM-DD"),
       loaiDoiTuong: "TAI_SAN" as "TAI_SAN" | "CCDC",
       ghiChu: "",
-      congViecs: [] as MaintenancePlanDetailItem[],
+      congViecs: [] as MaintenancePlanWorkItem[],
       chiTiets: [] as MaintenancePlanAssetItem[],
     },
     validationSchema: MaintenancePlanValidation,
@@ -132,8 +139,18 @@ export default function MaintenancePlanningForm({
         idDonViThucHien: selectedPlan.idDonViThucHien || "",
         idNguoiPhuTrach: selectedPlan.idNguoiPhuTrach || "",
         idCongTy: selectedPlan.idCongTy || CongTy.CT001,
-        congViecs: selectedPlan.congViecs || [],
-        chiTiets: selectedPlan.chiTiets || [],
+        congViecs: (selectedPlan.congViecs || []).map((item) => {
+          return {
+            ...item,
+            action: Action.UPDATE,
+          };
+        }),
+        chiTiets: (selectedPlan.chiTiets || []).map((item) => {
+          return {
+            ...item,
+            action: Action.UPDATE,
+          };
+        }),
       });
       formik.setErrors({}); // Clear errors when selectedPlan changes
     } else {
@@ -164,11 +181,15 @@ export default function MaintenancePlanningForm({
           </Box>
         </AccordionSummary>
         <AccordionDetails>
-          <Box display="flex" gap={2}>
-            {!readOnly && <SaveBtn onSave={formik.submitForm} />}
-            {!readOnly && <CancelBtn onClick={onClose} />}
-            {readOnly && <EditButton onClick={onEdit} />}
-          </Box>
+          {![StatusPlan.PROGRESS, StatusPlan.COMPLETED].includes(
+            selectedPlan?.trangThai as StatusPlanType,
+          ) && (
+            <Box display="flex" gap={2}>
+              {!readOnly && <SaveBtn onSave={formik.submitForm} />}
+              {!readOnly && <CancelBtn onClick={onClose} />}
+              {readOnly && <EditButton onClick={onEdit} />}
+            </Box>
+          )}
 
           {/* Thông tin cơ bản */}
           <Paper sx={{ mt: 2, p: 2, borderRadius: "12px" }}>
@@ -265,7 +286,7 @@ export default function MaintenancePlanningForm({
               </Grid>
 
               <Grid size={{ xs: 12, md: 6 }}>
-                <FieldDateTime
+                <FieldDate
                   title="Ngày bắt đầu *"
                   formik={formik}
                   field="ngayBatDau"
@@ -274,7 +295,7 @@ export default function MaintenancePlanningForm({
               </Grid>
 
               <Grid size={{ xs: 12, md: 6 }}>
-                <FieldDateTime
+                <FieldDate
                   title="Ngày kết thúc *"
                   formik={formik}
                   field="ngayKetThuc"

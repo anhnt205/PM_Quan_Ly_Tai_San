@@ -39,4 +39,5 @@ logs/
 *.log
 *.gz
 .env
+*SNAPSHOT.jar
 

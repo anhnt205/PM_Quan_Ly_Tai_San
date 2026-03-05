@@ -24,3 +24,18 @@ export const PlanType = {
 export const CongTy = {
   CT001: "CT001",
 };
+
+export const Action = {
+  CREATE: "CREATE",
+  UPDATE: "UPDATE",
+  DELETE: "DELETE",
+};
+
+export type ActionType = (typeof Action)[keyof typeof Action];
+
+export const StatusPlan = {
+  PENDING: "CHUA_THUC_HIEN",
+  PROGRESS: "DANG_THUC_HIEN",
+  COMPLETED: "DA_HOAN_THANH",
+};
+export type StatusPlanType = (typeof StatusPlan)[keyof typeof StatusPlan];

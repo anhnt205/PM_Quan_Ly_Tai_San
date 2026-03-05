@@ -26,9 +26,9 @@ import {
   VisibilityOff,
   Inventory,
 } from "@mui/icons-material";
-import { useState } from "react";
+import { act, useState } from "react";
 import FieldAutoCompleted from "../../../../../components/TextField/FieldAutoCompleted";
-import { Devicetype } from "../../../../../utils/const";
+import { Action, Devicetype } from "../../../../../utils/const";
 
 interface Props {
   formik: any;
@@ -53,13 +53,13 @@ export default function ThietBiBaoTriTable({
       idTaiSan: null,
       idCCDC: null,
       ghiChu: "",
+      action: Action.CREATE,
     };
     formik.setFieldValue("chiTiets", [newAsset, ...currentData]);
   };
 
   const handleDeleteAsset = (index: number) => {
-    const updated = currentData.filter((_: any, i: number) => i !== index);
-    formik.setFieldValue("chiTiets", updated);
+    formik.setFieldValue(`chiTiets[${index}].action`, Action.DELETE);
   };
 
   // Helper validation cho ô đầu tiên
@@ -298,7 +298,7 @@ export default function ThietBiBaoTriTable({
                 </TableRow>
               )}
 
-              {currentData.map((item: any, index: number) => {
+              {currentData.filter((item: any) => item.action !== Action.DELETE).map((item: any, index: number) => {
                 const isError = getErrorForRow(index);
 
                 return (

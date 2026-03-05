@@ -33,15 +33,24 @@ import {
   Visibility,
   VisibilityOff,
 } from "@mui/icons-material";
-import { MaintenancePlanDetailItem } from "../../../types";
+import { MaintenancePlanWorkItem } from "../../../types";
 import { Formik } from "formik";
 import dayjs from "dayjs";
+import { Action } from "../../../../../utils/const";
 
 interface Props {
   formik: any;
   readOnly?: boolean;
   staffs?: any[];
 }
+
+// Style Header đồng bộ với bảng Thiết bị
+const headerStyle = {
+  bgcolor: "success.main",
+  color: "white",
+  fontWeight: "bold",
+  borderBottom: "none",
+};
 
 export default function ChiTietCongViecTable({
   formik,
@@ -50,10 +59,10 @@ export default function ChiTietCongViecTable({
 }: Props) {
   const [tableExpanded, setTableExpanded] = useState(true);
   const [editingWork, setEditingWork] =
-    useState<MaintenancePlanDetailItem | null>(null);
+    useState<MaintenancePlanWorkItem | null>(null);
 
   // 1. Logic Save: Nhận values từ Inner Formik và đẩy vào Main Formik
-  const handleSaveWork = (values: MaintenancePlanDetailItem) => {
+  const handleSaveWork = (values: MaintenancePlanWorkItem) => {
     if (!editingWork) return;
 
     const currentCongViecs = formik.values.congViecs || [];
@@ -85,6 +94,7 @@ export default function ChiTietCongViecTable({
       ngayThucHien: dayjs(new Date()).format("YYYY-MM-DD"),
       ngayTao: "",
       ngayCapNhat: "",
+      action: Action.CREATE,
     };
     formik.setFieldValue("congViecs", [newWork, ...currentData]);
     if (!tableExpanded) setTableExpanded(true);
@@ -94,17 +104,7 @@ export default function ChiTietCongViecTable({
 
   // Logic Delete
   const handleDeleteWork = (index: number) => {
-    const updated = [...currentData];
-    updated.splice(index, 1);
-    formik.setFieldValue("congViecs", updated);
-  };
-
-  // Style Header đồng bộ với bảng Thiết bị
-  const headerStyle = {
-    bgcolor: "success.main",
-    color: "white",
-    fontWeight: "bold",
-    borderBottom: "none",
+    formik.setFieldValue(`congViecs[${index}].action`, Action.DELETE);
   };
 
   return (
@@ -218,67 +218,69 @@ export default function ChiTietCongViecTable({
 
               {/* Render danh sách công việc */}
               {hasData &&
-                currentData.map((work: any, index: number) => (
-                  <TableRow key={work.id || index}>
-                    <TableCell>
-                      {work.tenCongViec || (
-                        <Typography
-                          color="text.secondary"
-                          fontStyle="italic"
-                          fontSize="0.875rem"
-                        >
-                          Chưa đặt tên
-                        </Typography>
-                      )}
-                    </TableCell>
-                    <TableCell
-                      sx={{
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {work.moTa || "-"}
-                    </TableCell>
-                    <TableCell align="center">
-                      {work.thoiGianDuKien || 0}
-                    </TableCell>
-                    <TableCell align="center">
-                      {work.ngayThucHien || "-"}
-                    </TableCell>
-                    <TableCell align="center">
-                      {work.nguoiThucHien || "-"}
-                    </TableCell>
-                    {!readOnly && (
-                      <TableCell align="center">
-                        <Box
-                          sx={{
-                            display: "flex",
-                            gap: 0.5,
-                            justifyContent: "center",
-                          }}
-                        >
-                          {/* Nút Sửa */}
-                          <IconButton
-                            size="small"
-                            onClick={() => setEditingWork(work)}
-                            color="primary"
+                currentData
+                  .filter((item: any) => item.action !== Action.DELETE)
+                  .map((work: any, index: number) => (
+                    <TableRow key={work.id || index}>
+                      <TableCell>
+                        {work.tenCongViec || (
+                          <Typography
+                            color="text.secondary"
+                            fontStyle="italic"
+                            fontSize="0.875rem"
                           >
-                            <Edit fontSize="small" />
-                          </IconButton>
-                          {/* Nút Xóa - Cho phép xóa tự do, không chặn khi chỉ còn 1 dòng */}
-                          <IconButton
-                            size="small"
-                            onClick={() => handleDeleteWork(index)}
-                            color="error"
-                          >
-                            <Delete fontSize="small" />
-                          </IconButton>
-                        </Box>
+                            Chưa đặt tên
+                          </Typography>
+                        )}
                       </TableCell>
-                    )}
-                  </TableRow>
-                ))}
+                      <TableCell
+                        sx={{
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {work.moTa || "-"}
+                      </TableCell>
+                      <TableCell align="center">
+                        {work.thoiGianDuKien || 0}
+                      </TableCell>
+                      <TableCell align="center">
+                        {work.ngayThucHien || "-"}
+                      </TableCell>
+                      <TableCell align="center">
+                        {work.nguoiThucHien || "-"}
+                      </TableCell>
+                      {!readOnly && (
+                        <TableCell align="center">
+                          <Box
+                            sx={{
+                              display: "flex",
+                              gap: 0.5,
+                              justifyContent: "center",
+                            }}
+                          >
+                            {/* Nút Sửa */}
+                            <IconButton
+                              size="small"
+                              onClick={() => setEditingWork(work)}
+                              color="primary"
+                            >
+                              <Edit fontSize="small" />
+                            </IconButton>
+                            {/* Nút Xóa - Cho phép xóa tự do, không chặn khi chỉ còn 1 dòng */}
+                            <IconButton
+                              size="small"
+                              onClick={() => handleDeleteWork(index)}
+                              color="error"
+                            >
+                              <Delete fontSize="small" />
+                            </IconButton>
+                          </Box>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
 
               {/* Thông báo trống: Chỉ hiện khi đang ở chế độ readOnly (vì chế độ Sửa đã có nút Thêm nét đứt bù đắp) */}
               {readOnly && !hasData && (

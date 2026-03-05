@@ -1,20 +1,20 @@
 import { Chip } from "@mui/material";
-import { PlanType } from "../../../utils/const";
+import { PlanType, StatusPlan, StatusPlanType } from "../../../utils/const";
 
-const getStatusDetails = (status: number) => {
+const getStatusDetails = (status: StatusPlanType) => {
   switch (status) {
-    case 0:
+    case StatusPlan.PENDING:
       return { label: "Chưa thực hiện", color: "#9e9e9e" }; // Xám
-    case 1:
+    case StatusPlan.PROGRESS:
       return { label: "Đang thực hiện", color: "#9c27b0" }; // Cam
-    case 2:
+    case StatusPlan.COMPLETED:
       return { label: "Đã hoàn thành", color: "#4caf50" }; // Xanh lá
     default:
       return { label: "Chưa thực hiện", color: "#9e9e9e" }; // Xám
   }
 };
 
-export const showStatus = (status: number) => {
+export const showStatus = (status: StatusPlanType) => {
   const { label, color } = getStatusDetails(status);
 
   return (

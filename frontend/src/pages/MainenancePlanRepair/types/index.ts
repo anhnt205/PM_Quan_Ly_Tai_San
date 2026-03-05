@@ -1,3 +1,4 @@
+import { ActionType, StatusPlanType } from "../../../utils/const";
 export interface MaintenancePlanData {
   id: string;
   idCongTy: string;
@@ -15,12 +16,12 @@ export interface MaintenancePlanData {
   ngayTao?: string;
   ngayCapNhat?: string;
   ghiChu?: string;
-  trangThai?: number;
-  congViecs?: MaintenancePlanDetailItem[];
+  trangThai?: StatusPlanType;
+  congViecs?: MaintenancePlanWorkItem[];
   chiTiets?: MaintenancePlanAssetItem[];
 }
 
-export interface MaintenancePlanDetailItem {
+export interface MaintenancePlanWorkItem {
   id: string;
   idKeHoach: string;
   tenCongViec: string;
@@ -30,6 +31,7 @@ export interface MaintenancePlanDetailItem {
   ngayThucHien?: string;
   ngayTao?: string;
   ngayCapNhat?: string;
+  action: ActionType;
 }
 
 export interface MaintenancePlanAssetItem {
@@ -42,4 +44,5 @@ export interface MaintenancePlanAssetItem {
   ghiChu?: string;
   ngayTao?: string;
   ngayCapNhat?: string;
+  action?: ActionType;
 }

@@ -28,6 +28,7 @@ public class KeHoachCongViecSuaChuaDao {
                 IdKeHoach,
                 TenCongViec,
                 MoTa,
+                NguoiThucHien,
                 ThoiGianDuKien,
                 NgayThucHien,
                 NgayTao,
