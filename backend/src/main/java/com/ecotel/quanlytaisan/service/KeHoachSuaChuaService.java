@@ -70,12 +70,25 @@ public class KeHoachSuaChuaService {
             String loaiKeHoach,
             String loaiDoiTuong,
             String idDonViThucHien,
-            String trangThai
+            String trangThai,
+            Integer ngay, Integer thang, Integer nam
     ) throws SQLException {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
 
         List<KeHoachSuaChuaDTO> sourceList = keHoachSuaChuaDao.findAll(idCongTy);
+
+        // Đếm theo trạng thái (tính trên toàn bộ list sau lọc, trước phân trang)
+        Map<String, Long> groupCounts = new HashMap<>();
+        groupCounts.put("CHUA_THUC_HIEN", 0L);
+        groupCounts.put("DANG_THUC_HIEN", 0L);
+        groupCounts.put("DA_HOAN_THANH", 0L);
+        for (KeHoachSuaChuaDTO item : sourceList) {
+            String tt = item.getTrangThai();
+            if (tt != null) {
+                groupCounts.put(tt, groupCounts.getOrDefault(tt, 0L) + 1);
+            }
+        }
 
         // Lọc theo loại kế hoạch
         if (loaiKeHoach != null && !loaiKeHoach.trim().isEmpty()) {
@@ -91,6 +104,7 @@ public class KeHoachSuaChuaService {
                     .collect(Collectors.toList());
         }
 
+
         // Lọc theo loại đối tượng
         if (loaiDoiTuong != null && !loaiDoiTuong.trim().isEmpty()) {
             sourceList = sourceList.stream()
@@ -105,20 +119,27 @@ public class KeHoachSuaChuaService {
                     .collect(Collectors.toList());
         }
 
+        // Lọc theo NgayBatDau (ngày/tháng/năm cụ thể)
+        if (ngay != null || thang != null || nam != null) {
+            sourceList = sourceList.stream()
+                    .filter(item -> {
+                        if (item.getNgayBatDau() == null) return false;
+                        java.util.Calendar cal = java.util.Calendar.getInstance();
+                        cal.setTime(item.getNgayBatDau());
+                        if (nam != null && cal.get(java.util.Calendar.YEAR) != nam) return false;
+                        if (thang != null && (cal.get(java.util.Calendar.MONTH) + 1) != thang) return false;
+                        if (ngay != null && cal.get(java.util.Calendar.DAY_OF_MONTH) != ngay) return false;
+                        return true;
+                    })
+                    .collect(Collectors.toList());
+        }
+
         // Tìm kiếm theo tên kế hoạch
         if (search != null && !search.trim().isEmpty()) {
             String q = search.toLowerCase();
             sourceList = sourceList.stream()
                     .filter(item -> item.getTenKeHoach() != null && item.getTenKeHoach().toLowerCase().contains(q))
                     .collect(Collectors.toList());
-        }
-
-        // Tính toán thống kê (nếu cần)
-        Map<String, Long> groupCounts = new HashMap<>();
-        for (KeHoachSuaChuaDTO item : sourceList) {
-            if (item.getLoaiKeHoach() != null) {
-                groupCounts.put(item.getLoaiKeHoach(), groupCounts.getOrDefault(item.getLoaiKeHoach(), 0L) + 1);
-            }
         }
 
         // Sắp xếp
