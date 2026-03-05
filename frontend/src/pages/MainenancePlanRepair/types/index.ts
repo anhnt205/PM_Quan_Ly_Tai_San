@@ -40,7 +40,11 @@ export interface MaintenancePlanAssetItem {
   idTaiSan: string | null;
   tenTaiSan?: string;
   idCCDC: string | null;
+  idChiTietCCDC: string | null;
   tenCCDC?: string;
+  soKyHieu?: string;
+  namSanXuat?: string;
+  nuocSanXuat?: string;
   ghiChu?: string;
   ngayTao?: string;
   ngayCapNhat?: string;

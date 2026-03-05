@@ -44,7 +44,8 @@ export default function ThietBiBaoTriTable({
   const [tableExpanded, setTableExpanded] = useState(true);
 
   const currentData = formik.values.chiTiets || [];
-  const hasData = currentData.length > 0;
+  const hasData =
+    currentData.filter((item: any) => item.action !== Action.DELETE).length > 0;
 
   const handleAddAsset = () => {
     const newAsset = {
@@ -52,6 +53,7 @@ export default function ThietBiBaoTriTable({
       idKeHoach: "",
       idTaiSan: null,
       idCCDC: null,
+      idChiTietCCDC: null,
       ghiChu: "",
       action: Action.CREATE,
     };
@@ -64,8 +66,14 @@ export default function ThietBiBaoTriTable({
 
   // Helper validation cho ô đầu tiên
   const getErrorForRow = (index: number) => {
-    const value = formik.values.chiTiets?.[index]?.idThietBi;
-    const touched = formik.touched.chiTiets?.[index]?.idThietBi;
+    const value =
+      formik.values.loaiDoiTuong === Devicetype.ASSET
+        ? formik.values.chiTiets?.[index]?.idTaiSan
+        : formik.values.chiTiets?.[index]?.idChiTietCCDC;
+    const touched =
+      formik.values.loaiDoiTuong === Devicetype.ASSET
+        ? formik.touched.chiTiets?.[index]?.idTaiSan
+        : formik.touched.chiTiets?.[index]?.idChiTietCCDC;
     if (!touched) return false;
     return !value || value.trim() === "";
   };
@@ -118,10 +126,10 @@ export default function ThietBiBaoTriTable({
         <Box mb={2}>
           {/* ToggleButtonGroup kiểu pill với sliding background */}
           <ToggleButtonGroup
-            value={formik.values.LoaiDoiTuong || Devicetype.ASSET}
+            value={formik.values.loaiDoiTuong || Devicetype.ASSET}
             exclusive
             onChange={(_, val) => {
-              if (val) formik.setFieldValue("LoaiDoiTuong", val);
+              if (val) formik.setFieldValue("loaiDoiTuong", val);
             }}
             disabled={readOnly || hasData}
             sx={{
@@ -176,13 +184,13 @@ export default function ThietBiBaoTriTable({
 
                 // Đổi hình dáng của khối nền trượt cho khớp với nút bên dưới
                 borderRadius:
-                  formik.values.LoaiDoiTuong === Devicetype.TOOL
+                  formik.values.loaiDoiTuong === Devicetype.TOOL
                     ? "0 46px 46px 0"
                     : "46px 0 0 46px",
 
                 // Trượt sang phải một khoảng bằng chính chiều rộng của nó (100%)
                 transform:
-                  formik.values.LoaiDoiTuong === Devicetype.TOOL
+                  formik.values.loaiDoiTuong === Devicetype.TOOL
                     ? "translateX(100%)"
                     : "translateX(0)",
               },
@@ -195,7 +203,7 @@ export default function ThietBiBaoTriTable({
               }}
             >
               <Box display="flex" alignItems="center" gap={1}>
-                {hasData && formik.values.LoaiDoiTuong === Devicetype.ASSET && (
+                {hasData && formik.values.loaiDoiTuong === Devicetype.ASSET && (
                   <Tooltip
                     title="Chỉ được chọn 1 trong 2 loại, vui lòng xóa tất cả các dòng đã thêm để có thể đổi loại"
                     placement="top"
@@ -215,7 +223,7 @@ export default function ThietBiBaoTriTable({
               }}
             >
               <Box display="flex" alignItems="center" gap={1}>
-                {hasData && formik.values.LoaiDoiTuong === Devicetype.TOOL && (
+                {hasData && formik.values.loaiDoiTuong === Devicetype.TOOL && (
                   <Tooltip
                     title="Chỉ được chọn 1 trong 2 loại, vui lòng xóa tất cả các dòng đã thêm để có thể đổi loại"
                     placement="top"
@@ -298,104 +306,121 @@ export default function ThietBiBaoTriTable({
                 </TableRow>
               )}
 
-              {currentData.filter((item: any) => item.action !== Action.DELETE).map((item: any, index: number) => {
-                const isError = getErrorForRow(index);
+              {currentData
+                .filter((item: any) => item.action !== Action.DELETE)
+                .map((item: any, index: number) => {
+                  const isError = getErrorForRow(index);
 
-                return (
-                  <TableRow key={item.id || index}>
-                    <TableCell sx={{ minWidth: 250 }}>
-                      {readOnly ? (
-                        formik.values.LoaiDoiTuong === Devicetype.TOOL ? (
-                          item.tenCCDC || "-"
+                  return (
+                    <TableRow key={item.id || index}>
+                      <TableCell sx={{ minWidth: 250 }}>
+                        {readOnly ? (
+                          formik.values.loaiDoiTuong === Devicetype.TOOL ? (
+                            item.tenCCDC +
+                            " " +
+                            `(${item.soKyHieu})` +
+                            "-" +
+                            item.namSanXuat
+                          ) : (
+                            item.tenTaiSan || "-"
+                          )
                         ) : (
-                          item.tenTaiSan || "-"
-                        )
-                      ) : (
-                        <FieldAutoCompleted
-                          title={
-                            formik.values.LoaiDoiTuong === Devicetype.TOOL
-                              ? "Chọn thiết bị ccdc"
-                              : "Chọn thiết bị tài sản"
-                          }
-                          data={assets}
-                          labelkey={
-                            formik.values.LoaiDoiTuong === Devicetype.TOOL
-                              ? "tenCCDC"
-                              : "tenTaiSan"
-                          }
-                          formik={formik}
-                          field={
-                            formik.values.LoaiDoiTuong === Devicetype.TOOL
-                              ? `chiTiets[${index}].idCCDC`
-                              : `chiTiets[${index}].idTaiSan`
-                          }
-                          disabled={readOnly}
-                          limitOptions={20}
-                        />
-                      )}
-                    </TableCell>
-
-                    {/* Cột Loại dạng Chip vuông góc */}
-                    <TableCell align="center">
-                      {formik.values.LoaiDoiTuong === Devicetype.TOOL ? (
-                        <Chip
-                          icon={<Inventory fontSize="small" />}
-                          label="CCDC - VT"
-                          size="small"
-                          color="warning"
-                          variant="outlined"
-                          sx={{
-                            borderRadius: "6px",
-                            fontWeight: 500,
-                          }}
-                        />
-                      ) : (
-                        <Chip
-                          icon={<Inventory fontSize="small" />}
-                          label="Tài sản"
-                          size="small"
-                          color="info"
-                          variant="outlined"
-                          sx={{
-                            borderRadius: "6px",
-                            fontWeight: 500,
-                          }}
-                        />
-                      )}
-                    </TableCell>
-
-                    <TableCell>
-                      {readOnly ? (
-                        item.ghiChu || "-"
-                      ) : (
-                        <TextField
-                          size="small"
-                          fullWidth
-                          value={item.ghiChu || ""}
-                          onChange={(e) =>
-                            formik.setFieldValue(
-                              `chiTiets[${index}].ghiChu`,
-                              e.target.value,
-                            )
-                          }
-                        />
-                      )}
-                    </TableCell>
-
-                    {!readOnly && (
-                      <TableCell align="center">
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => handleDeleteAsset(index)}
-                        >
-                          <Delete fontSize="small" />
-                        </IconButton>
+                          <FieldAutoCompleted
+                            title={
+                              formik.values.loaiDoiTuong === Devicetype.TOOL
+                                ? "Chọn thiết bị ccdc"
+                                : "Chọn thiết bị tài sản"
+                            }
+                            data={assets.filter(
+                              (item: any) =>
+                                item.type === formik.values.loaiDoiTuong,
+                            )}
+                            labelkey="ten"
+                            formik={formik}
+                            field={
+                              formik.values.loaiDoiTuong === Devicetype.TOOL
+                                ? `chiTiets[${index}].idChiTietCCDC`
+                                : `chiTiets[${index}].idTaiSan`
+                            }
+                            disabled={readOnly}
+                            limitOptions={20}
+                            onChange={(values) => {
+                              if (values) {
+                                if (
+                                  formik.values.loaiDoiTuong === Devicetype.TOOL
+                                ) {
+                                  formik.setFieldValue(
+                                    `chiTiets[${index}].idCCDC`,
+                                    values.idCCDCVatTu,
+                                  );
+                                }
+                              }
+                            }}
+                          />
+                        )}
                       </TableCell>
-                    )}
-                  </TableRow>
-                );
-              })}
+
+                      {/* Cột Loại dạng Chip vuông góc */}
+                      <TableCell align="center">
+                        {formik.values.loaiDoiTuong === Devicetype.TOOL ? (
+                          <Chip
+                            icon={<Inventory fontSize="small" />}
+                            label="CCDC - VT"
+                            size="small"
+                            color="warning"
+                            variant="outlined"
+                            sx={{
+                              borderRadius: "6px",
+                              fontWeight: 500,
+                            }}
+                          />
+                        ) : (
+                          <Chip
+                            icon={<Inventory fontSize="small" />}
+                            label="Tài sản"
+                            size="small"
+                            color="info"
+                            variant="outlined"
+                            sx={{
+                              borderRadius: "6px",
+                              fontWeight: 500,
+                            }}
+                          />
+                        )}
+                      </TableCell>
+
+                      <TableCell>
+                        {readOnly ? (
+                          item.ghiChu || "-"
+                        ) : (
+                          <TextField
+                            size="small"
+                            fullWidth
+                            value={item.ghiChu || ""}
+                            onChange={(e) =>
+                              formik.setFieldValue(
+                                `chiTiets[${index}].ghiChu`,
+                                e.target.value,
+                              )
+                            }
+                          />
+                        )}
+                      </TableCell>
+
+                      {!readOnly && (
+                        <TableCell align="center">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleDeleteAsset(index)}
+                          >
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  );
+                })}
 
               {readOnly && !hasData && (
                 <TableRow>

@@ -393,7 +393,7 @@ function PlanPopover({
             />
             <Box>
               <Typography sx={{ fontSize: "0.75rem", color: "text.secondary" }}>
-                Đơn vị
+                Đơn vị thực hiện
               </Typography>
               <Typography sx={{ fontSize: "0.82rem", fontWeight: 500 }}>
                 {plan.tenDonViThucHien}

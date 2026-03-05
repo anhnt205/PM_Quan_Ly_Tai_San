@@ -25,7 +25,8 @@ import { useAllAssetsQuery } from "../AssetManager/Mutation";
 import { useAllToolQuery } from "../ToolManager/Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
 import { showPeriod, showPlanType, showStatus } from "./config";
-import { StatusPlan } from "../../utils/const";
+import { Devicetype, StatusPlan } from "../../utils/const";
+import { useToolDetailAllQuery } from "../ToolTransfer/Mutation";
 
 export default function MaintenancePlanRepair() {
   const { user } = useSelector((state: any) => state.user);
@@ -51,16 +52,18 @@ export default function MaintenancePlanRepair() {
 
   // Assets & Tools for planning
   const { data: rawAssets = [] } = useAllAssetsQuery();
-  const { data: rawTools = [] } = useAllToolQuery();
+  const { data: rawTools = [] } = useToolDetailAllQuery();
   const allEquipment = useMemo(
     () => [
       ...rawAssets.map((a: any) => ({
         ...a,
         ten: a.tenTaiSan || a.ten || "",
+        type: Devicetype.ASSET,
       })),
       ...rawTools.map((t: any) => ({
         ...t,
         ten: t.ten || "",
+        type: Devicetype.TOOL,
       })),
     ],
     [rawAssets, rawTools],
@@ -212,8 +215,8 @@ export default function MaintenancePlanRepair() {
       value: "",
       count:
         planPageData?.groupCounts?.[StatusPlan.PENDING] +
-        planPageData?.groupCounts?.[StatusPlan.PROGRESS] +
-        planPageData?.groupCounts?.[StatusPlan.COMPLETED],
+          planPageData?.groupCounts?.[StatusPlan.PROGRESS] +
+          planPageData?.groupCounts?.[StatusPlan.COMPLETED] || 0,
       color: "primary",
     },
     {
@@ -391,13 +394,7 @@ export default function MaintenancePlanRepair() {
                     Loại kế hoạch
                   </Typography>
                   <Typography variant="body2">
-                    {selectedPlan?.loaiKeHoach === "THIET_BI"
-                      ? "Theo thiết bị"
-                      : selectedPlan?.loaiKeHoach === "CHU_KY"
-                        ? "Chu kỳ thời gian"
-                        : selectedPlan?.loaiKeHoach === "GIO_MAY"
-                          ? "Giờ máy"
-                          : "—"}
+                    {showPlanType(selectedPlan?.loaiKeHoach) || "-"}
                   </Typography>
                 </Box>
                 {selectedPlan?.ngayBatDau &&
@@ -499,9 +496,9 @@ export default function MaintenancePlanRepair() {
                     {selectedPlan.chiTiets.map((tb, i) => (
                       <Typography key={i} variant="body2">
                         •{" "}
-                        {selectedPlan.loaiDoiTuong === "TAI_SAN"
+                        {selectedPlan.loaiDoiTuong === Devicetype.ASSET
                           ? tb.tenTaiSan || tb.idTaiSan
-                          : tb.tenCCDC || tb.idCCDC}
+                          : `${tb.tenCCDC + "" + `(${tb.soKyHieu})` + "-" + tb.namSanXuat}`}
                       </Typography>
                     ))}
                   </Box>

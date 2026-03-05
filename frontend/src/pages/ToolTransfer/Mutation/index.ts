@@ -15,7 +15,11 @@ import { useMemo, useState } from "react";
 import axios from "axios";
 import { findById } from "../../../utils/helpers";
 import { useAllToolQuery } from "../../ToolManager/Mutation";
-import { CongTy, MessageTypeActions, MessageTypeFunctions } from "../../../utils/const";
+import {
+  CongTy,
+  MessageTypeActions,
+  MessageTypeFunctions,
+} from "../../../utils/const";
 import { listNguoiKy } from "../config";
 import socketService from "../../../services/socketService";
 
@@ -672,6 +676,62 @@ export const useToolByDepartmentPageQuery = ({
           kyHieu: asset.kyHieu,
           soLuongDaBanGiao: 0,
           asset: asset,
+        });
+      }
+      return acc;
+    }, []);
+  }, [allToolsQuery.data, detailQuery.data]);
+
+  return {
+    data: processedData,
+    isLoading: allToolsQuery.isLoading || detailQuery.isLoading,
+    isError: detailQuery.isError,
+    error: detailQuery.error,
+    refetch: detailQuery.refetch,
+  };
+};
+
+export const useToolDetailAllQuery = () => {
+  const allToolsQuery = useAllToolQuery(); // đã được cache ở nhiều nơi
+
+  const detailQuery = useQuery({
+    queryKey: ["chitietdonvisohuuALl"],
+    queryFn: async () => {
+      const res = await api.get(
+        `/chitietdonvisohuu`,
+      );
+      return res.data?.data || res.data || [];
+    },
+  });
+
+  const processedData = useMemo(() => {
+    // Ép kiểu tạm thời thành any[] để tránh lỗi TypeScript
+    const allTools = (allToolsQuery.data || []) as any[];
+    const details = (detailQuery.data || []) as any[];
+    if (!details.length || !allTools.length) return [];
+
+    // Tạo Map để lookup nhanh
+    const toolMap = new Map(allTools.map((tool: any) => [tool.id, tool]));
+    const detailMap = new Map();
+    allTools.forEach((tool: any) => {
+      tool?.chiTietTaiSanList?.forEach((detail: any) => {
+        detailMap.set(detail.id, {
+          ...detail,
+          assetTen: tool.ten,
+          assetDonVi: tool.donViTinh,
+        });
+      });
+    });
+
+    return details.reduce((acc: any[], e: any) => {
+      if (!e?.idCCDCVT || !e?.idTsCon) return acc;
+      const asset = toolMap.get(e.idCCDCVT) as any;
+      const detailAsset = detailMap.get(e.idTsCon) as any;
+      if (asset?.id && detailAsset?.id) {
+        acc.push({
+          id: detailAsset.id,
+          idCCDCVatTu: e.idCCDCVT,
+          ten: `${asset.ten || "N/A"} (${detailAsset.soKyHieu || ""}) - ${detailAsset.namSanXuat || ""}`,
         });
       }
       return acc;
