@@ -23,5 +23,8 @@ public class KeHoachChiTietSuaChuaDTO {
     // Có thể thêm trường loại đối tượng để xác định (từ master)
     private String loaiDoiTuong;
 
-    private String idChiTietTaiSan;
+    private String idChiTietCCDC;
+    private String soKyHieu;
+    private String nuocSanXuat;
+    private Integer namSanXuat;
 }

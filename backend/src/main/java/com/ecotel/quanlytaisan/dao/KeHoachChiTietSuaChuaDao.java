@@ -31,12 +31,17 @@ public class KeHoachChiTietSuaChuaDao {
             ts.TenTaiSan AS tenTaiSan,
             ct.IdCCDC,
             c.Ten AS tenCCDC,
+            ct.IdChiTietCCDC,
+            ctts.SoKyHieu AS soKyHieu,
+            ctts.NuocSanXuat AS nuocSanXuat,
+            ctts.NamSanXuat AS namSanXuat,
             ct.GhiChu,
             ct.NgayTao,
             ct.NgayCapNhat
         FROM KeHoachChiTietSuaChua ct
             LEFT JOIN TaiSan ts ON ct.IdTaiSan = ts.Id
             LEFT JOIN ccdcvattu c ON ct.IdCCDC = c.Id
+            LEFT JOIN chitiettaisan ctts ON ct.IdChiTietCCDC = ctts.Id
         WHERE ct.IdKeHoach = ?
     """;
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(KeHoachChiTietSuaChuaDTO.class), idKeHoach);
@@ -51,12 +56,17 @@ public class KeHoachChiTietSuaChuaDao {
             ts.TenTaiSan AS tenTaiSan,
             ct.IdCCDC,
             c.Ten AS tenCCDC,
+            ct.IdChiTietCCDC,
+            ctts.SoKyHieu AS soKyHieu,
+            ctts.NuocSanXuat AS nuocSanXuat,
+            ctts.NamSanXuat AS namSanXuat,
             ct.GhiChu,
             ct.NgayTao,
             ct.NgayCapNhat
         FROM KeHoachChiTietSuaChua ct
             LEFT JOIN TaiSan ts ON ct.IdTaiSan = ts.Id
             LEFT JOIN ccdcvattu c ON ct.IdCCDC = c.Id
+            LEFT JOIN chitiettaisan ctts ON ct.IdChiTietCCDC = ctts.Id
         WHERE ct.Id = ?
     """;
         return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(KeHoachChiTietSuaChuaDTO.class), id);
