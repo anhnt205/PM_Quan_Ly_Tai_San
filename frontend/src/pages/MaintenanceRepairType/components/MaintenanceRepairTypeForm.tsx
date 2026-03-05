@@ -12,7 +12,7 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
 import FieldInput from "../../../components/TextField/FieldInput";
@@ -89,7 +89,7 @@ export default function MaintenanceRepairTypeForm({
                 title="Mã loại sửa chữa *"
                 formik={formik}
                 field="id"
-                disabled={Boolean(selectedRepairType)}
+                disabled={Boolean(selectedRepairType?.id)}
               />
             </Grid>
             <Grid size={{ xs: 6 }}>

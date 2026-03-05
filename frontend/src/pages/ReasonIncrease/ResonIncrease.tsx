@@ -1,4 +1,4 @@
-import { Delete } from "@mui/icons-material";
+import { ContentCopy, Delete } from "@mui/icons-material";
 import {
   Box,
   Chip,
@@ -31,6 +31,7 @@ export default function ReasonIncrease() {
   const [readOnly, setReadOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
+  const [isCopy, setIsCopy] = useState(false);
   const { user } = useSelector((state: RootState) => state.user);
 
   const [importErrors, setImportErrors] = useState<string[]>([]);
@@ -48,7 +49,7 @@ export default function ReasonIncrease() {
     deleteManyMutation,
     importExcelMutation,
     exportMutation,
-    deleteAllMutation
+    deleteAllMutation,
   } = useReasonIncreaseMutation(
     paginationModel.page,
     paginationModel.pageSize,
@@ -80,18 +81,19 @@ export default function ReasonIncrease() {
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedReasonIncrease(params.row);
-    setReadOnly(true); // Set readOnly to true when viewing details
+    setReadOnly(true);
     setShowForm(true);
   };
 
   const handleSave = (values: any) => {
-    if (selectedReasonIncrease) {
+    if (selectedReasonIncrease && !isCopy) {
       updateMutation.mutate(values);
     } else {
       createMutation.mutate(values);
     }
     setShowForm(false);
     setSelectedReasonIncrease(null);
+    setIsCopy(false);
   };
 
   const handleEdit = () => {
@@ -137,17 +139,31 @@ export default function ReasonIncrease() {
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
-        <IconButton
-          onClick={async (e) => {
-            e.stopPropagation();
-            const confirm = await showConfirmAlert("Xác nhận xóa!");
-            if (confirm.isConfirmed) {
-              deleteOneMutation.mutate(params.row.id);
-            }
-          }}
-        >
-          <Delete color="error" />
-        </IconButton>
+        <Box display="flex" gap={1} justifyContent="center" alignItems="center">
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              const { id, ...copyData } = params.row;
+              setSelectedReasonIncrease({ ...copyData, id: "" });
+              setIsCopy(true);
+              setReadOnly(false);
+              setShowForm(true);
+            }}
+          >
+            <ContentCopy color="primary" />
+          </IconButton>
+          <IconButton
+            onClick={async (e) => {
+              e.stopPropagation();
+              const confirm = await showConfirmAlert("Xác nhận xóa!");
+              if (confirm.isConfirmed) {
+                deleteOneMutation.mutate(params.row.id);
+              }
+            }}
+          >
+            <Delete color="error" />
+          </IconButton>
+        </Box>
       ),
     },
   ];

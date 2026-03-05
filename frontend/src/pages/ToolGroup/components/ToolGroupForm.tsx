@@ -96,7 +96,7 @@ export default function ToolGroupForm({
                 title="Mã nhóm ccdc *"
                 formik={formik}
                 field="id"
-                disabled={Boolean(selectedToolGroup)}
+                disabled={Boolean(selectedToolGroup?.id)}
               />
             </Grid>
             <Grid size={{ xs: 12 }}>

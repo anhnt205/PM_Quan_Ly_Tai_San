@@ -9,7 +9,7 @@ import {
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-import { Delete } from "@mui/icons-material";
+import { ContentCopy, Delete } from "@mui/icons-material";
 import ToolGroupForm from "./components/ToolGroupForm";
 import { useState } from "react";
 import {
@@ -27,6 +27,7 @@ export default function ToolGroup() {
   const [showForm, setShowForm] = useState(false);
   const [selectedToolGroup, setSelectedToolGroup] = useState<any>(null);
   const [readOnly, setReadOnly] = useState(false);
+  const [isCopy, setIsCopy] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
@@ -46,7 +47,7 @@ export default function ToolGroup() {
     deleteManyMutation,
     importExcelMutation,
     exportMutation,
-    deleteAllMutation
+    deleteAllMutation,
   } = useToolGroupMutation(
     paginationModel.page,
     paginationModel.pageSize,
@@ -81,13 +82,14 @@ export default function ToolGroup() {
   };
 
   const handleSave = (values: any) => {
-    if (selectedToolGroup) {
+    if (selectedToolGroup && !isCopy) {
       updateMutation.mutate(values);
     } else {
       createMutation.mutate(values);
     }
     setShowForm(false);
     setSelectedToolGroup(null);
+    setIsCopy(false);
   };
 
   const handleEdit = () => {
@@ -144,17 +146,31 @@ export default function ToolGroup() {
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
-        <IconButton
-          onClick={async (e) => {
-            e.stopPropagation();
-            const confirm = await showConfirmAlert("Xác nhận xóa!");
-            if (confirm.isConfirmed) {
-              deleteOneMutation.mutate(params.row.id);
-            }
-          }}
-        >
-          <Delete color="error" />
-        </IconButton>
+        <Box display="flex" gap={1} justifyContent="center" alignItems="center">
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              const { id, ...copyData } = params.row;
+              setSelectedToolGroup({ ...copyData, id: "" });
+              setIsCopy(true);
+              setReadOnly(false);
+              setShowForm(true);
+            }}
+          >
+            <ContentCopy color="primary" />
+          </IconButton>
+          <IconButton
+            onClick={async (e) => {
+              e.stopPropagation();
+              const confirm = await showConfirmAlert("Xác nhận xóa!");
+              if (confirm.isConfirmed) {
+                deleteOneMutation.mutate(params.row.id);
+              }
+            }}
+          >
+            <Delete color="error" />
+          </IconButton>
+        </Box>
       ),
     },
   ];

@@ -172,7 +172,7 @@ export default function StaffForm({
                     title="Mã nhân viên *"
                     formik={formik}
                     field="id"
-                    disabled={Boolean(selectedStaff)}
+                    disabled={Boolean(selectedStaff?.id)}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>

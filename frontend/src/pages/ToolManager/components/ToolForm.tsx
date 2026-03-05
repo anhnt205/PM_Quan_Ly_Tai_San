@@ -284,7 +284,7 @@ export default function ToolForm({
                     title="Mã công cụ dụng cụ *"
                     formik={formik}
                     field="id"
-                    disabled={Boolean(selectedTool)}
+                    disabled={Boolean(selectedTool?.id)}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>

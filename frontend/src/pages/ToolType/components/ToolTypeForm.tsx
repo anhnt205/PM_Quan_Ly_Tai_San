@@ -12,14 +12,13 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
 import FieldInput from "../../../components/TextField/FieldInput";
 import { useFormik } from "formik";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
-import ToolGroups from "../../../data/ToolGroup.json";
 import EditButton from "../../../components/Button/EditButton";
 import { ToolTypeValidation } from "../validation/Validation";
 import {
@@ -57,11 +56,11 @@ export default function ToolTypeForm({
   useEffect(() => {
     if (selectedToolType) {
       formik.setValues(selectedToolType);
-      formik.setErrors({}); // Clear errors when selectedToolType changes
+      formik.setErrors({});
     } else {
       formik.resetForm();
     }
-  }, [selectedToolType, readOnly]); // Add readOnly to dependencies
+  }, [selectedToolType, readOnly]);
 
   return (
     <Accordion sx={{ background: "#f6f8f4ff" }} expanded={expanded}>
@@ -71,7 +70,7 @@ export default function ToolTypeForm({
         id="panel1-header"
         sx={{
           "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
-            transform: "none", // Ngăn không cho xoay
+            transform: "none",
           },
         }}
       >
@@ -97,7 +96,7 @@ export default function ToolTypeForm({
                 title="Mã loại CCDC *"
                 formik={formik}
                 field="id"
-                disabled={Boolean(selectedToolType)}
+                disabled={Boolean(selectedToolType?.id)}
               />
             </Grid>
             <Grid size={{ xs: 12 }}>

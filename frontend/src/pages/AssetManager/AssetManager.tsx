@@ -1,4 +1,4 @@
-import { Delete, Inventory2, Build } from "@mui/icons-material";
+import { Delete, Inventory2, Build, ContentCopy } from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -31,14 +31,12 @@ import {
   useAllTypeAssetQuery,
 } from "../TypeAsset/Mutation";
 import { useAllUnitsQuery } from "../Unit/Mutation";
-import { useAllProjectsQuery } from "../Project/Mutation";
 import { useAllReasonIncreaseQuery } from "../ReasonIncrease/Mutation";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useAllModelAssetQuery } from "../ModelAsset/Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
 import { Eye, HistoryIcon } from "lucide-react";
 import AssetHistoryModal from "./components/AssetHistoryModal";
-import socketService from "../../services/socketService";
 import { useLocation, useNavigate } from "react-router-dom";
 
 export default function AssetManager() {
@@ -46,6 +44,7 @@ export default function AssetManager() {
   const [showForm, setShowForm] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<any>(null);
   const [readOnly, setReadOnly] = useState(false);
+  const [isCopy, setIsCopy] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
@@ -80,8 +79,6 @@ export default function AssetManager() {
       selectedGroup,
       selectedDepartment,
     );
-
-  // Use sample data for tab 3, real data for other tabs
 
   const { data: allDepartments = [] } = useAllDepartmentsQuery();
   const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
@@ -125,13 +122,14 @@ export default function AssetManager() {
   };
 
   const handleSave = (values: any) => {
-    if (selectedAsset) {
+    if (selectedAsset && !isCopy) {
       updateMutation.mutate(values);
     } else {
       createMutation.mutate(values);
     }
     setShowForm(false);
     setSelectedAsset(null);
+    setIsCopy(false);
   };
 
   const columns: GridColDef[] = [
@@ -290,6 +288,19 @@ export default function AssetManager() {
       headerAlign: "center",
       renderCell: (params) => (
         <>
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              const { id, ...copyData } = params.row;
+              setSelectedAsset({ ...copyData, id: "" });
+              setIsCopy(true);
+              setReadOnly(false);
+              setShowForm(true);
+            }}
+          >
+            <ContentCopy color="primary" />
+          </IconButton>
+
           <IconButton
             onClick={async (e) => {
               e.stopPropagation();

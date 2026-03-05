@@ -23,7 +23,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
 import FieldInput from "../../../components/TextField/FieldInput";
@@ -223,7 +223,7 @@ export default function AssetManagerForm({
                     title="Mã tài sản *"
                     formik={formik}
                     field="id"
-                    disabled={Boolean(selectedAsset)}
+                    disabled={Boolean(selectedAsset?.id)}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>

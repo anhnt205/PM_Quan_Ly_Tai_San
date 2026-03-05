@@ -8,16 +8,12 @@ import {
   AccordionDetails,
   AccordionSummary,
   Box,
-  Button,
   Checkbox,
   Grid,
-  IconButton,
-  InputAdornment,
   Paper,
-  TextField,
   Typography,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
 import FieldInput from "../../../components/TextField/FieldInput";
@@ -99,7 +95,7 @@ export default function DepartmentForm({
                 title="Mã phòng ban *"
                 formik={formik}
                 field="id"
-                disabled={Boolean(selectedDepartment)}
+                disabled={Boolean(selectedDepartment?.id)}
               />
             </Grid>
             <Grid size={{ xs: 6 }}>
