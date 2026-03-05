@@ -65,12 +65,12 @@ public class KeHoachSuaChuaDao {
             return new java.util.ArrayList<>(cache);
         }
         return cache.stream()
-                .filter(dto -> idCongTy.equals(dto.getIdCongTy()))
+                .filter(dto -> idCongTy.equalsIgnoreCase(dto.getIdCongTy()))
                 .collect(Collectors.toList());
     }
 
     public long countByCongTy(String idCongTy) {
-        String sql = "SELECT COUNT(*) FROM KeHoachSuaChua WHERE IdCongTy = ?";
+        String sql = "SELECT COUNT(*) FROM KeHoachSuaChua WHERE UPPER(IdCongTy) = UPPER(?)";
         return jdbcTemplate.queryForObject(sql, Long.class, idCongTy);
     }
 
@@ -118,7 +118,7 @@ public class KeHoachSuaChuaDao {
             FROM KeHoachSuaChua kh
                 LEFT JOIN PhongBan pb ON kh.IdDonViThucHien = pb.Id
                 LEFT JOIN NhanVien nv ON kh.IdNguoiPhuTrach = nv.Id
-            WHERE kh.IdCongTy = ?
+            WHERE UPPER(kh.IdCongTy) = UPPER(?)
             ORDER BY %s %s
             LIMIT ? OFFSET ?
         """;
