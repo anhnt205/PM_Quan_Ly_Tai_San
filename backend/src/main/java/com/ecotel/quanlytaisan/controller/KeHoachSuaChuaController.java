@@ -35,11 +35,12 @@ public class KeHoachSuaChuaController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String loaiKeHoach,
             @RequestParam(required = false) String loaiDoiTuong,
-            @RequestParam(required = false) String idDonViThucHien
+            @RequestParam(required = false) String idDonViThucHien,
+            @RequestParam(required = false) String trangThai
     ) throws SQLException {
         PageResponse<KeHoachSuaChuaDTO> response = keHoachSuaChuaService.findAllPaged(
                 idCongTy, page, size, sortBy, sortDir, search,
-                loaiKeHoach, loaiDoiTuong, idDonViThucHien
+                loaiKeHoach, loaiDoiTuong, idDonViThucHien, trangThai
         );
         return ResponseEntity.ok(response);
     }

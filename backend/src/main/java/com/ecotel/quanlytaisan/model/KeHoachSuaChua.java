@@ -34,6 +34,7 @@ public class KeHoachSuaChua {
     private Date ngayCapNhat;
 
     private String ghiChu;
+    private String trangThai;
 
     // Các trường hiển thị (được gán từ join)
     private String tenDonViThucHien;
@@ -46,6 +47,9 @@ public class KeHoachSuaChua {
 
     public Integer getMocGioMay() {
         return mocGioMay != null ? mocGioMay : 0;
+    }
+    public String getTrangThai() {
+        return trangThai != null ? trangThai : "CHUA_THUC_HIEN";
     }
 
     // Map từ mảng String (import CSV)
@@ -65,6 +69,7 @@ public class KeHoachSuaChua {
         kh.setNgayTao(parseDate(safeGet(row, 11), "yyyy-MM-dd HH:mm:ss"));
         kh.setNgayCapNhat(parseDate(safeGet(row, 12), "yyyy-MM-dd HH:mm:ss"));
         kh.setGhiChu(safeGet(row, 13));
+        kh.setTrangThai(safeGet(row, 14));
         return kh;
     }
 
@@ -95,6 +100,8 @@ public class KeHoachSuaChua {
         kh.setNgayCapNhat(ngayCapNhat != null ? Date.from(ngayCapNhat.atZone(ZoneId.systemDefault()).toInstant()) : null);
 
         kh.setGhiChu(getCellStringValue(row.getCell(13)));
+
+        kh.setTrangThai(getCellStringValue(row.getCell(14)));
         return kh;
     }
 

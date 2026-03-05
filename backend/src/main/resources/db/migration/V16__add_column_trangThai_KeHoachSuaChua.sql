@@ -1,0 +1,8 @@
+ALTER TABLE kehoachsuachua
+    ADD TrangThai ENUM('CHUA_THUC_HIEN', 'DANG_THUC_HIEN', 'DA_HOAN_THANH')
+DEFAULT 'CHUA_THUC_HIEN'
+AFTER GhiChu;
+
+UPDATE kehoachsuachua
+SET TrangThai = 'CHUA_THUC_HIEN'
+WHERE TrangThai IS NULL;

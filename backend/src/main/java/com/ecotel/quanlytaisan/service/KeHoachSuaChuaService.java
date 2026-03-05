@@ -69,7 +69,8 @@ public class KeHoachSuaChuaService {
             String search,
             String loaiKeHoach,
             String loaiDoiTuong,
-            String idDonViThucHien
+            String idDonViThucHien,
+            String trangThai
     ) throws SQLException {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
@@ -80,6 +81,13 @@ public class KeHoachSuaChuaService {
         if (loaiKeHoach != null && !loaiKeHoach.trim().isEmpty()) {
             sourceList = sourceList.stream()
                     .filter(item -> loaiKeHoach.equals(item.getLoaiKeHoach()))
+                    .collect(Collectors.toList());
+        }
+
+        // Lọc theo trạng thái
+        if (trangThai != null && !trangThai.trim().isEmpty()) {
+            sourceList = sourceList.stream()
+                    .filter(item -> trangThai.equals(item.getTrangThai()))
                     .collect(Collectors.toList());
         }
 

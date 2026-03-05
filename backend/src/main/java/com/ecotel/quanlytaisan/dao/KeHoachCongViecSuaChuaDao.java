@@ -31,7 +31,7 @@ public class KeHoachCongViecSuaChuaDao {
                 ThoiGianDuKien,
                 NgayThucHien,
                 NgayTao,
-                NgayCapNhat,
+                NgayCapNhat
             FROM KeHoachCongViecSuaChua
             WHERE IdKeHoach = ?
         """;

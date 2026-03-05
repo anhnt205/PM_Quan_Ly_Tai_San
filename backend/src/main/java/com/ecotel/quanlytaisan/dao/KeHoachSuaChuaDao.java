@@ -45,7 +45,8 @@ public class KeHoachSuaChuaDao {
                 kh.LoaiDoiTuong,
                 kh.NgayTao,
                 kh.NgayCapNhat,
-                kh.GhiChu
+                kh.GhiChu,
+                kh.TrangThai
             FROM KeHoachSuaChua kh
                 LEFT JOIN PhongBan pb ON kh.IdDonViThucHien = pb.Id
                 LEFT JOIN NhanVien nv ON kh.IdNguoiPhuTrach = nv.Id
@@ -114,7 +115,8 @@ public class KeHoachSuaChuaDao {
                 kh.LoaiDoiTuong,
                 kh.NgayTao,
                 kh.NgayCapNhat,
-                kh.GhiChu
+                kh.GhiChu,
+                kh.TrangThai
             FROM KeHoachSuaChua kh
                 LEFT JOIN PhongBan pb ON kh.IdDonViThucHien = pb.Id
                 LEFT JOIN NhanVien nv ON kh.IdNguoiPhuTrach = nv.Id
@@ -150,7 +152,8 @@ public class KeHoachSuaChuaDao {
                 kh.LoaiDoiTuong,
                 kh.NgayTao,
                 kh.NgayCapNhat,
-                kh.GhiChu
+                kh.GhiChu,
+                kh.TrangThai
             FROM KeHoachSuaChua kh
                 LEFT JOIN PhongBan pb ON kh.IdDonViThucHien = pb.Id
                 LEFT JOIN NhanVien nv ON kh.IdNguoiPhuTrach = nv.Id
@@ -197,8 +200,8 @@ public class KeHoachSuaChuaDao {
         INSERT INTO KeHoachSuaChua (
             Id, IdCongTy, TenKeHoach, LoaiKeHoach, ChuKyNgay, MocGioMay,
             IdDonViThucHien, IdNguoiPhuTrach, NgayBatDau, NgayKetThuc,
-            LoaiDoiTuong, NgayTao, NgayCapNhat, GhiChu
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            LoaiDoiTuong, NgayTao, NgayCapNhat, GhiChu, TrangThai
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """;
 
         Date now = new Date();
@@ -222,6 +225,7 @@ public class KeHoachSuaChuaDao {
             ps.setObject(12, entity.getNgayTao());
             ps.setObject(13, entity.getNgayCapNhat());
             ps.setString(14, entity.getGhiChu());
+            ps.setString(15, entity.getTrangThai() != null ? entity.getTrangThai() : "CHUA_THUC_HIEN");
         });
 
         CompletableFuture.runAsync(this::refreshCache);
@@ -234,7 +238,7 @@ public class KeHoachSuaChuaDao {
         UPDATE KeHoachSuaChua SET
             TenKeHoach = ?, LoaiKeHoach = ?, ChuKyNgay = ?, MocGioMay = ?,
             IdDonViThucHien = ?, IdNguoiPhuTrach = ?, NgayBatDau = ?, NgayKetThuc = ?,
-            LoaiDoiTuong = ?, NgayCapNhat = ?, GhiChu = ?
+            LoaiDoiTuong = ?, NgayCapNhat = ?, GhiChu = ?, TrangThai = ?
         WHERE Id = ?
     """;
 
@@ -254,7 +258,8 @@ public class KeHoachSuaChuaDao {
             ps.setString(9, entity.getLoaiDoiTuong());
             ps.setObject(10, entity.getNgayCapNhat());
             ps.setString(11, entity.getGhiChu());
-            ps.setString(12, entity.getId());
+            ps.setString(12, entity.getTrangThai());
+            ps.setString(13, entity.getId());
         });
 
         CompletableFuture.runAsync(this::refreshCache);
@@ -277,19 +282,20 @@ public class KeHoachSuaChuaDao {
         entity.setNgayCapNhat(entity.getNgayTao());
 
         String sql = """
-            INSERT INTO KeHoachSuaChua (
-                Id, IdCongTy, TenKeHoach, LoaiKeHoach, ChuKyNgay, MocGioMay,
-                IdDonViThucHien, IdNguoiPhuTrach, NgayBatDau, NgayKetThuc,
-                LoaiDoiTuong, NgayTao, NgayCapNhat, GhiChu
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """;
+        INSERT INTO KeHoachSuaChua (
+            Id, IdCongTy, TenKeHoach, LoaiKeHoach, ChuKyNgay, MocGioMay,
+            IdDonViThucHien, IdNguoiPhuTrach, NgayBatDau, NgayKetThuc,
+            LoaiDoiTuong, NgayTao, NgayCapNhat, GhiChu, TrangThai
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """;
         int result = jdbcTemplate.update(sql,
                 entity.getId(), entity.getIdCongTy(), entity.getTenKeHoach(), entity.getLoaiKeHoach(),
                 entity.getChuKyNgay(), entity.getMocGioMay(),
                 entity.getIdDonViThucHien(), entity.getIdNguoiPhuTrach(),
                 entity.getNgayBatDau(), entity.getNgayKetThuc(),
                 entity.getLoaiDoiTuong(), entity.getNgayTao(), entity.getNgayCapNhat(),
-                entity.getGhiChu()
+                entity.getGhiChu(),
+                entity.getTrangThai() != null ? entity.getTrangThai() : "CHUA_THUC_HIEN"
         );
         if (result > 0) {
             CompletableFuture.runAsync(this::refreshCache);
@@ -304,7 +310,7 @@ public class KeHoachSuaChuaDao {
             UPDATE KeHoachSuaChua SET
                 TenKeHoach = ?, LoaiKeHoach = ?, ChuKyNgay = ?, MocGioMay = ?,
                 IdDonViThucHien = ?, IdNguoiPhuTrach = ?, NgayBatDau = ?, NgayKetThuc = ?,
-                LoaiDoiTuong = ?, NgayCapNhat = ?, GhiChu = ?
+                LoaiDoiTuong = ?, NgayCapNhat = ?, GhiChu = ?, TrangThai = ?
             WHERE Id = ?
         """;
         int result = jdbcTemplate.update(sql,
@@ -312,6 +318,7 @@ public class KeHoachSuaChuaDao {
                 entity.getIdDonViThucHien(), entity.getIdNguoiPhuTrach(),
                 entity.getNgayBatDau(), entity.getNgayKetThuc(),
                 entity.getLoaiDoiTuong(), entity.getNgayCapNhat(), entity.getGhiChu(),
+                entity.getTrangThai(),
                 entity.getId()
         );
         if (result > 0) {

@@ -52,4 +52,6 @@ public class KeHoachSuaChuaDTO {
     public Integer getMocGioMay() {
         return mocGioMay != null ? mocGioMay : 0;
     }
+
+    private String trangThai;
 }
