@@ -1,4 +1,4 @@
-import { Delete } from "@mui/icons-material";
+import { ContentCopy, Delete } from "@mui/icons-material";
 import {
   Box,
   CircularProgress,
@@ -28,6 +28,7 @@ export default function TypeAsset() {
   const [showForm, setShowForm] = useState(false);
   const [selectedTypeAsset, setSelectedTypeAsset] = useState<any>(null);
   const [readOnly, setReadOnly] = useState(false);
+  const [isCopy, setIsCopy] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [importErrors, setImportErrors] = useState<string[]>([]);
@@ -46,7 +47,7 @@ export default function TypeAsset() {
     deleteManyMutation,
     importExcelMutation,
     exportMutation,
-    deleteAllMutation
+    deleteAllMutation,
   } = useTypeAssetMutation(
     paginationModel.page,
     paginationModel.pageSize,
@@ -82,13 +83,14 @@ export default function TypeAsset() {
   };
 
   const handleSave = (values: any) => {
-    if (selectedTypeAsset) {
+    if (selectedTypeAsset && !isCopy) {
       updateMutation.mutate(values);
     } else {
       createMutation.mutate(values);
     }
     setShowForm(false);
     setSelectedTypeAsset(null);
+    setIsCopy(false);
   };
 
   const handleEdit = () => {
@@ -125,17 +127,31 @@ export default function TypeAsset() {
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
-        <IconButton
-          onClick={async (e) => {
-            e.stopPropagation();
-            const confirm = await showConfirmAlert("Xác nhận xóa!");
-            if (confirm.isConfirmed) {
-              deleteOneMutation.mutate(params.row.id);
-            }
-          }}
-        >
-          <Delete color="error" />
-        </IconButton>
+        <Box display="flex" gap={1} justifyContent="center" alignItems="center">
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              const { id, ...copyData } = params.row;
+              setSelectedTypeAsset({ ...copyData, id: "" });
+              setIsCopy(true);
+              setReadOnly(false);
+              setShowForm(true);
+            }}
+          >
+            <ContentCopy color="primary" />
+          </IconButton>
+          <IconButton
+            onClick={async (e) => {
+              e.stopPropagation();
+              const confirm = await showConfirmAlert("Xác nhận xóa!");
+              if (confirm.isConfirmed) {
+                deleteOneMutation.mutate(params.row.id);
+              }
+            }}
+          >
+            <Delete color="error" />
+          </IconButton>
+        </Box>
       ),
     },
   ];

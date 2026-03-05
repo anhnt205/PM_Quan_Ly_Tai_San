@@ -8,23 +8,16 @@ import {
   AccordionDetails,
   AccordionSummary,
   Box,
-  Button,
-  Checkbox,
   Grid,
-  IconButton,
-  InputAdornment,
   Paper,
-  TextField,
   Typography,
 } from "@mui/material";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
 import FieldInput from "../../../components/TextField/FieldInput";
 import { useFormik } from "formik";
 import ViewBtn from "../../../components/Button/ViewBtn";
-import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
-import AssetParents from "../../../data/AssetParent.json";
 import EditButton from "../../../components/Button/EditButton";
 import { CurrentStatusValidation } from "../validation/Validation";
 
@@ -57,11 +50,11 @@ export default function CurrentStatusForm({
   useEffect(() => {
     if (selectedCurrentStatus) {
       formik.setValues(selectedCurrentStatus);
-      formik.setErrors({}); // Clear errors when selectedCurrentStatus changes
+      formik.setErrors({});
     } else {
       formik.resetForm();
     }
-  }, [selectedCurrentStatus, readOnly]); // Add readOnly to dependencies
+  }, [selectedCurrentStatus, readOnly]);
 
   return (
     <Accordion sx={{ background: "#f6f8f4ff" }} expanded={expanded}>
@@ -71,7 +64,7 @@ export default function CurrentStatusForm({
         id="panel1-header"
         sx={{
           "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
-            transform: "none", // Ngăn không cho xoay
+            transform: "none",
           },
         }}
       >
@@ -98,7 +91,7 @@ export default function CurrentStatusForm({
                 title="Mã hiện trạng *"
                 formik={formik}
                 field="id"
-                disabled={Boolean(selectedCurrentStatus)}
+                disabled={Boolean(selectedCurrentStatus?.id)}
               />
             </Grid>
             <Grid size={{ xs: 12 }}>

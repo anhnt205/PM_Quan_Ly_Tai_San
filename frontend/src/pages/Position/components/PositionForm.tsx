@@ -105,7 +105,7 @@ export default function PositionForm({
                 title="Mã chức vụ *"
                 formik={formik}
                 field="id"
-                disabled={Boolean(selectedPosition)}
+                disabled={Boolean(selectedPosition?.id)}
               />
             </Grid>
             <Grid size={{ xs: 6 }}>

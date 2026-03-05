@@ -107,7 +107,7 @@ export default function ModelAssetForm({
                 title="Mã mô hình *"
                 formik={formik}
                 field="id"
-                disabled={Boolean(selectedModelAsset)}
+                disabled={Boolean(selectedModelAsset?.id)}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>

@@ -8,16 +8,11 @@ import {
   AccordionDetails,
   AccordionSummary,
   Box,
-  Button,
-  Checkbox,
   FormControlLabel,
   Grid,
-  IconButton,
-  InputAdornment,
   Paper,
   Radio,
   RadioGroup,
-  TextField,
   Typography,
 } from "@mui/material";
 import React, { useState, useEffect } from "react";
@@ -114,7 +109,9 @@ export default function ReasonIncreaseForm({
                 row
                 name="tangGiam"
                 value={formik.values.tangGiam}
-                onChange={(e) => formik.setFieldValue("tangGiam", e.target.value)}
+                onChange={(e) =>
+                  formik.setFieldValue("tangGiam", e.target.value)
+                }
               >
                 <FormControlLabel
                   value={1}

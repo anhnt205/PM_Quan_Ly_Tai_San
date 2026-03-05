@@ -53,11 +53,11 @@ export default function TypeAssetForm({
   useEffect(() => {
     if (selectedTypeAsset) {
       formik.setValues(selectedTypeAsset);
-      formik.setErrors({}); // Clear errors when selectedTypeAsset changes
+      formik.setErrors({});
     } else {
       formik.resetForm();
     }
-  }, [selectedTypeAsset, readOnly]); // Add readOnly to dependencies
+  }, [selectedTypeAsset, readOnly]);
 
   return (
     <Accordion sx={{ background: "#f6f8f4ff" }} expanded={expanded}>
@@ -67,7 +67,7 @@ export default function TypeAssetForm({
         id="panel1-header"
         sx={{
           "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
-            transform: "none", // Ngăn không cho xoay
+            transform: "none",
           },
         }}
       >
@@ -93,7 +93,7 @@ export default function TypeAssetForm({
                 title="Mã loại tài sản *"
                 formik={formik}
                 field="id"
-                disabled={Boolean(selectedTypeAsset)}
+                disabled={Boolean(selectedTypeAsset?.id)}
               />
             </Grid>
             <Grid size={{ xs: 12 }}>

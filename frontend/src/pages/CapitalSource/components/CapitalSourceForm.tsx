@@ -1,7 +1,5 @@
 import {
   InfoOutlineRounded,
-  Visibility,
-  VisibilityOff,
   ArrowDropDown,
   ArrowDropUp,
 } from "@mui/icons-material";
@@ -10,16 +8,11 @@ import {
   AccordionDetails,
   AccordionSummary,
   Box,
-  Button,
-  Checkbox,
   Grid,
-  IconButton,
-  InputAdornment,
   Paper,
-  TextField,
   Typography,
 } from "@mui/material";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
 import FieldInput from "../../../components/TextField/FieldInput";
@@ -100,7 +93,7 @@ export default function CapitalSourceForm({
                 title="Mã nguồn kinh phí *"
                 formik={formik}
                 field="id"
-                disabled={Boolean(selectedCapitalSource)}
+                disabled={Boolean(selectedCapitalSource?.id)}
               />
             </Grid>
             <Grid size={{ xs: 6 }}>

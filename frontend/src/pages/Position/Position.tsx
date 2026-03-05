@@ -10,8 +10,8 @@ import {
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-import ProjectForm from "./components/PositionForm";
-import { Delete } from "@mui/icons-material";
+import PositionForm from "./components/PositionForm";
+import { ContentCopy, Delete } from "@mui/icons-material";
 import { useState } from "react";
 import { showConfirmAlert } from "../../components/Alert";
 import {
@@ -27,9 +27,10 @@ export default function Position() {
   const [showForm, setShowForm] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<any>(null);
   const [readOnly, setReadOnly] = useState(false);
+  const [isCopy, setIsCopy] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
-  const {user}=useSelector((state:RootState)=>state.user)
+  const { user } = useSelector((state: RootState) => state.user);
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
@@ -43,7 +44,7 @@ export default function Position() {
     deleteManyMutation,
     importExcelMutation,
     exportMutation,
-    deleteAllMutation
+    deleteAllMutation,
   } = usePositionMutation(
     paginationModel.page,
     paginationModel.pageSize,
@@ -66,13 +67,14 @@ export default function Position() {
   };
 
   const handleSave = (values: any) => {
-    if (selectedPosition) {
+    if (selectedPosition && !isCopy) {
       updateMutation.mutate(values);
     } else {
       createMutation.mutate(values);
     }
     setShowForm(false);
     setSelectedPosition(null);
+    setIsCopy(false);
   };
 
   const handleEdit = () => {
@@ -203,17 +205,32 @@ export default function Position() {
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
-        <IconButton
-          onClick={async (e) => {
-            e.stopPropagation();
-            const confirm = await showConfirmAlert("Xác nhận xóa!");
-            if (confirm.isConfirmed) {
-              deleteOneMutation.mutate(params.row.id);
-            }
-          }}
-        >
-          <Delete color="error" />
-        </IconButton>
+        <Box display="flex" gap={1} justifyContent="center" alignItems="center">
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              const { id, ...copyData } = params.row;
+              setSelectedPosition({ ...copyData, id: "" });
+              setIsCopy(true);
+              setReadOnly(false);
+              setShowForm(true);
+            }}
+          >
+            <ContentCopy color="primary" />
+          </IconButton>
+
+          <IconButton
+            onClick={async (e) => {
+              e.stopPropagation();
+              const confirm = await showConfirmAlert("Xác nhận xóa!");
+              if (confirm.isConfirmed) {
+                deleteOneMutation.mutate(params.row.id);
+              }
+            }}
+          >
+            <Delete color="error" />
+          </IconButton>
+        </Box>
       ),
     },
   ];
@@ -254,7 +271,7 @@ export default function Position() {
         </Dialog>
         {showForm && (
           <Box py={2}>
-            <ProjectForm
+            <PositionForm
               onCancel={() => {
                 setShowForm(false);
                 setSelectedPosition(null);
@@ -283,7 +300,7 @@ export default function Position() {
           searchValue={searchValue}
           setSearchValue={setSearchValue}
           onDeleteAll={deleteAllMutation.mutate}
-          showDeleteAll={user?.taiKhoan?.tenDangNhap==="admin"}
+          showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
         />
       </Box>
     </Box>

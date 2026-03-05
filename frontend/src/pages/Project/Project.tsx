@@ -11,7 +11,7 @@ import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import ProjectForm from "./components/ProjectForm";
-import { Delete } from "@mui/icons-material";
+import { ContentCopy, Delete } from "@mui/icons-material";
 import { useState } from "react";
 import {
   useAllProjectsQuery,
@@ -27,6 +27,7 @@ export default function Project() {
   const [showForm, setShowForm] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [readOnly, setReadOnly] = useState(false);
+  const [isCopy, setIsCopy] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
@@ -43,7 +44,7 @@ export default function Project() {
     deleteManyMutation,
     exportMutation,
     importExcelMutation,
-    deleteAllMutation
+    deleteAllMutation,
   } = useProjectMutation(
     paginationModel.page,
     paginationModel.pageSize,
@@ -66,13 +67,14 @@ export default function Project() {
   };
 
   const handleSave = (values: any) => {
-    if (selectedProject) {
+    if (selectedProject && !isCopy) {
       updateMutation.mutate(values);
     } else {
       createMutation.mutate(values);
     }
     setShowForm(false);
     setSelectedProject(null);
+    setIsCopy(false);
   };
 
   const handleEdit = () => {
@@ -132,17 +134,31 @@ export default function Project() {
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
-        <IconButton
-          onClick={async (e) => {
-            e.stopPropagation();
-            const confirm = await showConfirmAlert("Xác nhận xóa!");
-            if (confirm.isConfirmed) {
-              deleteOneMutation.mutate(params.row.id);
-            }
-          }}
-        >
-          <Delete color="error" />
-        </IconButton>
+        <Box display="flex" gap={1} justifyContent="center" alignItems="center">
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              const { id, ...copyData } = params.row;
+              setSelectedProject({ ...copyData, id: "" });
+              setIsCopy(true);
+              setReadOnly(false);
+              setShowForm(true);
+            }}
+          >
+            <ContentCopy color="primary" />
+          </IconButton>
+          <IconButton
+            onClick={async (e) => {
+              e.stopPropagation();
+              const confirm = await showConfirmAlert("Xác nhận xóa!");
+              if (confirm.isConfirmed) {
+                deleteOneMutation.mutate(params.row.id);
+              }
+            }}
+          >
+            <Delete color="error" />
+          </IconButton>
+        </Box>
       ),
     },
   ];

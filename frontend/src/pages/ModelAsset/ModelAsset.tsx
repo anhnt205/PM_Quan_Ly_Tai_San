@@ -9,14 +9,10 @@ import {
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-import { Delete } from "@mui/icons-material";
+import { ContentCopy, Delete } from "@mui/icons-material";
 import { useState } from "react";
-import {
-  useAllModelAssetQuery,
-  useModelAssetMutation,
-  useModelAssetPageQuery,
-} from "./Mutation";
-import { showConfirmAlert, showErrorAlert } from "../../components/Alert";
+import { useModelAssetMutation, useModelAssetPageQuery } from "./Mutation";
+import { showConfirmAlert } from "../../components/Alert";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useDebounce } from "../../hooks/useDebounce";
 import ModelAssetForm from "./components/ModelAssetForm";
@@ -27,6 +23,7 @@ export default function ModelAsset() {
   const [showForm, setShowForm] = useState(false);
   const [selectedModelAsset, setSelectedModelAsset] = useState<any>(null);
   const [readOnly, setReadOnly] = useState(false);
+  const [isCopy, setIsCopy] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
@@ -46,7 +43,7 @@ export default function ModelAsset() {
     deleteManyMutation,
     importExcelMutation,
     exportMutation,
-    deleteAllMutation
+    deleteAllMutation,
   } = useModelAssetMutation(
     paginationModel.page,
     paginationModel.pageSize,
@@ -80,13 +77,14 @@ export default function ModelAsset() {
   };
 
   const handleSave = (values: any) => {
-    if (selectedModelAsset) {
+    if (selectedModelAsset && !isCopy) {
       updateMutation.mutate(values);
     } else {
       createMutation.mutate(values);
     }
     setShowForm(false);
     setSelectedModelAsset(null);
+    setIsCopy(false);
   };
 
   const handleEdit = () => {
@@ -197,17 +195,31 @@ export default function ModelAsset() {
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
-        <IconButton
-          onClick={async (e) => {
-            e.stopPropagation();
-            const confirm = await showConfirmAlert("Xác nhận xóa!");
-            if (confirm.isConfirmed) {
-              deleteOneMutation.mutate(params.row.id);
-            }
-          }}
-        >
-          <Delete color="error" />
-        </IconButton>
+        <Box display="flex" gap={1} justifyContent="center" alignItems="center">
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              const { id, ...copyData } = params.row;
+              setSelectedModelAsset({ ...copyData, id: "" });
+              setIsCopy(true);
+              setReadOnly(false);
+              setShowForm(true);
+            }}
+          >
+            <ContentCopy color="primary" />
+          </IconButton>
+          <IconButton
+            onClick={async (e) => {
+              e.stopPropagation();
+              const confirm = await showConfirmAlert("Xác nhận xóa!");
+              if (confirm.isConfirmed) {
+                deleteOneMutation.mutate(params.row.id);
+              }
+            }}
+          >
+            <Delete color="error" />
+          </IconButton>
+        </Box>
       ),
     },
   ];

@@ -1,5 +1,5 @@
-import { Chip, IconButton, Tooltip } from "@mui/material";
-import { History as HistoryIcon } from "@mui/icons-material";
+import { Box, Chip, IconButton, Tooltip } from "@mui/material";
+import { ContentCopy, History as HistoryIcon } from "@mui/icons-material";
 import { ReactNode } from "react";
 
 export interface ColumnConfig {
@@ -14,6 +14,7 @@ export interface ColumnConfig {
 
 export const createColumns = (
   handleOpenHistory: (row: any) => void,
+  handleCopy: (row: any) => void,
 ): ColumnConfig[] => [
   {
     key: "id",
@@ -120,26 +121,36 @@ export const createColumns = (
     isShow: true,
     width: 100,
     render: (_: any, row: any) => (
-      <Tooltip title="Xem lịch sử điều chuyển">
+      <Box display="flex" gap={1} justifyContent="center" alignItems="center">
         <IconButton
-          size="small"
           onClick={(e) => {
             e.stopPropagation();
-            handleOpenHistory(row);
-          }}
-          sx={{
-            color: "#4F46E5",
-            bgcolor: "#EEF2FF",
-            "&:hover": {
-              bgcolor: "#E0E7FF",
-              transform: "scale(1.1)",
-            },
-            transition: "all 0.2s",
+            handleCopy(row);
           }}
         >
-          <HistoryIcon fontSize="small" />
+          <ContentCopy color="primary" />
         </IconButton>
-      </Tooltip>
+        <Tooltip title="Xem lịch sử điều chuyển">
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleOpenHistory(row);
+            }}
+            sx={{
+              color: "primary.main",
+              bgcolor: "action.hover",
+              "&:hover": {
+                bgcolor: "action.selected",
+                transform: "scale(1.1)",
+              },
+              transition: "all 0.2s",
+            }}
+          >
+            <HistoryIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </Box>
     ),
   },
   {

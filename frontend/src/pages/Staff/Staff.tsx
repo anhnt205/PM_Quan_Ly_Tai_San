@@ -1,4 +1,4 @@
-import { Delete } from "@mui/icons-material";
+import { ContentCopy, Delete } from "@mui/icons-material";
 import {
   Box,
   Chip,
@@ -22,6 +22,7 @@ import { RootState } from "../../redux/store";
 
 export default function Staff() {
   const [showForm, setShowForm] = useState(false);
+  const [isCopy, setIsCopy] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<any>(null);
   const [readOnly, setReadOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -65,14 +66,16 @@ export default function Staff() {
   };
 
   const handleSave = (values: any) => {
-    if (selectedStaff) {
+    if (selectedStaff && !isCopy) {
       updateMutation.mutate(values);
     } else {
       createMutation.mutate(values);
     }
     setShowForm(false);
     setSelectedStaff(null);
+    setIsCopy(false);
   };
+
   const handleEdit = () => {
     setReadOnly(false);
   };
@@ -203,17 +206,32 @@ export default function Staff() {
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
-        <IconButton
-          onClick={async (e) => {
-            e.stopPropagation();
-            const confirm = await showConfirmAlert("Xác nhận xóa!");
-            if (confirm.isConfirmed) {
-              deleteOneMutation.mutate(params.row.id);
-            }
-          }}
-        >
-          <Delete color="error" />
-        </IconButton>
+        <Box display="flex" gap={1} justifyContent="center" alignItems="center">
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              const { id, ...copyData } = params.row;
+              setSelectedStaff({ ...copyData, id: "" });
+              setIsCopy(true);
+              setReadOnly(false);
+              setShowForm(true);
+            }}
+          >
+            <ContentCopy color="primary" />
+          </IconButton>
+
+          <IconButton
+            onClick={async (e) => {
+              e.stopPropagation();
+              const confirm = await showConfirmAlert("Xác nhận xóa!");
+              if (confirm.isConfirmed) {
+                deleteOneMutation.mutate(params.row.id);
+              }
+            }}
+          >
+            <Delete color="error" />
+          </IconButton>
+        </Box>
       ),
     },
   ];
@@ -226,6 +244,7 @@ export default function Staff() {
           setShowForm(true);
           setSelectedStaff(null);
           setReadOnly(false);
+          setIsCopy(false);
         }}
         onExport={() => exportMutation.mutate()}
         onImport={handleImport}
@@ -259,6 +278,7 @@ export default function Staff() {
                 setShowForm(false);
                 setSelectedStaff(null);
                 setReadOnly(false);
+                setIsCopy(false);
               }}
               onEdit={handleEdit}
               selectedStaff={selectedStaff}
