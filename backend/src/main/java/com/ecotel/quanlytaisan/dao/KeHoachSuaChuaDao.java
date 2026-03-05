@@ -59,9 +59,8 @@ public class KeHoachSuaChuaDao {
     }
 
     public List<KeHoachSuaChuaDTO> findAll(String idCongTy) {
-        if (cache == null || cache.isEmpty()) {
-            refreshCache();
-        }
+
+        refreshCache();
         if (idCongTy == null) {
             return new java.util.ArrayList<>(cache);
         }
