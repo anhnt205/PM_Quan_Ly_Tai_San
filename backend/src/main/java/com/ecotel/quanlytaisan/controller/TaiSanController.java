@@ -365,6 +365,7 @@ public class TaiSanController {
             @RequestParam int thang,
             @RequestParam int nam,
             @RequestParam String idNhomTaiSan,
+            @RequestParam(required = false) String idDonViHienThoi,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String sortBy,
@@ -372,7 +373,7 @@ public class TaiSanController {
             @RequestParam(required = false) String search) {
         try {
             PageResponse<KhauHaoTaiSan> result = taiSanService.getKhauHaoTaiSanByNhomPaged(
-                    idcongty, ngay, thang, nam, idNhomTaiSan, page, size, sortBy, sortDir, search
+                    idcongty, ngay, thang, nam, idNhomTaiSan,idDonViHienThoi, page, size, sortBy, sortDir, search
             );
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách khấu hao tài sản theo nhóm thành công", result, null));
         } catch (Exception e) {

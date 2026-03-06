@@ -6,6 +6,8 @@ import api from "../../../config/api.config";
 interface MauSo21ContentProps {
   onContentChange?: (content: any) => void;
   selectedDeptName?: string;
+  selectedDeptAssetGroupName?: string;
+  idDonVi?: string;
   selectedYear?: string | number;
   idCongTy?: string;
   idNhomTaiSan?: string | number;
@@ -17,9 +19,11 @@ interface MauSo21ContentProps {
 export default function MauSo21Content({
   onContentChange,
   selectedDeptName,
+  selectedDeptAssetGroupName,
   selectedYear,
   idCongTy,
   idNhomTaiSan,
+  idDonVi,
   ngayBaoCao,
   fetchKey,
   onFetchSuccess,
@@ -93,7 +97,8 @@ export default function MauSo21Content({
   const handleInputChange = (field: string, value: string) => {
     const newData = { ...formData, [field]: value };
     setFormData(newData);
-    onContentChange?.({ ...newData });
+    // Always preserve rows when updating form data
+    onContentChange?.({ ...newData, rows, footerData });
   };
 
   const dottedInputSx = {
@@ -188,6 +193,7 @@ export default function MauSo21Content({
           ngay: day,
           thang: month,
           nam: selectedYear,
+          idDonViHienThoi: idDonVi,
         };
         if (idNhomTaiSan) params.idNhomTaiSan = idNhomTaiSan;
 
@@ -228,11 +234,12 @@ export default function MauSo21Content({
           await new Promise((r) => setTimeout(r, 0));
         }
 
-        onContentChange?.({
+        const finalData = {
           diaChi: formData.diaChi,
           rows: acc,
           footerData: {},
-        });
+        };
+        onContentChange?.(finalData);
         onFetchSuccess?.();
       } catch (err) {
         console.error("Fetch khauhao error", err);
@@ -277,13 +284,7 @@ export default function MauSo21Content({
             >
               Đơn vị:
             </Typography>
-            <TextField
-              value={formData.donVi}
-              onChange={(e) => handleInputChange("donVi", e.target.value)}
-              variant="standard"
-              fullWidth
-              sx={{ ...dottedInputLeftSx }}
-            />
+            <Typography>{selectedDeptName || ""}</Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "baseline" }}>
             <Typography
@@ -395,7 +396,7 @@ export default function MauSo21Content({
           <Typography component="span" sx={{ fontFamily: "inherit", mr: 1 }}>
             Loại tài sản:{" "}
             <b style={{ fontWeight: "bold" }}>
-              {selectedDeptName || formData.loaiTaiSan || ""}
+              {selectedDeptAssetGroupName || formData.loaiTaiSan || ""}
             </b>
           </Typography>
         </Box>

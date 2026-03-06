@@ -744,8 +744,9 @@ public class TaiSanDao {
         return jdbcTemplate.update(sql, id);
     }
 
-    public List<KhauHaoTaiSan> getKhauHaoTaiSanByNhom(String idCongTy, int ngay, int thang, int nam, String idNhomTaiSan) {
-        String sql = """
+    public List<KhauHaoTaiSan> getKhauHaoTaiSanByNhom(String idCongTy, int ngay, int thang, int nam, String idNhomTaiSan, String idDonViHienThoi) {
+        // build the base SQL with placeholders for the date calculations, company and group filters
+        StringBuilder sql = new StringBuilder("""
         WITH RECURSIVE periods AS (
             SELECT 1 AS ky
             UNION ALL
@@ -755,35 +756,35 @@ public class TaiSanDao {
             ts.Id AS soThe,
             ts.TenTaiSan AS tenTaiSan,
             ts.TaiKhoanTaiSan AS maTk,
-        
+
             DATE_ADD(STR_TO_DATE(ts.NgaySuDung, '%Y-%m-%d'), INTERVAL (p.ky - 1) * 30 DAY) AS ngayTinhKhao,
             p.ky AS thangKh,
             ts.NguyenGia AS nguyenGia,
             ts.GiaTriKhauHaoBanDau AS khauHaoBanDau,
-        
+
             -- Khấu hao phát sinh đầu kỳ
             (ts.GiaTriKhauHaoBanDau + (ts.NguyenGia / ts.SoKyKhauHao) * (p.ky - 1)) AS khauHaoPsdk,
-        
+
             -- Giá trị còn lại ban đầu
             GREATEST(ts.NguyenGia - (ts.GiaTriKhauHaoBanDau + (ts.NguyenGia / ts.SoKyKhauHao) * (p.ky - 1)), 0) AS gtclBanDau,
-        
+
             -- Khấu hao phát sinh cuối kỳ
             (ts.GiaTriKhauHaoBanDau + (ts.NguyenGia / ts.SoKyKhauHao) * p.ky) AS khauHaoPsck,
-        
+
             -- Giá trị còn lại hiện tại
             GREATEST(ts.NguyenGia - (ts.GiaTriKhauHaoBanDau + (ts.NguyenGia / ts.SoKyKhauHao) * p.ky), 0) AS gtclHienTai,
-        
+
             (ts.NguyenGia / ts.SoKyKhauHao) AS khauHaoBinhQuan,
             (ts.NguyenGia / ts.SoKyKhauHao) AS soTien,
             0 AS chenhLech,
-        
+
             -- Khấu hao kỳ trước
             CAST((ts.GiaTriKhauHaoBanDau + (ts.NguyenGia / ts.SoKyKhauHao) * GREATEST(p.ky - 2, 0)) AS DECIMAL(18,2)) AS khKyTruoc,
             CAST(0 AS DECIMAL(18,2)) AS clKyTruoc,
-        
+
             -- Hạn sử dụng còn lại
             GREATEST(ts.SoKyKhauHao - (ts.KyKhauHaoBanDau + p.ky), 0) AS hsdCkh,
-        
+
             ts.TaiKhoanChiPhi AS tkNo,
             ts.TaiKhoanKhauHao AS tkCo,
             '00' AS dtgt,
@@ -802,10 +803,29 @@ public class TaiSanDao {
           AND DATE_ADD(STR_TO_DATE(ts.NgaySuDung, '%Y-%m-%d'), INTERVAL p.ky * 30 DAY) > CONCAT(?, '-', LPAD(?,2,'0'), '-', LPAD(?,2,'0'))
           AND ts.IdCongTy = ?
           AND ts.IdNhomTaiSan = ?
-        ORDER BY ts.KyHieu, p.ky
-        """;
+        """.
+        toString());
 
-        return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(KhauHaoTaiSan.class), nam, thang, ngay, nam, thang, ngay, idCongTy, idNhomTaiSan);
+        // collect parameters in order
+        List<Object> params = new java.util.ArrayList<>();
+        params.add(nam);
+        params.add(thang);
+        params.add(ngay);
+        params.add(nam);
+        params.add(thang);
+        params.add(ngay);
+        params.add(idCongTy);
+        params.add(idNhomTaiSan);
+
+        // only apply DonViHienThoi filter if value supplied (non-null and non-empty)
+        if (idDonViHienThoi != null && !idDonViHienThoi.trim().isEmpty()) {
+            sql.append("\n          AND ts.IdDonViHienThoi = ?\n");
+            params.add(idDonViHienThoi);
+        }
+
+        sql.append("ORDER BY ts.KyHieu, p.ky");
+
+        return jdbcTemplate.query(sql.toString(), new BeanPropertyRowMapper<>(KhauHaoTaiSan.class), params.toArray());
     }
 
 

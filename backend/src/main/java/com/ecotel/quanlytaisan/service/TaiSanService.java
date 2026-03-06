@@ -241,8 +241,8 @@ public class TaiSanService {
         return taiSanDao.getKhauHaoTaiSan(idCongTy, ngay, thang, nam);
     }
 
-    public List<KhauHaoTaiSan> getKhauHaoTaiSanByNhom(String idCongTy, int ngay, int thang, int nam, String idNhomTaiSan) {
-        return taiSanDao.getKhauHaoTaiSanByNhom(idCongTy, ngay, thang, nam, idNhomTaiSan);
+    public List<KhauHaoTaiSan> getKhauHaoTaiSanByNhom(String idCongTy, int ngay, int thang, int nam, String idNhomTaiSan, String idDonViHienThoi) {
+        return taiSanDao.getKhauHaoTaiSanByNhom(idCongTy, ngay, thang, nam, idNhomTaiSan, idDonViHienThoi);
     }
 
     public List<TaiSan> readCsv(MultipartFile file) throws IOException {
@@ -1019,14 +1019,14 @@ public class TaiSanService {
      * Lấy danh sách khấu hao tài sản theo nhóm với phân trang và tìm kiếm
      */
     public PageResponse<KhauHaoTaiSan> getKhauHaoTaiSanByNhomPaged(
-            String idCongTy, int ngay, int thang, int nam, String idNhomTaiSan,
+            String idCongTy, int ngay, int thang, int nam, String idNhomTaiSan,String idDonViHienThoi,
             int page, int size, String sortBy, String sortDir, String search) {
 
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
 
         // Lấy toàn bộ dữ liệu khấu hao theo nhóm (sử dụng method hiện có)
-        List<KhauHaoTaiSan> all = taiSanDao.getKhauHaoTaiSanByNhom(idCongTy, ngay, thang, nam, idNhomTaiSan);
+        List<KhauHaoTaiSan> all = taiSanDao.getKhauHaoTaiSanByNhom(idCongTy, ngay, thang, nam, idNhomTaiSan,idDonViHienThoi);
 
         // Filter theo search
         List<KhauHaoTaiSan> filtered = filterKhauHaoTaiSan(all, search);

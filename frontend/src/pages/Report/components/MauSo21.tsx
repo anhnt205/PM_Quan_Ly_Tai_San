@@ -20,6 +20,7 @@ import XLSX from "xlsx-js-style";
 import MauSo21Content from "./MauSo21Content";
 import ExportExcelButton from "../../../components/Button/ExportExcelButton";
 import { CongTy } from "../../../utils/const";
+import { useAllDepartmentsQuery } from "../../Department/Mutation";
 
 if (typeof window !== "undefined") {
   (window as any).Buffer = (window as any).Buffer || Buffer;
@@ -27,6 +28,7 @@ if (typeof window !== "undefined") {
 
 export default function MauSo21({ title }: { title?: string }) {
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [selectedDeptName, setSelectedDeptName] = useState("");
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState<
     "success" | "error" | "warning"
@@ -34,6 +36,7 @@ export default function MauSo21({ title }: { title?: string }) {
   const [contentData, setContentData] = useState({});
 
   const handleContentChange = useCallback((data: any) => {
+    console.log("contentData updated with:", data);
     setContentData(data);
   }, []);
 
@@ -63,11 +66,18 @@ export default function MauSo21({ title }: { title?: string }) {
     queryFn: async () =>
       (await api.get("/nhomtaisan", { params: { idcongty: idCongTy } })).data,
   });
+  const { data: departments = [] } = useAllDepartmentsQuery();
 
   const handleExport = () => {
     const data = contentData as any;
-    if (!data || !Array.isArray(data.rows) || data.rows.length === 0) {
-      setSnackbarMessage("Chưa có dữ liệu để xuất!");
+    console.log("Export clicked, contentData:", contentData);
+    const hasData = data && Array.isArray(data.rows) && data.rows.length > 0;
+
+    if (!hasData) {
+      console.warn("Export failed - no data:", { contentData });
+      setSnackbarMessage(
+        "Chưa có dữ liệu để xuất! Vui lòng click 'Lấy dữ liệu' trước.",
+      );
       setSnackbarSeverity("warning");
       setOpenSnackbar(true);
       return;
@@ -344,7 +354,7 @@ export default function MauSo21({ title }: { title?: string }) {
     }
   };
 
-  const selectedDeptName =
+  const selectedDeptAssetGroupName =
     groups.find(
       (d: any) => d.id?.toString() === String(formik.values.IdLoaiTaiSan),
     )?.tenNhom || "";
@@ -473,7 +483,33 @@ export default function MauSo21({ title }: { title?: string }) {
             </Typography>
           </Box>
         )}
-
+        <Box sx={{ mb: 3 }}>
+          <FieldAutoCompleted
+            title="Đơn vị"
+            labelkey="tenPhongBan"
+            data={departments}
+            formik={formik}
+            field="IdDonVi"
+            onChange={(values) => {
+              setSelectedDeptName?.(values ? values.tenPhongBan : "");
+            }}
+            componentsProps={{
+              paper: {
+                sx: {
+                  backgroundColor: "#fff0f5",
+                  borderRadius: "6px",
+                },
+              },
+              popper: {
+                style: { width: 360, overflow: "visible" },
+                placement: "bottom-start",
+              },
+              listbox: {
+                sx: { maxHeight: 220, overflow: "auto" },
+              },
+            }}
+          />
+        </Box>
         <Box sx={{ mb: 3 }}>
           <FieldAutoCompleted
             title="Loại tài sản"
@@ -570,8 +606,10 @@ export default function MauSo21({ title }: { title?: string }) {
         <MauSo21Content
           onContentChange={handleContentChange}
           selectedDeptName={selectedDeptName}
+          selectedDeptAssetGroupName={selectedDeptAssetGroupName}
           selectedYear={selectedYear}
           idCongTy={idCongTy}
+          idDonVi={formik.values.IdDonVi}
           idNhomTaiSan={formik.values.IdLoaiTaiSan}
           ngayBaoCao={formik.values.NgayBaoCao}
           fetchKey={fetchKey}
