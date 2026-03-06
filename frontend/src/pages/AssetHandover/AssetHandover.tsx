@@ -45,7 +45,10 @@ import SignDocumentForm from "./components/SignDocumentForm";
 import SignDocumentTransferForm from "../AssetTransfer/components/SignDocumentForm";
 
 import dayjs from "dayjs";
-import { useAssetTransferPageQuery } from "../AssetTransfer/Mutation";
+import {
+  useAssetTranferMutation,
+  useAssetTransferPageQuery,
+} from "../AssetTransfer/Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useAllStaffsQuery, useStaffMutation } from "../Staff/Mutation";
 import { useAllDepartmentsQuery } from "../Department/Mutation";
@@ -53,6 +56,7 @@ import { useAllUnitsQuery } from "../Unit/Mutation";
 import { useAllPositionsQuery } from "../Position/Mutation";
 import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
 import S3Service from "../../services/S3Service";
+import api from "../../config/api.config";
 
 export default function AssetHandover() {
   const [showForm, setShowForm] = useState(false);
@@ -122,6 +126,7 @@ export default function AssetHandover() {
   const { data: allUnits = [] } = useAllUnitsQuery();
   const { data: positions = [] } = useAllPositionsQuery();
   const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
+  const { assetTransferDetailAllMutation } = useAssetTranferMutation();
 
   useEffect(() => {
     setSelectedIds([]);
@@ -475,65 +480,86 @@ export default function AssetHandover() {
           <IconButton
             size="small"
             title="Tạo biên bản bàn giao tài sản"
-            onClick={(e) => {
+            onClick={async (e) => {
               e.stopPropagation();
               window.scrollTo({ top: 140, behavior: "smooth" });
-              setSelectedRow({
-                id: "",
-                soQuyetDinh: "",
-                banGiaoTaiSan: "",
-                quyetDinhDieuDongSo: "",
-                lenhDieuDong: params.row.id,
-                idDonViGiao: params.row.idDonViGiao,
-                idDonViNhan: params.row.idDonViNhan,
-                ngayBanGiao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-                ngayQuyetDinh: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-                ngayTaoChungTu: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-                diaDiemQuyetDinh: "",
-                idGiamDoc: "",
-                idCongTy: params.row.idCongTy,
-                idLanhDao: "",
-                idDaiDiendonviBanHanhQD: "",
-                daXacNhan: false,
-                idDaiDienBenGiao: "",
-                daiDienBenGiaoXacNhan: false,
-                idDaiDienBenNhan: "",
-                daiDienBenNhanXacNhan: false,
-                trangThai: 0,
-                note: "",
-                ngayTao: "",
-                ngayCapNhat: "",
-                nguoiTao: "",
-                nguoiCapNhat: "",
-                isActive: true,
-                share: false,
-                duongDanFile: "",
-                tenFile: "",
-                byStep: false,
-                giamDocKy: false,
-                taiLieuBangKe: "",
-                nguoiKyList: [] as any[],
-                chiTietBanGiaoTaiSan: params.row.chiTietDieuDongTaiSanDTOS
-                  ? params.row.chiTietDieuDongTaiSanDTOS.map((item: any) => ({
-                      id: "",
-                      tenTaiSan: item.tenTaiSan,
-                      idBanGiaoTaiSan: "",
-                      idTaiSan: item.idTaiSan,
-                      donViTinh: item.donViTinh,
-                      soLuong: item.soLuong,
-                      hienTrang: item.hienTrang || "1",
-                      ghiChu: item.ghiChu || "",
-                      isActive: true,
-                      moTa: item.moTa || "",
-                      kyHieu: item.kyHieu || "",
-                      nuocSanXuat: item.nuocSanXuat || "",
-                    }))
-                  : [],
-                initialChiTiet: [] as any[],
-                isNew: true,
-              });
-              setReadOnly(false);
-              setShowForm(true);
+
+              try {
+                const res = await assetTransferDetailAllMutation.mutateAsync(
+                  params.row.id,
+                );
+
+                // Đảm bảo mảng chi tiết được lấy về đầy đủ
+                const fullDetails = res || [];
+
+                // 2. Set dữ liệu vào state để truyền xuống form
+                setSelectedRow({
+                  id: "",
+                  soQuyetDinh: "",
+                  banGiaoTaiSan: "",
+                  quyetDinhDieuDongSo: "",
+                  lenhDieuDong: params.row.id,
+                  idDonViGiao: params.row.idDonViGiao,
+                  idDonViNhan: params.row.idDonViNhan,
+                  ngayBanGiao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+                  ngayQuyetDinh: dayjs(new Date()).format(
+                    "YYYY-MM-DD HH:mm:ss",
+                  ),
+                  ngayTaoChungTu: dayjs(new Date()).format(
+                    "YYYY-MM-DD HH:mm:ss",
+                  ),
+                  diaDiemQuyetDinh: "",
+                  idGiamDoc: "",
+                  idCongTy: params.row.idCongTy,
+                  idLanhDao: "",
+                  idDaiDiendonviBanHanhQD: "",
+                  daXacNhan: false,
+                  idDaiDienBenGiao: "",
+                  daiDienBenGiaoXacNhan: false,
+                  idDaiDienBenNhan: "",
+                  daiDienBenNhanXacNhan: false,
+                  trangThai: 0,
+                  note: "",
+                  ngayTao: "",
+                  ngayCapNhat: "",
+                  nguoiTao: "",
+                  nguoiCapNhat: "",
+                  isActive: true,
+                  share: false,
+                  duongDanFile: "",
+                  tenFile: "",
+                  byStep: false,
+                  giamDocKy: false,
+                  taiLieuBangKe: "",
+                  nguoiKyList: [] as any[],
+
+                  // 3. Map lại từ fullDetails vừa gọi từ API về
+                  chiTietBanGiaoTaiSan: fullDetails.map((item: any) => ({
+                    id: "",
+                    tenTaiSan: item.tenTaiSan,
+                    idBanGiaoTaiSan: "",
+                    idTaiSan: item.idTaiSan,
+                    donViTinh: item.donViTinh,
+                    soLuong: item.soLuong,
+                    hienTrang: item.hienTrang || "1",
+                    ghiChu: item.ghiChu || "",
+                    isActive: true,
+                    moTa: item.moTa || "",
+                    kyHieu: item.kyHieu || "",
+                    nuocSanXuat: item.nuocSanXuat || "",
+                  })),
+                  initialChiTiet: [] as any[],
+                  isNew: true,
+                });
+
+                setReadOnly(false);
+                setShowForm(true);
+              } catch (error) {
+                console.error(
+                  "Lỗi khi lấy danh sách chi tiết tài sản: ",
+                  error,
+                );
+              }
             }}
           >
             <ListPlus size={20} strokeWidth={2} color="#4caf50" />
