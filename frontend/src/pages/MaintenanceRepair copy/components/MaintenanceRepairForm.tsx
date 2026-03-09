@@ -13,12 +13,14 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
   TextField,
   styled,
 } from "@mui/material";
 import { useFormik } from "formik";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import {
   Add,
@@ -26,7 +28,6 @@ import {
   ArrowDropUp,
   Delete,
   Cancel,
-  Visibility,
 } from "@mui/icons-material";
 import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
@@ -35,29 +36,11 @@ import FieldInput from "../../../components/TextField/FieldInput";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
 import FileAttachmentInput from "../../../components/TextField/FileAttachmentInput";
 import CustomStepper from "../../../components/common/CustomStepper";
+import { generateCode } from "../../../utils/helpers";
 import { useAllLoaiSCBDQuery } from "../../MaintenanceRepairType/Mutation";
-import { Devicetype, StatusPlan } from "../../../utils/const";
-import dayjs from "dayjs";
-import FieldDate from "../../../components/TextField/FieldDate";
-import { useMaintenancePlanningPageQuery } from "../../MainenancePlanRepair/Mutation";
-import { generateBangKePdf, mergeBangKeWithOriginalPdf } from "../config";
-import S3Service from "../../../services/S3Service";
-import SignDocumentForm from "./SignDocumentForm";
-import { useAssetByDonViQuery } from "../../AssetTransfer/Mutation";
-import { useToolByDepartmentPageQuery } from "../../ToolTransfer/Mutation";
-import DialogLoading from "../../../components/common/DialogLoading";
-import { MaintenanceRepairData } from "../types";
-const CustomTableCell = styled(TableCell)(({ theme }) => ({
-  borderBottom: "1px solid rgba(224, 224, 224, 1)",
-  padding: "16px 8px",
-  fontSize: "14px",
-}));
-
-const CustomTableHeadCell = styled(CustomTableCell)(({ theme }) => ({
-  fontWeight: "bold",
-  color: "rgba(0, 0, 0, 0.87)",
-  backgroundColor: "transparent",
-}));
+import { useAllAssetsQuery } from "../../AssetManager/Mutation";
+import { useAllToolQuery } from "../../ToolManager/Mutation";
+import { CongTy } from "../../../utils/const";
 
 export default function MaintenanceRepairForm({
   onEdit,
@@ -83,116 +66,100 @@ export default function MaintenanceRepairForm({
   allCurrentStatus: any[];
 }) {
   const [expanded, setExpanded] = useState(true);
-  const [isPreview, setIsPreview] = useState(false);
   const [document, setDocument] = useState<File | string | any>("");
-  const [selectedPlanRawChiTiets, setSelectedPlanRawChiTiets] = useState<any[]>(
-    [],
+  const [activeDetailTab, setActiveDetailTab] = useState<"taisan" | "ccdc">(
+    "taisan",
   );
-  const [chiTietKeHoach, setChiTietKeHoach] = useState<any[]>([]);
-
-  const { data: MaintenancePlanningPage = { items: [] } } =
-    useMaintenancePlanningPageQuery(0, 9999, undefined, StatusPlan.PENDING);
   const { data: maintenanceRepairTypes = [] } = useAllLoaiSCBDQuery();
+  const { data: allAssets = [] } = useAllAssetsQuery();
+  const { data: allTools = [] } = useAllToolQuery();
+
+  const CustomTableCell = styled(TableCell)(({ theme }) => ({
+    borderBottom: "1px solid rgba(224, 224, 224, 1)",
+    padding: "16px 8px",
+    fontSize: "14px",
+  }));
+
+  const CustomTableHeadCell = styled(CustomTableCell)(({ theme }) => ({
+    fontWeight: "bold",
+    color: "rgba(0, 0, 0, 0.87)",
+    backgroundColor: "transparent",
+  }));
 
   const currentStatus = selectedRepair?.trangThai ?? 0;
 
   const formik = useFormik({
     initialValues: {
       id: "",
-      idCongTy: "",
-      idKeHoach: "",
-      maSuaChua: "",
-      tenSuaChua: "",
-      loaiDoiTuong: "",
+      soQuyetDinh: "",
+      tenPhieu: "",
       idLoaiSuaChua: "",
-      idDonViGiao: "",
-      idDonViNhan: "",
+      idPhanXuong: "",
+      ngayYeuCauHoanThanh: "",
+      idDonViTiepNhanTaiSan: "",
       idNguoiKyNhay: "",
       trangThaiKyNhay: false,
       nguoiLapPhieuKyNhay: false,
-      ngayKetThucDuKien: dayjs(new Date()).format("YYYY-MM-DD"),
+      idDonViDeNghi: "",
       idTrinhDuyetCapPhong: "",
       trinhDuyetCapPhongXacNhan: false,
       idTrinhDuyetGiamDoc: "",
       trinhDuyetGiamDocXacNhan: false,
-      idDonViDeNghi: "",
-      duongDanFile: "",
-      tenFile: "",
-      taiLieuBanGhi: "",
-      byStep: false,
-      soQuyetDinh: "",
+      diaDiemGiaoNhan: "",
+      idPhongBanXemPhieu: "",
+      noiNhan: "",
+      trangThai: 0,
+      idCongTy: CongTy.CT001,
+      ngayTao: "",
+      ngayCapNhat: "",
       nguoiTao: "",
+      nguoiCapNhat: "",
+      coHieuLuc: 1,
       share: false,
       daBanGiao: false,
+      byStep: false,
       coPhieuBanGiao: false,
-      taiLieuCuoi: "",
-      loai: 0,
-      tenDonViGiao: "",
-      tenDonViNhan: "",
-      tenDonViDeNghi: "",
-      tenNguoiKyNhay: "",
-      tenTrinhDuyetCapPhong: "",
-      tenTrinhDuyetGiamDoc: "",
-      trangThai: 0,
-      ghiChu: "",
-      nguoiKyList: [] as any[],
-      initialChiTiet: [] as any[],
+      tenFile: "",
+      duongDanFile: "",
+      nguoiKyList: [],
+      ghiChuKhac: "",
       chiTietSuaChuaBaoDuongDTOS: [
         {
           id: "",
           idSuaChuaBaoDuong: "",
-          tenTaiSan: "",
+          tentaiSan: "",
           idTaiSan: "",
-          idCCDC: "",
-          idChiTietCCDC: "",
           soLuong: 0,
           ghiChu: "",
+          ngayTao: "",
+          ngayCapNhat: "",
+          nguoiTao: "",
+          nguoiCapNhat: "",
           isActive: true,
           hienTrang: "",
           moTa: "",
+          daBanGiao: true,
         },
       ],
     },
-    onSubmit: async (values) => {
-      const bangKeBytes = await generateBangKePdf(
-        values.chiTietSuaChuaBaoDuongDTOS,
-        allUnits,
-        allCurrentStatus,
+    onSubmit: (values) => {
+      const chiTietSuaChuaBaoDuongDTOS = values.chiTietSuaChuaBaoDuongDTOS.map(
+        (item, index) => ({
+          ...item,
+          id: `${generateCode("CTSC-")}-${index}`,
+          idSuaChuaBaoDuong: values.id,
+        }),
       );
-
-      // 2. Xử lý Key tài liệu gốc (duongDanFile)
-      let keyTailieu = values.duongDanFile;
-      let keyTaiLieuCuoi = values.taiLieuCuoi;
-
-      // Nếu 'document' là File (người dùng vừa chọn file mới)
-      if (document instanceof File) {
-        keyTailieu = await S3Service.put({
-          name: document.name,
-          file: document,
-          type: "tailieu",
-        });
-      }
-
-      // 3. Merge và Upload tài liệu cuối (taiLieuCuoi)
-      const mergePdf = await mergeBangKeWithOriginalPdf(
-        keyTailieu,
-        bangKeBytes,
-      );
-      if (!mergePdf) throw new Error("Không thể tạo tài liệu");
-
-      if (!keyTaiLieuCuoi) {
-        keyTaiLieuCuoi = await S3Service.put({
-          name: `SCBD_${values.tenSuaChua}.pdf`,
-          file: mergePdf,
-          type: "tailieu",
-        });
-      } else {
-        await S3Service.updatePresignedPutUrl(keyTaiLieuCuoi, mergePdf);
-      }
+      const nguoiKyList = values.nguoiKyList.map((item: any, index) => ({
+        ...item,
+        id: `${generateCode("NK-")}-${index}`,
+        idTaiLieu: values.id,
+        idPhongBan: values.idDonViDeNghi,
+      }));
       onSave({
         ...values,
-        duongDanFile: keyTailieu,
-        taiLieuCuoi: keyTaiLieuCuoi,
+        chiTietSuaChuaBaoDuongDTOS,
+        nguoiKyList,
       });
     },
   });
@@ -200,16 +167,12 @@ export default function MaintenanceRepairForm({
   useEffect(() => {
     if (selectedRepair) {
       formik.setValues({
+        ...formik.values,
         ...selectedRepair,
-        initialChiTiet: (selectedRepair.chiTietSuaChuaBaoDuongDTOS || []).map(
-          (i: any) => i.id,
-        ),
       });
-      setDocument(selectedRepair.taiLieuCuoi || "");
     } else {
       formik.resetForm();
       setDocument("");
-      setSelectedPlanRawChiTiets([]); // Clear raw chiTiets when form is reset
     }
   }, [selectedRepair]);
 
@@ -232,117 +195,8 @@ export default function MaintenanceRepairForm({
     }
   }, [formik.values.idDonViDeNghi, departments, staffs]);
 
-  // Assets & Tools for planning
-  const { data: toolsByDepartment = [], isLoading: isLoadingTool } =
-    useToolByDepartmentPageQuery({
-      departmentId: formik.values.idDonViGiao,
-    });
-  const {
-    data: allAssetsByDonVi = { items: [] },
-    isFetching,
-    isLoading: isLoadingAsset,
-  } = useAssetByDonViQuery(undefined, formik.values.idDonViGiao);
-  const allEquipment = useMemo(
-    () => [
-      ...allAssetsByDonVi.items.map((a: any) => ({
-        ...a,
-        ten: a.tenTaiSan || a.ten || "",
-        type: Devicetype.ASSET,
-      })),
-      ...toolsByDepartment.map((t: any) => ({
-        ...t,
-        ten: t.ten || t.tenDetailAsset || "",
-        type: Devicetype.TOOL,
-      })),
-    ],
-    [toolsByDepartment, allAssetsByDonVi],
-  );
-
-  // useEffect to populate chiTietSuaChuaBaoDuongDTOS when allEquipment is loaded
-  useEffect(() => {
-    if (
-      selectedPlanRawChiTiets.length > 0 &&
-      allEquipment.length > 0 &&
-      formik.values.loaiDoiTuong
-    ) {
-      const loaiDoiTuong = formik.values.loaiDoiTuong;
-      const populatedDetails = selectedPlanRawChiTiets.map((chiTiet: any) => {
-        let equipmentInfo = null;
-        let equipmentIdToSearch = "";
-
-        if (loaiDoiTuong === Devicetype.ASSET) {
-          equipmentIdToSearch = chiTiet.idTaiSan;
-          equipmentInfo = allEquipment.find(
-            (eq: any) =>
-              eq.id === equipmentIdToSearch && eq.type === Devicetype.ASSET,
-          );
-        } else if (loaiDoiTuong === Devicetype.TOOL) {
-          equipmentIdToSearch = chiTiet.idChiTietCCDC;
-          equipmentInfo = allEquipment.find(
-            (eq: any) =>
-              eq.id === equipmentIdToSearch && eq.type === Devicetype.TOOL,
-          );
-        }
-
-        return {
-          id: "", // This will be generated on save
-          idSuaChuaBaoDuong: "",
-          ten: equipmentInfo?.ten || "",
-          idTaiSan:
-            equipmentInfo?.type === Devicetype.ASSET ? equipmentInfo?.id : "",
-          idCCDC:
-            equipmentInfo?.type === Devicetype.TOOL
-              ? equipmentInfo?.idCCDCVatTu || chiTiet.idCCDC
-              : "",
-          idChiTietCCDC:
-            equipmentInfo?.type === Devicetype.TOOL ? equipmentInfo?.id : "",
-          soLuong: equipmentInfo?.soLuong || chiTiet.soLuong || 1,
-          ghiChu: equipmentInfo?.ghiChu || chiTiet.ghiChu || "",
-          isActive: true,
-          hienTrang: equipmentInfo?.hienTrang || chiTiet.hienTrang || "",
-          moTa: equipmentInfo?.moTa || chiTiet.moTa || "",
-          daBanGiao: true,
-          donViTinh: equipmentInfo?.donViTinh || chiTiet.donViTinh || "",
-        };
-      });
-
-      formik.setFieldValue("chiTietSuaChuaBaoDuongDTOS", populatedDetails);
-      setChiTietKeHoach(
-        populatedDetails.map((item: any) => ({
-          ...item,
-          id:
-            loaiDoiTuong === Devicetype.TOOL
-              ? item?.idChiTietCCDC
-              : item?.idTaiSan,
-        })),
-      );
-    }
-  }, [selectedPlanRawChiTiets, allEquipment.length]);
-
   return (
     <>
-      <DialogLoading
-        loading={isLoadingTool || isLoadingAsset}
-        title="Đang tải tài sản/ccdc ..."
-      />
-      {isPreview && (
-        <SignDocumentForm
-          selectedIds={[]}
-          document={document}
-          onCancel={() => {
-            setIsPreview(false);
-          }}
-          onSign={() => {
-            console.log("Ký tài liệu thành công");
-          }}
-          showSignerSidebar={false}
-          fullscreen={true}
-          assetTransferDetail={formik.values.chiTietSuaChuaBaoDuongDTOS}
-          allUnits={allUnits}
-          allCurrentStatus={allCurrentStatus}
-          isEdit={[0].includes(selectedRepair?.trangThai ?? 0) ? true : false}
-        />
-      )}
       <Accordion
         sx={{
           background: "#f6f8f4ff",
@@ -417,44 +271,19 @@ export default function MaintenanceRepairForm({
               {/* CỘT TRÁI */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <Grid container spacing={2}>
-                  {readOnly && (
-                    <Grid size={12}>
-                      <FieldInput
-                        title="Số phiếu *"
-                        formik={formik}
-                        field="id"
-                        disabled={true}
-                      />
-                    </Grid>
-                  )}
+                  <Grid size={12}>
+                    <FieldInput
+                      title="Số phiếu *"
+                      formik={formik}
+                      field="soQuyetDinh"
+                      disabled={readOnly}
+                    />
+                  </Grid>
                   <Grid size={12}>
                     <FieldInput
                       title="Tên phiếu *"
                       formik={formik}
                       field="tenPhieu"
-                      disabled={readOnly}
-                    />
-                  </Grid>
-                  <Grid size={12}>
-                    <FieldAutoCompleted
-                      title="Kế hoạch *"
-                      labelkey="tenKeHoach"
-                      data={MaintenancePlanningPage.items}
-                      formik={formik}
-                      field="idKeHoach"
-                      onChange={async (value) => {
-                        formik.setFieldValue(
-                          "loaiDoiTuong",
-                          value.loaiDoiTuong,
-                        );
-                        formik.setFieldValue(
-                          "idDonViNhan",
-                          value.idDonViThucHien,
-                        );
-                        setChiTietKeHoach([]);
-                        setSelectedPlanRawChiTiets(value?.chiTiets || []);
-                        formik.setFieldValue("chiTietSuaChuaBaoDuongDTOS", []);
-                      }}
                       disabled={readOnly}
                     />
                   </Grid>
@@ -470,35 +299,38 @@ export default function MaintenanceRepairForm({
                   </Grid>
                   <Grid size={12}>
                     <FieldAutoCompleted
-                      title="Đơn vị giao *"
+                      title="Phân xưởng quản lý tài sản *"
                       labelkey="tenPhongBan"
-                      data={departments}
+                      data={departments.filter((i) => !i.isKho)}
                       formik={formik}
-                      field="idDonViGiao"
-                      onChange={() => {
-                        setChiTietKeHoach([]);
-                        formik.setFieldValue("chiTietSuaChuaBaoDuongDTOS", []);
-                      }}
+                      field="idPhanXuong"
+                      disabled={readOnly}
+                    />
+                  </Grid>
+                  <Grid size={12}>
+                    <TextField
+                      label="Thời gian yêu cầu hoàn thành *"
+                      type="date"
+                      InputLabelProps={{ shrink: true }}
+                      fullWidth
+                      size="small"
+                      value={formik.values.ngayYeuCauHoanThanh}
+                      onChange={(e) =>
+                        formik.setFieldValue(
+                          "ngayYeuCauHoanThanh",
+                          e.target.value,
+                        )
+                      }
                       disabled={readOnly}
                     />
                   </Grid>
                   <Grid size={12}>
                     <FieldAutoCompleted
-                      title="Đơn vị nhận *"
+                      title="Đơn vị tiếp nhận tài sản *"
                       labelkey="tenPhongBan"
-                      data={departments.filter((i) =>
-                        i.tenPhongBan.includes("sửa chữa"),
-                      )}
+                      data={departments.filter((i) => !i.isKho)}
                       formik={formik}
-                      field="idDonViNhan"
-                      disabled={readOnly}
-                    />
-                  </Grid>
-                  <Grid size={12}>
-                    <FieldDate
-                      title="Ngày kết thúc dự kiến *"
-                      formik={formik}
-                      field="ngayKetThucDuKien"
+                      field="idDonViTiepNhanTaiSan"
                       disabled={readOnly}
                     />
                   </Grid>
@@ -592,7 +424,9 @@ export default function MaintenanceRepairForm({
 
                   {formik.values.nguoiKyList.map((row: any, index) => {
                     const staffInDept = staffs.filter(
-                      (s) => s.phongBanId === row.idPhongBan,
+                      (s) =>
+                        s.phongBanId === row.idPhongBan &&
+                        s.hasAccount === true,
                     );
 
                     return (
@@ -609,7 +443,7 @@ export default function MaintenanceRepairForm({
                               <FieldAutoCompleted
                                 title={`Đơn vị ${index + 1}`}
                                 labelkey="tenPhongBan"
-                                data={departments}
+                                data={departments.filter((i) => !i.isKho)}
                                 formik={formik}
                                 field={`nguoiKyList[${index}].idPhongBan`}
                                 onChange={() => {
@@ -698,9 +532,9 @@ export default function MaintenanceRepairForm({
             <Box>
               {(() => {
                 const isKhac =
-                  maintenanceRepairTypes
-                    .find((t: any) => t.id === formik.values.idLoaiSuaChua)
-                    ?.ten.toLowerCase() === "khác".toLowerCase();
+                  maintenanceRepairTypes.find(
+                    (t: any) => t.id === formik.values.idLoaiSuaChua,
+                  )?.ten === "Khác";
                 return (
                   <>
                     <Typography variant="subtitle1" fontWeight={600} mb={2}>
@@ -714,16 +548,16 @@ export default function MaintenanceRepairForm({
                         minRows={4}
                         fullWidth
                         label="Ghi chú"
-                        value={formik.values.ghiChu}
+                        value={formik.values.ghiChuKhac}
                         onChange={(e) =>
-                          formik.setFieldValue("ghiChu", e.target.value)
+                          formik.setFieldValue("ghiChuKhac", e.target.value)
                         }
                         disabled={readOnly}
                       />
                     ) : (
                       <>
                         {/* TOGGLE TÀI SẢN / CCDC */}
-                        {/* <Box mb={2}>
+                        <Box mb={2}>
                           <ToggleButtonGroup
                             value={activeDetailTab}
                             exclusive
@@ -788,7 +622,7 @@ export default function MaintenanceRepairForm({
                               CCDC - Vật tư
                             </ToggleButton>
                           </ToggleButtonGroup>
-                        </Box> */}
+                        </Box>
                         <Table
                           size="small"
                           sx={{
@@ -803,7 +637,7 @@ export default function MaintenanceRepairForm({
                                 STT
                               </CustomTableHeadCell>
                               <CustomTableHeadCell width="25%">
-                                {formik.values.loaiDoiTuong === Devicetype.ASSET
+                                {activeDetailTab === "taisan"
                                   ? "Tài sản"
                                   : "CCDC - Vật tư"}
                               </CustomTableHeadCell>
@@ -813,9 +647,9 @@ export default function MaintenanceRepairForm({
                               <CustomTableHeadCell width="15%">
                                 Số lượng
                               </CustomTableHeadCell>
-                              {/* <CustomTableHeadCell width="20%">
+                              <CustomTableHeadCell width="20%">
                                 Trạng thái
-                              </CustomTableHeadCell> */}
+                              </CustomTableHeadCell>
                               <CustomTableHeadCell width="20%">
                                 Ghi chú
                               </CustomTableHeadCell>
@@ -831,39 +665,38 @@ export default function MaintenanceRepairForm({
                                   <CustomTableCell>{index + 1}</CustomTableCell>
                                   <CustomTableCell>
                                     <FieldAutoCompleted
-                                      title={
-                                        formik.values.loaiDoiTuong ===
-                                        Devicetype.ASSET
-                                          ? "Chọn thiết bị tài sản"
-                                          : "Chọn thiết bị ccdc"
+                                      title=""
+                                      labelkey={
+                                        activeDetailTab === "taisan"
+                                          ? "tenTaiSan"
+                                          : "ten"
                                       }
-                                      data={chiTietKeHoach}
-                                      labelkey="ten"
+                                      data={
+                                        activeDetailTab === "taisan"
+                                          ? allAssets
+                                          : allTools
+                                      }
                                       formik={formik}
-                                      limitOptions={20}
-                                      field={
-                                        formik.values.loaiDoiTuong ===
-                                        Devicetype.TOOL
-                                          ? `chiTietSuaChuaBaoDuongDTOS[${index}].idChiTietCCDC`
-                                          : `chiTietSuaChuaBaoDuongDTOS[${index}].idTaiSan`
-                                      }
+                                      field={`chiTietSuaChuaBaoDuongDTOS.${index}.idTaiSan`}
                                       onChange={(value) => {
                                         formik.setFieldValue(
                                           `chiTietSuaChuaBaoDuongDTOS.${index}.donViTinh`,
                                           value?.donViTinh,
                                         );
                                         formik.setFieldValue(
-                                          `chiTietSuaChuaBaoDuongDTOS.${index}.ten`,
-                                          value?.ten,
+                                          `chiTietSuaChuaBaoDuongDTOS.${index}.tentaiSan`,
+                                          activeDetailTab === "taisan"
+                                            ? value?.tenTaiSan
+                                            : value?.ten,
                                         );
                                         formik.setFieldValue(
                                           `chiTietSuaChuaBaoDuongDTOS.${index}.soLuong`,
                                           value?.soLuong,
                                         );
-                                        // formik.setFieldValue(
-                                        //   `chiTietSuaChuaBaoDuongDTOS.${index}.hienTrang`,
-                                        //   value?.hienTrang,
-                                        // );
+                                        formik.setFieldValue(
+                                          `chiTietSuaChuaBaoDuongDTOS.${index}.hienTrang`,
+                                          value?.hienTrang,
+                                        );
                                         formik.setFieldValue(
                                           `chiTietSuaChuaBaoDuongDTOS.${index}.moTa`,
                                           value?.moTa,
@@ -895,14 +728,14 @@ export default function MaintenanceRepairForm({
                                       disabled={readOnly}
                                     />
                                   </CustomTableCell>
-                                  {/* <CustomTableCell>
+                                  <CustomTableCell>
                                     <FieldInput
                                       title=""
                                       formik={formik}
                                       field={`chiTietSuaChuaBaoDuongDTOS.${index}.hienTrang`}
                                       disabled={readOnly}
                                     />
-                                  </CustomTableCell> */}
+                                  </CustomTableCell>
                                   <CustomTableCell>
                                     <FieldInput
                                       title=""
@@ -963,19 +796,6 @@ export default function MaintenanceRepairForm({
                             </Button>
                           </Box>
                         )}
-                        <Box
-                          mt={2}
-                          display="flex"
-                          alignItems="center"
-                          gap={0.5}
-                          sx={{ cursor: "pointer", color: "#1976d2" }}
-                          onClick={() => setIsPreview(true)}
-                        >
-                          <Typography variant="body2">
-                            Xem trước tài liệu
-                          </Typography>
-                          <Visibility fontSize="small" />
-                        </Box>
                       </>
                     )}
                   </>

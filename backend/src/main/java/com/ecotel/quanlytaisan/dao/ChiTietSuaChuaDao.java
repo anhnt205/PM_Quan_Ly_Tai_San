@@ -26,6 +26,8 @@ public class ChiTietSuaChuaDao {
                 ts.KyHieu,
                 ts.SoKyHieu,
                 ts.DonViTinh,
+                ct.IdCCDC,
+                ct.IdChiTietCCDC,
                 ct.SoLuong,
                 ct.HienTrang,
                 ct.MoTa,
@@ -36,7 +38,7 @@ public class ChiTietSuaChuaDao {
                 ct.NguoiCapNhat,
                 ct.IsActive
             FROM ChiTietSuaChua ct
-                INNER JOIN TaiSan ts ON ct.IdTaiSan = ts.Id
+                LEFT JOIN TaiSan ts ON ct.IdTaiSan = ts.Id
             WHERE ct.IdSuaChua = ?
         """;
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(ChiTietSuaChuaDTO.class), idSuaChua);
@@ -52,6 +54,8 @@ public class ChiTietSuaChuaDao {
                 ts.KyHieu,
                 ts.SoKyHieu,
                 ts.DonViTinh,
+                ct.IdCCDC,
+                ct.IdChiTietCCDC,
                 ct.SoLuong,
                 ct.HienTrang,
                 ct.MoTa,
@@ -62,7 +66,7 @@ public class ChiTietSuaChuaDao {
                 ct.NguoiCapNhat,
                 ct.IsActive
             FROM ChiTietSuaChua ct
-                INNER JOIN TaiSan ts ON ct.IdTaiSan = ts.Id
+                LEFT JOIN TaiSan ts ON ct.IdTaiSan = ts.Id
             WHERE ct.Id = ?
         """;
         return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(ChiTietSuaChuaDTO.class), id);
@@ -73,13 +77,13 @@ public class ChiTietSuaChuaDao {
         entity.setNgayCapNhat(entity.getNgayTao());
         entity.setIsActive(true);
         String sql = """
-            INSERT INTO ChiTietSuaChua (Id, IdSuaChua, IdTaiSan, SoLuong, HienTrang, MoTa, GhiChu,
+            INSERT INTO ChiTietSuaChua (Id, IdSuaChua, IdTaiSan, IdCCDC, IdChiTietCCDC, SoLuong, HienTrang, MoTa, GhiChu,
                                         NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """;
         return jdbcTemplate.update(sql,
-                entity.getId(), entity.getIdSuaChua(), entity.getIdTaiSan(), entity.getSoLuong(),
-                entity.getHienTrang(), entity.getMoTa(), entity.getGhiChu(),
+                entity.getId(), entity.getIdSuaChua(), entity.getIdTaiSan(), entity.getIdCCDC(), entity.getIdChiTietCCDC(),
+                entity.getSoLuong(), entity.getHienTrang(), entity.getMoTa(), entity.getGhiChu(),
                 entity.getNgayTao(), entity.getNgayCapNhat(), entity.getNguoiTao(),
                 entity.getNguoiCapNhat(), entity.getIsActive());
     }
@@ -123,13 +127,13 @@ public class ChiTietSuaChuaDao {
         entity.setNgayCapNhat(new Date());
         String sql = """
             UPDATE ChiTietSuaChua SET
-                IdSuaChua = ?, IdTaiSan = ?, SoLuong = ?, HienTrang = ?, MoTa = ?, GhiChu = ?,
+                IdSuaChua = ?, IdTaiSan = ?, IdCCDC = ?, IdChiTietCCDC = ?, SoLuong = ?, HienTrang = ?, MoTa = ?, GhiChu = ?,
                 NgayCapNhat = ?, NguoiCapNhat = ?, IsActive = ?
             WHERE Id = ?
         """;
         return jdbcTemplate.update(sql,
-                entity.getIdSuaChua(), entity.getIdTaiSan(), entity.getSoLuong(),
-                entity.getHienTrang(), entity.getMoTa(), entity.getGhiChu(),
+                entity.getIdSuaChua(), entity.getIdTaiSan(), entity.getIdCCDC(), entity.getIdChiTietCCDC(),
+                entity.getSoLuong(), entity.getHienTrang(), entity.getMoTa(), entity.getGhiChu(),
                 entity.getNgayCapNhat(), entity.getNguoiCapNhat(), entity.getIsActive(),
                 entity.getId());
     }

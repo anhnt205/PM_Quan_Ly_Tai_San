@@ -16,6 +16,7 @@ import static com.ecotel.quanlytaisan.utils.ParserHelper.*;
 public class SuaChua {
     private String id;
     private String idCongTy;
+    private String idLoaiSuaChua;
     private String idKeHoach;
     private String maSuaChua;
     private String tenSuaChua;
@@ -52,6 +53,7 @@ public class SuaChua {
     private Boolean daBanGiao;
     private Boolean coPhieuBanGiao;
     private String taiLieuCuoi;
+    private String ghiChu;
     private Integer loai;                        // Loại phiếu
 
     // Các trường hiển thị (được gán từ join)

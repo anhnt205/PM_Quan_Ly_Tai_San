@@ -1,8 +1,10 @@
 export interface MaintenanceRepairDetailItem {
-  id?: string;
-  idSuaChuaBaoDuong?: string;
-  tentaiSan?: string;
+  id: string;
+  idSuaChuaBaoDuong: string;
+  tenTaiSan: string;
   idTaiSan?: string;
+  idChiTietCCDC?: string;
+  idCCDC?: string;
   soLuong?: number;
   ghiChu?: string;
   ngayTao?: string;
@@ -14,54 +16,73 @@ export interface MaintenanceRepairDetailItem {
   moTa?: string;
 }
 
-export interface MaintenanceRepairSigner {
-  id?: string;
-  idTaiLieu?: string;
-  idNguoiKy?: string;
-  trangThai?: number;
-  ngayKy?: string;
-  hoTen?: string;
+export interface Signer {
+  id: string;
+  idTaiLieu: string;
+  idNguoiKy: string;
+  tenNguoiKy: string;
+  idPhongBan: string;
+  trangThai: number;
+}
+
+export interface SignaturesData {
+  id: string;
+  idTaiLieu: string;
+  loaiKy: number;
+  x: number;
+  y: number;
+  idNguoiKy: string;
+  chuKySo: string;
+  ngayKy: string;
+  stt: number;
+  chuKyNhay: string;
+  chuKyThuong: string;
+  scale: number;
+  width: number;
+  isLocked: boolean;
 }
 
 export interface MaintenanceRepairData {
-  id?: string;
-  idKeHoach?: string; // Liên kết với kế hoạch bảo trì
-  soQuyetDinh?: string;
-  tenPhieu?: string;
-  idLoaiSuaChua?: string;
-  loai?: number; // type=1, type=2
-  idPhanXuong?: string;
-  ngayYeuCauHoanThanh?: string;
-  idDonViTiepNhanTaiSan?: string;
-  idDonViGiao?: string;
-  idDonViNhan?: string;
-  tenDonViGiao?: string;
-  tenDonViNhan?: string;
-  idNguoiKyNhay?: string;
-  trangThaiKyNhay?: boolean;
-  nguoiLapPhieuKyNhay?: boolean;
-  idDonViDeNghi?: string;
-  idTrinhDuyetCapPhong?: string;
-  trinhDuyetCapPhongXacNhan?: boolean;
-  idTrinhDuyetGiamDoc?: string;
-  tenTrinhDuyetGiamDoc?: string;
-  trinhDuyetGiamDocXacNhan?: boolean;
-  diaDiemGiaoNhan?: string;
-  idPhongBanXemPhieu?: string;
-  noiNhan?: string;
-  trangThai?: number; // 0-4
-  idCongTy?: string;
-  ngayTao?: string;
-  ngayCapNhat?: string;
-  nguoiTao?: string;
-  nguoiCapNhat?: string;
-  coHieuLuc?: number;
-  share?: boolean;
-  daBanGiao?: boolean;
-  byStep?: boolean;
-  coPhieuBanGiao?: boolean;
-  tenFile?: string;
-  duongDanFile?: string;
-  nguoiKyList?: MaintenanceRepairSigner[];
+  id: string;
+  idCongTy: string;
+  idLoaiSuaChua: string;
+  maSuaChua: string;
+  ghiChu: string;
+  loaiDoiTuong: string;
+  idKeHoach: string;
+  tenSuaChua: string;
+  idDonViGiao: string;
+  idDonViNhan: string;
+  idNguoiKyNhay: string;
+  trangThaiKyNhay: boolean;
+  nguoiLapPhieuKyNhay: boolean;
+  ngayKetThucDuKien: string;
+  idTrinhDuyetCapPhong: string;
+  trinhDuyetCapPhongXacNhan: boolean;
+  idTrinhDuyetGiamDoc: string;
+  trinhDuyetGiamDocXacNhan: boolean;
+  idDonViDeNghi: string;
+  duongDanFile: string;
+  tenFile: string;
+  taiLieuBanGhi: string;
+  byStep: boolean;
+  soQuyetDinh: string;
+  nguoiTao: string;
+  share: boolean;
+  ngayTao: string;
+  daBanGiao: boolean;
+  coPhieuBanGiao: boolean;
+  taiLieuCuoi: string;
+  loai: 0;
+  tenDonViGiao: string;
+  tenDonViNhan: string;
+  tenDonViDeNghi: string;
+  tenNguoiKyNhay: string;
+  tenTrinhDuyetCapPhong: string;
+  tenTrinhDuyetGiamDoc: string;
+  trangThai: 0;
+  ngayCapNhat: string;
+  nguoiKyList?: Signer[];
+  initialChiTiet: [];
   chiTietSuaChuaBaoDuongDTOS?: MaintenanceRepairDetailItem[];
 }

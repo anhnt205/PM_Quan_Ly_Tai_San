@@ -374,6 +374,7 @@ export default function AssetManager() {
           setSelectedAsset(null);
           setReadOnly(false);
         }}
+        loading={exportAssetMutation.isPending || importAssetMutation.isPending}
         onExport={() => exportAssetMutation.mutate()}
         onImport={(file) => importAssetMutation.mutate(file)}
         showExcel={true}

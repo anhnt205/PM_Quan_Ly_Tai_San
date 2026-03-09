@@ -14,6 +14,7 @@ import java.util.List;
 public class SuaChuaDTO {
     private String id;
     private String idCongTy;
+    private String idLoaiSuaChua;
     private String idKeHoach;
     private String tenKeHoach;
     private String maSuaChua;
@@ -61,6 +62,7 @@ public class SuaChuaDTO {
     private Boolean daBanGiao;
     private Boolean coPhieuBanGiao;
     private String taiLieuCuoi;
+    private String ghiChu;
     private Integer loai;
 
     // Danh sách chi tiết sửa chữa

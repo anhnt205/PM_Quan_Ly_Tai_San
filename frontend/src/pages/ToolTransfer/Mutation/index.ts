@@ -661,7 +661,7 @@ export const useToolByDepartmentPageQuery = ({
       const detailAsset = detailMap.get(e.idTsCon) as any;
       if (asset?.id && detailAsset?.id) {
         acc.push({
-          id: e.idCCDCVT,
+          id: detailAsset.id,
           idCCDCVatTu: e.idCCDCVT,
           tenCCDCVatTu: asset.ten || "N/A",
           idDetaiAsset: detailAsset.id,
@@ -697,9 +697,7 @@ export const useToolDetailAllQuery = () => {
   const detailQuery = useQuery({
     queryKey: ["chitietdonvisohuuALl"],
     queryFn: async () => {
-      const res = await api.get(
-        `/chitietdonvisohuu`,
-      );
+      const res = await api.get(`/chitietdonvisohuu`);
       return res.data?.data || res.data || [];
     },
   });
