@@ -47,11 +47,13 @@ public class SuaChuaController {
             @RequestParam(required = false) Integer loai,
             @RequestParam(required = false) String idDonViGiao,
             @RequestParam(required = false) String idDonViNhan,
-            @RequestParam(required = false) String idKeHoach
+            @RequestParam(required = false) String idKeHoach,
+            @RequestParam(required = false) Integer trangThai  // <-- thêm
     ) throws SQLException {
         PageResponse<SuaChuaDTO> response = suaChuaService.findAllPaged(
                 idCongTy, page, size, sortBy, sortDir, search,
-                userId, loai, idDonViGiao, idDonViNhan, idKeHoach
+                userId, loai, idDonViGiao, idDonViNhan, idKeHoach,
+                trangThai  // <-- thêm
         );
         return ResponseEntity.ok(response);
     }

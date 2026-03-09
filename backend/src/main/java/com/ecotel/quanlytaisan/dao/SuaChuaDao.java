@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import javax.annotation.PostConstruct;
 import java.time.Year;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -123,9 +124,17 @@ public class SuaChuaDao {
     }
 
     public Map<Integer, Long> getCountByTrangThai(String idCongTy) {
-        // Tạm thời không có trạng thái tổng hợp, có thể dùng loại hoặc tự tính
-        // Tôi sẽ để trống, bạn có thể điều chỉnh sau
-        return new java.util.HashMap<>();
+        String sql = """
+        SELECT TrangThai, COUNT(*) as total
+        FROM SuaChua
+        WHERE IdCongTy = ?
+        GROUP BY TrangThai
+        """;
+        Map<Integer, Long> result = new HashMap<>();
+        jdbcTemplate.query(sql, rs -> {
+            result.put(rs.getInt("TrangThai"), rs.getLong("total"));
+        }, idCongTy);
+        return result;
     }
 
     public List<SuaChuaDTO> findAllPaged(String idCongTy, int offset, int limit, String sortBy, String sortDir) {

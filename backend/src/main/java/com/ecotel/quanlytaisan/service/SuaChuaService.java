@@ -62,14 +62,15 @@ public class SuaChuaService {
             Integer loai,
             String idDonViGiao,
             String idDonViNhan,
-            String idKeHoach // Thêm tham số lọc theo kế hoạch
+            String idKeHoach,
+            Integer trangThai  // <-- thêm tham số này
     ) throws SQLException {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
 
         List<SuaChuaDTO> sourceList = findAll(idCongTy);
 
-        // Lọc theo quyền ký (nếu có userId)
+        // Lọc theo quyền ký
         if (userId != null && !userId.trim().isEmpty()) {
             sourceList = sourceList.stream()
                     .filter(item -> isUserTurnToSign(item, userId))
@@ -78,25 +79,25 @@ public class SuaChuaService {
 
         if (idDonViGiao != null && !idDonViGiao.trim().isEmpty()) {
             sourceList = sourceList.stream()
-                    .filter(item -> item.getIdDonViGiao() != null && item.getIdDonViGiao().equals(idDonViGiao))
+                    .filter(item -> idDonViGiao.equals(item.getIdDonViGiao()))
                     .collect(Collectors.toList());
         }
 
         if (idDonViNhan != null && !idDonViNhan.trim().isEmpty()) {
             sourceList = sourceList.stream()
-                    .filter(item -> item.getIdDonViNhan() != null && item.getIdDonViNhan().equals(idDonViNhan))
+                    .filter(item -> idDonViNhan.equals(item.getIdDonViNhan()))
                     .collect(Collectors.toList());
         }
 
         if (loai != null) {
             sourceList = sourceList.stream()
-                    .filter(item -> item.getLoai() != null && item.getLoai().equals(loai))
+                    .filter(item -> loai.equals(item.getLoai()))
                     .collect(Collectors.toList());
         }
 
         if (idKeHoach != null && !idKeHoach.trim().isEmpty()) {
             sourceList = sourceList.stream()
-                    .filter(item -> item.getIdKeHoach() != null && item.getIdKeHoach().equals(idKeHoach))
+                    .filter(item -> idKeHoach.equals(item.getIdKeHoach()))
                     .collect(Collectors.toList());
         }
 
@@ -112,7 +113,23 @@ public class SuaChuaService {
                     .collect(Collectors.toList());
         }
 
-        // Tính toán thống kê theo loại
+        // Tính số lượng theo từng trạng thái TRƯỚC khi lọc trangThai
+        // (để luôn trả về đủ số lượng tất cả trạng thái)
+        Map<String, Long> trangThaiCounts = new HashMap<>();
+        trangThaiCounts.put("nhap",      sourceList.stream().filter(i -> Integer.valueOf(0).equals(i.getTrangThai())).count());
+        trangThaiCounts.put("choDuyet",  sourceList.stream().filter(i -> Integer.valueOf(1).equals(i.getTrangThai())).count());
+        trangThaiCounts.put("huy",       sourceList.stream().filter(i -> Integer.valueOf(2).equals(i.getTrangThai())).count());
+        trangThaiCounts.put("hoanThanh", sourceList.stream().filter(i -> Integer.valueOf(3).equals(i.getTrangThai())).count());
+        trangThaiCounts.put("tatCa",     (long) sourceList.size());
+
+        // Lọc theo trạng thái SAU khi đã đếm
+        if (trangThai != null) {
+            sourceList = sourceList.stream()
+                    .filter(item -> trangThai.equals(item.getTrangThai()))
+                    .collect(Collectors.toList());
+        }
+
+        // Tính số lượng theo loại
         Map<String, Long> groupCounts = new HashMap<>();
         for (SuaChuaDTO item : sourceList) {
             if (item.getLoai() != null) {
@@ -126,18 +143,18 @@ public class SuaChuaService {
 
         long total = sourceList.size();
         int from = Math.min(page * size, sourceList.size());
-        int to = Math.min(from + size, sourceList.size());
+        int to   = Math.min(from + size, sourceList.size());
         List<SuaChuaDTO> items = sourceList.subList(from, to);
 
         for (SuaChuaDTO item : items) {
-            List<ChiTietSuaChuaDTO> chiTiet = chiTietSuaChuaDao.findByIdSuaChua(item.getId());
-            item.setChiTietSuaChuas(chiTiet);
+            item.setChiTietSuaChuas(chiTietSuaChuaDao.findByIdSuaChua(item.getId()));
             item.setChuKyList(kyTaiLieuDao.findById(item.getId()));
             item.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId()));
         }
 
         PageResponse<SuaChuaDTO> response = new PageResponse<>(items, total, page, size);
         response.setGroupCounts(groupCounts);
+        response.setTrangThaiCounts(trangThaiCounts); // <-- thêm field này vào PageResponse
         return response;
     }
 
