@@ -44,6 +44,19 @@ public class ChiTietSuaChuaService {
         return chiTietSuaChuaDao.delete(id);
     }
 
+    public void bulkInsert(List<ChiTietSuaChua> list) {
+        chiTietSuaChuaDao.batchInsert(list);
+    }
+
+    public void bulkUpdate(List<ChiTietSuaChua> list) {
+        chiTietSuaChuaDao.batchUpdate(list);
+    }
+
+    public void bulkDelete(List<String> ids) {
+        chiTietSuaChuaDao.batchDelete(ids);
+    }
+
+
     public int deleteByIdSuaChua(String idSuaChua) {
         return chiTietSuaChuaDao.deleteByIdSuaChua(idSuaChua);
     }

@@ -47,6 +47,14 @@ public class ChiTietSuaChuaController {
         return new ResponseEntity<>(result, HttpStatus.CREATED);
     }
 
+    @PostMapping("/bulk")
+    public ResponseEntity<?> bulkInsert(@RequestBody List<ChiTietSuaChua> list) {
+
+        chiTietSuaChuaService.bulkInsert(list);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body("Inserted successfully");
+    }
+
     /**
      * Cập nhật chi tiết
      */
@@ -60,6 +68,15 @@ public class ChiTietSuaChuaController {
         return ResponseEntity.ok(result);
     }
 
+    @PutMapping("/bulk")
+    public ResponseEntity<?> bulkUpdate(@RequestBody List<ChiTietSuaChua> list) {
+
+        chiTietSuaChuaService.bulkUpdate(list);
+
+        return ResponseEntity.ok("Updated successfully");
+    }
+
+
     /**
      * Xóa chi tiết
      */
@@ -70,6 +87,14 @@ public class ChiTietSuaChuaController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/bulk")
+    public ResponseEntity<?> bulkDelete(@RequestBody List<String> ids) {
+
+        chiTietSuaChuaService.bulkDelete(ids);
+
+        return ResponseEntity.ok("Deleted successfully");
     }
 
     /**
