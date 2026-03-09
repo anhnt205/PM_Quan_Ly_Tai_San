@@ -137,6 +137,7 @@ export default function ToolManager() {
           setReadOnly(false);
           setIsCopy(false);
         }}
+        loading={exportExcelMutation.isPending || importExcelMutation.isPending}
         onExport={() => exportExcelMutation.mutate()}
         onImport={(file) => importExcelMutation.mutate(file)}
         showExcel={true}

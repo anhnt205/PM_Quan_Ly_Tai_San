@@ -2,6 +2,8 @@ import { Download, Settings, Upload } from "@mui/icons-material";
 import NewButton from "../Button/NewButton";
 import {
   Box,
+  Dialog,
+  DialogContent,
   IconButton,
   ListItemIcon,
   Menu,
@@ -9,8 +11,11 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useRef, useState } from "react";
+import CustomProgress from "../loading/CustomProgress";
+import CustomLoading from "../loading/CustomLoading/CustomLoading";
 
 interface Props {
+  loading?: boolean;
   title: string;
   onNewClick: () => void;
   onExport?: () => void; // Thêm prop xuất file
@@ -19,6 +24,7 @@ interface Props {
 }
 
 export default function PageAction({
+  loading = false,
   title,
   onNewClick,
   onExport,
@@ -120,6 +126,7 @@ export default function PageAction({
           </MenuItem>
         )}
       </Menu>
+      <CustomProgress title="Đang xử lý ..." loading={loading} />
     </Box>
   );
 }
