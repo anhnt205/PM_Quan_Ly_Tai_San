@@ -1,5 +1,3 @@
-
-
 ALTER TABLE chitietsuachua
     ADD IdCCDC VARCHAR(50);
 ALTER TABLE chitietsuachua
