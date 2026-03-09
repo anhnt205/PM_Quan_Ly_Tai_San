@@ -8,10 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import javax.annotation.PostConstruct;
 import java.time.Year;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -464,50 +461,61 @@ public class SuaChuaDao {
     }
 
     // 0:nháp, 1: chờ duyệt, 2: hủy, 3: hoàn thành
+    // 0: nháp, 1: chờ duyệt, 2: hủy, 3: hoàn thành
     public int updateTrangThai(String id, String userId) {
         SuaChua sc = findById(id);
-        int trangThai = sc.getTrangThai();
+        if (sc == null) return 0;
 
+        int trangThai = sc.getTrangThai() != null ? sc.getTrangThai() : 0;
+
+        // Bước 1: Ký từ bảng NguoiKy (người ký phụ)
         int status = updateTrangThaiKy(id, userId);
-        if (status == 1) trangThai = 1;
+        if (status == 1) {
+            trangThai = 1;
+        }
 
-        // Người ký nháy (giả sử IdNguoiKyNhay là một ID duy nhất)
-        if (sc.getIdNguoiKyNhay() != null && !sc.getIdNguoiKyNhay().isEmpty()
-                && userId.equals(sc.getIdNguoiKyNhay()) && !sc.getTrangThaiKyNhay()) {
+        // Bước 2: Người ký nháy
+        if (Objects.equals(userId, sc.getIdNguoiKyNhay())) {
             sc.setTrangThaiKyNhay(true);
             trangThai = 1;
         }
 
-        // Duyệt cấp phòng
-        if (sc.getIdTrinhDuyetCapPhong() != null && !sc.getIdTrinhDuyetCapPhong().isEmpty()
-                && userId.equals(sc.getIdTrinhDuyetCapPhong()) && !sc.getTrinhDuyetCapPhongXacNhan()) {
+        // Bước 3: Duyệt cấp phòng
+        if (Objects.equals(userId, sc.getIdTrinhDuyetCapPhong())) {
             sc.setTrinhDuyetCapPhongXacNhan(true);
             trangThai = 1;
         }
 
-        // Duyệt giám đốc
-        if (sc.getIdTrinhDuyetGiamDoc() != null && !sc.getIdTrinhDuyetGiamDoc().isEmpty()
-                && userId.equals(sc.getIdTrinhDuyetGiamDoc()) && !sc.getTrinhDuyetGiamDocXacNhan()) {
+        // Bước 4: Duyệt giám đốc
+        if (Objects.equals(userId, sc.getIdTrinhDuyetGiamDoc())) {
             sc.setTrinhDuyetGiamDocXacNhan(true);
             trangThai = 1;
         }
 
-        // Kiểm tra đã ký đủ chưa
+        // Kiểm tra tất cả đã ký chưa
         boolean allKy = true;
         if (sc.getIdNguoiKyNhay() != null && !sc.getIdNguoiKyNhay().isEmpty())
-            allKy = allKy && sc.getTrangThaiKyNhay();
+            allKy = allKy && Boolean.TRUE.equals(sc.getTrangThaiKyNhay());
         if (sc.getIdTrinhDuyetCapPhong() != null && !sc.getIdTrinhDuyetCapPhong().isEmpty())
-            allKy = allKy && sc.getTrinhDuyetCapPhongXacNhan();
+            allKy = allKy && Boolean.TRUE.equals(sc.getTrinhDuyetCapPhongXacNhan());
         if (sc.getIdTrinhDuyetGiamDoc() != null && !sc.getIdTrinhDuyetGiamDoc().isEmpty())
-            allKy = allKy && sc.getTrinhDuyetGiamDocXacNhan();
+            allKy = allKy && Boolean.TRUE.equals(sc.getTrinhDuyetGiamDocXacNhan());
 
-        if (allKy) allKy = checkAllOtherNguoiKy(id);
+        if (allKy) {
+            allKy = checkAllOtherNguoiKy(id);
+        }
 
-        if (allKy) trangThai = 3; // Hoàn thành
+        if (allKy) {
+            trangThai = 3; // Hoàn thành
+        }
 
         sc.setTrangThai(trangThai);
         SuaChua result = update(sc);
-        return result != null ? trangThai : 0;
+        if (result != null) {
+            CompletableFuture.runAsync(this::refreshCache);
+            return trangThai;
+        }
+        return 0;
     }
 
     public int huyTrangThai(String id) {

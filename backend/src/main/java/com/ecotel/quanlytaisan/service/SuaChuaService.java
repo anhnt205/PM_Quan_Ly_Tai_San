@@ -396,6 +396,10 @@ public class SuaChuaService {
         return 0;
     }
 
+    public int updateTrangThai(String id, String userId) {
+        return suaChuaDao.updateTrangThai(id, userId);
+    }
+
     // ==================== IMPORT ====================
 
     public List<SuaChua> readCsv(MultipartFile file) throws IOException {

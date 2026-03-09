@@ -1,5 +1,6 @@
 package com.ecotel.quanlytaisan.controller;
 
+import com.ecotel.quanlytaisan.model.ApiResponse;
 import com.ecotel.quanlytaisan.model.SuaChua;
 import com.ecotel.quanlytaisan.model.SuaChuaDTO;
 import com.ecotel.quanlytaisan.model.PageResponse;
@@ -123,58 +124,38 @@ public class SuaChuaController {
     }
 
     // ==================== CÁC ENDPOINT XỬ LÝ KÝ DUYỆT ====================
-
     /**
-     * Ký nháy (dành cho người được chỉ định trong IdNguoiKyNhay)
+     * Gộp toàn bộ ký duyệt vào 1 API
+     * Tự động xác định bước dựa trên userId:
+     *   - Người ký nháy (IdNguoiKyNhay)
+     *   - Duyệt cấp phòng (IdTrinhDuyetCapPhong)
+     *   - Duyệt giám đốc (IdTrinhDuyetGiamDoc)
+     *   - Người ký phụ (bảng NguoiKy)
+     * Trả về trạng thái mới: 0=nháp, 1=chờ duyệt, 2=hủy, 3=hoàn thành
      */
-    @PostMapping("/{id}/ky-nhay")
-    public ResponseEntity<Integer> updateKyNhay(@PathVariable String id, @RequestParam String userId) {
-        int result = suaChuaService.updateKyNhay(id, userId);
-        return ResponseEntity.ok(result);
-    }
+    @PostMapping("/capnhattrangthai")
+    public ResponseEntity<ApiResponse<Object>> capNhatTrangThai(
+            @RequestParam String id,
+            @RequestParam String userId
+    ) {
+        try {
+            SuaChua existing = suaChuaService.findById(id);
+            if (existing == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.failure("Không tìm thấy phiếu sửa chữa", null));
+            }
 
-    /**
-     * Người lập phiếu ký nháy (NguoiLapPhieuKyNhay)
-     */
-    @PostMapping("/{id}/ky-lap-phieu")
-    public ResponseEntity<Integer> updateNguoiLapPhieuKyNhay(@PathVariable String id) {
-        int result = suaChuaService.updateNguoiLapPhieuKyNhay(id);
-        return ResponseEntity.ok(result);
+            int result = suaChuaService.updateTrangThai(id, userId);
+            if (result > 0) {
+                return ResponseEntity.ok(ApiResponse.success("Cập nhật thành công", result, result));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.failure("Cập nhật thất bại", result));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
     }
-
-    /**
-     * Duyệt cấp phòng
-     */
-    @PostMapping("/{id}/duyet-cap-phong")
-    public ResponseEntity<Integer> updateDuyetCapPhong(
-            @PathVariable String id,
-            @RequestParam String userId,
-            @RequestParam boolean xacNhan) {
-        int result = suaChuaService.updateDuyetCapPhong(id, userId, xacNhan);
-        return ResponseEntity.ok(result);
-    }
-
-    /**
-     * Duyệt giám đốc
-     */
-    @PostMapping("/{id}/duyet-giam-doc")
-    public ResponseEntity<Integer> updateDuyetGiamDoc(
-            @PathVariable String id,
-            @RequestParam String userId,
-            @RequestParam boolean xacNhan) {
-        int result = suaChuaService.updateDuyetGiamDoc(id, userId, xacNhan);
-        return ResponseEntity.ok(result);
-    }
-
-    /**
-     * Ký từ bảng NguoiKy (người ký phụ)
-     */
-    @PostMapping("/{id}/ky")
-    public ResponseEntity<Integer> updateTrangThaiKy(@PathVariable String id, @RequestParam String userId) {
-        int result = suaChuaService.updateTrangThaiKy(id, userId);
-        return ResponseEntity.ok(result);
-    }
-
     /**
      * Hủy phiếu sửa chữa
      */
