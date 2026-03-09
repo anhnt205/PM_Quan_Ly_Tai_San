@@ -63,7 +63,7 @@ public class SuaChuaService {
             String idDonViGiao,
             String idDonViNhan,
             String idKeHoach,
-            Integer trangThai  // <-- thêm tham số này
+            Integer trangThai
     ) throws SQLException {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
@@ -77,32 +77,37 @@ public class SuaChuaService {
                     .collect(Collectors.toList());
         }
 
+        // Lọc theo idDonViGiao - không phân biệt hoa/thường
         if (idDonViGiao != null && !idDonViGiao.trim().isEmpty()) {
             sourceList = sourceList.stream()
-                    .filter(item -> idDonViGiao.equals(item.getIdDonViGiao()))
+                    .filter(item -> equalsIgnoreCase(item.getIdDonViGiao(), idDonViGiao))
                     .collect(Collectors.toList());
         }
 
+        // Lọc theo idDonViNhan - không phân biệt hoa/thường
         if (idDonViNhan != null && !idDonViNhan.trim().isEmpty()) {
             sourceList = sourceList.stream()
-                    .filter(item -> idDonViNhan.equals(item.getIdDonViNhan()))
+                    .filter(item -> equalsIgnoreCase(item.getIdDonViNhan(), idDonViNhan))
                     .collect(Collectors.toList());
         }
 
+        // Lọc theo loai
         if (loai != null) {
             sourceList = sourceList.stream()
                     .filter(item -> loai.equals(item.getLoai()))
                     .collect(Collectors.toList());
         }
 
+        // Lọc theo idKeHoach - không phân biệt hoa/thường
         if (idKeHoach != null && !idKeHoach.trim().isEmpty()) {
             sourceList = sourceList.stream()
-                    .filter(item -> idKeHoach.equals(item.getIdKeHoach()))
+                    .filter(item -> equalsIgnoreCase(item.getIdKeHoach(), idKeHoach))
                     .collect(Collectors.toList());
         }
 
+        // Lọc theo search text - không phân biệt hoa/thường
         if (search != null && !search.trim().isEmpty()) {
-            String q = search.toLowerCase().trim();
+            String q = search.trim().toLowerCase();
             sourceList = sourceList.stream()
                     .filter(item ->
                             (item.getMaSuaChua() != null && item.getMaSuaChua().toLowerCase().contains(q)) ||
@@ -114,7 +119,6 @@ public class SuaChuaService {
         }
 
         // Tính số lượng theo từng trạng thái TRƯỚC khi lọc trangThai
-        // (để luôn trả về đủ số lượng tất cả trạng thái)
         Map<String, Long> trangThaiCounts = new HashMap<>();
         trangThaiCounts.put("nhap",      sourceList.stream().filter(i -> Integer.valueOf(0).equals(i.getTrangThai())).count());
         trangThaiCounts.put("choDuyet",  sourceList.stream().filter(i -> Integer.valueOf(1).equals(i.getTrangThai())).count());
@@ -154,8 +158,14 @@ public class SuaChuaService {
 
         PageResponse<SuaChuaDTO> response = new PageResponse<>(items, total, page, size);
         response.setGroupCounts(groupCounts);
-        response.setTrangThaiCounts(trangThaiCounts); // <-- thêm field này vào PageResponse
+        response.setTrangThaiCounts(trangThaiCounts);
         return response;
+    }
+
+    // Helper method dùng chung
+    private boolean equalsIgnoreCase(String a, String b) {
+        if (a == null || b == null) return false;
+        return a.trim().equalsIgnoreCase(b.trim());
     }
 
     private Comparator<SuaChuaDTO> getComparator(String sortBy, String sortDir) {

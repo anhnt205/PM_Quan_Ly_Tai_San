@@ -116,7 +116,7 @@ public class SuaChuaDao {
             return new java.util.ArrayList<>(cache);
         }
         return cache.stream()
-                .filter(dto -> idCongTy.equals(dto.getIdCongTy()))
+                .filter(dto -> idCongTy.equalsIgnoreCase(dto.getIdCongTy()))
                 .collect(Collectors.toList());
     }
 
