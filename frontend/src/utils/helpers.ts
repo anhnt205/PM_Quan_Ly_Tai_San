@@ -366,21 +366,18 @@ export const getToolHandoverCount = (
 };
 
 export const getMaintenanceRepairCount = (
-  type: number,
   userTenDangNhap: string,
-  maintenanceRepairList?: MaintenanceRepairData[],
+  MaintenanceRepair?: MaintenanceRepairData[],
 ): number => {
-  if (!maintenanceRepairList || maintenanceRepairList.length === 0) return 0;
+  if (!MaintenanceRepair || MaintenanceRepair.length === 0) return 0;
 
-  return maintenanceRepairList.filter((item) => {
-    // ===== Filter 1: loại =====
-    if (item.loai !== type) return false;
-
+  return MaintenanceRepair.filter((item) => {
     // ===== Filter 2: share hoặc người tạo =====
     if (item.share !== true && item.nguoiTao !== userTenDangNhap) {
       return false;
     }
 
+    console.log(item);
     // ===== Build signature group =====
     const idSignatureGroup: { id?: string; signed: boolean }[] = [];
 
@@ -410,6 +407,7 @@ export const getMaintenanceRepairCount = (
           signed: signatory.trangThai === 1,
         });
       });
+      console.log(sortedSignatories);
     }
 
     // 4. Trình duyệt giám đốc

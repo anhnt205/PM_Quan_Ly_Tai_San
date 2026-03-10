@@ -1,17 +1,112 @@
 import { Chip } from "@mui/material";
 
+export const ShowPermissionSigning = (status: number) => {
+  // Định nghĩa cấu hình cho từng trạng thái
+  const getStatusConfig = (status: number) => {
+    switch (status) {
+      case 1:
+        return { label: "Chưa đến lượt ký", color: "#f44336" }; // Red
+      case 2:
+        return { label: "Không được phép ký", color: "#ffab40" }; // OrangeAccent
+      case 3:
+        return { label: "Đã ký", color: "#2196f3" }; // Blue
+      case 4:
+        return { label: "Đã ký & tạo", color: "#9c27b0" }; // Purple
+      case 5:
+        return { label: "Cần ký & tạo", color: "#ff9800" }; // Orange
+      default:
+        return { label: "Cần ký", color: "#4caf50" }; // Green
+    }
+  };
+
+  const config = getStatusConfig(status);
+
+  return (
+    <Chip
+      label={config.label}
+      sx={{
+        backgroundColor: config.color,
+        color: "white",
+        fontWeight: 500,
+        fontSize: "12px",
+        borderRadius: "4px", // Bo góc theo mẫu Flutter (4)
+        height: "24px", // Tương đương với padding vertical của bạn
+        "& .MuiChip-label": {
+          paddingLeft: "5px",
+          paddingRight: "5px",
+        },
+      }}
+    />
+  );
+};
+export const getPermissionSigning = (data: any, user?: any, allStaffs = []) => {
+  const signatureFlow: any[] = [];
+  if (data?.nguoiLapPhieuKyNhay === true) {
+    signatureFlow.push({
+      id: data.idNguoiKyNhay,
+      signed: data.trangThaiKyNhay === true,
+      label: `Người lập phiếu: ${
+        findById(allStaffs, data.idNguoiKyNhay)?.hoTen ?? ""
+      }`,
+    });
+  }
+
+  signatureFlow.push({
+    id: data?.idTrinhDuyetCapPhong,
+    signed: data?.trinhDuyetCapPhongXacNhan === true,
+    label: `Người duyệt: ${data?.tenTrinhDuyetCapPhong ?? ""}`,
+  });
+
+  const listLen = data?.nguoiKyList?.length ?? 0;
+  for (let i = 0; i < listLen; i++) {
+    const item = data.nguoiKyList[i];
+    signatureFlow.push({
+      id: item?.idNguoiKy,
+      signed: item?.trangThai === 1,
+      label: `Người ký ${i + 1}: ${item?.tenNguoiKy ?? ""}`,
+    });
+  }
+
+  signatureFlow.push({
+    id: data?.idTrinhDuyetGiamDoc,
+    signed: data?.trinhDuyetGiamDocXacNhan === true,
+    label: `Người phê duyệt: ${data?.tenTrinhDuyetGiamDoc ?? ""}`,
+  });
+  const filtered = signatureFlow.filter(
+    (step) => step.id != null && String(step.id).trim() !== "",
+  );
+
+  const currentIndex = filtered.findIndex(
+    (s) => s.id === user?.taiKhoan?.tenDangNhap,
+  );
+
+  if (currentIndex === -1) return 2;
+
+  if (
+    data?.nguoiTao === user?.taiKhoan?.tenDangNhap &&
+    filtered[currentIndex].signed !== -1
+  ) {
+    return filtered[currentIndex].signed === true ? 4 : 5;
+  }
+
+  if (filtered[currentIndex].signed === true) return 3;
+
+  const previousNotSigned = filtered
+    .slice(0, currentIndex)
+    .find((s) => s.signed === false);
+  if (previousNotSigned) return 1;
+  return 0;
+};
 const getStatusDetails = (status: number) => {
   switch (status) {
     case 0:
-      return { label: "Nháp", color: "#9e9e9e" }; // Xám
+      return { label: "Nháp", color: "#9e9e9e" }; // Đỏ
     case 1:
       return { label: "Duyệt", color: "#ff9800" }; // Cam
     case 2:
-      return { label: "Đang sửa chữa", color: "#9c27b0" }; // Tím
+      return { label: "Hủy", color: "#4caf50" }; // Xanh lá
     case 3:
-      return { label: "Hủy", color: "#f44336" }; // Đỏ
-    case 4:
-      return { label: "Hoàn thành", color: "#4caf50" }; // Xanh lá
+      return { label: "Hoàn thành", color: "#68b9f0" }; // Xanh lá
     default:
       return { label: "Nháp", color: "#9e9e9e" }; // Xám
   }
@@ -55,6 +150,80 @@ export const showShareStatus = (isShare: boolean, isMyCreated: boolean) => {
         mb: "2px",
         "& .MuiChip-label": {
           padding: 0,
+        },
+      }}
+    />
+  );
+};
+
+const getStatusDocument = (status: number) => {
+  switch (status) {
+    case 1:
+      return { label: "Chưa tạo biên bản", color: "#f60808" }; // Đỏ
+    case 2:
+      return { label: "Bàn giao một phần", color: "#ff9800" }; // Cam
+    case 3:
+      return { label: "Đã bàn giao hết", color: "#0fadfc" }; // Xanh lá
+    case 4:
+      return { label: "Sắp quá hạn bàn giao", color: "#d40ffc" }; // Xanh lá
+    case 5:
+      return { label: "Đã quá hạn bàn giao", color: "#08f433" }; // Xanh lá
+    default:
+      return { label: "Không xác định", color: "#dee4e0" }; // Xám
+  }
+};
+export const showStatusDocument = (status: number) => {
+  const { label, color } = getStatusDocument(status);
+
+  return (
+    <Chip
+      label={label}
+      sx={{
+        backgroundColor: color,
+        color: "white",
+        fontWeight: 500,
+        fontSize: "12px",
+        borderRadius: "4px", // BorderRadius.circular(4)
+        height: "auto",
+        padding: "1px 5px", // EdgeInsets.symmetric(horizontal: 5, vertical: 1)
+        mb: "2px", // margin: const EdgeInsets.only(bottom: 2)
+        "& .MuiChip-label": {
+          padding: 0,
+        },
+      }}
+    />
+  );
+};
+
+export const showDownloadFile = (fileName: string, onDownload: () => void) => {
+  return (
+    <Chip
+      icon={
+        <FileDownloadOutlined style={{ fontSize: "14px", color: "#388e3c" }} />
+      }
+      label={fileName || "File"}
+      onClick={(e) => {
+        e.stopPropagation();
+        onDownload();
+      }}
+      variant="outlined"
+      sx={{
+        backgroundColor: "#f1f8e9", // Tương đương Colors.green.shade50
+        color: "#388e3c", // Tương đương Colors.green.shade700
+        borderColor: "#c8e6c9", // Tương đương Colors.green.shade200
+        borderRadius: "6px", // BorderRadius.circular(6)
+        height: "24px", // Chiều cao compact cho bảng
+        fontSize: "11px",
+        fontWeight: 500,
+        cursor: "pointer",
+        maxWidth: "100%",
+        "& .MuiChip-label": {
+          px: 1, // Padding horizontal cho text
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        },
+        "&:hover": {
+          backgroundColor: "#e8f5e9", // Hiệu ứng hover nhẹ
         },
       }}
     />
@@ -337,7 +506,6 @@ export const canUserSign = (newSigningType: number, images: any[]) => {
 
   // Lấy tất cả chữ ký mới của user hiện tại trong phiên này
   const userNewSignatures = images.filter((img) => !img.isLocked);
-
   // Nếu chưa có chữ ký mới nào, được phép ký
   if (userNewSignatures.length === 0) {
     return true;
@@ -369,7 +537,12 @@ import S3Service from "../../../services/S3Service";
 import { findById } from "../../../utils/helpers";
 import socketService from "../../../services/socketService";
 import { MessageTypeFunctions } from "../../../utils/const";
-import { showConfirmAlert, showErrorAlert, showSuccessAlert } from "../../../components/Alert";
+import {
+  showConfirmAlert,
+  showErrorAlert,
+  showSuccessAlert,
+} from "../../../components/Alert";
+import { FileDownloadOutlined } from "@mui/icons-material";
 
 export const generateBangKePdf = async (
   assetTransferDetail?: any[],
@@ -400,15 +573,7 @@ export const generateBangKePdf = async (
 
   autoTable(doc, {
     startY: 25,
-    head: [
-      [
-        "Stt",
-        "Tên tài sản",
-        "Đơn vị tính",
-        "Số lượng",
-        "Ghi chú",
-      ],
-    ],
+    head: [["Stt", "Tên tài sản", "Đơn vị tính", "Số lượng", "Ghi chú"]],
     body: tableData,
     theme: "grid",
     headStyles: {

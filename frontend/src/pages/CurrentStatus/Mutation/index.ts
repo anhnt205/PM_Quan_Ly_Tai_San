@@ -190,6 +190,7 @@ export const useCurrentStatusMutation = (
               reject(new Error(errorMessages.join("\n")));
             } else if (listImport.length > 0) {
               const res = await api.post("/hientrangkythuat/batch", listImport);
+              queryClient.invalidateQueries({ queryKey: ["currentStatus"] });
               resolve(res.data);
             } else {
               reject(new Error("File không có dữ liệu hợp lệ"));

@@ -1,6 +1,6 @@
 export interface MaintenanceRepairDetailItem {
   id?: string;
-  idSuaChuaBaoDuong?: string;
+  idSuaChua?: string;
   tentaiSan?: string;
   idTaiSan?: string;
   soLuong?: number;

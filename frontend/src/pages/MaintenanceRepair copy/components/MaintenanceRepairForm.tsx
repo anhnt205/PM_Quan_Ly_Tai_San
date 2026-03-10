@@ -126,7 +126,7 @@ export default function MaintenanceRepairForm({
       chiTietSuaChuaBaoDuongDTOS: [
         {
           id: "",
-          idSuaChuaBaoDuong: "",
+          idSuaChua: "",
           tentaiSan: "",
           idTaiSan: "",
           soLuong: 0,
@@ -147,7 +147,7 @@ export default function MaintenanceRepairForm({
         (item, index) => ({
           ...item,
           id: `${generateCode("CTSC-")}-${index}`,
-          idSuaChuaBaoDuong: values.id,
+          idSuaChua: values.id,
         }),
       );
       const nguoiKyList = values.nguoiKyList.map((item: any, index) => ({

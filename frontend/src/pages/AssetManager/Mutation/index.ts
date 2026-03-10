@@ -195,6 +195,25 @@ export const useAssetManagerMutation = (
     },
   });
 
+  const updateAssetOwnershipMutation = useMutation({
+    mutationFn: async (data: { id: string; idDonVi: string }[]) => {
+      const res = await api.put(`/taisan/updatedonvi`, data);
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: ["assetsPage"] });
+
+      console.log("Cập nhật tài sản theo đơn vị thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Cập nhật tài sản theo đơn vị thất bại",
+      );
+    },
+  });
+
   // --- 1. Mutation Xuất Excel ---
   const exportAssetMutation = useMutation({
     mutationFn: async () => {
@@ -429,6 +448,7 @@ export const useAssetManagerMutation = (
     createChildAssetBulkMutation,
     deleteOneChildAsssetMutation,
     createManyHistoryAssetMutation,
+    updateAssetOwnershipMutation,
   };
 };
 

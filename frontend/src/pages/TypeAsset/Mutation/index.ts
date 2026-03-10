@@ -200,6 +200,7 @@ export const useTypeAssetMutation = (
               reject(new Error(errorMessages.join("\n")));
             } else if (listImport.length > 0) {
               const res = await api.post("/loaitaisancon/batch", listImport);
+              queryClient.invalidateQueries({ queryKey: ["allTypeAssets"] });
               resolve(res.data);
             } else {
               reject(new Error("File không có dữ liệu hợp lệ"));

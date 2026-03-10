@@ -17,6 +17,7 @@ public class SuaChuaDTO {
     private String idLoaiSuaChua;
     private String idKeHoach;
     private String tenKeHoach;
+    private String loaiDoiTuong;
     private String maSuaChua;
     private String tenSuaChua;
     private String mucDoSuCo;

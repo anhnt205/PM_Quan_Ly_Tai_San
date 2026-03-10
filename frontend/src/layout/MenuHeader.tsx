@@ -47,7 +47,9 @@ import { ShowCountInSubMenu } from "../components/common/ShowCountInSubMenu";
 import { useToolTransferPageQuery } from "../pages/ToolTransfer/Mutation";
 import { useToolHandoverPageQuery } from "../pages/ToolHandover/Mutation";
 import { useAssetHandoverPageQuery } from "../pages/AssetHandover/Mutation";
-import { useMaintenanceRepairAllQuery } from "../pages/MaintenanceRepair/Mutation";
+import {
+  useMaintenanceRepairPageQuery,
+} from "../pages/MaintenanceRepair/Mutation";
 import api from "../config/api.config";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React from "react";
@@ -257,7 +259,8 @@ export default function Menuheader() {
     0,
     999999,
   );
-  const { data: maintenanceRepair = [] } = useMaintenanceRepairAllQuery();
+  const { data: maintenanceRepair = { items: [] } } =
+    useMaintenanceRepairPageQuery(0, 999999);
 
   const assetTransferCount1 = getAssetTransferCount(
     1,
@@ -300,16 +303,11 @@ export default function Menuheader() {
     toolHandover.items,
   );
 
-  const maintenanceRepairCount1 = getMaintenanceRepairCount(
-    1,
+  const maintenanceRepairCount = getMaintenanceRepairCount(
     user?.taiKhoan?.tenDangNhap,
-    maintenanceRepair,
+    maintenanceRepair.items,
   );
-  const maintenanceRepairCount2 = getMaintenanceRepairCount(
-    2,
-    user?.taiKhoan?.tenDangNhap,
-    maintenanceRepair,
-  );
+  
   const menuItems = [
     {
       text: "Tổng quan",
@@ -419,7 +417,7 @@ export default function Menuheader() {
       text: "Sửa chữa bảo dưỡng",
       icon: <Engineering fontSize="small" />,
       path: "/",
-      count: maintenanceRepairCount1 + maintenanceRepairCount2,
+      count: maintenanceRepairCount,
       subMenu: [
         {
           text: "Kế hoạch sửa chữa bảo dưỡng",
@@ -427,8 +425,8 @@ export default function Menuheader() {
         },
         {
           text: "Phiếu sửa chữa bảo dưỡng",
-          path: `${ROUTES.MAINTENANCEREPAIR}?type=1`,
-          count: maintenanceRepairCount1,
+          path: `${ROUTES.MAINTENANCEREPAIR}`,
+          count: maintenanceRepairCount,
         },
       ],
     },

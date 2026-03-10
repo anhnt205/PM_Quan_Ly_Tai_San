@@ -46,7 +46,7 @@ export interface AssetDetailType {
 
 export interface HistoryToolType {
   id: string;
-  idBanGiaoCCDCVatTu: string;
+  idBanGiaoCCDCVatTu?: string;
   idCCDCVatTu: string;
   idChiTietCCDCVatTu: string;
   idDonViGiao: string;
