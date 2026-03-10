@@ -7,4 +7,5 @@ export const MaintenancePlanValidation = yup.object({
   ngayKetThuc: yup.string().required("Ngày kết thúc là bắt buộc"),
   idNguoiPhuTrach: yup.string().required("Người phụ trách là bắt buộc"),
   idDonViThucHien: yup.string().required("Đơn vị thực hiện là bắt buộc"),
+  idDonViGiao: yup.string().required("Đơn vị giao là bắt buộc"),
 });

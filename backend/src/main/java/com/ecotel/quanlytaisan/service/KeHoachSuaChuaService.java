@@ -69,6 +69,7 @@ public class KeHoachSuaChuaService {
             String search,
             String loaiKeHoach,
             String loaiDoiTuong,
+            String idDonViGiao,
             String idDonViThucHien,
             String trangThai,
             Integer ngay, Integer thang, Integer nam
@@ -111,7 +112,11 @@ public class KeHoachSuaChuaService {
                     .filter(item -> loaiDoiTuong.equals(item.getLoaiDoiTuong()))
                     .collect(Collectors.toList());
         }
-
+        if (idDonViGiao != null && !idDonViGiao.trim().isEmpty()) {
+            sourceList = sourceList.stream()
+                    .filter(item -> idDonViGiao.equals(item.getIdDonViGiao()))
+                    .collect(Collectors.toList());
+        }
         // Lọc theo đơn vị thực hiện
         if (idDonViThucHien != null && !idDonViThucHien.trim().isEmpty()) {
             sourceList = sourceList.stream()

@@ -15,6 +15,9 @@ public class KeHoachSuaChuaDTO {
     private Integer mocGioMay;
 
     // Đơn vị thực hiện
+    private String idDonViGiao;
+    private String tenDonViGiao;
+
     private String idDonViThucHien;
     private String tenDonViThucHien;
 

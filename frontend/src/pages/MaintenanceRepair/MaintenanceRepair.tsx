@@ -6,6 +6,7 @@ import {
   Tab,
   Tabs,
   Badge,
+  Chip,
 } from "@mui/material";
 import { ClassOutlined, TableChart } from "@mui/icons-material";
 import { useState, useMemo, useCallback, useEffect } from "react";
@@ -20,7 +21,7 @@ import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
 import { useAllStaffsQuery } from "../Staff/Mutation";
 import { showConfirmAlert } from "../../components/Alert";
 import { GridColDef } from "@mui/x-data-grid";
-import { Trash2, ListPlus } from "lucide-react";
+import { Trash2, ListPlus, Eye } from "lucide-react";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
 import {
   showStatus,
@@ -37,6 +38,7 @@ import { showStatus as showStatusPlan } from "../MainenancePlanRepair/config";
 import {
   useMaintenanceRepairMutation,
   useMaintenanceRepairPageQuery,
+  useMaintenanceRepairResultPageQuery,
 } from "./Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
 import {
@@ -50,6 +52,7 @@ import SignDocumentForm from "./components/SignDocumentForm";
 import { SignaturesData } from "./types";
 import dayjs from "dayjs";
 import { useLocation, useNavigate } from "react-router-dom";
+import MaintenanceRepairResultForm from "./components/MaintenanceRepairResultForm";
 
 export default function MaintenanceRepair() {
   const { user } = useSelector((state: any) => state.user);
@@ -59,6 +62,8 @@ export default function MaintenanceRepair() {
   const [readOnly, setReadOnly] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [showResultForm, setShowResultForm] = useState(false);
+  const [selectedRepairForResult, setSelectedRepairForResult] =
+    useState<any>(null);
   const [searchValue, setSearchValue] = useState("");
   const [maintenanceRepairs, setMaintenanceRepairs] = useState<any[]>([]);
   const [status, setStatus] = useState("");
@@ -88,11 +93,10 @@ export default function MaintenanceRepair() {
       status !== "" ? parseInt(status) : undefined,
       user?.taiKhoan?.tenDangNhap,
     );
-  const { getPlanningDetailMutation } = useMaintenancePlanningMutation();
 
   const searchDebounce = useDebounce(searchValue, 600);
-  const { data: planPageData = { items: [], totalItems: 0 } } =
-    useMaintenancePlanningPageQuery(
+  const { data: resultPageData = { items: [], totalItems: 0 } } =
+    useMaintenanceRepairResultPageQuery(
       paginationModel.page,
       paginationModel.pageSize,
       searchDebounce,
@@ -365,6 +369,31 @@ export default function MaintenanceRepair() {
             params.row?.nguoiTao === user?.taiKhoan?.tenDangNhap,
           ),
       },
+      {
+        field: "result",
+        headerName: "Kết quả sửa chữa",
+        width: 140,
+        headerAlign: "center",
+        align: "center",
+        renderCell: (params) => (
+          <Chip
+            label={"Chưa có phiếu kết quả"}
+            sx={{
+              backgroundColor: "#f30d0d",
+              color: "white",
+              fontWeight: 500,
+              fontSize: "12px",
+              borderRadius: "4px",
+              height: "auto",
+              padding: "1px 5px",
+              mb: "2px",
+              "& .MuiChip-label": {
+                padding: 0,
+              },
+            }}
+          />
+        ),
+      },
 
       {
         field: "HanhDong",
@@ -393,6 +422,42 @@ export default function MaintenanceRepair() {
                   <Trash2 size={20} strokeWidth={2} />
                 </IconButton>
               </Tooltip>
+              <Tooltip title="Xem phiếu sửa chữa">
+                <IconButton
+                  color="primary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedDocument(params.row.taiLieuCuoi);
+                    setShowSignDocument(true);
+                    setShowSidebar(false);
+                  }}
+                  sx={{
+                    padding: "4px",
+                    "&:hover": { bgcolor: "rgba(25, 118, 210, 0.08)" },
+                  }}
+                >
+                  <Eye size={20} strokeWidth={2} />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Lập phiếu kết quả sửa chữa">
+                <span>
+                  <IconButton
+                    color="success"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowForm(false);
+                      setSelectedRepairForResult(params.row);
+                      setShowResultForm(true);
+                    }}
+                    sx={{
+                      padding: "4px",
+                      "&:hover": { bgcolor: "rgba(76, 175, 80, 0.08)" },
+                    }}
+                  >
+                    <ListPlus size={20} strokeWidth={2} color="#4caf50" />
+                  </IconButton>
+                </span>
+              </Tooltip>
             </Box>
           );
         },
@@ -401,29 +466,20 @@ export default function MaintenanceRepair() {
     [user, allDepartments, handleRowClick, handleDelete],
   );
 
-  const planningColumns: GridColDef<any>[] = [
+  const resultColumns: GridColDef<any>[] = [
     {
       field: "tenKeHoach",
-      headerName: "Tên kế hoạch",
+      headerName: "Tên phiếu",
       flex: 2,
       minWidth: 160,
       editable: false,
     },
     {
-      field: "loaiKeHoach",
-      headerName: "Loại kế hoạch",
+      field: "tenDonViGiao",
+      headerName: "Đơn vị",
       flex: 1.5,
       minWidth: 130,
       editable: false,
-      renderCell: (params: any) => showPlanType(params.value),
-    },
-    {
-      field: "thuocKy",
-      headerName: "Thuộc kỳ",
-      flex: 1,
-      minWidth: 100,
-      editable: false,
-      renderCell: (params: any) => showPeriod(params.row.ngayBatDau),
     },
     {
       field: "tenDonViThucHien",
@@ -477,63 +533,38 @@ export default function MaintenanceRepair() {
       align: "center",
       renderCell: (params: any) => (
         <Box sx={{ display: "flex", gap: 1 }}>
-          <IconButton
-            size="small"
-            title="Tạo phiếu sửa chữa bảo dưỡng"
-            onClick={async (e) => {
-              e.stopPropagation();
-              window.scrollTo({ top: 140, behavior: "smooth" });
-
-              // 2. Set dữ liệu vào state để truyền xuống form
-              setSelectedRepair({
-                id: "",
-                idCongTy: CongTy.CT001,
-                idKeHoach: params.row.id,
-                maSuaChua: "",
-                tenSuaChua: "",
-                loaiDoiTuong: params.row.loaiDoiTuong,
-                idLoaiSuaChua: "",
-                idDonViGiao: "",
-                idDonViNhan: params.row.idDonViThucHien,
-                idNguoiKyNhay: "",
-                trangThaiKyNhay: false,
-                nguoiLapPhieuKyNhay: false,
-                ngayKetThucDuKien: dayjs(new Date()).format("YYYY-MM-DD"),
-                idTrinhDuyetCapPhong: "",
-                trinhDuyetCapPhongXacNhan: false,
-                idTrinhDuyetGiamDoc: "",
-                trinhDuyetGiamDocXacNhan: false,
-                idDonViDeNghi: "",
-                duongDanFile: "",
-                tenFile: "",
-                taiLieuBanGhi: "",
-                byStep: false,
-                soQuyetDinh: "",
-                nguoiTao: "",
-                share: false,
-                daBanGiao: false,
-                coPhieuBanGiao: false,
-                taiLieuCuoi: "",
-                loai: 0,
-                tenDonViGiao: "",
-                tenDonViNhan: "",
-                tenDonViDeNghi: "",
-                tenNguoiKyNhay: "",
-                tenTrinhDuyetCapPhong: "",
-                tenTrinhDuyetGiamDoc: "",
-                trangThai: 0,
-                ghiChu: "",
-                nguoiKyList: [] as any[],
-                initialChiTiet: [] as any[],
-                chiTietSuaChuas: [],
-              });
-
-              setReadOnly(false);
-              setShowForm(true);
-            }}
-          >
-            <ListPlus size={20} strokeWidth={2} color="#4caf50" />
-          </IconButton>
+          <Tooltip title="Xóa">
+            <IconButton
+              color="error"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(params.row);
+              }}
+              sx={{
+                padding: "4px",
+                "&:hover": { bgcolor: "rgba(211, 47, 47, 0.08)" },
+              }}
+            >
+              <Trash2 size={20} strokeWidth={2} />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Xem phiếu kết quả sửa chữa">
+            <IconButton
+              color="primary"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedDocument(params.row.taiLieuCuoi);
+                setShowSignDocument(true);
+                setShowSidebar(false);
+              }}
+              sx={{
+                padding: "4px",
+                "&:hover": { bgcolor: "rgba(25, 118, 210, 0.08)" },
+              }}
+            >
+              <Eye size={20} strokeWidth={2} />
+            </IconButton>
+          </Tooltip>
         </Box>
       ),
     },
@@ -544,6 +575,7 @@ export default function MaintenanceRepair() {
       id: "",
       idKeHoach: plan.id,
       loaiDoiTuong: plan.loaiDoiTuong || "",
+      idDonViGiao: plan.idDonViGiao || "",
       idDonViNhan: plan.idDonViThucHien || "",
       ngayKetThucDuKien: plan.ngayKetThuc
         ? dayjs(plan.ngayKetThuc).format("YYYY-MM-DD")
@@ -600,6 +632,28 @@ export default function MaintenanceRepair() {
                 />
               </Box>
             )}
+            {showResultForm && selectedRepairForResult && !showForm && (
+              <Box sx={{ mb: 2 }}>
+                <MaintenanceRepairResultForm
+                  key={`result-form-${selectedRepairForResult?.id}`}
+                  onClose={() => setShowResultForm(false)}
+                  selectedRepair={selectedRepairForResult}
+                  readOnly={false}
+                  onSave={(data) => {
+                    console.log("Result form saved:", data);
+                    // TODO: Implement API call to save result
+                    setShowResultForm(false);
+                  }}
+                  onCancel={() => setShowResultForm(false)}
+                  onEdit={handleEdit}
+                  departments={allDepartments}
+                  staffs={(allStaffs || []).filter(
+                    (staff: any) => staff.hasAccount,
+                  )}
+                  repairs={repairPageData.items}
+                />
+              </Box>
+            )}
 
             <Grid
               container
@@ -645,13 +699,13 @@ export default function MaintenanceRepair() {
                     <Tab
                       icon={
                         <Badge
-                          badgeContent={planPageData.totalItems}
+                          badgeContent={resultPageData.totalItems}
                           color="error"
                         >
                           <TableChart />
                         </Badge>
                       }
-                      label="Kế hoạch sửa chữa bảo dưỡng"
+                      label="Kết quả sửa chữa bảo dưỡng"
                       iconPosition="top"
                     />
                   </Tabs>
@@ -681,16 +735,16 @@ export default function MaintenanceRepair() {
                       ? "Phếu sửa chữa bảo dưỡng"
                       : "Kế hoạch sửa chữa bảo dưỡng"
                   }
-                  columns={activeTabRepair === 0 ? columns : planningColumns}
+                  columns={activeTabRepair === 0 ? columns : resultColumns}
                   rows={
                     activeTabRepair === 0
                       ? repairPageData.items
-                      : planPageData.items
+                      : resultPageData.items
                   }
                   total={
                     activeTabRepair === 0
                       ? repairPageData?.totalItems || 0
-                      : planPageData?.totalItems || 0
+                      : resultPageData?.totalItems || 0
                   }
                   paginationModel={paginationModel}
                   onPaginationModelChange={setPaginationModel}

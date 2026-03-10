@@ -15,12 +15,14 @@ import {
   TableBody,
   TableCell,
   styled,
+  Checkbox,
 } from "@mui/material";
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import {
+  Add,
   ArrowDropDown,
   ArrowDropUp,
   Delete,
@@ -34,23 +36,28 @@ import FileAttachmentInput from "../../../components/TextField/FileAttachmentInp
 import CustomStepper from "../../../components/common/CustomStepper";
 import { generateCode } from "../../../utils/helpers";
 import SignDocumentForm from "../../AssetTransfer/components/SignDocumentForm";
+import EditButton from "../../../components/Button/EditButton";
 
 export default function MaintenanceRepairResultForm({
   onClose,
   selectedRepair,
   readOnly,
   onSave,
+  onEdit,
   onCancel,
   departments,
   staffs,
+  repairs = [],
 }: {
   onClose: () => void;
   selectedRepair?: any;
   readOnly?: boolean;
   onSave: (values: any) => void;
+  onEdit: () => void;
   onCancel: () => void;
   departments: any[];
   staffs: any[];
+  repairs?: any[];
 }) {
   const [expanded, setExpanded] = useState(true);
   const [nvThamMuu, setNVThamMuu] = useState<any[]>([]);
@@ -73,11 +80,13 @@ export default function MaintenanceRepairResultForm({
     initialValues: {
       id: "",
       soPhieu: "",
+      tenPhieu: "",
+      idPhieuSuaChua: selectedRepair.id || "",
       ngayLapPhieu: new Date().toISOString().split("T")[0],
       loaiPhieu: selectedRepair?.idLoaiSuaChua || "",
-      idPhanXuong: selectedRepair?.idPhanXuong || "",
-      idDonViTiepNhanTaiSan: selectedRepair?.idDonViTiepNhanTaiSan || "",
-      ngayYeuCauHoanThanh: selectedRepair?.ngayYeuCauHoanThanh || "",
+      idPhanXuong: selectedRepair?.idDonViGiao || "",
+      idDonViTiepNhanTaiSan: selectedRepair?.idDonViNhan || "",
+      ngayYeuCauHoanThanh: selectedRepair?.ngayKetThucDuKien || "",
       idDonViDeNghi: selectedRepair?.idDonViDeNghi || "",
       idNguoiKyNhay: selectedRepair?.idNguoiKyNhay || "",
       idNguoiDaiDienDonVi: "",
@@ -85,11 +94,16 @@ export default function MaintenanceRepairResultForm({
       idTrinhDuyetGiamDoc: selectedRepair?.idTrinhDuyetGiamDoc || "",
       tenFile: selectedRepair?.tenFile || "",
       duongDanFile: selectedRepair?.duongDanFile || "",
+      trangThaiKyNhay: false,
+      nguoiLapPhieuKyNhay: false,
+      trinhDuyetCapPhongXacNhan: false,
+      trinhDuyetGiamDocXacNhan: false,
+      nguoiKyList: [] as any[],
       chiTietSuaChuaBaoDuongDTOS:
         selectedRepair?.chiTietSuaChuaBaoDuongDTOS || [
           {
             id: "",
-            idSuaChua: "",
+            idSuaChuaBaoDuong: "",
             tentaiSan: "",
             idTaiSan: "",
             soLuong: 0,
@@ -140,6 +154,24 @@ export default function MaintenanceRepairResultForm({
   };
 
   const currentStatus = selectedRepair?.trangThai ?? 0;
+
+  const [nvPGD, setNVPGD] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (formik.values.idDonViDeNghi && departments && staffs) {
+      setNVThamMuu(
+        staffs.filter((i) => i.phongBanId === formik.values.idDonViDeNghi),
+      );
+      const lanhDaoDeptIds = departments
+        .filter((d) => d.isLanhDao === true)
+        .map((d) => d.id);
+
+      const filteredPGD = staffs.filter((s) =>
+        lanhDaoDeptIds.includes(s.phongBanId),
+      );
+      setNVPGD(filteredPGD);
+    }
+  }, [formik.values.idDonViDeNghi, departments, staffs]);
 
   return (
     <>
@@ -204,8 +236,11 @@ export default function MaintenanceRepairResultForm({
           >
             <Box>
               <Box display="flex" gap={2}>
-                <SaveBtn onSave={formik.submitForm} />
-                <CancelBtn onClick={onClose} />
+                <Box display="flex" gap={2}>
+                  {!readOnly && <SaveBtn onSave={formik.submitForm} />}
+                  {!readOnly && <CancelBtn onClick={onClose} />}
+                  {readOnly && <EditButton onClick={onEdit} />}
+                </Box>
               </Box>
             </Box>
             <CustomStepper activeStep={currentStatus} />
@@ -233,19 +268,21 @@ export default function MaintenanceRepairResultForm({
                     />
                   </Grid>
                   <Grid size={12}>
-                    <TextField
-                      label="Ngày lập phiếu *"
-                      type="date"
-                      InputLabelProps={{ shrink: true }}
-                      fullWidth
-                      size="small"
-                      value={formik.values.ngayLapPhieu}
-                      onChange={(e) =>
-                        formik.setFieldValue("ngayLapPhieu", e.target.value)
-                      }
+                    <FieldInput
+                      title="Tên phiếu *"
+                      formik={formik}
+                      field="tenPhieu"
                       disabled={readOnly}
                     />
                   </Grid>
+                  <FieldAutoCompleted
+                    title="Phiếu sửa chữa bảo dưỡng"
+                    labelkey="tenSuaChua"
+                    data={repairs}
+                    formik={formik}
+                    field="idPhieuSuaChua"
+                    disabled={readOnly}
+                  />
                   <Grid size={12}>
                     <FieldInput
                       title="Loại phiếu"
@@ -284,7 +321,7 @@ export default function MaintenanceRepairResultForm({
                       fullWidth
                       size="small"
                       value={formik.values.ngayYeuCauHoanThanh}
-                      disabled={true}
+                      disabled={readOnly}
                     />
                   </Grid>
                 </Grid>
@@ -300,7 +337,7 @@ export default function MaintenanceRepairResultForm({
                       data={departments.filter((i) => !i.isKho)}
                       formik={formik}
                       field="idDonViDeNghi"
-                      disabled={true}
+                      disabled={readOnly}
                     />
                   </Grid>
                   <Grid size={12}>
@@ -310,8 +347,30 @@ export default function MaintenanceRepairResultForm({
                       data={nvThamMuu}
                       formik={formik}
                       field="idNguoiKyNhay"
-                      disabled={true}
+                      disabled={readOnly}
                     />
+                  </Grid>
+                  <Grid size={12}>
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="space-between"
+                    >
+                      <Typography fontSize={14} color="text.secondary">
+                        Người lập phiếu ký nháy:
+                      </Typography>
+                      <Checkbox
+                        checked={formik.values.nguoiLapPhieuKyNhay}
+                        onChange={(e) =>
+                          formik.setFieldValue(
+                            "nguoiLapPhieuKyNhay",
+                            e.target.checked,
+                          )
+                        }
+                        disabled={readOnly}
+                        color="primary"
+                      />
+                    </Box>
                   </Grid>
                   <Grid size={12}>
                     <FieldAutoCompleted
@@ -320,26 +379,122 @@ export default function MaintenanceRepairResultForm({
                       data={nvThamMuu}
                       formik={formik}
                       field="idTrinhDuyetCapPhong"
-                      disabled={true}
+                      disabled={readOnly}
                     />
                   </Grid>
+                  <Grid size={12} sx={{ mt: 1 }}>
+                    <Button
+                      variant="contained"
+                      color="success"
+                      size="small"
+                      startIcon={<Add />}
+                      disabled={readOnly}
+                      sx={{
+                        textTransform: "none",
+                        boxShadow: "none",
+                      }}
+                      onClick={() => {
+                        const newNguoiKy = [
+                          ...formik.values.nguoiKyList,
+                          {
+                            id: "",
+                            idTaiLieu: "",
+                            idPhongBan: "",
+                            idNguoiKy: "",
+                            tenNguoiKy: "",
+                            trangThai: 0,
+                          },
+                        ];
+                        formik.setFieldValue("nguoiKyList", newNguoiKy);
+                      }}
+                    >
+                      Thêm người ký
+                    </Button>
+                  </Grid>
+
+                  {formik.values.nguoiKyList.map((row: any, index) => {
+                    const staffInDept = staffs.filter(
+                      (s) => s.phongBanId === row.idPhongBan,
+                    );
+
+                    return (
+                      <Grid
+                        key={index}
+                        container
+                        spacing={1}
+                        alignItems="center"
+                        sx={{ width: "100%", mt: 1 }}
+                      >
+                        <Grid size={11}>
+                          <Grid container spacing={1}>
+                            <Grid size={12}>
+                              <FieldAutoCompleted
+                                title={`Đơn vị ${index + 1}`}
+                                labelkey="tenPhongBan"
+                                data={departments}
+                                formik={formik}
+                                field={`nguoiKyList[${index}].idPhongBan`}
+                                onChange={() => {
+                                  formik.setFieldValue(
+                                    `nguoiKyList[${index}].idNguoiKy`,
+                                    "",
+                                  );
+                                  formik.setFieldValue(
+                                    `nguoiKyList[${index}].tenNguoiKy`,
+                                    "",
+                                  );
+                                }}
+                                disabled={readOnly}
+                              />
+                            </Grid>
+                            <Grid size={12}>
+                              <FieldAutoCompleted
+                                title={`Người ký ${index + 1}`}
+                                labelkey="hoTen"
+                                data={staffInDept}
+                                formik={formik}
+                                field={`nguoiKyList[${index}].idNguoiKy`}
+                                onChange={(value) => {
+                                  formik.setFieldValue(
+                                    `nguoiKyList[${index}].tenNguoiKy`,
+                                    value?.hoTen,
+                                  );
+                                }}
+                                disabled={readOnly}
+                              />
+                            </Grid>
+                          </Grid>
+                        </Grid>
+
+                        <Grid
+                          size={1}
+                          sx={{
+                            display: "flex",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <IconButton
+                            onClick={() => {
+                              const newNguoiKy = [...formik.values.nguoiKyList];
+                              newNguoiKy.splice(index, 1);
+                              formik.setFieldValue("nguoiKyList", newNguoiKy);
+                            }}
+                            disabled={readOnly}
+                            size="small"
+                          >
+                            <Delete sx={{ color: "red" }} />
+                          </IconButton>
+                        </Grid>
+                      </Grid>
+                    );
+                  })}
                   <Grid size={12}>
                     <FieldAutoCompleted
                       title="Người phê duyệt *"
                       labelkey="hoTen"
-                      data={nvThamMuu}
+                      data={nvPGD}
                       formik={formik}
-                      field="idTrinhDuyetGiamDoc"
-                      disabled={true}
-                    />
-                  </Grid>
-                  <Grid size={12}>
-                    <FieldAutoCompleted
-                      title="Người đại diện đơn vị sửa chữa *"
-                      labelkey="hoTen"
-                      data={staffInDonViTiepNhan}
-                      formik={formik}
-                      field="idNguoiDaiDienDonVi"
+                      field={`idTrinhDuyetGiamDoc`}
                       disabled={readOnly}
                     />
                   </Grid>
@@ -392,9 +547,6 @@ export default function MaintenanceRepairResultForm({
                     <CustomTableHeadCell width="12%">
                       Mã tài sản
                     </CustomTableHeadCell>
-                    <CustomTableHeadCell width="12%">
-                      Đơn vị
-                    </CustomTableHeadCell>
                     <CustomTableHeadCell width="8%">
                       Số lượng
                     </CustomTableHeadCell>
@@ -440,7 +592,6 @@ export default function MaintenanceRepairResultForm({
                               data={[]}
                               formik={formik}
                               field={`chiTietSuaChuaBaoDuongDTOS.${index}.tentaiSan`}
-                              disabled={false}
                             />
                           </CustomTableCell>
                           <CustomTableCell>
@@ -451,27 +602,7 @@ export default function MaintenanceRepairResultForm({
                                 formik.values.chiTietSuaChuaBaoDuongDTOS[index]
                                   .idTaiSan || ""
                               }
-                              disabled={true}
                               variant="outlined"
-                              sx={{
-                                "& .MuiInputBase-root": {
-                                  backgroundColor: "#f5f5f5",
-                                },
-                              }}
-                            />
-                          </CustomTableCell>
-                          <CustomTableCell>
-                            <TextField
-                              size="small"
-                              fullWidth
-                              value={donViName}
-                              disabled={true}
-                              variant="outlined"
-                              sx={{
-                                "& .MuiInputBase-root": {
-                                  backgroundColor: "#f5f5f5",
-                                },
-                              }}
                             />
                           </CustomTableCell>
                           <CustomTableCell>
@@ -480,7 +611,6 @@ export default function MaintenanceRepairResultForm({
                               type="number"
                               formik={formik}
                               field={`chiTietSuaChuaBaoDuongDTOS.${index}.soLuong`}
-                              disabled={false}
                             />
                           </CustomTableCell>
                           <CustomTableCell>
@@ -489,7 +619,6 @@ export default function MaintenanceRepairResultForm({
                               type="number"
                               formik={formik}
                               field={`chiTietSuaChuaBaoDuongDTOS.${index}.donGia`}
-                              disabled={false}
                             />
                           </CustomTableCell>
                           <CustomTableCell align="right">
@@ -497,13 +626,7 @@ export default function MaintenanceRepairResultForm({
                               size="small"
                               fullWidth
                               value={thanhTien.toLocaleString("vi-VN")}
-                              disabled={true}
                               variant="outlined"
-                              sx={{
-                                "& .MuiInputBase-root": {
-                                  backgroundColor: "#f5f5f5",
-                                },
-                              }}
                             />
                           </CustomTableCell>
                           <CustomTableCell>
@@ -511,7 +634,6 @@ export default function MaintenanceRepairResultForm({
                               title=""
                               formik={formik}
                               field={`chiTietSuaChuaBaoDuongDTOS.${index}.hienTrang`}
-                              disabled={false}
                             />
                           </CustomTableCell>
                           <CustomTableCell>
@@ -519,7 +641,6 @@ export default function MaintenanceRepairResultForm({
                               title=""
                               formik={formik}
                               field={`chiTietSuaChuaBaoDuongDTOS.${index}.ghiChu`}
-                              disabled={false}
                             />
                           </CustomTableCell>
                           <CustomTableCell align="center">
@@ -547,36 +668,39 @@ export default function MaintenanceRepairResultForm({
                 </TableBody>
               </Table>
 
-              <Box mt={2}>
-                <Button
-                  variant="contained"
-                  size="small"
-                  onClick={() => {
-                    formik.setFieldValue("chiTietSuaChuaBaoDuongDTOS", [
-                      ...formik.values.chiTietSuaChuaBaoDuongDTOS,
-                      {
-                        id: "",
-                        idSuaChua: "",
-                        tentaiSan: "",
-                        idTaiSan: "",
-                        soLuong: 0,
-                        donGia: 0,
-                        ghiChu: "",
-                        ngayTao: "",
-                        ngayCapNhat: "",
-                        nguoiTao: "",
-                        nguoiCapNhat: "",
-                        isActive: true,
-                        hienTrang: "",
-                        moTa: "",
-                        daBanGiao: true,
-                      },
-                    ]);
-                  }}
-                >
-                  + Thêm tài sản
-                </Button>
-              </Box>
+              {!readOnly && (
+                <Box mt={2}>
+                  <Button
+                    startIcon={<Add />}
+                    variant="text"
+                    onClick={() => {
+                      formik.setFieldValue("chiTietSuaChuaBaoDuongDTOS", [
+                        ...formik.values.chiTietSuaChuaBaoDuongDTOS,
+                        {
+                          id: "",
+                          idSuaChuaBaoDuong: "",
+                          tentaiSan: "",
+                          idTaiSan: "",
+                          soLuong: 0,
+                          donGia: 0,
+                          ghiChu: "",
+                          ngayTao: "",
+                          ngayCapNhat: "",
+                          nguoiTao: "",
+                          nguoiCapNhat: "",
+                          isActive: true,
+                          hienTrang: "",
+                          moTa: "",
+                          daBanGiao: true,
+                        },
+                      ]);
+                    }}
+                    sx={{ textTransform: "none" }}
+                  >
+                    Thêm một dòng
+                  </Button>
+                </Box>
+              )}
 
               {/* CÁC CHI PHÍ KHÁC */}
               <Box mt={4}>

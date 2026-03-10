@@ -36,6 +36,8 @@ public class KeHoachSuaChuaDao {
                 kh.LoaiKeHoach,
                 kh.ChuKyNgay,
                 kh.MocGioMay,
+                kh.IdDonViGiao,
+                pbg.TenPhongBan AS tenDonViGiao,
                 kh.IdDonViThucHien,
                 pb.TenPhongBan AS tenDonViThucHien,
                 kh.IdNguoiPhuTrach,
@@ -49,6 +51,7 @@ public class KeHoachSuaChuaDao {
                 kh.TrangThai
             FROM KeHoachSuaChua kh
                 LEFT JOIN PhongBan pb ON kh.IdDonViThucHien = pb.Id
+                LEFT JOIN PhongBan pbg ON kh.IdDonViGiao = pbg.Id
                 LEFT JOIN NhanVien nv ON kh.IdNguoiPhuTrach = nv.Id
         """;
         try {
@@ -105,6 +108,8 @@ public class KeHoachSuaChuaDao {
                 kh.LoaiKeHoach,
                 kh.ChuKyNgay,
                 kh.MocGioMay,
+                kh.IdDonViGiao,
+                pbg.TenPhongBan AS tenDonViGiao,
                 kh.IdDonViThucHien,
                 pb.TenPhongBan AS tenDonViThucHien,
                 kh.IdNguoiPhuTrach,
@@ -118,6 +123,7 @@ public class KeHoachSuaChuaDao {
                 kh.TrangThai
             FROM KeHoachSuaChua kh
                 LEFT JOIN PhongBan pb ON kh.IdDonViThucHien = pb.Id
+                LEFT JOIN PhongBan pbg ON kh.IdDonViGiao = pbg.Id
                 LEFT JOIN NhanVien nv ON kh.IdNguoiPhuTrach = nv.Id
             WHERE UPPER(kh.IdCongTy) = UPPER(?)
             ORDER BY %s %s
@@ -149,6 +155,8 @@ public class KeHoachSuaChuaDao {
                 kh.LoaiKeHoach,
                 kh.ChuKyNgay,
                 kh.MocGioMay,
+                kh.IdDonViGiao,
+                pbg.TenPhongBan AS tenDonViGiao,
                 kh.IdDonViThucHien,
                 pb.TenPhongBan AS tenDonViThucHien,
                 kh.IdNguoiPhuTrach,
@@ -162,6 +170,7 @@ public class KeHoachSuaChuaDao {
                 kh.TrangThai
             FROM KeHoachSuaChua kh
                 LEFT JOIN PhongBan pb ON kh.IdDonViThucHien = pb.Id
+                LEFT JOIN PhongBan pbg ON kh.IdDonViGiao = pbg.Id
                 LEFT JOIN NhanVien nv ON kh.IdNguoiPhuTrach = nv.Id
             WHERE kh.Id = ?
         """;
@@ -205,9 +214,9 @@ public class KeHoachSuaChuaDao {
         String sql = """
         INSERT INTO KeHoachSuaChua (
             Id, IdCongTy, TenKeHoach, LoaiKeHoach, ChuKyNgay, MocGioMay,
-            IdDonViThucHien, IdNguoiPhuTrach, NgayBatDau, NgayKetThuc,
+            IdDonViThucHien,IdDonViGiao, IdNguoiPhuTrach, NgayBatDau, NgayKetThuc,
             LoaiDoiTuong, NgayTao, NgayCapNhat, GhiChu, TrangThai
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?)
     """;
 
         Date now = new Date();
@@ -223,15 +232,16 @@ public class KeHoachSuaChuaDao {
             ps.setString(4, entity.getLoaiKeHoach());
             ps.setObject(5, entity.getChuKyNgay());
             ps.setObject(6, entity.getMocGioMay());
-            ps.setString(7, entity.getIdDonViThucHien());
-            ps.setString(8, entity.getIdNguoiPhuTrach());
-            ps.setObject(9, entity.getNgayBatDau());
-            ps.setObject(10, entity.getNgayKetThuc());
-            ps.setString(11, entity.getLoaiDoiTuong());
-            ps.setObject(12, entity.getNgayTao());
-            ps.setObject(13, entity.getNgayCapNhat());
-            ps.setString(14, entity.getGhiChu());
-            ps.setString(15, entity.getTrangThai() != null ? entity.getTrangThai() : "CHUA_THUC_HIEN");
+            ps.setString(7, entity.getIdDonViGiao());
+            ps.setString(8, entity.getIdDonViThucHien());
+            ps.setString(9, entity.getIdNguoiPhuTrach());
+            ps.setObject(10, entity.getNgayBatDau());
+            ps.setObject(11, entity.getNgayKetThuc());
+            ps.setString(12, entity.getLoaiDoiTuong());
+            ps.setObject(13, entity.getNgayTao());
+            ps.setObject(14, entity.getNgayCapNhat());
+            ps.setString(15, entity.getGhiChu());
+            ps.setString(16, entity.getTrangThai() != null ? entity.getTrangThai() : "CHUA_THUC_HIEN");
         });
 
         CompletableFuture.runAsync(this::refreshCache);
@@ -243,7 +253,7 @@ public class KeHoachSuaChuaDao {
         String sql = """
         UPDATE KeHoachSuaChua SET
             TenKeHoach = ?, LoaiKeHoach = ?, ChuKyNgay = ?, MocGioMay = ?,
-            IdDonViThucHien = ?, IdNguoiPhuTrach = ?, NgayBatDau = ?, NgayKetThuc = ?,
+            IdDonViThucHien = ?,IdDonViGiao, IdNguoiPhuTrach = ?, NgayBatDau = ?, NgayKetThuc = ?,
             LoaiDoiTuong = ?, NgayCapNhat = ?, GhiChu = ?, TrangThai = ?
         WHERE Id = ?
     """;
@@ -257,15 +267,16 @@ public class KeHoachSuaChuaDao {
             ps.setString(2, entity.getLoaiKeHoach());
             ps.setObject(3, entity.getChuKyNgay());
             ps.setObject(4, entity.getMocGioMay());
-            ps.setString(5, entity.getIdDonViThucHien());
-            ps.setString(6, entity.getIdNguoiPhuTrach());
-            ps.setObject(7, entity.getNgayBatDau());
-            ps.setObject(8, entity.getNgayKetThuc());
-            ps.setString(9, entity.getLoaiDoiTuong());
-            ps.setObject(10, entity.getNgayCapNhat());
-            ps.setString(11, entity.getGhiChu());
-            ps.setString(12, entity.getTrangThai());
-            ps.setString(13, entity.getId());
+            ps.setString(5, entity.getIdDonViGiao());
+            ps.setString(6, entity.getIdDonViThucHien());
+            ps.setString(7, entity.getIdNguoiPhuTrach());
+            ps.setObject(8, entity.getNgayBatDau());
+            ps.setObject(9, entity.getNgayKetThuc());
+            ps.setString(10, entity.getLoaiDoiTuong());
+            ps.setObject(11, entity.getNgayCapNhat());
+            ps.setString(12, entity.getGhiChu());
+            ps.setString(13, entity.getTrangThai());
+            ps.setString(14, entity.getId());
         });
 
         CompletableFuture.runAsync(this::refreshCache);
@@ -290,14 +301,14 @@ public class KeHoachSuaChuaDao {
         String sql = """
         INSERT INTO KeHoachSuaChua (
             Id, IdCongTy, TenKeHoach, LoaiKeHoach, ChuKyNgay, MocGioMay,
-            IdDonViThucHien, IdNguoiPhuTrach, NgayBatDau, NgayKetThuc,
+            IdDonViThucHien,IdDonViGiao, IdNguoiPhuTrach, NgayBatDau, NgayKetThuc,
             LoaiDoiTuong, NgayTao, NgayCapNhat, GhiChu, TrangThai
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?)
     """;
         int result = jdbcTemplate.update(sql,
                 entity.getId(), entity.getIdCongTy(), entity.getTenKeHoach(), entity.getLoaiKeHoach(),
                 entity.getChuKyNgay(), entity.getMocGioMay(),
-                entity.getIdDonViThucHien(), entity.getIdNguoiPhuTrach(),
+                entity.getIdDonViThucHien(),entity.getIdDonViGiao(), entity.getIdNguoiPhuTrach(),
                 entity.getNgayBatDau(), entity.getNgayKetThuc(),
                 entity.getLoaiDoiTuong(), entity.getNgayTao(), entity.getNgayCapNhat(),
                 entity.getGhiChu(),
@@ -315,13 +326,13 @@ public class KeHoachSuaChuaDao {
         String sql = """
             UPDATE KeHoachSuaChua SET
                 TenKeHoach = ?, LoaiKeHoach = ?, ChuKyNgay = ?, MocGioMay = ?,
-                IdDonViThucHien = ?, IdNguoiPhuTrach = ?, NgayBatDau = ?, NgayKetThuc = ?,
+                IdDonViThucHien = ?,IdDonViGiao, IdNguoiPhuTrach = ?, NgayBatDau = ?, NgayKetThuc = ?,
                 LoaiDoiTuong = ?, NgayCapNhat = ?, GhiChu = ?, TrangThai = ?
             WHERE Id = ?
         """;
         int result = jdbcTemplate.update(sql,
                 entity.getTenKeHoach(), entity.getLoaiKeHoach(), entity.getChuKyNgay(), entity.getMocGioMay(),
-                entity.getIdDonViThucHien(), entity.getIdNguoiPhuTrach(),
+                entity.getIdDonViThucHien(),entity.getIdDonViGiao(), entity.getIdNguoiPhuTrach(),
                 entity.getNgayBatDau(), entity.getNgayKetThuc(),
                 entity.getLoaiDoiTuong(), entity.getNgayCapNhat(), entity.getGhiChu(),
                 entity.getTrangThai(),

@@ -28,6 +28,7 @@ import { Devicetype, StatusPlan } from "../../utils/const";
 import { useToolDetailAllQuery } from "../ToolTransfer/Mutation";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../utils/routes";
+import { RootState } from "../../redux/store";
 
 export default function MaintenancePlanRepair() {
   const [showForm, setShowForm] = useState(false);
@@ -40,31 +41,15 @@ export default function MaintenancePlanRepair() {
   const [selectedPlan, setSelectedPlan] = useState<MaintenancePlanData | null>(
     null,
   );
+  const { user } = useSelector((state: RootState) => state.user);
   const navigate = useNavigate();
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
     page: 0,
   });
-
+  console.log(user?.taiKhoan);
   const { data: allStaffs = [] } = useAllStaffsQuery();
-  const { data: rawAssets = [] } = useAllAssetsQuery();
-  const { data: rawTools = [] } = useToolDetailAllQuery();
-  const allEquipment = useMemo(
-    () => [
-      ...rawAssets.map((a: any) => ({
-        ...a,
-        ten: a.tenTaiSan || a.ten || "",
-        type: Devicetype.ASSET,
-      })),
-      ...rawTools.map((t: any) => ({
-        ...t,
-        ten: t.ten || "",
-        type: Devicetype.TOOL,
-      })),
-    ],
-    [rawAssets, rawTools],
-  );
   const searchDebounce = useDebounce(searchValue, 600);
   const { data: planPageData = { items: [], totalItems: 0 } } =
     useMaintenancePlanningPageQuery(
@@ -72,6 +57,7 @@ export default function MaintenancePlanRepair() {
       paginationModel.pageSize,
       searchDebounce,
       status,
+      user?.taiKhoan?.phongBanId,
     );
 
   const {
@@ -131,8 +117,15 @@ export default function MaintenancePlanRepair() {
       renderCell: (params: any) => showPeriod(params.row.ngayBatDau),
     },
     {
+      field: "tenDonViGiao",
+      headerName: "Đơn vị giao",
+      flex: 1.5,
+      minWidth: 130,
+      editable: false,
+    },
+    {
       field: "tenDonViThucHien",
-      headerName: "Đơn vị",
+      headerName: "Đơn vị thực hiện",
       flex: 1.5,
       minWidth: 130,
       editable: false,
@@ -266,7 +259,6 @@ export default function MaintenancePlanRepair() {
               onSave={handlePlanningSave}
               selectedPlan={selectedPlan}
               staffs={allStaffs}
-              assets={allEquipment}
             />
           </Box>
         )}
@@ -433,6 +425,14 @@ export default function MaintenancePlanRepair() {
                     </Typography>
                   </Box>
                 )}
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Đơn vị giao
+                  </Typography>
+                  <Typography variant="body2">
+                    {selectedPlan?.tenDonViGiao || "—"}
+                  </Typography>
+                </Box>
                 <Box>
                   <Typography variant="caption" color="text.secondary">
                     Đơn vị thực hiện

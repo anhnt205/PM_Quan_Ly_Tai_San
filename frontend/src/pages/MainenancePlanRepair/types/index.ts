@@ -6,6 +6,8 @@ export interface MaintenancePlanData {
   loaiKeHoach: "THIET_BI" | "CHU_KY" | "GIO_MAY";
   chuKyNgay?: number;
   mocGioMay?: number;
+  idDonViGiao?:string;
+  tenDonViGiao?:string;
   idDonViThucHien: string;
   tenDonViThucHien?: string;
   idNguoiPhuTrach: string;

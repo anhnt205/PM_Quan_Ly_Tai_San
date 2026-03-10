@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Accordion,
   AccordionDetails,
@@ -64,6 +64,9 @@ import {
 } from "../../../utils/const";
 import { generateCode } from "../../../utils/helpers";
 import FieldDate from "../../../components/TextField/FieldDate";
+import { useAssetByDonViQuery } from "../../AssetTransfer/Mutation";
+import { useToolByDepartmentPageQuery } from "../../ToolTransfer/Mutation";
+import DialogLoading from "../../../components/common/DialogLoading";
 
 interface MaintenancePlanningFormProps {
   onEdit: () => void;
@@ -73,7 +76,6 @@ interface MaintenancePlanningFormProps {
   onSave: (data: MaintenancePlanData) => void;
   onCancel?: () => void;
   staffs?: any[];
-  assets?: any[];
 }
 
 export default function MaintenancePlanningForm({
@@ -84,14 +86,12 @@ export default function MaintenancePlanningForm({
   onSave,
   onCancel,
   staffs = [],
-  assets = [],
 }: MaintenancePlanningFormProps) {
   const [expanded, setExpanded] = useState(true);
 
   const { data: allDepartments = { items: [] } } = useDepartmentsPageQuery(
     0,
-    10,
-    "sửa chữa",
+    9999,
   );
 
   const formik = useFormik({
@@ -102,6 +102,7 @@ export default function MaintenancePlanningForm({
       loaiKeHoach: "THIET_BI" as "THIET_BI" | "CHU_KY" | "GIO_MAY",
       chuKyNgay: 0,
       mocGioMay: 0,
+      idDonViGiao: "",
       idDonViThucHien: "",
       idNguoiPhuTrach: "",
       ngayBatDau: dayjs(new Date()).format("YYYY-MM-DD"),
@@ -136,6 +137,7 @@ export default function MaintenancePlanningForm({
         ngayBatDau: selectedPlan.ngayBatDau || "",
         ngayKetThuc: selectedPlan.ngayKetThuc || "",
         ghiChu: selectedPlan.ghiChu || "",
+        idDonViGiao: selectedPlan.idDonViGiao || "",
         idDonViThucHien: selectedPlan.idDonViThucHien || "",
         idNguoiPhuTrach: selectedPlan.idNguoiPhuTrach || "",
         idCongTy: selectedPlan.idCongTy || CongTy.CT001,
@@ -158,8 +160,37 @@ export default function MaintenancePlanningForm({
     }
   }, [selectedPlan, readOnly]); // Add readOnly to dependencies
 
+  const { data: toolsByDepartment = [], isLoading: isLoadingTool } =
+    useToolByDepartmentPageQuery({
+      departmentId: formik.values.idDonViGiao,
+    });
+  const {
+    data: allAssetsByDonVi = { items: [] },
+    isFetching,
+    isLoading: isLoadingAsset,
+  } = useAssetByDonViQuery(2, formik.values.idDonViGiao);
+  const allEquipment = useMemo(
+    () => [
+      ...allAssetsByDonVi.items.map((a: any) => ({
+        ...a,
+        ten: a.tenTaiSan || a.ten || "",
+        type: Devicetype.ASSET,
+      })),
+      ...toolsByDepartment.map((t: any) => ({
+        ...t,
+        ten: t.ten || t.tenDetailAsset || "",
+        type: Devicetype.TOOL,
+      })),
+    ],
+    [toolsByDepartment, allAssetsByDonVi],
+  );
+
   return (
     <>
+      <DialogLoading
+        loading={isLoadingTool || isLoadingAsset}
+        title="Đang tải tài sản/ccdc ..."
+      />
       <Accordion sx={{ background: "#f6f8f4ff" }} expanded={expanded}>
         <AccordionSummary
           expandIcon={<ViewBtn expanded={expanded} setExpanded={setExpanded} />}
@@ -261,14 +292,13 @@ export default function MaintenancePlanningForm({
                   />
                 </Grid>
               )}
-
               <Grid size={{ xs: 12, md: 6 }}>
                 <FieldAutoCompleted
-                  title="Đơn vị thực hiện *"
+                  title="Đơn vị giao *"
                   data={allDepartments.items}
                   labelkey="tenPhongBan"
                   formik={formik}
-                  field="idDonViThucHien"
+                  field="idDonViGiao"
                   disabled={readOnly}
                 />
               </Grid>
@@ -281,6 +311,20 @@ export default function MaintenancePlanningForm({
                   labelkey="hoTen"
                   formik={formik}
                   field="idNguoiPhuTrach"
+                  disabled={readOnly}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <FieldAutoCompleted
+                  title="Đơn vị thực hiện *"
+                  data={allDepartments.items.filter((i: any) =>
+                    i.tenPhongBan
+                      ?.toLowerCase()
+                      .includes("sửa chữa".toLowerCase()),
+                  )}
+                  labelkey="tenPhongBan"
+                  formik={formik}
+                  field="idDonViThucHien"
                   disabled={readOnly}
                 />
               </Grid>
@@ -321,7 +365,7 @@ export default function MaintenancePlanningForm({
           <ThietBiBaoTriTable
             formik={formik}
             readOnly={readOnly}
-            assets={assets}
+            assets={allEquipment}
           />
 
           {/* Chi tiết công việc */}

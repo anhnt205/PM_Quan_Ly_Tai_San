@@ -14,6 +14,7 @@ export const useMaintenancePlanningPageQuery = (
   pageSize?: number,
   searchValue?: string,
   trangThai?: string,
+  idDonViGiao?: string,
 ) => {
   return useQuery({
     queryKey: [
@@ -22,6 +23,7 @@ export const useMaintenancePlanningPageQuery = (
       pageSize,
       searchValue,
       trangThai,
+      idDonViGiao,
     ],
     queryFn: async () => {
       const res = await api.get("/kehoach-suachua", {
@@ -31,6 +33,7 @@ export const useMaintenancePlanningPageQuery = (
           idCongTy: CongTy.CT001,
           search: searchValue,
           trangThai: trangThai,
+          // idDonVigiao: idDonViGiao,
         },
       });
       return res.data;
