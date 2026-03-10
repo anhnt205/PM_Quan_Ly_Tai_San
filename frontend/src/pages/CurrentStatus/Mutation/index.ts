@@ -18,7 +18,7 @@ export const useCurrentStatusMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["currentStatus"] });
+      queryClient.invalidateQueries({ queryKey: ["currentStatusPage"] });
       showSuccessAlert("Tạo hiện trạng thành công");
     },
     onError: (error: any) => {
@@ -36,7 +36,7 @@ export const useCurrentStatusMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["currentStatus"] });
+      queryClient.invalidateQueries({ queryKey: ["currentStatusPage"] });
       showSuccessAlert("Sửa hiện trạng thành công");
     },
     onError: (error: any) => {
@@ -53,7 +53,7 @@ export const useCurrentStatusMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["currentStatus"] });
+      queryClient.invalidateQueries({ queryKey: ["currentStatusPage"] });
       showSuccessAlert("Xóa hiện trạng thành công");
     },
     onError: (error: any) => {
@@ -70,7 +70,7 @@ export const useCurrentStatusMutation = (
       return res.data.message;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["currentStatus"] });
+      queryClient.invalidateQueries({ queryKey: ["currentStatusPage"] });
       showSuccessAlert(data || "Xóa hiện trạng thành công");
     },
     onError: (error: any) => {
@@ -82,23 +82,23 @@ export const useCurrentStatusMutation = (
     },
   });
 
-   const deleteAllMutation = useMutation({
-     mutationFn: async () => {
-       const res = await api.delete(`/hientrangkythuat/delete-all`);
-       return res.data.message;
-     },
-     onSuccess: (data) => {
-       queryClient.invalidateQueries({ queryKey: ["currentStatus"] });
-       showSuccessAlert(data || "Xóa hiện trạng thành công");
-     },
-     onError: (error: any) => {
-       showErrorAlert(
-         error.response?.data?.message ||
-           error.message ||
-           "Xóa hiện trạng thất bại",
-       );
-     },
-   });
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.delete(`/hientrangkythuat/delete-all`);
+      return res.data.message;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["currentStatusPage"] });
+      showSuccessAlert(data || "Xóa hiện trạng thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa hiện trạng thất bại",
+      );
+    },
+  });
 
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: CurrentStatusType[]) => {
@@ -190,7 +190,9 @@ export const useCurrentStatusMutation = (
               reject(new Error(errorMessages.join("\n")));
             } else if (listImport.length > 0) {
               const res = await api.post("/hientrangkythuat/batch", listImport);
-              queryClient.invalidateQueries({ queryKey: ["currentStatus"] });
+              queryClient.invalidateQueries({
+                queryKey: ["currentStatusPage"],
+              });
               resolve(res.data);
             } else {
               reject(new Error("File không có dữ liệu hợp lệ"));
@@ -203,7 +205,7 @@ export const useCurrentStatusMutation = (
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["currentStatus"] });
+      queryClient.invalidateQueries({ queryKey: ["currentStatusPage"] });
       showSuccessAlert("Import hiện trạng thành công");
     },
   });

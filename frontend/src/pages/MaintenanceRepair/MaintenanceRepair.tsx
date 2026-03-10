@@ -20,7 +20,7 @@ import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
 import { useAllStaffsQuery } from "../Staff/Mutation";
 import { showConfirmAlert } from "../../components/Alert";
 import { GridColDef } from "@mui/x-data-grid";
-import { Trash2 } from "lucide-react";
+import { Trash2, ListPlus } from "lucide-react";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
 import {
   showStatus,
@@ -38,8 +38,12 @@ import {
   useMaintenanceRepairPageQuery,
 } from "./Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
-import { useMaintenancePlanningPageQuery } from "../MainenancePlanRepair/Mutation";
+import {
+  useMaintenancePlanningMutation,
+  useMaintenancePlanningPageQuery,
+} from "../MainenancePlanRepair/Mutation";
 import { showPeriod, showPlanType } from "../MainenancePlanRepair/config";
+import { CongTy, StatusPlan } from "../../utils/const";
 import S3Service from "../../services/S3Service";
 import SignDocumentForm from "./components/SignDocumentForm";
 import { SignaturesData } from "./types";
@@ -83,6 +87,7 @@ export default function MaintenanceRepair() {
       status !== "" ? parseInt(status) : undefined,
       user?.taiKhoan?.tenDangNhap,
     );
+  const { getPlanningDetailMutation } = useMaintenancePlanningMutation();
 
   const searchDebounce = useDebounce(searchValue, 600);
   const { data: planPageData = { items: [], totalItems: 0 } } =
@@ -213,35 +218,31 @@ export default function MaintenanceRepair() {
   const statusOptions: FilterOption[] = [
     {
       label: "Tất cả",
-      count:
-        (repairPageData?.groupCounts?.["Loai_0"] ?? 0) +
-        (repairPageData?.groupCounts?.["Loai_1"] ?? 0) +
-        (repairPageData?.groupCounts?.["Loai_2"] ?? 0) +
-        (repairPageData?.groupCounts?.["Loai_3"] ?? 0),
+      count: repairPageData?.trangThaiCounts?.["tatCa"] ?? 0,
       color: "default",
       value: "",
     },
     {
       label: "Nháp",
-      count: repairPageData?.groupCounts?.["Loai_0"] ?? 0,
+      count: repairPageData?.trangThaiCounts?.["nhap"] ?? 0,
       color: "default",
       value: "0",
     },
     {
       label: "Duyệt",
-      count: repairPageData?.groupCounts?.["Loai_1"] ?? 0,
+      count: repairPageData?.trangThaiCounts?.["choDuyet"] ?? 0,
       color: "info",
       value: "1",
     },
     {
       label: "Hủy",
-      count: repairPageData?.groupCounts?.["Loai_2"] ?? 0,
+      count: repairPageData?.trangThaiCounts?.["huy"] ?? 0,
       color: "error",
       value: "2",
     },
     {
       label: "Hoàn thành",
-      count: repairPageData?.groupCounts?.["Loai_3"] ?? 0,
+      count: repairPageData?.trangThaiCounts?.["hoanThanh"] ?? 0,
       color: "success",
       value: "3",
     },
@@ -399,7 +400,7 @@ export default function MaintenanceRepair() {
     [user, allDepartments, handleRowClick, handleDelete],
   );
 
-  const planningColumns = [
+  const planningColumns: GridColDef<any>[] = [
     {
       field: "tenKeHoach",
       headerName: "Tên kế hoạch",
@@ -469,21 +470,69 @@ export default function MaintenanceRepair() {
     {
       field: "actions",
       headerName: "Hành động",
-      width: 100,
-      editable: false,
+      width: 120,
+      sortable: false,
+      headerAlign: "center",
+      align: "center",
       renderCell: (params: any) => (
         <Box sx={{ display: "flex", gap: 1 }}>
-          <Tooltip title="Xóa kế hoạch">
-            <IconButton
-              size="small"
-              color="error"
-              onClick={async (e) => {
-                e.stopPropagation();
-              }}
-            >
-              <Trash2 size={16} />
-            </IconButton>
-          </Tooltip>
+          <IconButton
+            size="small"
+            title="Tạo phiếu sửa chữa bảo dưỡng"
+            onClick={async (e) => {
+              e.stopPropagation();
+              window.scrollTo({ top: 140, behavior: "smooth" });
+
+              // 2. Set dữ liệu vào state để truyền xuống form
+              setSelectedRepair({
+                id: "",
+                idCongTy: CongTy.CT001,
+                idKeHoach: params.row.id,
+                maSuaChua: "",
+                tenSuaChua: "",
+                loaiDoiTuong: params.row.loaiDoiTuong,
+                idLoaiSuaChua: "",
+                idDonViGiao: "",
+                idDonViNhan: params.row.idDonViThucHien,
+                idNguoiKyNhay: "",
+                trangThaiKyNhay: false,
+                nguoiLapPhieuKyNhay: false,
+                ngayKetThucDuKien: dayjs(new Date()).format("YYYY-MM-DD"),
+                idTrinhDuyetCapPhong: "",
+                trinhDuyetCapPhongXacNhan: false,
+                idTrinhDuyetGiamDoc: "",
+                trinhDuyetGiamDocXacNhan: false,
+                idDonViDeNghi: "",
+                duongDanFile: "",
+                tenFile: "",
+                taiLieuBanGhi: "",
+                byStep: false,
+                soQuyetDinh: "",
+                nguoiTao: "",
+                share: false,
+                daBanGiao: false,
+                coPhieuBanGiao: false,
+                taiLieuCuoi: "",
+                loai: 0,
+                tenDonViGiao: "",
+                tenDonViNhan: "",
+                tenDonViDeNghi: "",
+                tenNguoiKyNhay: "",
+                tenTrinhDuyetCapPhong: "",
+                tenTrinhDuyetGiamDoc: "",
+                trangThai: 0,
+                ghiChu: "",
+                nguoiKyList: [] as any[],
+                initialChiTiet: [] as any[],
+                chiTietSuaChuas: [],
+              });
+
+              setReadOnly(false);
+              setShowForm(true);
+            }}
+          >
+            <ListPlus size={20} strokeWidth={2} color="#4caf50" />
+          </IconButton>
         </Box>
       ),
     },
@@ -524,12 +573,14 @@ export default function MaintenanceRepair() {
           <PageAction
             title="Sửa chữa, bảo dưỡng"
             onNewClick={() => {
-              handleClose();
+              setSelectedRepair(null);
+              setReadOnly(false);
               setShowForm(true);
+              setShowSidebar(false);
             }}
           />
           <Box sx={{ p: 2 }}>
-            {activeTabRepair === 0 && showForm && !showResultForm && (
+            {showForm && (
               <Box sx={{ mb: 2 }}>
                 <MaintenanceRepairForm
                   key={showForm ? "new-form" : `edit-${selectedRepair?.id}`}

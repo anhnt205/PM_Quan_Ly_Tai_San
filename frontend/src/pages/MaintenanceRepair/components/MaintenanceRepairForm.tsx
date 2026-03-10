@@ -51,6 +51,7 @@ import { useToolByDepartmentPageQuery } from "../../ToolTransfer/Mutation";
 import DialogLoading from "../../../components/common/DialogLoading";
 import { MaintenanceRepairData } from "../types";
 import { generateCode } from "../../../utils/helpers";
+import { MaintenanceValidation } from "../validation/Validation";
 const CustomTableCell = styled(TableCell)(({ theme }) => ({
   borderBottom: "1px solid rgba(224, 224, 224, 1)",
   padding: "16px 8px",
@@ -158,6 +159,7 @@ export default function MaintenanceRepairForm({
         },
       ],
     },
+    validationSchema: MaintenanceValidation,
     onSubmit: async (values) => {
       const chiTietSuaChuas = values.chiTietSuaChuas.map((item, index) => ({
         ...item,
@@ -223,6 +225,7 @@ export default function MaintenanceRepairForm({
           const data = await getPlanningDetailMutation.mutateAsync(
             selectedRepair.idKeHoach,
           );
+          console.log(data);
           setSelectedPlanRawChiTiets(data || []);
         } catch (error) {
           console.error("Lỗi khi lấy chi tiết kế hoạch:", error);
@@ -274,7 +277,7 @@ export default function MaintenanceRepairForm({
     data: allAssetsByDonVi = { items: [] },
     isFetching,
     isLoading: isLoadingAsset,
-  } = useAssetByDonViQuery(undefined, formik.values.idDonViGiao);
+  } = useAssetByDonViQuery(2, formik.values.idDonViGiao);
   const allEquipment = useMemo(
     () => [
       ...allAssetsByDonVi.items.map((a: any) => ({
@@ -338,16 +341,17 @@ export default function MaintenanceRepairForm({
           donViTinh: equipmentInfo?.donViTinh || chiTiet.donViTinh || "",
         };
       });
-
       // formik.setFieldValue("chiTietSuaChuas", populatedDetails);
       setChiTietKeHoach(
-        populatedDetails.map((item: any) => ({
-          ...item,
-          id:
-            loaiDoiTuong === Devicetype.TOOL
-              ? item?.idChiTietCCDC
-              : item?.idTaiSan,
-        })),
+        populatedDetails
+          .filter((item: any) => item.idTaiSan || item.idChiTietCCDC)
+          .map((item: any) => ({
+            ...item,
+            id:
+              loaiDoiTuong === Devicetype.TOOL
+                ? item?.idChiTietCCDC
+                : item?.idTaiSan,
+          })),
       );
     }
   }, [selectedPlanRawChiTiets, allEquipment.length]);
@@ -371,6 +375,7 @@ export default function MaintenanceRepairForm({
           showSignerSidebar={false}
           fullscreen={true}
           assetTransferDetail={formik.values.chiTietSuaChuas}
+          ghiChu={formik.values.ghiChu}
           allUnits={allUnits}
           allCurrentStatus={allCurrentStatus}
           isEdit={[0].includes(selectedRepair?.trangThai ?? 0) ? true : false}
@@ -727,34 +732,11 @@ export default function MaintenanceRepairForm({
 
             {/* CHI TIẾT TÀI SẢN */}
             <Box>
-              {(() => {
-                const isKhac =
-                  maintenanceRepairTypes
-                    .find((t: any) => t.id === formik.values.idLoaiSuaChua)
-                    ?.ten.toLowerCase() === "khác".toLowerCase();
-                return (
-                  <>
-                    <Typography variant="subtitle1" fontWeight={600} mb={2}>
-                      {isKhac
-                        ? "Chi tiết sửa chữa bảo dưỡng khác:"
-                        : "Chi tiết tài sản sửa chữa bảo dưỡng:"}
-                    </Typography>
-                    {isKhac ? (
-                      <TextField
-                        multiline
-                        minRows={4}
-                        fullWidth
-                        label="Ghi chú"
-                        value={formik.values.ghiChu}
-                        onChange={(e) =>
-                          formik.setFieldValue("ghiChu", e.target.value)
-                        }
-                        disabled={readOnly}
-                      />
-                    ) : (
-                      <>
-                        {/* TOGGLE TÀI SẢN / CCDC */}
-                        {/* <Box mb={2}>
+              <Typography variant="subtitle1" fontWeight={600} mb={2}>
+                Chi tiết tài sản sửa chữa bảo dưỡng:
+              </Typography>
+              {/* TOGGLE TÀI SẢN / CCDC */}
+              {/* <Box mb={2}>
                           <ToggleButtonGroup
                             value={activeDetailTab}
                             exclusive
@@ -820,112 +802,108 @@ export default function MaintenanceRepairForm({
                             </ToggleButton>
                           </ToggleButtonGroup>
                         </Box> */}
-                        <Table
-                          size="small"
-                          sx={{
-                            "& .MuiTableCell-root": {
-                              borderBottom: "1px solid #e0e0e0",
-                            },
-                          }}
-                        >
-                          <TableHead>
-                            <TableRow>
-                              <CustomTableHeadCell width="5%">
-                                STT
-                              </CustomTableHeadCell>
-                              <CustomTableHeadCell width="25%">
-                                {formik.values.loaiDoiTuong === Devicetype.ASSET
-                                  ? "Tài sản"
-                                  : "CCDC - Vật tư"}
-                              </CustomTableHeadCell>
-                              <CustomTableHeadCell width="15%">
-                                Đơn vị tính
-                              </CustomTableHeadCell>
-                              <CustomTableHeadCell width="15%">
-                                Số lượng
-                              </CustomTableHeadCell>
-                              {/* <CustomTableHeadCell width="20%">
+              <Table
+                size="small"
+                sx={{
+                  "& .MuiTableCell-root": {
+                    borderBottom: "1px solid #e0e0e0",
+                  },
+                }}
+              >
+                <TableHead>
+                  <TableRow>
+                    <CustomTableHeadCell width="5%">STT</CustomTableHeadCell>
+                    <CustomTableHeadCell width="25%">
+                      {formik.values.loaiDoiTuong === Devicetype.ASSET
+                        ? "Tài sản"
+                        : "CCDC - Vật tư"}
+                    </CustomTableHeadCell>
+                    <CustomTableHeadCell width="15%">
+                      Đơn vị tính
+                    </CustomTableHeadCell>
+                    <CustomTableHeadCell width="15%">
+                      Số lượng
+                    </CustomTableHeadCell>
+                    {/* <CustomTableHeadCell width="20%">
                                 Trạng thái
                               </CustomTableHeadCell> */}
-                              <CustomTableHeadCell width="20%">
-                                Ghi chú
-                              </CustomTableHeadCell>
-                              {!readOnly && (
-                                <CustomTableHeadCell width="5%"></CustomTableHeadCell>
-                              )}
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {formik.values.chiTietSuaChuas.map((row, index) => (
-                              <TableRow key={index}>
-                                <CustomTableCell>{index + 1}</CustomTableCell>
-                                <CustomTableCell>
-                                  <FieldAutoCompleted
-                                    title={
-                                      formik.values.loaiDoiTuong ===
-                                      Devicetype.ASSET
-                                        ? "Chọn thiết bị tài sản"
-                                        : "Chọn thiết bị ccdc"
-                                    }
-                                    data={chiTietKeHoach}
-                                    labelkey="ten"
-                                    formik={formik}
-                                    limitOptions={20}
-                                    field={
-                                      formik.values.loaiDoiTuong ===
-                                      Devicetype.TOOL
-                                        ? `chiTietSuaChuas[${index}].idChiTietCCDC`
-                                        : `chiTietSuaChuas[${index}].idTaiSan`
-                                    }
-                                    onChange={(value) => {
-                                      formik.setFieldValue(
-                                        `chiTietSuaChuas.${index}.donViTinh`,
-                                        value?.donViTinh,
-                                      );
-                                      formik.setFieldValue(
-                                        `chiTietSuaChuas.${index}.ten`,
-                                        value?.ten,
-                                      );
-                                      formik.setFieldValue(
-                                        `chiTietSuaChuas.${index}.soLuong`,
-                                        value?.soLuong,
-                                      );
-                                      formik.setFieldValue(
-                                        `chiTietSuaChuas.${index}.idCCDC`,
-                                        value?.idCCDC,
-                                      );
-                                      formik.setFieldValue(
-                                        `chiTietSuaChuas.${index}.moTa`,
-                                        value?.moTa,
-                                      );
-                                      formik.setFieldValue(
-                                        `chiTietSuaChuas.${index}.ghiChu`,
-                                        value?.ghiChu,
-                                      );
-                                    }}
-                                    disabled={readOnly}
-                                  />
-                                </CustomTableCell>
-                                <CustomTableCell>
-                                  <FieldAutoCompleted
-                                    title=""
-                                    labelkey="tenDonVi"
-                                    data={allUnits}
-                                    formik={formik}
-                                    field={`chiTietSuaChuas.${index}.donViTinh`}
-                                    disabled={readOnly}
-                                  />
-                                </CustomTableCell>
-                                <CustomTableCell>
-                                  <FieldInput
-                                    title=""
-                                    type="number"
-                                    formik={formik}
-                                    field={`chiTietSuaChuas.${index}.soLuong`}
-                                    disabled={readOnly}
-                                  />
-                                </CustomTableCell>
-                                {/* <CustomTableCell>
+                    <CustomTableHeadCell width="20%">
+                      Ghi chú
+                    </CustomTableHeadCell>
+                    {!readOnly && (
+                      <CustomTableHeadCell width="5%"></CustomTableHeadCell>
+                    )}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {formik.values.chiTietSuaChuas.map((row, index) => (
+                    <TableRow key={index}>
+                      <CustomTableCell>{index + 1}</CustomTableCell>
+                      <CustomTableCell>
+                        <FieldAutoCompleted
+                          title={
+                            formik.values.loaiDoiTuong === Devicetype.ASSET
+                              ? "Chọn thiết bị tài sản"
+                              : "Chọn thiết bị ccdc"
+                          }
+                          data={chiTietKeHoach}
+                          labelkey="ten"
+                          formik={formik}
+                          limitOptions={20}
+                          field={
+                            formik.values.loaiDoiTuong === Devicetype.TOOL
+                              ? `chiTietSuaChuas[${index}].idChiTietCCDC`
+                              : `chiTietSuaChuas[${index}].idTaiSan`
+                          }
+                          onChange={(value) => {
+                            formik.setFieldValue(
+                              `chiTietSuaChuas.${index}.donViTinh`,
+                              value?.donViTinh,
+                            );
+                            formik.setFieldValue(
+                              `chiTietSuaChuas.${index}.ten`,
+                              value?.ten,
+                            );
+                            formik.setFieldValue(
+                              `chiTietSuaChuas.${index}.soLuong`,
+                              value?.soLuong,
+                            );
+                            formik.setFieldValue(
+                              `chiTietSuaChuas.${index}.idCCDC`,
+                              value?.idCCDC,
+                            );
+                            formik.setFieldValue(
+                              `chiTietSuaChuas.${index}.moTa`,
+                              value?.moTa,
+                            );
+                            formik.setFieldValue(
+                              `chiTietSuaChuas.${index}.ghiChu`,
+                              value?.ghiChu,
+                            );
+                          }}
+                          disabled={readOnly}
+                        />
+                      </CustomTableCell>
+                      <CustomTableCell>
+                        <FieldAutoCompleted
+                          title=""
+                          labelkey="tenDonVi"
+                          data={allUnits}
+                          formik={formik}
+                          field={`chiTietSuaChuas.${index}.donViTinh`}
+                          disabled={readOnly}
+                        />
+                      </CustomTableCell>
+                      <CustomTableCell>
+                        <FieldInput
+                          title=""
+                          type="number"
+                          formik={formik}
+                          field={`chiTietSuaChuas.${index}.soLuong`}
+                          disabled={true}
+                        />
+                      </CustomTableCell>
+                      {/* <CustomTableCell>
                                     <FieldInput
                                       title=""
                                       formik={formik}
@@ -933,79 +911,84 @@ export default function MaintenanceRepairForm({
                                       disabled={readOnly}
                                     />
                                   </CustomTableCell> */}
-                                <CustomTableCell>
-                                  <FieldInput
-                                    title=""
-                                    formik={formik}
-                                    field={`chiTietSuaChuas.${index}.ghiChu`}
-                                    disabled={readOnly}
-                                  />
-                                </CustomTableCell>
-                                {!readOnly && (
-                                  <CustomTableCell align="center">
-                                    <IconButton
-                                      color="error"
-                                      size="small"
-                                      onClick={() => {
-                                        const newAssets = [
-                                          ...formik.values.chiTietSuaChuas,
-                                        ];
-                                        newAssets.splice(index, 1);
-                                        formik.setFieldValue(
-                                          "chiTietSuaChuas",
-                                          newAssets,
-                                        );
-                                      }}
-                                    >
-                                      <Delete fontSize="small" />
-                                    </IconButton>
-                                  </CustomTableCell>
-                                )}
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                        {!readOnly && (
-                          <Box mt={2}>
-                            <Button
-                              startIcon={<Add />}
-                              variant="text"
-                              onClick={() => {
-                                formik.setFieldValue("chiTietSuaChuas", [
-                                  ...formik.values.chiTietSuaChuas,
-                                  {
-                                    assetId: "",
-                                    uom: "",
-                                    quantity: 1,
-                                    status: "Đang sử dụng",
-                                    note: "",
-                                  },
-                                ]);
-                              }}
-                              sx={{ textTransform: "none" }}
-                            >
-                              Thêm một dòng
-                            </Button>
-                          </Box>
-                        )}
-                        <Box
-                          mt={2}
-                          display="flex"
-                          alignItems="center"
-                          gap={0.5}
-                          sx={{ cursor: "pointer", color: "#1976d2" }}
-                          onClick={() => setIsPreview(true)}
-                        >
-                          <Typography variant="body2">
-                            Xem trước tài liệu
-                          </Typography>
-                          <Visibility fontSize="small" />
-                        </Box>
-                      </>
-                    )}
-                  </>
-                );
-              })()}
+                      <CustomTableCell>
+                        <FieldInput
+                          title=""
+                          formik={formik}
+                          field={`chiTietSuaChuas.${index}.ghiChu`}
+                          disabled={readOnly}
+                        />
+                      </CustomTableCell>
+                      {!readOnly && (
+                        <CustomTableCell align="center">
+                          <IconButton
+                            color="error"
+                            size="small"
+                            onClick={() => {
+                              const newAssets = [
+                                ...formik.values.chiTietSuaChuas,
+                              ];
+                              newAssets.splice(index, 1);
+                              formik.setFieldValue(
+                                "chiTietSuaChuas",
+                                newAssets,
+                              );
+                            }}
+                          >
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        </CustomTableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {!readOnly && (
+                <Box mt={2}>
+                  <Button
+                    startIcon={<Add />}
+                    variant="text"
+                    onClick={() => {
+                      formik.setFieldValue("chiTietSuaChuas", [
+                        ...formik.values.chiTietSuaChuas,
+                        {
+                          assetId: "",
+                          uom: "",
+                          quantity: 1,
+                          status: "Đang sử dụng",
+                          note: "",
+                        },
+                      ]);
+                    }}
+                    sx={{ textTransform: "none" }}
+                  >
+                    Thêm một dòng
+                  </Button>
+                </Box>
+              )}
+              <Typography variant="subtitle1" fontWeight={600} mb={2}>
+                Chi tiết sửa chữa bảo dưỡng khác:
+              </Typography>
+              <TextField
+                multiline
+                minRows={4}
+                fullWidth
+                label="Ghi chú"
+                value={formik.values.ghiChu}
+                onChange={(e) => formik.setFieldValue("ghiChu", e.target.value)}
+                disabled={readOnly}
+              />
+              <Box
+                mt={2}
+                display="flex"
+                alignItems="center"
+                gap={0.5}
+                sx={{ cursor: "pointer", color: "#1976d2" }}
+                onClick={() => setIsPreview(true)}
+              >
+                <Typography variant="body2">Xem trước tài liệu</Typography>
+                <Visibility fontSize="small" />
+              </Box>
             </Box>
           </Paper>
         </AccordionDetails>

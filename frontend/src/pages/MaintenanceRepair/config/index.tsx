@@ -548,6 +548,7 @@ export const generateBangKePdf = async (
   assetTransferDetail?: any[],
   allUnits?: any[],
   allCurrentStatus?: any[],
+  ghiChu?: string,
 ): Promise<Uint8Array> => {
   const doc = new jsPDF();
 
@@ -593,6 +594,20 @@ export const generateBangKePdf = async (
       lineColor: 0,
     },
   });
+  if (ghiChu) {
+    // Lấy tọa độ Y sau khi bảng kết thúc
+    // @ts-ignore (vì lastAutoTable thường không có trong type định nghĩa sẵn của jsPDF)
+    const finalY = doc.lastAutoTable.finalY || 25;
+
+    doc.setFontSize(11);
+    doc.setFont("times_new_roman");
+
+    // Tự động xuống dòng nếu ghi chú quá dài (chiều rộng tối đa 180mm)
+    const splitGhiChu = doc.splitTextToSize(`${ghiChu}`, 180);
+
+    // Vẽ văn bản cách hàng cuối của bảng 10 đơn vị
+    doc.text(splitGhiChu, 15, finalY + 10);
+  }
 
   return new Uint8Array(doc.output("arraybuffer"));
 };

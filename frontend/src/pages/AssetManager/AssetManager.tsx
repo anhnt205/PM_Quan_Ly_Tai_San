@@ -72,7 +72,7 @@ export default function AssetManager() {
 
   const { data: assetsPage = { items: [], totalItems: 0 }, isLoading } =
     useAssetPageQuery(
-      tab < 3 ? tab : -1,
+      tab < 4 ? tab : -1,
       paginationModel.page,
       paginationModel.pageSize,
       valueDebounce,

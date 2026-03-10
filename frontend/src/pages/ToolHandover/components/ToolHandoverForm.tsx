@@ -299,6 +299,7 @@ export default function ToolHandoverForm({
       }
       onSave({
         ...values,
+        trangThai: 0,
         quyetDinhDieuDongSo: values.lenhDieuDong,
         chiTietBanGiaoCCDCVatTu,
         nguoiKyList,
@@ -511,7 +512,7 @@ export default function ToolHandoverForm({
             mb={2}
           >
             <Box>
-              {[0].includes(currentStatus) && (
+              {[0, 2].includes(currentStatus) && (
                 <Box display="flex" gap={2}>
                   {!readOnly && <SaveBtn onSave={formik.submitForm} />}
                   {!readOnly && <CancelBtn onClick={onClose} />}

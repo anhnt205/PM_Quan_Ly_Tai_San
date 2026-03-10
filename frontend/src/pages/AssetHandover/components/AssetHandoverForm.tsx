@@ -284,6 +284,7 @@ export default function AssetHandoverForm({
       }
       onSave({
         ...values,
+        trangThai: 0,
         quyetDinhDieuDongSo: values.lenhDieuDong,
         chiTietBanGiaoTaiSan,
         nguoiKyList,
@@ -452,7 +453,7 @@ export default function AssetHandoverForm({
             mb={2}
           >
             <Box>
-              {[0].includes(currentStatus) && (
+              {[0, 2].includes(currentStatus) && (
                 <Box display="flex" gap={2}>
                   {!readOnly && <SaveBtn onSave={formik.submitForm} />}
                   {!readOnly && <CancelBtn onClick={onClose} />}

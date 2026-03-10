@@ -47,6 +47,7 @@ interface SignDocumentFormProps {
   allCurrentStatus?: any[];
   staffs?: any[];
   isEdit?: boolean;
+  ghiChu?: string;
 }
 
 export default function SignDocumentForm({
@@ -61,6 +62,7 @@ export default function SignDocumentForm({
   allCurrentStatus = [],
   staffs = [],
   isEdit = false,
+  ghiChu,
 }: SignDocumentFormProps) {
   const [signatureType, setSignatureType] = useState(0);
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -145,6 +147,7 @@ export default function SignDocumentForm({
           assetTransferDetail,
           allUnits,
           allCurrentStatus,
+          ghiChu,
         );
         setBangKeBytes(bytes);
       } catch (err) {

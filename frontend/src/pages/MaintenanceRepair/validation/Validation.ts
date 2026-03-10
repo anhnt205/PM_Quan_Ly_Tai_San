@@ -1,10 +1,14 @@
 import * as yup from "yup";
 
-export const MaintenancePlanValidation = yup.object({
-  tenKeHoach: yup.string().required("Tên kế hoạch là bắt buộc"),
-  loaiKeHoach: yup.string().required("Loại kế hoạch là bắt buộc"),
-  ngayBatDau: yup.string().required("Ngày bắt đầu là bắt buộc"),
-  ngayKetThuc: yup.string().required("Ngày kết thúc là bắt buộc"),
-  idNguoiPhuTrach: yup.string().required("Người phụ trách là bắt buộc"),
-  idDonVi: yup.string().required("Đơn vị thực hiện là bắt buộc"),
+export const MaintenanceValidation = yup.object({
+  idKeHoach: yup.string().required("Kế hoạch là bắt buộc"),
+  tenSuaChua: yup.string().required("Tên phiếu là bắt buộc"),
+  idLoaiSuaChua: yup.string().required("Loại sửa chữa là bắt buộc"),
+  idDonViGiao: yup.string().required("Đơn vị giao là bắt buộc"),
+  idDonViNhan: yup.string().required("Đơn vị nhận là bắt buộc"),
+  ngayKetThucDuKien: yup.string().required("Ngày dự kiến là bắt buộc"),
+  idDonViDeNghi: yup.string().required("Đơn vị đề nghị là bắt buộc"),
+  idTrinhDuyetGiamDoc: yup.string().required("Người phê duyệt là bắt buộc"),
+  idNguoiKyNhay: yup.string().required("Người lập biểu là bắt buộc"),
+  idTrinhDuyetCapPhong: yup.string().required("Người duyệt là bắt buộc"),
 });

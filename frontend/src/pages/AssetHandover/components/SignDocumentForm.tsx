@@ -9,9 +9,6 @@ import {
 } from "@mui/material";
 import { useState, useEffect, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";
-import { useAssetHandoverMutation } from "../Mutation";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
 import { PDFDocument } from "pdf-lib";
 import "../../../assets/fonts/times_new_roman-normal";
 import "../../../assets/fonts/times_new_roman-bold";
