@@ -228,6 +228,7 @@ export default function MaintenanceRepairForm({
           console.error("Lỗi khi lấy chi tiết kế hoạch:", error);
         }
         formik.setValues({
+          ...formik.initialValues,
           ...selectedRepair,
           initialChiTiet: (selectedRepair.chiTietSuaChuas || []).map(
             (i: any) => i.id,

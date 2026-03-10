@@ -1,11 +1,8 @@
 import {
   Box,
-  Button,
   Grid,
   IconButton,
   Tooltip,
-  Dialog,
-  Typography,
   Tab,
   Tabs,
   Badge,
@@ -23,8 +20,7 @@ import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
 import { useAllStaffsQuery } from "../Staff/Mutation";
 import { showConfirmAlert } from "../../components/Alert";
 import { GridColDef } from "@mui/x-data-grid";
-import { Trash2, FileText } from "lucide-react";
-import { SignHeader } from "../../components/SignDocument/SignHeader";
+import { Trash2 } from "lucide-react";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
 import {
   showStatus,
@@ -32,7 +28,6 @@ import {
   showDownloadFile,
   ShowPermissionSigning,
   getPermissionSigning,
-  showStatusDocument,
   handleSendToSigner,
   canSign,
   handleSignDocument,
@@ -45,10 +40,11 @@ import {
 import { useDebounce } from "../../hooks/useDebounce";
 import { useMaintenancePlanningPageQuery } from "../MainenancePlanRepair/Mutation";
 import { showPeriod, showPlanType } from "../MainenancePlanRepair/config";
-import { StatusPlan } from "../../utils/const";
 import S3Service from "../../services/S3Service";
 import SignDocumentForm from "./components/SignDocumentForm";
 import { SignaturesData } from "./types";
+import dayjs from "dayjs";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function MaintenanceRepair() {
   const { user } = useSelector((state: any) => state.user);
@@ -74,6 +70,9 @@ export default function MaintenanceRepair() {
   const { data: allUnits = [] } = useAllUnitsQuery();
   const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
   const { data: allStaffs = [] } = useAllStaffsQuery();
+
+  const location = useLocation();
+  const navigate = useNavigate();
 
   // API queries — load data from server
   const { data: repairPageData = { items: [], totalItems: 0 } } =
@@ -489,6 +488,34 @@ export default function MaintenanceRepair() {
       ),
     },
   ];
+
+  const handleCreateFromPlan = useCallback((plan: any) => {
+    const prefilledData = {
+      id: "",
+      idKeHoach: plan.id,
+      loaiDoiTuong: plan.loaiDoiTuong || "",
+      idDonViNhan: plan.idDonViThucHien || "",
+      ngayKetThucDuKien: plan.ngayKetThuc
+        ? dayjs(plan.ngayKetThuc).format("YYYY-MM-DD")
+        : dayjs(new Date()).format("YYYY-MM-DD"),
+    };
+
+    setSelectedRepair(prefilledData);
+    setActiveTabRepair(0);
+    setShowForm(true);
+    setShowResultForm(false);
+    setReadOnly(false);
+    setShowSidebar(false);
+  }, []);
+
+  useEffect(() => {
+    if (location.state?.createFromPlan) {
+      const planData = location.state.createFromPlan;
+      handleCreateFromPlan(planData);
+
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, handleCreateFromPlan, navigate, location.pathname]);
 
   return (
     <>

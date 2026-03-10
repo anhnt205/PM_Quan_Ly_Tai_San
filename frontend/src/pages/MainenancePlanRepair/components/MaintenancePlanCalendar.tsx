@@ -110,10 +110,8 @@ function buildWeekSlots(
     );
   });
 
-  // Sort: earlier start first → wider span first
   overlapping.sort((a, b) => dayjs(a.ngayBatDau).diff(dayjs(b.ngayBatDau)));
 
-  // Convert to raw slots (no track yet)
   const raw = overlapping.map((plan) => {
     const s = dayjs(plan.ngayBatDau!);
     const e = plan.ngayKetThuc ? dayjs(plan.ngayKetThuc) : s;
@@ -130,8 +128,7 @@ function buildWeekSlots(
     };
   });
 
-  // Greedy track assignment
-  const trackEnds: number[] = []; // trackEnds[t] = last occupied column in track t
+  const trackEnds: number[] = [];
   return raw.map((slot) => {
     let track = 0;
     while (
@@ -145,7 +142,6 @@ function buildWeekSlots(
   });
 }
 
-/* ─── Event bar ──────────────────────────────────────────────────── */
 interface EventBarProps {
   slot: CalendarSlot;
   onClick: (anchor: HTMLElement, plan: MaintenancePlanData) => void;
@@ -201,7 +197,6 @@ function EventBar({ slot, onClick }: EventBarProps) {
   );
 }
 
-/* ─── Day cell ───────────────────────────────────────────────────── */
 function DayCell({
   day,
   currentMonth,
@@ -247,17 +242,18 @@ function DayCell({
   );
 }
 
-/* ─── Detail Popover ─────────────────────────────────────────────── */
 function PlanPopover({
   anchor,
   plan,
   onClose,
   onOpenDetail,
+  onCreateRepair,
 }: {
   anchor: HTMLElement | null;
   plan: MaintenancePlanData | null;
   onClose: () => void;
   onOpenDetail?: (plan: MaintenancePlanData) => void;
+  onCreateRepair?: (plan: any) => void;
 }) {
   if (!plan) return null;
   const cfg = STATUS[plan.trangThai ?? 0] ?? STATUS[0];
@@ -416,8 +412,11 @@ function PlanPopover({
           </Typography>
         )}
 
-        {onOpenDetail && (
-          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 0.5 }}>
+        {/* Gộp 2 nút vào chung 1 Box để chúng nằm ngang nhau */}
+        <Box
+          sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 1 }}
+        >
+          {onOpenDetail && (
             <Button
               size="small"
               variant="outlined"
@@ -425,12 +424,43 @@ function PlanPopover({
                 onClose();
                 onOpenDetail(plan);
               }}
-              sx={{ fontSize: "0.75rem" }}
+              sx={{
+                fontSize: "0.75rem",
+                borderColor: "divider",
+                color: "text.primary",
+              }}
             >
               Mở chi tiết
             </Button>
-          </Box>
-        )}
+          )}
+
+          {onCreateRepair && (
+            <Button
+              size="small"
+              variant="contained"
+              onClick={() => {
+                onClose();
+                onCreateRepair(plan);
+              }}
+              sx={{
+                fontSize: "0.75rem",
+                bgcolor: "warning.main",
+                color: "#fff",
+                border: "1px solid",
+                borderColor: "warning.main",
+                transition: "all 0.2s ease-in-out",
+                "&:hover": {
+                  bgcolor: "transparent",
+                  color: "warning.main",
+                  borderColor: "warning.main",
+                  boxShadow: "none",
+                },
+              }}
+            >
+              Tạo phiếu
+            </Button>
+          )}
+        </Box>
       </Box>
     </Popover>
   );
@@ -441,12 +471,14 @@ interface Props {
   onClose: () => void;
   plans: MaintenancePlanData[];
   onPlanClick?: (plan: MaintenancePlanData) => void;
+  onCreateRepair?: (plan: any) => void;
 }
 
 export default function MaintenancePlanCalendar({
   onClose,
   plans,
   onPlanClick,
+  onCreateRepair,
 }: Props) {
   const today = useMemo(() => dayjs(), []);
   const [current, setCurrent] = useState<Dayjs>(today.startOf("month"));
@@ -793,6 +825,7 @@ export default function MaintenancePlanCalendar({
           setActivePlan(null);
         }}
         onOpenDetail={onPlanClick}
+        onCreateRepair={onCreateRepair}
       />
     </Box>
   );

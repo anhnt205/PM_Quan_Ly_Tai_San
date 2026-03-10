@@ -6,7 +6,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo } from "react";
 import PageAction from "../../components/common/PageAction";
 import MaintenancePlanCalendar from "./components/MaintenancePlanCalendar";
 import MaintenancePlanningForm from "./components/MaintenancePlanningForm";
@@ -22,20 +22,17 @@ import {
   useMaintenancePlanningMutation,
 } from "./Mutation";
 import { useAllAssetsQuery } from "../AssetManager/Mutation";
-import { useAllToolQuery } from "../ToolManager/Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
 import { showPeriod, showPlanType, showStatus } from "./config";
 import { Devicetype, StatusPlan } from "../../utils/const";
 import { useToolDetailAllQuery } from "../ToolTransfer/Mutation";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../../utils/routes";
 
 export default function MaintenancePlanRepair() {
-  const { user } = useSelector((state: any) => state.user);
   const [showForm, setShowForm] = useState(false);
   const [readOnly, setReadOnly] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
-  const [maintenancePlans, setMaintenancePlans] = useState<
-    MaintenancePlanData[]
-  >([]);
   const [status, setStatus] = useState("");
   const [searchValue, setSearchValue] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -43,14 +40,14 @@ export default function MaintenancePlanRepair() {
   const [selectedPlan, setSelectedPlan] = useState<MaintenancePlanData | null>(
     null,
   );
+  const navigate = useNavigate();
+
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
     page: 0,
   });
 
   const { data: allStaffs = [] } = useAllStaffsQuery();
-
-  // Assets & Tools for planning
   const { data: rawAssets = [] } = useAllAssetsQuery();
   const { data: rawTools = [] } = useToolDetailAllQuery();
   const allEquipment = useMemo(
@@ -77,18 +74,15 @@ export default function MaintenancePlanRepair() {
       status,
     );
 
-  // Maintenance Planning mutations
   const {
     createMutation: createPlanMutation,
     updateMutation: updatePlanMutation,
     deleteMutation: deletePlanMutation,
   } = useMaintenancePlanningMutation();
 
-  // Handlers for maintenance planning
   const handlePlanningClose = () => {
     setShowForm(false);
     setReadOnly(false);
-    // Không xóa selectedPlan → sidebar vẫn hiển thị sau khi đóng form
   };
 
   const handlePlanningEdit = () => {
@@ -331,6 +325,11 @@ export default function MaintenancePlanRepair() {
                       setShowForm(true);
                       setShowSidebar(true);
                       setShowCalendar(false);
+                    }}
+                    onCreateRepair={(plan) => {
+                      navigate(ROUTES.MAINTENANCEREPAIR, {
+                        state: { createFromPlan: plan },
+                      });
                     }}
                   />
                 ) : undefined
