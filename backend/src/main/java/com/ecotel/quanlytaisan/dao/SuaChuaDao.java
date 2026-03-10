@@ -90,7 +90,9 @@ public class SuaChuaDao {
                 sc.CoPhieuBanGiao,
                 sc.TaiLieuCuoi,
                 sc.ghiChu,
-                sc.Loai
+                sc.Loai,
+                sc.TrangThai,        
+                sc.NgayCapNhat
 
             FROM SuaChua sc
                 LEFT JOIN PhongBan pbGiao ON sc.IdDonViGiao = pbGiao.Id
