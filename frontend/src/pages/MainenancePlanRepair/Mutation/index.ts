@@ -419,10 +419,37 @@ export const useMaintenancePlanningMutation = () => {
     },
   });
 
+  const updateStatusPlanMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const res = await api.patch(
+        `/kehoach-suachua/${id}/trang-thai`,
+        {},
+        {
+          params: {
+            trangThai: status,
+          },
+        },
+      );
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      console.log("Cập nhật trạng thái kế hoạch sửa chữa thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Cập nhật trạng thái kế hoạch sửa chữa thất bại",
+      );
+      return null;
+    },
+  });
+
   return {
     createMutation,
     updateMutation,
     deleteMutation,
     getPlanningDetailMutation,
+    updateStatusPlanMutation,
   };
 };

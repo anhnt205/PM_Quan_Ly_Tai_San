@@ -110,7 +110,7 @@ export const useAccountMutation = (
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [mainKey] });
-      queryClient.invalidateQueries({ queryKey: ["staffs"] });
+      queryClient.invalidateQueries({ queryKey: ["staffsPage"] });
       showSuccessAlert("Thêm tài khoản và áp quyền thành công");
     },
     onError: (error: any) => {

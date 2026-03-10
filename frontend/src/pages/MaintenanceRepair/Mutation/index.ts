@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../../../config/api.config";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
-import { CongTy, MessageTypeFunctions } from "../../../utils/const";
+import { CongTy, MessageTypeFunctions, StatusPlan } from "../../../utils/const";
 import {
   MaintenanceRepairData,
   MaintenanceRepairDetailItem,
@@ -16,6 +16,7 @@ import socketService from "../../../services/socketService";
 import { useAssetManagerMutation } from "../../AssetManager/Mutation";
 import { generateCode } from "../../../utils/helpers";
 import { useToolManagerMutation } from "../../ToolManager/Mutation";
+import { useMaintenancePlanningMutation } from "../../MainenancePlanRepair/Mutation";
 
 export const useMaintenanceRepairPageQuery = (
   page?: number,
@@ -422,6 +423,7 @@ export const useMaintenanceRepairMutation = () => {
   // ky tai lieu
   const { createManyHistoryAssetMutation, updateAssetOwnershipMutation } =
     useAssetManagerMutation();
+  const { updateStatusPlanMutation } = useMaintenancePlanningMutation();
 
   const {
     createManyHistoryToolMutation,
@@ -495,6 +497,10 @@ export const useMaintenanceRepairMutation = () => {
             })),
           );
         }
+        updateStatusPlanMutation.mutate({
+          id: data.repair.idKeHoach,
+          status: StatusPlan.PROGRESS,
+        });
       }
       queryClient.invalidateQueries({ queryKey: ["maintenanceRepairPage"] });
 

@@ -174,6 +174,7 @@ export default function MaintenanceRepairForm({
         values.chiTietSuaChuas,
         allUnits,
         allCurrentStatus,
+        values.ghiChu,
       );
 
       // 2. Xử lý Key tài liệu gốc (duongDanFile)
@@ -332,7 +333,7 @@ export default function MaintenanceRepairForm({
               : null,
           idChiTietCCDC:
             equipmentInfo?.type === Devicetype.TOOL ? equipmentInfo?.id : null,
-          soLuong: equipmentInfo?.soLuong || chiTiet.soLuong || 1,
+          soLuong: equipmentInfo?.soLuong || chiTiet.soLuong || 0,
           ghiChu: equipmentInfo?.ghiChu || chiTiet.ghiChu || "",
           isActive: true,
           hienTrang: equipmentInfo?.hienTrang || chiTiet.hienTrang || "",
@@ -900,7 +901,7 @@ export default function MaintenanceRepairForm({
                           type="number"
                           formik={formik}
                           field={`chiTietSuaChuas.${index}.soLuong`}
-                          disabled={true}
+                          disabled={readOnly}
                         />
                       </CustomTableCell>
                       {/* <CustomTableCell>

@@ -33,6 +33,7 @@ import {
   handleSignDocument,
   isCheckShowShare,
 } from "./config";
+import { showStatus as showStatusPlan } from "../MainenancePlanRepair/config";
 import {
   useMaintenanceRepairMutation,
   useMaintenanceRepairPageQuery,
@@ -458,7 +459,7 @@ export default function MaintenanceRepair() {
       flex: 1.2,
       minWidth: 120,
       editable: false,
-      renderCell: (params: any) => showStatus(params.value),
+      renderCell: (params: any) => showStatusPlan(params.value),
     },
     {
       field: "ngayTao",

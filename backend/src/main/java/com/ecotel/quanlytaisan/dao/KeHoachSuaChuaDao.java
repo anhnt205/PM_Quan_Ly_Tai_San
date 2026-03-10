@@ -130,7 +130,14 @@ public class KeHoachSuaChuaDao {
 
     public KeHoachSuaChua findById(String id) {
         String sql = "SELECT * FROM KeHoachSuaChua WHERE Id = ?";
-        return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(KeHoachSuaChua.class), id);
+        List<KeHoachSuaChua> results = jdbcTemplate.query(
+            sql, 
+            new BeanPropertyRowMapper<>(KeHoachSuaChua.class), 
+            id
+        );
+        
+        // Nếu rỗng thì trả về null, nếu có thì lấy phần tử đầu tiên
+        return results.isEmpty() ? null : results.get(0);
     }
 
     public KeHoachSuaChuaDTO findByIdDTO(String id) {
