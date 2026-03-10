@@ -48,6 +48,7 @@ public class SuaChuaDao {
                 
                 sc.IdKeHoach,
                 keHoach.TenKeHoach AS tenKeHoach,
+                keHoach.LoaiDoiTuong,
 
                 sc.IdLoaiSuaChua,
                 loaiSC.Ten AS tenLoaiSuaChua,
@@ -90,7 +91,8 @@ public class SuaChuaDao {
                 sc.CoPhieuBanGiao,
                 sc.TaiLieuCuoi,
                 sc.ghiChu,
-                sc.Loai
+                sc.Loai,
+                sc.TrangThai
 
             FROM SuaChua sc
                 LEFT JOIN PhongBan pbGiao ON sc.IdDonViGiao = pbGiao.Id
@@ -206,7 +208,8 @@ public class SuaChuaDao {
                 sc.CoPhieuBanGiao,
                 sc.TaiLieuCuoi,
                 sc.GhiChu,
-                sc.Loai
+                sc.Loai,
+                sc.TrangThai
 
             FROM SuaChua sc
                 LEFT JOIN PhongBan pbGiao ON sc.IdDonViGiao = pbGiao.Id
@@ -275,7 +278,8 @@ public class SuaChuaDao {
                 sc.CoPhieuBanGiao,
                 sc.TaiLieuCuoi,
                 sc.GhiChu,
-                sc.Loai
+                sc.Loai,
+                sc.TrangThai
 
             FROM SuaChua sc
                 LEFT JOIN PhongBan pbGiao ON sc.IdDonViGiao = pbGiao.Id
@@ -414,6 +418,135 @@ public class SuaChuaDao {
             CompletableFuture.runAsync(this::refreshCache);
         }
         return result;
+    }
+
+    // bulk operations for SuaChua
+    public void batchInsert(List<SuaChua> list) {
+        if (list == null || list.isEmpty()) return;
+        String sql = """
+            INSERT INTO SuaChua (
+                Id, IdCongTy, IdLoaiSuaChua,
+                MaSuaChua, TenSuaChua, MucDoSuCo, MucDoUuTien,
+                IdDonViGiao, IdDonViNhan, IdNguoiKyNhay, TrangThaiKyNhay, NguoiLapPhieuKyNhay,
+                NgayKetThucDuKien, IdTrinhDuyetCapPhong, TrinhDuyetCapPhongXacNhan,
+                IdTrinhDuyetGiamDoc, TrinhDuyetGiamDocXacNhan, IdDonViDeNghi,
+                DuongDanFile, TenFile, TaiLieuBanGhi, ByStep, SoQuyetDinh,
+                NguoiTao, Share, NgayTao, NgayCapNhat, DaBanGiao, CoPhieuBanGiao, TaiLieuCuoi, Loai, TrangThai, GhiChu,
+                IdKeHoach
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        """;
+        Date now = new Date();
+        jdbcTemplate.batchUpdate(sql, list, 50, (ps, entity) -> {
+            entity.setId(generateNextId());
+            entity.setNgayTao(now);
+            entity.setNgayCapNhat(now);
+            if (entity.getTrangThaiKyNhay() == null) entity.setTrangThaiKyNhay(false);
+            if (entity.getNguoiLapPhieuKyNhay() == null) entity.setNguoiLapPhieuKyNhay(false);
+            if (entity.getTrinhDuyetCapPhongXacNhan() == null) entity.setTrinhDuyetCapPhongXacNhan(false);
+            if (entity.getTrinhDuyetGiamDocXacNhan() == null) entity.setTrinhDuyetGiamDocXacNhan(false);
+            if (entity.getByStep() == null) entity.setByStep(false);
+            if (entity.getShare() == null) entity.setShare(false);
+            if (entity.getDaBanGiao() == null) entity.setDaBanGiao(false);
+            if (entity.getCoPhieuBanGiao() == null) entity.setCoPhieuBanGiao(false);
+            if (entity.getLoai() == null) entity.setLoai(0);
+
+            ps.setString(1, entity.getId());
+            ps.setString(2, entity.getIdCongTy());
+            ps.setString(3, entity.getIdLoaiSuaChua());
+            ps.setString(4, entity.getMaSuaChua());
+            ps.setString(5, entity.getTenSuaChua());
+            ps.setObject(6, entity.getMucDoSuCo());
+            ps.setObject(7, entity.getMucDoUuTien());
+            ps.setString(8, entity.getIdDonViGiao());
+            ps.setString(9, entity.getIdDonViNhan());
+            ps.setString(10, entity.getIdNguoiKyNhay());
+            ps.setBoolean(11, entity.getTrangThaiKyNhay());
+            ps.setBoolean(12, entity.getNguoiLapPhieuKyNhay());
+            ps.setObject(13, entity.getNgayKetThucDuKien());
+            ps.setString(14, entity.getIdTrinhDuyetCapPhong());
+            ps.setBoolean(15, entity.getTrinhDuyetCapPhongXacNhan());
+            ps.setString(16, entity.getIdTrinhDuyetGiamDoc());
+            ps.setBoolean(17, entity.getTrinhDuyetGiamDocXacNhan());
+            ps.setString(18, entity.getIdDonViDeNghi());
+            ps.setString(19, entity.getDuongDanFile());
+            ps.setString(20, entity.getTenFile());
+            ps.setString(21, entity.getTaiLieuBanGhi());
+            ps.setBoolean(22, entity.getByStep());
+            ps.setString(23, entity.getSoQuyetDinh());
+            ps.setString(24, entity.getNguoiTao());
+            ps.setBoolean(25, entity.getShare());
+            ps.setObject(26, entity.getNgayTao());
+            ps.setObject(27, entity.getNgayCapNhat());
+            ps.setBoolean(28, entity.getDaBanGiao());
+            ps.setBoolean(29, entity.getCoPhieuBanGiao());
+            ps.setString(30, entity.getTaiLieuCuoi());
+            ps.setInt(31, entity.getLoai());
+            ps.setInt(32, entity.getTrangThai());
+            ps.setString(33, entity.getGhiChu());
+            ps.setString(34, entity.getIdKeHoach());
+        });
+        CompletableFuture.runAsync(this::refreshCache);
+    }
+
+    public void batchUpdate(List<SuaChua> list) {
+        if (list == null || list.isEmpty()) return;
+        String sql = """
+            UPDATE SuaChua SET
+                IdLoaiSuaChua = ?, MaSuaChua = ?, TenSuaChua = ?, MucDoSuCo = ?, MucDoUuTien = ?,
+                IdDonViGiao = ?, IdDonViNhan = ?, IdNguoiKyNhay = ?, TrangThaiKyNhay = ?, NguoiLapPhieuKyNhay = ?,
+                NgayKetThucDuKien = ?,
+                IdTrinhDuyetCapPhong = ?, TrinhDuyetCapPhongXacNhan = ?,
+                IdTrinhDuyetGiamDoc = ?, TrinhDuyetGiamDocXacNhan = ?,
+                IdDonViDeNghi = ?, DuongDanFile = ?, TenFile = ?, TaiLieuBanGhi = ?,
+                ByStep = ?, SoQuyetDinh = ?, NguoiTao = ?, Share = ?,
+                NgayCapNhat = ?, DaBanGiao = ?, CoPhieuBanGiao = ?, TaiLieuCuoi = ?, Loai = ?, TrangThai = ?, GhiChu = ?,
+                IdKeHoach = ?
+            WHERE Id = ?
+        """;
+        Date now = new Date();
+        jdbcTemplate.batchUpdate(sql, list, 50, (ps, entity) -> {
+            entity.setNgayCapNhat(now);
+            ps.setString(1, entity.getIdLoaiSuaChua());
+            ps.setString(2, entity.getMaSuaChua());
+            ps.setString(3, entity.getTenSuaChua());
+            ps.setObject(4, entity.getMucDoSuCo());
+            ps.setObject(5, entity.getMucDoUuTien());
+            ps.setString(6, entity.getIdDonViGiao());
+            ps.setString(7, entity.getIdDonViNhan());
+            ps.setString(8, entity.getIdNguoiKyNhay());
+            ps.setBoolean(9, entity.getTrangThaiKyNhay());
+            ps.setBoolean(10, entity.getNguoiLapPhieuKyNhay());
+            ps.setObject(11, entity.getNgayKetThucDuKien());
+            ps.setString(12, entity.getIdTrinhDuyetCapPhong());
+            ps.setBoolean(13, entity.getTrinhDuyetCapPhongXacNhan());
+            ps.setString(14, entity.getIdTrinhDuyetGiamDoc());
+            ps.setBoolean(15, entity.getTrinhDuyetGiamDocXacNhan());
+            ps.setString(16, entity.getIdDonViDeNghi());
+            ps.setString(17, entity.getDuongDanFile());
+            ps.setString(18, entity.getTenFile());
+            ps.setString(19, entity.getTaiLieuBanGhi());
+            ps.setBoolean(20, entity.getByStep());
+            ps.setString(21, entity.getSoQuyetDinh());
+            ps.setString(22, entity.getNguoiTao());
+            ps.setBoolean(23, entity.getShare());
+            ps.setObject(24, entity.getNgayCapNhat());
+            ps.setBoolean(25, entity.getDaBanGiao());
+            ps.setBoolean(26, entity.getCoPhieuBanGiao());
+            ps.setString(27, entity.getTaiLieuCuoi());
+            ps.setInt(28, entity.getLoai());
+            ps.setInt(29, entity.getTrangThai());
+            ps.setString(30, entity.getGhiChu());
+            ps.setString(31, entity.getIdKeHoach());
+            ps.setString(32, entity.getId());
+        });
+        CompletableFuture.runAsync(this::refreshCache);
+    }
+
+    public void batchDelete(List<String> ids) {
+        if (ids == null || ids.isEmpty()) return;
+        String sql = "DELETE FROM SuaChua WHERE Id = ?";
+        jdbcTemplate.batchUpdate(sql, ids, 50, (ps, id) -> ps.setString(1, id));
+        CompletableFuture.runAsync(this::refreshCache);
     }
 
     // Các phương thức xử lý ký duyệt theo quy trình mới

@@ -2,27 +2,30 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../../../config/api.config";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import { CongTy, MessageTypeFunctions } from "../../../utils/const";
-import { MaintenanceRepairData, MaintenanceRepairDetailItem, SignaturesData, Signer } from "../types";
+import {
+  MaintenanceRepairData,
+  MaintenanceRepairDetailItem,
+  SignaturesData,
+  Signer,
+} from "../types";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import dayjs from "dayjs";
 import { listNguoiKy } from "../config";
 import socketService from "../../../services/socketService";
+import { useAssetManagerMutation } from "../../AssetManager/Mutation";
+import { generateCode } from "../../../utils/helpers";
+import { useToolManagerMutation } from "../../ToolManager/Mutation";
 
 export const useMaintenanceRepairPageQuery = (
   page?: number,
   pageSize?: number,
   searchValue?: string,
   trangThai?: number,
+  userId?: string,
 ) => {
   return useQuery({
-    queryKey: [
-      "maintenanceRepairPage",
-      page,
-      pageSize,
-      searchValue,
-      trangThai,
-    ],
+    queryKey: ["maintenanceRepairPage", page, pageSize, searchValue, trangThai],
     queryFn: async () => {
       const res = await api.get("/suachua", {
         params: {
@@ -31,6 +34,7 @@ export const useMaintenanceRepairPageQuery = (
           size: pageSize,
           search: searchValue,
           trangThai: trangThai,
+          userId,
         },
       });
       return res.data;
@@ -58,7 +62,8 @@ export const useMaintenanceRepairMutation = () => {
   const queryClient = useQueryClient();
   const idCongTy = CongTy.CT001;
   const { user } = useSelector((state: RootState) => state.user);
-  const now = dayjs(new Date()).format("YYYY-MM-DDTHH:mm:ss");
+  const now = dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss");
+
   const createMutation = useMutation({
     mutationFn: async (data: MaintenanceRepairData) => {
       const res = await api.post("/suachua", {
@@ -69,41 +74,38 @@ export const useMaintenanceRepairMutation = () => {
       return res.data;
     },
     onSuccess: async (response, data) => {
-      const idDDTS = response.data.id;
-      if (
-        data.chiTietSuaChuaBaoDuongDTOS &&
-        data.chiTietSuaChuaBaoDuongDTOS.length > 0
-      ) {
+      const idSCBD = response.id;
+      if (data.chiTietSuaChuas && data.chiTietSuaChuas.length > 0) {
         createMaintenanceRepairDetailManyMutation.mutate(
-          data.chiTietSuaChuaBaoDuongDTOS?.map((item) => ({
+          data.chiTietSuaChuas?.map((item) => ({
             ...item,
-            idDieuDongTaiSan: idDDTS,
+            idSuaChua: idSCBD,
           })),
         );
       }
       if (data.nguoiKyList && data.nguoiKyList.length > 0) {
         updateSignerMutation.mutate({
-          idTaiLieu: idDDTS,
+          idTaiLieu: idSCBD,
           data: data.nguoiKyList.map((item) => ({
             ...item,
-            idTaiLieu: idDDTS,
+            idTaiLieu: idSCBD,
           })),
         });
       }
       const list = await listNguoiKy([data]);
       socketService.send({
-        type: MessageTypeFunctions.ASSET_TRANSFER,
+        type: MessageTypeFunctions.MAINTENANCE,
         recieve: list,
       });
-      queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
+      queryClient.invalidateQueries({ queryKey: ["maintenanceRepairPage"] });
 
-      showSuccessAlert("Tạo điều động tài sản thành công");
+      showSuccessAlert("Tạo phiếu sửa chữa thành công");
     },
     onError: (error: any) => {
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Tạo điều động tài sản thất bại",
+          "Tạo phiếu sửa chữa thất bại",
       );
     },
   });
@@ -119,55 +121,57 @@ export const useMaintenanceRepairMutation = () => {
     },
     onSuccess: async (response, data) => {
       if (data.initialChiTiet && data.initialChiTiet.length > 0) {
-        deleteMaintenanceRepairDetailItemManyMutation.mutate(data.initialChiTiet);
+        deleteMaintenanceRepairDetailItemManyMutation.mutate(
+          data.initialChiTiet,
+        );
       }
-      if (
-        data.chiTietSuaChuaBaoDuongDTOS &&
-        data.chiTietSuaChuaBaoDuongDTOS.length > 0
-      ) {
+      if (data.chiTietSuaChuas && data.chiTietSuaChuas.length > 0) {
         createMaintenanceRepairDetailManyMutation.mutate(
-          data.chiTietSuaChuaBaoDuongDTOS.map((item) => ({
+          data.chiTietSuaChuas.map((item) => ({
             ...item,
-            idDieuDongTaiSan: data.id,
+            idSuaChua: data.id,
           })),
         );
       }
       if (data.nguoiKyList && data.nguoiKyList.length > 0 && data.id) {
         updateSignerMutation.mutate({
           idTaiLieu: data.id,
-          data: data.nguoiKyList,
+          data: data.nguoiKyList.map((item) => ({
+            ...item,
+            idTaiLieu: data.id,
+          })),
         });
       }
       const list = await listNguoiKy([data]);
       socketService.send({
-        type: MessageTypeFunctions.ASSET_TRANSFER,
+        type: MessageTypeFunctions.MAINTENANCE,
         recieve: list,
       });
-      queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
-      showSuccessAlert("Sửa điều động tài sản thành công");
+      queryClient.invalidateQueries({ queryKey: ["maintenanceRepairPage"] });
+      showSuccessAlert("Sửa phiếu sửa chữa thành công");
     },
     onError: (error: any) => {
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Sửa điều động tài sản thất bại",
+          "Sửa phiếu sửa chữa thất bại",
       );
     },
   });
   const updateManyMutation = useMutation({
     mutationFn: async (data: MaintenanceRepairData[]) => {
-      const res = await api.put(`/suachua/batch`, data);
+      const res = await api.put(`/suachua/bulk`, data);
       return res.data;
     },
     onSuccess: (response, data) => {
-      queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
-      console.log("Sửa điều động tài sản thành công");
+      queryClient.invalidateQueries({ queryKey: ["maintenanceRepairPage"] });
+      console.log("Sửa phiếu sửa chữa thành công");
     },
     onError: (error: any) => {
       console.log(
         error.response?.data?.message ||
           error.message ||
-          "Sửa điều động tài sản thất bại",
+          "Sửa phiếu sửa chữa thất bại",
       );
     },
   });
@@ -180,97 +184,97 @@ export const useMaintenanceRepairMutation = () => {
       deleteSignerMutation.mutate(data.id);
       const list = await listNguoiKy([data]);
       socketService.send({
-        type: MessageTypeFunctions.ASSET_TRANSFER,
+        type: MessageTypeFunctions.MAINTENANCE,
         recieve: list,
       });
-      queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
-      showSuccessAlert("Xóa điều động tài sản thành công");
+      queryClient.invalidateQueries({ queryKey: ["maintenanceRepairPage"] });
+      showSuccessAlert("Xóa phiếu sửa chữa thành công");
     },
     onError: (error: any) => {
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa điều động tài sản thất bại",
+          "Xóa phiếu sửa chữa thất bại",
       );
     },
   });
   const deleteManyMutation = useMutation({
     mutationFn: async (ids: string[]) => {
-      const res = await api.delete(`/suachua/batch`, { data: ids });
+      const res = await api.delete(`/suachua/bulk`, { data: ids });
       return res.data.message;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
-      showSuccessAlert(data || "Xóa điều động tài sản thành công");
+      queryClient.invalidateQueries({ queryKey: ["maintenanceRepairPage"] });
+      showSuccessAlert(data || "Xóa phiếu sửa chữa thành công");
     },
     onError: (error: any) => {
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Xóa điều động tài sản thất bại",
+          "Xóa phiếu sửa chữa thất bại",
       );
     },
   });
 
   const cancelMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await api.post(`/suachua/huy?id=${data.id}`);
+      const res = await api.post(`/suachua/${data.id}/huy`);
       return res.data;
     },
     onSuccess: async (response, data) => {
-      queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
+      queryClient.invalidateQueries({ queryKey: ["maintenanceRepairPage"] });
       deleteSignerMutation.mutate(data.id);
       const list = await listNguoiKy([data]);
       socketService.send({
-        type: MessageTypeFunctions.ASSET_TRANSFER,
+        type: MessageTypeFunctions.MAINTENANCE,
         recieve: list,
       });
-      showSuccessAlert("Hủy điều động tài sản thành công");
+      showSuccessAlert("Hủy phiếu sửa chữa thành công");
     },
     onError: (error: any) => {
       showErrorAlert(
         error.response?.data?.message ||
           error.message ||
-          "Hủy điều động tài sản thất bại",
+          "Hủy phiếu sửa chữa thất bại",
       );
     },
   });
 
-  // chi tiết điều động
+  // chi tiết sửa chữa
 
   const createMaintenanceRepairDetailManyMutation = useMutation({
     mutationFn: async (data: MaintenanceRepairDetailItem[]) => {
-      const res = await api.post("/chitiet-suachua/batch", data);
+      const res = await api.post("/chitiet-suachua/bulk", data);
       return res.data;
     },
     onSuccess: (response, data) => {
-      queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
+      queryClient.invalidateQueries({ queryKey: ["maintenanceRepairPage"] });
 
-      console.log("Tạo chi tiết điều động tài sản thành công");
+      console.log("Tạo chi tiết phiếu sửa chữa thành công");
     },
     onError: (error: any) => {
       console.log(
         error.response?.data?.message ||
           error.message ||
-          "Tạo chi tiết điều động tài sản thất bại",
+          "Tạo chi tiết phiếu sửa chữa thất bại",
       );
     },
   });
   const deleteMaintenanceRepairDetailItemManyMutation = useMutation({
     mutationFn: async (data: string[]) => {
-      const res = await api.delete("/chitiet-suachua/batch", { data });
+      const res = await api.delete("/chitiet-suachua/bulk", { data });
       return res.data;
     },
     onSuccess: (response, data) => {
-      queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
+      queryClient.invalidateQueries({ queryKey: ["maintenanceRepairPage"] });
 
-      console.log("Tạo chi tiết điều động tài sản thành công");
+      console.log("Tạo chi tiết phiếu sửa chữa thành công");
     },
     onError: (error: any) => {
       console.log(
         error.response?.data?.message ||
           error.message ||
-          "Tạo chi tiết điều động tài sản thất bại",
+          "Tạo chi tiết phiếu sửa chữa thất bại",
       );
     },
   });
@@ -279,7 +283,7 @@ export const useMaintenanceRepairMutation = () => {
     mutationFn: async (id: string) => {
       const res = await api.get(`/chitiet-suachua`, {
         params: {
-          iddieudongtaisan: id,
+          idSuaChua: id,
         },
       });
       return res.data;
@@ -292,7 +296,7 @@ export const useMaintenanceRepairMutation = () => {
       return res.data;
     },
     onSuccess: (response, data) => {
-      queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
+      queryClient.invalidateQueries({ queryKey: ["maintenanceRepairPage"] });
 
       console.log("Tạo người ký thành công");
     },
@@ -316,7 +320,7 @@ export const useMaintenanceRepairMutation = () => {
       return res.data;
     },
     onSuccess: (response, data) => {
-      queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
+      queryClient.invalidateQueries({ queryKey: ["maintenanceRepairPage"] });
 
       console.log("Cập nhật người ký thành công");
     },
@@ -334,7 +338,7 @@ export const useMaintenanceRepairMutation = () => {
       return res.data;
     },
     onSuccess: (response, data) => {
-      queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
+      queryClient.invalidateQueries({ queryKey: ["maintenanceRepairPage"] });
 
       console.log("Xóa người ký thành công");
     },
@@ -353,43 +357,18 @@ export const useMaintenanceRepairMutation = () => {
       return res.data;
     },
     onSuccess: (response, data) => {
-      console.log("Lấy chi tiết điều động tài sảnhành công");
+      console.log("Lấy chi tiết phiếu sửa chữahành công");
     },
     onError: (error: any) => {
       console.log(
         error.response?.data?.message ||
           error.message ||
-          "Lấy chi tiết điều động tài sảnn thất bại",
+          "Lấy chi tiết phiếu sửa chữan thất bại",
       );
       return null;
     },
   });
 
-  const getAssetHandoverMutation = useMutation({
-    mutationFn: async (search: string) => {
-      if (!search) return;
-      const res = await api.get(`/bangiaotaisan/paged`, {
-        params: {
-          page: 0,
-          size: 999,
-          search: search,
-          idcongty: idCongTy,
-        },
-      });
-      return res.data.items || [];
-    },
-    onSuccess: (response, data) => {
-      console.log("Lấy biên bản bàn giao thành công");
-    },
-    onError: (error: any) => {
-      console.log(
-        error.response?.data?.message ||
-          error.message ||
-          "Lấy biên bản bàn giao tài sản thất bại",
-      );
-      return [];
-    },
-  });
   // list chu ky theo tai lieu
   const handleSignatureList = async (idTaiLieu: string) => {
     if (!idTaiLieu) return;
@@ -417,16 +396,17 @@ export const useMaintenanceRepairMutation = () => {
       return res.data;
     },
     onSuccess: async (response, data) => {
-      queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
+      queryClient.invalidateQueries({ queryKey: ["maintenanceRepairPage"] });
       data.SignaturesData.forEach((item) => {
         signStatusMutation.mutate({
           idTaiLieu: item.idTaiLieu,
           userId: item.idNguoiKy,
+          repair: data.asset,
         });
       });
       const list = await listNguoiKy([data.asset]);
       socketService.send({
-        type: MessageTypeFunctions.ASSET_TRANSFER,
+        type: MessageTypeFunctions.MAINTENANCE,
         recieve: list,
       });
       showSuccessAlert("Ký thành công");
@@ -440,21 +420,83 @@ export const useMaintenanceRepairMutation = () => {
 
   // cap nhat trang thai ky
   // ky tai lieu
+  const { createManyHistoryAssetMutation, updateAssetOwnershipMutation } =
+    useAssetManagerMutation();
+
+  const {
+    createManyHistoryToolMutation,
+    updateAssetOwnershipMutation: updateAssetOwnershipMutationTool,
+  } = useToolManagerMutation();
   const signStatusMutation = useMutation({
     mutationFn: async ({
       idTaiLieu,
       userId,
+      repair,
     }: {
       idTaiLieu: string;
       userId: string;
+      repair: MaintenanceRepairData;
     }) => {
       const res = await api.post(
         `/suachua/capnhattrangthai?id=${idTaiLieu}&userId=${userId}`,
       );
-      return res.data;
+      return res.data.data;
     },
     onSuccess: (response, data) => {
-      queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
+      if (response === 3) {
+        const taisan = (data.repair.chiTietSuaChuas || []).filter(
+          (item): item is typeof item & { idTaiSan: string } =>
+            Boolean(item.idTaiSan),
+        );
+        const ccdc = (data.repair.chiTietSuaChuas || []).filter(
+          (
+            item,
+          ): item is typeof item & { idCCDC: string; idChiTietCCDC: string } =>
+            Boolean(item.idChiTietCCDC),
+        );
+        if (taisan.length > 0) {
+          updateAssetOwnershipMutation.mutate(
+            taisan.map((item) => ({
+              id: item.idTaiSan,
+              idDonVi: data.repair.idDonViNhan,
+            })),
+          );
+          createManyHistoryAssetMutation.mutate(
+            taisan.map((item, index) => ({
+              id: generateCode("LSDCTS-") + `${item.idTaiSan} -`,
+              idBanGiaoTaiSan: data.repair.id,
+              idTaiSan: item.idTaiSan,
+              idDonViNhan: data.repair.idDonViNhan,
+              idDonViGiao: data.repair.idDonViGiao,
+              thoiGianBanGiao: dayjs(new Date()).format("YYYY-MM-DD"),
+            })),
+          );
+        }
+        if (ccdc.length > 0) {
+          updateAssetOwnershipMutationTool.mutate(
+            ccdc.map((item: any) => ({
+              idCCDCVT: item.idCCDC,
+              idDonViGui: data.repair.idDonViGiao,
+              idDonViNhan: data.repair.idDonViNhan,
+              idTsCon: item.idChiTietCCDC,
+              soLuongBanGiao: item.soLuong,
+              thoiGianBanGiao: now,
+            })),
+          );
+          createManyHistoryToolMutation.mutate(
+            ccdc.map((item: any) => ({
+              id: generateCode("LSDCCCDC-") + `${item.idCCDCVatTu} -`,
+              idCCDCVatTu: item.idCCDC,
+              idChiTietCCDCVatTu: item.idChiTietCCDC,
+              idDonViNhan: data.repair.idDonViNhan,
+              idDonViGiao: data.repair.idDonViGiao,
+              soLuong: item.soLuong,
+              thoiGianBanGiao: now,
+            })),
+          );
+        }
+      }
+      queryClient.invalidateQueries({ queryKey: ["maintenanceRepairPage"] });
 
       console.log("Cập nhật trạng thái ký thành công");
     },
@@ -595,8 +637,6 @@ export const useMaintenanceRepairMutation = () => {
     signMutation,
     handleAssetByDonVi,
     getByIdMutation,
-    getAssetHandoverMutation,
     maintenanceRepairDetailAllMutation,
   };
 };
-

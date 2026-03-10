@@ -343,6 +343,37 @@ export const useToolManagerMutation = (
     },
   });
 
+  const updateAssetOwnershipMutation = useMutation({
+    mutationFn: async (
+      data: {
+        idCCDCVT: string;
+        idDonViGui: string;
+        idDonViNhan: string;
+        idTsCon: string;
+        soLuongBanGiao: number;
+        thoiGianBanGiao: string;
+      }[],
+    ) => {
+      const res = await api.post(
+        `/chitietdonvisohuu/update-so-luong/batch`,
+        data,
+      );
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: ["toolsPage"] });
+
+      console.log("Cập nhật ccdc vật tư theo đơn vị thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Cập nhật ccdc vật tư theo đơn vị thất bại",
+      );
+    },
+  });
+
   const exportExcelMutation = useMutation({
     mutationFn: async () => {
       const res = await api.get("/ccdcvattu/export/excel", {
@@ -583,6 +614,7 @@ export const useToolManagerMutation = (
     exportExcelMutation,
     importExcelMutation,
     createManyHistoryToolMutation,
+    updateAssetOwnershipMutation,
   };
 };
 

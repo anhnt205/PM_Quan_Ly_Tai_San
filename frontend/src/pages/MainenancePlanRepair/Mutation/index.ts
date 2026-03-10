@@ -401,9 +401,28 @@ export const useMaintenancePlanningMutation = () => {
     },
   });
 
+  const getPlanningDetailMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.get(`/kehoach-chitiet/kehoach/${id}`);
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      console.log("Lấy chi tiết kế hoạch sửa chữa thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Lấy chi tiết kế hoạch sửa chữa thất bại",
+      );
+      return null;
+    },
+  });
+
   return {
     createMutation,
     updateMutation,
     deleteMutation,
+    getPlanningDetailMutation,
   };
 };

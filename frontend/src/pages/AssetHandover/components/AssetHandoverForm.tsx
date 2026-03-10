@@ -294,7 +294,6 @@ export default function AssetHandoverForm({
   });
 
   useEffect(() => {
-    console.log("selectedAssetHandover: ", selectedAssetHandover);
     if (selectedAssetHandover) {
       formik.setValues({
         ...selectedAssetHandover,

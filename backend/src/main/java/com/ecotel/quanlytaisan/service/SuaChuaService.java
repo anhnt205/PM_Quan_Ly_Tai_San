@@ -276,6 +276,19 @@ public class SuaChuaService {
         return suaChuaDao.delete(id);
     }
 
+    // bulk operations
+    public void bulkInsert(List<SuaChua> list) {
+        suaChuaDao.batchInsert(list);
+    }
+
+    public void bulkUpdate(List<SuaChua> list) {
+        suaChuaDao.batchUpdate(list);
+    }
+
+    public void bulkDelete(List<String> ids) {
+        suaChuaDao.batchDelete(ids);
+    }
+
     // ==================== CÁC PHƯƠNG THỨC XỬ LÝ KÝ DUYỆT ====================
 
     public int updateTrangThaiKy(String id, String userId) {

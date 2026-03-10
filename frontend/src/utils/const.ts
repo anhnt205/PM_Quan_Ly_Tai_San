@@ -4,6 +4,7 @@ export const MessageTypeFunctions = {
   TOOL_TRANSFER: "TOOL_TRANSFER",
   TOOL_HANDOVER: "TOOL_HANDOVER",
   ALL_FUNCTION: "ALL_FUNCTION",
+  MAINTENANCE: "MAINTENANCE",
 };
 export const MessageTypeActions = {
   CREATE: "CREATE",

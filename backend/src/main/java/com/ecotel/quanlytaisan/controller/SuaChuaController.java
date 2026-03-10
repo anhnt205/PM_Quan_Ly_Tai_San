@@ -123,6 +123,27 @@ public class SuaChuaController {
         return ResponseEntity.noContent().build();
     }
 
+    // Bulk create
+    @PostMapping("/bulk-create")
+    public ResponseEntity<?> bulkCreate(@RequestBody List<SuaChua> list) throws SQLException {
+        suaChuaService.bulkInsert(list);
+        return ResponseEntity.ok().build();
+    }
+
+    // Bulk update (primary path)
+    @PutMapping("/bulk")
+    public ResponseEntity<?> bulkUpdate(@RequestBody List<SuaChua> list) throws SQLException {
+        suaChuaService.bulkUpdate(list);
+        return ResponseEntity.ok().build();
+    }
+
+    // Bulk delete
+    @DeleteMapping("/bulk")
+    public ResponseEntity<?> bulkDelete(@RequestBody List<String> ids) throws SQLException {
+        suaChuaService.bulkDelete(ids);
+        return ResponseEntity.ok().build();
+    }
+
     // ==================== CÁC ENDPOINT XỬ LÝ KÝ DUYỆT ====================
     /**
      * Gộp toàn bộ ký duyệt vào 1 API

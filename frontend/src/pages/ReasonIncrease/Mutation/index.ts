@@ -5,11 +5,7 @@ import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import { s } from "../../../utils/helpers";
 import * as XLSX from "xlsx";
 
-export const useReasonIncreaseMutation = (
-  page?: number,
-  pageSize?: number,
-  searchValue?: string,
-) => {
+export const useReasonIncreaseMutation = () => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: async (data: ReasonIncreaseType) => {
@@ -83,23 +79,23 @@ export const useReasonIncreaseMutation = (
     },
   });
 
-   const deleteAllMutation = useMutation({
-     mutationFn: async () => {
-       const res = await api.delete(`/lydotang/delete-all`);
-       return res.data.message;
-     },
-     onSuccess: (data) => {
-       queryClient.invalidateQueries({ queryKey: ["reasonIncreasesPage"] });
-       showSuccessAlert(data || "Xóa lý do tăng thành công");
-     },
-     onError: (error: any) => {
-       showErrorAlert(
-         error.response?.data?.message ||
-           error.message ||
-           "Xóa lý do tăng thất bại",
-       );
-     },
-   });
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.delete(`/lydotang/delete-all`);
+      return res.data.message;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["reasonIncreasesPage"] });
+      showSuccessAlert(data || "Xóa lý do tăng thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa lý do tăng thất bại",
+      );
+    },
+  });
 
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: ReasonIncreaseType[]) => {
@@ -183,6 +179,9 @@ export const useReasonIncreaseMutation = (
               reject(new Error(errorMessages.join("\n")));
             } else if (listImport.length > 0) {
               const res = await api.post("/lydotang/batch", listImport);
+              queryClient.invalidateQueries({
+                queryKey: ["reasonIncreasesPage"],
+              });
               resolve(res.data);
             } else {
               reject(new Error("File không có dữ liệu hợp lệ"));

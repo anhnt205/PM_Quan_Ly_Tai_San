@@ -9,9 +9,7 @@ public class ChiTietSuaChuaDTO {
     private String id;
     private String idSuaChua;
     private String idTaiSan;
-    private String tenTaiSan;
-    private String kyHieu;
-    private String soKyHieu;
+    private String ten;
     private String donViTinh;
     private String idCCDC;
     private String idChiTietCCDC;

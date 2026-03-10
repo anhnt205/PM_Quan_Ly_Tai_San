@@ -1,10 +1,10 @@
 export interface MaintenanceRepairDetailItem {
   id: string;
-  idSuaChuaBaoDuong: string;
+  idSuaChua: string;
   tenTaiSan: string;
-  idTaiSan?: string;
-  idChiTietCCDC?: string;
-  idCCDC?: string;
+  idTaiSan: string | null;
+  idChiTietCCDC: string | null;
+  idCCDC: string | null;
   soLuong?: number;
   ghiChu?: string;
   ngayTao?: string;
@@ -84,5 +84,5 @@ export interface MaintenanceRepairData {
   ngayCapNhat: string;
   nguoiKyList?: Signer[];
   initialChiTiet: [];
-  chiTietSuaChuaBaoDuongDTOS?: MaintenanceRepairDetailItem[];
+  chiTietSuaChuas?: MaintenanceRepairDetailItem[];
 }

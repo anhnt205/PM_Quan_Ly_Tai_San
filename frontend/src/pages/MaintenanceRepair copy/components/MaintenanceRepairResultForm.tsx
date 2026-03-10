@@ -89,7 +89,7 @@ export default function MaintenanceRepairResultForm({
         selectedRepair?.chiTietSuaChuaBaoDuongDTOS || [
           {
             id: "",
-            idSuaChuaBaoDuong: "",
+            idSuaChua: "",
             tentaiSan: "",
             idTaiSan: "",
             soLuong: 0,
@@ -556,7 +556,7 @@ export default function MaintenanceRepairResultForm({
                       ...formik.values.chiTietSuaChuaBaoDuongDTOS,
                       {
                         id: "",
-                        idSuaChuaBaoDuong: "",
+                        idSuaChua: "",
                         tentaiSan: "",
                         idTaiSan: "",
                         soLuong: 0,

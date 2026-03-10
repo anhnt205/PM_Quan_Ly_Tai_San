@@ -26,7 +26,18 @@ import { GridColDef } from "@mui/x-data-grid";
 import { Trash2, FileText } from "lucide-react";
 import { SignHeader } from "../../components/SignDocument/SignHeader";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
-import { showStatus, showShareStatus } from "./config";
+import {
+  showStatus,
+  showShareStatus,
+  showDownloadFile,
+  ShowPermissionSigning,
+  getPermissionSigning,
+  showStatusDocument,
+  handleSendToSigner,
+  canSign,
+  handleSignDocument,
+  isCheckShowShare,
+} from "./config";
 import {
   useMaintenanceRepairMutation,
   useMaintenanceRepairPageQuery,
@@ -35,6 +46,9 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { useMaintenancePlanningPageQuery } from "../MainenancePlanRepair/Mutation";
 import { showPeriod, showPlanType } from "../MainenancePlanRepair/config";
 import { StatusPlan } from "../../utils/const";
+import S3Service from "../../services/S3Service";
+import SignDocumentForm from "./components/SignDocumentForm";
+import { SignaturesData } from "./types";
 
 export default function MaintenanceRepair() {
   const { user } = useSelector((state: any) => state.user);
@@ -68,6 +82,7 @@ export default function MaintenanceRepair() {
       paginationModel.pageSize,
       undefined,
       status !== "" ? parseInt(status) : undefined,
+      user?.taiKhoan?.tenDangNhap,
     );
 
   const searchDebounce = useDebounce(searchValue, 600);
@@ -76,7 +91,7 @@ export default function MaintenanceRepair() {
       paginationModel.page,
       paginationModel.pageSize,
       searchDebounce,
-      status,
+      undefined,
     );
 
   // Repair mutations
@@ -86,6 +101,8 @@ export default function MaintenanceRepair() {
     cancelMutation,
     deleteOneMutation: deleteRepairMutation,
     deleteManyMutation: deleteManyRepairMutation,
+    updateManyMutation,
+    signMutation,
   } = useMaintenanceRepairMutation();
 
   const handleEdit = () => {
@@ -93,17 +110,20 @@ export default function MaintenanceRepair() {
   };
 
   const handleClose = useCallback(() => {
+    setSelectedIds([]);
+    setSelectedDocument(null);
+    setSearchValue("");
+    setShowSignDocument(false);
     setSelectedRepair(null);
     setShowForm(false);
-    setShowResultForm(false);
-    setReadOnly(false);
     setShowSidebar(false);
+    setReadOnly(false);
+    setMaintenanceRepairs([]);
   }, []);
 
   const handleRowClick = useCallback(
     (params: any) => {
-      const fullRepair = maintenanceRepairs.find((r) => r.id === params.row.id);
-      setSelectedRepair(fullRepair || params.row);
+      setSelectedRepair(params.row);
       setShowForm(true);
       setShowResultForm(false);
       setReadOnly(true);
@@ -143,6 +163,16 @@ export default function MaintenanceRepair() {
     ],
   );
 
+  const handleSign = (data: SignaturesData[]) => {
+    signMutation.mutate({
+      SignaturesData: data,
+      asset: selectedRepair,
+    });
+  };
+
+  const handleSend = (items: any[]) => {
+    handleSendToSigner(items, updateManyMutation.mutateAsync, handleClose);
+  };
   const handleCancel = useCallback(async () => {
     if (selectedRepair) {
       const confirm = await showConfirmAlert(
@@ -157,29 +187,15 @@ export default function MaintenanceRepair() {
     }
   }, [selectedRepair, handleClose, cancelMutation]);
 
-  const handleDeleteSelected = useCallback(
-    (ids: string[]) => {
-      deleteManyRepairMutation.mutate(ids, {
-        onSuccess: () => {
-          setSelectedIds([]);
-          if (selectedRepair && ids.includes(selectedRepair.id)) {
-            handleClose();
-          }
-        },
-      });
-    },
-    [selectedRepair, handleClose, deleteManyRepairMutation],
-  );
-
   const handleDelete = useCallback(
-    async (rowId: string) => {
+    async (data: any) => {
       const confirm = await showConfirmAlert(
-        `Xóa phiếu sửa chữa bảo dưỡng "${rowId}"`,
+        `Xóa phiếu sửa chữa bảo dưỡng "${data.id}"`,
       );
       if (confirm?.isConfirmed) {
-        deleteRepairMutation.mutate(rowId, {
+        deleteRepairMutation.mutate(data, {
           onSuccess: () => {
-            if (selectedRepair?.id === rowId) handleClose();
+            handleClose();
           },
         });
       }
@@ -187,45 +203,54 @@ export default function MaintenanceRepair() {
     [handleClose, selectedRepair, deleteRepairMutation],
   );
 
-  const handleViewPdf = useCallback(
-    async (_fileName: string, _filePath: string) => {
-      // TODO: Implement S3 file preview
-    },
-    [],
-  );
+  const [repairDetailDetail, setRepairDetail] = useState<any[]>([]);
+  const handleViewSignAssets = async (fileName: string, item: any) => {
+    setSelectedDocument(fileName);
+    setShowSignDocument(true);
+    setSelectedRepair(item);
+    setRepairDetail(item.chiTietDieuDongTaiSanDTOS);
+    setShowSidebar(true); // Hiện sidebar khi ký
+  };
   const statusOptions: FilterOption[] = [
     {
       label: "Tất cả",
-      value: "",
       count:
-        planPageData?.groupCounts?.[StatusPlan.PENDING] +
-          planPageData?.groupCounts?.[StatusPlan.PROGRESS] +
-          planPageData?.groupCounts?.[StatusPlan.COMPLETED] || 0,
-      color: "primary",
+        (repairPageData?.groupCounts?.["Loai_0"] ?? 0) +
+        (repairPageData?.groupCounts?.["Loai_1"] ?? 0) +
+        (repairPageData?.groupCounts?.["Loai_2"] ?? 0) +
+        (repairPageData?.groupCounts?.["Loai_3"] ?? 0),
+      color: "default",
+      value: "",
     },
     {
-      label: "Chưa thực hiện",
-      value: StatusPlan.PENDING,
-      count: planPageData?.groupCounts?.[StatusPlan.PENDING] ?? 0,
-      color: "warning",
+      label: "Nháp",
+      count: repairPageData?.groupCounts?.["Loai_0"] ?? 0,
+      color: "default",
+      value: "0",
     },
     {
-      label: "Đang thực hiện",
-      value: StatusPlan.PROGRESS,
-      count: planPageData?.groupCounts?.[StatusPlan.PROGRESS] ?? 0,
+      label: "Duyệt",
+      count: repairPageData?.groupCounts?.["Loai_1"] ?? 0,
       color: "info",
+      value: "1",
     },
     {
-      label: "Đã hoàn thành",
-      value: StatusPlan.COMPLETED,
-      count: planPageData?.groupCounts?.[StatusPlan.COMPLETED] ?? 0,
+      label: "Hủy",
+      count: repairPageData?.groupCounts?.["Loai_2"] ?? 0,
+      color: "error",
+      value: "2",
+    },
+    {
+      label: "Hoàn thành",
+      count: repairPageData?.groupCounts?.["Loai_3"] ?? 0,
       color: "success",
+      value: "3",
     },
   ];
   const columns: GridColDef<any>[] = useMemo(
     () => [
       {
-        field: "tenPhieu",
+        field: "tenSuaChua",
         headerName: "Tên Phiếu",
         width: 180,
         headerAlign: "center",
@@ -253,8 +278,8 @@ export default function MaintenanceRepair() {
       },
 
       {
-        field: "ngayYeuCauHoanThanh",
-        headerName: "Thời gian yêu cầu hoàn thành",
+        field: "ngayKetThucDuKien",
+        headerName: "Thời gian dự kiến hoàn thành",
         width: 180,
         headerAlign: "center",
         align: "center",
@@ -274,6 +299,13 @@ export default function MaintenanceRepair() {
         width: 160,
         headerAlign: "center",
         align: "center",
+        renderCell: (params) => {
+          return showDownloadFile(
+            params.value,
+            () => S3Service.download(params.row.duongDanFile),
+            // handleDownloadFile(params.value),
+          );
+        },
       },
 
       {
@@ -306,15 +338,19 @@ export default function MaintenanceRepair() {
         width: 140,
         headerAlign: "center",
         align: "center",
-        renderCell: (params) => showStatus(params.row?.trangThai ?? 0),
+        renderCell: (params) => showStatus(params.row.trangThai ?? 0),
       },
+
       {
-        field: "trangThai",
-        headerName: "Trạn thái kí",
+        field: "TrangThaiKy",
+        headerName: "Trạng thái ký",
         width: 140,
         headerAlign: "center",
         align: "center",
-        renderCell: (params) => showStatus(params.row?.trangThai ?? 0),
+        renderCell: (params) =>
+          ShowPermissionSigning(
+            getPermissionSigning(params.row, user, allStaffs),
+          ),
       },
       {
         field: "share",
@@ -322,11 +358,11 @@ export default function MaintenanceRepair() {
         width: 140,
         headerAlign: "center",
         align: "center",
-        renderCell: (params) => {
-          const isMyCreated =
-            params.row?.nguoiTao === user?.taiKhoan?.tenDangNhap;
-          return showShareStatus(params.row?.share ?? false, isMyCreated);
-        },
+        renderCell: (params) =>
+          showShareStatus(
+            params.row?.share ?? false,
+            params.row?.nguoiTao === user?.taiKhoan?.tenDangNhap,
+          ),
       },
 
       {
@@ -341,35 +377,12 @@ export default function MaintenanceRepair() {
           const hasFile = !!params.row?.tenFile;
           return (
             <Box sx={{ display: "flex", gap: 0.5, justifyContent: "center" }}>
-              <Tooltip title={hasFile ? "Xem tài liệu" : "Chưa có tài liệu"}>
-                <span>
-                  <IconButton
-                    color="info"
-                    disabled={!hasFile}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleViewPdf(
-                        params.row.tenFile,
-                        params.row.duongDanFile,
-                      );
-                    }}
-                    sx={{
-                      padding: "4px",
-                      "&:hover:not(:disabled)": {
-                        bgcolor: "rgba(2, 136, 209, 0.08)",
-                      },
-                    }}
-                  >
-                    <FileText size={20} strokeWidth={2} />
-                  </IconButton>
-                </span>
-              </Tooltip>
               <Tooltip title="Xóa">
                 <IconButton
                   color="error"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDelete(params.row.id);
+                    handleDelete(params.row);
                   }}
                   sx={{
                     padding: "4px",
@@ -384,7 +397,7 @@ export default function MaintenanceRepair() {
         },
       },
     ],
-    [user, allDepartments, handleRowClick, handleDelete, handleViewPdf],
+    [user, allDepartments, handleRowClick, handleDelete],
   );
 
   const planningColumns = [
@@ -559,7 +572,7 @@ export default function MaintenanceRepair() {
                           <TableChart />
                         </Badge>
                       }
-                      label="Kết quả sửa chữa bảo dưỡng"
+                      label="Kế hoạch sửa chữa bảo dưỡng"
                       iconPosition="top"
                     />
                   </Tabs>
@@ -613,10 +626,16 @@ export default function MaintenanceRepair() {
                   onSelectionChange={(ids) => {
                     setSelectedIds(ids);
                   }}
-                  onDelete={handleDeleteSelected}
-                  showDelete={true}
+                  onDelete={() => {}}
+                  showDelete={false}
+                  searchValue={searchValue}
+                  setSearchValue={setSearchValue}
+                  handleSendToSigner={handleSend}
+                  onSign={handleViewSignAssets}
+                  handleSignDocument={handleSignDocument}
+                  isCheckShowShare={isCheckShowShare}
+                  canSign={canSign}
                 />
-                )
               </Grid>
 
               {/* Sidebar - only for tab 0 */}
@@ -640,63 +659,19 @@ export default function MaintenanceRepair() {
           </Box>
         </>
       ) : (
-        <Dialog
-          fullScreen
-          open={showSignDocument}
-          onClose={() => {
-            setShowSignDocument(false);
-            setSelectedDocument(null);
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              height: "100vh",
-              bgcolor: "#ced4da",
-            }}
-          >
-            <SignHeader
-              pagesCount={1}
-              handleExportPDF={() => {}}
-              onCancel={() => {
-                setShowSignDocument(false);
-                setSelectedDocument(null);
-              }}
-            />
-
-            <Box
-              sx={{
-                flex: 1,
-                overflowY: "auto",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                p: 4,
-              }}
-            >
-              <Box
-                sx={{
-                  width: "100%",
-                  maxWidth: "850px",
-                  bgcolor: "white",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-                  lineHeight: 0,
-                }}
-              >
-                <iframe
-                  src={`${selectedDocument}#toolbar=0&navpanes=0&scrollbar=0&view=FitW`}
-                  style={{
-                    width: "100%",
-                    height: "1200px",
-                    border: "none",
-                  }}
-                  title="PDF Viewer"
-                />
-              </Box>
-            </Box>
-          </Box>
-        </Dialog>
+        <SignDocumentForm
+          selectedIds={selectedIds}
+          document={selectedDocument}
+          onCancel={handleClose}
+          onSign={handleSign}
+          assetTransferDetail={repairDetailDetail}
+          showSignerSidebar={showSidebar}
+          allUnits={allUnits}
+          allCurrentStatus={allCurrentStatus}
+          fullscreen={true}
+          staffs={allStaffs}
+          isEdit={false}
+        />
       )}
     </>
   );
