@@ -224,6 +224,23 @@ public class KeHoachSuaChuaService {
         return keHoachSuaChuaDao.update(entity);
     }
 
+    public int updateTrangThai(String id, String trangThai) {
+        List<String> validValues = List.of("CHUA_THUC_HIEN", "DANG_THUC_HIEN", "DA_HOAN_THANH");
+        if (!validValues.contains(trangThai)) {
+            throw new IllegalArgumentException("Trạng thái không hợp lệ: " + trangThai);
+        }
+
+        // Kiểm tra trạng thái hiện tại
+        KeHoachSuaChua existing = keHoachSuaChuaDao.findById(id);
+        if (existing == null) {
+            throw new IllegalArgumentException("Không tìm thấy kế hoạch với ID: " + id);
+        }
+        if ("DA_HOAN_THANH".equals(existing.getTrangThai())) {
+            throw new IllegalStateException("Kế hoạch đã hoàn thành, không thể thay đổi trạng thái");
+        }
+        return keHoachSuaChuaDao.updateTrangThai(id, trangThai);
+    }
+
     public int delete(String id) throws SQLException {
         // Xóa các công việc và chi tiết trước (cascade có thể tự động nếu DB có ON DELETE CASCADE)
         keHoachCongViecSuaChuaDao.deleteByIdKeHoach(id);

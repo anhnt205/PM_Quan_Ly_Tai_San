@@ -327,6 +327,15 @@ public class KeHoachSuaChuaDao {
         return null;
     }
 
+    public int updateTrangThai(String id, String trangThai) {
+        String sql = "UPDATE KeHoachSuaChua SET TrangThai = ?, NgayCapNhat = ? WHERE Id = ?";
+        int result = jdbcTemplate.update(sql, trangThai, new Date(), id);
+        if (result > 0) {
+            CompletableFuture.runAsync(this::refreshCache);
+        }
+        return result;
+    }
+
     public int delete(String id) {
         String sql = "DELETE FROM KeHoachSuaChua WHERE Id = ?";
         int result = jdbcTemplate.update(sql, id);

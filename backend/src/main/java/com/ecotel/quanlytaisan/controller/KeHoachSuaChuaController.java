@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/kehoach-suachua")
@@ -103,6 +104,30 @@ public class KeHoachSuaChuaController {
         }
         return ResponseEntity.ok(updated);
     }
+
+    /**
+     * Cập nhật trạng thái kế hoạch sửa chữa
+     * trangThai: CHUA_THUC_HIEN | DANG_THUC_HIEN | DA_HOAN_THANH
+     */
+    @PatchMapping("/{id}/trang-thai")
+    public ResponseEntity<?> updateTrangThai(
+            @PathVariable String id,
+            @RequestParam String trangThai
+    ) {
+        try {
+            int result = keHoachSuaChuaService.updateTrangThai(id, trangThai);
+            if (result == 0) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(Map.of("message", "Cập nhật thành công", "trangThai", trangThai));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)  // 409
+                    .body(Map.of("message", e.getMessage()));
+        }
+    }
+
 
     /**
      * Xóa kế hoạch sửa chữa
