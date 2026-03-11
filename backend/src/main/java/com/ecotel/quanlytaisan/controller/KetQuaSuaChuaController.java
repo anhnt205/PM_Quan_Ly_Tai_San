@@ -16,7 +16,7 @@ public class KetQuaSuaChuaController {
     private KetQuaSuaChuaService ketQuaSuaChuaService;
 
     /**
-     * Lấy kết quả theo phiếu sửa chữa
+     * Lấy kết quả theo phiếu sửa chữa (kèm chi tiết)
      */
     @GetMapping("/suachua/{idSuaChua}")
     public ResponseEntity<KetQuaSuaChuaDTO> findByIdSuaChua(@PathVariable String idSuaChua) {
@@ -52,7 +52,8 @@ public class KetQuaSuaChuaController {
      * Cập nhật kết quả
      */
     @PutMapping("/{id}")
-    public ResponseEntity<KetQuaSuaChua> update(@PathVariable String id, @RequestBody KetQuaSuaChua entity) {
+    public ResponseEntity<KetQuaSuaChua> update(@PathVariable String id,
+                                                @RequestBody KetQuaSuaChua entity) {
         entity.setId(id);
         KetQuaSuaChua updated = ketQuaSuaChuaService.update(entity);
         if (updated == null) {

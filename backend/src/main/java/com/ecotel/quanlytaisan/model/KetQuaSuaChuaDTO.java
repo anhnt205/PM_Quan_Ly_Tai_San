@@ -1,130 +1,110 @@
 package com.ecotel.quanlytaisan.model;
 
 import lombok.Data;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import java.util.Date;
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
 public class KetQuaSuaChuaDTO {
+
     private String id;
-    private String idSuaChua;
-    private String maKetQua;
-    private String tenKetQua;
+    private String idCongTy;
+    private String maSuaChua;
+    private String tenSuaChua;
+    private String mucDoSuCo;
+    private String mucDoUuTien;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
-    private Date ngayBatDauThucTe;
+    private String idDonViGiao;
+    private String tenDonViGiao;            // JOIN PhongBan
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
-    private Date ngayKetThucThucTe;
+    private String idDonViNhan;
+    private String tenDonViNhan;            // JOIN PhongBan
 
-    private Integer thoiGianThucHienGio;
-    private String noiDungCongViec;
-    private String ketQuaDatDuoc;
+    private String idNguoiKyNhay;
+    private String tenNguoiKyNhay;          // JOIN NhanVien
 
-    private String idDonViThucHien;
-    private String tenDonViThucHien;
-    private String nhanSuThucHien;      // JSON
-    private String idTruongNhom;
-    private String tenTruongNhom;
+    private Boolean trangThaiKyNhay;
+    private Boolean nguoiLapPhieuKyNhay;
+    private String ngayKetThucDuKien;
 
-    private String danhGiaTinhTrang;
-    private Integer trangThaiHoatDong;   // 1:Tốt,2:Yếu,3:Chưa dùng
-    private Double tongChiPhi;
-    private String vatTuTieuHao;         // JSON
+    private String idTrinhDuyetCapPhong;
+    private String tenTrinhDuyetCapPhong;   // JOIN NhanVien
+    private Boolean trinhDuyetCapPhongXacNhan;
 
-    private Boolean daXacNhan;
-    private String idDaiDienBenGiao;
-    private String tenDaiDienBenGiao;
-    private Boolean daiDienBenGiaoXacNhan;
-    private String idDaiDienBenNhan;
-    private String tenDaiDienBenNhan;
-    private Boolean daiDienBenNhanXacNhan;
+    private String idTrinhDuyetGiamDoc;
+    private String tenTrinhDuyetGiamDoc;    // JOIN NhanVien
+    private Boolean trinhDuyetGiamDocXacNhan;
 
-    private Integer trangThai;           // 0:Nháp,1:Gửi,2:Chờ duyệt,3:Duyệt,4:Từ chối
-    private String idNguoiDuyet;
-    private String tenNguoiDuyet;
-
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
-    private Date ngayDuyet;
-
-    private String lyDoTuChoi;
-    private String note;
-    private String ghiChu;
+    private String idDonViDeNghi;
     private String duongDanFile;
     private String tenFile;
     private String taiLieuBanGhi;
-
     private Boolean byStep;
-    private String idGiamDoc;
-    private String tenGiamDoc;
-    private Boolean giamDocKy;
-
     private String soQuyetDinh;
-
-    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Ho_Chi_Minh")
-    private Date ngayQuyetDinh;
-
-    private String diaDiemQuyetDinh;
-    private Boolean share;
-
-    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Ho_Chi_Minh")
-    private Date ngayTaoChungTu;
-
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
-    private Date ngayTao;
-
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
-    private Date ngayCapNhat;
-
     private String nguoiTao;
-    private String nguoiCapNhat;
-    private Boolean isActive;
+    private Boolean share;
+    private String ngayTao;
+    private Boolean daBanGiao;
+    private Boolean coPhieuBanGiao;
+    private String taiLieuCuoi;
+    private Integer loai;
+    private Integer trangThai;
+    private String idKeHoach;
+    private String ngayCapNhat;
+    private String idLoaiSuaChua;
+    private String ghiChu;
+    private String idSuaChua;
+    private BigDecimal chiPhiPhanCong;
+    private BigDecimal chiPhiThueNgoai;
 
     private List<ChiTietKetQuaSuaChuaDTO> chiTietKetQuaSuaChuas;
 
-    // Custom getters
-    public Boolean getDaXacNhan() {
-        return daXacNhan != null ? daXacNhan : false;
+    // Custom getters với default value
+    public Boolean getTrangThaiKyNhay() {
+        return trangThaiKyNhay != null ? trangThaiKyNhay : false;
     }
 
-    public Boolean getDaiDienBenGiaoXacNhan() {
-        return daiDienBenGiaoXacNhan != null ? daiDienBenGiaoXacNhan : false;
+    public Boolean getNguoiLapPhieuKyNhay() {
+        return nguoiLapPhieuKyNhay != null ? nguoiLapPhieuKyNhay : false;
     }
 
-    public Boolean getDaiDienBenNhanXacNhan() {
-        return daiDienBenNhanXacNhan != null ? daiDienBenNhanXacNhan : false;
+    public Boolean getTrinhDuyetCapPhongXacNhan() {
+        return trinhDuyetCapPhongXacNhan != null ? trinhDuyetCapPhongXacNhan : false;
     }
 
-    public Integer getTrangThai() {
-        return trangThai != null ? trangThai : 0;
-    }
-
-    public Integer getTrangThaiHoatDong() {
-        return trangThaiHoatDong != null ? trangThaiHoatDong : 0;
+    public Boolean getTrinhDuyetGiamDocXacNhan() {
+        return trinhDuyetGiamDocXacNhan != null ? trinhDuyetGiamDocXacNhan : false;
     }
 
     public Boolean getByStep() {
         return byStep != null ? byStep : false;
     }
 
-    public Boolean getGiamDocKy() {
-        return giamDocKy != null ? giamDocKy : false;
-    }
-
     public Boolean getShare() {
         return share != null ? share : false;
     }
 
-    public Boolean getIsActive() {
-        return isActive != null ? isActive : false;
+    public Boolean getDaBanGiao() {
+        return daBanGiao != null ? daBanGiao : false;
     }
 
-    public Double getTongChiPhi() {
-        return tongChiPhi != null ? tongChiPhi : 0.0;
+    public Boolean getCoPhieuBanGiao() {
+        return coPhieuBanGiao != null ? coPhieuBanGiao : false;
     }
 
-    public Integer getThoiGianThucHienGio() {
-        return thoiGianThucHienGio != null ? thoiGianThucHienGio : 0;
+    public Integer getLoai() {
+        return loai != null ? loai : 0;
+    }
+
+    public Integer getTrangThai() {
+        return trangThai != null ? trangThai : 0;
+    }
+
+    public BigDecimal getChiPhiPhanCong() {
+        return chiPhiPhanCong != null ? chiPhiPhanCong : BigDecimal.ZERO;
+    }
+
+    public BigDecimal getChiPhiThueNgoai() {
+        return chiPhiThueNgoai != null ? chiPhiThueNgoai : BigDecimal.ZERO;
     }
 }

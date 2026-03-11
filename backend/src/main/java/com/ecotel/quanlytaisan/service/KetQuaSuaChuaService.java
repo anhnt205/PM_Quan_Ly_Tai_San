@@ -45,15 +45,18 @@ public class KetQuaSuaChuaService {
     }
 
     public KetQuaSuaChua update(KetQuaSuaChua entity) {
+        KetQuaSuaChua existing = ketQuaSuaChuaDao.findById(entity.getId());
+        if (existing == null) {
+            return null;
+        }
         return ketQuaSuaChuaDao.update(entity);
     }
 
     public int delete(String id) {
-        // Chi tiết kết quả sẽ tự xóa nếu có ON DELETE CASCADE
         return ketQuaSuaChuaDao.delete(id);
     }
 
-    // Import CSV/Excel (nếu cần)
+    // Import CSV (nếu cần)
     public List<KetQuaSuaChua> readCsv(MultipartFile file) throws IOException {
         List<KetQuaSuaChua> list = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(
@@ -73,6 +76,7 @@ public class KetQuaSuaChuaService {
         return list;
     }
 
+    // Import Excel (nếu cần)
     public List<KetQuaSuaChua> readExcel(MultipartFile file) throws IOException {
         List<KetQuaSuaChua> list = new ArrayList<>();
         Workbook workbook = WorkbookFactory.create(file.getInputStream());
