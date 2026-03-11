@@ -123,12 +123,13 @@ public class KetQuaSuaChuaService {
             LocalDateTime toDate,
             String search,
             String userId,
+            String idDonViGiao,  // <-- THÊM
             int page,
             int size) {
 
-        // Lấy tất cả dữ liệu theo bộ lọc cơ bản (không phân trang)
         List<KetQuaSuaChuaDTO> allItems = ketQuaSuaChuaDao.findByFilters(
-                idCongTy, trangThai, fromDate, toDate, 0, Integer.MAX_VALUE);
+                idCongTy, trangThai, fromDate, toDate, idDonViGiao,  // <-- THÊM
+                0, Integer.MAX_VALUE);
 
         // Lọc theo quyền ký nếu có userId
         if (userId != null && !userId.trim().isEmpty()) {
@@ -287,7 +288,7 @@ public class KetQuaSuaChuaService {
      */
     public List<KetQuaSuaChuaDTO> getByUserId(String userId) {
         // Lấy tất cả phiếu (có thể giới hạn theo công ty nếu cần)
-        List<KetQuaSuaChuaDTO> all = ketQuaSuaChuaDao.findByFilters(null, null, null, null, 0, Integer.MAX_VALUE);
+        List<KetQuaSuaChuaDTO> all = ketQuaSuaChuaDao.findByFilters(null, null, null, null, null, 0, Integer.MAX_VALUE);
 
         return all.stream()
                 .filter(item -> isUserTurnToSign(item, userId))
@@ -419,7 +420,7 @@ public class KetQuaSuaChuaService {
      * Lấy danh sách theo loại
      */
     public List<KetQuaSuaChuaDTO> getByLoai(int loai) {
-        List<KetQuaSuaChuaDTO> all = ketQuaSuaChuaDao.findByFilters(null, null, null, null, 0, Integer.MAX_VALUE);
+        List<KetQuaSuaChuaDTO> all = ketQuaSuaChuaDao.findByFilters(null, null, null, null, null, 0, Integer.MAX_VALUE);
         return all.stream()
                 .filter(item -> item.getLoai() != null && item.getLoai() == loai)
                 .peek(item -> {

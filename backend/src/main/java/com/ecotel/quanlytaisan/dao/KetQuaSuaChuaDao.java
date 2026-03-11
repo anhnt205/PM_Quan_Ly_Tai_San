@@ -109,6 +109,7 @@ public class KetQuaSuaChuaDao {
 
     public List<KetQuaSuaChuaDTO> findByFilters(String idCongTy, Integer trangThai,
                                                 LocalDateTime fromDate, LocalDateTime toDate,
+                                                String idDonViGiao,
                                                 int page, int size) {
         String sql = """
         SELECT
@@ -155,16 +156,17 @@ public class KetQuaSuaChuaDao {
             kq.ChiPhiPhanCong,
             kq.ChiPhiThueNgoai
         FROM ketquasuachua kq
-            LEFT JOIN PhongBan pbGiao    ON kq.IdDonViGiao            = pbGiao.Id
-            LEFT JOIN PhongBan pbNhan    ON kq.IdDonViNhan            = pbNhan.Id
-            LEFT JOIN NhanVien nvKyNhay  ON kq.IdNguoiKyNhay          = nvKyNhay.Id
-            LEFT JOIN NhanVien nvCapPhong ON kq.IdTrinhDuyetCapPhong  = nvCapPhong.Id
-            LEFT JOIN NhanVien nvGiamDoc  ON kq.IdTrinhDuyetGiamDoc   = nvGiamDoc.Id
+            LEFT JOIN PhongBan pbGiao     ON kq.IdDonViGiao           = pbGiao.Id
+            LEFT JOIN PhongBan pbNhan     ON kq.IdDonViNhan            = pbNhan.Id
+            LEFT JOIN NhanVien nvKyNhay   ON kq.IdNguoiKyNhay         = nvKyNhay.Id
+            LEFT JOIN NhanVien nvCapPhong ON kq.IdTrinhDuyetCapPhong   = nvCapPhong.Id
+            LEFT JOIN NhanVien nvGiamDoc  ON kq.IdTrinhDuyetGiamDoc    = nvGiamDoc.Id
         WHERE 1=1
             AND (? IS NULL OR kq.IdCongTy = ?)
             AND (? IS NULL OR kq.TrangThai = ?)
             AND (? IS NULL OR kq.NgayTao >= ?)
             AND (? IS NULL OR kq.NgayTao <= ?)
+            AND (? IS NULL OR kq.IdDonViGiao = ?)
         ORDER BY kq.NgayTao DESC
         LIMIT ? OFFSET ?
     """;
@@ -176,6 +178,7 @@ public class KetQuaSuaChuaDao {
                 trangThai, trangThai,
                 fromDate, fromDate,
                 toDate, toDate,
+                idDonViGiao, idDonViGiao,
                 size, offset);
     }
 

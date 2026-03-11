@@ -38,6 +38,7 @@ public class KetQuaSuaChuaController {
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate denNgay,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String userId,
+            @RequestParam(required = false) String idDonViGiao,  // <-- THÊM
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
@@ -45,7 +46,9 @@ public class KetQuaSuaChuaController {
         LocalDateTime toDateTime = (denNgay != null) ? denNgay.atTime(LocalTime.MAX) : null;
 
         PageResponse<KetQuaSuaChuaDTO> response = ketQuaSuaChuaService.findWithFilters(
-                idCongTy, trangThai, fromDateTime, toDateTime, search, userId, page, size);
+                idCongTy, trangThai, fromDateTime, toDateTime, search, userId,
+                idDonViGiao,  // <-- THÊM
+                page, size);
         return ResponseEntity.ok(response);
     }
 
