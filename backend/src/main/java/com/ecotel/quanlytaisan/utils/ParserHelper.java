@@ -274,4 +274,21 @@ public class ParserHelper {
         workbook.write(out);
         workbook.close();
     }
+
+    public static Integer getCellIntegerValue(Cell cell) {
+        if (cell == null) return null;
+
+        switch (cell.getCellType()) {
+            case NUMERIC:
+                return (int) cell.getNumericCellValue();
+            case STRING:
+                try {
+                    return Integer.parseInt(cell.getStringCellValue().trim());
+                } catch (Exception e) {
+                    return null;
+                }
+            default:
+                return null;
+        }
+    }
 }

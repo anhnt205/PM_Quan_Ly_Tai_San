@@ -29,6 +29,8 @@ public class ChiTietKetQuaSuaChuaDTO {
     private String nguoiTao;
     private String nguoiCapNhat;
     private Boolean isActive;
+    private String idCCDC;
+    private String idChiTietCCDC;
 
     public Integer getSoLuong() {
         return soLuong != null ? soLuong : 1;

@@ -23,6 +23,8 @@ public class ChiTietKetQuaSuaChuaDao {
                 ct.IdKetQuaSuaChua,
                 ct.IdTaiSan,
                 ts.TenTaiSan,
+                ct.IdCCDC,
+                ct.IdChiTietCCDC,
                 ts.KyHieu,
                 ts.SoKyHieu,
                 ts.DonViTinh,
@@ -55,32 +57,77 @@ public class ChiTietKetQuaSuaChuaDao {
         entity.setIsActive(true);
         String sql = """
             INSERT INTO ChiTietKetQuaSuaChua (
-                Id, IdKetQuaSuaChua, IdTaiSan, SoLuong, HienTrang, MoTa, DanhGia,
-                VatTuSuDung, GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        Id,
+                        IdKetQuaSuaChua,
+                        IdTaiSan,
+                        IdCCDC,
+                        IdChiTietCCDC,
+                        SoLuong,
+                        HienTrang,
+                        MoTa,
+                        DanhGia,
+                        VatTuSuDung,
+                        GhiChu,
+                        NgayTao,
+                        NgayCapNhat,
+                        NguoiTao,
+                        NguoiCapNhat,
+                        IsActive
+            )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """;
         return jdbcTemplate.update(sql,
-                entity.getId(), entity.getIdKetQuaSuaChua(), entity.getIdTaiSan(), entity.getSoLuong(),
-                entity.getHienTrang(), entity.getMoTa(), entity.getDanhGia(),
-                entity.getVatTuSuDung(), entity.getGhiChu(),
-                entity.getNgayTao(), entity.getNgayCapNhat(), entity.getNguoiTao(),
-                entity.getNguoiCapNhat(), entity.getIsActive());
+                entity.getId(),
+                entity.getIdKetQuaSuaChua(),
+                entity.getIdTaiSan(),
+                entity.getIdCCDC(),
+                entity.getIdChiTietCCDC(),
+                entity.getSoLuong(),
+                entity.getHienTrang(),
+                entity.getMoTa(),
+                entity.getDanhGia(),
+                entity.getVatTuSuDung(),
+                entity.getGhiChu(),
+                entity.getNgayTao(),
+                entity.getNgayCapNhat(),
+                entity.getNguoiTao(),
+                entity.getNguoiCapNhat(),
+                entity.getIsActive());
     }
 
     public int update(ChiTietKetQuaSuaChua entity) {
         entity.setNgayCapNhat(new Date());
         String sql = """
             UPDATE ChiTietKetQuaSuaChua SET
-                IdKetQuaSuaChua = ?, IdTaiSan = ?, SoLuong = ?, HienTrang = ?, MoTa = ?,
-                DanhGia = ?, VatTuSuDung = ?, GhiChu = ?,
-                NgayCapNhat = ?, NguoiCapNhat = ?, IsActive = ?
-            WHERE Id = ?
+                                    IdKetQuaSuaChua = ?,
+                                    IdTaiSan = ?,
+                                    IdCCDC = ?,
+                                    IdChiTietCCDC = ?,
+                                    SoLuong = ?,
+                                    HienTrang = ?,
+                                    MoTa = ?,
+                                    DanhGia = ?,
+                                    VatTuSuDung = ?,
+                                    GhiChu = ?,
+                                    NgayCapNhat = ?,
+                                    NguoiCapNhat = ?,
+                                    IsActive = ?
+                                WHERE Id = ?
         """;
         return jdbcTemplate.update(sql,
-                entity.getIdKetQuaSuaChua(), entity.getIdTaiSan(), entity.getSoLuong(),
-                entity.getHienTrang(), entity.getMoTa(), entity.getDanhGia(),
-                entity.getVatTuSuDung(), entity.getGhiChu(),
-                entity.getNgayCapNhat(), entity.getNguoiCapNhat(), entity.getIsActive(),
+                entity.getIdKetQuaSuaChua(),
+                entity.getIdTaiSan(),
+                entity.getIdCCDC(),
+                entity.getIdChiTietCCDC(),
+                entity.getSoLuong(),
+                entity.getHienTrang(),
+                entity.getMoTa(),
+                entity.getDanhGia(),
+                entity.getVatTuSuDung(),
+                entity.getGhiChu(),
+                entity.getNgayCapNhat(),
+                entity.getNguoiCapNhat(),
+                entity.getIsActive(),
                 entity.getId());
     }
 
