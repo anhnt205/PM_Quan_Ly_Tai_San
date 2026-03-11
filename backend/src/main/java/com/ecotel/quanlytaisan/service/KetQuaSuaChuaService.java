@@ -4,6 +4,7 @@ import com.ecotel.quanlytaisan.dao.ChiTietKetQuaSuaChuaDao;
 import com.ecotel.quanlytaisan.dao.KetQuaSuaChuaDao;
 import com.ecotel.quanlytaisan.model.KetQuaSuaChua;
 import com.ecotel.quanlytaisan.model.KetQuaSuaChuaDTO;
+import com.ecotel.quanlytaisan.model.PageResponse;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -16,8 +17,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class KetQuaSuaChuaService {
@@ -38,6 +42,44 @@ public class KetQuaSuaChuaService {
 
     public KetQuaSuaChua findById(String id) {
         return ketQuaSuaChuaDao.findById(id);
+    }
+
+    public PageResponse<KetQuaSuaChuaDTO> findWithFilters(
+            String idCongTy, Integer trangThai,
+            LocalDateTime fromDate, LocalDateTime toDate,
+            int page, int size) {
+
+        // Lấy dữ liệu phân trang (có áp dụng bộ lọc trạng thái nếu có)
+        List<KetQuaSuaChuaDTO> items = ketQuaSuaChuaDao.findByFilters(
+                idCongTy, trangThai, fromDate, toDate, page, size);
+        long totalItems = ketQuaSuaChuaDao.countByFilters(
+                idCongTy, trangThai, fromDate, toDate);
+
+        // Thống kê theo trạng thái (không bị ảnh hưởng bởi bộ lọc trạng thái)
+        Map<Integer, Long> rawStats = ketQuaSuaChuaDao.countByTrangThai(idCongTy, fromDate, toDate);
+        Map<String, Long> trangThaiCounts = new HashMap<>();
+
+        long totalAll = 0;
+        for (Map.Entry<Integer, Long> entry : rawStats.entrySet()) {
+            String name = mapTrangThai(entry.getKey());
+            trangThaiCounts.put(name, entry.getValue());
+            totalAll += entry.getValue();
+        }
+        // Thêm mục "Tất cả" với tổng số
+        trangThaiCounts.put("Tất cả", totalAll);
+
+        return new PageResponse<>(items, totalItems, page, size, null, null, trangThaiCounts);
+    }
+
+    // Hàm chuyển mã số sang tên hiển thị
+    private String mapTrangThai(Integer code) {
+        switch (code) {
+            case 0: return "Nháp";
+            case 1: return "Duyệt";
+            case 2: return "Hủy";
+            case 3: return "Hoàn thành";
+            default: return "Tất Cả";
+        }
     }
 
     public KetQuaSuaChua insert(KetQuaSuaChua entity) {

@@ -7,7 +7,11 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.time.Year;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Repository
 public class KetQuaSuaChuaDao {
@@ -98,6 +102,116 @@ public class KetQuaSuaChuaDao {
         } catch (Exception e) {
             return prefix + "0001";
         }
+    }
+
+    public List<KetQuaSuaChuaDTO> findByFilters(String idCongTy, Integer trangThai,
+                                                LocalDateTime fromDate, LocalDateTime toDate,
+                                                int page, int size) {
+        String sql = """
+        SELECT
+            kq.Id,
+            kq.IdCongTy,
+            kq.MaSuaChua,
+            kq.TenSuaChua,
+            kq.MucDoSuCo,
+            kq.MucDoUuTien,
+            kq.IdDonViGiao,
+            pbGiao.TenPhongBan   AS tenDonViGiao,
+            kq.IdDonViNhan,
+            pbNhan.TenPhongBan   AS tenDonViNhan,
+            kq.IdNguoiKyNhay,
+            nvKyNhay.HoTen       AS tenNguoiKyNhay,
+            kq.TrangThaiKyNhay,
+            kq.NguoiLapPhieuKyNhay,
+            kq.NgayKetThucDuKien,
+            kq.IdTrinhDuyetCapPhong,
+            nvCapPhong.HoTen     AS tenTrinhDuyetCapPhong,
+            kq.TrinhDuyetCapPhongXacNhan,
+            kq.IdTrinhDuyetGiamDoc,
+            nvGiamDoc.HoTen      AS tenTrinhDuyetGiamDoc,
+            kq.TrinhDuyetGiamDocXacNhan,
+            kq.IdDonViDeNghi,
+            kq.DuongDanFile,
+            kq.TenFile,
+            kq.TaiLieuBanGhi,
+            kq.ByStep,
+            kq.SoQuyetDinh,
+            kq.NguoiTao,
+            kq.Share,
+            kq.NgayTao,
+            kq.DaBanGiao,
+            kq.CoPhieuBanGiao,
+            kq.TaiLieuCuoi,
+            kq.Loai,
+            kq.TrangThai,
+            kq.IdKeHoach,
+            kq.NgayCapNhat,
+            kq.idLoaiSuaChua,
+            kq.GhiChu,
+            kq.IdSuaChua,
+            kq.ChiPhiPhanCong,
+            kq.ChiPhiThueNgoai
+        FROM ketquasuachua kq
+            LEFT JOIN PhongBan pbGiao    ON kq.IdDonViGiao            = pbGiao.Id
+            LEFT JOIN PhongBan pbNhan    ON kq.IdDonViNhan            = pbNhan.Id
+            LEFT JOIN NhanVien nvKyNhay  ON kq.IdNguoiKyNhay          = nvKyNhay.Id
+            LEFT JOIN NhanVien nvCapPhong ON kq.IdTrinhDuyetCapPhong  = nvCapPhong.Id
+            LEFT JOIN NhanVien nvGiamDoc  ON kq.IdTrinhDuyetGiamDoc   = nvGiamDoc.Id
+        WHERE 1=1
+            AND (? IS NULL OR kq.IdCongTy = ?)
+            AND (? IS NULL OR kq.TrangThai = ?)
+            AND (? IS NULL OR kq.NgayTao >= ?)
+            AND (? IS NULL OR kq.NgayTao <= ?)
+        ORDER BY kq.NgayTao DESC
+        LIMIT ? OFFSET ?
+    """;
+
+        int offset = page * size;
+        return jdbcTemplate.query(sql,
+                new BeanPropertyRowMapper<>(KetQuaSuaChuaDTO.class),
+                idCongTy, idCongTy,
+                trangThai, trangThai,
+                fromDate, fromDate,
+                toDate, toDate,
+                size, offset);
+    }
+
+    public long countByFilters(String idCongTy, Integer trangThai,
+                               LocalDateTime fromDate, LocalDateTime toDate) {
+        String sql = """
+        SELECT COUNT(*)
+        FROM ketquasuachua kq
+        WHERE 1=1
+            AND (? IS NULL OR kq.IdCongTy = ?)
+            AND (? IS NULL OR kq.TrangThai = ?)
+            AND (? IS NULL OR kq.NgayTao >= ?)
+            AND (? IS NULL OR kq.NgayTao <= ?)
+    """;
+
+        return jdbcTemplate.queryForObject(sql, Long.class,
+                idCongTy, idCongTy,
+                trangThai, trangThai,
+                fromDate, fromDate,
+                toDate, toDate);
+    }
+
+    public Map<Integer, Long> countByTrangThai(String idCongTy, LocalDateTime fromDate, LocalDateTime toDate) {
+        String sql = """
+        SELECT TrangThai, COUNT(*)
+        FROM ketquasuachua
+        WHERE 1=1
+            AND (? IS NULL OR IdCongTy = ?)
+            AND (? IS NULL OR NgayTao >= ?)
+            AND (? IS NULL OR NgayTao <= ?)
+        GROUP BY TrangThai
+    """;
+        return jdbcTemplate.query(sql, rs -> {
+            Map<Integer, Long> map = new HashMap<>();
+            while (rs.next()) {
+                map.put(rs.getInt(1), rs.getLong(2));
+            }
+            return map;
+        }, idCongTy, idCongTy, fromDate, fromDate, toDate, toDate);
     }
 
     public KetQuaSuaChua insert(KetQuaSuaChua entity) {

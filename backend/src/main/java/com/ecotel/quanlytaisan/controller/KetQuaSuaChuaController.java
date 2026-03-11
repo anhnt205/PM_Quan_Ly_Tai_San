@@ -2,11 +2,17 @@ package com.ecotel.quanlytaisan.controller;
 
 import com.ecotel.quanlytaisan.model.KetQuaSuaChua;
 import com.ecotel.quanlytaisan.model.KetQuaSuaChuaDTO;
+import com.ecotel.quanlytaisan.model.PageResponse;
 import com.ecotel.quanlytaisan.service.KetQuaSuaChuaService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @RestController
 @RequestMapping("/api/ketqua-suachua")
@@ -25,6 +31,23 @@ public class KetQuaSuaChuaController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping
+    public ResponseEntity<PageResponse<KetQuaSuaChuaDTO>> findAll(
+            @RequestParam(required = false) String idCongTy,
+            @RequestParam(required = false) Integer trangThai,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate tuNgay,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate denNgay,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        LocalDateTime fromDateTime = (tuNgay != null) ? tuNgay.atStartOfDay() : null;
+        LocalDateTime toDateTime = (denNgay != null) ? denNgay.atTime(LocalTime.MAX) : null;
+
+        PageResponse<KetQuaSuaChuaDTO> response = ketQuaSuaChuaService.findWithFilters(
+                idCongTy, trangThai, fromDateTime, toDateTime, page, size);
+        return ResponseEntity.ok(response);
     }
 
     /**
