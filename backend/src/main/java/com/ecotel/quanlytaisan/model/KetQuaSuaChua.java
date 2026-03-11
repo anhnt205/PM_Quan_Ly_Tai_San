@@ -2,6 +2,8 @@ package com.ecotel.quanlytaisan.model;
 
 import lombok.Data;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -9,6 +11,8 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 @Data
+@Getter
+@Setter
 public class KetQuaSuaChua {
 
     private String id;                          // Id varchar(50) PK

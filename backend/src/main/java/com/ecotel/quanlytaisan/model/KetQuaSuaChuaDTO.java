@@ -1,10 +1,15 @@
 package com.ecotel.quanlytaisan.model;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.math.BigDecimal;
 import java.util.List;
 
 @Data
+@Getter
+@Setter
 public class KetQuaSuaChuaDTO {
 
     private String id;
@@ -58,6 +63,10 @@ public class KetQuaSuaChuaDTO {
     private BigDecimal chiPhiThueNgoai;
 
     private List<ChiTietKetQuaSuaChuaDTO> chiTietKetQuaSuaChuas;
+
+    private List<KyTaiLieu> chuKyList;
+    private List<NguoiKy> nguoiKyList;
+
 
     // Custom getters với default value
     public Boolean getTrangThaiKyNhay() {

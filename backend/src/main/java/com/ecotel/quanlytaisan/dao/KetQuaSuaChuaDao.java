@@ -2,6 +2,7 @@ package com.ecotel.quanlytaisan.dao;
 
 import com.ecotel.quanlytaisan.model.KetQuaSuaChua;
 import com.ecotel.quanlytaisan.model.KetQuaSuaChuaDTO;
+import com.ecotel.quanlytaisan.model.NguoiKy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -16,6 +17,8 @@ import java.util.Map;
 @Repository
 public class KetQuaSuaChuaDao {
 
+    @Autowired
+    private KyTaiLieuDao kyTaiLieuDao;
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
@@ -310,5 +313,101 @@ public class KetQuaSuaChuaDao {
     public int delete(String id) {
         String sql = "DELETE FROM ketquasuachua WHERE Id = ?";
         return jdbcTemplate.update(sql, id);
+    }
+
+
+    /**
+     * Cập nhật trạng thái ký theo quy trình
+     * 0: nháp, 1: chờ duyệt, 2: hủy, 3: hoàn thành
+     */
+    public int updateTrangThai(String id, String userId) {
+        KetQuaSuaChua kq = findById(id);
+        if (kq == null) return 0;
+
+        int trangThai = kq.getTrangThai() != null ? kq.getTrangThai() : 0;
+
+        // Bước 1: Ký từ bảng NguoiKy (người ký phụ)
+        int status = updateTrangThaiKy(id, userId);
+        if (status == 1) {
+            trangThai = 1; // Chờ duyệt
+        }
+
+        // Bước 2: Người ký nháy
+        if (userId != null && userId.equals(kq.getIdNguoiKyNhay())) {
+            kq.setTrangThaiKyNhay(true);
+            trangThai = 1; // Chờ duyệt
+        }
+
+        // Bước 3: Duyệt cấp phòng
+        if (userId != null && userId.equals(kq.getIdTrinhDuyetCapPhong())) {
+            kq.setTrinhDuyetCapPhongXacNhan(true);
+            trangThai = 1; // Chờ duyệt
+        }
+
+        // Bước 4: Duyệt giám đốc
+        if (userId != null && userId.equals(kq.getIdTrinhDuyetGiamDoc())) {
+            kq.setTrinhDuyetGiamDocXacNhan(true);
+            trangThai = 1; // Chờ duyệt
+        }
+
+        // Kiểm tra tất cả đã ký chưa
+        boolean allKy = true;
+        if (kq.getIdNguoiKyNhay() != null && !kq.getIdNguoiKyNhay().isEmpty())
+            allKy = allKy && Boolean.TRUE.equals(kq.getTrangThaiKyNhay());
+        if (kq.getIdTrinhDuyetCapPhong() != null && !kq.getIdTrinhDuyetCapPhong().isEmpty())
+            allKy = allKy && Boolean.TRUE.equals(kq.getTrinhDuyetCapPhongXacNhan());
+        if (kq.getIdTrinhDuyetGiamDoc() != null && !kq.getIdTrinhDuyetGiamDoc().isEmpty())
+            allKy = allKy && Boolean.TRUE.equals(kq.getTrinhDuyetGiamDocXacNhan());
+
+        if (allKy) {
+            allKy = checkAllOtherNguoiKy(id); // Kiểm tra người ký phụ
+        }
+
+        if (allKy) {
+            trangThai = 3; // Hoàn thành
+        }
+
+        kq.setTrangThai(trangThai);
+        KetQuaSuaChua result = update(kq);
+        if (result != null) {
+            return trangThai;
+        }
+        return 0;
+    }
+
+    /**
+     * Hủy phiếu kết quả sửa chữa
+     */
+    public int huyTrangThai(String id) {
+        String sql = """
+        UPDATE ketquasuachua
+        SET TrangThaiKyNhay = 0,
+            TrinhDuyetCapPhongXacNhan = 0,
+            TrinhDuyetGiamDocXacNhan = 0,
+            TrangThai = 2
+        WHERE Id = ?
+        """;
+        return jdbcTemplate.update(sql, id);
+    }
+
+    public boolean checkAllOtherNguoiKy(String idTaiLieu) {
+        List<NguoiKy> nguoiKyList = kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(idTaiLieu);
+        boolean flag = true;
+        for (NguoiKy nguoiKy : nguoiKyList) {
+            if (nguoiKy.getTrangThai() != 1) {
+                flag = false;
+                break;
+            }
+        }
+        return flag;
+    }
+
+    public int updateTrangThaiKy(String id, String userId) {
+        NguoiKy nguoiKy = kyTaiLieuDao.getNguoiKy(userId, id);
+        if (nguoiKy != null) {
+            nguoiKy.setTrangThai(1);
+            return kyTaiLieuDao.updateTrangThai(nguoiKy.getId(), "1");
+        }
+        return 0;
     }
 }
