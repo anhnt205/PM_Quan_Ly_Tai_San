@@ -1,81 +1,101 @@
+import { useState } from "react";
 import {
-  Paper,
   Box,
+  Paper,
   Typography,
   Collapse,
-  Table,
-  TableBody,
-  TableCell,
   TableContainer,
+  Table,
   TableHead,
   TableRow,
+  TableCell,
+  TableBody,
   Button,
   IconButton,
-  ToggleButtonGroup,
-  ToggleButton,
-  Tooltip,
+  Grid,
   TextField,
-  Chip,
 } from "@mui/material";
 import {
   InfoOutlineRounded,
-  Add,
-  Delete,
-  Lock,
   Visibility,
   VisibilityOff,
-  Inventory,
+  Add,
+  Delete,
 } from "@mui/icons-material";
-import { act, useState } from "react";
 import FieldAutoCompleted from "../../../../../components/TextField/FieldAutoCompleted";
-import { Action, Devicetype } from "../../../../../utils/const";
+import FieldInput from "../../../../../components/TextField/FieldInput";
+import { useAllAssetsQuery } from "../../../../AssetManager/Mutation";
+import { useAllToolQuery } from "../../../../ToolManager/Mutation";
+import { Devicetype } from "../../../../../utils/const";
+
+enum Action {
+  CREATE = "CREATE",
+  UPDATE = "UPDATE",
+  DELETE = "DELETE",
+}
 
 interface Props {
   formik: any;
   readOnly?: boolean;
-  assets?: any[];
+  taiSans?: any[];
+  ccdcs?: any[];
 }
 
 export default function ThietBiBaoTriTable({
   formik,
   readOnly = false,
-  assets = [],
+  taiSans = [],
+  ccdcs = [],
 }: Props) {
   const [tableExpanded, setTableExpanded] = useState(true);
 
-  const currentData = formik.values.chiTiets || [];
-  const hasData =
-    currentData.filter((item: any) => item.action !== Action.DELETE).length > 0;
+  // Tách làm 2 mảng riêng biệt trong Formik
+  const currentTaiSans = formik.values.chiTietsTaiSan || [];
+  const currentCCDCs = formik.values.chiTietsCCDC || [];
 
-  const handleAddAsset = () => {
+  const hasTaiSanData =
+    currentTaiSans.filter((item: any) => item.action !== Action.DELETE).length >
+    0;
+  const hasCCDCData =
+    currentCCDCs.filter((item: any) => item.action !== Action.DELETE).length >
+    0;
+
+  // --- HANDLER TÀI SẢN ---
+  const handleAddTaiSan = () => {
     const newAsset = {
       id: "",
       idKeHoach: "",
       idTaiSan: null,
-      idCCDC: null,
-      idChiTietCCDC: null,
       ghiChu: "",
       action: Action.CREATE,
     };
-    formik.setFieldValue("chiTiets", [newAsset, ...currentData]);
+    formik.setFieldValue("chiTietsTaiSan", [newAsset, ...currentTaiSans]);
   };
 
-  const handleDeleteAsset = (index: number) => {
-    formik.setFieldValue(`chiTiets[${index}].action`, Action.DELETE);
+  const handleDeleteTaiSan = (originalIndex: number) => {
+    formik.setFieldValue(
+      `chiTietsTaiSan[${originalIndex}].action`,
+      Action.DELETE,
+    );
   };
 
-  // Helper validation cho ô đầu tiên
-  const getErrorForRow = (index: number) => {
-    const value =
-      formik.values.loaiDoiTuong === Devicetype.ASSET
-        ? formik.values.chiTiets?.[index]?.idTaiSan
-        : formik.values.chiTiets?.[index]?.idChiTietCCDC;
-    const touched =
-      formik.values.loaiDoiTuong === Devicetype.ASSET
-        ? formik.touched.chiTiets?.[index]?.idTaiSan
-        : formik.touched.chiTiets?.[index]?.idChiTietCCDC;
-    if (!touched) return false;
-    return !value || value.trim() === "";
+  // --- HANDLER CCDC - VẬT TƯ ---
+  const handleAddCCDC = () => {
+    const newTool = {
+      id: "",
+      idKeHoach: "",
+      idCCDC: null,
+      ghiChu: "",
+      action: Action.CREATE,
+    };
+    formik.setFieldValue("chiTietsCCDC", [newTool, ...currentCCDCs]);
+  };
+
+  const handleDeleteCCDC = (originalIndex: number) => {
+    formik.setFieldValue(
+      `chiTietsCCDC[${originalIndex}].action`,
+      Action.DELETE,
+    );
   };
 
   return (
@@ -87,8 +107,10 @@ export default function ThietBiBaoTriTable({
         border: "1px solid",
         borderColor: "divider",
         boxShadow: "none",
+        bgcolor: "background.paper",
       }}
     >
+      {/* HEADER BẢNG */}
       <Box
         onClick={() => setTableExpanded(!tableExpanded)}
         sx={{
@@ -101,7 +123,7 @@ export default function ThietBiBaoTriTable({
       >
         <Box display="flex" alignItems="center" gap={2}>
           <InfoOutlineRounded color="primary" />
-          <Typography fontWeight={500}>
+          <Typography fontWeight={500} color="text.primary">
             Danh sách thiết bị tài sản / CCDC cần bảo trì
           </Typography>
         </Box>
@@ -113,7 +135,6 @@ export default function ThietBiBaoTriTable({
           >
             {tableExpanded ? "Thu gọn" : "Mở rộng"}
           </Typography>
-
           {tableExpanded ? (
             <Visibility sx={{ color: "text.secondary", fontSize: 20 }} />
           ) : (
@@ -122,320 +143,328 @@ export default function ThietBiBaoTriTable({
         </Box>
       </Box>
 
+      {/* NỘI DUNG 2 BẢNG */}
       <Collapse in={tableExpanded}>
-        <Box mb={2}>
-          {/* ToggleButtonGroup kiểu pill với sliding background */}
-          <ToggleButtonGroup
-            value={formik.values.loaiDoiTuong || Devicetype.ASSET}
-            exclusive
-            onChange={(_, val) => {
-              if (val) formik.setFieldValue("loaiDoiTuong", val);
-            }}
-            disabled={readOnly || hasData}
-            sx={{
-              position: "relative",
-              bgcolor: "background.paper", // Nền trắng cho group
-              borderRadius: "50px", // Pill shape ngoài cùng
-              overflow: "hidden",
-              border: "1px solid",
-              borderColor: "success.main",
-              "& .MuiToggleButtonGroup-grouped": {
-                border: 0,
-                mx: 0, // Đưa mx về 0 để 2 nút dính sát vào nhau ở giữa
-                px: 3,
-                py: 0.75,
-                fontWeight: 500,
-                fontSize: "0.875rem",
-                textTransform: "none",
-                color: "success.main", // Chữ xanh khi không chọn
-                transition: "color 0.3s ease",
-                zIndex: 2,
-
-                // Nút bên trái: Bo góc trái, vuông góc phải
-                "&:first-of-type": {
-                  borderRadius: "46px 0 0 46px !important",
-                },
-                // Nút bên phải: Vuông góc trái, bo góc phải
-                "&:last-of-type": {
-                  borderRadius: "0 46px 46px 0 !important",
-                },
-
-                "&.Mui-selected": {
-                  color: "white", // Chữ trắng khi chọn
-                  backgroundColor: "transparent !important", // Để indicator xử lý nền
-                  boxShadow: "none",
-                },
-                "&:hover": {
-                  backgroundColor: "transparent",
-                },
-              },
-              // Sliding indicator
-              "&:after": {
-                content: '""',
-                position: "absolute",
-                top: "4px",
-                left: "4px",
-                height: "calc(100% - 8px)",
-                // Chiều rộng bằng đúng 1 nửa vùng không gian chứa nút (trừ đi padding 2 bên)
-                width: "calc(50% - 4px)",
-                backgroundColor: "success.main",
-                transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-                zIndex: 1,
-
-                // Đổi hình dáng của khối nền trượt cho khớp với nút bên dưới
-                borderRadius:
-                  formik.values.loaiDoiTuong === Devicetype.TOOL
-                    ? "0 46px 46px 0"
-                    : "46px 0 0 46px",
-
-                // Trượt sang phải một khoảng bằng chính chiều rộng của nó (100%)
-                transform:
-                  formik.values.loaiDoiTuong === Devicetype.TOOL
-                    ? "translateX(100%)"
-                    : "translateX(0)",
-              },
-            }}
-          >
-            <ToggleButton
-              value={Devicetype.ASSET}
+        <Grid container spacing={3}>
+          {/* =========== BẢNG 1: TÀI SẢN =========== */}
+          <Grid size={{ xs: 12, lg: 6 }}>
+            <TableContainer
+              component={Paper}
+              variant="outlined"
               sx={{
-                width: 200,
+                border: "1px solid",
+                borderColor: "divider",
+                borderRadius: 2,
               }}
             >
-              <Box display="flex" alignItems="center" gap={1}>
-                {hasData && formik.values.loaiDoiTuong === Devicetype.ASSET && (
-                  <Tooltip
-                    title="Chỉ được chọn 1 trong 2 loại, vui lòng xóa tất cả các dòng đã thêm để có thể đổi loại"
-                    placement="top"
-                    arrow
-                  >
-                    <Lock sx={{ fontSize: 16 }} />
-                  </Tooltip>
-                )}
-                Tài sản
-              </Box>
-            </ToggleButton>
-
-            <ToggleButton
-              value={Devicetype.TOOL}
-              sx={{
-                width: 200,
-              }}
-            >
-              <Box display="flex" alignItems="center" gap={1}>
-                {hasData && formik.values.loaiDoiTuong === Devicetype.TOOL && (
-                  <Tooltip
-                    title="Chỉ được chọn 1 trong 2 loại, vui lòng xóa tất cả các dòng đã thêm để có thể đổi loại"
-                    placement="top"
-                    arrow
-                  >
-                    <Lock sx={{ fontSize: 16 }} />
-                  </Tooltip>
-                )}
-                CCDC - Vật tư
-              </Box>
-            </ToggleButton>
-          </ToggleButtonGroup>
-        </Box>
-
-        <TableContainer
-          component={Paper}
-          variant="outlined"
-          sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2 }}
-        >
-          <Table size="small" sx={{ tableLayout: "fixed", width: "100%" }}>
-            <TableHead>
-              <TableRow sx={{ bgcolor: "success.main" }}>
-                <TableCell
-                  align="center"
-                  sx={{ color: "white", fontWeight: 600, width: "50%" }}
-                >
-                  Thiết bị
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{ color: "white", fontWeight: 600, width: 150 }}
-                >
-                  Loại
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{ color: "white", fontWeight: 600 }}
-                >
-                  Ghi chú
-                </TableCell>
-                {!readOnly && (
-                  <TableCell
-                    align="center"
-                    width={80}
-                    sx={{ color: "white", fontWeight: 600 }}
-                  >
-                    Xóa
-                  </TableCell>
-                )}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {!readOnly && (
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    sx={{
-                      p: 1,
-                      borderBottom: hasData ? "1px solid" : "none",
-                      borderColor: "divider",
-                    }}
-                  >
-                    <Button
-                      fullWidth
-                      variant="outlined"
-                      startIcon={<Add />}
-                      onClick={handleAddAsset}
+              <Table size="small" sx={{ tableLayout: "fixed", width: "100%" }}>
+                <TableHead>
+                  <TableRow sx={{ bgcolor: "success.main" }}>
+                    <TableCell
+                      align="center"
                       sx={{
-                        py: 0.75,
-                        borderStyle: "dashed",
-                        "&:hover": {
-                          borderStyle: "dashed",
-                          bgcolor: "action.hover",
-                        },
+                        color: "primary.contrastText",
+                        fontWeight: 600,
+                        width: "50%",
                       }}
                     >
-                      Thêm thiết bị
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              )}
-
-              {currentData
-                .filter((item: any) => item.action !== Action.DELETE)
-                .map((item: any, index: number) => {
-                  const isError = getErrorForRow(index);
-
-                  return (
-                    <TableRow key={item.id || index}>
-                      <TableCell sx={{ minWidth: 250 }}>
-                        {readOnly ? (
-                          formik.values.loaiDoiTuong === Devicetype.TOOL ? (
-                            item.tenCCDC +
-                            " " +
-                            `(${item.soKyHieu})` +
-                            "-" +
-                            item.namSanXuat
-                          ) : (
-                            item.tenTaiSan || "-"
-                          )
-                        ) : (
-                          <FieldAutoCompleted
-                            title={
-                              formik.values.loaiDoiTuong === Devicetype.TOOL
-                                ? "Chọn thiết bị ccdc"
-                                : "Chọn thiết bị tài sản"
-                            }
-                            data={assets.filter(
-                              (item: any) =>
-                                item.type === formik.values.loaiDoiTuong,
-                            )}
-                            labelkey="ten"
-                            formik={formik}
-                            field={
-                              formik.values.loaiDoiTuong === Devicetype.TOOL
-                                ? `chiTiets[${index}].idChiTietCCDC`
-                                : `chiTiets[${index}].idTaiSan`
-                            }
-                            disabled={readOnly}
-                            limitOptions={20}
-                            onChange={(values) => {
-                              if (values) {
-                                if (
-                                  formik.values.loaiDoiTuong === Devicetype.TOOL
-                                ) {
-                                  formik.setFieldValue(
-                                    `chiTiets[${index}].idCCDC`,
-                                    values.idCCDCVatTu,
-                                  );
-                                }
-                              }
-                            }}
-                          />
-                        )}
+                      Tên Tài Sản
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{ color: "primary.contrastText", fontWeight: 600 }}
+                    >
+                      Ghi chú
+                    </TableCell>
+                    {!readOnly && (
+                      <TableCell
+                        align="center"
+                        width={60}
+                        sx={{ color: "primary.contrastText", fontWeight: 600 }}
+                      >
+                        Xóa
                       </TableCell>
-
-                      {/* Cột Loại dạng Chip vuông góc */}
-                      <TableCell align="center">
-                        {formik.values.loaiDoiTuong === Devicetype.TOOL ? (
-                          <Chip
-                            icon={<Inventory fontSize="small" />}
-                            label="CCDC - VT"
-                            size="small"
-                            color="warning"
-                            variant="outlined"
-                            sx={{
-                              borderRadius: "6px",
-                              fontWeight: 500,
-                            }}
-                          />
-                        ) : (
-                          <Chip
-                            icon={<Inventory fontSize="small" />}
-                            label="Tài sản"
-                            size="small"
-                            color="info"
-                            variant="outlined"
-                            sx={{
-                              borderRadius: "6px",
-                              fontWeight: 500,
-                            }}
-                          />
-                        )}
+                    )}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {!readOnly && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={3}
+                        sx={{
+                          p: 1,
+                          borderBottom: hasTaiSanData ? "1px solid" : "none",
+                          borderColor: "divider",
+                        }}
+                      >
+                        <Button
+                          fullWidth
+                          variant="outlined"
+                          color="primary"
+                          startIcon={<Add />}
+                          onClick={handleAddTaiSan}
+                          sx={{
+                            py: 0.75,
+                            borderStyle: "dashed",
+                            "&:hover": {
+                              borderStyle: "dashed",
+                              bgcolor: "action.hover",
+                            },
+                          }}
+                        >
+                          Thêm Tài Sản
+                        </Button>
                       </TableCell>
-
-                      <TableCell>
-                        {readOnly ? (
-                          item.ghiChu || "-"
-                        ) : (
-                          <TextField
-                            size="small"
-                            fullWidth
-                            value={item.ghiChu || ""}
-                            onChange={(e) =>
-                              formik.setFieldValue(
-                                `chiTiets[${index}].ghiChu`,
-                                e.target.value,
-                              )
-                            }
-                          />
-                        )}
-                      </TableCell>
-
-                      {!readOnly && (
-                        <TableCell align="center">
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => handleDeleteAsset(index)}
-                          >
-                            <Delete fontSize="small" />
-                          </IconButton>
-                        </TableCell>
-                      )}
                     </TableRow>
-                  );
-                })}
+                  )}
 
-              {readOnly && !hasData && (
-                <TableRow>
-                  <TableCell
-                    colSpan={readOnly ? 3 : 4}
-                    align="center"
-                    sx={{ py: 3, color: "text.secondary" }}
-                  >
-                    Chưa có thiết bị nào được thêm vào kế hoạch
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                  {currentTaiSans.map((item: any, originalIndex: number) => {
+                    if (item.action === Action.DELETE) return null;
+
+                    return (
+                      <TableRow key={item.id || `ts-${originalIndex}`}>
+                        <TableCell
+                          sx={{ minWidth: 200, verticalAlign: "top", pt: 1.5 }}
+                        >
+                          {readOnly ? (
+                            item.tenTaiSan || "-"
+                          ) : (
+                            <FieldAutoCompleted
+                              title="Chọn thiết bị tài sản"
+                              data={taiSans}
+                              labelkey="ten"
+                              formik={formik}
+                              field={`chiTietsTaiSan[${originalIndex}].idTaiSan`}
+                              disabled={readOnly}
+                              limitOptions={20}
+                            />
+                          )}
+                        </TableCell>
+
+                        <TableCell sx={{ verticalAlign: "top", pt: 1.5 }}>
+                          {readOnly ? (
+                            item.ghiChu || "-"
+                          ) : (
+                            <FieldInput
+                              title="Nhập ghi chú"
+                              formik={formik}
+                              field={`chiTietsTaiSan[${originalIndex}].ghiChu`}
+                              disabled={readOnly}
+                            />
+                          )}
+                        </TableCell>
+
+                        {!readOnly && (
+                          <TableCell
+                            align="center"
+                            sx={{ verticalAlign: "top", pt: 1.5 }}
+                          >
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => handleDeleteTaiSan(originalIndex)}
+                            >
+                              <Delete fontSize="small" />
+                            </IconButton>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    );
+                  })}
+
+                  {readOnly && !hasTaiSanData && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={3}
+                        align="center"
+                        sx={{ py: 3, color: "text.secondary" }}
+                      >
+                        Chưa có Tài sản nào được thêm
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Grid>
+
+          {/* =========== BẢNG 2: CCDC - VẬT TƯ =========== */}
+          <Grid size={{ xs: 12, lg: 6 }}>
+            <TableContainer
+              component={Paper}
+              variant="outlined"
+              sx={{
+                border: "1px solid",
+                borderColor: "divider",
+                borderRadius: 2,
+              }}
+            >
+              <Table size="small" sx={{ tableLayout: "fixed", width: "100%" }}>
+                <TableHead>
+                  <TableRow sx={{ bgcolor: "success.main" }}>
+                    <TableCell
+                      align="center"
+                      sx={{
+                        color: "info.contrastText",
+                        fontWeight: 600,
+                        width: "45%",
+                      }}
+                    >
+                      Vật tư tiêu hao
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{
+                        color: "info.contrastText",
+                        fontWeight: 600,
+                        width: "20%",
+                      }}
+                    >
+                      SL hiện có
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{ color: "info.contrastText", fontWeight: 600 }}
+                    >
+                      Ghi chú
+                    </TableCell>
+                    {!readOnly && (
+                      <TableCell
+                        align="center"
+                        width={60}
+                        sx={{ color: "info.contrastText", fontWeight: 600 }}
+                      >
+                        Xóa
+                      </TableCell>
+                    )}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {!readOnly && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={4}
+                        sx={{
+                          p: 1,
+                          borderBottom: hasCCDCData ? "1px solid" : "none",
+                          borderColor: "divider",
+                        }}
+                      >
+                        <Button
+                          fullWidth
+                          variant="outlined"
+                          color="primary"
+                          startIcon={<Add />}
+                          onClick={handleAddCCDC}
+                          sx={{
+                            py: 0.75,
+                            borderStyle: "dashed",
+                            "&:hover": {
+                              borderStyle: "dashed",
+                              bgcolor: "action.hover",
+                            },
+                          }}
+                        >
+                          Thêm Vật tư tiêu hao
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  )}
+
+                  {currentCCDCs.map((item: any, originalIndex: number) => {
+                    if (item.action === Action.DELETE) return null;
+
+                    // Lấy object CCDC tương ứng từ list data để hiển thị số lượng
+                    const selectedCCDC = ccdcs.find(
+                      (c: any) => c.id === item.idCCDC,
+                    );
+                    const slHienCo = selectedCCDC?.soLuong ?? "-";
+
+                    return (
+                      <TableRow key={item.id || `ccdc-${originalIndex}`}>
+                        <TableCell
+                          sx={{ minWidth: 200, verticalAlign: "top", pt: 1.5 }}
+                        >
+                          {readOnly ? (
+                            `${item.tenCCDC || ""} ${item.soKyHieu ? `(${item.soKyHieu})` : ""} ${item.namSanXuat ? `- ${item.namSanXuat}` : ""}`
+                          ) : (
+                            <FieldAutoCompleted
+                              title="Chọn CCDC - Vật tư"
+                              data={ccdcs}
+                              labelkey="ten"
+                              formik={formik}
+                              field={`chiTietsCCDC[${originalIndex}].idCCDC`}
+                              disabled={readOnly}
+                              limitOptions={20}
+                            />
+                          )}
+                        </TableCell>
+
+                        <TableCell sx={{ verticalAlign: "top", pt: 1.5 }}>
+                          <TextField
+                            fullWidth
+                            disabled
+                            size="small"
+                            type="number"
+                            label="SL hiện có"
+                            value={slHienCo !== "-" ? slHienCo : ""}
+                            InputLabelProps={{ shrink: true }}
+                            sx={{
+                              "& .MuiInputBase-input.Mui-disabled": {
+                                WebkitTextFillColor: "rgba(0, 0, 0, 0.6)",
+                              },
+                            }}
+                          />
+                        </TableCell>
+
+                        <TableCell sx={{ verticalAlign: "top", pt: 1.5 }}>
+                          {readOnly ? (
+                            item.ghiChu || "-"
+                          ) : (
+                            <FieldInput
+                              title="Nhập ghi chú"
+                              formik={formik}
+                              field={`chiTietsCCDC[${originalIndex}].ghiChu`}
+                              disabled={readOnly}
+                            />
+                          )}
+                        </TableCell>
+
+                        {!readOnly && (
+                          <TableCell
+                            align="center"
+                            sx={{ verticalAlign: "top", pt: 1.5 }}
+                          >
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => handleDeleteCCDC(originalIndex)}
+                            >
+                              <Delete fontSize="small" />
+                            </IconButton>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    );
+                  })}
+
+                  {readOnly && !hasCCDCData && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={4}
+                        align="center"
+                        sx={{ py: 3, color: "text.secondary" }}
+                      >
+                        Chưa có CCDC - Vật tư nào được thêm
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Grid>
+        </Grid>
       </Collapse>
     </Paper>
   );

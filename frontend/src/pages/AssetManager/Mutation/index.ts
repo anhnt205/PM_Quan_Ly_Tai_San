@@ -496,6 +496,7 @@ export const useAssetPageQuery = (
     enabled: tab !== undefined && tab >= 0,
   });
 };
+
 export const useAllAssetsQuery = () => {
   return useQuery({
     queryKey: ["allAssets"], // Key để cache dữ liệu
@@ -510,6 +511,7 @@ export const useAllAssetsQuery = () => {
     placeholderData: (previousData) => previousData,
   });
 };
+
 export const useAssetByTypeQuery = (idloaitaisan?: string) => {
   return useQuery({
     queryKey: ["assetsByType", idloaitaisan], // Key để cache dữ liệu
@@ -525,6 +527,7 @@ export const useAssetByTypeQuery = (idloaitaisan?: string) => {
     enabled: !!idloaitaisan,
   });
 };
+
 export const useAssetDepreciationsQuery = (
   date?: string,
   page?: number,
@@ -551,6 +554,7 @@ export const useAssetDepreciationsQuery = (
     placeholderData: (previousData) => previousData,
   });
 };
+
 export const useCountriesQuery = () => {
   return useQuery({
     queryKey: ["countries"], // Key để cache dữ liệu
@@ -561,6 +565,7 @@ export const useCountriesQuery = () => {
     placeholderData: (placeholderData) => placeholderData,
   });
 };
+
 export const useHistoryAssethandoverQuery = (
   page?: number,
   pageSize?: number,

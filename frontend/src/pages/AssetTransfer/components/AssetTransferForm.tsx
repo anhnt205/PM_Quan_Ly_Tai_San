@@ -147,7 +147,7 @@ export default function AssetTransferForm({
           isActive: true,
           hienTrang: "",
           moTa: "",
-          daBanGiao: true,
+          daBanGiao: false,
         },
       ],
       initialChiTiet: [],

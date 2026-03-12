@@ -164,25 +164,26 @@ export default function MaintenancePlanningForm({
     useToolByDepartmentPageQuery({
       departmentId: formik.values.idDonViGiao,
     });
-  const {
-    data: allAssetsByDonVi = { items: [] },
-    isFetching,
-    isLoading: isLoadingAsset,
-  } = useAssetByDonViQuery(2, formik.values.idDonViGiao);
-  const allEquipment = useMemo(
-    () => [
-      ...allAssetsByDonVi.items.map((a: any) => ({
+
+  const { data: allAssetsByDonVi = { items: [] }, isLoading: isLoadingAsset } =
+    useAssetByDonViQuery(2, formik.values.idDonViGiao);
+
+  const listTaiSan = useMemo(
+    () =>
+      (allAssetsByDonVi.items || []).map((a: any) => ({
         ...a,
         ten: a.tenTaiSan || a.ten || "",
-        type: Devicetype.ASSET,
       })),
-      ...toolsByDepartment.map((t: any) => ({
+    [allAssetsByDonVi],
+  );
+
+  const listCCDC = useMemo(
+    () =>
+      (toolsByDepartment || []).map((t: any) => ({
         ...t,
         ten: t.ten || t.tenDetailAsset || "",
-        type: Devicetype.TOOL,
       })),
-    ],
-    [toolsByDepartment, allAssetsByDonVi],
+    [toolsByDepartment],
   );
 
   return (
@@ -292,6 +293,7 @@ export default function MaintenancePlanningForm({
                   />
                 </Grid>
               )}
+
               <Grid size={{ xs: 12, md: 6 }}>
                 <FieldAutoCompleted
                   title="Đơn vị giao *"
@@ -300,8 +302,13 @@ export default function MaintenancePlanningForm({
                   formik={formik}
                   field="idDonViGiao"
                   disabled={readOnly}
+                  onChange={(newValue) => {
+                    formik.setFieldValue("chiTietsTaiSan", []);
+                    formik.setFieldValue("chiTietsCCDC", []);
+                  }}
                 />
               </Grid>
+
               <Grid size={{ xs: 12, md: 6 }}>
                 <FieldAutoCompleted
                   title="Người phụ trách *"
@@ -365,7 +372,8 @@ export default function MaintenancePlanningForm({
           <ThietBiBaoTriTable
             formik={formik}
             readOnly={readOnly}
-            assets={allEquipment}
+            taiSans={listTaiSan}
+            ccdcs={listCCDC}
           />
 
           {/* Chi tiết công việc */}

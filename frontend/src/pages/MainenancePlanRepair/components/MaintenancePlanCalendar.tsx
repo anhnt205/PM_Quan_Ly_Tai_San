@@ -23,6 +23,7 @@ import {
 import { MaintenancePlanData } from "../types";
 import { StatusPlan, StatusPlanType } from "../../../utils/const";
 import { showPlanType } from "../config";
+import MaintenancePlanDetailDialog from "./MaintenancePlanDetailDialog/MaintenancePlanDetailDialog";
 
 dayjs.locale("vi");
 
@@ -258,211 +259,220 @@ function PlanPopover({
   if (!plan) return null;
   const cfg = STATUS[plan.trangThai ?? 0] ?? STATUS[0];
 
+  const [detailPlanView, setDetailPlanView] = useState<any | null>(null);
+
   return (
-    <Popover
-      open={Boolean(anchor)}
-      anchorEl={anchor}
-      onClose={onClose}
-      anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-      transformOrigin={{ vertical: "top", horizontal: "left" }}
-      PaperProps={{
-        sx: { width: 300, borderRadius: 2, overflow: "hidden", boxShadow: 6 },
-      }}
-    >
-      {/* Color header */}
-      <Box
-        sx={{
-          bgcolor: cfg.border,
-          px: 2,
-          py: 1.5,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
+    <>
+      <Popover
+        open={Boolean(anchor)}
+        anchorEl={anchor}
+        onClose={onClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        transformOrigin={{ vertical: "top", horizontal: "left" }}
+        PaperProps={{
+          sx: { width: 300, borderRadius: 2, overflow: "hidden", boxShadow: 6 },
         }}
       >
-        <Typography
+        {/* Color header */}
+        <Box
           sx={{
-            color: "#fff",
-            fontWeight: 700,
-            fontSize: "0.9rem",
-            flex: 1,
-            pr: 1,
+            bgcolor: cfg.border,
+            px: 2,
+            py: 1.5,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
           }}
-          noWrap
         >
-          {plan.tenKeHoach}
-        </Typography>
-        <IconButton
-          size="small"
-          onClick={onClose}
-          sx={{ color: "#fff", p: 0.3 }}
-        >
-          <X size={16} />
-        </IconButton>
-      </Box>
-
-      <Box
-        sx={{
-          px: 2,
-          py: 1.5,
-          display: "flex",
-          flexDirection: "column",
-          gap: 1,
-        }}
-      >
-        {/* Status */}
-        <Chip
-          label={cfg.label}
-          size="small"
-          sx={{
-            bgcolor: cfg.bg,
-            color: cfg.color,
-            fontWeight: 600,
-            border: `1px solid ${cfg.border}`,
-            alignSelf: "flex-start",
-          }}
-        />
-
-        <Divider />
-
-        {/* Date range */}
-        <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
-          <CalendarDays
-            size={15}
-            style={{ marginTop: 2, color: "#757575", flexShrink: 0 }}
-          />
-          <Box>
-            <Typography sx={{ fontSize: "0.75rem", color: "text.secondary" }}>
-              Thời gian
-            </Typography>
-            <Typography sx={{ fontSize: "0.82rem", fontWeight: 500 }}>
-              {dayjs(plan.ngayBatDau).format("DD/MM/YYYY")}
-              {plan.ngayKetThuc && plan.ngayKetThuc !== plan.ngayBatDau
-                ? ` – ${dayjs(plan.ngayKetThuc).format("DD/MM/YYYY")}`
-                : ""}
-            </Typography>
-          </Box>
-        </Box>
-
-        {/* Type */}
-        {plan.loaiKeHoach && (
-          <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
-            <Clock
-              size={15}
-              style={{ marginTop: 2, color: "#757575", flexShrink: 0 }}
-            />
-            <Box>
-              <Typography sx={{ fontSize: "0.75rem", color: "text.secondary" }}>
-                Loại kế hoạch
-              </Typography>
-              <Typography sx={{ fontSize: "0.82rem", fontWeight: 500 }}>
-                {showPlanType(plan.loaiKeHoach)}
-              </Typography>
-            </Box>
-          </Box>
-        )}
-
-        {/* Person */}
-        {plan.tenNguoiPhuTrach && (
-          <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
-            <User
-              size={15}
-              style={{ marginTop: 2, color: "#757575", flexShrink: 0 }}
-            />
-            <Box>
-              <Typography sx={{ fontSize: "0.75rem", color: "text.secondary" }}>
-                Người phụ trách
-              </Typography>
-              <Typography sx={{ fontSize: "0.82rem", fontWeight: 500 }}>
-                {plan.tenNguoiPhuTrach}
-              </Typography>
-            </Box>
-          </Box>
-        )}
-
-        {/* Dept */}
-        {plan.tenDonViThucHien && (
-          <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
-            <Building2
-              size={15}
-              style={{ marginTop: 2, color: "#757575", flexShrink: 0 }}
-            />
-            <Box>
-              <Typography sx={{ fontSize: "0.75rem", color: "text.secondary" }}>
-                Đơn vị thực hiện
-              </Typography>
-              <Typography sx={{ fontSize: "0.82rem", fontWeight: 500 }}>
-                {plan.tenDonViThucHien}
-              </Typography>
-            </Box>
-          </Box>
-        )}
-
-        {/* Notes */}
-        {plan.ghiChu && (
           <Typography
             sx={{
-              fontSize: "0.78rem",
-              color: "text.secondary",
-              fontStyle: "italic",
-              mt: 0.5,
+              color: "#fff",
+              fontWeight: 700,
+              fontSize: "0.9rem",
+              flex: 1,
+              pr: 1,
             }}
+            noWrap
           >
-            {plan.ghiChu}
+            {plan.tenKeHoach}
           </Typography>
-        )}
-
-        {/* Gộp 2 nút vào chung 1 Box để chúng nằm ngang nhau */}
-        <Box
-          sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 1 }}
-        >
-          {onOpenDetail && (
-            <Button
-              size="small"
-              variant="outlined"
-              onClick={() => {
-                onClose();
-                onOpenDetail(plan);
-              }}
-              sx={{
-                fontSize: "0.75rem",
-                borderColor: "divider",
-                color: "text.primary",
-              }}
-            >
-              Mở chi tiết
-            </Button>
-          )}
-
-          {onCreateRepair && (
-            <Button
-              size="small"
-              variant="contained"
-              onClick={() => {
-                onClose();
-                onCreateRepair(plan);
-              }}
-              sx={{
-                fontSize: "0.75rem",
-                bgcolor: "warning.main",
-                color: "#fff",
-                border: "1px solid",
-                borderColor: "warning.main",
-                transition: "all 0.2s ease-in-out",
-                "&:hover": {
-                  bgcolor: "transparent",
-                  color: "warning.main",
-                  borderColor: "warning.main",
-                  boxShadow: "none",
-                },
-              }}
-            >
-              Tạo phiếu
-            </Button>
-          )}
+          <IconButton
+            size="small"
+            onClick={onClose}
+            sx={{ color: "#fff", p: 0.3 }}
+          >
+            <X size={16} />
+          </IconButton>
         </Box>
-      </Box>
-    </Popover>
+
+        <Box
+          sx={{
+            px: 2,
+            py: 1.5,
+            display: "flex",
+            flexDirection: "column",
+            gap: 1,
+          }}
+        >
+          {/* Status */}
+          <Chip
+            label={cfg.label}
+            size="small"
+            sx={{
+              bgcolor: cfg.bg,
+              color: cfg.color,
+              fontWeight: 600,
+              border: `1px solid ${cfg.border}`,
+              alignSelf: "flex-start",
+            }}
+          />
+
+          <Divider />
+
+          {/* Date range */}
+          <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
+            <CalendarDays
+              size={15}
+              style={{ marginTop: 2, color: "#757575", flexShrink: 0 }}
+            />
+            <Box>
+              <Typography sx={{ fontSize: "0.75rem", color: "text.secondary" }}>
+                Thời gian
+              </Typography>
+              <Typography sx={{ fontSize: "0.82rem", fontWeight: 500 }}>
+                {dayjs(plan.ngayBatDau).format("DD/MM/YYYY")}
+                {plan.ngayKetThuc && plan.ngayKetThuc !== plan.ngayBatDau
+                  ? ` – ${dayjs(plan.ngayKetThuc).format("DD/MM/YYYY")}`
+                  : ""}
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Type */}
+          {plan.loaiKeHoach && (
+            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
+              <Clock
+                size={15}
+                style={{ marginTop: 2, color: "#757575", flexShrink: 0 }}
+              />
+              <Box>
+                <Typography
+                  sx={{ fontSize: "0.75rem", color: "text.secondary" }}
+                >
+                  Loại kế hoạch
+                </Typography>
+                <Typography sx={{ fontSize: "0.82rem", fontWeight: 500 }}>
+                  {showPlanType(plan.loaiKeHoach)}
+                </Typography>
+              </Box>
+            </Box>
+          )}
+
+          {/* Person */}
+          {plan.tenNguoiPhuTrach && (
+            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
+              <User
+                size={15}
+                style={{ marginTop: 2, color: "#757575", flexShrink: 0 }}
+              />
+              <Box>
+                <Typography
+                  sx={{ fontSize: "0.75rem", color: "text.secondary" }}
+                >
+                  Người phụ trách
+                </Typography>
+                <Typography sx={{ fontSize: "0.82rem", fontWeight: 500 }}>
+                  {plan.tenNguoiPhuTrach}
+                </Typography>
+              </Box>
+            </Box>
+          )}
+
+          {/* Dept */}
+          {plan.tenDonViThucHien && (
+            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
+              <Building2
+                size={15}
+                style={{ marginTop: 2, color: "#757575", flexShrink: 0 }}
+              />
+              <Box>
+                <Typography
+                  sx={{ fontSize: "0.75rem", color: "text.secondary" }}
+                >
+                  Đơn vị thực hiện
+                </Typography>
+                <Typography sx={{ fontSize: "0.82rem", fontWeight: 500 }}>
+                  {plan.tenDonViThucHien}
+                </Typography>
+              </Box>
+            </Box>
+          )}
+
+          {/* Notes */}
+          {plan.ghiChu && (
+            <Typography
+              sx={{
+                fontSize: "0.78rem",
+                color: "text.secondary",
+                fontStyle: "italic",
+                mt: 0.5,
+              }}
+            >
+              {plan.ghiChu}
+            </Typography>
+          )}
+
+          {/* Gộp 2 nút vào chung 1 Box để chúng nằm ngang nhau */}
+          <Box
+            sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 1 }}
+          >
+            {onOpenDetail && (
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => {
+                  onClose(); // Đóng cái popover nhỏ xíu đi
+                  onOpenDetail(plan); // Báo cho thằng cha biết là cần mở chi tiết cái plan này
+                }}
+                sx={{
+                  fontSize: "0.75rem",
+                  borderColor: "divider",
+                  color: "text.primary",
+                }}
+              >
+                Mở chi tiết
+              </Button>
+            )}
+            {onCreateRepair && (
+              <Button
+                size="small"
+                variant="contained"
+                onClick={() => {
+                  onClose();
+                  onCreateRepair(plan);
+                }}
+                sx={{
+                  fontSize: "0.75rem",
+                  bgcolor: "warning.main",
+                  color: "#fff",
+                  border: "1px solid",
+                  borderColor: "warning.main",
+                  transition: "all 0.2s ease-in-out",
+                  "&:hover": {
+                    bgcolor: "transparent",
+                    color: "warning.main",
+                    borderColor: "warning.main",
+                    boxShadow: "none",
+                  },
+                }}
+              >
+                Tạo phiếu
+              </Button>
+            )}
+          </Box>
+        </Box>
+      </Popover>
+    </>
   );
 }
 
@@ -490,6 +500,9 @@ export default function MaintenancePlanCalendar({
   const year = current.year();
   const month = current.month() + 1;
   const weeks = useMemo(() => buildCalendarWeeks(year, month), [year, month]);
+
+  const [detailPlanView, setDetailPlanView] =
+    useState<MaintenancePlanData | null>(null);
 
   // Plans that have at least a start date
   const validPlans = useMemo(
@@ -816,7 +829,6 @@ export default function MaintenancePlanCalendar({
         </Box>
       </Box>
 
-      {/* ── Plan detail popover ── */}
       <PlanPopover
         anchor={popoverAnchor}
         plan={activePlan}
@@ -824,8 +836,17 @@ export default function MaintenancePlanCalendar({
           setPopoverAnchor(null);
           setActivePlan(null);
         }}
-        onOpenDetail={onPlanClick}
+        onOpenDetail={(plan) => {
+          setDetailPlanView(plan);
+          setPopoverAnchor(null); // Đóng popover nhỏ đi
+        }}
         onCreateRepair={onCreateRepair}
+      />
+
+      <MaintenancePlanDetailDialog
+        open={Boolean(detailPlanView)}
+        plan={detailPlanView}
+        onClose={() => setDetailPlanView(null)}
       />
     </Box>
   );

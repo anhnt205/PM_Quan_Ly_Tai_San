@@ -382,7 +382,7 @@ export default function ChiTietCongViecTable({
                     Hủy
                   </Button>
                   <Button
-                    onClick={submitForm} // Gọi submit của Inner Formik
+                    onClick={submitForm}
                     variant="contained"
                     disabled={!values.tenCongViec?.trim()}
                   >
