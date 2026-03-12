@@ -207,6 +207,20 @@ public class DieuDongCCDCVatTuController {
         }
     }
 
+     @PostMapping("/banhanhquyetdinh")
+    public ResponseEntity<ApiResponse<Object>> banHanhQuyetDinh(@RequestParam String id,@RequestParam String soQuyetDinh) throws SQLException {
+        try {
+            int result = service.banHanhQuyetDinh(id,soQuyetDinh);
+            if (result > 0) {
+                return ResponseEntity.ok(ApiResponse.success("Cập nhật thành công", result, result));
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.failure("Lỗi", result));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
     @PostMapping("/huy")
     public ResponseEntity<ApiResponse<Object>> huyTrangthai(@RequestParam String id) throws SQLException {
         try {

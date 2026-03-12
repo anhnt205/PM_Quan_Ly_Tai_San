@@ -19,7 +19,6 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.Comparator;
 
 @Service
 public class DieuDongTaiSanService {
@@ -148,7 +147,7 @@ public class DieuDongTaiSanService {
         }
 
         // Filter by trangThaiPhieu if trangThai != 4
-        if (trangThai != null && trangThai != 4) {
+        if (trangThai != null && trangThai != 5) {
             List<DieuDongTaiSanDTO> trangThaiFiltered = new ArrayList<>();
             for (DieuDongTaiSanDTO item : sourceList) {
                 if (item != null && item.getTrangThai() != null && item.getTrangThai().equals(trangThai)) {
@@ -305,6 +304,10 @@ public class DieuDongTaiSanService {
 
     public int updateTrangThai(String id, String userId) {
         return dao.updateTrangThai(id, userId);
+    }
+
+    public int banHanhQuyetDinh(String id,String soQuyetDinh) {
+        return dao.banHanhQuyetDinh(id,soQuyetDinh);
     }
 
     public int huyTrangThai(String id) {

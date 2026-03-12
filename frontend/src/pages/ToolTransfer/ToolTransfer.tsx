@@ -12,6 +12,7 @@ import { useSelector } from "react-redux";
 import { showConfirmAlert } from "../../components/Alert";
 import {
   canSign,
+  getDecision,
   getPermissionSigning,
   getTypeInfo,
   handleSendToSigner,
@@ -75,6 +76,7 @@ export default function ToolTransfer() {
     signMutation,
     getToolHandoverMutation,
     handoverDetails,
+    decisionMutation,
   } = useToolTransferMutation();
 
   const { data: detailData = [] } = useToolHandoverDetailsQuery(
@@ -129,10 +131,16 @@ export default function ToolTransfer() {
       value: "2",
     },
     {
-      label: "Hoàn thành",
+      label: "Chưa ban hành",
       count: toolTransferPage?.trangThaiCounts?.["3"] ?? 0,
       color: "success",
       value: "3",
+    },
+    {
+      label: "Đã ban hành",
+      count: toolTransferPage?.trangThaiCounts?.["4"] ?? 0,
+      color: "secondary",
+      value: "4",
     },
   ];
 
@@ -224,6 +232,10 @@ export default function ToolTransfer() {
     }
   };
 
+  const handleDecision = (data: any) => {
+    decisionMutation.mutate(data);
+  };
+
   const handleViewSignAssets = async (fileName: string, item: any) => {
     setSelectedDocument(fileName);
     setShowSignDocument(true);
@@ -240,6 +252,13 @@ export default function ToolTransfer() {
   };
 
   const columns: GridColDef<ToolTransferData>[] = [
+    {
+      field: "id",
+      headerName: "Mã",
+      width: 150,
+      headerAlign: "center",
+      align: "center",
+    },
     {
       field: "tenPhieu",
       headerName: "Phiếu ký nội sinh",
@@ -284,13 +303,6 @@ export default function ToolTransfer() {
           S3Service.download(params.row.duongDanFile),
         );
       },
-    },
-    {
-      field: "soQuyetDinh",
-      headerName: "Ký số",
-      width: 150,
-      headerAlign: "center",
-      align: "center",
     },
     {
       field: "tgGnTuNgay",
@@ -554,6 +566,8 @@ export default function ToolTransfer() {
                     setStatus(value);
                   }}
                   statusValue={status}
+                  handleDecision={handleDecision}
+                  isDecision={getDecision}
                   isCheckShowShare={isCheckShowShare}
                   loading={isLoading}
                 />

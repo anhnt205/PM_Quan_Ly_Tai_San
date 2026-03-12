@@ -200,6 +200,39 @@ export const useAssetTranferMutation = () => {
     },
   });
 
+  const decisionMutation = useMutation({
+    mutationFn: async (data: any) => {
+      console.log(data);
+      const res = await api.post(
+        `/dieudongtaisan/banhanhquyetdinh`,
+        {},
+        {
+          params: {
+            id: data.id,
+            soQuyetDinh: data.soQuyetDinh,
+          },
+        },
+      );
+      return res.data;
+    },
+    onSuccess: async (response, data) => {
+      queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
+      const list = await listNguoiKy([data]);
+      socketService.send({
+        type: MessageTypeFunctions.ASSET_TRANSFER,
+        recieve: list,
+      });
+      showSuccessAlert("Ban hành quyết định thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Ban hành quyết định thất bại",
+      );
+    },
+  });
+
   // chi tiết điều động
 
   const createAssetTransferDetailManyMutation = useMutation({
@@ -561,6 +594,7 @@ export const useAssetTranferMutation = () => {
     getByIdMutation,
     getAssetHandoverMutation,
     assetTransferDetailAllMutation,
+    decisionMutation,
   };
 };
 

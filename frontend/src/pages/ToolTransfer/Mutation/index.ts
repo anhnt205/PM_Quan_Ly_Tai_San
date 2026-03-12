@@ -191,6 +191,39 @@ export const useToolTransferMutation = (
     },
   });
 
+  const decisionMutation = useMutation({
+    mutationFn: async (data: any) => {
+      console.log(data);
+      const res = await api.post(
+        `/dieudongccdcvattu/banhanhquyetdinh`,
+        {},
+        {
+          params: {
+            id: data.id,
+            soQuyetDinh: data.soQuyetDinh,
+          },
+        },
+      );
+      return res.data;
+    },
+    onSuccess: async (response, data) => {
+      queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
+      const list = await listNguoiKy([data]);
+      socketService.send({
+        type: MessageTypeFunctions.ASSET_TRANSFER,
+        recieve: list,
+      });
+      showSuccessAlert("Ban hành quyết định thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Ban hành quyết định thất bại",
+      );
+    },
+  });
+
   const cancelMutation = useMutation({
     mutationFn: async (data: any) => {
       const res = await api.post(`/dieudongccdcvattu/huy?id=${data.id}`);
@@ -569,6 +602,7 @@ export const useToolTransferMutation = (
     handoverDetails: handoverDetailsQuery.data || [],
     toolTransferDetailMutation,
     toolTransferDetailAllMutation,
+    decisionMutation,
   };
 };
 

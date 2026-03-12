@@ -148,7 +148,7 @@ export default function AssetHandoverForm({
     undefined,
     undefined,
     undefined,
-    3,
+    4,
     user.taiKhoan?.phongBanId,
     selectedAssetHandover ? undefined : true,
   );
@@ -514,6 +514,7 @@ export default function AssetHandoverForm({
                       onChange={async (value) => {
                         formik.setFieldValue("idDonViGiao", value.idDonViGiao);
                         formik.setFieldValue("idDonViNhan", value.idDonViNhan);
+                        formik.setFieldValue("soQuyetDinh", value.soQuyetDinh);
                         getListAsset(value.id);
                       }}
                       disabled={readOnly}
@@ -544,7 +545,7 @@ export default function AssetHandoverForm({
                       title="Số quyết định"
                       formik={formik}
                       field="soQuyetDinh"
-                      disabled={readOnly}
+                      disabled={true}
                     />
                   </Grid>
                   <Grid size={12}>

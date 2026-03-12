@@ -1,13 +1,12 @@
 package com.ecotel.quanlytaisan.model;
 
-import java.util.Date;
 
 public class LoaiKeHoach {
 
     private String id;
     private String ten;
-    private Date ngayTao;
-    private Date ngayCapNhat;
+    private String ngayTao;
+    private String ngayCapNhat;
     private String nguoiTao;
     private String nguoiCapNhat;
     private Boolean isActive;
@@ -28,19 +27,19 @@ public class LoaiKeHoach {
         this.ten = ten;
     }
 
-    public Date getNgayTao() {
+    public String getNgayTao() {
         return ngayTao;
     }
 
-    public void setNgayTao(Date ngayTao) {
+    public void setNgayTao(String ngayTao) {
         this.ngayTao = ngayTao;
     }
 
-    public Date getNgayCapNhat() {
+    public String getNgayCapNhat() {
         return ngayCapNhat;
     }
 
-    public void setNgayCapNhat(Date ngayCapNhat) {
+    public void setNgayCapNhat(String ngayCapNhat) {
         this.ngayCapNhat = ngayCapNhat;
     }
 

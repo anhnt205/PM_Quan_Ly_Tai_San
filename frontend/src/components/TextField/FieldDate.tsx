@@ -25,7 +25,7 @@ export default function FieldDate({
 
   const setValue = (val: string) => {
     if (formik && field) {
-      formik.setfieldValue(field, val);
+      formik.setFieldValue(field, val);
     } else {
       setSelectedDate?.(val);
     }

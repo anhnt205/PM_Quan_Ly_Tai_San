@@ -35,6 +35,7 @@ import { Dispatch, SetStateAction } from "react";
 import { FilterOption, FilterStatusGroup } from "./FilterStatusGroup";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
+import DecisionButton from "../Button/DecisionButton";
 
 const CustomFilterPanel = (props: any) => {
   return (
@@ -88,6 +89,8 @@ interface Props {
   isFilterDepartment?: boolean;
   showDeleteAll?: boolean;
   onDeleteAll?: () => void;
+  isDecision?: (status: number) => boolean;
+  handleDecision?: (item: any) => void;
 }
 
 export default function TableCustom({
@@ -131,6 +134,8 @@ export default function TableCustom({
   isFilterDepartment = false,
   showDeleteAll = false,
   onDeleteAll,
+  isDecision,
+  handleDecision,
 }: Props) {
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.user);
@@ -278,6 +283,17 @@ export default function TableCustom({
                 Ký biên bản
               </Button>
             )}
+            {selectedItem.length === 1 &&
+              isDecision?.(selectedItem[0]?.trangThai ?? 0) && (
+                <DecisionButton
+                  data={selectedItem[0]}
+                  handleDecision={handleDecision}
+                  onClose={() => {
+                    setSelectedItem([]);
+                    onSelectionChange?.([]);
+                  }}
+                />
+              )}
             {selectedItem && isCheckShowShare?.(selectedItem) && (
               <Button
                 size="small"

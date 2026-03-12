@@ -121,7 +121,7 @@ export default function ToolHandover() {
       searchDebounce,
       undefined,
       currentType ? Number(currentType) : undefined,
-      3,
+      4,
       true,
       user.taiKhoan?.phongBanId,
     );
@@ -404,6 +404,13 @@ export default function ToolHandover() {
   const [toolTransfer, setToolTransfer] = useState<any | null>(null);
   const columnsTransfer: GridColDef<ToolTransferData>[] = [
     {
+      field: "id",
+      headerName: "Mã",
+      width: 150,
+      headerAlign: "center",
+      align: "center",
+    },
+    {
       field: "tenPhieu",
       headerName: "Phiếu ký nội sinh",
       flex: 1,
@@ -438,11 +445,6 @@ export default function ToolHandover() {
           S3Service.download(params.row.duongDanFile),
         );
       },
-    },
-    {
-      field: "soQuyetDinh",
-      headerName: "Ký số",
-      width: 150,
     },
     {
       field: "trangThai",
@@ -482,7 +484,7 @@ export default function ToolHandover() {
               window.scrollTo({ top: 140, behavior: "smooth" });
               setSelectedRow({
                 id: "",
-                soQuyetDinh: "",
+                soQuyetDinh: params.row.soQuyetDinh,
                 banGiaoCCDCVatTu: "",
                 quyetDinhDieuDongSo: "",
                 lenhDieuDong: params.row.id,

@@ -18,6 +18,7 @@ import { useAssetTranferMutation, useAssetTransferPageQuery } from "./Mutation";
 import { useSelector } from "react-redux";
 import {
   canSign,
+  getDecision,
   getPermissionSigning,
   getTypeInfo,
   handleSendToSigner,
@@ -83,6 +84,7 @@ export default function AssetTransfer() {
     handleSignatureList,
     signMutation,
     getAssetHandoverMutation,
+    decisionMutation,
   } = useAssetTranferMutation();
 
   const debouncedSearchValue = useDebounce(searchValue, 600);
@@ -134,10 +136,16 @@ export default function AssetTransfer() {
       value: "2",
     },
     {
-      label: "Hoàn thành",
+      label: "Chưa ban hành",
       count: assetTranferPage?.trangThaiCounts?.["3"] ?? 0,
       color: "success",
       value: "3",
+    },
+    {
+      label: "Đã ban hành",
+      count: assetTranferPage?.trangThaiCounts?.["4"] ?? 0,
+      color: "secondary",
+      value: "4",
     },
   ];
 
@@ -222,6 +230,9 @@ export default function AssetTransfer() {
       asset: selectedRow,
     });
   };
+  const handleDecision = (data: any) => {
+    decisionMutation.mutate(data);
+  };
 
   const handleViewSignAssets = async (fileName: string, item: any) => {
     setSelectedDocument(fileName);
@@ -238,6 +249,13 @@ export default function AssetTransfer() {
   };
 
   const columns: GridColDef<any>[] = [
+    {
+      field: "id",
+      headerName: "Mã",
+      width: 150,
+      headerAlign: "center",
+      align: "center",
+    },
     {
       field: "tenPhieu",
       headerName: "Phiếu ký nội sinh",
@@ -288,15 +306,6 @@ export default function AssetTransfer() {
         );
       },
     },
-
-    {
-      field: "id",
-      headerName: "Ký số",
-      width: 150,
-      headerAlign: "center",
-      align: "center",
-    },
-
     {
       field: "tgGnTuNgay",
       headerName: "Thời gian giao nhận từ ngày",
@@ -562,6 +571,8 @@ export default function AssetTransfer() {
                   onStatusChange={(value) => {
                     setStatus(value);
                   }}
+                  handleDecision={handleDecision}
+                  isDecision={getDecision}
                   statusValue={status}
                   isCheckShowShare={isCheckShowShare}
                   loading={isLoading}

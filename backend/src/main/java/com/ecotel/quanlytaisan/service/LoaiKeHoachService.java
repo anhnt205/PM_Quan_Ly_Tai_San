@@ -14,9 +14,9 @@ public class LoaiKeHoachService {
     @Autowired
     private LoaiKeHoachDao dao;
 
-    public List<LoaiKeHoach> getAll(int page,int size,String keyword){
+    public List<LoaiKeHoach> getAll(int page,int size,String search){
 
-        return dao.findAll(page,size,keyword);
+        return dao.findAll(page,size,search);
 
     }
 

@@ -11,6 +11,14 @@ import { MessageTypeFunctions } from "../../../utils/const";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 
+export const getDecision = (status: number) => {
+  switch (status) {
+    case 3:
+      return true;
+    default:
+      return false;
+  }
+};
 export const ShowPermissionSigning = (status: number) => {
   // Định nghĩa cấu hình cho từng trạng thái
   const getStatusConfig = (status: number) => {
@@ -129,7 +137,9 @@ const getStatusDetails = (status: number) => {
     case 2:
       return { label: "Hủy", color: "#4caf50" }; // Xanh lá
     case 3:
-      return { label: "Hoàn thành", color: "#68b9f0" }; // Xanh lá
+      return { label: "Chưa ban hành", color: "#68b9f0" }; // Xanh lá
+    case 4:
+      return { label: "Đã ban hành", color: "#9c27b0" }; // Xanh lá
     default:
       return { label: "Nháp", color: "#9e9e9e" }; // Xám
   }

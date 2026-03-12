@@ -3,7 +3,7 @@ package com.ecotel.quanlytaisan.service;
 import com.ecotel.quanlytaisan.dao.ChiTietDieuDongCCDCVatTuDao;
 import com.ecotel.quanlytaisan.dao.DieuDongCCDCVatTuDao;
 import com.ecotel.quanlytaisan.model.*;
-import com.ecotel.quanlytaisan.model.PageResponse;
+
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -150,7 +150,7 @@ public class DieuDongCCDCVatTuService {
         }
 
         // Filter by trangThaiPhieu if trangThai != 4
-        if (trangThai != null && trangThai != 4) {
+        if (trangThai != null && trangThai != 5) {
             List<DieuDongCCDCVatTuDTO> trangThaiFiltered = new ArrayList<>();
             for (DieuDongCCDCVatTuDTO item : sourceList) {
                 if (item != null && item.getTrangThai() != null && item.getTrangThai().equals(trangThai)) {
@@ -291,7 +291,9 @@ public class DieuDongCCDCVatTuService {
     public int delete(String id) throws SQLException {
         return dao.delete(id);
     }
-
+    public int banHanhQuyetDinh(String id,String soQuyetDinh) {
+        return dao.banHanhQuyetDinh(id,soQuyetDinh);
+    }
     public int updateTrangThai(String id, String userId) {
         return dao.updateTrangThai(id, userId);
     }

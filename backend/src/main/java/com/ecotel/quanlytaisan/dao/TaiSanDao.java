@@ -230,7 +230,10 @@ public class TaiSanDao {
                     ts.SoThe,
                     ts.nvNS,
                     ts.vonVay,
-                    ts.vonKhac
+                    ts.vonKhac,
+                    ts.tgKiemDinh,
+                    ts.chuKyKiemDinh,
+                    ts.trangThaiKiemDinh
                 FROM 
                     TaiSan AS ts
                 LEFT JOIN 
@@ -330,7 +333,10 @@ public class TaiSanDao {
                     ts.SoThe,
                     ts.nvNS,
                     ts.vonVay,
-                    ts.vonKhac
+                    ts.vonKhac,
+                    ts.tgKiemDinh,
+                    ts.chuKyKiemDinh,
+                    ts.trangThaiKiemDinh
                 FROM 
                     TaiSan AS ts
                 LEFT JOIN 
@@ -437,7 +443,10 @@ public class TaiSanDao {
                 ts.SoThe,
                 ts.nvNS,
                 ts.vonVay,
-                ts.vonKhac
+                ts.vonKhac,
+                ts.tgKiemDinh,
+                ts.chuKyKiemDinh,
+                ts.trangThaiKiemDinh
                     FROM TaiSan ts
                     LEFT JOIN MoHinhTaiSan mhts ON ts.IdMoHinhTaiSan = mhts.Id
                     LEFT JOIN NhomTaiSan nts ON ts.IdNhomTaiSan = nts.Id
@@ -513,7 +522,10 @@ public class TaiSanDao {
                   ts.SoThe,
                   ts.nvNS,
                   ts.vonVay,
-                  ts.vonKhac
+                  ts.vonKhac,
+                  ts.tgKiemDinh,
+                    ts.chuKyKiemDinh,
+                    ts.trangThaiKiemDinh
                 FROM 
                     TaiSan AS ts
                 LEFT JOIN 
@@ -595,7 +607,10 @@ public class TaiSanDao {
                       ts.SoThe,
                       ts.nvNS,
                       ts.vonVay,
-                      ts.vonKhac
+                      ts.vonKhac,
+                      ts.tgKiemDinh,
+                    ts.chuKyKiemDinh,
+                    ts.trangThaiKiemDinh
                 FROM 
                     TaiSan AS ts
                 LEFT JOIN 
@@ -628,8 +643,8 @@ public class TaiSanDao {
             return update(taiSan);
         } else {
             // Nếu chưa tồn tại thì insert
-            String sql = "INSERT INTO TaiSan (Id, IdLoaiTaiSan, TenTaiSan, NguyenGia, GiaTriKhauHaoBanDau, KyKhauHaoBanDau, " + "GiaTriThanhLy, IdMoHinhTaiSan, PhuongPhapKhauHao, SoKyKhauHao, TaiKhoanTaiSan, TaiKhoanKhauHao, TaiKhoanChiPhi, " + "IdNhomTaiSan, NgayVaoSo, NgaySuDung, IdDuDan, IdNguonVon, KyHieu, SoKyHieu, CongSuat, NuocSanXuat, NamSanXuat, " + "LyDoTang, HienTrang, SoLuong, DonViTinh, GhiChu, IdDonViBanDau, IdDonViHienThoi, MoTa, IdCongTy, NgayTao, " + "NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive,  IsTaiSanCon,IdLoaiTaiSanCon, SoThe, nvNS, vonVay, vonKhac) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?, ?, ?, ?)";
-            int result = jdbcTemplate.update(sql, taiSan.getId(), taiSan.getIdLoaiTaiSan(), taiSan.getTenTaiSan(), taiSan.getNguyenGia(), taiSan.getGiaTriKhauHaoBanDau(), taiSan.getKyKhauHaoBanDau(), taiSan.getGiaTriThanhLy(), taiSan.getIdMoHinhTaiSan(), taiSan.getPhuongPhapKhauHao(), taiSan.getSoKyKhauHao(), taiSan.getTaiKhoanTaiSan(), taiSan.getTaiKhoanKhauHao(), taiSan.getTaiKhoanChiPhi(), taiSan.getIdNhomTaiSan(), taiSan.getNgayVaoSo(), taiSan.getNgaySuDung(), taiSan.getIdDuDan(), taiSan.getIdNguonVon(), taiSan.getKyHieu(), taiSan.getSoKyHieu(), taiSan.getCongSuat(), taiSan.getNuocSanXuat(), taiSan.getNamSanXuat(), taiSan.getLyDoTang(), taiSan.getHienTrang(), taiSan.getSoLuong(), taiSan.getDonViTinh(), taiSan.getGhiChu(), taiSan.getIdDonViBanDau(), taiSan.getIdDonViHienThoi(), taiSan.getMoTa(), taiSan.getIdCongTy(), taiSan.getNgayTao(), taiSan.getNgayCapNhat(), taiSan.getNguoiTao(), taiSan.getNguoiCapNhat(), taiSan.getIsActive(), taiSan.getIsTaiSanCon(), taiSan.getIdLoaiTaiSanCon(), taiSan.getSoThe(), taiSan.getNvNS(), taiSan.getVonVay(), taiSan.getVonKhac());
+            String sql = "INSERT INTO TaiSan (Id, IdLoaiTaiSan, TenTaiSan, NguyenGia, GiaTriKhauHaoBanDau, KyKhauHaoBanDau, " + "GiaTriThanhLy, IdMoHinhTaiSan, PhuongPhapKhauHao, SoKyKhauHao, TaiKhoanTaiSan, TaiKhoanKhauHao, TaiKhoanChiPhi, " + "IdNhomTaiSan, NgayVaoSo, NgaySuDung, IdDuDan, IdNguonVon, KyHieu, SoKyHieu, CongSuat, NuocSanXuat, NamSanXuat, " + "LyDoTang, HienTrang, SoLuong, DonViTinh, GhiChu, IdDonViBanDau, IdDonViHienThoi, MoTa, IdCongTy, NgayTao, " + "NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive,  IsTaiSanCon,IdLoaiTaiSanCon, SoThe, nvNS, vonVay, vonKhac, tgKiemDinh, chuKyKiemDinh) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?, ?, ?, ?,?,?)";
+            int result = jdbcTemplate.update(sql, taiSan.getId(), taiSan.getIdLoaiTaiSan(), taiSan.getTenTaiSan(), taiSan.getNguyenGia(), taiSan.getGiaTriKhauHaoBanDau(), taiSan.getKyKhauHaoBanDau(), taiSan.getGiaTriThanhLy(), taiSan.getIdMoHinhTaiSan(), taiSan.getPhuongPhapKhauHao(), taiSan.getSoKyKhauHao(), taiSan.getTaiKhoanTaiSan(), taiSan.getTaiKhoanKhauHao(), taiSan.getTaiKhoanChiPhi(), taiSan.getIdNhomTaiSan(), taiSan.getNgayVaoSo(), taiSan.getNgaySuDung(), taiSan.getIdDuDan(), taiSan.getIdNguonVon(), taiSan.getKyHieu(), taiSan.getSoKyHieu(), taiSan.getCongSuat(), taiSan.getNuocSanXuat(), taiSan.getNamSanXuat(), taiSan.getLyDoTang(), taiSan.getHienTrang(), taiSan.getSoLuong(), taiSan.getDonViTinh(), taiSan.getGhiChu(), taiSan.getIdDonViBanDau(), taiSan.getIdDonViHienThoi(), taiSan.getMoTa(), taiSan.getIdCongTy(), taiSan.getNgayTao(), taiSan.getNgayCapNhat(), taiSan.getNguoiTao(), taiSan.getNguoiCapNhat(), taiSan.getIsActive(), taiSan.getIsTaiSanCon(), taiSan.getIdLoaiTaiSanCon(), taiSan.getSoThe(), taiSan.getNvNS(), taiSan.getVonVay(), taiSan.getVonKhac(), taiSan.getTgKiemDinh(), taiSan.getChuKyKiemDinh());
             // if (result > 0) {
             //     refreshCache();
             // }
@@ -646,13 +661,13 @@ public class TaiSanDao {
                         NgayVaoSo=?, NgaySuDung=?, IdDuDan=?, IdNguonVon=?, KyHieu=?, SoKyHieu=?,
                         CongSuat=?, NuocSanXuat=?, NamSanXuat=?, LyDoTang=?, HienTrang=?, SoLuong=?,
                         DonViTinh=?, GhiChu=?, IdDonViBanDau=?, IdDonViHienThoi=?, MoTa=?, IdCongTy=?,
-                        NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?, IsActive=?,   IsTaiSanCon=?,IdLoaiTaiSanCon=?, SoThe=?, nvNS=?, vonVay=?, vonKhac=?
+                        NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?, IsActive=?,   IsTaiSanCon=?,IdLoaiTaiSanCon=?, SoThe=?, nvNS=?, vonVay=?, vonKhac=?, tgKiemDinh=?, chuKyKiemDinh=?, trangThaiKiemDinh=?
                     WHERE Id=?
                 """;
 
         int result = jdbcTemplate.update(sql, taiSan.getIdLoaiTaiSan(), taiSan.getTenTaiSan(), taiSan.getNguyenGia(), taiSan.getGiaTriKhauHaoBanDau(), taiSan.getKyKhauHaoBanDau(), taiSan.getGiaTriThanhLy(), taiSan.getIdMoHinhTaiSan(), taiSan.getPhuongPhapKhauHao(), taiSan.getSoKyKhauHao(), taiSan.getTaiKhoanTaiSan(), taiSan.getTaiKhoanKhauHao(), taiSan.getTaiKhoanChiPhi(), taiSan.getIdNhomTaiSan(), taiSan.getNgayVaoSo(),   // fix
                 taiSan.getNgaySuDung(), // fix
-                taiSan.getIdDuDan(), taiSan.getIdNguonVon(), taiSan.getKyHieu(), taiSan.getSoKyHieu(), taiSan.getCongSuat(), taiSan.getNuocSanXuat(), taiSan.getNamSanXuat(), taiSan.getLyDoTang(), taiSan.getHienTrang(), taiSan.getSoLuong(), taiSan.getDonViTinh(), taiSan.getGhiChu(), taiSan.getIdDonViBanDau(), taiSan.getIdDonViHienThoi(), taiSan.getMoTa(), taiSan.getIdCongTy(), taiSan.getNgayCapNhat(), taiSan.getNguoiTao(), taiSan.getNguoiCapNhat(), taiSan.getIsActive() != null ? (taiSan.getIsActive() ? 1 : 0) : 1, taiSan.getIsTaiSanCon(), taiSan.getIdLoaiTaiSanCon(), taiSan.getSoThe(), taiSan.getNvNS(), taiSan.getVonVay(), taiSan.getVonKhac(), taiSan.getId());
+                taiSan.getIdDuDan(), taiSan.getIdNguonVon(), taiSan.getKyHieu(), taiSan.getSoKyHieu(), taiSan.getCongSuat(), taiSan.getNuocSanXuat(), taiSan.getNamSanXuat(), taiSan.getLyDoTang(), taiSan.getHienTrang(), taiSan.getSoLuong(), taiSan.getDonViTinh(), taiSan.getGhiChu(), taiSan.getIdDonViBanDau(), taiSan.getIdDonViHienThoi(), taiSan.getMoTa(), taiSan.getIdCongTy(), taiSan.getNgayCapNhat(), taiSan.getNguoiTao(), taiSan.getNguoiCapNhat(), taiSan.getIsActive() != null ? (taiSan.getIsActive() ? 1 : 0) : 1, taiSan.getIsTaiSanCon(), taiSan.getIdLoaiTaiSanCon(), taiSan.getSoThe(), taiSan.getNvNS(), taiSan.getVonVay(), taiSan.getVonKhac(),taiSan.getTgKiemDinh(), taiSan.getChuKyKiemDinh(), taiSan.getTrangThaiKiemDinh() != null ? (taiSan.getTrangThaiKiemDinh() ? 1 : 0) : 1,taiSan.getId());
         // if (result > 0) {
         //     CompletableFuture.runAsync(this::refreshCache);
         // }
@@ -1014,7 +1029,10 @@ public class TaiSanDao {
                     ts.SoThe,
                     ts.nvNS,
                     ts.vonVay,
-                    ts.vonKhac
+                    ts.vonKhac,
+                    ts.tgKiemDinh,
+                    ts.chuKyKiemDinh,
+                    ts.trangThaiKiemDinh
                 FROM 
                     TaiSan AS ts
                 LEFT JOIN 

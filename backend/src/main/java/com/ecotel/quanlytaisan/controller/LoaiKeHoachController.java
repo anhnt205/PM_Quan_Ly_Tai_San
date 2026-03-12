@@ -19,10 +19,10 @@ public class LoaiKeHoachController {
     public List<LoaiKeHoach> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String keyword
+            @RequestParam(required = false) String search
     ){
 
-        return service.getAll(page,size,keyword);
+        return service.getAll(page,size,search);
 
     }
 

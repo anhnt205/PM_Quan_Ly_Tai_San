@@ -358,13 +358,13 @@ export default function AssetTransferForm({
               {/* CỘT TRÁI */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <Grid container spacing={2}>
-                  {isSignedForm && (
+                  {selectedTransfer && (
                     <Grid size={12}>
                       <FieldInput
                         title="Số chứng từ *"
                         formik={formik}
-                        field="soQuyetDinh"
-                        disabled={readOnly}
+                        field="id"
+                        disabled={true}
                       />
                     </Grid>
                   )}

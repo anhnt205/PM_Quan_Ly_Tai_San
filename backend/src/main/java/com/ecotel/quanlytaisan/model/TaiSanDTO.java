@@ -60,6 +60,9 @@ public class TaiSanDTO {
     private Double nvNS;
     private Double vonVay;
     private Double vonKhac;
+    private String tgKiemDinh;
+    private Integer chuKyKiemDinh;
+    private Boolean trangThaiKiemDinh;
     private List<NguonKinhPhi> nguonKinhPhiList;
     private List<SetNguonKinhPhi>setNguonKinhPhiList;
 }

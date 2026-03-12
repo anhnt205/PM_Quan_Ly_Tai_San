@@ -569,10 +569,11 @@ export default function ToolHandoverForm({
                       formik={formik}
                       field="lenhDieuDong"
                       data={ToolTransferData.items || []}
-                      labelkey="soQuyetDinh"
+                      labelkey="id"
                       onChange={async (value) => {
                         formik.setFieldValue("idDonViGiao", value.idDonViGiao);
                         formik.setFieldValue("idDonViNhan", value.idDonViNhan);
+                        formik.setFieldValue("soQuyetDinh", value.soQuyetDinh);
                         formik.setFieldValue("chiTietBanGiaoCCDCVatTu", []);
                         getListTool(value.id);
                       }}
@@ -604,7 +605,7 @@ export default function ToolHandoverForm({
                       title="Số quyết định"
                       formik={formik}
                       field="soQuyetDinh"
-                      disabled={readOnly}
+                      disabled={true}
                     />
                   </Grid>
                   <Grid size={12}>

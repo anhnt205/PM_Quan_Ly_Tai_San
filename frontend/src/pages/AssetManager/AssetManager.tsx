@@ -38,6 +38,7 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { Eye, HistoryIcon } from "lucide-react";
 import AssetHistoryModal from "./components/AssetHistoryModal";
 import { useLocation, useNavigate } from "react-router-dom";
+import { ShowStatus } from "./config";
 
 export default function AssetManager() {
   const [tab, setTab] = React.useState(0);
@@ -279,6 +280,15 @@ export default function AssetManager() {
       minWidth: 150,
       align: "center",
       headerAlign: "center",
+    },
+    {
+      field: "trangThaiKiemDinh",
+      headerName: "Trạng thái kiểm định",
+      flex: 1,
+      minWidth: 150,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => ShowStatus(params.row.trangThaiKiemDinh ? 1 : 0),
     },
     {
       field: "action",

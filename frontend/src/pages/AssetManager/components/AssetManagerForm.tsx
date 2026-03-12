@@ -40,6 +40,7 @@ import dayjs from "dayjs";
 import { AssetValidation } from "../validation";
 import TextFieldNumber from "../../../components/TextField/TextFieldNumber";
 import { CongTy } from "../../../utils/const";
+import FieldDate from "../../../components/TextField/FieldDate";
 
 export default function AssetManagerForm({
   onEdit,
@@ -86,6 +87,8 @@ export default function AssetManagerForm({
       idNhomTaiSan: "",
       ngayVaoSo: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       ngaySuDung: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      tgKiemDinh: dayjs(new Date()).format("YYYY-MM-DD"),
+      chuKyKiemDinh: 0,
       idDuDan: "",
       idNguonVon: "",
       kyHieu: "",
@@ -440,6 +443,14 @@ export default function AssetManagerForm({
                     disabled={readOnly}
                   />
                 </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <FieldDate
+                    title="Thời gian kiểm định"
+                    formik={formik}
+                    field="tgKiemDinh"
+                    disabled={readOnly}
+                  />
+                </Grid>
               </Grid>
             </Grid>
             <Grid size={{ xs: 6 }}>
@@ -629,6 +640,15 @@ export default function AssetManagerForm({
                     labelkey="tenPhongBan"
                     formik={formik}
                     field="idDonViHienThoi"
+                    disabled={readOnly}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <FieldInput
+                    title="Chu kỳ kiểm định (tháng)"
+                    formik={formik}
+                    type="number"
+                    field="chuKyKiemDinh"
                     disabled={readOnly}
                   />
                 </Grid>

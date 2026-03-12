@@ -106,7 +106,7 @@ export default function AssetHandover() {
       searchDebounce,
       currentType ? Number(currentType) : undefined,
       undefined,
-      3,
+      4,
       user.taiKhoan?.phongBanId,
       true,
     );
@@ -408,6 +408,13 @@ export default function AssetHandover() {
 
   const columnsTransfer: GridColDef<AssetTransferData>[] = [
     {
+      field: "id",
+      headerName: "Mã",
+      width: 150,
+      headerAlign: "center",
+      align: "center",
+    },
+    {
       field: "tenPhieu",
       headerName: "Phiếu ký nội sinh",
       flex: 1,
@@ -442,11 +449,6 @@ export default function AssetHandover() {
           S3Service.download(params.row.duongDanFile),
         );
       },
-    },
-    {
-      field: "soQuyetDinh",
-      headerName: "Ký số",
-      width: 150,
     },
     {
       field: "trangThai",
@@ -495,7 +497,7 @@ export default function AssetHandover() {
                 // 2. Set dữ liệu vào state để truyền xuống form
                 setSelectedRow({
                   id: "",
-                  soQuyetDinh: "",
+                  soQuyetDinh: params.row.soQuyetDinh,
                   banGiaoTaiSan: "",
                   quyetDinhDieuDongSo: "",
                   lenhDieuDong: params.row.id,

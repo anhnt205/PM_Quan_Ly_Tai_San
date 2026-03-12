@@ -7,6 +7,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 import com.ecotel.quanlytaisan.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -550,7 +551,7 @@ public class DieuDongCCDCVatTuDao {
 
         String generatedId = generateIdAndSoQuyetDinh(obj.getLoai());
         obj.setId(generatedId);
-        obj.setSoQuyetDinh(generatedId);
+        // obj.setSoQuyetDinh(generatedId);
         // Kiểm tra xem record có tồn tại không
         String checkSql = "SELECT COUNT(*) FROM DieuDongCCDCVatTu WHERE Id = ?";
         int count = jdbcTemplate.queryForObject(checkSql, Integer.class, obj.getId());
@@ -776,7 +777,16 @@ public class DieuDongCCDCVatTuDao {
         return 0;
 
     }
+    public int banHanhQuyetDinh(String id,String soQuyetDinh) {
+        String sql = """
+                UPDATE DieuDongCCDCVatTu
+                SET TrangThai=?,soQuyetDinh=?
+                WHERE Id=?
+                """;
 
+        int result = jdbcTemplate.update(sql, 4,soQuyetDinh, id);
+        return result;
+    }
 
     public int huyDieuDong(String id) {
         String sql = """
@@ -874,7 +884,7 @@ public class DieuDongCCDCVatTuDao {
                     LEFT JOIN NhanVien nvGiamDoc ON ddts.IdTrinhDuyetGiamDoc = nvGiamDoc.Id
 
                 WHERE ddts.IdCongTy = ?
-                  AND ddts.TrangThai = 3
+                  AND ddts.TrangThai = 4
                   AND ddts.Loai = 2
                   AND EXISTS (
                     SELECT 1 FROM ChiTietDieuDongCCDCVatTu ctdd
@@ -900,7 +910,7 @@ public class DieuDongCCDCVatTuDao {
                 SELECT DISTINCT ddts.Id
                 FROM DieuDongCCDCVatTu ddts
                 WHERE ddts.IdCongTy = ?
-                  AND ddts.TrangThai = 3
+                  AND ddts.TrangThai = 4
                   AND EXISTS (
                     SELECT 1 FROM ChiTietDieuDongCCDCVatTu ctdd
                     WHERE ctdd.IdDieuDongCCDCVatTu = ddts.Id

@@ -618,7 +618,7 @@ public class DieuDongTaiSanDao {
         // Tự động sinh Id và SoQuyetDinh nếu chưa có
         String generatedId = generateIdAndSoQuyetDinh(obj.getLoai());
         obj.setId(generatedId);
-        obj.setSoQuyetDinh(generatedId);
+        // obj.setSoQuyetDinh(generatedId);
 
         // Kiểm tra xem record có tồn tại không
         String checkSql = "SELECT COUNT(*) FROM DieuDongTaiSan WHERE Id = ?";
@@ -694,6 +694,19 @@ public class DieuDongTaiSanDao {
 
         int result = jdbcTemplate.update(sql, daBanGiao, id  // điều kiện WHERE
         );
+        if (result > 0) {
+            CompletableFuture.runAsync(this::refreshCache);
+        }
+        return result;
+    }
+    public int banHanhQuyetDinh(String id,String soQuyetDinh) {
+        String sql = """
+                UPDATE DieuDongTaiSan
+                SET TrangThai=?,soQuyetDinh=?
+                WHERE Id=?
+                """;
+
+        int result = jdbcTemplate.update(sql, 4,soQuyetDinh, id);
         if (result > 0) {
             CompletableFuture.runAsync(this::refreshCache);
         }
@@ -979,7 +992,7 @@ public class DieuDongTaiSanDao {
                 LEFT JOIN NhanVien nvNguoiCapNhat ON ddts.NguoiCapNhat = nvNguoiCapNhat.Id
 
             WHERE ddts.IdCongTy = ?
-              AND ddts.TrangThai = 3
+              AND ddts.TrangThai = 4
               AND ddts.Loai = 2
               AND EXISTS (
                 SELECT 1 FROM ChiTietDieuDongTaiSan ctdd
@@ -1002,7 +1015,7 @@ public class DieuDongTaiSanDao {
                 SELECT DISTINCT ddts.Id
                 FROM DieuDongTaiSan ddts
                 WHERE ddts.IdCongTy = ?
-                  AND ddts.TrangThai = 3
+                  AND ddts.TrangThai = 4
                   AND EXISTS (
                     SELECT 1 FROM ChiTietDieuDongTaiSan ctdd
                     WHERE ctdd.IdDieuDongTaiSan = ddts.Id

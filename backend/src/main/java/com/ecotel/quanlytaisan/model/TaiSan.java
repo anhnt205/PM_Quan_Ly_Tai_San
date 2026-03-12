@@ -50,6 +50,10 @@ public class TaiSan {
     private Float nvNS;
     private Float vonVay;
     private Float vonKhac;
+    private String tgKiemDinh;
+    private Integer chuKyKiemDinh;
+    private Boolean trangThaiKiemDinh;
+
     public static TaiSan mapToTaiSan(String[] line) {
         TaiSan ts = new TaiSan();
         int i = 0;
@@ -149,6 +153,7 @@ public class TaiSan {
         ts.setNvNS(getCellFloat(row.getCell(i++)));
         ts.setVonVay(getCellFloat(row.getCell(i++)));
         ts.setVonKhac(getCellFloat(row.getCell(i++)));
+        
 
         return ts;
     }

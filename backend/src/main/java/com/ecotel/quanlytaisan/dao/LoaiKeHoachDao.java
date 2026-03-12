@@ -16,7 +16,7 @@ public class LoaiKeHoachDao {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public List<LoaiKeHoach> findAll(int page, int size, String keyword) {
+    public List<LoaiKeHoach> findAll(int page, int size, String search) {
 
         int offset = page * size;
 
@@ -30,7 +30,7 @@ public class LoaiKeHoachDao {
         return jdbcTemplate.query(
                 sql,
                 new BeanPropertyRowMapper<>(LoaiKeHoach.class),
-                keyword, keyword, keyword,
+                search, search, search,
                 size,
                 offset
         );
