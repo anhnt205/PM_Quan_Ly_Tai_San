@@ -3,6 +3,8 @@ package com.ecotel.quanlytaisan.service;
 
 import com.ecotel.quanlytaisan.dao.LoaiKeHoachDao;
 import com.ecotel.quanlytaisan.model.LoaiKeHoach;
+import com.ecotel.quanlytaisan.model.PageResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,9 +16,12 @@ public class LoaiKeHoachService {
     @Autowired
     private LoaiKeHoachDao dao;
 
-    public List<LoaiKeHoach> getAll(int page,int size,String search){
+    public PageResponse<LoaiKeHoach> getAll(int page,int size,String search){
 
-        return dao.findAll(page,size,search);
+        List<LoaiKeHoach> items= dao.findAll(page,size,search);
+        long totalItems = dao.countAll(search);
+
+        return new PageResponse<>(items, totalItems, page, size);
 
     }
 

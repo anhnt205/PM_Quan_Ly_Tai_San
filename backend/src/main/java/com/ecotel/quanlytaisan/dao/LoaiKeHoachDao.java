@@ -20,26 +20,53 @@ public class LoaiKeHoachDao {
 
         int offset = page * size;
 
-        String sql = """
-        SELECT * FROM LoaiKeHoach
-        WHERE (? IS NULL OR Id LIKE CONCAT('%',?,'%')
-        OR Ten LIKE CONCAT('%',?,'%'))
-        LIMIT ? OFFSET ?
-        """;
+       String sql = """
+       SELECT 
+        lkh.Id,
+        lkh.Ten
+        FROM LoaiKeHoachSucChua lkh 
+        WHERE ( 
+            ? IS NULL 
+            OR lkh.Id LIKE ? 
+            OR lkh.Ten LIKE ?
+            ) LIMIT ? OFFSET ?
+            """;
+
+        String keyword = (search == null || search.isBlank())
+                ? null
+                : "%" + search + "%";
 
         return jdbcTemplate.query(
-                sql,
-                new BeanPropertyRowMapper<>(LoaiKeHoach.class),
-                search, search, search,
-                size,
-                offset
+            sql,
+            new BeanPropertyRowMapper<>(LoaiKeHoach.class),
+            keyword,     
+            keyword, 
+            keyword, 
+            size, 
+            offset
         );
+    }
+
+    public long countAll( String keyword) {
+        String whereClause = "";
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            whereClause += " WHERE (LOWER(Ten) LIKE LOWER(?) OR LOWER(Id) LIKE LOWER(?))";
+        }
+
+        String sql = "SELECT COUNT(*) FROM LoaiKeHoachSucChua " + whereClause;
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            String searchPattern = "%" + keyword.trim().toLowerCase() + "%";
+            return jdbcTemplate.queryForObject(sql, Long.class, searchPattern, searchPattern);
+        } else {
+            return jdbcTemplate.queryForObject(sql, Long.class);
+        }
     }
 
     public int insert(LoaiKeHoach entity) {
 
         String sql = """
-        INSERT INTO LoaiKeHoach
+        INSERT INTO LoaiKeHoachSucChua
         (Id,Ten,NgayTao,NgayCapNhat,NguoiTao,NguoiCapNhat,IsActive)
         VALUES (?,?,?,?,?,?,?)
         """;
@@ -61,7 +88,7 @@ public class LoaiKeHoachDao {
     public int update(LoaiKeHoach entity) {
 
         String sql = """
-        UPDATE LoaiKeHoach
+        UPDATE LoaiKeHoachSucChua
         SET Ten=?,NgayCapNhat=?,NguoiCapNhat=?
         WHERE Id=?
         """;
@@ -77,21 +104,21 @@ public class LoaiKeHoachDao {
 
     public int delete(String id) {
 
-        String sql = "DELETE FROM LoaiKeHoach WHERE Id=?";
+        String sql = "DELETE FROM LoaiKeHoachSucChua WHERE Id=?";
 
         return jdbcTemplate.update(sql,id);
     }
 
     public int deleteAll() {
 
-        String sql = "DELETE FROM LoaiKeHoach";
+        String sql = "DELETE FROM LoaiKeHoachSucChua";
 
         return jdbcTemplate.update(sql);
     }
 
     public int deleteBatch(List<String> ids){
 
-        String sql = "DELETE FROM LoaiKeHoach WHERE Id=?";
+        String sql = "DELETE FROM LoaiKeHoachSucChua WHERE Id=?";
 
         int total = 0;
 

@@ -2,6 +2,7 @@
 package com.ecotel.quanlytaisan.controller;
 
 import com.ecotel.quanlytaisan.model.LoaiKeHoach;
+import com.ecotel.quanlytaisan.model.PageResponse;
 import com.ecotel.quanlytaisan.service.LoaiKeHoachService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +17,7 @@ public class LoaiKeHoachController {
     private LoaiKeHoachService service;
 
     @GetMapping
-    public List<LoaiKeHoach> getAll(
+    public PageResponse<LoaiKeHoach> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String search

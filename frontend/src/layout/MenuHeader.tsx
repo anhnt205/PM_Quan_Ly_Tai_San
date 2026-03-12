@@ -47,9 +47,7 @@ import { ShowCountInSubMenu } from "../components/common/ShowCountInSubMenu";
 import { useToolTransferPageQuery } from "../pages/ToolTransfer/Mutation";
 import { useToolHandoverPageQuery } from "../pages/ToolHandover/Mutation";
 import { useAssetHandoverPageQuery } from "../pages/AssetHandover/Mutation";
-import {
-  useMaintenanceRepairPageQuery,
-} from "../pages/MaintenanceRepair/Mutation";
+import { useMaintenanceRepairPageQuery } from "../pages/MaintenanceRepair/Mutation";
 import api from "../config/api.config";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React from "react";
@@ -307,7 +305,7 @@ export default function Menuheader() {
     user?.taiKhoan?.tenDangNhap,
     maintenanceRepair.items,
   );
-  
+
   const menuItems = [
     {
       text: "Tổng quan",
@@ -333,6 +331,7 @@ export default function Menuheader() {
         { text: "Loại tài sản", path: ROUTES.TYPEASSET },
         { text: "Nhóm ccdc", path: ROUTES.TOOLGROUP },
         { text: "Loại ccdc", path: ROUTES.TOOLTYPE },
+        { text: "Loại kế hoạch sửa chữa", path: ROUTES.PlanType },
         { text: "Loại sửa chữa bảo dưỡng", path: ROUTES.MAINTENANCEREPAIRTYPE },
         { text: "Đơn vị tính", path: ROUTES.UNIT },
         { text: "Lý do tăng", path: ROUTES.REASONINCREASE },

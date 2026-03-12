@@ -35,6 +35,7 @@ import { RootState } from "./redux/store";
 import { useQueryClient } from "@tanstack/react-query";
 import { MessageTypeFunctions } from "./utils/const";
 import MaintenancePlanRepair from "./pages/MainenancePlanRepair/MaintenancePlanRepair";
+import PlanType from "./pages/PlanType/PlanType";
 
 const ProtectedRoute = ({
   allowedRoles,
@@ -166,6 +167,7 @@ function App() {
           <Route path={ROUTES.TYPEASSET} element={<TypeAsset />} />
           <Route path={ROUTES.TOOLGROUP} element={<ToolGroup />} />
           <Route path={ROUTES.TOOLTYPE} element={<ToolType />} />
+          <Route path={ROUTES.PlanType} element={<PlanType />} />
           <Route
             path={ROUTES.MAINTENANCEREPAIRTYPE}
             element={<MaintenanceRepairType />}
