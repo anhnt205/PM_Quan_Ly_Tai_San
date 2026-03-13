@@ -11,7 +11,7 @@ export const usePlanTypeMutation = () => {
 
   const createMutation = useMutation({
     mutationFn: async (data: PlanTypeType) => {
-      const res = await api.post("/loaikehoach", data);
+      const res = await api.post("/loaikehoachscbd", data);
       return res.data;
     },
     onSuccess: (data) => {
@@ -29,7 +29,7 @@ export const usePlanTypeMutation = () => {
 
   const updateMutation = useMutation({
     mutationFn: async (data: PlanTypeType) => {
-      const res = await api.put(`/loaikehoach/${data.id}`, data);
+      const res = await api.put(`/loaikehoachscbd/${data.id}`, data);
       return res.data;
     },
     onSuccess: (data) => {
@@ -47,7 +47,7 @@ export const usePlanTypeMutation = () => {
 
   const deleteOneMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await api.delete(`/loaikehoach/${id}`);
+      const res = await api.delete(`/loaikehoachscbd/${id}`);
       return res.data;
     },
     onSuccess: (data) => {
@@ -65,7 +65,7 @@ export const usePlanTypeMutation = () => {
 
   const deleteManyMutation = useMutation({
     mutationFn: async (ids: string[]) => {
-      const res = await api.delete(`/loaikehoach/batch`, { data: ids });
+      const res = await api.delete(`/loaikehoachscbd/batch`, { data: ids });
       return res.data.message;
     },
     onSuccess: (data) => {
@@ -83,7 +83,7 @@ export const usePlanTypeMutation = () => {
 
   const deleteAllMutation = useMutation({
     mutationFn: async () => {
-      const res = await api.delete(`/loaikehoach/all`);
+      const res = await api.delete(`/loaikehoachscbd/all`);
       return res.data.message;
     },
     onSuccess: (data) => {
@@ -103,7 +103,7 @@ export const usePlanTypeMutation = () => {
     mutationFn: async (dataToExport: PlanTypeType[]) => {
       const payload = dataToExport.map((item) => ({
         "Mã loại kế hoạch": item.id || "",
-        "Tên loại kế hoạch": item.ten || "",
+        "Tên loại kế hoạch": item.tenLoai || "",
       }));
 
       const response = await api.post("/upload/export", payload, {
@@ -149,7 +149,7 @@ export const usePlanTypeMutation = () => {
               if (!row[0] && !row[1] && !row[2]) continue;
 
               const id = s(row[0]);
-              const ten = s(row[1]);
+              const tenLoai = s(row[1]);
 
               const rowErrors: string[] = [];
 
@@ -157,21 +157,21 @@ export const usePlanTypeMutation = () => {
                 rowErrors.push("Mã loại kế hoạch không được để trống");
               }
 
-              if (!ten) {
+              if (!tenLoai) {
                 rowErrors.push("Tên loại kế hoạch không được để trống");
               }
 
               if (rowErrors.length > 0) {
                 errorMessages.push(`Dòng ${i + 1}: ${rowErrors.join(", ")}`);
               } else {
-                listImport.push({ id, ten });
+                listImport.push({ id, tenLoai });
               }
             }
 
             if (errorMessages.length > 0) {
               reject(new Error(errorMessages.join("\n")));
             } else if (listImport.length > 0) {
-              const res = await api.post("/loaikehoach/batch", listImport);
+              const res = await api.post("/loaikehoachscbd/batch", listImport);
               resolve(res.data);
             } else {
               reject(new Error("File không có dữ liệu hợp lệ"));
@@ -208,7 +208,7 @@ export const useAllPlanTypeQuery = () => {
   return useQuery({
     queryKey: ["allPlanTypes"],
     queryFn: async () => {
-      const res = await api.get("/loaikehoach", {
+      const res = await api.get("/loaikehoachscbd", {
         params: {
           page: 0,
           size: 9999,
@@ -227,7 +227,7 @@ export const usePlanTypePageQuery = (
   return useQuery({
     queryKey: ["planTypesPage", page, pageSize, searchValue], // Key để cache dữ liệu
     queryFn: async () => {
-      const res = await api.get("/loaikehoach", {
+      const res = await api.get("/loaikehoachscbd", {
         params: {
           page: page,
           size: pageSize,

@@ -6,7 +6,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import PageAction from "../../components/common/PageAction";
 import MaintenancePlanCalendar from "./components/MaintenancePlanCalendar";
 import MaintenancePlanningForm from "./components/MaintenancePlanningForm";
@@ -14,21 +14,23 @@ import TableCustom from "../../components/common/TableCustom";
 import { useSelector } from "react-redux";
 import { useAllStaffsQuery } from "../Staff/Mutation";
 import { showConfirmAlert } from "../../components/Alert";
-import { Trash2, Calendar } from "lucide-react";
+import { Trash2, Calendar, FilePlus } from "lucide-react";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
 import { MaintenancePlanData } from "./types";
 import {
   useMaintenancePlanningPageQuery,
   useMaintenancePlanningMutation,
+  useChiTietTaiSanByKeHoachQuery,
+  useVatTuTieuHaoByKeHoachQuery,
+  useWorkItemsByPlanQuery,
 } from "./Mutation";
-import { useAllAssetsQuery } from "../AssetManager/Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
 import { showPeriod, showPlanType, showStatus } from "./config";
-import { Devicetype, StatusPlan } from "../../utils/const";
-import { useToolDetailAllQuery } from "../ToolTransfer/Mutation";
+import { Action, Devicetype, StatusPlan } from "../../utils/const";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../utils/routes";
 import { RootState } from "../../redux/store";
+import api from "../../config/api.config";
 
 export default function MaintenancePlanRepair() {
   const [showForm, setShowForm] = useState(false);
@@ -43,6 +45,26 @@ export default function MaintenancePlanRepair() {
   );
   const { user } = useSelector((state: RootState) => state.user);
   const navigate = useNavigate();
+
+  const { data: taiSanList = [] } = useChiTietTaiSanByKeHoachQuery(
+    selectedPlan?.id,
+  );
+  const { data: ccdcList = [] } = useVatTuTieuHaoByKeHoachQuery(
+    selectedPlan?.id,
+  );
+  const { data: workItems = [], isLoading: isLoadingWorks } =
+    useWorkItemsByPlanQuery(selectedPlan?.id);
+
+  const fullSelectedPlan = useMemo(() => {
+    if (!selectedPlan) return null;
+    return {
+      ...selectedPlan,
+      // Cung cấp đúng tên mảng mà Form đang mong đợi
+      danhSachTaiSan: taiSanList || [],
+      danhSachVatTu: ccdcList || [],
+      congViecs: workItems || [],
+    };
+  }, [selectedPlan, taiSanList, ccdcList, workItems]);
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
@@ -76,22 +98,22 @@ export default function MaintenancePlanRepair() {
   };
 
   const handlePlanningSave = (planData: MaintenancePlanData) => {
+    // Nếu có ID thì gọi Update, không có thì gọi Create
     if (selectedPlan?.id) {
       updatePlanMutation.mutate(planData, {
         onSuccess: () => {
-          handleClose();
+          handleClose(); // Chỉ cần đóng form, việc lưu bảng con Mutation đã lo xong
         },
       });
     } else {
       createPlanMutation.mutate(planData, {
         onSuccess: () => {
-          handleClose();
+          handleClose(); // Chỉ cần đóng form
         },
       });
     }
   };
 
-  // Define planning table columns
   const planningColumns = [
     {
       field: "tenKeHoach",
@@ -101,7 +123,7 @@ export default function MaintenancePlanRepair() {
       editable: false,
     },
     {
-      field: "loaiKeHoach",
+      field: "idLoaiKeHoach",
       headerName: "Loại kế hoạch",
       flex: 1.5,
       minWidth: 130,
@@ -169,10 +191,26 @@ export default function MaintenancePlanRepair() {
     {
       field: "actions",
       headerName: "Hành động",
-      width: 100,
+      width: 120,
       editable: false,
       renderCell: (params: any) => (
         <Box sx={{ display: "flex", gap: 1 }}>
+          <Tooltip title="Tạo phiếu">
+            <IconButton
+              size="small"
+              color="warning"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(ROUTES.MAINTENANCEREPAIR, {
+                  state: { createFromPlan: params.row },
+                });
+              }}
+            >
+              <FilePlus size={16} />
+            </IconButton>
+          </Tooltip>
+
+          {/* NÚT XÓA  */}
           <Tooltip title="Xóa kế hoạch">
             <IconButton
               size="small"
@@ -195,7 +233,6 @@ export default function MaintenancePlanRepair() {
     },
   ];
 
-  // Planning status filter options
   const planningStatusOptions: FilterOption[] = [
     {
       label: "Tất cả",
@@ -249,15 +286,15 @@ export default function MaintenancePlanRepair() {
           <Box sx={{ mb: 2 }}>
             <MaintenancePlanningForm
               key={
-                selectedPlan
-                  ? `view-planning-${selectedPlan.id}`
+                fullSelectedPlan
+                  ? `view-planning-${fullSelectedPlan.id}`
                   : "new-planning-form"
               }
               onClose={handlePlanningClose}
               readOnly={readOnly}
               onEdit={handlePlanningEdit}
               onSave={handlePlanningSave}
-              selectedPlan={selectedPlan}
+              selectedPlan={fullSelectedPlan}
               staffs={allStaffs}
             />
           </Box>
@@ -329,7 +366,7 @@ export default function MaintenancePlanRepair() {
             />
           </Grid>
 
-          {showSidebar && selectedPlan && (
+          {showSidebar && fullSelectedPlan && (
             <Grid
               size={{ xs: 3 }}
               sx={{
@@ -377,7 +414,7 @@ export default function MaintenancePlanRepair() {
                     Tên kế hoạch
                   </Typography>
                   <Typography variant="body2" fontWeight={500}>
-                    {selectedPlan?.tenKeHoach || "—"}
+                    {fullSelectedPlan?.tenKeHoach || "—"}
                   </Typography>
                 </Box>
                 <Box>
@@ -385,12 +422,12 @@ export default function MaintenancePlanRepair() {
                     Loại kế hoạch
                   </Typography>
                   <Typography variant="body2">
-                    {showPlanType(selectedPlan?.loaiKeHoach) || "-"}
+                    {showPlanType(fullSelectedPlan?.idLoaiKeHoach) || "-"}
                   </Typography>
                 </Box>
-                {selectedPlan?.ngayBatDau &&
+                {fullSelectedPlan?.ngayBatDau &&
                   (() => {
-                    const d = new Date(selectedPlan.ngayBatDau);
+                    const d = new Date(fullSelectedPlan.ngayBatDau);
                     const thang = d.getMonth() + 1;
                     const quy = Math.ceil(thang / 3);
                     const nam = d.getFullYear();
@@ -405,32 +442,12 @@ export default function MaintenancePlanRepair() {
                       </Box>
                     );
                   })()}
-                {selectedPlan?.loaiKeHoach === "CHU_KY" && (
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Chu kỳ (ngày)
-                    </Typography>
-                    <Typography variant="body2">
-                      {selectedPlan?.chuKyNgay} ngày
-                    </Typography>
-                  </Box>
-                )}
-                {selectedPlan?.loaiKeHoach === "GIO_MAY" && (
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Mốc giờ máy
-                    </Typography>
-                    <Typography variant="body2">
-                      {selectedPlan?.mocGioMay} giờ
-                    </Typography>
-                  </Box>
-                )}
                 <Box>
                   <Typography variant="caption" color="text.secondary">
                     Đơn vị giao
                   </Typography>
                   <Typography variant="body2">
-                    {selectedPlan?.tenDonViGiao || "—"}
+                    {fullSelectedPlan?.tenDonViGiao || "—"}
                   </Typography>
                 </Box>
                 <Box>
@@ -438,7 +455,7 @@ export default function MaintenancePlanRepair() {
                     Đơn vị thực hiện
                   </Typography>
                   <Typography variant="body2">
-                    {selectedPlan?.tenDonViThucHien || "—"}
+                    {fullSelectedPlan?.tenDonViThucHien || "—"}
                   </Typography>
                 </Box>
                 <Box>
@@ -446,7 +463,7 @@ export default function MaintenancePlanRepair() {
                     Người phụ trách
                   </Typography>
                   <Typography variant="body2">
-                    {selectedPlan?.tenNguoiPhuTrach || "—"}
+                    {fullSelectedPlan?.tenNguoiPhuTrach || "—"}
                   </Typography>
                 </Box>
                 <Box>
@@ -454,7 +471,7 @@ export default function MaintenancePlanRepair() {
                     Ngày bắt đầu
                   </Typography>
                   <Typography variant="body2">
-                    {selectedPlan?.ngayBatDau || "—"}
+                    {fullSelectedPlan?.ngayBatDau || "—"}
                   </Typography>
                 </Box>
                 <Box>
@@ -462,7 +479,7 @@ export default function MaintenancePlanRepair() {
                     Ngày kết thúc
                   </Typography>
                   <Typography variant="body2">
-                    {selectedPlan?.ngayKetThuc || "—"}
+                    {fullSelectedPlan?.ngayKetThuc || "—"}
                   </Typography>
                 </Box>
                 <Box>
@@ -470,38 +487,39 @@ export default function MaintenancePlanRepair() {
                     Trạng thái
                   </Typography>
                   <Typography variant="body2">
-                    {selectedPlan?.trangThai === StatusPlan.PENDING
+                    {fullSelectedPlan?.trangThai === StatusPlan.PENDING
                       ? "❓ Chưa thực hiện"
-                      : selectedPlan?.trangThai === StatusPlan.PROGRESS
+                      : fullSelectedPlan?.trangThai === StatusPlan.PROGRESS
                         ? "⏳ Đang thực hiện"
                         : "✅ Đã hoàn thành"}
                   </Typography>
                 </Box>
-                {selectedPlan?.ghiChu && (
+                {fullSelectedPlan?.ghiChu && (
                   <Box>
                     <Typography variant="caption" color="text.secondary">
                       Ghi chú
                     </Typography>
                     <Typography variant="body2">
-                      {selectedPlan.ghiChu}
+                      {fullSelectedPlan.ghiChu}
                     </Typography>
                   </Box>
                 )}
-                {selectedPlan?.chiTiets && selectedPlan.chiTiets.length > 0 && (
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Thiết bị ({selectedPlan.chiTiets.length})
-                    </Typography>
-                    {selectedPlan.chiTiets.map((tb, i) => (
-                      <Typography key={i} variant="body2">
-                        •{" "}
-                        {selectedPlan.loaiDoiTuong === Devicetype.ASSET
-                          ? tb.tenTaiSan || tb.idTaiSan
-                          : `${tb.tenCCDC + "" + `(${tb.soKyHieu})` + "-" + tb.namSanXuat}`}
+                {fullSelectedPlan?.chiTiets &&
+                  fullSelectedPlan.chiTiets.length > 0 && (
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">
+                        Thiết bị ({fullSelectedPlan.chiTiets.length})
                       </Typography>
-                    ))}
-                  </Box>
-                )}
+                      {fullSelectedPlan.chiTiets.map((tb, i) => (
+                        <Typography key={i} variant="body2">
+                          •{" "}
+                          {tb.idTaiSan
+                            ? tb.tenTaiSan || "Tài sản chưa rõ tên"
+                            : `${tb.tenCCDC || "Vật tư"} ${tb.soKyHieu ? `(${tb.soKyHieu})` : ""} ${tb.namSanXuat ? `-${tb.namSanXuat}` : ""}`}
+                        </Typography>
+                      ))}
+                    </Box>
+                  )}
               </Box>
             </Grid>
           )}

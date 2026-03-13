@@ -86,7 +86,6 @@ function buildCalendarWeeks(year: number, month: number): Dayjs[][] {
 
 interface CalendarSlot {
   plan: MaintenancePlanData;
-  /** 0-based column start within this week (0 = Mon). */
   colStart: number;
   /** Number of columns spanned in this week. */
   colSpan: number;
@@ -349,7 +348,7 @@ function PlanPopover({
           </Box>
 
           {/* Type */}
-          {plan.loaiKeHoach && (
+          {plan.idLoaiKeHoach && (
             <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
               <Clock
                 size={15}
@@ -362,7 +361,7 @@ function PlanPopover({
                   Loại kế hoạch
                 </Typography>
                 <Typography sx={{ fontSize: "0.82rem", fontWeight: 500 }}>
-                  {showPlanType(plan.loaiKeHoach)}
+                  {showPlanType(plan.idLoaiKeHoach)}
                 </Typography>
               </Box>
             </Box>

@@ -99,7 +99,7 @@ export default function PlanType() {
       headerAlign: "center",
     },
     {
-      field: "ten",
+      field: "tenLoai",
       headerName: "Tên loại kế hoạch",
       flex: 1,
       minWidth: 150,

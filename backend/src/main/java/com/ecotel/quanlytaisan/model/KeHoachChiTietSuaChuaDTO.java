@@ -21,7 +21,6 @@ public class KeHoachChiTietSuaChuaDTO {
     private Date ngayCapNhat;
 
     // Có thể thêm trường loại đối tượng để xác định (từ master)
-    private String loaiDoiTuong;
 
     private String idChiTietCCDC;
     private String soKyHieu;

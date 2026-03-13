@@ -24,8 +24,6 @@ public class KeHoachSuaChua {
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Ho_Chi_Minh")
     private Date ngayKetThuc;
 
-    private String loaiDoiTuong;          // 'TAI_SAN', 'CCDC'
-
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
     private Date ngayTao;
 
@@ -56,11 +54,10 @@ public class KeHoachSuaChua {
         kh.setIdNguoiPhuTrach(safeGet(row, 6));
         kh.setNgayBatDau(parseDate(safeGet(row, 7), "yyyy-MM-dd"));
         kh.setNgayKetThuc(parseDate(safeGet(row, 8), "yyyy-MM-dd"));
-        kh.setLoaiDoiTuong(safeGet(row, 9));
-        kh.setNgayTao(parseDate(safeGet(row, 10), "yyyy-MM-dd HH:mm:ss"));
-        kh.setNgayCapNhat(parseDate(safeGet(row, 11), "yyyy-MM-dd HH:mm:ss"));
-        kh.setGhiChu(safeGet(row, 12));
-        kh.setTrangThai(safeGet(row, 13));
+        kh.setNgayTao(parseDate(safeGet(row, 9), "yyyy-MM-dd HH:mm:ss"));
+        kh.setNgayCapNhat(parseDate(safeGet(row, 10), "yyyy-MM-dd HH:mm:ss"));
+        kh.setGhiChu(safeGet(row, 11));
+        kh.setTrangThai(safeGet(row, 12));
         return kh;
     }
 
@@ -81,16 +78,14 @@ public class KeHoachSuaChua {
         LocalDateTime ngayKT = getCellDate(row.getCell(8));
         kh.setNgayKetThuc(ngayKT != null ? Date.from(ngayKT.atZone(ZoneId.systemDefault()).toInstant()) : null);
 
-        kh.setLoaiDoiTuong(getCellStringValue(row.getCell(9)));
-
-        LocalDateTime ngayTao = getCellDate(row.getCell(10));
+        LocalDateTime ngayTao = getCellDate(row.getCell(9));
         kh.setNgayTao(ngayTao != null ? Date.from(ngayTao.atZone(ZoneId.systemDefault()).toInstant()) : null);
 
-        LocalDateTime ngayCapNhat = getCellDate(row.getCell(11));
+        LocalDateTime ngayCapNhat = getCellDate(row.getCell(10));
         kh.setNgayCapNhat(ngayCapNhat != null ? Date.from(ngayCapNhat.atZone(ZoneId.systemDefault()).toInstant()) : null);
 
-        kh.setGhiChu(getCellStringValue(row.getCell(12)));
-        kh.setTrangThai(getCellStringValue(row.getCell(13)));
+        kh.setGhiChu(getCellStringValue(row.getCell(11)));
+        kh.setTrangThai(getCellStringValue(row.getCell(12)));
         return kh;
     }
 

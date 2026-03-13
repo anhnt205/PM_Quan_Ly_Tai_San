@@ -574,7 +574,6 @@ export default function MaintenanceRepair() {
     const prefilledData = {
       id: "",
       idKeHoach: plan.id,
-      loaiDoiTuong: plan.loaiDoiTuong || "",
       idDonViGiao: plan.idDonViGiao || "",
       idDonViNhan: plan.idDonViThucHien || "",
       ngayKetThucDuKien: plan.ngayKetThuc

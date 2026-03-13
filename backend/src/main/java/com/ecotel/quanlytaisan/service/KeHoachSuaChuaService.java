@@ -81,8 +81,7 @@ public class KeHoachSuaChuaService {
             String sortDir,
             String search,
             String loaiKeHoach,
-            String loaiDoiTuong,
-            String idDonViGiao,
+             String idDonViGiao,
             String idDonViThucHien,
             String trangThai,
             Integer ngay, Integer thang, Integer nam
@@ -113,11 +112,6 @@ public class KeHoachSuaChuaService {
         if (trangThai != null && !trangThai.trim().isEmpty()) {
             sourceList = sourceList.stream()
                     .filter(item -> trangThai.equals(item.getTrangThai()))
-                    .collect(Collectors.toList());
-        }
-        if (loaiDoiTuong != null && !loaiDoiTuong.trim().isEmpty()) {
-            sourceList = sourceList.stream()
-                    .filter(item -> loaiDoiTuong.equals(item.getLoaiDoiTuong()))
                     .collect(Collectors.toList());
         }
         if (idDonViGiao != null && !idDonViGiao.trim().isEmpty()) {

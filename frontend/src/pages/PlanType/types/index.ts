@@ -1,6 +1,6 @@
 export interface PlanTypeType {
   id: string;
-  ten: string;
+  tenLoai: string;
   ngayTao?: string;
   ngayCapNhat?: string;
   nguoiTao?: string;

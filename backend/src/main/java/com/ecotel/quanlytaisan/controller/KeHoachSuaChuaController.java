@@ -35,7 +35,6 @@ public class KeHoachSuaChuaController {
             @RequestParam(defaultValue = "desc") String sortDir,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String loaiKeHoach,
-            @RequestParam(required = false) String loaiDoiTuong,
             @RequestParam(required = false) String idDonVigiao,
             @RequestParam(required = false) String idDonViThucHien,
             @RequestParam(required = false) String trangThai,
@@ -45,7 +44,7 @@ public class KeHoachSuaChuaController {
     ) throws SQLException {
         PageResponse<KeHoachSuaChuaDTO> response = keHoachSuaChuaService.findAllPaged(
                 idCongTy, page, size, sortBy, sortDir, search,
-                loaiKeHoach, loaiDoiTuong,idDonVigiao, idDonViThucHien, trangThai,
+                loaiKeHoach, idDonVigiao, idDonViThucHien, trangThai,
                 ngay, thang, nam
         );
         return ResponseEntity.ok(response);

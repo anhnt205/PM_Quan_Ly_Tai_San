@@ -39,7 +39,7 @@ export default function PlanTypeForm({
   const formik = useFormik({
     initialValues: {
       id: "",
-      ten: "",
+      tenLoai: "",
     },
     validationSchema: PlanTypeValidation,
     onSubmit(values) {
@@ -97,7 +97,7 @@ export default function PlanTypeForm({
               <FieldInput
                 title="Tên loại kế hoạch *"
                 formik={formik}
-                field="ten"
+                field="tenLoai"
                 disabled={readOnly}
               />
             </Grid>

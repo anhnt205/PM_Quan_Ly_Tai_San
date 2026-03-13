@@ -30,8 +30,6 @@ public class KeHoachSuaChuaDTO {
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Ho_Chi_Minh")
     private Date ngayKetThuc;
 
-    private String loaiDoiTuong;          // 'TAI_SAN', 'CCDC'
-
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
     private Date ngayTao;
 

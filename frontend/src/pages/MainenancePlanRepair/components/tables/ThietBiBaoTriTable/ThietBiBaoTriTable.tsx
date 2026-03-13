@@ -24,9 +24,6 @@ import {
 } from "@mui/icons-material";
 import FieldAutoCompleted from "../../../../../components/TextField/FieldAutoCompleted";
 import FieldInput from "../../../../../components/TextField/FieldInput";
-import { useAllAssetsQuery } from "../../../../AssetManager/Mutation";
-import { useAllToolQuery } from "../../../../ToolManager/Mutation";
-import { Devicetype } from "../../../../../utils/const";
 
 enum Action {
   CREATE = "CREATE",
@@ -64,8 +61,9 @@ export default function ThietBiBaoTriTable({
   const handleAddTaiSan = () => {
     const newAsset = {
       id: "",
-      idKeHoach: "",
-      idTaiSan: null,
+      idKeHoachSuaChua: formik.values.id,
+      idTaiSan: "",
+      tenTaiSan: "",
       ghiChu: "",
       action: Action.CREATE,
     };
@@ -79,12 +77,15 @@ export default function ThietBiBaoTriTable({
     );
   };
 
-  // --- HANDLER CCDC - VẬT TƯ ---
   const handleAddCCDC = () => {
     const newTool = {
       id: "",
-      idKeHoach: "",
-      idCCDC: null,
+      idKeHoachSuaChua: formik.values.id,
+      idCCDC: "",
+      idChiTietCCDC: "",
+      tenCCDC: "",
+      tenVatTu: "",
+      soLuong: 1,
       ghiChu: "",
       action: Action.CREATE,
     };
@@ -221,14 +222,16 @@ export default function ThietBiBaoTriTable({
 
                   {currentTaiSans.map((item: any, originalIndex: number) => {
                     if (item.action === Action.DELETE) return null;
-
                     return (
                       <TableRow key={item.id || `ts-${originalIndex}`}>
                         <TableCell
                           sx={{ minWidth: 200, verticalAlign: "top", pt: 1.5 }}
                         >
                           {readOnly ? (
-                            item.tenTaiSan || "-"
+                            taiSans.find((t: any) => t.id === item.idTaiSan)
+                              ?.ten ||
+                            item.tenTaiSan ||
+                            "-"
                           ) : (
                             <FieldAutoCompleted
                               title="Chọn thiết bị tài sản"
@@ -236,6 +239,12 @@ export default function ThietBiBaoTriTable({
                               labelkey="ten"
                               formik={formik}
                               field={`chiTietsTaiSan[${originalIndex}].idTaiSan`}
+                              onChange={(val) => {
+                                formik.setFieldValue(
+                                  `chiTietsTaiSan[${originalIndex}].tenTaiSan`,
+                                  val?.ten,
+                                );
+                              }}
                               disabled={readOnly}
                               limitOptions={20}
                             />
@@ -276,7 +285,7 @@ export default function ThietBiBaoTriTable({
                   {readOnly && !hasTaiSanData && (
                     <TableRow>
                       <TableCell
-                        colSpan={3}
+                        colSpan={2}
                         align="center"
                         sx={{ py: 3, color: "text.secondary" }}
                       >
@@ -375,9 +384,9 @@ export default function ThietBiBaoTriTable({
                   {currentCCDCs.map((item: any, originalIndex: number) => {
                     if (item.action === Action.DELETE) return null;
 
-                    // Lấy object CCDC tương ứng từ list data để hiển thị số lượng
                     const selectedCCDC = ccdcs.find(
-                      (c: any) => c.id === item.idCCDC,
+                      (c: any) =>
+                        c.id === item.idCCDC || c.id === item.idChiTietCCDC,
                     );
                     const slHienCo = selectedCCDC?.soLuong ?? "-";
 
@@ -387,35 +396,84 @@ export default function ThietBiBaoTriTable({
                           sx={{ minWidth: 200, verticalAlign: "top", pt: 1.5 }}
                         >
                           {readOnly ? (
-                            `${item.tenCCDC || ""} ${item.soKyHieu ? `(${item.soKyHieu})` : ""} ${item.namSanXuat ? `- ${item.namSanXuat}` : ""}`
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                pt: 0.8,
+                                color: "text.primary",
+                                fontWeight: 500,
+                              }}
+                            >
+                              {item.tenCCDC ||
+                                item.tenVatTu ||
+                                selectedCCDC?.ten ||
+                                "-"}
+                            </Typography>
                           ) : (
                             <FieldAutoCompleted
                               title="Chọn CCDC - Vật tư"
                               data={ccdcs}
                               labelkey="ten"
                               formik={formik}
-                              field={`chiTietsCCDC[${originalIndex}].idCCDC`}
+                              field={`chiTietsCCDC[${originalIndex}].idChiTietCCDC`}
+                              onChange={(val) => {
+                                const masterId =
+                                  val?.idCCDCVatTu || val?.idCCDC || val?.id;
+                                formik.setFieldValue(
+                                  `chiTietsCCDC[${originalIndex}].idCCDC`,
+                                  masterId,
+                                );
+                                formik.setFieldValue(
+                                  `chiTietsCCDC[${originalIndex}].tenVatTu`,
+                                  val?.ten,
+                                );
+                                formik.setFieldValue(
+                                  `chiTietsCCDC[${originalIndex}].tenCCDC`,
+                                  val?.ten,
+                                );
+                              }}
                               disabled={readOnly}
                               limitOptions={20}
                             />
                           )}
                         </TableCell>
 
-                        <TableCell sx={{ verticalAlign: "top", pt: 1.5 }}>
-                          <TextField
-                            fullWidth
-                            disabled
-                            size="small"
-                            type="number"
-                            label="SL hiện có"
-                            value={slHienCo !== "-" ? slHienCo : ""}
-                            InputLabelProps={{ shrink: true }}
-                            sx={{
-                              "& .MuiInputBase-input.Mui-disabled": {
-                                WebkitTextFillColor: "rgba(0, 0, 0, 0.6)",
-                              },
-                            }}
-                          />
+                        <TableCell
+                          align="center"
+                          sx={{ verticalAlign: "top", pt: 1.5 }}
+                        >
+                          {readOnly ? (
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                pt: 0.8,
+                                fontWeight: 500,
+                                textAlign: "center",
+                              }}
+                            >
+                              {slHienCo}
+                            </Typography>
+                          ) : (
+                            <TextField
+                              fullWidth
+                              disabled
+                              size="small"
+                              type="number"
+                              placeholder="0"
+                              value={slHienCo !== "-" ? slHienCo : ""}
+                              InputLabelProps={{ shrink: true }}
+                              sx={{
+                                "& .MuiInputBase-root": {
+                                  height: "40px",
+                                  bgcolor: "action.hover",
+                                },
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "rgba(0, 0, 0, 0.8)",
+                                  textAlign: "center",
+                                },
+                              }}
+                            />
+                          )}
                         </TableCell>
 
                         <TableCell sx={{ verticalAlign: "top", pt: 1.5 }}>
@@ -452,7 +510,7 @@ export default function ThietBiBaoTriTable({
                   {readOnly && !hasCCDCData && (
                     <TableRow>
                       <TableCell
-                        colSpan={4}
+                        colSpan={3}
                         align="center"
                         sx={{ py: 3, color: "text.secondary" }}
                       >

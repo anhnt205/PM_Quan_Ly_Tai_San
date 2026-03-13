@@ -48,7 +48,6 @@ public class SuaChuaDao {
                 
                 sc.IdKeHoach,
                 keHoach.TenKeHoach AS tenKeHoach,
-                keHoach.LoaiDoiTuong,
 
                 sc.IdLoaiSuaChua,
                 loaiSC.Ten AS tenLoaiSuaChua,

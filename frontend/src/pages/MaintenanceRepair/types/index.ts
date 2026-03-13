@@ -48,7 +48,6 @@ export interface MaintenanceRepairData {
   idLoaiSuaChua: string;
   maSuaChua: string;
   ghiChu: string;
-  loaiDoiTuong: string;
   idKeHoach: string;
   tenSuaChua: string;
   idDonViGiao: string;

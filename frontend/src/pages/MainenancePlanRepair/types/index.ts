@@ -1,26 +1,26 @@
 import { ActionType, StatusPlanType } from "../../../utils/const";
+
 export interface MaintenancePlanData {
   id: string;
   idCongTy: string;
   tenKeHoach: string;
-  loaiKeHoach: "THIET_BI" | "CHU_KY" | "GIO_MAY";
-  chuKyNgay?: number;
-  mocGioMay?: number;
-  idDonViGiao?:string;
-  tenDonViGiao?:string;
+  idLoaiKeHoach: string; // Đã bỏ enum THIET_BI | CHU_KY | GIO_MAY
+  idDonViGiao?: string;
+  tenDonViGiao?: string;
   idDonViThucHien: string;
   tenDonViThucHien?: string;
   idNguoiPhuTrach: string;
   tenNguoiPhuTrach?: string;
   ngayBatDau: string;
   ngayKetThuc: string;
-  loaiDoiTuong: "TAI_SAN" | "CCDC";
   ngayTao?: string;
   ngayCapNhat?: string;
   ghiChu?: string;
   trangThai?: StatusPlanType;
   congViecs?: MaintenancePlanWorkItem[];
-  chiTiets?: MaintenancePlanAssetItem[];
+  danhSachTaiSan?: MaintenancePlanAssetItem[];
+  danhSachVatTu?: MaintenancePlanCCDCItem[];
+  chiTiets?: any[]; // Dùng chung cho UI trước khi tách
 }
 
 export interface MaintenancePlanWorkItem {
@@ -36,17 +36,25 @@ export interface MaintenancePlanWorkItem {
   action: ActionType;
 }
 
+// Bảng Tài Sản mới
 export interface MaintenancePlanAssetItem {
   id: string;
-  idKeHoach: string;
-  idTaiSan: string | null;
+  idKeHoachSuaChua: string;
+  idTaiSan: string;
   tenTaiSan?: string;
-  idCCDC: string | null;
-  idChiTietCCDC: string | null;
-  tenCCDC?: string;
-  soKyHieu?: string;
-  namSanXuat?: string;
-  nuocSanXuat?: string;
+  ghiChu?: string;
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  action?: ActionType;
+}
+
+// Bảng CCDC (Vật tư tiêu hao) mới
+export interface MaintenancePlanCCDCItem {
+  id: string;
+  idKeHoachSuaChua: string;
+  idCCDC: string;
+  tenVatTu?: string;
+  soLuong?: number;
   ghiChu?: string;
   ngayTao?: string;
   ngayCapNhat?: string;

@@ -40,8 +40,10 @@ import { CongTy, Devicetype, StatusPlan } from "../../../utils/const";
 import dayjs from "dayjs";
 import FieldDate from "../../../components/TextField/FieldDate";
 import {
+  useChiTietTaiSanByKeHoachQuery,
   useMaintenancePlanningMutation,
   useMaintenancePlanningPageQuery,
+  useVatTuTieuHaoByKeHoachQuery,
 } from "../../MainenancePlanRepair/Mutation";
 import { generateBangKePdf, mergeBangKeWithOriginalPdf } from "../config";
 import S3Service from "../../../services/S3Service";
@@ -98,8 +100,11 @@ export default function MaintenanceRepairForm({
   const { data: MaintenancePlanningPage = { items: [] } } =
     useMaintenancePlanningPageQuery(0, 9999, undefined, StatusPlan.PENDING);
   const { data: maintenanceRepairTypes = [] } = useAllLoaiSCBDQuery();
-  const { getPlanningDetailMutation } = useMaintenancePlanningMutation();
-
+  const idKeHoachToFetch = selectedRepair?.idKeHoach;
+  const { data: taiSanDetails = [] } =
+    useChiTietTaiSanByKeHoachQuery(idKeHoachToFetch);
+  const { data: ccdcDetails = [] } =
+    useVatTuTieuHaoByKeHoachQuery(idKeHoachToFetch);
   const currentStatus = selectedRepair?.trangThai ?? 0;
 
   const formik = useFormik({
@@ -109,7 +114,6 @@ export default function MaintenanceRepairForm({
       idKeHoach: "",
       maSuaChua: "",
       tenSuaChua: "",
-      loaiDoiTuong: "",
       idLoaiSuaChua: "",
       idDonViGiao: "",
       idDonViNhan: "",
@@ -219,36 +223,31 @@ export default function MaintenanceRepairForm({
 
   useEffect(() => {
     if (selectedRepair) {
-      // 1. Tạo hàm async
-      const fetchAndSetData = async () => {
-        // 2. Sử dụng mutateAsync để có thể await lấy dữ liệu
-        try {
-          const data = await getPlanningDetailMutation.mutateAsync(
-            selectedRepair.idKeHoach,
-          );
-          console.log(data);
-          setSelectedPlanRawChiTiets(data || []);
-        } catch (error) {
-          console.error("Lỗi khi lấy chi tiết kế hoạch:", error);
-        }
-        formik.setValues({
-          ...formik.initialValues,
-          ...selectedRepair,
-          initialChiTiet: (selectedRepair.chiTietSuaChuas || []).map(
-            (i: any) => i.id,
-          ),
-        });
-        setDocument(selectedRepair.taiLieuCuoi || "");
-      };
-
-      // 3. GỌI HÀM NÀY
-      fetchAndSetData();
+      formik.setValues({
+        ...formik.initialValues,
+        ...selectedRepair,
+        initialChiTiet: (selectedRepair.chiTietSuaChuas || []).map(
+          (i: any) => i.id,
+        ),
+      });
+      setDocument(selectedRepair.taiLieuCuoi || "");
     } else {
       formik.resetForm();
       setDocument("");
       setSelectedPlanRawChiTiets([]);
     }
   }, [selectedRepair]);
+
+  // 2. Tự động "lắng nghe" và gộp dữ liệu Tài sản + CCDC khi API tải xong
+  useEffect(() => {
+    // Nếu có dữ liệu từ 1 trong 2 API (hoặc cả 2), gộp chúng lại
+    if (taiSanDetails.length > 0 || ccdcDetails.length > 0) {
+      setSelectedPlanRawChiTiets([...taiSanDetails, ...ccdcDetails]);
+    } else if (!selectedRepair) {
+      // Dọn dẹp mảng nếu đang ở chế độ thêm mới
+      setSelectedPlanRawChiTiets([]);
+    }
+  }, [taiSanDetails, ccdcDetails, selectedRepair]);
 
   const [nvThamMuu, setNVThamMuu] = useState<any[]>([]);
   const [nvPGD, setNVPGD] = useState<any[]>([]);
@@ -297,42 +296,30 @@ export default function MaintenanceRepairForm({
 
   // useEffect to populate chiTietSuaChuas when allEquipment is loaded
   useEffect(() => {
-    if (
-      selectedPlanRawChiTiets.length > 0 &&
-      allEquipment.length > 0 &&
-      formik.values.loaiDoiTuong
-    ) {
-      const loaiDoiTuong = formik.values.loaiDoiTuong;
+    if (selectedPlanRawChiTiets.length > 0 && allEquipment.length > 0) {
       const populatedDetails = selectedPlanRawChiTiets.map((chiTiet: any) => {
-        let equipmentInfo = null;
-        let equipmentIdToSearch = "";
+        // TỰ ĐỘNG NHẬN DIỆN: Nếu có idTaiSan thì là ASSET, ngược lại là TOOL
+        const isAsset = !!chiTiet.idTaiSan;
+        const equipmentIdToSearch = isAsset
+          ? chiTiet.idTaiSan
+          : chiTiet.idChiTietCCDC;
+        const targetType = isAsset ? Devicetype.ASSET : Devicetype.TOOL;
 
-        if (loaiDoiTuong === Devicetype.ASSET) {
-          equipmentIdToSearch = chiTiet.idTaiSan;
-          equipmentInfo = allEquipment.find(
-            (eq: any) =>
-              eq.id === equipmentIdToSearch && eq.type === Devicetype.ASSET,
-          );
-        } else if (loaiDoiTuong === Devicetype.TOOL) {
-          equipmentIdToSearch = chiTiet.idChiTietCCDC;
-          equipmentInfo = allEquipment.find(
-            (eq: any) =>
-              eq.id === equipmentIdToSearch && eq.type === Devicetype.TOOL,
-          );
-        }
+        const equipmentInfo = allEquipment.find(
+          (eq: any) => eq.id === equipmentIdToSearch && eq.type === targetType,
+        );
 
         return {
-          id: "", // This will be generated on save
+          id: "",
           idSuaChua: "",
           ten: equipmentInfo?.ten || "",
-          idTaiSan:
-            equipmentInfo?.type === Devicetype.ASSET ? equipmentInfo?.id : null,
-          idCCDC:
-            equipmentInfo?.type === Devicetype.TOOL
-              ? equipmentInfo?.idCCDCVatTu || chiTiet.idCCDC
-              : null,
-          idChiTietCCDC:
-            equipmentInfo?.type === Devicetype.TOOL ? equipmentInfo?.id : null,
+          idTaiSan: isAsset ? equipmentInfo?.id || chiTiet.idTaiSan : null,
+          idCCDC: !isAsset
+            ? equipmentInfo?.idCCDCVatTu || chiTiet.idCCDC
+            : null,
+          idChiTietCCDC: !isAsset
+            ? equipmentInfo?.id || chiTiet.idChiTietCCDC
+            : null,
           soLuong: equipmentInfo?.soLuong || chiTiet.soLuong || 0,
           ghiChu: equipmentInfo?.ghiChu || chiTiet.ghiChu || "",
           isActive: true,
@@ -342,20 +329,18 @@ export default function MaintenanceRepairForm({
           donViTinh: equipmentInfo?.donViTinh || chiTiet.donViTinh || "",
         };
       });
-      // formik.setFieldValue("chiTietSuaChuas", populatedDetails);
+
       setChiTietKeHoach(
         populatedDetails
           .filter((item: any) => item.idTaiSan || item.idChiTietCCDC)
           .map((item: any) => ({
             ...item,
-            id:
-              loaiDoiTuong === Devicetype.TOOL
-                ? item?.idChiTietCCDC
-                : item?.idTaiSan,
+            // id định danh cho dòng trong bảng: lấy cái nào đang có giá trị
+            id: item.idTaiSan || item.idChiTietCCDC,
           })),
       );
     }
-  }, [selectedPlanRawChiTiets, allEquipment.length]);
+  }, [selectedPlanRawChiTiets, allEquipment]); // Đã xóa formik.values.loaiDoiTuong khỏi dependencies
 
   return (
     <>
@@ -736,73 +721,6 @@ export default function MaintenanceRepairForm({
               <Typography variant="subtitle1" fontWeight={600} mb={2}>
                 Chi tiết tài sản sửa chữa bảo dưỡng:
               </Typography>
-              {/* TOGGLE TÀI SẢN / CCDC */}
-              {/* <Box mb={2}>
-                          <ToggleButtonGroup
-                            value={activeDetailTab}
-                            exclusive
-                            onChange={(_, val) => {
-                              if (val) setActiveDetailTab(val);
-                            }}
-                            size="small"
-                            disabled={readOnly}
-                            sx={{
-                              bgcolor: "#f0f0f0",
-                              borderRadius: "20px",
-                              p: "3px",
-                              gap: "2px",
-                              "& .MuiToggleButtonGroup-grouped": {
-                                border: "none",
-                                borderRadius: "16px !important",
-                              },
-                            }}
-                          >
-                            <ToggleButton
-                              value="taisan"
-                              sx={{
-                                textTransform: "none",
-                                fontWeight: 500,
-                                fontSize: "0.8rem",
-                                px: 2.5,
-                                py: 0.5,
-                                borderRadius: "16px",
-                                color: "text.secondary",
-                                "&.Mui-selected": {
-                                  bgcolor: "white",
-                                  color: "success.main",
-                                  fontWeight: 600,
-                                  boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
-                                  "&:hover": { bgcolor: "white" },
-                                },
-                                "&:hover": { bgcolor: "transparent" },
-                              }}
-                            >
-                              Tài sản
-                            </ToggleButton>
-                            <ToggleButton
-                              value="ccdc"
-                              sx={{
-                                textTransform: "none",
-                                fontWeight: 500,
-                                fontSize: "0.8rem",
-                                px: 2.5,
-                                py: 0.5,
-                                borderRadius: "16px",
-                                color: "text.secondary",
-                                "&.Mui-selected": {
-                                  bgcolor: "white",
-                                  color: "success.main",
-                                  fontWeight: 600,
-                                  boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
-                                  "&:hover": { bgcolor: "white" },
-                                },
-                                "&:hover": { bgcolor: "transparent" },
-                              }}
-                            >
-                              CCDC - Vật tư
-                            </ToggleButton>
-                          </ToggleButtonGroup>
-                        </Box> */}
               <Table
                 size="small"
                 sx={{
@@ -815,9 +733,7 @@ export default function MaintenanceRepairForm({
                   <TableRow>
                     <CustomTableHeadCell width="5%">STT</CustomTableHeadCell>
                     <CustomTableHeadCell width="25%">
-                      {formik.values.loaiDoiTuong === Devicetype.ASSET
-                        ? "Tài sản"
-                        : "CCDC - Vật tư"}
+                      Thiết bị / Vật tư
                     </CustomTableHeadCell>
                     <CustomTableHeadCell width="15%">
                       Đơn vị tính
@@ -825,9 +741,6 @@ export default function MaintenanceRepairForm({
                     <CustomTableHeadCell width="15%">
                       Số lượng
                     </CustomTableHeadCell>
-                    {/* <CustomTableHeadCell width="20%">
-                                Trạng thái
-                              </CustomTableHeadCell> */}
                     <CustomTableHeadCell width="20%">
                       Ghi chú
                     </CustomTableHeadCell>
@@ -842,44 +755,55 @@ export default function MaintenanceRepairForm({
                       <CustomTableCell>{index + 1}</CustomTableCell>
                       <CustomTableCell>
                         <FieldAutoCompleted
-                          title={
-                            formik.values.loaiDoiTuong === Devicetype.ASSET
-                              ? "Chọn thiết bị tài sản"
-                              : "Chọn thiết bị ccdc"
-                          }
+                          title="Chọn thiết bị / vật tư"
                           data={chiTietKeHoach}
                           labelkey="ten"
                           formik={formik}
                           limitOptions={20}
-                          field={
-                            formik.values.loaiDoiTuong === Devicetype.TOOL
-                              ? `chiTietSuaChuas[${index}].idChiTietCCDC`
-                              : `chiTietSuaChuas[${index}].idTaiSan`
-                          }
+                          // Dùng 'ten' làm field để hiển thị nhãn đã chọn trong input
+                          field={`chiTietSuaChuas[${index}].ten`}
                           onChange={(value) => {
+                            // TỰ ĐỘNG NHẬN DIỆN VÀ GÁN ID
+                            const isAsset = value?.type === Devicetype.ASSET;
+
+                            // Gán ID Tài sản (nếu là TS thì gán ID, nếu là CCDC thì null)
                             formik.setFieldValue(
-                              `chiTietSuaChuas.${index}.donViTinh`,
-                              value?.donViTinh,
+                              `chiTietSuaChuas.${index}.idTaiSan`,
+                              isAsset ? value?.id : null,
                             );
+
+                            // Gán ID CCDC (nếu là CCDC thì gán ID, nếu là TS thì null)
+                            formik.setFieldValue(
+                              `chiTietSuaChuas.${index}.idChiTietCCDC`,
+                              !isAsset ? value?.id : null,
+                            );
+
+                            // Trường idCCDC (thường dùng cho bảng vật tư tiêu hao)
+                            formik.setFieldValue(
+                              `chiTietSuaChuas.${index}.idCCDC`,
+                              !isAsset ? value?.idCCDCVatTu || value?.id : null,
+                            );
+
+                            // Map các thông tin đi kèm
                             formik.setFieldValue(
                               `chiTietSuaChuas.${index}.ten`,
                               value?.ten,
                             );
                             formik.setFieldValue(
-                              `chiTietSuaChuas.${index}.soLuong`,
-                              value?.soLuong,
+                              `chiTietSuaChuas.${index}.donViTinh`,
+                              value?.donViTinh,
                             );
                             formik.setFieldValue(
-                              `chiTietSuaChuas.${index}.idCCDC`,
-                              value?.idCCDC,
+                              `chiTietSuaChuas.${index}.soLuong`,
+                              value?.soLuong || 1,
                             );
                             formik.setFieldValue(
                               `chiTietSuaChuas.${index}.moTa`,
-                              value?.moTa,
+                              value?.moTa || "",
                             );
                             formik.setFieldValue(
                               `chiTietSuaChuas.${index}.ghiChu`,
-                              value?.ghiChu,
+                              value?.ghiChu || "",
                             );
                           }}
                           disabled={readOnly}

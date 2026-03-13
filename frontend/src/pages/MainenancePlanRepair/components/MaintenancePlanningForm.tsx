@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Accordion,
   AccordionDetails,
@@ -7,32 +7,8 @@ import {
   Grid,
   Typography,
   Paper,
-  Button,
-  IconButton,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Chip,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Divider,
-  ToggleButton,
-  ToggleButtonGroup,
 } from "@mui/material";
 import {
-  Add,
-  Delete,
-  Edit,
   ArrowDropDown,
   ArrowDropUp,
   InfoOutlineRounded,
@@ -44,17 +20,12 @@ import EditButton from "../../../components/Button/EditButton";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import FieldInput from "../../../components/TextField/FieldInput";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
-import {
-  MaintenancePlanData,
-  MaintenancePlanWorkItem,
-  MaintenancePlanAssetItem,
-} from "../types";
+import { MaintenancePlanData, MaintenancePlanWorkItem } from "../types";
 import { MaintenancePlanValidation } from "../validation/Validation";
 import { useDepartmentsPageQuery } from "../../Department/Mutation";
 import dayjs from "dayjs";
 import ThietBiBaoTriTable from "./tables/ThietBiBaoTriTable/ThietBiBaoTriTable";
 import ChiTietCongViecTable from "./tables/ChiTietCongViecTable/ChiTietCongViecTable";
-import FieldDateTime from "../../../components/TextField/FieldDateTime";
 import {
   Action,
   CongTy,
@@ -62,11 +33,11 @@ import {
   StatusPlan,
   StatusPlanType,
 } from "../../../utils/const";
-import { generateCode } from "../../../utils/helpers";
 import FieldDate from "../../../components/TextField/FieldDate";
 import { useAssetByDonViQuery } from "../../AssetTransfer/Mutation";
 import { useToolByDepartmentPageQuery } from "../../ToolTransfer/Mutation";
 import DialogLoading from "../../../components/common/DialogLoading";
+import { useAllLoaiSCBDQuery } from "../../MaintenanceRepairType/Mutation";
 
 interface MaintenancePlanningFormProps {
   onEdit: () => void;
@@ -89,76 +60,80 @@ export default function MaintenancePlanningForm({
 }: MaintenancePlanningFormProps) {
   const [expanded, setExpanded] = useState(true);
 
-  const { data: allDepartments = { items: [] } } = useDepartmentsPageQuery(
-    0,
-    9999,
-  );
-
   const formik = useFormik({
     initialValues: {
       id: "",
       idCongTy: CongTy.CT001,
       tenKeHoach: "",
-      loaiKeHoach: "THIET_BI" as "THIET_BI" | "CHU_KY" | "GIO_MAY",
-      chuKyNgay: 0,
-      mocGioMay: 0,
+      idLoaiKeHoach: "",
       idDonViGiao: "",
       idDonViThucHien: "",
       idNguoiPhuTrach: "",
       ngayBatDau: dayjs(new Date()).format("YYYY-MM-DD"),
       ngayKetThuc: dayjs(new Date()).format("YYYY-MM-DD"),
-      loaiDoiTuong: "TAI_SAN" as "TAI_SAN" | "CCDC",
       ghiChu: "",
       congViecs: [] as MaintenancePlanWorkItem[],
-      chiTiets: [] as MaintenancePlanAssetItem[],
+
+      chiTietsTaiSan: [] as any[],
+      chiTietsCCDC: [] as any[],
     },
     validationSchema: MaintenancePlanValidation,
     onSubmit: (values) => {
-      const chiTiets = values.chiTiets.map((item) => {
-        return {
-          ...item,
-          idTaiSan: item.idTaiSan ?? null,
-          idCCDC: item.idCCDC ?? null,
-        };
-      });
-      onSave({ ...values, chiTiets });
+      const mappedCCDC = values.chiTietsCCDC.map((item) => ({
+        ...item,
+        tenVatTu: item.tenCCDC || item.ten || item.tenVatTu,
+      }));
+
+      const mergedChiTiets = [...values.chiTietsTaiSan, ...mappedCCDC];
+
+      const payloadToSave: any = {
+        ...values,
+        chiTiets: mergedChiTiets,
+      };
+
+      delete payloadToSave.chiTietsTaiSan;
+      delete payloadToSave.chiTietsCCDC;
+
+      onSave(payloadToSave as MaintenancePlanData);
     },
   });
 
+  const { data: allDepartments = { items: [] } } = useDepartmentsPageQuery(
+    0,
+    9999,
+  );
+  const { data: listLoaiKeHoach = [] } = useAllLoaiSCBDQuery();
+
   useEffect(() => {
     if (selectedPlan) {
+      const taiSans = selectedPlan.danhSachTaiSan || [];
+      const ccdcs = selectedPlan.danhSachVatTu || [];
+
       formik.setValues({
-        id: selectedPlan.id || "",
-        tenKeHoach: selectedPlan.tenKeHoach || "",
-        loaiKeHoach: selectedPlan.loaiKeHoach || "THIET_BI",
-        chuKyNgay: selectedPlan?.chuKyNgay ?? 0,
-        mocGioMay: selectedPlan?.mocGioMay ?? 0,
-        loaiDoiTuong: selectedPlan.loaiDoiTuong || Devicetype.ASSET,
-        ngayBatDau: selectedPlan.ngayBatDau || "",
-        ngayKetThuc: selectedPlan.ngayKetThuc || "",
-        ghiChu: selectedPlan.ghiChu || "",
-        idDonViGiao: selectedPlan.idDonViGiao || "",
-        idDonViThucHien: selectedPlan.idDonViThucHien || "",
-        idNguoiPhuTrach: selectedPlan.idNguoiPhuTrach || "",
-        idCongTy: selectedPlan.idCongTy || CongTy.CT001,
-        congViecs: (selectedPlan.congViecs || []).map((item) => {
-          return {
-            ...item,
-            action: Action.UPDATE,
-          };
-        }),
-        chiTiets: (selectedPlan.chiTiets || []).map((item) => {
-          return {
-            ...item,
-            action: Action.UPDATE,
-          };
-        }),
+        ...formik.initialValues,
+        ...selectedPlan,
+        idLoaiKeHoach:
+          selectedPlan.idLoaiKeHoach || (selectedPlan as any).loaiKeHoach || "",
+        chiTietsTaiSan: taiSans.map((item: any) => ({
+          ...item,
+          action: Action.UPDATE,
+          tenTaiSan: item.tenTaiSan || "",
+        })),
+        chiTietsCCDC: ccdcs.map((item: any) => ({
+          ...item,
+          action: Action.UPDATE,
+          tenCCDC: item.tenVatTu || item.tenCCDC,
+          idChiTietCCDC: item.idChiTietCCDC || item.idCCDC || item.id,
+        })),
+        congViecs: (selectedPlan.congViecs || []).map((item: any) => ({
+          ...item,
+          action: Action.UPDATE,
+        })),
       });
-      formik.setErrors({}); // Clear errors when selectedPlan changes
     } else {
       formik.resetForm();
     }
-  }, [selectedPlan, readOnly]); // Add readOnly to dependencies
+  }, [selectedPlan]);
 
   const { data: toolsByDepartment = [], isLoading: isLoadingTool } =
     useToolByDepartmentPageQuery({
@@ -239,60 +214,17 @@ export default function MaintenancePlanningForm({
                 />
               </Grid>
 
-              {/* Loại kế hoạch - Tự động co dãn size dựa trên điều kiện */}
-              <Grid
-                size={{
-                  xs: 12,
-                  md:
-                    formik.values.loaiKeHoach === "THIET_BI" ||
-                    !formik.values.loaiKeHoach
-                      ? 6
-                      : 3,
-                }}
-              >
-                <FormControl fullWidth disabled={readOnly} size="small">
-                  <InputLabel>Loại kế hoạch</InputLabel>
-                  <Select
-                    value={formik.values.loaiKeHoach || "THIET_BI"}
-                    label="Loại kế hoạch"
-                    onChange={(e) =>
-                      formik.setFieldValue("loaiKeHoach", e.target.value)
-                    }
-                  >
-                    <MenuItem value="THIET_BI">Theo thiết bị</MenuItem>
-                    <MenuItem value="CHU_KY">Theo chu kỳ thời gian</MenuItem>
-                    <MenuItem value="GIO_MAY">Theo giờ máy</MenuItem>
-                  </Select>
-                </FormControl>
+              {/* Loại kế hoạch   */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <FieldAutoCompleted
+                  title="Loại kế hoạch *"
+                  data={listLoaiKeHoach}
+                  labelkey="ten"
+                  formik={formik}
+                  field="loaiKeHoach"
+                  disabled={readOnly}
+                />
               </Grid>
-
-              {/* Số ngày - chỉ cho chu kỳ thời gian */}
-              {formik.values.loaiKeHoach === "CHU_KY" && (
-                <Grid size={{ xs: 12, md: 3 }}>
-                  <FieldInput
-                    title="Chu kỳ (ngày)"
-                    type="number"
-                    formik={formik}
-                    field="chuKy"
-                    disabled={readOnly}
-                    slotProps={{ input: { min: 1 } }}
-                  />
-                </Grid>
-              )}
-
-              {/* Giờ máy - chỉ cho loại giờ máy */}
-              {formik.values.loaiKeHoach === "GIO_MAY" && (
-                <Grid size={{ xs: 12, md: 3 }}>
-                  <FieldInput
-                    title="Mốc giờ máy (giờ)"
-                    type="number"
-                    formik={formik}
-                    field="mocGioMay"
-                    disabled={readOnly}
-                    slotProps={{ input: { min: 1 } }}
-                  />
-                </Grid>
-              )}
 
               <Grid size={{ xs: 12, md: 6 }}>
                 <FieldAutoCompleted
