@@ -39,13 +39,12 @@ public class KeHoachSuaChuaDTO {
     private Date ngayCapNhat;
 
     private String ghiChu;
+    private String trangThai;
 
-    // Danh sách công việc (nếu cần gộp)
+    // Danh sách công việc (nếu cần)
     private List<KeHoachCongViecSuaChuaDTO> congViecs;
 
-    // Danh sách chi tiết (nếu cần gộp)
-    private List<KeHoachChiTietSuaChuaDTO> chiTiets;
-
-
-    private String trangThai;
+    // --- THAY THẾ: Xóa chiTiets, thêm hai danh sách mới ---
+    private List<SuaChuaChiTietTaiSan> danhSachTaiSan;   // chi tiết tài sản sửa chữa
+    private List<SuaChuaVatTuTieuHao> danhSachVatTu;     // vật tư tiêu hao
 }

@@ -1,8 +1,9 @@
 package com.ecotel.quanlytaisan.service;
 
-import com.ecotel.quanlytaisan.dao.KeHoachChiTietSuaChuaDao;
-import com.ecotel.quanlytaisan.dao.KeHoachCongViecSuaChuaDao;
 import com.ecotel.quanlytaisan.dao.KeHoachSuaChuaDao;
+import com.ecotel.quanlytaisan.dao.KeHoachCongViecSuaChuaDao;
+import com.ecotel.quanlytaisan.dao.SuaChuaChiTietTaiSanDao;      // DAO mới
+import com.ecotel.quanlytaisan.dao.SuaChuaVatTuTieuHaoDao;       // DAO mới
 import com.ecotel.quanlytaisan.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,17 +24,24 @@ public class KeHoachSuaChuaService {
     @Autowired
     private KeHoachCongViecSuaChuaDao keHoachCongViecSuaChuaDao;
 
+    // Thay thế KeHoachChiTietSuaChuaDao bằng 2 DAO mới
     @Autowired
-    private KeHoachChiTietSuaChuaDao keHoachChiTietSuaChuaDao;
+    private SuaChuaChiTietTaiSanDao suaChuaChiTietTaiSanDao;
+
+    @Autowired
+    private SuaChuaVatTuTieuHaoDao suaChuaVatTuTieuHaoDao;
 
     // Lấy danh sách tất cả kế hoạch (kèm công việc và chi tiết)
     public List<KeHoachSuaChuaDTO> findAll(String idCongTy) throws SQLException {
         List<KeHoachSuaChuaDTO> list = keHoachSuaChuaDao.findAll(idCongTy);
         for (KeHoachSuaChuaDTO dto : list) {
             List<KeHoachCongViecSuaChuaDTO> congViecs = keHoachCongViecSuaChuaDao.findByIdKeHoach(dto.getId());
-            List<KeHoachChiTietSuaChuaDTO> chiTiets = keHoachChiTietSuaChuaDao.findByIdKeHoach(dto.getId());
+            // Lấy danh sách tài sản và vật tư từ 2 bảng mới
+            List<SuaChuaChiTietTaiSan> danhSachTaiSan = suaChuaChiTietTaiSanDao.findByIdKeHoach(dto.getId());
+            List<SuaChuaVatTuTieuHao> danhSachVatTu = suaChuaVatTuTieuHaoDao.findByIdKeHoach(dto.getId());
             dto.setCongViecs(congViecs);
-            dto.setChiTiets(chiTiets);
+            dto.setDanhSachTaiSan(danhSachTaiSan);
+            dto.setDanhSachVatTu(danhSachVatTu);
         }
         return list;
     }
@@ -54,8 +62,13 @@ public class KeHoachSuaChuaService {
     public void bulkDelete(List<String> ids) {
         if (ids == null || ids.isEmpty()) return;
 
+        // Xóa các công việc và chi tiết từ 2 bảng mới trước
         keHoachCongViecSuaChuaDao.deleteByIdKeHoachIn(ids);
-        keHoachChiTietSuaChuaDao.deleteByIdKeHoachIn(ids);
+        // Xóa chi tiết tài sản và vật tư theo idKeHoach
+        for (String id : ids) {
+            suaChuaChiTietTaiSanDao.deleteByIdKeHoach(id);
+            suaChuaVatTuTieuHaoDao.deleteByIdKeHoach(id);
+        }
         keHoachSuaChuaDao.batchDelete(ids);
     }
 
@@ -79,7 +92,7 @@ public class KeHoachSuaChuaService {
 
         List<KeHoachSuaChuaDTO> sourceList = keHoachSuaChuaDao.findAll(idCongTy);
 
-        // Đếm theo trạng thái (tính trên toàn bộ list sau lọc, trước phân trang)
+        // Đếm theo trạng thái
         Map<String, Long> groupCounts = new HashMap<>();
         groupCounts.put("CHUA_THUC_HIEN", 0L);
         groupCounts.put("DANG_THUC_HIEN", 0L);
@@ -91,22 +104,17 @@ public class KeHoachSuaChuaService {
             }
         }
 
-        // Lọc theo loại kế hoạch
+        // Lọc
         if (loaiKeHoach != null && !loaiKeHoach.trim().isEmpty()) {
             sourceList = sourceList.stream()
                     .filter(item -> loaiKeHoach.equals(item.getIdLoaiKeHoach()))
                     .collect(Collectors.toList());
         }
-
-        // Lọc theo trạng thái
         if (trangThai != null && !trangThai.trim().isEmpty()) {
             sourceList = sourceList.stream()
                     .filter(item -> trangThai.equals(item.getTrangThai()))
                     .collect(Collectors.toList());
         }
-
-
-        // Lọc theo loại đối tượng
         if (loaiDoiTuong != null && !loaiDoiTuong.trim().isEmpty()) {
             sourceList = sourceList.stream()
                     .filter(item -> loaiDoiTuong.equals(item.getLoaiDoiTuong()))
@@ -117,14 +125,13 @@ public class KeHoachSuaChuaService {
                     .filter(item -> idDonViGiao.equals(item.getIdDonViGiao()))
                     .collect(Collectors.toList());
         }
-        // Lọc theo đơn vị thực hiện
         if (idDonViThucHien != null && !idDonViThucHien.trim().isEmpty()) {
             sourceList = sourceList.stream()
                     .filter(item -> idDonViThucHien.equals(item.getIdDonViThucHien()))
                     .collect(Collectors.toList());
         }
 
-        // Lọc theo NgayBatDau (ngày/tháng/năm cụ thể)
+        // Lọc theo ngày bắt đầu
         if (ngay != null || thang != null || nam != null) {
             sourceList = sourceList.stream()
                     .filter(item -> {
@@ -139,7 +146,7 @@ public class KeHoachSuaChuaService {
                     .collect(Collectors.toList());
         }
 
-        // Tìm kiếm theo tên kế hoạch
+        // Tìm kiếm theo tên
         if (search != null && !search.trim().isEmpty()) {
             String q = search.toLowerCase();
             sourceList = sourceList.stream()
@@ -147,7 +154,6 @@ public class KeHoachSuaChuaService {
                     .collect(Collectors.toList());
         }
 
-        // Sắp xếp
         sourceList.sort(getComparator(sortBy, sortDir));
 
         long total = sourceList.size();
@@ -155,12 +161,14 @@ public class KeHoachSuaChuaService {
         int to = Math.min(from + size, sourceList.size());
         List<KeHoachSuaChuaDTO> items = sourceList.subList(from, to);
 
-        // Gán thêm công việc và chi tiết cho từng item
+        // Gán công việc và chi tiết từ 2 bảng mới
         for (KeHoachSuaChuaDTO item : items) {
             List<KeHoachCongViecSuaChuaDTO> congViecs = keHoachCongViecSuaChuaDao.findByIdKeHoach(item.getId());
-            List<KeHoachChiTietSuaChuaDTO> chiTiets = keHoachChiTietSuaChuaDao.findByIdKeHoach(item.getId());
+            List<SuaChuaChiTietTaiSan> danhSachTaiSan = suaChuaChiTietTaiSanDao.findByIdKeHoach(item.getId());
+            List<SuaChuaVatTuTieuHao> danhSachVatTu = suaChuaVatTuTieuHaoDao.findByIdKeHoach(item.getId());
             item.setCongViecs(congViecs);
-            item.setChiTiets(chiTiets);
+            item.setDanhSachTaiSan(danhSachTaiSan);
+            item.setDanhSachVatTu(danhSachVatTu);
         }
 
         PageResponse<KeHoachSuaChuaDTO> response = new PageResponse<>(items, total, page, size);
@@ -172,7 +180,7 @@ public class KeHoachSuaChuaService {
         String normalizedSortBy = sortBy != null ? sortBy.trim().toLowerCase() : "ngaytao";
         boolean ascending = sortDir != null && sortDir.equalsIgnoreCase("asc");
 
-        Comparator<KeHoachSuaChuaDTO> comparator = null;
+        Comparator<KeHoachSuaChuaDTO> comparator;
 
         switch (normalizedSortBy) {
             case "tenkehoach":
@@ -191,10 +199,6 @@ public class KeHoachSuaChuaService {
                         Comparator.nullsLast(Date::compareTo));
                 break;
             case "ngaytao":
-                comparator = Comparator.comparing(
-                        item -> item.getNgayTao() != null ? item.getNgayTao() : new Date(0),
-                        Comparator.nullsLast(Date::compareTo));
-                break;
             default:
                 comparator = Comparator.comparing(
                         item -> item.getNgayTao() != null ? item.getNgayTao() : new Date(0),
@@ -214,9 +218,11 @@ public class KeHoachSuaChuaService {
         KeHoachSuaChuaDTO dto = keHoachSuaChuaDao.findByIdDTO(id);
         if (dto != null) {
             List<KeHoachCongViecSuaChuaDTO> congViecs = keHoachCongViecSuaChuaDao.findByIdKeHoach(id);
-            List<KeHoachChiTietSuaChuaDTO> chiTiets = keHoachChiTietSuaChuaDao.findByIdKeHoach(id);
+            List<SuaChuaChiTietTaiSan> danhSachTaiSan = suaChuaChiTietTaiSanDao.findByIdKeHoach(id);
+            List<SuaChuaVatTuTieuHao> danhSachVatTu = suaChuaVatTuTieuHaoDao.findByIdKeHoach(id);
             dto.setCongViecs(congViecs);
-            dto.setChiTiets(chiTiets);
+            dto.setDanhSachTaiSan(danhSachTaiSan);
+            dto.setDanhSachVatTu(danhSachVatTu);
         }
         return dto;
     }
@@ -235,7 +241,6 @@ public class KeHoachSuaChuaService {
             throw new IllegalArgumentException("Trạng thái không hợp lệ: " + trangThai);
         }
 
-        // Kiểm tra trạng thái hiện tại
         KeHoachSuaChua existing = keHoachSuaChuaDao.findById(id);
         if (existing == null) {
             throw new IllegalArgumentException("Không tìm thấy kế hoạch với ID: " + id);
@@ -246,21 +251,21 @@ public class KeHoachSuaChuaService {
         return keHoachSuaChuaDao.updateTrangThai(id, trangThai);
     }
 
+    @Transactional
     public int delete(String id) throws SQLException {
-        // Xóa các công việc và chi tiết trước (cascade có thể tự động nếu DB có ON DELETE CASCADE)
+        // Xóa các công việc và chi tiết từ 2 bảng mới trước
         keHoachCongViecSuaChuaDao.deleteByIdKeHoach(id);
-        keHoachChiTietSuaChuaDao.deleteByIdKeHoach(id);
+        suaChuaChiTietTaiSanDao.deleteByIdKeHoach(id);
+        suaChuaVatTuTieuHaoDao.deleteByIdKeHoach(id);
         return keHoachSuaChuaDao.delete(id);
     }
 
-    // Import (placeholder, có thể copy từ module khác)
+    // Import (placeholder)
     public List<KeHoachSuaChua> readCsv(MultipartFile file) throws IOException {
-        // ... cài đặt tương tự
         return new ArrayList<>();
     }
 
     public List<KeHoachSuaChua> readExcel(MultipartFile file) throws IOException {
-        // ... cài đặt tương tự
         return new ArrayList<>();
     }
 }
