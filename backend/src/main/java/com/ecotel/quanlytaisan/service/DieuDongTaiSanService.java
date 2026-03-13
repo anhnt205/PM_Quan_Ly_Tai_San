@@ -306,8 +306,8 @@ public class DieuDongTaiSanService {
         return dao.updateTrangThai(id, userId);
     }
 
-    public int banHanhQuyetDinh(String id,String soQuyetDinh) {
-        return dao.banHanhQuyetDinh(id,soQuyetDinh);
+    public int[] banHanhQuyetDinh(List<BanHanhRequest> requests) {
+        return dao.banHanhQuyetDinh(requests);
     }
 
     public int huyTrangThai(String id) {

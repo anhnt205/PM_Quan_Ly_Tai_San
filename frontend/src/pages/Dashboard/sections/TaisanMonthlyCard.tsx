@@ -8,6 +8,7 @@ import {
   MenuItem,
 } from "@mui/material";
 import { TrendingUp } from "@mui/icons-material";
+import { formattedPrice } from "../../../utils/helpers";
 
 export default function TaisanMonthlyCard({
   taiSanMonthlyData,
@@ -111,7 +112,7 @@ export default function TaisanMonthlyCard({
                 }}
               >
                 <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5 }}>
-                  {item.soLuong}
+                  {formattedPrice(item.soLuong)}
                 </Typography>
                 <Box
                   sx={{

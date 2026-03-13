@@ -264,7 +264,6 @@ export default function ToolTransferForm({
     }));
   }, [toolsByDepartment]);
 
-
   return (
     <>
       <DialogLoading loading={isLoading} title="Đang tải ccdc ..." />
@@ -334,7 +333,7 @@ export default function ToolTransferForm({
                   {readOnly && <EditButton onClick={onEdit} />}
                 </Box>
               )}
-              {![0, 2, 3].includes(currentStatus) && (
+              {![0, 2, 3, 4].includes(currentStatus) && (
                 <Button
                   size="small"
                   sx={{ bgcolor: "red", color: "white" }}

@@ -1,5 +1,6 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
+import { formattedPrice } from "../../../utils/helpers";
 
 interface BarChartItem {
   label: string;
@@ -129,7 +130,7 @@ export default function BarChart({
                 variant="caption"
                 sx={{ mb: 0.5, fontWeight: 500, fontSize: "11px" }}
               >
-                {item.value}
+                {formattedPrice(item.value)}
               </Typography>
               <Box
                 sx={{

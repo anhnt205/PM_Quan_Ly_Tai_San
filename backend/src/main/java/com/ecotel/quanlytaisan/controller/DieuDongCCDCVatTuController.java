@@ -207,15 +207,18 @@ public class DieuDongCCDCVatTuController {
         }
     }
 
-     @PostMapping("/banhanhquyetdinh")
-    public ResponseEntity<ApiResponse<Object>> banHanhQuyetDinh(@RequestParam String id,@RequestParam String soQuyetDinh) throws SQLException {
+   @PostMapping("/banhanhquyetdinh")
+    public ResponseEntity<ApiResponse<Object>> banHanhQuyetDinh(@RequestBody List<BanHanhRequest> requests) {
         try {
-            int result = service.banHanhQuyetDinh(id,soQuyetDinh);
-            if (result > 0) {
-                return ResponseEntity.ok(ApiResponse.success("Cập nhật thành công", result, result));
+            if (requests == null || requests.isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.failure("Danh sách trống", null));
             }
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.failure("Lỗi", result));
+            
+            int[] results = service.banHanhQuyetDinh(requests);
+            int totalUpdated = 0;
+            for (int r : results) totalUpdated += (r > 0 ? 1 : 0);
+
+            return ResponseEntity.ok(ApiResponse.success("Cập nhật thành công " + totalUpdated + " bản ghi", totalUpdated, totalUpdated));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));

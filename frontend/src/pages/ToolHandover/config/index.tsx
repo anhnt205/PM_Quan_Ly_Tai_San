@@ -662,6 +662,8 @@ export const generateBienBanPdf = async (
     },
     columnStyles: {
       0: { cellWidth: 12, halign: "center" },
+      2: { halign: "center" },
+      3: { halign: "center" },
       4: { cellWidth: 20, halign: "center" },
       5: { cellWidth: 15, halign: "center" },
     },

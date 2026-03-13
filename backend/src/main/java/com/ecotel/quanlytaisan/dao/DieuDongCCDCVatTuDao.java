@@ -777,15 +777,27 @@ public class DieuDongCCDCVatTuDao {
         return 0;
 
     }
-    public int banHanhQuyetDinh(String id,String soQuyetDinh) {
+    public int[] banHanhQuyetDinh(List<BanHanhRequest> requests) {
         String sql = """
                 UPDATE DieuDongCCDCVatTu
-                SET TrangThai=?,soQuyetDinh=?
-                WHERE Id=?
+                SET TrangThai = ?, soQuyetDinh = ?
+                WHERE Id = ?
                 """;
 
-        int result = jdbcTemplate.update(sql, 4,soQuyetDinh, id);
-        return result;
+        return jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                BanHanhRequest item = requests.get(i);
+                ps.setInt(1, 4); // TrangThai = 4
+                ps.setString(2, item.getSoQuyetDinh());
+                ps.setString(3, item.getId());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return requests.size();
+            }
+        });
     }
 
     public int huyDieuDong(String id) {

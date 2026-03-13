@@ -201,23 +201,20 @@ export const useAssetTranferMutation = () => {
   });
 
   const decisionMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: any[]) => {
       console.log(data);
       const res = await api.post(
         `/dieudongtaisan/banhanhquyetdinh`,
-        {},
-        {
-          params: {
-            id: data.id,
-            soQuyetDinh: data.soQuyetDinh,
-          },
-        },
+        data.map((item) => ({
+          id: item.id,
+          soQuyetDinh: item.soQuyetDinh,
+        })),
       );
       return res.data;
     },
     onSuccess: async (response, data) => {
       queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
-      const list = await listNguoiKy([data]);
+      const list = await listNguoiKy(data);
       socketService.send({
         type: MessageTypeFunctions.ASSET_TRANSFER,
         recieve: list,

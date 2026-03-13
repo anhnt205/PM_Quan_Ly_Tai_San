@@ -133,13 +133,13 @@ export default function ToolTransfer() {
     {
       label: "Chưa ban hành",
       count: toolTransferPage?.trangThaiCounts?.["3"] ?? 0,
-      color: "success",
+      color: "secondary",
       value: "3",
     },
     {
       label: "Đã ban hành",
       count: toolTransferPage?.trangThaiCounts?.["4"] ?? 0,
-      color: "secondary",
+      color: "success",
       value: "4",
     },
   ];
@@ -232,7 +232,7 @@ export default function ToolTransfer() {
     }
   };
 
-  const handleDecision = (data: any) => {
+  const handleDecision = (data: any[]) => {
     decisionMutation.mutate(data);
   };
 

@@ -1,6 +1,7 @@
 import { Apartment, Handshake } from "@mui/icons-material";
 import { Box, Card, Checkbox, Paper, Typography } from "@mui/material";
 import React, { Dispatch, SetStateAction } from "react";
+import { formatDecimal, formattedPrice } from "../../../utils/helpers";
 
 interface Props {
   item: any;
@@ -50,7 +51,9 @@ export default function AssetGroupItem({
       >
         <Typography color="primary">
           Số lượng tài sản:{" "}
-          <span style={{ color: "black" }}>{item?.soLuongTaiSan}</span>
+          <span style={{ color: "black" }}>
+            {formattedPrice(item?.soLuongTaiSan)}
+          </span>
         </Typography>
         <Checkbox
           checked={selectedGroup === item?.id}

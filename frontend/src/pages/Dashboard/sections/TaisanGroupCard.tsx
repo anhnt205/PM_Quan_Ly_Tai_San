@@ -2,7 +2,11 @@ import React from "react";
 import { Paper, Typography, Box } from "@mui/material";
 import { Inventory, AttachMoney } from "@mui/icons-material";
 import PieChart, { COLORS } from "../components/PieChart";
-import { useAllAssetGroupQuery, useTypeAssetMutation } from "../../TypeAsset/Mutation";
+import {
+  useAllAssetGroupQuery,
+  useTypeAssetMutation,
+} from "../../TypeAsset/Mutation";
+import { formattedPrice } from "../../../utils/helpers";
 
 export default function TaisanGroupCard({ taiSanPieData, statistics }: any) {
   // If `taiSanPieData` not provided, fallback to assetGroups from typeAsset hook
@@ -83,7 +87,7 @@ export default function TaisanGroupCard({ taiSanPieData, statistics }: any) {
                 {item.ten}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                {item.soLuong} ({item.phanTram?.toFixed(1)}%)
+                {formattedPrice(item.soLuong)} ({item.phanTram?.toFixed(1)}%)
               </Typography>
             </Box>
           ))}

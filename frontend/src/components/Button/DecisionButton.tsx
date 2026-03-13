@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Button,
   Dialog,
@@ -8,48 +8,85 @@ import {
   DialogTitle,
   TextField,
   Box,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
 } from "@mui/material";
-import SendIcon from "@mui/icons-material/Send"; // Icon gửi
-import GavelIcon from "@mui/icons-material/Gavel"; // Icon búa (quyết định)
+import SendIcon from "@mui/icons-material/Send";
+import GavelIcon from "@mui/icons-material/Gavel";
+import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh"; // Icon cho nhập nhanh
 
 export default function DecisionButton({
-  data,
+  data, // data bây giờ là mảng các hàng đã chọn: any[]
   handleDecision,
   onClose,
 }: {
-  data: any;
-  handleDecision?: (data: any) => void;
+  data: any[];
+  handleDecision?: (payload: any[]) => void;
   onClose: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [decisionCode, setDecisionCode] = useState("");
+  const [decisionMap, setDecisionMap] = useState<{ [key: string]: string }>({});
+  const [commonCode, setCommonCode] = useState("");
 
-  // Mở modal
+  // Cập nhật decisionMap khi data thay đổi (ví dụ: mở modal)
+  useEffect(() => {
+    if (open) {
+      const initialMap: { [key: string]: string } = {};
+      data.forEach((item) => {
+        initialMap[item.id] = "";
+      });
+      setDecisionMap(initialMap);
+    }
+  }, [open, data]);
+
   const handleClickOpen = () => setOpen(true);
 
-  // Đóng modal
   const handleClose = () => {
     setOpen(false);
-    setDecisionCode(""); // Reset mã khi đóng
+    setCommonCode("");
     onClose();
   };
 
-  // Xử lý gửi mã
+  // Hàm nhập nhanh cho tất cả các hàng
+  const applyToAll = () => {
+    const updatedMap = { ...decisionMap };
+    data.forEach((item) => {
+      updatedMap[item.id] = commonCode;
+    });
+    setDecisionMap(updatedMap);
+  };
+
+  const handleInputChange = (id: string, value: string) => {
+    setDecisionMap((prev) => ({ ...prev, [id]: value }));
+  };
+
   const handleSend = async () => {
-    const updatedData = {
-      ...data,
-      soQuyetDinh: decisionCode,
-    };
-    await handleDecision?.(updatedData);
+    // Chuyển format thành mảng các object gửi lên Backend
+    const payload = data.map((item) => ({
+      id: item.id,
+      soQuyetDinh: decisionMap[item.id] || "",
+    }));
+
+    await handleDecision?.(payload);
     handleClose();
   };
 
+  // Kiểm tra xem tất cả các ô đã được nhập số quyết định chưa
+  const isInvalid = data.some((item) => !decisionMap[item.id]?.trim());
+
   return (
     <Box sx={{ p: 2 }}>
-      {/* Button chính */}
       <Button
         variant="contained"
         color="primary"
+        disabled={data.length === 0}
         startIcon={<GavelIcon />}
         onClick={handleClickOpen}
         sx={{
@@ -57,33 +94,61 @@ export default function DecisionButton({
           textTransform: "none",
           fontWeight: "bold",
           px: 3,
-          py: 1,
         }}
       >
-        Ban hành quyết định
+        Ban hành ({data.length}) quyết định
       </Button>
 
-      {/* Popup / Modal nhập mã */}
-      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
+      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
         <DialogTitle sx={{ fontWeight: "bold", color: "#1976d2" }}>
-          Xác nhận ban hành
+          Xác nhận ban hành quyết định
         </DialogTitle>
 
         <DialogContent>
           <DialogContentText sx={{ mb: 2 }}>
-            Vui lòng nhập **Số quyết định** để hoàn tất quy trình ban hành tài
-            sản.
+            Vui lòng nhập **Số quyết định** để hoàn tất quy trình ban hành quyết định.
           </DialogContentText>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Số quyết định"
-            type="text"
-            fullWidth
+
+          {/* Bảng danh sách hàng đã chọn */}
+          <TableContainer
+            component={Paper}
             variant="outlined"
-            value={decisionCode}
-            onChange={(e) => setDecisionCode(e.target.value)}
-          />
+            sx={{ maxHeight: 300 }}
+          >
+            <Table stickyHeader size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: "bold" }}>Mã</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", width: "200px" }}>
+                    Số quyết định
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {data.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>
+                      <Typography variant="body2" fontWeight="500">
+                        {item.id}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <TextField
+                        size="small"
+                        placeholder="Nhập số..."
+                        fullWidth
+                        value={decisionMap[item.id] || ""}
+                        onChange={(e) =>
+                          handleInputChange(item.id, e.target.value)
+                        }
+                        error={!decisionMap[item.id]?.trim()}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </DialogContent>
 
         <DialogActions sx={{ p: 2, justifyContent: "space-between" }}>
@@ -94,9 +159,9 @@ export default function DecisionButton({
             onClick={handleSend}
             variant="contained"
             endIcon={<SendIcon />}
-            disabled={!decisionCode.trim()} // Chỉ cho gửi khi đã nhập mã
+            disabled={isInvalid}
           >
-            Gửi quyết định
+            Gửi ({data.length}) ban hành
           </Button>
         </DialogActions>
       </Dialog>

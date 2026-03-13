@@ -8,6 +8,7 @@ import {
   MenuItem,
 } from "@mui/material";
 import { Build } from "@mui/icons-material";
+import { formattedPrice } from "../../../utils/helpers";
 
 export default function CcdcMonthlyCard({
   ccdcMonthlyData,
@@ -111,7 +112,7 @@ export default function CcdcMonthlyCard({
                 }}
               >
                 <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5 }}>
-                  {item.soLuong}
+                  {formattedPrice(item.soLuong)}
                 </Typography>
                 <Box
                   sx={{

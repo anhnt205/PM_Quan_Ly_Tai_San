@@ -11,13 +11,17 @@ import { MessageTypeFunctions } from "../../../utils/const";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 
-export const getDecision = (status: number) => {
-  switch (status) {
-    case 3:
-      return true;
-    default:
-      return false;
+export const getDecision = (data: any[]) => {
+  if (data.length === 0) {
+    return false;
   }
+  const hasSharedItems = data.some((e) => e.trangThai !== 3);
+
+  if (hasSharedItems) {
+    return false;
+  }
+
+  return data.some((e) => e.trangThai === 3);
 };
 export const ShowPermissionSigning = (status: number) => {
   // Định nghĩa cấu hình cho từng trạng thái
@@ -137,9 +141,9 @@ const getStatusDetails = (status: number) => {
     case 2:
       return { label: "Hủy", color: "#4caf50" }; // Xanh lá
     case 3:
-      return { label: "Chưa ban hành", color: "#68b9f0" }; // Xanh lá
+      return { label: "Chưa ban hành", color: "#9c27b0" }; // Xanh lá
     case 4:
-      return { label: "Đã ban hành", color: "#9c27b0" }; // Xanh lá
+      return { label: "Đã ban hành", color: "#68b9f0" }; // Xanh lá
     default:
       return { label: "Nháp", color: "#9e9e9e" }; // Xám
   }
@@ -685,6 +689,12 @@ export const generateBangKePdf = async (
       textColor: 0,
       lineWidth: 0.1,
       lineColor: 0,
+    },
+    columnStyles: {
+      0: { halign: "center" },
+      2: { halign: "center" },
+      3: { halign: "center" },
+      4: { halign: "center" },
     },
   });
 

@@ -331,7 +331,7 @@ export default function AssetTransferForm({
                   {readOnly && <EditButton onClick={onEdit} />}
                 </Box>
               )}
-              {![0, 2, 3].includes(currentStatus) && (
+              {![0, 2, 3, 4].includes(currentStatus) && (
                 <Button
                   size="small"
                   sx={{ bgcolor: "red", color: "white" }}

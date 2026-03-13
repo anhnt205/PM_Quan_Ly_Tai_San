@@ -89,7 +89,7 @@ interface Props {
   isFilterDepartment?: boolean;
   showDeleteAll?: boolean;
   onDeleteAll?: () => void;
-  isDecision?: (status: number) => boolean;
+  isDecision?: (data: any[]) => boolean;
   handleDecision?: (item: any) => void;
 }
 
@@ -283,17 +283,16 @@ export default function TableCustom({
                 Ký biên bản
               </Button>
             )}
-            {selectedItem.length === 1 &&
-              isDecision?.(selectedItem[0]?.trangThai ?? 0) && (
-                <DecisionButton
-                  data={selectedItem[0]}
-                  handleDecision={handleDecision}
-                  onClose={() => {
-                    setSelectedItem([]);
-                    onSelectionChange?.([]);
-                  }}
-                />
-              )}
+            {selectedItem.length > 0 && isDecision?.(selectedItem) && (
+              <DecisionButton
+                data={selectedItem}
+                handleDecision={handleDecision}
+                onClose={() => {
+                  setSelectedItem([]);
+                  onSelectionChange?.([]);
+                }}
+              />
+            )}
             {selectedItem && isCheckShowShare?.(selectedItem) && (
               <Button
                 size="small"

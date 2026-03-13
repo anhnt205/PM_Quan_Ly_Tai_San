@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Box, Typography } from "@mui/material";
 import { PieChart as RechartsChart, Pie, Cell, Sector } from "recharts";
 import { animate } from "framer-motion";
+import { formattedPrice } from "../../../utils/helpers";
 
 interface PieChartItem {
   ten: string;
@@ -190,7 +191,7 @@ export default function PieChart({ data, size = 120 }: Props) {
               variant="caption"
               sx={{ color: "text.disabled", fontSize: "0.65rem" }}
             >
-              ({activeItem.soLuong})
+              ({formattedPrice(activeItem.soLuong)})
             </Typography>
           </>
         ) : (

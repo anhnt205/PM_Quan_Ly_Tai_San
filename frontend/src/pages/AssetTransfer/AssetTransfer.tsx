@@ -138,13 +138,13 @@ export default function AssetTransfer() {
     {
       label: "Chưa ban hành",
       count: assetTranferPage?.trangThaiCounts?.["3"] ?? 0,
-      color: "success",
+      color: "secondary",
       value: "3",
     },
     {
       label: "Đã ban hành",
       count: assetTranferPage?.trangThaiCounts?.["4"] ?? 0,
-      color: "secondary",
+      color: "success",
       value: "4",
     },
   ];
@@ -230,7 +230,7 @@ export default function AssetTransfer() {
       asset: selectedRow,
     });
   };
-  const handleDecision = (data: any) => {
+  const handleDecision = (data: any[]) => {
     decisionMutation.mutate(data);
   };
 

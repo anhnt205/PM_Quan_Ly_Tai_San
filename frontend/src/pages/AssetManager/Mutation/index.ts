@@ -459,6 +459,7 @@ export const useAssetPageQuery = (
   searchValue?: string,
   idNhomTaiSan?: string,
   idDonViHienThoi?: string,
+  soNgayThongBaoKiemDinh?: number,
 ) => {
   return useQuery({
     queryKey: [
@@ -469,6 +470,7 @@ export const useAssetPageQuery = (
       idNhomTaiSan,
       tab,
       idDonViHienThoi,
+      soNgayThongBaoKiemDinh,
     ], // Key để cache dữ liệu
     queryFn: async () => {
       const res = await api.get(
@@ -488,6 +490,7 @@ export const useAssetPageQuery = (
             idNhomTaiSan: idNhomTaiSan,
             iddonvihienthoi:
               tab === 0 ? "kth" : tab === 3 ? "K31" : idDonViHienThoi,
+            soNgayThongBaoKiemDinh: soNgayThongBaoKiemDinh,
           },
         },
       );

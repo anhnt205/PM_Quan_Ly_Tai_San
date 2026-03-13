@@ -291,8 +291,8 @@ public class DieuDongCCDCVatTuService {
     public int delete(String id) throws SQLException {
         return dao.delete(id);
     }
-    public int banHanhQuyetDinh(String id,String soQuyetDinh) {
-        return dao.banHanhQuyetDinh(id,soQuyetDinh);
+    public int[] banHanhQuyetDinh(List<BanHanhRequest> requests) {
+        return dao.banHanhQuyetDinh(requests);
     }
     public int updateTrangThai(String id, String userId) {
         return dao.updateTrangThai(id, userId);

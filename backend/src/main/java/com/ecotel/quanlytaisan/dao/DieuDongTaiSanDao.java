@@ -699,18 +699,37 @@ public class DieuDongTaiSanDao {
         }
         return result;
     }
-    public int banHanhQuyetDinh(String id,String soQuyetDinh) {
-        String sql = """
-                UPDATE DieuDongTaiSan
-                SET TrangThai=?,soQuyetDinh=?
-                WHERE Id=?
-                """;
+   public int[] banHanhQuyetDinh(List<BanHanhRequest> requests) {
+    String sql = """
+            UPDATE DieuDongTaiSan
+            SET TrangThai = ?, soQuyetDinh = ?
+            WHERE Id = ?
+            """;
 
-        int result = jdbcTemplate.update(sql, 4,soQuyetDinh, id);
-        if (result > 0) {
+        int[] results = jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                BanHanhRequest item = requests.get(i);
+                ps.setInt(1, 4); // TrangThai = 4
+                ps.setString(2, item.getSoQuyetDinh());
+                ps.setString(3, item.getId());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return requests.size();
+            }
+        });
+
+        // --- THÊM LOGIC REFRESH CACHE Ở ĐÂY ---
+        // Kiểm tra xem có ít nhất 1 dòng được update thành công (giá trị > 0 hoặc SUCCESS_NO_INFO)
+        boolean isUpdated = java.util.Arrays.stream(results).anyMatch(r -> r > 0 || r == -2); 
+        
+        if (isUpdated) {
             CompletableFuture.runAsync(this::refreshCache);
         }
-        return result;
+
+        return results;
     }
 
     public DieuDongTaiSan findById(String id) {

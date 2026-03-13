@@ -79,6 +79,7 @@ export default function AssetManager() {
       valueDebounce,
       selectedGroup,
       selectedDepartment,
+      10,
     );
 
   const { data: allDepartments = [] } = useAllDepartmentsQuery();
@@ -288,7 +289,7 @@ export default function AssetManager() {
       minWidth: 150,
       align: "center",
       headerAlign: "center",
-      renderCell: (params) => ShowStatus(params.row.trangThaiKiemDinh ? 1 : 0),
+      renderCell: (params) => ShowStatus(params.row),
     },
     {
       field: "action",
@@ -475,6 +476,11 @@ export default function AssetManager() {
                 icon={<Build fontSize="small" />}
                 sx={{ fontSize: 12 }}
               />
+              <Tab
+                label="Kho kiểm định"
+                icon={<Build fontSize="small" />}
+                sx={{ fontSize: 12 }}
+              />
             </Tabs>
           </Box>
           <TableCustom
@@ -486,7 +492,9 @@ export default function AssetManager() {
                   ? "Quản lý tài sản - Tài sản đã bàn giao"
                   : tab === 2
                     ? "Quản lý tài sản - Kho công ty"
-                    : "Sửa chữa bảo dưỡng"
+                    : tab === 3
+                      ? "Quản lý tài sản - Sửa chữa bảo dưỡng"
+                      : "Quản lý tài sản - Kho kiểm định"
             }
             columns={columns}
             rows={assetsPage.items}

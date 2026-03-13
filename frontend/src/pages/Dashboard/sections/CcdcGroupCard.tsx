@@ -2,6 +2,7 @@ import React from "react";
 import { Paper, Typography, Box } from "@mui/material";
 import { Build, AttachMoney } from "@mui/icons-material";
 import PieChart from "../components/PieChart";
+import { formattedPrice } from "../../../utils/helpers";
 
 export default function CcdcGroupCard({
   ccdcPieData,
@@ -54,7 +55,7 @@ export default function CcdcGroupCard({
                   {item.ten}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {item.soLuong} ({item.phanTram?.toFixed(1)}%)
+                  {formattedPrice(item.soLuong)} ({item.phanTram?.toFixed(1)}%)
                 </Typography>
               </Box>
             ))}
