@@ -13,9 +13,7 @@ public class KeHoachSuaChua {
     private String id;
     private String idCongTy;
     private String tenKeHoach;
-    private String loaiKeHoach;          // 'THIET_BI', 'CHU_KY', 'GIO_MAY'
-    private Integer chuKyNgay;            // Số ngày giữa các lần
-    private Integer mocGioMay;            // Số giờ vận hành giữa các lần
+    private String idLoaiKeHoach;
     private String idDonViThucHien;
     private String idDonViGiao;
     private String idNguoiPhuTrach;
@@ -42,13 +40,6 @@ public class KeHoachSuaChua {
     private String tenNguoiPhuTrach;
 
     // Custom getters for null safety
-    public Integer getChuKyNgay() {
-        return chuKyNgay != null ? chuKyNgay : 0;
-    }
-
-    public Integer getMocGioMay() {
-        return mocGioMay != null ? mocGioMay : 0;
-    }
     public String getTrangThai() {
         return trangThai != null ? trangThai : "CHUA_THUC_HIEN";
     }
@@ -59,19 +50,17 @@ public class KeHoachSuaChua {
         kh.setId(safeGet(row, 0));
         kh.setIdCongTy(safeGet(row, 1));
         kh.setTenKeHoach(safeGet(row, 2));
-        kh.setLoaiKeHoach(safeGet(row, 3));
-        kh.setChuKyNgay(parseInt(safeGet(row, 4)));
-        kh.setMocGioMay(parseInt(safeGet(row, 5)));
-        kh.setIdDonViGiao(safeGet(row, 6));
-        kh.setIdDonViThucHien(safeGet(row, 7));
-        kh.setIdNguoiPhuTrach(safeGet(row, 8));
-        kh.setNgayBatDau(parseDate(safeGet(row, 9), "yyyy-MM-dd"));
-        kh.setNgayKetThuc(parseDate(safeGet(row, 10), "yyyy-MM-dd"));
-        kh.setLoaiDoiTuong(safeGet(row, 11));
-        kh.setNgayTao(parseDate(safeGet(row, 12), "yyyy-MM-dd HH:mm:ss"));
-        kh.setNgayCapNhat(parseDate(safeGet(row, 13), "yyyy-MM-dd HH:mm:ss"));
-        kh.setGhiChu(safeGet(row, 14));
-        kh.setTrangThai(safeGet(row, 15));
+        kh.setIdLoaiKeHoach(safeGet(row, 3));
+        kh.setIdDonViGiao(safeGet(row, 4));
+        kh.setIdDonViThucHien(safeGet(row, 5));
+        kh.setIdNguoiPhuTrach(safeGet(row, 6));
+        kh.setNgayBatDau(parseDate(safeGet(row, 7), "yyyy-MM-dd"));
+        kh.setNgayKetThuc(parseDate(safeGet(row, 8), "yyyy-MM-dd"));
+        kh.setLoaiDoiTuong(safeGet(row, 9));
+        kh.setNgayTao(parseDate(safeGet(row, 10), "yyyy-MM-dd HH:mm:ss"));
+        kh.setNgayCapNhat(parseDate(safeGet(row, 11), "yyyy-MM-dd HH:mm:ss"));
+        kh.setGhiChu(safeGet(row, 12));
+        kh.setTrangThai(safeGet(row, 13));
         return kh;
     }
 
@@ -81,30 +70,27 @@ public class KeHoachSuaChua {
         kh.setId(getCellStringValue(row.getCell(0)));
         kh.setIdCongTy(getCellStringValue(row.getCell(1)));
         kh.setTenKeHoach(getCellStringValue(row.getCell(2)));
-        kh.setLoaiKeHoach(getCellStringValue(row.getCell(3)));
-        kh.setChuKyNgay(parseInt(getCellStringValue(row.getCell(4))));
-        kh.setMocGioMay(parseInt(getCellStringValue(row.getCell(5))));
-        kh.setIdDonViGiao(getCellStringValue(row.getCell(6)));
-        kh.setIdDonViThucHien(getCellStringValue(row.getCell(7)));
-        kh.setIdNguoiPhuTrach(getCellStringValue(row.getCell(8)));
+        kh.setIdLoaiKeHoach(getCellStringValue(row.getCell(3)));
+        kh.setIdDonViGiao(getCellStringValue(row.getCell(4)));
+        kh.setIdDonViThucHien(getCellStringValue(row.getCell(5)));
+        kh.setIdNguoiPhuTrach(getCellStringValue(row.getCell(6)));
 
-        LocalDateTime ngayBD = getCellDate(row.getCell(9));
+        LocalDateTime ngayBD = getCellDate(row.getCell(7));
         kh.setNgayBatDau(ngayBD != null ? Date.from(ngayBD.atZone(ZoneId.systemDefault()).toInstant()) : null);
 
-        LocalDateTime ngayKT = getCellDate(row.getCell(10));
+        LocalDateTime ngayKT = getCellDate(row.getCell(8));
         kh.setNgayKetThuc(ngayKT != null ? Date.from(ngayKT.atZone(ZoneId.systemDefault()).toInstant()) : null);
 
-        kh.setLoaiDoiTuong(getCellStringValue(row.getCell(11)));
+        kh.setLoaiDoiTuong(getCellStringValue(row.getCell(9)));
 
-        LocalDateTime ngayTao = getCellDate(row.getCell(12));
+        LocalDateTime ngayTao = getCellDate(row.getCell(10));
         kh.setNgayTao(ngayTao != null ? Date.from(ngayTao.atZone(ZoneId.systemDefault()).toInstant()) : null);
 
-        LocalDateTime ngayCapNhat = getCellDate(row.getCell(13));
+        LocalDateTime ngayCapNhat = getCellDate(row.getCell(11));
         kh.setNgayCapNhat(ngayCapNhat != null ? Date.from(ngayCapNhat.atZone(ZoneId.systemDefault()).toInstant()) : null);
 
-        kh.setGhiChu(getCellStringValue(row.getCell(14)));
-
-        kh.setTrangThai(getCellStringValue(row.getCell(15)));
+        kh.setGhiChu(getCellStringValue(row.getCell(12)));
+        kh.setTrangThai(getCellStringValue(row.getCell(13)));
         return kh;
     }
 

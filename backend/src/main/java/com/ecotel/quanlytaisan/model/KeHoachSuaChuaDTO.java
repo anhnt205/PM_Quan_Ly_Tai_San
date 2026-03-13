@@ -10,9 +10,8 @@ public class KeHoachSuaChuaDTO {
     private String id;
     private String idCongTy;
     private String tenKeHoach;
-    private String loaiKeHoach;          // 'THIET_BI', 'CHU_KY', 'GIO_MAY'
-    private Integer chuKyNgay;
-    private Integer mocGioMay;
+    private String idLoaiKeHoach;
+    private String tenLoaiKeHoach;
 
     // Đơn vị thực hiện
     private String idDonViGiao;
@@ -47,14 +46,6 @@ public class KeHoachSuaChuaDTO {
     // Danh sách chi tiết (nếu cần gộp)
     private List<KeHoachChiTietSuaChuaDTO> chiTiets;
 
-    // Custom getters for null safety
-    public Integer getChuKyNgay() {
-        return chuKyNgay != null ? chuKyNgay : 0;
-    }
-
-    public Integer getMocGioMay() {
-        return mocGioMay != null ? mocGioMay : 0;
-    }
 
     private String trangThai;
 }

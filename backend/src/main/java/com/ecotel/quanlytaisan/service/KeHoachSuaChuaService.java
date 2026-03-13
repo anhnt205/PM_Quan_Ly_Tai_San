@@ -94,7 +94,7 @@ public class KeHoachSuaChuaService {
         // Lọc theo loại kế hoạch
         if (loaiKeHoach != null && !loaiKeHoach.trim().isEmpty()) {
             sourceList = sourceList.stream()
-                    .filter(item -> loaiKeHoach.equals(item.getLoaiKeHoach()))
+                    .filter(item -> loaiKeHoach.equals(item.getIdLoaiKeHoach()))
                     .collect(Collectors.toList());
         }
 

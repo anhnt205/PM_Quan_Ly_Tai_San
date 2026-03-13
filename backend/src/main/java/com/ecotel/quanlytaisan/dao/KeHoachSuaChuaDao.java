@@ -33,9 +33,8 @@ public class KeHoachSuaChuaDao {
                 kh.Id,
                 kh.IdCongTy,
                 kh.TenKeHoach,
-                kh.LoaiKeHoach,
-                kh.ChuKyNgay,
-                kh.MocGioMay,
+                kh.IdLoaiKeHoach,
+                lkh.TenLoai AS tenLoaiKeHoach,
                 kh.IdDonViGiao,
                 pbg.TenPhongBan AS tenDonViGiao,
                 kh.IdDonViThucHien,
@@ -53,6 +52,7 @@ public class KeHoachSuaChuaDao {
                 LEFT JOIN PhongBan pb ON kh.IdDonViThucHien = pb.Id
                 LEFT JOIN PhongBan pbg ON kh.IdDonViGiao = pbg.Id
                 LEFT JOIN NhanVien nv ON kh.IdNguoiPhuTrach = nv.Id
+                LEFT JOIN loaikehoach lkh ON kh.IdLoaiKeHoach = lkh.Id
         """;
         try {
             cache = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(KeHoachSuaChuaDTO.class));
@@ -62,7 +62,6 @@ public class KeHoachSuaChuaDao {
     }
 
     public List<KeHoachSuaChuaDTO> findAll(String idCongTy) {
-
         refreshCache();
         if (idCongTy == null) {
             return new java.util.ArrayList<>(cache);
@@ -85,7 +84,7 @@ public class KeHoachSuaChuaDao {
                 orderColumn = "kh.TenKeHoach";
                 break;
             case "loaikehoach":
-                orderColumn = "kh.LoaiKeHoach";
+                orderColumn = "lkh.TenLoai";          // sắp xếp theo tên loại kế hoạch
                 break;
             case "ngaybatdau":
                 orderColumn = "kh.NgayBatDau";
@@ -101,33 +100,33 @@ public class KeHoachSuaChuaDao {
         String direction = (sortDir != null && sortDir.equalsIgnoreCase("asc")) ? "ASC" : "DESC";
 
         String sql = """
-            SELECT 
-                kh.Id,
-                kh.IdCongTy,
-                kh.TenKeHoach,
-                kh.LoaiKeHoach,
-                kh.ChuKyNgay,
-                kh.MocGioMay,
-                kh.IdDonViGiao,
-                pbg.TenPhongBan AS tenDonViGiao,
-                kh.IdDonViThucHien,
-                pb.TenPhongBan AS tenDonViThucHien,
-                kh.IdNguoiPhuTrach,
-                nv.HoTen AS tenNguoiPhuTrach,
-                kh.NgayBatDau,
-                kh.NgayKetThuc,
-                kh.LoaiDoiTuong,
-                kh.NgayTao,
-                kh.NgayCapNhat,
-                kh.GhiChu,
-                kh.TrangThai
-            FROM KeHoachSuaChua kh
-                LEFT JOIN PhongBan pb ON kh.IdDonViThucHien = pb.Id
-                LEFT JOIN PhongBan pbg ON kh.IdDonViGiao = pbg.Id
-                LEFT JOIN NhanVien nv ON kh.IdNguoiPhuTrach = nv.Id
-            WHERE UPPER(kh.IdCongTy) = UPPER(?)
-            ORDER BY %s %s
-            LIMIT ? OFFSET ?
+        SELECT 
+            kh.Id,
+            kh.IdCongTy,
+            kh.TenKeHoach,
+            kh.IdLoaiKeHoach,
+            lkh.TenLoai AS tenLoaiKeHoach,
+            kh.IdDonViGiao,
+            pbg.TenPhongBan AS tenDonViGiao,
+            kh.IdDonViThucHien,
+            pb.TenPhongBan AS tenDonViThucHien,
+            kh.IdNguoiPhuTrach,
+            nv.HoTen AS tenNguoiPhuTrach,
+            kh.NgayBatDau,
+            kh.NgayKetThuc,
+            kh.LoaiDoiTuong,
+            kh.NgayTao,
+            kh.NgayCapNhat,
+            kh.GhiChu,
+            kh.TrangThai
+        FROM KeHoachSuaChua kh
+            LEFT JOIN PhongBan pb ON kh.IdDonViThucHien = pb.Id
+            LEFT JOIN PhongBan pbg ON kh.IdDonViGiao = pbg.Id
+            LEFT JOIN NhanVien nv ON kh.IdNguoiPhuTrach = nv.Id
+            LEFT JOIN loaikehoach lkh ON kh.IdLoaiKeHoach = lkh.Id
+        WHERE UPPER(kh.IdCongTy) = UPPER(?)
+        ORDER BY %s %s
+        LIMIT ? OFFSET ?
         """;
         String finalSql = String.format(sql, orderColumn, direction);
         return jdbcTemplate.query(finalSql, new BeanPropertyRowMapper<>(KeHoachSuaChuaDTO.class),
@@ -137,12 +136,10 @@ public class KeHoachSuaChuaDao {
     public KeHoachSuaChua findById(String id) {
         String sql = "SELECT * FROM KeHoachSuaChua WHERE Id = ?";
         List<KeHoachSuaChua> results = jdbcTemplate.query(
-            sql, 
-            new BeanPropertyRowMapper<>(KeHoachSuaChua.class), 
-            id
+                sql,
+                new BeanPropertyRowMapper<>(KeHoachSuaChua.class),
+                id
         );
-        
-        // Nếu rỗng thì trả về null, nếu có thì lấy phần tử đầu tiên
         return results.isEmpty() ? null : results.get(0);
     }
 
@@ -152,9 +149,8 @@ public class KeHoachSuaChuaDao {
                 kh.Id,
                 kh.IdCongTy,
                 kh.TenKeHoach,
-                kh.LoaiKeHoach,
-                kh.ChuKyNgay,
-                kh.MocGioMay,
+                kh.IdLoaiKeHoach,
+                lkh.TenLoai AS tenLoaiKeHoach,
                 kh.IdDonViGiao,
                 pbg.TenPhongBan AS tenDonViGiao,
                 kh.IdDonViThucHien,
@@ -172,6 +168,7 @@ public class KeHoachSuaChuaDao {
                 LEFT JOIN PhongBan pb ON kh.IdDonViThucHien = pb.Id
                 LEFT JOIN PhongBan pbg ON kh.IdDonViGiao = pbg.Id
                 LEFT JOIN NhanVien nv ON kh.IdNguoiPhuTrach = nv.Id
+                LEFT JOIN loaikehoach lkh ON kh.IdLoaiKeHoach = lkh.Id
             WHERE kh.Id = ?
         """;
         try {
@@ -208,16 +205,15 @@ public class KeHoachSuaChuaDao {
         return prefix + String.format("%04d", nextSeq);
     }
 
-    // insert nhieu
+    // insert nhiều
     public void batchInsert(List<KeHoachSuaChua> list) {
-
         String sql = """
         INSERT INTO KeHoachSuaChua (
-            Id, IdCongTy, TenKeHoach, LoaiKeHoach, ChuKyNgay, MocGioMay,
-            IdDonViThucHien,IdDonViGiao, IdNguoiPhuTrach, NgayBatDau, NgayKetThuc,
+            Id, IdCongTy, TenKeHoach, IdLoaiKeHoach,
+            IdDonViThucHien, IdDonViGiao, IdNguoiPhuTrach, NgayBatDau, NgayKetThuc,
             LoaiDoiTuong, NgayTao, NgayCapNhat, GhiChu, TrangThai
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?)
-    """;
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """;
 
         Date now = new Date();
 
@@ -229,34 +225,31 @@ public class KeHoachSuaChuaDao {
             ps.setString(1, entity.getId());
             ps.setString(2, entity.getIdCongTy());
             ps.setString(3, entity.getTenKeHoach());
-            ps.setString(4, entity.getLoaiKeHoach());
-            ps.setObject(5, entity.getChuKyNgay());
-            ps.setObject(6, entity.getMocGioMay());
-            ps.setString(7, entity.getIdDonViGiao());
-            ps.setString(8, entity.getIdDonViThucHien());
-            ps.setString(9, entity.getIdNguoiPhuTrach());
-            ps.setObject(10, entity.getNgayBatDau());
-            ps.setObject(11, entity.getNgayKetThuc());
-            ps.setString(12, entity.getLoaiDoiTuong());
-            ps.setObject(13, entity.getNgayTao());
-            ps.setObject(14, entity.getNgayCapNhat());
-            ps.setString(15, entity.getGhiChu());
-            ps.setString(16, entity.getTrangThai() != null ? entity.getTrangThai() : "CHUA_THUC_HIEN");
+            ps.setString(4, entity.getIdLoaiKeHoach());
+            ps.setString(5, entity.getIdDonViThucHien());
+            ps.setString(6, entity.getIdDonViGiao());
+            ps.setString(7, entity.getIdNguoiPhuTrach());
+            ps.setObject(8, entity.getNgayBatDau());
+            ps.setObject(9, entity.getNgayKetThuc());
+            ps.setString(10, entity.getLoaiDoiTuong());
+            ps.setObject(11, entity.getNgayTao());
+            ps.setObject(12, entity.getNgayCapNhat());
+            ps.setString(13, entity.getGhiChu());
+            ps.setString(14, entity.getTrangThai() != null ? entity.getTrangThai() : "CHUA_THUC_HIEN");
         });
 
         CompletableFuture.runAsync(this::refreshCache);
     }
 
-    // update nhieu
+    // update nhiều
     public void batchUpdate(List<KeHoachSuaChua> list) {
-
         String sql = """
         UPDATE KeHoachSuaChua SET
-            TenKeHoach = ?, LoaiKeHoach = ?, ChuKyNgay = ?, MocGioMay = ?,
-            IdDonViThucHien = ?,IdDonViGiao, IdNguoiPhuTrach = ?, NgayBatDau = ?, NgayKetThuc = ?,
+            TenKeHoach = ?, IdLoaiKeHoach = ?,
+            IdDonViThucHien = ?, IdDonViGiao = ?, IdNguoiPhuTrach = ?, NgayBatDau = ?, NgayKetThuc = ?,
             LoaiDoiTuong = ?, NgayCapNhat = ?, GhiChu = ?, TrangThai = ?
         WHERE Id = ?
-    """;
+        """;
 
         Date now = new Date();
 
@@ -264,32 +257,26 @@ public class KeHoachSuaChuaDao {
             entity.setNgayCapNhat(now);
 
             ps.setString(1, entity.getTenKeHoach());
-            ps.setString(2, entity.getLoaiKeHoach());
-            ps.setObject(3, entity.getChuKyNgay());
-            ps.setObject(4, entity.getMocGioMay());
-            ps.setString(5, entity.getIdDonViGiao());
-            ps.setString(6, entity.getIdDonViThucHien());
-            ps.setString(7, entity.getIdNguoiPhuTrach());
-            ps.setObject(8, entity.getNgayBatDau());
-            ps.setObject(9, entity.getNgayKetThuc());
-            ps.setString(10, entity.getLoaiDoiTuong());
-            ps.setObject(11, entity.getNgayCapNhat());
-            ps.setString(12, entity.getGhiChu());
-            ps.setString(13, entity.getTrangThai());
-            ps.setString(14, entity.getId());
+            ps.setString(2, entity.getIdLoaiKeHoach());
+            ps.setString(3, entity.getIdDonViThucHien());
+            ps.setString(4, entity.getIdDonViGiao());
+            ps.setString(5, entity.getIdNguoiPhuTrach());
+            ps.setObject(6, entity.getNgayBatDau());
+            ps.setObject(7, entity.getNgayKetThuc());
+            ps.setString(8, entity.getLoaiDoiTuong());
+            ps.setObject(9, entity.getNgayCapNhat());
+            ps.setString(10, entity.getGhiChu());
+            ps.setString(11, entity.getTrangThai());
+            ps.setString(12, entity.getId());
         });
 
         CompletableFuture.runAsync(this::refreshCache);
     }
 
-    // xoa nhieu
+    // xóa nhiều
     public void batchDelete(List<String> ids) {
-
         String sql = "DELETE FROM KeHoachSuaChua WHERE Id = ?";
-
-        jdbcTemplate.batchUpdate(sql, ids, 50,
-                (ps, id) -> ps.setString(1, id));
-
+        jdbcTemplate.batchUpdate(sql, ids, 50, (ps, id) -> ps.setString(1, id));
         CompletableFuture.runAsync(this::refreshCache);
     }
 
@@ -300,15 +287,14 @@ public class KeHoachSuaChuaDao {
 
         String sql = """
         INSERT INTO KeHoachSuaChua (
-            Id, IdCongTy, TenKeHoach, LoaiKeHoach, ChuKyNgay, MocGioMay,
-            IdDonViThucHien,IdDonViGiao, IdNguoiPhuTrach, NgayBatDau, NgayKetThuc,
+            Id, IdCongTy, TenKeHoach, IdLoaiKeHoach,
+            IdDonViThucHien, IdDonViGiao, IdNguoiPhuTrach, NgayBatDau, NgayKetThuc,
             LoaiDoiTuong, NgayTao, NgayCapNhat, GhiChu, TrangThai
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?)
-    """;
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """;
         int result = jdbcTemplate.update(sql,
-                entity.getId(), entity.getIdCongTy(), entity.getTenKeHoach(), entity.getLoaiKeHoach(),
-                entity.getChuKyNgay(), entity.getMocGioMay(),
-                entity.getIdDonViThucHien(),entity.getIdDonViGiao(), entity.getIdNguoiPhuTrach(),
+                entity.getId(), entity.getIdCongTy(), entity.getTenKeHoach(), entity.getIdLoaiKeHoach(),
+                entity.getIdDonViThucHien(), entity.getIdDonViGiao(), entity.getIdNguoiPhuTrach(),
                 entity.getNgayBatDau(), entity.getNgayKetThuc(),
                 entity.getLoaiDoiTuong(), entity.getNgayTao(), entity.getNgayCapNhat(),
                 entity.getGhiChu(),
@@ -325,14 +311,14 @@ public class KeHoachSuaChuaDao {
         entity.setNgayCapNhat(new Date());
         String sql = """
             UPDATE KeHoachSuaChua SET
-                TenKeHoach = ?, LoaiKeHoach = ?, ChuKyNgay = ?, MocGioMay = ?,
-                IdDonViThucHien = ?,IdDonViGiao, IdNguoiPhuTrach = ?, NgayBatDau = ?, NgayKetThuc = ?,
+                TenKeHoach = ?, IdLoaiKeHoach = ?,
+                IdDonViThucHien = ?, IdDonViGiao = ?, IdNguoiPhuTrach = ?, NgayBatDau = ?, NgayKetThuc = ?,
                 LoaiDoiTuong = ?, NgayCapNhat = ?, GhiChu = ?, TrangThai = ?
             WHERE Id = ?
         """;
         int result = jdbcTemplate.update(sql,
-                entity.getTenKeHoach(), entity.getLoaiKeHoach(), entity.getChuKyNgay(), entity.getMocGioMay(),
-                entity.getIdDonViThucHien(),entity.getIdDonViGiao(), entity.getIdNguoiPhuTrach(),
+                entity.getTenKeHoach(), entity.getIdLoaiKeHoach(),
+                entity.getIdDonViThucHien(), entity.getIdDonViGiao(), entity.getIdNguoiPhuTrach(),
                 entity.getNgayBatDau(), entity.getNgayKetThuc(),
                 entity.getLoaiDoiTuong(), entity.getNgayCapNhat(), entity.getGhiChu(),
                 entity.getTrangThai(),
