@@ -23,6 +23,7 @@ public class ChucVu {
     private Boolean dieuDongCCDCVatTu;
     private Boolean banGiaoTaiSan;
     private Boolean banGiaoCCDCVatTu;
+    private Boolean banHanhQuyetDinh;
     private Boolean baoCao;
 
     private String idCongTy;
@@ -50,11 +51,12 @@ public class ChucVu {
         cv.setBanGiaoTaiSan(row[12] != null && row[12].equalsIgnoreCase("true"));
         cv.setBanGiaoCCDCVatTu(row[13] != null && row[13].equalsIgnoreCase("true"));
         cv.setBaoCao(row[14] != null && row[14].equalsIgnoreCase("true"));
-        cv.setIdCongTy(row[15]);
-        cv.setNgayTao(row[16]);
-        cv.setNgayCapNhat(row[17]);
-        cv.setNguoiTao(row[18]);
-        cv.setNguoiCapNhat(row[19]);
+        cv.setBanHanhQuyetDinh(row[15] != null && row[14].equalsIgnoreCase("true"));
+        cv.setIdCongTy(row[16]);
+        cv.setNgayTao(row[17]);
+        cv.setNgayCapNhat(row[18]);
+        cv.setNguoiTao(row[19]);
+        cv.setNguoiCapNhat(row[20]);
         return cv;
     }
 
@@ -75,11 +77,12 @@ public class ChucVu {
         cv.setBanGiaoTaiSan(getCellBooleanValue(row.getCell(12)));
         cv.setBanGiaoCCDCVatTu(getCellBooleanValue(row.getCell(13)));
         cv.setBaoCao(getCellBooleanValue(row.getCell(14)));
-        cv.setIdCongTy(getCellStringValue(row.getCell(15)));
-        cv.setNgayTao(getCellStringValue(row.getCell(16)));
-        cv.setNgayCapNhat(getCellStringValue(row.getCell(17)));
-        cv.setNguoiTao(getCellStringValue(row.getCell(18)));
-        cv.setNguoiCapNhat(getCellStringValue(row.getCell(19)));
+        cv.setBanHanhQuyetDinh(getCellBooleanValue(row.getCell(15)));
+        cv.setIdCongTy(getCellStringValue(row.getCell(16)));
+        cv.setNgayTao(getCellStringValue(row.getCell(17)));
+        cv.setNgayCapNhat(getCellStringValue(row.getCell(18)));
+        cv.setNguoiTao(getCellStringValue(row.getCell(19)));
+        cv.setNguoiCapNhat(getCellStringValue(row.getCell(20)));
         return cv;
     }
 }

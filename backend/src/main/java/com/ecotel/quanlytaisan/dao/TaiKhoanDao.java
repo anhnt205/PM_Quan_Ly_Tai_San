@@ -33,6 +33,11 @@ public class TaiKhoanDao {
             } catch (SQLException e) {
                 tk.setPhongBanId(null);
             }
+             try {
+                tk.setChucVuId(rs.getString("ChucVuId"));
+            } catch (SQLException e) {
+                tk.setChucVuId(null);
+            }
             tk.setEmail(rs.getString("Email"));
             tk.setSoDienThoai(rs.getString("SoDienThoai"));
             tk.setHinhAnh(rs.getString("HinhAnh"));
@@ -169,6 +174,7 @@ public class TaiKhoanDao {
                        tk.IsActive,
                        nv.HoTen AS TenNhanVien,
                        nv.BoPhan AS PhongBanId,
+                       nv.ChucVu AS ChucVuId,
                 tk.Username
                 FROM TaiKhoan AS tk
                          LEFT JOIN NhanVien AS nv ON nv.Id = tk.TenDangNhap

@@ -54,6 +54,7 @@ export default function PositionForm({
       banGiaoTaiSan: false,
       banGiaoCCDCVatTu: false,
       baoCao: false,
+      banHanhQuyetDinh: false,
       idCongTy: CongTy.CT001,
     },
     validationSchema: PositionValidation,
@@ -292,6 +293,21 @@ export default function PositionForm({
             <Grid size={{ xs: 6 }}>
               <Box display="flex" alignItems="center">
                 <Box width={200}>
+                  <Typography>Ban hành quyết định:</Typography>
+                </Box>
+                <Checkbox
+                  checked={formik.values.banHanhQuyetDinh}
+                  onChange={(e) =>
+                    formik.setFieldValue("banHanhQuyetDinh", e.target.checked)
+                  }
+                  name="banHanhQuyetDinh"
+                  disabled={readOnly}
+                />
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <Box display="flex" alignItems="center">
+                <Box width={200}>
                   <Typography>Báo cáo:</Typography>
                 </Box>
                 <Checkbox
@@ -303,21 +319,21 @@ export default function PositionForm({
                   disabled={readOnly}
                 />
               </Box>
-              <Grid size={{ xs: 6 }}>
-                <Box display="flex" alignItems="center">
-                  <Box width={200}>
-                    <Typography>Quản lý tài sản:</Typography>
-                  </Box>
-                  <Checkbox
-                    checked={formik.values.quanLyTaiSan}
-                    onChange={(e) =>
-                      formik.setFieldValue("quanLyTaiSan", e.target.checked)
-                    }
-                    name="quanLyTaiSan"
-                    disabled={readOnly}
-                  />
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <Box display="flex" alignItems="center">
+                <Box width={200}>
+                  <Typography>Quản lý tài sản:</Typography>
                 </Box>
-              </Grid>
+                <Checkbox
+                  checked={formik.values.quanLyTaiSan}
+                  onChange={(e) =>
+                    formik.setFieldValue("quanLyTaiSan", e.target.checked)
+                  }
+                  name="quanLyTaiSan"
+                  disabled={readOnly}
+                />
+              </Box>
             </Grid>
           </Grid>
         </Paper>

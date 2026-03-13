@@ -25,7 +25,6 @@ import {
   showStatus,
   showStatusDocument,
 } from "../ToolTransfer/config";
-import { findById } from "../../utils/helpers";
 import { Building, Eye, Trash2 } from "lucide-react";
 import { ToolSignature, ToolTransferData } from "./types";
 import { useToolTransferMutation, useToolTransferPageQuery } from "./Mutation";

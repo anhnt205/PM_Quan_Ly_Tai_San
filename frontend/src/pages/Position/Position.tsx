@@ -192,6 +192,16 @@ export default function Position() {
       ),
     },
     {
+      field: "banHanhQuyetDinh",
+      headerName: "Ban hành quyết định",
+      width: 150,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => (
+        <Checkbox checked={params.row.banHanhQuyetDinh} />
+      ),
+    },
+    {
       field: "baoCao",
       headerName: "Báo cáo",
       width: 150,

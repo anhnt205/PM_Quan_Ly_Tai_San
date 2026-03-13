@@ -1,0 +1,2 @@
+ALTER TABLE chucvu
+    ADD COLUMN banHanhQuyetDinh TINYINT(1) DEFAULT 0;

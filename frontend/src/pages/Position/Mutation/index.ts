@@ -143,6 +143,7 @@ export const usePositionMutation = (
             ? "TRUE"
             : "FALSE",
           "Quản lý Báo cáo": item.baoCao ? "TRUE" : "FALSE",
+          "Ban hành quyết định": item.banHanhQuyetDinh ? "TRUE" : "FALSE",
           "Ngày tạo": item.ngayTao || "",
           "Ngày cập nhật": item.ngayCapNhat || "",
         }));
@@ -196,6 +197,7 @@ export const usePositionMutation = (
                 banGiaoTaiSan: b(row[12]),
                 banGiaoCCDCVatTu: b(row[13]),
                 baoCao: b(row[14]),
+                banHanhQuyetDinh: b(row[15]),
                 idCongTy: CongTy.CT001,
                 ngayTao: row[15]?.toString() || new Date().toISOString(),
                 ngayCapNhat: row[16]?.toString() || new Date().toISOString(),
@@ -235,7 +237,7 @@ export const usePositionMutation = (
     importExcelMutation,
     exportMutation,
     getByIdMutation,
-    deleteAllMutation
+    deleteAllMutation,
   };
 };
 

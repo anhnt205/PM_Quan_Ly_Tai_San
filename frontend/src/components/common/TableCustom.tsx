@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   BarChart,
   Close,
@@ -36,6 +36,7 @@ import { FilterOption, FilterStatusGroup } from "./FilterStatusGroup";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import DecisionButton from "../Button/DecisionButton";
+import { usePositionMutation } from "../../pages/Position/Mutation";
 
 const CustomFilterPanel = (props: any) => {
   return (
@@ -142,6 +143,26 @@ export default function TableCustom({
   const [selectedItem, setSelectedItem] = useState<any[]>([]);
   const [columnVisibilityModel, setColumnVisibilityModel] =
     useState<GridColumnVisibilityModel>({});
+
+  const [isPermissionBanHanh, setIsPermissionBanHanh] = useState(false);
+  const { getByIdMutation } = usePositionMutation();
+
+  useEffect(() => {
+    const checkPermission = async () => {
+      if (user?.taiKhoan?.chucVuId) {
+        try {
+          const chucvu = await getByIdMutation.mutateAsync(
+            user.taiKhoan.chucVuId,
+          );
+          setIsPermissionBanHanh(!!chucvu?.data?.banHanhQuyetDinh);
+        } catch (error) {
+          console.error("Lỗi lấy quyền:", error);
+        }
+      }
+    };
+
+    checkPermission();
+  }, [user?.taiKhoan?.chucVuId]);
 
   useEffect(() => {
     if (tableId) {
@@ -283,16 +304,18 @@ export default function TableCustom({
                 Ký biên bản
               </Button>
             )}
-            {selectedItem.length > 0 && isDecision?.(selectedItem) && (
-              <DecisionButton
-                data={selectedItem}
-                handleDecision={handleDecision}
-                onClose={() => {
-                  setSelectedItem([]);
-                  onSelectionChange?.([]);
-                }}
-              />
-            )}
+            {selectedItem.length > 0 &&
+              isPermissionBanHanh &&
+              isDecision?.(selectedItem) && (
+                <DecisionButton
+                  data={selectedItem}
+                  handleDecision={handleDecision}
+                  onClose={() => {
+                    setSelectedItem([]);
+                    onSelectionChange?.([]);
+                  }}
+                />
+              )}
             {selectedItem && isCheckShowShare?.(selectedItem) && (
               <Button
                 size="small"

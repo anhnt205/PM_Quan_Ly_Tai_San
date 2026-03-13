@@ -13,6 +13,7 @@ export interface PositionType {
   dieuDongCCDCVatTu: boolean;
   banGiaoTaiSan: boolean;
   banGiaoCCDCVatTu: boolean;
+  banHanhQuyetDinh: boolean;
   baoCao: boolean;
   idCongTy: string;
   ngayTao?: string;

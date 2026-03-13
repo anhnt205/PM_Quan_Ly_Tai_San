@@ -37,6 +37,7 @@ public class ChucVuDao {
             cv.setBanGiaoTaiSan(rs.getBoolean("BanGiaoTaiSan"));
             cv.setBanGiaoCCDCVatTu(rs.getBoolean("BanGiaoCCDCVatTu"));
             cv.setBaoCao(rs.getBoolean("BaoCao"));
+            cv.setBanHanhQuyetDinh(rs.getBoolean("BanHanhQuyetDinh"));
 
             cv.setIdCongTy(rs.getString("IdCongTy"));
             cv.setNgayTao(rs.getString("NgayTao"));
@@ -69,6 +70,7 @@ public class ChucVuDao {
             cv.setBanGiaoTaiSan(rs.getBoolean("BanGiaoTaiSan"));
             cv.setBanGiaoCCDCVatTu(rs.getBoolean("BanGiaoCCDCVatTu"));
             cv.setBaoCao(rs.getBoolean("BaoCao"));
+            cv.setBanHanhQuyetDinh(rs.getBoolean("BanHanhQuyetDinh"));
 
             cv.setIdCongTy(rs.getString("IdCongTy"));
             cv.setNgayTao(rs.getString("NgayTao"));
@@ -98,8 +100,8 @@ public class ChucVuDao {
                     INSERT INTO ChucVu(Id, TenChucVu, QuanLyNhanVien, QuanLyPhongBan, QuanLyDuAn,
                                        QuanLyNguonVon, QuanLyMoHinhTaiSan, QuanLyNhomTaiSan, QuanLyTaiSan,
                                        QuanLyCCDCVatTu, DieuDongTaiSan, DieuDongCCDCVatTu, BanGiaoTaiSan,
-                                       BanGiaoCCDCVatTu, BaoCao, IdCongTy, NgayTao, NguoiTao)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                       BanGiaoCCDCVatTu, BaoCao,BanHanhQuyetDinh, IdCongTy, NgayTao, NguoiTao)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)
                     """;
             return jdbcTemplate.update(sql,
                     cv.getId(),
@@ -117,6 +119,7 @@ public class ChucVuDao {
                     cv.getBanGiaoTaiSan(),
                     cv.getBanGiaoCCDCVatTu(),
                     cv.getBaoCao(),
+                    cv.getBanHanhQuyetDinh(),
                     cv.getIdCongTy(),
                     cv.getNgayTao(),
                     cv.getNguoiTao()
@@ -129,7 +132,7 @@ public class ChucVuDao {
                 UPDATE ChucVu
                 SET TenChucVu=?, QuanLyNhanVien=?, QuanLyPhongBan=?, QuanLyDuAn=?, QuanLyNguonVon=?,
                     QuanLyMoHinhTaiSan=?, QuanLyNhomTaiSan=?, QuanLyTaiSan=?, QuanLyCCDCVatTu=?,
-                    DieuDongTaiSan=?, DieuDongCCDCVatTu=?, BanGiaoTaiSan=?, BanGiaoCCDCVatTu=?, BaoCao=?,
+                    DieuDongTaiSan=?, DieuDongCCDCVatTu=?, BanGiaoTaiSan=?, BanGiaoCCDCVatTu=?, BaoCao=?,BanHanhQuyetDinh=?,
                     IdCongTy=?, NgayCapNhat=?, NguoiCapNhat=?
                 WHERE Id=?
                 """;
@@ -148,6 +151,7 @@ public class ChucVuDao {
                 cv.getBanGiaoTaiSan(),
                 cv.getBanGiaoCCDCVatTu(),
                 cv.getBaoCao(),
+                cv.getBanHanhQuyetDinh(),
                 cv.getIdCongTy(),
                 cv.getNgayCapNhat(),
                 cv.getNguoiCapNhat(),
