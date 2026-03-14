@@ -40,6 +40,7 @@ export default function PlanTypeForm({
     initialValues: {
       id: "",
       tenLoai: "",
+      isActive:true
     },
     validationSchema: PlanTypeValidation,
     onSubmit(values) {

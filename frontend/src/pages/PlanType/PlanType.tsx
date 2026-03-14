@@ -50,12 +50,11 @@ export default function PlanType() {
     deleteAllMutation,
   } = usePlanTypeMutation();
   const debouncedSearchValue = useDebounce(searchValue, 600);
-  const { data: planTypesPage = { items: [], totalItems: 0 }, isLoading } =
-    usePlanTypePageQuery(
-      paginationModel.page,
-      paginationModel.pageSize,
-      debouncedSearchValue,
-    );
+  const { data: planTypesPage = [], isLoading } = usePlanTypePageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    debouncedSearchValue,
+  );
   const { data: allPlanTypes = [] } = useAllPlanTypeQuery();
 
   const handleImport = (file: File) => {
@@ -193,8 +192,8 @@ export default function PlanType() {
           tableId="planType"
           title="Quản lý loại kế hoạch sử chữa"
           columns={columns}
-          rows={planTypesPage.items}
-          total={planTypesPage.totalItems}
+          rows={planTypesPage}
+          total={planTypesPage.length}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
           loading={isLoading}

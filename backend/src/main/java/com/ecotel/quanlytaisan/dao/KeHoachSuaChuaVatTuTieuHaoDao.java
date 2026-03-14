@@ -53,11 +53,12 @@ public class KeHoachSuaChuaVatTuTieuHaoDao {
 
     // ==================== Insert ====================
     public int insert(KeHoachSuaChuaVatTuTieuHao entity) {
-        String sql = "INSERT INTO kehoachsuachua_vattu_tieuhao (Id, IdKeHoachSuaChua, IdCCDC, TenVatTu, SoLuong, GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO kehoachsuachua_vattu_tieuhao (Id, IdKeHoachSuaChua, IdCCDC,IdChiTietCCDC, TenVatTu, SoLuong, GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)";
         return jdbcTemplate.update(sql,
                 entity.getId(),
                 entity.getIdKeHoachSuaChua(),
                 entity.getIdCCDC(),
+                entity.getIdChiTietCCDC(),
                 entity.getTenVatTu(),
                 entity.getSoLuong(),
                 entity.getGhiChu(),
@@ -72,7 +73,7 @@ public class KeHoachSuaChuaVatTuTieuHaoDao {
      * Insert hàng loạt
      */
     public int[] batchInsert(List<KeHoachSuaChuaVatTuTieuHao> list) {
-        String sql = "INSERT INTO kehoachsuachua_vattu_tieuhao (Id, IdKeHoachSuaChua, IdCCDC, TenVatTu, SoLuong, GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO kehoachsuachua_vattu_tieuhao (Id, IdKeHoachSuaChua, IdCCDC,IdChiTietCCDC, TenVatTu, SoLuong, GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
 
         return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
@@ -81,18 +82,19 @@ public class KeHoachSuaChuaVatTuTieuHaoDao {
                 ps.setString(1, entity.getId());
                 ps.setString(2, entity.getIdKeHoachSuaChua());
                 ps.setString(3, entity.getIdCCDC());
-                ps.setString(4, entity.getTenVatTu());
+                ps.setString(4, entity.getIdChiTietCCDC());
+                ps.setString(5, entity.getTenVatTu());
                 if (entity.getSoLuong() != null) {
-                    ps.setInt(5, entity.getSoLuong());
+                    ps.setInt(6, entity.getSoLuong());
                 } else {
-                    ps.setNull(5, java.sql.Types.INTEGER);
+                    ps.setNull(6, java.sql.Types.INTEGER);
                 }
-                ps.setString(6, entity.getGhiChu());
-                ps.setString(7, entity.getNgayTao());
-                ps.setString(8, entity.getNgayCapNhat());
-                ps.setString(9, entity.getNguoiTao());
-                ps.setString(10, entity.getNguoiCapNhat());
-                ps.setBoolean(11, entity.getIsActive() != null ? entity.getIsActive() : true);
+                ps.setString(7, entity.getGhiChu());
+                ps.setString(8, entity.getNgayTao());
+                ps.setString(9, entity.getNgayCapNhat());
+                ps.setString(10, entity.getNguoiTao());
+                ps.setString(11, entity.getNguoiCapNhat());
+                ps.setBoolean(12, entity.getIsActive() != null ? entity.getIsActive() : true);
             }
 
             @Override
@@ -104,9 +106,10 @@ public class KeHoachSuaChuaVatTuTieuHaoDao {
 
     // ==================== Update ====================
     public int update(KeHoachSuaChuaVatTuTieuHao entity) {
-        String sql = "UPDATE kehoachsuachua_vattu_tieuhao SET IdCCDC = ?, TenVatTu = ?, SoLuong = ?, GhiChu = ?, NgayCapNhat = ?, NguoiCapNhat = ?, IsActive = ? WHERE Id = ?";
+        String sql = "UPDATE kehoachsuachua_vattu_tieuhao SET IdCCDC = ?,IdChiTietCCDC=?, TenVatTu = ?, SoLuong = ?, GhiChu = ?, NgayCapNhat = ?, NguoiCapNhat = ?, IsActive = ? WHERE Id = ?";
         return jdbcTemplate.update(sql,
                 entity.getIdCCDC(),
+                entity.getIdChiTietCCDC(),
                 entity.getTenVatTu(),
                 entity.getSoLuong(),
                 entity.getGhiChu(),
@@ -120,24 +123,25 @@ public class KeHoachSuaChuaVatTuTieuHaoDao {
      * Update hàng loạt
      */
     public int[] batchUpdate(List<KeHoachSuaChuaVatTuTieuHao> list) {
-        String sql = "UPDATE kehoachsuachua_vattu_tieuhao SET IdCCDC = ?, TenVatTu = ?, SoLuong = ?, GhiChu = ?, NgayCapNhat = ?, NguoiCapNhat = ?, IsActive = ? WHERE Id = ?";
+        String sql = "UPDATE kehoachsuachua_vattu_tieuhao SET IdCCDC = ?,IdChiTietCCDC=?, TenVatTu = ?, SoLuong = ?, GhiChu = ?, NgayCapNhat = ?, NguoiCapNhat = ?, IsActive = ? WHERE Id = ?";
 
         return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
                 KeHoachSuaChuaVatTuTieuHao entity = list.get(i);
                 ps.setString(1, entity.getIdCCDC());
-                ps.setString(2, entity.getTenVatTu());
+                ps.setString(2, entity.getIdChiTietCCDC());
+                ps.setString(3, entity.getTenVatTu());
                 if (entity.getSoLuong() != null) {
-                    ps.setInt(3, entity.getSoLuong());
+                    ps.setInt(4, entity.getSoLuong());
                 } else {
-                    ps.setNull(3, java.sql.Types.INTEGER);
+                    ps.setNull(4, java.sql.Types.INTEGER);
                 }
-                ps.setString(4, entity.getGhiChu());
-                ps.setString(5, entity.getNgayCapNhat());
-                ps.setString(6, entity.getNguoiCapNhat());
-                ps.setBoolean(7, entity.getIsActive() != null ? entity.getIsActive() : true);
-                ps.setString(8, entity.getId());
+                ps.setString(5, entity.getGhiChu());
+                ps.setString(6, entity.getNgayCapNhat());
+                ps.setString(7, entity.getNguoiCapNhat());
+                ps.setBoolean(8, entity.getIsActive() != null ? entity.getIsActive() : true);
+                ps.setString(9, entity.getId());
             }
 
             @Override

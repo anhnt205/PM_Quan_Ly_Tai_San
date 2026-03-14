@@ -209,7 +209,7 @@ public class KeHoachSuaChuaDao {
             Id, IdCongTy, TenKeHoach, IdLoaiKeHoach,
             IdDonViThucHien, IdDonViGiao, IdNguoiPhuTrach, NgayBatDau, NgayKetThuc,
              NgayTao, NgayCapNhat, GhiChu, TrangThai
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """;
 
         Date now = new Date();
@@ -285,7 +285,7 @@ public class KeHoachSuaChuaDao {
             Id, IdCongTy, TenKeHoach, IdLoaiKeHoach,
             IdDonViThucHien, IdDonViGiao, IdNguoiPhuTrach, NgayBatDau, NgayKetThuc,
             NgayTao, NgayCapNhat, GhiChu, TrangThai
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """;
         int result = jdbcTemplate.update(sql,
                 entity.getId(), entity.getIdCongTy(), entity.getTenKeHoach(), entity.getIdLoaiKeHoach(),

@@ -38,6 +38,7 @@ import { useAssetByDonViQuery } from "../../AssetTransfer/Mutation";
 import { useToolByDepartmentPageQuery } from "../../ToolTransfer/Mutation";
 import DialogLoading from "../../../components/common/DialogLoading";
 import { useAllLoaiSCBDQuery } from "../../MaintenanceRepairType/Mutation";
+import { useAllPlanTypeQuery } from "../../PlanType/Mutation";
 
 interface MaintenancePlanningFormProps {
   onEdit: () => void;
@@ -102,7 +103,7 @@ export default function MaintenancePlanningForm({
     0,
     9999,
   );
-  const { data: listLoaiKeHoach = [] } = useAllLoaiSCBDQuery();
+  const { data: listLoaiKeHoach = [] } = useAllPlanTypeQuery();
 
   useEffect(() => {
     if (selectedPlan) {
@@ -140,8 +141,11 @@ export default function MaintenancePlanningForm({
       departmentId: formik.values.idDonViGiao,
     });
 
+  const isCapPhat =
+    allDepartments.items.find((i: any) => i.id === formik.values.idDonViGiao)
+      ?.loaiKho === 1;
   const { data: allAssetsByDonVi = { items: [] }, isLoading: isLoadingAsset } =
-    useAssetByDonViQuery(2, formik.values.idDonViGiao);
+    useAssetByDonViQuery(isCapPhat ? 1 : 2, formik.values.idDonViGiao);
 
   const listTaiSan = useMemo(
     () =>
@@ -156,7 +160,7 @@ export default function MaintenancePlanningForm({
     () =>
       (toolsByDepartment || []).map((t: any) => ({
         ...t,
-        ten: t.ten || t.tenDetailAsset || "",
+        ten: t.tenDetailAsset || "",
       })),
     [toolsByDepartment],
   );
@@ -219,9 +223,9 @@ export default function MaintenancePlanningForm({
                 <FieldAutoCompleted
                   title="Loại kế hoạch *"
                   data={listLoaiKeHoach}
-                  labelkey="ten"
+                  labelkey="tenLoai"
                   formik={formik}
-                  field="loaiKeHoach"
+                  field="idLoaiKeHoach"
                   disabled={readOnly}
                 />
               </Grid>
@@ -256,11 +260,7 @@ export default function MaintenancePlanningForm({
               <Grid size={{ xs: 12, md: 6 }}>
                 <FieldAutoCompleted
                   title="Đơn vị thực hiện *"
-                  data={allDepartments.items.filter((i: any) =>
-                    i.tenPhongBan
-                      ?.toLowerCase()
-                      .includes("sửa chữa".toLowerCase()),
-                  )}
+                  data={allDepartments.items}
                   labelkey="tenPhongBan"
                   formik={formik}
                   field="idDonViThucHien"

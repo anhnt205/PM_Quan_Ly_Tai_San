@@ -33,4 +33,8 @@ public class LoaiKeHoachScbdService {
     public int delete(String id) {
         return loaiKeHoachDao.delete(id); // soft delete
     }
+
+    public void deleteAll() {
+        loaiKeHoachDao.deleteAll();
+    }
 }

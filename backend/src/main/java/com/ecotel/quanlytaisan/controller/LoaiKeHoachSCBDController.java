@@ -3,6 +3,9 @@ package com.ecotel.quanlytaisan.controller;
 import com.ecotel.quanlytaisan.model.ApiResponse;
 import com.ecotel.quanlytaisan.model.LoaiKeHoachSCBD;
 import com.ecotel.quanlytaisan.service.LoaiKeHoachScbdService;
+
+import io.swagger.v3.oas.annotations.Operation;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -90,4 +93,32 @@ public class LoaiKeHoachSCBDController {
                     .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
         }
     }
+    @DeleteMapping("/batch")
+    public ResponseEntity<ApiResponse<Object>> deleteBatch(@RequestBody List<String> ids) {
+        try {
+            int total = 0;
+            for (String id : ids) {
+                total += loaiKeHoachService.delete(id);
+            }
+            if (total > 0) {
+                return ResponseEntity.ok(ApiResponse.success("Xóa danh sách loại kế hoạch thành công", null, total));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.failure("Xóa danh sách loại kế hoạch thất bại", total));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
+
+
+
+    @DeleteMapping("/delete-all")
+    @Operation(summary = "Xoá toàn bộ loại kế hoạch")
+    public ResponseEntity<?> deleteAll() {
+        loaiKeHoachService.deleteAll();
+        return ResponseEntity.ok("Đã xoá toàn bộ loại kế hoạch");
+    }
+
 }

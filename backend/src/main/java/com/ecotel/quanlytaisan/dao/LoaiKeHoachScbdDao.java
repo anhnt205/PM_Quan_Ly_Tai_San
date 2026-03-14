@@ -56,4 +56,9 @@ public class LoaiKeHoachScbdDao {
         String sql = "UPDATE loaikehoach SET IsActive=0 WHERE Id=?";
         return jdbcTemplate.update(sql, id);
     }
+
+     public int deleteAll() {
+        String sql = "DELETE FROM loaikehoach";
+        return jdbcTemplate.update(sql);
+    }
 }

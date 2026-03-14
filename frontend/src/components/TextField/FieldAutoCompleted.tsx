@@ -51,6 +51,7 @@ export default function FieldAutoCompleted({
     const found = data.find(
       (i) => i.id?.toString() === currentValue?.toString(),
     );
+
     if (found) return found;
 
     // 2. Logic dự phòng: Nếu không thấy trong data nhưng có currentValue và formik

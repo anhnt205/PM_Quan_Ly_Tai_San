@@ -388,7 +388,6 @@ export default function ThietBiBaoTriTable({
                       (c: any) =>
                         c.id === item.idCCDC || c.id === item.idChiTietCCDC,
                     );
-                    const slHienCo = selectedCCDC?.soLuong ?? "-";
 
                     return (
                       <TableRow key={item.id || `ccdc-${originalIndex}`}>
@@ -431,6 +430,14 @@ export default function ThietBiBaoTriTable({
                                   `chiTietsCCDC[${originalIndex}].tenCCDC`,
                                   val?.ten,
                                 );
+                                formik.setFieldValue(
+                                  `chiTietsCCDC[${originalIndex}].soLuong`,
+                                  val?.soLuong,
+                                );
+                                formik.setFieldValue(
+                                  `chiTietsCCDC[${originalIndex}].soLuongHienCo`,
+                                  val?.soLuong,
+                                );
                               }}
                               disabled={readOnly}
                               limitOptions={20}
@@ -451,27 +458,14 @@ export default function ThietBiBaoTriTable({
                                 textAlign: "center",
                               }}
                             >
-                              {slHienCo}
+                              {item.soLuong || "-"}
                             </Typography>
                           ) : (
-                            <TextField
-                              fullWidth
-                              disabled
-                              size="small"
-                              type="number"
-                              placeholder="0"
-                              value={slHienCo !== "-" ? slHienCo : ""}
-                              InputLabelProps={{ shrink: true }}
-                              sx={{
-                                "& .MuiInputBase-root": {
-                                  height: "40px",
-                                  bgcolor: "action.hover",
-                                },
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "rgba(0, 0, 0, 0.8)",
-                                  textAlign: "center",
-                                },
-                              }}
+                            <FieldInput
+                              title="Nhập số lượng"
+                              formik={formik}
+                              field={`chiTietsCCDC[${originalIndex}].soLuong`}
+                              disabled={readOnly}
                             />
                           )}
                         </TableCell>

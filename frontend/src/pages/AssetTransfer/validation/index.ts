@@ -14,12 +14,12 @@ export const assetTransferValidationSchema = yup.object({
   tenFile: yup.string().required("Chọn tài liệu quyết định"),
   chiTietDieuDongTaiSanDTOS: yup.array().of(
     yup.object({
-      idTaiSan: yup.string().required("Chọn ít nhất 1 ccdc"),
+      idTaiSan: yup.string().required("Chọn ít nhất 1 tái sản"),
       soLuong: yup
         .number()
         .typeError("Số lượng phải là số")
         .required("Nhập số lượng bàn giao")
-        .min(1, "Số lượng tối thiểu là 1")
+        .min(1, "Số lượng tối thiểu là 1"),
     }),
   ),
 });

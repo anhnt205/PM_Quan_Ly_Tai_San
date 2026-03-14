@@ -83,7 +83,7 @@ export const usePlanTypeMutation = () => {
 
   const deleteAllMutation = useMutation({
     mutationFn: async () => {
-      const res = await api.delete(`/loaikehoachscbd/all`);
+      const res = await api.delete(`/loaikehoachscbd/delete-all`);
       return res.data.message;
     },
     onSuccess: (data) => {
@@ -184,7 +184,6 @@ export const usePlanTypeMutation = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["allToolTypes"] });
       queryClient.invalidateQueries({ queryKey: ["planTypesPage"] });
       showSuccessAlert("Import loại kế hoạch thành công");
     },
@@ -214,7 +213,8 @@ export const useAllPlanTypeQuery = () => {
           size: 9999,
         },
       });
-      return res.data;
+      console.log(res.data.data);
+      return res.data.data;
     },
     placeholderData: (placeholderData) => placeholderData,
   });
@@ -234,7 +234,7 @@ export const usePlanTypePageQuery = (
           search: searchValue,
         },
       });
-      return res.data;
+      return res.data.data;
     },
     placeholderData: (previousData) => previousData,
   });

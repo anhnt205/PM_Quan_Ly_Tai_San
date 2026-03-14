@@ -9,6 +9,8 @@ public class KeHoachSuaChuaVatTuTieuHao {
     private String idKeHoachSuaChua;
     @NotNull
     private String idCCDC;
+    @NotNull
+    private String idChiTietCCDC;
     private String tenVatTu;
     private Integer soLuong;
     private String ghiChu;
