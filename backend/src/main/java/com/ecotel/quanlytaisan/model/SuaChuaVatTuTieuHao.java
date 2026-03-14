@@ -5,9 +5,11 @@ import lombok.Data;
 @Data
 public class SuaChuaVatTuTieuHao {
     private String id;
+    private String idSuaChua;
     private String idKeHoachSuaChua;
-    private String idCCDC;           // Khóa ngoại đến bảng ccdcvattu
-    private String tenVatTu;          // Tên vật tư (có thể lấy từ CCDC hoặc nhập tay)
+    private String idCCDC;
+    private String idChiTietCCDC;         
+    private String tenVatTu;         
     private Integer soLuong;
     private String ghiChu;
     private String ngayTao;

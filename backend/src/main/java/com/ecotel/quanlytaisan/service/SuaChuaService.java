@@ -25,7 +25,10 @@ public class SuaChuaService {
     private SuaChuaDao suaChuaDao;
 
     @Autowired
-    private ChiTietSuaChuaDao chiTietSuaChuaDao;
+    private SuaChuaChiTietTaiSanDao taiSanSuaChuaDao;
+
+    @Autowired
+    private SuaChuaVatTuTieuHaoDao vattuSuaChuaDao;
 
     @Autowired
     private KetQuaSuaChuaDao ketQuaSuaChuaDao;
@@ -42,8 +45,10 @@ public class SuaChuaService {
     public List<SuaChuaDTO> findAll(String idCongTy) throws SQLException {
         List<SuaChuaDTO> list = suaChuaDao.findAll(idCongTy);
         for (SuaChuaDTO dto : list) {
-            List<ChiTietSuaChuaDTO> chiTiet = chiTietSuaChuaDao.findByIdSuaChua(dto.getId());
-            dto.setChiTietSuaChuas(chiTiet);
+            List<SuaChuaChiTietTaiSan> taisan = taiSanSuaChuaDao.findByIdSuaChua(dto.getId());
+            dto.setDanhSachTaiSan(taisan);
+            List<SuaChuaVatTuTieuHao> vattu = vattuSuaChuaDao.findByIdSuaChua(dto.getId());
+            dto.setDanhSachTaiSan(taisan);
             // Lấy danh sách chữ ký nếu cần
             dto.setChuKyList(kyTaiLieuDao.findById(dto.getId()));
             dto.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(dto.getId()));
@@ -151,7 +156,8 @@ public class SuaChuaService {
         List<SuaChuaDTO> items = sourceList.subList(from, to);
 
         for (SuaChuaDTO item : items) {
-            item.setChiTietSuaChuas(chiTietSuaChuaDao.findByIdSuaChua(item.getId()));
+            item.setDanhSachTaiSan(taiSanSuaChuaDao.findByIdSuaChua(item.getId()));
+            item.setDanhSachVatTu(vattuSuaChuaDao.findByIdSuaChua(item.getId()));
             item.setChuKyList(kyTaiLieuDao.findById(item.getId()));
             item.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId()));
         }
@@ -220,7 +226,10 @@ public class SuaChuaService {
         List<SuaChuaDTO> all = suaChuaDao.findAll(null);
         return all.stream()
                 .filter(item -> isUserTurnToSign(item, userId))
-                .peek(item -> item.setChiTietSuaChuas(chiTietSuaChuaDao.findByIdSuaChua(item.getId())))
+                .peek(item -> {
+                     item.setDanhSachTaiSan(taiSanSuaChuaDao.findByIdSuaChua(item.getId()));
+                    item.setDanhSachVatTu(vattuSuaChuaDao.findByIdSuaChua(item.getId()));
+                })
                 .collect(Collectors.toList());
     }
 
@@ -229,8 +238,8 @@ public class SuaChuaService {
         return all.stream()
                 .filter(item -> item.getLoai() != null && item.getLoai() == loai)
                 .peek(item -> {
-                    List<ChiTietSuaChuaDTO> chiTiet = chiTietSuaChuaDao.findByIdSuaChua(item.getId());
-                    item.setChiTietSuaChuas(chiTiet);
+                     item.setDanhSachTaiSan(taiSanSuaChuaDao.findByIdSuaChua(item.getId()));
+                    item.setDanhSachVatTu(vattuSuaChuaDao.findByIdSuaChua(item.getId()));
                 })
                 .collect(Collectors.toList());
     }
@@ -242,7 +251,8 @@ public class SuaChuaService {
     public SuaChuaDTO findByIdDTO(String id) throws SQLException {
         SuaChuaDTO dto = suaChuaDao.findByIdDTO(id);
         if (dto != null) {
-            dto.setChiTietSuaChuas(chiTietSuaChuaDao.findByIdSuaChua(id));
+             dto.setDanhSachTaiSan(taiSanSuaChuaDao.findByIdSuaChua(id));
+            dto.setDanhSachVatTu(vattuSuaChuaDao.findByIdSuaChua(id));
             dto.setChuKyList(kyTaiLieuDao.findById(id));
             dto.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(id));
         }
@@ -272,7 +282,8 @@ public class SuaChuaService {
     }
 
     public int delete(String id) throws SQLException {
-        chiTietSuaChuaDao.deleteByIdSuaChua(id);
+        vattuSuaChuaDao.deleteByIdSuaChua(id);
+        taiSanSuaChuaDao.deleteByIdSuaChua(id);
         return suaChuaDao.delete(id);
     }
 

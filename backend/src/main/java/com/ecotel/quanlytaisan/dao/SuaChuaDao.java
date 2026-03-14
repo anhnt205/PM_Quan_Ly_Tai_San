@@ -19,9 +19,6 @@ public class SuaChuaDao {
     private JdbcTemplate jdbcTemplate;
 
     @Autowired
-    private ChiTietSuaChuaDao chiTietSuaChuaDao;
-
-    @Autowired
     private KetQuaSuaChuaDao ketQuaSuaChuaDao;
 
     @Autowired

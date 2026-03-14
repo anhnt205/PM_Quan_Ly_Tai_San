@@ -1,6 +1,5 @@
 package com.ecotel.quanlytaisan.dao;
 
-import com.ecotel.quanlytaisan.model.LoaiKeHoach;
 import com.ecotel.quanlytaisan.model.LoaiKeHoachSCBD;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -9,8 +8,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-
-import java.util.List;
 
 @Repository
 public class LoaiKeHoachScbdDao {

@@ -1,7 +1,6 @@
 package com.ecotel.quanlytaisan.service;
 
 import com.ecotel.quanlytaisan.dao.LoaiKeHoachScbdDao;
-import com.ecotel.quanlytaisan.model.LoaiKeHoach;
 import com.ecotel.quanlytaisan.model.LoaiKeHoachSCBD;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

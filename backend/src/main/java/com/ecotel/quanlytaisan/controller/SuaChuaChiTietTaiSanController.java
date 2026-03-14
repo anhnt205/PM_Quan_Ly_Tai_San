@@ -43,10 +43,10 @@ public class SuaChuaChiTietTaiSanController {
         }
     }
 
-    @GetMapping("/by-kehoach/{idKeHoach}")
-    public ResponseEntity<ApiResponse<Object>> getByIdKeHoach(@PathVariable String idKeHoach) {
+    @GetMapping("/by-suachua/{idSuaChua}")
+    public ResponseEntity<ApiResponse<Object>> getByIdSuaChua(@PathVariable String idSuaChua) {
         try {
-            List<SuaChuaChiTietTaiSan> list = service.getByIdKeHoach(idKeHoach);
+            List<SuaChuaChiTietTaiSan> list = service.getByIdSuaChua(idSuaChua);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách theo kế hoạch thành công", list, null));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

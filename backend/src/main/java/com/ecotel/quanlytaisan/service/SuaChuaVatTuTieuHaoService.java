@@ -28,8 +28,8 @@ public class SuaChuaVatTuTieuHaoService {
         return vatTuTieuHaoDao.findById(id);
     }
 
-    public List<SuaChuaVatTuTieuHao> getByIdKeHoach(String idKeHoach) {
-        return vatTuTieuHaoDao.findByIdKeHoach(idKeHoach);
+    public List<SuaChuaVatTuTieuHao> getByIdSuaChua(String idSuaChua) {
+        return vatTuTieuHaoDao.findByIdSuaChua(idSuaChua);
     }
 
     @Transactional

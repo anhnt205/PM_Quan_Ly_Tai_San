@@ -66,7 +66,8 @@ public class SuaChuaDTO {
     private Integer loai;
 
     // Danh sách chi tiết sửa chữa
-    private List<ChiTietSuaChuaDTO> chiTietSuaChuas;
+    private List<SuaChuaChiTietTaiSan> danhSachTaiSan;
+    private List<SuaChuaVatTuTieuHao> danhSachVatTu;
 
     // Trạng thái tổng hợp (có thể tính toán)
     private Integer trangThaiTongHop; // 0: nháp, 1: chờ ký nháy, 2: chờ duyệt phòng, 3: chờ duyệt giám đốc, 4: hoàn thành, 5: từ chối, v.v.

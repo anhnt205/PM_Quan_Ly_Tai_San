@@ -28,8 +28,8 @@ public class SuaChuaChiTietTaiSanService {
         return chiTietTaiSanDao.findById(id);
     }
 
-    public List<SuaChuaChiTietTaiSan> getByIdKeHoach(String idKeHoach) {
-        return chiTietTaiSanDao.findByIdKeHoach(idKeHoach);
+    public List<SuaChuaChiTietTaiSan> getByIdSuaChua(String idSuaChua) {
+        return chiTietTaiSanDao.findByIdSuaChua(idSuaChua);
     }
 
     @Transactional
