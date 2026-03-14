@@ -2,9 +2,8 @@ package com.ecotel.quanlytaisan.service;
 
 import com.ecotel.quanlytaisan.dao.KeHoachSuaChuaDao;
 import com.ecotel.quanlytaisan.dao.KeHoachCongViecSuaChuaDao;
-import com.ecotel.quanlytaisan.dao.SuaChuaChiTietTaiSanDao;      // DAO mới
-import com.ecotel.quanlytaisan.dao.SuaChuaVatTuTieuHaoDao;       // DAO mới
 import com.ecotel.quanlytaisan.model.*;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +13,9 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import com.ecotel.quanlytaisan.dao.KeHoachSuaChuaChiTietTaiSanDao;
+import com.ecotel.quanlytaisan.dao.KeHoachSuaChuaVatTuTieuHaoDao;
 
 @Service
 public class KeHoachSuaChuaService {
@@ -26,10 +28,10 @@ public class KeHoachSuaChuaService {
 
     // Thay thế KeHoachChiTietSuaChuaDao bằng 2 DAO mới
     @Autowired
-    private SuaChuaChiTietTaiSanDao suaChuaChiTietTaiSanDao;
+    private KeHoachSuaChuaChiTietTaiSanDao suaChuaChiTietTaiSanDao;
 
     @Autowired
-    private SuaChuaVatTuTieuHaoDao suaChuaVatTuTieuHaoDao;
+    private KeHoachSuaChuaVatTuTieuHaoDao suaChuaVatTuTieuHaoDao;
 
     // Lấy danh sách tất cả kế hoạch (kèm công việc và chi tiết)
     public List<KeHoachSuaChuaDTO> findAll(String idCongTy) throws SQLException {
@@ -37,8 +39,8 @@ public class KeHoachSuaChuaService {
         for (KeHoachSuaChuaDTO dto : list) {
             List<KeHoachCongViecSuaChuaDTO> congViecs = keHoachCongViecSuaChuaDao.findByIdKeHoach(dto.getId());
             // Lấy danh sách tài sản và vật tư từ 2 bảng mới
-            List<SuaChuaChiTietTaiSan> danhSachTaiSan = suaChuaChiTietTaiSanDao.findByIdKeHoach(dto.getId());
-            List<SuaChuaVatTuTieuHao> danhSachVatTu = suaChuaVatTuTieuHaoDao.findByIdKeHoach(dto.getId());
+            List<KeHoachSuaChuaChiTietTaiSan> danhSachTaiSan = suaChuaChiTietTaiSanDao.findByIdKeHoach(dto.getId());
+            List<KeHoachSuaChuaVatTuTieuHao> danhSachVatTu = suaChuaVatTuTieuHaoDao.findByIdKeHoach(dto.getId());
             dto.setCongViecs(congViecs);
             dto.setDanhSachTaiSan(danhSachTaiSan);
             dto.setDanhSachVatTu(danhSachVatTu);
@@ -158,8 +160,8 @@ public class KeHoachSuaChuaService {
         // Gán công việc và chi tiết từ 2 bảng mới
         for (KeHoachSuaChuaDTO item : items) {
             List<KeHoachCongViecSuaChuaDTO> congViecs = keHoachCongViecSuaChuaDao.findByIdKeHoach(item.getId());
-            List<SuaChuaChiTietTaiSan> danhSachTaiSan = suaChuaChiTietTaiSanDao.findByIdKeHoach(item.getId());
-            List<SuaChuaVatTuTieuHao> danhSachVatTu = suaChuaVatTuTieuHaoDao.findByIdKeHoach(item.getId());
+            List<KeHoachSuaChuaChiTietTaiSan> danhSachTaiSan = suaChuaChiTietTaiSanDao.findByIdKeHoach(item.getId());
+            List<KeHoachSuaChuaVatTuTieuHao> danhSachVatTu = suaChuaVatTuTieuHaoDao.findByIdKeHoach(item.getId());
             item.setCongViecs(congViecs);
             item.setDanhSachTaiSan(danhSachTaiSan);
             item.setDanhSachVatTu(danhSachVatTu);
@@ -212,8 +214,8 @@ public class KeHoachSuaChuaService {
         KeHoachSuaChuaDTO dto = keHoachSuaChuaDao.findByIdDTO(id);
         if (dto != null) {
             List<KeHoachCongViecSuaChuaDTO> congViecs = keHoachCongViecSuaChuaDao.findByIdKeHoach(id);
-            List<SuaChuaChiTietTaiSan> danhSachTaiSan = suaChuaChiTietTaiSanDao.findByIdKeHoach(id);
-            List<SuaChuaVatTuTieuHao> danhSachVatTu = suaChuaVatTuTieuHaoDao.findByIdKeHoach(id);
+            List<KeHoachSuaChuaChiTietTaiSan> danhSachTaiSan = suaChuaChiTietTaiSanDao.findByIdKeHoach(id);
+            List<KeHoachSuaChuaVatTuTieuHao> danhSachVatTu = suaChuaVatTuTieuHaoDao.findByIdKeHoach(id);
             dto.setCongViecs(congViecs);
             dto.setDanhSachTaiSan(danhSachTaiSan);
             dto.setDanhSachVatTu(danhSachVatTu);

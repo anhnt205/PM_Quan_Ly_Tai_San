@@ -43,6 +43,6 @@ public class KeHoachSuaChuaDTO {
     private List<KeHoachCongViecSuaChuaDTO> congViecs;
 
     // --- THAY THẾ: Xóa chiTiets, thêm hai danh sách mới ---
-    private List<SuaChuaChiTietTaiSan> danhSachTaiSan;   // chi tiết tài sản sửa chữa
-    private List<SuaChuaVatTuTieuHao> danhSachVatTu;     // vật tư tiêu hao
+    private List<KeHoachSuaChuaChiTietTaiSan> danhSachTaiSan;   // chi tiết tài sản sửa chữa
+    private List<KeHoachSuaChuaVatTuTieuHao> danhSachVatTu;     // vật tư tiêu hao
 }

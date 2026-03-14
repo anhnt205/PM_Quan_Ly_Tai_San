@@ -504,18 +504,53 @@ export default function MaintenancePlanRepair() {
                     </Typography>
                   </Box>
                 )}
-                {fullSelectedPlan?.chiTiets &&
-                  fullSelectedPlan.chiTiets.length > 0 && (
+
+                {/* Danh sách tài sản */}
+                {fullSelectedPlan?.danhSachTaiSan &&
+                  fullSelectedPlan.danhSachTaiSan.length > 0 && (
                     <Box>
                       <Typography variant="caption" color="text.secondary">
-                        Thiết bị ({fullSelectedPlan.chiTiets.length})
+                        Tài sản ({fullSelectedPlan.danhSachTaiSan.length})
                       </Typography>
-                      {fullSelectedPlan.chiTiets.map((tb, i) => (
+                      {fullSelectedPlan.danhSachTaiSan.map(
+                        (ts: any, i: number) => (
+                          <Typography key={i} variant="body2">
+                            • {ts.tenTaiSan || "Tài sản chưa rõ tên"}
+                          </Typography>
+                        ),
+                      )}
+                    </Box>
+                  )}
+
+                {/* Danh sách vật tư */}
+                {fullSelectedPlan?.danhSachVatTu &&
+                  fullSelectedPlan.danhSachVatTu.length > 0 && (
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">
+                        Vật tư - CCDC ({fullSelectedPlan.danhSachVatTu.length})
+                      </Typography>
+                      {fullSelectedPlan.danhSachVatTu.map(
+                        (vt: any, i: number) => (
+                          <Typography key={i} variant="body2">
+                            • {vt.tenVatTu || "Vật tư chưa rõ tên"} (Số lượng:{" "}
+                            {vt.soLuong})
+                          </Typography>
+                        ),
+                      )}
+                    </Box>
+                  )}
+
+                {/* Danh sách công việc */}
+                {fullSelectedPlan?.congViecs &&
+                  fullSelectedPlan.congViecs.length > 0 && (
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">
+                        Công việc ({fullSelectedPlan.congViecs.length})
+                      </Typography>
+                      {fullSelectedPlan.congViecs.map((cv: any, i: number) => (
                         <Typography key={i} variant="body2">
-                          •{" "}
-                          {tb.idTaiSan
-                            ? tb.tenTaiSan || "Tài sản chưa rõ tên"
-                            : `${tb.tenCCDC || "Vật tư"} ${tb.soKyHieu ? `(${tb.soKyHieu})` : ""} ${tb.namSanXuat ? `-${tb.namSanXuat}` : ""}`}
+                          • {cv.tenCongViec || "Công việc chưa rõ tên"} (
+                          {cv.nguoiThucHien})
                         </Typography>
                       ))}
                     </Box>

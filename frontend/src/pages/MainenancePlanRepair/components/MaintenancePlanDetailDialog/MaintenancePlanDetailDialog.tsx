@@ -13,12 +13,19 @@ import {
   IconButton,
   useTheme,
   alpha,
+  TableContainer,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
 } from "@mui/material";
 import {
   Close,
   InfoOutlineRounded,
   Inventory,
   Build,
+  PlaylistAddCheck,
 } from "@mui/icons-material";
 import dayjs from "dayjs";
 
@@ -35,20 +42,12 @@ export default function MaintenancePlanDetailDialog({
 }: MaintenancePlanDetailDialogProps) {
   const theme = useTheme();
 
-  // Tách và đếm số lượng Tài sản / CCDC từ mảng chiTiets của plan
-  const { soLuongTaiSan, soLuongCCDC } = useMemo(() => {
-    if (!plan || !plan.chiTiets) return { soLuongTaiSan: 0, soLuongCCDC: 0 };
-
-    let ts = 0;
-    let ccdc = 0;
-
-    plan.chiTiets.forEach((item: any) => {
-      // Dựa vào logic backend trả về để đếm, thường là check field idTaiSan / idCCDC
-      if (item.idTaiSan) ts += 1;
-      if (item.idCCDC) ccdc += 1;
-    });
-
-    return { soLuongTaiSan: ts, soLuongCCDC: ccdc };
+  // Tách và đếm số lượng Tài sản / CCDC / Công việc từ plan
+  const { soLuongTaiSan, soLuongCCDC, soLuongCongViec } = useMemo(() => {
+    const soLuongTaiSan = plan?.danhSachTaiSan?.length || 0;
+    const soLuongCCDC = plan?.danhSachVatTu?.length || 0;
+    const soLuongCongViec = plan?.congViecs?.length || 0;
+    return { soLuongTaiSan, soLuongCCDC, soLuongCongViec };
   }, [plan]);
 
   if (!plan) return null;
@@ -233,7 +232,7 @@ export default function MaintenancePlanDetailDialog({
             </Grid>
           )}
 
-          {/* Thống kê thiết bị (Tài sản & CCDC) */}
+          {/* Thống kê */}
           <Grid size={{ xs: 12 }}>
             <Typography
               variant="subtitle2"
@@ -241,11 +240,11 @@ export default function MaintenancePlanDetailDialog({
               fontWeight={600}
               gutterBottom
             >
-              Thiết bị bảo trì
+              Thống kê
             </Typography>
             <Grid container spacing={2}>
               {/* Box Tài Sản */}
-              <Grid size={{ xs: 12, sm: 6 }}>
+              <Grid size={{ xs: 12, sm: 4 }}>
                 <Paper
                   variant="outlined"
                   sx={{
@@ -285,7 +284,7 @@ export default function MaintenancePlanDetailDialog({
               </Grid>
 
               {/* Box CCDC */}
-              <Grid size={{ xs: 12, sm: 6 }}>
+              <Grid size={{ xs: 12, sm: 4 }}>
                 <Paper
                   variant="outlined"
                   sx={{
@@ -327,8 +326,150 @@ export default function MaintenancePlanDetailDialog({
                   </Box>
                 </Paper>
               </Grid>
+              {/* Box Công Việc */}
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: 2,
+                    borderRadius: 2,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 2,
+                    bgcolor: alpha(theme.palette.success.main, 0.05),
+                    borderColor: alpha(theme.palette.success.main, 0.2),
+                  }}
+                >
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      borderRadius: "50%",
+                      bgcolor: alpha(theme.palette.success.main, 0.1),
+                      display: "flex",
+                      color: "success.main",
+                    }}
+                  >
+                    <PlaylistAddCheck />
+                  </Box>
+                  <Box>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      fontWeight={500}
+                    >
+                      Công việc
+                    </Typography>
+                    <Typography
+                      variant="h6"
+                      color="success.main"
+                      fontWeight={700}
+                    >
+                      {soLuongCongViec}
+                    </Typography>
+                  </Box>
+                </Paper>
+              </Grid>
             </Grid>
           </Grid>
+          {/* Danh sách tài sản */}
+          {soLuongTaiSan > 0 && (
+            <Grid size={{ xs: 12 }}>
+              <Typography
+                variant="subtitle2"
+                color="primary"
+                fontWeight={600}
+                gutterBottom
+              >
+                Danh sách tài sản
+              </Typography>
+              <TableContainer component={Paper} variant="outlined">
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Mã tài sản</TableCell>
+                      <TableCell>Tên tài sản</TableCell>
+                      <TableCell>Ghi chú</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {plan.danhSachTaiSan.map((item: any) => (
+                      <TableRow key={item.id}>
+                        <TableCell>{item.idTaiSan}</TableCell>
+                        <TableCell>{item.tenTaiSan || "-"}</TableCell>
+                        <TableCell>{item.ghiChu || "-"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Grid>
+          )}
+          {/* Danh sách vật tư */}
+          {soLuongCCDC > 0 && (
+            <Grid size={{ xs: 12 }}>
+              <Typography
+                variant="subtitle2"
+                color="primary"
+                fontWeight={600}
+                gutterBottom
+              >
+                Danh sách vật tư - CCDC
+              </Typography>
+              <TableContainer component={Paper} variant="outlined">
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Tên vật tư</TableCell>
+                      <TableCell align="right">Số lượng</TableCell>
+                      <TableCell>Ghi chú</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {plan.danhSachVatTu.map((item: any) => (
+                      <TableRow key={item.id}>
+                        <TableCell>{item.tenVatTu || "-"}</TableCell>
+                        <TableCell align="right">{item.soLuong}</TableCell>
+                        <TableCell>{item.ghiChu || "-"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Grid>
+          )}
+          {/* Danh sách công việc */}
+          {soLuongCongViec > 0 && (
+            <Grid size={{ xs: 12 }}>
+              <Typography
+                variant="subtitle2"
+                color="primary"
+                fontWeight={600}
+                gutterBottom
+              >
+                Danh sách công việc
+              </Typography>
+              <TableContainer component={Paper} variant="outlined">
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Tên công việc</TableCell>
+                      <TableCell>Người thực hiện</TableCell>
+                      <TableCell>Ngày thực hiện</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {plan.congViecs.map((item: any) => (
+                      <TableRow key={item.id}>
+                        <TableCell>{item.tenCongViec || "-"}</TableCell>
+                        <TableCell>{item.nguoiThucHien || "-"}</TableCell>
+                        <TableCell>{formatDate(item.ngayThucHien)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Grid>
+          )}
         </Grid>
       </DialogContent>
 

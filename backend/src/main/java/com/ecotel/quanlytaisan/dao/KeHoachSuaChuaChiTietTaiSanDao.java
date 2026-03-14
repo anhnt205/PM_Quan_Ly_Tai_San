@@ -22,20 +22,20 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
 
     // Lấy tất cả bản ghi (chỉ active)
     public List<KeHoachSuaChuaChiTietTaiSan> findAll() {
-        String sql = "SELECT * FROM kehoachsuachua_chitiet_taisan WHERE IsActive = 1";
+        String sql = "SELECT * FROM kehoachsuachua_chitiet_taisan";
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(KeHoachSuaChuaChiTietTaiSan.class));
     }
 
     // Lấy theo Id
     public KeHoachSuaChuaChiTietTaiSan findById(String id) {
-        String sql = "SELECT * FROM kehoachsuachua_chitiet_taisan WHERE Id = ? AND IsActive = 1";
+        String sql = "SELECT * FROM kehoachsuachua_chitiet_taisan WHERE Id = ?";
         List<KeHoachSuaChuaChiTietTaiSan> list = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(KeHoachSuaChuaChiTietTaiSan.class), id);
         return list.isEmpty() ? null : list.get(0);
     }
 
     // Lấy danh sách theo IdKeHoachSuaChua
     public List<KeHoachSuaChuaChiTietTaiSan> findByIdKeHoach(String idKeHoach) {
-        String sql = "SELECT * FROM kehoachsuachua_chitiet_taisan WHERE IdKeHoachSuaChua = ? AND IsActive = 1";
+        String sql = "SELECT *, ts.TenTaiSan AS tenTaiSan FROM kehoachsuachua_chitiet_taisan LEFT JOIN TaiSan ts ON kehoachsuachua_chitiet_taisan.IdTaiSan = ts.Id WHERE IdKeHoachSuaChua = ?";
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(KeHoachSuaChuaChiTietTaiSan.class), idKeHoach);
     }
 
@@ -124,19 +124,19 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
     // ==================== Delete (soft) ====================
     // Xóa mềm theo IdKeHoachSuaChua (cập nhật IsActive = 0)
     public int deleteByIdKeHoach(String idKeHoach) {
-        String sql = "UPDATE kehoachsuachua_chitiet_taisan SET IsActive = 0 WHERE IdKeHoachSuaChua = ?";
+        String sql = "DELETE FROM kehoachsuachua_chitiet_taisan WHERE IdKeHoachSuaChua = ?";
         return jdbcTemplate.update(sql, idKeHoach);
     }
 
     // Xóa mềm theo Id
     public int deleteById(String id) {
-        String sql = "UPDATE kehoachsuachua_chitiet_taisan SET IsActive = 0 WHERE Id = ?";
+        String sql = "DELETE FROM kehoachsuachua_chitiet_taisan WHERE Id = ?";
         return jdbcTemplate.update(sql, id);
     }
 
     // Xóa mềm nhiều bản ghi (batch) theo danh sách Id
     public int[] batchDelete(List<String> ids) {
-        String sql = "UPDATE kehoachsuachua_chitiet_taisan SET IsActive = 0 WHERE Id = ?";
+        String sql = "DELETE FROM kehoachsuachua_chitiet_taisan WHERE Id = ?";
         return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {

@@ -21,18 +21,18 @@ public class SuaChuaChiTietTaiSanDao {
     // ==================== Query methods ====================
 
     public List<SuaChuaChiTietTaiSan> findAll() {
-        String sql = "SELECT * FROM suachua_chitiet_taisan WHERE IsActive = 1";
+        String sql = "SELECT * FROM suachua_chitiet_taisan";
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(SuaChuaChiTietTaiSan.class));
     }
 
     public SuaChuaChiTietTaiSan findById(String id) {
-        String sql = "SELECT * FROM suachua_chitiet_taisan WHERE Id = ? AND IsActive = 1";
+        String sql = "SELECT * FROM suachua_chitiet_taisan WHERE Id = ?";
         List<SuaChuaChiTietTaiSan> list = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(SuaChuaChiTietTaiSan.class), id);
         return list.isEmpty() ? null : list.get(0);
     }
 
     public List<SuaChuaChiTietTaiSan> findByIdKeHoach(String idKeHoach) {
-        String sql = "SELECT * FROM suachua_chitiet_taisan WHERE IdKeHoachSuaChua = ? AND IsActive = 1";
+        String sql = "SELECT * FROM suachua_chitiet_taisan WHERE IdKeHoachSuaChua = ?";
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(SuaChuaChiTietTaiSan.class), idKeHoach);
     }
 

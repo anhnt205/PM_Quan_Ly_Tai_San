@@ -330,7 +330,7 @@ export default function ThietBiBaoTriTable({
                         width: "20%",
                       }}
                     >
-                      SL hiện có
+                      SL
                     </TableCell>
                     <TableCell
                       align="center"
