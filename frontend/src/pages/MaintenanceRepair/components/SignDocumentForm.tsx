@@ -42,7 +42,8 @@ interface SignDocumentFormProps {
   onSign: (data: SignaturesData[]) => void;
   fullscreen?: boolean;
   showSignerSidebar?: boolean;
-  assetTransferDetail?: any[];
+  listAsset?: any[];
+  listTool?: any[];
   allUnits?: any[];
   allCurrentStatus?: any[];
   staffs?: any[];
@@ -57,7 +58,8 @@ export default function SignDocumentForm({
   onSign,
   fullscreen = true,
   showSignerSidebar = true,
-  assetTransferDetail,
+  listAsset = [],
+  listTool = [],
   allUnits = [],
   allCurrentStatus = [],
   staffs = [],
@@ -144,7 +146,8 @@ export default function SignDocumentForm({
     const rebuildBangKe = async () => {
       try {
         const bytes = await generateBangKePdf(
-          assetTransferDetail,
+          listAsset,
+          listTool,
           allUnits,
           allCurrentStatus,
           ghiChu,
@@ -155,7 +158,7 @@ export default function SignDocumentForm({
       }
     };
     rebuildBangKe();
-  }, [assetTransferDetail, allUnits, allCurrentStatus]);
+  }, [listAsset.length, listTool.length, allUnits, allCurrentStatus]);
 
   // State để tracking kích thước hiển thị thực tế của các canvas pages
   const [canvasDisplaySizes, setCanvasDisplaySizes] = useState<

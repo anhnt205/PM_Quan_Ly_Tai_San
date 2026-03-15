@@ -7,6 +7,8 @@ public class KeHoachSuaChuaChiTietTaiSan {
     private String id;
     private String idKeHoachSuaChua;
     private String idTaiSan;
+    private Integer soLuong;
+    private String donViTinh;
     private String ghiChu;
     private String ngayTao;
     private String ngayCapNhat;

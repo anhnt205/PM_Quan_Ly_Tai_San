@@ -545,7 +545,8 @@ import {
 import { FileDownloadOutlined } from "@mui/icons-material";
 
 export const generateBangKePdf = async (
-  assetTransferDetail?: any[],
+  danhSachTaiSan?: any[],
+  danhSachVatTu?: any[],
   allUnits?: any[],
   allCurrentStatus?: any[],
   ghiChu?: string,
@@ -553,10 +554,10 @@ export const generateBangKePdf = async (
   const doc = new jsPDF();
 
   doc.setFont("times_new_roman", "normal");
-  doc.setFontSize(13);
-  doc.text("BẢNG KÊ CHI TIẾT", 105, 15, { align: "center" });
-  const tableData = (
-    Array.isArray(assetTransferDetail) ? assetTransferDetail : []
+  let lastY = 15;
+
+  const tableAssetData = (
+    Array.isArray(danhSachTaiSan) ? danhSachTaiSan : []
   ).map((item: any, index: number) => {
     // Kiểm tra an toàn: Chỉ gọi findById khi mảng là hợp lệ
     const unit = Array.isArray(allUnits)
@@ -565,39 +566,103 @@ export const generateBangKePdf = async (
 
     return [
       index + 1,
-      item?.ten || "",
+      item?.tenTaiSan || "",
       unit?.tenDonVi || "",
       item.soLuong || 0,
       item.ghiChu || "",
     ];
   });
 
-  autoTable(doc, {
-    startY: 25,
-    head: [["Stt", "Tên tài sản", "Đơn vị tính", "Số lượng", "Ghi chú"]],
-    body: tableData,
-    theme: "grid",
-    headStyles: {
-      fillColor: false,
-      textColor: 0,
-      lineWidth: 0.1,
-      lineColor: 0,
-      font: "times_new_roman",
-      fontStyle: "normal",
-      halign: "center",
+  if (tableAssetData.length > 0) {
+    doc.setFontSize(13);
+    doc.text("DANH SÁCH TÀI SẢN SỬA CHỮA", 105, lastY, { align: "center" });
+    autoTable(doc, {
+      startY: lastY + 10,
+      head: [["Stt", "Tên tài sản", "Đơn vị tính", "Số lượng", "Ghi chú"]],
+      body: tableAssetData,
+      theme: "grid",
+      headStyles: {
+        fillColor: false,
+        textColor: 0,
+        lineWidth: 0.1,
+        lineColor: 0,
+        font: "times_new_roman",
+        fontStyle: "normal",
+        halign: "center",
+      },
+      bodyStyles: {
+        font: "times_new_roman",
+        fontSize: 10,
+        textColor: 0,
+        lineWidth: 0.1,
+        lineColor: 0,
+      },
+    });
+    lastY = (doc as any).lastAutoTable.finalY;
+  }
+
+  const tableToolData = (Array.isArray(danhSachVatTu) ? danhSachVatTu : []).map(
+    (item: any, index: number) => {
+      // Kiểm tra an toàn: Chỉ gọi findById khi mảng là hợp lệ
+      const unit = Array.isArray(allUnits)
+        ? findById(allUnits, item?.donViTinh)
+        : null;
+
+      return [
+        index + 1,
+        item?.tenVatTu || "",
+        unit?.tenDonVi || "",
+        item.soKyHieu || "",
+        item.namSanXuat || "",
+        item.soLuong || 0,
+        item.ghiChu || "",
+      ];
     },
-    bodyStyles: {
-      font: "times_new_roman",
-      fontSize: 10,
-      textColor: 0,
-      lineWidth: 0.1,
-      lineColor: 0,
-    },
-  });
+  );
+
+  if (tableToolData.length > 0) {
+    doc.setFontSize(13);
+    doc.text("DANH SÁCH VẬT TƯ TIÊU HAO", 105, lastY + 10, {
+      align: "center",
+    });
+    autoTable(doc, {
+      startY: lastY + 20,
+      head: [
+        [
+          "Stt",
+          "Tên vật tư",
+          "Đơn vị tính",
+          "Mã hiệu",
+          "Năm sản xuất",
+          "Số lượng",
+          "Ghi chú",
+        ],
+      ],
+      body: tableToolData,
+      theme: "grid",
+      headStyles: {
+        fillColor: false,
+        textColor: 0,
+        lineWidth: 0.1,
+        lineColor: 0,
+        font: "times_new_roman",
+        fontStyle: "normal",
+        halign: "center",
+      },
+      bodyStyles: {
+        font: "times_new_roman",
+        fontSize: 10,
+        textColor: 0,
+        lineWidth: 0.1,
+        lineColor: 0,
+      },
+    });
+    lastY = (doc as any).lastAutoTable.finalY;
+  }
+
   if (ghiChu) {
     // Lấy tọa độ Y sau khi bảng kết thúc
-    // @ts-ignore (vì lastAutoTable thường không có trong type định nghĩa sẵn của jsPDF)
-    const finalY = doc.lastAutoTable.finalY || 25;
+    const finalY = lastY || 25;
 
     doc.setFontSize(11);
     doc.setFont("times_new_roman");

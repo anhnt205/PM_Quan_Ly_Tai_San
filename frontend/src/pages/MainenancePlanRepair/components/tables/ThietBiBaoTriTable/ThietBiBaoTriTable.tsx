@@ -63,6 +63,7 @@ export default function ThietBiBaoTriTable({
       id: "",
       idKeHoachSuaChua: formik.values.id,
       idTaiSan: "",
+      soLuong: 1,
       tenTaiSan: "",
       ghiChu: "",
       action: Action.CREATE,
@@ -166,10 +167,20 @@ export default function ThietBiBaoTriTable({
                       sx={{
                         color: "primary.contrastText",
                         fontWeight: 600,
-                        width: "50%",
+                        width: "45%",
                       }}
                     >
                       Tên Tài Sản
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{
+                        color: "info.contrastText",
+                        fontWeight: 600,
+                        width: "20%",
+                      }}
+                    >
+                      SL
                     </TableCell>
                     <TableCell
                       align="center"
@@ -247,6 +258,30 @@ export default function ThietBiBaoTriTable({
                               }}
                               disabled={readOnly}
                               limitOptions={20}
+                            />
+                          )}
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{ verticalAlign: "top", pt: 1.5 }}
+                        >
+                          {readOnly ? (
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                pt: 0.8,
+                                fontWeight: 500,
+                                textAlign: "center",
+                              }}
+                            >
+                              {item.soLuong || "-"}
+                            </Typography>
+                          ) : (
+                            <FieldInput
+                              title="Nhập số lượng"
+                              formik={formik}
+                              field={`chiTietsTaiSan[${originalIndex}].soLuong`}
+                              disabled={readOnly}
                             />
                           )}
                         </TableCell>

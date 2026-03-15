@@ -22,7 +22,6 @@ import {
 } from "lucide-react";
 import { MaintenancePlanData } from "../types";
 import { StatusPlan, StatusPlanType } from "../../../utils/const";
-import { showPlanType } from "../config";
 import MaintenancePlanDetailDialog from "./MaintenancePlanDetailDialog/MaintenancePlanDetailDialog";
 
 dayjs.locale("vi");
@@ -348,24 +347,20 @@ function PlanPopover({
           </Box>
 
           {/* Type */}
-          {plan.idLoaiKeHoach && (
-            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
-              <Clock
-                size={15}
-                style={{ marginTop: 2, color: "#757575", flexShrink: 0 }}
-              />
-              <Box>
-                <Typography
-                  sx={{ fontSize: "0.75rem", color: "text.secondary" }}
-                >
-                  Loại kế hoạch
-                </Typography>
-                <Typography sx={{ fontSize: "0.82rem", fontWeight: 500 }}>
-                  {showPlanType(plan.idLoaiKeHoach)}
-                </Typography>
-              </Box>
+          <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
+            <Clock
+              size={15}
+              style={{ marginTop: 2, color: "#757575", flexShrink: 0 }}
+            />
+            <Box>
+              <Typography sx={{ fontSize: "0.75rem", color: "text.secondary" }}>
+                Loại kế hoạch
+              </Typography>
+              <Typography sx={{ fontSize: "0.82rem", fontWeight: 500 }}>
+                {plan?.tenLoaiKeHoach}
+              </Typography>
             </Box>
-          )}
+          </Box>
 
           {/* Person */}
           {plan.tenNguoiPhuTrach && (
@@ -442,32 +437,33 @@ function PlanPopover({
                 Mở chi tiết
               </Button>
             )}
-            {onCreateRepair && (
-              <Button
-                size="small"
-                variant="contained"
-                onClick={() => {
-                  onClose();
-                  onCreateRepair(plan);
-                }}
-                sx={{
-                  fontSize: "0.75rem",
-                  bgcolor: "warning.main",
-                  color: "#fff",
-                  border: "1px solid",
-                  borderColor: "warning.main",
-                  transition: "all 0.2s ease-in-out",
-                  "&:hover": {
-                    bgcolor: "transparent",
-                    color: "warning.main",
+            {plan.trangThai != null && [StatusPlan.PENDING].includes(plan.trangThai) &&
+              onCreateRepair && (
+                <Button
+                  size="small"
+                  variant="contained"
+                  onClick={() => {
+                    onClose();
+                    onCreateRepair(plan);
+                  }}
+                  sx={{
+                    fontSize: "0.75rem",
+                    bgcolor: "warning.main",
+                    color: "#fff",
+                    border: "1px solid",
                     borderColor: "warning.main",
-                    boxShadow: "none",
-                  },
-                }}
-              >
-                Tạo phiếu
-              </Button>
-            )}
+                    transition: "all 0.2s ease-in-out",
+                    "&:hover": {
+                      bgcolor: "transparent",
+                      color: "warning.main",
+                      borderColor: "warning.main",
+                      boxShadow: "none",
+                    },
+                  }}
+                >
+                  Tạo phiếu
+                </Button>
+              )}
           </Box>
         </Box>
       </Popover>

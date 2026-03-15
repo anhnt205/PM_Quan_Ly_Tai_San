@@ -41,7 +41,23 @@ public class KeHoachSuaChuaVatTuTieuHaoDao {
      * Lấy danh sách theo IdKeHoachSuaChua
      */
     public List<KeHoachSuaChuaVatTuTieuHao> findByIdKeHoach(String idKeHoach) {
-        String sql = "SELECT * FROM kehoachsuachua_vattu_tieuhao WHERE IdKeHoachSuaChua = ?";
+        String sql = """
+        SELECT 
+            kh.Id,
+            kh.IdKeHoachSuaChua,
+            kh.IdCCDC,
+            kh.IdChiTietCCDC,
+            kh.GhiChu,
+            kh.TenVatTu AS tenVatTu,
+            ctts.SoKyHieu AS soKyHieu,
+            ctts.NuocSanXuat AS nuocSanXuat,
+            ctts.NamSanXuat AS namSanXuat,
+            vt.DonViTinh AS donViTinh,
+            kh.SoLuong AS soLuong
+        FROM kehoachsuachua_vattu_tieuhao kh
+            LEFT JOIN chitiettaisan ctts ON kh.IdChiTietCCDC = ctts.Id 
+            LEFT JOIN ccdcvattu vt ON kh.IdCCDC = vt.Id 
+        WHERE IdKeHoachSuaChua = ?""";
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(KeHoachSuaChuaVatTuTieuHao.class), idKeHoach);
     }
 

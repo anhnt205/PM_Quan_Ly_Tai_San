@@ -45,7 +45,7 @@ import {
   useMaintenancePlanningMutation,
   useMaintenancePlanningPageQuery,
 } from "../MainenancePlanRepair/Mutation";
-import { showPeriod, showPlanType } from "../MainenancePlanRepair/config";
+import { showPeriod } from "../MainenancePlanRepair/config";
 import { CongTy, StatusPlan } from "../../utils/const";
 import S3Service from "../../services/S3Service";
 import SignDocumentForm from "./components/SignDocumentForm";
@@ -796,7 +796,8 @@ export default function MaintenanceRepair() {
           document={selectedDocument}
           onCancel={handleClose}
           onSign={handleSign}
-          assetTransferDetail={repairDetailDetail}
+          listAsset={[]}
+          listTool={[]}
           showSignerSidebar={showSidebar}
           allUnits={allUnits}
           allCurrentStatus={allCurrentStatus}

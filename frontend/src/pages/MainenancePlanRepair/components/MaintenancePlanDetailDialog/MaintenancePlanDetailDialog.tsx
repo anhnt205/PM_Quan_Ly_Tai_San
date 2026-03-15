@@ -128,13 +128,7 @@ export default function MaintenancePlanDetailDialog({
                     Loại kế hoạch
                   </Typography>
                   <Typography variant="body2" fontWeight={500}>
-                    {plan.loaiKeHoach === "THIET_BI"
-                      ? "Theo thiết bị"
-                      : plan.loaiKeHoach === "CHU_KY"
-                        ? `Theo chu kỳ (${plan.chuKyNgay} ngày)`
-                        : plan.loaiKeHoach === "GIO_MAY"
-                          ? `Theo giờ máy (${plan.mocGioMay} giờ)`
-                          : "-"}
+                    {plan.tenLoaiKeHoach || "-"}
                   </Typography>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>

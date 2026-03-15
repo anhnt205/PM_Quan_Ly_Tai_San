@@ -12,6 +12,10 @@ public class KeHoachSuaChuaVatTuTieuHao {
     @NotNull
     private String idChiTietCCDC;
     private String tenVatTu;
+    private String soKyHieu;
+    private String namSanXuat;
+    private String nuocSanXuat;
+    private String donViTinh;
     private Integer soLuong;
     private String ghiChu;
     private String ngayTao;

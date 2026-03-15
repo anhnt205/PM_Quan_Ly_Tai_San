@@ -5,6 +5,7 @@ export interface MaintenancePlanData {
   idCongTy: string;
   tenKeHoach: string;
   idLoaiKeHoach: string; // Đã bỏ enum THIET_BI | CHU_KY | GIO_MAY
+  tenLoaiKeHoach?: string;
   idDonViGiao?: string;
   tenDonViGiao?: string;
   idDonViThucHien: string;
@@ -41,6 +42,7 @@ export interface MaintenancePlanAssetItem {
   id: string;
   idKeHoachSuaChua: string;
   idTaiSan: string;
+  soLuong?: number;
   tenTaiSan?: string;
   ghiChu?: string;
   ngayTao?: string;
@@ -53,6 +55,7 @@ export interface MaintenancePlanCCDCItem {
   id: string;
   idKeHoachSuaChua: string;
   idCCDC: string;
+  idChiTietCCDC: string;
   tenVatTu?: string;
   soLuong?: number;
   ghiChu?: string;

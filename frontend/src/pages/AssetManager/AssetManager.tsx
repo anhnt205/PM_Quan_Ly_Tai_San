@@ -471,16 +471,6 @@ export default function AssetManager() {
                 icon={<Inventory2 fontSize="small" />}
                 sx={{ fontSize: 12 }}
               />
-              <Tab
-                label="Sửa chữa bảo dưỡng"
-                icon={<Build fontSize="small" />}
-                sx={{ fontSize: 12 }}
-              />
-              <Tab
-                label="Kho kiểm định"
-                icon={<Build fontSize="small" />}
-                sx={{ fontSize: 12 }}
-              />
             </Tabs>
           </Box>
           <TableCustom
@@ -492,9 +482,7 @@ export default function AssetManager() {
                   ? "Quản lý tài sản - Tài sản đã bàn giao"
                   : tab === 2
                     ? "Quản lý tài sản - Kho công ty"
-                    : tab === 3
-                      ? "Quản lý tài sản - Sửa chữa bảo dưỡng"
-                      : "Quản lý tài sản - Kho kiểm định"
+                    : ""
             }
             columns={columns}
             rows={assetsPage.items}

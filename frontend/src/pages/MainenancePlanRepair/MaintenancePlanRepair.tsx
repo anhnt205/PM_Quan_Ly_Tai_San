@@ -14,7 +14,7 @@ import TableCustom from "../../components/common/TableCustom";
 import { useSelector } from "react-redux";
 import { useAllStaffsQuery } from "../Staff/Mutation";
 import { showConfirmAlert } from "../../components/Alert";
-import { Trash2, Calendar, FilePlus } from "lucide-react";
+import { Trash2, Calendar, FilePlus, ListPlus } from "lucide-react";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
 import { MaintenancePlanData } from "./types";
 import {
@@ -25,12 +25,11 @@ import {
   useWorkItemsByPlanQuery,
 } from "./Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
-import { showPeriod, showPlanType, showStatus } from "./config";
-import { Action, Devicetype, StatusPlan } from "../../utils/const";
+import { showPeriod, showStatus } from "./config";
+import { StatusPlan } from "../../utils/const";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../utils/routes";
 import { RootState } from "../../redux/store";
-import api from "../../config/api.config";
 
 export default function MaintenancePlanRepair() {
   const [showForm, setShowForm] = useState(false);
@@ -123,12 +122,11 @@ export default function MaintenancePlanRepair() {
       editable: false,
     },
     {
-      field: "idLoaiKeHoach",
+      field: "tenLoaiKeHoach",
       headerName: "Loại kế hoạch",
       flex: 1.5,
       minWidth: 130,
       editable: false,
-      renderCell: (params: any) => showPlanType(params.value),
     },
     {
       field: "thuocKy",
@@ -194,21 +192,30 @@ export default function MaintenancePlanRepair() {
       width: 120,
       editable: false,
       renderCell: (params: any) => (
-        <Box sx={{ display: "flex", gap: 1 }}>
-          <Tooltip title="Tạo phiếu">
-            <IconButton
-              size="small"
-              color="warning"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(ROUTES.MAINTENANCEREPAIR, {
-                  state: { createFromPlan: params.row },
-                });
-              }}
-            >
-              <FilePlus size={16} />
-            </IconButton>
-          </Tooltip>
+        <Box
+          sx={{
+            width: "100%",
+            display: "flex",
+            gap: 1,
+            justifyContent: "center",
+          }}
+        >
+          {[StatusPlan.PENDING].includes(params.row?.trangThai) && (
+            <Tooltip title="Tạo phiếu sửa chữa">
+              <IconButton
+                size="small"
+                color="primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(ROUTES.MAINTENANCEREPAIR, {
+                    state: { createFromPlan: params.row },
+                  });
+                }}
+              >
+                <ListPlus size={16} />
+              </IconButton>
+            </Tooltip>
+          )}
 
           {/* NÚT XÓA  */}
           <Tooltip title="Xóa kế hoạch">
@@ -422,7 +429,7 @@ export default function MaintenancePlanRepair() {
                     Loại kế hoạch
                   </Typography>
                   <Typography variant="body2">
-                    {showPlanType(fullSelectedPlan?.idLoaiKeHoach) || "-"}
+                    {fullSelectedPlan?.tenLoaiKeHoach || "-"}
                   </Typography>
                 </Box>
                 {fullSelectedPlan?.ngayBatDau &&

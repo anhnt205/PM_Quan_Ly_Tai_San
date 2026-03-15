@@ -37,23 +37,6 @@ export const showStatus = (status: StatusPlanType) => {
   );
 };
 
-export const showPlanType = (type: string) => {
-  const label = () => {
-    switch (type) {
-      case PlanType.DEVICE:
-        return "Theo thiết bị";
-      case PlanType.WORK:
-        return "Theo chu kỳ thời gian";
-      case PlanType.TIME:
-        return "Theo giờ máy";
-      default:
-        return "";
-    }
-  };
-
-  return <p>{label()}</p>;
-};
-
 export const showPeriod = (time: string) => {
   if (!time) return "";
 

@@ -1,19 +1,28 @@
-export interface MaintenanceRepairDetailItem {
+import { ActionType } from "../../../utils/const";
+
+export interface MaintenanceAssetItem {
   id: string;
-  idSuaChua: string;
-  tenTaiSan: string;
-  idTaiSan: string | null;
-  idChiTietCCDC: string | null;
-  idCCDC: string | null;
+  idKeHoachSuaChua: string;
+  idTaiSan: string;
+  tenTaiSan?: string;
+  ghiChu?: string;
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  action?: ActionType;
+}
+
+// Bảng CCDC (Vật tư tiêu hao) mới
+export interface MaintenanceCCDCItem {
+  id: string;
+  idKeHoachSuaChua: string;
+  idCCDC: string;
+  idChiTietCCDC: string;
+  tenVatTu?: string;
   soLuong?: number;
   ghiChu?: string;
   ngayTao?: string;
   ngayCapNhat?: string;
-  nguoiTao?: string;
-  nguoiCapNhat?: string;
-  isActive?: boolean;
-  hienTrang?: string;
-  moTa?: string;
+  action?: ActionType;
 }
 
 export interface Signer {
@@ -82,6 +91,8 @@ export interface MaintenanceRepairData {
   trangThai: 0;
   ngayCapNhat: string;
   nguoiKyList?: Signer[];
-  initialChiTiet: [];
-  chiTietSuaChuas?: MaintenanceRepairDetailItem[];
+  initialTaiSan: [];
+  initialVatTu: [];
+  danhSachTaiSan?: MaintenanceAssetItem[];
+  danhSachVatTu?: MaintenanceCCDCItem[];
 }

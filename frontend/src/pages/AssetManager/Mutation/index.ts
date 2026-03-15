@@ -488,8 +488,7 @@ export const useAssetPageQuery = (
             size: pageSize,
             search: searchValue,
             idNhomTaiSan: idNhomTaiSan,
-            iddonvihienthoi:
-              tab === 0 ? "kth" : tab === 3 ? "K31" : idDonViHienThoi,
+            iddonvihienthoi: tab === 0 ? "kth" : idDonViHienThoi,
             soNgayThongBaoKiemDinh: soNgayThongBaoKiemDinh,
           },
         },

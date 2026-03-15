@@ -138,7 +138,7 @@ export default function MaintenancePlanningForm({
 
   const { data: toolsByDepartment = [], isLoading: isLoadingTool } =
     useToolByDepartmentPageQuery({
-      departmentId: formik.values.idDonViGiao,
+      departmentId: formik.values.idDonViThucHien,
     });
 
   const isCapPhat =
