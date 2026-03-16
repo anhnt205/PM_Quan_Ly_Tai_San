@@ -17,9 +17,6 @@ public class KetQuaSuaChuaChiTietDao {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    @Autowired
-    private KetQuaSuaChuaChiTietDTO ketQuaSuaChuaChiTietDTO;
-
     public String generateNextId() {
         int currentYear = Year.now().getValue();
         String prefix = "KQCT-" + currentYear + "-";
