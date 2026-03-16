@@ -1,16 +1,17 @@
 package com.ecotel.quanlytaisan.dao;
 
-import com.ecotel.quanlytaisan.model.KeHoachSuaChuaVatTuTieuHao;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.UUID;
+import com.ecotel.quanlytaisan.model.KeHoachSuaChuaVatTuTieuHao;
 
 @Repository
 public class KeHoachSuaChuaVatTuTieuHaoDao {
@@ -45,6 +46,8 @@ public class KeHoachSuaChuaVatTuTieuHaoDao {
         SELECT 
             kh.Id,
             kh.IdKeHoachSuaChua,
+            kh.IdNhomCCDC,
+            n.Ten AS tenNhomCCDC,
             kh.IdCCDC,
             kh.IdChiTietCCDC,
             kh.GhiChu,
@@ -57,6 +60,7 @@ public class KeHoachSuaChuaVatTuTieuHaoDao {
         FROM kehoachsuachua_vattu_tieuhao kh
             LEFT JOIN chitiettaisan ctts ON kh.IdChiTietCCDC = ctts.Id 
             LEFT JOIN ccdcvattu vt ON kh.IdCCDC = vt.Id 
+            LEFT JOIN nhomccdc n ON kh.IdNhomCCDC = n.Id
         WHERE IdKeHoachSuaChua = ?""";
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(KeHoachSuaChuaVatTuTieuHao.class), idKeHoach);
     }
@@ -69,12 +73,13 @@ public class KeHoachSuaChuaVatTuTieuHaoDao {
 
     // ==================== Insert ====================
     public int insert(KeHoachSuaChuaVatTuTieuHao entity) {
-        String sql = "INSERT INTO kehoachsuachua_vattu_tieuhao (Id, IdKeHoachSuaChua, IdCCDC,IdChiTietCCDC, TenVatTu, SoLuong, GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)";
+        String sql = "INSERT INTO kehoachsuachua_vattu_tieuhao (Id, IdKeHoachSuaChua, IdCCDC,IdChiTietCCDC,IdNhomCCDC, TenVatTu, SoLuong, GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)";
         return jdbcTemplate.update(sql,
                 entity.getId(),
                 entity.getIdKeHoachSuaChua(),
                 entity.getIdCCDC(),
                 entity.getIdChiTietCCDC(),
+                entity.getIdNhomCCDC(),
                 entity.getTenVatTu(),
                 entity.getSoLuong(),
                 entity.getGhiChu(),
@@ -89,7 +94,7 @@ public class KeHoachSuaChuaVatTuTieuHaoDao {
      * Insert hàng loạt
      */
     public int[] batchInsert(List<KeHoachSuaChuaVatTuTieuHao> list) {
-        String sql = "INSERT INTO kehoachsuachua_vattu_tieuhao (Id, IdKeHoachSuaChua, IdCCDC,IdChiTietCCDC, TenVatTu, SoLuong, GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
+        String sql = "INSERT INTO kehoachsuachua_vattu_tieuhao (Id, IdKeHoachSuaChua, IdCCDC,IdChiTietCCDC, TenVatTu, SoLuong, GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive,IdNhomCCDC) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)";
 
         return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
@@ -111,6 +116,7 @@ public class KeHoachSuaChuaVatTuTieuHaoDao {
                 ps.setString(10, entity.getNguoiTao());
                 ps.setString(11, entity.getNguoiCapNhat());
                 ps.setBoolean(12, entity.getIsActive() != null ? entity.getIsActive() : true);
+                ps.setString(13, entity.getIdNhomCCDC());
             }
 
             @Override
@@ -122,10 +128,11 @@ public class KeHoachSuaChuaVatTuTieuHaoDao {
 
     // ==================== Update ====================
     public int update(KeHoachSuaChuaVatTuTieuHao entity) {
-        String sql = "UPDATE kehoachsuachua_vattu_tieuhao SET IdCCDC = ?,IdChiTietCCDC=?, TenVatTu = ?, SoLuong = ?, GhiChu = ?, NgayCapNhat = ?, NguoiCapNhat = ?, IsActive = ? WHERE Id = ?";
+        String sql = "UPDATE kehoachsuachua_vattu_tieuhao SET IdCCDC = ?,IdChiTietCCDC=?,IdNhomCCDC=?, TenVatTu = ?, SoLuong = ?, GhiChu = ?, NgayCapNhat = ?, NguoiCapNhat = ?, IsActive = ? WHERE Id = ?";
         return jdbcTemplate.update(sql,
                 entity.getIdCCDC(),
                 entity.getIdChiTietCCDC(),
+                entity.getIdNhomCCDC(),
                 entity.getTenVatTu(),
                 entity.getSoLuong(),
                 entity.getGhiChu(),
@@ -139,7 +146,7 @@ public class KeHoachSuaChuaVatTuTieuHaoDao {
      * Update hàng loạt
      */
     public int[] batchUpdate(List<KeHoachSuaChuaVatTuTieuHao> list) {
-        String sql = "UPDATE kehoachsuachua_vattu_tieuhao SET IdCCDC = ?,IdChiTietCCDC=?, TenVatTu = ?, SoLuong = ?, GhiChu = ?, NgayCapNhat = ?, NguoiCapNhat = ?, IsActive = ? WHERE Id = ?";
+        String sql = "UPDATE kehoachsuachua_vattu_tieuhao SET IdCCDC = ?,IdChiTietCCDC=?, TenVatTu = ?, SoLuong = ?, GhiChu = ?, NgayCapNhat = ?, NguoiCapNhat = ?, IsActive = ?,IdNhomCCDC=?, WHERE Id = ?";
 
         return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
@@ -157,6 +164,7 @@ public class KeHoachSuaChuaVatTuTieuHaoDao {
                 ps.setString(6, entity.getNgayCapNhat());
                 ps.setString(7, entity.getNguoiCapNhat());
                 ps.setBoolean(8, entity.getIsActive() != null ? entity.getIsActive() : true);
+                ps.setString(9, entity.getIdNhomCCDC());
                 ps.setString(9, entity.getId());
             }
 

@@ -62,7 +62,6 @@ public class KetQuaSuaChuaDTO {
     private BigDecimal chiPhiPhanCong;
     private BigDecimal chiPhiThueNgoai;
 
-    private List<ChiTietKetQuaSuaChuaDTO> chiTietKetQuaSuaChuas;
 
     private List<KyTaiLieu> chuKyList;
     private List<NguoiKy> nguoiKyList;

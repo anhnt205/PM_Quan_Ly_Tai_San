@@ -163,6 +163,8 @@ export default function MaintenanceRepairForm({
           idKeHoachSuaChua: null,
           idCCDC: null,
           idChiTietCCDC: null,
+          idNhomCCDC: null,
+          tenNhomCCDC: "",
           soLuong: 1,
           donViTinh: "",
           tenVatTu: "",
@@ -266,12 +268,12 @@ export default function MaintenanceRepairForm({
     if (taiSanDetails) {
       formik.setFieldValue("danhSachTaiSan", taiSanDetails);
     }
-  }, [taiSanDetails.length]);
+  }, [taiSanDetails.length, formik.values.idKeHoach]);
   useEffect(() => {
     if (ccdcDetails) {
       formik.setFieldValue("danhSachVatTu", ccdcDetails);
     }
-  }, [ccdcDetails.length]);
+  }, [ccdcDetails.length, formik.values.idKeHoach]);
 
   const [nvThamMuu, setNVThamMuu] = useState<any[]>([]);
   const [nvPGD, setNVPGD] = useState<any[]>([]);
@@ -492,13 +494,13 @@ export default function MaintenanceRepairForm({
                       formik={formik}
                       field="idKeHoach"
                       onChange={async (value) => {
+                        formik.setFieldValue("danhSachTaiSan", []);
+                        formik.setFieldValue("danhSachVatTu", []);
                         formik.setFieldValue(
                           "idDonViNhan",
                           value.idDonViThucHien,
                         );
                         formik.setFieldValue("idDonViGiao", value.idDonViGiao);
-                        formik.setFieldValue("danhSachTaiSan", []);
-                        formik.setFieldValue("danhSachVatTu", []);
                       }}
                       disabled={readOnly}
                     />
@@ -855,7 +857,7 @@ export default function MaintenanceRepairForm({
                             title=""
                             formik={formik}
                             field={`danhSachTaiSan.${index}.ghiChu`}
-                            disabled={true}
+                            disabled={readOnly}
                           />
                         </CustomTableCell>
                         {/* {!readOnly && (
@@ -946,6 +948,14 @@ export default function MaintenanceRepairForm({
                         STT
                       </CustomTableHeadCell>
                       <CustomTableHeadCell
+                        width="20%"
+                        sx={{
+                          color: "primary.contrastText",
+                        }}
+                      >
+                        Nhóm vật tư
+                      </CustomTableHeadCell>
+                      <CustomTableHeadCell
                         width="25%"
                         sx={{
                           color: "primary.contrastText",
@@ -962,7 +972,7 @@ export default function MaintenanceRepairForm({
                         Đơn vị tính
                       </CustomTableHeadCell>
                       <CustomTableHeadCell
-                        width="15%"
+                        width="10%"
                         sx={{
                           color: "primary.contrastText",
                         }}
@@ -970,7 +980,7 @@ export default function MaintenanceRepairForm({
                         Số lượng
                       </CustomTableHeadCell>
                       <CustomTableHeadCell
-                        width="20%"
+                        width="10%"
                         sx={{
                           color: "primary.contrastText",
                         }}
@@ -987,6 +997,13 @@ export default function MaintenanceRepairForm({
                       formik.values.danhSachVatTu.map((row, index) => (
                         <TableRow key={index}>
                           <CustomTableCell>{index + 1}</CustomTableCell>
+                          <CustomTableCell>
+                            <TextField
+                              size="small"
+                              value={row?.tenNhomCCDC}
+                              disabled
+                            />
+                          </CustomTableCell>
                           <CustomTableCell>
                             <FieldAutoCompleted
                               title="Chọn thiết bị / vật tư"
@@ -1005,6 +1022,10 @@ export default function MaintenanceRepairForm({
                                 formik.setFieldValue(
                                   `danhSachVatTu.${index}.idCCDC`,
                                   value?.idCCDC,
+                                );
+                                formik.setFieldValue(
+                                  `danhSachVatTu.${index}.idNhomCCDC`,
+                                  value?.idNhomCCDC,
                                 );
                                 formik.setFieldValue(
                                   `danhSachVatTu.${index}.donViTinh`,
@@ -1046,7 +1067,7 @@ export default function MaintenanceRepairForm({
                               title=""
                               formik={formik}
                               field={`danhSachVatTu.${index}.ghiChu`}
-                              disabled={true}
+                              disabled={readOnly}
                             />
                           </CustomTableCell>
                           {/* {!readOnly && (

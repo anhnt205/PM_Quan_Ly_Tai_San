@@ -21,18 +21,18 @@ public class SuaChuaVatTuTieuHaoDao {
     // ==================== Query methods ====================
 
     public List<SuaChuaVatTuTieuHao> findAll() {
-        String sql = "SELECT * FROM suachua_vattu_tieuhao";
+        String sql = "SELECT *,n.Ten AS tenNhomCCDC FROM suachua_vattu_tieuhao sc LEFT JOIN nhomccdc n ON sc.IdNhomCCDC = n.Id";
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(SuaChuaVatTuTieuHao.class));
     }
 
     public SuaChuaVatTuTieuHao findById(String id) {
-        String sql = "SELECT * FROM suachua_vattu_tieuhao WHERE Id = ?";
+        String sql = "SELECT *,n.Ten AS tenNhomCCDC FROM suachua_vattu_tieuhao sc LEFT JOIN nhomccdc n ON sc.IdNhomCCDC = n.Id WHERE Id = ?";
         List<SuaChuaVatTuTieuHao> list = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(SuaChuaVatTuTieuHao.class), id);
         return list.isEmpty() ? null : list.get(0);
     }
 
     public List<SuaChuaVatTuTieuHao> findByIdSuaChua(String idSuaChua) {
-        String sql = "SELECT * FROM suachua_vattu_tieuhao WHERE IdSuaChua = ?";
+        String sql = "SELECT *,n.Ten AS tenNhomCCDC FROM suachua_vattu_tieuhao sc LEFT JOIN nhomccdc n ON sc.IdNhomCCDC = n.Id WHERE IdSuaChua = ?";
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(SuaChuaVatTuTieuHao.class), idSuaChua);
     }
 
@@ -45,13 +45,14 @@ public class SuaChuaVatTuTieuHaoDao {
     // ==================== Insert ====================
 
     public int insert(SuaChuaVatTuTieuHao entity) {
-        String sql = "INSERT INTO suachua_vattu_tieuhao (Id,IdSuaChua, IdKeHoachSuaChua, IdCCDC,IdChiTietCCDC, TenVatTu, SoLuong, GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)";
+        String sql = "INSERT INTO suachua_vattu_tieuhao (Id,IdSuaChua, IdKeHoachSuaChua, IdCCDC,IdChiTietCCDC,IdNhomCCDC, TenVatTu, SoLuong, GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)";
         return jdbcTemplate.update(sql,
                 entity.getId(),
                 entity.getIdSuaChua(),
                 entity.getIdKeHoachSuaChua(),
                 entity.getIdCCDC(),
                 entity.getIdChiTietCCDC(),
+                entity.getIdNhomCCDC(),
                 entity.getTenVatTu(),
                 entity.getSoLuong(),
                 entity.getGhiChu(),
@@ -63,7 +64,7 @@ public class SuaChuaVatTuTieuHaoDao {
     }
 
     public int[] batchInsert(List<SuaChuaVatTuTieuHao> list) {
-        String sql = "INSERT INTO suachua_vattu_tieuhao (Id,IdSuaChua, IdKeHoachSuaChua, IdCCDC,IdChiTietCCDC, TenVatTu, SoLuong, GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)";
+        String sql = "INSERT INTO suachua_vattu_tieuhao (Id,IdSuaChua, IdKeHoachSuaChua, IdCCDC,IdChiTietCCDC, TenVatTu, SoLuong, GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive,IdNhomCCDC) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)";
 
         return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
@@ -86,6 +87,7 @@ public class SuaChuaVatTuTieuHaoDao {
                 ps.setString(11, entity.getNguoiTao());
                 ps.setString(12, entity.getNguoiCapNhat());
                 ps.setBoolean(13, entity.getIsActive() != null ? entity.getIsActive() : true);
+                ps.setString(14, entity.getIdNhomCCDC());
             }
 
             @Override
@@ -98,12 +100,13 @@ public class SuaChuaVatTuTieuHaoDao {
     // ==================== Update ====================
 
     public int update(SuaChuaVatTuTieuHao entity) {
-        String sql = "UPDATE suachua_vattu_tieuhao SET SuaChua=?,IdKeHoachSuaChua = ?,IdCCDC = ?,IdChiTietCCDC = ?,TenVatTu = ?, SoLuong = ?, GhiChu = ?, NgayCapNhat = ?, NguoiCapNhat = ?, IsActive = ? WHERE Id = ?";
+        String sql = "UPDATE suachua_vattu_tieuhao SET SuaChua=?,IdKeHoachSuaChua = ?,IdCCDC = ?,IdChiTietCCDC = ?,IdNhomCCDC=?,TenVatTu = ?, SoLuong = ?, GhiChu = ?, NgayCapNhat = ?, NguoiCapNhat = ?, IsActive = ? WHERE Id = ?";
         return jdbcTemplate.update(sql,
                 entity.getIdSuaChua(),
                 entity.getIdKeHoachSuaChua(),
                 entity.getIdCCDC(),
                 entity.getIdChiTietCCDC(),
+                entity.getIdNhomCCDC(),
                 entity.getTenVatTu(),
                 entity.getSoLuong(),
                 entity.getGhiChu(),
@@ -114,7 +117,7 @@ public class SuaChuaVatTuTieuHaoDao {
     }
 
     public int[] batchUpdate(List<SuaChuaVatTuTieuHao> list) {
-        String sql = "UPDATE suachua_vattu_tieuhao SET IdSuaChua=?,IdKeHoachSuaChua = ?,IdCCDC = ?,IdChiTietCCDC = ?,TenVatTu = ?, SoLuong = ?, GhiChu = ?, NgayCapNhat = ?, NguoiCapNhat = ?, IsActive = ? WHERE Id = ?";
+        String sql = "UPDATE suachua_vattu_tieuhao SET IdSuaChua=?,IdKeHoachSuaChua = ?,IdCCDC = ?,IdChiTietCCDC = ?,TenVatTu = ?, SoLuong = ?, GhiChu = ?, NgayCapNhat = ?, NguoiCapNhat = ?, IsActive = ?,IdNhomCCDC=? WHERE Id = ?";
 
         return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
@@ -134,6 +137,7 @@ public class SuaChuaVatTuTieuHaoDao {
                 ps.setString(8, entity.getNgayCapNhat());
                 ps.setString(9, entity.getNguoiCapNhat());
                 ps.setBoolean(10, entity.getIsActive() != null ? entity.getIsActive() : true);
+                ps.setString(11, entity.getIdNhomCCDC());
                 ps.setString(11, entity.getId());
             }
 

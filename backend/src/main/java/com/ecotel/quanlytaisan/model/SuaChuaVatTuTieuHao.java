@@ -8,7 +8,9 @@ public class SuaChuaVatTuTieuHao {
     private String idSuaChua;
     private String idKeHoachSuaChua;
     private String idCCDC;
-    private String idChiTietCCDC;         
+    private String idChiTietCCDC;    
+    private String idNhomCCDC;    
+    private String tenNhomCCDC; 
     private String tenVatTu;         
     private Integer soLuong;
     private String ghiChu;

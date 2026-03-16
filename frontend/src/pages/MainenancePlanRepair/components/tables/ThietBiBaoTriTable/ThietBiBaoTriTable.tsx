@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Box,
   Paper,
@@ -13,7 +13,6 @@ import {
   Button,
   IconButton,
   Grid,
-  TextField,
 } from "@mui/material";
 import {
   InfoOutlineRounded,
@@ -57,6 +56,21 @@ export default function ThietBiBaoTriTable({
     currentCCDCs.filter((item: any) => item.action !== Action.DELETE).length >
     0;
 
+  // Lấy danh sách nhóm CCDC không trùng lặp
+  const nhomCCDCList = useMemo(() => {
+    if (!ccdcs || ccdcs.length === 0) return [];
+    const groupMap = new Map();
+    ccdcs.forEach((item) => {
+      if (item.idNhomCCDC && !groupMap.has(item.idNhomCCDC)) {
+        groupMap.set(item.idNhomCCDC, {
+          id: item.idNhomCCDC,
+          ten: item.tenNhomCCDC,
+        });
+      }
+    });
+    return Array.from(groupMap.values());
+  }, [ccdcs.length]);
+
   // --- HANDLER TÀI SẢN ---
   const handleAddTaiSan = () => {
     const newAsset = {
@@ -78,10 +92,13 @@ export default function ThietBiBaoTriTable({
     );
   };
 
+  // --- HANDLER CCDC ---
   const handleAddCCDC = () => {
     const newTool = {
       id: "",
       idKeHoachSuaChua: formik.values.id,
+      idNhomCCDC: null, // Thêm trường để lưu nhóm
+      tenNhomCCDC: "",
       idCCDC: "",
       idChiTietCCDC: "",
       tenCCDC: "",
@@ -149,408 +166,438 @@ export default function ThietBiBaoTriTable({
       <Collapse in={tableExpanded}>
         <Grid container spacing={3}>
           {/* =========== BẢNG 1: TÀI SẢN =========== */}
-          <Grid size={{ xs: 12, lg: 6 }}>
-            <TableContainer
-              component={Paper}
-              variant="outlined"
-              sx={{
-                border: "1px solid",
-                borderColor: "divider",
-                borderRadius: 2,
-              }}
-            >
-              <Table size="small" sx={{ tableLayout: "fixed", width: "100%" }}>
-                <TableHead>
-                  <TableRow sx={{ bgcolor: "success.main" }}>
+          <TableContainer
+            component={Paper}
+            variant="outlined"
+            sx={{
+              border: "1px solid",
+              borderColor: "divider",
+              borderRadius: 2,
+            }}
+          >
+            <Table size="small" sx={{ tableLayout: "fixed", width: "100%" }}>
+              <TableHead>
+                <TableRow sx={{ bgcolor: "success.main" }}>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      color: "primary.contrastText",
+                      fontWeight: 600,
+                      width: "45%",
+                    }}
+                  >
+                    Tên Tài Sản
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      color: "info.contrastText",
+                      fontWeight: 600,
+                      width: "20%",
+                    }}
+                  >
+                    SL
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ color: "primary.contrastText", fontWeight: 600 }}
+                  >
+                    Ghi chú
+                  </TableCell>
+                  {!readOnly && (
                     <TableCell
                       align="center"
-                      sx={{
-                        color: "primary.contrastText",
-                        fontWeight: 600,
-                        width: "45%",
-                      }}
-                    >
-                      Tên Tài Sản
-                    </TableCell>
-                    <TableCell
-                      align="center"
-                      sx={{
-                        color: "info.contrastText",
-                        fontWeight: 600,
-                        width: "20%",
-                      }}
-                    >
-                      SL
-                    </TableCell>
-                    <TableCell
-                      align="center"
+                      width={60}
                       sx={{ color: "primary.contrastText", fontWeight: 600 }}
                     >
-                      Ghi chú
+                      Xóa
                     </TableCell>
-                    {!readOnly && (
-                      <TableCell
-                        align="center"
-                        width={60}
-                        sx={{ color: "primary.contrastText", fontWeight: 600 }}
-                      >
-                        Xóa
-                      </TableCell>
-                    )}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {!readOnly && (
-                    <TableRow>
-                      <TableCell
-                        colSpan={3}
+                  )}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {!readOnly && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={4}
+                      sx={{
+                        p: 1,
+                        borderBottom: hasTaiSanData ? "1px solid" : "none",
+                        borderColor: "divider",
+                      }}
+                    >
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        color="primary"
+                        startIcon={<Add />}
+                        onClick={handleAddTaiSan}
                         sx={{
-                          p: 1,
-                          borderBottom: hasTaiSanData ? "1px solid" : "none",
-                          borderColor: "divider",
+                          py: 0.75,
+                          borderStyle: "dashed",
+                          "&:hover": {
+                            borderStyle: "dashed",
+                            bgcolor: "action.hover",
+                          },
                         }}
                       >
-                        <Button
-                          fullWidth
-                          variant="outlined"
-                          color="primary"
-                          startIcon={<Add />}
-                          onClick={handleAddTaiSan}
-                          sx={{
-                            py: 0.75,
-                            borderStyle: "dashed",
-                            "&:hover": {
-                              borderStyle: "dashed",
-                              bgcolor: "action.hover",
-                            },
-                          }}
-                        >
-                          Thêm Tài Sản
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  )}
+                        Thêm Tài Sản
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )}
 
-                  {currentTaiSans.map((item: any, originalIndex: number) => {
-                    if (item.action === Action.DELETE) return null;
-                    return (
-                      <TableRow key={item.id || `ts-${originalIndex}`}>
-                        <TableCell
-                          sx={{ minWidth: 200, verticalAlign: "top", pt: 1.5 }}
-                        >
-                          {readOnly ? (
-                            taiSans.find((t: any) => t.id === item.idTaiSan)
-                              ?.ten ||
-                            item.tenTaiSan ||
-                            "-"
-                          ) : (
-                            <FieldAutoCompleted
-                              title="Chọn thiết bị tài sản"
-                              data={taiSans}
-                              labelkey="ten"
-                              formik={formik}
-                              field={`chiTietsTaiSan[${originalIndex}].idTaiSan`}
-                              onChange={(val) => {
-                                formik.setFieldValue(
-                                  `chiTietsTaiSan[${originalIndex}].tenTaiSan`,
-                                  val?.ten,
-                                );
-                              }}
-                              disabled={readOnly}
-                              limitOptions={20}
-                            />
-                          )}
-                        </TableCell>
+                {currentTaiSans.map((item: any, originalIndex: number) => {
+                  if (item.action === Action.DELETE) return null;
+                  return (
+                    <TableRow key={item.id || `ts-${originalIndex}`}>
+                      <TableCell
+                        sx={{ minWidth: 200, verticalAlign: "top", pt: 1.5 }}
+                      >
+                        {readOnly ? (
+                          taiSans.find((t: any) => t.id === item.idTaiSan)
+                            ?.ten ||
+                          item.tenTaiSan ||
+                          "-"
+                        ) : (
+                          <FieldAutoCompleted
+                            title="Chọn thiết bị tài sản"
+                            data={taiSans}
+                            labelkey="ten"
+                            formik={formik}
+                            field={`chiTietsTaiSan[${originalIndex}].idTaiSan`}
+                            onChange={(val) => {
+                              formik.setFieldValue(
+                                `chiTietsTaiSan[${originalIndex}].tenTaiSan`,
+                                val?.ten,
+                              );
+                            }}
+                            disabled={readOnly}
+                            limitOptions={20}
+                          />
+                        )}
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{ verticalAlign: "top", pt: 1.5 }}
+                      >
+                        {readOnly ? (
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              pt: 0.8,
+                              fontWeight: 500,
+                              textAlign: "center",
+                            }}
+                          >
+                            {item.soLuong || "-"}
+                          </Typography>
+                        ) : (
+                          <FieldInput
+                            title="Nhập số lượng"
+                            formik={formik}
+                            field={`chiTietsTaiSan[${originalIndex}].soLuong`}
+                            disabled={readOnly}
+                          />
+                        )}
+                      </TableCell>
+
+                      <TableCell sx={{ verticalAlign: "top", pt: 1.5 }}>
+                        {readOnly ? (
+                          item.ghiChu || "-"
+                        ) : (
+                          <FieldInput
+                            title="Nhập ghi chú"
+                            formik={formik}
+                            field={`chiTietsTaiSan[${originalIndex}].ghiChu`}
+                            disabled={readOnly}
+                          />
+                        )}
+                      </TableCell>
+
+                      {!readOnly && (
                         <TableCell
                           align="center"
                           sx={{ verticalAlign: "top", pt: 1.5 }}
                         >
-                          {readOnly ? (
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                pt: 0.8,
-                                fontWeight: 500,
-                                textAlign: "center",
-                              }}
-                            >
-                              {item.soLuong || "-"}
-                            </Typography>
-                          ) : (
-                            <FieldInput
-                              title="Nhập số lượng"
-                              formik={formik}
-                              field={`chiTietsTaiSan[${originalIndex}].soLuong`}
-                              disabled={readOnly}
-                            />
-                          )}
-                        </TableCell>
-
-                        <TableCell sx={{ verticalAlign: "top", pt: 1.5 }}>
-                          {readOnly ? (
-                            item.ghiChu || "-"
-                          ) : (
-                            <FieldInput
-                              title="Nhập ghi chú"
-                              formik={formik}
-                              field={`chiTietsTaiSan[${originalIndex}].ghiChu`}
-                              disabled={readOnly}
-                            />
-                          )}
-                        </TableCell>
-
-                        {!readOnly && (
-                          <TableCell
-                            align="center"
-                            sx={{ verticalAlign: "top", pt: 1.5 }}
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleDeleteTaiSan(originalIndex)}
                           >
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => handleDeleteTaiSan(originalIndex)}
-                            >
-                              <Delete fontSize="small" />
-                            </IconButton>
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    );
-                  })}
-
-                  {readOnly && !hasTaiSanData && (
-                    <TableRow>
-                      <TableCell
-                        colSpan={2}
-                        align="center"
-                        sx={{ py: 3, color: "text.secondary" }}
-                      >
-                        Chưa có Tài sản nào được thêm
-                      </TableCell>
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      )}
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Grid>
+                  );
+                })}
+
+                {readOnly && !hasTaiSanData && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={4}
+                      align="center"
+                      sx={{ py: 3, color: "text.secondary" }}
+                    >
+                      Chưa có Tài sản nào được thêm
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
 
           {/* =========== BẢNG 2: CCDC - VẬT TƯ =========== */}
-          <Grid size={{ xs: 12, lg: 6 }}>
-            <TableContainer
-              component={Paper}
-              variant="outlined"
-              sx={{
-                border: "1px solid",
-                borderColor: "divider",
-                borderRadius: 2,
-              }}
-            >
-              <Table size="small" sx={{ tableLayout: "fixed", width: "100%" }}>
-                <TableHead>
-                  <TableRow sx={{ bgcolor: "success.main" }}>
+          <TableContainer
+            component={Paper}
+            variant="outlined"
+            sx={{
+              border: "1px solid",
+              borderColor: "divider",
+              borderRadius: 2,
+            }}
+          >
+            <Table size="small" sx={{ tableLayout: "fixed", width: "100%" }}>
+              <TableHead>
+                <TableRow sx={{ bgcolor: "success.main" }}>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      color: "info.contrastText",
+                      fontWeight: 600,
+                      width: "30%",
+                    }}
+                  >
+                    Nhóm Vật Tư
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      color: "info.contrastText",
+                      fontWeight: 600,
+                      width: "30%",
+                    }}
+                  >
+                    Vật tư tiêu hao
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      color: "info.contrastText",
+                      fontWeight: 600,
+                      width: "10%",
+                    }}
+                  >
+                    SL
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ color: "info.contrastText", fontWeight: 600 }}
+                  >
+                    Ghi chú
+                  </TableCell>
+                  {!readOnly && (
                     <TableCell
                       align="center"
-                      sx={{
-                        color: "info.contrastText",
-                        fontWeight: 600,
-                        width: "45%",
-                      }}
-                    >
-                      Vật tư tiêu hao
-                    </TableCell>
-                    <TableCell
-                      align="center"
-                      sx={{
-                        color: "info.contrastText",
-                        fontWeight: 600,
-                        width: "20%",
-                      }}
-                    >
-                      SL
-                    </TableCell>
-                    <TableCell
-                      align="center"
+                      width={60}
                       sx={{ color: "info.contrastText", fontWeight: 600 }}
                     >
-                      Ghi chú
+                      Xóa
                     </TableCell>
-                    {!readOnly && (
-                      <TableCell
-                        align="center"
-                        width={60}
-                        sx={{ color: "info.contrastText", fontWeight: 600 }}
-                      >
-                        Xóa
-                      </TableCell>
-                    )}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {!readOnly && (
-                    <TableRow>
-                      <TableCell
-                        colSpan={4}
+                  )}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {!readOnly && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5}
+                      sx={{
+                        p: 1,
+                        borderBottom: hasCCDCData ? "1px solid" : "none",
+                        borderColor: "divider",
+                      }}
+                    >
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        color="primary"
+                        startIcon={<Add />}
+                        onClick={handleAddCCDC}
                         sx={{
-                          p: 1,
-                          borderBottom: hasCCDCData ? "1px solid" : "none",
-                          borderColor: "divider",
+                          py: 0.75,
+                          borderStyle: "dashed",
+                          "&:hover": {
+                            borderStyle: "dashed",
+                            bgcolor: "action.hover",
+                          },
                         }}
                       >
-                        <Button
-                          fullWidth
-                          variant="outlined"
-                          color="primary"
-                          startIcon={<Add />}
-                          onClick={handleAddCCDC}
-                          sx={{
-                            py: 0.75,
-                            borderStyle: "dashed",
-                            "&:hover": {
-                              borderStyle: "dashed",
-                              bgcolor: "action.hover",
-                            },
-                          }}
-                        >
-                          Thêm Vật tư tiêu hao
-                        </Button>
+                        Thêm Vật tư tiêu hao
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )}
+
+                {currentCCDCs.map((item: any, originalIndex: number) => {
+                  if (item.action === Action.DELETE) return null;
+
+                  // Lọc danh sách CCDC cho hàng hiện tại
+                  const rowFilteredCCDCs = ccdcs.filter(
+                    (c) => c.idNhomCCDC === item.idNhomCCDC,
+                  );
+
+                  return (
+                    <TableRow key={item.id || `ccdc-${originalIndex}`}>
+                      {/* CHỌN NHÓM VẬT TƯ */}
+                      <TableCell
+                        sx={{ minWidth: 200, verticalAlign: "top", pt: 1.5 }}
+                      >
+                        {readOnly ? (
+                          item.tenNhomCCDC || "-"
+                        ) : (
+                          <FieldAutoCompleted
+                            title="Chọn nhóm vật tư"
+                            data={nhomCCDCList}
+                            labelkey="ten"
+                            formik={formik}
+                            field={`chiTietsCCDC[${originalIndex}].idNhomCCDC`}
+                            onChange={(val) => {
+                              formik.setFieldValue(
+                                `chiTietsCCDC[${originalIndex}].idNhomCCDC`,
+                                val?.id,
+                              );
+                              formik.setFieldValue(
+                                `chiTietsCCDC[${originalIndex}].tenNhomCCDC`,
+                                val?.ten,
+                              );
+                              // Reset vật tư đã chọn khi đổi nhóm
+                              formik.setFieldValue(
+                                `chiTietsCCDC[${originalIndex}].idChiTietCCDC`,
+                                "",
+                              );
+                              formik.setFieldValue(
+                                `chiTietsCCDC[${originalIndex}].idCCDC`,
+                                "",
+                              );
+                              formik.setFieldValue(
+                                `chiTietsCCDC[${originalIndex}].tenVatTu`,
+                                "",
+                              );
+                            }}
+                            disabled={readOnly}
+                          />
+                        )}
                       </TableCell>
-                    </TableRow>
-                  )}
 
-                  {currentCCDCs.map((item: any, originalIndex: number) => {
-                    if (item.action === Action.DELETE) return null;
+                      {/* CHỌN VẬT TƯ TIÊU HAO */}
+                      <TableCell
+                        sx={{ minWidth: 200, verticalAlign: "top", pt: 1.5 }}
+                      >
+                        {readOnly ? (
+                          item.tenVatTu || "-"
+                        ) : (
+                          <FieldAutoCompleted
+                            title="Chọn vật tư"
+                            data={rowFilteredCCDCs}
+                            labelkey="ten"
+                            formik={formik}
+                            field={`chiTietsCCDC[${originalIndex}].idChiTietCCDC`}
+                            onChange={(val) => {
+                              const masterId =
+                                val?.idCCDCVatTu || val?.idCCDC || val?.id;
+                              formik.setFieldValue(
+                                `chiTietsCCDC[${originalIndex}].idCCDC`,
+                                masterId,
+                              );
+                              formik.setFieldValue(
+                                `chiTietsCCDC[${originalIndex}].tenVatTu`,
+                                val?.ten,
+                              );
+                              formik.setFieldValue(
+                                `chiTietsCCDC[${originalIndex}].soLuong`,
+                                val?.soLuong,
+                              );
+                            }}
+                            disabled={readOnly || !item.idNhomCCDC}
+                          />
+                        )}
+                      </TableCell>
 
-                    const selectedCCDC = ccdcs.find(
-                      (c: any) =>
-                        c.id === item.idCCDC || c.id === item.idChiTietCCDC,
-                    );
+                      {/* SỐ LƯỢNG */}
+                      <TableCell
+                        align="center"
+                        sx={{ verticalAlign: "top", pt: 1.5 }}
+                      >
+                        {readOnly ? (
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              pt: 0.8,
+                              fontWeight: 500,
+                              textAlign: "center",
+                            }}
+                          >
+                            {item.soLuong || "-"}
+                          </Typography>
+                        ) : (
+                          <FieldInput
+                            title="Nhập SL"
+                            formik={formik}
+                            field={`chiTietsCCDC[${originalIndex}].soLuong`}
+                            disabled={readOnly}
+                          />
+                        )}
+                      </TableCell>
 
-                    return (
-                      <TableRow key={item.id || `ccdc-${originalIndex}`}>
-                        <TableCell
-                          sx={{ minWidth: 200, verticalAlign: "top", pt: 1.5 }}
-                        >
-                          {readOnly ? (
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                pt: 0.8,
-                                color: "text.primary",
-                                fontWeight: 500,
-                              }}
-                            >
-                              {item.tenCCDC ||
-                                item.tenVatTu ||
-                                selectedCCDC?.ten ||
-                                "-"}
-                            </Typography>
-                          ) : (
-                            <FieldAutoCompleted
-                              title="Chọn CCDC - Vật tư"
-                              data={ccdcs}
-                              labelkey="ten"
-                              formik={formik}
-                              field={`chiTietsCCDC[${originalIndex}].idChiTietCCDC`}
-                              onChange={(val) => {
-                                const masterId =
-                                  val?.idCCDCVatTu || val?.idCCDC || val?.id;
-                                formik.setFieldValue(
-                                  `chiTietsCCDC[${originalIndex}].idCCDC`,
-                                  masterId,
-                                );
-                                formik.setFieldValue(
-                                  `chiTietsCCDC[${originalIndex}].tenVatTu`,
-                                  val?.ten,
-                                );
-                                formik.setFieldValue(
-                                  `chiTietsCCDC[${originalIndex}].tenCCDC`,
-                                  val?.ten,
-                                );
-                                formik.setFieldValue(
-                                  `chiTietsCCDC[${originalIndex}].soLuong`,
-                                  val?.soLuong,
-                                );
-                                formik.setFieldValue(
-                                  `chiTietsCCDC[${originalIndex}].soLuongHienCo`,
-                                  val?.soLuong,
-                                );
-                              }}
-                              disabled={readOnly}
-                              limitOptions={20}
-                            />
-                          )}
-                        </TableCell>
+                      {/* GHI CHÚ */}
+                      <TableCell sx={{ verticalAlign: "top", pt: 1.5 }}>
+                        {readOnly ? (
+                          item.ghiChu || "-"
+                        ) : (
+                          <FieldInput
+                            title="Nhập ghi chú"
+                            formik={formik}
+                            field={`chiTietsCCDC[${originalIndex}].ghiChu`}
+                            disabled={readOnly}
+                          />
+                        )}
+                      </TableCell>
 
+                      {/* XÓA */}
+                      {!readOnly && (
                         <TableCell
                           align="center"
                           sx={{ verticalAlign: "top", pt: 1.5 }}
                         >
-                          {readOnly ? (
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                pt: 0.8,
-                                fontWeight: 500,
-                                textAlign: "center",
-                              }}
-                            >
-                              {item.soLuong || "-"}
-                            </Typography>
-                          ) : (
-                            <FieldInput
-                              title="Nhập số lượng"
-                              formik={formik}
-                              field={`chiTietsCCDC[${originalIndex}].soLuong`}
-                              disabled={readOnly}
-                            />
-                          )}
-                        </TableCell>
-
-                        <TableCell sx={{ verticalAlign: "top", pt: 1.5 }}>
-                          {readOnly ? (
-                            item.ghiChu || "-"
-                          ) : (
-                            <FieldInput
-                              title="Nhập ghi chú"
-                              formik={formik}
-                              field={`chiTietsCCDC[${originalIndex}].ghiChu`}
-                              disabled={readOnly}
-                            />
-                          )}
-                        </TableCell>
-
-                        {!readOnly && (
-                          <TableCell
-                            align="center"
-                            sx={{ verticalAlign: "top", pt: 1.5 }}
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleDeleteCCDC(originalIndex)}
                           >
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => handleDeleteCCDC(originalIndex)}
-                            >
-                              <Delete fontSize="small" />
-                            </IconButton>
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    );
-                  })}
-
-                  {readOnly && !hasCCDCData && (
-                    <TableRow>
-                      <TableCell
-                        colSpan={3}
-                        align="center"
-                        sx={{ py: 3, color: "text.secondary" }}
-                      >
-                        Chưa có CCDC - Vật tư nào được thêm
-                      </TableCell>
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      )}
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Grid>
+                  );
+                })}
+
+                {readOnly && !hasCCDCData && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5}
+                      align="center"
+                      sx={{ py: 3, color: "text.secondary" }}
+                    >
+                      Chưa có CCDC - Vật tư nào được thêm
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </Grid>
       </Collapse>
     </Paper>

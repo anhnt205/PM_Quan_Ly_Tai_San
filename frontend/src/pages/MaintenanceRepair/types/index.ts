@@ -20,6 +20,8 @@ export interface MaintenanceCCDCItem {
   idKeHoachSuaChua: string;
   idCCDC: string;
   idChiTietCCDC: string;
+  idNhomCCDC: string;
+  tenNhomCCDC?: string;
   tenVatTu?: string;
   soLuong?: number;
   donViTinh?: string;
@@ -137,5 +139,5 @@ export interface MaintenanceRepairResultData {
   idSuaChua: string;
   chiPhiPhanCong: number;
   chiPhiThueNgoai: number;
-  taisan:[]
+  taisan: [];
 }

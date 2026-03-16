@@ -11,6 +11,9 @@ public class KeHoachSuaChuaVatTuTieuHao {
     private String idCCDC;
     @NotNull
     private String idChiTietCCDC;
+
+    private String idNhomCCDC;
+    private String tenNhomCCDC;
     private String tenVatTu;
     private String soKyHieu;
     private String namSanXuat;

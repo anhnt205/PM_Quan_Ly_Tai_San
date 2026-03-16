@@ -707,6 +707,8 @@ export const useToolByDepartmentPageQuery = ({
           soKyHieu: detailAsset.soKyHieu,
           kyHieu: asset.kyHieu,
           soLuongDaBanGiao: 0,
+          idNhomCCDC: asset.idNhomCCDC,
+          tenNhomCCDC: asset.tenNhomCCDC,
           asset: asset,
         });
       }
