@@ -168,6 +168,16 @@ public class SuaChuaService {
         return response;
     }
 
+    public boolean isAllTaiSanDaSua(String idSuaChua) throws SQLException {
+        // Kiểm tra phiếu tồn tại và trạng thái = 3
+        SuaChuaDTO dto = findByIdDTO(idSuaChua);
+        if (dto == null || dto.getTrangThai() == null || dto.getTrangThai() != 3) {
+            return false;
+        }
+        int chuaSua = taiSanSuaChuaDao.countChuaSuaByIdSuaChua(idSuaChua);
+        return chuaSua == 0;
+    }
+
     // Helper method dùng chung
     private boolean equalsIgnoreCase(String a, String b) {
         if (a == null || b == null) return false;

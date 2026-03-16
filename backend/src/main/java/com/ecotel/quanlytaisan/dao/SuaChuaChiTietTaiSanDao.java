@@ -41,6 +41,11 @@ public class SuaChuaChiTietTaiSanDao {
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(SuaChuaChiTietTaiSan.class),idSuaChua);
     }
 
+    public int countChuaSuaByIdSuaChua(String idSuaChua) {
+        String sql = "SELECT COUNT(*) FROM suachua_chitiet_taisan WHERE IdSuaChua = ? AND (DaSuaChua = 0 OR DaSuaChua IS NULL)";
+        return jdbcTemplate.queryForObject(sql, Integer.class, idSuaChua);
+    }
+
     // ==================== ID Generator ====================
 
     public String generateNextId() {

@@ -90,6 +90,16 @@ public class SuaChuaController {
     }
 
     /**
+     * Check đã sửa chữa của những trạng thái đã hoàn thành
+     */
+    @GetMapping("/{id}/check-dasua")
+    public ResponseEntity<Boolean> checkAllTaiSanDaSua(@PathVariable String id) throws SQLException {
+        boolean result = suaChuaService.isAllTaiSanDaSua(id);
+        return ResponseEntity.ok(result);
+    }
+
+
+    /**
      * Tạo mới phiếu sửa chữa
      */
     @PostMapping
