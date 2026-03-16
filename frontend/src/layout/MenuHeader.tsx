@@ -432,18 +432,8 @@ export default function Menuheader() {
     {
       text: "Báo cáo",
       icon: <Assessment fontSize="small" />,
-      path: "/",
+      path: ROUTES.REPORT,
       code: "BAOCAO",
-      subMenu: [
-        { text: "Báo cáo S22-DN", path: `${ROUTES.REPORT}?type=1` },
-        { text: "Biên bản kiểm kê", path: `${ROUTES.REPORT}?type=2` },
-        {
-          text: "Báo cáo 05-TSCD-24-2017-TT-BTC",
-          path: `${ROUTES.REPORT}?type=3`,
-        },
-        { text: "Mẫu số-01", path: `${ROUTES.REPORT}?type=4` },
-        { text: "Mẫu số-21", path: `${ROUTES.REPORT}?type=5` },
-      ],
     },
   ].filter((item) => {
     // 1. Kiểm tra quyền của menu chính

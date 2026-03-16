@@ -386,7 +386,7 @@ export default function TableCustom({
           </Box>
         </Grid>
       </Grid>
-      <Box sx={{ width: "100%", overflowX: "auto" }}>
+      <Box sx={{ width: "100%" }}>
         {customContent ? (
           customContent
         ) : (
