@@ -159,15 +159,15 @@ export const showShareStatus = (isShare: boolean, isMyCreated: boolean) => {
 const getStatusDocument = (status: number) => {
   switch (status) {
     case 1:
-      return { label: "Chưa tạo biên bản", color: "#f60808" }; // Đỏ
+      return { label: "Chưa tạo kết quả", color: "#f60808" }; // Đỏ
     case 2:
-      return { label: "Bàn giao một phần", color: "#ff9800" }; // Cam
+      return { label: "Sửa chữa một phần", color: "#ff9800" }; // Cam
     case 3:
-      return { label: "Đã bàn giao hết", color: "#0fadfc" }; // Xanh lá
+      return { label: "Đã sửa chữa hết", color: "#0fadfc" }; // Xanh lá
     case 4:
-      return { label: "Sắp quá hạn bàn giao", color: "#d40ffc" }; // Xanh lá
+      return { label: "Sắp quá hạn sửa chữa", color: "#d40ffc" }; // Xanh lá
     case 5:
-      return { label: "Đã quá hạn bàn giao", color: "#08f433" }; // Xanh lá
+      return { label: "Đã quá hạn sửa chữa", color: "#08f433" }; // Xanh lá
     default:
       return { label: "Không xác định", color: "#dee4e0" }; // Xám
   }

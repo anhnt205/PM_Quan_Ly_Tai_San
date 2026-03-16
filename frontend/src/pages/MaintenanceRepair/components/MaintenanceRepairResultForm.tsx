@@ -16,6 +16,8 @@ import {
   TableCell,
   styled,
   Checkbox,
+  Collapse,
+  TableContainer,
 } from "@mui/material";
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
@@ -26,6 +28,8 @@ import {
   ArrowDropDown,
   ArrowDropUp,
   Delete,
+  KeyboardArrowDown,
+  KeyboardArrowUp,
   Visibility,
 } from "@mui/icons-material";
 import SaveBtn from "../../../components/Button/SaveBtn";
@@ -37,6 +41,19 @@ import CustomStepper from "../../../components/common/CustomStepper";
 import { generateCode } from "../../../utils/helpers";
 import SignDocumentForm from "../../AssetTransfer/components/SignDocumentForm";
 import EditButton from "../../../components/Button/EditButton";
+import FieldDate from "../../../components/TextField/FieldDate";
+
+const CustomTableCell = styled(TableCell)(({ theme }) => ({
+  borderBottom: "1px solid rgba(224, 224, 224, 1)",
+  padding: "16px 8px",
+  fontSize: "14px",
+}));
+
+const CustomTableHeadCell = styled(CustomTableCell)(({ theme }) => ({
+  fontWeight: "bold",
+  color: "rgba(0, 0, 0, 0.87)",
+  backgroundColor: "transparent",
+}));
 
 export default function MaintenanceRepairResultForm({
   onClose,
@@ -64,65 +81,47 @@ export default function MaintenanceRepairResultForm({
   const [isPreview, setIsPreview] = useState(false);
   const [document, setDocument] = useState<File | string | any>("");
 
-  const CustomTableCell = styled(TableCell)(({ theme }) => ({
-    borderBottom: "1px solid rgba(224, 224, 224, 1)",
-    padding: "16px 8px",
-    fontSize: "14px",
-  }));
-
-  const CustomTableHeadCell = styled(CustomTableCell)(({ theme }) => ({
-    fontWeight: "bold",
-    color: "rgba(0, 0, 0, 0.87)",
-    backgroundColor: "transparent",
-  }));
-
   const formik = useFormik({
     initialValues: {
       id: "",
-      soPhieu: "",
-      tenPhieu: "",
-      idPhieuSuaChua: selectedRepair.id || "",
-      ngayLapPhieu: new Date().toISOString().split("T")[0],
-      loaiPhieu: selectedRepair?.idLoaiSuaChua || "",
-      idPhanXuong: selectedRepair?.idDonViGiao || "",
-      idDonViTiepNhanTaiSan: selectedRepair?.idDonViNhan || "",
-      ngayYeuCauHoanThanh: selectedRepair?.ngayKetThucDuKien || "",
-      idDonViDeNghi: selectedRepair?.idDonViDeNghi || "",
-      idNguoiKyNhay: selectedRepair?.idNguoiKyNhay || "",
-      idNguoiDaiDienDonVi: "",
-      idTrinhDuyetCapPhong: selectedRepair?.idTrinhDuyetCapPhong || "",
-      idTrinhDuyetGiamDoc: selectedRepair?.idTrinhDuyetGiamDoc || "",
-      tenFile: selectedRepair?.tenFile || "",
-      duongDanFile: selectedRepair?.duongDanFile || "",
+      idCongTy: "",
+      maSuaChua: "",
+      tenSuaChua: "",
+      mucDoSuCo: "",
+      mucDoUuTien: "",
+      idDonViGiao: "",
+      idDonViNhan: "",
+      idNguoiKyNhay: "",
       trangThaiKyNhay: false,
       nguoiLapPhieuKyNhay: false,
+      ngayKetThucDuKien: "",
+      idTrinhDuyetCapPhong: "",
       trinhDuyetCapPhongXacNhan: false,
+      idTrinhDuyetGiamDoc: "",
       trinhDuyetGiamDocXacNhan: false,
-      nguoiKyList: [] as any[],
-      chiTietSuaChuaBaoDuongDTOS:
-        selectedRepair?.chiTietSuaChuaBaoDuongDTOS || [
-          {
-            id: "",
-            idSuaChuaBaoDuong: "",
-            tentaiSan: "",
-            idTaiSan: "",
-            soLuong: 0,
-            donGia: 0,
-            ghiChu: "",
-            ngayTao: "",
-            ngayCapNhat: "",
-            nguoiTao: "",
-            nguoiCapNhat: "",
-            isActive: true,
-            hienTrang: "",
-            moTa: "",
-            daBanGiao: true,
-          },
-        ],
+      idDonViDeNghi: "",
+      duongDanFile: "",
+      tenFile: "",
+      taiLieuBanGhi: "",
+      byStep: false,
+      soQuyetDinh: "",
+      nguoiTao: "",
+      share: false,
+      ngayTao: "",
+      daBanGiao: false,
+      coPhieuBanGiao: false,
+      taiLieuCuoi: "",
+      loai: 0,
       trangThai: 0,
-      coHieuLuc: 1,
-      chiPhiNhanCong: 0,
+      idKeHoach: "",
+      ngayCapNhat: "",
+      idLoaiSuaChua: "",
+      ghiChu: "",
+      idSuaChua: "",
+      chiPhiPhanCong: 0,
       chiPhiThueNgoai: 0,
+      nguoiKyList: [] as any[],
+      danhSachTaiSan: [] as any[],
     },
     onSubmit: (values) => {
       onSave({
@@ -144,7 +143,7 @@ export default function MaintenanceRepairResultForm({
 
   // Staff từ đơn vị tiếp nhận
   const staffInDonViTiepNhan = staffs.filter(
-    (s) => s.phongBanId === formik.values.idDonViTiepNhanTaiSan,
+    (s) => s.phongBanId === formik.values.idDonViNhan,
   );
 
   // Hàm lấy tên phòng ban từ ID
@@ -284,43 +283,38 @@ export default function MaintenanceRepairResultForm({
                     disabled={readOnly}
                   />
                   <Grid size={12}>
-                    <FieldInput
-                      title="Loại phiếu"
+                    <FieldAutoCompleted
+                      title="Đơn vị giao *"
+                      labelkey="tenPhongBan"
+                      data={departments}
                       formik={formik}
-                      field="loaiPhieu"
+                      field="idDonViGiao"
                       disabled={true}
                     />
                   </Grid>
                   <Grid size={12}>
-                    <TextField
-                      label="Phân xưởng quản lý"
-                      fullWidth
-                      size="small"
-                      value={getDepartmentName(formik.values.idPhanXuong)}
+                    <FieldAutoCompleted
+                      title="Đơn vị nhận *"
+                      labelkey="tenPhongBan"
+                      data={departments}
+                      formik={formik}
+                      field="idDonViNhan"
                       disabled={true}
-                      variant="outlined"
                     />
                   </Grid>
                   <Grid size={12}>
-                    <TextField
-                      label="Đơn vị tiếp nhận"
-                      fullWidth
-                      size="small"
-                      value={getDepartmentName(
-                        formik.values.idDonViTiepNhanTaiSan,
-                      )}
-                      disabled={true}
-                      variant="outlined"
+                    <FieldDate
+                      title="Ngày bắt đầu thực tế"
+                      formik={formik}
+                      field="ngayBatDauThucTe"
+                      disabled={readOnly}
                     />
                   </Grid>
                   <Grid size={12}>
-                    <TextField
-                      label="Thời gian yêu cầu hoàn thành"
-                      type="date"
-                      InputLabelProps={{ shrink: true }}
-                      fullWidth
-                      size="small"
-                      value={formik.values.ngayYeuCauHoanThanh}
+                    <FieldDate
+                      title="Ngày kết thúc thực tế"
+                      formik={formik}
+                      field="ngayKetThucThucTe"
                       disabled={readOnly}
                     />
                   </Grid>
@@ -526,206 +520,31 @@ export default function MaintenanceRepairResultForm({
             </Box>
 
             {/* CHI TIẾT TÀI SẢN */}
-            <Box mb={4}>
+            <AssetTableSection formik={formik} readOnly={readOnly} />
+
+            {/* CÁC CHI PHÍ KHÁC */}
+            <Box mt={4}>
               <Typography variant="subtitle1" fontWeight={600} mb={2}>
-                Chi tiết tài sản sửa chữa bảo dưỡng:
+                Các chi phí khác:
               </Typography>
-              <Table
-                size="small"
-                sx={{
-                  "& .MuiTableCell-root": {
-                    borderBottom: "1px solid #e0e0e0",
-                  },
-                }}
-              >
-                <TableHead>
-                  <TableRow>
-                    <CustomTableHeadCell width="4%">STT</CustomTableHeadCell>
-                    <CustomTableHeadCell width="15%">
-                      Tên tài sản
-                    </CustomTableHeadCell>
-                    <CustomTableHeadCell width="12%">
-                      Mã tài sản
-                    </CustomTableHeadCell>
-                    <CustomTableHeadCell width="8%">
-                      Số lượng
-                    </CustomTableHeadCell>
-                    <CustomTableHeadCell width="10%">
-                      Đơn giá
-                    </CustomTableHeadCell>
-                    <CustomTableHeadCell width="10%">
-                      Thành tiền
-                    </CustomTableHeadCell>
-                    <CustomTableHeadCell width="12%">
-                      Trạng thái
-                    </CustomTableHeadCell>
-                    <CustomTableHeadCell width="12%">
-                      Ghi chú
-                    </CustomTableHeadCell>
-                    <CustomTableHeadCell width="5%"></CustomTableHeadCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {formik.values.chiTietSuaChuaBaoDuongDTOS.map(
-                    (row: any, index: number) => {
-                      const donViName =
-                        departments.find(
-                          (d) => d.id === formik.values.idPhanXuong,
-                        )?.tenPhongBan || "";
-                      const soLuong =
-                        formik.values.chiTietSuaChuaBaoDuongDTOS[index]
-                          .soLuong || 0;
-                      const donGia =
-                        formik.values.chiTietSuaChuaBaoDuongDTOS[index]
-                          .donGia || 0;
-                      const thanhTien = soLuong * donGia;
-
-                      return (
-                        <TableRow key={index}>
-                          <CustomTableCell align="center">
-                            {index + 1}
-                          </CustomTableCell>
-                          <CustomTableCell>
-                            <FieldAutoCompleted
-                              title=""
-                              labelkey="tenTaiSan"
-                              data={[]}
-                              formik={formik}
-                              field={`chiTietSuaChuaBaoDuongDTOS.${index}.tentaiSan`}
-                            />
-                          </CustomTableCell>
-                          <CustomTableCell>
-                            <TextField
-                              size="small"
-                              fullWidth
-                              value={
-                                formik.values.chiTietSuaChuaBaoDuongDTOS[index]
-                                  .idTaiSan || ""
-                              }
-                              variant="outlined"
-                            />
-                          </CustomTableCell>
-                          <CustomTableCell>
-                            <FieldInput
-                              title=""
-                              type="number"
-                              formik={formik}
-                              field={`chiTietSuaChuaBaoDuongDTOS.${index}.soLuong`}
-                            />
-                          </CustomTableCell>
-                          <CustomTableCell>
-                            <FieldInput
-                              title=""
-                              type="number"
-                              formik={formik}
-                              field={`chiTietSuaChuaBaoDuongDTOS.${index}.donGia`}
-                            />
-                          </CustomTableCell>
-                          <CustomTableCell align="right">
-                            <TextField
-                              size="small"
-                              fullWidth
-                              value={thanhTien.toLocaleString("vi-VN")}
-                              variant="outlined"
-                            />
-                          </CustomTableCell>
-                          <CustomTableCell>
-                            <FieldInput
-                              title=""
-                              formik={formik}
-                              field={`chiTietSuaChuaBaoDuongDTOS.${index}.hienTrang`}
-                            />
-                          </CustomTableCell>
-                          <CustomTableCell>
-                            <FieldInput
-                              title=""
-                              formik={formik}
-                              field={`chiTietSuaChuaBaoDuongDTOS.${index}.ghiChu`}
-                            />
-                          </CustomTableCell>
-                          <CustomTableCell align="center">
-                            <IconButton
-                              color="error"
-                              size="small"
-                              onClick={() => {
-                                const newAssets = [
-                                  ...formik.values.chiTietSuaChuaBaoDuongDTOS,
-                                ];
-                                newAssets.splice(index, 1);
-                                formik.setFieldValue(
-                                  "chiTietSuaChuaBaoDuongDTOS",
-                                  newAssets,
-                                );
-                              }}
-                            >
-                              <Delete fontSize="small" />
-                            </IconButton>
-                          </CustomTableCell>
-                        </TableRow>
-                      );
-                    },
-                  )}
-                </TableBody>
-              </Table>
-
-              {!readOnly && (
-                <Box mt={2}>
-                  <Button
-                    startIcon={<Add />}
-                    variant="text"
-                    onClick={() => {
-                      formik.setFieldValue("chiTietSuaChuaBaoDuongDTOS", [
-                        ...formik.values.chiTietSuaChuaBaoDuongDTOS,
-                        {
-                          id: "",
-                          idSuaChuaBaoDuong: "",
-                          tentaiSan: "",
-                          idTaiSan: "",
-                          soLuong: 0,
-                          donGia: 0,
-                          ghiChu: "",
-                          ngayTao: "",
-                          ngayCapNhat: "",
-                          nguoiTao: "",
-                          nguoiCapNhat: "",
-                          isActive: true,
-                          hienTrang: "",
-                          moTa: "",
-                          daBanGiao: true,
-                        },
-                      ]);
-                    }}
-                    sx={{ textTransform: "none" }}
-                  >
-                    Thêm một dòng
-                  </Button>
-                </Box>
-              )}
-
-              {/* CÁC CHI PHÍ KHÁC */}
-              <Box mt={4}>
-                <Typography variant="subtitle1" fontWeight={600} mb={2}>
-                  Các chi phí khác:
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <FieldInput
-                      title="Chi phí nhân công"
-                      type="number"
-                      formik={formik}
-                      field="chiPhiNhanCong"
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <FieldInput
-                      title="Chi phí thuê ngoài"
-                      type="number"
-                      formik={formik}
-                      field="chiPhiThueNgoai"
-                    />
-                  </Grid>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <FieldInput
+                    title="Chi phí nhân công"
+                    type="number"
+                    formik={formik}
+                    field="chiPhiNhanCong"
+                  />
                 </Grid>
-              </Box>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <FieldInput
+                    title="Chi phí thuê ngoài"
+                    type="number"
+                    formik={formik}
+                    field="chiPhiThueNgoai"
+                  />
+                </Grid>
+              </Grid>
             </Box>
           </Paper>
         </AccordionDetails>
@@ -733,3 +552,402 @@ export default function MaintenanceRepairResultForm({
     </>
   );
 }
+
+// =================================================================
+// Asset Row Component for nested table
+// =================================================================
+const AssetRow = ({
+  row,
+  index,
+  formik,
+  readOnly,
+  onRemove,
+}: {
+  row: any;
+  index: number;
+  formik: any;
+  readOnly?: boolean;
+  onRemove: () => void;
+}) => {
+  const [open, setOpen] = useState(false);
+
+  const soLuong = row.soLuong || 0;
+  const donGia = row.donGia || 0;
+  const thanhTien = soLuong * donGia;
+
+  const handleAddMaterial = () => {
+    const newMaterials = [
+      ...(row.vatTuTieuHao || []),
+      {
+        id: "",
+        tenVatTu: "",
+        soLuong: 1,
+        donGia: 0,
+        ghiChu: "",
+      },
+    ];
+    formik.setFieldValue(
+      `chiTietSuaChuaBaoDuongDTOS[${index}].vatTuTieuHao`,
+      newMaterials,
+    );
+  };
+
+  const handleRemoveMaterial = (materialIndex: number) => {
+    const newMaterials = [...(row.vatTuTieuHao || [])];
+    newMaterials.splice(materialIndex, 1);
+    formik.setFieldValue(
+      `chiTietSuaChuaBaoDuongDTOS[${index}].vatTuTieuHao`,
+      newMaterials,
+    );
+  };
+
+  return (
+    <>
+      <TableRow sx={{ "& > *": { borderBottom: "unset" } }}>
+        <CustomTableCell width="4%">
+          <IconButton
+            aria-label="expand row"
+            size="small"
+            onClick={() => setOpen(!open)}
+          >
+            {open ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
+          </IconButton>
+        </CustomTableCell>
+        <CustomTableCell align="center">{index + 1}</CustomTableCell>
+        <CustomTableCell>
+          <FieldAutoCompleted
+            title=""
+            labelkey="tenTaiSan"
+            data={[]} // Replace with actual asset data source
+            formik={formik}
+            field={`chiTietSuaChuaBaoDuongDTOS[${index}].tenTaiSan`}
+            disabled={readOnly}
+          />
+        </CustomTableCell>
+        <CustomTableCell>
+          <FieldInput
+            title=""
+            type="number"
+            formik={formik}
+            field={`chiTietSuaChuaBaoDuongDTOS[${index}].soLuong`}
+            disabled={readOnly}
+          />
+        </CustomTableCell>
+        <CustomTableCell>
+          <FieldInput
+            title=""
+            formik={formik}
+            field={`chiTietSuaChuaBaoDuongDTOS[${index}].ghiChu`}
+            disabled={readOnly}
+          />
+        </CustomTableCell>
+        <CustomTableCell align="center">
+          <IconButton
+            color="error"
+            size="small"
+            onClick={onRemove}
+            disabled={readOnly}
+          >
+            <Delete fontSize="small" />
+          </IconButton>
+        </CustomTableCell>
+      </TableRow>
+      <TableRow>
+        <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={10}>
+          <Collapse in={open} timeout="auto" unmountOnExit>
+            <Box
+              sx={{
+                margin: "1px 1px 16px 1px",
+                padding: 2,
+                border: "1px solid #e0e0e0",
+                borderRadius: "8px",
+                bgcolor: "#fafafa",
+              }}
+            >
+              <Typography variant="subtitle2" gutterBottom component="div">
+                Vật tư tiêu hao cho:{" "}
+                <b>{row.tenTaiSan || "Tài sản chưa chọn"}</b>
+              </Typography>
+              <TableContainer
+                component={Paper}
+                variant="outlined"
+                sx={{
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 2,
+                }}
+              >
+                <Table size="small" aria-label="purchases">
+                  <TableHead sx={{ bgcolor: "success.main" }}>
+                    <TableRow>
+                      <CustomTableHeadCell
+                        sx={{
+                          color: "primary.contrastText",
+                        }}
+                        width="25%"
+                      >
+                        Tên vật tư
+                      </CustomTableHeadCell>
+                      <CustomTableHeadCell
+                        width="10%"
+                        sx={{
+                          color: "primary.contrastText",
+                        }}
+                      >
+                        Số lượng
+                      </CustomTableHeadCell>
+                      <CustomTableHeadCell
+                        width="10%"
+                        sx={{
+                          color: "primary.contrastText",
+                        }}
+                      >
+                        Đơn giá
+                      </CustomTableHeadCell>
+                      <CustomTableHeadCell
+                        width="10%"
+                        sx={{
+                          color: "primary.contrastText",
+                        }}
+                      >
+                        Thành tiền
+                      </CustomTableHeadCell>
+                      <CustomTableHeadCell
+                        sx={{
+                          color: "primary.contrastText",
+                        }}
+                      >
+                        Ghi chú
+                      </CustomTableHeadCell>
+                      <CustomTableHeadCell
+                        width="5%"
+                        sx={{
+                          color: "primary.contrastText",
+                        }}
+                      ></CustomTableHeadCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {(row.vatTuTieuHao || []).map(
+                      (materialRow: any, materialIndex: number) => {
+                        const materialThanhTien =
+                          (materialRow.soLuong || 0) *
+                          (materialRow.donGia || 0);
+                        return (
+                          <TableRow key={materialIndex}>
+                            <CustomTableCell>
+                              <FieldAutoCompleted
+                                title=""
+                                labelkey="tenVatTu"
+                                data={[]} // Replace with actual material data source
+                                formik={formik}
+                                field={`chiTietSuaChuaBaoDuongDTOS[${index}].vatTuTieuHao[${materialIndex}].tenVatTu`}
+                                disabled={readOnly}
+                              />
+                            </CustomTableCell>
+                            <CustomTableCell>
+                              <FieldInput
+                                title=""
+                                type="number"
+                                formik={formik}
+                                field={`chiTietSuaChuaBaoDuongDTOS[${index}].vatTuTieuHao[${materialIndex}].soLuong`}
+                                disabled={readOnly}
+                              />
+                            </CustomTableCell>
+                            <CustomTableCell>
+                              <FieldInput
+                                title=""
+                                type="number"
+                                formik={formik}
+                                field={`chiTietSuaChuaBaoDuongDTOS[${index}].vatTuTieuHao[${materialIndex}].donGia`}
+                                disabled={readOnly}
+                              />
+                            </CustomTableCell>
+                            <CustomTableCell>
+                              <FieldInput
+                                title=""
+                                type="number"
+                                formik={formik}
+                                field={`chiTietSuaChuaBaoDuongDTOS[${index}].vatTuTieuHao[${materialIndex}].thanhTien`}
+                                disabled={readOnly}
+                              />
+                            </CustomTableCell>
+                            <CustomTableCell>
+                              <FieldInput
+                                title=""
+                                formik={formik}
+                                field={`chiTietSuaChuaBaoDuongDTOS[${index}].vatTuTieuHao[${materialIndex}].ghiChu`}
+                                disabled={readOnly}
+                              />
+                            </CustomTableCell>
+                            <CustomTableCell>
+                              <IconButton
+                                size="small"
+                                color="error"
+                                disabled={readOnly}
+                                onClick={() =>
+                                  handleRemoveMaterial(materialIndex)
+                                }
+                              >
+                                <Delete fontSize="small" />
+                              </IconButton>
+                            </CustomTableCell>
+                          </TableRow>
+                        );
+                      },
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              {!readOnly && (
+                <Button
+                  startIcon={<Add />}
+                  onClick={handleAddMaterial}
+                  sx={{ mt: 1, textTransform: "none" }}
+                  size="small"
+                >
+                  Thêm vật tư
+                </Button>
+              )}
+            </Box>
+          </Collapse>
+        </TableCell>
+      </TableRow>
+    </>
+  );
+};
+
+// =================================================================
+// Main Asset Table Section Component
+// =================================================================
+const AssetTableSection = ({
+  formik,
+  readOnly,
+}: {
+  formik: any;
+  readOnly?: boolean;
+}) => {
+  const handleAddAsset = () => {
+    formik.setFieldValue("chiTietSuaChuaBaoDuongDTOS", [
+      ...formik.values.chiTietSuaChuaBaoDuongDTOS,
+      {
+        id: "",
+        idSuaChuaBaoDuong: "",
+        tenTaiSan: "",
+        idTaiSan: "",
+        soLuong: 1,
+        donGia: 0,
+        ghiChu: "",
+        hienTrang: "",
+        vatTuTieuHao: [], // Initialize with empty materials
+      },
+    ]);
+  };
+
+  const handleRemoveAsset = (index: number) => {
+    const newAssets = [...formik.values.chiTietSuaChuaBaoDuongDTOS];
+    newAssets.splice(index, 1);
+    formik.setFieldValue("chiTietSuaChuaBaoDuongDTOS", newAssets);
+  };
+
+  return (
+    <Box>
+      <Box display="flex" justifyContent="space-between" alignItems="center">
+        <Typography variant="subtitle1" fontWeight={600} mb={2}>
+          Chi tiết tài sản sửa chữa bảo dưỡng:
+        </Typography>
+        {!readOnly && (
+          <Button
+            startIcon={<Add />}
+            variant="contained"
+            size="small"
+            onClick={handleAddAsset}
+            sx={{ textTransform: "none", mb: 2 }}
+          >
+            Thêm tài sản
+          </Button>
+        )}
+      </Box>
+      <TableContainer
+        component={Paper}
+        variant="outlined"
+        sx={{
+          border: "1px solid",
+          borderColor: "divider",
+          borderRadius: 2,
+        }}
+      >
+        <Table
+          size="small"
+          sx={{
+            "& .MuiTableCell-root": {
+              borderBottom: "1px solid #e0e0e0",
+            },
+          }}
+        >
+          <TableHead sx={{ bgcolor: "success.main" }}>
+            <TableRow>
+              <CustomTableHeadCell
+                width="4%"
+                sx={{
+                  color: "primary.contrastText",
+                }}
+              ></CustomTableHeadCell>
+              <CustomTableHeadCell
+                width="4%"
+                sx={{
+                  color: "primary.contrastText",
+                }}
+              >
+                STT
+              </CustomTableHeadCell>
+              <CustomTableHeadCell
+                width="15%"
+                sx={{
+                  color: "primary.contrastText",
+                }}
+              >
+                Tên tài sản
+              </CustomTableHeadCell>
+              <CustomTableHeadCell
+                width="8%"
+                sx={{
+                  color: "primary.contrastText",
+                }}
+              >
+                Số lượng
+              </CustomTableHeadCell>
+              <CustomTableHeadCell
+                sx={{
+                  color: "primary.contrastText",
+                }}
+              >
+                Ghi chú
+              </CustomTableHeadCell>
+              <CustomTableHeadCell
+                width="5%"
+                sx={{
+                  color: "primary.contrastText",
+                }}
+              ></CustomTableHeadCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {formik.values.chiTietSuaChuaBaoDuongDTOS.map(
+              (row: any, index: number) => (
+                <AssetRow
+                  key={index}
+                  row={row}
+                  index={index}
+                  formik={formik}
+                  readOnly={readOnly}
+                  onRemove={() => handleRemoveAsset(index)}
+                />
+              ),
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
+  );
+};

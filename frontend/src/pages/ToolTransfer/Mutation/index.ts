@@ -702,6 +702,7 @@ export const useToolByDepartmentPageQuery = ({
           namSanXuat: detailAsset.namSanXuat ?? 2010,
           soLuong: e.soLuong || 0,
           soLuongConLai: e.soLuong || 0,
+          giaTri: asset.giaTri || 0,
           ghiChu: detailAsset.ghiChu,
           soKyHieu: detailAsset.soKyHieu,
           kyHieu: asset.kyHieu,

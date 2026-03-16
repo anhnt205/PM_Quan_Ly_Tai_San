@@ -84,7 +84,7 @@ public class SuaChuaDao {
                 sc.Share,
                 sc.NgayTao,
                 sc.DaBanGiao,
-                sc.CoPhieuBanGiao,
+                sc.CoPhieuSuaChua,
                 sc.TaiLieuCuoi,
                 sc.ghiChu,
                 sc.Loai,
@@ -202,7 +202,7 @@ public class SuaChuaDao {
                 sc.Share,
                 sc.NgayTao,
                 sc.DaBanGiao,
-                sc.CoPhieuBanGiao,
+                sc.CoPhieuSuaChua,
                 sc.TaiLieuCuoi,
                 sc.GhiChu,
                 sc.Loai,
@@ -272,7 +272,7 @@ public class SuaChuaDao {
                 sc.Share,
                 sc.NgayTao,
                 sc.DaBanGiao,
-                sc.CoPhieuBanGiao,
+                sc.CoPhieuSuaChua,
                 sc.TaiLieuCuoi,
                 sc.GhiChu,
                 sc.Loai,
@@ -333,7 +333,7 @@ public class SuaChuaDao {
         if (entity.getByStep() == null) entity.setByStep(false);
         if (entity.getShare() == null) entity.setShare(false);
         if (entity.getDaBanGiao() == null) entity.setDaBanGiao(false);
-        if (entity.getCoPhieuBanGiao() == null) entity.setCoPhieuBanGiao(false);
+        if (entity.getCoPhieuSuaChua() == null) entity.setCoPhieuSuaChua(false);
         if (entity.getLoai() == null) entity.setLoai(0);
 
         String sql = """
@@ -344,7 +344,7 @@ public class SuaChuaDao {
                 NgayKetThucDuKien, IdTrinhDuyetCapPhong, TrinhDuyetCapPhongXacNhan,
                 IdTrinhDuyetGiamDoc, TrinhDuyetGiamDocXacNhan, IdDonViDeNghi,
                 DuongDanFile, TenFile, TaiLieuBanGhi, ByStep, SoQuyetDinh,
-                NguoiTao, Share, NgayTao, NgayCapNhat, DaBanGiao, CoPhieuBanGiao, TaiLieuCuoi, Loai, TrangThai, GhiChu,
+                NguoiTao, Share, NgayTao, NgayCapNhat, DaBanGiao, CoPhieuSuaChua, TaiLieuCuoi, Loai, TrangThai, GhiChu,
                 IdKeHoach
             ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """;
@@ -360,7 +360,7 @@ public class SuaChuaDao {
                 entity.getDuongDanFile(), entity.getTenFile(), entity.getTaiLieuBanGhi(),
                 entity.getByStep(), entity.getSoQuyetDinh(), entity.getNguoiTao(),
                 entity.getShare(), entity.getNgayTao(), entity.getNgayCapNhat(),
-                entity.getDaBanGiao(), entity.getCoPhieuBanGiao(), entity.getTaiLieuCuoi(), entity.getLoai(), entity.getTrangThai(), entity.getGhiChu(),
+                entity.getDaBanGiao(), entity.getCoPhieuSuaChua(), entity.getTaiLieuCuoi(), entity.getLoai(), entity.getTrangThai(), entity.getGhiChu(),
                 entity.getIdKeHoach()
         );
         if (result > 0) {
@@ -382,7 +382,7 @@ public class SuaChuaDao {
                 IdTrinhDuyetGiamDoc = ?, TrinhDuyetGiamDocXacNhan = ?,
                 IdDonViDeNghi = ?, DuongDanFile = ?, TenFile = ?, TaiLieuBanGhi = ?,
                 ByStep = ?, SoQuyetDinh = ?, NguoiTao = ?, Share = ?,
-                NgayCapNhat = ?, DaBanGiao = ?, CoPhieuBanGiao = ?, TaiLieuCuoi = ?, Loai = ?, TrangThai = ?, GhiChu = ?,
+                NgayCapNhat = ?, DaBanGiao = ?, CoPhieuSuaChua = ?, TaiLieuCuoi = ?, Loai = ?, TrangThai = ?, GhiChu = ?,
                 IdKeHoach = ?
             WHERE Id = ?
         """;
@@ -397,7 +397,7 @@ public class SuaChuaDao {
                 entity.getDuongDanFile(), entity.getTenFile(), entity.getTaiLieuBanGhi(),
                 entity.getByStep(), entity.getSoQuyetDinh(), entity.getNguoiTao(), entity.getShare(),
                 entity.getNgayCapNhat(),
-                entity.getDaBanGiao(), entity.getCoPhieuBanGiao(), entity.getTaiLieuCuoi(), entity.getLoai(), entity.getTrangThai(), entity.getGhiChu(),
+                entity.getDaBanGiao(), entity.getCoPhieuSuaChua(), entity.getTaiLieuCuoi(), entity.getLoai(), entity.getTrangThai(), entity.getGhiChu(),
                 entity.getIdKeHoach(),
                 entity.getId()
         );
@@ -428,7 +428,7 @@ public class SuaChuaDao {
                 NgayKetThucDuKien, IdTrinhDuyetCapPhong, TrinhDuyetCapPhongXacNhan,
                 IdTrinhDuyetGiamDoc, TrinhDuyetGiamDocXacNhan, IdDonViDeNghi,
                 DuongDanFile, TenFile, TaiLieuBanGhi, ByStep, SoQuyetDinh,
-                NguoiTao, Share, NgayTao, NgayCapNhat, DaBanGiao, CoPhieuBanGiao, TaiLieuCuoi, Loai, TrangThai, GhiChu,
+                NguoiTao, Share, NgayTao, NgayCapNhat, DaBanGiao, CoPhieuSuaChua, TaiLieuCuoi, Loai, TrangThai, GhiChu,
                 IdKeHoach
             ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """;
@@ -444,7 +444,7 @@ public class SuaChuaDao {
             if (entity.getByStep() == null) entity.setByStep(false);
             if (entity.getShare() == null) entity.setShare(false);
             if (entity.getDaBanGiao() == null) entity.setDaBanGiao(false);
-            if (entity.getCoPhieuBanGiao() == null) entity.setCoPhieuBanGiao(false);
+            if (entity.getCoPhieuSuaChua() == null) entity.setCoPhieuSuaChua(false);
             if (entity.getLoai() == null) entity.setLoai(0);
 
             ps.setString(1, entity.getId());
@@ -475,7 +475,7 @@ public class SuaChuaDao {
             ps.setObject(26, entity.getNgayTao());
             ps.setObject(27, entity.getNgayCapNhat());
             ps.setBoolean(28, entity.getDaBanGiao());
-            ps.setBoolean(29, entity.getCoPhieuBanGiao());
+            ps.setBoolean(29, entity.getCoPhieuSuaChua());
             ps.setString(30, entity.getTaiLieuCuoi());
             ps.setInt(31, entity.getLoai());
             ps.setInt(32, entity.getTrangThai());
@@ -496,7 +496,7 @@ public class SuaChuaDao {
                 IdTrinhDuyetGiamDoc = ?, TrinhDuyetGiamDocXacNhan = ?,
                 IdDonViDeNghi = ?, DuongDanFile = ?, TenFile = ?, TaiLieuBanGhi = ?,
                 ByStep = ?, SoQuyetDinh = ?, NguoiTao = ?, Share = ?,
-                NgayCapNhat = ?, DaBanGiao = ?, CoPhieuBanGiao = ?, TaiLieuCuoi = ?, Loai = ?, TrangThai = ?, GhiChu = ?,
+                NgayCapNhat = ?, DaBanGiao = ?, CoPhieuSuaChua = ?, TaiLieuCuoi = ?, Loai = ?, TrangThai = ?, GhiChu = ?,
                 IdKeHoach = ?
             WHERE Id = ?
         """;
@@ -528,7 +528,7 @@ public class SuaChuaDao {
             ps.setBoolean(23, entity.getShare());
             ps.setObject(24, entity.getNgayCapNhat());
             ps.setBoolean(25, entity.getDaBanGiao());
-            ps.setBoolean(26, entity.getCoPhieuBanGiao());
+            ps.setBoolean(26, entity.getCoPhieuSuaChua());
             ps.setString(27, entity.getTaiLieuCuoi());
             ps.setInt(28, entity.getLoai());
             ps.setInt(29, entity.getTrangThai());

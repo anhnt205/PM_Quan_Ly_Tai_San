@@ -1,6 +1,7 @@
 package com.ecotel.quanlytaisan.controller;
 
 import com.ecotel.quanlytaisan.model.ApiResponse;
+import com.ecotel.quanlytaisan.model.BanGiaoTaiSan;
 import com.ecotel.quanlytaisan.model.SuaChuaChiTietTaiSan;
 import com.ecotel.quanlytaisan.service.SuaChuaChiTietTaiSanService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLException;
 import java.util.List;
 
 @RestController
@@ -54,6 +56,17 @@ public class SuaChuaChiTietTaiSanController {
         }
     }
 
+    @GetMapping("/chua-sua-chua")
+    public ResponseEntity<ApiResponse<Object>> getChuaSuaChua(@RequestParam String idSuaChua) {
+        try {
+            List<SuaChuaChiTietTaiSan> list = service.getChuaSuaChua(idSuaChua);
+            return ResponseEntity.ok(ApiResponse.success("Lấy danh sách chi tiết tài sản chưa sửa chữa thành công", list, null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
     @PostMapping
     public ResponseEntity<ApiResponse<Object>> create(@RequestBody SuaChuaChiTietTaiSan entity) {
         try {
@@ -85,7 +98,19 @@ public class SuaChuaChiTietTaiSanController {
                     .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
         }
     }
-
+@PostMapping("/capnhattrangthaisuachua")
+    public ResponseEntity<ApiResponse<Object>> capNhatTrangThaiSuaChua(@RequestParam String id, @RequestParam Boolean daSuaChua) throws SQLException {
+        try {
+            // Lấy thông tin trước khi cập nhật để gửi thông báo
+            int result = service.updateDaSuaChua(id, daSuaChua);
+            if (result > 0) {
+                return ResponseEntity.ok(ApiResponse.success("Cập nhật thành công", result, result));
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.failure("Lỗi", result));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
         try {

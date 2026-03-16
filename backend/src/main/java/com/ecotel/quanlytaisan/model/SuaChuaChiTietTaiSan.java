@@ -14,6 +14,7 @@ public class SuaChuaChiTietTaiSan {
     private String ngayCapNhat;
     private String nguoiTao;
     private String nguoiCapNhat;
+    private Boolean daSuaChua;
     private Boolean isActive;
 
     private String tenTaiSan;

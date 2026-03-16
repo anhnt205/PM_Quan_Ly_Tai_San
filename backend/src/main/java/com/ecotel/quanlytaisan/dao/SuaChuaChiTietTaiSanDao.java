@@ -36,6 +36,11 @@ public class SuaChuaChiTietTaiSanDao {
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(SuaChuaChiTietTaiSan.class), idSuaChua);
     }
 
+    public List<SuaChuaChiTietTaiSan> findChuaSuaChua(String idSuaChua) {
+        String sql = "SELECT * FROM suachua_chitiet_taisan WHERE IdSuaChua=? AND (DaSuaChua = 0 OR DaSuaChua IS NULL)";
+        return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(SuaChuaChiTietTaiSan.class),idSuaChua);
+    }
+
     // ==================== ID Generator ====================
 
     public String generateNextId() {
@@ -134,6 +139,11 @@ public class SuaChuaChiTietTaiSanDao {
                 return list.size();
             }
         });
+    }
+
+    public int updateDaSuaChua(String id, Boolean daSuaChua) {
+        String sql = "UPDATE suachua_chitiet_taisan SET DaSuaChua = ? WHERE Id = ?";
+        return jdbcTemplate.update(sql, daSuaChua, id);
     }
 
     // ==================== Delete (soft) ====================

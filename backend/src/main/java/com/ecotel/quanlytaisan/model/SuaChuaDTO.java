@@ -60,7 +60,7 @@ public class SuaChuaDTO {
     private Date ngayTao;
 
     private Boolean daBanGiao;
-    private Boolean coPhieuBanGiao;
+    private Boolean coPhieuSuaChua;
     private String taiLieuCuoi;
     private String ghiChu;
     private Integer loai;
@@ -110,6 +110,6 @@ public class SuaChuaDTO {
     }
 
     public Boolean getCoPhieuBanGiao() {
-        return coPhieuBanGiao != null ? coPhieuBanGiao : false;
+        return coPhieuSuaChua != null ? coPhieuSuaChua : false;
     }
 }

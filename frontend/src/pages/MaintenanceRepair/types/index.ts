@@ -6,6 +6,9 @@ export interface MaintenanceAssetItem {
   idTaiSan: string;
   tenTaiSan?: string;
   ghiChu?: string;
+  soLuong?: number;
+  donViTinh?: string;
+  daSuaChua?: boolean;
   ngayTao?: string;
   ngayCapNhat?: string;
   action?: ActionType;
@@ -19,6 +22,10 @@ export interface MaintenanceCCDCItem {
   idChiTietCCDC: string;
   tenVatTu?: string;
   soLuong?: number;
+  donViTinh?: string;
+  soKyHieu?: string;
+  nuocSanXuat?: string;
+  namSanXuat?: string;
   ghiChu?: string;
   ngayTao?: string;
   ngayCapNhat?: string;
@@ -79,20 +86,56 @@ export interface MaintenanceRepairData {
   share: boolean;
   ngayTao: string;
   daBanGiao: boolean;
-  coPhieuBanGiao: boolean;
+  coPhieuSuaChua: boolean;
   taiLieuCuoi: string;
-  loai: 0;
+  loai: number;
   tenDonViGiao: string;
   tenDonViNhan: string;
   tenDonViDeNghi: string;
   tenNguoiKyNhay: string;
   tenTrinhDuyetCapPhong: string;
   tenTrinhDuyetGiamDoc: string;
-  trangThai: 0;
+  trangThai: number;
   ngayCapNhat: string;
   nguoiKyList?: Signer[];
   initialTaiSan: [];
   initialVatTu: [];
   danhSachTaiSan?: MaintenanceAssetItem[];
   danhSachVatTu?: MaintenanceCCDCItem[];
+}
+
+export interface MaintenanceRepairResultData {
+  id: string;
+  idCongTy: string;
+  tenPhieu: string;
+  ngayBatDauThucte: string;
+  ngayKetThucThucte: string;
+  idDonViGiao: string;
+  idDonViNhan: string;
+  idNguoiKyNhay: string;
+  trangThaiKyNhay: false;
+  nguoiLapPhieuKyNhay: false;
+  ngayKetThucDuKien: string;
+  idTrinhDuyetCapPhong: string;
+  trinhDuyetCapPhongXacNhan: false;
+  idTrinhDuyetGiamDoc: string;
+  trinhDuyetGiamDocXacNhan: false;
+  idDonViDeNghi: string;
+  duongDanFile: string;
+  tenFile: string;
+  taiLieuBanGhi: string;
+  byStep: false;
+  soQuyetDinh: string;
+  nguoiTao: string;
+  share: false;
+  ngayTao: string;
+  taiLieuCuoi: string;
+  trangThai: number;
+  ngayCapNhat: string;
+  idLoaiSuaChua: string;
+  ghiChu: string;
+  idSuaChua: string;
+  chiPhiPhanCong: number;
+  chiPhiThueNgoai: number;
+  taisan:[]
 }

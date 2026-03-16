@@ -32,6 +32,10 @@ public class SuaChuaChiTietTaiSanService {
         return chiTietTaiSanDao.findByIdSuaChua(idSuaChua);
     }
 
+    public List<SuaChuaChiTietTaiSan> getChuaSuaChua(String idSuaChua) {
+        return chiTietTaiSanDao.findChuaSuaChua(idSuaChua);
+    }
+
     @Transactional
     public SuaChuaChiTietTaiSan create(SuaChuaChiTietTaiSan entity) {
         entity.setId(chiTietTaiSanDao.generateNextId());
@@ -76,6 +80,15 @@ public class SuaChuaChiTietTaiSanService {
         return chiTietTaiSanDao.batchUpdate(list).length;
     }
 
+    @Transactional
+    public int updateDaSuaChua(String id, Boolean daSuaChua) {  
+        if (id == null || id.trim().isEmpty()) {
+            return 0; 
+        }
+        
+        int result = chiTietTaiSanDao.updateDaSuaChua(id, daSuaChua);
+        return result;
+    }
     @Transactional
     public int batchDelete(List<String> ids) {
         return chiTietTaiSanDao.batchDelete(ids).length;

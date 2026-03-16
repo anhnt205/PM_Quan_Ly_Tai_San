@@ -51,7 +51,7 @@ public class SuaChua {
     private Date ngayTao;
 
     private Boolean daBanGiao;
-    private Boolean coPhieuBanGiao;
+    private Boolean coPhieuSuaChua;
     private String taiLieuCuoi;
     private String ghiChu;
     private Integer loai;                        // Loại phiếu
@@ -99,7 +99,7 @@ public class SuaChua {
     }
 
     public Boolean getCoPhieuBanGiao() {
-        return coPhieuBanGiao != null ? coPhieuBanGiao : false;
+        return coPhieuSuaChua != null ? coPhieuSuaChua : false;
     }
 
     // Map từ mảng String (import CSV)
@@ -131,7 +131,7 @@ public class SuaChua {
         sc.setShare(parseBoolean(safeGet(row, 23)));
         sc.setNgayTao(parseDate(safeGet(row, 24), "yyyy-MM-dd HH:mm:ss"));
         sc.setDaBanGiao(parseBoolean(safeGet(row, 25)));
-        sc.setCoPhieuBanGiao(parseBoolean(safeGet(row, 26)));
+        sc.setCoPhieuSuaChua(parseBoolean(safeGet(row, 26)));
         sc.setTaiLieuCuoi(safeGet(row, 27));
         sc.setLoai(parseInt(safeGet(row, 28)));
         sc.setIdKeHoach(safeGet(row, 29));
@@ -173,7 +173,7 @@ public class SuaChua {
         sc.setNgayTao(ngayTao != null ? Date.from(ngayTao.atZone(ZoneId.systemDefault()).toInstant()) : null);
 
         sc.setDaBanGiao(getCellBooleanValue(row.getCell(25)));
-        sc.setCoPhieuBanGiao(getCellBooleanValue(row.getCell(26)));
+        sc.setCoPhieuSuaChua(getCellBooleanValue(row.getCell(26)));
         sc.setTaiLieuCuoi(getCellStringValue(row.getCell(27)));
         sc.setLoai((int) parseDouble(getCellStringValue(row.getCell(28))));
         sc.setIdKeHoach(getCellStringValue(row.getCell(29)));

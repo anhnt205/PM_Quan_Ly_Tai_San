@@ -33,6 +33,7 @@ import {
   canSign,
   handleSignDocument,
   isCheckShowShare,
+  showStatusDocument,
 } from "./config";
 import { showStatus as showStatusPlan } from "../MainenancePlanRepair/config";
 import {
@@ -375,24 +376,7 @@ export default function MaintenanceRepair() {
         width: 140,
         headerAlign: "center",
         align: "center",
-        renderCell: (params) => (
-          <Chip
-            label={"Chưa có phiếu kết quả"}
-            sx={{
-              backgroundColor: "#f30d0d",
-              color: "white",
-              fontWeight: 500,
-              fontSize: "12px",
-              borderRadius: "4px",
-              height: "auto",
-              padding: "1px 5px",
-              mb: "2px",
-              "& .MuiChip-label": {
-                padding: 0,
-              },
-            }}
-          />
-        ),
+        renderCell: (params) => showStatusDocument(1),
       },
 
       {
