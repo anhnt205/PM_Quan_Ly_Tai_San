@@ -3,8 +3,6 @@ package com.ecotel.quanlytaisan.model;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -14,10 +12,11 @@ public class KetQuaSuaChuaDTO {
 
     private String id;
     private String idCongTy;
-    private String maSuaChua;
-    private String tenSuaChua;
-    private String mucDoSuCo;
-    private String mucDoUuTien;
+    private String tenPhieu;
+    private String idSuaChua;
+    private String idLoaiSuaChua;
+    private String ngayBatDauThucTe;
+    private String ngayKetThucThucTe;
 
     private String idDonViGiao;
     private String tenDonViGiao;            // JOIN PhongBan
@@ -30,7 +29,6 @@ public class KetQuaSuaChuaDTO {
 
     private Boolean trangThaiKyNhay;
     private Boolean nguoiLapPhieuKyNhay;
-    private String ngayKetThucDuKien;
 
     private String idTrinhDuyetCapPhong;
     private String tenTrinhDuyetCapPhong;   // JOIN NhanVien
@@ -49,23 +47,17 @@ public class KetQuaSuaChuaDTO {
     private String nguoiTao;
     private Boolean share;
     private String ngayTao;
-    private Boolean daBanGiao;
     private Boolean coPhieuBanGiao;
     private String taiLieuCuoi;
-    private Integer loai;
     private Integer trangThai;
-    private String idKeHoach;
-    private String ngayCapNhat;
-    private String idLoaiSuaChua;
-    private String ghiChu;
-    private String idSuaChua;
-    private BigDecimal chiPhiPhanCong;
-    private BigDecimal chiPhiThueNgoai;
 
+    // Danh sách chi tiết
+    private List<KetQuaSuaChuaChiTietDTO> chiTietTaiSanList;
+    private List<KetQuaSuaChuaChiTietVatTuDTO> chiTietVatTuList;
 
+    // Danh sách chữ ký
     private List<KyTaiLieu> chuKyList;
     private List<NguoiKy> nguoiKyList;
-
 
     // Custom getters với default value
     public Boolean getTrangThaiKyNhay() {
@@ -92,27 +84,11 @@ public class KetQuaSuaChuaDTO {
         return share != null ? share : false;
     }
 
-    public Boolean getDaBanGiao() {
-        return daBanGiao != null ? daBanGiao : false;
-    }
-
     public Boolean getCoPhieuBanGiao() {
         return coPhieuBanGiao != null ? coPhieuBanGiao : false;
     }
 
-    public Integer getLoai() {
-        return loai != null ? loai : 0;
-    }
-
     public Integer getTrangThai() {
         return trangThai != null ? trangThai : 0;
-    }
-
-    public BigDecimal getChiPhiPhanCong() {
-        return chiPhiPhanCong != null ? chiPhiPhanCong : BigDecimal.ZERO;
-    }
-
-    public BigDecimal getChiPhiThueNgoai() {
-        return chiPhiThueNgoai != null ? chiPhiThueNgoai : BigDecimal.ZERO;
     }
 }

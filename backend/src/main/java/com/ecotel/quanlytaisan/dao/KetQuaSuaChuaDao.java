@@ -27,10 +27,11 @@ public class KetQuaSuaChuaDao {
             SELECT
                 kq.Id,
                 kq.IdCongTy,
-                kq.MaSuaChua,
-                kq.TenSuaChua,
-                kq.MucDoSuCo,
-                kq.MucDoUuTien,
+                kq.TenPhieu,
+                kq.IdSuaChua,
+                kq.IdLoaiSuaChua,
+                kq.NgayBatDauThucTe,
+                kq.NgayKetThucThucTe,
                 kq.IdDonViGiao,
                 pbGiao.TenPhongBan   AS tenDonViGiao,
                 kq.IdDonViNhan,
@@ -39,7 +40,6 @@ public class KetQuaSuaChuaDao {
                 nvKyNhay.HoTen       AS tenNguoiKyNhay,
                 kq.TrangThaiKyNhay,
                 kq.NguoiLapPhieuKyNhay,
-                kq.NgayKetThucDuKien,
                 kq.IdTrinhDuyetCapPhong,
                 nvCapPhong.HoTen     AS tenTrinhDuyetCapPhong,
                 kq.TrinhDuyetCapPhongXacNhan,
@@ -55,23 +55,14 @@ public class KetQuaSuaChuaDao {
                 kq.NguoiTao,
                 kq.Share,
                 kq.NgayTao,
-                kq.DaBanGiao,
                 kq.CoPhieuBanGiao,
                 kq.TaiLieuCuoi,
-                kq.Loai,
-                kq.TrangThai,
-                kq.IdKeHoach,
-                kq.NgayCapNhat,
-                kq.idLoaiSuaChua,
-                kq.GhiChu,
-                kq.IdSuaChua,
-                kq.ChiPhiPhanCong,
-                kq.ChiPhiThueNgoai
+                kq.TrangThai
             FROM ketquasuachua kq
                 LEFT JOIN PhongBan pbGiao    ON kq.IdDonViGiao            = pbGiao.Id
-                LEFT JOIN PhongBan pbNhan    ON kq.IdDonViNhan             = pbNhan.Id
+                LEFT JOIN PhongBan pbNhan    ON kq.IdDonViNhan            = pbNhan.Id
                 LEFT JOIN NhanVien nvKyNhay  ON kq.IdNguoiKyNhay          = nvKyNhay.Id
-                LEFT JOIN NhanVien nvCapPhong ON kq.IdTrinhDuyetCapPhong   = nvCapPhong.Id
+                LEFT JOIN NhanVien nvCapPhong ON kq.IdTrinhDuyetCapPhong  = nvCapPhong.Id
                 LEFT JOIN NhanVien nvGiamDoc  ON kq.IdTrinhDuyetGiamDoc   = nvGiamDoc.Id
             WHERE kq.IdSuaChua = ?
         """;
@@ -115,10 +106,11 @@ public class KetQuaSuaChuaDao {
         SELECT
             kq.Id,
             kq.IdCongTy,
-            kq.MaSuaChua,
-            kq.TenSuaChua,
-            kq.MucDoSuCo,
-            kq.MucDoUuTien,
+            kq.TenPhieu,
+            kq.IdSuaChua,
+            kq.IdLoaiSuaChua,
+            kq.NgayBatDauThucTe,
+            kq.NgayKetThucThucTe,
             kq.IdDonViGiao,
             pbGiao.TenPhongBan   AS tenDonViGiao,
             kq.IdDonViNhan,
@@ -127,7 +119,6 @@ public class KetQuaSuaChuaDao {
             nvKyNhay.HoTen       AS tenNguoiKyNhay,
             kq.TrangThaiKyNhay,
             kq.NguoiLapPhieuKyNhay,
-            kq.NgayKetThucDuKien,
             kq.IdTrinhDuyetCapPhong,
             nvCapPhong.HoTen     AS tenTrinhDuyetCapPhong,
             kq.TrinhDuyetCapPhongXacNhan,
@@ -143,24 +134,15 @@ public class KetQuaSuaChuaDao {
             kq.NguoiTao,
             kq.Share,
             kq.NgayTao,
-            kq.DaBanGiao,
             kq.CoPhieuBanGiao,
             kq.TaiLieuCuoi,
-            kq.Loai,
-            kq.TrangThai,
-            kq.IdKeHoach,
-            kq.NgayCapNhat,
-            kq.idLoaiSuaChua,
-            kq.GhiChu,
-            kq.IdSuaChua,
-            kq.ChiPhiPhanCong,
-            kq.ChiPhiThueNgoai
+            kq.TrangThai
         FROM ketquasuachua kq
             LEFT JOIN PhongBan pbGiao     ON kq.IdDonViGiao           = pbGiao.Id
-            LEFT JOIN PhongBan pbNhan     ON kq.IdDonViNhan            = pbNhan.Id
+            LEFT JOIN PhongBan pbNhan     ON kq.IdDonViNhan           = pbNhan.Id
             LEFT JOIN NhanVien nvKyNhay   ON kq.IdNguoiKyNhay         = nvKyNhay.Id
-            LEFT JOIN NhanVien nvCapPhong ON kq.IdTrinhDuyetCapPhong   = nvCapPhong.Id
-            LEFT JOIN NhanVien nvGiamDoc  ON kq.IdTrinhDuyetGiamDoc    = nvGiamDoc.Id
+            LEFT JOIN NhanVien nvCapPhong ON kq.IdTrinhDuyetCapPhong  = nvCapPhong.Id
+            LEFT JOIN NhanVien nvGiamDoc  ON kq.IdTrinhDuyetGiamDoc   = nvGiamDoc.Id
         WHERE 1=1
             AND (? IS NULL OR kq.IdCongTy = ?)
             AND (? IS NULL OR kq.TrangThai = ?)
@@ -225,47 +207,48 @@ public class KetQuaSuaChuaDao {
 
         String sql = """
             INSERT INTO ketquasuachua (
-                Id, IdCongTy, MaSuaChua, TenSuaChua, MucDoSuCo, MucDoUuTien,
-                IdDonViGiao, IdDonViNhan, IdNguoiKyNhay, TrangThaiKyNhay,
-                NguoiLapPhieuKyNhay, NgayKetThucDuKien, IdTrinhDuyetCapPhong,
-                TrinhDuyetCapPhongXacNhan, IdTrinhDuyetGiamDoc, TrinhDuyetGiamDocXacNhan,
-                IdDonViDeNghi, DuongDanFile, TenFile, TaiLieuBanGhi, ByStep,
-                SoQuyetDinh, NguoiTao, Share, NgayTao, DaBanGiao, CoPhieuBanGiao,
-                TaiLieuCuoi, Loai, TrangThai, IdKeHoach, NgayCapNhat,
-                idLoaiSuaChua, GhiChu, IdSuaChua, ChiPhiPhanCong, ChiPhiThueNgoai
+                Id, IdCongTy, TenPhieu, IdSuaChua, IdLoaiSuaChua,
+                NgayBatDauThucTe, NgayKetThucThucTe,
+                IdDonViGiao, IdDonViNhan, IdNguoiKyNhay,
+                TrangThaiKyNhay, NguoiLapPhieuKyNhay,
+                IdTrinhDuyetCapPhong, TrinhDuyetCapPhongXacNhan,
+                IdTrinhDuyetGiamDoc, TrinhDuyetGiamDocXacNhan,
+                IdDonViDeNghi, DuongDanFile, TenFile, TaiLieuBanGhi,
+                ByStep, SoQuyetDinh, NguoiTao, Share, NgayTao,
+                CoPhieuBanGiao, TaiLieuCuoi, TrangThai
             ) VALUES (
-                ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?,
+                ?, ?,
+                ?, ?, ?,
+                ?, ?,
+                ?, ?,
+                ?, ?,
                 ?, ?, ?, ?,
-                ?, ?, ?,
-                ?, ?, ?,
                 ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?
+                ?, ?, ?
             )
         """;
 
         jdbcTemplate.update(sql,
-                entity.getId(), entity.getIdCongTy(), entity.getMaSuaChua(),
-                entity.getTenSuaChua(), entity.getMucDoSuCo(), entity.getMucDoUuTien(),
+                entity.getId(), entity.getIdCongTy(), entity.getTenPhieu(),
+                entity.getIdSuaChua(), entity.getIdLoaiSuaChua(),
+                entity.getNgayBatDauThucTe(), entity.getNgayKetThucThucTe(),
                 entity.getIdDonViGiao(), entity.getIdDonViNhan(), entity.getIdNguoiKyNhay(),
                 entity.getTrangThaiKyNhay() ? 1 : 0,
                 entity.getNguoiLapPhieuKyNhay() ? 1 : 0,
-                entity.getNgayKetThucDuKien(), entity.getIdTrinhDuyetCapPhong(),
+                entity.getIdTrinhDuyetCapPhong(),
                 entity.getTrinhDuyetCapPhongXacNhan() ? 1 : 0,
                 entity.getIdTrinhDuyetGiamDoc(),
                 entity.getTrinhDuyetGiamDocXacNhan() ? 1 : 0,
                 entity.getIdDonViDeNghi(), entity.getDuongDanFile(), entity.getTenFile(),
-                entity.getTaiLieuBanGhi(), entity.getByStep() ? 1 : 0,
+                entity.getTaiLieuBanGhi(),
+                entity.getByStep() ? 1 : 0,
                 entity.getSoQuyetDinh(), entity.getNguoiTao(),
                 entity.getShare() ? 1 : 0,
                 entity.getNgayTao(),
-                entity.getDaBanGiao() ? 1 : 0,
                 entity.getCoPhieuBanGiao() ? 1 : 0,
-                entity.getTaiLieuCuoi(), entity.getLoai(), entity.getTrangThai(),
-                entity.getIdKeHoach(), entity.getNgayCapNhat(),
-                entity.getIdLoaiSuaChua(), entity.getGhiChu(), entity.getIdSuaChua(),
-                entity.getChiPhiPhanCong(), entity.getChiPhiThueNgoai()
+                entity.getTaiLieuCuoi(),
+                entity.getTrangThai()
         );
 
         return entity;
@@ -274,39 +257,37 @@ public class KetQuaSuaChuaDao {
     public KetQuaSuaChua update(KetQuaSuaChua entity) {
         String sql = """
             UPDATE ketquasuachua SET
-                IdCongTy = ?, MaSuaChua = ?, TenSuaChua = ?, MucDoSuCo = ?, MucDoUuTien = ?,
-                IdDonViGiao = ?, IdDonViNhan = ?, IdNguoiKyNhay = ?, TrangThaiKyNhay = ?,
-                NguoiLapPhieuKyNhay = ?, NgayKetThucDuKien = ?, IdTrinhDuyetCapPhong = ?,
-                TrinhDuyetCapPhongXacNhan = ?, IdTrinhDuyetGiamDoc = ?, TrinhDuyetGiamDocXacNhan = ?,
-                IdDonViDeNghi = ?, DuongDanFile = ?, TenFile = ?, TaiLieuBanGhi = ?, ByStep = ?,
-                SoQuyetDinh = ?, NguoiTao = ?, Share = ?, NgayTao = ?, DaBanGiao = ?,
-                CoPhieuBanGiao = ?, TaiLieuCuoi = ?, Loai = ?, TrangThai = ?, IdKeHoach = ?,
-                NgayCapNhat = ?, idLoaiSuaChua = ?, GhiChu = ?, IdSuaChua = ?,
-                ChiPhiPhanCong = ?, ChiPhiThueNgoai = ?
+                IdCongTy = ?, TenPhieu = ?, IdSuaChua = ?, IdLoaiSuaChua = ?,
+                NgayBatDauThucTe = ?, NgayKetThucThucTe = ?,
+                IdDonViGiao = ?, IdDonViNhan = ?, IdNguoiKyNhay = ?,
+                TrangThaiKyNhay = ?, NguoiLapPhieuKyNhay = ?,
+                IdTrinhDuyetCapPhong = ?, TrinhDuyetCapPhongXacNhan = ?,
+                IdTrinhDuyetGiamDoc = ?, TrinhDuyetGiamDocXacNhan = ?,
+                IdDonViDeNghi = ?, DuongDanFile = ?, TenFile = ?, TaiLieuBanGhi = ?,
+                ByStep = ?, SoQuyetDinh = ?, NguoiTao = ?, Share = ?,
+                NgayTao = ?, CoPhieuBanGiao = ?, TaiLieuCuoi = ?, TrangThai = ?
             WHERE Id = ?
         """;
 
         jdbcTemplate.update(sql,
-                entity.getIdCongTy(), entity.getMaSuaChua(), entity.getTenSuaChua(),
-                entity.getMucDoSuCo(), entity.getMucDoUuTien(),
+                entity.getIdCongTy(), entity.getTenPhieu(), entity.getIdSuaChua(), entity.getIdLoaiSuaChua(),
+                entity.getNgayBatDauThucTe(), entity.getNgayKetThucThucTe(),
                 entity.getIdDonViGiao(), entity.getIdDonViNhan(), entity.getIdNguoiKyNhay(),
                 entity.getTrangThaiKyNhay() ? 1 : 0,
                 entity.getNguoiLapPhieuKyNhay() ? 1 : 0,
-                entity.getNgayKetThucDuKien(), entity.getIdTrinhDuyetCapPhong(),
+                entity.getIdTrinhDuyetCapPhong(),
                 entity.getTrinhDuyetCapPhongXacNhan() ? 1 : 0,
                 entity.getIdTrinhDuyetGiamDoc(),
                 entity.getTrinhDuyetGiamDocXacNhan() ? 1 : 0,
                 entity.getIdDonViDeNghi(), entity.getDuongDanFile(), entity.getTenFile(),
-                entity.getTaiLieuBanGhi(), entity.getByStep() ? 1 : 0,
+                entity.getTaiLieuBanGhi(),
+                entity.getByStep() ? 1 : 0,
                 entity.getSoQuyetDinh(), entity.getNguoiTao(),
                 entity.getShare() ? 1 : 0,
                 entity.getNgayTao(),
-                entity.getDaBanGiao() ? 1 : 0,
                 entity.getCoPhieuBanGiao() ? 1 : 0,
-                entity.getTaiLieuCuoi(), entity.getLoai(), entity.getTrangThai(),
-                entity.getIdKeHoach(), entity.getNgayCapNhat(),
-                entity.getIdLoaiSuaChua(), entity.getGhiChu(), entity.getIdSuaChua(),
-                entity.getChiPhiPhanCong(), entity.getChiPhiThueNgoai(),
+                entity.getTaiLieuCuoi(),
+                entity.getTrangThai(),
                 entity.getId()
         );
 
@@ -318,42 +299,32 @@ public class KetQuaSuaChuaDao {
         return jdbcTemplate.update(sql, id);
     }
 
-
-    /**
-     * Cập nhật trạng thái ký theo quy trình
-     * 0: nháp, 1: chờ duyệt, 2: hủy, 3: hoàn thành
-     */
     public int updateTrangThai(String id, String userId) {
         KetQuaSuaChua kq = findById(id);
         if (kq == null) return 0;
 
         int trangThai = kq.getTrangThai() != null ? kq.getTrangThai() : 0;
 
-        // Bước 1: Ký từ bảng NguoiKy (người ký phụ)
         int status = updateTrangThaiKy(id, userId);
         if (status == 1) {
-            trangThai = 1; // Chờ duyệt
+            trangThai = 1;
         }
 
-        // Bước 2: Người ký nháy
         if (userId != null && userId.equals(kq.getIdNguoiKyNhay())) {
             kq.setTrangThaiKyNhay(true);
-            trangThai = 1; // Chờ duyệt
+            trangThai = 1;
         }
 
-        // Bước 3: Duyệt cấp phòng
         if (userId != null && userId.equals(kq.getIdTrinhDuyetCapPhong())) {
             kq.setTrinhDuyetCapPhongXacNhan(true);
-            trangThai = 1; // Chờ duyệt
+            trangThai = 1;
         }
 
-        // Bước 4: Duyệt giám đốc
         if (userId != null && userId.equals(kq.getIdTrinhDuyetGiamDoc())) {
             kq.setTrinhDuyetGiamDocXacNhan(true);
-            trangThai = 1; // Chờ duyệt
+            trangThai = 1;
         }
 
-        // Kiểm tra tất cả đã ký chưa
         boolean allKy = true;
         if (kq.getIdNguoiKyNhay() != null && !kq.getIdNguoiKyNhay().isEmpty())
             allKy = allKy && Boolean.TRUE.equals(kq.getTrangThaiKyNhay());
@@ -363,11 +334,11 @@ public class KetQuaSuaChuaDao {
             allKy = allKy && Boolean.TRUE.equals(kq.getTrinhDuyetGiamDocXacNhan());
 
         if (allKy) {
-            allKy = checkAllOtherNguoiKy(id); // Kiểm tra người ký phụ
+            allKy = checkAllOtherNguoiKy(id);
         }
 
         if (allKy) {
-            trangThai = 3; // Hoàn thành
+            trangThai = 3;
         }
 
         kq.setTrangThai(trangThai);
@@ -378,9 +349,6 @@ public class KetQuaSuaChuaDao {
         return 0;
     }
 
-    /**
-     * Hủy phiếu kết quả sửa chữa
-     */
     public int huyTrangThai(String id) {
         String sql = """
         UPDATE ketquasuachua
