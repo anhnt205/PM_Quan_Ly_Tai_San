@@ -147,77 +147,82 @@ public class BaoCaoDao {
 
     public List<Map<String, Object>> getS22DnIncrease(String idDonVi, String nam) {
         String sql = """
-                SELECT
-                    bg.Id AS idTaiSan,
-                    bg.NgayBanGiao AS ngayThang,
-                    ts.TenTaiSan AS tenTaiSan,
-                    ts.DonViTinh AS donViTinh,
-                    ct.SoLuong AS soLuong,
-                    ts.NguyenGia AS donGia,
-                    (ct.SoLuong * ts.NguyenGia) AS tongTien,
-                    bg.Note AS ghiChu
-                FROM ChiTietBanGiaoTaiSan ct
-                JOIN BanGiaoTaiSan bg ON ct.IdBanGiaoTaiSan = bg.Id
-                JOIN TaiSan ts ON ct.IdTaiSan = ts.Id
-                WHERE bg.IdDonViNhan = ? AND bg.NgayBanGiao LIKE ?
-                """;
+        SELECT
+            bg.Id AS soQuyetDinh,
+            bg.NgayBanGiao AS ngayThang,
+            ts.Id AS idTaiSan,
+            ts.TenTaiSan AS tenTaiSan,
+            ts.DonViTinh AS donViTinh,
+            ct.SoLuong AS soLuong,
+            ts.NguyenGia AS donGia,
+            (ct.SoLuong * ts.NguyenGia) AS tongTien,
+            bg.Note AS ghiChu
+        FROM ChiTietBanGiaoTaiSan ct
+        JOIN BanGiaoTaiSan bg ON ct.IdBanGiaoTaiSan = bg.Id
+        JOIN TaiSan ts ON ct.IdTaiSan = ts.Id
+        WHERE bg.IdDonViNhan = ? AND bg.NgayBanGiao LIKE ?
+        """;
         return jdbcTemplate.queryForList(sql, idDonVi, nam + "%");
     }
 
     public List<Map<String, Object>> getS22DnDecrease(String idDonVi, String nam) {
         String sql = """
-                SELECT
-                    bg.Id AS idTaiSan,
-                    bg.NgayBanGiao AS ngayThang,
-                    ts.TenTaiSan AS tenTaiSan,
-                    ts.DonViTinh AS donViTinh,
-                    ct.SoLuong AS soLuong,
-                    ts.NguyenGia AS donGia,
-                    (ct.SoLuong * ts.NguyenGia) AS tongTien,
-                    bg.Note AS ghiChu
-                FROM ChiTietBanGiaoTaiSan ct
-                JOIN BanGiaoTaiSan bg ON ct.IdBanGiaoTaiSan = bg.Id
-                JOIN TaiSan ts ON ct.IdTaiSan = ts.Id
-                WHERE bg.IdDonViGiao = ? AND bg.NgayBanGiao LIKE ?
-                """;
+        SELECT
+            bg.Id AS soQuyetDinh,
+            bg.NgayBanGiao AS ngayThang,
+            ts.Id AS idTaiSan,
+            ts.TenTaiSan AS tenTaiSan,
+            ts.DonViTinh AS donViTinh,
+            ct.SoLuong AS soLuong,
+            ts.NguyenGia AS donGia,
+            (ct.SoLuong * ts.NguyenGia) AS tongTien,
+            bg.Note AS ghiChu
+        FROM ChiTietBanGiaoTaiSan ct
+        JOIN BanGiaoTaiSan bg ON ct.IdBanGiaoTaiSan = bg.Id
+        JOIN TaiSan ts ON ct.IdTaiSan = ts.Id
+        WHERE bg.IdDonViGiao = ? AND bg.NgayBanGiao LIKE ?
+        """;
         return jdbcTemplate.queryForList(sql, idDonVi, nam + "%");
     }
 
+
     public List<Map<String, Object>> getS22DnIncreaseCCDC(String idDonVi, String nam) {
         String sql = """
-                SELECT
-                    bg.Id AS idTaiSan,
-                    bg.NgayBanGiao AS ngayThang,
-                    ts.Ten AS tenTaiSan,
-                    ts.DonVitinh AS donViTinh,
-                    ct.SoLuong AS soLuong,
-                    ts.GiaTri AS donGia,
-                    (ct.SoLuong * ts.GiaTri) AS tongTien,
-                    bg.Note AS ghiChu
-                FROM ChiTietBanGiaoCCDCVatTu ct
-                JOIN BanGiaoCCDCVatTu bg ON ct.IdBanGiaoCCDCVatTu = bg.Id
-                JOIN CCDCVatTu ts ON ct.IdCCDCVatTu = ts.Id
-                WHERE bg.IdDonViNhan = ? AND bg.NgayBanGiao LIKE ?
-                """;
+        SELECT
+            bg.Id AS soQuyetDinh,
+            bg.NgayBanGiao AS ngayThang,
+            ts.Id AS idCCDC,
+            ts.Ten AS tenTaiSan,
+            ts.DonVitinh AS donViTinh,
+            ct.SoLuong AS soLuong,
+            ts.GiaTri AS donGia,
+            (ct.SoLuong * ts.GiaTri) AS tongTien,
+            bg.Note AS ghiChu
+        FROM ChiTietBanGiaoCCDCVatTu ct
+        JOIN BanGiaoCCDCVatTu bg ON ct.IdBanGiaoCCDCVatTu = bg.Id
+        JOIN CCDCVatTu ts ON ct.IdCCDCVatTu = ts.Id
+        WHERE bg.IdDonViNhan = ? AND bg.NgayBanGiao LIKE ?
+        """;
         return jdbcTemplate.queryForList(sql, idDonVi, nam + "%");
     }
 
     public List<Map<String, Object>> getS22DnDecreaseCCDC(String idDonVi, String nam) {
         String sql = """
-                SELECT
-                    bg.Id AS idTaiSan,
-                    bg.NgayBanGiao AS ngayThang,
-                    ts.Ten AS tenTaiSan,
-                    ts.DonVitinh AS donViTinh,
-                    ct.SoLuong AS soLuong,
-                    ts.GiaTri AS donGia,
-                    (ct.SoLuong * ts.GiaTri) AS tongTien,
-                    bg.Note AS ghiChu
-                FROM ChiTietBanGiaoCCDCVatTu ct
-                JOIN BanGiaoCCDCVatTu bg ON ct.IdBanGiaoCCDCVatTu = bg.Id
-                JOIN CCDCVatTu ts ON ct.IdCCDCVatTu = ts.Id
-                WHERE bg.IdDonViGiao = ? AND bg.NgayBanGiao LIKE ?
-                """;
+        SELECT
+            bg.Id AS soQuyetDinh,
+            bg.NgayBanGiao AS ngayThang,
+            ts.Id AS idCCDC,
+            ts.Ten AS tenTaiSan,
+            ts.DonVitinh AS donViTinh,
+            ct.SoLuong AS soLuong,
+            ts.GiaTri AS donGia,
+            (ct.SoLuong * ts.GiaTri) AS tongTien,
+            bg.Note AS ghiChu
+        FROM ChiTietBanGiaoCCDCVatTu ct
+        JOIN BanGiaoCCDCVatTu bg ON ct.IdBanGiaoCCDCVatTu = bg.Id
+        JOIN CCDCVatTu ts ON ct.IdCCDCVatTu = ts.Id
+        WHERE bg.IdDonViGiao = ? AND bg.NgayBanGiao LIKE ?
+        """;
         return jdbcTemplate.queryForList(sql, idDonVi, nam + "%");
     }
 

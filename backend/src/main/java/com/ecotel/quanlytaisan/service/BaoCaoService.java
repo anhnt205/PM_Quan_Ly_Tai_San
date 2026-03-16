@@ -47,17 +47,32 @@ public class BaoCaoService {
 
     public Map<String, Object> getS22DnReport(String idDonVi, String nam) {
         Map<String, Object> result = new java.util.HashMap<>();
-        result.put("data_increase", transformZeroToEmpty(dao.getS22DnIncrease(idDonVi, nam)));
-        result.put("data_reduce", transformZeroToEmpty(dao.getS22DnDecrease(idDonVi, nam)));
+
+        List<Map<String, Object>> increase = dao.getS22DnIncrease(idDonVi, nam);
+        List<Map<String, Object>> reduce = dao.getS22DnDecrease(idDonVi, nam);
+
+        increase = mergeS22List(increase, "idTaiSan");
+        reduce = mergeS22List(reduce, "idTaiSan");
+
+        result.put("data_increase", transformZeroToEmpty(increase));
+        result.put("data_reduce", transformZeroToEmpty(reduce));
         return result;
     }
 
     public Map<String, Object> getS22DnReportCCDC(String idDonVi, String nam) {
         Map<String, Object> result = new java.util.HashMap<>();
-        result.put("data_increase", transformZeroToEmpty(dao.getS22DnIncreaseCCDC(idDonVi, nam)));
-        result.put("data_reduce", transformZeroToEmpty(dao.getS22DnDecreaseCCDC(idDonVi, nam)));
+
+        List<Map<String, Object>> increase = dao.getS22DnIncreaseCCDC(idDonVi, nam);
+        List<Map<String, Object>> reduce = dao.getS22DnDecreaseCCDC(idDonVi, nam);
+
+        increase = mergeS22List(increase, "idCCDC");
+        reduce = mergeS22List(reduce, "idCCDC");
+
+        result.put("data_increase", transformZeroToEmpty(increase));
+        result.put("data_reduce", transformZeroToEmpty(reduce));
         return result;
     }
+
 
     /**
      * Transform numeric values: nếu = 0 hoặc null thì trả về chuỗi rỗng
@@ -131,5 +146,71 @@ public class BaoCaoService {
         return new ArrayList<>(result.stream()
                 .collect(Collectors.toMap(BaoCaoTangGiamTrongKy::getId, Function.identity(), (a, b) -> a, LinkedHashMap::new))
                 .values());
+    }
+
+
+    /**
+     * Gộp các dòng trong báo cáo S22 theo id tài sản (hoặc id CCDC)
+     * @param list     danh sách các Map từ DAO
+     * @param idField  tên trường id (ví dụ "idTaiSan" hoặc "idCCDC")
+     * @return danh sách đã gộp
+     */
+    private List<Map<String, Object>> mergeS22List(List<Map<String, Object>> list, String idField) {
+        if (list == null || list.isEmpty()) {
+            return list;
+        }
+
+        Map<String, Map<String, Object>> merged = new LinkedHashMap<>();
+
+        for (Map<String, Object> row : list) {
+            Object idObj = row.get(idField);
+            if (idObj == null) continue; // bỏ qua dòng không có id
+            String id = idObj.toString();
+
+            if (!merged.containsKey(id)) {
+                // Tạo bản sao của row (có thể dùng LinkedHashMap để giữ thứ tự)
+                Map<String, Object> newRow = new LinkedHashMap<>(row);
+                merged.put(id, newRow);
+            } else {
+                Map<String, Object> existing = merged.get(id);
+
+                // Cộng dồn số lượng
+                Number soLuongExisting = (Number) existing.get("soLuong");
+                Number soLuongCurrent = (Number) row.get("soLuong");
+                existing.put("soLuong", soLuongExisting.doubleValue() + soLuongCurrent.doubleValue());
+
+                // Cộng dồn tổng tiền
+                Number tongTienExisting = (Number) existing.get("tongTien");
+                Number tongTienCurrent = (Number) row.get("tongTien");
+                existing.put("tongTien", tongTienExisting.doubleValue() + tongTienCurrent.doubleValue());
+
+                // Ghép số quyết định
+                String soQDExisting = (String) existing.get("soQuyetDinh");
+                String soQDCurrent = (String) row.get("soQuyetDinh");
+                existing.put("soQuyetDinh", soQDExisting + ", " + soQDCurrent);
+
+                // Ghép ngày tháng (nếu cần)
+                String ngayExisting = (String) existing.get("ngayThang");
+                String ngayCurrent = (String) row.get("ngayThang");
+                if (ngayExisting != null && ngayCurrent != null) {
+                    existing.put("ngayThang", ngayExisting + ", " + ngayCurrent);
+                } else if (ngayCurrent != null) {
+                    existing.put("ngayThang", ngayCurrent);
+                }
+
+                // Ghép ghi chú
+                String ghiChuExisting = (String) existing.get("ghiChu");
+                String ghiChuCurrent = (String) row.get("ghiChu");
+                if (ghiChuExisting != null && ghiChuCurrent != null) {
+                    existing.put("ghiChu", ghiChuExisting + "; " + ghiChuCurrent);
+                } else if (ghiChuCurrent != null) {
+                    existing.put("ghiChu", ghiChuCurrent);
+                }
+
+                // Các trường tenTaiSan, donViTinh, donGia giữ nguyên (không gộp)
+            }
+        }
+
+        return new ArrayList<>(merged.values());
     }
 }
