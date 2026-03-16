@@ -19,23 +19,23 @@ public class KetQuaSuaChuaDTO {
     private String ngayKetThucThucTe;
 
     private String idDonViGiao;
-    private String tenDonViGiao;            // JOIN PhongBan
+    private String tenDonViGiao;
 
     private String idDonViNhan;
-    private String tenDonViNhan;            // JOIN PhongBan
+    private String tenDonViNhan;
 
     private String idNguoiKyNhay;
-    private String tenNguoiKyNhay;          // JOIN NhanVien
+    private String tenNguoiKyNhay;
 
     private Boolean trangThaiKyNhay;
     private Boolean nguoiLapPhieuKyNhay;
 
     private String idTrinhDuyetCapPhong;
-    private String tenTrinhDuyetCapPhong;   // JOIN NhanVien
+    private String tenTrinhDuyetCapPhong;
     private Boolean trinhDuyetCapPhongXacNhan;
 
     private String idTrinhDuyetGiamDoc;
-    private String tenTrinhDuyetGiamDoc;    // JOIN NhanVien
+    private String tenTrinhDuyetGiamDoc;
     private Boolean trinhDuyetGiamDocXacNhan;
 
     private String idDonViDeNghi;
@@ -51,15 +51,14 @@ public class KetQuaSuaChuaDTO {
     private String taiLieuCuoi;
     private Integer trangThai;
 
-    // Danh sách chi tiết
-    private List<KetQuaSuaChuaChiTietDTO> chiTietTaiSanList;
-    private List<KetQuaSuaChuaChiTietVatTuDTO> chiTietVatTuList;
+    // Thay thế hai list cũ bằng một list chứa chi tiết tài sản kèm vật tư
+    private List<KetQuaSuaChuaChiTietFullDTO> chiTietTaiSanList;
 
-    // Danh sách chữ ký
+    // Giữ nguyên các list chữ ký
     private List<KyTaiLieu> chuKyList;
     private List<NguoiKy> nguoiKyList;
 
-    // Custom getters với default value
+    // Custom getters giữ nguyên
     public Boolean getTrangThaiKyNhay() {
         return trangThaiKyNhay != null ? trangThaiKyNhay : false;
     }

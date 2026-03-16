@@ -2,13 +2,16 @@ package com.ecotel.quanlytaisan.service;
 
 import com.ecotel.quanlytaisan.dao.KetQuaSuaChuaDao;
 import com.ecotel.quanlytaisan.dao.KyTaiLieuDao;
+import com.ecotel.quanlytaisan.dao.NhanVienDao;
 import com.ecotel.quanlytaisan.model.KetQuaSuaChuaChiTietDTO;
+import com.ecotel.quanlytaisan.model.KetQuaSuaChuaChiTietFullDTO;
 import com.ecotel.quanlytaisan.model.KetQuaSuaChuaChiTietVatTuDTO;
 import com.ecotel.quanlytaisan.model.*;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,71 +40,44 @@ public class KetQuaSuaChuaService {
     @Autowired
     private KyTaiLieuDao kyTaiLieuDao;
 
-    // ==================== CÁC PHƯƠNG THỨC CRUD CƠ BẢN ====================
+    @Autowired
+    private NhanVienDao nhanVienDao;
 
+    // ==================== CRUD CƠ BẢN ====================
+
+    /**
+     * Tìm kết quả sửa chữa theo IdSuaChua (phiếu sửa chữa) và load chi tiết + vật tư
+     */
     public KetQuaSuaChuaDTO findByIdSuaChua(String idSuaChua) {
         KetQuaSuaChuaDTO dto = ketQuaSuaChuaDao.findByIdSuaChua(idSuaChua);
         if (dto != null) {
-            // Load chi tiết
-            dto.setChiTietTaiSanList(chiTietService.findByIdKetQuaSuaChua(dto.getId()));
-            dto.setChiTietVatTuList(vatTuService.findByIdKetQuaSuaChua(dto.getId()));
-            dto.setChuKyList(kyTaiLieuDao.findById(dto.getId()));
-            dto.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(dto.getId()));
+            loadChiTietAndVatTu(dto);
         }
         return dto;
     }
 
+    /**
+     * Tìm theo Id chính (bảng ketquasuachua) trả về entity
+     */
     public KetQuaSuaChua findById(String id) {
         return ketQuaSuaChuaDao.findById(id);
     }
 
+    /**
+     * Tìm theo Id chính và load chi tiết + vật tư, trả về DTO
+     */
     public KetQuaSuaChuaDTO findByIdDTO(String id) {
         KetQuaSuaChua entity = ketQuaSuaChuaDao.findById(id);
         if (entity == null) return null;
 
         KetQuaSuaChuaDTO dto = convertToDTO(entity);
-        // Load chi tiết
-        dto.setChiTietTaiSanList(chiTietService.findByIdKetQuaSuaChua(id));
-        dto.setChiTietVatTuList(vatTuService.findByIdKetQuaSuaChua(id));
-        dto.setChuKyList(kyTaiLieuDao.findById(id));
-        dto.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(id));
+        loadChiTietAndVatTu(dto);
         return dto;
     }
 
-    private KetQuaSuaChuaDTO convertToDTO(KetQuaSuaChua entity) {
-        if (entity == null) return null;
-        KetQuaSuaChuaDTO dto = new KetQuaSuaChuaDTO();
-        dto.setId(entity.getId());
-        dto.setIdCongTy(entity.getIdCongTy());
-        dto.setTenPhieu(entity.getTenPhieu());
-        dto.setIdSuaChua(entity.getIdSuaChua());
-        dto.setIdLoaiSuaChua(entity.getIdLoaiSuaChua());
-        dto.setNgayBatDauThucTe(entity.getNgayBatDauThucTe());
-        dto.setNgayKetThucThucTe(entity.getNgayKetThucThucTe());
-        dto.setIdDonViGiao(entity.getIdDonViGiao());
-        dto.setIdDonViNhan(entity.getIdDonViNhan());
-        dto.setIdNguoiKyNhay(entity.getIdNguoiKyNhay());
-        dto.setTrangThaiKyNhay(entity.getTrangThaiKyNhay());
-        dto.setNguoiLapPhieuKyNhay(entity.getNguoiLapPhieuKyNhay());
-        dto.setIdTrinhDuyetCapPhong(entity.getIdTrinhDuyetCapPhong());
-        dto.setTrinhDuyetCapPhongXacNhan(entity.getTrinhDuyetCapPhongXacNhan());
-        dto.setIdTrinhDuyetGiamDoc(entity.getIdTrinhDuyetGiamDoc());
-        dto.setTrinhDuyetGiamDocXacNhan(entity.getTrinhDuyetGiamDocXacNhan());
-        dto.setIdDonViDeNghi(entity.getIdDonViDeNghi());
-        dto.setDuongDanFile(entity.getDuongDanFile());
-        dto.setTenFile(entity.getTenFile());
-        dto.setTaiLieuBanGhi(entity.getTaiLieuBanGhi());
-        dto.setByStep(entity.getByStep());
-        dto.setSoQuyetDinh(entity.getSoQuyetDinh());
-        dto.setNguoiTao(entity.getNguoiTao());
-        dto.setShare(entity.getShare());
-        dto.setNgayTao(entity.getNgayTao());
-        dto.setCoPhieuBanGiao(entity.getCoPhieuBanGiao());
-        dto.setTaiLieuCuoi(entity.getTaiLieuCuoi());
-        dto.setTrangThai(entity.getTrangThai());
-        return dto;
-    }
-
+    /**
+     * Tìm kiếm với bộ lọc, phân trang và load chi tiết + vật tư
+     */
     public PageResponse<KetQuaSuaChuaDTO> findWithFilters(
             String idCongTy,
             Integer trangThai,
@@ -155,15 +131,53 @@ public class KetQuaSuaChuaService {
         int toIndex = Math.min(fromIndex + size, allItems.size());
         List<KetQuaSuaChuaDTO> items = allItems.subList(fromIndex, toIndex);
 
-        // Load chi tiết và chữ ký cho từng item
+        // Load chi tiết và vật tư cho từng item
         for (KetQuaSuaChuaDTO item : items) {
-            item.setChiTietTaiSanList(chiTietService.findByIdKetQuaSuaChua(item.getId()));
-            item.setChiTietVatTuList(vatTuService.findByIdKetQuaSuaChua(item.getId()));
-            item.setChuKyList(kyTaiLieuDao.findById(item.getId()));
-            item.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId()));
+            loadChiTietAndVatTu(item);
         }
 
         return new PageResponse<>(items, totalItems, page, size, null, null, trangThaiCounts);
+    }
+
+    /**
+     * Helper: load danh sách chi tiết tài sản kèm vật tư và chữ ký vào DTO
+     */
+    private void loadChiTietAndVatTu(KetQuaSuaChuaDTO dto) {
+        // Lấy danh sách chi tiết tài sản
+        List<KetQuaSuaChuaChiTietDTO> taiSanList = chiTietService.findByIdKetQuaSuaChua(dto.getId());
+        List<KetQuaSuaChuaChiTietFullDTO> fullList = new ArrayList<>();
+        for (KetQuaSuaChuaChiTietDTO ts : taiSanList) {
+            KetQuaSuaChuaChiTietFullDTO full = convertToFullChiTiet(ts);
+            // Lấy danh sách vật tư thuộc chi tiết này (dựa trên id của chi tiết tài sản)
+            List<KetQuaSuaChuaChiTietVatTuDTO> vatTuList = vatTuService.findBySuaChuaChiTietTaiSan(ts.getId());
+            full.setVatTuList(vatTuList);
+            fullList.add(full);
+        }
+        dto.setChiTietTaiSanList(fullList);
+
+        // Load chữ ký
+        dto.setChuKyList(kyTaiLieuDao.findById(dto.getId()));
+        dto.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(dto.getId()));
+    }
+
+    /**
+     * Convert từ KetQuaSuaChuaChiTietDTO sang KetQuaSuaChuaChiTietFullDTO
+     */
+    private KetQuaSuaChuaChiTietFullDTO convertToFullChiTiet(KetQuaSuaChuaChiTietDTO dto) {
+        if (dto == null) return null;
+        KetQuaSuaChuaChiTietFullDTO full = new KetQuaSuaChuaChiTietFullDTO();
+        BeanUtils.copyProperties(dto, full);
+        return full;
+    }
+
+    /**
+     * Convert từ entity sang DTO cơ bản (không load chi tiết)
+     */
+    private KetQuaSuaChuaDTO convertToDTO(KetQuaSuaChua entity) {
+        if (entity == null) return null;
+        KetQuaSuaChuaDTO dto = new KetQuaSuaChuaDTO();
+        BeanUtils.copyProperties(entity, dto);
+        return dto;
     }
 
     private String mapTrangThai(Integer code) {
@@ -176,8 +190,10 @@ public class KetQuaSuaChuaService {
         }
     }
 
+    /**
+     * Thêm mới phiếu kết quả sửa chữa
+     */
     public KetQuaSuaChua insert(KetQuaSuaChua entity) {
-        // Set giá trị mặc định
         if (entity.getTrangThai() == null) entity.setTrangThai(0);
         if (entity.getTrangThaiKyNhay() == null) entity.setTrangThaiKyNhay(false);
         if (entity.getNguoiLapPhieuKyNhay() == null) entity.setNguoiLapPhieuKyNhay(false);
@@ -194,6 +210,9 @@ public class KetQuaSuaChuaService {
         return ketQuaSuaChuaDao.insert(entity);
     }
 
+    /**
+     * Cập nhật phiếu kết quả sửa chữa
+     */
     public KetQuaSuaChua update(KetQuaSuaChua entity) {
         KetQuaSuaChua existing = ketQuaSuaChuaDao.findById(entity.getId());
         if (existing == null) {
@@ -202,16 +221,23 @@ public class KetQuaSuaChuaService {
         return ketQuaSuaChuaDao.update(entity);
     }
 
+    /**
+     * Xóa phiếu kết quả sửa chữa (cascade xóa chi tiết và vật tư)
+     */
     public int delete(String id) {
-        // Xóa chi tiết trước
+        // Xóa chi tiết tài sản (các service đã tự xóa vật tư con do cascade trong DB hoặc code)
         chiTietService.deleteByIdKetQuaSuaChua(id);
+        // Nếu chưa cascade, có thể gọi thêm vatTuService.deleteByIdKetQuaSuaChua(id) nhưng ở đây
+        // vật tư được xóa thông qua chi tiết (vì có foreign key idSuaChuaChiTietTaiSan)
+        // Nếu DB có ON DELETE CASCADE từ chi tiết sang vật tư thì không cần.
+        // Tuy nhiên để an toàn, ta xóa thẳng vật tư theo idKetQuaSuaChua
         vatTuService.deleteByIdKetQuaSuaChua(id);
-        // Xóa chữ ký (nếu có) - giả sử có xóa
+        // Xóa chữ ký (nếu có)
         // kyTaiLieuDao.deleteByIdTaiLieu(id);
         return ketQuaSuaChuaDao.delete(id);
     }
 
-    // ==================== CÁC PHƯƠNG THỨC XỬ LÝ KÝ DUYỆT ====================
+    // ==================== XỬ LÝ KÝ DUYỆT ====================
 
     public int updateTrangThai(String id, String userId) {
         return ketQuaSuaChuaDao.updateTrangThai(id, userId);
@@ -245,20 +271,20 @@ public class KetQuaSuaChuaService {
         return 0;
     }
 
+    /**
+     * Lấy danh sách phiếu mà user có quyền xem/ký
+     */
     public List<KetQuaSuaChuaDTO> getByUserId(String userId) {
         List<KetQuaSuaChuaDTO> all = ketQuaSuaChuaDao.findByFilters(null, null, null, null, null, 0, Integer.MAX_VALUE);
-
         return all.stream()
                 .filter(item -> isUserTurnToSign(item, userId))
-                .peek(item -> {
-                    item.setChiTietTaiSanList(chiTietService.findByIdKetQuaSuaChua(item.getId()));
-                    item.setChiTietVatTuList(vatTuService.findByIdKetQuaSuaChua(item.getId()));
-                    item.setChuKyList(kyTaiLieuDao.findById(item.getId()));
-                    item.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId()));
-                })
+                .peek(this::loadChiTietAndVatTu)
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Kiểm tra user có quyền ký trên phiếu không
+     */
     public boolean isUserTurnToSign(KetQuaSuaChuaDTO item, String userId) {
         if ("admin".equalsIgnoreCase(userId)) return true;
         if (userId != null && userId.equals(item.getNguoiTao())) return true;
@@ -319,6 +345,10 @@ public class KetQuaSuaChuaService {
         return false;
     }
 
+    /**
+     * Lấy quyền ký của user trên phiếu
+     * Trả về: 0 - có thể ký, 1 - chưa đến lượt, 2 - không trong luồng, 3 - đã ký
+     */
     public int getPermissionSigning(KetQuaSuaChuaDTO item, String userId) {
         List<Map<String, Object>> flow = new ArrayList<>();
 
@@ -362,7 +392,7 @@ public class KetQuaSuaChuaService {
         return ketQuaSuaChuaDao.updateTrangThaiKy(id, userId);
     }
 
-    // ==================== IMPORT ====================
+    // ==================== IMPORT / EXPORT ====================
 
     public List<KetQuaSuaChua> readCsv(MultipartFile file) throws IOException {
         List<KetQuaSuaChua> list = new ArrayList<>();
@@ -399,6 +429,8 @@ public class KetQuaSuaChuaService {
         workbook.close();
         return list;
     }
+
+    // ==================== BULK OPERATIONS ====================
 
     public void bulkInsert(List<KetQuaSuaChua> list) {
         for (KetQuaSuaChua entity : list) {

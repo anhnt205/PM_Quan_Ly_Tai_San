@@ -32,6 +32,11 @@ public class KetQuaSuaChuaChiTietVatTuDao {
         }
     }
 
+    public List<KetQuaSuaChuaChiTietVatTuDTO> findByIdSuaChuaChiTietTaiSan(String idSuaChuaChiTietTaiSan) {
+        String sql = "SELECT * FROM ketquasuachua_chitiet_vattu WHERE IdSuaChuaChiTietTaiSan = ? AND (IsActive IS NULL OR IsActive = 1)";
+        return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(KetQuaSuaChuaChiTietVatTuDTO.class), idSuaChuaChiTietTaiSan);
+    }
+
     public KetQuaSuaChuaChiTietVatTu findById(String id) {
         String sql = "SELECT * FROM ketquasuachua_chitiet_vattu WHERE Id = ?";
         try {

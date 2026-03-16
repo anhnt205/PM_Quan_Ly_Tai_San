@@ -74,6 +74,10 @@ public class KetQuaSuaChuaChiTietVatTuService {
         return result;
     }
 
+    public List<KetQuaSuaChuaChiTietVatTuDTO> findBySuaChuaChiTietTaiSan(String idSuaChuaChiTietTaiSan) {
+        return vatTuDao.findByIdSuaChuaChiTietTaiSan(idSuaChuaChiTietTaiSan);
+    }
+
     public List<KetQuaSuaChuaChiTietVatTu> updateBulk(List<KetQuaSuaChuaChiTietVatTu> entities, String userId) {
         List<KetQuaSuaChuaChiTietVatTu> result = new ArrayList<>();
         for (KetQuaSuaChuaChiTietVatTu entity : entities) {
