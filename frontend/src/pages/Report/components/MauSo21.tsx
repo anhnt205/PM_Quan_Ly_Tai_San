@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "../../../config/api.config";
 import {
@@ -12,7 +12,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import { useFormik } from "formik";
-import { Print, TableChart } from "@mui/icons-material";
+import { Print } from "@mui/icons-material";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
 import FieldDateTime from "../../../components/TextField/FieldDateTime";
 import { Buffer } from "buffer";
@@ -376,8 +376,6 @@ export default function MauSo21({ title }: { title?: string }) {
         display: "flex",
         flexDirection: "column",
         gap: 3,
-        p: 2,
-        bgcolor: "#f5f5f5",
         minHeight: "auto",
         position: "relative",
         zIndex: 0,

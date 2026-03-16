@@ -441,8 +441,6 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
         display: "flex",
         flexDirection: "column",
         gap: 3,
-        p: 2,
-        bgcolor: "#f5f5f5",
         minHeight: "100vh",
       }}
     >

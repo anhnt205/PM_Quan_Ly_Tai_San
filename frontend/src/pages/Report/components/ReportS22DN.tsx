@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "../../../config/api.config";
 import {
@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import XLSX from "xlsx-js-style";
 import { useFormik } from "formik";
-import { Print, TableChart } from "@mui/icons-material";
+import { Print } from "@mui/icons-material";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
 import FieldYear from "../../../components/TextField/FieldYear";
 import ReportS22DNContent from "./ReportS22DNContent";
@@ -450,8 +450,6 @@ export default function ReportS22DN({ title }: { title?: string }) {
         display: "flex",
         flexDirection: "column",
         gap: 3,
-        p: 2,
-        bgcolor: "#f5f5f5",
         minHeight: "auto",
         position: "relative",
         zIndex: 0,
