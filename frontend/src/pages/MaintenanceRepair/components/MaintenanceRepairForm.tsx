@@ -517,7 +517,7 @@ export default function MaintenanceRepairForm({
                       data={maintenanceRepairTypes}
                       formik={formik}
                       field="idLoaiSuaChua"
-                      disabled={true}
+                      disabled={readOnly}
                     />
                   </Grid>
                   <Grid size={12}>
