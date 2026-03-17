@@ -42,7 +42,7 @@ public class SuaChuaChiTietTaiSanDao {
     }
 
     public int countChuaSuaByIdSuaChua(String idSuaChua) {
-        String sql = "SELECT COUNT(*) FROM suachua_chitiet_taisan WHERE IdSuaChua = ? AND (DaSuaChua = 0 OR DaSuaChua IS NULL)";
+        String sql = "SELECT COUNT(*) FROM suachua_chitiet_taisan WHERE IdSuaChua = ? AND (DaSuaChua IS NULL OR DaSuaChua = 0)";
         return jdbcTemplate.queryForObject(sql, Integer.class, idSuaChua);
     }
 

@@ -93,9 +93,15 @@ public class SuaChuaController {
      * Check đã sửa chữa của những trạng thái đã hoàn thành
      */
     @GetMapping("/{id}/check-dasua")
-    public ResponseEntity<Boolean> checkAllTaiSanDaSua(@PathVariable String id) throws SQLException {
-        boolean result = suaChuaService.isAllTaiSanDaSua(id);
-        return ResponseEntity.ok(result);
+    public ResponseEntity<?> checkAllDaSuaChua(@PathVariable String id) {
+        try {
+            boolean result = suaChuaService.checkAllDaSuaChua(id);
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (SQLException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi cơ sở dữ liệu");
+        }
     }
 
 

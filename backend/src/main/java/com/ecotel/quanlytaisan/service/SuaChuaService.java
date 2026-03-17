@@ -405,6 +405,21 @@ public class SuaChuaService {
         return false;
     }
 
+    public boolean checkAllDaSuaChua(String idSuaChua) throws SQLException {
+        // 1. Kiểm tra phiếu tồn tại và trạng thái
+        SuaChua sc = suaChuaDao.findById(idSuaChua);
+        if (sc == null) {
+            throw new IllegalArgumentException("Phiếu sửa chữa không tồn tại");
+        }
+        if (sc.getTrangThai() == null || sc.getTrangThai() != 3) {
+            // Phiếu chưa hoàn thành, không thể kiểm tra hoặc coi như chưa sửa hết
+            throw new IllegalArgumentException("Chỉ kiểm tra được với phiếu đã hoàn thành");
+        }
+        // 2. Đếm tài sản chưa sửa
+        int countChuaSua = taiSanSuaChuaDao.countChuaSuaByIdSuaChua(idSuaChua);
+        return countChuaSua == 0;
+    }
+
     public int getPermissionSigning(SuaChuaDTO item, String userId) {
         List<Map<String, Object>> flow = new ArrayList<>();
 
