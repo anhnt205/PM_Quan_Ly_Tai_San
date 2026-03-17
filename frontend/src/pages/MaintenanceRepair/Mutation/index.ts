@@ -998,13 +998,13 @@ export const useMaintenanceRepairResultMutation = () => {
         queryKey: ["maintenanceRepairResultPage"],
       });
 
-      console.log("Tạo chi tiết phiếu sửa chữa thành công");
+      console.log("Xóa chi tiết kết quả thành công");
     },
     onError: (error: any) => {
       console.log(
         error.response?.data?.message ||
           error.message ||
-          "Tạo chi tiết phiếu sửa chữa thất bại",
+          "Xóa chi tiết kết quả thất bại",
       );
     },
   });
