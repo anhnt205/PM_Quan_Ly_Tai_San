@@ -1088,13 +1088,6 @@ const AssetTableSection = ({
   };
 
   const handleRemoveAsset = (index: number) => {
-    formik.setFieldValue(
-      `chiTietTaiSanList[${index}].vatTuList`,
-      formik.values.chiTietTaiSanList[index].vatTuList.map((i: any) => ({
-        ...i,
-        action: Action.DELETE,
-      })),
-    );
     formik.setFieldValue(`chiTietTaiSanList[${index}].action`, Action.DELETE);
   };
 
@@ -1191,18 +1184,23 @@ const AssetTableSection = ({
           <TableBody>
             {formik.values.chiTietTaiSanList
               .filter((item: any) => item.action !== Action.DELETE)
-              .map((row: any, index: number) => (
-                <AssetRow
-                  key={index}
-                  row={row}
-                  index={index}
-                  formik={formik}
-                  assets={assets}
-                  tools={tools}
-                  readOnly={readOnly}
-                  onRemove={() => handleRemoveAsset(index)}
-                />
-              ))}
+              .map((row: any) => {
+                const originalIndex =
+                  formik.values.chiTietTaiSanList.indexOf(row);
+                if (originalIndex === -1) return null;
+                return (
+                  <AssetRow
+                    key={originalIndex}
+                    row={row}
+                    index={originalIndex}
+                    formik={formik}
+                    assets={assets}
+                    tools={tools}
+                    readOnly={readOnly}
+                    onRemove={() => handleRemoveAsset(originalIndex)}
+                  />
+                );
+              })}
           </TableBody>
         </Table>
       </TableContainer>
