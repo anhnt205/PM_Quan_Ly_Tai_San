@@ -7,6 +7,8 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 
+import java.math.BigDecimal;
+
 @Data
 @Getter
 @Setter
@@ -40,6 +42,8 @@ public class KetQuaSuaChua {
     private Boolean coPhieuBanGiao;                   // CoPhieuBanGiao tinyint(1)
     private String taiLieuCuoi;                        // TaiLieuCuoi text
     private Integer trangThai;                         // TrangThai int
+    private BigDecimal chiPhiPhanCong;
+    private BigDecimal chiPhiThueNgoai;
 
     // Custom getters với default value
     public Boolean getTrangThaiKyNhay() {
@@ -99,7 +103,28 @@ public class KetQuaSuaChua {
         String val = cell.toString().trim();
         return val.isEmpty() ? null : val;
     }
+    private static BigDecimal parseBigDecimal(String val) {
+        if (val == null || val.isBlank()) return null;
+        try {
+            return new BigDecimal(val.trim());
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
+    private static BigDecimal getCellBigDecimal(Cell cell) {
+        if (cell == null) return null;
+        if (cell.getCellType() == CellType.NUMERIC) {
+            return BigDecimal.valueOf(cell.getNumericCellValue());
+        }
+        String val = cell.toString().trim();
+        if (val.isEmpty()) return null;
+        try {
+            return new BigDecimal(val);
+        } catch (Exception e) {
+            return null;
+        }
+    }
     // ----------------------------------------------------------------
     // Thứ tự cột theo bảng mới (28 cột):
     // 0 Id | 1 IdCongTy | 2 TenPhieu | 3 IdSuaChua | 4 IdLoaiSuaChua
@@ -145,7 +170,8 @@ public class KetQuaSuaChua {
         if (row.length > 25) kq.setCoPhieuBanGiao(parseBool(row[25]));
         if (row.length > 26) kq.setTaiLieuCuoi(row[26].trim().isEmpty() ? null : row[26].trim());
         if (row.length > 27) kq.setTrangThai(parseInt(row[27]));
-
+        if (row.length > 28) kq.setChiPhiPhanCong(parseBigDecimal(row[28]));
+        if (row.length > 29) kq.setChiPhiThueNgoai(parseBigDecimal(row[29]));
         return kq;
     }
 
@@ -181,6 +207,8 @@ public class KetQuaSuaChua {
         kq.setCoPhieuBanGiao(parseBool(cellStr(row, 25)));
         kq.setTaiLieuCuoi(cellStr(row, 26));
         kq.setTrangThai(parseInt(cellStr(row, 27)));
+        kq.setChiPhiPhanCong(getCellBigDecimal(row.getCell(28)));
+        kq.setChiPhiThueNgoai(getCellBigDecimal(row.getCell(29)));
 
         return kq;
     }

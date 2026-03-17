@@ -3,6 +3,8 @@ package com.ecotel.quanlytaisan.model;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -50,7 +52,8 @@ public class KetQuaSuaChuaDTO {
     private Boolean coPhieuBanGiao;
     private String taiLieuCuoi;
     private Integer trangThai;
-
+    private BigDecimal chiPhiPhanCong;
+    private BigDecimal chiPhiThueNgoai;
     // Thay thế hai list cũ bằng một list chứa chi tiết tài sản kèm vật tư
     private List<KetQuaSuaChuaChiTietFullDTO> chiTietTaiSanList;
 

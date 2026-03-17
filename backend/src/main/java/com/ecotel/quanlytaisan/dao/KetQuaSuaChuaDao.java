@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.Year;
 import java.util.HashMap;
@@ -21,6 +22,8 @@ public class KetQuaSuaChuaDao {
     private KyTaiLieuDao kyTaiLieuDao;
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    // ==================== FINDERS ====================
 
     public KetQuaSuaChuaDTO findByIdSuaChua(String idSuaChua) {
         String sql = """
@@ -57,7 +60,9 @@ public class KetQuaSuaChuaDao {
                 kq.NgayTao,
                 kq.CoPhieuBanGiao,
                 kq.TaiLieuCuoi,
-                kq.TrangThai
+                kq.TrangThai,
+                kq.ChiPhiPhanCong,
+                kq.ChiPhiThueNgoai
             FROM ketquasuachua kq
                 LEFT JOIN PhongBan pbGiao    ON kq.IdDonViGiao            = pbGiao.Id
                 LEFT JOIN PhongBan pbNhan    ON kq.IdDonViNhan            = pbNhan.Id
@@ -82,26 +87,10 @@ public class KetQuaSuaChuaDao {
         }
     }
 
-    public String generateNextId() {
-        int currentYear = Year.now().getValue();
-        String prefix = "KQSC-" + currentYear + "-";
-        String sql = """
-            SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(Id, '-', -1) AS UNSIGNED)), 0) + 1
-            FROM ketquasuachua
-            WHERE Id LIKE ?
-        """;
-        try {
-            Integer nextSeq = jdbcTemplate.queryForObject(sql, Integer.class, prefix + "%");
-            return prefix + String.format("%04d", nextSeq != null ? nextSeq : 1);
-        } catch (Exception e) {
-            return prefix + "0001";
-        }
-    }
-
     public List<KetQuaSuaChuaDTO> findByFilters(String idCongTy, Integer trangThai,
                                                 LocalDateTime fromDate, LocalDateTime toDate,
                                                 String idDonViGiao,
-                                                int page, int size) {
+                                                int offset, int limit) {
         String sql = """
         SELECT
             kq.Id,
@@ -136,7 +125,9 @@ public class KetQuaSuaChuaDao {
             kq.NgayTao,
             kq.CoPhieuBanGiao,
             kq.TaiLieuCuoi,
-            kq.TrangThai
+            kq.TrangThai,
+            kq.ChiPhiPhanCong,
+            kq.ChiPhiThueNgoai
         FROM ketquasuachua kq
             LEFT JOIN PhongBan pbGiao     ON kq.IdDonViGiao           = pbGiao.Id
             LEFT JOIN PhongBan pbNhan     ON kq.IdDonViNhan           = pbNhan.Id
@@ -151,9 +142,9 @@ public class KetQuaSuaChuaDao {
             AND (? IS NULL OR kq.IdDonViGiao = ?)
         ORDER BY kq.NgayTao DESC
         LIMIT ? OFFSET ?
-    """;
+        """;
 
-        int offset = page * size;
+        int offsetCalc = offset;
         return jdbcTemplate.query(sql,
                 new BeanPropertyRowMapper<>(KetQuaSuaChuaDTO.class),
                 idCongTy, idCongTy,
@@ -161,7 +152,7 @@ public class KetQuaSuaChuaDao {
                 fromDate, fromDate,
                 toDate, toDate,
                 idDonViGiao, idDonViGiao,
-                size, offset);
+                limit, offsetCalc);
     }
 
     public long countByFilters(String idCongTy, Integer trangThai,
@@ -174,7 +165,7 @@ public class KetQuaSuaChuaDao {
             AND (? IS NULL OR kq.TrangThai = ?)
             AND (? IS NULL OR kq.NgayTao >= ?)
             AND (? IS NULL OR kq.NgayTao <= ?)
-    """;
+        """;
 
         return jdbcTemplate.queryForObject(sql, Long.class,
                 idCongTy, idCongTy,
@@ -192,7 +183,7 @@ public class KetQuaSuaChuaDao {
             AND (? IS NULL OR NgayTao >= ?)
             AND (? IS NULL OR NgayTao <= ?)
         GROUP BY TrangThai
-    """;
+        """;
         return jdbcTemplate.query(sql, rs -> {
             Map<Integer, Long> map = new HashMap<>();
             while (rs.next()) {
@@ -201,6 +192,26 @@ public class KetQuaSuaChuaDao {
             return map;
         }, idCongTy, idCongTy, fromDate, fromDate, toDate, toDate);
     }
+
+    // ==================== ID GENERATOR ====================
+
+    public String generateNextId() {
+        int currentYear = Year.now().getValue();
+        String prefix = "KQSC-" + currentYear + "-";
+        String sql = """
+            SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(Id, '-', -1) AS UNSIGNED)), 0) + 1
+            FROM ketquasuachua
+            WHERE Id LIKE ?
+        """;
+        try {
+            Integer nextSeq = jdbcTemplate.queryForObject(sql, Integer.class, prefix + "%");
+            return prefix + String.format("%04d", nextSeq != null ? nextSeq : 1);
+        } catch (Exception e) {
+            return prefix + "0001";
+        }
+    }
+
+    // ==================== INSERT ====================
 
     public KetQuaSuaChua insert(KetQuaSuaChua entity) {
         entity.setId(generateNextId());
@@ -215,7 +226,8 @@ public class KetQuaSuaChuaDao {
                 IdTrinhDuyetGiamDoc, TrinhDuyetGiamDocXacNhan,
                 IdDonViDeNghi, DuongDanFile, TenFile, TaiLieuBanGhi,
                 ByStep, SoQuyetDinh, NguoiTao, Share, NgayTao,
-                CoPhieuBanGiao, TaiLieuCuoi, TrangThai
+                CoPhieuBanGiao, TaiLieuCuoi, TrangThai,
+                ChiPhiPhanCong, ChiPhiThueNgoai
             ) VALUES (
                 ?, ?, ?, ?, ?,
                 ?, ?,
@@ -225,7 +237,8 @@ public class KetQuaSuaChuaDao {
                 ?, ?,
                 ?, ?, ?, ?,
                 ?, ?, ?, ?, ?,
-                ?, ?, ?
+                ?, ?, ?,
+                ?, ?
             )
         """;
 
@@ -234,25 +247,29 @@ public class KetQuaSuaChuaDao {
                 entity.getIdSuaChua(), entity.getIdLoaiSuaChua(),
                 entity.getNgayBatDauThucTe(), entity.getNgayKetThucThucTe(),
                 entity.getIdDonViGiao(), entity.getIdDonViNhan(), entity.getIdNguoiKyNhay(),
-                entity.getTrangThaiKyNhay() ? 1 : 0,
-                entity.getNguoiLapPhieuKyNhay() ? 1 : 0,
+                entity.getTrangThaiKyNhay() != null && entity.getTrangThaiKyNhay() ? 1 : 0,
+                entity.getNguoiLapPhieuKyNhay() != null && entity.getNguoiLapPhieuKyNhay() ? 1 : 0,
                 entity.getIdTrinhDuyetCapPhong(),
-                entity.getTrinhDuyetCapPhongXacNhan() ? 1 : 0,
+                entity.getTrinhDuyetCapPhongXacNhan() != null && entity.getTrinhDuyetCapPhongXacNhan() ? 1 : 0,
                 entity.getIdTrinhDuyetGiamDoc(),
-                entity.getTrinhDuyetGiamDocXacNhan() ? 1 : 0,
+                entity.getTrinhDuyetGiamDocXacNhan() != null && entity.getTrinhDuyetGiamDocXacNhan() ? 1 : 0,
                 entity.getIdDonViDeNghi(), entity.getDuongDanFile(), entity.getTenFile(),
                 entity.getTaiLieuBanGhi(),
-                entity.getByStep() ? 1 : 0,
+                entity.getByStep() != null && entity.getByStep() ? 1 : 0,
                 entity.getSoQuyetDinh(), entity.getNguoiTao(),
-                entity.getShare() ? 1 : 0,
+                entity.getShare() != null && entity.getShare() ? 1 : 0,
                 entity.getNgayTao(),
-                entity.getCoPhieuBanGiao() ? 1 : 0,
+                entity.getCoPhieuBanGiao() != null && entity.getCoPhieuBanGiao() ? 1 : 0,
                 entity.getTaiLieuCuoi(),
-                entity.getTrangThai()
+                entity.getTrangThai() != null ? entity.getTrangThai() : 0,
+                entity.getChiPhiPhanCong(),
+                entity.getChiPhiThueNgoai()
         );
 
         return entity;
     }
+
+    // ==================== UPDATE ====================
 
     public KetQuaSuaChua update(KetQuaSuaChua entity) {
         String sql = """
@@ -265,7 +282,8 @@ public class KetQuaSuaChuaDao {
                 IdTrinhDuyetGiamDoc = ?, TrinhDuyetGiamDocXacNhan = ?,
                 IdDonViDeNghi = ?, DuongDanFile = ?, TenFile = ?, TaiLieuBanGhi = ?,
                 ByStep = ?, SoQuyetDinh = ?, NguoiTao = ?, Share = ?,
-                NgayTao = ?, CoPhieuBanGiao = ?, TaiLieuCuoi = ?, TrangThai = ?
+                NgayTao = ?, CoPhieuBanGiao = ?, TaiLieuCuoi = ?, TrangThai = ?,
+                ChiPhiPhanCong = ?, ChiPhiThueNgoai = ?
             WHERE Id = ?
         """;
 
@@ -273,31 +291,37 @@ public class KetQuaSuaChuaDao {
                 entity.getIdCongTy(), entity.getTenPhieu(), entity.getIdSuaChua(), entity.getIdLoaiSuaChua(),
                 entity.getNgayBatDauThucTe(), entity.getNgayKetThucThucTe(),
                 entity.getIdDonViGiao(), entity.getIdDonViNhan(), entity.getIdNguoiKyNhay(),
-                entity.getTrangThaiKyNhay() ? 1 : 0,
-                entity.getNguoiLapPhieuKyNhay() ? 1 : 0,
+                entity.getTrangThaiKyNhay() != null && entity.getTrangThaiKyNhay() ? 1 : 0,
+                entity.getNguoiLapPhieuKyNhay() != null && entity.getNguoiLapPhieuKyNhay() ? 1 : 0,
                 entity.getIdTrinhDuyetCapPhong(),
-                entity.getTrinhDuyetCapPhongXacNhan() ? 1 : 0,
+                entity.getTrinhDuyetCapPhongXacNhan() != null && entity.getTrinhDuyetCapPhongXacNhan() ? 1 : 0,
                 entity.getIdTrinhDuyetGiamDoc(),
-                entity.getTrinhDuyetGiamDocXacNhan() ? 1 : 0,
+                entity.getTrinhDuyetGiamDocXacNhan() != null && entity.getTrinhDuyetGiamDocXacNhan() ? 1 : 0,
                 entity.getIdDonViDeNghi(), entity.getDuongDanFile(), entity.getTenFile(),
                 entity.getTaiLieuBanGhi(),
-                entity.getByStep() ? 1 : 0,
+                entity.getByStep() != null && entity.getByStep() ? 1 : 0,
                 entity.getSoQuyetDinh(), entity.getNguoiTao(),
-                entity.getShare() ? 1 : 0,
+                entity.getShare() != null && entity.getShare() ? 1 : 0,
                 entity.getNgayTao(),
-                entity.getCoPhieuBanGiao() ? 1 : 0,
+                entity.getCoPhieuBanGiao() != null && entity.getCoPhieuBanGiao() ? 1 : 0,
                 entity.getTaiLieuCuoi(),
-                entity.getTrangThai(),
+                entity.getTrangThai() != null ? entity.getTrangThai() : 0,
+                entity.getChiPhiPhanCong(),
+                entity.getChiPhiThueNgoai(),
                 entity.getId()
         );
 
         return entity;
     }
 
+    // ==================== DELETE ====================
+
     public int delete(String id) {
         String sql = "DELETE FROM ketquasuachua WHERE Id = ?";
         return jdbcTemplate.update(sql, id);
     }
+
+    // ==================== TRẠNG THÁI KÝ DUYỆT ====================
 
     public int updateTrangThai(String id, String userId) {
         KetQuaSuaChua kq = findById(id);
