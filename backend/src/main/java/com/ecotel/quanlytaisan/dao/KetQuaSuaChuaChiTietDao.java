@@ -51,14 +51,13 @@ public class KetQuaSuaChuaChiTietDao {
         entity.setId(generateNextId());
         String sql = """
             INSERT INTO ketquasuachua_chitiet (
-                Id, IdKetQuaSuaChua, IdSuaChuaChiTietTaiSan, IdTaiSan, SoLuong,
+                Id, IdKetQuaSuaChua, IdTaiSan, SoLuong,
                 GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """;
         jdbcTemplate.update(sql,
                 entity.getId(),
                 entity.getIdKetQuaSuaChua(),
-                entity.getIdSuaChuaChiTietTaiSan(),
                 entity.getIdTaiSan(),
                 entity.getSoLuong(),
                 entity.getGhiChu(),
@@ -74,13 +73,12 @@ public class KetQuaSuaChuaChiTietDao {
     public KetQuaSuaChuaChiTiet update(KetQuaSuaChuaChiTiet entity) {
         String sql = """
             UPDATE ketquasuachua_chitiet SET
-                IdKetQuaSuaChua = ?, IdSuaChuaChiTietTaiSan = ?, IdTaiSan = ?, SoLuong = ?,
+                IdKetQuaSuaChua = ?, IdTaiSan = ?, SoLuong = ?,
                 GhiChu = ?, NgayTao = ?, NgayCapNhat = ?, NguoiTao = ?, NguoiCapNhat = ?, IsActive = ?
             WHERE Id = ?
         """;
         jdbcTemplate.update(sql,
                 entity.getIdKetQuaSuaChua(),
-                entity.getIdSuaChuaChiTietTaiSan(),
                 entity.getIdTaiSan(),
                 entity.getSoLuong(),
                 entity.getGhiChu(),

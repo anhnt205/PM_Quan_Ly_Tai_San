@@ -24,6 +24,7 @@ export interface MaintenanceCCDCItem {
   tenNhomCCDC?: string;
   tenVatTu?: string;
   soLuong?: number;
+  soLuongConLai?: number;
   donViTinh?: string;
   soKyHieu?: string;
   nuocSanXuat?: string;
@@ -106,6 +107,42 @@ export interface MaintenanceRepairData {
   danhSachVatTu?: MaintenanceCCDCItem[];
 }
 
+// kết quả sửa chữa
+
+export interface MaintenanceResultCCDCItem {
+  id: string;
+  idKetQuaSuaChua: string;
+  idKetQuaSuaChuaChiTiet: string;
+  idCcdc?: string;
+  idChiTietCcdc?: string;
+  idNhomCCDC: string;
+  soLuong?: number;
+  donGia?: number;
+  thanhTien?: number;
+  ghiChu?: string;
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+  isActive?: boolean;
+  action?: ActionType;
+}
+
+export interface MaintenanceResultAssetItem {
+  id: string;
+  idKetQuaSuaChua: string;
+  idTaiSan: string;
+  hienTrang: string;
+  soLuong: number;
+  ghiChu: string;
+  ngayTao: string;
+  ngayCapNhat: string;
+  nguoiTao: string;
+  nguoiCapNhat: string;
+  isActive: boolean;
+  action?: ActionType;
+  vatTuList?: MaintenanceCCDCItem[];
+}
 export interface MaintenanceRepairResultData {
   id: string;
   idCongTy: string;
@@ -115,21 +152,20 @@ export interface MaintenanceRepairResultData {
   idDonViGiao: string;
   idDonViNhan: string;
   idNguoiKyNhay: string;
-  trangThaiKyNhay: false;
-  nguoiLapPhieuKyNhay: false;
-  ngayKetThucDuKien: string;
+  trangThaiKyNhay: boolean;
+  nguoiLapPhieuKyNhay: boolean;
   idTrinhDuyetCapPhong: string;
-  trinhDuyetCapPhongXacNhan: false;
+  trinhDuyetCapPhongXacNhan: boolean;
   idTrinhDuyetGiamDoc: string;
-  trinhDuyetGiamDocXacNhan: false;
+  trinhDuyetGiamDocXacNhan: boolean;
   idDonViDeNghi: string;
   duongDanFile: string;
   tenFile: string;
   taiLieuBanGhi: string;
-  byStep: false;
+  byStep: boolean;
   soQuyetDinh: string;
   nguoiTao: string;
-  share: false;
+  share: boolean;
   ngayTao: string;
   taiLieuCuoi: string;
   trangThai: number;
@@ -139,5 +175,8 @@ export interface MaintenanceRepairResultData {
   idSuaChua: string;
   chiPhiPhanCong: number;
   chiPhiThueNgoai: number;
-  taisan: [];
+  nguoiKyList?: Signer[];
+  initialTaiSan: [];
+  initialVatTu: [];
+  chiTietTaiSanList: MaintenanceResultAssetItem[];
 }

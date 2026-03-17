@@ -32,7 +32,7 @@ public class SuaChuaChiTietTaiSanDao {
     }
 
     public List<SuaChuaChiTietTaiSan> findByIdSuaChua(String idSuaChua) {
-        String sql = "SELECT * FROM suachua_chitiet_taisan WHERE IdSuaChua = ?";
+        String sql = "SELECT sc.*,ts.TenTaiSan AS tenTaiSan,ts.HienTrang AS hienTrang FROM suachua_chitiet_taisan sc LEFT JOIN TaiSan ts ON sc.IdTaiSan = ts.Id WHERE IdSuaChua = ?";
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(SuaChuaChiTietTaiSan.class), idSuaChua);
     }
 

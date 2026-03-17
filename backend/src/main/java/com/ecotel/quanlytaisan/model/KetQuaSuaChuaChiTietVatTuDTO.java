@@ -12,7 +12,7 @@ public class KetQuaSuaChuaChiTietVatTuDTO {
 
     private String id;
     private String idKetQuaSuaChua;
-    private String idSuaChuaChiTietTaiSan;
+    private String IdKetQuaSuaChuaChiTiet;
     private String idCcdc;
     private String idChiTietCcdc;
     private Integer soLuong;

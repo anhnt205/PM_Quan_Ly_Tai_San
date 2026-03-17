@@ -39,6 +39,7 @@ import { showStatus as showStatusPlan } from "../MainenancePlanRepair/config";
 import {
   useMaintenanceRepairMutation,
   useMaintenanceRepairPageQuery,
+  useMaintenanceRepairResultMutation,
   useMaintenanceRepairResultPageQuery,
 } from "./Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
@@ -115,6 +116,16 @@ export default function MaintenanceRepair() {
     signMutation,
   } = useMaintenanceRepairMutation();
 
+  const {
+    createMutation: createRepairResultMutation,
+    updateMutation: updateRepairResultMutation,
+    cancelMutation: cancelResultMutation,
+    deleteOneMutation: deleteRepairResultMutation,
+    deleteManyMutation: deleteManyRepairResultMutation,
+    // updateManyMutation: updateManyRepairResultMutation,
+    signMutation: signResultMutation,
+  } = useMaintenanceRepairResultMutation();
+
   const handleEdit = () => {
     setReadOnly(false);
   };
@@ -142,35 +153,39 @@ export default function MaintenanceRepair() {
     [maintenanceRepairs],
   );
 
+  const handleRowResultClick = useCallback(
+    (params: any) => {
+      setSelectedRepairForResult(params.row);
+      setShowForm(false);
+      setShowResultForm(true);
+      setReadOnly(true);
+      setShowSidebar(false);
+    },
+    [maintenanceRepairs],
+  );
+
   const handleSave = useCallback(
     async (values: any) => {
-      const enrichedValues = {
-        ...values,
-        tenDonViGiao:
-          allDepartments.find((d: any) => d.id === values.idDonViGiao)
-            ?.tenPhongBan || "",
-        tenDonViNhan:
-          allDepartments.find((d: any) => d.id === values.idDonViNhan)
-            ?.tenPhongBan || "",
-        tenTrinhDuyetGiamDoc:
-          allStaffs.find((s: any) => s.id === values.idTrinhDuyetGiamDoc)
-            ?.hoTen || "",
-      };
-
       if (values.id) {
-        updateRepairMutation.mutate(enrichedValues);
+        updateRepairMutation.mutate(values);
       } else {
-        createRepairMutation.mutate(enrichedValues);
+        createRepairMutation.mutate(values);
       }
       handleClose();
     },
-    [
-      allDepartments,
-      allStaffs,
-      updateRepairMutation,
-      createRepairMutation,
-      handleClose,
-    ],
+    [updateRepairMutation, createRepairMutation, handleClose],
+  );
+
+  const handleSaveResult = useCallback(
+    async (values: any) => {
+      if (values.id) {
+        updateRepairResultMutation.mutate(values);
+      } else {
+        createRepairResultMutation.mutate(values);
+      }
+      handleClose();
+    },
+    [updateRepairResultMutation, createRepairResultMutation, handleClose],
   );
 
   const handleSign = (data: SignaturesData[]) => {
@@ -430,7 +445,46 @@ export default function MaintenanceRepair() {
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowForm(false);
-                      setSelectedRepairForResult(params.row);
+                      setSelectedRepairForResult({
+                        id: "",
+                        idCongTy: CongTy.CT001,
+                        tenPhieu: "",
+                        ngayBatDauThucte: dayjs(new Date()).format(
+                          "YYYY-MM-DD",
+                        ),
+                        ngayKetThucThucte: dayjs(new Date()).format(
+                          "YYYY-MM-DD",
+                        ),
+                        idDonViGiao: params.row.idDonViGiao,
+                        idDonViNhan: params.row.idDonViNhan,
+                        idNguoiKyNhay: "",
+                        trangThaiKyNhay: false,
+                        nguoiLapPhieuKyNhay: false,
+                        idTrinhDuyetCapPhong: "",
+                        trinhDuyetCapPhongXacNhan: false,
+                        idTrinhDuyetGiamDoc: "",
+                        trinhDuyetGiamDocXacNhan: false,
+                        idDonViDeNghi: "",
+                        duongDanFile: "",
+                        tenFile: "",
+                        taiLieuBanGhi: "",
+                        byStep: false,
+                        nguoiTao: "",
+                        share: false,
+                        ngayTao: "",
+                        taiLieuCuoi: "",
+                        trangThai: 0,
+                        ngayCapNhat: "",
+                        idLoaiSuaChua: params.row.idLoaiSuaChua,
+                        ghiChu: "",
+                        idSuaChua: params.row.id,
+                        chiPhiPhanCong: 0,
+                        chiPhiThueNgoai: 0,
+                        nguoiKyList: [] as any[],
+                        initialTaiSan: [],
+                        initialVatTu: [],
+                        chiTietTaiSanList: [] as any[],
+                      });
                       setShowResultForm(true);
                     }}
                     sx={{
@@ -452,7 +506,7 @@ export default function MaintenanceRepair() {
 
   const resultColumns: GridColDef<any>[] = [
     {
-      field: "tenKeHoach",
+      field: "tenPhieu",
       headerName: "Tên phiếu",
       flex: 2,
       minWidth: 160,
@@ -460,34 +514,27 @@ export default function MaintenanceRepair() {
     },
     {
       field: "tenDonViGiao",
-      headerName: "Đơn vị",
+      headerName: "Đơn vị giao",
       flex: 1.5,
       minWidth: 130,
       editable: false,
     },
     {
-      field: "tenDonViThucHien",
-      headerName: "Đơn vị",
+      field: "tenDonViNhan",
+      headerName: "Đơn vị thực hiện",
       flex: 1.5,
       minWidth: 130,
       editable: false,
     },
     {
-      field: "tenNguoiPhuTrach",
-      headerName: "Người phụ trách",
-      flex: 1.5,
-      minWidth: 120,
-      editable: false,
-    },
-    {
-      field: "ngayBatDau",
+      field: "ngayBatDauThucTe",
       headerName: "Ngày bắt đầu",
       flex: 1,
       minWidth: 100,
       editable: false,
     },
     {
-      field: "ngayKetThuc",
+      field: "ngayKetThucThucTe",
       headerName: "Ngày kết thúc",
       flex: 1,
       minWidth: 100,
@@ -520,9 +567,18 @@ export default function MaintenanceRepair() {
           <Tooltip title="Xóa">
             <IconButton
               color="error"
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
-                handleDelete(params.row);
+                const confirm = await showConfirmAlert(
+                  `Xóa phiếu kết quả sửa chữa "${params.row.id}"`,
+                );
+                if (confirm?.isConfirmed) {
+                  deleteRepairResultMutation.mutate(params.row, {
+                    onSuccess: () => {
+                      handleClose();
+                    },
+                  });
+                }
               }}
               sx={{
                 padding: "4px",
@@ -621,12 +677,8 @@ export default function MaintenanceRepair() {
                   key={`result-form-${selectedRepairForResult?.id}`}
                   onClose={() => setShowResultForm(false)}
                   selectedRepair={selectedRepairForResult}
-                  readOnly={false}
-                  onSave={(data) => {
-                    console.log("Result form saved:", data);
-                    // TODO: Implement API call to save result
-                    setShowResultForm(false);
-                  }}
+                  readOnly={readOnly}
+                  onSave={handleSaveResult}
                   onCancel={() => setShowResultForm(false)}
                   onEdit={handleEdit}
                   departments={allDepartments}
@@ -634,6 +686,8 @@ export default function MaintenanceRepair() {
                     (staff: any) => staff.hasAccount,
                   )}
                   repairs={repairPageData.items}
+                  allUnits={allUnits}
+                  allCurrentStatus={allCurrentStatus}
                 />
               </Box>
             )}
@@ -731,7 +785,11 @@ export default function MaintenanceRepair() {
                   }
                   paginationModel={paginationModel}
                   onPaginationModelChange={setPaginationModel}
-                  onRowClick={handleRowClick}
+                  onRowClick={
+                    activeTabRepair === 0
+                      ? handleRowClick
+                      : handleRowResultClick
+                  }
                   showStatusFilter={activeTabRepair === 0}
                   statusOptions={statusOptions}
                   statusValue={status}

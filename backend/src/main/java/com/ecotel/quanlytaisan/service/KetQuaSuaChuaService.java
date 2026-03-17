@@ -226,12 +226,12 @@ public class KetQuaSuaChuaService {
      */
     public int delete(String id) {
         // Xóa chi tiết tài sản (các service đã tự xóa vật tư con do cascade trong DB hoặc code)
-        chiTietService.deleteByIdKetQuaSuaChua(id);
+        // chiTietService.deleteByIdKetQuaSuaChua(id);
         // Nếu chưa cascade, có thể gọi thêm vatTuService.deleteByIdKetQuaSuaChua(id) nhưng ở đây
         // vật tư được xóa thông qua chi tiết (vì có foreign key idSuaChuaChiTietTaiSan)
         // Nếu DB có ON DELETE CASCADE từ chi tiết sang vật tư thì không cần.
         // Tuy nhiên để an toàn, ta xóa thẳng vật tư theo idKetQuaSuaChua
-        vatTuService.deleteByIdKetQuaSuaChua(id);
+        // vatTuService.deleteByIdKetQuaSuaChua(id);
         // Xóa chữ ký (nếu có)
         // kyTaiLieuDao.deleteByIdTaiLieu(id);
         return ketQuaSuaChuaDao.delete(id);

@@ -11,7 +11,6 @@ public class KetQuaSuaChuaChiTiet {
 
     private String id;                          // Id varchar(50) PK
     private String idKetQuaSuaChua;              // IdKetQuaSuaChua varchar(50)
-    private String idSuaChuaChiTietTaiSan;       // IdSuaChuaChiTietTaiSan varchar(50)
     private String idTaiSan;                      // IdTaiSan varchar(50)
     private Integer soLuong;                       // SoLuong int
     private String ghiChu;                          // GhiChu text

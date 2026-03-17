@@ -12,7 +12,6 @@ public class KetQuaSuaChuaChiTietDTO {
 
     private String id;
     private String idKetQuaSuaChua;
-    private String idSuaChuaChiTietTaiSan;
     private String idTaiSan;
     private Integer soLuong;
     private String ghiChu;

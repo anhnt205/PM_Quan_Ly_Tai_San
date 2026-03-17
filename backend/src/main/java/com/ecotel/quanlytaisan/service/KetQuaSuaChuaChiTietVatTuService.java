@@ -75,7 +75,7 @@ public class KetQuaSuaChuaChiTietVatTuService {
     }
 
     public List<KetQuaSuaChuaChiTietVatTuDTO> findBySuaChuaChiTietTaiSan(String idSuaChuaChiTietTaiSan) {
-        return vatTuDao.findByIdSuaChuaChiTietTaiSan(idSuaChuaChiTietTaiSan);
+        return vatTuDao.findByIdKetQuaSuaChuaChiTiet(idSuaChuaChiTietTaiSan);
     }
 
     public List<KetQuaSuaChuaChiTietVatTu> updateBulk(List<KetQuaSuaChuaChiTietVatTu> entities, String userId) {

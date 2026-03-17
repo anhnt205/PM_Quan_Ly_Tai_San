@@ -22,15 +22,17 @@ export default function FieldYearMonth({
   field?: string;
   disabled?: boolean;
 }) {
+  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const value =
     formik && field
-      ? getIn(formik.values, field)
+      ? getIn(formik.values, field) || "" // Fallback to empty string if null
       : "01/" + new Date().getFullYear();
-  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
-  // Parse value để lấy month và year
-  const parts = value.split("/");
-  const currentMonth = parseInt(parts[0]) || 1;
+  // 2. Add a safety check before splitting
+  const parts = value && value.includes("/") ? value.split("/") : [];
+
+  // 3. Provide sensible defaults if the split fails
+  const currentMonth = parseInt(parts[0]) || new Date().getMonth() + 1;
   const currentYear = parseInt(parts[1]) || new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
 

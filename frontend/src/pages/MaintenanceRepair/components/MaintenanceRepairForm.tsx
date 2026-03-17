@@ -183,6 +183,7 @@ export default function MaintenanceRepairForm({
         ...item,
         id: `${generateCode("CTSC-")}-${index}`,
         idKeHoachSuaChua: values.idKeHoach,
+        soLuongConLai: item.soLuong,
       }));
       const nguoiKyList = values.nguoiKyList.map((item: any, index) => ({
         ...item,
@@ -512,7 +513,7 @@ export default function MaintenanceRepairForm({
                       data={maintenanceRepairTypes}
                       formik={formik}
                       field="idLoaiSuaChua"
-                      disabled={readOnly}
+                      disabled={true}
                     />
                   </Grid>
                   <Grid size={12}>

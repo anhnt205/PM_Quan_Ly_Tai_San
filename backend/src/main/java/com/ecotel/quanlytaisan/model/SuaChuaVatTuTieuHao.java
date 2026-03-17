@@ -13,6 +13,7 @@ public class SuaChuaVatTuTieuHao {
     private String tenNhomCCDC; 
     private String tenVatTu;         
     private Integer soLuong;
+    private Integer soLuongConLai;
     private String ghiChu;
     private String ngayTao;
     private String ngayCapNhat;
@@ -23,4 +24,5 @@ public class SuaChuaVatTuTieuHao {
     // Các trường hiển thị (join)
     private String tenCCDC;
     private String tenKeHoach;
+    private Float donGia;
 }

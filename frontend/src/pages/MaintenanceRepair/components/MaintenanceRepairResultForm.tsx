@@ -42,6 +42,20 @@ import { generateCode } from "../../../utils/helpers";
 import SignDocumentForm from "../../AssetTransfer/components/SignDocumentForm";
 import EditButton from "../../../components/Button/EditButton";
 import FieldDate from "../../../components/TextField/FieldDate";
+import { Action, StatusPlan } from "../../../utils/const";
+import { useAllLoaiSCBDQuery } from "../../MaintenanceRepairType/Mutation";
+import { useMaintenancePlanningPageQuery } from "../../MainenancePlanRepair/Mutation";
+import dayjs from "dayjs";
+import {
+  getAssetMaintenanceQuery,
+  getToolMaintenanceQuery,
+  useMaintenanceRepairMutation,
+} from "../Mutation";
+import { useAllCurrentStatusQuery } from "../../CurrentStatus/Mutation";
+import TextFieldNumber from "../../../components/TextField/TextFieldNumber";
+import S3Service from "../../../services/S3Service";
+import { generateBangKeKetQuaPdf, mergeBangKeWithOriginalPdf } from "../config";
+import SignDocumentResultForm from "./SignDocumentResultForm";
 
 const CustomTableCell = styled(TableCell)(({ theme }) => ({
   borderBottom: "1px solid rgba(224, 224, 224, 1)",
@@ -65,6 +79,8 @@ export default function MaintenanceRepairResultForm({
   departments,
   staffs,
   repairs = [],
+  allUnits,
+  allCurrentStatus,
 }: {
   onClose: () => void;
   selectedRepair?: any;
@@ -75,26 +91,28 @@ export default function MaintenanceRepairResultForm({
   departments: any[];
   staffs: any[];
   repairs?: any[];
+  allUnits: any[];
+  allCurrentStatus: any[];
 }) {
   const [expanded, setExpanded] = useState(true);
   const [nvThamMuu, setNVThamMuu] = useState<any[]>([]);
   const [isPreview, setIsPreview] = useState(false);
   const [document, setDocument] = useState<File | string | any>("");
 
+  const { data: maintenanceRepairTypes = [] } = useAllLoaiSCBDQuery();
+
   const formik = useFormik({
     initialValues: {
       id: "",
       idCongTy: "",
-      maSuaChua: "",
-      tenSuaChua: "",
-      mucDoSuCo: "",
-      mucDoUuTien: "",
+      tenPhieu: "",
+      ngayBatDauThucte: dayjs(new Date()).format("YYYY-MM-DD"),
+      ngayKetThucThucte: dayjs(new Date()).format("YYYY-MM-DD"),
       idDonViGiao: "",
       idDonViNhan: "",
       idNguoiKyNhay: "",
       trangThaiKyNhay: false,
       nguoiLapPhieuKyNhay: false,
-      ngayKetThucDuKien: "",
       idTrinhDuyetCapPhong: "",
       trinhDuyetCapPhongXacNhan: false,
       idTrinhDuyetGiamDoc: "",
@@ -108,12 +126,8 @@ export default function MaintenanceRepairResultForm({
       nguoiTao: "",
       share: false,
       ngayTao: "",
-      daBanGiao: false,
-      coPhieuBanGiao: false,
       taiLieuCuoi: "",
-      loai: 0,
       trangThai: 0,
-      idKeHoach: "",
       ngayCapNhat: "",
       idLoaiSuaChua: "",
       ghiChu: "",
@@ -121,36 +135,92 @@ export default function MaintenanceRepairResultForm({
       chiPhiPhanCong: 0,
       chiPhiThueNgoai: 0,
       nguoiKyList: [] as any[],
-      danhSachTaiSan: [] as any[],
+      // initialTaiSan: [],
+      // initialVatTu: [],
+      chiTietTaiSanList: [] as any[],
     },
-    onSubmit: (values) => {
+    onSubmit: async (values) => {
+      const nguoiKyList = values.nguoiKyList.map((item: any, index) => ({
+        ...item,
+        id: `${generateCode("SIG-")}-${index}`,
+        idTaiLieu: values.id,
+      }));
+      const bangKeBytes = await generateBangKeKetQuaPdf(
+        values,
+        allUnits,
+        allCurrentStatus,
+      );
+
+      // 2. Xử lý Key tài liệu gốc (duongDanFile)
+      let keyTailieu = values.duongDanFile;
+      let keyTaiLieuCuoi = values.taiLieuCuoi;
+
+      // Nếu 'document' là File (người dùng vừa chọn file mới)
+      if (document instanceof File) {
+        keyTailieu = await S3Service.put({
+          name: document.name,
+          file: document,
+          type: "tailieu",
+        });
+      }
+
+      // 3. Merge và Upload tài liệu cuối (taiLieuCuoi)
+      const mergePdf = await mergeBangKeWithOriginalPdf(
+        keyTailieu,
+        bangKeBytes,
+      );
+      if (!mergePdf) throw new Error("Không thể tạo tài liệu");
+
+      if (!keyTaiLieuCuoi) {
+        keyTaiLieuCuoi = await S3Service.put({
+          name: `KQSC_${values.tenPhieu}.pdf`,
+          file: mergePdf,
+          type: "tailieu",
+        });
+      } else {
+        await S3Service.updatePresignedPutUrl(keyTaiLieuCuoi, mergePdf);
+      }
       onSave({
         ...values,
-        id: generateCode("KQ-"),
+        trangThai: 0,
+        nguoiKyList,
+        duongDanFile: keyTailieu,
+        taiLieuCuoi: keyTaiLieuCuoi,
       });
     },
   });
 
   useEffect(() => {
-    if (selectedRepair && departments && staffs) {
-      const nvDeNghi = staffs.filter(
-        (i) => i.phongBanId === selectedRepair?.idDonViDeNghi,
-      );
-      setNVThamMuu(nvDeNghi);
-      setDocument(selectedRepair?.duongDanFile || "");
+    if (selectedRepair) {
+      formik.setValues({
+        ...formik.initialValues,
+        ...selectedRepair,
+        chiTietTaiSanList: (selectedRepair.chiTietTaiSanList || []).map(
+          (i: any) => ({
+            ...i,
+            action: i.id ? Action.UPDATE : Action.CREATE,
+            vatTuList: (i.vatTuList || []).map((j: any) => ({
+              ...j,
+              action: j.id ? Action.UPDATE : Action.CREATE,
+            })),
+          }),
+        ),
+        // initialTaiSan: (selectedRepair.chiTietTaiSanList || []).map(
+        //   (i: any) => i.id,
+        // ),
+        // initialvatTu: (selectedRepair.danhSachVatTu || []).map(
+        //   (i: any) => i.id,
+        // ),
+      });
+      setDocument(selectedRepair.taiLieuCuoi || "");
+    } else {
+      formik.resetForm();
+      setDocument("");
     }
-  }, [selectedRepair, departments, staffs]);
+  }, [selectedRepair]);
 
-  // Staff từ đơn vị tiếp nhận
-  const staffInDonViTiepNhan = staffs.filter(
-    (s) => s.phongBanId === formik.values.idDonViNhan,
-  );
-
-  // Hàm lấy tên phòng ban từ ID
-  const getDepartmentName = (id: string) => {
-    const dept = departments.find((d: any) => d.id === id);
-    return dept?.tenPhongBan || id || "";
-  };
+  const { data: allAsset } = getAssetMaintenanceQuery(formik.values.idSuaChua);
+  const { data: allCCDC } = getToolMaintenanceQuery(formik.values.idSuaChua);
 
   const currentStatus = selectedRepair?.trangThai ?? 0;
 
@@ -174,26 +244,25 @@ export default function MaintenanceRepairResultForm({
 
   return (
     <>
-      {isPreview &&
-        createPortal(
-          <SignDocumentForm
-            selectedIds={[]}
-            document={document}
-            onCancel={() => {
-              setIsPreview(false);
-            }}
-            onSign={() => {
-              console.log("Ký tài liệu thành công");
-            }}
-            showSignerSidebar={false}
-            fullscreen={true}
-            assetTransferDetail={[]}
-            allUnits={[]}
-            allCurrentStatus={[]}
-            staffs={staffs}
-          />,
-          document.body,
-        )}
+      {isPreview && (
+        <SignDocumentResultForm
+          selectedIds={[]}
+          document={document}
+          onCancel={() => {
+            setIsPreview(false);
+          }}
+          onSign={() => {
+            console.log("Ký tài liệu thành công");
+          }}
+          showSignerSidebar={false}
+          fullscreen={true}
+          data={formik.values}
+          allUnits={allUnits}
+          allCurrentStatus={allCurrentStatus}
+          staffs={staffs}
+          isEdit={[0].includes(selectedRepair?.trangThai ?? 0) ? true : false}
+        />
+      )}
       <Accordion
         sx={{
           background: "#f6f8f4ff",
@@ -258,14 +327,16 @@ export default function MaintenanceRepairResultForm({
               {/* CỘT TRÁI */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <Grid container spacing={2}>
-                  <Grid size={12}>
-                    <FieldInput
-                      title="Số phiếu *"
-                      formik={formik}
-                      field="soPhieu"
-                      disabled={readOnly}
-                    />
-                  </Grid>
+                  {selectedRepair.id && readOnly && (
+                    <Grid size={12}>
+                      <FieldInput
+                        title="Số phiếu *"
+                        formik={formik}
+                        field="id"
+                        disabled={true}
+                      />
+                    </Grid>
+                  )}
                   <Grid size={12}>
                     <FieldInput
                       title="Tên phiếu *"
@@ -279,9 +350,19 @@ export default function MaintenanceRepairResultForm({
                     labelkey="tenSuaChua"
                     data={repairs}
                     formik={formik}
-                    field="idPhieuSuaChua"
-                    disabled={readOnly}
+                    field="idSuaChua"
+                    disabled={true}
                   />
+                  <Grid size={12}>
+                    <FieldAutoCompleted
+                      title="Loại sửa chữa *"
+                      labelkey="ten"
+                      data={maintenanceRepairTypes}
+                      formik={formik}
+                      field="idLoaiSuaChua"
+                      disabled={true}
+                    />
+                  </Grid>
                   <Grid size={12}>
                     <FieldAutoCompleted
                       title="Đơn vị giao *"
@@ -506,21 +587,17 @@ export default function MaintenanceRepairResultForm({
                 fileName="tenFile"
                 filePath="duongDanFile"
                 setDocument={setDocument}
-                disabled={true}
+                disabled={readOnly}
               />
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<Visibility />}
-                onClick={() => setIsPreview(true)}
-                sx={{ mt: 1 }}
-              >
-                <Typography variant="body2">Xem tài liệu</Typography>
-              </Button>
             </Box>
 
             {/* CHI TIẾT TÀI SẢN */}
-            <AssetTableSection formik={formik} readOnly={readOnly} />
+            <AssetTableSection
+              formik={formik}
+              readOnly={readOnly}
+              assets={allAsset}
+              tools={allCCDC}
+            />
 
             {/* CÁC CHI PHÍ KHÁC */}
             <Box mt={4}>
@@ -529,22 +606,31 @@ export default function MaintenanceRepairResultForm({
               </Typography>
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <FieldInput
-                    title="Chi phí nhân công"
-                    type="number"
+                  <TextFieldNumber
+                    title="Chi phí phân công"
                     formik={formik}
-                    field="chiPhiNhanCong"
+                    field="chiPhiPhanCong"
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <FieldInput
+                  <TextFieldNumber
                     title="Chi phí thuê ngoài"
-                    type="number"
                     formik={formik}
                     field="chiPhiThueNgoai"
                   />
                 </Grid>
               </Grid>
+            </Box>
+            <Box
+              mt={2}
+              display="flex"
+              alignItems="center"
+              gap={0.5}
+              sx={{ cursor: "pointer", color: "#1976d2" }}
+              onClick={() => setIsPreview(true)}
+            >
+              <Typography variant="body2">Xem trước tài liệu</Typography>
+              <Visibility fontSize="small" />
             </Box>
           </Paper>
         </AccordionDetails>
@@ -560,44 +646,81 @@ const AssetRow = ({
   row,
   index,
   formik,
+  assets=[],
+  tools=[],
   readOnly,
   onRemove,
 }: {
   row: any;
   index: number;
   formik: any;
+  assets: any[];
+  tools: any[];
   readOnly?: boolean;
   onRemove: () => void;
 }) => {
   const [open, setOpen] = useState(false);
 
-  const soLuong = row.soLuong || 0;
-  const donGia = row.donGia || 0;
-  const thanhTien = soLuong * donGia;
+  const { data: allCurrentStatus } = useAllCurrentStatusQuery();
+
+  const getMaxAvailable = (
+    toolId: string,
+    currentAssetIndex: number,
+    currentMaterialIndex: number,
+  ) => {
+    if (!toolId) return 0;
+
+    // Tìm tổng số lượng ban đầu của vật tư trong kho
+    const toolInfo = tools.find((t) => t.idChiTietCCDC === toolId);
+    const initialMax = toolInfo?.soLuongConLai || 0;
+
+    // Tính tổng số lượng vật tư này đã được chọn ở CÁC DÒNG KHÁC trong toàn bộ phiếu
+    let usedElsewhere = 0;
+    const allAssets = formik.values.chiTietTaiSanList || [];
+
+    allAssets.forEach((assetItem: any, aIdx: number) => {
+      (assetItem.vatTuList || []).forEach((matItem: any, mIdx: number) => {
+        // Cộng dồn nếu đúng id vật tư và KHÔNG phải là chính cái ô chúng ta đang nhập
+        if (
+          matItem.idChiTietCcdc === toolId &&
+          !(aIdx === currentAssetIndex && mIdx === currentMaterialIndex)
+        ) {
+          usedElsewhere += Number(matItem.soLuong || 0);
+        }
+      });
+    });
+
+    // Số lượng còn lại = Tổng ban đầu - Tổng đã dùng ở các dòng khác
+    return Math.max(0, initialMax - usedElsewhere);
+  };
 
   const handleAddMaterial = () => {
     const newMaterials = [
-      ...(row.vatTuTieuHao || []),
+      ...(row.vatTuList || []),
       {
         id: "",
-        tenVatTu: "",
-        soLuong: 1,
+        idKetQuaSuaChua: "",
+        idCcdc: "",
+        idChiTietCcdc: "",
+        idNhomCCDC: "",
+        soLuong: 0,
         donGia: 0,
+        thanhTien: 0,
         ghiChu: "",
+        ngayTao: "",
+        ngayCapNhat: "",
+        nguoiTao: "",
+        nguoiCapNhat: "",
+        action: Action.CREATE,
       },
     ];
-    formik.setFieldValue(
-      `chiTietSuaChuaBaoDuongDTOS[${index}].vatTuTieuHao`,
-      newMaterials,
-    );
+    formik.setFieldValue(`chiTietTaiSanList[${index}].vatTuList`, newMaterials);
   };
 
   const handleRemoveMaterial = (materialIndex: number) => {
-    const newMaterials = [...(row.vatTuTieuHao || [])];
-    newMaterials.splice(materialIndex, 1);
     formik.setFieldValue(
-      `chiTietSuaChuaBaoDuongDTOS[${index}].vatTuTieuHao`,
-      newMaterials,
+      `chiTietTaiSanList[${index}].vatTuList[${materialIndex}].action`,
+      Action.DELETE,
     );
   };
 
@@ -618,9 +741,26 @@ const AssetRow = ({
           <FieldAutoCompleted
             title=""
             labelkey="tenTaiSan"
-            data={[]} // Replace with actual asset data source
+            data={assets.map((i: any) => ({
+              ...i,
+              id: i.idTaiSan,
+            }))} // Replace with actual asset data source
             formik={formik}
-            field={`chiTietSuaChuaBaoDuongDTOS[${index}].tenTaiSan`}
+            field={`chiTietTaiSanList[${index}].idTaiSan`}
+            onChange={(values) => {
+              formik.setFieldValue(
+                `chiTietTaiSanList[${index}].hienTrang`,
+                values?.hienTrang,
+              );
+              formik.setFieldValue(
+                `chiTietTaiSanList[${index}].soLuong`,
+                values?.soLuong,
+              );
+              formik.setFieldValue(
+                `chiTietTaiSanList[${index}].tenTaiSan`,
+                values?.tenTaiSan,
+              );
+            }}
             disabled={readOnly}
           />
         </CustomTableCell>
@@ -629,7 +769,18 @@ const AssetRow = ({
             title=""
             type="number"
             formik={formik}
-            field={`chiTietSuaChuaBaoDuongDTOS[${index}].soLuong`}
+            field={`chiTietTaiSanList[${index}].soLuong`}
+            disabled={true}
+          />
+        </CustomTableCell>
+        <CustomTableCell>
+          <FieldAutoCompleted
+            title=""
+            labelkey="tenHTKT"
+            data={allCurrentStatus} // Replace with actual asset data source
+            formik={formik}
+            field={`chiTietTaiSanList[${index}].hienTrang`}
+            onChange={(values) => {}}
             disabled={readOnly}
           />
         </CustomTableCell>
@@ -637,7 +788,7 @@ const AssetRow = ({
           <FieldInput
             title=""
             formik={formik}
-            field={`chiTietSuaChuaBaoDuongDTOS[${index}].ghiChu`}
+            field={`chiTietTaiSanList[${index}].ghiChu`}
             disabled={readOnly}
           />
         </CustomTableCell>
@@ -659,9 +810,6 @@ const AssetRow = ({
               sx={{
                 margin: "1px 1px 16px 1px",
                 padding: 2,
-                border: "1px solid #e0e0e0",
-                borderRadius: "8px",
-                bgcolor: "#fafafa",
               }}
             >
               <Typography variant="subtitle2" gutterBottom component="div">
@@ -728,55 +876,144 @@ const AssetRow = ({
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {(row.vatTuTieuHao || []).map(
-                      (materialRow: any, materialIndex: number) => {
-                        const materialThanhTien =
-                          (materialRow.soLuong || 0) *
-                          (materialRow.donGia || 0);
+                    {(row.vatTuList || [])
+                      .filter((i: any) => i.action !== Action.DELETE)
+                      .map((materialRow: any, materialIndex: number) => {
                         return (
                           <TableRow key={materialIndex}>
                             <CustomTableCell>
                               <FieldAutoCompleted
                                 title=""
                                 labelkey="tenVatTu"
-                                data={[]} // Replace with actual material data source
+                                data={tools.map((i: any) => ({
+                                  ...i,
+                                  id: i.idChiTietCCDC,
+                                }))} // Replace with actual material data source
                                 formik={formik}
-                                field={`chiTietSuaChuaBaoDuongDTOS[${index}].vatTuTieuHao[${materialIndex}].tenVatTu`}
+                                field={`chiTietTaiSanList[${index}].vatTuList[${materialIndex}].idChiTietCcdc`}
+                                onChange={(values) => {
+                                  const newToolId = values?.id;
+                                  const price = values?.donGia || 0;
+
+                                  // Kiểm tra xem nếu đổi vật tư mới thì mức max của nó là bao nhiêu
+                                  const maxAllowed = getMaxAvailable(
+                                    newToolId,
+                                    index,
+                                    materialIndex,
+                                  );
+                                  const currentInputQty =
+                                    formik.values.chiTietTaiSanList[index]
+                                      .vatTuList[materialIndex].soLuong || 0;
+
+                                  // Ép số lượng hiện hành xuống nếu vượt quá max của vật tư mới
+                                  const safeQty = Math.min(
+                                    currentInputQty,
+                                    maxAllowed,
+                                  );
+                                  formik.setFieldValue(
+                                    `chiTietTaiSanList[${index}].vatTuList[${materialIndex}].donGia`,
+                                    values?.donGia,
+                                  );
+                                  formik.setFieldValue(
+                                    `chiTietTaiSanList[${index}].vatTuList[${materialIndex}].soLuong`,
+                                    safeQty,
+                                  );
+                                  formik.setFieldValue(
+                                    `chiTietTaiSanList[${index}].vatTuList[${materialIndex}].thanhTien`,
+                                    (values?.donGia || 0) * safeQty,
+                                  );
+                                  formik.setFieldValue(
+                                    `chiTietTaiSanList[${index}].vatTuList[${materialIndex}].ghiChu`,
+                                    values?.ghiChu,
+                                  );
+                                  formik.setFieldValue(
+                                    `chiTietTaiSanList[${index}].vatTuList[${materialIndex}].idCcdc`,
+                                    values?.idCCDC,
+                                  );
+                                  formik.setFieldValue(
+                                    `chiTietTaiSanList[${index}].vatTuList[${materialIndex}].tenVatTu`,
+                                    values?.tenVatTu,
+                                  );
+                                }}
                                 disabled={readOnly}
+                              />
+                            </CustomTableCell>
+                            <CustomTableCell>
+                              <TextFieldNumber
+                                formik={formik}
+                                field={`chiTietTaiSanList[${index}].vatTuList[${materialIndex}].soLuong`}
+                                onChange={(value) => {
+                                  const inputValue = Number(value || 0);
+                                  const currentToolId =
+                                    formik.values.chiTietTaiSanList[index]
+                                      .vatTuList[materialIndex].idChiTietCcdc;
+
+                                  // Tính toán giới hạn được phép nhập
+                                  const maxAllowed = getMaxAvailable(
+                                    currentToolId,
+                                    index,
+                                    materialIndex,
+                                  );
+                                  console.log(currentToolId);
+                                  console.log(maxAllowed);
+
+                                  // Ép giá trị nhập vào nằm trong khoảng từ 0 đến maxAllowed
+                                  const finalValue = Math.min(
+                                    Math.max(0, inputValue),
+                                    maxAllowed,
+                                  );
+
+                                  // Set số lượng an toàn
+                                  formik.setFieldValue(
+                                    `chiTietTaiSanList[${index}].vatTuList[${materialIndex}].soLuong`,
+                                    finalValue,
+                                  );
+
+                                  // Tính lại tiền theo số lượng an toàn
+                                  const currentPrice =
+                                    formik.values.chiTietTaiSanList[index]
+                                      .vatTuList[materialIndex].donGia || 0;
+                                  formik.setFieldValue(
+                                    `chiTietTaiSanList[${index}].vatTuList[${materialIndex}].thanhTien`,
+                                    currentPrice * finalValue,
+                                  );
+                                }}
+                                disabled={
+                                  readOnly ||
+                                  !formik.values.chiTietTaiSanList[index]
+                                    .vatTuList[materialIndex].idChiTietCcdc
+                                }
+                              />
+                            </CustomTableCell>
+                            <CustomTableCell>
+                              <TextFieldNumber
+                                title=""
+                                formik={formik}
+                                field={`chiTietTaiSanList[${index}].vatTuList[${materialIndex}].donGia`}
+                                onChange={(value) => {
+                                  formik.setFieldValue(
+                                    `chiTietTaiSanList[${index}].vatTuList[${materialIndex}].thanhTien`,
+                                    (formik.values.chiTietTaiSanList[index]
+                                      .vatTuList[materialIndex].soLuong || 0) *
+                                      (value || 0),
+                                  );
+                                }}
+                                disabled={readOnly}
+                              />
+                            </CustomTableCell>
+                            <CustomTableCell>
+                              <TextFieldNumber
+                                title=""
+                                formik={formik}
+                                field={`chiTietTaiSanList[${index}].vatTuList[${materialIndex}].thanhTien`}
+                                disabled={true}
                               />
                             </CustomTableCell>
                             <CustomTableCell>
                               <FieldInput
                                 title=""
-                                type="number"
                                 formik={formik}
-                                field={`chiTietSuaChuaBaoDuongDTOS[${index}].vatTuTieuHao[${materialIndex}].soLuong`}
-                                disabled={readOnly}
-                              />
-                            </CustomTableCell>
-                            <CustomTableCell>
-                              <FieldInput
-                                title=""
-                                type="number"
-                                formik={formik}
-                                field={`chiTietSuaChuaBaoDuongDTOS[${index}].vatTuTieuHao[${materialIndex}].donGia`}
-                                disabled={readOnly}
-                              />
-                            </CustomTableCell>
-                            <CustomTableCell>
-                              <FieldInput
-                                title=""
-                                type="number"
-                                formik={formik}
-                                field={`chiTietSuaChuaBaoDuongDTOS[${index}].vatTuTieuHao[${materialIndex}].thanhTien`}
-                                disabled={readOnly}
-                              />
-                            </CustomTableCell>
-                            <CustomTableCell>
-                              <FieldInput
-                                title=""
-                                formik={formik}
-                                field={`chiTietSuaChuaBaoDuongDTOS[${index}].vatTuTieuHao[${materialIndex}].ghiChu`}
+                                field={`chiTietTaiSanList[${index}].vatTuList[${materialIndex}].ghiChu`}
                                 disabled={readOnly}
                               />
                             </CustomTableCell>
@@ -794,8 +1031,7 @@ const AssetRow = ({
                             </CustomTableCell>
                           </TableRow>
                         );
-                      },
-                    )}
+                      })}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -823,31 +1059,43 @@ const AssetRow = ({
 const AssetTableSection = ({
   formik,
   readOnly,
+  assets,
+  tools,
 }: {
   formik: any;
   readOnly?: boolean;
+  assets: any[];
+  tools: any[];
 }) => {
   const handleAddAsset = () => {
-    formik.setFieldValue("chiTietSuaChuaBaoDuongDTOS", [
-      ...formik.values.chiTietSuaChuaBaoDuongDTOS,
+    formik.setFieldValue("chiTietTaiSanList", [
+      ...formik.values.chiTietTaiSanList,
       {
         id: "",
-        idSuaChuaBaoDuong: "",
-        tenTaiSan: "",
+        idKetQuaSuaChua: "",
         idTaiSan: "",
-        soLuong: 1,
-        donGia: 0,
-        ghiChu: "",
         hienTrang: "",
-        vatTuTieuHao: [], // Initialize with empty materials
+        soLuong: 0,
+        ghiChu: "",
+        ngayTao: "",
+        ngayCapNhat: "",
+        nguoiTao: "",
+        nguoiCapNhat: "",
+        action: Action.CREATE,
+        vatTuList: [],
       },
     ]);
   };
 
   const handleRemoveAsset = (index: number) => {
-    const newAssets = [...formik.values.chiTietSuaChuaBaoDuongDTOS];
-    newAssets.splice(index, 1);
-    formik.setFieldValue("chiTietSuaChuaBaoDuongDTOS", newAssets);
+    formik.setFieldValue(
+      `chiTietTaiSanList[${index}].vatTuList`,
+      formik.values.chiTietTaiSanList[index].vatTuList.map((i: any) => ({
+        ...i,
+        action: Action.DELETE,
+      })),
+    );
+    formik.setFieldValue(`chiTietTaiSanList[${index}].action`, Action.DELETE);
   };
 
   return (
@@ -902,7 +1150,7 @@ const AssetTableSection = ({
                 STT
               </CustomTableHeadCell>
               <CustomTableHeadCell
-                width="15%"
+                width="25%"
                 sx={{
                   color: "primary.contrastText",
                 }}
@@ -916,6 +1164,14 @@ const AssetTableSection = ({
                 }}
               >
                 Số lượng
+              </CustomTableHeadCell>
+              <CustomTableHeadCell
+                width="15%"
+                sx={{
+                  color: "primary.contrastText",
+                }}
+              >
+                Hiện trạng
               </CustomTableHeadCell>
               <CustomTableHeadCell
                 sx={{
@@ -933,18 +1189,20 @@ const AssetTableSection = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {formik.values.chiTietSuaChuaBaoDuongDTOS.map(
-              (row: any, index: number) => (
+            {formik.values.chiTietTaiSanList
+              .filter((item: any) => item.action !== Action.DELETE)
+              .map((row: any, index: number) => (
                 <AssetRow
                   key={index}
                   row={row}
                   index={index}
                   formik={formik}
+                  assets={assets}
+                  tools={tools}
                   readOnly={readOnly}
                   onRemove={() => handleRemoveAsset(index)}
                 />
-              ),
-            )}
+              ))}
           </TableBody>
         </Table>
       </TableContainer>

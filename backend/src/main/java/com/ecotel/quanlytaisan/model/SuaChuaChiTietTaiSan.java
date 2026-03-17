@@ -19,5 +19,6 @@ public class SuaChuaChiTietTaiSan {
 
     private String tenTaiSan;
     private String tenKeHoach;
+    private String hienTrang;
 
 }

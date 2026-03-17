@@ -13,7 +13,7 @@ public class KetQuaSuaChuaChiTietVatTu {
 
     private String id;                          // Id varchar(50) PK
     private String idKetQuaSuaChua;              // IdKetQuaSuaChua varchar(50)
-    private String idSuaChuaChiTietTaiSan;       // IdSuaChuaChiTietTaiSan varchar(50)
+    private String IdKetQuaSuaChuaChiTiet;       // IdSuaChuaChiTietTaiSan varchar(50)
     private String idCcdc;                        // IdCCDC varchar(50)
     private String idChiTietCcdc;                 // IdChiTietCCDC varchar(50)
     private Integer soLuong;                       // SoLuong int

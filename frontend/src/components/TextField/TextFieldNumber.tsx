@@ -21,6 +21,7 @@ export default function TextFieldNumber({
   const error = formik && field ? getIn(formik.errors, field) : "";
   return (
     <NumericFormat
+      size="small"
       customInput={TextField}
       label={title}
       fullWidth
@@ -40,14 +41,6 @@ export default function TextFieldNumber({
       error={Boolean(touched && error)}
       helperText={touched && error}
       variant="outlined"
-      sx={{
-        "& .MuiInputBase-root": {
-          height: "32px",
-          borderRadius: "6px",
-          fontSize: "14px",
-          backgroundColor: "#FFFFFF",
-        },
-      }}
     />
   );
 }

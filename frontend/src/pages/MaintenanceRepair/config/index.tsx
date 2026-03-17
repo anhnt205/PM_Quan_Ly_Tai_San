@@ -676,7 +676,113 @@ export const generateBangKePdf = async (
 
   return new Uint8Array(doc.output("arraybuffer"));
 };
+export const generateBangKeKetQuaPdf = async (
+  data?: any,
+  allUnits?: any[],
+  allCurrentStatus?: any[],
+): Promise<Uint8Array> => {
+  const doc = new jsPDF();
 
+  doc.setFont("times_new_roman", "normal");
+  let lastY = 15;
+
+  // Xử lý dữ liệu: Map danh sách tài sản thành các dòng của bảng
+  const tableData = (
+    Array.isArray(data.chiTietTaiSanList) ? data.chiTietTaiSanList : []
+  ).map((item: any, index: number) => {
+    const status = Array.isArray(allCurrentStatus)
+      ? findById(allCurrentStatus, item?.hienTrang)
+      : null;
+      
+    const statusName = status?.tenHTKT ? ` ${status.tenHTKT}` : "";
+
+    // 2. Chuyển đổi vatTuList thành chuỗi nhiều dòng
+    const vatTuString = (Array.isArray(item?.vatTuList) ? item.vatTuList : [])
+      .map((vt: any) => {
+        // Lấy đơn vị tính nếu cần
+        const unit = Array.isArray(allUnits)
+          ? findById(allUnits, vt?.donViTinh)
+          : null;
+        const unitName = unit?.tenDonVi ? ` ${unit.tenDonVi}` : "";
+
+        return `- ${vt?.tenVatTu || "Vật tư"}: ${vt?.soLuong || 0}${unitName}`;
+      })
+      .join("\n"); // Dùng \n để autoTable tự động xuống dòng trong ô
+
+    return [
+      index + 1,
+      item?.tenTaiSan || "",
+      vatTuString || "Không có vật tư", // Cột Vật tư tiêu hao
+      statusName, // Cột Hiện trạng
+      item?.ghiChu || "", // Cột Ghi chú
+    ];
+  });
+
+  // Vẽ bảng
+  if (tableData.length > 0) {
+    doc.setFontSize(13);
+    doc.text("KẾT QUẢ SỬA CHỮA TÀI SẢN", 105, lastY, { align: "center" });
+
+    autoTable(doc, {
+      startY: lastY + 10,
+      head: [
+        ["Stt", "Tên tài sản", "Vật tư tiêu hao", "Hiện trạng", "Ghi chú"],
+      ],
+      body: tableData,
+      theme: "grid",
+      headStyles: {
+        fillColor: false,
+        textColor: 0,
+        lineWidth: 0.1,
+        lineColor: 0,
+        font: "times_new_roman",
+        fontStyle: "bold", // Đậm header cho đẹp
+        halign: "center",
+      },
+      bodyStyles: {
+        font: "times_new_roman",
+        fontSize: 10,
+        textColor: 0,
+        lineWidth: 0.1,
+        lineColor: 0,
+        valign: "top", // Đẩy text lên trên cùng để danh sách vật tư trông gọn hơn
+      },
+      columnStyles: {
+        0: { halign: "center", cellWidth: 10 }, // STT
+        1: { cellWidth: 45 }, // Tên tài sản
+        2: { cellWidth: 60 }, // Vật tư tiêu hao (rộng nhất để chứa list)
+        3: { cellWidth: 40 }, // Hiện trạng
+        4: { cellWidth: "auto" }, // Ghi chú
+      },
+    });
+
+    lastY = (doc as any).lastAutoTable.finalY;
+  }
+
+  // ===== VẼ PHẦN THÔNG TIN BÊN DƯỚI BẢNG =====
+  let currentY = (lastY || 25) + 10;
+  doc.setFontSize(11);
+  doc.setFont("times_new_roman", "normal");
+
+  // 1. Hiển thị Chi phí nhân công (phân công)
+  const chiPhiPhanCong = Number(data?.chiPhiPhanCong || 0);
+  doc.text(
+    `Chi phí nhân công: ${chiPhiPhanCong.toLocaleString("vi-VN")} VNĐ`,
+    15,
+    currentY,
+  );
+  currentY += 7; // Tăng Y để dòng tiếp theo không bị đè
+
+  // 2. Hiển thị Chi phí thuê ngoài
+  const chiPhiThueNgoai = Number(data?.chiPhiThueNgoai || 0);
+  doc.text(
+    `Chi phí thuê ngoài: ${chiPhiThueNgoai.toLocaleString("vi-VN")} VNĐ`,
+    15,
+    currentY,
+  );
+
+  return new Uint8Array(doc.output("arraybuffer"));
+};
 export const mergeBangKeWithOriginalPdf = async (
   tailieu?: File | Blob | string | null,
   bangKeBytes?: Uint8Array | null,

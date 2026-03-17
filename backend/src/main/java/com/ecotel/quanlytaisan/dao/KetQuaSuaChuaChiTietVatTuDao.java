@@ -32,9 +32,9 @@ public class KetQuaSuaChuaChiTietVatTuDao {
         }
     }
 
-    public List<KetQuaSuaChuaChiTietVatTuDTO> findByIdSuaChuaChiTietTaiSan(String idSuaChuaChiTietTaiSan) {
-        String sql = "SELECT * FROM ketquasuachua_chitiet_vattu WHERE IdSuaChuaChiTietTaiSan = ? AND (IsActive IS NULL OR IsActive = 1)";
-        return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(KetQuaSuaChuaChiTietVatTuDTO.class), idSuaChuaChiTietTaiSan);
+    public List<KetQuaSuaChuaChiTietVatTuDTO> findByIdKetQuaSuaChuaChiTiet(String idKetQuaSuaChuaChiTiet) {
+        String sql = "SELECT * FROM ketquasuachua_chitiet_vattu WHERE IdKetQuaSuaChuaChiTiet = ? AND (IsActive IS NULL OR IsActive = 1)";
+        return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(KetQuaSuaChuaChiTietVatTuDTO.class), idKetQuaSuaChuaChiTiet);
     }
 
     public KetQuaSuaChuaChiTietVatTu findById(String id) {
@@ -55,7 +55,7 @@ public class KetQuaSuaChuaChiTietVatTuDao {
         entity.setId(generateNextId());
         String sql = """
             INSERT INTO ketquasuachua_chitiet_vattu (
-                Id, IdKetQuaSuaChua, IdSuaChuaChiTietTaiSan, IdCCDC, IdChiTietCCDC,
+                Id, IdKetQuaSuaChua, IdKetQuaSuaChuaChiTiet, IdCCDC, IdChiTietCCDC,
                 SoLuong, DonGia, ThanhTien, GhiChu, NgayTao, NgayCapNhat,
                 NguoiTao, NguoiCapNhat, IsActive, IdNhomCCDC
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -63,7 +63,7 @@ public class KetQuaSuaChuaChiTietVatTuDao {
         jdbcTemplate.update(sql,
                 entity.getId(),
                 entity.getIdKetQuaSuaChua(),
-                entity.getIdSuaChuaChiTietTaiSan(),
+                entity.getIdKetQuaSuaChuaChiTiet(),
                 entity.getIdCcdc(),
                 entity.getIdChiTietCcdc(),
                 entity.getSoLuong(),
@@ -83,7 +83,7 @@ public class KetQuaSuaChuaChiTietVatTuDao {
     public KetQuaSuaChuaChiTietVatTu update(KetQuaSuaChuaChiTietVatTu entity) {
         String sql = """
             UPDATE ketquasuachua_chitiet_vattu SET
-                IdKetQuaSuaChua = ?, IdSuaChuaChiTietTaiSan = ?, IdCCDC = ?, IdChiTietCCDC = ?,
+                IdKetQuaSuaChua = ?, IdKetQuaSuaChuaChiTiet = ?, IdCCDC = ?, IdChiTietCCDC = ?,
                 SoLuong = ?, DonGia = ?, ThanhTien = ?, GhiChu = ?,
                 NgayTao = ?, NgayCapNhat = ?, NguoiTao = ?, NguoiCapNhat = ?,
                 IsActive = ?, IdNhomCCDC = ?
@@ -91,7 +91,7 @@ public class KetQuaSuaChuaChiTietVatTuDao {
         """;
         jdbcTemplate.update(sql,
                 entity.getIdKetQuaSuaChua(),
-                entity.getIdSuaChuaChiTietTaiSan(),
+                entity.getIdKetQuaSuaChuaChiTiet(),
                 entity.getIdCcdc(),
                 entity.getIdChiTietCcdc(),
                 entity.getSoLuong(),
