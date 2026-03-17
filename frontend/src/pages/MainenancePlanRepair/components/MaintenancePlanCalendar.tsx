@@ -19,6 +19,7 @@ import {
   Clock,
   User,
   Building2,
+  Wrench,
 } from "lucide-react";
 import { MaintenancePlanData } from "../types";
 import { StatusPlan, StatusPlanType } from "../../../utils/const";
@@ -341,7 +342,7 @@ function PlanPopover({
                 {dayjs(plan.ngayBatDau).format("DD/MM/YYYY")}
                 {plan.ngayKetThuc && plan.ngayKetThuc !== plan.ngayBatDau
                   ? ` – ${dayjs(plan.ngayKetThuc).format("DD/MM/YYYY")}`
-                  : ""}
+                  : "-"}
               </Typography>
             </Box>
           </Box>
@@ -357,7 +358,21 @@ function PlanPopover({
                 Loại kế hoạch
               </Typography>
               <Typography sx={{ fontSize: "0.82rem", fontWeight: 500 }}>
-                {plan?.tenLoaiKeHoach}
+                {plan?.tenLoaiKeHoach || "-"}
+              </Typography>
+            </Box>
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
+            <Wrench
+              size={15}
+              style={{ marginTop: 2, color: "#757575", flexShrink: 0 }}
+            />
+            <Box>
+              <Typography sx={{ fontSize: "0.75rem", color: "text.secondary" }}>
+                Loại sửa chữa
+              </Typography>
+              <Typography sx={{ fontSize: "0.82rem", fontWeight: 500 }}>
+                {plan?.tenLoaiSuaChua || "-"}
               </Typography>
             </Box>
           </Box>
@@ -376,7 +391,7 @@ function PlanPopover({
                   Người phụ trách
                 </Typography>
                 <Typography sx={{ fontSize: "0.82rem", fontWeight: 500 }}>
-                  {plan.tenNguoiPhuTrach}
+                  {plan.tenNguoiPhuTrach || "-"}
                 </Typography>
               </Box>
             </Box>
@@ -396,7 +411,7 @@ function PlanPopover({
                   Đơn vị thực hiện
                 </Typography>
                 <Typography sx={{ fontSize: "0.82rem", fontWeight: 500 }}>
-                  {plan.tenDonViThucHien}
+                  {plan.tenDonViThucHien || "-"}
                 </Typography>
               </Box>
             </Box>
@@ -412,7 +427,7 @@ function PlanPopover({
                 mt: 0.5,
               }}
             >
-              {plan.ghiChu}
+              {plan.ghiChu || "-"}
             </Typography>
           )}
 
@@ -437,7 +452,8 @@ function PlanPopover({
                 Mở chi tiết
               </Button>
             )}
-            {plan.trangThai != null && [StatusPlan.PENDING].includes(plan.trangThai) &&
+            {plan.trangThai != null &&
+              [StatusPlan.PENDING].includes(plan.trangThai) &&
               onCreateRepair && (
                 <Button
                   size="small"
@@ -841,6 +857,7 @@ export default function MaintenancePlanCalendar({
       <MaintenancePlanDetailDialog
         open={Boolean(detailPlanView)}
         plan={detailPlanView}
+        onCreateRepair={onCreateRepair}
         onClose={() => setDetailPlanView(null)}
       />
     </Box>

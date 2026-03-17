@@ -69,7 +69,6 @@ export default function MaintenancePlanRepair() {
     pageSize: 10,
     page: 0,
   });
-  console.log(user?.taiKhoan);
   const { data: allStaffs = [] } = useAllStaffsQuery();
   const searchDebounce = useDebounce(searchValue, 600);
   const { data: planPageData = { items: [], totalItems: 0 } } =
@@ -124,6 +123,13 @@ export default function MaintenancePlanRepair() {
     {
       field: "tenLoaiKeHoach",
       headerName: "Loại kế hoạch",
+      flex: 1.5,
+      minWidth: 130,
+      editable: false,
+    },
+    {
+      field: "tenLoaiSuaChua",
+      headerName: "Loại sửa chữa",
       flex: 1.5,
       minWidth: 130,
       editable: false,
@@ -430,6 +436,14 @@ export default function MaintenancePlanRepair() {
                   </Typography>
                   <Typography variant="body2">
                     {fullSelectedPlan?.tenLoaiKeHoach || "-"}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Loại sửa chữa
+                  </Typography>
+                  <Typography variant="body2">
+                    {fullSelectedPlan?.tenLoaiSuaChua || "-"}
                   </Typography>
                 </Box>
                 {fullSelectedPlan?.ngayBatDau &&

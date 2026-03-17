@@ -14,6 +14,7 @@ public class KeHoachSuaChua {
     private String idCongTy;
     private String tenKeHoach;
     private String idLoaiKeHoach;
+    private String idLoaiSuaChua;
     private String idDonViThucHien;
     private String idDonViGiao;
     private String idNguoiPhuTrach;

@@ -60,6 +60,7 @@ export default function MaintenancePlanningForm({
   staffs = [],
 }: MaintenancePlanningFormProps) {
   const [expanded, setExpanded] = useState(true);
+  const { data: maintenanceRepairTypes = [] } = useAllLoaiSCBDQuery();
 
   const formik = useFormik({
     initialValues: {
@@ -67,6 +68,7 @@ export default function MaintenancePlanningForm({
       idCongTy: CongTy.CT001,
       tenKeHoach: "",
       idLoaiKeHoach: "",
+      idLoaiSuaChua: "",
       idDonViGiao: "",
       idDonViThucHien: "",
       idNguoiPhuTrach: "",
@@ -217,19 +219,6 @@ export default function MaintenancePlanningForm({
                   disabled={readOnly}
                 />
               </Grid>
-
-              {/* Loại kế hoạch   */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <FieldAutoCompleted
-                  title="Loại kế hoạch *"
-                  data={listLoaiKeHoach}
-                  labelkey="tenLoai"
-                  formik={formik}
-                  field="idLoaiKeHoach"
-                  disabled={readOnly}
-                />
-              </Grid>
-
               <Grid size={{ xs: 12, md: 6 }}>
                 <FieldAutoCompleted
                   title="Đơn vị giao *"
@@ -244,7 +233,38 @@ export default function MaintenancePlanningForm({
                   }}
                 />
               </Grid>
+              {/* Loại kế hoạch   */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <FieldAutoCompleted
+                  title="Loại kế hoạch *"
+                  data={listLoaiKeHoach}
+                  labelkey="tenLoai"
+                  formik={formik}
+                  field="idLoaiKeHoach"
+                  disabled={readOnly}
+                />
+              </Grid>
 
+              <Grid size={{ xs: 12, md: 6 }}>
+                <FieldAutoCompleted
+                  title="Đơn vị thực hiện *"
+                  data={allDepartments.items}
+                  labelkey="tenPhongBan"
+                  formik={formik}
+                  field="idDonViThucHien"
+                  disabled={readOnly}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <FieldAutoCompleted
+                  title="Loại sửa chữa *"
+                  labelkey="ten"
+                  data={maintenanceRepairTypes}
+                  formik={formik}
+                  field="idLoaiSuaChua"
+                  disabled={readOnly}
+                />
+              </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
                 <FieldAutoCompleted
                   title="Người phụ trách *"
@@ -254,16 +274,6 @@ export default function MaintenancePlanningForm({
                   labelkey="hoTen"
                   formik={formik}
                   field="idNguoiPhuTrach"
-                  disabled={readOnly}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <FieldAutoCompleted
-                  title="Đơn vị thực hiện *"
-                  data={allDepartments.items}
-                  labelkey="tenPhongBan"
-                  formik={formik}
-                  field="idDonViThucHien"
                   disabled={readOnly}
                 />
               </Grid>

@@ -28,17 +28,20 @@ import {
   PlaylistAddCheck,
 } from "@mui/icons-material";
 import dayjs from "dayjs";
+import { StatusPlan } from "../../../../utils/const";
 
 interface MaintenancePlanDetailDialogProps {
   open: boolean;
   plan: any | null; // Data của kế hoạch được chọn
   onClose: () => void;
+  onCreateRepair?: (data: any) => void;
 }
 
 export default function MaintenancePlanDetailDialog({
   open,
   plan,
   onClose,
+  onCreateRepair,
 }: MaintenancePlanDetailDialogProps) {
   const theme = useTheme();
 
@@ -473,6 +476,34 @@ export default function MaintenancePlanDetailDialog({
         <Button onClick={onClose} variant="outlined" color="inherit">
           Đóng
         </Button>
+        {plan.trangThai != null &&
+          [StatusPlan.PENDING].includes(plan.trangThai) &&
+          onCreateRepair && (
+            <Button
+              size="small"
+              variant="contained"
+              onClick={() => {
+                onClose();
+                onCreateRepair(plan);
+              }}
+              sx={{
+                fontSize: "0.75rem",
+                bgcolor: "warning.main",
+                color: "#fff",
+                border: "1px solid",
+                borderColor: "warning.main",
+                transition: "all 0.2s ease-in-out",
+                "&:hover": {
+                  bgcolor: "transparent",
+                  color: "warning.main",
+                  borderColor: "warning.main",
+                  boxShadow: "none",
+                },
+              }}
+            >
+              Tạo phiếu
+            </Button>
+          )}
       </DialogActions>
     </Dialog>
   );

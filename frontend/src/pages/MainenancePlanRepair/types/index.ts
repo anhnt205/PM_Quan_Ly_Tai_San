@@ -5,6 +5,8 @@ export interface MaintenancePlanData {
   idCongTy: string;
   tenKeHoach: string;
   idLoaiKeHoach: string; // Đã bỏ enum THIET_BI | CHU_KY | GIO_MAY
+  idLoaiSuaChua: string;
+  tenLoaiSuaChua?: string;
   tenLoaiKeHoach?: string;
   idDonViGiao?: string;
   tenDonViGiao?: string;

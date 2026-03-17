@@ -12,6 +12,8 @@ public class KeHoachSuaChuaDTO {
     private String tenKeHoach;
     private String idLoaiKeHoach;
     private String tenLoaiKeHoach;
+    private String idLoaiSuaChua;
+    private String tenLoaiSuaChua;
 
     // Đơn vị thực hiện
     private String idDonViGiao;
