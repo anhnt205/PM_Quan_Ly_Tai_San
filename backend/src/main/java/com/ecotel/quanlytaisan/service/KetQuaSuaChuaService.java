@@ -3,6 +3,7 @@ package com.ecotel.quanlytaisan.service;
 import com.ecotel.quanlytaisan.dao.KetQuaSuaChuaDao;
 import com.ecotel.quanlytaisan.dao.KyTaiLieuDao;
 import com.ecotel.quanlytaisan.dao.NhanVienDao;
+import com.ecotel.quanlytaisan.dao.TaiSanDao;
 import com.ecotel.quanlytaisan.model.KetQuaSuaChuaChiTietDTO;
 import com.ecotel.quanlytaisan.model.KetQuaSuaChuaChiTietFullDTO;
 import com.ecotel.quanlytaisan.model.KetQuaSuaChuaChiTietVatTuDTO;
@@ -14,6 +15,7 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
@@ -41,6 +43,9 @@ public class KetQuaSuaChuaService {
     private KyTaiLieuDao kyTaiLieuDao;
 
     @Autowired
+    private TaiSanDao taiSanDao;
+
+    @Autowired
     private NhanVienDao nhanVienDao;
 
     // ==================== CRUD CƠ BẢN ====================
@@ -54,6 +59,22 @@ public class KetQuaSuaChuaService {
             loadChiTietAndVatTu(dto);
         }
         return dto;
+    }
+
+    /**
+     * Cập nhật hiện trạng tài sản dựa trên chi tiết kết quả sửa chữa
+     * @param idKetQuaSuaChua ID phiếu kết quả sửa chữa
+     */
+    @Transactional
+    public void updateHienTrangTaiSanFromKetQua(String idKetQuaSuaChua) {
+        // Lấy danh sách chi tiết tài sản của phiếu kết quả
+        List<KetQuaSuaChuaChiTietDTO> chiTietList = chiTietService.findByIdKetQuaSuaChua(idKetQuaSuaChua);
+
+        for (KetQuaSuaChuaChiTietDTO ct : chiTietList) {
+            if (ct.getIdTaiSan() != null && ct.getHienTrang() != null) {
+                taiSanDao.updateHienTrang(ct.getIdTaiSan(), ct.getHienTrang());
+            }
+        }
     }
 
     /**
@@ -240,7 +261,14 @@ public class KetQuaSuaChuaService {
     // ==================== XỬ LÝ KÝ DUYỆT ====================
 
     public int updateTrangThai(String id, String userId) {
-        return ketQuaSuaChuaDao.updateTrangThai(id, userId);
+        int newStatus = ketQuaSuaChuaDao.updateTrangThai(id, userId);
+
+        // Nếu trạng thái mới là 3 (hoàn thành), tiến hành cập nhật hiện trạng tài sản
+        if (newStatus == 3) {
+            updateHienTrangTaiSanFromKetQua(id);
+        }
+
+        return newStatus;
     }
 
     public int huyTrangThai(String id) {

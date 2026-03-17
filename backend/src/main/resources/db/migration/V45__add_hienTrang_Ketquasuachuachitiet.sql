@@ -1,0 +1,1 @@
+ALTER TABLE ketquasuachua_chitiet ADD COLUMN hienTrang INT;

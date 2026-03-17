@@ -50,11 +50,12 @@ public class KetQuaSuaChuaChiTietDao {
     public KetQuaSuaChuaChiTiet insert(KetQuaSuaChuaChiTiet entity) {
         entity.setId(generateNextId());
         String sql = """
-            INSERT INTO ketquasuachua_chitiet (
-                Id, IdKetQuaSuaChua, IdTaiSan, SoLuong,
-                GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """;
+
+        INSERT INTO ketquasuachua_chitiet (
+            Id, IdKetQuaSuaChua, IdSuaChuaChiTietTaiSan, IdTaiSan, SoLuong,
+            GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive, hienTrang
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """;
         jdbcTemplate.update(sql,
                 entity.getId(),
                 entity.getIdKetQuaSuaChua(),
@@ -65,18 +66,22 @@ public class KetQuaSuaChuaChiTietDao {
                 entity.getNgayCapNhat(),
                 entity.getNguoiTao(),
                 entity.getNguoiCapNhat(),
-                entity.getIsActive() ? 1 : 0
+                entity.getIsActive() ? 1 : 0,
+                entity.getHienTrang()
+
         );
+        if (entity.getHienTrang() == null) entity.setHienTrang(0);
         return entity;
     }
 
     public KetQuaSuaChuaChiTiet update(KetQuaSuaChuaChiTiet entity) {
         String sql = """
-            UPDATE ketquasuachua_chitiet SET
-                IdKetQuaSuaChua = ?, IdTaiSan = ?, SoLuong = ?,
-                GhiChu = ?, NgayTao = ?, NgayCapNhat = ?, NguoiTao = ?, NguoiCapNhat = ?, IsActive = ?
-            WHERE Id = ?
-        """;
+
+        UPDATE ketquasuachua_chitiet SET
+            IdKetQuaSuaChua = ?, IdSuaChuaChiTietTaiSan = ?, IdTaiSan = ?, SoLuong = ?,
+            GhiChu = ?, NgayTao = ?, NgayCapNhat = ?, NguoiTao = ?, NguoiCapNhat = ?, IsActive = ?, hienTrang = ?
+        WHERE Id = ?
+    """;
         jdbcTemplate.update(sql,
                 entity.getIdKetQuaSuaChua(),
                 entity.getIdTaiSan(),
@@ -87,6 +92,7 @@ public class KetQuaSuaChuaChiTietDao {
                 entity.getNguoiTao(),
                 entity.getNguoiCapNhat(),
                 entity.getIsActive() ? 1 : 0,
+                entity.getHienTrang(),
                 entity.getId()
         );
         return entity;

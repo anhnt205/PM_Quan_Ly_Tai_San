@@ -49,6 +49,19 @@ public class TaiSanDao {
         return list;
     }
 
+    // Thêm vào class TaiSanDao
+
+    /**
+     * Cập nhật hiện trạng (hienTrang) cho tài sản
+     * @param idTaiSan ID tài sản
+     * @param hienTrang Giá trị hiện trạng mới
+     * @return số dòng cập nhật
+     */
+    public int updateHienTrang(String idTaiSan, Integer hienTrang) {
+        String sql = "UPDATE TaiSan SET HienTrang = ? WHERE Id = ?";
+        return jdbcTemplate.update(sql, hienTrang, idTaiSan);
+    }
+
     /**
      * Hàm phụ trợ để load thêm dữ liệu quan hệ (Nguồn kinh phí) cho DTO
      */

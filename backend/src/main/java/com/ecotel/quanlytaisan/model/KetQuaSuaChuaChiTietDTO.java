@@ -20,7 +20,7 @@ public class KetQuaSuaChuaChiTietDTO {
     private String nguoiTao;
     private String nguoiCapNhat;
     private Boolean isActive;
-
+    private Integer hienTrang;
     // Có thể thêm các field từ bảng liên quan nếu cần join
     private String tenTaiSan;        // Ví dụ nếu join với TaiSan
 }

@@ -19,6 +19,7 @@ public class KetQuaSuaChuaChiTiet {
     private String nguoiTao;                          // NguoiTao varchar(50)
     private String nguoiCapNhat;                      // NguoiCapNhat varchar(50)
     private Boolean isActive;                         // IsActive tinyint(1)
+    private Integer hienTrang;
 
     // Default values
     public Boolean getIsActive() {
