@@ -326,7 +326,7 @@ export default function ToolTableCustom({
                         },
                       }}
                     >
-                      <TableCell>Mã chi tiết CCDC - Vật tư</TableCell>
+                      <TableCell>Ký hiệu</TableCell>
                       <TableCell>Đơn vị sở hữu</TableCell>
                       <TableCell>Số lượng đang sở hữu</TableCell>
                       <TableCell>Thời gian bàn giao</TableCell>
@@ -341,9 +341,9 @@ export default function ToolTableCustom({
                       </TableRow>
                     ) : detailsToShow.length > 0 ? (
                       detailsToShow.map((detail: any) => (
-                        <TableRow key={`detail-item-${detail.id}`}>
+                        <TableRow key={`detail-item-${detail.soKyHieu}`}>
                           <TableCell sx={{ border: "1px solid #e0e0e0" }}>
-                            {detail.idTsCon || "-"}
+                            {detail.soKyHieu || "-"}
                           </TableCell>
                           <TableCell sx={{ border: "1px solid #e0e0e0" }}>
                             {findById(allDepartments, detail.idDonViSoHuu)

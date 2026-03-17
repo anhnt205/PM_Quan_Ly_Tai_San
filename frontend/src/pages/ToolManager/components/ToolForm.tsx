@@ -417,7 +417,7 @@ export default function ToolForm({
             <TableHead>
               <TableRow>
                 <TableCell>STT</TableCell>
-                <TableCell>Số ký hiệu</TableCell>
+                <TableCell>Ký hiệu</TableCell>
                 <TableCell>Số lượng</TableCell>
                 <TableCell>Công suất</TableCell>
                 <TableCell>Nước sản xuất</TableCell>

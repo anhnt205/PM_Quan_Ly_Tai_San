@@ -386,7 +386,7 @@ export default function TableCustom({
           </Box>
         </Grid>
       </Grid>
-      <Box sx={{ width: "100%" }}>
+      <Box sx={{ width: "100%", overflow: "hidden" }}>
         {customContent ? (
           customContent
         ) : (
@@ -435,7 +435,6 @@ export default function TableCustom({
             showToolbar
             slots={{ toolbar: GridToolbar, filterPanel: CustomFilterPanel }}
             localeText={viVN.components.MuiDataGrid.defaultProps.localeText}
-            // disableVirtualization={true}
             slotProps={{
               filterPanel: { disableAddFilterButton: false },
               toolbar: {
@@ -443,22 +442,18 @@ export default function TableCustom({
                 printOptions: { disableToolbarButton: true },
               },
             }}
-            getRowHeight={() => "auto"}
             sx={{
               fontSize: "14px",
               "& .MuiDataGrid-toolbarContainer .MuiButton-root": {
                 color: "#1FA463",
                 fontWeight: 600,
-                // Hiệu ứng hover cho nút trong toolbar
                 "&:hover": {
                   backgroundColor: "rgba(31, 164, 99, 0.04)",
                 },
               },
-
               "& .MuiDataGrid-columnHeader": {
                 backgroundColor: "#1FA463",
               },
-
               "& .MuiDataGrid-columnHeaderTitle": {
                 color: "#fff",
                 fontWeight: 700,
@@ -470,24 +465,16 @@ export default function TableCustom({
               "& .MuiDataGrid-iconButtonContainer": {
                 visibility: "visible",
               },
-
               "& .MuiDataGrid-sortIcon": {
                 opacity: 1,
                 color: "#fff",
               },
-
               "& .MuiDataGrid-menuIcon": {
                 opacity: 1,
                 color: "#fff",
               },
-
-              // Checkbox header
               "& .MuiDataGrid-columnHeaderCheckbox .MuiCheckbox-root": {
                 color: "#fff",
-              },
-              "& .MuiDataGrid-cell": {
-                display: "flex",
-                alignItems: "center",
               },
             }}
           />

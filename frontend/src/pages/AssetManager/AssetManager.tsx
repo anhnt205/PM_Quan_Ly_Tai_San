@@ -294,75 +294,59 @@ export default function AssetManager() {
     {
       field: "action",
       headerName: "Hành động",
-      width: 150,
+      width: 200,
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
         <>
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation();
-              const { id, ...copyData } = params.row;
-              setSelectedAsset({ ...copyData, id: "" });
-              setIsCopy(true);
-              setReadOnly(false);
-              setShowForm(true);
-            }}
-          >
-            <ContentCopy color="primary" />
-          </IconButton>
+          <Tooltip title="Sao chép">
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                const { id, ...copyData } = params.row;
+                setSelectedAsset({ ...copyData, id: "" });
+                setIsCopy(true);
+                setReadOnly(false);
+                setShowForm(true);
+              }}
+            >
+              <ContentCopy color="primary" />
+            </IconButton>
+          </Tooltip>
 
-          <IconButton
-            onClick={async (e) => {
-              e.stopPropagation();
-              const confirm = await showConfirmAlert("Xác nhận xóa!");
-              if (confirm.isConfirmed) {
-                deleteOneMutation.mutate(params.row.id);
-              }
-            }}
-          >
-            <Delete color="error" />
-          </IconButton>
+          <Tooltip title="Xóa">
+            <IconButton
+              onClick={async (e) => {
+                e.stopPropagation();
+                const confirm = await showConfirmAlert("Xác nhận xóa!");
+                if (confirm.isConfirmed) {
+                  deleteOneMutation.mutate(params.row.id);
+                }
+              }}
+            >
+              <Delete color="error" />
+            </IconButton>
+          </Tooltip>
 
           <Tooltip title="Xem">
             <IconButton
-              size="small"
               onClick={(e) => {
                 e.stopPropagation();
                 setOpenViewModal(true);
               }}
-              sx={{
-                color: "#4F46E5",
-                bgcolor: "#EEF2FF",
-                "&:hover": {
-                  bgcolor: "#E0E7FF",
-                  transform: "scale(1.1)",
-                },
-                transition: "all 0.2s",
-              }}
             >
-              <Eye fontSize={16} />
+              <Eye color="#0288d1" />
             </IconButton>
           </Tooltip>
 
           <Tooltip title="Xem lịch sử điều chuyển">
             <IconButton
-              size="small"
               onClick={(e) => {
                 e.stopPropagation();
                 handleOpenHistory(params.row);
               }}
-              sx={{
-                color: "#4F46E5",
-                bgcolor: "#EEF2FF",
-                "&:hover": {
-                  bgcolor: "#E0E7FF",
-                  transform: "scale(1.1)",
-                },
-                transition: "all 0.2s",
-              }}
             >
-              <HistoryIcon fontSize="small" />
+              <HistoryIcon color="#7b1fa2" />
             </IconButton>
           </Tooltip>
         </>
