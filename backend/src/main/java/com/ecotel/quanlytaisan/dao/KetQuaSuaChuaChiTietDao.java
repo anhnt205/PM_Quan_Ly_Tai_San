@@ -43,7 +43,7 @@ public class KetQuaSuaChuaChiTietDao {
     }
 
     public List<KetQuaSuaChuaChiTietDTO> findByIdKetQuaSuaChua(String idKetQuaSuaChua) {
-        String sql = "SELECT * FROM ketquasuachua_chitiet WHERE IdKetQuaSuaChua = ? AND (IsActive IS NULL OR IsActive = 1)";
+        String sql = "SELECT kq.*,ts.TenTaiSan AS tenTaiSan FROM ketquasuachua_chitiet kq LEFT JOIN taisan ts ON kq.IdTaiSan = ts.Id WHERE kq.IdKetQuaSuaChua = ? AND (kq.IsActive IS NULL OR kq.IsActive = 1)";
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(KetQuaSuaChuaChiTietDTO.class), idKetQuaSuaChua);
     }
 
@@ -52,9 +52,9 @@ public class KetQuaSuaChuaChiTietDao {
         String sql = """
 
         INSERT INTO ketquasuachua_chitiet (
-            Id, IdKetQuaSuaChua, IdSuaChuaChiTietTaiSan, IdTaiSan, SoLuong,
+            Id, IdKetQuaSuaChua, IdTaiSan, SoLuong,
             GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive, hienTrang
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """;
         jdbcTemplate.update(sql,
                 entity.getId(),
@@ -78,7 +78,7 @@ public class KetQuaSuaChuaChiTietDao {
         String sql = """
 
         UPDATE ketquasuachua_chitiet SET
-            IdKetQuaSuaChua = ?, IdSuaChuaChiTietTaiSan = ?, IdTaiSan = ?, SoLuong = ?,
+            IdKetQuaSuaChua = ?, IdTaiSan = ?, SoLuong = ?,
             GhiChu = ?, NgayTao = ?, NgayCapNhat = ?, NguoiTao = ?, NguoiCapNhat = ?, IsActive = ?, hienTrang = ?
         WHERE Id = ?
     """;

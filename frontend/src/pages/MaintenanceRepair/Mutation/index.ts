@@ -931,7 +931,7 @@ export const useMaintenanceRepairResultMutation = () => {
   });
   const updateMaintenanceRepairDetailMutation = useMutation({
     mutationFn: async (data: MaintenanceResultAssetItem) => {
-      const res = await api.post("/ketqua-suachua/chitiet", data, {
+      const res = await api.put(`/ketqua-suachua/chitiet/${data.id}`, data, {
         params: {
           userId: user?.taiKhoan?.tenDangNhap,
         },

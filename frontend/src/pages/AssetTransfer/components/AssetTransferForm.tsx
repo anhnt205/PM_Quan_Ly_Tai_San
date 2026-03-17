@@ -221,7 +221,11 @@ export default function AssetTransferForm({
         ),
         initialNguoiKy: selectedTransfer.nguoiKyList.map((i: any) => i.id),
       });
-      setDocument(selectedTransfer.duongDanFile || "");
+      setDocument(
+        [0].includes(selectedTransfer.trangThai ?? 0)
+          ? selectedTransfer.duongDanFile
+          : selectedTransfer.taiLieuCuoi,
+      );
     } else formik.resetForm();
   }, [selectedTransfer]);
 

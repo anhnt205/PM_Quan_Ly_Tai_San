@@ -251,7 +251,11 @@ export default function MaintenanceRepairForm({
           (i: any) => i.id,
         ),
       });
-      setDocument(selectedRepair.taiLieuCuoi || "");
+      setDocument(
+        [0].includes(selectedRepair.trangThai ?? 0)
+          ? selectedRepair.duongDanFile
+          : selectedRepair.taiLieuCuoi,
+      );
     } else {
       formik.resetForm();
       setDocument("");

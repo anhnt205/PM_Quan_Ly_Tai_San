@@ -33,7 +33,15 @@ public class KetQuaSuaChuaChiTietVatTuDao {
     }
 
     public List<KetQuaSuaChuaChiTietVatTuDTO> findByIdKetQuaSuaChuaChiTiet(String idKetQuaSuaChuaChiTiet) {
-        String sql = "SELECT * FROM ketquasuachua_chitiet_vattu WHERE IdKetQuaSuaChuaChiTiet = ? AND (IsActive IS NULL OR IsActive = 1)";
+        String sql = "SELECT vt.*, " +
+                    // Nối chuỗi: Ten (SoKyHieu) - NamSanXuat
+                    "CONCAT(c.Ten, ' (', ct.SoKyHieu, ') - ', ct.NamSanXuat) AS tenVatTu " +
+                    "FROM ketquasuachua_chitiet_vattu vt " +
+                    "LEFT JOIN ccdcvattu c ON vt.idCCDC = c.Id " +
+                    "LEFT JOIN chitiettaisan ct ON vt.idChiTietCCDC = ct.Id " +
+                    "WHERE vt.IdKetQuaSuaChuaChiTiet = ? " +
+                    "AND (vt.IsActive IS NULL OR vt.IsActive = 1)";
+
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(KetQuaSuaChuaChiTietVatTuDTO.class), idKetQuaSuaChuaChiTiet);
     }
 

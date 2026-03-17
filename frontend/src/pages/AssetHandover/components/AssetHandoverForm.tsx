@@ -306,7 +306,7 @@ export default function AssetHandoverForm({
           (i: any) => i.id,
         ),
       });
-      setDocument(selectedAssetHandover.tenFile);
+      setDocument(selectedAssetHandover.duongDanFile);
       getListAsset(selectedAssetHandover.lenhDieuDong);
     } else {
       formik.resetForm();

@@ -693,7 +693,7 @@ export const generateBangKeKetQuaPdf = async (
     const status = Array.isArray(allCurrentStatus)
       ? findById(allCurrentStatus, item?.hienTrang)
       : null;
-      
+
     const statusName = status?.tenHTKT ? ` ${status.tenHTKT}` : "";
 
     // 2. Chuyển đổi vatTuList thành chuỗi nhiều dòng
@@ -705,7 +705,7 @@ export const generateBangKeKetQuaPdf = async (
           : null;
         const unitName = unit?.tenDonVi ? ` ${unit.tenDonVi}` : "";
 
-        return `- ${vt?.tenVatTu || "Vật tư"}: ${vt?.soLuong || 0}${unitName}`;
+        return `- ${vt?.tenVatTu || "Vật tư"}: SL:${vt?.soLuong || 0}${unitName}`;
       })
       .join("\n"); // Dùng \n để autoTable tự động xuống dòng trong ô
 

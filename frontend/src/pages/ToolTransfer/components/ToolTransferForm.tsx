@@ -211,7 +211,11 @@ export default function ToolTransferForm({
         ),
         initialNguoiKy: (selectedTool.nguoiKyList || []).map((i: any) => i.id),
       });
-      setDocument(selectedTool.taiLieuCuoi || "");
+      setDocument(
+        [0].includes(selectedTool.trangThai ?? 0)
+          ? selectedTool.duongDanFile
+          : selectedTool.taiLieuCuoi,
+      );
     } else {
       formik.resetForm();
     }

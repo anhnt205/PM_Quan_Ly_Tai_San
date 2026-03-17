@@ -137,6 +137,7 @@ export default function MaintenanceRepair() {
     setShowSignDocument(false);
     setSelectedRepair(null);
     setShowForm(false);
+    setShowResultForm(false);
     setShowSidebar(false);
     setReadOnly(false);
     setMaintenanceRepairs([]);
@@ -449,10 +450,10 @@ export default function MaintenanceRepair() {
                         id: "",
                         idCongTy: CongTy.CT001,
                         tenPhieu: "",
-                        ngayBatDauThucte: dayjs(new Date()).format(
+                        ngayBatDauThucTe: dayjs(new Date()).format(
                           "YYYY-MM-DD",
                         ),
-                        ngayKetThucThucte: dayjs(new Date()).format(
+                        ngayKetThucThucTe: dayjs(new Date()).format(
                           "YYYY-MM-DD",
                         ),
                         idDonViGiao: params.row.idDonViGiao,

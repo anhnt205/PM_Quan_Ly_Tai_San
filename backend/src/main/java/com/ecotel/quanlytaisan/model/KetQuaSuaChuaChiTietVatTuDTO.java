@@ -27,4 +27,5 @@ public class KetQuaSuaChuaChiTietVatTuDTO {
     private String idNhomCcdc;
 
     // Có thể thêm field hiển thị tên CCDC, nhóm CCDC nếu cần
+    private String tenVatTu;
 }

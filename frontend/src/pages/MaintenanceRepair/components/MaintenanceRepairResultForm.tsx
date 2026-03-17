@@ -56,6 +56,7 @@ import TextFieldNumber from "../../../components/TextField/TextFieldNumber";
 import S3Service from "../../../services/S3Service";
 import { generateBangKeKetQuaPdf, mergeBangKeWithOriginalPdf } from "../config";
 import SignDocumentResultForm from "./SignDocumentResultForm";
+import { MaintenanceResultValidation } from "../validation/Validation";
 
 const CustomTableCell = styled(TableCell)(({ theme }) => ({
   borderBottom: "1px solid rgba(224, 224, 224, 1)",
@@ -106,8 +107,8 @@ export default function MaintenanceRepairResultForm({
       id: "",
       idCongTy: "",
       tenPhieu: "",
-      ngayBatDauThucte: dayjs(new Date()).format("YYYY-MM-DD"),
-      ngayKetThucThucte: dayjs(new Date()).format("YYYY-MM-DD"),
+      ngayBatDauThucTe: dayjs(new Date()).format("YYYY-MM-DD"),
+      ngayKetThucThucTe: dayjs(new Date()).format("YYYY-MM-DD"),
       idDonViGiao: "",
       idDonViNhan: "",
       idNguoiKyNhay: "",
@@ -139,6 +140,7 @@ export default function MaintenanceRepairResultForm({
       // initialVatTu: [],
       chiTietTaiSanList: [] as any[],
     },
+    validationSchema: MaintenanceResultValidation,
     onSubmit: async (values) => {
       const nguoiKyList = values.nguoiKyList.map((item: any, index) => ({
         ...item,
@@ -212,7 +214,11 @@ export default function MaintenanceRepairResultForm({
         //   (i: any) => i.id,
         // ),
       });
-      setDocument(selectedRepair.taiLieuCuoi || "");
+      setDocument(
+        [0].includes(selectedRepair.trangThai ?? 0)
+          ? selectedRepair.duongDanFile
+          : selectedRepair.taiLieuCuoi,
+      );
     } else {
       formik.resetForm();
       setDocument("");
@@ -646,8 +652,8 @@ const AssetRow = ({
   row,
   index,
   formik,
-  assets=[],
-  tools=[],
+  assets = [],
+  tools = [],
   readOnly,
   onRemove,
 }: {
@@ -663,11 +669,22 @@ const AssetRow = ({
 
   const { data: allCurrentStatus } = useAllCurrentStatusQuery();
 
+  // Filter out assets that are already selected in other rows
+  const selectedAssetIdsInOtherRows = formik.values.chiTietTaiSanList
+    .filter((_: any, i: number) => i !== index && _.action !== Action.DELETE) // Exclude current row
+    .map((asset: any) => asset.idTaiSan)
+    .filter(Boolean);
+
+  const availableAssets = assets.filter(
+    (asset: any) => !selectedAssetIdsInOtherRows.includes(asset.idTaiSan),
+  );
+
   const getMaxAvailable = (
     toolId: string,
     currentAssetIndex: number,
     currentMaterialIndex: number,
   ) => {
+    console.log("getMaxAvailable called for toolId:", toolId);
     if (!toolId) return 0;
 
     // Tìm tổng số lượng ban đầu của vật tư trong kho
@@ -679,18 +696,25 @@ const AssetRow = ({
     const allAssets = formik.values.chiTietTaiSanList || [];
 
     allAssets.forEach((assetItem: any, aIdx: number) => {
-      (assetItem.vatTuList || []).forEach((matItem: any, mIdx: number) => {
-        // Cộng dồn nếu đúng id vật tư và KHÔNG phải là chính cái ô chúng ta đang nhập
-        if (
-          matItem.idChiTietCcdc === toolId &&
-          !(aIdx === currentAssetIndex && mIdx === currentMaterialIndex)
-        ) {
-          usedElsewhere += Number(matItem.soLuong || 0);
-        }
-      });
+      (assetItem.vatTuList || [])
+        .filter((i: any) => i.action !== Action.DELETE)
+        .forEach((matItem: any, mIdx: number) => {
+          // Cộng dồn nếu đúng id vật tư và KHÔNG phải là chính cái ô chúng ta đang nhập
+          if (
+            matItem.idChiTietCcdc === toolId &&
+            !(aIdx === currentAssetIndex && mIdx === currentMaterialIndex)
+          ) {
+            usedElsewhere += Number(matItem.soLuong || 0);
+          }
+        });
     });
 
+    console.log("initialMax:", initialMax, "usedElsewhere:", usedElsewhere);
     // Số lượng còn lại = Tổng ban đầu - Tổng đã dùng ở các dòng khác
+    console.log(
+      "Calculated maxAllowed:",
+      Math.max(0, initialMax - usedElsewhere),
+    );
     return Math.max(0, initialMax - usedElsewhere);
   };
 
@@ -701,7 +725,7 @@ const AssetRow = ({
         id: "",
         idKetQuaSuaChua: "",
         idCcdc: "",
-        idChiTietCcdc: "",
+        idChiTietCcdc: "", // Standardized to uppercase
         idNhomCCDC: "",
         soLuong: 0,
         donGia: 0,
@@ -741,10 +765,10 @@ const AssetRow = ({
           <FieldAutoCompleted
             title=""
             labelkey="tenTaiSan"
-            data={assets.map((i: any) => ({
+            data={availableAssets.map((i: any) => ({
               ...i,
               id: i.idTaiSan,
-            }))} // Replace with actual asset data source
+            }))} // Use filtered asset list
             formik={formik}
             field={`chiTietTaiSanList[${index}].idTaiSan`}
             onChange={(values) => {
@@ -943,6 +967,10 @@ const AssetRow = ({
                                 formik={formik}
                                 field={`chiTietTaiSanList[${index}].vatTuList[${materialIndex}].soLuong`}
                                 onChange={(value) => {
+                                  console.log(
+                                    "TextFieldNumber onChange - raw value:",
+                                    value,
+                                  );
                                   const inputValue = Number(value || 0);
                                   const currentToolId =
                                     formik.values.chiTietTaiSanList[index]
@@ -954,8 +982,10 @@ const AssetRow = ({
                                     index,
                                     materialIndex,
                                   );
-                                  console.log(currentToolId);
-                                  console.log(maxAllowed);
+                                  console.log(
+                                    "maxAllowed from getMaxAvailable:",
+                                    maxAllowed,
+                                  );
 
                                   // Ép giá trị nhập vào nằm trong khoảng từ 0 đến maxAllowed
                                   const finalValue = Math.min(
@@ -963,6 +993,10 @@ const AssetRow = ({
                                     maxAllowed,
                                   );
 
+                                  console.log(
+                                    "finalValue after capping:",
+                                    finalValue,
+                                  );
                                   // Set số lượng an toàn
                                   formik.setFieldValue(
                                     `chiTietTaiSanList[${index}].vatTuList[${materialIndex}].soLuong`,
@@ -970,9 +1004,10 @@ const AssetRow = ({
                                   );
 
                                   // Tính lại tiền theo số lượng an toàn
-                                  const currentPrice =
-                                    formik.values.chiTietTaiSanList[index]
-                                      .vatTuList[materialIndex].donGia || 0;
+                                  const toolInfo = tools.find(
+                                    (t) => t.idChiTietCCDC === currentToolId,
+                                  );
+                                  const currentPrice = toolInfo?.donGia || 0;
                                   formik.setFieldValue(
                                     `chiTietTaiSanList[${index}].vatTuList[${materialIndex}].thanhTien`,
                                     currentPrice * finalValue,
@@ -985,6 +1020,7 @@ const AssetRow = ({
                                 }
                               />
                             </CustomTableCell>
+
                             <CustomTableCell>
                               <TextFieldNumber
                                 title=""
