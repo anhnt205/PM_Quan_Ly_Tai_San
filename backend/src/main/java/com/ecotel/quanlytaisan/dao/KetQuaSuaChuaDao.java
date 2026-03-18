@@ -454,4 +454,10 @@ public class KetQuaSuaChuaDao {
         }
         return 0;
     }
+
+    public int countByIdSuaChua(String idSuaChua) {
+        String sql = "SELECT COUNT(*) FROM ketquasuachua WHERE IdSuaChua = ?";
+        return jdbcTemplate.queryForObject(sql, Integer.class, idSuaChua);
+    }
+
 }

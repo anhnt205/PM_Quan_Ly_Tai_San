@@ -675,4 +675,9 @@ public class SuaChuaDao {
             """;
         return jdbcTemplate.update(sql, id);
     }
+
+    public int updateCoPhieuSuaChua(String idSuaChua, boolean coPhieu) {
+        String sql = "UPDATE SuaChua SET CoPhieuSuaChua = ? WHERE Id = ?";
+        return jdbcTemplate.update(sql, coPhieu ? 1 : 0, idSuaChua);
+    }
 }

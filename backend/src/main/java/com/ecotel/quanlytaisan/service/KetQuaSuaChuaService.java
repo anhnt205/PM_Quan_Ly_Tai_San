@@ -48,6 +48,9 @@ public class KetQuaSuaChuaService {
     @Autowired
     private LichSuSuaChuaDao lichSuSuaChuaDao;
 
+    @Autowired
+    private SuaChuaDao suaChuaDao;
+
     // ==================== CRUD CƠ BẢN ====================
 
 //    /**
@@ -277,7 +280,12 @@ public class KetQuaSuaChuaService {
         String currentTime = sdf.format(new Date());
         entity.setNgayTao(currentTime);
 
-        return ketQuaSuaChuaDao.insert(entity);
+        KetQuaSuaChua inserted = ketQuaSuaChuaDao.insert(entity);
+        if (inserted != null && inserted.getIdSuaChua() != null) {
+            // Cập nhật CoPhieuSuaChua = 1 cho phiếu sửa chữa tương ứng
+            suaChuaDao.updateCoPhieuSuaChua(inserted.getIdSuaChua(), true);
+        }
+        return inserted;
     }
 
     /**
@@ -291,20 +299,18 @@ public class KetQuaSuaChuaService {
         return ketQuaSuaChuaDao.update(entity);
     }
 
-    /**
-     * Xóa phiếu kết quả sửa chữa (cascade xóa chi tiết và vật tư)
-     */
     public int delete(String id) {
-        // Xóa chi tiết tài sản (các service đã tự xóa vật tư con do cascade trong DB hoặc code)
-        // chiTietService.deleteByIdKetQuaSuaChua(id);
-        // Nếu chưa cascade, có thể gọi thêm vatTuService.deleteByIdKetQuaSuaChua(id) nhưng ở đây
-        // vật tư được xóa thông qua chi tiết (vì có foreign key idSuaChuaChiTietTaiSan)
-        // Nếu DB có ON DELETE CASCADE từ chi tiết sang vật tư thì không cần.
-        // Tuy nhiên để an toàn, ta xóa thẳng vật tư theo idKetQuaSuaChua
-        // vatTuService.deleteByIdKetQuaSuaChua(id);
-        // Xóa chữ ký (nếu có)
-        // kyTaiLieuDao.deleteByIdTaiLieu(id);
-        return ketQuaSuaChuaDao.delete(id);
+        KetQuaSuaChua kq = ketQuaSuaChuaDao.findById(id);
+        if (kq == null) return 0;
+        String idSuaChua = kq.getIdSuaChua();
+        int result = ketQuaSuaChuaDao.delete(id);
+        if (result > 0 && idSuaChua != null) {
+            int remaining = ketQuaSuaChuaDao.countByIdSuaChua(idSuaChua);
+            if (remaining == 0) {
+                suaChuaDao.updateCoPhieuSuaChua(idSuaChua, false);
+            }
+        }
+        return result;
     }
 
     // ==================== XỬ LÝ KÝ DUYỆT ====================
