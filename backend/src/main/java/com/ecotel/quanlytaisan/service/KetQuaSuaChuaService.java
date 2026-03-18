@@ -1,9 +1,6 @@
 package com.ecotel.quanlytaisan.service;
 
-import com.ecotel.quanlytaisan.dao.KetQuaSuaChuaDao;
-import com.ecotel.quanlytaisan.dao.KyTaiLieuDao;
-import com.ecotel.quanlytaisan.dao.NhanVienDao;
-import com.ecotel.quanlytaisan.dao.TaiSanDao;
+import com.ecotel.quanlytaisan.dao.*;
 import com.ecotel.quanlytaisan.model.KetQuaSuaChuaChiTietDTO;
 import com.ecotel.quanlytaisan.model.KetQuaSuaChuaChiTietFullDTO;
 import com.ecotel.quanlytaisan.model.KetQuaSuaChuaChiTietVatTuDTO;
@@ -47,6 +44,9 @@ public class KetQuaSuaChuaService {
 
     @Autowired
     private NhanVienDao nhanVienDao;
+
+    @Autowired
+    private LichSuSuaChuaDao lichSuSuaChuaDao;
 
     // ==================== CRUD CƠ BẢN ====================
 
@@ -223,6 +223,44 @@ public class KetQuaSuaChuaService {
     }
 
     /**
+     * Tạo lịch sử sửa chữa từ phiếu kết quả đã hoàn thành (trạng thái = 3)
+     * @param idKetQuaSuaChua ID phiếu kết quả
+     */
+    @Transactional
+    public void insertLichSuFromKetQua(String idKetQuaSuaChua) {
+        // Lấy thông tin phiếu kết quả
+        KetQuaSuaChua kq = ketQuaSuaChuaDao.findById(idKetQuaSuaChua);
+        if (kq == null) {
+            // Không tìm thấy phiếu, bỏ qua
+            return;
+        }
+
+        // Lấy danh sách chi tiết tài sản của phiếu
+        List<KetQuaSuaChuaChiTietDTO> chiTietList = chiTietService.findByIdKetQuaSuaChua(idKetQuaSuaChua);
+        if (chiTietList.isEmpty()) {
+            return; // Không có tài sản nào
+        }
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String now = sdf.format(new Date());
+
+        for (KetQuaSuaChuaChiTietDTO ct : chiTietList) {
+            if (ct.getIdTaiSan() == null || ct.getIdTaiSan().trim().isEmpty()) {
+                continue; // Bỏ qua nếu không có ID tài sản
+            }
+
+            LichSuSuaChua lichSu = new LichSuSuaChua();
+            lichSu.setIdTaiSan(ct.getIdTaiSan());
+            lichSu.setNgayBatDau(kq.getNgayBatDauThucTe());
+            lichSu.setNgayKetThuc(kq.getNgayKetThucThucTe());
+            lichSu.setIdKetQuaSuaChua(idKetQuaSuaChua);
+            lichSu.setNgayTao(now);
+            lichSu.setNgayCapNhat(now);
+
+            lichSuSuaChuaDao.insert(lichSu);
+        }
+    }
+    /**
      * Thêm mới phiếu kết quả sửa chữa
      */
     public KetQuaSuaChua insert(KetQuaSuaChua entity) {
@@ -277,6 +315,7 @@ public class KetQuaSuaChuaService {
         // Nếu trạng thái mới là 3 (hoàn thành), tiến hành cập nhật hiện trạng tài sản
         if (newStatus == 3) {
             updateHienTrangTaiSanFromKetQua(id);
+            insertLichSuFromKetQua(id);
         }
 
         return newStatus;
