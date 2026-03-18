@@ -27,6 +27,7 @@ import {
   Add,
   ArrowDropDown,
   ArrowDropUp,
+  Cancel,
   Delete,
   KeyboardArrowDown,
   KeyboardArrowUp,
@@ -308,15 +309,23 @@ export default function MaintenanceRepairResultForm({
             alignItems="center"
             mb={2}
           >
-            <Box>
+            {[0, 2].includes(currentStatus) && (
               <Box display="flex" gap={2}>
-                <Box display="flex" gap={2}>
-                  {!readOnly && <SaveBtn onSave={formik.submitForm} />}
-                  {!readOnly && <CancelBtn onClick={onClose} />}
-                  {readOnly && <EditButton onClick={onEdit} />}
-                </Box>
+                {!readOnly && <SaveBtn onSave={formik.submitForm} />}
+                {!readOnly && <CancelBtn onClick={onClose} />}
+                {readOnly && <EditButton onClick={onEdit} />}
               </Box>
-            </Box>
+            )}
+            {![0, 2, 3].includes(currentStatus) && (
+              <Button
+                size="small"
+                sx={{ bgcolor: "red", color: "white" }}
+                startIcon={<Cancel />}
+                onClick={onCancel}
+              >
+                Hủy phiếu
+              </Button>
+            )}
             <CustomStepper activeStep={currentStatus} />
           </Box>
 

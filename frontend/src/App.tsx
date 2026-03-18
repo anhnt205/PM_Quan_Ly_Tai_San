@@ -108,6 +108,7 @@ function App() {
       ) {
         console.log("Handling socket message in App.tsx:", data);
         queryClient.invalidateQueries({ queryKey: ["maintenanceRepairPage"] });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceRepairResultPage"] });
       }
     });
 

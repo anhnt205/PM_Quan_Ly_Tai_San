@@ -822,6 +822,25 @@ export const useMaintenanceRepairResultMutation = () => {
       );
     },
   });
+  const updateManyMutation = useMutation({
+    mutationFn: async (data: MaintenanceRepairData[]) => {
+      const res = await api.put(`/ketqua-suachua/bulk`, data);
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["maintenanceRepairResultPage"],
+      });
+      console.log("Sửa phiếu kết quả thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Sửa phiếu kết quả thất bại",
+      );
+    },
+  });
 
   const deleteOneMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -1166,6 +1185,25 @@ export const useMaintenanceRepairResultMutation = () => {
     },
   });
 
+  const getResultByRepairMutation = useMutation({
+    mutationFn: async (id: string) => {
+      if (!id) return;
+      const res = await api.get(`/ketqua-suachua/suachua/${id}`);
+      return res.data || [];
+    },
+    onSuccess: (response, data) => {
+      console.log("Lấy phiếu kết quả thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Lấy phiếu kết quả tài sản thất bại",
+      );
+      return [];
+    },
+  });
+
   // list chu ky theo tai lieu
   const handleSignatureList = async (idTaiLieu: string) => {
     if (!idTaiLieu) return;
@@ -1235,43 +1273,43 @@ export const useMaintenanceRepairResultMutation = () => {
     }: {
       idTaiLieu: string;
       userId: string;
-      repair: MaintenanceRepairData;
+      repair: MaintenanceRepairResultData;
     }) => {
       const res = await api.post(
-        `/ketqua-suachua/chitiet/capnhattrangthai?id=${idTaiLieu}&userId=${userId}`,
+        `/ketqua-suachua/capnhattrangthai?id=${idTaiLieu}&userId=${userId}`,
       );
       return res.data.data;
     },
     onSuccess: (response, data) => {
       if (response === 3) {
-        // const taisan = (data.repair.chiTietSuaChuas || []).filter(
-        //   (item): item is typeof item & { idTaiSan: string } =>
-        //     Boolean(item.idTaiSan),
-        // );
+        const taisan = (data.repair.chiTietTaiSanList || []).filter(
+          (item): item is typeof item & { idTaiSan: string } =>
+            Boolean(item.idTaiSan),
+        );
         // const ccdc = (data.repair.chiTietSuaChuas || []).filter(
         //   (
         //     item,
         //   ): item is typeof item & { idCCDC: string; idChiTietCCDC: string } =>
         //     Boolean(item.idChiTietCCDC),
         // );
-        // if (taisan.length > 0) {
-        //   updateAssetOwnershipMutation.mutate(
-        //     taisan.map((item) => ({
-        //       id: item.idTaiSan,
-        //       idDonVi: data.repair.idDonViNhan,
-        //     })),
-        //   );
-        //   createManyHistoryAssetMutation.mutate(
-        //     taisan.map((item, index) => ({
-        //       id: generateCode("LSDCTS-") + `${item.idTaiSan} -`,
-        //       idBanGiaoTaiSan: data.repair.id,
-        //       idTaiSan: item.idTaiSan,
-        //       idDonViNhan: data.repair.idDonViNhan,
-        //       idDonViGiao: data.repair.idDonViGiao,
-        //       thoiGianBanGiao: dayjs(new Date()).format("YYYY-MM-DD"),
-        //     })),
-        //   );
-        // }
+        if (taisan.length > 0) {
+          updateAssetOwnershipMutation.mutate(
+            taisan.map((item) => ({
+              id: item.idTaiSan,
+              idDonVi: data.repair.idDonViNhan,
+            })),
+          );
+          createManyHistoryAssetMutation.mutate(
+            taisan.map((item, index) => ({
+              id: generateCode("LSDCTS-") + `${item.idTaiSan} -`,
+              idBanGiaoTaiSan: data.repair.id,
+              idTaiSan: item.idTaiSan,
+              idDonViNhan: data.repair.idDonViNhan,
+              idDonViGiao: data.repair.idDonViGiao,
+              thoiGianBanGiao: dayjs(new Date()).format("YYYY-MM-DD"),
+            })),
+          );
+        }
         // if (ccdc.length > 0) {
         //   updateAssetOwnershipMutationTool.mutate(
         //     ccdc.map((item: any) => ({
@@ -1295,10 +1333,6 @@ export const useMaintenanceRepairResultMutation = () => {
         //     })),
         //   );
         // }
-        updateStatusPlanMutation.mutate({
-          id: data.repair.idKeHoach,
-          status: StatusPlan.PROGRESS,
-        });
       }
       queryClient.invalidateQueries({
         queryKey: ["maintenanceRepairResultPage"],
@@ -1321,8 +1355,10 @@ export const useMaintenanceRepairResultMutation = () => {
     deleteOneMutation,
     deleteManyMutation,
     cancelMutation,
+    updateManyMutation,
     handleSignatureList,
     signMutation,
     getByIdMutation,
+    getResultByRepairMutation,
   };
 };

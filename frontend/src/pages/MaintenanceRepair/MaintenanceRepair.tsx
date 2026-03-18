@@ -21,7 +21,7 @@ import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
 import { useAllStaffsQuery } from "../Staff/Mutation";
 import { showConfirmAlert } from "../../components/Alert";
 import { GridColDef } from "@mui/x-data-grid";
-import { Trash2, ListPlus, Eye } from "lucide-react";
+import { Trash2, ListPlus, Eye, Building } from "lucide-react";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
 import {
   showStatus,
@@ -55,6 +55,7 @@ import { SignaturesData } from "./types";
 import dayjs from "dayjs";
 import { useLocation, useNavigate } from "react-router-dom";
 import MaintenanceRepairResultForm from "./components/MaintenanceRepairResultForm";
+import KetQuaDialog from "./components/KetQuaDialog";
 
 export default function MaintenanceRepair() {
   const { user } = useSelector((state: any) => state.user);
@@ -64,8 +65,6 @@ export default function MaintenanceRepair() {
   const [readOnly, setReadOnly] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [showResultForm, setShowResultForm] = useState(false);
-  const [selectedRepairForResult, setSelectedRepairForResult] =
-    useState<any>(null);
   const [searchValue, setSearchValue] = useState("");
   const [maintenanceRepairs, setMaintenanceRepairs] = useState<any[]>([]);
   const [status, setStatus] = useState("");
@@ -77,6 +76,8 @@ export default function MaintenanceRepair() {
     pageSize: 10,
     page: 0,
   });
+  const [showKetQuaDialog, setShowKetQuaDialog] = useState(false);
+  const [result, setResult] = useState<any[]>([]);
 
   const { data: allDepartments = [] } = useAllDepartmentsQuery();
   const { data: allUnits = [] } = useAllUnitsQuery();
@@ -87,22 +88,23 @@ export default function MaintenanceRepair() {
   const navigate = useNavigate();
 
   // API queries — load data from server
+  const searchDebounce = useDebounce(searchValue, 600);
   const { data: repairPageData = { items: [], totalItems: 0 } } =
     useMaintenanceRepairPageQuery(
       paginationModel.page,
       paginationModel.pageSize,
-      undefined,
+      searchDebounce,
       status !== "" ? parseInt(status) : undefined,
       user?.taiKhoan?.tenDangNhap,
     );
 
-  const searchDebounce = useDebounce(searchValue, 600);
   const { data: resultPageData = { items: [], totalItems: 0 } } =
     useMaintenanceRepairResultPageQuery(
       paginationModel.page,
       paginationModel.pageSize,
       searchDebounce,
-      undefined,
+      status !== "" ? parseInt(status) : undefined,
+      user?.taiKhoan?.tenDangNhap,
     );
 
   // Repair mutations
@@ -122,8 +124,9 @@ export default function MaintenanceRepair() {
     cancelMutation: cancelResultMutation,
     deleteOneMutation: deleteRepairResultMutation,
     deleteManyMutation: deleteManyRepairResultMutation,
-    // updateManyMutation: updateManyRepairResultMutation,
+    updateManyMutation: updateManyRepairResultMutation,
     signMutation: signResultMutation,
+    getResultByRepairMutation,
   } = useMaintenanceRepairResultMutation();
 
   const handleEdit = () => {
@@ -135,6 +138,7 @@ export default function MaintenanceRepair() {
     setSelectedDocument(null);
     setSearchValue("");
     setShowSignDocument(false);
+    setSelectedRepair(null);
     setSelectedRepair(null);
     setShowForm(false);
     setShowResultForm(false);
@@ -156,7 +160,7 @@ export default function MaintenanceRepair() {
 
   const handleRowResultClick = useCallback(
     (params: any) => {
-      setSelectedRepairForResult(params.row);
+      setSelectedRepair(params.row);
       setShowForm(false);
       setShowResultForm(true);
       setReadOnly(true);
@@ -190,22 +194,45 @@ export default function MaintenanceRepair() {
   );
 
   const handleSign = (data: SignaturesData[]) => {
-    signMutation.mutate({
-      SignaturesData: data,
-      asset: selectedRepair,
-    });
+    if (activeTabRepair === 0) {
+      signMutation.mutate({
+        SignaturesData: data,
+        asset: selectedRepair,
+      });
+    } else {
+      signResultMutation.mutate({
+        SignaturesData: data,
+        asset: selectedRepair,
+      });
+    }
   };
 
   const handleSend = (items: any[]) => {
-    handleSendToSigner(items, updateManyMutation.mutateAsync, handleClose);
+    handleSendToSigner(
+      items,
+      activeTabRepair === 0
+        ? updateManyMutation.mutateAsync
+        : updateManyRepairResultMutation.mutateAsync,
+      handleClose,
+    );
   };
   const handleCancel = useCallback(async () => {
-    if (selectedRepair) {
+    if (selectedRepair && activeTabRepair === 0) {
       const confirm = await showConfirmAlert(
         `Hủy phiếu sửa chữa bảo dưỡng "${selectedRepair?.id}"`,
       );
       if (confirm && confirm.isConfirmed) {
         cancelMutation.mutate(
+          { id: selectedRepair.id, trangThai: 3 },
+          { onSuccess: handleClose },
+        );
+      }
+    } else if (selectedRepair && activeTabRepair === 1) {
+      const confirm = await showConfirmAlert(
+        `Hủy phiếu kết quả sửa chữa "${selectedRepair?.id}"`,
+      );
+      if (confirm && confirm.isConfirmed) {
+        cancelResultMutation.mutate(
           { id: selectedRepair.id, trangThai: 3 },
           { onSuccess: handleClose },
         );
@@ -228,13 +255,16 @@ export default function MaintenanceRepair() {
     },
     [handleClose, selectedRepair, deleteRepairMutation],
   );
+  const handleViewKetQua = async (id: string) => {
+    const result: any[] = await getResultByRepairMutation.mutateAsync(id);
+    setResult(result);
+    setShowKetQuaDialog(true);
+  };
 
-  const [repairDetailDetail, setRepairDetail] = useState<any[]>([]);
   const handleViewSignAssets = async (fileName: string, item: any) => {
     setSelectedDocument(fileName);
     setShowSignDocument(true);
     setSelectedRepair(item);
-    setRepairDetail(item.chiTietDieuDongTaiSanDTOS);
     setShowSidebar(true); // Hiện sidebar khi ký
   };
   const statusOptions: FilterOption[] = [
@@ -271,6 +301,14 @@ export default function MaintenanceRepair() {
   ];
   const columns: GridColDef<any>[] = useMemo(
     () => [
+      {
+        field: "id",
+        headerName: "Mã",
+        width: 140,
+        headerAlign: "center",
+        align: "center",
+      },
+
       {
         field: "tenSuaChua",
         headerName: "Tên Phiếu",
@@ -309,7 +347,7 @@ export default function MaintenanceRepair() {
 
       {
         field: "tenTrinhDuyetGiamDoc",
-        headerName: "Trình duyệt biên bản",
+        headerName: "Trình duyệt sửa chữa",
         width: 160,
         headerAlign: "center",
         align: "center",
@@ -329,15 +367,6 @@ export default function MaintenanceRepair() {
           );
         },
       },
-
-      {
-        field: "id",
-        headerName: "Ký số",
-        width: 140,
-        headerAlign: "center",
-        align: "center",
-      },
-
       {
         field: "tenDonViGiao",
         headerName: "Đơn vị giao",
@@ -392,7 +421,8 @@ export default function MaintenanceRepair() {
         width: 140,
         headerAlign: "center",
         align: "center",
-        renderCell: (params) => showStatusDocument(1),
+        renderCell: (params) =>
+          showStatusDocument(params.row.tinhTrangThucHien),
       },
 
       {
@@ -439,6 +469,23 @@ export default function MaintenanceRepair() {
                   <Eye size={20} strokeWidth={2} />
                 </IconButton>
               </Tooltip>
+              <Tooltip title="Xem phiếu kết quả">
+                <IconButton
+                  color="primary"
+                  disabled={!params.row.coPhieuKetQua}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleViewKetQua(params.row.id);
+                  }}
+                  sx={{
+                    padding: "4px",
+                    "&:hover": { bgcolor: "rgba(25, 118, 210, 0.08)" },
+                  }}
+                >
+                  <Building size={20} strokeWidth={2} />
+                </IconButton>
+              </Tooltip>
+
               <Tooltip title="Lập phiếu kết quả sửa chữa">
                 <span>
                   <IconButton
@@ -446,7 +493,7 @@ export default function MaintenanceRepair() {
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowForm(false);
-                      setSelectedRepairForResult({
+                      setSelectedRepair({
                         id: "",
                         idCongTy: CongTy.CT001,
                         tenPhieu: "",
@@ -507,6 +554,14 @@ export default function MaintenanceRepair() {
 
   const resultColumns: GridColDef<any>[] = [
     {
+      field: "id",
+      headerName: "Mã",
+      width: 140,
+      headerAlign: "center",
+      align: "center",
+    },
+
+    {
       field: "tenPhieu",
       headerName: "Tên phiếu",
       flex: 2,
@@ -528,6 +583,20 @@ export default function MaintenanceRepair() {
       editable: false,
     },
     {
+      field: "tenFile",
+      headerName: "Tài liệu duyệt",
+      width: 160,
+      headerAlign: "center",
+      align: "center",
+      renderCell: (params) => {
+        return showDownloadFile(
+          params.value,
+          () => S3Service.download(params.row.duongDanFile),
+          // handleDownloadFile(params.value),
+        );
+      },
+    },
+    {
       field: "ngayBatDauThucTe",
       headerName: "Ngày bắt đầu",
       flex: 1,
@@ -542,19 +611,43 @@ export default function MaintenanceRepair() {
       editable: false,
     },
     {
-      field: "trangThai",
-      headerName: "Trạng thái",
-      flex: 1.2,
-      minWidth: 120,
-      editable: false,
-      renderCell: (params: any) => showStatusPlan(params.value),
-    },
-    {
       field: "ngayTao",
       headerName: "Ngày tạo",
       flex: 1,
       minWidth: 100,
       editable: false,
+    },
+    {
+      field: "trangThai",
+      headerName: "Trạng thái phiếu",
+      width: 140,
+      headerAlign: "center",
+      align: "center",
+      renderCell: (params) => showStatus(params.row.trangThai ?? 0),
+    },
+
+    {
+      field: "TrangThaiKy",
+      headerName: "Trạng thái ký",
+      width: 140,
+      headerAlign: "center",
+      align: "center",
+      renderCell: (params) =>
+        ShowPermissionSigning(
+          getPermissionSigning(params.row, user, allStaffs),
+        ),
+    },
+    {
+      field: "share",
+      headerName: "Trình duyệt",
+      width: 140,
+      headerAlign: "center",
+      align: "center",
+      renderCell: (params) =>
+        showShareStatus(
+          params.row?.share ?? false,
+          params.row?.nguoiTao === user?.taiKhoan?.tenDangNhap,
+        ),
     },
     {
       field: "actions",
@@ -642,6 +735,11 @@ export default function MaintenanceRepair() {
 
   return (
     <>
+      <KetQuaDialog
+        open={showKetQuaDialog}
+        onClose={() => setShowKetQuaDialog(false)}
+        result={result}
+      />
       {!showSignDocument ? (
         <>
           <PageAction
@@ -673,15 +771,15 @@ export default function MaintenanceRepair() {
                 />
               </Box>
             )}
-            {showResultForm && selectedRepairForResult && !showForm && (
+            {showResultForm && selectedRepair && !showForm && (
               <Box sx={{ mb: 2 }}>
                 <MaintenanceRepairResultForm
-                  key={`result-form-${selectedRepairForResult?.id}`}
+                  key={`result-form-${selectedRepair?.id}`}
                   onClose={() => setShowResultForm(false)}
-                  selectedRepair={selectedRepairForResult}
+                  selectedRepair={selectedRepair}
                   readOnly={readOnly}
                   onSave={handleSaveResult}
-                  onCancel={() => setShowResultForm(false)}
+                  onCancel={handleCancel}
                   onEdit={handleEdit}
                   departments={allDepartments}
                   staffs={(allStaffs || []).filter(
@@ -792,7 +890,7 @@ export default function MaintenanceRepair() {
                       ? handleRowClick
                       : handleRowResultClick
                   }
-                  showStatusFilter={activeTabRepair === 0}
+                  showStatusFilter={true}
                   statusOptions={statusOptions}
                   statusValue={status}
                   onStatusChange={(value) => {

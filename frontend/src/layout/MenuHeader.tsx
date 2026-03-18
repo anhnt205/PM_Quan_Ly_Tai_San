@@ -30,7 +30,7 @@ import logo from "../assets/images/logo_1.png";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../redux/store";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { logout } from "../redux/userSlice";
 import { ROUTES } from "../utils/routes";
 import ExpirationSettingDialog from "../components/common/ExpirationSettingDialog";
@@ -47,15 +47,136 @@ import { ShowCountInSubMenu } from "../components/common/ShowCountInSubMenu";
 import { useToolTransferPageQuery } from "../pages/ToolTransfer/Mutation";
 import { useToolHandoverPageQuery } from "../pages/ToolHandover/Mutation";
 import { useAssetHandoverPageQuery } from "../pages/AssetHandover/Mutation";
-import { useMaintenanceRepairPageQuery } from "../pages/MaintenanceRepair/Mutation";
+import {
+  useMaintenanceRepairPageQuery,
+  useMaintenanceRepairResultPageQuery,
+} from "../pages/MaintenanceRepair/Mutation";
 import api from "../config/api.config";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React from "react";
 
-const NavMenuItem = ({ item }: { item: any }) => {
+const isMenuActive = (item: any, pathname: string): boolean => {
+  if (item.path === pathname) {
+    return true;
+  }
+  if (item.subMenu) {
+    return item.subMenu.some((subItem: any) => isMenuActive(subItem, pathname));
+  }
+  return false;
+};
+
+const NestedMenuItem = ({
+  item,
+  handleCloseMenu,
+}: {
+  item: any;
+  handleCloseMenu: () => void;
+}) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+
+  const isActive = isMenuActive(item, location.pathname);
+
+  const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleClick = (path: string) => {
+    if (path !== "#") {
+      navigate(path);
+      handleClose();
+      handleCloseMenu();
+    }
+  };
+
+  const menuItemStyle = (active: boolean) => ({
+    fontSize: "14px",
+    display: "flex",
+    gap: 2,
+    justifyContent: "space-between",
+    borderRadius: "6px",
+    mx: 1,
+    my: 0.5,
+    backgroundColor: active ? "action.hover" : "transparent",
+    "&:hover": {
+      backgroundColor: "action.hover",
+    },
+  });
+
+  if (item.subMenu && item.subMenu.length > 0) {
+    return (
+      <Box onMouseLeave={handleClose}>
+        <MenuItem onClick={handleOpen} sx={menuItemStyle(isActive)}>
+          {item.text}
+          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+            {item.count > 0 && <ShowCountInSubMenu count={item.count} />}
+            <ArrowRight fontSize="small" />
+          </Box>
+        </MenuItem>
+        <Menu
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleClose}
+          anchorOrigin={{
+            vertical: "top",
+            horizontal: "right",
+          }}
+          transformOrigin={{
+            vertical: "top",
+            horizontal: "left",
+          }}
+          MenuListProps={{ onMouseLeave: handleClose }}
+          slotProps={{
+            paper: {
+              sx: {
+                padding: "8px",
+                borderRadius: "12px",
+                boxShadow: "0px 5px 15px rgba(0,0,0,0.1)",
+              },
+            },
+          }}
+        >
+          {item.subMenu.map((subItem: any, index: number) => {
+            const isSubActive = isMenuActive(subItem, location.pathname);
+            return (
+              <MenuItem
+                key={index}
+                onClick={() => handleClick(subItem.path)}
+                sx={menuItemStyle(isSubActive)}
+              >
+                {subItem.text}
+                {subItem.count > 0 && (
+                  <ShowCountInSubMenu count={subItem.count} />
+                )}
+              </MenuItem>
+            );
+          })}
+        </Menu>
+      </Box>
+    );
+  }
+
+  return (
+    <MenuItem onClick={() => handleClick(item.path)} sx={menuItemStyle(isActive)}>
+      {item.text}
+      {item.count > 0 && <ShowCountInSubMenu count={item.count} />}
+    </MenuItem>
+  );
+};
+
+const NavMenuItem = ({ item }: { item: any }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  const isActive = isMenuActive(item, location.pathname);
 
   const handleOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -74,11 +195,11 @@ const NavMenuItem = ({ item }: { item: any }) => {
     minWidth: "auto",
     px: 2,
     position: "relative",
-  };
-
-  const handleSubItemClick = (path: string) => {
-    navigate(path);
-    handleClose();
+    borderRadius: "8px",
+    backgroundColor: isActive ? "rgba(255, 255, 255, 0.15)" : "transparent",
+    "&:hover": {
+      backgroundColor: "rgba(255, 255, 255, 0.1)",
+    },
   };
 
   // Trường hợp 1: Có menu con (subMenu)
@@ -88,7 +209,7 @@ const NavMenuItem = ({ item }: { item: any }) => {
         <Button
           color="inherit"
           onClick={handleOpen}
-          startIcon={item.icon} // THÊM DÒNG NÀY ĐỂ HIỂN THỊ ICON
+          startIcon={item.icon}
           endIcon={<KeyboardArrowDown />}
           sx={buttonStyle}
         >
@@ -102,18 +223,22 @@ const NavMenuItem = ({ item }: { item: any }) => {
           MenuListProps={{
             "aria-labelledby": "basic-button",
           }}
+          slotProps={{
+            paper: {
+              sx: {
+                padding: "8px",
+                borderRadius: "12px",
+                boxShadow: "0px 5px 15px rgba(0,0,0,0.1)",
+              },
+            },
+          }}
         >
           {item.subMenu.map((subItem: any, index: number) => (
-            <MenuItem
+            <NestedMenuItem
               key={index}
-              onClick={() => handleSubItemClick(subItem.path)}
-              sx={{ fontSize: "14px", display: "flex", gap: 2 }}
-            >
-              {subItem.text}
-              {subItem.count > 0 && (
-                <ShowCountInSubMenu count={subItem.count} />
-              )}
-            </MenuItem>
+              item={subItem}
+              handleCloseMenu={handleClose}
+            />
           ))}
         </Menu>
       </>
@@ -124,7 +249,7 @@ const NavMenuItem = ({ item }: { item: any }) => {
   return (
     <Button
       onClick={() => navigate(item.path)}
-      startIcon={item.icon} // THÊM DÒNG NÀY ĐỂ HIỂN THỊ ICON
+      startIcon={item.icon}
       sx={buttonStyle}
     >
       {item.text}
@@ -259,6 +384,8 @@ export default function Menuheader() {
   );
   const { data: maintenanceRepair = { items: [] } } =
     useMaintenanceRepairPageQuery(0, 999999);
+  const { data: maintenanceRepairResult = { items: [] } } =
+    useMaintenanceRepairResultPageQuery(0, 999999);
 
   const assetTransferCount1 = getAssetTransferCount(
     1,
@@ -305,6 +432,10 @@ export default function Menuheader() {
     user?.taiKhoan?.tenDangNhap,
     maintenanceRepair.items,
   );
+  const maintenanceRepairResultCount = getMaintenanceRepairCount(
+    user?.taiKhoan?.tenDangNhap,
+    maintenanceRepairResult.items,
+  );
 
   const menuItems = [
     {
@@ -339,84 +470,101 @@ export default function Menuheader() {
       ].filter((sub) => hasPermission(sub.code)),
     },
     {
-      text: "Quản lý tài sản",
+      text: "Quản lý thiết bị",
       icon: <Inventory fontSize="small" />,
-      path: ROUTES.ASSETMANAGER,
-      code: "TAISAN",
-    },
-    {
-      text: "Quản lý CCDC-Vật tư",
-      icon: <Inventory fontSize="small" />,
-      path: ROUTES.TOOLMANAGER,
-      code: "CCDCVT",
-    },
-    {
-      text: "Điều động tài sản",
-      icon: <LocalShipping fontSize="small" />,
-      path: "/",
-      code: "DIEUDONG_TAISAN",
-      count: assetTransferCount1 + assetTransferCount2 + assetTransferCount3,
+      path: "#",
       subMenu: [
-        {
-          text: "Cấp phát tài sản",
-          path: `${ROUTES.ASSETTRANSFER}?type=1`,
-          count: assetTransferCount1,
-        },
+        { text: "Quản lý tài sản", path: ROUTES.ASSETMANAGER, code: "TAISAN" },
+        { text: "Quản lý CCDC-Vật tư", path: ROUTES.TOOLMANAGER, code: "CCDCVT" },
+      ].filter((sub) => hasPermission(sub.code)),
+    },
+    {
+      text: "Điều chuyển thiết bị",
+      icon: <LocalShipping fontSize="small" />,
+      path: "#",
+      count:
+        assetTransferCount1 +
+        assetTransferCount2 +
+        assetTransferCount3 +
+        toolTransferCount1 +
+        toolTransferCount2 +
+        toolTransferCount3,
+      subMenu: [
         {
           text: "Điều chuyển tài sản",
-          path: `${ROUTES.ASSETTRANSFER}?type=2`,
-          count: assetTransferCount2,
-        },
-        {
-          text: "Thu hồi tài sản",
-          path: `${ROUTES.ASSETTRANSFER}?type=3`,
-          count: assetTransferCount3,
-        },
-      ],
-    },
-    {
-      text: "Điều động CCDC - vật tư",
-      icon: <LocalShipping fontSize="small" />,
-      path: "/",
-      code: "DIEUDONG_CCDC",
-      count: toolTransferCount1 + toolTransferCount2 + toolTransferCount3,
-      subMenu: [
-        {
-          text: "Cấp phát CCDC - vật tư",
-          path: `${ROUTES.TOOLTRANSFER}?type=1`,
-          count: toolTransferCount1,
+          path: "#",
+          code: "DIEUDONG_TAISAN",
+          count:
+            assetTransferCount1 + assetTransferCount2 + assetTransferCount3,
+          subMenu: [
+            {
+              text: "Cấp phát tài sản",
+              path: `${ROUTES.ASSETTRANSFER}?type=1`,
+              count: assetTransferCount1,
+            },
+            {
+              text: "Điều chuyển tài sản",
+              path: `${ROUTES.ASSETTRANSFER}?type=2`,
+              count: assetTransferCount2,
+            },
+            {
+              text: "Thu hồi tài sản",
+              path: `${ROUTES.ASSETTRANSFER}?type=3`,
+              count: assetTransferCount3,
+            },
+          ],
         },
         {
           text: "Điều chuyển CCDC - vật tư",
-          path: `${ROUTES.TOOLTRANSFER}?type=2`,
-          count: toolTransferCount2,
+          path: "#",
+          code: "DIEUDONG_CCDC",
+          count:
+            toolTransferCount1 + toolTransferCount2 + toolTransferCount3,
+          subMenu: [
+            {
+              text: "Cấp phát CCDC - vật tư",
+              path: `${ROUTES.TOOLTRANSFER}?type=1`,
+              count: toolTransferCount1,
+            },
+            {
+              text: "Điều chuyển CCDC - vật tư",
+              path: `${ROUTES.TOOLTRANSFER}?type=2`,
+              count: toolTransferCount2,
+            },
+            {
+              text: "Thu hồi CCDC - vật tư",
+              path: `${ROUTES.TOOLTRANSFER}?type=3`,
+              count: toolTransferCount3,
+            },
+          ],
+        },
+      ].filter((sub) => hasPermission(sub.code)),
+    },
+    {
+      text: "Bàn giao thiết bị",
+      icon: <Handshake fontSize="small" />,
+      path: "#",
+      count: assetHandoverCount + toolHandoverCount,
+      subMenu: [
+        {
+          text: "Bàn giao tài sản",
+          path: "/ban_giao_tai_san",
+          code: "BANGIAO_TAISAN",
+          count: assetHandoverCount,
         },
         {
-          text: "Thu hồi CCDC - vật tư",
-          path: `${ROUTES.TOOLTRANSFER}?type=3`,
-          count: toolTransferCount3,
+          text: "Bàn giao CCDC-Vật tư",
+          path: ROUTES.TOOLHANDOVER,
+          code: "BANGIAO_CCDC",
+          count: toolHandoverCount,
         },
-      ],
-    },
-    {
-      text: "Bàn giao tài sản",
-      icon: <Handshake fontSize="small" />,
-      path: "/ban_giao_tai_san",
-      code: "BANGIAO_TAISAN",
-      count: assetHandoverCount,
-    },
-    {
-      text: "Bàn giao CCDC-Vật tư",
-      icon: <Handshake fontSize="small" />,
-      path: ROUTES.TOOLHANDOVER,
-      code: "BANGIAO_CCDC",
-      count: toolHandoverCount,
+      ].filter((sub) => hasPermission(sub.code)),
     },
     {
       text: "Sửa chữa bảo dưỡng",
       icon: <Engineering fontSize="small" />,
       path: "/",
-      count: maintenanceRepairCount,
+      count: maintenanceRepairCount + maintenanceRepairResultCount,
       subMenu: [
         {
           text: "Kế hoạch sửa chữa bảo dưỡng",
@@ -425,7 +573,7 @@ export default function Menuheader() {
         {
           text: "Phiếu sửa chữa bảo dưỡng",
           path: `${ROUTES.MAINTENANCEREPAIR}`,
-          count: maintenanceRepairCount,
+          count: maintenanceRepairCount + maintenanceRepairResultCount,
         },
       ],
     },
