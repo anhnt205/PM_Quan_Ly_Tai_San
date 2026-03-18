@@ -57,12 +57,12 @@ public class KetQuaSuaChuaController {
     // ==================== API LẤY CHI TIẾT ====================
 
     @GetMapping("/suachua/{idSuaChua}")
-    public ResponseEntity<KetQuaSuaChuaDTO> findByIdSuaChua(@PathVariable String idSuaChua) {
-        KetQuaSuaChuaDTO dto = ketQuaSuaChuaService.findByIdSuaChua(idSuaChua);
-        if (dto == null) {
+    public ResponseEntity<List<KetQuaSuaChuaDTO>> findByIdSuaChua(@PathVariable String idSuaChua) {
+        List<KetQuaSuaChuaDTO> list = ketQuaSuaChuaService.findListByIdSuaChua(idSuaChua);
+        if (list.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(dto);
+        return ResponseEntity.ok(list);
     }
 
     @GetMapping("/{id}")

@@ -50,15 +50,26 @@ public class KetQuaSuaChuaService {
 
     // ==================== CRUD CƠ BẢN ====================
 
+//    /**
+//     * Tìm kết quả sửa chữa theo IdSuaChua (phiếu sửa chữa) và load chi tiết + vật tư
+//     */
+//    public KetQuaSuaChuaDTO findByIdSuaChua(String idSuaChua) {
+//        KetQuaSuaChuaDTO dto = ketQuaSuaChuaDao.findByIdSuaChua(idSuaChua);
+//        if (dto != null) {
+//            loadChiTietAndVatTu(dto);
+//        }
+//        return dto;
+//    }
+
     /**
-     * Tìm kết quả sửa chữa theo IdSuaChua (phiếu sửa chữa) và load chi tiết + vật tư
+     * Tìm danh sách kết quả sửa chữa theo IdSuaChua (phiếu sửa chữa) và load chi tiết + vật tư
      */
-    public KetQuaSuaChuaDTO findByIdSuaChua(String idSuaChua) {
-        KetQuaSuaChuaDTO dto = ketQuaSuaChuaDao.findByIdSuaChua(idSuaChua);
-        if (dto != null) {
+    public List<KetQuaSuaChuaDTO> findListByIdSuaChua(String idSuaChua) {
+        List<KetQuaSuaChuaDTO> list = ketQuaSuaChuaDao.findListByIdSuaChua(idSuaChua);
+        for (KetQuaSuaChuaDTO dto : list) {
             loadChiTietAndVatTu(dto);
         }
-        return dto;
+        return list;
     }
 
     /**

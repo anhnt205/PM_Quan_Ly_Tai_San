@@ -25,57 +25,106 @@ public class KetQuaSuaChuaDao {
 
     // ==================== FINDERS ====================
 
-    public KetQuaSuaChuaDTO findByIdSuaChua(String idSuaChua) {
+//    public KetQuaSuaChuaDTO findByIdSuaChua(String idSuaChua) {
+//        String sql = """
+//            SELECT
+//                kq.Id,
+//                kq.IdCongTy,
+//                kq.TenPhieu,
+//                kq.IdSuaChua,
+//                kq.IdLoaiSuaChua,
+//                kq.NgayBatDauThucTe,
+//                kq.NgayKetThucThucTe,
+//                kq.IdDonViGiao,
+//                pbGiao.TenPhongBan   AS tenDonViGiao,
+//                kq.IdDonViNhan,
+//                pbNhan.TenPhongBan   AS tenDonViNhan,
+//                kq.IdNguoiKyNhay,
+//                nvKyNhay.HoTen       AS tenNguoiKyNhay,
+//                kq.TrangThaiKyNhay,
+//                kq.NguoiLapPhieuKyNhay,
+//                kq.IdTrinhDuyetCapPhong,
+//                nvCapPhong.HoTen     AS tenTrinhDuyetCapPhong,
+//                kq.TrinhDuyetCapPhongXacNhan,
+//                kq.IdTrinhDuyetGiamDoc,
+//                nvGiamDoc.HoTen      AS tenTrinhDuyetGiamDoc,
+//                kq.TrinhDuyetGiamDocXacNhan,
+//                kq.IdDonViDeNghi,
+//                kq.DuongDanFile,
+//                kq.TenFile,
+//                kq.TaiLieuBanGhi,
+//                kq.ByStep,
+//                kq.SoQuyetDinh,
+//                kq.NguoiTao,
+//                kq.Share,
+//                kq.NgayTao,
+//                kq.CoPhieuBanGiao,
+//                kq.TaiLieuCuoi,
+//                kq.TrangThai,
+//                kq.ChiPhiPhanCong,
+//                kq.ChiPhiThueNgoai
+//            FROM ketquasuachua kq
+//                LEFT JOIN PhongBan pbGiao    ON kq.IdDonViGiao            = pbGiao.Id
+//                LEFT JOIN PhongBan pbNhan    ON kq.IdDonViNhan            = pbNhan.Id
+//                LEFT JOIN NhanVien nvKyNhay  ON kq.IdNguoiKyNhay          = nvKyNhay.Id
+//                LEFT JOIN NhanVien nvCapPhong ON kq.IdTrinhDuyetCapPhong  = nvCapPhong.Id
+//                LEFT JOIN NhanVien nvGiamDoc  ON kq.IdTrinhDuyetGiamDoc   = nvGiamDoc.Id
+//            WHERE kq.IdSuaChua = ?
+//        """;
+//        try {
+//            return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(KetQuaSuaChuaDTO.class), idSuaChua);
+//        } catch (Exception e) {
+//            return null;
+//        }
+//    }
+
+    public List<KetQuaSuaChuaDTO> findListByIdSuaChua(String idSuaChua) {
         String sql = """
-            SELECT
-                kq.Id,
-                kq.IdCongTy,
-                kq.TenPhieu,
-                kq.IdSuaChua,
-                kq.IdLoaiSuaChua,
-                kq.NgayBatDauThucTe,
-                kq.NgayKetThucThucTe,
-                kq.IdDonViGiao,
-                pbGiao.TenPhongBan   AS tenDonViGiao,
-                kq.IdDonViNhan,
-                pbNhan.TenPhongBan   AS tenDonViNhan,
-                kq.IdNguoiKyNhay,
-                nvKyNhay.HoTen       AS tenNguoiKyNhay,
-                kq.TrangThaiKyNhay,
-                kq.NguoiLapPhieuKyNhay,
-                kq.IdTrinhDuyetCapPhong,
-                nvCapPhong.HoTen     AS tenTrinhDuyetCapPhong,
-                kq.TrinhDuyetCapPhongXacNhan,
-                kq.IdTrinhDuyetGiamDoc,
-                nvGiamDoc.HoTen      AS tenTrinhDuyetGiamDoc,
-                kq.TrinhDuyetGiamDocXacNhan,
-                kq.IdDonViDeNghi,
-                kq.DuongDanFile,
-                kq.TenFile,
-                kq.TaiLieuBanGhi,
-                kq.ByStep,
-                kq.SoQuyetDinh,
-                kq.NguoiTao,
-                kq.Share,
-                kq.NgayTao,
-                kq.CoPhieuBanGiao,
-                kq.TaiLieuCuoi,
-                kq.TrangThai,
-                kq.ChiPhiPhanCong,
-                kq.ChiPhiThueNgoai
-            FROM ketquasuachua kq
-                LEFT JOIN PhongBan pbGiao    ON kq.IdDonViGiao            = pbGiao.Id
-                LEFT JOIN PhongBan pbNhan    ON kq.IdDonViNhan            = pbNhan.Id
-                LEFT JOIN NhanVien nvKyNhay  ON kq.IdNguoiKyNhay          = nvKyNhay.Id
-                LEFT JOIN NhanVien nvCapPhong ON kq.IdTrinhDuyetCapPhong  = nvCapPhong.Id
-                LEFT JOIN NhanVien nvGiamDoc  ON kq.IdTrinhDuyetGiamDoc   = nvGiamDoc.Id
-            WHERE kq.IdSuaChua = ?
-        """;
-        try {
-            return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(KetQuaSuaChuaDTO.class), idSuaChua);
-        } catch (Exception e) {
-            return null;
-        }
+        SELECT
+            kq.Id,
+            kq.IdCongTy,
+            kq.TenPhieu,
+            kq.IdSuaChua,
+            kq.IdLoaiSuaChua,
+            kq.NgayBatDauThucTe,
+            kq.NgayKetThucThucTe,
+            kq.IdDonViGiao,
+            pbGiao.TenPhongBan   AS tenDonViGiao,
+            kq.IdDonViNhan,
+            pbNhan.TenPhongBan   AS tenDonViNhan,
+            kq.IdNguoiKyNhay,
+            nvKyNhay.HoTen       AS tenNguoiKyNhay,
+            kq.TrangThaiKyNhay,
+            kq.NguoiLapPhieuKyNhay,
+            kq.IdTrinhDuyetCapPhong,
+            nvCapPhong.HoTen     AS tenTrinhDuyetCapPhong,
+            kq.TrinhDuyetCapPhongXacNhan,
+            kq.IdTrinhDuyetGiamDoc,
+            nvGiamDoc.HoTen      AS tenTrinhDuyetGiamDoc,
+            kq.TrinhDuyetGiamDocXacNhan,
+            kq.IdDonViDeNghi,
+            kq.DuongDanFile,
+            kq.TenFile,
+            kq.TaiLieuBanGhi,
+            kq.ByStep,
+            kq.SoQuyetDinh,
+            kq.NguoiTao,
+            kq.Share,
+            kq.NgayTao,
+            kq.CoPhieuBanGiao,
+            kq.TaiLieuCuoi,
+            kq.TrangThai,
+            kq.ChiPhiPhanCong,
+            kq.ChiPhiThueNgoai
+        FROM ketquasuachua kq
+            LEFT JOIN PhongBan pbGiao    ON kq.IdDonViGiao            = pbGiao.Id
+            LEFT JOIN PhongBan pbNhan    ON kq.IdDonViNhan            = pbNhan.Id
+            LEFT JOIN NhanVien nvKyNhay  ON kq.IdNguoiKyNhay          = nvKyNhay.Id
+            LEFT JOIN NhanVien nvCapPhong ON kq.IdTrinhDuyetCapPhong  = nvCapPhong.Id
+            LEFT JOIN NhanVien nvGiamDoc  ON kq.IdTrinhDuyetGiamDoc   = nvGiamDoc.Id
+        WHERE kq.IdSuaChua = ?
+    """;
+        return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(KetQuaSuaChuaDTO.class), idSuaChua);
     }
 
     public KetQuaSuaChua findById(String id) {
