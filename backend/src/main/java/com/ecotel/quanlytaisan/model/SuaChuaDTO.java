@@ -21,7 +21,7 @@ public class SuaChuaDTO {
     private String tenSuaChua;
     private String mucDoSuCo;
     private String mucDoUuTien;
-
+    private Integer tinhTrangThucHien;
     // Đơn vị
     private String idDonViGiao;
     private String tenDonViGiao;
@@ -112,4 +112,5 @@ public class SuaChuaDTO {
     public Boolean getCoPhieuBanGiao() {
         return coPhieuSuaChua != null ? coPhieuSuaChua : false;
     }
+
 }

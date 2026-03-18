@@ -107,6 +107,22 @@ public class SuaChuaDao {
         }
     }
 
+    public Set<String> getIdsChuaSuaHet(String idCongTy) {
+        String sql = """
+        SELECT DISTINCT sc.Id
+        FROM SuaChua sc
+        WHERE sc.IdCongTy = ?
+          AND sc.CoPhieuSuaChua = 1
+          AND EXISTS (
+              SELECT 1 FROM suachua_chitiet_taisan ct
+              WHERE ct.IdSuaChua = sc.Id
+                AND (ct.DaSuaChua = 0 OR ct.DaSuaChua IS NULL)
+          )
+    """;
+        List<String> ids = jdbcTemplate.queryForList(sql, String.class, idCongTy);
+        return new HashSet<>(ids);
+    }
+
     public List<SuaChuaDTO> findAll(String idCongTy) {
         if (cache == null || cache.isEmpty()) {
             refreshCache();

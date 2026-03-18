@@ -15,6 +15,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,6 +31,9 @@ public class SuaChuaService {
 
     @Autowired
     private SuaChuaChiTietTaiSanDao taiSanSuaChuaDao;
+
+    @Autowired
+    private ConfigDao configDao;
 
     @Autowired
     private SuaChuaVatTuTieuHaoDao vattuSuaChuaDao;
@@ -68,7 +76,8 @@ public class SuaChuaService {
             String idDonViGiao,
             String idDonViNhan,
             String idKeHoach,
-            Integer trangThai
+            Integer trangThai,
+            Boolean chuaSuaHet
     ) throws SQLException {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
@@ -123,6 +132,13 @@ public class SuaChuaService {
                     .collect(Collectors.toList());
         }
 
+        if (Boolean.TRUE.equals(chuaSuaHet)) {
+            Set<String> idsChuaSuaHet = suaChuaDao.getIdsChuaSuaHet(idCongTy);
+            sourceList = sourceList.stream()
+                    .filter(item -> idsChuaSuaHet.contains(item.getId()))
+                    .collect(Collectors.toList());
+        }
+
         // Tính số lượng theo từng trạng thái TRƯỚC khi lọc trangThai
         Map<String, Long> trangThaiCounts = new HashMap<>();
         trangThaiCounts.put("nhap",      sourceList.stream().filter(i -> Integer.valueOf(0).equals(i.getTrangThai())).count());
@@ -160,6 +176,7 @@ public class SuaChuaService {
             item.setDanhSachVatTu(vattuSuaChuaDao.findByIdSuaChua(item.getId()));
             item.setChuKyList(kyTaiLieuDao.findById(item.getId()));
             item.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId()));
+            item.setTinhTrangThucHien(tinhTrangThucHien(item));
         }
 
         PageResponse<SuaChuaDTO> response = new PageResponse<>(items, total, page, size);
@@ -265,6 +282,7 @@ public class SuaChuaService {
             dto.setDanhSachVatTu(vattuSuaChuaDao.findByIdSuaChua(id));
             dto.setChuKyList(kyTaiLieuDao.findById(id));
             dto.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(id));
+            dto.setTinhTrangThucHien(tinhTrangThucHien(dto));
         }
         return dto;
     }
@@ -495,5 +513,77 @@ public class SuaChuaService {
         }
         workbook.close();
         return list;
+    }
+    private LocalDateTime convertToLocalDateTime(Date date) {
+        if (date == null) return null;
+        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+    }
+    private LocalDateTime parseDateTime(String dateTimeString) {
+        if (dateTimeString == null || dateTimeString.trim().isEmpty()) {
+            return LocalDateTime.now();
+        }
+        DateTimeFormatter[] formatters = {
+                DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS"),
+                DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"),
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"),
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+                DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        };
+        for (DateTimeFormatter formatter : formatters) {
+            try {
+                if (dateTimeString.length() == 10) {
+                    LocalDate date = LocalDate.parse(dateTimeString, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                    return date.atStartOfDay();
+                }
+                return LocalDateTime.parse(dateTimeString, formatter);
+            } catch (Exception e) {
+                // tiếp tục
+            }
+        }
+        throw new RuntimeException("Không thể parse ngày: " + dateTimeString);
+    }
+
+    /**
+     * Tính trạng thái thực hiện của phiếu sửa chữa
+     * 1: Chưa có phiếu kết quả (CoPhieuSuaChua = false)
+     * 2: Có phiếu kết quả nhưng chưa sửa hết tài sản (còn DaSuaChua = 0)
+     * 3: Đã sửa hết tài sản (tất cả DaSuaChua = 1)
+     * 4: Sắp quá hạn (còn trong khoảng cảnh báo so với NgayKetThucDuKien)
+     * 5: Đã quá hạn (quá NgayKetThucDuKien)
+     */
+    public int tinhTrangThucHien(SuaChuaDTO dto) {
+        // Lấy cấu hình từ người tạo
+        Config config = configDao.findByIdAccount(dto.getNguoiTao());
+        int ngayBaoHetHan = 3; // mặc định
+        if (config != null && config.getNgayBaoHetHan() != null) {
+            ngayBaoHetHan = config.getNgayBaoHetHan();
+        }
+
+        // Kiểm tra quá hạn dựa trên NgayKetThucDuKien (Date)
+        Date ngayKetThuc = dto.getNgayKetThucDuKien();
+        if (ngayKetThuc != null) {
+            LocalDateTime deadline = convertToLocalDateTime(ngayKetThuc);
+            LocalDateTime now = LocalDateTime.now();
+            long daysLeft = ChronoUnit.DAYS.between(now, deadline);
+            if (daysLeft < 0) {
+                return 5; // Đã quá hạn
+            } else if (daysLeft <= ngayBaoHetHan) {
+                return 4; // Sắp quá hạn
+            }
+        }
+
+        // Kiểm tra CoPhieuSuaChua
+        boolean coPhieu = Boolean.TRUE.equals(dto.getCoPhieuSuaChua());
+        if (!coPhieu) {
+            return 1; // Chưa có phiếu kết quả
+        }
+
+        // Kiểm tra tài sản đã sửa hết chưa
+        int countChuaSua = taiSanSuaChuaDao.countChuaSuaByIdSuaChua(dto.getId());
+        if (countChuaSua == 0) {
+            return 3; // Đã sửa hết
+        } else {
+            return 2; // Có phiếu nhưng chưa sửa hết
+        }
     }
 }
