@@ -232,7 +232,24 @@ export default function ToolTransfer() {
   };
 
   const handleDecision = (data: any[]) => {
-    decisionMutation.mutate(data);
+    decisionMutation.mutate(data, {
+      onSuccess: () => {
+        // Chủ động cập nhật lại state của selectedRow ngay khi ban hành thành công
+        setSelectedRow((prev: any) => {
+          if (!prev) return prev;
+
+          // Kiểm tra xem row đang được chọn (đang mở Sidebar) có nằm trong danh sách vừa ban hành không
+          const isJustIssued = data.some((item) => item.id === prev.id);
+
+          if (isJustIssued) {
+            // Nếu có, trả về một object mới và ghi đè trangThai thành 4 (Đã ban hành)
+            return { ...prev, trangThai: 4 };
+          }
+
+          return prev;
+        });
+      },
+    });
   };
 
   const handleViewSignAssets = async (fileName: string, item: any) => {
@@ -386,7 +403,16 @@ export default function ToolTransfer() {
       renderCell: (params) => {
         const rowData = params.row as ToolTransferData;
         return (
-          <Box sx={{ display: "flex", gap: 0.5, justifyContent: "center" }}>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 0.5,
+              justifyContent: "center",
+              alignItems: "center",
+              height: "100%", // Thêm dòng này để Box lấp đầy chiều cao của cell
+              width: "100%", // Thêm dòng này để đảm bảo căn giữa ngang tuyệt đối
+            }}
+          >
             <Tooltip title="Xóa">
               <IconButton
                 size="small"
@@ -411,7 +437,7 @@ export default function ToolTransfer() {
                 }}
                 sx={{
                   padding: "4px",
-                  "&:hover": { bgcolor: "rgba(25, 118, 210, 0.08)" },
+                  "&:hover": { bgcolor: "action.hover" }, // Sửa lại theo chuẩn Semantic Colors của dự án
                 }}
               >
                 <Building size={18} />
@@ -428,9 +454,7 @@ export default function ToolTransfer() {
                     rowData.chiTietDieuDongCCDCVatTuDTOS || [],
                   );
                   setShowSignerSidebar(false);
-                  // setDepartmentId(rowData.idDonViGiao);
                   setSelectedIds([rowData.id]);
-
                   setShowSignDocument(true);
                 }}
               >

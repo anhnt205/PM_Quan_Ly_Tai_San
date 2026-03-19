@@ -26,6 +26,7 @@ interface SignerStepProps {
   name: string;
   status: SignStatus;
   date?: string;
+  isSimpleDot?: boolean;
 }
 
 const getSteps = (item: any): SignerStepProps[] => {
@@ -37,9 +38,9 @@ const getSteps = (item: any): SignerStepProps[] => {
   if (item.nguoiLapPhieuKyNhay) {
     steps.push({
       label: "Người ký nháy",
-      name: item.tenNguoiKyNhay || "Chưa xác định", // Giả định field name
+      name: item.tenNguoiKyNhay || "Chưa xác định",
       status: item.trangThaiKyNhay ? "completed" : "pending",
-      date: item.ngayKyNhay, // Giả định có field ngày
+      date: item.ngayKyNhay,
     });
   }
 
@@ -61,29 +62,45 @@ const getSteps = (item: any): SignerStepProps[] => {
     });
   }
 
-  // 4. Trình duyệt cấp phòng (Luôn hiển thị theo code Flutter)
+  // 4. Trình duyệt cấp phòng
   steps.push({
     label: "Trình duyệt cấp phòng",
     name: item.tenTrinhDuyetCapPhong || "Chưa xác định",
     status: item.trinhDuyetCapPhongXacNhan ? "completed" : "pending",
   });
 
-  // 5. Danh sách người đại diện (Map từ listSignatory)
+  // 5. Danh sách người đại diện
   if (item.nguoiKyList && Array.isArray(item.nguoiKyList)) {
     item.nguoiKyList.forEach((e: any) => {
       steps.push({
         label: "Người đại diện",
-        name: e.tenNguoiKy || "",
+        name: e.tenNguoiKy || "Chưa xác định",
         status: e.trangThai === 1 ? "completed" : "pending",
       });
     });
   }
 
-  // 6. Trình duyệt ban giám đốc (Luôn hiển thị)
+  // 6. Trình duyệt ban giám đốc
   steps.push({
     label: "Trình duyệt ban giám đốc",
     name: item.tenTrinhDuyetGiamDoc || "Chưa xác định",
     status: item.trinhDuyetGiamDocXacNhan ? "completed" : "pending",
+  });
+
+  // 7. Trạng thái của phòng văn thư
+  let vanThuName = "Ban hành";
+  let vanThuStatus: SignStatus = "pending";
+
+  if (item.trangThai === 4) {
+    vanThuName = "Ban hành";
+    vanThuStatus = "completed";
+  }
+
+  steps.push({
+    label: "Trạng thái của phòng văn thư",
+    name: vanThuName,
+    status: vanThuStatus,
+    isSimpleDot: true,
   });
 
   return steps;
@@ -98,13 +115,11 @@ export default function SignerSidebar({
 }) {
   const theme = useTheme();
 
-  // Chuyển đổi data từ row sang định dạng Stepper
   const dynamicSteps = React.useMemo(
     () => getSteps(selectedRow),
     [selectedRow],
   );
 
-  if (!selectedRow) return null;
   if (!selectedRow) return null;
 
   const getStatusConfig = (status: SignStatus) => {
@@ -123,7 +138,7 @@ export default function SignerSidebar({
           borderColor: alpha(theme.palette.warning.main, 0.3),
           icon: <History color="warning" />,
         };
-      default: // future hoặc mặc định
+      default:
         return {
           color: theme.palette.text.disabled,
           bgcolor: theme.palette.action.hover,
@@ -142,57 +157,107 @@ export default function SignerSidebar({
         borderColor: "divider",
         display: "flex",
         flexDirection: "column",
-        bgcolor: "#fff",
+        minHeight: "500px",
+        overflow: "hidden",
+        bgcolor: "background.paper",
       }}
     >
-      {/* 1. Header Sidebar */}
+      {/* Header Sidebar */}
       <Box
         p={2}
         borderBottom="1px solid"
         borderColor="divider"
         display="flex"
         justifyContent="space-between"
-        alignItems="start"
+        alignItems="center"
+        bgcolor="background.paper"
+        sx={{ flexShrink: 0, zIndex: 10 }}
       >
-        <Box>
-          <Box display="flex" alignItems="center" gap={1} mb={0.5}>
-            <ErrorOutline fontSize="small" color="action" />
-            <Typography variant="subtitle2" color="text.secondary">
-              Chi tiết Trạng thái ký "Biên bản {selectedRow?.id}"
-            </Typography>
-          </Box>
+        <Box display="flex" alignItems="center" gap={1}>
+          <ErrorOutline fontSize="small" color="action" />
+          <Typography variant="subtitle2" color="text.secondary">
+            Chi tiết Trạng thái ký "Biên bản {selectedRow?.id}"
+          </Typography>
         </Box>
         <IconButton size="small" onClick={onClose}>
           <VisibilityOff fontSize="small" />
         </IconButton>
       </Box>
 
-      {/* 2. Content Scrollable */}
-      <Box p={3} sx={{ flex: 1, overflowY: "auto" }}>
-        {/* Stepper */}
-        <Stepper orientation="vertical" activeStep={1}>
+      {/* Content Scrollable */}
+      <Box p={2} sx={{ flex: 1, overflowY: "auto" }}>
+        <Stepper
+          orientation="vertical"
+          connector={null}
+          sx={{
+            px: 1,
+            "& .MuiStep-root": {
+              position: "relative",
+            },
+            "& .MuiStepContent-root": {
+              ml: 1.5,
+              pl: 3.5,
+              pr: 0,
+              borderLeft: "2px solid",
+              position: "relative",
+            },
+          }}
+        >
           {dynamicSteps.map((step, index) => {
             const config = getStatusConfig(step.status);
+            const isLast = index === dynamicSteps.length - 1;
 
             return (
               <Step key={index} active={true} expanded={true}>
-                <StepLabel icon={config.icon}>
+                <StepLabel
+                  icon={config.icon}
+                  sx={{
+                    py: 0.5,
+                    "& .MuiStepLabel-label": { mt: "4px !important" },
+                  }}
+                >
                   <Typography
                     variant="caption"
                     color="text.secondary"
-                    fontWeight={600}
+                    fontWeight={700}
                   >
                     {step.label}
                   </Typography>
                 </StepLabel>
+
                 <StepContent
-                  sx={{ borderLeft: `1px solid ${theme.palette.divider}` }}
+                  sx={{
+                    borderColor: `${config.color} !important`,
+                    "&::before": {
+                      content: '""',
+                      position: "absolute",
+                      left: 0,
+                      top: 27,
+                      width: 18,
+                      height: "2px",
+                      backgroundColor: config.color,
+                    },
+                    ...(isLast
+                      ? {
+                          borderLeft: "none !important",
+                          "&::after": {
+                            content: '""',
+                            position: "absolute",
+                            left: -2,
+                            top: 0,
+                            height: 28,
+                            width: "2px",
+                            backgroundColor: config.color,
+                          },
+                        }
+                      : {}),
+                  }}
                 >
                   <Paper
                     elevation={0}
                     sx={{
                       p: 1.5,
-                      mt: 1,
+                      width: "100%",
                       bgcolor: config.bgcolor,
                       border: "1px solid",
                       borderColor: config.borderColor,
@@ -210,6 +275,7 @@ export default function SignerSidebar({
                           step.status === "pending"
                             ? "text.secondary"
                             : "text.primary",
+                        lineHeight: 1.2,
                       }}
                     >
                       {step.name}
@@ -219,7 +285,12 @@ export default function SignerSidebar({
                       <Typography
                         variant="caption"
                         color="text.secondary"
-                        sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 0.5,
+                          mt: 0.5,
+                        }}
                       >
                         <History fontSize="inherit" /> {step.date}
                       </Typography>

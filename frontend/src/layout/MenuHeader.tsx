@@ -163,7 +163,10 @@ const NestedMenuItem = ({
   }
 
   return (
-    <MenuItem onClick={() => handleClick(item.path)} sx={menuItemStyle(isActive)}>
+    <MenuItem
+      onClick={() => handleClick(item.path)}
+      sx={menuItemStyle(isActive)}
+    >
       {item.text}
       {item.count > 0 && <ShowCountInSubMenu count={item.count} />}
     </MenuItem>
@@ -462,8 +465,8 @@ export default function Menuheader() {
         { text: "Loại tài sản", path: ROUTES.TYPEASSET },
         { text: "Nhóm ccdc", path: ROUTES.TOOLGROUP },
         { text: "Loại ccdc", path: ROUTES.TOOLTYPE },
-        { text: "Loại kế hoạch sửa chữa", path: ROUTES.PlanType },
-        { text: "Loại sửa chữa bảo dưỡng", path: ROUTES.MAINTENANCEREPAIRTYPE },
+        // { text: "Loại kế hoạch sửa chữa", path: ROUTES.PlanType },
+        // { text: "Loại sửa chữa bảo dưỡng", path: ROUTES.MAINTENANCEREPAIRTYPE },
         { text: "Đơn vị tính", path: ROUTES.UNIT },
         { text: "Lý do tăng", path: ROUTES.REASONINCREASE },
         { text: "Hiện trạng", path: ROUTES.CURRENTSTATUS },
@@ -475,7 +478,11 @@ export default function Menuheader() {
       path: "#",
       subMenu: [
         { text: "Quản lý tài sản", path: ROUTES.ASSETMANAGER, code: "TAISAN" },
-        { text: "Quản lý CCDC-Vật tư", path: ROUTES.TOOLMANAGER, code: "CCDCVT" },
+        {
+          text: "Quản lý CCDC-Vật tư",
+          path: ROUTES.TOOLMANAGER,
+          code: "CCDCVT",
+        },
       ].filter((sub) => hasPermission(sub.code)),
     },
     {
@@ -518,8 +525,7 @@ export default function Menuheader() {
           text: "Điều chuyển CCDC - vật tư",
           path: "#",
           code: "DIEUDONG_CCDC",
-          count:
-            toolTransferCount1 + toolTransferCount2 + toolTransferCount3,
+          count: toolTransferCount1 + toolTransferCount2 + toolTransferCount3,
           subMenu: [
             {
               text: "Cấp phát CCDC - vật tư",
@@ -560,23 +566,23 @@ export default function Menuheader() {
         },
       ].filter((sub) => hasPermission(sub.code)),
     },
-    {
-      text: "Sửa chữa bảo dưỡng",
-      icon: <Engineering fontSize="small" />,
-      path: "/",
-      count: maintenanceRepairCount + maintenanceRepairResultCount,
-      subMenu: [
-        {
-          text: "Kế hoạch sửa chữa bảo dưỡng",
-          path: `${ROUTES.MAINTENANCEPLANREPAIR}`,
-        },
-        {
-          text: "Phiếu sửa chữa bảo dưỡng",
-          path: `${ROUTES.MAINTENANCEREPAIR}`,
-          count: maintenanceRepairCount + maintenanceRepairResultCount,
-        },
-      ],
-    },
+    // {
+    //   text: "Sửa chữa bảo dưỡng",
+    //   icon: <Engineering fontSize="small" />,
+    //   path: "/",
+    //   count: maintenanceRepairCount + maintenanceRepairResultCount,
+    //   subMenu: [
+    //     {
+    //       text: "Kế hoạch sửa chữa bảo dưỡng",
+    //       path: `${ROUTES.MAINTENANCEPLANREPAIR}`,
+    //     },
+    //     {
+    //       text: "Phiếu sửa chữa bảo dưỡng",
+    //       path: `${ROUTES.MAINTENANCEREPAIR}`,
+    //       count: maintenanceRepairCount + maintenanceRepairResultCount,
+    //     },
+    //   ],
+    // },
     {
       text: "Báo cáo",
       icon: <Assessment fontSize="small" />,

@@ -1,5 +1,4 @@
 import React from "react";
-import { useTheme, alpha } from "@mui/material/styles";
 import {
   Box,
   Paper,
@@ -9,13 +8,15 @@ import {
   Step,
   StepLabel,
   StepContent,
+  alpha,
+  useTheme,
 } from "@mui/material";
 import {
+  ErrorOutline,
+  VisibilityOff,
   CheckCircle,
   History,
   RadioButtonUnchecked,
-  ErrorOutline,
-  VisibilityOff,
   FiberManualRecord,
 } from "@mui/icons-material";
 
@@ -47,7 +48,7 @@ const getSteps = (item: any): SignerStepProps[] => {
       label: "Người ký nháy",
       name: item.tenNguoiKyNhay || "Chưa xác định",
       status: item.trangThaiKyNhay ? "completed" : "pending",
-      date: item.ngayKyNhay, // Nếu có field ngày, nếu không thì bỏ hoặc để undefined
+      date: item.ngayKyNhay,
     });
   }
 
@@ -76,6 +77,20 @@ const getSteps = (item: any): SignerStepProps[] => {
     status: item.trinhDuyetGiamDocXacNhan ? "completed" : "pending",
   });
 
+  // 5. Trạng thái của phòng văn thư
+  let vanThuName = "Ban hành";
+  let vanThuStatus: SignStatus = "pending";
+
+  if (item.trangThai === 4) {
+    vanThuStatus = "completed";
+  }
+
+  steps.push({
+    label: "Trạng thái của phòng văn thư",
+    name: vanThuName,
+    status: vanThuStatus,
+  });
+
   return steps;
 };
 
@@ -85,12 +100,10 @@ const getHandoverNodes = (
 ): ThreadNode[] => {
   const nodes: ThreadNode[] = [];
 
-  // --- PHẦN 2: CHI TIẾT BÀN GIAO (Depth 0) ---
   nodes.push({ header: "Chi tiết bàn giao", depth: 0 });
 
   const tools = item?.chiTietDieuDongCCDCVatTuDTOS || [];
   tools.forEach((tool: any) => {
-    // Cấp 1: Tên vật tư (Màu Hồng)
     nodes.push({
       header: `${tool.tenCCDCVatTu} - SLX: ${tool.soLuongXuat}`,
       subInfo: `Số lượng đã bàn giao: ${tool.soLuongDaBanGiao || 0}`,
@@ -98,9 +111,7 @@ const getHandoverNodes = (
       status: "info",
     });
 
-    // Cấp 2: Các phiếu bàn giao con (Lọc từ API mới dựa trên idCCDCVatTu)
     const subItems = handoverDetails.filter((detail) => {
-      console.log("So sánh:", detail.idCCDCVatTu, "với", tool.idCCDCVatTu);
       return String(detail.idCCDCVatTu) === String(tool.idCCDCVatTu);
     });
 
@@ -139,8 +150,6 @@ const ThreadItem = ({
         flexDirection: "column",
       }}
     >
-      {/* 1. ĐƯỜNG DỌC CHÍNH (Trunk - vị trí 10) */}
-      {/* Logic: Chỉ vẽ nếu là nhánh chính (D1) HOẶC là nhánh con (D2) nhưng phía sau vẫn còn các nhóm D1 khác */}
       {(isDepth1 || (isDepth2 && hasMoreMainBranches)) && (
         <Box
           sx={{
@@ -155,7 +164,6 @@ const ThreadItem = ({
         />
       )}
 
-      {/* 2. ĐƯỜNG DỌC PHỤ (Vị trí 34 - nối các con Depth 2) */}
       {isDepth2 && (
         <>
           <Box
@@ -163,7 +171,6 @@ const ThreadItem = ({
               position: "absolute",
               left: 34,
               top: 0,
-              // Dừng ở 50% nếu là phần tử cuối cùng của nhóm con
               bottom: isLast ? "50%" : 0,
               width: "2px",
               bgcolor: "#bdbdbd",
@@ -183,7 +190,6 @@ const ThreadItem = ({
         </>
       )}
 
-      {/* 3. NHÁNH NGANG CHO DEPTH 1 */}
       {isDepth1 && (
         <Box
           sx={{
@@ -197,16 +203,16 @@ const ThreadItem = ({
         />
       )}
 
-      {/* NỘI DUNG CHÍNH (Phần Paper giữ nguyên nhưng sửa FiberManualRecord) */}
       <Box sx={{ py: 0, pl: isHeader ? 0 : 2.5, my: 0.5 }}>
         {isHeader ? (
           <Box
             sx={{
               py: 1,
               px: 2,
-              bgcolor: "#fff",
+              bgcolor: "background.paper",
               borderRadius: "8px",
-              border: "1px solid #eee",
+              border: "1px solid",
+              borderColor: "divider",
               boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
             }}
           >
@@ -221,8 +227,12 @@ const ThreadItem = ({
               p: 1.5,
               borderRadius: "10px",
               border: "1px solid",
-              borderColor: isDepth2 ? "#f0f0f0" : "#e0e0e0",
-              bgcolor: isDepth2 ? "#fff" : node.isDone ? "#f6ffed" : "#fff",
+              borderColor: isDepth2 ? "#f0f0f0" : "divider",
+              bgcolor: isDepth2
+                ? "background.paper"
+                : node.isDone
+                  ? "#f6ffed"
+                  : "background.paper",
               position: "relative",
               zIndex: 1,
             }}
@@ -231,12 +241,12 @@ const ThreadItem = ({
               <FiberManualRecord
                 sx={{
                   position: "absolute",
-                  left: -16, // Đã chỉnh sang -16 theo bạn thấy đúng
+                  left: -16,
                   top: "50%",
                   transform: "translateY(-50%)",
                   fontSize: 10,
                   color: "#bdbdbd",
-                  bgcolor: "#fff",
+                  bgcolor: "background.paper",
                   borderRadius: "50%",
                   zIndex: 2,
                 }}
@@ -338,6 +348,7 @@ export default function SignerSidebar({
         flexDirection: "column",
         minHeight: "500px",
         overflow: "hidden",
+        bgcolor: "background.paper",
       }}
     >
       <Box
@@ -347,7 +358,7 @@ export default function SignerSidebar({
         display="flex"
         justifyContent="space-between"
         alignItems="center"
-        bgcolor="#fff"
+        bgcolor="background.paper"
         sx={{ flexShrink: 0, zIndex: 10 }}
       >
         <Box display="flex" alignItems="center" gap={1}>
@@ -369,17 +380,17 @@ export default function SignerSidebar({
         />
         <Stepper
           orientation="vertical"
-          connector={null} // Triệt tiêu connector mặc định để tránh đè đường kẻ
+          connector={null}
           sx={{
             px: 1,
             "& .MuiStep-root": {
               position: "relative",
             },
             "& .MuiStepContent-root": {
-              ml: 1.5, // Căn chỉnh trục dọc
+              ml: 1.5,
               pl: 3.5,
               pr: 0,
-              borderLeft: "2px solid", // Khai báo border trước
+              borderLeft: "2px solid",
               position: "relative",
             },
           }}
@@ -408,10 +419,7 @@ export default function SignerSidebar({
 
                 <StepContent
                   sx={{
-                    // Màu sắc thay đổi động theo trạng thái của từng bước
                     borderColor: `${config.color} !important`,
-
-                    // Xử lý nhánh ngang nối vào khung Paper
                     "&::before": {
                       content: '""',
                       position: "absolute",
@@ -421,15 +429,13 @@ export default function SignerSidebar({
                       height: "2px",
                       backgroundColor: config.color,
                     },
-
-                    // XỬ LÝ ĐƯỜNG DỌC CHO PHẦN TỬ CUỐI
                     ...(isLast
                       ? {
-                          borderLeft: "none !important", // Bỏ border chính
+                          borderLeft: "none !important",
                           "&::after": {
                             content: '""',
                             position: "absolute",
-                            left: -2, // Vẽ lại đoạn ngắn dừng đúng nhánh ngang
+                            left: -2,
                             top: 0,
                             height: 28,
                             width: "2px",
@@ -444,7 +450,7 @@ export default function SignerSidebar({
                     sx={{
                       p: 1.5,
                       width: "100%",
-                      bgcolor: config.bgcolor, // Đồng bộ màu nền Paper
+                      bgcolor: config.bgcolor,
                       border: "1px solid",
                       borderColor: config.borderColor,
                       borderRadius: "10px",
@@ -490,24 +496,28 @@ export default function SignerSidebar({
         </Stepper>
 
         {/* Phần Chi tiết bàn giao */}
-        {handoverNodes.map((node, index) => {
-          const hasMoreMainBranches = handoverNodes
-            .slice(index + 1)
-            .some((n) => n.depth === 1);
+        {handoverNodes.length > 0 && (
+          <Box mt={2}>
+            {handoverNodes.map((node, index) => {
+              const hasMoreMainBranches = handoverNodes
+                .slice(index + 1)
+                .some((n) => n.depth === 1);
 
-          const isLastInGroup =
-            index === handoverNodes.length - 1 ||
-            handoverNodes[index + 1].depth < node.depth;
+              const isLastInGroup =
+                index === handoverNodes.length - 1 ||
+                handoverNodes[index + 1].depth < node.depth;
 
-          return (
-            <ThreadItem
-              key={index}
-              node={node}
-              isLast={isLastInGroup}
-              hasMoreMainBranches={hasMoreMainBranches}
-            />
-          );
-        })}
+              return (
+                <ThreadItem
+                  key={index}
+                  node={node}
+                  isLast={isLastInGroup}
+                  hasMoreMainBranches={hasMoreMainBranches}
+                />
+              );
+            })}
+          </Box>
+        )}
       </Box>
     </Paper>
   );

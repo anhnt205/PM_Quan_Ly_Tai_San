@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
 import { Box, Grid, IconButton, Tooltip } from "@mui/material";
-import {
-  Delete as DeleteIcon,
-  Visibility as VisibilityIcon,
-  EventNote as EventNoteIcon,
-} from "@mui/icons-material";
+import { Visibility as VisibilityIcon } from "@mui/icons-material";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import AssetTransferForm from "./components/AssetTransferForm";
 import SignerSidebar from "./components/SignerSidebar";
@@ -36,11 +32,7 @@ import { FilterOption } from "../../components/common/FilterStatusGroup";
 import { Building, Trash2 } from "lucide-react";
 import { AssetHandoverData } from "../AssetHandover/types";
 import { useDebounce } from "../../hooks/useDebounce";
-import {
-  useAllStaffsQuery,
-  useGetFileQuery,
-  useStaffMutation,
-} from "../Staff/Mutation";
+import { useAllStaffsQuery } from "../Staff/Mutation";
 import { useAllDepartmentsQuery } from "../Department/Mutation";
 import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
 import { useAllUnitsQuery } from "../Unit/Mutation";
@@ -75,7 +67,6 @@ export default function AssetTransfer() {
   const [assetTransferDetail, setAssetTransferDetail] = useState<any[]>([]);
   const [status, setStatus] = useState("");
   const {
-    handleDownloadFile,
     createMutation,
     updateMutation,
     updateManyMutation,
@@ -212,6 +203,7 @@ export default function AssetTransfer() {
       handleClose();
     }
   };
+
   const handleCancel = async () => {
     if (selectedRow) {
       const confirm = await showConfirmAlert(
@@ -230,8 +222,26 @@ export default function AssetTransfer() {
       asset: selectedRow,
     });
   };
+
   const handleDecision = (data: any[]) => {
-    decisionMutation.mutate(data);
+    decisionMutation.mutate(data, {
+      onSuccess: () => {
+        // Chủ động cập nhật lại state của selectedRow ngay khi ban hành thành công
+        setSelectedRow((prev: any) => {
+          if (!prev) return prev;
+
+          // Kiểm tra xem row đang được chọn (đang mở Sidebar) có nằm trong danh sách vừa ban hành không
+          const isJustIssued = data.some((item) => item.id === prev.id);
+
+          if (isJustIssued) {
+            // Nếu có, trả về một object mới và ghi đè trangThai thành 4 (Đã ban hành)
+            return { ...prev, trangThai: 4 };
+          }
+
+          return prev;
+        });
+      },
+    });
   };
 
   const handleViewSignAssets = async (fileName: string, item: any) => {
@@ -239,7 +249,7 @@ export default function AssetTransfer() {
     setShowSignDocument(true);
     setSelectedRow(item);
     setAssetTransferDetail(item.chiTietDieuDongTaiSanDTOS);
-    setShowSignerSidebar(true); // Hiện sidebar khi ký
+    setShowSignerSidebar(true);
   };
 
   const handleViewBienBan = async (id: string) => {

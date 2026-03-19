@@ -146,7 +146,7 @@ export default function Staff() {
     {
       field: "signature",
       headerName: "Quyền ký",
-      width: 150,
+      flex: 1,
       align: "center",
       headerAlign: "center",
       renderCell: (params) => {
@@ -157,7 +157,6 @@ export default function Staff() {
         return (
           <Box
             display={"flex"}
-            flexDirection={"column"}
             justifyContent={"center"}
             alignItems={"center"}
             gap={1}
