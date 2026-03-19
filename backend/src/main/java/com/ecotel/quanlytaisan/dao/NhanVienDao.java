@@ -2,6 +2,7 @@ package com.ecotel.quanlytaisan.dao;
 
 import com.ecotel.quanlytaisan.model.NhanVien;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -69,6 +70,15 @@ public class NhanVienDao {
                 WHERE  nv.IdCongTy = ?;
                 """;
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(NhanVienDTO.class), idCongTy);
+    }
+
+    public NhanVien findEntityById(String id) {
+        String sql = "SELECT * FROM NhanVien WHERE Id = ?";
+        try {
+            return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(NhanVien.class), id);
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
     }
 
     public long countByCongTy(String idCongTy, String search) {

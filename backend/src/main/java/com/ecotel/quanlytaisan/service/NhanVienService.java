@@ -56,6 +56,10 @@ public class NhanVienService {
         return nhanVienDao.findById(id);
     }
 
+    public NhanVien findEntityById(String id) {
+        return nhanVienDao.findEntityById(id);
+    }
+
     public int create(NhanVien nv) {
         return nhanVienDao.insert(nv);
     }

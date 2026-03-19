@@ -35,6 +35,12 @@ public class DieuDongCCDCVatTuService {
     @Autowired
     private PhongBanService phongBanService;
 
+    @Autowired
+    private NhanVienService nhanVienService;
+
+    @Autowired
+    private ChucVuService chucVuService;
+
     public DieuDongCCDCVatTuService() {
         this.dao = new DieuDongCCDCVatTuDao();
     }
@@ -56,14 +62,38 @@ public class DieuDongCCDCVatTuService {
 
         // Filter theo lượt ký - chỉ lấy những item mà đến lượt user ký
         // Ngoại lệ: admin lấy hết, NguoiTao cũng lấy không phân biệt thứ tự
+        // Sau khi lấy sourceList từ dao.findAll(idCongTy) và trước khi filter khác
         if (userid != null && !userid.trim().isEmpty()) {
-            List<DieuDongCCDCVatTuDTO> turnFiltered = new ArrayList<>();
-            for (DieuDongCCDCVatTuDTO item : sourceList) {
-                if (isUserTurnToSign(item, userid)) {
-                    turnFiltered.add(item);
+            boolean skipFilter = false;
+
+            // 1. Admin luôn lấy hết
+            if ("admin".equalsIgnoreCase(userid)) {
+                skipFilter = true;
+            } else {
+                // 2. Kiểm tra quyền ban hành quyết định
+                try {
+                    NhanVien nv = nhanVienService.findEntityById(userid);
+                    if (nv != null && nv.getChucVu() != null) {
+                        ChucVu cv = chucVuService.findById(nv.getChucVu());
+                        if (cv != null && Boolean.TRUE.equals(cv.getBanHanhQuyetDinh())) {
+                            skipFilter = true;
+                        }
+                    }
+                } catch (Exception e) {
+                    // Log lỗi nếu cần, nhưng không làm gián đoạn – coi như không có quyền đặc biệt
                 }
             }
-            sourceList = turnFiltered;
+
+            // Nếu không được bỏ qua, mới áp dụng lọc theo lượt ký
+            if (!skipFilter) {
+                List<DieuDongCCDCVatTuDTO> turnFiltered = new ArrayList<>();
+                for (DieuDongCCDCVatTuDTO item : sourceList) {
+                    if (isUserTurnToSign(item, userid)) {
+                        turnFiltered.add(item);
+                    }
+                }
+                sourceList = turnFiltered;
+            }
         }
 
         // Filter by chuaBanGiaoHet - chỉ lấy những phiếu chưa bàn giao hết
