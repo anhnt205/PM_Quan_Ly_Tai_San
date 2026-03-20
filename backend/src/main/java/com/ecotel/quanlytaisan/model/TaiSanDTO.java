@@ -41,6 +41,7 @@ public class TaiSanDTO {
     private Integer hienTrang;
     private Integer soLuong;
     private String donViTinh;
+    private String tenDonViTinh;
     private String ghiChu;
     private String idDonViBanDau;
     private String idDonViHienThoi;
@@ -63,6 +64,8 @@ public class TaiSanDTO {
     private String tgKiemDinh;
     private Integer chuKyKiemDinh;
     private Boolean trangThaiKiemDinh;
+    private String tenDonViBanDau;
+    private String tenDonViHienThoi;
     private List<NguonKinhPhi> nguonKinhPhiList;
     private List<SetNguonKinhPhi>setNguonKinhPhiList;
 }
