@@ -24,6 +24,7 @@ public class TaiSanFileService {
         dto.setId(entity.getId());
         dto.setIdTaiSan(entity.getIdTaiSan());
         dto.setFilePath(entity.getFilePath());
+        dto.setTenFile(entity.getTenFile());
         dto.setLoai(entity.getLoai());
         dto.setNgayTao(entity.getNgayTao());
         dto.setGhiChu(entity.getGhiChu());
@@ -36,6 +37,7 @@ public class TaiSanFileService {
         entity.setId(dto.getId());
         entity.setIdTaiSan(dto.getIdTaiSan());
         entity.setFilePath(dto.getFilePath());
+        entity.setTenFile(dto.getTenFile());
         entity.setLoai(dto.getLoai());
         entity.setNgayTao(dto.getNgayTao());
         entity.setGhiChu(dto.getGhiChu());

@@ -17,22 +17,23 @@ public class TaiSanFileDao {
 
     // Lấy tất cả file của một tài sản
     public List<TaiSanFile> findByTaiSanId(String idTaiSan) {
-        String sql = "SELECT * FROM taisan_file WHERE IdTaiSan = ? ORDER BY NgayTao DESC";
+        String sql = "SELECT Id, IdTaiSan, FilePath, TenFile, Loai, NgayTao, GhiChu FROM taisan_file WHERE IdTaiSan = ? ORDER BY NgayTao DESC";
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(TaiSanFile.class), idTaiSan);
     }
 
     // Lấy file theo id
     public TaiSanFile findById(Integer id) {
-        String sql = "SELECT * FROM taisan_file WHERE Id = ?";
+        String sql = "SELECT Id, IdTaiSan, FilePath, TenFile, Loai, NgayTao, GhiChu FROM taisan_file WHERE Id = ?";
         return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(TaiSanFile.class), id);
     }
 
     // Thêm mới file
     public int insert(TaiSanFile file) {
-        String sql = "INSERT INTO taisan_file (IdTaiSan, FilePath, Loai, NgayTao, GhiChu) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO taisan_file (IdTaiSan, FilePath, TenFile, Loai, NgayTao, GhiChu) VALUES (?, ?, ?, ?, ?, ?)";
         return jdbcTemplate.update(sql,
                 file.getIdTaiSan(),
                 file.getFilePath(),
+                file.getTenFile(),
                 file.getLoai(),
                 file.getNgayTao(),
                 file.getGhiChu()
@@ -41,9 +42,10 @@ public class TaiSanFileDao {
 
     // Cập nhật file
     public int update(TaiSanFile file) {
-        String sql = "UPDATE taisan_file SET FilePath = ?, Loai = ?, GhiChu = ? WHERE Id = ?";
+        String sql = "UPDATE taisan_file SET FilePath = ?, TenFile = ?, Loai = ?, GhiChu = ? WHERE Id = ?";
         return jdbcTemplate.update(sql,
                 file.getFilePath(),
+                file.getTenFile(),
                 file.getLoai(),
                 file.getGhiChu(),
                 file.getId()
@@ -73,12 +75,13 @@ public class TaiSanFileDao {
      * Thêm nhiều file cùng lúc (batch insert)
      */
     public int[] insertBatch(List<TaiSanFile> files) {
-        String sql = "INSERT INTO taisan_file (IdTaiSan, FilePath, Loai, NgayTao, GhiChu) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO taisan_file (IdTaiSan, FilePath, TenFile, Loai, NgayTao, GhiChu) VALUES (?, ?, ?, ?, ?, ?)";
         List<Object[]> batchArgs = new ArrayList<>();
         for (TaiSanFile file : files) {
             Object[] args = new Object[]{
                     file.getIdTaiSan(),
                     file.getFilePath(),
+                    file.getTenFile(),
                     file.getLoai(),
                     file.getNgayTao(),
                     file.getGhiChu()

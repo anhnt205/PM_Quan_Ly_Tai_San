@@ -1,0 +1,1 @@
+ALTER TABLE taisan_file ADD COLUMN TenFile VARCHAR(255) DEFAULT NULL COMMENT 'Tên file gốc' AFTER FilePath;
