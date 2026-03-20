@@ -35,10 +35,11 @@ import { useAllReasonIncreaseQuery } from "../ReasonIncrease/Mutation";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useAllModelAssetQuery } from "../ModelAsset/Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
-import { Eye, HistoryIcon } from "lucide-react";
+import { BookOpenCheckIcon, Eye, HistoryIcon } from "lucide-react";
 import AssetHistoryModal from "./components/AssetHistoryModal";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ShowStatus } from "./config";
+import AssetEbookModal from "./components/AssetEbookModal";
 
 export default function AssetManager() {
   const [tab, setTab] = React.useState(0);
@@ -52,6 +53,7 @@ export default function AssetManager() {
   const [selectedGroup, setSelectedGroup] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
+  const [modalOpenBook, setModalOpenBook] = useState(false);
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
@@ -328,7 +330,18 @@ export default function AssetManager() {
             </IconButton>
           </Tooltip>
 
-          <Tooltip title="Xem">
+          <Tooltip title="Xem nhật ký">
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                setModalOpenBook(true);
+                setSelectedAsset(params.row);
+              }}
+            >
+              <BookOpenCheckIcon color="#0288d1" />
+            </IconButton>
+          </Tooltip>
+          {/* <Tooltip title="Xem">
             <IconButton
               onClick={(e) => {
                 e.stopPropagation();
@@ -348,7 +361,7 @@ export default function AssetManager() {
             >
               <HistoryIcon color="#7b1fa2" />
             </IconButton>
-          </Tooltip>
+          </Tooltip> */}
         </>
       ),
     },
@@ -497,97 +510,25 @@ export default function AssetManager() {
         }}
         selectedAsset={selectedAsset}
       />
-      <Dialog
-        open={openViewModal}
-        onClose={() => setOpenViewModal(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: "12px",
-            boxShadow: "0 10px 40px rgba(0,0,0,0.15)",
-          },
+      <AssetEbookModal
+        open={modalOpenBook}
+        onClose={() => setModalOpenBook(false)}
+        onCancel={() => {
+          setShowForm(false);
+          setSelectedAsset(null);
+          setReadOnly(false);
         }}
-      >
-        <DialogTitle
-          sx={{
-            background: "linear-gradient(135deg, #04b46e 0%, #03a05a 100%)",
-            color: "white",
-            fontWeight: 600,
-            fontSize: "1.2rem",
-            padding: "20px",
-          }}
-        >
-          Xem Ghi Chú
-        </DialogTitle>
-        <DialogContent
-          sx={{
-            padding: "24px",
-            minHeight: "180px",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-          }}
-        >
-          <Box
-            sx={{
-              background: "#f5f5f5",
-              border: "1px solid #e0e0e0",
-              borderRadius: "8px",
-              padding: "16px",
-              minHeight: "100px",
-              display: "flex",
-              alignItems: "flex-start",
-            }}
-          >
-            <Typography
-              sx={{
-                color: "#666",
-                fontSize: "1rem",
-                lineHeight: "1.6",
-                fontStyle: "italic",
-              }}
-            >
-              Ghi chú hiện ở đây...
-            </Typography>
-          </Box>
-        </DialogContent>
-        <DialogActions
-          sx={{
-            padding: "16px 24px",
-            gap: "8px",
-            borderTop: "1px solid #e0e0e0",
-          }}
-        >
-          <Button
-            onClick={() => setOpenViewModal(false)}
-            variant="outlined"
-            sx={{
-              textTransform: "none",
-              fontSize: "1rem",
-              padding: "8px 24px",
-              color: "#666",
-            }}
-          >
-            Hủy
-          </Button>
-          <Button
-            onClick={() => setOpenViewModal(false)}
-            variant="contained"
-            sx={{
-              textTransform: "none",
-              fontSize: "1rem",
-              padding: "8px 24px",
-              background: "linear-gradient(135deg, #04b46e 0%, #03a05a 100%)",
-              "&:hover": {
-                background: "linear-gradient(135deg, #039b5f 0%, #038050 100%)",
-              },
-            }}
-          >
-            Xác nhận
-          </Button>
-        </DialogActions>
-      </Dialog>
+        selectedAsset={selectedAsset}
+        readOnly={readOnly}
+        onEdit={handleEdit}
+        onSave={handleSave}
+        allAssetModel={allModelAsset}
+        allCurrentStatus={allCurrentStatus}
+        assetGroups={assetGroups}
+        allDepartments={allDepartments}
+        allUnits={allUnits}
+        allReasonIncreases={allReasonIncreases}
+      />
     </Box>
   );
 }

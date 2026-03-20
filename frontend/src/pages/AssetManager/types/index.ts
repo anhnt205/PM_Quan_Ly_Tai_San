@@ -7,17 +7,20 @@ export interface AssetType {
   kyKhauHaoBanDau: number;
   giaTriThanhLy: number;
   idMoHinhTaiSan: string;
+  tenMoHinh?: string;
   phuongPhapKhauHao: number;
   soKyKhauHao: number;
   taiKhoanTaiSan: number;
   taiKhoanKhauHao: number;
   taiKhoanChiPhi: number;
   idNhomTaiSan: string;
+  tenNhom?: string;
   ngayVaoSo: string;
   ngaySuDung: string;
   tgKiemDinh?: string;
   chuKyKiemDinh?: number;
   idDuDan: string;
+  tenDuAn?: string;
   idNguonVon: string;
   kyHieu: string;
   soKyHieu: string;
@@ -30,7 +33,9 @@ export interface AssetType {
   donViTinh: string;
   ghiChu: string;
   idDonViBanDau: string;
+  tenDonViBanDau?: string;
   idDonViHienThoi: string;
+  tenDonViHienThoi?: string;
   moTa: string;
   idCongTy: string;
   ngayTao: string;
@@ -40,6 +45,7 @@ export interface AssetType {
   isActive: boolean;
   isTaiSanCon: boolean;
   idLoaiTaiSanCon: string;
+  tenLoaiTaiSanCon?: string;
   soThe: string;
   nvNS: number;
   vonVay: number;

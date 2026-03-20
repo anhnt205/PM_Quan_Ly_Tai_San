@@ -31,7 +31,7 @@ public class TaiSanDao {
                 nv.TenNguonKinhPhi,
                 pb1.TenPhongBan AS tenDonViBanDau,
                 pb2.TenPhongBan AS tenDonViHienThoi,
-                dvt.Ten AS tenDonViTinh,
+                dvt.TenDonVi AS tenDonViTinh,
                 ts.IdDuDan as idDuAn
             FROM TaiSan AS ts
             LEFT JOIN MoHinhTaiSan AS mhts ON ts.IdMoHinhTaiSan = mhts.Id
@@ -234,7 +234,7 @@ public class TaiSanDao {
                     ts.trangThaiKiemDinh,
                     pb1.TenPhongBan AS tenDonViBanDau,
                     pb2.TenPhongBan AS tenDonViHienThoi,
-                    dvt.Ten AS tenDonViTinh
+                    dvt.TenDonVi AS tenDonViTinh
                 FROM 
                     TaiSan AS ts
                 LEFT JOIN MoHinhTaiSan AS mhts ON ts.IdMoHinhTaiSan = mhts.Id
@@ -335,7 +335,7 @@ public class TaiSanDao {
                     ts.trangThaiKiemDinh,
                     pb1.TenPhongBan AS tenDonViBanDau,
                     pb2.TenPhongBan AS tenDonViHienThoi,
-                    dvt.Ten AS tenDonViTinh
+                    dvt.TenDonVi AS tenDonViTinh
                 FROM 
                     TaiSan AS ts
                 LEFT JOIN MoHinhTaiSan AS mhts ON ts.IdMoHinhTaiSan = mhts.Id
@@ -437,7 +437,7 @@ public class TaiSanDao {
                         ts.trangThaiKiemDinh,
                         pb1.TenPhongBan AS tenDonViBanDau,
                         pb2.TenPhongBan AS tenDonViHienThoi,
-                        dvt.Ten AS tenDonViTinh
+                        dvt.TenDonVi AS tenDonViTinh
                     FROM TaiSan ts
                     LEFT JOIN MoHinhTaiSan mhts ON ts.IdMoHinhTaiSan = mhts.Id
                     LEFT JOIN NhomTaiSan nts ON ts.IdNhomTaiSan = nts.Id
@@ -801,7 +801,7 @@ public class TaiSanDao {
                     ts.trangThaiKiemDinh,
                     pb1.TenPhongBan AS tenDonViBanDau,
                     pb2.TenPhongBan AS tenDonViHienThoi,
-                    dvt.Ten AS tenDonViTinh
+                    dvt.TenDonVi AS tenDonViTinh
                 FROM 
                     TaiSan AS ts
                 LEFT JOIN MoHinhTaiSan AS mhts ON ts.IdMoHinhTaiSan = mhts.Id
