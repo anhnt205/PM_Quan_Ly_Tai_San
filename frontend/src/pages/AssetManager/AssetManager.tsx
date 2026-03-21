@@ -40,12 +40,13 @@ import AssetHistoryModal from "./components/AssetHistoryModal";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ShowStatus } from "./config";
 import AssetEbookModal from "./components/AssetEbookModal";
+import { Action } from "../../utils/const";
 
 export default function AssetManager() {
   const [tab, setTab] = React.useState(0);
   const [showForm, setShowForm] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<any>(null);
-  const [readOnly, setReadOnly] = useState(false);
+  const [readOnly, setReadOnly] = useState(true);
   const [isCopy, setIsCopy] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
@@ -127,12 +128,23 @@ export default function AssetManager() {
 
   const handleSave = (values: any) => {
     if (selectedAsset && !isCopy) {
-      updateMutation.mutate(values);
+      updateMutation.mutate(values, {
+        onSuccess: () =>
+          setSelectedAsset({
+            ...values,
+            taiSanConList: values.taiSanConList.filter(
+              (item: any) => !item.isDeleted,
+            ),
+            fileDinhKemList: values.fileDinhKemList.filter(
+              (item: any) => item.action !== Action.DELETE,
+            ),
+          }),
+      });
     } else {
       createMutation.mutate(values);
     }
     setShowForm(false);
-    setSelectedAsset(null);
+    setReadOnly(true);
     setIsCopy(false);
   };
 
@@ -512,11 +524,16 @@ export default function AssetManager() {
       />
       <AssetEbookModal
         open={modalOpenBook}
-        onClose={() => setModalOpenBook(false)}
+        onClose={() => {
+          setModalOpenBook(false);
+          setSelectedAsset(null);
+          setShowForm(false);
+          setReadOnly(true);
+        }}
         onCancel={() => {
           setShowForm(false);
-          setSelectedAsset(null);
-          setReadOnly(false);
+          // setSelectedAsset(null);
+          setReadOnly(true);
         }}
         selectedAsset={selectedAsset}
         readOnly={readOnly}

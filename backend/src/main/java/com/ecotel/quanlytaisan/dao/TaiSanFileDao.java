@@ -1,5 +1,6 @@
 package com.ecotel.quanlytaisan.dao;
 
+import com.ecotel.quanlytaisan.model.ChiTietTaiSan;
 import com.ecotel.quanlytaisan.model.TaiSanFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -19,6 +20,30 @@ public class TaiSanFileDao {
     public List<TaiSanFile> findByTaiSanId(String idTaiSan) {
         String sql = "SELECT Id, IdTaiSan, FilePath, TenFile, Loai, NgayTao, GhiChu FROM taisan_file WHERE IdTaiSan = ? ORDER BY NgayTao DESC";
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(TaiSanFile.class), idTaiSan);
+    }
+
+    public List<TaiSanFile> findAllByTaiSanIds(List<String> taiSanIds) {
+        if (taiSanIds == null || taiSanIds.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+
+        // Tạo các dấu hỏi tương ứng với số lượng ID: ?,?,?
+        String inSql = String.join(",", java.util.Collections.nCopies(taiSanIds.size(), "?"));
+        
+        // Đảm bảo tên bảng và tên cột khớp 100% với Database
+        String sql = String.format("SELECT * FROM taisan_file WHERE IdTaiSan IN (%s)", inSql);
+
+        try {
+            return jdbcTemplate.query(
+                sql, 
+                new BeanPropertyRowMapper<>(TaiSanFile.class), 
+                taiSanIds.toArray() // Truyền mảng Object[]
+            );
+        } catch (Exception e) {
+            // Log lỗi để biết chính xác SQL sai ở đâu
+            System.out.println("Lỗi truy vấn SQL: " + e.getMessage());
+            return java.util.Collections.emptyList();
+        }
     }
 
     // Lấy file theo id

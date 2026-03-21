@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../../../config/api.config";
-import { AssetChildType, AssetType, HistoryAssetType } from "../types";
+import {
+  AssetChildType,
+  AssetFileType,
+  AssetType,
+  HistoryAssetType,
+} from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import axios from "axios";
 import * as XLSX from "xlsx";
@@ -8,7 +13,7 @@ import dayjs from "dayjs";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import { generateCode } from "../../../utils/helpers";
-import { CongTy } from "../../../utils/const";
+import { Action, CongTy } from "../../../utils/const";
 
 const getColumnLetter = (colIndex: number): string => {
   let letter = "";
@@ -47,6 +52,12 @@ export const useAssetManagerMutation = (
           ngayTao: now,
         })),
       );
+      if (
+        payload?.fileDinhKemList &&
+        (payload?.fileDinhKemList || []).length > 0
+      ) {
+        createFileMutation.mutate(payload?.fileDinhKemList);
+      }
       queryClient.invalidateQueries({ queryKey: ["assetsPage"], exact: false });
       showSuccessAlert("Tạo tài sản thành công");
     },
@@ -69,12 +80,18 @@ export const useAssetManagerMutation = (
       return res.data;
     },
     onSuccess: (data, payload) => {
-      console.log(payload);
       const listDeleted = (payload?.taiSanConList || []).filter(
         (i) => i.isDeleted,
       );
+      console.log(listDeleted);
       const listUpdated = (payload?.taiSanConList || []).filter(
         (i) => i.isInsert,
+      );
+      const listFileDeleted = (payload?.fileDinhKemList || []).filter(
+        (i) => i.action === Action.DELETE && i.id,
+      );
+      const listFileCreated = (payload?.fileDinhKemList || []).filter(
+        (i) => i.action === Action.CREATE,
       );
       if (listUpdated.length > 0) {
         createChildAssetBulkMutation.mutate(
@@ -92,6 +109,15 @@ export const useAssetManagerMutation = (
           .forEach((i) => {
             deleteOneChildAsssetMutation.mutate(i.id);
           });
+      }
+
+      if (listFileCreated.length > 0) {
+        createFileMutation.mutate(listFileCreated);
+      }
+      if (listFileDeleted.length > 0) {
+        deleteFileManyMutation.mutate(
+          listFileDeleted.map((i) => i.id as number),
+        );
       }
       queryClient.invalidateQueries({ queryKey: ["assetsPage"], exact: false });
       showSuccessAlert("Sửa tài sản thành công");
@@ -435,6 +461,55 @@ export const useAssetManagerMutation = (
           error.response?.data?.message || "Lỗi khi gửi dữ liệu lên máy chủ",
         );
       }
+    },
+  });
+
+  // ---3. Thêm tệp đính kèm
+  const createFileMutation = useMutation({
+    mutationFn: async (data: AssetFileType[]) => {
+      const res = await api.post(
+        "/taisan-file/batch",
+        data.map((i) => {
+          return {
+            ...i,
+            idTaiSan: i.idTaiSan,
+            nguoiTao: user?.taiKhoan?.tenDangNhap || "",
+            ngayTao: now,
+          };
+        }),
+      );
+      return res.data;
+    },
+    onSuccess: (data, payload) => {
+      queryClient.invalidateQueries({
+        queryKey: ["assetsPage"],
+        exact: false,
+      });
+      console.log("Tạo file đính kèm thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo file đính kèm thất bại",
+      );
+    },
+  });
+  const deleteFileManyMutation = useMutation({
+    mutationFn: async (ids: number[]) => {
+      const res = await api.delete(`/taisan-file/batch`, { data: ids });
+      return res.data.message;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["assetsPage"] });
+      console.log(data || "Xóa tệp đính kèm thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa tệp đính kèm thất bại",
+      );
     },
   });
 

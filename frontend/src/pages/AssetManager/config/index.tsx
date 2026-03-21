@@ -1,4 +1,4 @@
-import { Chip } from "@mui/material";
+import { Box, Chip, Typography } from "@mui/material";
 import dayjs from "dayjs";
 
 export const ShowStatus = (data: any) => {
@@ -47,9 +47,51 @@ export const ShowStatus = (data: any) => {
   );
 };
 
+export const showDownloadFile = (fileName: string, onDownload: () => void) => {
+  return (
+    <Box
+      component="span"
+      onClick={(e) => {
+        e.stopPropagation();
+        onDownload();
+      }}
+      sx={{
+        display: "inline-flex",
+        alignItems: "center",
+        cursor: "pointer",
+        color: "#1976d2", // Màu xanh link truyền thống
+        "&:hover": {
+          textDecoration: "underline",
+          color: "#115293",
+        },
+        transition: "all 0.2s",
+        gap: 0.5,
+      }}
+    >
+      <Typography
+        variant="body2"
+        component="span"
+        sx={{
+          fontSize: "13px",
+          fontWeight: 500,
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          maxWidth: "250px", // Giới hạn độ dài để không vỡ layout
+        }}
+      >
+        {fileName || "Tài liệu đính kèm"}
+      </Typography>
+      <FileDownloadOutlined sx={{ fontSize: "16px" }} />
+    </Box>
+  );
+};
+
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { AssetType } from "../types";
+import { FileDownloadOutlined } from "@mui/icons-material";
+import { findById } from "../../../utils/helpers";
 
 interface Attachment {
   id: string;
@@ -61,68 +103,87 @@ interface Attachment {
 
 export const generateAssetPdf = async (
   asset: AssetType,
-  attachments: Attachment[] = [],
+  allAssetModel: any[],
+  allCurrentStatus: any[],
+  assetGroups: any[],
+  allDepartments: any[],
+  allUnits: any[],
+  allReasonIncreases: any[],
 ): Promise<Uint8Array> => {
   const doc = new jsPDF();
   doc.setFont("times_new_roman", "normal");
   doc.setFontSize(16);
   doc.text("THÔNG TIN TÀI SẢN", 105, 15, { align: "center" });
 
-  // Danh sách các cặp key-value (loại bỏ Tên tài sản và Ghi chú)
+  // --- Phần thông tin chính (giữ nguyên) ---
   const pairs: [string, any][] = [
+    ["Số thẻ tài sản", asset.soThe],
     ["Nguyên giá", formatCurrency(asset.nguyenGia)],
     ["Giá trị khấu hao ban đầu", formatCurrency(asset.giaTriKhauHaoBanDau)],
     ["Kỳ khấu hao ban đầu", asset.kyKhauHaoBanDau],
     ["Giá trị thanh lý", formatCurrency(asset.giaTriThanhLy)],
-    ["Mô hình tài sản", asset.tenMoHinh],
-    ["Phương pháp khấu hao", asset.phuongPhapKhauHao],
-    ["Số kỹ khấu hao", asset.soKyKhauHao],
+    ["Mô hình tài sản", asset.tenMoHinh || asset.idMoHinhTaiSan],
+    [
+      "Phương pháp khấu hao",
+      asset.phuongPhapKhauHao === 1 ? "Đường thẳng" : "Khác",
+    ],
+    ["Số kỳ khấu hao", asset.soKyKhauHao],
     ["Tài khoản tài sản", asset.taiKhoanTaiSan],
     ["Tài khoản khấu hao", asset.taiKhoanKhauHao],
     ["Tài khoản chi phí", asset.taiKhoanChiPhi],
-    ["Nhóm tài sản", asset.tenNhom],
-    ["Dự án", asset.tenDuAn],
+    ["Nhóm tài sản", asset.tenNhom || asset.idNhomTaiSan],
+    ["Loại tài sản", asset.tenLoaiTaiSanCon || asset.idLoaiTaiSanCon],
+    [
+      "Ngày vào sổ",
+      asset.ngayVaoSo
+        ? dayjs(asset.ngayVaoSo).format("DD/MM/YYYY HH:mm:ss")
+        : "",
+    ],
+    [
+      "Ngày sử dụng",
+      asset.ngaySuDung
+        ? dayjs(asset.ngaySuDung).format("DD/MM/YYYY HH:mm:ss")
+        : "",
+    ],
+    ["Dự án", asset.tenDuAn || asset.idDuDan],
     ["Vốn NS", formatCurrency(asset.nvNS)],
     ["Vốn vay", formatCurrency(asset.vonVay)],
     ["Vốn khác", formatCurrency(asset.vonKhac)],
-    ["Ký hiệu", asset.kyHieu],
-    ["Số ký hiệu", asset.soKyHieu],
+    ["Mã hiệu", asset.kyHieu],
+    ["Số mã hiệu", asset.soKyHieu],
     ["Công suất", asset.congSuat],
     ["Nước sản xuất", asset.nuocSanXuat],
     ["Năm sản xuất", asset.namSanXuat],
     ["Lý do tăng", asset.lyDoTang],
-    ["Hiện trạng", asset.hienTrang],
+    ["Hiện trạng", findById(allCurrentStatus, asset.hienTrang)?.tenHTKT],
     ["Số lượng", asset.soLuong],
-    ["Đơn vị tính", asset.donViTinh],
+    ["Đơn vị tính", asset.tenDonViTinh],
+    ["Kho", asset.tenDonViBanDau || asset.idDonViBanDau],
+    ["Đơn vị hiện thời", asset.tenDonViHienThoi || asset.idDonViHienThoi],
   ];
 
-  // Nhóm các cặp thành từng bộ 2 để tạo dòng 4 cột
+  // Nhóm thành dòng 2 cặp (4 cột)
   const rows: any[] = [];
   for (let i = 0; i < pairs.length; i += 2) {
     const pair1 = pairs[i];
-    const pair2 = pairs[i + 1]; // có thể undefined nếu lẻ
-    const row = [
+    const pair2 = pairs[i + 1];
+    rows.push([
       pair1[0],
       pair1[1],
-      pair2 ? pair2[0] : "", // nếu không có cặp thứ hai, để ô trống
+      pair2 ? pair2[0] : "",
       pair2 ? pair2[1] : "",
-    ];
-    rows.push(row);
+    ]);
   }
 
-  // Xây dựng body của bảng
   const tableBody: any[] = [
-    // Dòng đầu: Tên tài sản (gộp 4 cột)
     [
       {
         content: `Tên tài sản: ${asset.tenTaiSan}`,
         colSpan: 4,
-        styles: { fontSize: 12, fontStyle: "bold", cellPadding: 2 },
+        styles: { fontSize: 12, fontStyle: "bold" },
       },
     ],
-    // Các dòng dữ liệu (mỗi dòng 4 cột)
     ...rows,
-    // Dòng cuối: Ghi chú (gộp 4 cột)
     [
       {
         content: `Ghi chú: ${asset.ghiChu || ""}`,
@@ -132,64 +193,60 @@ export const generateAssetPdf = async (
     ],
   ];
 
-  // Vẽ bảng chính với 4 cột
   autoTable(doc, {
     startY: 25,
     body: tableBody,
     theme: "plain",
-    styles: {
-      font: "times_new_roman",
-      fontSize: 11,
-      cellPadding: 2,
-    },
+    styles: { font: "times_new_roman", fontSize: 11, cellPadding: 2 },
     columnStyles: {
-      0: { fontStyle: "bold", cellWidth: 45 }, // label 1
-      1: { cellWidth: 60 }, // value 1
-      2: { fontStyle: "bold", cellWidth: 45 }, // label 2
-      3: { cellWidth: 60 }, // value 2
+      0: { fontStyle: "bold", cellWidth: 45 },
+      1: { cellWidth: 60 },
+      2: { fontStyle: "bold", cellWidth: 45 },
+      3: { cellWidth: 60 },
     },
-    margin: { left: 15, right: 15 }, // thu hẹp margin để vừa 4 cột
-    didDrawPage: (data) => {},
+    margin: { left: 15, right: 15 },
   });
 
   let y = (doc as any).lastAutoTable.finalY + 10;
 
-  // Xử lý tệp đính kèm (giữ nguyên)
-  if (attachments.length > 0) {
+  // --- Phần tài sản con (liệt kê dạng văn bản, không kẻ bảng) ---
+  if (asset.taiSanConList && asset.taiSanConList.length > 0) {
+    const conList = asset.taiSanConList.filter((con: any) => !con.isDeleted);
+    if (conList.length > 0) {
+      doc.setFont("times_new_roman", "bold");
+      doc.setFontSize(12);
+      doc.text("Danh sách tài sản con:", 20, y);
+      y += 6;
+      doc.setFontSize(10);
+
+      conList.forEach((con: any, idx: number) => {
+        // Chuẩn bị nội dung: số thứ tự + mã tài sản + tên tài sản
+        const line = `${idx + 1}. ${con.idTaiSanCon || ""} - ${con.tenTaiSan || "N/A"}`;
+        // Tự động xuống dòng nếu nội dung quá dài
+        const lines = doc.splitTextToSize(line, 170); // chiều rộng vùng in (A4 trừ lề)
+        doc.text(lines, 25, y);
+        y += lines.length * 5; // mỗi dòng cao 5mm (có thể điều chỉnh)
+      });
+
+      y += 5; // khoảng cách sau danh sách
+    }
+  }
+
+  // --- Phần danh sách tệp đính kèm (chỉ tên) ---
+  if (asset.fileDinhKemList && asset.fileDinhKemList.length > 0) {
     doc.setFontSize(12);
     doc.text("Danh sách tệp đính kèm:", 20, y);
     y += 6;
-    attachments.forEach((att, index) => {
-      doc.text(`- ${att.tenFile} (${att.loaiFile})`, 25, y);
-      y += 5;
-    });
+    asset.fileDinhKemList
+      .filter((file: any) => !file.isDeleted)
+      .forEach((att, idx) => {
+        doc.setFontSize(10);
+        doc.text(`${idx + 1}. ${att.tenFile}`, 25, y);
+        y += 5;
+      });
   }
 
-  // Trang cho từng tệp đính kèm (giữ nguyên)
-  for (let i = 0; i < attachments.length; i++) {
-    const att = attachments[i];
-    doc.addPage();
-
-    doc.setFontSize(14);
-    doc.text(`Tệp đính kèm: ${att.tenFile}`, 20, 20);
-
-    if (att.loaiFile.startsWith("image/") && att.data) {
-      try {
-        doc.addImage(att.data as string, "JPEG", 20, 30, 170, 0);
-      } catch (e) {
-        doc.text("Không thể hiển thị ảnh.", 20, 30);
-      }
-    } else if (att.loaiFile === "application/pdf" && att.data) {
-      doc.text("Tệp PDF không thể hiển thị trực tiếp trong PDF này.", 20, 30);
-      doc.text("Vui lòng mở tệp đính kèm riêng.", 20, 36);
-    } else {
-      doc.text("Không có dữ liệu xem trước.", 20, 30);
-    }
-
-    doc.setFontSize(10);
-    doc.text(`Loại tệp: ${att.loaiFile}`, 20, 50);
-  }
-
+  // Không cần thêm trang nhúng nội dung nữa vì yêu cầu chỉ hiển thị tên
   return new Uint8Array(doc.output("arraybuffer"));
 };
 

@@ -14,25 +14,31 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import SaveBtn from "../../../../components/Button/SaveBtn";
 import CancelBtn from "../../../../components/Button/CancelBtn";
 import FieldInput from "../../../../components/TextField/FieldInput";
 import { useFormik } from "formik";
 import EditButton from "../../../../components/Button/EditButton";
-import { findById } from "../../../../utils/helpers";
+import { findById, formatDecimal } from "../../../../utils/helpers";
 import { useAssetByTypeQuery, useCountriesQuery } from "../../Mutation";
 import { useAllTypeAssetByGroupQuery } from "../../../TypeAsset/Mutation";
 import { useAllProjectsQuery } from "../../../Project/Mutation";
 import dayjs from "dayjs";
 import { AssetValidation } from "../../validation";
 import TextFieldNumber from "../../../../components/TextField/TextFieldNumber";
-import { CongTy } from "../../../../utils/const";
+import { Action, CongTy } from "../../../../utils/const";
 import FieldYearMonth from "../../../../components/TextField/FieldYearMonth";
 import FieldDateTime from "../../../../components/TextField/FieldDateTime";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
+import { AssetFileType } from "../../types";
+import { showDownloadFile } from "../../config";
+import S3Service from "../../../../services/S3Service";
 
 export default function AssetInfo({
+  readOnly,
+  onEdit,
+  onCancel,
   selectedAsset,
   onSave,
   allAssetModel,
@@ -42,6 +48,9 @@ export default function AssetInfo({
   allUnits,
   allReasonIncreases,
 }: {
+  readOnly?: boolean;
+  onEdit: () => void;
+  onCancel: () => void;
   selectedAsset?: any;
   onSave: (values: any) => void;
   allAssetModel: any[];
@@ -51,8 +60,6 @@ export default function AssetInfo({
   allUnits: any[];
   allReasonIncreases: any[];
 }) {
-  const [readOnly, setReadOnly] = useState(true);
-
   const formik = useFormik({
     initialValues: {
       id: "",
@@ -100,6 +107,18 @@ export default function AssetInfo({
       nvNS: 0,
       vonVay: 0,
       vonKhac: 0,
+      fileDinhKemList: [
+        {
+          id: undefined as Number | undefined,
+          idTaiSan: "",
+          filePath: "",
+          tenFile: "",
+          loai: 0,
+          ngayTao: "",
+          ghiChu: "",
+          action: Action.CREATE,
+        },
+      ] as AssetFileType[],
       taiSanConList: [
         {
           id: "",
@@ -186,7 +205,61 @@ export default function AssetInfo({
     } else {
       formik.resetForm();
     }
-    setReadOnly(true);
+    onCancel();
+  };
+
+  const handleFileUpload = async (
+    event: ChangeEvent<HTMLInputElement>,
+    loai: number,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Hiển thị loading nếu muốn
+    try {
+      const keyTailieu = await S3Service.put({
+        name: file.name,
+        file: file,
+        type: "tailieu",
+      });
+      const newFile: AssetFileType = {
+        id: undefined, // id tạm thời
+        idTaiSan: formik.values.id,
+        filePath: keyTailieu,
+        tenFile: file.name,
+        loai: loai,
+        ngayTao: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+        ghiChu: "",
+        action: Action.CREATE,
+      };
+      formik.setFieldValue("fileDinhKemList", [
+        ...formik.values.fileDinhKemList,
+        newFile,
+      ]);
+    } catch (error) {
+      console.error("Upload file error", error);
+      // Có thể hiển thị toast lỗi
+    }
+    // Reset input để có thể chọn lại cùng file
+    event.target.value = "";
+  };
+
+  const handleRemoveFile = (fileId?: number) => {
+    if (!fileId) return;
+    const currentList = formik.values.fileDinhKemList;
+    const fileToRemove = currentList.find((f) => f.id === fileId);
+
+    if (fileToRemove && fileToRemove.id) {
+      // File đã tồn tại trên server → xóa mềm: đánh dấu action = "delete"
+      const newList = currentList.map((f) =>
+        f.id === fileId ? { ...f, action: Action.DELETE } : f,
+      );
+      formik.setFieldValue("fileDinhKemList", newList);
+    } else {
+      // File mới upload (chưa có id) → xóa khỏi danh sách
+      const newList = currentList.filter((f) => f.id !== fileId);
+      formik.setFieldValue("fileDinhKemList", newList);
+    }
   };
 
   return (
@@ -204,11 +277,11 @@ export default function AssetInfo({
           top: 0,
           zIndex: 10,
           background: "#f5f5f5",
-          pb: 2,
+          p: 2,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          mb: 2,
+          borderRadius: "12px",
         }}
       >
         <Box display={"flex"} alignItems={"center"} gap={2}>
@@ -218,7 +291,7 @@ export default function AssetInfo({
         <Box display="flex" gap={2}>
           {!readOnly && <SaveBtn onSave={formik.submitForm} />}
           {!readOnly && <CancelBtn onClick={handleCancel} />}
-          {readOnly && <EditButton onClick={() => setReadOnly(false)} />}
+          {readOnly && <EditButton onClick={onEdit} />}
         </Box>
       </Box>
 
@@ -229,7 +302,7 @@ export default function AssetInfo({
             {/* Số thẻ tài sản */}
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -249,33 +322,10 @@ export default function AssetInfo({
               )}
             </Grid>
 
-            {/* Mã tài sản */}
-            <Grid size={{ xs: 12 }}>
-              {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
-                    Mã tài sản:
-                  </Typography>
-                  <Typography>{formik.values.id || "N/A"}</Typography>
-                </Box>
-              ) : (
-                <FieldInput
-                  title="Mã tài sản *"
-                  formik={formik}
-                  field="id"
-                  disabled={Boolean(selectedAsset?.id)}
-                />
-              )}
-            </Grid>
-
             {/* Tên tài sản */}
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -296,7 +346,7 @@ export default function AssetInfo({
             </Grid>
 
             {readOnly ? (
-              <Box display="flex" alignItems="center" gap={2}>
+              <Box display="flex" gap={2}>
                 <Typography
                   variant="body2"
                   fontWeight="bold"
@@ -304,7 +354,9 @@ export default function AssetInfo({
                 >
                   Nguyên giá:
                 </Typography>
-                <Typography>{formik.values.nguyenGia || "N/A"}</Typography>
+                <Typography>
+                  {formatDecimal(formik.values.nguyenGia)} đ
+                </Typography>
               </Box>
             ) : (
               <Grid size={{ xs: 12 }}>
@@ -317,7 +369,7 @@ export default function AssetInfo({
               </Grid>
             )}
             {readOnly ? (
-              <Box display="flex" alignItems="center" gap={2}>
+              <Box display="flex" gap={2}>
                 <Typography
                   variant="body2"
                   fontWeight="bold"
@@ -326,7 +378,7 @@ export default function AssetInfo({
                   Giá trị khấu hao ban đầu:
                 </Typography>
                 <Typography>
-                  {formik.values.giaTriKhauHaoBanDau || "N/A"}
+                  {formatDecimal(formik.values.giaTriKhauHaoBanDau)} đ
                 </Typography>
               </Box>
             ) : (
@@ -340,7 +392,7 @@ export default function AssetInfo({
               </Grid>
             )}
             {readOnly ? (
-              <Box display="flex" alignItems="center" gap={2}>
+              <Box display="flex" gap={2}>
                 <Typography
                   variant="body2"
                   fontWeight="bold"
@@ -364,7 +416,7 @@ export default function AssetInfo({
             )}
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -388,7 +440,7 @@ export default function AssetInfo({
 
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -437,7 +489,7 @@ export default function AssetInfo({
 
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -468,7 +520,7 @@ export default function AssetInfo({
 
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -490,7 +542,7 @@ export default function AssetInfo({
 
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -514,7 +566,7 @@ export default function AssetInfo({
 
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -538,7 +590,7 @@ export default function AssetInfo({
 
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -562,7 +614,7 @@ export default function AssetInfo({
 
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -589,7 +641,7 @@ export default function AssetInfo({
 
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -618,7 +670,7 @@ export default function AssetInfo({
 
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -644,7 +696,7 @@ export default function AssetInfo({
 
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -675,7 +727,7 @@ export default function AssetInfo({
           <Grid container spacing={2} sx={{ mt: 2 }}>
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -702,7 +754,7 @@ export default function AssetInfo({
 
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -710,7 +762,7 @@ export default function AssetInfo({
                   >
                     Vốn NS:
                   </Typography>
-                  <Typography>{formik.values.nvNS}</Typography>
+                  <Typography>{formatDecimal(formik.values.nvNS)} đ</Typography>
                 </Box>
               ) : (
                 <TextFieldNumber
@@ -732,7 +784,7 @@ export default function AssetInfo({
 
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -740,7 +792,9 @@ export default function AssetInfo({
                   >
                     Vốn vay:
                   </Typography>
-                  <Typography>{formik.values.vonVay}</Typography>
+                  <Typography>
+                    {formatDecimal(formik.values.vonVay)} đ
+                  </Typography>
                 </Box>
               ) : (
                 <TextFieldNumber
@@ -762,7 +816,7 @@ export default function AssetInfo({
 
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -770,7 +824,9 @@ export default function AssetInfo({
                   >
                     Vốn khác:
                   </Typography>
-                  <Typography>{formik.values.vonKhac}</Typography>
+                  <Typography>
+                    {formatDecimal(formik.values.vonKhac)} đ
+                  </Typography>
                 </Box>
               ) : (
                 <TextFieldNumber
@@ -792,7 +848,7 @@ export default function AssetInfo({
 
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -814,7 +870,7 @@ export default function AssetInfo({
 
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -836,7 +892,7 @@ export default function AssetInfo({
 
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -858,7 +914,7 @@ export default function AssetInfo({
 
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -894,7 +950,7 @@ export default function AssetInfo({
 
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -917,7 +973,7 @@ export default function AssetInfo({
 
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -944,7 +1000,7 @@ export default function AssetInfo({
 
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -969,7 +1025,7 @@ export default function AssetInfo({
               )}
             </Grid>
             {readOnly ? (
-              <Box display="flex" alignItems="center" gap={2}>
+              <Box display="flex" gap={2}>
                 <Typography
                   variant="body2"
                   fontWeight="bold"
@@ -992,7 +1048,7 @@ export default function AssetInfo({
 
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -1019,7 +1075,7 @@ export default function AssetInfo({
 
             <Grid size={{ xs: 12 }}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" gap={2}>
                   <Typography
                     variant="body2"
                     fontWeight="bold"
@@ -1050,7 +1106,8 @@ export default function AssetInfo({
                     Kho:
                   </Typography>
                   <Typography>
-                    {formik.values.idDonViBanDau || "N/A"}
+                    {findById(allDepartments, formik.values.idDonViBanDau)
+                      ?.tenPhongBan || "N/A"}
                   </Typography>
                 </Box>
               ) : (
@@ -1094,7 +1151,7 @@ export default function AssetInfo({
               )}
             </Grid>
 
-            <Grid size={{ xs: 6 }}>
+            {/* <Grid size={{ xs: 6 }}>
               {readOnly ? (
                 <Box display="flex" alignItems="center" gap={2}>
                   <Typography
@@ -1118,9 +1175,9 @@ export default function AssetInfo({
                   disabled={readOnly}
                 />
               )}
-            </Grid>
+            </Grid> */}
 
-            <Grid size={{ xs: 6 }}>
+            {/* <Grid size={{ xs: 6 }}>
               {readOnly ? (
                 <Box display="flex" alignItems="center" gap={2}>
                   <Typography
@@ -1141,7 +1198,7 @@ export default function AssetInfo({
                   disabled={readOnly}
                 />
               )}
-            </Grid>
+            </Grid> */}
           </Grid>
         </Grid>
       </Grid>
@@ -1200,6 +1257,10 @@ export default function AssetInfo({
                               formik.setFieldValue(
                                 `taiSanConList.${row.originalIndex}.hienTrang`,
                                 val.hienTrang,
+                              );
+                              formik.setFieldValue(
+                                `taiSanConList.${row.originalIndex}.tenTaiSan`,
+                                val.tenTaiSan,
                               );
                             }
                           }}
@@ -1297,6 +1358,156 @@ export default function AssetInfo({
           </Table>
         </Box>
       )}
+      <Grid container spacing={2} sx={{ mt: 4 }}>
+        <Grid size={{ xs: 6 }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Typography variant="body2" fontWeight="bold">
+              Biên bản nghiệm thu
+            </Typography>
+            {!readOnly && (
+              <Button
+                variant="text"
+                size="small"
+                component="label"
+                startIcon={<Add />}
+              >
+                Tệp đính kèm
+                <input
+                  type="file"
+                  hidden
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                  onChange={(e) => handleFileUpload(e, 0)}
+                />
+              </Button>
+            )}
+          </Box>
+          <Box sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 1 }}>
+            {formik.values.fileDinhKemList
+              .filter((e) => e.loai === 0 && e.action !== Action.DELETE)
+              .map((i, index) => (
+                <Box
+                  key={i.id || index}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    py: 0.5,
+                    borderBottom: "1px dashed #e0e0e0",
+                    "&:last-child": { borderBottom: "none" },
+                  }}
+                >
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "text.secondary", minWidth: "20px" }}
+                  >
+                    {index + 1}.
+                  </Typography>
+                  {showDownloadFile(i.tenFile, () =>
+                    S3Service.download(i.filePath),
+                  )}
+                  {!readOnly && (
+                    <IconButton
+                      size="small"
+                      onClick={() => handleRemoveFile(i.id)}
+                      color="error"
+                    >
+                      <Delete fontSize="small" />
+                    </IconButton>
+                  )}
+                </Box>
+              ))}
+            {formik.values.fileDinhKemList.filter(
+              (e) => e.loai === 0 && e.action !== Action.DELETE,
+            ).length === 0 && (
+              <Typography
+                variant="body2"
+                sx={{ fontStyle: "italic", color: "gray" }}
+              >
+                Không có tệp đính kèm.
+              </Typography>
+            )}
+          </Box>
+        </Grid>
+
+        {/* Tài liệu kỹ thuật */}
+        <Grid size={{ xs: 6 }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Typography variant="body2" fontWeight="bold">
+              Tài liệu kỹ thuật
+            </Typography>
+            {!readOnly && (
+              <Button
+                variant="text"
+                size="small"
+                component="label"
+                startIcon={<Add />}
+              >
+                Tệp đính kèm
+                <input
+                  type="file"
+                  hidden
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                  onChange={(e) => handleFileUpload(e, 1)}
+                />
+              </Button>
+            )}
+          </Box>
+          <Box sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 1 }}>
+            {formik.values.fileDinhKemList
+              .filter((e) => e.loai === 1 && e.action !== Action.DELETE)
+              .map((i, index) => (
+                <Box
+                  key={i.id || index}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    py: 0.5,
+                    borderBottom: "1px dashed #e0e0e0",
+                    "&:last-child": { borderBottom: "none" },
+                  }}
+                >
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "text.secondary", minWidth: "20px" }}
+                  >
+                    {index + 1}.
+                  </Typography>
+                  {showDownloadFile(i.tenFile, () =>
+                    S3Service.download(i.filePath),
+                  )}
+                  {!readOnly && (
+                    <IconButton
+                      size="small"
+                      onClick={() => handleRemoveFile(i.id)}
+                      color="error"
+                    >
+                      <Delete fontSize="small" />
+                    </IconButton>
+                  )}
+                </Box>
+              ))}
+            {formik.values.fileDinhKemList.filter(
+              (e) => e.loai === 1 && e.action !== Action.DELETE,
+            ).length === 0 && (
+              <Typography
+                variant="body2"
+                sx={{ fontStyle: "italic", color: "gray" }}
+              >
+                Không có tệp đính kèm.
+              </Typography>
+            )}
+          </Box>
+        </Grid>
+      </Grid>
     </Paper>
   );
 }

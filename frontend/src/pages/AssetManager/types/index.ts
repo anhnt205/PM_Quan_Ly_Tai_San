@@ -1,3 +1,5 @@
+import { ActionType } from "../../../utils/const";
+
 export interface AssetType {
   id: string;
   idLoaiTaiSan: string;
@@ -29,8 +31,10 @@ export interface AssetType {
   namSanXuat: number;
   lyDoTang: string;
   hienTrang: number;
+  tenHienTrang?: string;
   soLuong: number;
   donViTinh: string;
+  tenDonViTinh?: string;
   ghiChu: string;
   idDonViBanDau: string;
   tenDonViBanDau?: string;
@@ -51,8 +55,18 @@ export interface AssetType {
   vonVay: number;
   vonKhac: number;
   taiSanConList?: AssetChildType[];
+  fileDinhKemList?: AssetFileType[];
 }
-
+export interface AssetFileType {
+  id?: number;
+  idTaiSan: string;
+  filePath: string;
+  tenFile: string;
+  loai: number;
+  ngayTao?: string;
+  ghiChu?: string;
+  action?: ActionType;
+}
 export interface AssetChildType {
   id: string;
   idTaiSanCon: string;

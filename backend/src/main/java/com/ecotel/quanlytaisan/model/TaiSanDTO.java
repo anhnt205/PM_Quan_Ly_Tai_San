@@ -56,6 +56,7 @@ public class TaiSanDTO {
     private Boolean isTaiSanCon;
     private List<ChiTietTaiSan> chiTietTaiSanList;
     private List<TaiSanCon> taiSanConList;
+    private List<TaiSanFile> fileDinhKemList;
     private String idLoaiTaiSanCon;
     private String soThe;
     private Double nvNS;

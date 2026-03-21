@@ -2,6 +2,7 @@ package com.ecotel.quanlytaisan.service;
 
 import com.ecotel.quanlytaisan.dao.ChiTietTaiSanDao;
 import com.ecotel.quanlytaisan.dao.TaiSanDao;
+import com.ecotel.quanlytaisan.dao.TaiSanFileDao;
 import com.ecotel.quanlytaisan.dao.ChiTietBanGiaoTaiSanDao;
 import com.ecotel.quanlytaisan.dao.PhongBanDao;
 import com.ecotel.quanlytaisan.model.*;
@@ -29,6 +30,8 @@ public class TaiSanService {
     private TaiSanDao taiSanDao;
     @Autowired
     private ChiTietTaiSanDao chiTietTaiSanDao;
+     @Autowired
+    private TaiSanFileDao taiSanFileDao;
     @Autowired
     private ChiTietBanGiaoTaiSanDao chiTietBanGiaoTaiSanDao;
     @Autowired
@@ -868,14 +871,21 @@ public class TaiSanService {
             taiSanDao.getTaiSanConByTaiSanIds(ids)
         );
         System.out.println("4");
+        CompletableFuture<List<TaiSanFile>> taiSanFileFuture = CompletableFuture.supplyAsync(() ->
+            taiSanFileDao.findAllByTaiSanIds(ids)
+        );
+        System.out.println("5");
+
 
         // Wait for all to complete and get results
         List<ChiTietTaiSan> allChiTiet;
         List<TaiSanCon> allTaiSanCon;
+        List<TaiSanFile> allTaiSanFile;
         try {
-            CompletableFuture.allOf(chiTietFuture, taiSanConFuture).join();
+            CompletableFuture.allOf(chiTietFuture, taiSanConFuture, taiSanFileFuture).join();
             allChiTiet = chiTietFuture.get();
             allTaiSanCon = taiSanConFuture.get();
+            allTaiSanFile = taiSanFileFuture.get();
         } catch (Exception e) {
             e.printStackTrace();
             return;
@@ -887,11 +897,14 @@ public class TaiSanService {
 
         Map<String, List<TaiSanCon>> taiSanConMap = allTaiSanCon.stream()
                 .collect(Collectors.groupingBy(TaiSanCon::getIdTaiSanCha));
+        Map<String, List<TaiSanFile>> taiSanFileMap = allTaiSanFile.stream()
+                .collect(Collectors.groupingBy(TaiSanFile::getIdTaiSan));
 
         // Assign back to DTOs
         for (TaiSanDTO dto : taiSanDTOList) {
             dto.setChiTietTaiSanList(chiTietMap.getOrDefault(dto.getId(), new ArrayList<>()));
             dto.setTaiSanConList(taiSanConMap.getOrDefault(dto.getId(), new ArrayList<>()));
+            dto.setFileDinhKemList(taiSanFileMap.getOrDefault(dto.getId(), new ArrayList<>()));
         }
     }
 

@@ -7,7 +7,7 @@ import org.apache.poi.ss.usermodel.Row;
 
 @Data
 public class TaiSanCon {
-    private String id,idTaiSanCon,idTaiSanCha,ngayTao,ngayCapNhat,nguoiTao,nguoiCapNhat,isActive;
+    private String id,idTaiSanCon,tenTaiSan,idTaiSanCha,ngayTao,ngayCapNhat,nguoiTao,nguoiCapNhat,isActive;
     private TaiSanCon mapToTaiSanCon(String[] row) {
         TaiSanCon ts = new TaiSanCon();
         ts.setId(row[0]);

@@ -87,7 +87,15 @@ const AssetEbookModal = ({
       setLoading(true);
       setError(null);
       try {
-        const bytes = await generateAssetPdf(selectedAsset);
+        const bytes = await generateAssetPdf(
+          selectedAsset,
+          allAssetModel,
+          allCurrentStatus,
+          assetGroups,
+          allDepartments,
+          allUnits,
+          allReasonIncreases,
+        );
         if (cancelled) return;
         setPdfBlob(bytes);
         const blob = new Blob([bytes.buffer as ArrayBuffer], {
@@ -301,6 +309,9 @@ const AssetEbookModal = ({
             }}
           >
             <AssetInfo
+              readOnly={readOnly}
+              onEdit={onEdit}
+              onCancel={onCancel}
               selectedAsset={selectedAsset}
               onSave={onSave}
               allAssetModel={allAssetModel}
