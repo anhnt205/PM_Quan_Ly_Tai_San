@@ -107,6 +107,21 @@ public class LichSuDieuChuyenTaiSanDao {
         return jdbcTemplate.query(sql.toString(), new BeanPropertyRowMapper<>(LichSuDieuChuyenTaiSan.class), params.toArray());
     }
 
+    public int update(String id, LichSuDieuChuyenTaiSanDTO item) {
+        String sql = """
+                UPDATE LichSuDieuChuyenTaiSan 
+                SET IdDonViNhan = ?, ThoiGianBanGiao = ? 
+                WHERE Id = ?
+                """;
+        return jdbcTemplate.update(sql, item.getIdDonViNhan(), item.getThoiGianBanGiao(), id);
+    }
+
+    public int delete(String id) {
+        String sql = "DELETE FROM LichSuDieuChuyenTaiSan WHERE Id = ?";
+        return jdbcTemplate.update(sql, id);
+    }
+
+    
     public long countAll(String idTaiSan, String fromDate, String toDate) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM LichSuDieuChuyenTaiSan ls WHERE 1=1");
         List<Object> params = new ArrayList<>();

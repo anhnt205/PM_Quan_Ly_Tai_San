@@ -210,14 +210,43 @@ export const useAssetManagerMutation = (
       return res.data;
     },
     onSuccess: (data) => {
-      console.log("Tạo lịch sử điều chuyển thành công");
+      queryClient.invalidateQueries({ queryKey: ["historyAssetHandover"] });
+      showSuccessAlert("Tạo lịch sử điều chuyển thành công");
     },
     onError: (error: any) => {
-      console.log(
+      showErrorAlert(
         error.response?.data?.message ||
           error.message ||
           "Tạo lịch sử điều chuyển thất bại",
       );
+    },
+  });
+
+  const updateHistoryAssetMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const res = await api.put(`/lichsudieuchuyentaisan/${id}`, data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["historyAssetHandover"] });
+      showSuccessAlert("Cập nhật lịch sử điều chuyển thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(error.response?.data?.message || "Cập nhật thất bại");
+    },
+  });
+
+  const deleteHistoryAssetMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.delete(`/lichsudieuchuyentaisan/${id}`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["historyAssetHandover"] });
+      showSuccessAlert("Xóa lịch sử điều chuyển thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(error.response?.data?.message || "Xóa thất bại");
     },
   });
 
@@ -520,6 +549,8 @@ export const useAssetManagerMutation = (
     deleteManyMutation,
     exportAssetMutation,
     importAssetMutation,
+    updateHistoryAssetMutation,
+    deleteHistoryAssetMutation,
     createChildAssetBulkMutation,
     deleteOneChildAsssetMutation,
     createManyHistoryAssetMutation,

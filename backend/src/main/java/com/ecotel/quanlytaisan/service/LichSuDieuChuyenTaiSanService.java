@@ -30,4 +30,12 @@ public class LichSuDieuChuyenTaiSanService {
         // SỬA LỖI: Sử dụng constructor có tham số của PageResponse
         return new PageResponse<>(list, total, page, size);
     }
+
+    public int update(String id, LichSuDieuChuyenTaiSanDTO item) {
+        return lichSuDieuChuyenTaiSanDao.update(id, item);
+    }
+
+    public int delete(String id) {
+        return lichSuDieuChuyenTaiSanDao.delete(id);
+    }
 }

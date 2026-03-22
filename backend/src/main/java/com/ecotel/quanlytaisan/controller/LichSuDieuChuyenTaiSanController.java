@@ -35,6 +35,36 @@ public class LichSuDieuChuyenTaiSanController {
         }
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody LichSuDieuChuyenTaiSanDTO item) {
+        try {
+            int result = lichSuDieuChuyenTaiSanService.update(id, item);
+            if (result > 0) {
+                return ResponseEntity.ok(ApiResponse.success("Cập nhật lịch sử thành công", null, result));
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.failure("Không tìm thấy bản ghi để cập nhật", result));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+        try {
+            int result = lichSuDieuChuyenTaiSanService.delete(id);
+            if (result > 0) {
+                return ResponseEntity.ok(ApiResponse.success("Xóa lịch sử thành công", null, result));
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.failure("Không tìm thấy bản ghi để xóa", result));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+    
     @GetMapping
     public ResponseEntity<PageResponse<LichSuDieuChuyenTaiSan>> getAllPaged(
             @RequestParam(defaultValue = "0") int page,

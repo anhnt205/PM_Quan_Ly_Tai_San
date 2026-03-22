@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -20,6 +20,7 @@ import * as pdfjsLib from "pdfjs-dist";
 import { AssetType } from "../types";
 import { generateAssetPdf } from "../config";
 import AssetInfo from "./AssetEBook/AssetInfo";
+import TransferHistoryPage from "./AssetEBook/TransferHistoryPage";
 
 // Cấu hình worker cho pdf.js (chỉ chạy ở client)
 if (typeof window !== "undefined") {
@@ -105,7 +106,7 @@ const AssetEbookModal = ({
         const pdf = await pdfjsLib.getDocument(url).promise;
         if (cancelled) return;
         setPdfDoc(pdf);
-        setTotalPages(pdf.numPages);
+        setTotalPages(pdf.numPages + 1);
         setCurrentPage(1);
         URL.revokeObjectURL(url);
       } catch (err) {
@@ -229,7 +230,6 @@ const AssetEbookModal = ({
             }}
           >
             <PictureAsPdf />
-            <img src="/pdf-icon.png" alt="PDF Icon" width="24" height="24" />
           </Box>
           <Typography variant="h5" sx={{ fontWeight: 700, color: "#f3f4f6" }}>
             Sổ tài sản điện tử
@@ -296,6 +296,7 @@ const AssetEbookModal = ({
           </Box>
         ) : error ? (
           <Typography color="error" align="center">
+            {" "}
             {error}
           </Typography>
         ) : (
@@ -308,19 +309,27 @@ const AssetEbookModal = ({
               overflow: "auto",
             }}
           >
-            <AssetInfo
-              readOnly={readOnly}
-              onEdit={onEdit}
-              onCancel={onCancel}
-              selectedAsset={selectedAsset}
-              onSave={onSave}
-              allAssetModel={allAssetModel}
-              allCurrentStatus={allCurrentStatus}
-              assetGroups={assetGroups}
-              allDepartments={allDepartments}
-              allUnits={allUnits}
-              allReasonIncreases={allReasonIncreases}
-            />
+            {/* LOGIC LẬT TRANG HYBRID */}
+            {currentPage === totalPages ? (
+              <TransferHistoryPage
+                idTaiSan={selectedAsset?.id}
+                allDepartments={allDepartments}
+              />
+            ) : (
+              <AssetInfo
+                readOnly={readOnly}
+                onEdit={onEdit}
+                onCancel={onCancel}
+                selectedAsset={selectedAsset}
+                onSave={onSave}
+                allAssetModel={allAssetModel}
+                allCurrentStatus={allCurrentStatus}
+                assetGroups={assetGroups}
+                allDepartments={allDepartments}
+                allUnits={allUnits}
+                allReasonIncreases={allReasonIncreases}
+              />
+            )}
           </Box>
         )}
       </DialogContent>
