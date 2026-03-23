@@ -448,14 +448,16 @@ export default function AssetManager() {
               },
             }}
           >
-            {assetGroups.map((i: any, index: number) => (
-              <AssetGroupItem
-                key={i.id}
-                item={i}
-                selectedGroup={selectedGroup}
-                setSelectedGroup={setSelectedGroup}
-              />
-            ))}
+            {assetGroups
+              .filter((e: any) => e.soLuongTaiSan > 0)
+              .map((i: any, index: number) => (
+                <AssetGroupItem
+                  key={i.id}
+                  item={i}
+                  selectedGroup={selectedGroup}
+                  setSelectedGroup={setSelectedGroup}
+                />
+              ))}
           </Box>
         </Paper>
         <Box>

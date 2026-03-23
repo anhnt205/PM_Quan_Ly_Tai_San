@@ -90,7 +90,12 @@ export const showDownloadFile = (fileName: string, onDownload: () => void) => {
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { AssetHoursGroupYearType, AssetType } from "../types";
+import {
+  AssetHoursGroupYearType,
+  AssetType,
+  MaintenanceIncidentType,
+  TransferHistoryData,
+} from "../types";
 import { FileDownloadOutlined } from "@mui/icons-material";
 import { findById } from "../../../utils/helpers";
 import { PDFDocument } from "pdf-lib";
@@ -251,7 +256,11 @@ export const generateAssetPdf = async (
 export const generateMonthlyActivityReport = async (
   data: AssetHoursGroupYearType[],
 ): Promise<Uint8Array> => {
-  const sortedData = [...data].sort((a, b) => (a.nam || 0) - (b.nam || 0));
+  const reportData =
+    data && data.length > 0 ? data : [{} as AssetHoursGroupYearType];
+  const sortedData = [...reportData].sort(
+    (a, b) => (a.nam || 0) - (b.nam || 0),
+  );
   const doc = new jsPDF();
   let currentPage = 0;
   const totalPages = sortedData.length;
@@ -395,16 +404,6 @@ export const generateMonthlyActivityReport = async (
   }
   return new Uint8Array(doc.output("arraybuffer"));
 };
-interface TransferHistoryData {
-  id: string;
-  thoiGianBanGiao: string;
-  idDonViNhan: string;
-  tenDonViNhan?: string;
-  idDonViGiao?: string;
-  tenDonViGiao?: string;
-  idTaiSan?: string;
-  tenTaiSan?: string;
-}
 
 export const generateTransferHistoryPDF = async (
   data: TransferHistoryData[],
@@ -438,6 +437,82 @@ export const generateTransferHistoryPDF = async (
         { content: "Ngày tháng", styles: { halign: "center" } },
         { content: "Đơn vị quản lý", styles: { halign: "center" } },
         { content: "Ghi Chú", styles: { halign: "center" } },
+      ],
+    ],
+    body: tableData,
+    headStyles: {
+      fillColor: [255, 255, 255],
+      textColor: [0, 0, 0],
+      fontStyle: "bold",
+      halign: "center",
+      fontSize: 10,
+      valign: "middle",
+    },
+    bodyStyles: {
+      fontSize: 9,
+      cellPadding: 4,
+      halign: "center",
+      valign: "middle",
+    },
+    columnStyles: {
+      0: { cellWidth: 25, halign: "center" },
+      1: { cellWidth: 50, halign: "center" },
+    },
+    margin: { left: 20, right: 20 },
+    theme: "grid",
+    styles: {
+      font: "times_new_roman",
+      lineColor: [0, 0, 0],
+      lineWidth: 0.1,
+    },
+    didParseCell: (data: any) => {
+      // Căn trái cho cột đơn vị quản lý
+      if (data.section === "body" && data.column.index === 2) {
+        data.cell.styles.halign = "left";
+      }
+    },
+  });
+
+  return new Uint8Array(doc.output("arraybuffer"));
+};
+
+export const generateAssetManentancePDF = async (
+  data: MaintenanceIncidentType[],
+): Promise<Uint8Array> => {
+  const doc = new jsPDF();
+
+  // Set font
+  doc.setFont("times_new_roman", "bold");
+
+  // Tiêu đề chính
+  doc.setFontSize(18);
+  doc.text("DIỄN BIẾN KỸ THUẬT VÀ TAI NẠN, SỰ CỐ PHẢI SỬA CHỮA", 105, 20, {
+    align: "center",
+  });
+
+  // Chuẩn bị dữ liệu cho bảng
+  const tableData = data.map((item, index) => {
+    return [
+      item.tuNgay ? dayjs(item.tuNgay).format("DD/MM/YYYY") : "-",
+      item.denNgay ? dayjs(item.denNgay).format("DD/MM/YYYY") : "-",
+      item.loaiSuCo || "",
+      item.noiSuaChua || "",
+    ];
+  });
+
+  // Tạo bảng
+  autoTable(doc, {
+    startY: 30,
+    head: [
+      [
+        { content: "Từ ngày", styles: { halign: "center" } },
+        { content: "Đến ngày", styles: { halign: "center" } },
+        {
+          content: "Loại sự cố, tai nạn, nội dung hư hỏng",
+        },
+        {
+          content: "Nơi sửa chữa",
+        },
       ],
     ],
     body: tableData,

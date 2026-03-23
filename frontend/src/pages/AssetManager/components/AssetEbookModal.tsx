@@ -19,6 +19,7 @@ import {
 import * as pdfjsLib from "pdfjs-dist";
 import { AssetType } from "../types";
 import {
+  generateAssetManentancePDF,
   generateAssetPdf,
   generateMonthlyActivityReport,
   generateTransferHistoryPDF,
@@ -31,6 +32,7 @@ import {
   useHistoryAssethandoverQuery,
 } from "../Mutation";
 import HoursAsset from "./AssetEBook/HoursAsset";
+import AssetMaintenance from "./AssetEBook/AssetMaintenance";
 
 // Cấu hình worker cho pdf.js (chỉ chạy ở client)
 if (typeof window !== "undefined") {
@@ -68,7 +70,7 @@ const AssetEbookModal = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(1); // Bắt đầu từ trang 1
   const [pdfDoc, setPdfDoc] = useState<any>(null);
-  const [totalPages, setTotalPages] = useState(3); // Tổng số trang PDF
+  const [totalPages, setTotalPages] = useState(4); // Tổng số trang PDF
   const [pdfBlob, setPdfBlob] = useState<Uint8Array | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -122,6 +124,8 @@ const AssetEbookModal = ({
         if (transfer) listPdf.push(transfer);
         const activity = await generateMonthlyActivityReport(assetHoursByYear);
         if (activity) listPdf.push(activity);
+        const maintenance = await generateAssetManentancePDF([]);
+        if (maintenance) listPdf.push(maintenance);
 
         const merge = await mergePdf(listPdf);
         if (cancelled) return;
@@ -360,8 +364,10 @@ const AssetEbookModal = ({
                 asset={selectedAsset}
                 allDepartments={allDepartments}
               />
-            ) : (
+            ) : currentPage === 3 ? (
               <HoursAsset asset={selectedAsset} />
+            ) : (
+              <AssetMaintenance />
             )}
           </Box>
         )}

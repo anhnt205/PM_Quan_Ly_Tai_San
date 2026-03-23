@@ -113,3 +113,24 @@ export interface AssetHoursGroupYearType {
   nam?: number;
   data: AssetHoursType[];
 }
+
+export interface TransferHistoryData {
+  id: string;
+  thoiGianBanGiao: string;
+  idDonViNhan: string;
+  tenDonViNhan?: string;
+  idDonViGiao?: string;
+  tenDonViGiao?: string;
+  idTaiSan?: string;
+  tenTaiSan?: string;
+}
+export interface MaintenanceIncidentType {
+  id: string;
+  tuNgay: string;
+  denNgay: string;
+  loaiSuCo: string; // Loại sự cố, tai nạn, nội dung hư hỏng
+  noiSuaChua: string;
+  ghiChu?: string;
+  isNew?: boolean;
+  isDeleted?: boolean;
+}
