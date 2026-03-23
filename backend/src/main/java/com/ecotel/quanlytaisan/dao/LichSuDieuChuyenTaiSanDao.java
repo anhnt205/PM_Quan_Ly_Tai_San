@@ -21,7 +21,6 @@ public class LichSuDieuChuyenTaiSanDao {
     private JdbcTemplate jdbcTemplate;
 
     public int createBatch(List<LichSuDieuChuyenTaiSanDTO> list) {
-        // Lưu ý: Tên bảng trong DB là LichSuDieuChuyenTaiSan
         String sql = """
                 INSERT INTO LichSuDieuChuyenTaiSan 
                 (Id, IdBanGiaoTaiSan, IdTaiSan, IdDonViGiao, IdDonViNhan, ThoiGianBanGiao) 
@@ -121,7 +120,6 @@ public class LichSuDieuChuyenTaiSanDao {
         return jdbcTemplate.update(sql, id);
     }
 
-    
     public long countAll(String idTaiSan, String fromDate, String toDate) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM LichSuDieuChuyenTaiSan ls WHERE 1=1");
         List<Object> params = new ArrayList<>();
@@ -150,5 +148,35 @@ public class LichSuDieuChuyenTaiSanDao {
         }
 
         return jdbcTemplate.queryForObject(sql.toString(), Long.class, params.toArray());
+    }
+
+    // ================== BATCH UPDATE & DELETE ==================
+    public int[] updateBatch(List<LichSuDieuChuyenTaiSanDTO> list) {
+        String sql = """
+                UPDATE LichSuDieuChuyenTaiSan 
+                SET IdDonViNhan = ?, ThoiGianBanGiao = ? 
+                WHERE Id = ?
+                """;
+        return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                LichSuDieuChuyenTaiSanDTO item = list.get(i);
+                ps.setString(1, item.getIdDonViNhan());
+                ps.setString(2, item.getThoiGianBanGiao());
+                ps.setString(3, item.getId());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return list.size();
+            }
+        });
+    }
+
+    public int deleteBatch(List<String> ids) {
+        if (ids == null || ids.isEmpty()) return 0;
+        String placeholders = String.join(",", java.util.Collections.nCopies(ids.size(), "?"));
+        String sql = "DELETE FROM LichSuDieuChuyenTaiSan WHERE Id IN (" + placeholders + ")";
+        return jdbcTemplate.update(sql, ids.toArray());
     }
 }

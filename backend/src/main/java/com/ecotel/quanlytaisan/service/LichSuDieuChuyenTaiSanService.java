@@ -26,8 +26,6 @@ public class LichSuDieuChuyenTaiSanService {
         int offset = page * size;
         List<LichSuDieuChuyenTaiSan> list = lichSuDieuChuyenTaiSanDao.findAllPaged(offset, size, idTaiSan, fromDate, toDate);
         long total = lichSuDieuChuyenTaiSanDao.countAll(idTaiSan, fromDate, toDate);
-        
-        // SỬA LỖI: Sử dụng constructor có tham số của PageResponse
         return new PageResponse<>(list, total, page, size);
     }
 
@@ -37,5 +35,21 @@ public class LichSuDieuChuyenTaiSanService {
 
     public int delete(String id) {
         return lichSuDieuChuyenTaiSanDao.delete(id);
+    }
+
+    // ================== BATCH UPDATE & DELETE ==================
+    public int updateBatch(List<LichSuDieuChuyenTaiSanDTO> list) {
+        if (list == null || list.isEmpty()) return 0;
+        int[] results = lichSuDieuChuyenTaiSanDao.updateBatch(list);
+        int successCount = 0;
+        for (int r : results) {
+            if (r > 0) successCount++;
+        }
+        return successCount;
+    }
+
+    public int deleteBatch(List<String> ids) {
+        if (ids == null || ids.isEmpty()) return 0;
+        return lichSuDieuChuyenTaiSanDao.deleteBatch(ids);
     }
 }

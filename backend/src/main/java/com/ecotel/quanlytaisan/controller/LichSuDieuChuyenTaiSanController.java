@@ -64,7 +64,7 @@ public class LichSuDieuChuyenTaiSanController {
                     .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
         }
     }
-    
+
     @GetMapping
     public ResponseEntity<PageResponse<LichSuDieuChuyenTaiSan>> getAllPaged(
             @RequestParam(defaultValue = "0") int page,
@@ -75,5 +75,36 @@ public class LichSuDieuChuyenTaiSanController {
     ) {
         PageResponse<LichSuDieuChuyenTaiSan> response = lichSuDieuChuyenTaiSanService.getAllPaged(page, size, idTaiSan, fromDate, toDate);
         return ResponseEntity.ok(response);
+    }
+
+    // ================== BATCH UPDATE & DELETE ==================
+    @PutMapping("/batch")
+    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<LichSuDieuChuyenTaiSanDTO> list) {
+        try {
+            int successCount = lichSuDieuChuyenTaiSanService.updateBatch(list);
+            if (successCount > 0) {
+                return ResponseEntity.ok(ApiResponse.success("Cập nhật danh sách thành công", null, successCount));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.failure("Cập nhật danh sách thất bại", successCount));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
+    @DeleteMapping("/batch")
+    public ResponseEntity<ApiResponse<Object>> deleteBatch(@RequestBody List<String> ids) {
+        try {
+            int deletedCount = lichSuDieuChuyenTaiSanService.deleteBatch(ids);
+            if (deletedCount > 0) {
+                return ResponseEntity.ok(ApiResponse.success("Xóa danh sách thành công", null, deletedCount));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.failure("Xóa danh sách thất bại", deletedCount));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
     }
 }
