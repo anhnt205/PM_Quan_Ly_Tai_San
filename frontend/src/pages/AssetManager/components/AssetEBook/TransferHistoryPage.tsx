@@ -94,7 +94,8 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
       thoiGianBanGiao: dayjs().format("YYYY-MM-DD"),
       idDonViNhan: "",
       tenDonViNhan: "",
-      idDonViGiao: "K30", // Mặc định đơn vị giao
+      idDonViGiao:
+        asset.idDonViHienThoi | asset.idDonViBanDau || ("K30" as any), // Mặc định đơn vị giao
       tenDonViGiao: "",
       idTaiSan: asset.id,
       isNew: true,
@@ -161,7 +162,8 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
           idTaiSan: asset.id,
           thoiGianBanGiao: `${row.thoiGianBanGiao}T00:00:00`,
           idDonViNhan: row.idDonViNhan,
-          idDonViGiao: row.idDonViGiao || "K30",
+          idDonViGiao:
+            row.idDonViGiao || asset.idDonViHienThoi || asset.idDonViBanDau,
         }));
 
         await new Promise((resolve, reject) => {
