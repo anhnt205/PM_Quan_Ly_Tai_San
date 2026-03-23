@@ -3,6 +3,7 @@ import api from "../../../config/api.config";
 import {
   AssetChildType,
   AssetFileType,
+  AssetHoursType,
   AssetType,
   HistoryAssetType,
 } from "../types";
@@ -570,6 +571,120 @@ export const useAssetManagerMutation = (
     createManyHistoryAssetMutation,
     updateAssetOwnershipMutation,
   };
+};
+
+export const useGioHoatDongMutation = () => {
+  const queryClient = useQueryClient();
+  const idCongTy = CongTy.CT001;
+  const { user } = useSelector((state: RootState) => state.user);
+  const now = dayjs().format("YYYY-MM-DDTHH:mm:ss");
+
+  const createMutation = useMutation({
+    mutationFn: async (data: AssetHoursType[]) => {
+      const res = await api.post("/giohoatdong/batch", data);
+      return res.data;
+    },
+    onSuccess: (data, payload) => {
+      queryClient.invalidateQueries({
+        queryKey: ["assetHoursGroup"],
+        exact: false,
+      });
+      showSuccessAlert("Tạo giờ hoạt động thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo giờ hoạt động thất bại",
+      );
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: AssetHoursType[]) => {
+      const res = await api.put(
+        `/giohoatdong/batch`,
+        data.map((i) => ({
+          ...i,
+          ngayCapNhat: now,
+        })),
+      );
+      return res.data;
+    },
+    onSuccess: (data, payload) => {
+      queryClient.invalidateQueries({ queryKey: ["assetHoursGroup"], exact: false });
+      showSuccessAlert("Sửa giờ hoạt động thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Sửa giờ hoạt động thất bại",
+      );
+    },
+  });
+  const deleteManyMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const res = await api.delete(`/giohoatdong/batch`, { data: ids });
+      return res.data.message;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["assetHoursGroup"] });
+      showSuccessAlert(data || "Xóa giờ hoạt động thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa giờ hoạt động thất bại",
+      );
+    },
+  });
+
+  return {
+    createMutation,
+    updateMutation,
+    deleteManyMutation,
+  };
+};
+
+export const useAssetHoursPageQuery = (
+  page?: number,
+  pageSize?: number,
+  idTaiSan?: string,
+  nam?: number,
+  thang?: number,
+) => {
+  return useQuery({
+    queryKey: ["assetHoursPage", page, pageSize, idTaiSan, nam, thang], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("giohoatdong", {
+        params: {
+          page: page,
+          size: pageSize,
+          idTaiSan,
+          nam,
+          thang,
+        },
+      });
+      return res.data.data || res.data;
+    },
+    enabled: !!idTaiSan && !!nam,
+  });
+};
+export const useAssetHoursByGroupPageQuery = (idTaiSan?: string) => {
+  return useQuery({
+    queryKey: ["assetHoursGroup", idTaiSan], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("giohoatdong/group_year", {
+        params: {
+          idTaiSan,
+        },
+      });
+      return res.data.data || res.data || [];
+    },
+    enabled: !!idTaiSan,
+  });
 };
 
 export const useAssetPageQuery = (

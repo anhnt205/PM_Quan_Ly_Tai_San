@@ -3,6 +3,7 @@ package com.ecotel.quanlytaisan.controller;
 import com.ecotel.quanlytaisan.model.ApiResponse;
 import com.ecotel.quanlytaisan.model.GioHoatDong;
 import com.ecotel.quanlytaisan.model.GioHoatDongDTO;
+import com.ecotel.quanlytaisan.model.GioHoatDongYearData;
 import com.ecotel.quanlytaisan.model.PageResponse;
 import com.ecotel.quanlytaisan.service.GioHoatDongService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,13 @@ public class GioHoatDongController {
             @RequestParam(required = false) Integer thang
     ) {
         return ResponseEntity.ok(service.getAllPaged(page, size, idTaiSan, nam, thang));
+    }
+
+    @GetMapping("group_year")
+    public ResponseEntity<List<GioHoatDongYearData>> getGroupByYear(
+        @RequestParam(required = true) String idTaiSan
+    ){
+        return ResponseEntity.ok(service.getYearsWithData(idTaiSan));
     }
 
     @GetMapping("/{id}")

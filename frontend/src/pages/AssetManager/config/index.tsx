@@ -90,7 +90,7 @@ export const showDownloadFile = (fileName: string, onDownload: () => void) => {
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { AssetType } from "../types";
+import { AssetHoursGroupYearType, AssetType } from "../types";
 import { FileDownloadOutlined } from "@mui/icons-material";
 import { findById } from "../../../utils/helpers";
 import { PDFDocument } from "pdf-lib";
@@ -248,162 +248,151 @@ export const generateAssetPdf = async (
   return new Uint8Array(doc.output("arraybuffer"));
 };
 
-interface MonthlyActivity {
-  thang: number;
-  gioKm?: number | string;
-  ngaySctVao?: string;
-  ngaySctRa?: string;
-  ngayBccVao?: string;
-  ngayBccRa?: string;
-  soLanBaoDuongCapI?: number;
-  soLanBaoDuongCapII?: number;
-  ghiChu?: string;
-}
-
 export const generateMonthlyActivityReport = async (
-  data: MonthlyActivity[],
+  data: AssetHoursGroupYearType[],
 ): Promise<Uint8Array> => {
+  const sortedData = [...data].sort((a, b) => (a.nam || 0) - (b.nam || 0));
   const doc = new jsPDF();
+  let currentPage = 0;
+  const totalPages = sortedData.length;
 
-  // Set font và tiêu đề
-  doc.setFont("times_new_roman", "normal");
-  doc.setFontSize(16);
-  doc.text("GIỜ (KM) HOẠT ĐỘNG CỦA THIẾT BỊ TRONG NĂM", 105, 15, {
-    align: "center",
-  });
+  for (let index = 0; index < sortedData.length; index++) {
+    const yearData = sortedData[index];
+    const year = yearData.nam || new Date().getFullYear();
+    const yearItems = yearData.data || [];
 
-  doc.setFontSize(10);
-  doc.text(`(Năm: ${new Date().getFullYear()})`, 105, 22, {
-    align: "center",
-  });
-
-  // Chuẩn bị dữ liệu cho bảng (tạo đủ 12 tháng)
-  const tableData = Array.from({ length: 12 }, (_, i) => {
-    const month = i + 1;
-    const monthData = data?.find((item) => item.thang === month);
-
-    return [
-      `${month}`,
-      monthData?.gioKm || "",
-      monthData?.ngaySctVao || "",
-      monthData?.ngaySctRa || "",
-      monthData?.ngayBccVao || "",
-      monthData?.ngayBccRa || "",
-      monthData?.soLanBaoDuongCapI || "",
-      monthData?.soLanBaoDuongCapII || "",
-      monthData?.ghiChu || "",
-    ];
-  });
-  let totalGioKm = 0;
-  let totalCapI = 0;
-  let totalCapII = 0;
-
-  data?.forEach((item) => {
-    if (item.gioKm && typeof item.gioKm === "number") {
-      totalGioKm += item.gioKm;
+    if (index > 0) {
+      doc.addPage();
     }
-    if (item.soLanBaoDuongCapI) {
-      totalCapI += item.soLanBaoDuongCapI;
-    }
-    if (item.soLanBaoDuongCapII) {
-      totalCapII += item.soLanBaoDuongCapII;
-    }
-  });
+    // Set font và tiêu đề
+    doc.setFont("times_new_roman", "normal");
+    doc.setFontSize(16);
+    doc.text(`GIỜ (KM) HOẠT ĐỘNG CỦA THIẾT BỊ TRONG NĂM ${year}`, 105, 15, {
+      align: "center",
+    });
 
-  // Thêm hàng tổng cộng vào cuối bảng
-  tableData.push([
-    "CỘNG",
-    totalGioKm > 0 ? totalGioKm.toString() : "",
-    "",
-    "",
-    "",
-    "",
-    totalCapI > 0 ? totalCapI.toString() : "",
-    totalCapII > 0 ? totalCapII.toString() : "",
-    "",
-  ]);
+    // Chuẩn bị dữ liệu cho bảng (tạo đủ 12 tháng)
+    const tableData = Array.from({ length: 12 }, (_, i) => {
+      const month = i + 1;
+      const monthData = yearItems.find((item) => item.thang === month);
 
-  // Tạo bảng với autoTable
-  autoTable(doc, {
-    startY: 30,
-    head: [
-      [
-        { content: "Tháng", rowSpan: 2 }, // Chiếm 2 hàng
-        { content: "Giờ (km)", colSpan: 3, rowSpan: 1 }, // Chiếm 2 hàng
-        { content: "Ngày SCT", colSpan: 2, rowSpan: 1 }, // Gộp 2 cột, chỉ 1 hàng
-        { content: "Ngày BCC", colSpan: 2, rowSpan: 1 }, // Gộp 2 cột, chỉ 1 hàng
-        { content: "Số lần Báo đường", colSpan: 2, rowSpan: 1 }, // Gộp 2 cột, chỉ 1 hàng
-        { content: "Ghi chú", rowSpan: 2 }, // Chiếm 2 hàng
-      ],
-      // Hàng header thứ hai (tầng 2)
-      [
-        "Hoạt động",
-        "Sau SCL",
-        "Sau Bcc",
-        "Vào", // Dưới Ngày SCT
-        "Ra", // Dưới Ngày SCT
-        "Vào", // Dưới Ngày BCC
-        "Ra", // Dưới Ngày BCC
-        "Cấp I", // Dưới Số lần Báo đường
-        "Cấp II", // Dưới Số lần Báo đường
-      ],
-    ],
-    headStyles: {
-      fillColor: [255, 255, 255],
-      textColor: [0, 0, 0],
-      fontStyle: "bold",
-      valign: "middle",
-      halign: "center",
-      fontSize: 10,
-    },
-    body: tableData,
-    bodyStyles: {
-      fontSize: 9,
-      cellPadding: 2,
-    },
-    columnStyles: {
-      0: { cellWidth: 16, halign: "center" }, // Tháng
-      1: { cellWidth: 16, halign: "center" }, // Giờ (km)
-      2: { cellWidth: 16, halign: "center" }, // Ngày SCT Vào
-      3: { cellWidth: 16, halign: "center" }, // Ngày SCT Ra
-      4: { cellWidth: 16, halign: "center" }, // Ngày BCC Vào
-      5: { cellWidth: 16, halign: "center" }, // Ngày BCC Ra
-      6: { cellWidth: 16, halign: "center" }, // Cấp I
-      7: { cellWidth: 16, halign: "center" }, // Cấp II
-      8: { cellWidth: 16, halign: "center" }, // Ghi chú
-      9: { cellWidth: 16, halign: "center" }, // Ghi chú
-      10: { cellWidth: 16, halign: "center" }, // Ghi chú
-      11: { cellWidth: 16, halign: "center" }, // Ghi chú
-    },
-    margin: { left: 20, right: 20 },
-    theme: "grid",
-    styles: {
-      font: "times_new_roman",
-      lineColor: [0, 0, 0],
-      lineWidth: 0.1,
-    },
-    didDrawCell: (data) => {
-      // Vẽ border cho các cột gộp
-      if (data.section === "head") {
-        const { doc, cursor, settings } = data;
-        const { x, y, width, height } = data.cell;
+      return [
+        `${month}`,
+        monthData?.gioHoatDong || "",
+        monthData?.gioSauSCL || "",
+        monthData?.gioSauBcc || "",
+        monthData?.ngaySCT_Vao || "",
+        monthData?.ngaySCT_Ra || "",
+        monthData?.ngayBcc_Vao || "",
+        monthData?.ngayBcc_Ra || "",
+        monthData?.soLanBaoDuongCapI || "",
+        monthData?.soLanBaoDuongCapII || "",
+        monthData?.ghiChu || "",
+      ];
+    });
+    let totalGioKm = 0;
 
-        // Vẽ đường phân cách giữa các nhóm cột gộp
-        if (data.column.index === 2) {
-          doc.setDrawColor(0);
-          doc.line(x, y, x, y + height);
-        }
-        if (data.column.index === 4) {
-          doc.setDrawColor(0);
-          doc.line(x, y, x, y + height);
-        }
-        if (data.column.index === 6) {
-          doc.setDrawColor(0);
-          doc.line(x, y, x, y + height);
-        }
+    yearItems?.forEach((item) => {
+      if (item.gioHoatDong && typeof item.gioHoatDong === "number") {
+        totalGioKm += item.gioHoatDong;
       }
-    },
-  });
+    });
+
+    // Thêm hàng tổng cộng vào cuối bảng
+    tableData.push([
+      "CỘNG",
+      totalGioKm > 0 ? totalGioKm.toString() : "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+    ]);
+
+    // Tạo bảng với autoTable
+    autoTable(doc, {
+      startY: 30,
+      head: [
+        [
+          { content: "Tháng", rowSpan: 2 }, // Chiếm 2 hàng
+          { content: "Giờ (km)", colSpan: 3, rowSpan: 1 }, // Chiếm 2 hàng
+          { content: "Ngày SCT", colSpan: 2, rowSpan: 1 }, // Gộp 2 cột, chỉ 1 hàng
+          { content: "Ngày BCC", colSpan: 2, rowSpan: 1 }, // Gộp 2 cột, chỉ 1 hàng
+          { content: "Số lần Báo đường", colSpan: 2, rowSpan: 1 }, // Gộp 2 cột, chỉ 1 hàng
+          { content: "Ghi chú", rowSpan: 2 }, // Chiếm 2 hàng
+        ],
+        // Hàng header thứ hai (tầng 2)
+        [
+          "Hoạt động",
+          "Sau SCL",
+          "Sau Bcc",
+          "Vào", // Dưới Ngày SCT
+          "Ra", // Dưới Ngày SCT
+          "Vào", // Dưới Ngày BCC
+          "Ra", // Dưới Ngày BCC
+          "Cấp I", // Dưới Số lần Báo đường
+          "Cấp II", // Dưới Số lần Báo đường
+        ],
+      ],
+      headStyles: {
+        fillColor: [255, 255, 255],
+        textColor: [0, 0, 0],
+        fontStyle: "bold",
+        valign: "middle",
+        halign: "center",
+        fontSize: 10,
+      },
+      body: tableData,
+      bodyStyles: {
+        fontSize: 9,
+        cellPadding: 2,
+      },
+      columnStyles: {
+        0: { cellWidth: 16, halign: "center" }, // Tháng
+        1: { cellWidth: 16, halign: "center" }, // Giờ (km)
+        2: { cellWidth: 16, halign: "center" }, // Ngày SCT Vào
+        3: { cellWidth: 16, halign: "center" }, // Ngày SCT Ra
+        4: { cellWidth: 16, halign: "center" }, // Ngày BCC Vào
+        5: { cellWidth: 16, halign: "center" }, // Ngày BCC Ra
+        6: { cellWidth: 16, halign: "center" }, // Cấp I
+        7: { cellWidth: 16, halign: "center" }, // Cấp II
+        8: { cellWidth: 16, halign: "center" }, // Ghi chú
+        9: { cellWidth: 16, halign: "center" }, // Ghi chú
+        10: { cellWidth: 16, halign: "center" }, // Ghi chú
+        11: { cellWidth: 16, halign: "center" }, // Ghi chú
+      },
+      margin: { left: 20, right: 20 },
+      theme: "grid",
+      styles: {
+        font: "times_new_roman",
+        lineColor: [0, 0, 0],
+        lineWidth: 0.1,
+      },
+      didDrawCell: (data) => {
+        // Vẽ border cho các cột gộp
+        if (data.section === "head") {
+          const { doc, cursor, settings } = data;
+          const { x, y, width, height } = data.cell;
+
+          // Vẽ đường phân cách giữa các nhóm cột gộp
+          if (data.column.index === 2) {
+            doc.setDrawColor(0);
+            doc.line(x, y, x, y + height);
+          }
+          if (data.column.index === 4) {
+            doc.setDrawColor(0);
+            doc.line(x, y, x, y + height);
+          }
+          if (data.column.index === 6) {
+            doc.setDrawColor(0);
+            doc.line(x, y, x, y + height);
+          }
+        }
+      },
+    });
+  }
   return new Uint8Array(doc.output("arraybuffer"));
 };
 interface TransferHistoryData {

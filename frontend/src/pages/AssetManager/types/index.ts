@@ -88,3 +88,28 @@ export interface HistoryAssetType {
   idDonViNhan: string;
   thoiGianBanGiao: string;
 }
+
+export interface AssetHoursType {
+  id: string;
+  idTaiSan?: string;
+  nam?: number;
+  thang: number;
+  gioHoatDong?: number;
+  gioSauSCL?: number;
+  gioSauBcc?: number;
+  ngaySCT_Vao?: string;
+  ngaySCT_Ra?: string;
+  ngayBcc_Vao?: string;
+  ngayBcc_Ra: string;
+  soLanBaoDuongCapI?: number;
+  soLanBaoDuongCapII?: number;
+  ghiChu?: string;
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  isNew?: boolean;
+  isDeleted?: boolean;
+}
+export interface AssetHoursGroupYearType {
+  nam?: number;
+  data: AssetHoursType[];
+}

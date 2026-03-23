@@ -337,18 +337,28 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
       <TableContainer
         component={Paper}
         elevation={0}
-        sx={{ border: "1px solid #ddd" }}
+        sx={{ border: "1px solid grey" }}
       >
         <Table size="small">
-          <TableHead sx={{ bgcolor: "#f5f5f5" }}>
+          <TableHead>
             <TableRow>
               <TableCell
-                sx={{ fontWeight: "bold", width: "30%", color: "#333" }}
+                sx={{
+                  fontWeight: "bold",
+                  width: "30%",
+                  color: "#333",
+                  border: "1px solid grey",
+                }}
               >
                 Ngày tháng
               </TableCell>
               <TableCell
-                sx={{ fontWeight: "bold", width: "60%", color: "#333" }}
+                sx={{
+                  fontWeight: "bold",
+                  width: "60%",
+                  color: "#333",
+                  border: "1px solid grey",
+                }}
               >
                 Đơn vị quản lý
               </TableCell>
@@ -358,6 +368,7 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
                   width: "10%",
                   textAlign: "center",
                   color: "#333",
+                  border: "1px solid grey",
                 }}
               >
                 Thao tác
@@ -367,20 +378,28 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={3} align="center">
+                <TableCell
+                  colSpan={3}
+                  align="center"
+                  sx={{ border: "1px solid grey" }}
+                >
                   Đang tải dữ liệu...
                 </TableCell>
               </TableRow>
             ) : rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} align="center">
+                <TableCell
+                  colSpan={3}
+                  align="center"
+                  sx={{ border: "1px solid grey" }}
+                >
                   Chưa có lịch sử thuyên chuyển
                 </TableCell>
               </TableRow>
             ) : (
               rows.map((row) => (
                 <TableRow key={row.id}>
-                  <TableCell>
+                  <TableCell sx={{ border: "1px solid grey" }}>
                     <TextField
                       type="date"
                       fullWidth
@@ -395,7 +414,7 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
                     />
                   </TableCell>
 
-                  <TableCell>
+                  <TableCell sx={{ border: "1px solid grey" }}>
                     <Autocomplete
                       options={allDepartments.slice(0, 100)}
                       getOptionLabel={(option) => option?.tenPhongBan || ""}
@@ -429,7 +448,7 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
                     />
                   </TableCell>
 
-                  <TableCell align="center">
+                  <TableCell align="center" sx={{ border: "1px solid grey" }}>
                     <IconButton
                       size="small"
                       onClick={() => handleDeleteRow(row.id, row.isNew)}

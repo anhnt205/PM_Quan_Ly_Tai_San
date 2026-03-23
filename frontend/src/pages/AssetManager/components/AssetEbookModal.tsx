@@ -26,7 +26,10 @@ import {
 } from "../config";
 import AssetInfo from "./AssetEBook/AssetInfo";
 import TransferHistoryPage from "./AssetEBook/TransferHistoryPage";
-import { useHistoryAssethandoverQuery } from "../Mutation";
+import {
+  useAssetHoursByGroupPageQuery,
+  useHistoryAssethandoverQuery,
+} from "../Mutation";
 import HoursAsset from "./AssetEBook/HoursAsset";
 
 // Cấu hình worker cho pdf.js (chỉ chạy ở client)
@@ -91,6 +94,12 @@ const AssetEbookModal = ({
       selectedAsset?.id,
     );
 
+  const {
+    data: assetHoursByYear = [],
+    isLoading,
+    refetch,
+  } = useAssetHoursByGroupPageQuery(selectedAsset?.id);
+
   useEffect(() => {
     if (!open) return; // chỉ chạy khi modal mở
     let cancelled = false;
@@ -111,7 +120,7 @@ const AssetEbookModal = ({
         if (info) listPdf.push(info);
         const transfer = await generateTransferHistoryPDF(historyData.items);
         if (transfer) listPdf.push(transfer);
-        const activity = await generateMonthlyActivityReport([selectedAsset]);
+        const activity = await generateMonthlyActivityReport(assetHoursByYear);
         if (activity) listPdf.push(activity);
 
         const merge = await mergePdf(listPdf);
@@ -142,7 +151,7 @@ const AssetEbookModal = ({
     return () => {
       cancelled = true;
     };
-  }, [open, selectedAsset, historyData.totalItems]); // thêm open để chạy lại mỗi khi mở modal
+  }, [open, selectedAsset, historyData.totalItems, assetHoursByYear.length]); // thêm open để chạy lại mỗi khi mở modal
 
   // Render trang PDF hiện tại
   // useEffect(() => {
@@ -352,7 +361,7 @@ const AssetEbookModal = ({
                 allDepartments={allDepartments}
               />
             ) : (
-              <HoursAsset />
+              <HoursAsset asset={selectedAsset} />
             )}
           </Box>
         )}
