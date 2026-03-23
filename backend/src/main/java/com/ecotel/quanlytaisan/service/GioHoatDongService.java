@@ -3,13 +3,15 @@ package com.ecotel.quanlytaisan.service;
 import com.ecotel.quanlytaisan.dao.GioHoatDongDao;
 import com.ecotel.quanlytaisan.model.GioHoatDong;
 import com.ecotel.quanlytaisan.model.GioHoatDongDTO;
+import com.ecotel.quanlytaisan.model.GioHoatDongYearData;
 import com.ecotel.quanlytaisan.model.PageResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class GioHoatDongService {
@@ -43,12 +45,39 @@ public class GioHoatDongService {
         return dao.findById(id);
     }
 
+    public List<GioHoatDongYearData> getYearsWithData(String idTaiSan) {
+        // Fetch all records for the asset, already sorted by year desc, month desc
+        List<GioHoatDong> allRecords = dao.findByIdTaiSan(idTaiSan);
+
+        // Group by year
+        Map<Integer, List<GioHoatDong>> grouped = allRecords.stream()
+                .collect(Collectors.groupingBy(
+                        GioHoatDong::getNam,
+                        LinkedHashMap::new, // preserve order (years desc)
+                        Collectors.toList()
+                ));
+
+        // Build result list
+        List<GioHoatDongYearData> result = new ArrayList<>();
+        for (Map.Entry<Integer, List<GioHoatDong>> entry : grouped.entrySet()) {
+            GioHoatDongYearData yearData = new GioHoatDongYearData();
+            yearData.setNam(entry.getKey());
+            // Sort months ascending for each year
+            List<GioHoatDong> monthlyData = entry.getValue();
+            monthlyData.sort(Comparator.comparing(GioHoatDong::getThang));
+            yearData.setData(monthlyData);
+            result.add(yearData);
+        }
+        return result;
+    }
+
     public PageResponse<GioHoatDong> getAllPaged(int page, int size, String idTaiSan, Integer nam, Integer thang) {
         int offset = page * size;
         List<GioHoatDong> list = dao.findAllPaged(offset, size, idTaiSan, nam, thang);
         long total = dao.countAll(idTaiSan, nam, thang);
         return new PageResponse<>(list, total, page, size);
     }
+
 
     // ================== BATCH OPERATIONS ==================
     public int createBatch(List<GioHoatDongDTO> list) {
