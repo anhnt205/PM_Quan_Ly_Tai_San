@@ -18,19 +18,20 @@ import {
 } from "@mui/icons-material";
 import * as pdfjsLib from "pdfjs-dist";
 import { AssetType } from "../types";
-import { generateAssetPdf } from "../config";
+import {
+  generateAssetPdf,
+  generateMonthlyActivityReport,
+  generateTransferHistoryPDF,
+  mergePdf,
+} from "../config";
 import AssetInfo from "./AssetEBook/AssetInfo";
 import TransferHistoryPage from "./AssetEBook/TransferHistoryPage";
+import { useHistoryAssethandoverQuery } from "../Mutation";
+import HoursAsset from "./AssetEBook/HoursAsset";
 
 // Cấu hình worker cho pdf.js (chỉ chạy ở client)
 if (typeof window !== "undefined") {
   pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
-}
-
-interface AssetEbookModalProps {
-  open: boolean;
-  onClose: () => void;
-  asset: AssetType;
 }
 
 const AssetEbookModal = ({
@@ -64,7 +65,7 @@ const AssetEbookModal = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(1); // Bắt đầu từ trang 1
   const [pdfDoc, setPdfDoc] = useState<any>(null);
-  const [totalPages, setTotalPages] = useState(0); // Tổng số trang PDF
+  const [totalPages, setTotalPages] = useState(3); // Tổng số trang PDF
   const [pdfBlob, setPdfBlob] = useState<Uint8Array | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,12 +75,21 @@ const AssetEbookModal = ({
     if (!open) {
       // Reset state khi đóng modal
       setPdfDoc(null);
-      setTotalPages(0);
+      // setTotalPages(0);
       setPdfBlob(null);
       setCurrentPage(1);
       setError(null);
     }
   }, [open]);
+
+  const { data: historyData = { items: [], totalItems: 0 } } =
+    useHistoryAssethandoverQuery(
+      0,
+      999,
+      undefined,
+      undefined,
+      selectedAsset?.id,
+    );
 
   useEffect(() => {
     if (!open) return; // chỉ chạy khi modal mở
@@ -88,7 +98,8 @@ const AssetEbookModal = ({
       setLoading(true);
       setError(null);
       try {
-        const bytes = await generateAssetPdf(
+        const listPdf = [];
+        const info = await generateAssetPdf(
           selectedAsset,
           allAssetModel,
           allCurrentStatus,
@@ -97,17 +108,28 @@ const AssetEbookModal = ({
           allUnits,
           allReasonIncreases,
         );
+        if (info) listPdf.push(info);
+        const transfer = await generateTransferHistoryPDF(historyData.items);
+        if (transfer) listPdf.push(transfer);
+        const activity = await generateMonthlyActivityReport([selectedAsset]);
+        if (activity) listPdf.push(activity);
+
+        const merge = await mergePdf(listPdf);
         if (cancelled) return;
-        setPdfBlob(bytes);
-        const blob = new Blob([bytes.buffer as ArrayBuffer], {
+        if (!merge) {
+          setError("Không thể tạo file PDF.");
+          return;
+        }
+        setPdfBlob(merge);
+        const blob = new Blob([merge.buffer as ArrayBuffer], {
           type: "application/pdf",
         });
         const url = URL.createObjectURL(blob);
         const pdf = await pdfjsLib.getDocument(url).promise;
         if (cancelled) return;
         setPdfDoc(pdf);
-        setTotalPages(pdf.numPages + 1);
-        setCurrentPage(1);
+        // setTotalPages(pdf.numPages + 1);
+        // setCurrentPage(1);
         URL.revokeObjectURL(url);
       } catch (err) {
         if (cancelled) return;
@@ -120,54 +142,54 @@ const AssetEbookModal = ({
     return () => {
       cancelled = true;
     };
-  }, [open, selectedAsset]); // thêm open để chạy lại mỗi khi mở modal
+  }, [open, selectedAsset, historyData.totalItems]); // thêm open để chạy lại mỗi khi mở modal
 
   // Render trang PDF hiện tại
-  useEffect(() => {
-    if (!pdfDoc || !canvasRef.current) return;
+  // useEffect(() => {
+  //   if (!pdfDoc || !canvasRef.current) return;
 
-    let cancelled = false;
-    const renderPage = async () => {
-      try {
-        const page = await pdfDoc.getPage(currentPage);
-        if (cancelled) return;
+  //   let cancelled = false;
+  //   const renderPage = async () => {
+  //     try {
+  //       const page = await pdfDoc.getPage(currentPage);
+  //       if (cancelled) return;
 
-        const canvas = canvasRef.current!;
-        const context = canvas.getContext("2d")!;
+  //       const canvas = canvasRef.current!;
+  //       const context = canvas.getContext("2d")!;
 
-        // Tính tỉ lệ để vừa khung chứa
-        const container = canvas.parentElement;
-        if (!container) return;
-        const containerWidth = container.clientWidth;
-        const containerHeight = container.clientHeight;
+  //       // Tính tỉ lệ để vừa khung chứa
+  //       const container = canvas.parentElement;
+  //       if (!container) return;
+  //       const containerWidth = container.clientWidth;
+  //       const containerHeight = container.clientHeight;
 
-        const viewport = page.getViewport({ scale: 1 });
-        const scale = Math.min(
-          containerWidth / viewport.width,
-          containerHeight / viewport.height,
-        );
-        const scaledViewport = page.getViewport({ scale });
+  //       const viewport = page.getViewport({ scale: 1 });
+  //       const scale = Math.min(
+  //         containerWidth / viewport.width,
+  //         containerHeight / viewport.height,
+  //       );
+  //       const scaledViewport = page.getViewport({ scale });
 
-        canvas.width = scaledViewport.width;
-        canvas.height = scaledViewport.height;
-        canvas.style.width = "100%";
-        canvas.style.height = "auto";
+  //       canvas.width = scaledViewport.width;
+  //       canvas.height = scaledViewport.height;
+  //       canvas.style.width = "100%";
+  //       canvas.style.height = "auto";
 
-        await page.render({
-          canvasContext: context,
-          viewport: scaledViewport,
-        }).promise;
-      } catch (error: any) {
-        if (cancelled) return;
-        console.error("Lỗi render trang PDF:", error);
-        setError("Không thể hiển thị trang PDF.");
-      }
-    };
-    renderPage();
-    return () => {
-      cancelled = true;
-    };
-  }, [pdfDoc, currentPage]);
+  //       await page.render({
+  //         canvasContext: context,
+  //         viewport: scaledViewport,
+  //       }).promise;
+  //     } catch (error: any) {
+  //       if (cancelled) return;
+  //       console.error("Lỗi render trang PDF:", error);
+  //       setError("Không thể hiển thị trang PDF.");
+  //     }
+  //   };
+  //   renderPage();
+  //   return () => {
+  //     cancelled = true;
+  //   };
+  // }, [pdfDoc]);
 
   const handlePrev = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
@@ -310,12 +332,7 @@ const AssetEbookModal = ({
             }}
           >
             {/* LOGIC LẬT TRANG HYBRID */}
-            {currentPage === totalPages ? (
-              <TransferHistoryPage
-                idTaiSan={selectedAsset?.id}
-                allDepartments={allDepartments}
-              />
-            ) : (
+            {currentPage === 1 ? (
               <AssetInfo
                 readOnly={readOnly}
                 onEdit={onEdit}
@@ -329,6 +346,13 @@ const AssetEbookModal = ({
                 allUnits={allUnits}
                 allReasonIncreases={allReasonIncreases}
               />
+            ) : currentPage === 2 ? (
+              <TransferHistoryPage
+                asset={selectedAsset}
+                allDepartments={allDepartments}
+              />
+            ) : (
+              <HoursAsset />
             )}
           </Box>
         )}

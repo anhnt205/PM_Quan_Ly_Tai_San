@@ -235,6 +235,19 @@ export const useAssetManagerMutation = (
       showErrorAlert(error.response?.data?.message || "Cập nhật thất bại");
     },
   });
+  const updateHistoryAssetManyMutation = useMutation({
+    mutationFn: async (data: any[]) => {
+      const res = await api.put(`/lichsudieuchuyentaisan/batch`, data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["historyAssetHandover"] });
+      showSuccessAlert("Cập nhật lịch sử điều chuyển thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(error.response?.data?.message || "Cập nhật thất bại");
+    },
+  });
 
   const deleteHistoryAssetMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -550,6 +563,7 @@ export const useAssetManagerMutation = (
     exportAssetMutation,
     importAssetMutation,
     updateHistoryAssetMutation,
+    updateHistoryAssetManyMutation,
     deleteHistoryAssetMutation,
     createChildAssetBulkMutation,
     deleteOneChildAsssetMutation,

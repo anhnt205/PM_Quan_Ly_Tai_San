@@ -276,25 +276,22 @@ export default function AssetInfo({
           position: "sticky",
           top: 0,
           zIndex: 10,
-          background: "#f5f5f5",
           p: 2,
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
+          justifyContent: "flex-end",
           borderRadius: "12px",
         }}
       >
-        <Box display={"flex"} alignItems={"center"} gap={2}>
-          <InfoOutlineRounded color="primary" />
-          <Typography variant="h6">Thông tin tài sản</Typography>
-        </Box>
         <Box display="flex" gap={2}>
           {!readOnly && <SaveBtn onSave={formik.submitForm} />}
           {!readOnly && <CancelBtn onClick={handleCancel} />}
           {readOnly && <EditButton onClick={onEdit} />}
         </Box>
       </Box>
-
+      <Typography textAlign="center" fontSize={18} fontWeight={600}>
+        THÔNG TIN TÀI SẢN
+      </Typography>
       <Grid container spacing={2}>
         {/* Cột trái */}
         <Grid size={{ xs: 6 }}>
@@ -321,7 +318,6 @@ export default function AssetInfo({
                 />
               )}
             </Grid>
-
             {/* Tên tài sản */}
             <Grid size={{ xs: 12 }}>
               {readOnly ? (

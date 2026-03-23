@@ -1,5 +1,6 @@
 import { Box, Chip, Typography } from "@mui/material";
 import dayjs from "dayjs";
+import "../../../assets/fonts/times_new_roman-normal";
 
 export const ShowStatus = (data: any) => {
   const soNgayBaoTruoc = data.soNgayBaoTruoc || 20;
@@ -92,6 +93,7 @@ import autoTable from "jspdf-autotable";
 import { AssetType } from "../types";
 import { FileDownloadOutlined } from "@mui/icons-material";
 import { findById } from "../../../utils/helpers";
+import { PDFDocument } from "pdf-lib";
 
 interface Attachment {
   id: string;
@@ -133,18 +135,6 @@ export const generateAssetPdf = async (
     ["Tài khoản chi phí", asset.taiKhoanChiPhi],
     ["Nhóm tài sản", asset.tenNhom || asset.idNhomTaiSan],
     ["Loại tài sản", asset.tenLoaiTaiSanCon || asset.idLoaiTaiSanCon],
-    [
-      "Ngày vào sổ",
-      asset.ngayVaoSo
-        ? dayjs(asset.ngayVaoSo).format("DD/MM/YYYY HH:mm:ss")
-        : "",
-    ],
-    [
-      "Ngày sử dụng",
-      asset.ngaySuDung
-        ? dayjs(asset.ngaySuDung).format("DD/MM/YYYY HH:mm:ss")
-        : "",
-    ],
     ["Dự án", asset.tenDuAn || asset.idDuDan],
     ["Vốn NS", formatCurrency(asset.nvNS)],
     ["Vốn vay", formatCurrency(asset.vonVay)],
@@ -184,6 +174,14 @@ export const generateAssetPdf = async (
       },
     ],
     ...rows,
+    [
+      "Ngày vào sổ:",
+      asset.ngayVaoSo ? dayjs(asset.ngayVaoSo).format("DD/MM/YYYY") : "",
+    ],
+    [
+      "Ngày sử dụng:",
+      asset.ngaySuDung ? dayjs(asset.ngaySuDung).format("DD/MM/YYYY") : "",
+    ],
     [
       {
         content: `Ghi chú: ${asset.ghiChu || ""}`,
@@ -250,6 +248,246 @@ export const generateAssetPdf = async (
   return new Uint8Array(doc.output("arraybuffer"));
 };
 
+interface MonthlyActivity {
+  thang: number;
+  gioKm?: number | string;
+  ngaySctVao?: string;
+  ngaySctRa?: string;
+  ngayBccVao?: string;
+  ngayBccRa?: string;
+  soLanBaoDuongCapI?: number;
+  soLanBaoDuongCapII?: number;
+  ghiChu?: string;
+}
+
+export const generateMonthlyActivityReport = async (
+  data: MonthlyActivity[],
+): Promise<Uint8Array> => {
+  const doc = new jsPDF();
+
+  // Set font và tiêu đề
+  doc.setFont("times_new_roman", "normal");
+  doc.setFontSize(16);
+  doc.text("GIỜ (KM) HOẠT ĐỘNG CỦA THIẾT BỊ TRONG NĂM", 105, 15, {
+    align: "center",
+  });
+
+  doc.setFontSize(10);
+  doc.text(`(Năm: ${new Date().getFullYear()})`, 105, 22, {
+    align: "center",
+  });
+
+  // Chuẩn bị dữ liệu cho bảng (tạo đủ 12 tháng)
+  const tableData = Array.from({ length: 12 }, (_, i) => {
+    const month = i + 1;
+    const monthData = data?.find((item) => item.thang === month);
+
+    return [
+      `${month}`,
+      monthData?.gioKm || "",
+      monthData?.ngaySctVao || "",
+      monthData?.ngaySctRa || "",
+      monthData?.ngayBccVao || "",
+      monthData?.ngayBccRa || "",
+      monthData?.soLanBaoDuongCapI || "",
+      monthData?.soLanBaoDuongCapII || "",
+      monthData?.ghiChu || "",
+    ];
+  });
+  let totalGioKm = 0;
+  let totalCapI = 0;
+  let totalCapII = 0;
+
+  data?.forEach((item) => {
+    if (item.gioKm && typeof item.gioKm === "number") {
+      totalGioKm += item.gioKm;
+    }
+    if (item.soLanBaoDuongCapI) {
+      totalCapI += item.soLanBaoDuongCapI;
+    }
+    if (item.soLanBaoDuongCapII) {
+      totalCapII += item.soLanBaoDuongCapII;
+    }
+  });
+
+  // Thêm hàng tổng cộng vào cuối bảng
+  tableData.push([
+    "CỘNG",
+    totalGioKm > 0 ? totalGioKm.toString() : "",
+    "",
+    "",
+    "",
+    "",
+    totalCapI > 0 ? totalCapI.toString() : "",
+    totalCapII > 0 ? totalCapII.toString() : "",
+    "",
+  ]);
+
+  // Tạo bảng với autoTable
+  autoTable(doc, {
+    startY: 30,
+    head: [
+      [
+        { content: "Tháng", rowSpan: 2 }, // Chiếm 2 hàng
+        { content: "Giờ (km)", colSpan: 3, rowSpan: 1 }, // Chiếm 2 hàng
+        { content: "Ngày SCT", colSpan: 2, rowSpan: 1 }, // Gộp 2 cột, chỉ 1 hàng
+        { content: "Ngày BCC", colSpan: 2, rowSpan: 1 }, // Gộp 2 cột, chỉ 1 hàng
+        { content: "Số lần Báo đường", colSpan: 2, rowSpan: 1 }, // Gộp 2 cột, chỉ 1 hàng
+        { content: "Ghi chú", rowSpan: 2 }, // Chiếm 2 hàng
+      ],
+      // Hàng header thứ hai (tầng 2)
+      [
+        "Hoạt động",
+        "Sau SCL",
+        "Sau Bcc",
+        "Vào", // Dưới Ngày SCT
+        "Ra", // Dưới Ngày SCT
+        "Vào", // Dưới Ngày BCC
+        "Ra", // Dưới Ngày BCC
+        "Cấp I", // Dưới Số lần Báo đường
+        "Cấp II", // Dưới Số lần Báo đường
+      ],
+    ],
+    headStyles: {
+      fillColor: [255, 255, 255],
+      textColor: [0, 0, 0],
+      fontStyle: "bold",
+      valign: "middle",
+      halign: "center",
+      fontSize: 10,
+    },
+    body: tableData,
+    bodyStyles: {
+      fontSize: 9,
+      cellPadding: 2,
+    },
+    columnStyles: {
+      0: { cellWidth: 16, halign: "center" }, // Tháng
+      1: { cellWidth: 16, halign: "center" }, // Giờ (km)
+      2: { cellWidth: 16, halign: "center" }, // Ngày SCT Vào
+      3: { cellWidth: 16, halign: "center" }, // Ngày SCT Ra
+      4: { cellWidth: 16, halign: "center" }, // Ngày BCC Vào
+      5: { cellWidth: 16, halign: "center" }, // Ngày BCC Ra
+      6: { cellWidth: 16, halign: "center" }, // Cấp I
+      7: { cellWidth: 16, halign: "center" }, // Cấp II
+      8: { cellWidth: 16, halign: "center" }, // Ghi chú
+      9: { cellWidth: 16, halign: "center" }, // Ghi chú
+      10: { cellWidth: 16, halign: "center" }, // Ghi chú
+      11: { cellWidth: 16, halign: "center" }, // Ghi chú
+    },
+    margin: { left: 20, right: 20 },
+    theme: "grid",
+    styles: {
+      font: "times_new_roman",
+      lineColor: [0, 0, 0],
+      lineWidth: 0.1,
+    },
+    didDrawCell: (data) => {
+      // Vẽ border cho các cột gộp
+      if (data.section === "head") {
+        const { doc, cursor, settings } = data;
+        const { x, y, width, height } = data.cell;
+
+        // Vẽ đường phân cách giữa các nhóm cột gộp
+        if (data.column.index === 2) {
+          doc.setDrawColor(0);
+          doc.line(x, y, x, y + height);
+        }
+        if (data.column.index === 4) {
+          doc.setDrawColor(0);
+          doc.line(x, y, x, y + height);
+        }
+        if (data.column.index === 6) {
+          doc.setDrawColor(0);
+          doc.line(x, y, x, y + height);
+        }
+      }
+    },
+  });
+  return new Uint8Array(doc.output("arraybuffer"));
+};
+interface TransferHistoryData {
+  id: string;
+  thoiGianBanGiao: string;
+  idDonViNhan: string;
+  tenDonViNhan?: string;
+  idDonViGiao?: string;
+  tenDonViGiao?: string;
+  idTaiSan?: string;
+  tenTaiSan?: string;
+}
+
+export const generateTransferHistoryPDF = async (
+  data: TransferHistoryData[],
+): Promise<Uint8Array> => {
+  const doc = new jsPDF();
+
+  // Set font
+  doc.setFont("times_new_roman", "normal");
+
+  // Tiêu đề chính
+  doc.setFontSize(18);
+  doc.text("ĐIỀU CHUYỂN TÀI SẢN", 105, 20, { align: "center" });
+  console.log("data", data);
+
+  // Chuẩn bị dữ liệu cho bảng
+  const tableData = data.map((item, index) => {
+    return [
+      item.thoiGianBanGiao
+        ? dayjs(item.thoiGianBanGiao).format("DD/MM/YYYY")
+        : "-",
+      item.tenDonViNhan || item.idDonViNhan || "",
+      "",
+    ];
+  });
+
+  // Tạo bảng
+  autoTable(doc, {
+    startY: 30,
+    head: [
+      [
+        { content: "Ngày tháng", styles: { halign: "center" } },
+        { content: "Đơn vị quản lý", styles: { halign: "center" } },
+        { content: "Ghi Chú", styles: { halign: "center" } },
+      ],
+    ],
+    body: tableData,
+    headStyles: {
+      fillColor: [255, 255, 255],
+      textColor: [0, 0, 0],
+      fontStyle: "bold",
+      halign: "center",
+      fontSize: 10,
+      valign: "middle",
+    },
+    bodyStyles: {
+      fontSize: 9,
+      cellPadding: 4,
+      halign: "center",
+      valign: "middle",
+    },
+    columnStyles: {
+      0: { cellWidth: 25, halign: "center" },
+      1: { cellWidth: 50, halign: "center" },
+    },
+    margin: { left: 20, right: 20 },
+    theme: "grid",
+    styles: {
+      font: "times_new_roman",
+      lineColor: [0, 0, 0],
+      lineWidth: 0.1,
+    },
+    didParseCell: (data: any) => {
+      // Căn trái cho cột đơn vị quản lý
+      if (data.section === "body" && data.column.index === 2) {
+        data.cell.styles.halign = "left";
+      }
+    },
+  });
+
+  return new Uint8Array(doc.output("arraybuffer"));
+};
+
 // Hàm định dạng tiền tệ (VNĐ)
 const formatCurrency = (value: number | undefined | null): string => {
   if (value == null) return "—";
@@ -257,4 +495,40 @@ const formatCurrency = (value: number | undefined | null): string => {
     style: "currency",
     currency: "VND",
   }).format(value);
+};
+
+export const mergePdf = async (
+  pdfBytesList: Uint8Array[],
+  outputFileName: string = "merged_document.pdf",
+): Promise<Uint8Array | null> => {
+  // Kiểm tra đầu vào
+  if (!pdfBytesList || pdfBytesList.length === 0) {
+    console.error("Không có file PDF nào để merge");
+    return null;
+  }
+
+  try {
+    // Tạo document PDF mới
+    const mergedPdf = await PDFDocument.create();
+
+    // Duyệt qua từng file PDF trong danh sách
+    for (const pdfBytes of pdfBytesList) {
+      // Load từng PDF từ Uint8Array
+      const pdf = await PDFDocument.load(pdfBytes);
+
+      // Copy tất cả các trang từ PDF nguồn sang PDF đích
+      const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+
+      // Thêm từng trang đã copy vào PDF đã merge
+      copiedPages.forEach((page) => mergedPdf.addPage(page));
+    }
+
+    // Xuất file PDF đã merge
+    const finalPdfBytes = await mergedPdf.save();
+
+    return finalPdfBytes;
+  } catch (error) {
+    console.error("Lỗi khi merge PDF:", error);
+    return null;
+  }
 };

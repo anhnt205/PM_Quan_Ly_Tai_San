@@ -447,6 +447,7 @@ export const useAssetHandoverMutation = () => {
     updateManyMutation,
     signMutation,
     handleSignatureList,
+    updateAssetOwnershipMutation,
   };
 };
 export const useAssetHandoverAllQuery = () => {

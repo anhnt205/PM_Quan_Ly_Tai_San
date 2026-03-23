@@ -8,8 +8,6 @@ import {
 import { findById } from "../../../utils/helpers";
 import socketService from "../../../services/socketService";
 import { MessageTypeFunctions } from "../../../utils/const";
-import { useSelector } from "react-redux";
-import { RootState } from "../../../redux/store";
 
 export const getDecision = (data: any[]) => {
   if (data.length === 0) {
