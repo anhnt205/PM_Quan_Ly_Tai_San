@@ -58,7 +58,7 @@ export default function FieldDateTime({
           textField: {
             fullWidth: true,
             size: "small",
-            sx: { backgroundColor: "#fff" },
+            // sx: { backgroundColor: "#fff" },
             error: Boolean(touched && error),
             helperText: touched && error,
           },

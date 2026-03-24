@@ -9,15 +9,8 @@ import {
   Button,
   CircularProgress,
 } from "@mui/material";
-import {
-  ArrowBack,
-  ArrowForward,
-  Close,
-  PictureAsPdf,
-  Download,
-} from "@mui/icons-material";
+import { Close, PictureAsPdf, Download } from "@mui/icons-material";
 import * as pdfjsLib from "pdfjs-dist";
-import { AssetType } from "../types";
 import {
   generateAssetManentancePDF,
   generateAssetPdf,
@@ -34,7 +27,6 @@ import {
 import HoursAsset from "./AssetEBook/HoursAsset";
 import AssetMaintenance from "./AssetEBook/AssetMaintenance";
 
-// Cấu hình worker cho pdf.js (chỉ chạy ở client)
 if (typeof window !== "undefined") {
   pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 }
@@ -68,19 +60,16 @@ const AssetEbookModal = ({
   allUnits: any[];
   allReasonIncreases: any[];
 }) => {
-  const [currentPage, setCurrentPage] = useState(1); // Bắt đầu từ trang 1
+  const [currentPage, setCurrentPage] = useState(1);
   const [pdfDoc, setPdfDoc] = useState<any>(null);
-  const [totalPages, setTotalPages] = useState(4); // Tổng số trang PDF
+  const [totalPages] = useState(4);
   const [pdfBlob, setPdfBlob] = useState<Uint8Array | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (!open) {
-      // Reset state khi đóng modal
       setPdfDoc(null);
-      // setTotalPages(0);
       setPdfBlob(null);
       setCurrentPage(1);
       setError(null);
@@ -96,14 +85,12 @@ const AssetEbookModal = ({
       selectedAsset?.id,
     );
 
-  const {
-    data: assetHoursByYear = [],
-    isLoading,
-    refetch,
-  } = useAssetHoursByGroupPageQuery(selectedAsset?.id);
+  const { data: assetHoursByYear = [] } = useAssetHoursByGroupPageQuery(
+    selectedAsset?.id,
+  );
 
   useEffect(() => {
-    if (!open) return; // chỉ chạy khi modal mở
+    if (!open) return;
     let cancelled = false;
     const buildPdf = async () => {
       setLoading(true);
@@ -141,8 +128,6 @@ const AssetEbookModal = ({
         const pdf = await pdfjsLib.getDocument(url).promise;
         if (cancelled) return;
         setPdfDoc(pdf);
-        // setTotalPages(pdf.numPages + 1);
-        // setCurrentPage(1);
         URL.revokeObjectURL(url);
       } catch (err) {
         if (cancelled) return;
@@ -155,61 +140,10 @@ const AssetEbookModal = ({
     return () => {
       cancelled = true;
     };
-  }, [open, selectedAsset, historyData.totalItems, assetHoursByYear.length]); // thêm open để chạy lại mỗi khi mở modal
+  }, [open, selectedAsset, historyData.totalItems, assetHoursByYear.length]);
 
-  // Render trang PDF hiện tại
-  // useEffect(() => {
-  //   if (!pdfDoc || !canvasRef.current) return;
-
-  //   let cancelled = false;
-  //   const renderPage = async () => {
-  //     try {
-  //       const page = await pdfDoc.getPage(currentPage);
-  //       if (cancelled) return;
-
-  //       const canvas = canvasRef.current!;
-  //       const context = canvas.getContext("2d")!;
-
-  //       // Tính tỉ lệ để vừa khung chứa
-  //       const container = canvas.parentElement;
-  //       if (!container) return;
-  //       const containerWidth = container.clientWidth;
-  //       const containerHeight = container.clientHeight;
-
-  //       const viewport = page.getViewport({ scale: 1 });
-  //       const scale = Math.min(
-  //         containerWidth / viewport.width,
-  //         containerHeight / viewport.height,
-  //       );
-  //       const scaledViewport = page.getViewport({ scale });
-
-  //       canvas.width = scaledViewport.width;
-  //       canvas.height = scaledViewport.height;
-  //       canvas.style.width = "100%";
-  //       canvas.style.height = "auto";
-
-  //       await page.render({
-  //         canvasContext: context,
-  //         viewport: scaledViewport,
-  //       }).promise;
-  //     } catch (error: any) {
-  //       if (cancelled) return;
-  //       console.error("Lỗi render trang PDF:", error);
-  //       setError("Không thể hiển thị trang PDF.");
-  //     }
-  //   };
-  //   renderPage();
-  //   return () => {
-  //     cancelled = true;
-  //   };
-  // }, [pdfDoc]);
-
-  const handlePrev = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 1));
-  };
-
-  const handleNext = () => {
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   const handleDownloadPdf = () => {
@@ -229,24 +163,23 @@ const AssetEbookModal = ({
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="md"
-      fullWidth
+      fullScreen
       PaperProps={{
         sx: {
-          borderRadius: "12px",
-          height: "90vh",
+          borderRadius: 0,
           display: "flex",
           flexDirection: "column",
+          bgcolor: "#e8e0d0",
         },
       }}
     >
-      {/* Header */}
+      {/* Header chỉ có tiêu đề và nút tải PDF */}
       <DialogTitle
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          p: 3,
+          p: 2,
           background:
             "linear-gradient(to right, rgb(0, 158, 96, 1) 0%, rgb(2, 110, 66, 1) 100%)",
         }}
@@ -254,8 +187,8 @@ const AssetEbookModal = ({
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Box
             sx={{
-              width: 44,
-              height: 44,
+              width: 40,
+              height: 40,
               borderRadius: "8px",
               bgcolor: "#f87b38ff",
               display: "flex",
@@ -264,9 +197,9 @@ const AssetEbookModal = ({
               color: "white",
             }}
           >
-            <PictureAsPdf />
+            <PictureAsPdf fontSize="small" />
           </Box>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: "#f3f4f6" }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, color: "#f3f4f6" }}>
             Sổ tài sản điện tử
           </Typography>
         </Box>
@@ -281,30 +214,11 @@ const AssetEbookModal = ({
               bgcolor: "#ff8400ff",
               color: "white",
               "&:hover": { bgcolor: "#e67300" },
+              textTransform: "none",
             }}
           >
             Tải PDF
           </Button>
-
-          <IconButton
-            onClick={handlePrev}
-            disabled={currentPage === 1}
-            sx={{ color: "white" }}
-          >
-            <ArrowBack />
-          </IconButton>
-          <Typography
-            sx={{ color: "white", minWidth: 80, textAlign: "center" }}
-          >
-            {currentPage} / {totalPages}
-          </Typography>
-          <IconButton
-            onClick={handleNext}
-            disabled={currentPage === totalPages}
-            sx={{ color: "white" }}
-          >
-            <ArrowForward />
-          </IconButton>
           <IconButton onClick={onClose} sx={{ color: "white" }}>
             <Close />
           </IconButton>
@@ -315,9 +229,11 @@ const AssetEbookModal = ({
       <DialogContent
         sx={{
           flex: 1,
-          bgcolor: "#f5f5f5",
-          p: 2,
-          overflow: "hidden",
+          p: 4,
+          overflow: "auto",
+          backgroundImage:
+            "radial-gradient(circle at 25% 50%, rgba(0,0,0,0.02) 1%, transparent 1%)",
+          backgroundSize: "20px 20px",
         }}
       >
         {loading ? (
@@ -331,44 +247,79 @@ const AssetEbookModal = ({
           </Box>
         ) : error ? (
           <Typography color="error" align="center">
-            {" "}
             {error}
           </Typography>
         ) : (
           <Box
             sx={{
               width: "100%",
-              height: "100%",
+              minHeight: "100%",
+              display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              overflow: "auto",
             }}
           >
-            {/* LOGIC LẬT TRANG HYBRID */}
-            {currentPage === 1 ? (
-              <AssetInfo
-                readOnly={readOnly}
-                onEdit={onEdit}
-                onCancel={onCancel}
-                selectedAsset={selectedAsset}
-                onSave={onSave}
-                allAssetModel={allAssetModel}
-                allCurrentStatus={allCurrentStatus}
-                assetGroups={assetGroups}
-                allDepartments={allDepartments}
-                allUnits={allUnits}
-                allReasonIncreases={allReasonIncreases}
-              />
-            ) : currentPage === 2 ? (
-              <TransferHistoryPage
-                asset={selectedAsset}
-                allDepartments={allDepartments}
-              />
-            ) : currentPage === 3 ? (
-              <HoursAsset asset={selectedAsset} />
-            ) : (
-              <AssetMaintenance />
-            )}
+            <Box
+              sx={{
+                width: "100%",
+                maxWidth: "1200px",
+                transition: "all 0.3s ease",
+                animation: "fadeIn 0.4s ease",
+                "@keyframes fadeIn": {
+                  "0%": { opacity: 0, transform: "translateY(10px)" },
+                  "100%": { opacity: 1, transform: "translateY(0)" },
+                },
+              }}
+            >
+              {currentPage === 1 ? (
+                <AssetInfo
+                  readOnly={readOnly}
+                  onEdit={onEdit}
+                  onCancel={onCancel}
+                  selectedAsset={selectedAsset}
+                  onSave={onSave}
+                  allAssetModel={allAssetModel}
+                  allCurrentStatus={allCurrentStatus}
+                  assetGroups={assetGroups}
+                  allDepartments={allDepartments}
+                  allUnits={allUnits}
+                  allReasonIncreases={allReasonIncreases}
+                  onPageChange={handlePageChange}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                />
+              ) : currentPage === 2 ? (
+                <TransferHistoryPage
+                  readOnly={readOnly}
+                  onEdit={onEdit}
+                  onCancel={onCancel}
+                  asset={selectedAsset}
+                  allDepartments={allDepartments}
+                  onPageChange={handlePageChange}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                />
+              ) : currentPage === 3 ? (
+                <HoursAsset
+                  readOnly={readOnly}
+                  onEdit={onEdit}
+                  onCancel={onCancel}
+                  asset={selectedAsset}
+                  onPageChange={handlePageChange}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                />
+              ) : (
+                <AssetMaintenance
+                  readOnly={readOnly}
+                  onEdit={onEdit}
+                  onCancel={onCancel}
+                  onPageChange={handlePageChange}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                />
+              )}
+            </Box>
           </Box>
         )}
       </DialogContent>

@@ -20,24 +20,94 @@ import {
 import { Add, Delete, Save } from "@mui/icons-material";
 import { AssetHoursType } from "../../types";
 import { useAssetHoursPageQuery, useGioHoatDongMutation } from "../../Mutation";
+import SaveBtn from "../../../../components/Button/SaveBtn";
+import CancelBtn from "../../../../components/Button/CancelBtn";
+import EditButton from "../../../../components/Button/EditButton";
 
-// Mảng 12 tháng
-const MONTHS = [
-  { value: 1, label: " 1" },
-  { value: 2, label: " 2" },
-  { value: 3, label: " 3" },
-  { value: 4, label: " 4" },
-  { value: 5, label: " 5" },
-  { value: 6, label: " 6" },
-  { value: 7, label: " 7" },
-  { value: 8, label: " 8" },
-  { value: 9, label: " 9" },
-  { value: 10, label: " 10" },
-  { value: 11, label: " 11" },
-  { value: 12, label: " 12" },
-];
+// Style sách
+const bookStyles = {
+  container: {
+    backgroundColor: "#fef7e8",
+    backgroundImage: "linear-gradient(to bottom, #fef7e8, #fef0e0)",
+    borderRadius: "12px",
+    boxShadow:
+      "0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.8)",
+    position: "relative" as const,
+    padding: "24px",
+    minHeight: "calc(100vh - 120px)",
+    display: "flex",
+    flexDirection: "column" as const,
+    "&::before": {
+      content: '""',
+      position: "absolute" as const,
+      left: 0,
+      top: 0,
+      bottom: 0,
+      width: "24px",
+      background:
+        "linear-gradient(to right, rgba(139, 69, 19, 0.08), transparent)",
+      pointerEvents: "none" as const,
+      borderTopLeftRadius: "12px",
+      borderBottomLeftRadius: "12px",
+    },
+    "&::after": {
+      content: '""',
+      position: "absolute" as const,
+      right: 0,
+      top: 0,
+      bottom: 0,
+      width: "24px",
+      background:
+        "linear-gradient(to left, rgba(139, 69, 19, 0.08), transparent)",
+      pointerEvents: "none" as const,
+      borderTopRightRadius: "12px",
+      borderBottomRightRadius: "12px",
+    },
+  },
+  content: {
+    flex: 1,
+    overflow: "auto",
+  },
+  footer: {
+    marginTop: "auto",
+    paddingTop: "24px",
+    borderTop: "1px dashed #d4a373",
+    position: "relative" as const,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  pageNumber: {
+    position: "absolute" as const,
+    bottom: 0,
+    right: "20px",
+    fontSize: "12px",
+    color: "#b8956e",
+    fontStyle: "italic" as const,
+  },
+};
 
-export default function HoursAsset({ asset }: { asset: any }) {
+const MONTHS = [...Array(12)].map((_, i) => ({
+  value: i + 1,
+  label: `Tháng ${i + 1}`,
+}));
+export default function HoursAsset({
+  asset,
+  onPageChange,
+  currentPage = 3,
+  totalPages = 4,
+  readOnly = true,
+  onEdit,
+  onCancel,
+}: {
+  asset: any;
+  onPageChange?: (page: number) => void;
+  currentPage?: number;
+  totalPages?: number;
+  readOnly?: boolean;
+  onEdit: () => void;
+  onCancel: () => void;
+}) {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [rows, setRows] = useState<AssetHoursType[]>([]);
@@ -55,13 +125,9 @@ export default function HoursAsset({ asset }: { asset: any }) {
     isLoading,
     refetch,
   } = useAssetHoursPageQuery(0, 100, asset?.id, selectedYear);
-
-  // Khởi tạo 12 tháng từ dữ liệu API
-  useEffect(() => {
+  const resetData = () => {
     if (historyData?.items) {
       const dataMap = new Map<number, AssetHoursType>();
-
-      // Lưu dữ liệu từ API vào Map
       historyData.items.forEach((item: AssetHoursType) => {
         dataMap.set(item.thang, {
           id: item.id,
@@ -82,7 +148,6 @@ export default function HoursAsset({ asset }: { asset: any }) {
 
       setOriginalData(dataMap);
 
-      // Tạo rows cho 12 tháng
       const allRows: AssetHoursType[] = MONTHS.map((month) => {
         const existingData = dataMap.get(month.value);
         if (existingData) {
@@ -104,11 +169,8 @@ export default function HoursAsset({ asset }: { asset: any }) {
           isNew: true,
         };
       });
-
       setRows(allRows);
-      setHasChanges(false);
     } else {
-      // Không có dữ liệu, tạo 12 tháng trống
       const emptyRows: AssetHoursType[] = MONTHS.map((month) => ({
         id: `new-${month.value}`,
         thang: month.value,
@@ -127,6 +189,15 @@ export default function HoursAsset({ asset }: { asset: any }) {
       setRows(emptyRows);
       setOriginalData(new Map());
     }
+    setHasChanges(false);
+  };
+
+  const handleCancel = () => {
+    resetData();
+    onCancel();
+  };
+  useEffect(() => {
+    resetData();
   }, [historyData, selectedYear]);
 
   const handleChange = (
@@ -256,6 +327,7 @@ export default function HoursAsset({ asset }: { asset: any }) {
       // Refresh dữ liệu
       await refetch();
       setHasChanges(false);
+      onCancel();
     } catch (error) {
       console.error("Lỗi khi lưu:", error);
       alert("Có lỗi xảy ra khi lưu dữ liệu!");
@@ -283,266 +355,289 @@ export default function HoursAsset({ asset }: { asset: any }) {
   };
 
   return (
-    <Box
-      sx={{
-        width: "100%",
-        height: "100%",
-        bgcolor: "#fff",
-        p: 2,
-        borderRadius: 2,
-      }}
-    >
+    <Box sx={bookStyles.container}>
+      {/* Button actions */}
       <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={2}
-        flexWrap="wrap"
-        gap={2}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          gap: 2,
+          mb: 2,
+          position: "sticky",
+          top: 10,
+          zIndex: 10,
+        }}
       >
-        <Typography variant="h6" fontWeight="bold" color="#333">
-          GIỜ (KM) HOẠT ĐỘNG CỦA THIẾT BỊ TRONG NĂM {selectedYear}
-        </Typography>
-        <Box display="flex" gap={1} alignItems="center">
-          <FormControl size="small" sx={{ minWidth: 120 }}>
-            <InputLabel>Năm</InputLabel>
-            <Select
-              value={selectedYear}
-              label="Năm"
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-            >
-              <MenuItem value={currentYear - 1}>{currentYear - 1}</MenuItem>
-              <MenuItem value={currentYear}>{currentYear}</MenuItem>
-              <MenuItem value={currentYear + 1}>{currentYear + 1}</MenuItem>
-            </Select>
-          </FormControl>
-
-          <Button
-            variant="contained"
-            startIcon={<Save />}
-            onClick={handleSaveAll}
-            disabled={!hasChanges || isSaving}
-            sx={{
-              bgcolor: "#009e60",
-              "&:hover": { bgcolor: "#026e42" },
-              "&.Mui-disabled": { bgcolor: "#ccc" },
-            }}
-          >
-            {isSaving ? "Đang lưu..." : "Lưu"}
-          </Button>
-        </Box>
+        {!readOnly && (
+          <>
+            <SaveBtn onSave={handleSaveAll} />
+            <CancelBtn onClick={handleCancel} />
+          </>
+        )}
+        {readOnly && <EditButton onClick={onEdit} />}
       </Box>
 
-      <TableContainer
-        component={Paper}
-        elevation={0}
-        sx={{ border: "1px solid #ddd", overflowX: "auto" }}
+      {/* Header sách */}
+      <Typography
+        textAlign="center"
+        fontSize={20}
+        fontWeight={700}
+        sx={{ color: "#8b5a2b", letterSpacing: "2px", mb: 2 }}
       >
-        <Table size="small" stickyHeader sx={{ minWidth: 1000 }}>
-          <TableHead>
-            <TableRow sx={{ bgcolor: "#f5f5f5" }}>
-              <TableCell
-                rowSpan={2}
-                sx={{
-                  fontWeight: "bold",
-                  textAlign: "center",
-                  width: 60,
-                  border: "1px solid grey",
-                }}
-              >
-                Tháng
-              </TableCell>
-              <TableCell
-                colSpan={3}
-                sx={{
-                  fontWeight: "bold",
-                  textAlign: "center",
-                  width: 100,
-                  border: "1px solid grey",
-                }}
-              >
-                Giờ (km)
-              </TableCell>
-              <TableCell
-                colSpan={2}
-                sx={{
-                  fontWeight: "bold",
-                  textAlign: "center",
-                  border: "1px solid grey",
-                }}
-              >
-                Ngày SCT
-              </TableCell>
-              <TableCell
-                colSpan={2}
-                sx={{
-                  fontWeight: "bold",
-                  textAlign: "center",
-                  border: "1px solid grey",
-                }}
-              >
-                Ngày BCC
-              </TableCell>
-              <TableCell
-                colSpan={2}
-                sx={{
-                  fontWeight: "bold",
-                  textAlign: "center",
-                  border: "1px solid grey",
-                }}
-              >
-                Số lần Báo đường
-              </TableCell>
-              <TableCell
-                rowSpan={2}
-                sx={{
-                  fontWeight: "bold",
-                  textAlign: "center",
-                  width: 100,
-                  border: "1px solid grey",
-                }}
-              >
-                Ghi chú
-              </TableCell>
-            </TableRow>
-            <TableRow sx={{ bgcolor: "#f5f5f5" }}>
-              <TableCell
-                sx={{
-                  fontWeight: "bold",
-                  textAlign: "center",
-                  width: 100,
-                  border: "1px solid grey",
-                }}
-              >
-                Hoạt động
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: "bold",
-                  textAlign: "center",
-                  width: 100,
-                  border: "1px solid grey",
-                }}
-              >
-                Sau SCL
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: "bold",
-                  textAlign: "center",
-                  width: 100,
-                  border: "1px solid grey",
-                }}
-              >
-                Sau Bcc
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: "bold",
-                  textAlign: "center",
-                  width: 100,
-                  border: "1px solid grey",
-                }}
-              >
-                Vào
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: "bold",
-                  textAlign: "center",
-                  width: 100,
-                  border: "1px solid grey",
-                }}
-              >
-                Ra
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: "bold",
-                  textAlign: "center",
-                  width: 100,
-                  border: "1px solid grey",
-                }}
-              >
-                Vào
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: "bold",
-                  textAlign: "center",
-                  width: 100,
-                  border: "1px solid grey",
-                }}
-              >
-                Ra
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: "bold",
-                  textAlign: "center",
-                  width: 80,
-                  border: "1px solid grey",
-                }}
-              >
-                Cấp I
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: "bold",
-                  textAlign: "center",
-                  width: 80,
-                  border: "1px solid grey",
-                }}
-              >
-                Cấp II
-              </TableCell>
-            </TableRow>
-          </TableHead>
+        GIỜ (KM) HOẠT ĐỘNG CỦA THIẾT BỊ TRONG NĂM {selectedYear}
+      </Typography>
+      <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+        <FormControl size="small" sx={{ minWidth: 120 }}>
+          <InputLabel>Năm</InputLabel>
+          <Select
+            value={selectedYear}
+            label="Năm"
+            onChange={(e) => setSelectedYear(Number(e.target.value))}
+          >
+            <MenuItem value={currentYear - 1}>{currentYear - 1}</MenuItem>
+            <MenuItem value={currentYear}>{currentYear}</MenuItem>
+            <MenuItem value={currentYear + 1}>{currentYear + 1}</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
 
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={9} align="center">
-                  Đang tải dữ liệu...
+      <Box sx={bookStyles.content}>
+        <TableContainer
+          component={Paper}
+          elevation={0}
+          sx={{ border: "1px solid #d4a373", overflowX: "auto" }}
+        >
+          <Table size="small" stickyHeader sx={{ minWidth: 1000 }}>
+            <TableHead>
+              <TableRow sx={{ bgcolor: "#f5ede0" }}>
+                <TableCell
+                  rowSpan={2}
+                  sx={{
+                    bgcolor: "#f5ede0",
+                    border: "1px solid #d4a373",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    width: 60,
+                  }}
+                >
+                  Tháng
+                </TableCell>
+                <TableCell
+                  colSpan={3}
+                  sx={{
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    width: 100,
+                    bgcolor: "#f5ede0",
+                    border: "1px solid #d4a373",
+                  }}
+                >
+                  Giờ (km)
+                </TableCell>
+                <TableCell
+                  colSpan={2}
+                  sx={{
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    bgcolor: "#f5ede0",
+                    border: "1px solid #d4a373",
+                  }}
+                >
+                  Ngày SCT
+                </TableCell>
+                <TableCell
+                  colSpan={2}
+                  sx={{
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    bgcolor: "#f5ede0",
+                    border: "1px solid #d4a373",
+                  }}
+                >
+                  Ngày BCC
+                </TableCell>
+                <TableCell
+                  colSpan={2}
+                  sx={{
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    bgcolor: "#f5ede0",
+                    border: "1px solid #d4a373",
+                  }}
+                >
+                  Số lần Báo đường
+                </TableCell>
+                <TableCell
+                  rowSpan={2}
+                  sx={{
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    width: 100,
+                    bgcolor: "#f5ede0",
+                    border: "1px solid #d4a373",
+                  }}
+                >
+                  Ghi chú
                 </TableCell>
               </TableRow>
-            ) : (
-              rows.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell
-                    align="center"
-                    sx={{ fontWeight: "medium", border: "1px solid grey" }}
-                  >
-                    {row.thang}
-                  </TableCell>
+              <TableRow sx={{ bgcolor: "#f5f5f5" }}>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    width: 100,
+                    bgcolor: "#f5ede0",
+                    border: "1px solid #d4a373",
+                  }}
+                >
+                  Hoạt động
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    width: 100,
+                    bgcolor: "#f5ede0",
+                    border: "1px solid #d4a373",
+                  }}
+                >
+                  Sau SCL
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    width: 100,
+                    bgcolor: "#f5ede0",
+                    border: "1px solid #d4a373",
+                  }}
+                >
+                  Sau Bcc
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    width: 100,
+                    bgcolor: "#f5ede0",
+                    border: "1px solid #d4a373",
+                  }}
+                >
+                  Vào
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    width: 100,
+                    bgcolor: "#f5ede0",
+                    border: "1px solid #d4a373",
+                  }}
+                >
+                  Ra
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    width: 100,
+                    bgcolor: "#f5ede0",
+                    border: "1px solid #d4a373",
+                  }}
+                >
+                  Vào
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    width: 100,
+                    bgcolor: "#f5ede0",
+                    border: "1px solid #d4a373",
+                  }}
+                >
+                  Ra
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    width: 80,
+                    bgcolor: "#f5ede0",
+                    border: "1px solid #d4a373",
+                  }}
+                >
+                  Cấp I
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    width: 80,
+                    bgcolor: "#f5ede0",
+                    border: "1px solid #d4a373",
+                  }}
+                >
+                  Cấp II
+                </TableCell>
+              </TableRow>
+            </TableHead>
 
-                  {/* Giờ hoạt động - Có thể nhập */}
-                  <TableCell
-                    sx={{
-                      border: "1px solid grey",
-                    }}
-                  >
-                    <TextField
-                      fullWidth
-                      size="small"
-                      variant="standard"
-                      type="number"
-                      value={row.gioHoatDong}
-                      onChange={(e) =>
-                        handleChange(row.thang, "gioHoatDong", e.target.value)
-                      }
-                      placeholder="Nhập giờ/km"
-                      InputProps={{ inputProps: { min: 0 } }}
-                    />
+            <TableBody
+              sx={{ ...bookStyles.container, display: "flex !importance" }}
+            >
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={9} align="center">
+                    Đang tải dữ liệu...
                   </TableCell>
+                </TableRow>
+              ) : (
+                rows.map((row) => (
+                  <TableRow key={row.id}>
+                    <TableCell
+                      align="center"
+                      sx={{ fontWeight: "medium", border: "1px solid grey" }}
+                    >
+                      {row.thang}
+                    </TableCell>
 
-                  {/* Ngày SCT Vào - Tự động hoặc không cần nhập */}
-                  <TableCell
-                    sx={{
-                      border: "1px solid grey",
-                    }}
-                  >
-                    {/* <TextField
+                    {/* Giờ hoạt động - Có thể nhập */}
+                    <TableCell
+                      sx={{
+                        border: "1px solid grey",
+                      }}
+                    >
+                      {readOnly ? (
+                        <Typography>{row?.gioHoatDong || ""}</Typography>
+                      ) : (
+                        <TextField
+                          fullWidth
+                          size="small"
+                          variant="standard"
+                          type="number"
+                          value={row.gioHoatDong}
+                          onChange={(e) =>
+                            handleChange(
+                              row.thang,
+                              "gioHoatDong",
+                              e.target.value,
+                            )
+                          }
+                          placeholder="Nhập giờ/km"
+                          InputProps={{ inputProps: { min: 0 } }}
+                        />
+                      )}
+                    </TableCell>
+
+                    {/* Ngày SCT Vào - Tự động hoặc không cần nhập */}
+                    <TableCell
+                      sx={{
+                        border: "1px solid grey",
+                      }}
+                    >
+                      {/* <TextField
                       fullWidth
                       size="small"
                       variant="standard"
@@ -553,15 +648,15 @@ export default function HoursAsset({ asset }: { asset: any }) {
                       }
                       InputLabelProps={{ shrink: true }}
                     /> */}
-                  </TableCell>
+                    </TableCell>
 
-                  {/* Ngày SCT Ra */}
-                  <TableCell
-                    sx={{
-                      border: "1px solid grey",
-                    }}
-                  >
-                    {/* <TextField
+                    {/* Ngày SCT Ra */}
+                    <TableCell
+                      sx={{
+                        border: "1px solid grey",
+                      }}
+                    >
+                      {/* <TextField
                       fullWidth
                       size="small"
                       variant="standard"
@@ -572,15 +667,15 @@ export default function HoursAsset({ asset }: { asset: any }) {
                       }
                       InputLabelProps={{ shrink: true }}
                     /> */}
-                  </TableCell>
+                    </TableCell>
 
-                  {/* Ngày BCC Vào */}
-                  <TableCell
-                    sx={{
-                      border: "1px solid grey",
-                    }}
-                  >
-                    {/* <TextField
+                    {/* Ngày BCC Vào */}
+                    <TableCell
+                      sx={{
+                        border: "1px solid grey",
+                      }}
+                    >
+                      {/* <TextField
                       fullWidth
                       size="small"
                       variant="standard"
@@ -591,15 +686,15 @@ export default function HoursAsset({ asset }: { asset: any }) {
                       }
                       InputLabelProps={{ shrink: true }}
                     /> */}
-                  </TableCell>
+                    </TableCell>
 
-                  {/* Ngày BCC Ra */}
-                  <TableCell
-                    sx={{
-                      border: "1px solid grey",
-                    }}
-                  >
-                    {/* <TextField
+                    {/* Ngày BCC Ra */}
+                    <TableCell
+                      sx={{
+                        border: "1px solid grey",
+                      }}
+                    >
+                      {/* <TextField
                       fullWidth
                       size="small"
                       variant="standard"
@@ -610,15 +705,15 @@ export default function HoursAsset({ asset }: { asset: any }) {
                       }
                       InputLabelProps={{ shrink: true }}
                     /> */}
-                  </TableCell>
+                    </TableCell>
 
-                  {/* Số lần báo đường cấp I */}
-                  <TableCell
-                    sx={{
-                      border: "1px solid grey",
-                    }}
-                  >
-                    {/* <TextField
+                    {/* Số lần báo đường cấp I */}
+                    <TableCell
+                      sx={{
+                        border: "1px solid grey",
+                      }}
+                    >
+                      {/* <TextField
                       fullWidth
                       size="small"
                       variant="standard"
@@ -633,15 +728,15 @@ export default function HoursAsset({ asset }: { asset: any }) {
                       }
                       InputProps={{ inputProps: { min: 0 } }}
                     /> */}
-                  </TableCell>
+                    </TableCell>
 
-                  {/* Số lần báo đường cấp II */}
-                  <TableCell
-                    sx={{
-                      border: "1px solid grey",
-                    }}
-                  >
-                    {/* <TextField
+                    {/* Số lần báo đường cấp II */}
+                    <TableCell
+                      sx={{
+                        border: "1px solid grey",
+                      }}
+                    >
+                      {/* <TextField
                       fullWidth
                       size="small"
                       variant="standard"
@@ -656,15 +751,15 @@ export default function HoursAsset({ asset }: { asset: any }) {
                       }
                       InputProps={{ inputProps: { min: 0 } }}
                     /> */}
-                  </TableCell>
+                    </TableCell>
 
-                  {/* Ghi chú */}
-                  <TableCell
-                    sx={{
-                      border: "1px solid grey",
-                    }}
-                  >
-                    {/* <TextField
+                    {/* Ghi chú */}
+                    <TableCell
+                      sx={{
+                        border: "1px solid grey",
+                      }}
+                    >
+                      {/* <TextField
                       fullWidth
                       size="small"
                       variant="standard"
@@ -674,13 +769,13 @@ export default function HoursAsset({ asset }: { asset: any }) {
                       }
                       placeholder="Ghi chú..."
                     /> */}
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      border: "1px solid grey",
-                    }}
-                  >
-                    {/* <TextField
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        border: "1px solid grey",
+                      }}
+                    >
+                      {/* <TextField
                       fullWidth
                       size="small"
                       variant="standard"
@@ -690,13 +785,13 @@ export default function HoursAsset({ asset }: { asset: any }) {
                       }
                       placeholder="Ghi chú..."
                     /> */}
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      border: "1px solid grey",
-                    }}
-                  >
-                    {/* <TextField
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        border: "1px solid grey",
+                      }}
+                    >
+                      {/* <TextField
                       fullWidth
                       size="small"
                       variant="standard"
@@ -706,70 +801,101 @@ export default function HoursAsset({ asset }: { asset: any }) {
                       }
                       placeholder="Ghi chú..."
                     /> */}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
 
-            {/* Dòng tổng */}
-            <TableRow sx={{ bgcolor: "#f9f9f9" }}>
-              <TableCell
-                align="center"
-                sx={{ fontWeight: "bold", border: "1px solid grey" }}
-              >
-                TỔNG
-              </TableCell>
-              <TableCell
-                align="center"
-                sx={{ fontWeight: "bold", border: "1px solid grey" }}
-              >
-                {totals.gioHoatDong.toLocaleString()}
-              </TableCell>
-              <TableCell
-                colSpan={2}
-                align="center"
-                sx={{
-                  border: "1px solid grey",
-                }}
-              ></TableCell>
-              <TableCell
-                colSpan={2}
-                align="center"
-                sx={{
-                  border: "1px solid grey",
-                }}
-              ></TableCell>
-              <TableCell
-                align="center"
-                sx={{ fontWeight: "bold", border: "1px solid grey" }}
-              >
-                {/* {totals.soLanBaoDuongCapI} */}
-              </TableCell>
-              <TableCell
-                align="center"
-                sx={{ fontWeight: "bold", border: "1px solid grey" }}
-              >
-                {/* {totals.soLanBaoDuongCapII} */}
-              </TableCell>
-              <TableCell
-                sx={{
-                  border: "1px solid grey",
-                }}
-              ></TableCell>
-              <TableCell
-                sx={{
-                  border: "1px solid grey",
-                }}
-              ></TableCell>
-              <TableCell
-                sx={{
-                  border: "1px solid grey",
-                }}
-              ></TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </TableContainer>
+              {/* Dòng tổng */}
+              <TableRow>
+                <TableCell
+                  align="center"
+                  sx={{ fontWeight: "bold", border: "1px solid grey" }}
+                >
+                  TỔNG
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{ fontWeight: "bold", border: "1px solid grey" }}
+                >
+                  {totals.gioHoatDong.toLocaleString()}
+                </TableCell>
+                <TableCell
+                  colSpan={2}
+                  align="center"
+                  sx={{
+                    border: "1px solid grey",
+                  }}
+                ></TableCell>
+                <TableCell
+                  colSpan={2}
+                  align="center"
+                  sx={{
+                    border: "1px solid grey",
+                  }}
+                ></TableCell>
+                <TableCell
+                  align="center"
+                  sx={{ fontWeight: "bold", border: "1px solid grey" }}
+                >
+                  {/* {totals.soLanBaoDuongCapI} */}
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{ fontWeight: "bold", border: "1px solid grey" }}
+                >
+                  {/* {totals.soLanBaoDuongCapII} */}
+                </TableCell>
+                <TableCell
+                  sx={{
+                    border: "1px solid grey",
+                  }}
+                ></TableCell>
+                <TableCell
+                  sx={{
+                    border: "1px solid grey",
+                  }}
+                ></TableCell>
+                <TableCell
+                  sx={{
+                    border: "1px solid grey",
+                  }}
+                ></TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
+      {/* Footer - luôn ở dưới cùng */}
+      <Box sx={bookStyles.footer}>
+        <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
+          <Button
+            onClick={() => onPageChange?.(currentPage - 1)}
+            disabled={currentPage === 1}
+            sx={{
+              color: "#8b5a2b",
+              "&:hover": { bgcolor: "#fef0e0" },
+              "&.Mui-disabled": { color: "#d4a373" },
+              textTransform: "none",
+            }}
+          >
+            ← Trang trước
+          </Button>
+          <Button
+            onClick={() => onPageChange?.(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            sx={{
+              color: "#8b5a2b",
+              "&:hover": { bgcolor: "#fef0e0" },
+              "&.Mui-disabled": { color: "#d4a373" },
+              textTransform: "none",
+            }}
+          >
+            Trang sau →
+          </Button>
+        </Box>
+        <Box sx={bookStyles.pageNumber}>Trang {currentPage}</Box>
+      </Box>
     </Box>
   );
 }

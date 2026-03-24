@@ -21,14 +21,86 @@ import {
   useAssetManagerMutation,
   useHistoryAssethandoverQuery,
 } from "../../Mutation";
-import { Save } from "lucide-react";
 import { showConfirmAlert } from "../../../../components/Alert";
 import { useAssetHandoverMutation } from "../../../AssetHandover/Mutation";
 import { generateCode } from "../../../../utils/helpers";
+import SaveBtn from "../../../../components/Button/SaveBtn";
+import CancelBtn from "../../../../components/Button/CancelBtn";
+import EditButton from "../../../../components/Button/EditButton";
+
+// Style sách
+const bookStyles = {
+  container: {
+    backgroundColor: "#fef7e8",
+    backgroundImage: "linear-gradient(to bottom, #fef7e8, #fef0e0)",
+    borderRadius: "12px",
+    boxShadow:
+      "0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.8)",
+    position: "relative" as const,
+    padding: "24px",
+    minHeight: "calc(100vh - 120px)",
+    display: "flex",
+    flexDirection: "column" as const,
+    "&::before": {
+      content: '""',
+      position: "absolute" as const,
+      left: 0,
+      top: 0,
+      bottom: 0,
+      width: "24px",
+      background:
+        "linear-gradient(to right, rgba(139, 69, 19, 0.08), transparent)",
+      pointerEvents: "none" as const,
+      borderTopLeftRadius: "12px",
+      borderBottomLeftRadius: "12px",
+    },
+    "&::after": {
+      content: '""',
+      position: "absolute" as const,
+      right: 0,
+      top: 0,
+      bottom: 0,
+      width: "24px",
+      background:
+        "linear-gradient(to left, rgba(139, 69, 19, 0.08), transparent)",
+      pointerEvents: "none" as const,
+      borderTopRightRadius: "12px",
+      borderBottomRightRadius: "12px",
+    },
+  },
+  content: {
+    flex: 1,
+    overflow: "auto",
+  },
+  footer: {
+    marginTop: "auto",
+    paddingTop: "24px",
+    borderTop: "1px dashed #d4a373",
+    position: "relative" as const,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  pageNumber: {
+    position: "absolute" as const,
+    bottom: 0,
+    right: "20px",
+    fontSize: "12px",
+    color: "#b8956e",
+    fontStyle: "italic" as const,
+  },
+};
 
 interface TransferHistoryPageProps {
   asset: any;
   allDepartments: any[];
+  onPageChange?: (page: number) => void;
+  currentPage?: number;
+  totalPages?: number;
+  readOnly?: boolean;
+  onEdit?: () => void;
+  onCancel?: () => void;
+  onSave?: (values: any) => void;
 }
 
 interface RowData {
@@ -40,18 +112,26 @@ interface RowData {
   idDonViGiao?: string;
   tenDonViGiao?: string;
   isNew?: boolean;
-  originalData?: any; // Lưu dữ liệu gốc để so sánh
+  isDeleted?: boolean;
+  originalData?: any;
+  action?: "create" | "update" | "delete";
 }
 
 const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
   asset,
   allDepartments,
+  onPageChange,
+  currentPage = 2,
+  totalPages = 4,
+  readOnly = true,
+  onEdit,
+  onCancel,
+  onSave,
 }) => {
   const queryClient = useQueryClient();
   const {
-    createManyHistoryAssetMutation, // Tạo 1 cái
-    updateHistoryAssetMutation, // Cập nhật 1 cái
-    updateHistoryAssetManyMutation, // Cập nhật nhiều cái (create/update batch)
+    createManyHistoryAssetMutation,
+    updateHistoryAssetManyMutation,
     deleteHistoryAssetMutation,
   } = useAssetManagerMutation();
   const { updateAssetOwnershipMutation } = useAssetHandoverMutation();
@@ -67,6 +147,7 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
   const [rows, setRows] = useState<RowData[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   // Load dữ liệu từ API
   useEffect(() => {
@@ -81,12 +162,47 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
         idDonViGiao: item.idDonViGiao,
         tenDonViGiao: item.tenDonViGiao,
         isNew: false,
-        originalData: { ...item }, // Lưu lại dữ liệu gốc
+        isDeleted: false,
+        originalData: { ...item },
+        action: undefined,
       }));
       setRows(formattedRows);
       setHasChanges(false);
     }
   }, [historyData]);
+
+  // Xử lý khi bấm Edit
+  const handleEdit = () => {
+    setIsEditMode(true);
+    onEdit?.();
+  };
+
+  // Xử lý khi bấm Cancel
+  const handleCancel = () => {
+    // Reset lại dữ liệu về ban đầu
+    if (historyData?.items) {
+      const formattedRows = historyData.items.map((item: any) => ({
+        id: item.id,
+        thoiGianBanGiao: item.thoiGianBanGiao
+          ? item.thoiGianBanGiao.slice(0, 10)
+          : "",
+        idDonViNhan: item.idDonViNhan,
+        tenDonViNhan: item.tenDonViNhan,
+        idDonViGiao: item.idDonViGiao,
+        tenDonViGiao: item.tenDonViGiao,
+        isNew: false,
+        isDeleted: false,
+        originalData: { ...item },
+        action: undefined,
+      }));
+      setRows(formattedRows);
+    } else {
+      setRows([]);
+    }
+    setHasChanges(false);
+    setIsEditMode(false);
+    onCancel?.();
+  };
 
   const handleAddRow = () => {
     const newRow: RowData = {
@@ -94,11 +210,12 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
       thoiGianBanGiao: dayjs().format("YYYY-MM-DD"),
       idDonViNhan: "",
       tenDonViNhan: "",
-      idDonViGiao:
-        asset.idDonViHienThoi | asset.idDonViBanDau || ("K30" as any), // Mặc định đơn vị giao
+      idDonViGiao: asset.idDonViHienThoi || asset.idDonViBanDau || "K30",
       tenDonViGiao: "",
       idTaiSan: asset.id,
       isNew: true,
+      isDeleted: false,
+      action: "create",
     };
     setRows([newRow, ...rows]);
     setHasChanges(true);
@@ -106,56 +223,71 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
 
   const handleChange = (id: string, field: keyof RowData, value: any) => {
     setRows((prev) =>
-      prev.map((row) => (row.id === id ? { ...row, [field]: value } : row)),
+      prev.map((row) => {
+        if (row.id === id) {
+          const updatedRow = { ...row, [field]: value };
+          // Đánh dấu action là update nếu không phải row mới
+          if (!row.isNew && !row.isDeleted) {
+            updatedRow.action = "update";
+          }
+          return updatedRow;
+        }
+        return row;
+      }),
     );
     setHasChanges(true);
   };
 
-  // Lấy record có thời gian giao gần nhất
-  const getLatestRecord = (rowsList: RowData[]): RowData | null => {
-    if (rowsList.length === 0) return null;
+  const handleDeleteRow = (id: string, isNew?: boolean) => {
+    if (isNew) {
+      // Xóa row mới (chưa lưu) khỏi danh sách
+      setRows(rows.filter((r) => r.id !== id));
+    } else {
+      // Đánh dấu xóa mềm
+      setRows((prev) =>
+        prev.map((row) =>
+          row.id === id ? { ...row, isDeleted: true, action: "delete" } : row,
+        ),
+      );
+    }
+    setHasChanges(true);
+  };
 
-    const sorted = [...rowsList].sort((a, b) =>
+  const getLatestRecord = (rowsList: RowData[]): RowData | null => {
+    const activeRows = rowsList.filter((row) => !row.isDeleted);
+    if (activeRows.length === 0) return null;
+    const sorted = [...activeRows].sort((a, b) =>
       dayjs(b.thoiGianBanGiao).diff(dayjs(a.thoiGianBanGiao)),
     );
     return sorted[0];
   };
 
-  // Xử lý lưu tất cả thay đổi
-  const handleSaveAll = async () => {
+  const handleSave = async () => {
     if (isSaving) return;
     setIsSaving(true);
 
     try {
       // Phân loại các row cần xử lý
-      const rowsToCreate: RowData[] = []; // Dùng create từng cái
-      const rowsToUpdate: RowData[] = []; // Dùng update từng cái hoặc update nhiều
+      const rowsToCreate: RowData[] = [];
+      const rowsToUpdate: RowData[] = [];
+      const rowsToDelete: RowData[] = [];
 
       rows.forEach((row) => {
-        // Bỏ qua các row không có đơn vị nhận
-        if (!row.idDonViNhan) return;
-
-        if (row.isNew) {
-          // Row mới: dùng create API (từng cái)
-          rowsToCreate.push(row);
+        if (row.isDeleted) {
+          if (!row.isNew) {
+            rowsToDelete.push(row);
+          }
         } else {
-          // Row cũ: kiểm tra xem có thay đổi không
-          const originalRow = row.originalData;
-          if (originalRow) {
-            const hasChange =
-              originalRow.thoiGianBanGiao?.slice(0, 10) !==
-                row.thoiGianBanGiao ||
-              originalRow.idDonViNhan !== row.idDonViNhan;
-
-            if (hasChange) {
-              rowsToUpdate.push(row);
-            }
+          if (row.isNew) {
+            rowsToCreate.push(row);
+          } else if (row.action === "update") {
+            rowsToUpdate.push(row);
           }
         }
       });
 
+      // 1. Xử lý CREATE
       if (rowsToCreate.length > 0) {
-        // 1. Xử lý CREATE (từng cái một)
         const createPayload = rowsToCreate.map((row: any) => ({
           id: generateCode("LSDCTS-") + `${row.idTaiSan} -`,
           idBanGiaoTaiSan: "",
@@ -176,7 +308,6 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
 
       // 2. Xử lý UPDATE
       if (rowsToUpdate.length > 0) {
-        // Nếu API updateMany có sẵn, dùng batch
         const updatePayload = rowsToUpdate.map((row) => ({
           id: row.id,
           idTaiSan: asset.id,
@@ -193,276 +324,308 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
         });
       }
 
-      // 3. Sau khi lưu thành công, lấy record mới nhất để cập nhật đơn vị quản lý hiện tại
-      // Cập nhật lại rows với dữ liệu mới (xóa các row temp, thay bằng ID thật)
-      // Refresh data từ API
+      // 3. Xử lý DELETE
+      if (rowsToDelete.length > 0) {
+        for (const row of rowsToDelete) {
+          await new Promise((resolve, reject) => {
+            deleteHistoryAssetMutation.mutate(row.id, {
+              onSuccess: resolve,
+              onError: reject,
+            });
+          });
+        }
+      }
+
+      // Refresh dữ liệu
       await queryClient.invalidateQueries({
         queryKey: ["historyAssetHandover"],
       });
 
-      if (rows.length > 0) {
-        // Tìm record có thời gian gần nhất
-        const latestRecord = getLatestRecord(
-          rows.map((item: any) => ({
-            id: item.id,
-            thoiGianBanGiao: item.thoiGianBanGiao?.slice(0, 10) || "",
-            idDonViNhan: item.idDonViNhan,
-            idDonViGiao: item.idDonViGiao,
-            idTaiSan: item.idTaiSan,
-          })),
-        );
+      // Cập nhật đơn vị quản lý hiện tại dựa trên record mới nhất
+      const activeRows = rows.filter((row) => !row.isDeleted);
+      const latestRecord = getLatestRecord(activeRows);
 
-        if (latestRecord && latestRecord.idDonViNhan) {
-          // Gọi mutation cập nhật đơn vị quản lý hiện tại của tài sản
-          updateAssetOwnershipMutation.mutate([
-            {
-              id: asset.id,
-              idDonVi: latestRecord.idDonViNhan,
-            },
-          ]);
-        }
+      if (latestRecord && latestRecord.idDonViNhan) {
+        updateAssetOwnershipMutation.mutate([
+          {
+            id: asset.id,
+            idDonVi: latestRecord.idDonViNhan,
+          },
+        ]);
+      } else if (activeRows.length === 0) {
+        updateAssetOwnershipMutation.mutate([
+          {
+            id: asset.id,
+            idDonVi: "K30",
+          },
+        ]);
       }
 
-      // Invalidate thêm query asset list để cập nhật thông tin đơn vị quản lý
       await queryClient.invalidateQueries({ queryKey: ["assetsPage"] });
 
       setHasChanges(false);
+      setIsEditMode(false);
+
+      // Gọi onSave để thông báo đã lưu thành công
+      onSave?.({});
     } catch (error) {
       console.error("Error saving changes:", error);
-      // Có thể hiển thị thông báo lỗi ở đây
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDeleteRow = async (id: string, isNew?: boolean) => {
-    if (isNew) {
-      // Xóa row mới (chưa lưu)
-      setRows(rows.filter((r) => r.id !== id));
-      setHasChanges(true);
-    } else {
-      const result = await showConfirmAlert(
-        "Bạn có chắc chắn muốn xóa lịch sử điều chuyển này không?",
-      );
-
-      if (result.isConfirmed) {
-        deleteHistoryAssetMutation.mutate(id, {
-          onSuccess: async () => {
-            // Sau khi xóa, cập nhật lại đơn vị quản lý hiện tại
-            // Lấy record mới nhất còn lại từ state (đã xóa id đó)
-            const remainingRows = rows.filter((r) => r.id !== id);
-            const latestRecord = getLatestRecord(remainingRows);
-
-            if (latestRecord && latestRecord.idDonViNhan) {
-              updateAssetOwnershipMutation.mutate([
-                {
-                  id: asset.id,
-                  idDonVi: latestRecord.idDonViNhan,
-                },
-              ]);
-            } else if (remainingRows.length === 0) {
-              // Nếu không còn record nào, có thể set về null hoặc giá trị mặc định
-              updateAssetOwnershipMutation.mutate([
-                {
-                  id: asset.id,
-                  idDonVi: "K30", // Hoặc ID đơn vị mặc định
-                },
-              ]);
-            }
-
-            // Refresh dữ liệu
-            await queryClient.invalidateQueries({
-              queryKey: ["historyAssetHandover"],
-            });
-            await queryClient.invalidateQueries({ queryKey: ["assetsPage"] });
-          },
-        });
-      }
-    }
-  };
+  // Lọc các row không bị xóa để hiển thị
+  const visibleRows = rows.filter((row) => !row.isDeleted);
 
   return (
-    <Box
-      sx={{
-        width: "100%",
-        height: "100%",
-        bgcolor: "#fff",
-        p: 2,
-        borderRadius: 2,
-      }}
-    >
+    <Box sx={bookStyles.container}>
+      {/* Button actions */}
       <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={2}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          gap: 2,
+          mb: 2,
+          position: "sticky",
+          top: 10,
+          zIndex: 1,
+        }}
       >
-        <Typography variant="h6" fontWeight="bold" color="#333">
-          Lịch sử điều chuyển tài sản
-        </Typography>
-        <Box display="flex" gap={1.5}>
-          {hasChanges && (
-            <Button
-              variant="contained"
-              startIcon={<Save />}
-              onClick={handleSaveAll}
-              disabled={isSaving}
-              sx={{
-                bgcolor: "#009e60",
-                color: "#fff",
-                "&:hover": { bgcolor: "#026e42" },
-                "&.Mui-disabled": { bgcolor: "#ccc" },
-                textTransform: "none",
-                fontWeight: 600,
-                boxShadow: "none",
-              }}
-            >
-              {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
-            </Button>
-          )}
-
-          <IconButton
-            onClick={handleAddRow}
-            sx={{
-              bgcolor: "#009e60",
-              color: "#fff",
-              "&:hover": { bgcolor: "#026e42" },
-            }}
-          >
-            <Add />
-          </IconButton>
-        </Box>
+        {!readOnly && isEditMode && (
+          <>
+            <SaveBtn onSave={handleSave} />
+            <CancelBtn onClick={handleCancel} />
+          </>
+        )}
+        {readOnly && !isEditMode && <EditButton onClick={handleEdit} />}
       </Box>
 
-      <TableContainer
-        component={Paper}
-        elevation={0}
-        sx={{ border: "1px solid grey" }}
+      {/* Header sách */}
+      <Typography
+        textAlign="center"
+        fontSize={20}
+        fontWeight={700}
+        sx={{ color: "#8b5a2b", letterSpacing: "2px", mb: 2 }}
       >
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell
-                sx={{
-                  fontWeight: "bold",
-                  width: "30%",
-                  color: "#333",
-                  border: "1px solid grey",
-                }}
-              >
-                Ngày tháng
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: "bold",
-                  width: "60%",
-                  color: "#333",
-                  border: "1px solid grey",
-                }}
-              >
-                Đơn vị quản lý
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: "bold",
-                  width: "10%",
-                  textAlign: "center",
-                  color: "#333",
-                  border: "1px solid grey",
-                }}
-              >
-                Thao tác
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={3}
-                  align="center"
-                  sx={{ border: "1px solid grey" }}
-                >
-                  Đang tải dữ liệu...
-                </TableCell>
-              </TableRow>
-            ) : rows.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={3}
-                  align="center"
-                  sx={{ border: "1px solid grey" }}
-                >
-                  Chưa có lịch sử thuyên chuyển
-                </TableCell>
-              </TableRow>
-            ) : (
-              rows.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell sx={{ border: "1px solid grey" }}>
-                    <TextField
-                      type="date"
-                      fullWidth
-                      size="small"
-                      variant="standard"
-                      InputProps={{ disableUnderline: true }}
-                      value={row.thoiGianBanGiao}
-                      onChange={(e) =>
-                        handleChange(row.id, "thoiGianBanGiao", e.target.value)
-                      }
-                      sx={{ input: { color: "#333" } }}
-                    />
-                  </TableCell>
+        SỰ THUYÊN CHUYỂN TÀI SẢN
+      </Typography>
 
-                  <TableCell sx={{ border: "1px solid grey" }}>
-                    <Autocomplete
-                      options={allDepartments.slice(0, 100)}
-                      getOptionLabel={(option) => option?.tenPhongBan || ""}
-                      isOptionEqualToValue={(option, value) =>
-                        option.id === value?.id
-                      }
-                      value={
-                        allDepartments.find((d) => d.id === row.idDonViNhan) ||
-                        null
-                      }
-                      onChange={(_, newValue) => {
-                        handleChange(row.id, "idDonViNhan", newValue?.id || "");
-                        handleChange(
-                          row.id,
-                          "tenDonViNhan",
-                          newValue?.tenPhongBan || "",
-                        );
-                      }}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          variant="standard"
-                          InputProps={{
-                            ...params.InputProps,
-                            disableUnderline: true,
-                          }}
-                          placeholder="Chọn đơn vị..."
-                        />
-                      )}
-                      sx={{ width: "100%" }}
-                    />
-                  </TableCell>
+      {/* Nút thêm - chỉ hiển thị khi ở chế độ edit */}
+      {isEditMode && (
+        <Box
+          display="flex"
+          justifyContent="flex-end"
+          alignItems="center"
+          mb={3}
+          gap={2}
+        >
+          <Button
+            variant="outlined"
+            startIcon={<Add />}
+            onClick={handleAddRow}
+            sx={{
+              borderColor: "#d4a373",
+              color: "#8b5a2b",
+              "&:hover": { borderColor: "#b8956e", bgcolor: "#fef0e0" },
+              textTransform: "none",
+            }}
+          >
+            Thêm lịch sử
+          </Button>
+        </Box>
+      )}
 
-                  <TableCell align="center" sx={{ border: "1px solid grey" }}>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleDeleteRow(row.id, row.isNew)}
-                      sx={{ color: "#d32f2f" }}
-                    >
-                      <Delete fontSize="small" />
-                    </IconButton>
+      {/* Nội dung chính */}
+      <Box sx={bookStyles.content}>
+        <TableContainer
+          component={Paper}
+          elevation={0}
+          sx={{
+            border: "1px solid #d4a373",
+            borderRadius: "8px",
+            overflow: "hidden",
+          }}
+        >
+          <Table size="small">
+            <TableHead>
+              <TableRow sx={{ bgcolor: "#f5ede0" }}>
+                <TableCell
+                  sx={{
+                    fontWeight: 600,
+                    width: "30%",
+                    color: "#6b4c3b",
+                    border: "1px solid #d4a373",
+                  }}
+                >
+                  Ngày tháng
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: 600,
+                    width: "60%",
+                    color: "#6b4c3b",
+                    border: "1px solid #d4a373",
+                  }}
+                >
+                  Đơn vị quản lý
+                </TableCell>
+                {isEditMode && (
+                  <TableCell
+                    sx={{
+                      fontWeight: 600,
+                      width: "10%",
+                      textAlign: "center",
+                      color: "#6b4c3b",
+                      border: "1px solid #d4a373",
+                    }}
+                  >
+                    Thao tác
+                  </TableCell>
+                )}
+              </TableRow>
+            </TableHead>
+            <TableBody
+              sx={{ ...bookStyles.container, display: "flex !importance" }}
+            >
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={isEditMode ? 3 : 2} align="center">
+                    Đang tải dữ liệu...
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+              ) : visibleRows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={isEditMode ? 3 : 2} align="center">
+                    Chưa có lịch sử thuyên chuyển
+                  </TableCell>
+                </TableRow>
+              ) : (
+                visibleRows.map((row) => (
+                  <TableRow key={row.id}>
+                    <TableCell sx={{ border: "1px solid #d4a373" }}>
+                      {isEditMode ? (
+                        <TextField
+                          type="date"
+                          fullWidth
+                          size="small"
+                          variant="standard"
+                          InputProps={{ disableUnderline: true }}
+                          value={row.thoiGianBanGiao}
+                          onChange={(e) =>
+                            handleChange(
+                              row.id,
+                              "thoiGianBanGiao",
+                              e.target.value,
+                            )
+                          }
+                          sx={{ input: { color: "#5a3e2b" } }}
+                        />
+                      ) : (
+                        <Typography sx={{ color: "#5a3e2b" }}>
+                          {dayjs(row.thoiGianBanGiao).format("DD/MM/YYYY")}
+                        </Typography>
+                      )}
+                    </TableCell>
+
+                    <TableCell sx={{ border: "1px solid #d4a373" }}>
+                      {isEditMode ? (
+                        <Autocomplete
+                          options={allDepartments.slice(0, 100)}
+                          getOptionLabel={(option) => option?.tenPhongBan || ""}
+                          isOptionEqualToValue={(option, value) =>
+                            option.id === value?.id
+                          }
+                          value={
+                            allDepartments.find(
+                              (d) => d.id === row.idDonViNhan,
+                            ) || null
+                          }
+                          onChange={(_, newValue) => {
+                            handleChange(
+                              row.id,
+                              "idDonViNhan",
+                              newValue?.id || "",
+                            );
+                            handleChange(
+                              row.id,
+                              "tenDonViNhan",
+                              newValue?.tenPhongBan || "",
+                            );
+                          }}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              variant="standard"
+                              InputProps={{
+                                ...params.InputProps,
+                                disableUnderline: true,
+                              }}
+                              placeholder="Chọn đơn vị..."
+                            />
+                          )}
+                          sx={{ width: "100%" }}
+                        />
+                      ) : (
+                        <Typography sx={{ color: "#5a3e2b" }}>
+                          {row.tenDonViNhan || "N/A"}
+                        </Typography>
+                      )}
+                    </TableCell>
+
+                    {isEditMode && (
+                      <TableCell
+                        align="center"
+                        sx={{ border: "1px solid #d4a373" }}
+                      >
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeleteRow(row.id, row.isNew)}
+                          sx={{ color: "#d32f2f" }}
+                        >
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
+
+      {/* Footer - luôn ở dưới cùng */}
+      <Box sx={bookStyles.footer}>
+        <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
+          <Button
+            onClick={() => onPageChange?.(currentPage - 1)}
+            disabled={currentPage === 1}
+            sx={{
+              color: "#8b5a2b",
+              "&:hover": { bgcolor: "#fef0e0" },
+              "&.Mui-disabled": { color: "#d4a373" },
+              textTransform: "none",
+            }}
+          >
+            ← Trang trước
+          </Button>
+          <Button
+            onClick={() => onPageChange?.(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            sx={{
+              color: "#8b5a2b",
+              "&:hover": { bgcolor: "#fef0e0" },
+              "&.Mui-disabled": { color: "#d4a373" },
+              textTransform: "none",
+            }}
+          >
+            Trang sau →
+          </Button>
+        </Box>
+        <Box sx={bookStyles.pageNumber}>Trang {currentPage}</Box>
+      </Box>
     </Box>
   );
 };

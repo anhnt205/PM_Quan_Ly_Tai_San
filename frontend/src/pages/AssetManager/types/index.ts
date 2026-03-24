@@ -133,4 +133,5 @@ export interface MaintenanceIncidentType {
   ghiChu?: string;
   isNew?: boolean;
   isDeleted?: boolean;
+  isUpdated?: boolean;
 }

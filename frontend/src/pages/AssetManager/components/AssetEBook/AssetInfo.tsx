@@ -1,4 +1,9 @@
-import { Add, Delete, InfoOutlineRounded } from "@mui/icons-material";
+import {
+  Add,
+  Delete,
+  InfoOutlineRounded,
+  RemoveRedEye,
+} from "@mui/icons-material";
 import {
   Autocomplete,
   Box,
@@ -13,6 +18,7 @@ import {
   TableRow,
   TextField,
   Typography,
+  Divider,
 } from "@mui/material";
 import { ChangeEvent, useEffect, useState } from "react";
 import SaveBtn from "../../../../components/Button/SaveBtn";
@@ -34,6 +40,78 @@ import FieldAutoCompleted from "../../../../components/TextField/FieldAutoComple
 import { AssetFileType } from "../../types";
 import { showDownloadFile } from "../../config";
 import S3Service from "../../../../services/S3Service";
+import ViewTaiLieu from "../ViewTaiLieu";
+
+// Style cho hiệu ứng sách
+const bookStyles = {
+  container: {
+    backgroundColor: "#fef7e8",
+    backgroundImage: "linear-gradient(to bottom, #fef7e8, #fef0e0)",
+    borderRadius: "12px",
+    boxShadow:
+      "0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.8)",
+    position: "relative" as const,
+    padding: "24px",
+    "&::before": {
+      content: '""',
+      position: "absolute" as const,
+      left: 0,
+      top: 0,
+      bottom: 0,
+      width: "24px",
+      background:
+        "linear-gradient(to right, rgba(139, 69, 19, 0.08), transparent)",
+      pointerEvents: "none" as const,
+      borderTopLeftRadius: "12px",
+      borderBottomLeftRadius: "12px",
+    },
+    "&::after": {
+      content: '""',
+      position: "absolute" as const,
+      right: 0,
+      top: 0,
+      bottom: 0,
+      width: "24px",
+      background:
+        "linear-gradient(to left, rgba(139, 69, 19, 0.08), transparent)",
+      pointerEvents: "none" as const,
+      borderTopRightRadius: "12px",
+      borderBottomRightRadius: "12px",
+    },
+  },
+  header: {
+    borderBottom: "2px solid #d4a373",
+    paddingBottom: "12px",
+    marginBottom: "24px",
+    position: "relative" as const,
+  },
+  pageNumber: {
+    position: "absolute" as const,
+    bottom: "16px",
+    right: "24px",
+    fontSize: "12px",
+    color: "#b8956e",
+    fontStyle: "italic" as const,
+  },
+  sectionTitle: {
+    fontSize: "16px",
+    fontWeight: 600,
+    color: "#6b4c3b",
+    borderLeft: "4px solid #d4a373",
+    paddingLeft: "12px",
+    marginBottom: "16px",
+    marginTop: "8px",
+  },
+  fieldRow: {
+    marginBottom: "16px",
+  },
+  label: {
+    fontWeight: 500,
+    color: "#6b4c3b",
+    marginBottom: "6px",
+    fontSize: "13px",
+  },
+};
 
 export default function AssetInfo({
   readOnly,
@@ -47,6 +125,9 @@ export default function AssetInfo({
   allDepartments,
   allUnits,
   allReasonIncreases,
+  onPageChange,
+  currentPage,
+  totalPages,
 }: {
   readOnly?: boolean;
   onEdit: () => void;
@@ -59,7 +140,11 @@ export default function AssetInfo({
   allDepartments: any[];
   allUnits: any[];
   allReasonIncreases: any[];
+  onPageChange?: (page: number) => void;
+  currentPage?: number;
+  totalPages?: number;
 }) {
+  const [previewFile, setPreviewFile] = useState("");
   const formik = useFormik({
     initialValues: {
       id: "",
@@ -215,7 +300,6 @@ export default function AssetInfo({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Hiển thị loading nếu muốn
     try {
       const keyTailieu = await S3Service.put({
         name: file.name,
@@ -223,7 +307,7 @@ export default function AssetInfo({
         type: "tailieu",
       });
       const newFile: AssetFileType = {
-        id: undefined, // id tạm thời
+        id: undefined,
         idTaiSan: formik.values.id,
         filePath: keyTailieu,
         tenFile: file.name,
@@ -238,9 +322,7 @@ export default function AssetInfo({
       ]);
     } catch (error) {
       console.error("Upload file error", error);
-      // Có thể hiển thị toast lỗi
     }
-    // Reset input để có thể chọn lại cùng file
     event.target.value = "";
   };
 
@@ -250,61 +332,70 @@ export default function AssetInfo({
     const fileToRemove = currentList.find((f) => f.id === fileId);
 
     if (fileToRemove && fileToRemove.id) {
-      // File đã tồn tại trên server → xóa mềm: đánh dấu action = "delete"
       const newList = currentList.map((f) =>
         f.id === fileId ? { ...f, action: Action.DELETE } : f,
       );
       formik.setFieldValue("fileDinhKemList", newList);
     } else {
-      // File mới upload (chưa có id) → xóa khỏi danh sách
       const newList = currentList.filter((f) => f.id !== fileId);
       formik.setFieldValue("fileDinhKemList", newList);
     }
   };
 
   return (
-    <Paper
-      sx={{
-        mt: 2,
-        p: 2,
-        borderRadius: "12px",
-        boxShadow: "none",
-      }}
-    >
+    <Box sx={{ ...bookStyles.container }}>
+      {/* Nút hành động */}
       <Box
         sx={{
-          position: "sticky",
-          top: 0,
-          zIndex: 10,
-          p: 2,
           display: "flex",
           alignItems: "center",
           justifyContent: "flex-end",
-          borderRadius: "12px",
+          gap: 2,
+          position: "sticky",
+          top: 10,
+          zIndex: 10,
         }}
       >
-        <Box display="flex" gap={2}>
-          {!readOnly && <SaveBtn onSave={formik.submitForm} />}
-          {!readOnly && <CancelBtn onClick={handleCancel} />}
-          {readOnly && <EditButton onClick={onEdit} />}
-        </Box>
+        {!readOnly && <SaveBtn onSave={formik.submitForm} />}
+        {!readOnly && <CancelBtn onClick={handleCancel} />}
+        {readOnly && <EditButton onClick={onEdit} />}
       </Box>
-      <Typography textAlign="center" fontSize={18} fontWeight={600}>
+      {/* Header sách */}
+      <Box sx={bookStyles.header}>
+        <Typography
+          textAlign="center"
+          fontSize={20}
+          fontWeight={700}
+          sx={{ color: "#8b5a2b", letterSpacing: "2px" }}
+        >
+          LÝ LỊCH THIẾT BỊ
+        </Typography>
+        <Typography
+          textAlign="center"
+          fontSize={14}
+          sx={{ color: "#b8956e", mt: 1 }}
+        >
+          {`Thẻ số: ${selectedAsset?.soThe || ""}`}
+        </Typography>
+      </Box>
+      <Typography
+        textAlign="center"
+        fontSize={20}
+        fontWeight={700}
+        sx={{ color: "#8b5a2b", letterSpacing: "2px", mb: 2 }}
+      >
         THÔNG TIN TÀI SẢN
       </Typography>
-      <Grid container spacing={2}>
+      {/* Nội dung chính - giữ nguyên các trường nhập */}
+      <Grid container spacing={3}>
         {/* Cột trái */}
         <Grid size={{ xs: 6 }}>
-          <Grid container spacing={2} sx={{ mt: 2 }}>
+          <Box sx={{ pr: 1 }}>
             {/* Số thẻ tài sản */}
-            <Grid size={{ xs: 12 }}>
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Số thẻ tài sản:
                   </Typography>
                   <Typography>{formik.values.soThe || "N/A"}</Typography>
@@ -317,16 +408,13 @@ export default function AssetInfo({
                   disabled={readOnly}
                 />
               )}
-            </Grid>
+            </Box>
+
             {/* Tên tài sản */}
-            <Grid size={{ xs: 12 }}>
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Tên tài sản:
                   </Typography>
                   <Typography>{formik.values.tenTaiSan || "N/A"}</Typography>
@@ -339,89 +427,80 @@ export default function AssetInfo({
                   disabled={readOnly}
                 />
               )}
-            </Grid>
+            </Box>
 
-            {readOnly ? (
-              <Box display="flex" gap={2}>
-                <Typography
-                  variant="body2"
-                  fontWeight="bold"
-                  sx={{ minWidth: "120px" }}
-                >
-                  Nguyên giá:
-                </Typography>
-                <Typography>
-                  {formatDecimal(formik.values.nguyenGia)} đ
-                </Typography>
-              </Box>
-            ) : (
-              <Grid size={{ xs: 12 }}>
+            {/* Nguyên giá */}
+            <Box sx={bookStyles.fieldRow}>
+              {readOnly ? (
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
+                    Nguyên giá:
+                  </Typography>
+                  <Typography>
+                    {formatDecimal(formik.values.nguyenGia)} đ
+                  </Typography>
+                </Box>
+              ) : (
                 <TextFieldNumber
                   title="Nguyên giá tài sản"
                   formik={formik}
                   field="nguyenGia"
                   disabled={true}
                 />
-              </Grid>
-            )}
-            {readOnly ? (
-              <Box display="flex" gap={2}>
-                <Typography
-                  variant="body2"
-                  fontWeight="bold"
-                  sx={{ minWidth: "120px" }}
-                >
-                  Giá trị khấu hao ban đầu:
-                </Typography>
-                <Typography>
-                  {formatDecimal(formik.values.giaTriKhauHaoBanDau)} đ
-                </Typography>
-              </Box>
-            ) : (
-              <Grid size={{ xs: 12 }}>
+              )}
+            </Box>
+
+            {/* Giá trị khấu hao ban đầu */}
+            <Box sx={bookStyles.fieldRow}>
+              {readOnly ? (
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
+                    Giá trị khấu hao ban đầu:
+                  </Typography>
+                  <Typography>
+                    {formatDecimal(formik.values.giaTriKhauHaoBanDau)} đ
+                  </Typography>
+                </Box>
+              ) : (
                 <TextFieldNumber
                   title="Giá trị khấu hao ban đầu"
                   formik={formik}
                   field="giaTriKhauHaoBanDau"
                   disabled={true}
                 />
-              </Grid>
-            )}
-            {readOnly ? (
-              <Box display="flex" gap={2}>
-                <Typography
-                  variant="body2"
-                  fontWeight="bold"
-                  sx={{ minWidth: "120px" }}
-                >
-                  Kỳ khấu hao ban đầu:
-                </Typography>
-                <Typography>
-                  {formik.values.kyKhauHaoBanDau || "N/A"}
-                </Typography>
-              </Box>
-            ) : (
-              <Grid size={{ xs: 12 }}>
+              )}
+            </Box>
+
+            {/* Kỳ khấu hao ban đầu */}
+            <Box sx={bookStyles.fieldRow}>
+              {readOnly ? (
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
+                    Kỳ khấu hao ban đầu:
+                  </Typography>
+                  <Typography>
+                    {formik.values.kyKhauHaoBanDau || "N/A"}
+                  </Typography>
+                </Box>
+              ) : (
                 <TextFieldNumber
                   title="Kỳ khấu hao ban đầu"
                   formik={formik}
                   field="kyKhauHaoBanDau"
                   disabled={true}
                 />
-              </Grid>
-            )}
-            <Grid size={{ xs: 12 }}>
+              )}
+            </Box>
+
+            {/* Giá trị thanh lý */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Giá trị thanh lý:
                   </Typography>
                   <Typography>
-                    {formik.values.giaTriThanhLy || "N/A"}
+                    {formatDecimal(formik.values.giaTriThanhLy)} đ
                   </Typography>
                 </Box>
               ) : (
@@ -432,16 +511,13 @@ export default function AssetInfo({
                   disabled={true}
                 />
               )}
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            {/* Mô hình tài sản */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Mô hình tài sản:
                   </Typography>
                   <Typography>
@@ -481,16 +557,13 @@ export default function AssetInfo({
                   disabled={readOnly}
                 />
               )}
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            {/* Phương pháp khấu hao */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Phương pháp khấu hao:
                   </Typography>
                   <Typography>
@@ -512,16 +585,13 @@ export default function AssetInfo({
                   disabled
                 />
               )}
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            {/* Số kỳ khấu hao */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Số kỳ khấu hao:
                   </Typography>
                   <Typography>{formik.values.soKyKhauHao}</Typography>
@@ -534,16 +604,13 @@ export default function AssetInfo({
                   disabled={true}
                 />
               )}
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            {/* Tài khoản tài sản */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Tài khoản tài sản:
                   </Typography>
                   <Typography>
@@ -558,16 +625,13 @@ export default function AssetInfo({
                   disabled={true}
                 />
               )}
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            {/* Tài khoản khấu hao */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Tài khoản khấu hao:
                   </Typography>
                   <Typography>
@@ -582,16 +646,13 @@ export default function AssetInfo({
                   disabled={true}
                 />
               )}
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            {/* Tài khoản chi phí */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Tài khoản chi phí:
                   </Typography>
                   <Typography>
@@ -606,16 +667,13 @@ export default function AssetInfo({
                   disabled={true}
                 />
               )}
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            {/* Nhóm tài sản */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Nhóm tài sản:
                   </Typography>
                   <Typography>
@@ -633,16 +691,13 @@ export default function AssetInfo({
                   disabled={readOnly}
                 />
               )}
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            {/* Loại tài sản */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Loại tài sản:
                   </Typography>
                   <Typography>
@@ -662,16 +717,13 @@ export default function AssetInfo({
                   disabled={readOnly}
                 />
               )}
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            {/* Ngày vào sổ */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Ngày vào sổ:
                   </Typography>
                   <Typography>
@@ -688,16 +740,13 @@ export default function AssetInfo({
                   disabled={readOnly}
                 />
               )}
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            {/* Ngày sử dụng */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Ngày sử dụng:
                   </Typography>
                   <Typography>
@@ -714,21 +763,18 @@ export default function AssetInfo({
                   disabled={readOnly}
                 />
               )}
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
         </Grid>
 
         {/* Cột phải */}
         <Grid size={{ xs: 6 }}>
-          <Grid container spacing={2} sx={{ mt: 2 }}>
-            <Grid size={{ xs: 12 }}>
+          <Box sx={{ pl: 1 }}>
+            {/* Dự án */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Dự án:
                   </Typography>
                   <Typography>
@@ -746,16 +792,13 @@ export default function AssetInfo({
                   disabled={readOnly}
                 />
               )}
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            {/* Vốn NS */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Vốn NS:
                   </Typography>
                   <Typography>{formatDecimal(formik.values.nvNS)} đ</Typography>
@@ -776,16 +819,13 @@ export default function AssetInfo({
                   }}
                 />
               )}
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            {/* Vốn vay */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Vốn vay:
                   </Typography>
                   <Typography>
@@ -808,16 +848,13 @@ export default function AssetInfo({
                   }}
                 />
               )}
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            {/* Vốn khác */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Vốn khác:
                   </Typography>
                   <Typography>
@@ -840,16 +877,13 @@ export default function AssetInfo({
                   }}
                 />
               )}
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            {/* Mã hiệu */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Mã hiệu:
                   </Typography>
                   <Typography>{formik.values.kyHieu || "N/A"}</Typography>
@@ -862,16 +896,13 @@ export default function AssetInfo({
                   disabled={readOnly}
                 />
               )}
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            {/* Số mã hiệu */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Số mã hiệu:
                   </Typography>
                   <Typography>{formik.values.soKyHieu || "N/A"}</Typography>
@@ -884,16 +915,13 @@ export default function AssetInfo({
                   disabled={readOnly}
                 />
               )}
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            {/* Công suất */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Công suất:
                   </Typography>
                   <Typography>{formik.values.congSuat || "N/A"}</Typography>
@@ -906,16 +934,13 @@ export default function AssetInfo({
                   disabled={readOnly}
                 />
               )}
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            {/* Nước sản xuất */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Nước sản xuất:
                   </Typography>
                   <Typography>{formik.values.nuocSanXuat || "N/A"}</Typography>
@@ -942,16 +967,13 @@ export default function AssetInfo({
                   )}
                 />
               )}
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            {/* Năm sản xuất */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Năm sản xuất:
                   </Typography>
                   <Typography>{formik.values.namSanXuat}</Typography>
@@ -965,16 +987,13 @@ export default function AssetInfo({
                   disabled={readOnly}
                 />
               )}
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            {/* Lý do tăng */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Lý do tăng:
                   </Typography>
                   <Typography>
@@ -992,16 +1011,13 @@ export default function AssetInfo({
                   disabled={readOnly}
                 />
               )}
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            {/* Hiện trạng */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Hiện trạng:
                   </Typography>
                   <Typography>
@@ -1019,37 +1035,32 @@ export default function AssetInfo({
                   disabled={readOnly}
                 />
               )}
-            </Grid>
-            {readOnly ? (
-              <Box display="flex" gap={2}>
-                <Typography
-                  variant="body2"
-                  fontWeight="bold"
-                  sx={{ minWidth: "120px" }}
-                >
-                  Số lượng:
-                </Typography>
-                <Typography>{formik.values.soLuong || "N/A"}</Typography>
-              </Box>
-            ) : (
-              <Grid size={{ xs: 12 }}>
+            </Box>
+
+            {/* Số lượng */}
+            <Box sx={bookStyles.fieldRow}>
+              {readOnly ? (
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
+                    Số lượng:
+                  </Typography>
+                  <Typography>{formik.values.soLuong || "N/A"}</Typography>
+                </Box>
+              ) : (
                 <TextFieldNumber
                   title="Số lượng"
                   formik={formik}
                   field="soLuong"
                   disabled={true}
                 />
-              </Grid>
-            )}
+              )}
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            {/* Đơn vị tính */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Đơn vị tính:
                   </Typography>
                   <Typography>
@@ -1067,16 +1078,13 @@ export default function AssetInfo({
                   disabled={readOnly}
                 />
               )}
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            {/* Ghi chú */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Ghi chú:
                   </Typography>
                   <Typography>{formik.values.ghiChu || "N/A"}</Typography>
@@ -1089,16 +1097,13 @@ export default function AssetInfo({
                   disabled={readOnly}
                 />
               )}
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            {/* Kho */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Kho:
                   </Typography>
                   <Typography>
@@ -1118,16 +1123,13 @@ export default function AssetInfo({
                   disabled={true}
                 />
               )}
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            {/* Đơn vị hiện thời */}
+            <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
+                <Box display="flex" alignItems="center">
+                  <Typography sx={bookStyles.label} width="140px">
                     Đơn vị hiện thời:
                   </Typography>
                   <Typography>
@@ -1145,86 +1147,45 @@ export default function AssetInfo({
                   disabled={readOnly}
                 />
               )}
-            </Grid>
-
-            {/* <Grid size={{ xs: 6 }}>
-              {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
-                    Thời gian kiểm định:
-                  </Typography>
-                  <Typography>
-                    {dayjs(formik.values.tgKiemDinh).isValid()
-                      ? dayjs(formik.values.tgKiemDinh).format("MM/YYYY")
-                      : "N/A"}
-                  </Typography>
-                </Box>
-              ) : (
-                <FieldYearMonth
-                  title="Thời gian kiểm định"
-                  formik={formik}
-                  field="tgKiemDinh"
-                  disabled={readOnly}
-                />
-              )}
-            </Grid> */}
-
-            {/* <Grid size={{ xs: 6 }}>
-              {readOnly ? (
-                <Box display="flex" alignItems="center" gap={2}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="bold"
-                    sx={{ minWidth: "120px" }}
-                  >
-                    Chu kỳ kiểm định (tháng):
-                  </Typography>
-                  <Typography>{formik.values.chuKyKiemDinh}</Typography>
-                </Box>
-              ) : (
-                <FieldInput
-                  title="Chu kỳ kiểm định (tháng)"
-                  formik={formik}
-                  type="number"
-                  field="chuKyKiemDinh"
-                  disabled={readOnly}
-                />
-              )}
-            </Grid> */}
-          </Grid>
+            </Box>
+          </Box>
         </Grid>
       </Grid>
 
+      {/* Chi tiết tài sản con */}
       {formik.values.donViTinh?.toLocaleLowerCase() === "ht" && (
         <Box sx={{ mt: 4 }}>
-          <Typography fontSize={14} py={2}>
-            Chi tiết tài sản con:
-          </Typography>
-          <Table size="small">
+          <Divider sx={{ my: 2, borderColor: "#d4a373" }} />
+          <Table size="small" sx={{ bgcolor: "#fffef7", borderRadius: 1 }}>
             <TableHead>
-              <TableRow>
-                <TableCell sx={{ width: "25%" }}>Tài sản</TableCell>
-                <TableCell sx={{ width: "15%" }}>Đơn vị tính</TableCell>
-                <TableCell sx={{ width: "20%" }}>Số lượng</TableCell>
-                <TableCell sx={{ width: "20%" }}>Tình trạng kỹ thuật</TableCell>
-                <TableCell sx={{ width: "20%" }}>Ghi chú</TableCell>
+              <TableRow sx={{ bgcolor: "#f5ede0" }}>
+                <TableCell sx={{ fontWeight: 600, color: "#6b4c3b" }}>
+                  Tài sản
+                </TableCell>
+                <TableCell sx={{ fontWeight: 600, color: "#6b4c3b" }}>
+                  Đơn vị tính
+                </TableCell>
+                <TableCell sx={{ fontWeight: 600, color: "#6b4c3b" }}>
+                  Số lượng
+                </TableCell>
+                <TableCell sx={{ fontWeight: 600, color: "#6b4c3b" }}>
+                  Tình trạng kỹ thuật
+                </TableCell>
+                <TableCell sx={{ fontWeight: 600, color: "#6b4c3b" }}>
+                  Ghi chú
+                </TableCell>
                 <TableCell width={50}></TableCell>
               </TableRow>
             </TableHead>
-
-            <TableBody>
+            <TableBody sx={bookStyles.container}>
               {formik.values.taiSanConList
                 .map((row, originalIndex) => ({ ...row, originalIndex }))
                 .filter((row) => !row.isDeleted)
                 .map((row) => (
-                  <TableRow key={row.id || row.originalIndex}>
-                    <TableCell>
+                  <TableRow key={row.id || row.originalIndex} sx={bookStyles}>
+                    <TableCell sx={bookStyles}>
                       {readOnly ? (
-                        <Typography>
+                        <Typography variant="body2">
                           {findById(assetsByType, row.idTaiSanCon)?.tenTaiSan ||
                             "N/A"}
                         </Typography>
@@ -1263,64 +1224,87 @@ export default function AssetInfo({
                         />
                       )}
                     </TableCell>
-
                     <TableCell>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        value={
-                          findById(allUnits, row.donViTinh)?.tenDonVi || ""
-                        }
-                        disabled
-                      />
+                      {readOnly ? (
+                        <Typography variant="body2">
+                          {findById(allUnits, row.donViTinh)?.tenDonVi || ""}
+                        </Typography>
+                      ) : (
+                        <TextField
+                          fullWidth
+                          size="small"
+                          value={
+                            findById(allUnits, row.donViTinh)?.tenDonVi || ""
+                          }
+                          disabled
+                        />
+                      )}
                     </TableCell>
-
                     <TableCell>
-                      <FieldInput
-                        type="number"
-                        formik={formik}
-                        field={`taiSanConList.${row.originalIndex}.soLuong`}
-                        disabled
-                      />
+                      {readOnly ? (
+                        <Typography variant="body2">
+                          {row?.soLuong || ""}
+                        </Typography>
+                      ) : (
+                        <FieldInput
+                          type="number"
+                          formik={formik}
+                          field={`taiSanConList.${row.originalIndex}.soLuong`}
+                          disabled
+                        />
+                      )}
                     </TableCell>
-
                     <TableCell>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        value={
-                          findById(allCurrentStatus, row.hienTrang)?.tenHTKT ||
-                          ""
-                        }
-                        disabled
-                      />
+                      {readOnly ? (
+                        <Typography variant="body2">
+                          {findById(allCurrentStatus, row.hienTrang)?.tenHTKT ||
+                            ""}
+                        </Typography>
+                      ) : (
+                        <TextField
+                          fullWidth
+                          size="small"
+                          value={
+                            findById(allCurrentStatus, row.hienTrang)
+                              ?.tenHTKT || ""
+                          }
+                          disabled
+                        />
+                      )}
                     </TableCell>
-
                     <TableCell>
-                      <FieldInput
-                        formik={formik}
-                        field={`taiSanConList.${row.originalIndex}.ghiChu`}
-                        disabled
-                      />
+                      {readOnly ? (
+                        <Typography variant="body2">
+                          {row?.ghiChu || ""}
+                        </Typography>
+                      ) : (
+                        <FieldInput
+                          formik={formik}
+                          field={`taiSanConList.${row.originalIndex}.ghiChu`}
+                          disabled
+                        />
+                      )}
                     </TableCell>
-
                     <TableCell>
-                      <IconButton
-                        color="error"
-                        onClick={() => {
-                          formik.setFieldValue(
-                            `taiSanConList.${row.originalIndex}.isDeleted`,
-                            true,
-                          );
-                          formik.setFieldValue(
-                            `taiSanConList.${row.originalIndex}.isInsert`,
-                            false,
-                          );
-                        }}
-                        disabled={readOnly}
-                      >
-                        <Delete />
-                      </IconButton>
+                      {!readOnly && (
+                        <IconButton
+                          color="error"
+                          onClick={() => {
+                            formik.setFieldValue(
+                              `taiSanConList.${row.originalIndex}.isDeleted`,
+                              true,
+                            );
+                            formik.setFieldValue(
+                              `taiSanConList.${row.originalIndex}.isInsert`,
+                              false,
+                            );
+                          }}
+                          disabled={readOnly}
+                          size="small"
+                        >
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -1344,6 +1328,7 @@ export default function AssetInfo({
                         ]);
                       }}
                       variant="text"
+                      sx={{ color: "#8b5a2b" }}
                     >
                       Thêm một dòng
                     </Button>
@@ -1354,22 +1339,27 @@ export default function AssetInfo({
           </Table>
         </Box>
       )}
-      <Grid container spacing={2} sx={{ mt: 4 }}>
+
+      {/* Tài liệu đính kèm */}
+      <Grid container spacing={3} sx={{ mt: 2 }}>
         <Grid size={{ xs: 6 }}>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <Typography variant="body2" fontWeight="bold">
-              Biên bản nghiệm thu
-            </Typography>
+          <Divider sx={{ my: 1, borderColor: "#d4a373" }} />
+          <Typography sx={bookStyles.sectionTitle}>
+            BIÊN BẢN NGHIỆM THU
+          </Typography>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
             {!readOnly && (
               <Button
-                variant="text"
+                variant="outlined"
                 size="small"
                 component="label"
                 startIcon={<Add />}
+                sx={{
+                  alignSelf: "flex-start",
+                  mb: 1,
+                  borderColor: "#d4a373",
+                  color: "#8b5a2b",
+                }}
               >
                 Tệp đính kèm
                 <input
@@ -1380,8 +1370,6 @@ export default function AssetInfo({
                 />
               </Button>
             )}
-          </Box>
-          <Box sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 1 }}>
             {formik.values.fileDinhKemList
               .filter((e) => e.loai === 0 && e.action !== Action.DELETE)
               .map((i, index) => (
@@ -1392,19 +1380,25 @@ export default function AssetInfo({
                     alignItems: "center",
                     gap: 1,
                     py: 0.5,
-                    borderBottom: "1px dashed #e0e0e0",
-                    "&:last-child": { borderBottom: "none" },
+                    borderBottom: "1px dashed #e8e0d0",
                   }}
                 >
                   <Typography
                     variant="body2"
-                    sx={{ color: "text.secondary", minWidth: "20px" }}
+                    sx={{ color: "#b8956e", minWidth: "25px" }}
                   >
                     {index + 1}.
                   </Typography>
                   {showDownloadFile(i.tenFile, () =>
                     S3Service.download(i.filePath),
                   )}
+                  <IconButton
+                    size="small"
+                    onClick={() => setPreviewFile(i.filePath)}
+                    sx={{ color: "#6b4c3b" }}
+                  >
+                    <RemoveRedEye fontSize="small" />
+                  </IconButton>
                   {!readOnly && (
                     <IconButton
                       size="small"
@@ -1421,7 +1415,7 @@ export default function AssetInfo({
             ).length === 0 && (
               <Typography
                 variant="body2"
-                sx={{ fontStyle: "italic", color: "gray" }}
+                sx={{ fontStyle: "italic", color: "#b8a28c" }}
               >
                 Không có tệp đính kèm.
               </Typography>
@@ -1429,22 +1423,24 @@ export default function AssetInfo({
           </Box>
         </Grid>
 
-        {/* Tài liệu kỹ thuật */}
         <Grid size={{ xs: 6 }}>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <Typography variant="body2" fontWeight="bold">
-              Tài liệu kỹ thuật
-            </Typography>
+          <Divider sx={{ my: 1, borderColor: "#d4a373" }} />
+          <Typography sx={bookStyles.sectionTitle}>
+            TÀI LIỆU KỸ THUẬT
+          </Typography>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
             {!readOnly && (
               <Button
-                variant="text"
+                variant="outlined"
                 size="small"
                 component="label"
                 startIcon={<Add />}
+                sx={{
+                  alignSelf: "flex-start",
+                  mb: 1,
+                  borderColor: "#d4a373",
+                  color: "#8b5a2b",
+                }}
               >
                 Tệp đính kèm
                 <input
@@ -1455,8 +1451,6 @@ export default function AssetInfo({
                 />
               </Button>
             )}
-          </Box>
-          <Box sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 1 }}>
             {formik.values.fileDinhKemList
               .filter((e) => e.loai === 1 && e.action !== Action.DELETE)
               .map((i, index) => (
@@ -1467,19 +1461,25 @@ export default function AssetInfo({
                     alignItems: "center",
                     gap: 1,
                     py: 0.5,
-                    borderBottom: "1px dashed #e0e0e0",
-                    "&:last-child": { borderBottom: "none" },
+                    borderBottom: "1px dashed #e8e0d0",
                   }}
                 >
                   <Typography
                     variant="body2"
-                    sx={{ color: "text.secondary", minWidth: "20px" }}
+                    sx={{ color: "#b8956e", minWidth: "25px" }}
                   >
                     {index + 1}.
                   </Typography>
                   {showDownloadFile(i.tenFile, () =>
                     S3Service.download(i.filePath),
                   )}
+                  <IconButton
+                    size="small"
+                    onClick={() => setPreviewFile(i.filePath)}
+                    sx={{ color: "#6b4c3b" }}
+                  >
+                    <RemoveRedEye fontSize="small" />
+                  </IconButton>
                   {!readOnly && (
                     <IconButton
                       size="small"
@@ -1496,7 +1496,7 @@ export default function AssetInfo({
             ).length === 0 && (
               <Typography
                 variant="body2"
-                sx={{ fontStyle: "italic", color: "gray" }}
+                sx={{ fontStyle: "italic", color: "#b8a28c" }}
               >
                 Không có tệp đính kèm.
               </Typography>
@@ -1504,6 +1504,47 @@ export default function AssetInfo({
           </Box>
         </Grid>
       </Grid>
-    </Paper>
+
+      {/* Số trang */}
+      <Box sx={bookStyles.pageNumber}>Trang 1</Box>
+      <Box
+        sx={{
+          marginTop: "32px",
+          paddingTop: "16px",
+          display: "flex",
+          justifyContent: "center",
+          gap: 2,
+          borderTop: "1px dashed #d4a373",
+        }}
+      >
+        <Button
+          onClick={() => onPageChange?.(currentPage! - 1)}
+          disabled={currentPage === 1}
+          sx={{
+            color: "#8b5a2b",
+            "&:hover": { bgcolor: "#fef0e0" },
+            "&.Mui-disabled": { color: "#d4a373" },
+          }}
+        >
+          ← Trang trước
+        </Button>
+        <Button
+          onClick={() => onPageChange?.(currentPage! + 1)}
+          disabled={currentPage === totalPages}
+          sx={{
+            color: "#8b5a2b",
+            "&:hover": { bgcolor: "#fef0e0" },
+            "&.Mui-disabled": { color: "#d4a373" },
+          }}
+        >
+          Trang sau →
+        </Button>
+      </Box>
+      <ViewTaiLieu
+        open={!!previewFile}
+        onClose={() => setPreviewFile("")}
+        filePath={previewFile}
+      />
+    </Box>
   );
 }

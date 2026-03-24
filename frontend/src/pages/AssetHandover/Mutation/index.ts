@@ -334,6 +334,7 @@ export const useAssetHandoverMutation = () => {
     },
     onSuccess: (response, data) => {
       queryClient.invalidateQueries({ queryKey: [mainKey] });
+      queryClient.invalidateQueries({ queryKey: ["assetsPage"] });
 
       console.log("Cập nhật tài sản theo đơn vị thành công");
     },
