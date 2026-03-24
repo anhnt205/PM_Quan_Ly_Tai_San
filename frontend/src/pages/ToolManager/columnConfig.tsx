@@ -1,4 +1,4 @@
-import { Box, Chip, IconButton, Tooltip } from "@mui/material";
+import { Box, Chip, IconButton, Tooltip, Typography } from "@mui/material";
 import { ContentCopy, History as HistoryIcon } from "@mui/icons-material";
 import { ReactNode } from "react";
 
@@ -80,7 +80,31 @@ export const createColumns = (
     render: (v: any) => Number(v).toLocaleString("vi-VN"),
   },
   { key: "kyHieu", label: "Ký hiệu", visible: true, isShow: true, width: 100 },
-  { key: "ghiChu", label: "Ghi chú", visible: true, isShow: true, width: 100 },
+  {
+    key: "ghiChu",
+    label: "Ghi chú",
+    visible: true,
+    isShow: true,
+    width: 200,
+    render: (v: string) => (
+      <Tooltip title={v} placement="top" arrow>
+        <Typography
+          variant="body2"
+          sx={{
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "normal",
+            wordBreak: "break-word",
+          }}
+        >
+          {v}
+        </Typography>
+      </Tooltip>
+    ),
+  },
   {
     key: "nguoiTao",
     label: "Người tạo",

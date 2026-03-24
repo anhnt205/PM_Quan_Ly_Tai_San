@@ -28,6 +28,30 @@ export const useToolManagerMutation = (
   const { user } = useSelector((state: RootState) => state.user);
   const now = dayjs(new Date()).format("YYYY-MM-DDTHH:mm:ss");
 
+  const syncBakMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file); // Key này phải khớp với @RequestParam("file") ở Backend
+
+      const res = await api.post("/migration/upload-bak", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      // Sau khi đồng bộ xong 5,804 bản ghi, ta cần làm mới danh sách hiển thị
+      queryClient.invalidateQueries({ queryKey: ["toolsPage"] });
+      showSuccessAlert(data || "Đồng bộ dữ liệu SQL Server thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data || error.message || "Quá trình đồng bộ thất bại",
+      );
+    },
+  });
+
   // --- quan ly ccdc - vat tu ---
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -615,6 +639,7 @@ export const useToolManagerMutation = (
     importExcelMutation,
     createManyHistoryToolMutation,
     updateAssetOwnershipMutation,
+    syncBakMutation,
   };
 };
 

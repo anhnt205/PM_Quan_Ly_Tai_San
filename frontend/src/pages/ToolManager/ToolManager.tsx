@@ -14,6 +14,7 @@ import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useDebounce } from "../../hooks/useDebounce";
 import AssetHistoryModal from "./components/ToolHistoryModal";
 import { useLocation, useNavigate } from "react-router-dom";
+import SyncLoadingModal from "../../components/common/SyncLoadingModal";
 
 export default function ToolManager() {
   const [showForm, setShowForm] = useState(false);
@@ -54,6 +55,7 @@ export default function ToolManager() {
     deleteManyMutation,
     exportExcelMutation,
     importExcelMutation,
+    syncBakMutation,
   } = useToolManagerMutation((messages) => {
     setImportErrors(messages);
     setOpenErrorModal(true);
@@ -129,6 +131,14 @@ export default function ToolManager() {
         onClose={() => setOpenErrorModal(false)}
         errors={importErrors}
       />
+      <SyncLoadingModal
+        open={importExcelMutation.isPending || syncBakMutation.isPending}
+        title={
+          syncBakMutation.isPending
+            ? "Đang đồng bộ SQL Server..."
+            : "Đang xử lý file Excel..."
+        }
+      />
       <PageAction
         title="Quản lý CCDC - Vật tư"
         onNewClick={() => {
@@ -140,6 +150,7 @@ export default function ToolManager() {
         loading={exportExcelMutation.isPending || importExcelMutation.isPending}
         onExport={() => exportExcelMutation.mutate()}
         onImport={(file) => importExcelMutation.mutate(file)}
+        onSyncBak={(file) => syncBakMutation.mutate(file)}
         showExcel={true}
       />
       <Box p={2}>

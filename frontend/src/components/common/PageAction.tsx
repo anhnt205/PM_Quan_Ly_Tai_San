@@ -1,25 +1,23 @@
-import { Download, Settings, Upload } from "@mui/icons-material";
-import NewButton from "../Button/NewButton";
 import {
   Box,
-  Dialog,
-  DialogContent,
   IconButton,
   ListItemIcon,
   Menu,
   MenuItem,
   Typography,
 } from "@mui/material";
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
+import NewButton from "../Button/NewButton";
+import { Download, Settings, Sync, Upload } from "@mui/icons-material";
 import CustomProgress from "../loading/CustomProgress";
-import CustomLoading from "../loading/CustomLoading/CustomLoading";
 
 interface Props {
   loading?: boolean;
   title: string;
   onNewClick: () => void;
-  onExport?: () => void; // Thêm prop xuất file
-  onImport?: (file: File) => void; // Thêm prop nhập file
+  onExport?: () => void;
+  onImport?: (file: File) => void;
+  onSyncBak?: (file: File) => void;
   showExcel?: boolean;
 }
 
@@ -29,12 +27,13 @@ export default function PageAction({
   onNewClick,
   onExport,
   onImport,
+  onSyncBak,
   showExcel = false,
 }: Props) {
   const [anchorElExcel, setAnchorElExcel] = useState<null | HTMLElement>(null);
 
-  // Ref để gọi click vào input file ẩn
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bakInputRef = useRef<HTMLInputElement>(null);
 
   const handleOpenElExcel = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElExcel(event.currentTarget);
@@ -49,10 +48,25 @@ export default function PageAction({
     fileInputRef.current?.click();
   };
 
+  const handleSyncBakClick = () => {
+    // <--- Hàm mở dialog chọn file .bak
+    handleCloseMenu();
+    bakInputRef.current?.click();
+  };
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && onImport) {
       onImport(file);
+      event.target.value = "";
+    }
+  };
+
+  const handleBakFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    // <--- Xử lý file .bak
+    const file = event.target.files?.[0];
+    if (file && onSyncBak) {
+      onSyncBak(file);
       event.target.value = "";
     }
   };
@@ -66,12 +80,16 @@ export default function PageAction({
         gap: 2,
         top: 60,
         zIndex: 99,
-        bgcolor: "white",
+        bgcolor: "background.paper",
         p: 1,
+        borderBottom: "1px solid",
+        borderColor: "divider",
       }}
     >
       <NewButton onClick={onNewClick} />
-      <Typography>{title}</Typography>
+      <Typography sx={{ fontWeight: "medium", color: "text.primary" }}>
+        {title}
+      </Typography>
 
       {showExcel && (
         <IconButton onClick={handleOpenElExcel}>
@@ -79,7 +97,7 @@ export default function PageAction({
         </IconButton>
       )}
 
-      {/* Input file ẩn để phục vụ Import */}
+      {/* Input file Excel */}
       <input
         type="file"
         hidden
@@ -88,30 +106,42 @@ export default function PageAction({
         onChange={handleFileChange}
       />
 
+      {/* Input file .bak */}
+      <input
+        type="file"
+        hidden
+        ref={bakInputRef}
+        accept=".bak"
+        onChange={handleBakFileChange}
+      />
+
       <Menu
         open={Boolean(anchorElExcel)}
         onClose={handleCloseMenu}
         anchorEl={anchorElExcel}
-        anchorOrigin={{
-          vertical: "bottom",
-          horizontal: "left",
-        }}
-        transformOrigin={{
-          vertical: "top",
-          horizontal: "left",
-        }}
       >
-        {/* Chỉ hiện nút Import nếu có truyền hàm onImport */}
+        {/* Mục Import Excel cũ */}
         {onImport && (
           <MenuItem onClick={handleImportClick}>
             <ListItemIcon>
-              <Download color="primary" />
+              <Download fontSize="small" color="primary" />
             </ListItemIcon>
-            Import dữ liệu
+            <Typography variant="body2">Import từ Excel</Typography>
           </MenuItem>
         )}
 
-        {/* Chỉ hiện nút Export nếu có truyền hàm onExport */}
+        {/* MỤC MỚI: Đồng bộ từ SQL Server */}
+        {onSyncBak && (
+          <MenuItem onClick={handleSyncBakClick}>
+            <ListItemIcon>
+              <Sync fontSize="small" color="primary" />
+            </ListItemIcon>
+            <Typography variant="body2">
+              Đồng bộ từ SQL Server (.bak)
+            </Typography>
+          </MenuItem>
+        )}
+
         {onExport && (
           <MenuItem
             onClick={() => {
@@ -120,13 +150,17 @@ export default function PageAction({
             }}
           >
             <ListItemIcon>
-              <Upload color="secondary" />
+              <Upload fontSize="small" color="secondary" />
             </ListItemIcon>
-            Xuất toàn bộ
+            <Typography variant="body2">Xuất toàn bộ Excel</Typography>
           </MenuItem>
         )}
       </Menu>
-      <CustomProgress title="Đang xử lý ..." loading={loading} />
+
+      <CustomProgress
+        title="Hệ thống đang xử lý dữ liệu..."
+        loading={loading}
+      />
     </Box>
   );
 }
