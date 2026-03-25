@@ -54,8 +54,8 @@ public class DatabaseMigrationController {
             // (Phần 3: Code gọi lệnh RESTORE SQL Server sẽ được viết thêm vào đây sau)
             migrationService.processMigration(filePath.toString());
 
-            return ResponseEntity.ok("Upload thành công! Đường dẫn file: " + filePath.toString());
-
+            return ResponseEntity.ok("Đồng bộ dữ liệu SQL Server thành công! Hệ thống đã cập nhật danh mục vật tư.");
+            
         } catch (IOException e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

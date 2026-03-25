@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -39,6 +41,13 @@ public class DatabaseMigrationService {
     public void processMigration(String bakFilePath) {
         try {
             String dbTarget = "ESOFTINV_2026";
+
+            boolean isRestored = restoreDatabase(bakFilePath, dbTarget);
+            if (!isRestored) {
+                // Nếu Restore xịt thì ném lỗi dừng luôn, không chạy xuống dưới nữa
+                throw new RuntimeException("Lỗi: Quá trình Restore thất bại. Không thể đồng bộ!");
+            }
+
             System.out.println("--- Bắt đầu quy trình gom nhóm Cha-Con & Upsert ---");
 
             String queryDataSql = String.format(
@@ -139,6 +148,100 @@ public class DatabaseMigrationService {
         } catch (Exception e) {
             System.err.println("Lỗi hệ thống trong quá trình migration: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    private boolean restoreDatabase(String bakFilePath, String targetDbName) {
+        System.out.println("--- BƯỚC 1: Đọc Logical Names từ file .bak ---");
+        String logicalDataName = "";
+        String logicalLogName = "";
+
+        try {
+            // Lệnh lấy danh sách file bên trong .bak
+            String fileListCmd = String.format("RESTORE FILELISTONLY FROM DISK = N'%s'", bakFilePath);
+            ProcessBuilder pbFileList = new ProcessBuilder(
+                "sqlcmd", "-S", "DESKTOP-CHU10SD\\MSSQLSERVER01", "-E", "-W", "-Q", fileListCmd
+            );
+            pbFileList.redirectErrorStream(true);
+            Process procFileList = pbFileList.start();
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(procFileList.getInputStream(), "UTF-8"));
+            String line;
+            
+            // Đọc kết quả bảng từ sqlcmd để trích xuất LogicalName
+            // Bỏ qua 2 dòng header của sqlcmd (LogicalName, PhysicalName...)
+            boolean isDataStarted = false; 
+            while ((line = reader.readLine()) != null) {
+                if (line.contains("LogicalName")) {
+                    isDataStarted = true;
+                    reader.readLine(); // Bỏ qua dòng kẻ gạch "------------"
+                    continue;
+                }
+                
+                if (isDataStarted && !line.trim().isEmpty() && !line.contains("rows affected")) {
+                    // Cắt chuỗi theo khoảng trắng. Cột đầu tiên là LogicalName, cột thứ hai là Type (D=Data, L=Log)
+                    String[] columns = line.trim().split("\\s+");
+                    if (columns.length >= 2) {
+                        String name = columns[0];
+                        String type = columns[1];
+                        
+                        if (type.equals("D")) {
+                            logicalDataName = name;
+                        } else if (type.equals("L")) {
+                            logicalLogName = name;
+                        }
+                    }
+                }
+            }
+            procFileList.waitFor();
+
+            if (logicalDataName.isEmpty() || logicalLogName.isEmpty()) {
+                System.err.println("Lỗi: Không thể trích xuất Logical Name từ file .bak!");
+                return false;
+            }
+            
+            System.out.println("-> Tìm thấy Data Name: " + logicalDataName);
+            System.out.println("-> Tìm thấy Log Name: " + logicalLogName);
+
+            System.out.println("--- BƯỚC 2: Bắt đầu Restore với MOVE ---");
+            String dataFolder = "C:\\SQLData\\";
+            java.io.File dir = new java.io.File(dataFolder);
+            if (!dir.exists()) dir.mkdirs();
+
+            // Lắp LogicalName vừa tìm được vào lệnh Restore
+            String sqlCommand = String.format(
+                "RESTORE DATABASE [%s] FROM DISK = N'%s' WITH REPLACE, RECOVERY, " +
+                "MOVE N'%s' TO N'%s%s.mdf', " +
+                "MOVE N'%s' TO N'%s%s_log.ldf';",
+                targetDbName, bakFilePath, 
+                logicalDataName, dataFolder, targetDbName,
+                logicalLogName, dataFolder, targetDbName
+            );
+
+            ProcessBuilder pbRestore = new ProcessBuilder(
+                "sqlcmd", "-S", "DESKTOP-CHU10SD\\MSSQLSERVER01", "-E", "-Q", sqlCommand
+            );
+            pbRestore.redirectErrorStream(true);
+            Process procRestore = pbRestore.start();
+
+            BufferedReader resReader = new BufferedReader(new InputStreamReader(procRestore.getInputStream(), "UTF-8"));
+            while ((line = resReader.readLine()) != null) {
+                System.out.println("SQLCMD: " + line);
+            }
+
+            int exitCode = procRestore.waitFor();
+            if (exitCode == 0) {
+                System.out.println("--- RESTORE THÀNH CÔNG! ---");
+                Thread.sleep(3000); 
+                return true;
+            } else {
+                System.err.println("--- LỖI RESTORE ---");
+                return false;
+            }
+
+        } catch (Exception e) {
+            System.err.println("Lỗi hệ thống khi Restore: " + e.getMessage());
+            return false;
         }
     }
 }
