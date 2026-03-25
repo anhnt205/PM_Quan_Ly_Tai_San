@@ -49,12 +49,14 @@ export default function AssetGroupItem({
         alignItems={"center"}
         justifyContent={"space-between"}
       >
-        <Typography color="primary">
-          Số lượng tài sản:{" "}
-          <span style={{ color: "black" }}>
+        <Box>
+          <Typography color="primary">
+            Số lượng tài sản:{" "}
+          </Typography>
+          <Typography fontWeight={600} fontSize={14}>
             {formattedPrice(item?.soLuongTaiSan)}
-          </span>
-        </Typography>
+          </Typography> 
+        </Box>
         <Checkbox
           checked={selectedGroup === item?.id}
           onChange={() => {

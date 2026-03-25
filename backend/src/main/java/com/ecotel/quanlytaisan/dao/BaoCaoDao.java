@@ -189,7 +189,7 @@ public class BaoCaoDao {
     public List<Map<String, Object>> getS22DnIncreaseCCDC(String idDonVi, String nam) {
         String sql = """
         SELECT
-            bg.Id AS soQuyetDinh,
+            bg.SoQuyetDinh AS soQuyetDinh,
             bg.NgayBanGiao AS ngayThang,
             ts.Id AS idCCDC,
             ts.Ten AS tenTaiSan,
