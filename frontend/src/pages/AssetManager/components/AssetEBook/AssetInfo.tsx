@@ -45,11 +45,14 @@ import ViewTaiLieu from "../ViewTaiLieu";
 // Style cho hiệu ứng sách
 const bookStyles = {
   container: {
-    backgroundColor: "#fef7e8",
-    backgroundImage: "linear-gradient(to bottom, #fef7e8, #fef0e0)",
-    borderRadius: "12px",
+    width: "210mm",
+    minHeight: "297mm",
+    margin: "0 auto",
+    backgroundColor: "#ffffff",
+    backgroundImage: "none",
+    borderRadius: "2px",
     boxShadow:
-      "0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.8)",
+      "0 8px 32px rgba(0, 158, 96, 0.15), inset 0 1px 0 rgba(255,255,255,0.8)",
     position: "relative" as const,
     padding: "24px",
     "&::before": {
@@ -58,29 +61,13 @@ const bookStyles = {
       left: 0,
       top: 0,
       bottom: 0,
-      width: "24px",
-      background:
-        "linear-gradient(to right, rgba(139, 69, 19, 0.08), transparent)",
+      width: "6px",
+      background: "linear-gradient(to right, rgba(0, 158, 96, 0.2), transparent)",
       pointerEvents: "none" as const,
-      borderTopLeftRadius: "12px",
-      borderBottomLeftRadius: "12px",
-    },
-    "&::after": {
-      content: '""',
-      position: "absolute" as const,
-      right: 0,
-      top: 0,
-      bottom: 0,
-      width: "24px",
-      background:
-        "linear-gradient(to left, rgba(139, 69, 19, 0.08), transparent)",
-      pointerEvents: "none" as const,
-      borderTopRightRadius: "12px",
-      borderBottomRightRadius: "12px",
     },
   },
   header: {
-    borderBottom: "2px solid #d4a373",
+    borderBottom: "2px solid #009e60",
     paddingBottom: "12px",
     marginBottom: "24px",
     position: "relative" as const,
@@ -90,14 +77,12 @@ const bookStyles = {
     bottom: "16px",
     right: "24px",
     fontSize: "12px",
-    color: "#b8956e",
     fontStyle: "italic" as const,
   },
   sectionTitle: {
     fontSize: "16px",
     fontWeight: 600,
-    color: "#6b4c3b",
-    borderLeft: "4px solid #d4a373",
+    borderLeft: "4px solid #009e60",
     paddingLeft: "12px",
     marginBottom: "16px",
     marginTop: "8px",
@@ -107,7 +92,6 @@ const bookStyles = {
   },
   label: {
     fontWeight: 500,
-    color: "#6b4c3b",
     marginBottom: "6px",
     fontSize: "13px",
   },
@@ -126,8 +110,8 @@ export default function AssetInfo({
   allUnits,
   allReasonIncreases,
   onPageChange,
-  currentPage,
-  totalPages,
+  currentPage=2,
+  totalPages=4,
 }: {
   readOnly?: boolean;
   onEdit: () => void;
@@ -350,39 +334,24 @@ export default function AssetInfo({
           display: "flex",
           alignItems: "center",
           justifyContent: "flex-end",
-          gap: 2,
+          mb: 2,
           position: "sticky",
-          top: 10,
+          top: 0,
           zIndex: 10,
         }}
       >
-        {!readOnly && <SaveBtn onSave={formik.submitForm} />}
-        {!readOnly && <CancelBtn onClick={handleCancel} />}
-        {readOnly && <EditButton onClick={onEdit} />}
+        <Box sx={{ display: "flex", gap: 2 }}>
+          {!readOnly && <SaveBtn onSave={formik.submitForm} />}
+          {!readOnly && <CancelBtn onClick={handleCancel} />}
+          {readOnly && <EditButton onClick={onEdit} />}
+        </Box>
       </Box>
       {/* Header sách */}
-      <Box sx={bookStyles.header}>
-        <Typography
-          textAlign="center"
-          fontSize={20}
-          fontWeight={700}
-          sx={{ color: "#8b5a2b", letterSpacing: "2px" }}
-        >
-          LÝ LỊCH THIẾT BỊ
-        </Typography>
-        <Typography
-          textAlign="center"
-          fontSize={14}
-          sx={{ color: "#b8956e", mt: 1 }}
-        >
-          {`Thẻ số: ${selectedAsset?.soThe || ""}`}
-        </Typography>
-      </Box>
       <Typography
         textAlign="center"
         fontSize={20}
         fontWeight={700}
-        sx={{ color: "#8b5a2b", letterSpacing: "2px", mb: 2 }}
+        sx={{  letterSpacing: "2px", mb: 2 }}
       >
         THÔNG TIN TÀI SẢN
       </Typography>
@@ -1155,17 +1124,20 @@ export default function AssetInfo({
       {/* Chi tiết tài sản con */}
       {formik.values.donViTinh?.toLocaleLowerCase() === "ht" && (
         <Box sx={{ mt: 4 }}>
-          <Divider sx={{ my: 2, borderColor: "#d4a373" }} />
-          <Table size="small" sx={{ bgcolor: "#fffef7", borderRadius: 1 }}>
+          <Divider sx={{ my: 2, borderColor: "#009e60" }} />
+          <Typography sx={bookStyles.sectionTitle}>
+            DANH SÁCH TÀI SẢN TRỰC THUỘC
+          </Typography>
+          <Table size="small">
             <TableHead>
-              <TableRow sx={{ bgcolor: "#f5ede0" }}>
-                <TableCell sx={{ fontWeight: 600, color: "#6b4c3b" }}>
-                  Tài sản
+              <TableRow sx={{ bgcolor: "#e8f5e9" }}>
+                <TableCell sx={{ fontWeight: 600, color: "#026e42" }}>
+                  Mã tài sản
                 </TableCell>
-                <TableCell sx={{ fontWeight: 600, color: "#6b4c3b" }}>
-                  Đơn vị tính
+                <TableCell sx={{ fontWeight: 600, color: "#026e42" }}>
+                  Tên tài sản
                 </TableCell>
-                <TableCell sx={{ fontWeight: 600, color: "#6b4c3b" }}>
+                <TableCell sx={{ fontWeight: 600, color: "#026e42" }}>
                   Số lượng
                 </TableCell>
                 <TableCell sx={{ fontWeight: 600, color: "#6b4c3b" }}>
@@ -1328,7 +1300,7 @@ export default function AssetInfo({
                         ]);
                       }}
                       variant="text"
-                      sx={{ color: "#8b5a2b" }}
+                      sx={{ color: "#009e60" }}
                     >
                       Thêm một dòng
                     </Button>
@@ -1343,7 +1315,7 @@ export default function AssetInfo({
       {/* Tài liệu đính kèm */}
       <Grid container spacing={3} sx={{ mt: 2 }}>
         <Grid size={{ xs: 6 }}>
-          <Divider sx={{ my: 1, borderColor: "#d4a373" }} />
+          <Divider sx={{ my: 1, borderColor: "#009e60" }} />
           <Typography sx={bookStyles.sectionTitle}>
             BIÊN BẢN NGHIỆM THU
           </Typography>
@@ -1357,8 +1329,8 @@ export default function AssetInfo({
                 sx={{
                   alignSelf: "flex-start",
                   mb: 1,
-                  borderColor: "#d4a373",
-                  color: "#8b5a2b",
+                  borderColor: "#009e60",
+                  color: "#009e60",
                 }}
               >
                 Tệp đính kèm
@@ -1380,12 +1352,12 @@ export default function AssetInfo({
                     alignItems: "center",
                     gap: 1,
                     py: 0.5,
-                    borderBottom: "1px dashed #e8e0d0",
+                    borderBottom: "1px dashed #e8f5e9",
                   }}
                 >
                   <Typography
                     variant="body2"
-                    sx={{ color: "#b8956e", minWidth: "25px" }}
+                    sx={{ color: "#009e60", minWidth: "25px" }}
                   >
                     {index + 1}.
                   </Typography>
@@ -1395,7 +1367,7 @@ export default function AssetInfo({
                   <IconButton
                     size="small"
                     onClick={() => setPreviewFile(i.filePath)}
-                    sx={{ color: "#6b4c3b" }}
+                    sx={{ color: "#026e42" }}
                   >
                     <RemoveRedEye fontSize="small" />
                   </IconButton>
@@ -1415,7 +1387,7 @@ export default function AssetInfo({
             ).length === 0 && (
               <Typography
                 variant="body2"
-                sx={{ fontStyle: "italic", color: "#b8a28c" }}
+                sx={{ fontStyle: "italic" }}
               >
                 Không có tệp đính kèm.
               </Typography>
@@ -1424,7 +1396,7 @@ export default function AssetInfo({
         </Grid>
 
         <Grid size={{ xs: 6 }}>
-          <Divider sx={{ my: 1, borderColor: "#d4a373" }} />
+          <Divider sx={{ my: 1, borderColor: "#009e60" }} />
           <Typography sx={bookStyles.sectionTitle}>
             TÀI LIỆU KỸ THUẬT
           </Typography>
@@ -1438,8 +1410,8 @@ export default function AssetInfo({
                 sx={{
                   alignSelf: "flex-start",
                   mb: 1,
-                  borderColor: "#d4a373",
-                  color: "#8b5a2b",
+                  borderColor: "#009e60",
+                  color: "#009e60",
                 }}
               >
                 Tệp đính kèm
@@ -1461,12 +1433,11 @@ export default function AssetInfo({
                     alignItems: "center",
                     gap: 1,
                     py: 0.5,
-                    borderBottom: "1px dashed #e8e0d0",
+                    borderBottom: "1px dashed #e8f5e9",
                   }}
                 >
                   <Typography
                     variant="body2"
-                    sx={{ color: "#b8956e", minWidth: "25px" }}
                   >
                     {index + 1}.
                   </Typography>
@@ -1476,7 +1447,7 @@ export default function AssetInfo({
                   <IconButton
                     size="small"
                     onClick={() => setPreviewFile(i.filePath)}
-                    sx={{ color: "#6b4c3b" }}
+                    sx={{ color: "#026e42" }}
                   >
                     <RemoveRedEye fontSize="small" />
                   </IconButton>
@@ -1496,7 +1467,7 @@ export default function AssetInfo({
             ).length === 0 && (
               <Typography
                 variant="body2"
-                sx={{ fontStyle: "italic", color: "#b8a28c" }}
+                sx={{ fontStyle: "italic" }}
               >
                 Không có tệp đính kèm.
               </Typography>
@@ -1505,41 +1476,6 @@ export default function AssetInfo({
         </Grid>
       </Grid>
 
-      {/* Số trang */}
-      <Box sx={bookStyles.pageNumber}>Trang 1</Box>
-      <Box
-        sx={{
-          marginTop: "32px",
-          paddingTop: "16px",
-          display: "flex",
-          justifyContent: "center",
-          gap: 2,
-          borderTop: "1px dashed #d4a373",
-        }}
-      >
-        <Button
-          onClick={() => onPageChange?.(currentPage! - 1)}
-          disabled={currentPage === 1}
-          sx={{
-            color: "#8b5a2b",
-            "&:hover": { bgcolor: "#fef0e0" },
-            "&.Mui-disabled": { color: "#d4a373" },
-          }}
-        >
-          ← Trang trước
-        </Button>
-        <Button
-          onClick={() => onPageChange?.(currentPage! + 1)}
-          disabled={currentPage === totalPages}
-          sx={{
-            color: "#8b5a2b",
-            "&:hover": { bgcolor: "#fef0e0" },
-            "&.Mui-disabled": { color: "#d4a373" },
-          }}
-        >
-          Trang sau →
-        </Button>
-      </Box>
       <ViewTaiLieu
         open={!!previewFile}
         onClose={() => setPreviewFile("")}

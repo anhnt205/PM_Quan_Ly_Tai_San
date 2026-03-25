@@ -41,6 +41,7 @@ import {
   getToolHandoverCount,
   getToolTransferCount,
   getMaintenanceRepairCount,
+  findById,
 } from "../utils/helpers";
 import { ShowCount } from "../components/common/ShowCount";
 import { ShowCountInSubMenu } from "../components/common/ShowCountInSubMenu";
@@ -54,6 +55,8 @@ import {
 import api from "../config/api.config";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React from "react";
+import { useAllDepartmentsQuery } from "../pages/Department/Mutation";
+import { useAllPositionsQuery } from "../pages/Position/Mutation";
 
 const isMenuActive = (item: any, pathname: string): boolean => {
   if (item.path === pathname) {
@@ -316,6 +319,8 @@ export default function Menuheader() {
     setOpenExpirationDialog(false);
   };
 
+  const {data:chucVu=[]}=useAllPositionsQuery()
+
   // 1. Lấy dữ liệu cấu hình (Gọi endpoint chung /config)
   const { data: configResponse } = useQuery({
     queryKey: ["expirationConfig", user?.taiKhoan?.tenDangNhap],
@@ -409,36 +414,47 @@ export default function Menuheader() {
   const { data: maintenanceRepairResult = { items: [] } } =
     useMaintenanceRepairResultPageQuery(0, 999999);
 
+    const isBanHanh=findById(chucVu,user?.taiKhoan?.chucVuId)?.banHanhQuyetDinh||false as boolean
+    console.log(chucVu)
+    console.log(isBanHanh)
+
   const assetTransferCount1 = getAssetTransferCount(
     1,
     user?.taiKhoan?.tenDangNhap,
     assetTransfer.items,
+   isBanHanh
   );
   const assetTransferCount2 = getAssetTransferCount(
     2,
     user?.taiKhoan?.tenDangNhap,
     assetTransfer.items,
+   isBanHanh
+
   );
   const assetTransferCount3 = getAssetTransferCount(
     3,
     user?.taiKhoan?.tenDangNhap,
     assetTransfer.items,
+    isBanHanh
   );
 
   const toolTransferCount1 = getToolTransferCount(
     1,
     user?.taiKhoan?.tenDangNhap,
     toolTransfer.items,
+    isBanHanh
   );
   const toolTransferCount2 = getToolTransferCount(
     2,
     user?.taiKhoan?.tenDangNhap,
     toolTransfer.items,
+    isBanHanh
   );
   const toolTransferCount3 = getToolTransferCount(
     3,
     user?.taiKhoan?.tenDangNhap,
     toolTransfer.items,
+    isBanHanh
   );
 
   const assetHandoverCount = getAssetHandoverCount(

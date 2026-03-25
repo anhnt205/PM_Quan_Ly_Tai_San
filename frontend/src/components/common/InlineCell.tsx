@@ -5,7 +5,7 @@ interface InlineCellProps {
   value?: string;
   onCommit?: (value: string) => void;
   type?: "text" | "number";
-  align?: "left" | "right";
+  align?: "left" | "right"|"center";
   className?: string;
 }
 
@@ -41,13 +41,18 @@ export default function InlineCell({
   };
 
   if (!editing) {
+    let displayValue = String(value ?? "");
+    if (type === "number" && displayValue && !isNaN(Number(displayValue))) {
+      displayValue = Number(displayValue).toLocaleString("vi-VN");
+    }
+
     return (
       <div
         className={className}
         onClick={() => setEditing(true)}
         style={{ cursor: "text", textAlign: align }}
       >
-        {String(value ?? "")}
+        {displayValue}
       </div>
     );
   }

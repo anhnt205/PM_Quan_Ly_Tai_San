@@ -31,14 +31,16 @@ import EditButton from "../../../../components/Button/EditButton";
 // Style sách
 const bookStyles = {
   container: {
-    backgroundColor: "#fef7e8",
-    backgroundImage: "linear-gradient(to bottom, #fef7e8, #fef0e0)",
-    borderRadius: "12px",
+    width: "210mm",
+    minHeight: "297mm",
+    margin: "0 auto",
+    backgroundColor: "#ffffff",
+    backgroundImage: "linear-gradient(to bottom, #ffffff, #e6f7f0)",
+    borderRadius: "2px",
     boxShadow:
       "0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.8)",
     position: "relative" as const,
     padding: "24px",
-    minHeight: "calc(100vh - 120px)",
     display: "flex",
     flexDirection: "column" as const,
     "&::before": {
@@ -75,7 +77,6 @@ const bookStyles = {
   footer: {
     marginTop: "auto",
     paddingTop: "24px",
-    borderTop: "1px dashed #d4a373",
     position: "relative" as const,
     display: "flex",
     justifyContent: "center",
@@ -86,7 +87,6 @@ const bookStyles = {
     bottom: 0,
     right: "20px",
     fontSize: "12px",
-    color: "#b8956e",
     fontStyle: "italic" as const,
   },
 };
@@ -386,20 +386,21 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
           display: "flex",
           alignItems: "center",
           justifyContent: "flex-end",
-          gap: 2,
           mb: 2,
           position: "sticky",
-          top: 10,
-          zIndex: 1,
+          top: 0,
+          zIndex: 10,
         }}
       >
-        {!readOnly && isEditMode && (
-          <>
-            <SaveBtn onSave={handleSave} />
-            <CancelBtn onClick={handleCancel} />
-          </>
-        )}
-        {readOnly && !isEditMode && <EditButton onClick={handleEdit} />}
+        <Box sx={{ display: "flex", gap: 2 }}>
+          {!readOnly && isEditMode && (
+            <>
+              <SaveBtn onSave={handleSave} />
+              <CancelBtn onClick={handleCancel} />
+            </>
+          )}
+          {readOnly && !isEditMode && <EditButton onClick={handleEdit} />}
+        </Box>
       </Box>
 
       {/* Header sách */}
@@ -407,7 +408,7 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
         textAlign="center"
         fontSize={20}
         fontWeight={700}
-        sx={{ color: "#8b5a2b", letterSpacing: "2px", mb: 2 }}
+        sx={{ letterSpacing: "2px", mb: 2 }}
       >
         SỰ THUYÊN CHUYỂN TÀI SẢN
       </Typography>
@@ -426,9 +427,9 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
             startIcon={<Add />}
             onClick={handleAddRow}
             sx={{
-              borderColor: "#d4a373",
-              color: "#8b5a2b",
-              "&:hover": { borderColor: "#b8956e", bgcolor: "#fef0e0" },
+              borderColor: "#009e60",
+              color: "#009e60",
+              "&:hover": { borderColor: "#66bb6a", bgcolor: "#e6f7f0" },
               textTransform: "none",
             }}
           >
@@ -443,20 +444,18 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
           component={Paper}
           elevation={0}
           sx={{
-            border: "1px solid #d4a373",
             borderRadius: "8px",
             overflow: "hidden",
           }}
         >
           <Table size="small">
             <TableHead>
-              <TableRow sx={{ bgcolor: "#f5ede0" }}>
+              <TableRow sx={{ bgcolor: "#e8f5e9" }}>
                 <TableCell
                   sx={{
                     fontWeight: 600,
                     width: "30%",
-                    color: "#6b4c3b",
-                    border: "1px solid #d4a373",
+                    border: "1px solid grey",
                   }}
                 >
                   Ngày tháng
@@ -465,8 +464,7 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
                   sx={{
                     fontWeight: 600,
                     width: "60%",
-                    color: "#6b4c3b",
-                    border: "1px solid #d4a373",
+                    border: "1px solid grey",
                   }}
                 >
                   Đơn vị quản lý
@@ -477,8 +475,7 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
                       fontWeight: 600,
                       width: "10%",
                       textAlign: "center",
-                      color: "#6b4c3b",
-                      border: "1px solid #d4a373",
+                      border: "1px solid grey",
                     }}
                   >
                     Thao tác
@@ -496,7 +493,7 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
                   </TableCell>
                 </TableRow>
               ) : visibleRows.length === 0 ? (
-                <TableRow>
+                <TableRow sx={{border: "1px solid grey"}}>
                   <TableCell colSpan={isEditMode ? 3 : 2} align="center">
                     Chưa có lịch sử thuyên chuyển
                   </TableCell>
@@ -504,7 +501,7 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
               ) : (
                 visibleRows.map((row) => (
                   <TableRow key={row.id}>
-                    <TableCell sx={{ border: "1px solid #d4a373" }}>
+                    <TableCell sx={{ border: "1px solid grey" }}>
                       {isEditMode ? (
                         <TextField
                           type="date"
@@ -520,16 +517,15 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
                               e.target.value,
                             )
                           }
-                          sx={{ input: { color: "#5a3e2b" } }}
                         />
                       ) : (
-                        <Typography sx={{ color: "#5a3e2b" }}>
+                        <Typography>
                           {dayjs(row.thoiGianBanGiao).format("DD/MM/YYYY")}
                         </Typography>
                       )}
                     </TableCell>
 
-                    <TableCell sx={{ border: "1px solid #d4a373" }}>
+                    <TableCell sx={{ border: "1px solid grey" }}>
                       {isEditMode ? (
                         <Autocomplete
                           options={allDepartments.slice(0, 100)}
@@ -568,7 +564,7 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
                           sx={{ width: "100%" }}
                         />
                       ) : (
-                        <Typography sx={{ color: "#5a3e2b" }}>
+                        <Typography>
                           {row.tenDonViNhan || "N/A"}
                         </Typography>
                       )}
@@ -577,7 +573,7 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
                     {isEditMode && (
                       <TableCell
                         align="center"
-                        sx={{ border: "1px solid #d4a373" }}
+                        sx={{ border: "1px solid grey" }}
                       >
                         <IconButton
                           size="small"
@@ -598,32 +594,6 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
 
       {/* Footer - luôn ở dưới cùng */}
       <Box sx={bookStyles.footer}>
-        <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
-          <Button
-            onClick={() => onPageChange?.(currentPage - 1)}
-            disabled={currentPage === 1}
-            sx={{
-              color: "#8b5a2b",
-              "&:hover": { bgcolor: "#fef0e0" },
-              "&.Mui-disabled": { color: "#d4a373" },
-              textTransform: "none",
-            }}
-          >
-            ← Trang trước
-          </Button>
-          <Button
-            onClick={() => onPageChange?.(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            sx={{
-              color: "#8b5a2b",
-              "&:hover": { bgcolor: "#fef0e0" },
-              "&.Mui-disabled": { color: "#d4a373" },
-              textTransform: "none",
-            }}
-          >
-            Trang sau →
-          </Button>
-        </Box>
         <Box sx={bookStyles.pageNumber}>Trang {currentPage}</Box>
       </Box>
     </Box>

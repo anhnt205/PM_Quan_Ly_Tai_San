@@ -27,14 +27,16 @@ import EditButton from "../../../../components/Button/EditButton";
 // Style sách
 const bookStyles = {
   container: {
-    backgroundColor: "#fef7e8",
-    backgroundImage: "linear-gradient(to bottom, #fef7e8, #fef0e0)",
-    borderRadius: "12px",
+    width: "210mm",
+    minHeight: "297mm",
+    margin: "0 auto",
+    backgroundColor: "#ffffff",
+    backgroundImage: "linear-gradient(to bottom, #ffffff, #e6f7f0)",
+    borderRadius: "2px",
     boxShadow:
       "0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.8)",
     position: "relative" as const,
     padding: "24px",
-    minHeight: "calc(100vh - 120px)",
     display: "flex",
     flexDirection: "column" as const,
     "&::before": {
@@ -71,7 +73,6 @@ const bookStyles = {
   footer: {
     marginTop: "auto",
     paddingTop: "24px",
-    borderTop: "1px dashed #d4a373",
     position: "relative" as const,
     display: "flex",
     justifyContent: "center",
@@ -82,7 +83,7 @@ const bookStyles = {
     bottom: 0,
     right: "20px",
     fontSize: "12px",
-    color: "#b8956e",
+    color: "#026e42b6a",
     fontStyle: "italic" as const,
   },
 };
@@ -362,20 +363,21 @@ export default function HoursAsset({
           display: "flex",
           alignItems: "center",
           justifyContent: "flex-end",
-          gap: 2,
           mb: 2,
           position: "sticky",
-          top: 10,
+          top: 0,
           zIndex: 10,
         }}
       >
-        {!readOnly && (
-          <>
-            <SaveBtn onSave={handleSaveAll} />
-            <CancelBtn onClick={handleCancel} />
-          </>
-        )}
-        {readOnly && <EditButton onClick={onEdit} />}
+        <Box sx={{ display: "flex", gap: 2 }}>
+          {!readOnly && (
+            <>
+              <SaveBtn onSave={handleSaveAll} />
+              <CancelBtn onClick={handleCancel} />
+            </>
+          )}
+          {readOnly && <EditButton onClick={onEdit} />}
+        </Box>
       </Box>
 
       {/* Header sách */}
@@ -383,7 +385,7 @@ export default function HoursAsset({
         textAlign="center"
         fontSize={20}
         fontWeight={700}
-        sx={{ color: "#8b5a2b", letterSpacing: "2px", mb: 2 }}
+        sx={{ letterSpacing: "2px", mb: 2 }}
       >
         GIỜ (KM) HOẠT ĐỘNG CỦA THIẾT BỊ TRONG NĂM {selectedYear}
       </Typography>
@@ -406,16 +408,16 @@ export default function HoursAsset({
         <TableContainer
           component={Paper}
           elevation={0}
-          sx={{ border: "1px solid #d4a373", overflowX: "auto" }}
+          sx={{ border: "1px solid grey", overflowX: "auto" }}
         >
           <Table size="small" stickyHeader sx={{ minWidth: 1000 }}>
             <TableHead>
-              <TableRow sx={{ bgcolor: "#f5ede0" }}>
+              <TableRow sx={{ bgcolor: "#e8f5e9" }}>
                 <TableCell
                   rowSpan={2}
                   sx={{
-                    bgcolor: "#f5ede0",
-                    border: "1px solid #d4a373",
+                    bgcolor: "#e8f5e9",
+                    border: "1px solid grey",
                     fontWeight: "bold",
                     textAlign: "center",
                     width: 60,
@@ -429,8 +431,8 @@ export default function HoursAsset({
                     fontWeight: "bold",
                     textAlign: "center",
                     width: 100,
-                    bgcolor: "#f5ede0",
-                    border: "1px solid #d4a373",
+                    bgcolor: "#e8f5e9",
+                    border: "1px solid grey",
                   }}
                 >
                   Giờ (km)
@@ -440,8 +442,8 @@ export default function HoursAsset({
                   sx={{
                     fontWeight: "bold",
                     textAlign: "center",
-                    bgcolor: "#f5ede0",
-                    border: "1px solid #d4a373",
+                    bgcolor: "#e8f5e9",
+                    border: "1px solid grey",
                   }}
                 >
                   Ngày SCT
@@ -451,8 +453,8 @@ export default function HoursAsset({
                   sx={{
                     fontWeight: "bold",
                     textAlign: "center",
-                    bgcolor: "#f5ede0",
-                    border: "1px solid #d4a373",
+                    bgcolor: "#e8f5e9",
+                    border: "1px solid grey",
                   }}
                 >
                   Ngày BCC
@@ -462,8 +464,8 @@ export default function HoursAsset({
                   sx={{
                     fontWeight: "bold",
                     textAlign: "center",
-                    bgcolor: "#f5ede0",
-                    border: "1px solid #d4a373",
+                    bgcolor: "#e8f5e9",
+                    border: "1px solid grey",
                   }}
                 >
                   Số lần Báo đường
@@ -474,8 +476,8 @@ export default function HoursAsset({
                     fontWeight: "bold",
                     textAlign: "center",
                     width: 100,
-                    bgcolor: "#f5ede0",
-                    border: "1px solid #d4a373",
+                    bgcolor: "#e8f5e9",
+                    border: "1px solid grey",
                   }}
                 >
                   Ghi chú
@@ -487,8 +489,8 @@ export default function HoursAsset({
                     fontWeight: "bold",
                     textAlign: "center",
                     width: 100,
-                    bgcolor: "#f5ede0",
-                    border: "1px solid #d4a373",
+                    bgcolor: "#e8f5e9",
+                    border: "1px solid grey",
                   }}
                 >
                   Hoạt động
@@ -498,8 +500,8 @@ export default function HoursAsset({
                     fontWeight: "bold",
                     textAlign: "center",
                     width: 100,
-                    bgcolor: "#f5ede0",
-                    border: "1px solid #d4a373",
+                    bgcolor: "#e8f5e9",
+                    border: "1px solid grey",
                   }}
                 >
                   Sau SCL
@@ -509,8 +511,8 @@ export default function HoursAsset({
                     fontWeight: "bold",
                     textAlign: "center",
                     width: 100,
-                    bgcolor: "#f5ede0",
-                    border: "1px solid #d4a373",
+                    bgcolor: "#e8f5e9",
+                    border: "1px solid grey",
                   }}
                 >
                   Sau Bcc
@@ -520,8 +522,8 @@ export default function HoursAsset({
                     fontWeight: "bold",
                     textAlign: "center",
                     width: 100,
-                    bgcolor: "#f5ede0",
-                    border: "1px solid #d4a373",
+                    bgcolor: "#e8f5e9",
+                    border: "1px solid grey",
                   }}
                 >
                   Vào
@@ -531,8 +533,8 @@ export default function HoursAsset({
                     fontWeight: "bold",
                     textAlign: "center",
                     width: 100,
-                    bgcolor: "#f5ede0",
-                    border: "1px solid #d4a373",
+                    bgcolor: "#e8f5e9",
+                    border: "1px solid grey",
                   }}
                 >
                   Ra
@@ -542,8 +544,8 @@ export default function HoursAsset({
                     fontWeight: "bold",
                     textAlign: "center",
                     width: 100,
-                    bgcolor: "#f5ede0",
-                    border: "1px solid #d4a373",
+                    bgcolor: "#e8f5e9",
+                    border: "1px solid grey",
                   }}
                 >
                   Vào
@@ -553,8 +555,8 @@ export default function HoursAsset({
                     fontWeight: "bold",
                     textAlign: "center",
                     width: 100,
-                    bgcolor: "#f5ede0",
-                    border: "1px solid #d4a373",
+                    bgcolor: "#e8f5e9",
+                    border: "1px solid grey",
                   }}
                 >
                   Ra
@@ -564,8 +566,8 @@ export default function HoursAsset({
                     fontWeight: "bold",
                     textAlign: "center",
                     width: 80,
-                    bgcolor: "#f5ede0",
-                    border: "1px solid #d4a373",
+                    bgcolor: "#e8f5e9",
+                    border: "1px solid grey",
                   }}
                 >
                   Cấp I
@@ -575,8 +577,8 @@ export default function HoursAsset({
                     fontWeight: "bold",
                     textAlign: "center",
                     width: 80,
-                    bgcolor: "#f5ede0",
-                    border: "1px solid #d4a373",
+                    bgcolor: "#e8f5e9",
+                    border: "1px solid grey",
                   }}
                 >
                   Cấp II
@@ -868,32 +870,6 @@ export default function HoursAsset({
       </Box>
       {/* Footer - luôn ở dưới cùng */}
       <Box sx={bookStyles.footer}>
-        <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
-          <Button
-            onClick={() => onPageChange?.(currentPage - 1)}
-            disabled={currentPage === 1}
-            sx={{
-              color: "#8b5a2b",
-              "&:hover": { bgcolor: "#fef0e0" },
-              "&.Mui-disabled": { color: "#d4a373" },
-              textTransform: "none",
-            }}
-          >
-            ← Trang trước
-          </Button>
-          <Button
-            onClick={() => onPageChange?.(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            sx={{
-              color: "#8b5a2b",
-              "&:hover": { bgcolor: "#fef0e0" },
-              "&.Mui-disabled": { color: "#d4a373" },
-              textTransform: "none",
-            }}
-          >
-            Trang sau →
-          </Button>
-        </Box>
         <Box sx={bookStyles.pageNumber}>Trang {currentPage}</Box>
       </Box>
     </Box>

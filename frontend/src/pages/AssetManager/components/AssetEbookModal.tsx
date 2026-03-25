@@ -26,6 +26,7 @@ import {
 } from "../Mutation";
 import HoursAsset from "./AssetEBook/HoursAsset";
 import AssetMaintenance from "./AssetEBook/AssetMaintenance";
+import AssetEbookCover from "./AssetEBook/AssetEbookCover";
 
 if (typeof window !== "undefined") {
   pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
@@ -62,7 +63,7 @@ const AssetEbookModal = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pdfDoc, setPdfDoc] = useState<any>(null);
-  const [totalPages] = useState(4);
+  const [totalPages] = useState(5);
   const [pdfBlob, setPdfBlob] = useState<Uint8Array | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -229,13 +230,63 @@ const AssetEbookModal = ({
       <DialogContent
         sx={{
           flex: 1,
-          p: 4,
+          p: 0,
+          display: "flex",
+          flexDirection: "column",
           overflow: "auto",
           backgroundImage:
             "radial-gradient(circle at 25% 50%, rgba(0,0,0,0.02) 1%, transparent 1%)",
           backgroundSize: "20px 20px",
         }}
       >
+        {/* Pagination Cố định & Căn giữa */}
+        <Box 
+          sx={{
+            position: "sticky",
+            top: 0,
+            zIndex: 100,
+            bgcolor: "rgba(255, 255, 255, 0.95)", // Tệp màu nền sáng
+            backdropFilter: "blur(4px)",
+            py: 1.5,
+            borderBottom: "1px dashed #009e60",
+            display: "flex",
+            justifyContent: "center",
+            boxShadow: "0 4px 12px rgba(0, 158, 96, 0.1)",
+            gap: 3,
+          }}
+        >
+          <Button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            sx={{
+              color: "#009e60",
+              "&:hover": { bgcolor: "#e8f5e9" },
+              "&.Mui-disabled": { color: "#66bb6a" },
+              textTransform: "none",
+              fontWeight: 600,
+              fontSize: "15px",
+            }}
+          >
+            ← Trang trước
+          </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center', color: "#026e42", fontWeight: "bold", fontSize: "16px" }}>
+             Trang {currentPage} / {totalPages}
+          </Box>
+          <Button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            sx={{
+              color: "#009e60",
+              "&:hover": { bgcolor: "#e8f5e9" },
+              "&.Mui-disabled": { color: "#66bb6a" },
+              textTransform: "none",
+              fontWeight: 600,
+              fontSize: "15px",
+            }}
+          >
+            Trang sau →
+          </Button>
+        </Box>
         {loading ? (
           <Box
             display="flex"
@@ -253,10 +304,11 @@ const AssetEbookModal = ({
           <Box
             sx={{
               width: "100%",
-              minHeight: "100%",
+              flex: 1,
+              py: 4, // Padding top & bottom cho nội dung trang
               display: "flex",
               justifyContent: "center",
-              alignItems: "center",
+              alignItems: "flex-start", // Để trang giấy dính top nếu ngắm dài
             }}
           >
             <Box
@@ -272,6 +324,13 @@ const AssetEbookModal = ({
               }}
             >
               {currentPage === 1 ? (
+                <AssetEbookCover 
+                  asset={selectedAsset}
+                  onPageChange={handlePageChange}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                />
+              ) : currentPage === 2 ? (
                 <AssetInfo
                   readOnly={readOnly}
                   onEdit={onEdit}
@@ -288,7 +347,7 @@ const AssetEbookModal = ({
                   currentPage={currentPage}
                   totalPages={totalPages}
                 />
-              ) : currentPage === 2 ? (
+              ) : currentPage === 3 ? (
                 <TransferHistoryPage
                   readOnly={readOnly}
                   onEdit={onEdit}
@@ -299,7 +358,7 @@ const AssetEbookModal = ({
                   currentPage={currentPage}
                   totalPages={totalPages}
                 />
-              ) : currentPage === 3 ? (
+              ) : currentPage === 4 ? (
                 <HoursAsset
                   readOnly={readOnly}
                   onEdit={onEdit}

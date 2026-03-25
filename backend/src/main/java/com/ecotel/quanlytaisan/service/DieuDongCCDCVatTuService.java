@@ -165,6 +165,18 @@ public class DieuDongCCDCVatTuService {
             sourceList = loaiFiltered;
         }
 
+        // ========== 4. Lọc trạng thái 3 và 4 cho người có BanHanhQuyetDinh ==========
+        if (hasBanHanhQuyetDinh) {
+            List<DieuDongCCDCVatTuDTO> finalFiltered = new ArrayList<>();
+            for (DieuDongCCDCVatTuDTO item : sourceList) {
+                if (item != null && item.getTrangThai() != null
+                        && (item.getTrangThai() == 3 || item.getTrangThai() == 4)) {
+                    finalFiltered.add(item);
+                }
+            }
+            sourceList = finalFiltered;
+        }
+
         // ========== 3. Tính toán counts (Trước khi lọc trạng thái) ==========
         Map<String, Long> loaiCounts = new java.util.HashMap<>();
         Map<String, Long> trangThaiCounts = new java.util.HashMap<>();
@@ -182,18 +194,6 @@ public class DieuDongCCDCVatTuService {
                     trangThaiCounts.put(key, trangThaiCounts.getOrDefault(key, 0L) + 1);
                 }
             }
-        }
-
-        // ========== 4. Lọc trạng thái 3 và 4 cho người có BanHanhQuyetDinh ==========
-        if (hasBanHanhQuyetDinh) {
-            List<DieuDongCCDCVatTuDTO> finalFiltered = new ArrayList<>();
-            for (DieuDongCCDCVatTuDTO item : sourceList) {
-                if (item != null && item.getTrangThai() != null
-                        && (item.getTrangThai() == 3 || item.getTrangThai() == 4)) {
-                    finalFiltered.add(item);
-                }
-            }
-            sourceList = finalFiltered;
         }
 
         // Filter by trangThaiPhieu if trangThai != 4

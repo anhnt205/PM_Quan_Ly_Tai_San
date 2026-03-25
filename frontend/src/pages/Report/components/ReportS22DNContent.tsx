@@ -430,14 +430,14 @@ export default function ReportS22DNContent({
                       onCommit={(v) =>
                         handleRowChange(index, "ctTangSoHieu", v)
                       }
-                      align="left"
+                      align="center"
                     />
                   </td>
                   <td style={cellStyle}>
                     <InlineCell
                       value={row.ctTangNgay}
                       onCommit={(v) => handleRowChange(index, "ctTangNgay", v)}
-                      align="left"
+                      align="center"
                     />
                   </td>
                   <td style={cellStyle}>
@@ -451,28 +451,31 @@ export default function ReportS22DNContent({
                     <InlineCell
                       value={row.dvt}
                       onCommit={(v) => handleRowChange(index, "dvt", v)}
-                      align="left"
+                      align="center"
                     />
                   </td>
                   <td style={cellStyle}>
                     <InlineCell
                       value={row.tangSoLuong}
                       onCommit={(v) => handleRowChange(index, "tangSoLuong", v)}
-                      align="right"
+                      align="center"
+                      type="number"
                     />
                   </td>
                   <td style={cellStyle}>
                     <InlineCell
                       value={row.tangDonGia}
                       onCommit={(v) => handleRowChange(index, "tangDonGia", v)}
-                      align="right"
+                      align="center"
+                      type="number"
                     />
                   </td>
                   <td style={cellStyle}>
                     <InlineCell
                       value={row.tangSoTien}
                       onCommit={(v) => handleRowChange(index, "tangSoTien", v)}
-                      align="right"
+                      align="center"
+                      type="number"
                     />
                   </td>
                   <td style={cellStyle}>
@@ -481,14 +484,14 @@ export default function ReportS22DNContent({
                       onCommit={(v) =>
                         handleRowChange(index, "ctGiamSoHieu", v)
                       }
-                      align="left"
+                      align="center"
                     />
                   </td>
                   <td style={cellStyle}>
                     <InlineCell
                       value={row.ctGiamNgay}
                       onCommit={(v) => handleRowChange(index, "ctGiamNgay", v)}
-                      align="left"
+                      align="center"
                     />
                   </td>
                   <td style={cellStyle}>
@@ -502,14 +505,16 @@ export default function ReportS22DNContent({
                     <InlineCell
                       value={row.giamSoLuong}
                       onCommit={(v) => handleRowChange(index, "giamSoLuong", v)}
-                      align="right"
+                      align="center"
+                      type="number"
                     />
                   </td>
                   <td style={cellStyle}>
                     <InlineCell
                       value={row.giamSoTien}
                       onCommit={(v) => handleRowChange(index, "giamSoTien", v)}
-                      align="right"
+                      align="center"
+                      type="number"
                     />
                   </td>
                   <td style={cellStyle}>
@@ -647,7 +652,7 @@ export default function ReportS22DNContent({
                           v,
                         )
                       }
-                      align="left"
+                      align="center"
                     />
                   </td>
                   <td style={cellStyle}>
@@ -656,7 +661,7 @@ export default function ReportS22DNContent({
                       onCommit={(v) =>
                         handleRowChange(tsRows.length + index, "ctTangNgay", v)
                       }
-                      align="left"
+                      align="center"
                     />
                   </td>
                   <td style={cellStyle}>
@@ -674,7 +679,7 @@ export default function ReportS22DNContent({
                       onCommit={(v) =>
                         handleRowChange(tsRows.length + index, "dvt", v)
                       }
-                      align="left"
+                      align="center"
                     />
                   </td>
                   <td style={cellStyle}>
@@ -683,7 +688,8 @@ export default function ReportS22DNContent({
                       onCommit={(v) =>
                         handleRowChange(tsRows.length + index, "tangSoLuong", v)
                       }
-                      align="right"
+                      align="center"
+                      type="number"
                     />
                   </td>
                   <td style={cellStyle}>
@@ -692,7 +698,8 @@ export default function ReportS22DNContent({
                       onCommit={(v) =>
                         handleRowChange(tsRows.length + index, "tangDonGia", v)
                       }
-                      align="right"
+                      align="center"
+                      type="number"
                     />
                   </td>
                   <td style={cellStyle}>
@@ -701,7 +708,8 @@ export default function ReportS22DNContent({
                       onCommit={(v) =>
                         handleRowChange(tsRows.length + index, "tangSoTien", v)
                       }
-                      align="right"
+                      align="center"
+                      type="number"
                     />
                   </td>
                   <td style={cellStyle}>
@@ -714,7 +722,7 @@ export default function ReportS22DNContent({
                           v,
                         )
                       }
-                      align="left"
+                      align="center"
                     />
                   </td>
                   <td style={cellStyle}>
@@ -723,7 +731,7 @@ export default function ReportS22DNContent({
                       onCommit={(v) =>
                         handleRowChange(tsRows.length + index, "ctGiamNgay", v)
                       }
-                      align="left"
+                      align="center"
                     />
                   </td>
                   <td style={cellStyle}>
@@ -741,7 +749,8 @@ export default function ReportS22DNContent({
                       onCommit={(v) =>
                         handleRowChange(tsRows.length + index, "giamSoLuong", v)
                       }
-                      align="right"
+                      align="center" 
+                      type="number"
                     />
                   </td>
                   <td style={cellStyle}>
@@ -750,7 +759,8 @@ export default function ReportS22DNContent({
                       onCommit={(v) =>
                         handleRowChange(tsRows.length + index, "giamSoTien", v)
                       }
-                      align="right"
+                      align="center"
+                      type="number"
                     />
                   </td>
                   <td style={cellStyle}>

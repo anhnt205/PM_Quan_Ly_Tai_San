@@ -505,14 +505,14 @@ export default function MauSo21Content({
                   <InlineCell
                     value={r.soHieu || ""}
                     onCommit={(v) => handleRowChange(idx, "soHieu", v)}
-                    align="left"
+                    align="center"
                   />
                 </td>
                 <td style={tableCellStyle}>
                   <InlineCell
                     value={r.ngay || ""}
                     onCommit={(v) => handleRowChange(idx, "ngay", v)}
-                    align="left"
+                    align="center"
                   />
                 </td>
                 <td style={tableCellStyle}>
@@ -526,49 +526,53 @@ export default function MauSo21Content({
                   <InlineCell
                     value={r.nuocSanXuat || ""}
                     onCommit={(v) => handleRowChange(idx, "nuocSanXuat", v)}
-                    align="left"
+                    align="center"
                   />
                 </td>
                 <td style={tableCellStyle}>
                   <InlineCell
                     value={r.thangNam || ""}
                     onCommit={(v) => handleRowChange(idx, "thangNam", v)}
-                    align="left"
+                    align="center"
                   />
                 </td>
                 <td style={tableCellStyle}>
                   <InlineCell
                     value={r.soHieuTscd || ""}
                     onCommit={(v) => handleRowChange(idx, "soHieuTscd", v)}
-                    align="left"
+                    align="center"
                   />
                 </td>
                 <td style={tableCellStyle}>
                   <InlineCell
                     value={r.nguyenGia || ""}
                     onCommit={(v) => handleRowChange(idx, "nguyenGia", v)}
-                    align="right"
+                    align="center"
+                    type="number"
                   />
                 </td>
                 <td style={tableCellStyle}>
                   <InlineCell
                     value={r.tyLeKhauHao || ""}
                     onCommit={(v) => handleRowChange(idx, "tyLeKhauHao", v)}
-                    align="right"
+                    align="center"
+                    type="number"
                   />
                 </td>
                 <td style={tableCellStyle}>
                   <InlineCell
                     value={r.mucKhauHao || ""}
                     onCommit={(v) => handleRowChange(idx, "mucKhauHao", v)}
-                    align="right"
+                    align="center"
+                    type="number"
                   />
                 </td>
                 <td style={tableCellStyle}>
                   <InlineCell
                     value={r.khauHaoDaTinh || ""}
                     onCommit={(v) => handleRowChange(idx, "khauHaoDaTinh", v)}
-                    align="right"
+                    align="center"
+                    type="number"
                   />
                 </td>
                 <td style={tableCellStyle}></td>

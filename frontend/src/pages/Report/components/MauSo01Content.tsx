@@ -583,21 +583,21 @@ export default function MauSo01Content({
                     <InlineCell
                       value={row.donViTinh}
                       onCommit={(v) => handleRowChange(index, "donViTinh", v)}
-                      align="left"
+                      align="center"
                     />
                   </td>
                   <td style={tableCellSx}>
                     <InlineCell
                       value={row.nuocSanXuat}
                       onCommit={(v) => handleRowChange(index, "nuocSanXuat", v)}
-                      align="left"
+                      align="center"
                     />
                   </td>
                   <td style={tableCellSx}>
                     <InlineCell
                       value={row.soDuDauKy}
                       onCommit={(v) => handleRowChange(index, "soDuDauKy", v)}
-                      align="right"
+                      align="center"
                       type="number"
                     />
                   </td>
@@ -605,7 +605,7 @@ export default function MauSo01Content({
                     <InlineCell
                       value={row.tangSoLuong}
                       onCommit={(v) => handleRowChange(index, "tangSoLuong", v)}
-                      align="right"
+                      align="center"
                       type="number"
                     />
                   </td>
@@ -620,7 +620,7 @@ export default function MauSo01Content({
                     <InlineCell
                       value={row.giamSoLuong}
                       onCommit={(v) => handleRowChange(index, "giamSoLuong", v)}
-                      align="right"
+                      align="center"
                       type="number"
                     />
                   </td>
@@ -635,7 +635,7 @@ export default function MauSo01Content({
                     <InlineCell
                       value={row.soDuCuoiKy}
                       onCommit={(v) => handleRowChange(index, "soDuCuoiKy", v)}
-                      align="right"
+                      align="center"
                       type="number"
                     />
                   </td>
@@ -643,7 +643,7 @@ export default function MauSo01Content({
                     <InlineCell
                       value={row.tinhTrang}
                       onCommit={(v) => handleRowChange(index, "tinhTrang", v)}
-                      align="left"
+                      align="center"
                     />
                   </td>
                   <td style={tableCellSx}>

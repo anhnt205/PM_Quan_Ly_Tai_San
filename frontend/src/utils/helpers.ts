@@ -91,8 +91,15 @@ export function getAssetTransferCount(
   type: number,
   userTenDangNhap: string,
   assetTransferList: AssetTransferData[],
+  isBanHanh?: boolean,
 ) {
   if (!assetTransferList || assetTransferList.length === 0) return 0;
+
+  if(isBanHanh){
+    return assetTransferList.filter((item) => {
+      return item.trangThai === 3
+    }).length
+  }
 
   return assetTransferList.filter((item) => {
     // ===== Filter 1: share hoặc người tạo =====
@@ -168,8 +175,15 @@ export const getToolTransferCount = (
   type: number,
   userTenDangNhap: string,
   toolAndMaterialList?: ToolTransferData[],
+  isBanHanh?: boolean,
 ): number => {
   if (!toolAndMaterialList || toolAndMaterialList.length === 0) return 0;
+   if(isBanHanh){
+    return toolAndMaterialList.filter((item) => {
+      if (item.loai !== type) return false;
+      return item.trangThai === 3
+    }).length
+  }
 
   return toolAndMaterialList.filter((item) => {
     // ===== Filter 1: loại =====

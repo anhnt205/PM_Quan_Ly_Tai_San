@@ -152,15 +152,15 @@ public class DieuDongTaiSanService {
             sourceList = loaiFiltered;
         }
 
-        // Filter by trangThai (if not status 5)
-        if (trangThai != null && trangThai != 5) {
-            List<DieuDongTaiSanDTO> trangThaiFiltered = new ArrayList<>();
+        // ========== 5. Apply final status filter for users with BanHanhQuyetDinh ==========
+        if (hasBanHanhQuyetDinh) {
+            List<DieuDongTaiSanDTO> finalFiltered = new ArrayList<>();
             for (DieuDongTaiSanDTO item : sourceList) {
-                if (item != null && item.getTrangThai() != null && item.getTrangThai().equals(trangThai)) {
-                    trangThaiFiltered.add(item);
+                if (item != null && item.getTrangThai() != null && (item.getTrangThai() == 3 || item.getTrangThai() == 4)) {
+                    finalFiltered.add(item);
                 }
             }
-            sourceList = trangThaiFiltered;
+            sourceList = finalFiltered;
         }
 
         // ========== 4. Compute counts (before final status filter) ==========
@@ -180,16 +180,18 @@ public class DieuDongTaiSanService {
             }
         }
 
-        // ========== 5. Apply final status filter for users with BanHanhQuyetDinh ==========
-        if (hasBanHanhQuyetDinh) {
-            List<DieuDongTaiSanDTO> finalFiltered = new ArrayList<>();
+        // Filter by trangThai (if not status 5)
+        if (trangThai != null && trangThai != 5) {
+            List<DieuDongTaiSanDTO> trangThaiFiltered = new ArrayList<>();
             for (DieuDongTaiSanDTO item : sourceList) {
-                if (item != null && item.getTrangThai() != null && (item.getTrangThai() == 3 || item.getTrangThai() == 4)) {
-                    finalFiltered.add(item);
+                if (item != null && item.getTrangThai() != null && item.getTrangThai().equals(trangThai)) {
+                    trangThaiFiltered.add(item);
                 }
             }
-            sourceList = finalFiltered;
+            sourceList = trangThaiFiltered;
         }
+
+
 
         // ========== 6. Sorting ==========
         sourceList.sort(getComparator(sortBy, sortDir));

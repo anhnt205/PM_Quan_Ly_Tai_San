@@ -643,7 +643,7 @@ export default function BBKiemKeContent({
                       onCommit={(v) =>
                         handleInventoryChange(index, "nuocSx", v)
                       }
-                      align="left"
+                      align="center"
                     />
                   </td>
                   <td style={tableBodyCellSx as React.CSSProperties}>
@@ -652,7 +652,7 @@ export default function BBKiemKeContent({
                       onCommit={(v) =>
                         handleInventoryChange(index, "phuongThuc", v)
                       }
-                      align="left"
+                      align="center"
                     />
                   </td>
                   <td style={tableBodyCellSx as React.CSSProperties}>
@@ -661,7 +661,7 @@ export default function BBKiemKeContent({
                       onCommit={(v) =>
                         handleInventoryChange(index, "soLuong", v)
                       }
-                      align="right"
+                      align="center"
                       type="number"
                     />
                   </td>
@@ -671,7 +671,7 @@ export default function BBKiemKeContent({
                       onCommit={(v) =>
                         handleInventoryChange(index, "hienTrang", v)
                       }
-                      align="left"
+                      align="center"
                     />
                   </td>
                   <td style={tableBodyCellSx as React.CSSProperties}>

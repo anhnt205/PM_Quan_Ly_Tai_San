@@ -27,14 +27,16 @@ import EditButton from "../../../../components/Button/EditButton";
 // Style sách
 const bookStyles = {
   container: {
-    backgroundColor: "#fef7e8",
-    backgroundImage: "linear-gradient(to bottom, #fef7e8, #fef0e0)",
-    borderRadius: "12px",
+    width: "210mm",
+    minHeight: "297mm",
+    margin: "0 auto",
+    backgroundColor: "#ffffff",
+    backgroundImage: "none",
+    borderRadius: "2px",
     boxShadow:
-      "0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.8)",
+      "0 8px 32px rgba(0, 158, 96, 0.15), inset 0 1px 0 rgba(255,255,255,0.8)",
     position: "relative" as const,
     padding: "24px",
-    minHeight: "calc(100vh - 120px)",
     display: "flex",
     flexDirection: "column" as const,
     "&::before": {
@@ -43,25 +45,9 @@ const bookStyles = {
       left: 0,
       top: 0,
       bottom: 0,
-      width: "24px",
-      background:
-        "linear-gradient(to right, rgba(139, 69, 19, 0.08), transparent)",
+      width: "6px",
+      background: "linear-gradient(to right, rgba(0, 158, 96, 0.2), transparent)",
       pointerEvents: "none" as const,
-      borderTopLeftRadius: "12px",
-      borderBottomLeftRadius: "12px",
-    },
-    "&::after": {
-      content: '""',
-      position: "absolute" as const,
-      right: 0,
-      top: 0,
-      bottom: 0,
-      width: "24px",
-      background:
-        "linear-gradient(to left, rgba(139, 69, 19, 0.08), transparent)",
-      pointerEvents: "none" as const,
-      borderTopRightRadius: "12px",
-      borderBottomRightRadius: "12px",
     },
   },
   content: {
@@ -71,7 +57,6 @@ const bookStyles = {
   footer: {
     marginTop: "auto",
     paddingTop: "24px",
-    borderTop: "1px dashed #d4a373",
     position: "relative" as const,
     display: "flex",
     justifyContent: "center",
@@ -79,10 +64,9 @@ const bookStyles = {
   },
   pageNumber: {
     position: "absolute" as const,
-    bottom: "24px",
-    right: "24px",
+    bottom: 0,
+    right: "20px",
     fontSize: "12px",
-    color: "#b8956e",
     fontStyle: "italic" as const,
   },
 };
@@ -295,20 +279,21 @@ export default function AssetMaintenance({
           display: "flex",
           alignItems: "center",
           justifyContent: "flex-end",
-          gap: 2,
           mb: 2,
           position: "sticky",
-          top: 10,
+          top: 0,
           zIndex: 10,
         }}
       >
-        {!readOnly && isEditMode && (
-          <>
-            <SaveBtn onSave={handleSaveAll} />
-            <CancelBtn onClick={handleCancel} />
-          </>
-        )}
-        {readOnly && !isEditMode && <EditButton onClick={handleEdit} />}
+        <Box sx={{ display: "flex", gap: 2 }}>
+          {!readOnly && isEditMode && (
+            <>
+              <SaveBtn onSave={handleSaveAll} />
+              <CancelBtn onClick={handleCancel} />
+            </>
+          )}
+          {readOnly && !isEditMode && <EditButton onClick={handleEdit} />}
+        </Box>
       </Box>
 
       {/* Header sách */}
@@ -316,7 +301,7 @@ export default function AssetMaintenance({
         textAlign="center"
         fontSize={20}
         fontWeight={700}
-        sx={{ color: "#8b5a2b", letterSpacing: "2px", mb: 2 }}
+        sx={{ letterSpacing: "2px", mb: 2 }}
       >
         DIỄN BIẾN KỸ THUẬT VÀ TAI NẠN, SỰ CỐ PHẢI SỬA CHỮA
       </Typography>
@@ -335,9 +320,9 @@ export default function AssetMaintenance({
             startIcon={<Add />}
             onClick={handleAddRow}
             sx={{
-              borderColor: "#d4a373",
-              color: "#8b5a2b",
-              "&:hover": { borderColor: "#b8956e", bgcolor: "#fef0e0" },
+              borderColor: "#009e60",
+              color: "#026e42",
+              "&:hover": { borderColor: "#007a4d", bgcolor: "#e6f7f0" },
               textTransform: "none",
             }}
           >
@@ -352,21 +337,21 @@ export default function AssetMaintenance({
           component={Paper}
           elevation={0}
           sx={{
-            border: "1px solid #d4a373",
+            border: "1px solid grey",
             borderRadius: "8px",
             overflow: "auto",
           }}
         >
           <Table size="small" stickyHeader sx={{ minWidth: 800 }}>
             <TableHead>
-              <TableRow sx={{ bgcolor: "#f5ede0" }}>
+              <TableRow sx={{ bgcolor: "#e8f5e9" }}>
                 <TableCell
                   sx={{
                     fontWeight: 600,
                     textAlign: "center",
                     width: 120,
-                    bgcolor: "#f5ede0",
-                    border: "1px solid #d4a373",
+                    bgcolor: "#e8f5e9",
+                    border: "1px solid grey",
                   }}
                 >
                   Từ ngày
@@ -376,8 +361,8 @@ export default function AssetMaintenance({
                     fontWeight: 600,
                     textAlign: "center",
                     width: 120,
-                    bgcolor: "#f5ede0",
-                    border: "1px solid #d4a373",
+                    bgcolor: "#e8f5e9",
+                    border: "1px solid grey",
                   }}
                 >
                   Đến ngày
@@ -387,8 +372,8 @@ export default function AssetMaintenance({
                     fontWeight: 600,
                     textAlign: "center",
                     width: 300,
-                    bgcolor: "#f5ede0",
-                    border: "1px solid #d4a373",
+                    bgcolor: "#e8f5e9",
+                    border: "1px solid grey",
                   }}
                 >
                   Loại sự cố, tai nạn, nội dung hư hỏng
@@ -398,8 +383,8 @@ export default function AssetMaintenance({
                     fontWeight: 600,
                     textAlign: "center",
                     width: 200,
-                    bgcolor: "#f5ede0",
-                    border: "1px solid #d4a373",
+                    bgcolor: "#e8f5e9",
+                    border: "1px solid grey",
                   }}
                 >
                   Nơi sửa chữa
@@ -410,8 +395,8 @@ export default function AssetMaintenance({
                       fontWeight: 600,
                       textAlign: "center",
                       width: 60,
-                      bgcolor: "#f5ede0",
-                      border: "1px solid #d4a373",
+                      bgcolor: "#e8f5e9",
+                      border: "1px solid grey",
                     }}
                   >
                     Thao tác
@@ -428,7 +413,7 @@ export default function AssetMaintenance({
                   <TableCell
                     colSpan={5}
                     align="center"
-                    sx={{ border: "1px solid #d4a373", color: "#b8956e" }}
+                    sx={{ border: "1px solid grey", color: "#026e42b6a" }}
                   >
                     Chưa có dữ liệu
                   </TableCell>
@@ -436,7 +421,7 @@ export default function AssetMaintenance({
               ) : (
                 visibleRows.map((row) => (
                   <TableRow key={row.id}>
-                    <TableCell sx={{ border: "1px solid #d4a373" }}>
+                    <TableCell sx={{ border: "1px solid #009e60" }}>
                       {isEditMode ? (
                         <TextField
                           fullWidth
@@ -449,10 +434,10 @@ export default function AssetMaintenance({
                           }
                           InputLabelProps={{ shrink: true }}
                           InputProps={{ disableUnderline: true }}
-                          sx={{ input: { color: "#5a3e2b", fontSize: 13 } }}
+                          sx={{ input: { color: "#026e42", fontSize: 13 } }}
                         />
                       ) : (
-                        <Typography sx={{ color: "#5a3e2b", fontSize: 13 }}>
+                        <Typography sx={{ color: "#026e42", fontSize: 13 }}>
                           {row.tuNgay
                             ? dayjs(row.tuNgay).format("DD/MM/YYYY")
                             : ""}
@@ -460,7 +445,7 @@ export default function AssetMaintenance({
                       )}
                     </TableCell>
 
-                    <TableCell sx={{ border: "1px solid #d4a373" }}>
+                    <TableCell sx={{ border: "1px solid #009e60" }}>
                       {isEditMode ? (
                         <TextField
                           fullWidth
@@ -473,10 +458,10 @@ export default function AssetMaintenance({
                           }
                           InputLabelProps={{ shrink: true }}
                           InputProps={{ disableUnderline: true }}
-                          sx={{ input: { color: "#5a3e2b", fontSize: 13 } }}
+                          sx={{ input: { color: "#026e42", fontSize: 13 } }}
                         />
                       ) : (
-                        <Typography sx={{ color: "#5a3e2b", fontSize: 13 }}>
+                        <Typography sx={{ color: "#026e42", fontSize: 13 }}>
                           {row.denNgay
                             ? dayjs(row.denNgay).format("DD/MM/YYYY")
                             : ""}
@@ -484,7 +469,7 @@ export default function AssetMaintenance({
                       )}
                     </TableCell>
 
-                    <TableCell sx={{ border: "1px solid #d4a373" }}>
+                    <TableCell sx={{ border: "1px solid #009e60" }}>
                       {isEditMode ? (
                         <FormControl fullWidth size="small" variant="standard">
                           <Select
@@ -493,7 +478,7 @@ export default function AssetMaintenance({
                               handleChange(row.id, "loaiSuCo", e.target.value)
                             }
                             displayEmpty
-                            sx={{ fontSize: 13, color: "#5a3e2b" }}
+                            sx={{ fontSize: 13, color: "#026e42" }}
                             disableUnderline
                           >
                             <MenuItem value="" disabled>
@@ -507,13 +492,13 @@ export default function AssetMaintenance({
                           </Select>
                         </FormControl>
                       ) : (
-                        <Typography sx={{ color: "#5a3e2b", fontSize: 13 }}>
+                        <Typography sx={{ color: "#026e42", fontSize: 13 }}>
                           {row.loaiSuCo || ""}
                         </Typography>
                       )}
                     </TableCell>
 
-                    <TableCell sx={{ border: "1px solid #d4a373" }}>
+                    <TableCell sx={{ border: "1px solid #009e60" }}>
                       {isEditMode ? (
                         <FormControl fullWidth size="small" variant="standard">
                           <Select
@@ -522,7 +507,7 @@ export default function AssetMaintenance({
                               handleChange(row.id, "noiSuaChua", e.target.value)
                             }
                             displayEmpty
-                            sx={{ fontSize: 13, color: "#5a3e2b" }}
+                            sx={{ fontSize: 13, color: "#026e42" }}
                             disableUnderline
                           >
                             <MenuItem value="" disabled>
@@ -536,7 +521,7 @@ export default function AssetMaintenance({
                           </Select>
                         </FormControl>
                       ) : (
-                        <Typography sx={{ color: "#5a3e2b", fontSize: 13 }}>
+                        <Typography sx={{ color: "#026e42", fontSize: 13 }}>
                           {row.noiSuaChua || ""}
                         </Typography>
                       )}
@@ -544,13 +529,13 @@ export default function AssetMaintenance({
 
                     <TableCell
                       align="center"
-                      sx={{ border: "1px solid #d4a373" }}
+                      sx={{ border: "1px solid #009e60" }}
                     >
                       {isEditMode && (
                         <IconButton
                           size="small"
                           onClick={() => handleDeleteRow(row.id, row.isNew)}
-                          sx={{ color: "#d32f2f" }}
+                          sx={{ color: "#009e60" }}
                         >
                           <Delete fontSize="small" />
                         </IconButton>
@@ -566,32 +551,6 @@ export default function AssetMaintenance({
 
       {/* Footer - luôn ở dưới cùng */}
       <Box sx={bookStyles.footer}>
-        <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
-          <Button
-            onClick={() => onPageChange?.(currentPage - 1)}
-            disabled={currentPage === 1}
-            sx={{
-              color: "#8b5a2b",
-              "&:hover": { bgcolor: "#fef0e0" },
-              "&.Mui-disabled": { color: "#d4a373" },
-              textTransform: "none",
-            }}
-          >
-            ← Trang trước
-          </Button>
-          <Button
-            onClick={() => onPageChange?.(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            sx={{
-              color: "#8b5a2b",
-              "&:hover": { bgcolor: "#fef0e0" },
-              "&.Mui-disabled": { color: "#d4a373" },
-              textTransform: "none",
-            }}
-          >
-            Trang sau →
-          </Button>
-        </Box>
         <Box sx={bookStyles.pageNumber}>Trang {currentPage}</Box>
       </Box>
     </Box>

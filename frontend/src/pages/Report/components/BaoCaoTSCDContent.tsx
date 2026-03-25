@@ -579,7 +579,7 @@ export default function BaoCaoTSCDContent({
             <tbody>
               {inventoryItems.map((item, index) => (
                 <tr key={index}>
-                  <td style={tableBodyCellSx}>{item.stt}</td>
+                  <td style={{...tableBodyCellSx, textAlign: "center"}}>{item.stt}</td>
                   <td style={tableBodyCellSx}>
                     <InlineCell
                       value={item.tenTSCD}
@@ -593,7 +593,7 @@ export default function BaoCaoTSCDContent({
                     <InlineCell
                       value={item.maso}
                       onCommit={(v) => handleInventoryChange(index, "maso", v)}
-                      align="right"
+                      align="center"
                     />
                   </td>
                   <td style={tableBodyCellSx}>
@@ -611,7 +611,7 @@ export default function BaoCaoTSCDContent({
                       onCommit={(v) =>
                         handleInventoryChange(index, "soluongkt", v)
                       }
-                      align="right"
+                      align="center"
                       type="number"
                     />
                   </td>
@@ -621,7 +621,7 @@ export default function BaoCaoTSCDContent({
                       onCommit={(v) =>
                         handleInventoryChange(index, "nguyengiakt", v)
                       }
-                      align="right"
+                      align="center"
                       type="number"
                     />
                   </td>
@@ -631,7 +631,7 @@ export default function BaoCaoTSCDContent({
                       onCommit={(v) =>
                         handleInventoryChange(index, "giatriconlaikt", v)
                       }
-                      align="right"
+                      align="center"
                       type="number"
                     />
                   </td>
@@ -641,7 +641,7 @@ export default function BaoCaoTSCDContent({
                       onCommit={(v) =>
                         handleInventoryChange(index, "soluongkk", v)
                       }
-                      align="right"
+                      align="center"
                       type="number"
                     />
                   </td>
@@ -651,7 +651,7 @@ export default function BaoCaoTSCDContent({
                       onCommit={(v) =>
                         handleInventoryChange(index, "nguyengiakk", v)
                       }
-                      align="right"
+                      align="center"
                       type="number"
                     />
                   </td>
@@ -661,7 +661,7 @@ export default function BaoCaoTSCDContent({
                       onCommit={(v) =>
                         handleInventoryChange(index, "giatriconlaikk", v)
                       }
-                      align="right"
+                      align="center"
                       type="number"
                     />
                   </td>
@@ -671,7 +671,7 @@ export default function BaoCaoTSCDContent({
                       onCommit={(v) =>
                         handleInventoryChange(index, "soluongcl", v)
                       }
-                      align="right"
+                      align="center"
                       type="number"
                     />
                   </td>
@@ -681,7 +681,7 @@ export default function BaoCaoTSCDContent({
                       onCommit={(v) =>
                         handleInventoryChange(index, "nguyengiacl", v)
                       }
-                      align="right"
+                      align="center"
                       type="number"
                     />
                   </td>
@@ -691,7 +691,7 @@ export default function BaoCaoTSCDContent({
                       onCommit={(v) =>
                         handleInventoryChange(index, "giatriconlaicl", v)
                       }
-                      align="right"
+                      align="center"
                       type="number"
                     />
                   </td>
