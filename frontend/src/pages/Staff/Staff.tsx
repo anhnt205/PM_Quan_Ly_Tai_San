@@ -146,7 +146,7 @@ export default function Staff() {
     {
       field: "signature",
       headerName: "Quyền ký",
-      flex: 1,
+      flex: 2,
       align: "center",
       headerAlign: "center",
       renderCell: (params) => {

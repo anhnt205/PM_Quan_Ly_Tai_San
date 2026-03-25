@@ -188,7 +188,10 @@ export const useStaffMutation = (
       window.URL.revokeObjectURL(url);
       showSuccessAlert("Xuất dữ liệu thành công");
     },
-    onError: () => showErrorAlert("Xuất dữ liệu thất bại"),
+    onError: (err) => {
+      console.log("Lỗi xuất file", err);
+      showErrorAlert("Xuất dữ liệu thất bại");
+    },
   });
 
   const importExcelMutation = useMutation({
