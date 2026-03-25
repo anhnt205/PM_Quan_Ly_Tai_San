@@ -415,9 +415,7 @@ export default function Menuheader() {
     useMaintenanceRepairResultPageQuery(0, 999999);
 
     const isBanHanh=findById(chucVu,user?.taiKhoan?.chucVuId)?.banHanhQuyetDinh||false as boolean
-    console.log(chucVu)
-    console.log(isBanHanh)
-
+    
   const assetTransferCount1 = getAssetTransferCount(
     1,
     user?.taiKhoan?.tenDangNhap,

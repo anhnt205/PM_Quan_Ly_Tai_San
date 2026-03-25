@@ -62,6 +62,7 @@ const TitleText = styled(Typography)({
   textAlign: 'center',
   marginTop: '90px',
   letterSpacing: '3px',
+  marginRight: '-3px', // Chỉnh lại center bù phần bị lệch do spacing
 });
 
 const SubTitleText = styled(Typography)({
@@ -79,14 +80,16 @@ const ContentWrapper = styled(Box)({
   marginBottom: 'auto',
   display: 'flex',
   flexDirection: 'column',
-  alignItems: 'center',
+  width: '100%',
+  padding: '0 40px',
+  boxSizing: 'border-box',
 });
 
 const FieldRow = styled(Box)({
   display: 'flex',
-  alignItems: 'flex-end',
+  alignItems: 'flex-start',
   marginBottom: '20px',
-  width: '80%',
+  width: '100%',
 });
 
 const FieldLabel = styled(Typography)({
@@ -100,39 +103,30 @@ const FieldLabel = styled(Typography)({
 
 const FieldValueWrapper = styled(Box)({
   flexGrow: 1,
-  borderBottom: '2px dotted #1a1a1a', // Viền gạch chấm
+  minHeight: '28px',
+  marginLeft: '10px',
   position: 'relative',
-  height: '30px',
+  backgroundImage: 'linear-gradient(to right, #1a1a1a 30%, rgba(255,255,255,0) 0%)',
+  backgroundPosition: 'bottom',
+  backgroundSize: '5px 2px',
+  backgroundRepeat: 'repeat-x',
+  display: 'flex',
+  alignItems: 'center',
+  paddingBottom: '2px', // cách viền một xíu
 });
 
 // Giả lập màu mực bút bi xanh khi nhập tay
-const penColor = '#1818a8';
-
-const StyledInput = styled('input')({
-  width: '100%',
-  border: 'none',
-  background: 'transparent',
-  fontFamily: '"Times New Roman", Times, serif',
-  fontSize: '22px', // Chữ to hơn một chút giống viết tay
-  outline: 'none',
-  padding: '0 8px',
-  boxSizing: 'border-box',
-  position: 'absolute',
-  bottom: '2px',
-  fontStyle: 'italic',
-  color: penColor,
-});
 
 const ValueText = styled(Typography)({
-  position: 'absolute',
-  bottom: '2px',
-  left: '8px',
   fontFamily: '"Times New Roman", Times, serif',
   fontStyle: 'italic',
-  color: penColor,
-  fontSize: '22px',
-  lineHeight: 1,
+  fontSize: '18px', // Chữ nhỏ lại theo ý user
+  lineHeight: 1.5,
+  wordBreak: 'break-word',
+  width: '100%',
 });
+
+
 
 const FooterText = styled(Typography)({
   fontFamily: '"Times New Roman", Times, serif',
@@ -158,7 +152,7 @@ export default function AssetEbookCover({
             {/* Phần Header */}
             <Box>
               <HeaderText>TẬP ĐOÀN CÔNG NGHIỆP THAN - KHOÁNG SẢN VIỆT NAM</HeaderText>
-              <HeaderText>CÔNG TY CỔ PHẦN THAN UÔNG BÍ - VINACOMIN</HeaderText>
+              <HeaderText>CÔNG TY CỔ PHẦN THAN UÔNG BÍ - TKV</HeaderText>
             </Box>
 
             {/* Tiêu đề chính */}
@@ -169,15 +163,31 @@ export default function AssetEbookCover({
             {/* Thông tin thiết bị */}
             <ContentWrapper>
               <FieldRow>
-                <FieldLabel>SỐ ĐĂNG KÝ : {asset?.soThe}</FieldLabel>
+                <FieldLabel>Tên thiết bị :</FieldLabel>
+                <FieldValueWrapper>
+                  <ValueText>{asset?.tenTaiSan}</ValueText>
+                </FieldValueWrapper>
               </FieldRow>
 
               <FieldRow>
-                <FieldLabel>LOẠI THIẾT BỊ : {asset?.tenNhom}</FieldLabel>
+                <FieldLabel>Mã hiệu :</FieldLabel>
+                <FieldValueWrapper>
+                  <ValueText>{asset?.kyHieu}</ValueText>
+                </FieldValueWrapper>
               </FieldRow>
 
               <FieldRow>
-                <FieldLabel>KIỂU THIẾT BỊ :</FieldLabel>
+                <FieldLabel>Số chế tạo :</FieldLabel>
+                <FieldValueWrapper>
+                  <ValueText></ValueText>
+                </FieldValueWrapper>
+              </FieldRow>
+
+              <FieldRow>
+                <FieldLabel>Số kiểm kê :</FieldLabel>
+                <FieldValueWrapper>
+                  <ValueText></ValueText>
+                </FieldValueWrapper>
               </FieldRow>
             </ContentWrapper>
 

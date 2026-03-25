@@ -100,7 +100,6 @@ export function getAssetTransferCount(
       return item.trangThai === 3
     }).length
   }
-
   return assetTransferList.filter((item) => {
     // ===== Filter 1: share hoặc người tạo =====
     if (item.share !== true && item.nguoiTao !== userTenDangNhap) {

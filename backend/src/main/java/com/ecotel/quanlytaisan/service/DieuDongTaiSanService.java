@@ -78,18 +78,18 @@ public class DieuDongTaiSanService {
                     // ignore – treat as no special rights
                 }
             }
+        // ========== 2. Apply turn‑based filter (if not skipped) ==========
+            if (!skipTurnFilter) {
+                List<DieuDongTaiSanDTO> turnFiltered = new ArrayList<>();
+                for (DieuDongTaiSanDTO item : sourceList) {
+                    if (isUserTurnToSign(item, userid)) {
+                        turnFiltered.add(item);
+                    }
+                }
+                sourceList = turnFiltered;
+            }
         }
 
-        // ========== 2. Apply turn‑based filter (if not skipped) ==========
-        if (!skipTurnFilter) {
-            List<DieuDongTaiSanDTO> turnFiltered = new ArrayList<>();
-            for (DieuDongTaiSanDTO item : sourceList) {
-                if (isUserTurnToSign(item, userid)) {
-                    turnFiltered.add(item);
-                }
-            }
-            sourceList = turnFiltered;
-        }
 
         // ========== 3. Apply other filters (chuaBanGiaoHet, idDonViGiao, search, loai, trangThai) ==========
         // Filter by chuaBanGiaoHet
