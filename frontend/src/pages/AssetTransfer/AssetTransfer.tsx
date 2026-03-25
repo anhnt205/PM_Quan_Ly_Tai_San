@@ -115,7 +115,7 @@ export default function AssetTransfer() {
       value: "0",
     },
     {
-      label: "Duyệt",
+      label: "Phê duyệt",
       count: assetTranferPage?.trangThaiCounts?.["1"] ?? 0,
       color: "info",
       value: "1",
@@ -259,6 +259,14 @@ export default function AssetTransfer() {
   };
 
   const columns: GridColDef<any>[] = [
+        {
+      field: "trangThai",
+      headerName: "Trạng thái phiếu",
+      width: 140,
+      headerAlign: "center",
+      align: "center",
+      renderCell: (params) => showStatus(params.row.trangThai ?? 0),
+    },
     {
       field: "id",
       headerName: "Mã",
@@ -353,14 +361,6 @@ export default function AssetTransfer() {
       width: 180,
       headerAlign: "center",
       align: "center",
-    },
-    {
-      field: "trangThai",
-      headerName: "Trạng thái phiếu",
-      width: 140,
-      headerAlign: "center",
-      align: "center",
-      renderCell: (params) => showStatus(params.row.trangThai ?? 0),
     },
 
     {

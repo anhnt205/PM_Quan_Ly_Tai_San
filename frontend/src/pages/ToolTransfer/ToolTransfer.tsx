@@ -118,7 +118,7 @@ export default function ToolTransfer() {
       value: "0",
     },
     {
-      label: "Duyệt",
+      label: "Phê duyệt",
       count: toolTransferPage?.trangThaiCounts?.["1"] ?? 0,
       color: "info",
       value: "1",
@@ -268,6 +268,14 @@ export default function ToolTransfer() {
   };
 
   const columns: GridColDef<ToolTransferData>[] = [
+        {
+      field: "trangThai",
+      headerName: "Trạng thái phiếu",
+      width: 140,
+      headerAlign: "center",
+      align: "center",
+      renderCell: (params) => showStatus(params.value ?? 0),
+    },
     {
       field: "id",
       headerName: "Mã",
@@ -351,14 +359,6 @@ export default function ToolTransfer() {
       width: 180,
       headerAlign: "center",
       align: "center",
-    },
-    {
-      field: "trangThai",
-      headerName: "Trạng thái phiếu",
-      width: 140,
-      headerAlign: "center",
-      align: "center",
-      renderCell: (params) => showStatus(params.value ?? 0),
     },
     {
       field: "trangThaiKy",

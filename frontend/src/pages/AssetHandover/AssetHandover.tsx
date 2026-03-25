@@ -157,7 +157,7 @@ export default function AssetHandover() {
       value: "0",
     },
     {
-      label: "Duyệt",
+      label: "Phê duyệt",
       count: handoverPage?.groupCounts?.["1"] ?? 0,
       color: "info",
       value: "1",
@@ -262,6 +262,14 @@ export default function AssetHandover() {
   };
 
   const columns: GridColDef<AssetHandoverData>[] = [
+        {
+      field: "trangThaiPhieu",
+      headerName: "Trạng thái phiếu",
+      width: 200,
+      headerAlign: "center",
+      align: "center",
+      renderCell: (params) => StatusHandover(params.row.trangThaiPhieu ?? 0),
+    },
     {
       field: "soQuyetDinh",
       headerName: "Số quyết định",
@@ -326,14 +334,6 @@ export default function AssetHandover() {
       align: "center",
       renderCell: (params) =>
         ShowPermissionSigning(getPermissionSigning(params.row, user, staffs)),
-    },
-    {
-      field: "trangThaiPhieu",
-      headerName: "Trạng thái phiếu",
-      width: 200,
-      headerAlign: "center",
-      align: "center",
-      renderCell: (params) => StatusHandover(params.row.trangThaiPhieu ?? 0),
     },
     {
       field: "trangThai",
@@ -672,7 +672,17 @@ export default function AssetHandover() {
                     }}
                   >
                     <Tab
-                      icon={<ClassOutlined />}
+                     icon={
+                        <Badge
+                          badgeContent={  
+                            (handoverPage?.groupCounts?.["0"] ?? 0) +
+                            (handoverPage?.groupCounts?.["1"] ?? 0)
+                          }
+                          color="error"
+                        >
+                          <ClassOutlined />
+                        </Badge>
+                      }
                       label="Biên bản bàn giao"
                       iconPosition="top"
                     />

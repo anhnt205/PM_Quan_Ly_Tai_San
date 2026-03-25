@@ -409,6 +409,29 @@ export default function Menuheader() {
     0,
     999999,
   );
+
+   const { data: transferAssetPage = { items: [], totalItems: 0 } } =
+      useAssetTransferPageQuery(
+        0,
+        999999,
+        "",
+        undefined,
+        undefined,
+        4,
+        user.taiKhoan?.phongBanId,
+        true,
+      );
+      const { data: transferToolPage = { items: [], totalItems: 0, loaiCounts: {} } } =
+          useToolTransferPageQuery(
+            0,
+            999999,
+            "",
+            undefined,
+            undefined,
+            4,
+            true,
+            user.taiKhoan?.phongBanId,
+          );
   const { data: maintenanceRepair = { items: [] } } =
     useMaintenanceRepairPageQuery(0, 999999);
   const { data: maintenanceRepairResult = { items: [] } } =
@@ -583,19 +606,19 @@ export default function Menuheader() {
       text: "Bàn giao thiết bị",
       icon: <Handshake fontSize="small" />,
       path: "#",
-      count: assetHandoverCount + toolHandoverCount,
+      count: assetHandoverCount + toolHandoverCount + transferAssetPage.totalItems + transferToolPage.totalItems,
       subMenu: [
         {
           text: "Bàn giao tài sản",
           path: "/ban_giao_tai_san",
           code: "BANGIAO_TAISAN",
-          count: assetHandoverCount,
+          count: assetHandoverCount+transferAssetPage.totalItems,
         },
         {
           text: "Bàn giao CCDC-Vật tư",
           path: ROUTES.TOOLHANDOVER,
           code: "BANGIAO_CCDC",
-          count: toolHandoverCount,
+          count: toolHandoverCount+transferToolPage.totalItems,
         },
       ].filter((sub) => hasPermission(sub.code)),
     },
