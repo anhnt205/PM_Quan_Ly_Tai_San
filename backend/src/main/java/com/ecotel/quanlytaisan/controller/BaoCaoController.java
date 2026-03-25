@@ -23,33 +23,33 @@ public class BaoCaoController {
     private BaoCaoService service;
 
     @GetMapping("/dieudongtaisan")
-    public List<DieuDongTaiSanDTO> getBaoCaoDieuDong(@RequestParam String idcongty, @RequestParam int loai) throws SQLException {
+    public List<DieuDongTaiSanDTO> getBaoCaoDieuDong(@RequestParam("idcongty") String idcongty, @RequestParam("loai") int loai) throws SQLException {
         return service.getBaoCaoDieuDong(idcongty, loai);
     }
 
     @GetMapping("/baocaokiemketaisan")
-    public List<BaoCaoKiemKeTaiSan> getBaoCaoKiemKeTaiSan(@RequestParam String iddonvi, @RequestParam String ngayBanGiao) throws SQLException {
+    public List<BaoCaoKiemKeTaiSan> getBaoCaoKiemKeTaiSan(@RequestParam("iddonvi") String iddonvi, @RequestParam("ngayBanGiao") String ngayBanGiao) throws SQLException {
         return service.getBaoCaoKiemKeTaiSan(iddonvi, ngayBanGiao);
     }
 
     @GetMapping("/baocaokiemkeccdc")
-    public List<BaoCaoKiemKeCCDC> getBaoCaoKiemKeCCDC(@RequestParam String iddonvi, @RequestParam String ngayBanGiao) throws SQLException {
+    public List<BaoCaoKiemKeCCDC> getBaoCaoKiemKeCCDC(@RequestParam("iddonvi") String iddonvi, @RequestParam("ngayBanGiao") String ngayBanGiao) throws SQLException {
         return service.getBaoCaoKiemKeCCDC(iddonvi, ngayBanGiao);
     }
 
     @GetMapping("/taisancodinh")
 
-    public List<Map<String, Object>> getTaiSanCoDinh(@RequestParam String iddonvi) throws SQLException {
+    public List<Map<String, Object>> getTaiSanCoDinh(@RequestParam("iddonvi") String iddonvi) throws SQLException {
         return service.getTaiSanCoDinh(iddonvi);
     }
 
     @GetMapping("/s22dn")
-    public Map<String, Object> getS22DnReport(@RequestParam String iddonvi, @RequestParam String nam) {
+    public Map<String, Object> getS22DnReport(@RequestParam("iddonvi") String iddonvi, @RequestParam("nam") String nam) {
         return service.getS22DnReport(iddonvi, nam);
     }
 
     @GetMapping("/s22dn-ccdc")
-    public Map<String, Object> getS22DnReportCCDC(@RequestParam String iddonvi, @RequestParam String nam) {
+    public Map<String, Object> getS22DnReportCCDC(@RequestParam("iddonvi") String iddonvi, @RequestParam("nam") String nam) {
         return service.getS22DnReportCCDC(iddonvi, nam);
     }
 
@@ -60,7 +60,7 @@ public class BaoCaoController {
      */
     @GetMapping("/kiemke-taisan-theo-phongban")
     public List<BaoCaoKiemKeTaiSan> getBaoCaoKiemKeTaiSanTheoPhongBan(
-            @RequestParam(required = false) String idPhongBan) {
+            @RequestParam(value = "idPhongBan",required = false) String idPhongBan) {
         return service.getBaoCaoKiemKeTaiSanTheoPhongBan(idPhongBan, "CT001");
     }
 
@@ -70,7 +70,7 @@ public class BaoCaoController {
      * CCDCVatTu: căn cứ IdDonViNhan trong BanGiaoCCDCVatTu
      */
     @GetMapping("/bienban-kiemke")
-    public List<BienBanKiemKe> getBienBanKiemKe(@RequestParam String idPhongBan) {
+    public List<BienBanKiemKe> getBienBanKiemKe(@RequestParam("idPhongBan") String idPhongBan) {
         return service.getBienBanKiemKe(idPhongBan);
     }
 
@@ -81,8 +81,8 @@ public class BaoCaoController {
      */
     @GetMapping("/tang-giam-trong-ky")
     public List<BaoCaoTangGiamTrongKy> getBaoCaoTangGiamTrongKy(
-            @RequestParam String idPhongBan,
-            @RequestParam String thangNam) {
+            @RequestParam("idPhongBan") String idPhongBan,
+            @RequestParam("thangNam") String thangNam) {
         return service.getBaoCaoTangGiamTrongKy(idPhongBan, thangNam);
     }
 }

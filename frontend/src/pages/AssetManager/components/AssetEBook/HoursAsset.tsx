@@ -31,7 +31,7 @@ const bookStyles = {
     minHeight: "297mm",
     margin: "0 auto",
     backgroundColor: "#ffffff",
-    backgroundImage: "linear-gradient(to bottom, #ffffff, #e6f7f0)",
+    // backgroundImage: "linear-gradient(to bottom, #ffffff, #e6f7f0)",
     borderRadius: "2px",
     boxShadow:
       "0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.8)",
@@ -385,11 +385,11 @@ export default function HoursAsset({
         textAlign="center"
         fontSize={20}
         fontWeight={700}
-        sx={{ letterSpacing: "2px", mb: 2 }}
+        sx={{ mb: 2 }}
       >
-        GIỜ (KM) HOẠT ĐỘNG CỦA THIẾT BỊ TRONG NĂM {selectedYear}
+        THEO DÕI TÌNH HÌNH HOẠT ĐỘNG HÀNG THÁNG NĂM {selectedYear}
       </Typography>
-      <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
         <FormControl size="small" sx={{ minWidth: 120 }}>
           <InputLabel>Năm</InputLabel>
           <Select
@@ -408,462 +408,203 @@ export default function HoursAsset({
         <TableContainer
           component={Paper}
           elevation={0}
-          sx={{ border: "1px solid grey", overflowX: "auto" }}
+          sx={{
+            borderRadius: "0px",
+            overflowX: "auto",
+            width: "100%",
+          }}
         >
-          <Table size="small" stickyHeader sx={{ minWidth: 1000 }}>
+          <Table size="small" sx={{ borderCollapse: 'collapse', border: '1px solid black', minWidth: 1200 }}>
             <TableHead>
-              <TableRow sx={{ bgcolor: "#e8f5e9" }}>
+              <TableRow>
                 <TableCell
                   rowSpan={2}
+                  align="center"
                   sx={{
-                    bgcolor: "#e8f5e9",
-                    border: "1px solid grey",
-                    fontWeight: "bold",
-                    textAlign: "center",
-                    width: 60,
+                    fontFamily: '"Times New Roman", Times, serif',
+                    fontWeight: 'bold',
+                    fontSize: '16px',
+                    minWidth: 120,
+                    border: "1px solid black",
+                    backgroundColor: "transparent",
                   }}
                 >
-                  Tháng
-                </TableCell>
-                <TableCell
-                  colSpan={3}
-                  sx={{
-                    fontWeight: "bold",
-                    textAlign: "center",
-                    width: 100,
-                    bgcolor: "#e8f5e9",
-                    border: "1px solid grey",
-                  }}
-                >
-                  Giờ (km)
-                </TableCell>
-                <TableCell
-                  colSpan={2}
-                  sx={{
-                    fontWeight: "bold",
-                    textAlign: "center",
-                    bgcolor: "#e8f5e9",
-                    border: "1px solid grey",
-                  }}
-                >
-                  Ngày SCT
-                </TableCell>
-                <TableCell
-                  colSpan={2}
-                  sx={{
-                    fontWeight: "bold",
-                    textAlign: "center",
-                    bgcolor: "#e8f5e9",
-                    border: "1px solid grey",
-                  }}
-                >
-                  Ngày BCC
-                </TableCell>
-                <TableCell
-                  colSpan={2}
-                  sx={{
-                    fontWeight: "bold",
-                    textAlign: "center",
-                    bgcolor: "#e8f5e9",
-                    border: "1px solid grey",
-                  }}
-                >
-                  Số lần Báo đường
+                  Ngày/tháng
                 </TableCell>
                 <TableCell
                   rowSpan={2}
+                  align="center"
                   sx={{
-                    fontWeight: "bold",
-                    textAlign: "center",
-                    width: 100,
-                    bgcolor: "#e8f5e9",
-                    border: "1px solid grey",
+                    fontFamily: '"Times New Roman", Times, serif',
+                    fontWeight: 'bold',
+                    fontSize: '16px',
+                    minWidth: 200,
+                    border: "1px solid black",
+                    backgroundColor: "transparent",
+                  }}
+                >
+                  Đơn vị quản lý
+                </TableCell>
+                <TableCell
+                  rowSpan={2}
+                  align="center"
+                  sx={{
+                    fontFamily: '"Times New Roman", Times, serif',
+                    fontWeight: 'bold',
+                    fontSize: '16px',
+                    minWidth: 150,
+                    border: "1px solid black",
+                    backgroundColor: "transparent",
+                  }}
+                >
+                  Giờ hoạt động<br/>trong tháng
+                </TableCell>
+                <TableCell
+                  rowSpan={2}
+                  align="center"
+                  sx={{
+                    fontFamily: '"Times New Roman", Times, serif',
+                    fontWeight: 'bold',
+                    fontSize: '16px',
+                    minWidth: 180,
+                    border: "1px solid black",
+                    backgroundColor: "transparent",
+                  }}
+                >
+                  Kết quả hoạt<br/>động của thiết bị
+                </TableCell>
+                <TableCell
+                  colSpan={5}
+                  align="center"
+                  sx={{
+                    fontFamily: '"Times New Roman", Times, serif',
+                    fontWeight: 'bold',
+                    fontSize: '16px',
+                    border: "1px solid black",
+                    backgroundColor: "transparent",
+                  }}
+                >
+                  Giờ ngừng máy (h)
+                </TableCell>
+                <TableCell
+                  rowSpan={2}
+                  align="center"
+                  sx={{
+                    fontFamily: '"Times New Roman", Times, serif',
+                    fontWeight: 'bold',
+                    fontSize: '16px',
+                    minWidth: 150,
+                    border: "1px solid black",
+                    backgroundColor: "transparent",
                   }}
                 >
                   Ghi chú
                 </TableCell>
               </TableRow>
-              <TableRow sx={{ bgcolor: "#f5f5f5" }}>
-                <TableCell
-                  sx={{
-                    fontWeight: "bold",
-                    textAlign: "center",
-                    width: 100,
-                    bgcolor: "#e8f5e9",
-                    border: "1px solid grey",
-                  }}
-                >
-                  Hoạt động
-                </TableCell>
-                <TableCell
-                  sx={{
-                    fontWeight: "bold",
-                    textAlign: "center",
-                    width: 100,
-                    bgcolor: "#e8f5e9",
-                    border: "1px solid grey",
-                  }}
-                >
-                  Sau SCL
-                </TableCell>
-                <TableCell
-                  sx={{
-                    fontWeight: "bold",
-                    textAlign: "center",
-                    width: 100,
-                    bgcolor: "#e8f5e9",
-                    border: "1px solid grey",
-                  }}
-                >
-                  Sau Bcc
-                </TableCell>
-                <TableCell
-                  sx={{
-                    fontWeight: "bold",
-                    textAlign: "center",
-                    width: 100,
-                    bgcolor: "#e8f5e9",
-                    border: "1px solid grey",
-                  }}
-                >
-                  Vào
-                </TableCell>
-                <TableCell
-                  sx={{
-                    fontWeight: "bold",
-                    textAlign: "center",
-                    width: 100,
-                    bgcolor: "#e8f5e9",
-                    border: "1px solid grey",
-                  }}
-                >
-                  Ra
-                </TableCell>
-                <TableCell
-                  sx={{
-                    fontWeight: "bold",
-                    textAlign: "center",
-                    width: 100,
-                    bgcolor: "#e8f5e9",
-                    border: "1px solid grey",
-                  }}
-                >
-                  Vào
-                </TableCell>
-                <TableCell
-                  sx={{
-                    fontWeight: "bold",
-                    textAlign: "center",
-                    width: 100,
-                    bgcolor: "#e8f5e9",
-                    border: "1px solid grey",
-                  }}
-                >
-                  Ra
-                </TableCell>
-                <TableCell
-                  sx={{
-                    fontWeight: "bold",
-                    textAlign: "center",
-                    width: 80,
-                    bgcolor: "#e8f5e9",
-                    border: "1px solid grey",
-                  }}
-                >
-                  Cấp I
-                </TableCell>
-                <TableCell
-                  sx={{
-                    fontWeight: "bold",
-                    textAlign: "center",
-                    width: 80,
-                    bgcolor: "#e8f5e9",
-                    border: "1px solid grey",
-                  }}
-                >
-                  Cấp II
-                </TableCell>
+              <TableRow>
+                {['Hỏng máy', 'Chờ đợi', 'Mất điện', 'Thiếu N.liệu', 'Lý do khác'].map((text) => (
+                  <TableCell
+                    key={text}
+                    align="center"
+                    sx={{
+                      fontFamily: '"Times New Roman", Times, serif',
+                      fontWeight: 'bold',
+                      fontSize: '15px',
+                      border: "1px solid black",
+                      backgroundColor: "transparent",
+                      minWidth: 90,
+                    }}
+                  >
+                    {text === 'Hỏng máy' ? <>Hỏng<br/>máy</> : 
+                     text === 'Chờ đợi' ? <>Chờ<br/>đợi</> : 
+                     text === 'Mất điện' ? <>Mất<br/>điện</> : 
+                     text === 'Thiếu N.liệu' ? <>Thiếu<br/>N.liệu</> : 
+                     <>Lý do<br/>khác</>}
+                  </TableCell>
+                ))}
               </TableRow>
             </TableHead>
 
-            <TableBody
-              sx={{ ...bookStyles.container, display: "flex !importance" }}
-            >
+            <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={9} align="center">
+                  <TableCell colSpan={10} align="center" sx={{ border: "1px solid black" }}>
                     Đang tải dữ liệu...
                   </TableCell>
                 </TableRow>
               ) : (
-                rows.map((row) => (
-                  <TableRow key={row.id}>
-                    <TableCell
-                      align="center"
-                      sx={{ fontWeight: "medium", border: "1px solid grey" }}
-                    >
-                      {row.thang}
-                    </TableCell>
-
-                    {/* Giờ hoạt động - Có thể nhập */}
-                    <TableCell
-                      sx={{
-                        border: "1px solid grey",
-                      }}
-                    >
-                      {readOnly ? (
-                        <Typography>{row?.gioHoatDong || ""}</Typography>
-                      ) : (
-                        <TextField
-                          fullWidth
-                          size="small"
-                          variant="standard"
-                          type="number"
-                          value={row.gioHoatDong}
-                          onChange={(e) =>
-                            handleChange(
-                              row.thang,
-                              "gioHoatDong",
-                              e.target.value,
-                            )
-                          }
-                          placeholder="Nhập giờ/km"
-                          InputProps={{ inputProps: { min: 0 } }}
-                        />
-                      )}
-                    </TableCell>
-
-                    {/* Ngày SCT Vào - Tự động hoặc không cần nhập */}
-                    <TableCell
-                      sx={{
-                        border: "1px solid grey",
-                      }}
-                    >
-                      {/* <TextField
-                      fullWidth
-                      size="small"
-                      variant="standard"
-                      type="date"
-                      value={row.ngaySCT_Vao || ""}
-                      onChange={(e) =>
-                        handleChange(row.thang, "ngaySCT_Vao", e.target.value)
-                      }
-                      InputLabelProps={{ shrink: true }}
-                    /> */}
-                    </TableCell>
-
-                    {/* Ngày SCT Ra */}
-                    <TableCell
-                      sx={{
-                        border: "1px solid grey",
-                      }}
-                    >
-                      {/* <TextField
-                      fullWidth
-                      size="small"
-                      variant="standard"
-                      type="date"
-                      value={row.ngaySCT_Ra || ""}
-                      onChange={(e) =>
-                        handleChange(row.thang, "ngaySCT_Ra", e.target.value)
-                      }
-                      InputLabelProps={{ shrink: true }}
-                    /> */}
-                    </TableCell>
-
-                    {/* Ngày BCC Vào */}
-                    <TableCell
-                      sx={{
-                        border: "1px solid grey",
-                      }}
-                    >
-                      {/* <TextField
-                      fullWidth
-                      size="small"
-                      variant="standard"
-                      type="date"
-                      value={row.ngayBcc_Vao || ""}
-                      onChange={(e) =>
-                        handleChange(row.thang, "ngayBcc_Vao", e.target.value)
-                      }
-                      InputLabelProps={{ shrink: true }}
-                    /> */}
-                    </TableCell>
-
-                    {/* Ngày BCC Ra */}
-                    <TableCell
-                      sx={{
-                        border: "1px solid grey",
-                      }}
-                    >
-                      {/* <TextField
-                      fullWidth
-                      size="small"
-                      variant="standard"
-                      type="date"
-                      value={row.ngayBcc_Ra || ""}
-                      onChange={(e) =>
-                        handleChange(row.thang, "ngayBcc_Ra", e.target.value)
-                      }
-                      InputLabelProps={{ shrink: true }}
-                    /> */}
-                    </TableCell>
-
-                    {/* Số lần báo đường cấp I */}
-                    <TableCell
-                      sx={{
-                        border: "1px solid grey",
-                      }}
-                    >
-                      {/* <TextField
-                      fullWidth
-                      size="small"
-                      variant="standard"
-                      type="number"
-                      value={row.soLanBaoDuongCapI}
-                      onChange={(e) =>
-                        handleChange(
-                          row.thang,
-                          "soLanBaoDuongCapI",
-                          parseInt(e.target.value) || 0,
-                        )
-                      }
-                      InputProps={{ inputProps: { min: 0 } }}
-                    /> */}
-                    </TableCell>
-
-                    {/* Số lần báo đường cấp II */}
-                    <TableCell
-                      sx={{
-                        border: "1px solid grey",
-                      }}
-                    >
-                      {/* <TextField
-                      fullWidth
-                      size="small"
-                      variant="standard"
-                      type="number"
-                      value={row.soLanBaoDuongCapII}
-                      onChange={(e) =>
-                        handleChange(
-                          row.thang,
-                          "soLanBaoDuongCapII",
-                          parseInt(e.target.value) || 0,
-                        )
-                      }
-                      InputProps={{ inputProps: { min: 0 } }}
-                    /> */}
-                    </TableCell>
-
-                    {/* Ghi chú */}
-                    <TableCell
-                      sx={{
-                        border: "1px solid grey",
-                      }}
-                    >
-                      {/* <TextField
-                      fullWidth
-                      size="small"
-                      variant="standard"
-                      value={row.ghiChu || ""}
-                      onChange={(e) =>
-                        handleChange(row.thang, "ghiChu", e.target.value)
-                      }
-                      placeholder="Ghi chú..."
-                    /> */}
-                    </TableCell>
-                    <TableCell
-                      sx={{
-                        border: "1px solid grey",
-                      }}
-                    >
-                      {/* <TextField
-                      fullWidth
-                      size="small"
-                      variant="standard"
-                      value={row.ghiChu || ""}
-                      onChange={(e) =>
-                        handleChange(row.thang, "ghiChu", e.target.value)
-                      }
-                      placeholder="Ghi chú..."
-                    /> */}
-                    </TableCell>
-                    <TableCell
-                      sx={{
-                        border: "1px solid grey",
-                      }}
-                    >
-                      {/* <TextField
-                      fullWidth
-                      size="small"
-                      variant="standard"
-                      value={row.ghiChu || ""}
-                      onChange={(e) =>
-                        handleChange(row.thang, "ghiChu", e.target.value)
-                      }
-                      placeholder="Ghi chú..."
-                    /> */}
-                    </TableCell>
-                  </TableRow>
-                ))
+                rows.map((row) => {
+                  const hasData = !row.isNew || Number(row.gioHoatDong) > 0;
+                  return (
+                    <TableRow key={row.id}>
+                      <TableCell align="center" sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px', fontFamily: '"Times New Roman", Times, serif', fontSize: '16px', fontWeight: 'bold' }}>
+                        Tháng {row.thang}
+                      </TableCell>
+                      <TableCell align="center" sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px', fontFamily: '"Times New Roman", Times, serif', fontSize: '16px' }}>
+                        {hasData ? (asset?.tenDonViHienThoi || asset?.tenDonViBanDau || "") : ""}
+                      </TableCell>
+                      <TableCell align="center" sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}>
+                        {readOnly ? (
+                          <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: '16px' }}>{row?.gioHoatDong || ""}</Typography>
+                        ) : (
+                          <TextField
+                            fullWidth
+                            size="small"
+                            variant="standard"
+                            type="number"
+                            value={row.gioHoatDong}
+                            onChange={(e) =>
+                              handleChange(
+                                row.thang,
+                                "gioHoatDong",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="Nhập giờ/km"
+                            InputProps={{ inputProps: { min: 0 }, disableUnderline: true }}
+                            sx={{ '& .MuiInputBase-input': { textAlign: 'center', fontFamily: '"Times New Roman", Times, serif', fontSize: '16px' } }}
+                          />
+                        )}
+                      </TableCell>
+                      <TableCell sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}></TableCell>
+                      <TableCell sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}></TableCell>
+                      <TableCell sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}></TableCell>
+                      <TableCell sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}></TableCell>
+                      <TableCell sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}></TableCell>
+                      <TableCell sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}></TableCell>
+                      <TableCell sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}></TableCell>
+                    </TableRow>
+                  );
+                })
               )}
 
               {/* Dòng tổng */}
-              <TableRow>
-                <TableCell
-                  align="center"
-                  sx={{ fontWeight: "bold", border: "1px solid grey" }}
-                >
-                  TỔNG
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{ fontWeight: "bold", border: "1px solid grey" }}
-                >
-                  {totals.gioHoatDong.toLocaleString()}
-                </TableCell>
-                <TableCell
-                  colSpan={2}
-                  align="center"
-                  sx={{
-                    border: "1px solid grey",
-                  }}
-                ></TableCell>
-                <TableCell
-                  colSpan={2}
-                  align="center"
-                  sx={{
-                    border: "1px solid grey",
-                  }}
-                ></TableCell>
-                <TableCell
-                  align="center"
-                  sx={{ fontWeight: "bold", border: "1px solid grey" }}
-                >
-                  {/* {totals.soLanBaoDuongCapI} */}
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{ fontWeight: "bold", border: "1px solid grey" }}
-                >
-                  {/* {totals.soLanBaoDuongCapII} */}
-                </TableCell>
-                <TableCell
-                  sx={{
-                    border: "1px solid grey",
-                  }}
-                ></TableCell>
-                <TableCell
-                  sx={{
-                    border: "1px solid grey",
-                  }}
-                ></TableCell>
-                <TableCell
-                  sx={{
-                    border: "1px solid grey",
-                  }}
-                ></TableCell>
-              </TableRow>
+              {!isLoading && (
+                <TableRow>
+                  <TableCell
+                    align="center"
+                    sx={{ borderTop: "none", borderBottom: '1px solid black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px', fontFamily: '"Times New Roman", Times, serif', fontSize: '16px', fontWeight: 'bold' }}
+                  >
+                    TỔNG
+                  </TableCell>
+                  <TableCell
+                    sx={{ borderTop: "none", borderBottom: '1px solid black', borderLeft: "1px solid black", borderRight: "1px solid black" }}
+                  ></TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ borderTop: "none", borderBottom: '1px solid black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px', fontFamily: '"Times New Roman", Times, serif', fontSize: '16px', fontWeight: 'bold' }}
+                  >
+                    {totals.gioHoatDong.toLocaleString()}
+                  </TableCell>
+                  <TableCell sx={{ borderTop: "none", borderBottom: '1px solid black', borderLeft: "1px solid black", borderRight: "1px solid black" }}></TableCell>
+                  <TableCell sx={{ borderTop: "none", borderBottom: '1px solid black', borderLeft: "1px solid black", borderRight: "1px solid black" }}></TableCell>
+                  <TableCell sx={{ borderTop: "none", borderBottom: '1px solid black', borderLeft: "1px solid black", borderRight: "1px solid black" }}></TableCell>
+                  <TableCell sx={{ borderTop: "none", borderBottom: '1px solid black', borderLeft: "1px solid black", borderRight: "1px solid black" }}></TableCell>
+                  <TableCell sx={{ borderTop: "none", borderBottom: '1px solid black', borderLeft: "1px solid black", borderRight: "1px solid black" }}></TableCell>
+                  <TableCell sx={{ borderTop: "none", borderBottom: '1px solid black', borderLeft: "1px solid black", borderRight: "1px solid black" }}></TableCell>
+                  <TableCell sx={{ borderTop: "none", borderBottom: '1px solid black', borderLeft: "1px solid black", borderRight: "1px solid black" }}></TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </TableContainer>

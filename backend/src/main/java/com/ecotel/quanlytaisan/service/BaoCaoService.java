@@ -51,8 +51,8 @@ public class BaoCaoService {
         List<Map<String, Object>> increase = dao.getS22DnIncrease(idDonVi, nam);
         List<Map<String, Object>> reduce = dao.getS22DnDecrease(idDonVi, nam);
 
-        increase = mergeS22List(increase, "idTaiSan");
-        reduce = mergeS22List(reduce, "idTaiSan");
+        increase = mergeS22List(increase, "idTaiSan","soQuyetDinh");
+        reduce = mergeS22List(reduce, "idTaiSan","soQuyetDinh");
 
         result.put("data_increase", transformZeroToEmpty(increase));
         result.put("data_reduce", transformZeroToEmpty(reduce));
@@ -65,8 +65,8 @@ public class BaoCaoService {
         List<Map<String, Object>> increase = dao.getS22DnIncreaseCCDC(idDonVi, nam);
         List<Map<String, Object>> reduce = dao.getS22DnDecreaseCCDC(idDonVi, nam);
 
-        increase = mergeS22List(increase, "idCCDC");
-        reduce = mergeS22List(reduce, "idCCDC");
+        increase = mergeS22List(increase, "idCCDC","soQuyetDinh");
+        reduce = mergeS22List(reduce, "idCCDC","soQuyetDinh");
 
         result.put("data_increase", transformZeroToEmpty(increase));
         result.put("data_reduce", transformZeroToEmpty(reduce));
@@ -155,7 +155,7 @@ public class BaoCaoService {
      * @param idField  tên trường id (ví dụ "idTaiSan" hoặc "idCCDC")
      * @return danh sách đã gộp
      */
-    private List<Map<String, Object>> mergeS22List(List<Map<String, Object>> list, String idField) {
+    private List<Map<String, Object>> mergeS22List(List<Map<String, Object>> list, String idField, String soQuyetDinhField) {
         if (list == null || list.isEmpty()) {
             return list;
         }
@@ -164,46 +164,52 @@ public class BaoCaoService {
 
         for (Map<String, Object> row : list) {
             Object idObj = row.get(idField);
-            if (idObj == null) continue; // bỏ qua dòng không có id
-            String id = idObj.toString();
+            Object soQDObj = row.get(soQuyetDinhField);
 
-            if (!merged.containsKey(id)) {
-                // Tạo bản sao của row (có thể dùng LinkedHashMap để giữ thứ tự)
+            if (idObj == null) continue; // bỏ qua dòng không có id
+
+            String id = idObj.toString();
+            String soQD = soQDObj != null ? soQDObj.toString() : "";
+
+            // Tạo key kết hợp từ idTaiSan và soQuyetDinh
+            String compositeKey = id + "|" + soQD;
+
+            if (!merged.containsKey(compositeKey)) {
+                // Tạo bản sao của row
                 Map<String, Object> newRow = new LinkedHashMap<>(row);
-                merged.put(id, newRow);
+                merged.put(compositeKey, newRow);
             } else {
-                Map<String, Object> existing = merged.get(id);
+                Map<String, Object> existing = merged.get(compositeKey);
 
                 // Cộng dồn số lượng
                 Number soLuongExisting = (Number) existing.get("soLuong");
                 Number soLuongCurrent = (Number) row.get("soLuong");
-                existing.put("soLuong", soLuongExisting.doubleValue() + soLuongCurrent.doubleValue());
+                if (soLuongExisting != null && soLuongCurrent != null) {
+                    existing.put("soLuong", soLuongExisting.doubleValue() + soLuongCurrent.doubleValue());
+                }
 
                 // Cộng dồn tổng tiền
                 Number tongTienExisting = (Number) existing.get("tongTien");
                 Number tongTienCurrent = (Number) row.get("tongTien");
-                existing.put("tongTien", tongTienExisting.doubleValue() + tongTienCurrent.doubleValue());
-
-                // Ghép số quyết định
-                String soQDExisting = (String) existing.get("soQuyetDinh");
-                String soQDCurrent = (String) row.get("soQuyetDinh");
-                existing.put("soQuyetDinh", soQDExisting + ", " + soQDCurrent);
+                if (tongTienExisting != null && tongTienCurrent != null) {
+                    existing.put("tongTien", tongTienExisting.doubleValue() + tongTienCurrent.doubleValue());
+                }
 
                 // Ghép ngày tháng (nếu cần)
                 String ngayExisting = (String) existing.get("ngayThang");
                 String ngayCurrent = (String) row.get("ngayThang");
-                if (ngayExisting != null && ngayCurrent != null) {
+                if (ngayExisting != null && ngayCurrent != null && !ngayExisting.equals(ngayCurrent)) {
                     existing.put("ngayThang", ngayExisting + ", " + ngayCurrent);
-                } else if (ngayCurrent != null) {
+                } else if (ngayCurrent != null && ngayExisting == null) {
                     existing.put("ngayThang", ngayCurrent);
                 }
 
                 // Ghép ghi chú
                 String ghiChuExisting = (String) existing.get("ghiChu");
                 String ghiChuCurrent = (String) row.get("ghiChu");
-                if (ghiChuExisting != null && ghiChuCurrent != null) {
+                if (ghiChuExisting != null && ghiChuCurrent != null && !ghiChuExisting.equals(ghiChuCurrent)) {
                     existing.put("ghiChu", ghiChuExisting + "; " + ghiChuCurrent);
-                } else if (ghiChuCurrent != null) {
+                } else if (ghiChuCurrent != null && ghiChuExisting == null) {
                     existing.put("ghiChu", ghiChuCurrent);
                 }
 

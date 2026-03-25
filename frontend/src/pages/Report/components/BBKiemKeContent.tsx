@@ -634,7 +634,7 @@ export default function BBKiemKeContent({
                     <InlineCell
                       value={item.dvt}
                       onCommit={(v) => handleInventoryChange(index, "dvt", v)}
-                      align="left"
+                      align="center"
                     />
                   </td>
                   <td style={tableBodyCellSx as React.CSSProperties}>

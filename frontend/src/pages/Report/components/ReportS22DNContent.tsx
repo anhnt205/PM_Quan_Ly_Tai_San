@@ -47,7 +47,7 @@ export default function ReportS22DNContent({
 
   const mapItemToRow = (item: any, isReduce = false): TableRowData => {
     const date = item?.ngayThang ? String(item.ngayThang).split(" ")[0] : "";
-    const id = fmt(item?.idTaiSan || item?.soHieu || "");
+    const id = fmt(item?.soQuyetDinh || "");
     const ten = fmt(item?.tenTaiSan || item?.ten || "");
     const dvt = fmt(item?.donViTinh || item?.dvt || "");
     const soLuong = fmt(item?.soLuong ?? item?.sl ?? "");

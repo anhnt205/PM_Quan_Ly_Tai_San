@@ -59,6 +59,7 @@ import { useAllDepartmentsQuery } from "../Department/Mutation";
 import { useAllUnitsQuery } from "../Unit/Mutation";
 import { useAllPositionsQuery } from "../Position/Mutation";
 import S3Service from "../../services/S3Service";
+import { getToolHandoverCount } from "../../utils/helpers";
 
 export default function ToolHandover() {
   const [showForm, setShowForm] = useState(false);
@@ -141,6 +142,15 @@ export default function ToolHandover() {
   const { data: allUnits = [] } = useAllUnitsQuery();
   const { data: positions = [] } = useAllPositionsQuery();
 
+  const { data: toolHandover = { items: [] } } = useToolHandoverPageQuery(
+    0,
+    999999,
+  );
+
+  const toolHandoverCount = getToolHandoverCount(
+    user?.taiKhoan?.tenDangNhap,
+    toolHandover.items,
+  );
   const statusOptions: FilterOption[] = [
     {
       label: "Tất cả",
@@ -662,8 +672,7 @@ export default function ToolHandover() {
                       icon={
                         <Badge
                           badgeContent={
-                            (handoverPage?.groupCounts?.["0"] ?? 0) +
-                            (handoverPage?.groupCounts?.["1"] ?? 0)
+                            toolHandoverCount
                           }
                           color="error"
                         >

@@ -57,6 +57,7 @@ import { useAllPositionsQuery } from "../Position/Mutation";
 import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
 import S3Service from "../../services/S3Service";
 import api from "../../config/api.config";
+import { getAssetHandoverCount } from "../../utils/helpers";
 
 export default function AssetHandover() {
   const [showForm, setShowForm] = useState(false);
@@ -138,6 +139,15 @@ export default function AssetHandover() {
   const handleTabChange = (_event: SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
   };
+
+    const { data: assetHandover = { items: [] } } = useAssetHandoverPageQuery(
+      0,
+      999999,
+    );
+    const assetHandoverCount = getAssetHandoverCount(
+    user?.taiKhoan?.tenDangNhap,
+    assetHandover.items,
+  );
 
   const statusOptions: FilterOption[] = [
     {
@@ -675,8 +685,7 @@ export default function AssetHandover() {
                      icon={
                         <Badge
                           badgeContent={  
-                            (handoverPage?.groupCounts?.["0"] ?? 0) +
-                            (handoverPage?.groupCounts?.["1"] ?? 0)
+                            assetHandoverCount
                           }
                           color="error"
                         >

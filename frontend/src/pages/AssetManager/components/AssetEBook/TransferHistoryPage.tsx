@@ -35,7 +35,7 @@ const bookStyles = {
     minHeight: "297mm",
     margin: "0 auto",
     backgroundColor: "#ffffff",
-    backgroundImage: "linear-gradient(to bottom, #ffffff, #e6f7f0)",
+    // backgroundImage: "linear-gradient(to bottom, #ffffff, #e6f7f0)",
     borderRadius: "2px",
     boxShadow:
       "0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.8)",
@@ -410,7 +410,7 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
         fontWeight={700}
         sx={{ letterSpacing: "2px", mb: 2 }}
       >
-        SỰ THUYÊN CHUYỂN TÀI SẢN
+        THEO DÕI DI CHUYỂN LẮP ĐẶT MÁY
       </Typography>
 
       {/* Nút thêm - chỉ hiển thị khi ở chế độ edit */}
@@ -433,7 +433,7 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
               textTransform: "none",
             }}
           >
-            Thêm lịch sử
+            Thêm di chuyển
           </Button>
         </Box>
       )}
@@ -444,38 +444,77 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
           component={Paper}
           elevation={0}
           sx={{
-            borderRadius: "8px",
+            borderRadius: "0px",
             overflow: "hidden",
+            width: "100%",
+            marginTop: "10px",
           }}
         >
-          <Table size="small">
+          <Table size="small" sx={{ borderCollapse: 'collapse', border: '1px solid black' }}>
             <TableHead>
-              <TableRow sx={{ bgcolor: "#e8f5e9" }}>
+              <TableRow>
                 <TableCell
+                  align="center"
                   sx={{
-                    fontWeight: 600,
-                    width: "30%",
-                    border: "1px solid grey",
+                    fontFamily: '"Times New Roman", Times, serif',
+                    fontWeight: 'bold',
+                    fontSize: '16px',
+                    width: "15%",
+                    border: "1px solid black",
+                    backgroundColor: "transparent",
                   }}
                 >
-                  Ngày tháng
+                  Ngày/tháng/<br/>năm
                 </TableCell>
                 <TableCell
+                  align="center"
                   sx={{
-                    fontWeight: 600,
-                    width: "60%",
-                    border: "1px solid grey",
+                    fontFamily: '"Times New Roman", Times, serif',
+                    fontWeight: 'bold',
+                    fontSize: '16px',
+                    width: "30%",
+                    border: "1px solid black",
+                    backgroundColor: "transparent",
                   }}
                 >
-                  Đơn vị quản lý
+                  Địa điểm đặt máy
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    fontFamily: '"Times New Roman", Times, serif',
+                    fontWeight: 'bold',
+                    fontSize: '16px',
+                    width: "25%",
+                    border: "1px solid black",
+                    backgroundColor: "transparent",
+                  }}
+                >
+                  Đối tượng phục vụ
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    fontFamily: '"Times New Roman", Times, serif',
+                    fontWeight: 'bold',
+                    fontSize: '16px',
+                    width: "30%",
+                    border: "1px solid black",
+                    backgroundColor: "transparent",
+                  }}
+                >
+                  Họ tên và chữ ký người<br/>chịu trách nhiệm lắp đặt
                 </TableCell>
                 {isEditMode && (
                   <TableCell
+                    align="center"
                     sx={{
-                      fontWeight: 600,
+                      fontFamily: '"Times New Roman", Times, serif',
+                      fontWeight: 'bold',
+                      fontSize: '16px',
                       width: "10%",
-                      textAlign: "center",
-                      border: "1px solid grey",
+                      border: "1px solid black",
+                      backgroundColor: "transparent",
                     }}
                   >
                     Thao tác
@@ -483,115 +522,119 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
                 )}
               </TableRow>
             </TableHead>
-            <TableBody
-              sx={{ ...bookStyles.container, display: "flex !importance" }}
-            >
+            <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={isEditMode ? 3 : 2} align="center">
+                  <TableCell colSpan={isEditMode ? 5 : 4} align="center" sx={{ border: "1px solid black" }}>
                     Đang tải dữ liệu...
                   </TableCell>
                 </TableRow>
-              ) : visibleRows.length === 0 ? (
-                <TableRow sx={{border: "1px solid grey"}}>
-                  <TableCell colSpan={isEditMode ? 3 : 2} align="center">
-                    Chưa có lịch sử thuyên chuyển
-                  </TableCell>
-                </TableRow>
               ) : (
-                visibleRows.map((row) => (
-                  <TableRow key={row.id}>
-                    <TableCell sx={{ border: "1px solid grey" }}>
-                      {isEditMode ? (
-                        <TextField
-                          type="date"
-                          fullWidth
-                          size="small"
-                          variant="standard"
-                          InputProps={{ disableUnderline: true }}
-                          value={row.thoiGianBanGiao}
-                          onChange={(e) =>
-                            handleChange(
-                              row.id,
-                              "thoiGianBanGiao",
-                              e.target.value,
-                            )
-                          }
-                        />
-                      ) : (
-                        <Typography>
-                          {dayjs(row.thoiGianBanGiao).format("DD/MM/YYYY")}
-                        </Typography>
-                      )}
-                    </TableCell>
-
-                    <TableCell sx={{ border: "1px solid grey" }}>
-                      {isEditMode ? (
-                        <Autocomplete
-                          options={allDepartments.slice(0, 100)}
-                          getOptionLabel={(option) => option?.tenPhongBan || ""}
-                          isOptionEqualToValue={(option, value) =>
-                            option.id === value?.id
-                          }
-                          value={
-                            allDepartments.find(
-                              (d) => d.id === row.idDonViNhan,
-                            ) || null
-                          }
-                          onChange={(_, newValue) => {
-                            handleChange(
-                              row.id,
-                              "idDonViNhan",
-                              newValue?.id || "",
-                            );
-                            handleChange(
-                              row.id,
-                              "tenDonViNhan",
-                              newValue?.tenPhongBan || "",
-                            );
-                          }}
-                          renderInput={(params) => (
-                            <TextField
-                              {...params}
-                              variant="standard"
-                              InputProps={{
-                                ...params.InputProps,
-                                disableUnderline: true,
-                              }}
-                              placeholder="Chọn đơn vị..."
-                            />
-                          )}
-                          sx={{ width: "100%" }}
-                        />
-                      ) : (
-                        <Typography>
-                          {row.tenDonViNhan || "N/A"}
-                        </Typography>
-                      )}
-                    </TableCell>
-
-                    {isEditMode && (
-                      <TableCell
-                        align="center"
-                        sx={{ border: "1px solid grey" }}
-                      >
-                        <IconButton
-                          size="small"
-                          onClick={() => handleDeleteRow(row.id, row.isNew)}
-                          sx={{ color: "#d32f2f" }}
-                        >
-                          <Delete fontSize="small" />
-                        </IconButton>
+                <>
+                  {visibleRows.map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell align="center" sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}>
+                        {isEditMode ? (
+                          <TextField
+                            type="date"
+                            fullWidth
+                            size="small"
+                            variant="standard"
+                            InputProps={{ disableUnderline: true }}
+                            value={row.thoiGianBanGiao}
+                            onChange={(e) =>
+                              handleChange(
+                                row.id,
+                                "thoiGianBanGiao",
+                                e.target.value,
+                              )
+                            }
+                          />
+                        ) : (
+                          <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: '16px' }}>
+                            {row.thoiGianBanGiao ? dayjs(row.thoiGianBanGiao).format("DD/MM/YYYY") : ''}
+                          </Typography>
+                        )}
                       </TableCell>
-                    )}
-                  </TableRow>
-                ))
+
+                      <TableCell sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}>
+                        {isEditMode ? (
+                          <Autocomplete
+                            options={allDepartments.slice(0, 100)}
+                            getOptionLabel={(option) => option?.tenPhongBan || ""}
+                            isOptionEqualToValue={(option, value) =>
+                              option.id === value?.id
+                            }
+                            value={
+                              allDepartments.find(
+                                (d) => d.id === row.idDonViNhan,
+                              ) || null
+                            }
+                            onChange={(_, newValue) => {
+                              handleChange(
+                                row.id,
+                                "idDonViNhan",
+                                newValue?.id || "",
+                              );
+                              handleChange(
+                                row.id,
+                                "tenDonViNhan",
+                                newValue?.tenPhongBan || "",
+                              );
+                            }}
+                            renderInput={(params) => (
+                              <TextField
+                                {...params}
+                                variant="standard"
+                                InputProps={{
+                                  ...params.InputProps,
+                                  disableUnderline: true,
+                                }}
+                                placeholder="Chọn đơn vị..."
+                              />
+                            )}
+                            sx={{ width: "100%" }}
+                          />
+                        ) : (
+                          <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: '16px' }}>
+                            {row.tenDonViNhan || ""}
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}></TableCell>
+                      <TableCell sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}></TableCell>
+                      {isEditMode && (
+                        <TableCell
+                          align="center"
+                          sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}
+                        >
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDeleteRow(row.id, row.isNew)}
+                            sx={{ color: "#d32f2f" }}
+                          >
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                  
+                  {/* Dòng trống mô phỏng sổ sách */}
+                  {!isEditMode && Array.from({ length: Math.max(0, 10 - visibleRows.length) }).map((_, index) => (
+                    <TableRow key={`empty-${index}`}>
+                      <TableCell sx={{ height: '40px', borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black" }}></TableCell>
+                      <TableCell sx={{ height: '40px', borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black" }}></TableCell>
+                      <TableCell sx={{ height: '40px', borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black" }}></TableCell>
+                      <TableCell sx={{ height: '40px', borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black" }}></TableCell>
+                    </TableRow>
+                  ))}
+                </>
               )}
             </TableBody>
           </Table>
         </TableContainer>
       </Box>
-
       {/* Footer - luôn ở dưới cùng */}
       <Box sx={bookStyles.footer}>
         <Box sx={bookStyles.pageNumber}>Trang {currentPage}</Box>
