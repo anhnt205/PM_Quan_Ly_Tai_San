@@ -52,50 +52,47 @@ public class DieuDongTaiSanService {
     public PageResponse<DieuDongTaiSanDTO> findAllPaged(String idCongTy, int page, int size, String sortBy, String sortDir, String search, Integer loai, String userid, Integer trangThai, String idDonViGiao, Boolean chuaBanGiaoHet) throws SQLException {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
-        List<DieuDongTaiSanDTO> sourceList;
-        sourceList = findAll(idCongTy);
 
-        boolean isClerk = isUserClerk(userid);
+        List<DieuDongTaiSanDTO> sourceList = findAll(idCongTy);
 
-        // Filter theo lượt ký - chỉ lấy những item mà đến lượt user ký
-        // Ngoại lệ: admin lấy hết, NguoiTao cũng lấy không phân biệt thứ tự
+        // ========== 1. Determine special flags for the user ==========
+        boolean skipTurnFilter = false;
+        boolean hasBanHanhQuyetDinh = false;
+
         if (userid != null && !userid.trim().isEmpty()) {
-            boolean skipFilter = false;
-
-            // 1. Admin luôn lấy hết
+            // Admin always skips turn filter and does NOT get status restriction
             if ("admin".equalsIgnoreCase(userid)) {
-                skipFilter = true;
+                skipTurnFilter = true;
             } else {
-                // 2. Kiểm tra quyền ban hành quyết định
+                // Check BanHanhQuyetDinh permission
                 try {
                     NhanVien nv = nhanVienService.findEntityById(userid);
                     if (nv != null && nv.getChucVu() != null) {
                         ChucVu cv = chucVuService.findById(nv.getChucVu());
                         if (cv != null && Boolean.TRUE.equals(cv.getBanHanhQuyetDinh())) {
-                            skipFilter = true;
+                            skipTurnFilter = true;
+                            hasBanHanhQuyetDinh = true;
                         }
                     }
                 } catch (Exception e) {
-                    // Log lỗi nếu cần, nhưng không làm gián đoạn – coi như không có quyền đặc biệt
+                    // ignore – treat as no special rights
                 }
-            }
-
-            if (isClerk){
-                skipFilter = true;
-            }
-            // Nếu không được bỏ qua, mới áp dụng lọc theo lượt ký
-            if (!skipFilter) {
-                List<DieuDongTaiSanDTO> turnFiltered = new ArrayList<>();
-                for (DieuDongTaiSanDTO item : sourceList) {
-                    if (isUserTurnToSign(item, userid)) {
-                        turnFiltered.add(item);
-                    }
-                }
-                sourceList = turnFiltered;
             }
         }
 
-        // Filter by chuaBanGiaoHet - chỉ lấy những phiếu chưa bàn giao hết tài sản
+        // ========== 2. Apply turn‑based filter (if not skipped) ==========
+        if (!skipTurnFilter) {
+            List<DieuDongTaiSanDTO> turnFiltered = new ArrayList<>();
+            for (DieuDongTaiSanDTO item : sourceList) {
+                if (isUserTurnToSign(item, userid)) {
+                    turnFiltered.add(item);
+                }
+            }
+            sourceList = turnFiltered;
+        }
+
+        // ========== 3. Apply other filters (chuaBanGiaoHet, idDonViGiao, search, loai, trangThai) ==========
+        // Filter by chuaBanGiaoHet
         if (Boolean.TRUE.equals(chuaBanGiaoHet)) {
             Set<String> idsChuaBanGiaoHet = dao.getIdsChuaBanGiaoHet(idCongTy);
             List<DieuDongTaiSanDTO> chuaBanGiaoHetFiltered = new ArrayList<>();
@@ -107,28 +104,22 @@ public class DieuDongTaiSanService {
             sourceList = chuaBanGiaoHetFiltered;
         }
 
-        // Filter by idDonViGiao if provided
+        // Filter by idDonViGiao
         if (idDonViGiao != null && !idDonViGiao.trim().isEmpty()) {
-            // 1. Kiểm tra đơn vị truyền vào có phải là Kho Loại 1 hay không
             PhongBanDTO phongBanTarget = phongBanService.getById(idDonViGiao);
             boolean isKhoLoai1Target = phongBanTarget != null
                     && Boolean.TRUE.equals(phongBanTarget.getIsKho())
                     && Integer.valueOf(1).equals(phongBanTarget.getLoaiKho());
 
             List<DieuDongTaiSanDTO> donViGiaoFiltered = new ArrayList<>();
-
             if (isKhoLoai1Target) {
-                // 2. Nếu là Kho Loại 1: Lấy tất cả các phiếu mà đơn vị giao cũng là Kho Loại 1
                 for (DieuDongTaiSanDTO item : sourceList) {
                     PhongBanDTO pbItem = phongBanService.getById(item.getIdDonViGiao());
-                    if (pbItem != null
-                            && Boolean.TRUE.equals(pbItem.getIsKho())
-                            && Integer.valueOf(1).equals(pbItem.getLoaiKho())) {
+                    if (pbItem != null && Boolean.TRUE.equals(pbItem.getIsKho()) && Integer.valueOf(1).equals(pbItem.getLoaiKho())) {
                         donViGiaoFiltered.add(item);
                     }
                 }
             } else {
-                // 3. Nếu không phải Kho Loại 1: Lọc chính xác theo ID đơn vị như cũ
                 for (DieuDongTaiSanDTO item : sourceList) {
                     if (idDonViGiao.equalsIgnoreCase(item.getIdDonViGiao())) {
                         donViGiaoFiltered.add(item);
@@ -138,11 +129,12 @@ public class DieuDongTaiSanService {
             sourceList = donViGiaoFiltered;
         }
 
+        // Filter by search
         if (search != null && !search.trim().isEmpty()) {
             String q = search.toLowerCase();
             List<DieuDongTaiSanDTO> filtered = new ArrayList<>();
             for (DieuDongTaiSanDTO item : sourceList) {
-                if (item != null && item.toString() != null && item.toString().toLowerCase().contains(q)) {
+                if (item != null && item.toString().toLowerCase().contains(q)) {
                     filtered.add(item);
                 }
             }
@@ -160,26 +152,7 @@ public class DieuDongTaiSanService {
             sourceList = loaiFiltered;
         }
 
-        // --- TÍNH TOÁN COUNTS (Trước khi lọc trạng thái) ---
-        Map<String, Long> loaiCounts = new java.util.HashMap<>();
-        Map<String, Long> trangThaiCounts = new java.util.HashMap<>();
-
-        for (DieuDongTaiSanDTO item : sourceList) {
-            if (item != null) {
-                // Tính loaiCounts (đếm tổng quát)
-                if (item.getLoai() != null) {
-                    String key = item.getLoai().toString();
-                    loaiCounts.put(key, loaiCounts.getOrDefault(key, 0L) + 1);
-                }
-                // Tính trangThaiCounts
-                if (item.getTrangThai() != null) {
-                    String key = item.getTrangThai().toString();
-                    trangThaiCounts.put(key, trangThaiCounts.getOrDefault(key, 0L) + 1);
-                }
-            }
-        }
-
-        // Filter by trangThaiPhieu if trangThai != 4
+        // Filter by trangThai (if not status 5)
         if (trangThai != null && trangThai != 5) {
             List<DieuDongTaiSanDTO> trangThaiFiltered = new ArrayList<>();
             for (DieuDongTaiSanDTO item : sourceList) {
@@ -190,21 +163,50 @@ public class DieuDongTaiSanService {
             sourceList = trangThaiFiltered;
         }
 
-        // Apply sorting
+        // ========== 4. Compute counts (before final status filter) ==========
+        Map<String, Long> loaiCounts = new HashMap<>();
+        Map<String, Long> trangThaiCounts = new HashMap<>();
+
+        for (DieuDongTaiSanDTO item : sourceList) {
+            if (item != null) {
+                if (item.getLoai() != null) {
+                    String key = item.getLoai().toString();
+                    loaiCounts.put(key, loaiCounts.getOrDefault(key, 0L) + 1);
+                }
+                if (item.getTrangThai() != null) {
+                    String key = item.getTrangThai().toString();
+                    trangThaiCounts.put(key, trangThaiCounts.getOrDefault(key, 0L) + 1);
+                }
+            }
+        }
+
+        // ========== 5. Apply final status filter for users with BanHanhQuyetDinh ==========
+        if (hasBanHanhQuyetDinh) {
+            List<DieuDongTaiSanDTO> finalFiltered = new ArrayList<>();
+            for (DieuDongTaiSanDTO item : sourceList) {
+                if (item != null && item.getTrangThai() != null && (item.getTrangThai() == 3 || item.getTrangThai() == 4)) {
+                    finalFiltered.add(item);
+                }
+            }
+            sourceList = finalFiltered;
+        }
+
+        // ========== 6. Sorting ==========
         sourceList.sort(getComparator(sortBy, sortDir));
 
+        // ========== 7. Pagination ==========
         long total = sourceList.size();
         int from = Math.min(page * size, sourceList.size());
         int to = Math.min(from + size, sourceList.size());
         List<DieuDongTaiSanDTO> items = sourceList.subList(from, to);
 
+        // ========== 8. Enrich items with signatures and details ==========
         for (DieuDongTaiSanDTO item : items) {
             item.setChuKyList(kyTaiLieuDao.findById(item.getId()));
             item.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId()));
 
             List<ChiTietDieuDongTaiSanDTO> chiTietList;
             if (Boolean.TRUE.equals(chuaBanGiaoHet)) {
-                // Lấy chỉ chi tiết chưa được bàn giao (DaBanGiao = false hoặc NULL)
                 chiTietList = chiTietDieuDongTaiSanDao.findAllChuaBanGiao(item.getId());
             } else {
                 chiTietList = chiTietDieuDongTaiSanDao.findAll(item.getId());
@@ -212,25 +214,12 @@ public class DieuDongTaiSanService {
             item.setChiTietDieuDongTaiSanDTOS(chiTietList);
         }
 
-        if (isClerk) {
-            // Văn thư chỉ được thấy các phiếu có trạng thái 3 hoặc 4
-            List<DieuDongTaiSanDTO> clerkFiltered = new ArrayList<>();
-            for (DieuDongTaiSanDTO item : sourceList) {
-                if (item != null && item.getTrangThai() != null) {
-                    if (item.getTrangThai() == 3 || item.getTrangThai() == 4) {
-                        clerkFiltered.add(item);
-                    }
-                }
-            }
-            sourceList = clerkFiltered;
-        }
-
+        // ========== 9. Build response ==========
         PageResponse<DieuDongTaiSanDTO> response = new PageResponse<>(items, total, page, size);
         response.setLoaiCounts(loaiCounts);
         response.setTrangThaiCounts(trangThaiCounts);
         return response;
     }
-
     /**
      * Comparator for sorting DieuDongTaiSanDTO.
      * - If sortBy is null or empty: default sort by status priority (0,1,3,2) then creation date descending.
@@ -623,22 +612,4 @@ public class DieuDongTaiSanService {
         return dao.findAllChuaBanGiaoHet(idCongTy);
     }
 
-    /**
-     * Kiểm tra xem user có chức vụ là "văn thư" không
-     */
-    private boolean isUserClerk(String userId) {
-        if (userId == null || userId.trim().isEmpty()) return false;
-        try {
-            NhanVien nv = nhanVienService.findEntityById(userId);
-            if (nv != null && nv.getChucVu() != null) {
-                ChucVu cv = chucVuService.findById(nv.getChucVu());
-                if (cv != null && cv.getTenChucVu() != null) {
-                    return cv.getTenChucVu().toLowerCase().contains("văn thư");
-                }
-            }
-        } catch (Exception e) {
-            // ignore, treat as not clerk
-        }
-        return false;
-    }
 }
