@@ -1,14 +1,14 @@
 package com.ecotel.quanlytaisan.dao;
 
-import com.ecotel.quanlytaisan.model.ChiTietDonViSoHuu;
-import com.ecotel.quanlytaisan.model.NhomDonVi;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.UUID;
+import com.ecotel.quanlytaisan.model.ChiTietDonViSoHuu;
 
 @Repository
 public class ChiTietDonViSoHuuDao {
@@ -40,7 +40,7 @@ public class ChiTietDonViSoHuuDao {
 
     // --- EXISTING FILTERS ---
     public List<ChiTietDonViSoHuu> findByIdCCDCVT(String idCCDCVT) {
-        String sql = "SELECT * FROM ChiTietDonViSoHuu WHERE IdCCDCVT = ?";
+        String sql = "SELECT dvsh.*,ctts.SoKyHieu AS soKyHieu FROM ChiTietDonViSoHuu dvsh LEFT JOIN chitiettaisan ctts ON ctts.id=dvsh.idTsCon WHERE dvsh.IdCCDCVT = ?";
         return jdbcTemplate.query(sql, rowMapper, idCCDCVT);
     }
 

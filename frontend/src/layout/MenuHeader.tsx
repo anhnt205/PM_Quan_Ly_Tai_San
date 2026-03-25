@@ -230,8 +230,27 @@ const NavMenuItem = ({ item }: { item: any }) => {
             paper: {
               sx: {
                 padding: "8px",
-                borderRadius: "12px",
+                borderRadius: "10px",
                 boxShadow: "0px 5px 15px rgba(0,0,0,0.1)",
+                maxHeight: 300,
+                "&::-webkit-scrollbar": {
+                  width: "6px", // Thanh cuộn nhỏ lại
+                  borderRadius: "10px", // Bo góc thanh cuộn
+                },
+
+                "&::-webkit-scrollbar-track": {
+                  background: "#f1f1f1", // Màu nền track
+                  borderRadius: "10px",
+                },
+
+                "&::-webkit-scrollbar-thumb": {
+                  background: "#c1c1c1", // Màu thanh cuộn
+                  borderRadius: "10px",
+
+                  "&:hover": {
+                    background: "#a8a8a8", // Màu khi hover
+                  },
+                },
               },
             },
           }}

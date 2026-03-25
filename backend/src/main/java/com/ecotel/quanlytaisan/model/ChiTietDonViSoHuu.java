@@ -16,6 +16,7 @@ public class ChiTietDonViSoHuu {
     private String ngayTao;
     private String nguoiTao;
     private String idTsCon;
+    private String soKyHieu;
     public static ChiTietDonViSoHuu mapToChiTietDonViSoHuu(String[] row) {
         ChiTietDonViSoHuu dv = new ChiTietDonViSoHuu();
         dv.setId(row[0]);
