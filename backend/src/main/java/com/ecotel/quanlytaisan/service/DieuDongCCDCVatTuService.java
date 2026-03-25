@@ -60,6 +60,8 @@ public class DieuDongCCDCVatTuService {
         List<DieuDongCCDCVatTuDTO> sourceList;
         sourceList = dao.findAll(idCongTy);
 
+        boolean isClerk = isUserClerk(userid);
+
         // Filter theo lượt ký - chỉ lấy những item mà đến lượt user ký
         // Ngoại lệ: admin lấy hết, NguoiTao cũng lấy không phân biệt thứ tự
         // Sau khi lấy sourceList từ dao.findAll(idCongTy) và trước khi filter khác
@@ -82,6 +84,10 @@ public class DieuDongCCDCVatTuService {
                 } catch (Exception e) {
                     // Log lỗi nếu cần, nhưng không làm gián đoạn – coi như không có quyền đặc biệt
                 }
+            }
+
+            if (isClerk){
+                skipFilter = true;
             }
 
             // Nếu không được bỏ qua, mới áp dụng lọc theo lượt ký
@@ -209,6 +215,19 @@ public class DieuDongCCDCVatTuService {
                 chiTietList = chiTietDieuDongCCDCVatTuDao.findAll(item.getId());
             }
             item.setChiTietDieuDongCCDCVatTuDTOS(chiTietList);
+        }
+
+        if (isClerk) {
+            // Văn thư chỉ được thấy các phiếu có trạng thái 3 hoặc 4
+            List<DieuDongCCDCVatTuDTO> clerkFiltered = new ArrayList<>();
+            for (DieuDongCCDCVatTuDTO item : sourceList) {
+                if (item != null && item.getTrangThai() != null) {
+                    if (item.getTrangThai() == 3 || item.getTrangThai() == 4) {
+                        clerkFiltered.add(item);
+                    }
+                }
+            }
+            sourceList = clerkFiltered;
         }
 
         PageResponse<DieuDongCCDCVatTuDTO> response = new PageResponse<>(items, total, page, size);
@@ -517,5 +536,24 @@ public class DieuDongCCDCVatTuService {
      */
     public List<DieuDongCCDCVatTuDTO> findAllChuaBanGiaoHet(String idCongTy) {
         return dao.findAllChuaBanGiaoHet(idCongTy);
+    }
+
+    /**
+     * Kiểm tra xem user có chức vụ là "văn thư" không
+     */
+    private boolean isUserClerk(String userId) {
+        if (userId == null || userId.trim().isEmpty()) return false;
+        try {
+            NhanVien nv = nhanVienService.findEntityById(userId);
+            if (nv != null && nv.getChucVu() != null) {
+                ChucVu cv = chucVuService.findById(nv.getChucVu());
+                if (cv != null && cv.getTenChucVu() != null) {
+                    return cv.getTenChucVu().toLowerCase().contains("văn thư");
+                }
+            }
+        } catch (Exception e) {
+            // ignore, treat as not clerk
+        }
+        return false;
     }
 }
