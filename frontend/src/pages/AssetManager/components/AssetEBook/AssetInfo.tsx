@@ -351,10 +351,57 @@ export default function AssetInfo({
         textAlign="center"
         fontSize={20}
         fontWeight={700}
-        sx={{  letterSpacing: "2px", mb: 2 }}
+        sx={{  letterSpacing: "2px", mb: 3 }}
       >
-        THÔNG TIN TÀI SẢN
+        LÝ LỊCH THIẾT BỊ
       </Typography>
+
+      {/* Thông tin mô phỏng bìa giấy */}
+      <Box sx={{ mb: 4, fontFamily: '"Times New Roman", Times, serif', fontSize: '18px', lineHeight: 1.8 }}>
+        <Box sx={{ display: 'flex', mb: 1 }}>
+          <Box sx={{ whiteSpace: 'nowrap', mr: 1 }}>Tên thiết bị, mã hiệu:</Box>
+          <Box sx={{ flexGrow: 1, borderBottom: '2px dotted #1a1a1a', display: 'flex', alignItems: 'flex-end', fontStyle: 'italic', pb: '2px', paddingLeft: '8px' }}>
+            <Typography sx={{ fontFamily: 'inherit', fontStyle: 'inherit', fontSize: 'inherit', lineHeight: 1 }}>
+              {formik.values.tenTaiSan} {formik.values.kyHieu ? `- ${formik.values.kyHieu}` : ''}
+            </Typography>
+          </Box>
+        </Box>
+        <Box sx={{ display: 'flex', mb: 1, gap: 1 }}>
+          <Box sx={{ whiteSpace: 'nowrap' }}>Số chế tạo:</Box>
+          <Box sx={{ flexGrow: 1, borderBottom: '2px dotted #1a1a1a', fontStyle: 'italic', color: '#1818a8', display: 'flex', alignItems: 'flex-end', pb: '2px', paddingLeft: '8px' }}>
+            <Typography sx={{ fontFamily: 'inherit', fontStyle: 'inherit', fontSize: 'inherit', lineHeight: 1 }}></Typography>
+          </Box>
+          <Box sx={{ whiteSpace: 'nowrap', ml: 2 }}>Số kiểm kê:</Box>
+          <Box sx={{ flexGrow: 1, borderBottom: '2px dotted #1a1a1a', fontStyle: 'italic', color: '#1818a8', display: 'flex', alignItems: 'flex-end', pb: '2px', paddingLeft: '8px' }}>
+            <Typography sx={{ fontFamily: 'inherit', fontStyle: 'inherit', fontSize: 'inherit', lineHeight: 1 }}></Typography>
+          </Box>
+        </Box>
+        <Box sx={{ display: 'flex', mb: 1 }}>
+          <Box sx={{ whiteSpace: 'nowrap', mr: 1 }}>Tên nhà máy chế tạo:</Box>
+          <Box sx={{ flexGrow: 1, borderBottom: '2px dotted #1a1a1a', fontStyle: 'italic', color: '#1818a8', display: 'flex', alignItems: 'flex-end', pb: '2px', paddingLeft: '8px' }}>
+            <Typography sx={{ fontFamily: 'inherit', fontStyle: 'inherit', fontSize: 'inherit', lineHeight: 1 }}></Typography>
+          </Box>
+        </Box>
+        <Box sx={{ display: 'flex', mb: 1, gap: 1 }}>
+          <Box sx={{ whiteSpace: 'nowrap' }}>Nước chế tạo:</Box>
+          <Box sx={{ flexGrow: 1, borderBottom: '2px dotted #1a1a1a', fontStyle: 'italic', color: '#1818a8', display: 'flex', alignItems: 'flex-end', pb: '2px', paddingLeft: '8px' }}>
+            <Typography sx={{ fontFamily: 'inherit', fontStyle: 'inherit', fontSize: 'inherit', lineHeight: 1 }}>
+              {formik.values.nuocSanXuat}
+            </Typography>
+          </Box>
+          <Box sx={{ whiteSpace: 'nowrap', ml: 2 }}>Năm chế tạo:</Box>
+          <Box sx={{ flexGrow: 1, borderBottom: '2px dotted #1a1a1a', fontStyle: 'italic', color: '#1818a8', display: 'flex', alignItems: 'flex-end', pb: '2px', paddingLeft: '8px' }}>
+            <Typography sx={{ fontFamily: 'inherit', fontStyle: 'inherit', fontSize: 'inherit', lineHeight: 1 }}>
+              {formik.values.namSanXuat}
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+
+      <Typography variant="h6" sx={{ fontSize: '18px', fontWeight: 'bold', mb: 2, color: '#026e42', textTransform: 'uppercase' }}>
+        Thông tin chi tiết
+      </Typography>
+
       {/* Nội dung chính - giữ nguyên các trường nhập */}
       <Grid container spacing={3}>
         {/* Cột trái */}

@@ -97,6 +97,7 @@ export function getAssetTransferCount(
 
   if(isBanHanh){
     return assetTransferList.filter((item) => {
+      if (item.loai !== type) return false;
       return item.trangThai === 3
     }).length
   }
