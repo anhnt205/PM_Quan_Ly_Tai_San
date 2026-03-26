@@ -3,6 +3,7 @@ package com.ecotel.quanlytaisan.controller;
 import com.ecotel.quanlytaisan.model.*;
 import com.ecotel.quanlytaisan.service.NhanVienService;
 import com.ecotel.quanlytaisan.service.NotificationService;
+import com.ecotel.quanlytaisan.service.S3Service;
 import com.ecotel.quanlytaisan.utils.HashUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,29 +28,32 @@ public class NhanVienController {
 
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private S3Service s3Service;
     @GetMapping
-    public List<NhanVienDTO> getAll(@RequestParam String idcongty) {
+    public List<NhanVienDTO> getAll(@RequestParam("idcongty") String idcongty) {
         return nhanVienService.getAll(idcongty);
     }
 
     @GetMapping("/paged")
     public PageResponse<NhanVienDTO> getAllPaged(
-            @RequestParam String idcongty,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search) {
+            @RequestParam("idcongty") String idcongty,
+            @RequestParam(value="page",defaultValue = "0") int page,
+            @RequestParam(value="size",defaultValue = "20") int size,
+            @RequestParam(value="sortBy",required = false) String sortBy,
+            @RequestParam(value="sortDir",required = false) String sortDir,
+            @RequestParam(value="search",required = false) String search) {
         return nhanVienService.getAllPaged(idcongty, page, size, sortBy, sortDir, search);
     }
 
     @GetMapping("/bynhanVien")
-    public List<NhanVienDTO> getByNhanVien(@RequestParam String idnhanVien) {
+    public List<NhanVienDTO> getByNhanVien(@RequestParam("idnhanvien") String idnhanVien) {
         return nhanVienService.getAll(idnhanVien);
     }
 
     @GetMapping("/{id}")
-    public NhanVienDTO getById(@PathVariable String id) {
+    public NhanVienDTO getById(@PathVariable("id") String id) {
         return nhanVienService.getById(id);
     }
 
@@ -77,7 +81,7 @@ public class NhanVienController {
 
     @PutMapping(value = "/{id}")
     public ResponseEntity<ApiResponse<Object>> update(
-            @PathVariable String id,
+            @PathVariable("id") String id,
             @RequestBody  NhanVien nv
     ) {
         try {
@@ -121,7 +125,7 @@ public class NhanVienController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             // Lấy thông tin nhân viên trước khi xóa để có thông tin công ty
             NhanVienDTO nhanVien = nhanVienService.getById(id);
@@ -168,7 +172,7 @@ public class NhanVienController {
         }
     }
     @GetMapping("/get-ky-so")
-    public String getKySo(@RequestParam String idnhanvien, @RequestParam String pin) {
+    public String getKySo(@RequestParam("idnhanvien") String idnhanvien, @RequestParam("pin") String pin) {
         String value = idnhanvien+pin;
         return HashUtil.sha256(value);
     }
@@ -257,7 +261,70 @@ public class NhanVienController {
     }
 
 
+    @PostMapping("/upload-signatures")
+    public ResponseEntity<ApiResponse<Object>> uploadSignatures(@RequestParam("files") List<MultipartFile> files) {
+        try {
+            List<String> successList = new ArrayList<>();
+            List<Map<String, String>> failureList = new ArrayList<>();
 
+            for (MultipartFile file : files) {
+                String originalFilename = file.getOriginalFilename();
+                if (originalFilename == null || originalFilename.isEmpty()) {
+                    continue;
+                }
+
+                String staffId = "";
+                String extension = "png";
+                int dotIndex = originalFilename.lastIndexOf(".");
+                if (dotIndex > 0) {
+                    staffId = originalFilename.substring(0, dotIndex);
+                    extension = originalFilename.substring(dotIndex + 1);
+                } else {
+                    staffId = originalFilename;
+                }
+
+                NhanVien nv = nhanVienService.findEntityById(staffId);
+                if (nv == null) {
+                    Map<String, String> fail = new HashMap<>();
+                    fail.put("fileName", originalFilename);
+                    fail.put("reason", "Không tìm thấy nhân viên với mã: " + staffId);
+                    failureList.add(fail);
+                    continue;
+                }
+
+                try {
+                    // 1. Tải ảnh lên S3
+                    byte[] data = file.getBytes();
+                    String s3Key = s3Service.uploadFile(data, extension);
+
+                    // 2. Cập nhật thông tin nhân viên
+                    nv.setChuKyNhay(s3Key);
+                    nv.setChuKyThuong(s3Key);
+                    nv.setKyNhay(true);
+                    nv.setKyThuong(true);
+
+                    nhanVienService.update(nv);
+                    successList.add(staffId);
+                } catch (Exception ex) {
+                    Map<String, String> fail = new HashMap<>();
+                    fail.put("fileName", originalFilename);
+                    fail.put("reason", "Lỗi tải ảnh lên S3 hoặc cập nhật DB: " + ex.getMessage());
+                    failureList.add(fail);
+                }
+            }
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("successCount", successList.size());
+            result.put("failureCount", failureList.size());
+            result.put("successItems", successList);
+            result.put("failureItems", failureList);
+
+            return ResponseEntity.ok(ApiResponse.success("Upload chữ ký hoàn tất", result, successList.size()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
 
 
     @DeleteMapping("/delete-all")

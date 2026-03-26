@@ -45,6 +45,7 @@ export default function Staff() {
     exportMutation,
     importExcelMutation,
     deleteAllMutation,
+    uploadMultipleSignaturesMutation,
   } = useStaffMutation(
     paginationModel.page,
     paginationModel.pageSize,
@@ -249,6 +250,10 @@ export default function Staff() {
         onExport={() => exportMutation.mutate()}
         onImport={handleImport}
         showExcel={true}
+        showImportSignature={true}
+        onImportSignature={(files) => {
+          uploadMultipleSignaturesMutation.mutate(files);
+        }}
       />
       <Box p={2}>
         <Dialog

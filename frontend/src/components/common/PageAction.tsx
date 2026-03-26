@@ -10,6 +10,7 @@ import { useRef, useState } from "react";
 import NewButton from "../Button/NewButton";
 import { Download, Settings, Sync, Upload } from "@mui/icons-material";
 import CustomProgress from "../loading/CustomProgress";
+import ImportSignatureModal from "./ImportSignatureModal";
 
 interface Props {
   loading?: boolean;
@@ -19,6 +20,8 @@ interface Props {
   onImport?: (file: File) => void;
   onSyncBak?: (file: File) => void;
   showExcel?: boolean;
+  showImportSignature?: boolean;
+  onImportSignature?: (files: File[]) => void;
 }
 
 export default function PageAction({
@@ -29,8 +32,11 @@ export default function PageAction({
   onImport,
   onSyncBak,
   showExcel = false,
+  showImportSignature=false,
+  onImportSignature
 }: Props) {
   const [anchorElExcel, setAnchorElExcel] = useState<null | HTMLElement>(null);
+  const [openSignatureModal, setOpenSignatureModal] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bakInputRef = useRef<HTMLInputElement>(null);
@@ -142,6 +148,20 @@ export default function PageAction({
           </MenuItem>
         )}
 
+        {showImportSignature && (
+          <MenuItem
+            onClick={() => {
+              handleCloseMenu();
+              setOpenSignatureModal(true);
+            }}
+          >
+            <ListItemIcon>
+              <Upload fontSize="small" color="success" />
+            </ListItemIcon>
+            <Typography variant="body2">Import chữ ký</Typography>
+          </MenuItem>
+        )}
+
         {onExport && (
           <MenuItem
             onClick={() => {
@@ -160,6 +180,15 @@ export default function PageAction({
       <CustomProgress
         title="Hệ thống đang xử lý dữ liệu..."
         loading={loading}
+      />
+
+      <ImportSignatureModal
+        open={openSignatureModal}
+        onClose={() => setOpenSignatureModal(false)}
+        onUpload={(files) => {
+          if (onImportSignature) onImportSignature(files);
+          setOpenSignatureModal(false);
+        }}
       />
     </Box>
   );

@@ -218,6 +218,30 @@ export const useStaffMutation = (
     },
   });
 
+  const uploadMultipleSignaturesMutation = useMutation({
+    mutationFn: async (files: File[]) => {
+      const formData = new FormData();
+      files.forEach((file) => {
+        formData.append("files", file);
+      });
+
+      const res = await api.post("/nhanvien/upload-signatures", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["staffsPage"] });
+      showSuccessAlert("Tải lên chữ ký thành công");
+    },
+    onError: (error: any) => {
+      const errorMsg = error.response?.data?.message || "Lỗi khi tải lên chữ ký";
+      showErrorAlert(errorMsg);
+    },
+  });
+
   // const handleUploadFileS3 = useMutation({
   //   mutationFn: async ({
   //     name,
@@ -322,6 +346,7 @@ export const useStaffMutation = (
     uploadMutation,
     getByIdMutation,
     deleteAllMutation,
+    uploadMultipleSignaturesMutation,
     // handleUploadFileS3,
     // handleDownloadS3,
     // handlePreviewS3,

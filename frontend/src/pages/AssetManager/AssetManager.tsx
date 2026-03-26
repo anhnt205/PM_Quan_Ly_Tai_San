@@ -1,4 +1,11 @@
-import { Delete, Inventory2, Build, ContentCopy } from "@mui/icons-material";
+import {
+  Delete,
+  Inventory2,
+  Build,
+  ContentCopy,
+  ContentCopyTwoTone,
+  MenuBookTwoTone,
+} from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -324,7 +331,7 @@ export default function AssetManager() {
                 setShowForm(true);
               }}
             >
-              <ContentCopy color="primary" />
+              <ContentCopyTwoTone color="primary" />
             </IconButton>
           </Tooltip>
 
@@ -342,7 +349,7 @@ export default function AssetManager() {
             </IconButton>
           </Tooltip>
 
-          <Tooltip title="Xem nhật ký">
+          <Tooltip title="Xem lý lịch">
             <IconButton
               onClick={(e) => {
                 e.stopPropagation();
@@ -350,7 +357,7 @@ export default function AssetManager() {
                 setSelectedAsset(params.row);
               }}
             >
-              <BookOpenCheckIcon color="#0288d1" />
+              <MenuBookTwoTone color="success" />
             </IconButton>
           </Tooltip>
           {/* <Tooltip title="Xem">
