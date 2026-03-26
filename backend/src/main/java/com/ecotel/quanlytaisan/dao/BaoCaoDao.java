@@ -165,6 +165,39 @@ public class BaoCaoDao {
         return jdbcTemplate.queryForList(sql, idDonVi, nam + "%");
     }
 
+    /**
+     * Lấy danh sách CCDC từ bảng chitietdonvisohuu, group theo IdCCDCVT và tính tổng số lượng
+     */
+    public List<Map<String, Object>> getCCDCGroupByDonViSoHuu(String idDonVi) {
+        String sql = """
+        SELECT 
+            IdCCDCVT AS idCCDCVT,
+            SUM(SoLuong) AS tongSoLuong
+        FROM chitietdonvisohuu
+        WHERE IdDonViSoHuu = ?
+        GROUP BY IdCCDCVT
+        HAVING SUM(SoLuong) > 0
+        """;
+        return jdbcTemplate.queryForList(sql, idDonVi);
+    }
+
+    /**
+     * Lấy thông tin chi tiết của CCDC theo Id
+     */
+    public Map<String, Object> getCCDCInfoById(String idCCDC) {
+        String sql = """
+        SELECT 
+            Id,
+            Ten,
+            DonViTinh,
+            GiaTri
+        FROM CCDCVatTu
+        WHERE Id = ?
+        """;
+        List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, idCCDC);
+        return results.isEmpty() ? null : results.get(0);
+    }
+
     public List<Map<String, Object>> getS22DnDecrease(String idDonVi, String nam) {
         String sql = """
         SELECT

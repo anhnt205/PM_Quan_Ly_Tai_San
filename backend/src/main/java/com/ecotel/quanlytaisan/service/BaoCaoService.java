@@ -14,10 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -48,11 +45,49 @@ public class BaoCaoService {
     public Map<String, Object> getS22DnReport(String idDonVi, String nam) {
         Map<String, Object> result = new java.util.HashMap<>();
 
+        // Lấy danh sách tăng từ bàn giao tài sản
         List<Map<String, Object>> increase = dao.getS22DnIncrease(idDonVi, nam);
+
+        // Lấy danh sách tài sản hiện tại của đơn vị
+        List<Map<String, Object>> currentAssets = dao.getTaiSanCoDinh(idDonVi);
+
+        // Tạo set chứa các idTaiSan đã có trong danh sách tăng
+        Set<String> existingAssetIds = increase.stream()
+                .map(row -> String.valueOf(row.get("idTaiSan")))
+                .filter(id -> id != null && !"null".equals(id))
+                .collect(Collectors.toSet());
+
+        // Thêm các tài sản chưa có trong danh sách tăng
+        for (Map<String, Object> asset : currentAssets) {
+            String assetId = String.valueOf(asset.get("Id"));
+            if (!existingAssetIds.contains(assetId)) {
+                // Tạo bản ghi mới cho tài sản chưa có trong danh sách tăng
+                Map<String, Object> newRecord = new java.util.LinkedHashMap<>();
+                newRecord.put("soQuyetDinh", ""); // Không có quyết định
+                newRecord.put("ngayThang", ""); // Không có ngày tháng
+                newRecord.put("idTaiSan", asset.get("Id"));
+                newRecord.put("tenTaiSan", asset.get("TenTaiSan"));
+                newRecord.put("donViTinh", asset.get("DonViTinh") != null ? asset.get("DonViTinh") : "");
+                newRecord.put("soLuong", asset.get("SoLuong") != null ? asset.get("SoLuong") : 0);
+                newRecord.put("donGia", asset.get("NguyenGia") != null ? asset.get("NguyenGia") : 0);
+
+                // Tính tổng tiền = số lượng * đơn giá
+                Number soLuong = (Number) asset.get("SoLuong");
+                Number donGia = (Number) asset.get("NguyenGia");
+                double tongTien = (soLuong != null ? soLuong.doubleValue() : 0) *
+                        (donGia != null ? donGia.doubleValue() : 0);
+                newRecord.put("tongTien", tongTien);
+                newRecord.put("ghiChu", asset.get("GhiChu") != null ? asset.get("GhiChu") : "");
+
+                increase.add(newRecord);
+            }
+        }
+
+        // Lấy danh sách giảm
         List<Map<String, Object>> reduce = dao.getS22DnDecrease(idDonVi, nam);
 
-        increase = mergeS22List(increase, "idTaiSan","soQuyetDinh");
-        reduce = mergeS22List(reduce, "idTaiSan","soQuyetDinh");
+        increase = mergeS22List(increase, "idTaiSan", "soQuyetDinh");
+        reduce = mergeS22List(reduce, "idTaiSan", "soQuyetDinh");
 
         result.put("data_increase", transformZeroToEmpty(increase));
         result.put("data_reduce", transformZeroToEmpty(reduce));
@@ -62,11 +97,67 @@ public class BaoCaoService {
     public Map<String, Object> getS22DnReportCCDC(String idDonVi, String nam) {
         Map<String, Object> result = new java.util.HashMap<>();
 
+        // Lấy danh sách tăng từ bàn giao CCDC
         List<Map<String, Object>> increase = dao.getS22DnIncreaseCCDC(idDonVi, nam);
+
+        // Lấy danh sách CCDC từ bảng chitietdonvisohuu, group theo IdCCDCVT và tính tổng số lượng
+        List<Map<String, Object>> ccdcFromDonViSoHuu = dao.getCCDCGroupByDonViSoHuu(idDonVi);
+
+        // Tạo map chứa idCCDC và tổng số lượng từ bảng chitietdonvisohuu
+        Map<String, Double> ccdcSoHuuMap = ccdcFromDonViSoHuu.stream()
+                .collect(Collectors.toMap(
+                        row -> String.valueOf(row.get("idCCDCVT")),
+                        row -> ((Number) row.get("tongSoLuong")).doubleValue(),
+                        (a, b) -> a
+                ));
+
+        // Tạo map chứa idCCDC và số lượng từ danh sách tăng hiện tại
+        Map<String, Double> increaseMap = increase.stream()
+                .collect(Collectors.toMap(
+                        row -> String.valueOf(row.get("idCCDC")),
+                        row -> ((Number) row.get("soLuong")).doubleValue(),
+                        (a, b) -> a + b // Nếu có nhiều dòng cùng id thì cộng dồn
+                ));
+
+        // Xử lý từng CCDC trong danh sách sở hữu
+        for (Map.Entry<String, Double> entry : ccdcSoHuuMap.entrySet()) {
+            String idCCDC = entry.getKey();
+            double soLuongSoHuu = entry.getValue();
+            double soLuongDaTang = increaseMap.getOrDefault(idCCDC, 0.0);
+
+            double soLuongConLai = soLuongSoHuu - soLuongDaTang;
+
+            // Nếu số lượng còn lại > 0 thì thêm vào danh sách tăng
+            if (soLuongConLai > 0) {
+                // Lấy thông tin chi tiết của CCDC
+                Map<String, Object> ccdcInfo = dao.getCCDCInfoById(idCCDC);
+
+                if (ccdcInfo != null) {
+                    Map<String, Object> newRecord = new java.util.LinkedHashMap<>();
+                    newRecord.put("soQuyetDinh", ""); // Không có quyết định
+                    newRecord.put("ngayThang", ""); // Không có ngày tháng
+                    newRecord.put("idCCDC", idCCDC);
+                    newRecord.put("tenTaiSan", ccdcInfo.get("Ten") != null ? ccdcInfo.get("Ten") : "");
+                    newRecord.put("donViTinh", ccdcInfo.get("DonViTinh") != null ? ccdcInfo.get("DonViTinh") : "");
+                    newRecord.put("soLuong", soLuongConLai);
+                    newRecord.put("donGia", ccdcInfo.get("GiaTri") != null ? ccdcInfo.get("GiaTri") : 0);
+
+                    // Tính tổng tiền = số lượng * đơn giá
+                    Number donGia = (Number) ccdcInfo.get("GiaTri");
+                    double tongTien = soLuongConLai * (donGia != null ? donGia.doubleValue() : 0);
+                    newRecord.put("tongTien", tongTien);
+                    newRecord.put("ghiChu", "Tồn từ kỳ trước"); // Ghi chú để phân biệt
+
+                    increase.add(newRecord);
+                }
+            }
+        }
+
+        // Lấy danh sách giảm
         List<Map<String, Object>> reduce = dao.getS22DnDecreaseCCDC(idDonVi, nam);
 
-        increase = mergeS22List(increase, "idCCDC","soQuyetDinh");
-        reduce = mergeS22List(reduce, "idCCDC","soQuyetDinh");
+        increase = mergeS22List(increase, "idCCDC", "soQuyetDinh");
+        reduce = mergeS22List(reduce, "idCCDC", "soQuyetDinh");
 
         result.put("data_increase", transformZeroToEmpty(increase));
         result.put("data_reduce", transformZeroToEmpty(reduce));
