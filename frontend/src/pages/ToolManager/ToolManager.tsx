@@ -150,7 +150,7 @@ export default function ToolManager() {
         loading={exportExcelMutation.isPending || importExcelMutation.isPending}
         onExport={() => exportExcelMutation.mutate()}
         onImport={(file) => importExcelMutation.mutate(file)}
-        onSyncBak={(file) => syncBakMutation.mutate(file)}
+        onSyncDb={() => syncBakMutation.mutate()}
         showExcel={true}
       />
       <Box p={2}>

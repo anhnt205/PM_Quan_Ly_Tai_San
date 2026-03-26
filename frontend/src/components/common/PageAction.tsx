@@ -18,7 +18,7 @@ interface Props {
   onNewClick: () => void;
   onExport?: () => void;
   onImport?: (file: File) => void;
-  onSyncBak?: (file: File) => void;
+  onSyncDb?: () => void;
   showExcel?: boolean;
   showImportSignature?: boolean;
   onImportSignature?: (files: File[]) => void;
@@ -30,7 +30,7 @@ export default function PageAction({
   onNewClick,
   onExport,
   onImport,
-  onSyncBak,
+  onSyncDb,
   showExcel = false,
   showImportSignature=false,
   onImportSignature
@@ -39,7 +39,6 @@ export default function PageAction({
   const [openSignatureModal, setOpenSignatureModal] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const bakInputRef = useRef<HTMLInputElement>(null);
 
   const handleOpenElExcel = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElExcel(event.currentTarget);
@@ -54,25 +53,15 @@ export default function PageAction({
     fileInputRef.current?.click();
   };
 
-  const handleSyncBakClick = () => {
-    // <--- Hàm mở dialog chọn file .bak
+  const handleSyncDbClick = () => {
     handleCloseMenu();
-    bakInputRef.current?.click();
+    if (onSyncDb) onSyncDb();
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && onImport) {
       onImport(file);
-      event.target.value = "";
-    }
-  };
-
-  const handleBakFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    // <--- Xử lý file .bak
-    const file = event.target.files?.[0];
-    if (file && onSyncBak) {
-      onSyncBak(file);
       event.target.value = "";
     }
   };
@@ -112,15 +101,6 @@ export default function PageAction({
         onChange={handleFileChange}
       />
 
-      {/* Input file .bak */}
-      <input
-        type="file"
-        hidden
-        ref={bakInputRef}
-        accept=".bak"
-        onChange={handleBakFileChange}
-      />
-
       <Menu
         open={Boolean(anchorElExcel)}
         onClose={handleCloseMenu}
@@ -136,14 +116,14 @@ export default function PageAction({
           </MenuItem>
         )}
 
-        {/* MỤC MỚI: Đồng bộ từ SQL Server */}
-        {onSyncBak && (
-          <MenuItem onClick={handleSyncBakClick}>
+        {/* MỤC MỚI: Đồng bộ từ SQL Server (Dùng Config) */}
+        {onSyncDb && (
+          <MenuItem onClick={handleSyncDbClick}>
             <ListItemIcon>
               <Sync fontSize="small" color="primary" />
             </ListItemIcon>
             <Typography variant="body2">
-              Đồng bộ từ SQL Server (.bak)
+              Đồng bộ CSDL Server (Config)
             </Typography>
           </MenuItem>
         )}

@@ -29,15 +29,8 @@ export const useToolManagerMutation = (
   const now = dayjs(new Date()).format("YYYY-MM-DDTHH:mm:ss");
 
   const syncBakMutation = useMutation({
-    mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append("file", file); // Key này phải khớp với @RequestParam("file") ở Backend
-
-      const res = await api.post("/migration/upload-bak", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+    mutationFn: async () => {
+      const res = await api.post("/migration/sync");
       return res.data;
     },
     onSuccess: (data) => {

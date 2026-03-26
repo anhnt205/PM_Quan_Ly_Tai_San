@@ -14,6 +14,7 @@ import {
   Handshake,
   Engineering,
   Assessment,
+  Storage,
 } from "@mui/icons-material";
 import {
   Avatar,
@@ -34,6 +35,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { logout } from "../redux/userSlice";
 import { ROUTES } from "../utils/routes";
 import ExpirationSettingDialog from "../components/common/ExpirationSettingDialog";
+import MssqlConfigDialog from "../components/common/MssqlConfigDialog";
 import { useAssetTransferPageQuery } from "../pages/AssetTransfer/Mutation";
 import {
   getAssetHandoverCount,
@@ -298,6 +300,7 @@ export default function Menuheader() {
     null,
   );
   const [openExpirationDialog, setOpenExpirationDialog] = useState(false);
+  const [openMssqlDialog, setOpenMssqlDialog] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -317,6 +320,22 @@ export default function Menuheader() {
 
   const handleCloseExpirationDialog = () => {
     setOpenExpirationDialog(false);
+  };
+
+  const handleOpenMssqlDialog = () => {
+    handleCloseSettingMenu();
+    setOpenMssqlDialog(true);
+  };
+
+  const handleCloseMssqlDialog = () => {
+    setOpenMssqlDialog(false);
+  };
+
+  const handleSaveMssqlConfig = (config: any) => {
+    console.log("MSSQL Config:", config);
+    // TODO: Connect to backend API
+    setOpenSnackbar(true);
+    handleCloseMssqlDialog();
   };
 
   const {data:chucVu=[]}=useAllPositionsQuery()
@@ -840,6 +859,12 @@ export default function Menuheader() {
             </ListItemIcon>
             <Typography>Thiết lập thời gian hết hạn</Typography>
           </MenuItem>
+          <MenuItem sx={{ py: 2 }} onClick={handleOpenMssqlDialog}>
+            <ListItemIcon>
+              <Storage fontSize="small" color="success" />
+            </ListItemIcon>
+            <Typography>Cấu hình server</Typography>
+          </MenuItem>
           <MenuItem
             sx={{ py: 2 }}
             onClick={() => {
@@ -863,6 +888,13 @@ export default function Menuheader() {
         onConfirm={handleConfirmExpiration}
         initialConfig={config}
         loading={updateConfigMutation.isPending}
+      />
+
+      {/* Dialog Mssql config */}
+      <MssqlConfigDialog
+        open={openMssqlDialog}
+        onClose={handleCloseMssqlDialog}
+        onSave={handleSaveMssqlConfig}
       />
 
       {/* Snackbar thông báo thành công */}
