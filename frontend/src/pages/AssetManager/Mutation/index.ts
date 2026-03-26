@@ -165,6 +165,23 @@ export const useAssetManagerMutation = (
       );
     },
   });
+  const deleteAllMutation = useMutation({
+       mutationFn: async () => {
+         const res = await api.delete(`/taisan/delete-all`);
+         return res.data.message;
+       },
+       onSuccess: (data) => { 
+         queryClient.invalidateQueries({ queryKey: ["assetsPage"] });
+         showSuccessAlert(data || "Xóa tài sản thành công");
+       },
+       onError: (error: any) => {
+         showErrorAlert(
+           error.response?.data?.message ||
+             error.message ||
+             "Xóa tài sản thất bại",
+         );
+       },
+     });
 
   // taisancon
   const createChildAssetBulkMutation = useMutation({
@@ -570,6 +587,7 @@ export const useAssetManagerMutation = (
     deleteOneChildAsssetMutation,
     createManyHistoryAssetMutation,
     updateAssetOwnershipMutation,
+    deleteAllMutation
   };
 };
 

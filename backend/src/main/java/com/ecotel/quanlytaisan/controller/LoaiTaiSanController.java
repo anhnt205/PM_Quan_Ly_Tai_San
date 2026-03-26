@@ -25,23 +25,23 @@ public class LoaiTaiSanController {
     private LoaiTaiSanService loaiTaiSanService;
 
     @GetMapping
-    public List<LoaiTaiSanEnrichedDTO> getAll(@RequestParam(required = false) String idCongTy) {
+    public List<LoaiTaiSanEnrichedDTO> getAll(@RequestParam(value = "idCongTy", required = false) String idCongTy) {
         return loaiTaiSanService.getAll(idCongTy);
     }
 
     @GetMapping("/paged")
     public PageResponse<LoaiTaiSanEnrichedDTO> getAllPaged(
-            @RequestParam(required = false) String idCongTy,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search) {
+            @RequestParam(value = "idCongTy", required = false) String idCongTy,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search) {
         return loaiTaiSanService.getAllPaged(idCongTy, page, size, sortBy, sortDir, search);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<LoaiTaiSanEnrichedDTO>> getById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<LoaiTaiSanEnrichedDTO>> getById(@PathVariable("id") String id) {
         try {
             LoaiTaiSanEnrichedDTO detail = loaiTaiSanService.getById(id);
             return ResponseEntity.ok(ApiResponse.success("Lấy thông tin loại tài sản thành công", detail, 1));
@@ -90,7 +90,7 @@ public class LoaiTaiSanController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody LoaiTaiSan lts) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody LoaiTaiSan lts) {
         try {
             lts.setId(id);
             int result = loaiTaiSanService.update(lts);
@@ -106,7 +106,7 @@ public class LoaiTaiSanController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = loaiTaiSanService.delete(id);
             if (result > 0) {

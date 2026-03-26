@@ -551,6 +551,16 @@ public class TaiSanDao {
         return jdbcTemplate.update(sql, id);
     }
 
+    public int deleteAllTaiSanCon() {
+        String sql = "DELETE FROM TaiSanCon WHERE IdTaiSanCha IN (SELECT Id FROM TaiSan)";
+        return jdbcTemplate.update(sql);
+    }
+
+    public int deleteAll() {
+        String sql = "DELETE FROM TaiSan";
+        return jdbcTemplate.update(sql);
+    }
+
     public List<TaiSanCon> getTaiSanConByTaiSan(String idTaiSan) {
         String sql = "SELECT * FROM TaiSanCon WHERE IdTaiSanCha = ?";
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(TaiSanCon.class), idTaiSan);

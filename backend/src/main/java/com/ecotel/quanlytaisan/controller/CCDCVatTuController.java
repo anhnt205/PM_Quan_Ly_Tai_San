@@ -29,56 +29,56 @@ public class CCDCVatTuController {
     private CCDCVatTuService ccdcVatTuService;
 
     @GetMapping
-    public List<CCDCVatTuDTO> getAll(@RequestParam String idcongty) {
+    public List<CCDCVatTuDTO> getAll(@RequestParam("idcongty") String idcongty) {
         return ccdcVatTuService.getAll(idcongty);
     }
 
     @GetMapping("/paged")
     public PageResponse<CCDCVatTuDTO> getAllPaged(
-            @RequestParam String idcongty,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search) {
+            @RequestParam("idcongty") String idcongty,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search) {
         return ccdcVatTuService.getAllPaged(idcongty, page, size, sortBy, sortDir, search);
     }
 
     @GetMapping("/paged-id-don-vi-ban-dau")
     public PageResponse<CCDCVatTuDTO> getAllPagedByDonVi(
-            @RequestParam String idcongty,
-            @RequestParam String iddonvi,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir) {
+            @RequestParam("idcongty") String idcongty,
+            @RequestParam("iddonvi") String iddonvi,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir) {
         return ccdcVatTuService.getAllPagedByDonVi(idcongty, iddonvi, page, size, sortBy, sortDir);
     }
 
     @GetMapping("/paged-da-ban-giao-theo-don-vi")
     public PageResponse<CCDCVatTuDTO> getDaBanGiaoByDonViSoHuu(
-            @RequestParam String idcongty,
-            @RequestParam String iddonvisoHuu,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir) {
+            @RequestParam("idcongty") String idcongty,
+            @RequestParam("iddonvisoHuu") String iddonvisoHuu,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir) {
         return ccdcVatTuService.getPagedDaBanGiaoByDonViSoHuu(idcongty, iddonvisoHuu, page, size, sortBy, sortDir);
     }
 
     @GetMapping("/paged-chua-ban-giao-theo-don-vi")
     public PageResponse<CCDCVatTuDTO> getChuaBanGiaoByDonViSoHuu(
-            @RequestParam String idcongty,
-            @RequestParam String iddonvisoHuu,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir) {
+            @RequestParam("idcongty") String idcongty,
+            @RequestParam("iddonvisoHuu") String iddonvisoHuu,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir) {
         return ccdcVatTuService.getPagedChuaBanGiaoByDonViSoHuu(idcongty, iddonvisoHuu, page, size, sortBy, sortDir);
     }
 
     @GetMapping("/{id}")
-    public CCDCVatTuDTO getById(@PathVariable String id) {
+    public CCDCVatTuDTO getById(@PathVariable("id") String id) {
         return ccdcVatTuService.getById(id);
     }
 
@@ -99,7 +99,7 @@ public class CCDCVatTuController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody CCDCVatTu ccdc) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody CCDCVatTu ccdc) {
         try {
             ccdc.setId(id);
             int result = ccdcVatTuService.update(ccdc);
@@ -152,7 +152,7 @@ public class CCDCVatTuController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = ccdcVatTuService.delete(id);
             if (result > 0) {
@@ -178,6 +178,17 @@ public class CCDCVatTuController {
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.failure("Xóa danh sách CCDC/Vật tư thất bại", total));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
+    @DeleteMapping("/delete-all")
+    public ResponseEntity<ApiResponse<Object>> deleteAll() {
+        try {
+            int result = ccdcVatTuService.deleteAll();
+            return ResponseEntity.ok(ApiResponse.success("Xóa toàn bộ CCDC/Vật tư thành công", null, result));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
@@ -255,7 +266,7 @@ public class CCDCVatTuController {
 
     @GetMapping("/export/excel")
     public void exportToExcel(
-            @RequestParam String idcongty,
+            @RequestParam("idcongty") String idcongty,
             HttpServletResponse response) throws IOException {
         try {
             // Tạo tên file với timestamp

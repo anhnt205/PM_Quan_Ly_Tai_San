@@ -18,7 +18,7 @@ public class S3Controller {
     }
 
     @GetMapping("/put")
-    public ResponseEntity<?> getPresignedPutUrl(@RequestParam String fileName, @RequestParam String type) {
+    public ResponseEntity<?> getPresignedPutUrl(@RequestParam("fileName") String fileName, @RequestParam("type") String type) {
         try {
             String url = s3Service.generatePresignedPutUrl(fileName, type);
             return ResponseEntity.ok(Map.of("status", "success", "data", url));
@@ -28,7 +28,7 @@ public class S3Controller {
     }
 
     @GetMapping("/get")
-    public ResponseEntity<?> getPresignedGetUrl(@RequestParam String key) {
+    public ResponseEntity<?> getPresignedGetUrl(@RequestParam("key") String key) {
         try {
             String url = s3Service.generatePresignedGetUrl(key);
             return ResponseEntity.ok(Map.of("status", "success", "data", url));
@@ -38,7 +38,7 @@ public class S3Controller {
     }
 
      @GetMapping("/update")
-    public ResponseEntity<?> getPresignedUpdateUrl(@RequestParam String key) {
+    public ResponseEntity<?> getPresignedUpdateUrl(@RequestParam("key") String key) {
         try {
             String url = s3Service.generatePresignedUpdateUrl(key);
             return ResponseEntity.ok(Map.of("status", "success", "data", url));
@@ -48,7 +48,7 @@ public class S3Controller {
     }
 
     @GetMapping("/download")
-    public ResponseEntity<?> downloadFileDirect(@RequestParam String key) {
+    public ResponseEntity<?> downloadFileDirect(@RequestParam("key") String key) {
         try {
             byte[] data = s3Service.downloadFile(key);
             String fileName = key.substring(key.lastIndexOf("/") + 1);
@@ -62,7 +62,7 @@ public class S3Controller {
     }
 
     @GetMapping("/preview")
-    public ResponseEntity<?> previewFile(@RequestParam String key) {
+    public ResponseEntity<?> previewFile(@RequestParam("key") String key) {
         try {
             byte[] data = s3Service.downloadFile(key);
             String fileName = key.substring(key.lastIndexOf("/") + 1);

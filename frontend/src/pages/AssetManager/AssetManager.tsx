@@ -48,6 +48,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ShowStatus } from "./config";
 import AssetEbookModal from "./components/AssetEbookModal";
 import { Action } from "../../utils/const";
+import { useSelector } from "react-redux";
+import { RootState } from "../../redux/store";
 
 export default function AssetManager() {
   const [tab, setTab] = React.useState(0);
@@ -61,6 +63,8 @@ export default function AssetManager() {
   const [selectedGroup, setSelectedGroup] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useSelector((state: RootState) => state.user);
+  
   const [modalOpenBook, setModalOpenBook] = useState(false);
 
   const [paginationModel, setPaginationModel] = useState({
@@ -75,6 +79,7 @@ export default function AssetManager() {
     deleteManyMutation,
     exportAssetMutation,
     importAssetMutation,
+    deleteAllMutation,
   } = useAssetManagerMutation((messages) => {
     setImportErrors(messages); // Lưu mảng lỗi vào state
     setOpenErrorModal(true); // Mở Modal MUI hiển thị danh sách lỗi
@@ -519,6 +524,8 @@ export default function AssetManager() {
             isFilterDepartment={tab === 1}
             selectedDepartment={selectedDepartment}
             setSelectedDepartment={setSelectedDepartment}
+            onDeleteAll={deleteAllMutation.mutate}
+            showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
           />
         </Box>
       </Box>

@@ -27,22 +27,22 @@ public class SetNguonKinhPhiController {
     }
 
     @GetMapping("/taisan/{idTaiSan}")
-    public List<SetNguonKinhPhi> getByTaiSanId(@PathVariable String idTaiSan) {
+    public List<SetNguonKinhPhi> getByTaiSanId(@PathVariable("idTaiSan") String idTaiSan) {
         return setNguonKinhPhiService.getByTaiSanId(idTaiSan);
     }
 
     @GetMapping("/nguonkinhphi/{idNguonKinhPhi}")
-    public List<SetNguonKinhPhi> getByNguonKinhPhiId(@PathVariable String idNguonKinhPhi) {
+    public List<SetNguonKinhPhi> getByNguonKinhPhiId(@PathVariable("idNguonKinhPhi") String idNguonKinhPhi) {
         return setNguonKinhPhiService.getByNguonKinhPhiId(idNguonKinhPhi);
     }
 
     @GetMapping("/nguonkinhphi-detail/{idTaiSan}")
-    public List<NguonKinhPhi> getNguonKinhPhiByTaiSan(@PathVariable String idTaiSan) {
+    public List<NguonKinhPhi> getNguonKinhPhiByTaiSan(@PathVariable("idTaiSan") String idTaiSan) {
         return setNguonKinhPhiService.getNguonKinhPhiByTaiSan(idTaiSan);
     }
 
     @GetMapping("/{id}")
-    public SetNguonKinhPhi getById(@PathVariable String id) {
+    public SetNguonKinhPhi getById(@PathVariable("id") String id) {
         return setNguonKinhPhiService.getById(id);
     }
 
@@ -82,7 +82,7 @@ public class SetNguonKinhPhiController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody SetNguonKinhPhi snkp) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody SetNguonKinhPhi snkp) {
         try {
             snkp.setId(id);
             int result = setNguonKinhPhiService.update(snkp);
@@ -98,7 +98,7 @@ public class SetNguonKinhPhiController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = setNguonKinhPhiService.delete(id);
             if (result > 0) {
@@ -113,7 +113,7 @@ public class SetNguonKinhPhiController {
     }
 
     @DeleteMapping("/taisan/{idTaiSan}")
-    public ResponseEntity<ApiResponse<Object>> deleteByTaiSanId(@PathVariable String idTaiSan) {
+    public ResponseEntity<ApiResponse<Object>> deleteByTaiSanId(@PathVariable("idTaiSan") String idTaiSan) {
         try {
             int result = setNguonKinhPhiService.deleteByTaiSanId(idTaiSan);
             if (result > 0) {
@@ -128,7 +128,7 @@ public class SetNguonKinhPhiController {
     }
 
     @DeleteMapping("/nguonkinhphi/{idNguonKinhPhi}")
-    public ResponseEntity<ApiResponse<Object>> deleteByNguonKinhPhiId(@PathVariable String idNguonKinhPhi) {
+    public ResponseEntity<ApiResponse<Object>> deleteByNguonKinhPhiId(@PathVariable("idNguonKinhPhi") String idNguonKinhPhi) {
         try {
             int result = setNguonKinhPhiService.deleteByNguonKinhPhiId(idNguonKinhPhi);
             if (result > 0) {

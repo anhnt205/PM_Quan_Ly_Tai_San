@@ -244,6 +244,12 @@ public class CCDCVatTuService {
         return ccdcVatTuDao.delete(id);
     }
 
+    public int deleteAll() {
+        ccdcVatTuDao.deleteAllChiTietTaiSan();
+        ccdcVatTuDao.deleteAllChiTietDonViSoHuu();
+        return ccdcVatTuDao.deleteAll();
+    }
+
     public List<CCDCVatTu> readCsv(MultipartFile file) throws IOException {
         List<CCDCVatTu> list = new ArrayList<>();
 

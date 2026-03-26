@@ -15,6 +15,8 @@ import { useDebounce } from "../../hooks/useDebounce";
 import AssetHistoryModal from "./components/ToolHistoryModal";
 import { useLocation, useNavigate } from "react-router-dom";
 import SyncLoadingModal from "../../components/common/SyncLoadingModal";
+import { RootState } from "../../redux/store";
+import { useSelector } from "react-redux";
 
 export default function ToolManager() {
   const [showForm, setShowForm] = useState(false);
@@ -26,6 +28,7 @@ export default function ToolManager() {
   const [searchValue, setSearchValue] = useState("");
   const [openHistory, setOpenHistory] = useState(false);
   const [selectedHistoryTool, setSelectedHistoryTool] = useState<any>(null);
+  const { user } = useSelector((state: RootState) => state.user);
 
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [openErrorModal, setOpenErrorModal] = useState(false);
@@ -56,6 +59,7 @@ export default function ToolManager() {
     exportExcelMutation,
     importExcelMutation,
     syncBakMutation,
+    deleteAllMutation
   } = useToolManagerMutation((messages) => {
     setImportErrors(messages);
     setOpenErrorModal(true);
@@ -150,7 +154,7 @@ export default function ToolManager() {
         loading={exportExcelMutation.isPending || importExcelMutation.isPending}
         onExport={() => exportExcelMutation.mutate()}
         onImport={(file) => importExcelMutation.mutate(file)}
-        onSyncDb={() => syncBakMutation.mutate()}
+        onSyncDb={user?.taiKhoan?.tenDangNhap==="admin"?() => syncBakMutation.mutate():undefined}
         showExcel={true}
       />
       <Box p={2}>
@@ -220,6 +224,8 @@ export default function ToolManager() {
               onPaginationModelChange={setPaginationModel}
               loading={isLoading}
               allDepartments={allDepartments}
+              onDeleteAll={deleteAllMutation.mutate}
+              showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
             />
           </Box>
 

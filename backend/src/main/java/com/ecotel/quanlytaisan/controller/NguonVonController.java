@@ -23,24 +23,24 @@ public class NguonVonController {
     private NguonVonService nguonVonService;
 
     @GetMapping
-    public List<NguonVon> getAll(@RequestParam String idcongty) {
+    public List<NguonVon> getAll(@RequestParam("idcongty") String idcongty) {
         return nguonVonService.getAll(idcongty);
     }
 
     @GetMapping("/paged")
     public PageResponse<NguonVon> getAllPaged(
-            @RequestParam String idCongTy,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search) {
+            @RequestParam("idCongTy") String idCongTy,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search) {
 
         return nguonVonService.getAllPaged(idCongTy, page, size, sortBy, sortDir, search);
     }
 
     @GetMapping("/{id}")
-    public NguonVon getById(@PathVariable String id) {
+    public NguonVon getById(@PathVariable("id") String id) {
         return nguonVonService.getById(id);
     }
 
@@ -80,7 +80,7 @@ public class NguonVonController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody NguonVon nv) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody NguonVon nv) {
         try {
             nv.setId(id);
             int result = nguonVonService.update(nv);
@@ -96,7 +96,7 @@ public class NguonVonController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = nguonVonService.delete(id);
             if (result > 0) {

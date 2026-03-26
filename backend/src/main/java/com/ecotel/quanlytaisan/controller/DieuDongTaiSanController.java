@@ -27,33 +27,33 @@ public class DieuDongTaiSanController {
 
 
     @GetMapping
-    public List<DieuDongTaiSanDTO> getAll(@RequestParam String idcongty) throws SQLException {
+    public List<DieuDongTaiSanDTO> getAll(@RequestParam("idcongty") String idcongty) throws SQLException {
         return service.findAll(idcongty);
     }
 
     @GetMapping("/paged")
     public PageResponse<DieuDongTaiSanDTO> getAllPaged(
-            @RequestParam String idcongty,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) Integer loai,
-            @RequestParam(required = false) String userid,
-            @RequestParam(required = false) Integer trangThai,
-            @RequestParam(required = false) String idDonViGiao,
-            @RequestParam(required = false) Boolean chuaBanGiaoHet) throws SQLException {
+            @RequestParam("idcongty") String idcongty,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "loai", required = false) Integer loai,
+            @RequestParam(value = "userid", required = false) String userid,
+            @RequestParam(value = "trangThai", required = false) Integer trangThai,
+            @RequestParam(value = "idDonViGiao", required = false) String idDonViGiao,
+            @RequestParam(value = "chuaBanGiaoHet", required = false) Boolean chuaBanGiaoHet) throws SQLException {
         return service.findAllPaged(idcongty, page, size, sortBy, sortDir, search, loai, userid, trangThai, idDonViGiao, chuaBanGiaoHet);
     }
 
     @GetMapping("/getbyuserid/{userid}")
-    public List<DieuDongTaiSanDTO> getbyuserid(@PathVariable String userid) throws SQLException {
+    public List<DieuDongTaiSanDTO> getbyuserid(@PathVariable("userid") String userid) throws SQLException {
         return service.findByUserId(userid);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable String id) throws SQLException {
+    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable("id") String id) throws SQLException {
         try {
             DieuDongTaiSanDTO item = service.findByIdDTO(id);
             if (item == null) {
@@ -86,7 +86,7 @@ public class DieuDongTaiSanController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody DieuDongTaiSan obj) throws SQLException {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody DieuDongTaiSan obj) throws SQLException {
         try {
             obj.setId(id); // Đảm bảo set id
             DieuDongTaiSan result = service.update(obj);
@@ -148,7 +148,7 @@ public class DieuDongTaiSanController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) throws SQLException {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) throws SQLException {
         try {
             // Lấy thông tin trước khi xóa để gửi thông báo
             DieuDongTaiSan existingItem = service.findById(id);
@@ -193,7 +193,7 @@ public class DieuDongTaiSanController {
     }
 
     @PostMapping("/capnhattrangthai")
-    public ResponseEntity<ApiResponse<Object>> updateTrangThai(@RequestParam String id, @RequestParam String userId) throws SQLException {
+    public ResponseEntity<ApiResponse<Object>> updateTrangThai(@RequestParam("id") String id, @RequestParam("userId") String userId) throws SQLException {
         try {
             // Lấy thông tin trước khi cập nhật để gửi thông báo
             DieuDongTaiSan existingItem = service.findById(id);
@@ -232,7 +232,7 @@ public class DieuDongTaiSanController {
     }
 
     @PostMapping("/huy")
-    public ResponseEntity<ApiResponse<Object>> huyTrangthai(@RequestParam String id) throws SQLException {
+    public ResponseEntity<ApiResponse<Object>> huyTrangthai(@RequestParam("id") String id) throws SQLException {
         try {
             // Lấy thông tin trước khi cập nhật để gửi thông báo
             DieuDongTaiSan existingItem = service.findById(id);
@@ -253,7 +253,7 @@ public class DieuDongTaiSanController {
     }
 
     @PostMapping("/update-trang-thai-ban-giao")
-    public ResponseEntity<ApiResponse<Object>> updateTrangThaiBanGiao(@RequestParam String id, @RequestParam boolean trangThaiBanGiao) throws SQLException {
+    public ResponseEntity<ApiResponse<Object>> updateTrangThaiBanGiao(@RequestParam("id") String id, @RequestParam("trangThaiBanGiao") boolean trangThaiBanGiao) throws SQLException {
         try {
             // Lấy thông tin trước khi cập nhật để gửi thông báo
             DieuDongTaiSan existingItem = service.findById(id);
@@ -311,19 +311,19 @@ public class DieuDongTaiSanController {
     }
 
     @GetMapping("/details")
-    public List<DieuDongTaiSanDetailResponse> getAllDetailByCongTy(@RequestParam String idcongty) {
+    public List<DieuDongTaiSanDetailResponse> getAllDetailByCongTy(@RequestParam("idcongty") String idcongty) {
         return detailService.getDieuDongTaiSanDetailByIdCongTy(idcongty);
     }
 
     @GetMapping("/details-by_user/{userid}")
-    public List<DieuDongTaiSanDetailResponse> getAllDetailByUserId(@PathVariable String userid) throws SQLException {
+    public List<DieuDongTaiSanDetailResponse> getAllDetailByUserId(@PathVariable("userid") String userid) throws SQLException {
         return detailService.getDieuDongTaiSanDetailByUserId(userid);
     }
 
     @GetMapping("/permission-signing/{id}")
     public ResponseEntity<ApiResponse<Object>> getPermissionSigning(
-            @PathVariable String id,
-            @RequestParam String tenDangNhap) throws SQLException {
+            @PathVariable("id") String id,
+            @RequestParam("tenDangNhap") String tenDangNhap) throws SQLException {
         try {
             DieuDongTaiSanDTO item = service.findByIdDTO(id);
             if (item == null) {
@@ -348,7 +348,7 @@ public class DieuDongTaiSanController {
     }
 
     @GetMapping("/permission-signing/")
-    public ResponseEntity<ApiResponse<Object>> getAllPermissionSigning(@RequestParam String tenDangNhap) throws SQLException {
+    public ResponseEntity<ApiResponse<Object>> getAllPermissionSigning(@RequestParam("tenDangNhap") String tenDangNhap) throws SQLException {
         try {
             if (tenDangNhap == null || tenDangNhap.trim().isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -412,8 +412,8 @@ public class DieuDongTaiSanController {
      */
     @GetMapping("/count-by-don-vi-giao")
     public ResponseEntity<ApiResponse<Object>> countByTrangThaiAndDonViGiao(
-            @RequestParam(defaultValue = "3") int trangThai,
-            @RequestParam String idDonViGiao) {
+            @RequestParam(value = "trangThai", defaultValue = "3") int trangThai,
+            @RequestParam("idDonViGiao") String idDonViGiao) {
         try {
             long count = service.countByTrangThaiAndDonViGiao(trangThai, idDonViGiao);
             java.util.Map<String, Object> response = new java.util.HashMap<>();
@@ -433,7 +433,7 @@ public class DieuDongTaiSanController {
      * Logic: So sánh số lượng trong ChiTietDieuDongTaiSan với tổng số lượng đã bàn giao trong ChiTietBanGiaoTaiSan
      */
     @GetMapping("/chua-ban-giao-het")
-    public ResponseEntity<ApiResponse<Object>> getChuaBanGiaoHet(@RequestParam String idCongTy) {
+    public ResponseEntity<ApiResponse<Object>> getChuaBanGiaoHet(@RequestParam("idCongTy") String idCongTy) {
         try {
             List<DieuDongTaiSanDTO> list = service.findAllChuaBanGiaoHet(idCongTy);
             return ResponseEntity.ok(ApiResponse.success(

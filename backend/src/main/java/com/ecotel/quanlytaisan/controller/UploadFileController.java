@@ -58,7 +58,7 @@ public class UploadFileController {
     }
 
     @GetMapping("/download/{fileName}")
-    public ResponseEntity<?> downloadFile(@PathVariable String fileName) {
+    public ResponseEntity<?> downloadFile(@PathVariable("fileName") String fileName) {
         try {
             File file = new File(UPLOAD_DIR + fileName);
             if (!file.exists()) {
@@ -75,7 +75,7 @@ public class UploadFileController {
     }
 
     @GetMapping("/preview/{fileName}")
-    public ResponseEntity<?> previewFile(@PathVariable String fileName) {
+    public ResponseEntity<?> previewFile(@PathVariable("fileName") String fileName) {
         try {
             File file = new File(UPLOAD_DIR + fileName);
             if (!file.exists()) {
@@ -99,7 +99,7 @@ public class UploadFileController {
 
 
     @PostMapping("/export")
-    public void exportJson(@RequestBody List<Map<String, Object>> jsonList, @RequestParam(defaultValue = "Sheet1") String sheetName, HttpServletResponse response) {
+    public void exportJson(@RequestBody List<Map<String, Object>> jsonList, @RequestParam(value = "sheetName", defaultValue = "Sheet1") String sheetName, HttpServletResponse response) {
         Workbook workbook = new XSSFWorkbook();
         try {
             // Sheet
@@ -295,7 +295,7 @@ public class UploadFileController {
      * @return PDF file as byte array
      */
     @GetMapping("/convert/docx-to-pdf/{fileName}")
-    public ResponseEntity<?> convertExistingDocxToPdf(@PathVariable String fileName) {
+    public ResponseEntity<?> convertExistingDocxToPdf(@PathVariable("fileName") String fileName) {
         Map<String, Object> response = new HashMap<>();
 
         try {

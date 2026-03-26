@@ -22,7 +22,7 @@ public class ConfigController {
     }
 
     @GetMapping("/{idAccount}")
-    public Config getByIdAccount(@PathVariable String idAccount) {
+    public Config getByIdAccount(@PathVariable("idAccount") String idAccount) {
         return configService.getByIdAccount(idAccount);
     }
 
@@ -62,7 +62,7 @@ public class ConfigController {
     }
 
     @PutMapping("/{idAccount}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String idAccount, @RequestBody Config config) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("idAccount") String idAccount, @RequestBody Config config) {
         try {
             config.setIdAccount(idAccount);
             int result = configService.update(config);
@@ -78,7 +78,7 @@ public class ConfigController {
     }
 
     @DeleteMapping("/{idAccount}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String idAccount) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("idAccount") String idAccount) {
         try {
             int result = configService.delete(idAccount);
             if (result > 0) {

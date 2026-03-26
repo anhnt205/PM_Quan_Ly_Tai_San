@@ -26,6 +26,7 @@ import {
 import { ColumnConfig } from "../columnConfig";
 import ColumnConfigMenu from "./ColumnConfig";
 import { findById } from "../../../utils/helpers";
+import { showConfirmAlert } from "../../../components/Alert";
 
 interface Props {
   tableId?: string;
@@ -44,6 +45,8 @@ interface Props {
   onPaginationModelChange?: (model: any) => void;
   loading?: boolean;
   allDepartments?: any[];
+  showDeleteAll?: boolean;
+  onDeleteAll?: () => void;
 }
 
 export default function ToolTableCustom({
@@ -63,6 +66,8 @@ export default function ToolTableCustom({
   onPaginationModelChange,
   loading = false,
   allDepartments = [],
+  showDeleteAll=false,
+  onDeleteAll
 }: Props) {
   const [expandedRows, setExpandedRows] = useState<Set<string | number>>(
     new Set(),
@@ -471,6 +476,26 @@ export default function ToolTableCustom({
                 Xóa ({selectedIds.length})
               </Button>
             )}
+            {showDeleteAll && (
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="error"
+                  startIcon={<Delete />}
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const confirm = await showConfirmAlert(
+                      `Xác nhận xóa tất cả bản ghi?. bạn không thể hoàn tác!.`,
+                    );
+                    if (confirm.isConfirmed) {
+                      onDeleteAll?.();
+                      onSelectionChange?.([]);
+                    }
+                  }}
+                >
+                  Xóa tất cả
+                </Button>
+              )}
           </Box>
         </Grid>
       </Grid>

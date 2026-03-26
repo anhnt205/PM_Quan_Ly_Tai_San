@@ -24,8 +24,8 @@ public class ChiTietBanGiaoCCDCVatTuController {
 
     @GetMapping
     public List<ChiTietBanGiaoCCDCVatTuDTO> getAll(
-            @RequestParam String idbangiaoccdcvattu,
-            @RequestParam String iddieudongccdcvattu) {
+            @RequestParam("idbangiaoccdcvattu") String idbangiaoccdcvattu,
+            @RequestParam("iddieudongccdcvattu") String iddieudongccdcvattu) {
 
         List<ChiTietBanGiaoCCDCVatTuDTO> banGiaoList = service.findAll(idbangiaoccdcvattu);
         List<ChiTietDieuDongCCDCVatTuDTO> dieuDongList = chiTietDieuDongCCDCVatTuService.findAll(iddieudongccdcvattu);
@@ -56,13 +56,13 @@ public class ChiTietBanGiaoCCDCVatTuController {
     }
 
     @GetMapping("/by-dieu-dong/{id}")
-    public List<ChiTietBanGiaoCCDCVatTuDTO> getAllByDieuDong(@PathVariable String id) {
+    public List<ChiTietBanGiaoCCDCVatTuDTO> getAllByDieuDong(@PathVariable("id") String id) {
         return service.findByIdDieuDong(id);
     }
 
 
     @GetMapping("/{id}")
-    public ChiTietBanGiaoCCDCVatTuDTO getById(@PathVariable String id) {
+    public ChiTietBanGiaoCCDCVatTuDTO getById(@PathVariable("id") String id) {
         return service.findById(id);
     }
 
@@ -153,7 +153,7 @@ public class ChiTietBanGiaoCCDCVatTuController {
 
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = service.delete(id);
             if (result > 0) {

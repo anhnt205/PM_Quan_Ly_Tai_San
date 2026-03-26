@@ -38,19 +38,19 @@ public class SuaChuaController {
      */
     @GetMapping
     public ResponseEntity<PageResponse<SuaChuaDTO>> findAll(
-            @RequestParam String idCongTy,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(defaultValue = "desc") String sortDir,
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) String userId,
-            @RequestParam(required = false) Integer loai,
-            @RequestParam(required = false) String idDonViGiao,
-            @RequestParam(required = false) String idDonViNhan,
-            @RequestParam(required = false) String idKeHoach,
-            @RequestParam(required = false) Integer trangThai,
-            @RequestParam(required = false) Boolean chuaSuaHet  // thêm
+            @RequestParam("idCongTy") String idCongTy,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", defaultValue = "desc") String sortDir,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "userId", required = false) String userId,
+            @RequestParam(value = "loai", required = false) Integer loai,
+            @RequestParam(value = "idDonViGiao", required = false) String idDonViGiao,
+            @RequestParam(value = "idDonViNhan", required = false) String idDonViNhan,
+            @RequestParam(value = "idKeHoach", required = false) String idKeHoach,
+            @RequestParam(value = "trangThai", required = false) Integer trangThai,
+            @RequestParam(value = "chuaSuaHet", required = false) Boolean chuaSuaHet  // thêm
     ) throws SQLException {
         PageResponse<SuaChuaDTO> response = suaChuaService.findAllPaged(
                 idCongTy, page, size, sortBy, sortDir, search,
@@ -64,7 +64,7 @@ public class SuaChuaController {
      * Lấy danh sách phiếu sửa chữa theo userId (các phiếu user có quyền xem)
      */
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<SuaChuaDTO>> getByUserId(@PathVariable String userId) throws SQLException {
+    public ResponseEntity<List<SuaChuaDTO>> getByUserId(@PathVariable("userId") String userId) throws SQLException {
         List<SuaChuaDTO> list = suaChuaService.getByUserId(userId);
         return ResponseEntity.ok(list);
     }
@@ -73,7 +73,7 @@ public class SuaChuaController {
      * Lấy danh sách phiếu sửa chữa theo loại
      */
     @GetMapping("/loai/{loai}")
-    public ResponseEntity<List<SuaChuaDTO>> getByLoai(@PathVariable int loai) throws SQLException {
+    public ResponseEntity<List<SuaChuaDTO>> getByLoai(@PathVariable("loai") int loai) throws SQLException {
         List<SuaChuaDTO> list = suaChuaService.getByLoai(loai);
         return ResponseEntity.ok(list);
     }
@@ -82,7 +82,7 @@ public class SuaChuaController {
      * Lấy thông tin phiếu sửa chữa theo ID (trả về DTO)
      */
     @GetMapping("/{id}")
-    public ResponseEntity<SuaChuaDTO> findById(@PathVariable String id) throws SQLException {
+    public ResponseEntity<SuaChuaDTO> findById(@PathVariable("id") String id) throws SQLException {
         SuaChuaDTO dto = suaChuaService.findByIdDTO(id);
         if (dto == null) {
             return ResponseEntity.notFound().build();
@@ -94,7 +94,7 @@ public class SuaChuaController {
      * Check đã sửa chữa của những trạng thái đã hoàn thành
      */
     @GetMapping("/{id}/check-dasua")
-    public ResponseEntity<?> checkAllDaSuaChua(@PathVariable String id) {
+    public ResponseEntity<?> checkAllDaSuaChua(@PathVariable("id") String id) {
         try {
             boolean result = suaChuaService.checkAllDaSuaChua(id);
             return ResponseEntity.ok(result);
@@ -119,7 +119,7 @@ public class SuaChuaController {
      * Cập nhật phiếu sửa chữa
      */
     @PutMapping("/{id}")
-    public ResponseEntity<SuaChua> update(@PathVariable String id, @RequestBody SuaChua entity) throws SQLException {
+    public ResponseEntity<SuaChua> update(@PathVariable("id") String id, @RequestBody SuaChua entity) throws SQLException {
         entity.setId(id);
         SuaChua updated = suaChuaService.update(entity);
         if (updated == null) {
@@ -132,7 +132,7 @@ public class SuaChuaController {
      * Xóa phiếu sửa chữa
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) throws SQLException {
+    public ResponseEntity<Void> delete(@PathVariable("id") String id) throws SQLException {
         int result = suaChuaService.delete(id);
         if (result == 0) {
             return ResponseEntity.notFound().build();
@@ -173,8 +173,8 @@ public class SuaChuaController {
      */
     @PostMapping("/capnhattrangthai")
     public ResponseEntity<ApiResponse<Object>> capNhatTrangThai(
-            @RequestParam String id,
-            @RequestParam String userId
+            @RequestParam("id") String id,
+            @RequestParam("userId") String userId
     ) {
         try {
             SuaChua existing = suaChuaService.findById(id);
@@ -198,7 +198,7 @@ public class SuaChuaController {
      * Hủy phiếu sửa chữa
      */
     @PostMapping("/{id}/huy")
-    public ResponseEntity<Integer> huyTrangThai(@PathVariable String id) {
+    public ResponseEntity<Integer> huyTrangThai(@PathVariable("id") String id) {
         int result = suaChuaService.huyTrangThai(id);
         return ResponseEntity.ok(result);
     }
@@ -209,8 +209,8 @@ public class SuaChuaController {
      */
     @GetMapping("/{id}/permission")
     public ResponseEntity<Integer> getPermissionSigning(
-            @PathVariable String id,
-            @RequestParam String userId
+            @PathVariable("id") String id,
+            @RequestParam("userId") String userId
     ) throws SQLException {
         SuaChuaDTO dto = suaChuaService.findByIdDTO(id);
         if (dto == null) {

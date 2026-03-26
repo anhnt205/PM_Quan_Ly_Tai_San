@@ -33,7 +33,7 @@ public class PermissionManagementController {
 
     // Gán vai trò cho người dùng
     @PostMapping("/assign-role")
-    public ResponseEntity<ApiResponse<Object>> assignRoleToUser(@RequestParam String userId, @RequestParam String roleId) {
+    public ResponseEntity<ApiResponse<Object>> assignRoleToUser(@RequestParam("userId") String userId, @RequestParam("roleId") String roleId) {
         try {
             // Kiểm tra xem user đã có role này chưa
             UserRole existingUserRole = userRoleService.getByUserAndRole(userId, roleId);
@@ -64,7 +64,7 @@ public class PermissionManagementController {
 
     // Gỡ vai trò khỏi người dùng
     @DeleteMapping("/remove-role")
-    public ResponseEntity<ApiResponse<Object>> removeRoleFromUser(@RequestParam String userId, @RequestParam String roleId) {
+    public ResponseEntity<ApiResponse<Object>> removeRoleFromUser(@RequestParam("userId") String userId, @RequestParam("roleId") String roleId) {
         try {
             UserRole userRole = userRoleService.getByUserAndRole(userId, roleId);
             if (userRole == null) {
@@ -86,12 +86,12 @@ public class PermissionManagementController {
 
     // Cấp quyền cho vai trò
     @PostMapping("/assign-permission-to-role")
-    public ResponseEntity<ApiResponse<Object>> assignPermissionToRole(@RequestParam String roleId, 
-                                                                     @RequestParam String permissionId,
-                                                                     @RequestParam(defaultValue = "false") boolean canCreate,
-                                                                     @RequestParam(defaultValue = "false") boolean canRead,
-                                                                     @RequestParam(defaultValue = "false") boolean canUpdate,
-                                                                     @RequestParam(defaultValue = "false") boolean canDelete) {
+    public ResponseEntity<ApiResponse<Object>> assignPermissionToRole(@RequestParam("roleId") String roleId, 
+                                                                     @RequestParam("permissionId") String permissionId,
+                                                                     @RequestParam(value = "canCreate", defaultValue = "false") boolean canCreate,
+                                                                     @RequestParam(value = "canRead", defaultValue = "false") boolean canRead,
+                                                                     @RequestParam(value = "canUpdate", defaultValue = "false") boolean canUpdate,
+                                                                     @RequestParam(value = "canDelete", defaultValue = "false") boolean canDelete) {
         try {
             // Kiểm tra xem role đã có permission này chưa
             RolePermission existingRolePermission = rolePermissionService.getByRoleAndPermission(roleId, permissionId);
@@ -124,12 +124,12 @@ public class PermissionManagementController {
 
     // Cập nhật quyền của vai trò
     @PutMapping("/update-role-permission")
-    public ResponseEntity<ApiResponse<Object>> updateRolePermission(@RequestParam String roleId, 
-                                                                   @RequestParam String permissionId,
-                                                                   @RequestParam(defaultValue = "false") boolean canCreate,
-                                                                   @RequestParam(defaultValue = "false") boolean canRead,
-                                                                   @RequestParam(defaultValue = "false") boolean canUpdate,
-                                                                   @RequestParam(defaultValue = "false") boolean canDelete) {
+    public ResponseEntity<ApiResponse<Object>> updateRolePermission(@RequestParam("roleId") String roleId, 
+                                                                   @RequestParam("permissionId") String permissionId,
+                                                                   @RequestParam(value = "canCreate", defaultValue = "false") boolean canCreate,
+                                                                   @RequestParam(value = "canRead", defaultValue = "false") boolean canRead,
+                                                                   @RequestParam(value = "canUpdate", defaultValue = "false") boolean canUpdate,
+                                                                   @RequestParam(value = "canDelete", defaultValue = "false") boolean canDelete) {
         try {
             RolePermission rolePermission = rolePermissionService.getByRoleAndPermission(roleId, permissionId);
             if (rolePermission == null) {
@@ -156,27 +156,27 @@ public class PermissionManagementController {
 
     // Lấy tất cả quyền của người dùng
     @GetMapping("/user/{userId}/permissions")
-    public List<UserPermission> getUserPermissions(@PathVariable String userId) {
+    public List<UserPermission> getUserPermissions(@PathVariable("userId") String userId) {
         return userPermissionService.getUserPermissions(userId);
     }
 
     // Lấy tất cả vai trò của người dùng
     @GetMapping("/user/{userId}/roles")
-    public List<UserRole> getUserRoles(@PathVariable String userId) {
+    public List<UserRole> getUserRoles(@PathVariable("userId") String userId) {
         return userRoleService.getByUserId(userId);
     }
 
     // Lấy tất cả quyền của vai trò
     @GetMapping("/role/{roleId}/permissions")
-    public List<RolePermission> getRolePermissions(@PathVariable String roleId) {
+    public List<RolePermission> getRolePermissions(@PathVariable("roleId") String roleId) {
         return rolePermissionService.getByRoleId(roleId);
     }
 
     // Kiểm tra quyền tổng thể của người dùng
     @GetMapping("/user/{userId}/check-permission")
-    public ResponseEntity<ApiResponse<Object>> checkUserPermission(@PathVariable String userId, 
-                                                                  @RequestParam String permissionCode, 
-                                                                  @RequestParam String action) {
+    public ResponseEntity<ApiResponse<Object>> checkUserPermission(@PathVariable("userId") String userId, 
+                                                                  @RequestParam("permissionCode") String permissionCode, 
+                                                                  @RequestParam("action") String action) {
         try {
             boolean hasPermission = userPermissionService.hasPermission(userId, permissionCode, action);
             Map<String, Object> result = new HashMap<>();

@@ -32,7 +32,7 @@ public class LoaiKeHoachSCBDController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable("id") String id) {
         try {
             LoaiKeHoachSCBD item = loaiKeHoachService.getById(id);
             if (item != null) {
@@ -64,7 +64,7 @@ public class LoaiKeHoachSCBDController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody LoaiKeHoachSCBD loaiKeHoach) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody LoaiKeHoachSCBD loaiKeHoach) {
         try {
             loaiKeHoach.setId(id);
             int result = loaiKeHoachService.update(loaiKeHoach);
@@ -80,7 +80,7 @@ public class LoaiKeHoachSCBDController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = loaiKeHoachService.delete(id);
             if (result > 0) {

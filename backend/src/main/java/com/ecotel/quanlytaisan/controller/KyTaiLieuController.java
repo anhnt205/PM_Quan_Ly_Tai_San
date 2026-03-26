@@ -24,7 +24,7 @@ public class KyTaiLieuController {
 
     // ===== API CŨ GIỮ NGUYÊN =====
     @GetMapping("/{idTaiLieu}")
-    public List<KyTaiLieu> getById(@PathVariable String idTaiLieu) {
+    public List<KyTaiLieu> getById(@PathVariable("idTaiLieu") String idTaiLieu) {
         return kyTaiLieuService.getList(idTaiLieu);
     }
 
@@ -49,7 +49,7 @@ public class KyTaiLieuController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             // Lấy thông tin trước khi xóa để gửi thông báo
             KyTaiLieu existingItem = kyTaiLieuService.getById(id);
@@ -93,8 +93,8 @@ public class KyTaiLieuController {
     // 2. Lấy thông tin 1 người ký
     @GetMapping("/nguoi-ky/{idNguoiKy}/{idTaiLieu}")
     public ResponseEntity<ApiResponse<NguoiKy>> getNguoiKy(
-            @PathVariable String idNguoiKy,
-            @PathVariable String idTaiLieu) {
+            @PathVariable("idNguoiKy") String idNguoiKy,
+            @PathVariable("idTaiLieu") String idTaiLieu) {
         try {
             NguoiKy nguoiKy = kyTaiLieuService.getNguoiKy(idNguoiKy, idTaiLieu);
             if (nguoiKy != null) {
@@ -110,7 +110,7 @@ public class KyTaiLieuController {
 
     // 3. Lấy tất cả người ký theo id tài liệu
     @GetMapping("/nguoi-ky/tailieu/{idTaiLieu}")
-    public ResponseEntity<ApiResponse<List<NguoiKy>>> getAllNguoiKyByIdTaiLieu(@PathVariable String idTaiLieu) {
+    public ResponseEntity<ApiResponse<List<NguoiKy>>> getAllNguoiKyByIdTaiLieu(@PathVariable("idTaiLieu") String idTaiLieu) {
         try {
             List<NguoiKy> list = kyTaiLieuService.getAllNguoiKyByIdTaiLieu(idTaiLieu);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách người ký thành công", list, list.size()));
@@ -123,8 +123,8 @@ public class KyTaiLieuController {
     // 4. Cập nhật trạng thái ký
     @PutMapping("/nguoi-ky/{id}/trangthai")
     public ResponseEntity<ApiResponse<Object>> updateTrangThaiKy(
-            @PathVariable String id,
-            @RequestParam String trangThai) {
+            @PathVariable("id") String id,
+            @RequestParam("trangThai") String trangThai) {
         try {
             int result = kyTaiLieuService.updateTrangThai(id, trangThai);
 
@@ -141,7 +141,7 @@ public class KyTaiLieuController {
     }
 
     @PutMapping("/nguoi-ky/update/{idTaiLieu}")
-    public ResponseEntity<ApiResponse<Object>> updateNguoiKy(@PathVariable String idTaiLieu, @RequestBody List<NguoiKy> nguoiKyList) {
+    public ResponseEntity<ApiResponse<Object>> updateNguoiKy(@PathVariable("idTaiLieu") String idTaiLieu, @RequestBody List<NguoiKy> nguoiKyList) {
         try {
             int result = kyTaiLieuService.updateNguoiKy(idTaiLieu, nguoiKyList);
             if (result > 0) {

@@ -18,13 +18,13 @@ public class KetQuaSuaChuaChiTietVatTuController {
     private KetQuaSuaChuaChiTietVatTuService vatTuService;
 
     @GetMapping("/by-ketqua/{idKetQuaSuaChua}")
-    public ResponseEntity<List<KetQuaSuaChuaChiTietVatTuDTO>> getByKetQuaSuaChua(@PathVariable String idKetQuaSuaChua) {
+    public ResponseEntity<List<KetQuaSuaChuaChiTietVatTuDTO>> getByKetQuaSuaChua(@PathVariable("idKetQuaSuaChua") String idKetQuaSuaChua) {
         List<KetQuaSuaChuaChiTietVatTuDTO> list = vatTuService.findByIdKetQuaSuaChua(idKetQuaSuaChua);
         return ResponseEntity.ok(list);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<KetQuaSuaChuaChiTietVatTu> findById(@PathVariable String id) {
+    public ResponseEntity<KetQuaSuaChuaChiTietVatTu> findById(@PathVariable("id") String id) {
         KetQuaSuaChuaChiTietVatTu entity = vatTuService.findById(id);
         if (entity == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(entity);
@@ -32,15 +32,15 @@ public class KetQuaSuaChuaChiTietVatTuController {
 
     @PostMapping
     public ResponseEntity<KetQuaSuaChuaChiTietVatTu> insert(@RequestBody KetQuaSuaChuaChiTietVatTu entity,
-                                                            @RequestParam String userId) {
+                                                            @RequestParam("userId") String userId) {
         KetQuaSuaChuaChiTietVatTu created = vatTuService.insert(entity, userId);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<KetQuaSuaChuaChiTietVatTu> update(@PathVariable String id,
+    public ResponseEntity<KetQuaSuaChuaChiTietVatTu> update(@PathVariable("id") String id,
                                                             @RequestBody KetQuaSuaChuaChiTietVatTu entity,
-                                                            @RequestParam String userId) {
+                                                            @RequestParam("userId") String userId) {
         entity.setId(id);
         KetQuaSuaChuaChiTietVatTu updated = vatTuService.update(entity, userId);
         if (updated == null) return ResponseEntity.notFound().build();
@@ -48,14 +48,14 @@ public class KetQuaSuaChuaChiTietVatTuController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") String id) {
         int result = vatTuService.delete(id);
         if (result == 0) return ResponseEntity.notFound().build();
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/soft/{id}")
-    public ResponseEntity<Void> softDelete(@PathVariable String id) {
+    public ResponseEntity<Void> softDelete(@PathVariable("id") String id) {
         int result = vatTuService.softDelete(id);
         if (result == 0) return ResponseEntity.notFound().build();
         return ResponseEntity.noContent().build();
@@ -63,14 +63,14 @@ public class KetQuaSuaChuaChiTietVatTuController {
 
     @PostMapping("/bulk")
     public ResponseEntity<List<KetQuaSuaChuaChiTietVatTu>> insertBulk(@RequestBody List<KetQuaSuaChuaChiTietVatTu> entities,
-                                                                      @RequestParam String userId) {
+                                                                      @RequestParam("userId") String userId) {
         List<KetQuaSuaChuaChiTietVatTu> created = vatTuService.insertBulk(entities, userId);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
     @PutMapping("/bulk")
     public ResponseEntity<List<KetQuaSuaChuaChiTietVatTu>> updateBulk(@RequestBody List<KetQuaSuaChuaChiTietVatTu> entities,
-                                                                      @RequestParam String userId) {
+                                                                      @RequestParam("userId") String userId) {
         List<KetQuaSuaChuaChiTietVatTu> updated = vatTuService.updateBulk(entities, userId);
         return ResponseEntity.ok(updated);
     }
@@ -83,9 +83,9 @@ public class KetQuaSuaChuaChiTietVatTuController {
 
     @PutMapping("/replace/{idKetQuaSuaChua}")
     public ResponseEntity<List<KetQuaSuaChuaChiTietVatTu>> replaceByKetQuaSuaChua(
-            @PathVariable String idKetQuaSuaChua,
+            @PathVariable("idKetQuaSuaChua") String idKetQuaSuaChua,
             @RequestBody List<KetQuaSuaChuaChiTietVatTu> newEntities,
-            @RequestParam String userId) {
+            @RequestParam("userId") String userId) {
         List<KetQuaSuaChuaChiTietVatTu> result = vatTuService.replaceByKetQuaSuaChua(idKetQuaSuaChua, newEntities, userId);
         return ResponseEntity.ok(result);
     }

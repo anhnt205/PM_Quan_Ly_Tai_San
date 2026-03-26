@@ -21,29 +21,29 @@ public class UserPermissionController {
 
     @GetMapping("/user/{userId}/paged")
     public PageResponse<UserPermission> getUserPermissionsPaged(
-            @PathVariable String userId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search) {
+            @PathVariable("userId") String userId,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search) {
 
         return userPermissionService.getUserPermissionsPagedResponse(userId, page, size, sortBy, sortDir, search);
     }
     @GetMapping("/user/{userId}")
-    public List<UserPermission> getUserPermissions(@PathVariable String userId) {
+    public List<UserPermission> getUserPermissions(@PathVariable("userId") String userId) {
         return userPermissionService.getUserPermissions(userId);
     }
 
     @GetMapping("/user/{userId}/permission/{permissionCode}")
-    public List<UserPermission> getUserPermissionsByCode(@PathVariable String userId, @PathVariable String permissionCode) {
+    public List<UserPermission> getUserPermissionsByCode(@PathVariable("userId") String userId, @PathVariable("permissionCode") String permissionCode) {
         return userPermissionService.getUserPermissionsByCode(userId, permissionCode);
     }
 
     @GetMapping("/user/{userId}/check/{permissionCode}/{action}")
-    public ResponseEntity<ApiResponse<Object>> checkPermission(@PathVariable String userId, 
-                                                             @PathVariable String permissionCode, 
-                                                             @PathVariable String action) {
+    public ResponseEntity<ApiResponse<Object>> checkPermission(@PathVariable("userId") String userId, 
+                                                             @PathVariable("permissionCode") String permissionCode, 
+                                                             @PathVariable("action") String action) {
         try {
             boolean hasPermission = userPermissionService.hasPermission(userId, permissionCode, action);
             Map<String, Object> result = new HashMap<>();
@@ -60,7 +60,7 @@ public class UserPermissionController {
     }
 
     @GetMapping("/user/{userId}/cancreate/{permissionCode}")
-    public ResponseEntity<ApiResponse<Object>> canCreate(@PathVariable String userId, @PathVariable String permissionCode) {
+    public ResponseEntity<ApiResponse<Object>> canCreate(@PathVariable("userId") String userId, @PathVariable("permissionCode") String permissionCode) {
         try {
             boolean canCreate = userPermissionService.canCreate(userId, permissionCode);
             Map<String, Object> result = new HashMap<>();
@@ -76,7 +76,7 @@ public class UserPermissionController {
     }
 
     @GetMapping("/user/{userId}/canread/{permissionCode}")
-    public ResponseEntity<ApiResponse<Object>> canRead(@PathVariable String userId, @PathVariable String permissionCode) {
+    public ResponseEntity<ApiResponse<Object>> canRead(@PathVariable("userId") String userId, @PathVariable("permissionCode") String permissionCode) {
         try {
             boolean canRead = userPermissionService.canRead(userId, permissionCode);
             Map<String, Object> result = new HashMap<>();
@@ -92,7 +92,7 @@ public class UserPermissionController {
     }
 
     @GetMapping("/user/{userId}/canupdate/{permissionCode}")
-    public ResponseEntity<ApiResponse<Object>> canUpdate(@PathVariable String userId, @PathVariable String permissionCode) {
+    public ResponseEntity<ApiResponse<Object>> canUpdate(@PathVariable("userId") String userId, @PathVariable("permissionCode") String permissionCode) {
         try {
             boolean canUpdate = userPermissionService.canUpdate(userId, permissionCode);
             Map<String, Object> result = new HashMap<>();
@@ -108,7 +108,7 @@ public class UserPermissionController {
     }
 
     @GetMapping("/user/{userId}/candelete/{permissionCode}")
-    public ResponseEntity<ApiResponse<Object>> canDelete(@PathVariable String userId, @PathVariable String permissionCode) {
+    public ResponseEntity<ApiResponse<Object>> canDelete(@PathVariable("userId") String userId, @PathVariable("permissionCode") String permissionCode) {
         try {
             boolean canDelete = userPermissionService.canDelete(userId, permissionCode);
             Map<String, Object> result = new HashMap<>();
@@ -158,7 +158,7 @@ public class UserPermissionController {
 
     // Xóa quyền cụ thể của user
     @DeleteMapping("/remove-permission")
-    public ResponseEntity<ApiResponse<Object>> removeUserPermission(@RequestParam String userId, @RequestParam String permissionCode) {
+    public ResponseEntity<ApiResponse<Object>> removeUserPermission(@RequestParam("userId") String userId, @RequestParam("permissionCode") String permissionCode) {
         try {
             int result = userPermissionService.removeUserPermission(userId, permissionCode);
             if (result > 0) {

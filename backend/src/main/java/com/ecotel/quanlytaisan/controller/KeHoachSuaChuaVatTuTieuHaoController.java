@@ -21,13 +21,13 @@ public class KeHoachSuaChuaVatTuTieuHaoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<KeHoachSuaChuaVatTuTieuHao> getById(@PathVariable String id) {
+    public ResponseEntity<KeHoachSuaChuaVatTuTieuHao> getById(@PathVariable("id") String id) {
         KeHoachSuaChuaVatTuTieuHao entity = vatTuTieuHaoService.getById(id);
         return entity != null ? ResponseEntity.ok(entity) : ResponseEntity.notFound().build();
     }
 
     @GetMapping("/kehoach/{idKeHoach}")
-    public ResponseEntity<List<KeHoachSuaChuaVatTuTieuHao>> getByIdKeHoach(@PathVariable String idKeHoach) {
+    public ResponseEntity<List<KeHoachSuaChuaVatTuTieuHao>> getByIdKeHoach(@PathVariable("idKeHoach") String idKeHoach) {
         return ResponseEntity.ok(vatTuTieuHaoService.getByIdKeHoach(idKeHoach));
     }
 
@@ -38,7 +38,7 @@ public class KeHoachSuaChuaVatTuTieuHaoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<KeHoachSuaChuaVatTuTieuHao> update(@PathVariable String id,
+    public ResponseEntity<KeHoachSuaChuaVatTuTieuHao> update(@PathVariable("id") String id,
                                                              @RequestBody KeHoachSuaChuaVatTuTieuHao entity) {
         entity.setId(id);
         KeHoachSuaChuaVatTuTieuHao updated = vatTuTieuHaoService.update(entity);
@@ -46,7 +46,7 @@ public class KeHoachSuaChuaVatTuTieuHaoController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") String id) {
         return vatTuTieuHaoService.delete(id) ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
     }
 

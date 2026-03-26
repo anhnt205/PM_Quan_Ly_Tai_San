@@ -29,11 +29,11 @@ public class HienTrangKyThuatController {
 
     @GetMapping("/paged")
     public PageResponse<HienTrangKyThuat> getAllPaged(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search) {
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search) {
         return hienTrangKyThuatService.getAllPaged(page, size, sortBy, sortDir, search);
     }
 
@@ -43,7 +43,7 @@ public class HienTrangKyThuatController {
     }
 
     @GetMapping("/{id}")
-    public HienTrangKyThuat getById(@PathVariable Integer id) {
+    public HienTrangKyThuat getById(@PathVariable("id") Integer id) {
         return hienTrangKyThuatService.getById(id);
     }
 
@@ -83,7 +83,7 @@ public class HienTrangKyThuatController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable Integer id, @RequestBody HienTrangKyThuat htkt) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") Integer id, @RequestBody HienTrangKyThuat htkt) {
         try {
             htkt.setId(id);
             int result = hienTrangKyThuatService.update(htkt);
@@ -99,7 +99,7 @@ public class HienTrangKyThuatController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") Integer id) {
         try {
             int result = hienTrangKyThuatService.delete(id);
             if (result > 0) {
@@ -114,7 +114,7 @@ public class HienTrangKyThuatController {
     }
 
     @DeleteMapping("/soft/{id}")
-    public ResponseEntity<ApiResponse<Object>> softDelete(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<Object>> softDelete(@PathVariable("id") Integer id) {
         try {
             int result = hienTrangKyThuatService.softDelete(id);
             if (result > 0) {

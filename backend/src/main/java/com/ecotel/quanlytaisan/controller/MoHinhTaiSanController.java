@@ -25,23 +25,23 @@ public class MoHinhTaiSanController {
     private MoHinhTaiSanService moHinhTaiSanService;
 
     @GetMapping
-    public List<MoHinhTaiSanEnrichedDTO> getAll(@RequestParam String idcongty) {
+    public List<MoHinhTaiSanEnrichedDTO> getAll(@RequestParam("idcongty") String idcongty) {
         return moHinhTaiSanService.getAll(idcongty);
     }
 
     @GetMapping("/paged")
     public PageResponse<MoHinhTaiSanEnrichedDTO> getPaged(
-            @RequestParam(required = false) String idCongTy,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search) {
+            @RequestParam(value = "idCongTy", required = false) String idCongTy,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search) {
         return moHinhTaiSanService.getAllPaged(idCongTy, page, size, sortBy, sortDir, search);
     }
 
     @GetMapping("/{id}")
-    public MoHinhTaiSanEnrichedDTO getById(@PathVariable String id) {
+    public MoHinhTaiSanEnrichedDTO getById(@PathVariable("id") String id) {
         return moHinhTaiSanService.getById(id);
     }
 
@@ -81,7 +81,7 @@ public class MoHinhTaiSanController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody MoHinhTaiSan mhts) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody MoHinhTaiSan mhts) {
         try {
             mhts.setId(id);
             int result = moHinhTaiSanService.update(mhts);
@@ -97,7 +97,7 @@ public class MoHinhTaiSanController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = moHinhTaiSanService.delete(id);
             if (result > 0) {

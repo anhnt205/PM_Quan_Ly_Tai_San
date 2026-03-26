@@ -29,15 +29,15 @@ public class KetQuaSuaChuaController {
 
     @GetMapping
     public ResponseEntity<PageResponse<KetQuaSuaChuaDTO>> findAll(
-            @RequestParam(required = false) String idCongTy,
-            @RequestParam(required = false) Integer trangThai,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate tuNgay,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate denNgay,
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) String userId,
-            @RequestParam(required = false) String idDonViGiao,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(value = "idCongTy", required = false) String idCongTy,
+            @RequestParam(value = "trangThai", required = false) Integer trangThai,
+            @RequestParam(value = "tuNgay", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate tuNgay,
+            @RequestParam(value = "denNgay", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate denNgay,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "userId", required = false) String userId,
+            @RequestParam(value = "idDonViGiao", required = false) String idDonViGiao,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
 
         LocalDateTime fromDateTime = (tuNgay != null) ? tuNgay.atStartOfDay() : null;
         LocalDateTime toDateTime = (denNgay != null) ? denNgay.atTime(LocalTime.MAX) : null;
@@ -49,7 +49,7 @@ public class KetQuaSuaChuaController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<KetQuaSuaChuaDTO>> getByUserId(@PathVariable String userId) {
+    public ResponseEntity<List<KetQuaSuaChuaDTO>> getByUserId(@PathVariable("userId") String userId) {
         List<KetQuaSuaChuaDTO> list = ketQuaSuaChuaService.getByUserId(userId);
         return ResponseEntity.ok(list);
     }
@@ -57,7 +57,7 @@ public class KetQuaSuaChuaController {
     // ==================== API LẤY CHI TIẾT ====================
 
     @GetMapping("/suachua/{idSuaChua}")
-    public ResponseEntity<List<KetQuaSuaChuaDTO>> findByIdSuaChua(@PathVariable String idSuaChua) {
+    public ResponseEntity<List<KetQuaSuaChuaDTO>> findByIdSuaChua(@PathVariable("idSuaChua") String idSuaChua) {
         List<KetQuaSuaChuaDTO> list = ketQuaSuaChuaService.findListByIdSuaChua(idSuaChua);
         if (list.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -66,7 +66,7 @@ public class KetQuaSuaChuaController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<KetQuaSuaChuaDTO> findById(@PathVariable String id) {
+    public ResponseEntity<KetQuaSuaChuaDTO> findById(@PathVariable("id") String id) {
         KetQuaSuaChuaDTO dto = ketQuaSuaChuaService.findByIdDTO(id);
         if (dto == null) {
             return ResponseEntity.notFound().build();
@@ -75,7 +75,7 @@ public class KetQuaSuaChuaController {
     }
 
     @GetMapping("/entity/{id}")
-    public ResponseEntity<KetQuaSuaChua> findByIdEntity(@PathVariable String id) {
+    public ResponseEntity<KetQuaSuaChua> findByIdEntity(@PathVariable("id") String id) {
         KetQuaSuaChua entity = ketQuaSuaChuaService.findById(id);
         if (entity == null) {
             return ResponseEntity.notFound().build();
@@ -92,7 +92,7 @@ public class KetQuaSuaChuaController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<KetQuaSuaChua> update(@PathVariable String id,
+    public ResponseEntity<KetQuaSuaChua> update(@PathVariable("id") String id,
                                                 @RequestBody KetQuaSuaChua entity) {
         entity.setId(id);
         KetQuaSuaChua updated = ketQuaSuaChuaService.update(entity);
@@ -103,7 +103,7 @@ public class KetQuaSuaChuaController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") String id) {
         int result = ketQuaSuaChuaService.delete(id);
         if (result == 0) {
             return ResponseEntity.notFound().build();
@@ -115,8 +115,8 @@ public class KetQuaSuaChuaController {
 
     @PostMapping("/capnhattrangthai")
     public ResponseEntity<ApiResponse<Object>> capNhatTrangThai(
-            @RequestParam String id,
-            @RequestParam String userId) {
+            @RequestParam("id") String id,
+            @RequestParam("userId") String userId) {
 
         try {
             KetQuaSuaChua existing = ketQuaSuaChuaService.findById(id);
@@ -138,15 +138,15 @@ public class KetQuaSuaChuaController {
     }
 
     @PostMapping("/{id}/huy")
-    public ResponseEntity<Integer> huyTrangThai(@PathVariable String id) {
+    public ResponseEntity<Integer> huyTrangThai(@PathVariable("id") String id) {
         int result = ketQuaSuaChuaService.huyTrangThai(id);
         return ResponseEntity.ok(result);
     }
 
     @GetMapping("/{id}/permission")
     public ResponseEntity<Integer> getPermissionSigning(
-            @PathVariable String id,
-            @RequestParam String userId) {
+            @PathVariable("id") String id,
+            @RequestParam("userId") String userId) {
 
         KetQuaSuaChuaDTO dto = ketQuaSuaChuaService.findByIdDTO(id);
         if (dto == null) {

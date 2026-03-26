@@ -29,17 +29,17 @@ public class BanGiaoTaiSanController {
 
 
     @GetMapping
-    public List<BanGiaoTaiSanDTO> getAll(@RequestParam String idcongty) throws SQLException {
+    public List<BanGiaoTaiSanDTO> getAll(@RequestParam("idcongty") String idcongty) throws SQLException {
         return service.findAll(idcongty);
     }
 
     @GetMapping("/paged")
-    public PageResponse<BanGiaoTaiSanDTO> getAllPaged(@RequestParam String idcongty, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size, @RequestParam(required = false) String sortBy, @RequestParam(required = false) String sortDir, @RequestParam(required = false) String search, @RequestParam(required = false) String userid, @RequestParam(required = false) Integer trangThai, @RequestParam(required = false) String idDonViGiao) throws SQLException {
+    public PageResponse<BanGiaoTaiSanDTO> getAllPaged(@RequestParam("idcongty") String idcongty, @RequestParam(value = "page", defaultValue = "0") int page, @RequestParam(value = "size", defaultValue = "20") int size, @RequestParam(value = "sortBy", required = false) String sortBy, @RequestParam(value = "sortDir", required = false) String sortDir, @RequestParam(value = "search", required = false) String search, @RequestParam(value = "userid", required = false) String userid, @RequestParam(value = "trangThai", required = false) Integer trangThai, @RequestParam(value = "idDonViGiao", required = false) String idDonViGiao) throws SQLException {
         return service.findAllPaged(idcongty, page, size, sortBy, sortDir, search, userid, trangThai, idDonViGiao);
     }
 
     @PutMapping("/updatestatus")
-    public ResponseEntity<ApiResponse<Object>> updateStatus(@RequestParam String userId, @RequestParam String docId) {
+    public ResponseEntity<ApiResponse<Object>> updateStatus(@RequestParam("userId") String userId, @RequestParam("docId") String docId) {
         try {
             int result = service.updateTrangThai(userId, docId);
             if (result > 0) {
@@ -52,38 +52,38 @@ public class BanGiaoTaiSanController {
     }
 
     @GetMapping("/getbyuserid/{userid}")
-    public List<BanGiaoTaiSanDTO> getbyuserid(@PathVariable String userid) throws SQLException {
+    public List<BanGiaoTaiSanDTO> getbyuserid(@PathVariable("userid") String userid) throws SQLException {
         return service.getByUserId(userid);
     }
 
     @GetMapping("/getbyuseridstatus")
-    public List<BanGiaoTaiSanDTO> getByUserIdStatus(@RequestParam String userid, @RequestParam int trangthai) throws SQLException {
+    public List<BanGiaoTaiSanDTO> getByUserIdStatus(@RequestParam("userid") String userid, @RequestParam("trangthai") int trangthai) throws SQLException {
         return service.getByUserIdStatus(userid, trangthai);
     }
 
     @GetMapping("/getbystatus")
-    public List<BanGiaoTaiSanDTO> getByStatus(@RequestParam int trangthai) throws SQLException {
+    public List<BanGiaoTaiSanDTO> getByStatus(@RequestParam("trangthai") int trangthai) throws SQLException {
         return service.getByStatus(trangthai);
     }
 
     @GetMapping("/{id}")
-    public BanGiaoTaiSan getById(@PathVariable String id) throws SQLException {
+    public BanGiaoTaiSan getById(@PathVariable("id") String id) throws SQLException {
         return service.findById(id);
     }
 
 
     @GetMapping("/details")
-    public List<BanGiaoTaiSanDetailResponse> getAllDetailByCongTy(@RequestParam String idcongty) {
+    public List<BanGiaoTaiSanDetailResponse> getAllDetailByCongTy(@RequestParam("idcongty") String idcongty) {
         return detailService.getBanGiaoTaiSanDetailByIdCongTy(idcongty);
     }
 
     @GetMapping("/details-by_user/{userid}")
-    public List<BanGiaoTaiSanDetailResponse> getAllDetailByUserId(@PathVariable String userid) throws SQLException {
+    public List<BanGiaoTaiSanDetailResponse> getAllDetailByUserId(@PathVariable("userid") String userid) throws SQLException {
         return detailService.getBanGiaoTaiSanDetailByUserId(userid);
     }
 
     @GetMapping("/permission-signing/{id}")
-    public ResponseEntity<ApiResponse<Object>> getPermissionSigning(@PathVariable String id, @RequestParam String tenDangNhap) throws SQLException {
+    public ResponseEntity<ApiResponse<Object>> getPermissionSigning(@PathVariable("id") String id, @RequestParam("tenDangNhap") String tenDangNhap) throws SQLException {
         try {
             BanGiaoTaiSanDTO item = service.findByIdDTO(id);
             if (item == null) {
@@ -106,7 +106,7 @@ public class BanGiaoTaiSanController {
     }
 
     @GetMapping("/permission-signing/")
-    public ResponseEntity<ApiResponse<Object>> getAllPermissionSigning(@RequestParam String tenDangNhap) throws SQLException {
+    public ResponseEntity<ApiResponse<Object>> getAllPermissionSigning(@RequestParam("tenDangNhap") String tenDangNhap) throws SQLException {
         try {
             if (tenDangNhap == null || tenDangNhap.trim().isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -187,7 +187,7 @@ public class BanGiaoTaiSanController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody BanGiaoTaiSan obj) throws SQLException {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody BanGiaoTaiSan obj) throws SQLException {
         try {
             obj.setId(id); // Đảm bảo set id
             BanGiaoTaiSan result = service.update(obj);
@@ -247,7 +247,7 @@ public class BanGiaoTaiSanController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) throws SQLException {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) throws SQLException {
         try {
             // Lấy thông tin trước khi xóa để gửi thông báo
             BanGiaoTaiSan existingItem = service.findById(id);
@@ -288,7 +288,7 @@ public class BanGiaoTaiSanController {
     }
 
     @PostMapping("/capnhattrangthai")
-    public ResponseEntity<ApiResponse<Object>> capNhatTrangThai(@RequestParam String id, @RequestParam String userId) throws SQLException {
+    public ResponseEntity<ApiResponse<Object>> capNhatTrangThai(@RequestParam("id") String id, @RequestParam("userId") String userId) throws SQLException {
         try {
             // Lấy thông tin trước khi cập nhật để gửi thông báo
             BanGiaoTaiSan existingItem = service.findById(id);
@@ -307,7 +307,7 @@ public class BanGiaoTaiSanController {
     }
 
     @PostMapping("/huytrangthai")
-    public ResponseEntity<ApiResponse<Object>> huyTrangThai(@RequestParam String id) throws SQLException {
+    public ResponseEntity<ApiResponse<Object>> huyTrangThai(@RequestParam("id") String id) throws SQLException {
         try {
             // Lấy thông tin trước khi cập nhật để gửi thông báo
             BanGiaoTaiSan existingItem = service.findById(id);

@@ -19,7 +19,7 @@ public class TaiSanFileController {
 
     // Lấy danh sách file theo id tài sản
     @GetMapping("/by-taisan/{idTaiSan}")
-    public ResponseEntity<ApiResponse<Object>> getByTaiSanId(@PathVariable String idTaiSan) {
+    public ResponseEntity<ApiResponse<Object>> getByTaiSanId(@PathVariable("idTaiSan") String idTaiSan) {
         try {
             List<TaiSanFileDTO> result = taiSanFileService.getByTaiSanId(idTaiSan);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách file thành công", result, null));
@@ -31,7 +31,7 @@ public class TaiSanFileController {
 
     // Lấy chi tiết file theo id
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable("id") Integer id) {
         try {
             TaiSanFileDTO result = taiSanFileService.getById(id);
             if (result != null) {
@@ -64,7 +64,7 @@ public class TaiSanFileController {
 
     // Cập nhật file
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable Integer id, @RequestBody TaiSanFileDTO dto) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") Integer id, @RequestBody TaiSanFileDTO dto) {
         try {
             int result = taiSanFileService.update(id, dto);
             if (result > 0) {
@@ -80,7 +80,7 @@ public class TaiSanFileController {
 
     // Xóa file
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") Integer id) {
         try {
             int result = taiSanFileService.delete(id);
             if (result > 0) {
@@ -96,7 +96,7 @@ public class TaiSanFileController {
 
     // Xóa tất cả file của một tài sản
     @DeleteMapping("/by-taisan/{idTaiSan}")
-    public ResponseEntity<ApiResponse<Object>> deleteByTaiSanId(@PathVariable String idTaiSan) {
+    public ResponseEntity<ApiResponse<Object>> deleteByTaiSanId(@PathVariable("idTaiSan") String idTaiSan) {
         try {
             int result = taiSanFileService.deleteByTaiSanId(idTaiSan);
             return ResponseEntity.ok(ApiResponse.success("Xóa tất cả file của tài sản thành công", null, result));

@@ -208,6 +208,11 @@ public class TaiSanService {
         return taiSanDao.delete(id);
     }
 
+    public int deleteAll() {
+        taiSanDao.deleteAllTaiSanCon();
+        return taiSanDao.deleteAll();
+    }
+
     public int updateDonViTaiSan(List<Map<String, String>> maps) {
         int result = 0;
         for (Map<String, String> map : maps) {

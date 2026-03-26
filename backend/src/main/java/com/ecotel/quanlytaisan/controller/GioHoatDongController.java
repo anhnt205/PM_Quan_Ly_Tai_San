@@ -23,24 +23,24 @@ public class GioHoatDongController {
     // ================== CRUD ==================
     @GetMapping
     public ResponseEntity<PageResponse<GioHoatDong>> getAllPaged(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String idTaiSan,
-            @RequestParam(required = false) Integer nam,
-            @RequestParam(required = false) Integer thang
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "idTaiSan", required = false) String idTaiSan,
+            @RequestParam(value = "nam", required = false) Integer nam,
+            @RequestParam(value = "thang", required = false) Integer thang
     ) {
         return ResponseEntity.ok(service.getAllPaged(page, size, idTaiSan, nam, thang));
     }
 
     @GetMapping("group_year")
     public ResponseEntity<List<GioHoatDongYearData>> getGroupByYear(
-        @RequestParam(required = true) String idTaiSan
+        @RequestParam(value = "idTaiSan", required = true) String idTaiSan
     ){
         return ResponseEntity.ok(service.getYearsWithData(idTaiSan));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable("id") String id) {
         try {
             GioHoatDong result = service.getById(id);
             if (result != null) {
@@ -71,7 +71,7 @@ public class GioHoatDongController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody GioHoatDongDTO dto) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody GioHoatDongDTO dto) {
         try {
             int result = service.update(id, dto);
             if (result > 0) {
@@ -86,7 +86,7 @@ public class GioHoatDongController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = service.delete(id);
             if (result > 0) {

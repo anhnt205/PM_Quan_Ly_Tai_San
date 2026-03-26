@@ -23,23 +23,23 @@ public class KhoController {
     private KhoService khoService;
 
     @GetMapping
-    public List<KhoEnrichedDTO> getAll(@RequestParam(required = false) String idCongTy) {
+    public List<KhoEnrichedDTO> getAll(@RequestParam(value = "idCongTy", required = false) String idCongTy) {
         return khoService.getAll(idCongTy);
     }
 
     @GetMapping("/paged")
     public PageResponse<KhoEnrichedDTO> getAllPaged(
-            @RequestParam(required = false) String idCongTy,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search) {
+            @RequestParam(value = "idCongTy", required = false) String idCongTy,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search) {
         return khoService.getAllPaged(idCongTy, page, size, sortBy, sortDir, search);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<KhoEnrichedDTO>> getById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<KhoEnrichedDTO>> getById(@PathVariable("id") String id) {
         try {
             KhoEnrichedDTO detail = khoService.getById(id);
             return ResponseEntity.ok(ApiResponse.success("Lấy thông tin kho thành công", detail, 1));
@@ -69,7 +69,7 @@ public class KhoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody Kho kho) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody Kho kho) {
         try {
             kho.setId(id);
             int result = khoService.update(kho);
@@ -85,7 +85,7 @@ public class KhoController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = khoService.delete(id);
             if (result > 0) {

@@ -25,7 +25,7 @@ public class ChiTietTaiSanController {
 
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ChiTietTaiSan>>> getAll(@RequestParam String idTaiSan) {
+    public ResponseEntity<ApiResponse<List<ChiTietTaiSan>>> getAll(@RequestParam("idTaiSan") String idTaiSan) {
         try {
             List<ChiTietTaiSan> list = service.getAll(idTaiSan);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", list, list.size()));
@@ -36,7 +36,7 @@ public class ChiTietTaiSanController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ChiTietTaiSan>> getById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<ChiTietTaiSan>> getById(@PathVariable("id") String id) {
         try {
             ChiTietTaiSan ts = service.getById(id);
             return ResponseEntity.ok(ApiResponse.success("Lấy chi tiết thành công", ts, 1));
@@ -130,7 +130,7 @@ public class ChiTietTaiSanController {
 
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int rows = service.delete(id);
             if (rows > 0) {
@@ -145,7 +145,7 @@ public class ChiTietTaiSanController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody ChiTietTaiSan ts) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody ChiTietTaiSan ts) {
         try {
             ts.setId(id);
             int rows = service.update(ts);

@@ -16,7 +16,7 @@ public class DanhMucController {
     private DanhMucService danhMucService;
 
     @GetMapping("/all")
-    public ResponseEntity<ApiResponse<DanhMucResponse>> getAllDanhMuc(@RequestParam String idCongTy) {
+    public ResponseEntity<ApiResponse<DanhMucResponse>> getAllDanhMuc(@RequestParam("idCongTy") String idCongTy) {
         try {
             DanhMucResponse danhMucResponse = danhMucService.getAllDanhMuc(idCongTy);
             
@@ -42,7 +42,7 @@ public class DanhMucController {
     }
 
     @GetMapping("/summary")
-    public ResponseEntity<ApiResponse<Object>> getDanhMucSummary(@RequestParam String idCongTy) {
+    public ResponseEntity<ApiResponse<Object>> getDanhMucSummary(@RequestParam("idCongTy") String idCongTy) {
         try {
             DanhMucResponse danhMucResponse = danhMucService.getAllDanhMuc(idCongTy);
             

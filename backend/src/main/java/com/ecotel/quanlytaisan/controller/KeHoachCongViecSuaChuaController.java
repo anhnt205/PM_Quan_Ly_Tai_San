@@ -23,7 +23,7 @@ public class KeHoachCongViecSuaChuaController {
      * Lấy danh sách công việc theo kế hoạch
      */
     @GetMapping("/kehoach/{idKeHoach}")
-    public ResponseEntity<List<KeHoachCongViecSuaChuaDTO>> findByIdKeHoach(@PathVariable String idKeHoach) {
+    public ResponseEntity<List<KeHoachCongViecSuaChuaDTO>> findByIdKeHoach(@PathVariable("idKeHoach") String idKeHoach) {
         List<KeHoachCongViecSuaChuaDTO> list = keHoachCongViecSuaChuaService.findByIdKeHoach(idKeHoach);
         return ResponseEntity.ok(list);
     }
@@ -32,7 +32,7 @@ public class KeHoachCongViecSuaChuaController {
      * Lấy công việc theo ID
      */
     @GetMapping("/{id}")
-    public ResponseEntity<KeHoachCongViecSuaChuaDTO> findById(@PathVariable String id) {
+    public ResponseEntity<KeHoachCongViecSuaChuaDTO> findById(@PathVariable("id") String id) {
         KeHoachCongViecSuaChuaDTO dto = keHoachCongViecSuaChuaService.findById(id);
         if (dto == null) {
             return ResponseEntity.notFound().build();
@@ -60,7 +60,7 @@ public class KeHoachCongViecSuaChuaController {
      * Cập nhật công việc
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Integer> update(@PathVariable String id, @RequestBody KeHoachCongViecSuaChua entity) {
+    public ResponseEntity<Integer> update(@PathVariable("id") String id, @RequestBody KeHoachCongViecSuaChua entity) {
         entity.setId(id);
         int result = keHoachCongViecSuaChuaService.update(entity);
         if (result == 0) {
@@ -80,7 +80,7 @@ public class KeHoachCongViecSuaChuaController {
      * Xóa công việc
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") String id) {
         int result = keHoachCongViecSuaChuaService.delete(id);
         if (result == 0) {
             return ResponseEntity.notFound().build();
@@ -99,7 +99,7 @@ public class KeHoachCongViecSuaChuaController {
      * Xóa tất cả công việc theo kế hoạch
      */
     @DeleteMapping("/kehoach/{idKeHoach}")
-    public ResponseEntity<Void> deleteByIdKeHoach(@PathVariable String idKeHoach) {
+    public ResponseEntity<Void> deleteByIdKeHoach(@PathVariable("idKeHoach") String idKeHoach) {
         keHoachCongViecSuaChuaService.deleteByIdKeHoach(idKeHoach);
         return ResponseEntity.noContent().build();
     }

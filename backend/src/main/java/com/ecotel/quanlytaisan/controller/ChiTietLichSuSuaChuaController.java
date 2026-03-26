@@ -18,12 +18,12 @@ public class ChiTietLichSuSuaChuaController {
     private ChiTietLichSuSuaChuaService chiTietService;
 
     @GetMapping("/lichsu/{idLichSu}")
-    public ResponseEntity<List<ChiTietLichSuSuaChuaDTO>> findByLichSu(@PathVariable String idLichSu) {
+    public ResponseEntity<List<ChiTietLichSuSuaChuaDTO>> findByLichSu(@PathVariable("idLichSu") String idLichSu) {
         return ResponseEntity.ok(chiTietService.findByIdLichSu(idLichSu));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ChiTietLichSuSuaChua> findById(@PathVariable String id) {
+    public ResponseEntity<ChiTietLichSuSuaChua> findById(@PathVariable("id") String id) {
         ChiTietLichSuSuaChua entity = chiTietService.findById(id);
         if (entity == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(entity);
@@ -36,7 +36,7 @@ public class ChiTietLichSuSuaChuaController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ChiTietLichSuSuaChua> update(@PathVariable String id, @RequestBody ChiTietLichSuSuaChua entity) {
+    public ResponseEntity<ChiTietLichSuSuaChua> update(@PathVariable("id") String id, @RequestBody ChiTietLichSuSuaChua entity) {
         entity.setId(id);
         ChiTietLichSuSuaChua updated = chiTietService.update(entity);
         if (updated == null) return ResponseEntity.notFound().build();
@@ -44,14 +44,14 @@ public class ChiTietLichSuSuaChuaController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") String id) {
         int result = chiTietService.delete(id);
         if (result == 0) return ResponseEntity.notFound().build();
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/by-lichsu/{idLichSu}")
-    public ResponseEntity<Integer> deleteByLichSu(@PathVariable String idLichSu) {
+    public ResponseEntity<Integer> deleteByLichSu(@PathVariable("idLichSu") String idLichSu) {
         int result = chiTietService.deleteByIdLichSu(idLichSu);
         return ResponseEntity.ok(result);
     }

@@ -36,16 +36,16 @@ public class KhauHaoController {
 
     @GetMapping("/paged")
     public PageResponse<KhauHao> findAllPaged(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search) {
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search) {
         return service.findAllPaged(page, size, sortBy, sortDir, search);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable String id) {
+    public ResponseEntity<?> getById(@PathVariable("id") String id) {
         try {
             KhauHao obj = service.findById(id);
             if (obj != null) {
@@ -91,7 +91,7 @@ public class KhauHaoController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable String id) {
+    public ResponseEntity<?> delete(@PathVariable("id") String id) {
         try {
             int result = service.delete(id);
             if (result > 0) {

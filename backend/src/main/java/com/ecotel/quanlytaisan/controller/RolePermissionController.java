@@ -19,12 +19,12 @@ public class RolePermissionController {
 
     @GetMapping("/role/{roleId}/paged")
     public PageResponse<RolePermission> getPermissionsByRolePaged(
-            @PathVariable String roleId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search) {
+            @PathVariable("roleId") String roleId,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search) {
 
         return rolePermissionService.getPagedResponseByRoleId(roleId, page, size, sortBy, sortDir, search);
     }
@@ -35,17 +35,17 @@ public class RolePermissionController {
     }
 
     @GetMapping("/role/{roleId}")
-    public List<RolePermission> getByRoleId(@PathVariable String roleId) {
+    public List<RolePermission> getByRoleId(@PathVariable("roleId") String roleId) {
         return rolePermissionService.getByRoleId(roleId);
     }
 
     @GetMapping("/permission/{permissionId}")
-    public List<RolePermission> getByPermissionId(@PathVariable String permissionId) {
+    public List<RolePermission> getByPermissionId(@PathVariable("permissionId") String permissionId) {
         return rolePermissionService.getByPermissionId(permissionId);
     }
 
     @GetMapping("/role/{roleId}/permission/{permissionId}")
-    public RolePermission getByRoleAndPermission(@PathVariable String roleId, @PathVariable String permissionId) {
+    public RolePermission getByRoleAndPermission(@PathVariable("roleId") String roleId, @PathVariable("permissionId") String permissionId) {
         return rolePermissionService.getByRoleAndPermission(roleId, permissionId);
     }
 
@@ -66,7 +66,7 @@ public class RolePermissionController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody RolePermission rolePermission) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody RolePermission rolePermission) {
         try {
             rolePermission.setId(id);
             int result = rolePermissionService.update(rolePermission);
@@ -82,7 +82,7 @@ public class RolePermissionController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = rolePermissionService.delete(id);
             if (result > 0) {
@@ -97,7 +97,7 @@ public class RolePermissionController {
     }
 
     @DeleteMapping("/role/{roleId}")
-    public ResponseEntity<ApiResponse<Object>> deleteByRoleId(@PathVariable String roleId) {
+    public ResponseEntity<ApiResponse<Object>> deleteByRoleId(@PathVariable("roleId") String roleId) {
         try {
             int result = rolePermissionService.deleteByRoleId(roleId);
             return ResponseEntity.ok(ApiResponse.success("Xóa tất cả phân quyền của vai trò thành công", null, result));
@@ -108,7 +108,7 @@ public class RolePermissionController {
     }
 
     @DeleteMapping("/permission/{permissionId}")
-    public ResponseEntity<ApiResponse<Object>> deleteByPermissionId(@PathVariable String permissionId) {
+    public ResponseEntity<ApiResponse<Object>> deleteByPermissionId(@PathVariable("permissionId") String permissionId) {
         try {
             int result = rolePermissionService.deleteByPermissionId(permissionId);
             return ResponseEntity.ok(ApiResponse.success("Xóa tất cả phân quyền của quyền thành công", null, result));

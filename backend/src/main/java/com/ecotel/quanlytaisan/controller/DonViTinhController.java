@@ -26,11 +26,11 @@ public class DonViTinhController {
     // Thêm endpoint phân trang
     @GetMapping("/paged")
     public PageResponse<DonViTinh> getAllPaged(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search) {
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search) {
 
         return donViTinhService.getAllPaged(page, size, sortBy, sortDir, search);
     }
@@ -41,7 +41,7 @@ public class DonViTinhController {
     }
 
     @GetMapping("/{id}")
-    public DonViTinh getById(@PathVariable String id) {
+    public DonViTinh getById(@PathVariable("id") String id) {
         return donViTinhService.getById(id);
     }
 
@@ -81,7 +81,7 @@ public class DonViTinhController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody DonViTinh dvt) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody DonViTinh dvt) {
         try {
             dvt.setId(id);
             int result = donViTinhService.update(dvt);
@@ -97,7 +97,7 @@ public class DonViTinhController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = donViTinhService.delete(id);
             if (result > 0) {

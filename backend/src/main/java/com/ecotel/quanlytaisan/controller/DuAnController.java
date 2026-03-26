@@ -24,23 +24,23 @@ public class DuAnController {
     private DuAnService duAnService;
 
     @GetMapping
-    public List<DuAnEnrichedDTO> getAll(@RequestParam(required = false) String idCongTy) {
+    public List<DuAnEnrichedDTO> getAll(@RequestParam(value = "idCongTy", required = false) String idCongTy) {
         return duAnService.getAll(idCongTy);
     }
 
     @GetMapping("/paged")
     public PageResponse<DuAnEnrichedDTO> getAllPaged(
-            @RequestParam(required = false) String idCongTy,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search) {
+            @RequestParam(value = "idCongTy", required = false) String idCongTy,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search) {
         return duAnService.getAllPaged(idCongTy, page, size, sortBy, sortDir, search);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<DuAnEnrichedDTO>> getById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<DuAnEnrichedDTO>> getById(@PathVariable("id") String id) {
         try {
             DuAnEnrichedDTO detail = duAnService.getById(id);
             return ResponseEntity.ok(ApiResponse.success("Lấy thông tin dự án thành công", detail, 1));
@@ -89,7 +89,7 @@ public class DuAnController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody DuAn da) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody DuAn da) {
         try {
             da.setId(id);
             int result = duAnService.update(da);
@@ -105,7 +105,7 @@ public class DuAnController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = duAnService.delete(id);
             if (result > 0) {

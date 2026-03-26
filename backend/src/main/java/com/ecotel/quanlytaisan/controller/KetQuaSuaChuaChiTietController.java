@@ -18,13 +18,13 @@ public class KetQuaSuaChuaChiTietController {
     private KetQuaSuaChuaChiTietService chiTietService;
 
     @GetMapping("/by-ketqua/{idKetQuaSuaChua}")
-    public ResponseEntity<List<KetQuaSuaChuaChiTietDTO>> getByKetQuaSuaChua(@PathVariable String idKetQuaSuaChua) {
+    public ResponseEntity<List<KetQuaSuaChuaChiTietDTO>> getByKetQuaSuaChua(@PathVariable("idKetQuaSuaChua") String idKetQuaSuaChua) {
         List<KetQuaSuaChuaChiTietDTO> list = chiTietService.findByIdKetQuaSuaChua(idKetQuaSuaChua);
         return ResponseEntity.ok(list);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<KetQuaSuaChuaChiTiet> findById(@PathVariable String id) {
+    public ResponseEntity<KetQuaSuaChuaChiTiet> findById(@PathVariable("id") String id) {
         KetQuaSuaChuaChiTiet entity = chiTietService.findById(id);
         if (entity == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(entity);
@@ -32,15 +32,15 @@ public class KetQuaSuaChuaChiTietController {
 
     @PostMapping
     public ResponseEntity<KetQuaSuaChuaChiTiet> insert(@RequestBody KetQuaSuaChuaChiTiet entity,
-                                                       @RequestParam String userId) {
+                                                       @RequestParam("userId") String userId) {
         KetQuaSuaChuaChiTiet created = chiTietService.insert(entity, userId);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<KetQuaSuaChuaChiTiet> update(@PathVariable String id,
+    public ResponseEntity<KetQuaSuaChuaChiTiet> update(@PathVariable("id") String id,
                                                        @RequestBody KetQuaSuaChuaChiTiet entity,
-                                                       @RequestParam String userId) {
+                                                       @RequestParam("userId") String userId) {
         entity.setId(id);
         KetQuaSuaChuaChiTiet updated = chiTietService.update(entity, userId);
         if (updated == null) return ResponseEntity.notFound().build();
@@ -48,14 +48,14 @@ public class KetQuaSuaChuaChiTietController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") String id) {
         int result = chiTietService.delete(id);
         if (result == 0) return ResponseEntity.notFound().build();
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/soft/{id}")
-    public ResponseEntity<Void> softDelete(@PathVariable String id) {
+    public ResponseEntity<Void> softDelete(@PathVariable("id") String id) {
         int result = chiTietService.softDelete(id);
         if (result == 0) return ResponseEntity.notFound().build();
         return ResponseEntity.noContent().build();
@@ -63,14 +63,14 @@ public class KetQuaSuaChuaChiTietController {
 
     @PostMapping("/bulk")
     public ResponseEntity<List<KetQuaSuaChuaChiTiet>> insertBulk(@RequestBody List<KetQuaSuaChuaChiTiet> entities,
-                                                                 @RequestParam String userId) {
+                                                                 @RequestParam("userId") String userId) {
         List<KetQuaSuaChuaChiTiet> created = chiTietService.insertBulk(entities, userId);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
     @PutMapping("/bulk")
     public ResponseEntity<List<KetQuaSuaChuaChiTiet>> updateBulk(@RequestBody List<KetQuaSuaChuaChiTiet> entities,
-                                                                 @RequestParam String userId) {
+                                                                 @RequestParam("userId") String userId) {
         List<KetQuaSuaChuaChiTiet> updated = chiTietService.updateBulk(entities, userId);
         return ResponseEntity.ok(updated);
     }
@@ -86,9 +86,9 @@ public class KetQuaSuaChuaChiTietController {
      */
     @PutMapping("/replace/{idKetQuaSuaChua}")
     public ResponseEntity<List<KetQuaSuaChuaChiTiet>> replaceByKetQuaSuaChua(
-            @PathVariable String idKetQuaSuaChua,
+            @PathVariable("idKetQuaSuaChua") String idKetQuaSuaChua,
             @RequestBody List<KetQuaSuaChuaChiTiet> newEntities,
-            @RequestParam String userId) {
+            @RequestParam("userId") String userId) {
         List<KetQuaSuaChuaChiTiet> result = chiTietService.replaceByKetQuaSuaChua(idKetQuaSuaChua, newEntities, userId);
         return ResponseEntity.ok(result);
     }

@@ -19,13 +19,13 @@ public class ChiTietDieuDongCCDCVatTuController {
     private ChiTietDieuDongCCDCVatTuService service;
 
     @GetMapping
-    public List<ChiTietDieuDongCCDCVatTuDTO> getAll(@RequestParam String  iddieudongccdcvattu
+    public List<ChiTietDieuDongCCDCVatTuDTO> getAll(@RequestParam("iddieudongccdcvattu") String  iddieudongccdcvattu
     ) {
         return service.findAll(iddieudongccdcvattu);
     }
 
     @GetMapping("/{id}")
-    public ChiTietDieuDongCCDCVatTuDTO getById(@PathVariable String id) {
+    public ChiTietDieuDongCCDCVatTuDTO getById(@PathVariable("id") String id) {
         return service.findById(id);
     }
 
@@ -98,7 +98,7 @@ public class ChiTietDieuDongCCDCVatTuController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = service.delete(id);
             if (result > 0) {

@@ -27,9 +27,9 @@ public class WebSocketController {
      */
     @PostMapping("/test/global")
     public ResponseEntity<Map<String, Object>> testGlobalNotification(
-            @RequestParam String title,
-            @RequestParam String message,
-            @RequestParam(defaultValue = "TEST") String type) {
+            @RequestParam("title") String title,
+            @RequestParam("message") String message,
+            @RequestParam(value = "type", defaultValue = "TEST") String type) {
         
         try {
             notificationService.sendGlobalNotification(title, message, type);
@@ -55,10 +55,10 @@ public class WebSocketController {
      */
     @PostMapping("/test/company")
     public ResponseEntity<Map<String, Object>> testCompanyNotification(
-            @RequestParam String companyId,
-            @RequestParam String title,
-            @RequestParam String message,
-            @RequestParam(defaultValue = "TEST") String type) {
+            @RequestParam("companyId") String companyId,
+            @RequestParam("title") String title,
+            @RequestParam("message") String message,
+            @RequestParam(value = "type", defaultValue = "TEST") String type) {
         
         try {
             notificationService.sendCompanyNotification(companyId, title, message, type);
@@ -85,11 +85,11 @@ public class WebSocketController {
      */
     @PostMapping("/test/crud")
     public ResponseEntity<Map<String, Object>> testCrudNotification(
-            @RequestParam String companyId,
-            @RequestParam String entityName,
-            @RequestParam String operation,
-            @RequestParam String entityId,
-            @RequestParam(defaultValue = "System") String userId) {
+            @RequestParam("companyId") String companyId,
+            @RequestParam("entityName") String entityName,
+            @RequestParam("operation") String operation,
+            @RequestParam("entityId") String entityId,
+            @RequestParam(value = "userId", defaultValue = "System") String userId) {
         
         try {
             notificationService.sendCrudNotification(companyId, entityName, operation, entityId, userId);
@@ -117,10 +117,10 @@ public class WebSocketController {
      */
     @PostMapping("/test/nhanvien")
     public ResponseEntity<Map<String, Object>> testNhanVienNotification(
-            @RequestParam String companyId,
-            @RequestParam String nhanVienId,
-            @RequestParam String operation,
-            @RequestParam(defaultValue = "System") String userId) {
+            @RequestParam("companyId") String companyId,
+            @RequestParam("nhanVienId") String nhanVienId,
+            @RequestParam("operation") String operation,
+            @RequestParam(value = "userId", defaultValue = "System") String userId) {
         
         try {
             switch (operation.toUpperCase()) {
@@ -159,10 +159,10 @@ public class WebSocketController {
      */
     @PostMapping("/test/taisan")
     public ResponseEntity<Map<String, Object>> testTaiSanNotification(
-            @RequestParam String companyId,
-            @RequestParam String taiSanId,
-            @RequestParam String operation,
-            @RequestParam(defaultValue = "System") String userId) {
+            @RequestParam("companyId") String companyId,
+            @RequestParam("taiSanId") String taiSanId,
+            @RequestParam("operation") String operation,
+            @RequestParam(value = "userId", defaultValue = "System") String userId) {
         
         try {
             switch (operation.toUpperCase()) {
@@ -208,10 +208,10 @@ public class WebSocketController {
      */
     @PostMapping("/socket-message")
     public ResponseEntity<Map<String, Object>> testSocketMessage(
-            @RequestParam int typeFunc,
-            @RequestParam(defaultValue = "0") int subTypeFunc,
-            @RequestParam int typeAction,
-            @RequestParam String idNeedToDo) {
+            @RequestParam("typeFunc") int typeFunc,
+            @RequestParam(value = "subTypeFunc", defaultValue = "0") int subTypeFunc,
+            @RequestParam("typeAction") int typeAction,
+            @RequestParam("idNeedToDo") String idNeedToDo) {
 
         try {
             // Validate
@@ -247,10 +247,10 @@ public class WebSocketController {
      */
     @PostMapping("/test/spec/ban-giao-tai-san")
     public ResponseEntity<Map<String, Object>> testBanGiaoTaiSanSpec(
-            @RequestParam(defaultValue = "0") int subTypeFunc,
-            @RequestParam int typeAction,
-            @RequestParam String creatorId,
-            @RequestParam(defaultValue = "") String signerIds) {
+            @RequestParam(value = "subTypeFunc", defaultValue = "0") int subTypeFunc,
+            @RequestParam("typeAction") int typeAction,
+            @RequestParam("creatorId") String creatorId,
+            @RequestParam(value = "signerIds", defaultValue = "") String signerIds) {
 
         try {
             if (!TypeAction.isValid(typeAction)) {
@@ -292,10 +292,10 @@ public class WebSocketController {
      */
     @PostMapping("/test/spec/dieu-chuyen-tai-san")
     public ResponseEntity<Map<String, Object>> testDieuChuyenTaiSanSpec(
-            @RequestParam(defaultValue = "0") int subTypeFunc,
-            @RequestParam int typeAction,
-            @RequestParam String creatorId,
-            @RequestParam(defaultValue = "") String signerIds) {
+            @RequestParam(value = "subTypeFunc", defaultValue = "0") int subTypeFunc,
+            @RequestParam("typeAction") int typeAction,
+            @RequestParam("creatorId") String creatorId,
+            @RequestParam(value = "signerIds", defaultValue = "") String signerIds) {
 
         try {
             if (!TypeAction.isValid(typeAction)) {
@@ -337,10 +337,10 @@ public class WebSocketController {
      */
     @PostMapping("/test/spec/ban-giao-ccdc")
     public ResponseEntity<Map<String, Object>> testBanGiaoCCDCSpec(
-            @RequestParam(defaultValue = "0") int subTypeFunc,
-            @RequestParam int typeAction,
-            @RequestParam String creatorId,
-            @RequestParam(defaultValue = "") String signerIds) {
+            @RequestParam(value = "subTypeFunc", defaultValue = "0") int subTypeFunc,
+            @RequestParam("typeAction") int typeAction,
+            @RequestParam("creatorId") String creatorId,
+            @RequestParam(value = "signerIds", defaultValue = "") String signerIds) {
 
         try {
             if (!TypeAction.isValid(typeAction)) {
@@ -382,10 +382,10 @@ public class WebSocketController {
      */
     @PostMapping("/test/spec/dieu-chuyen-ccdc")
     public ResponseEntity<Map<String, Object>> testDieuChuyenCCDCSpec(
-            @RequestParam(defaultValue = "0") int subTypeFunc,
-            @RequestParam int typeAction,
-            @RequestParam String creatorId,
-            @RequestParam(defaultValue = "") String signerIds) {
+            @RequestParam(value = "subTypeFunc", defaultValue = "0") int subTypeFunc,
+            @RequestParam("typeAction") int typeAction,
+            @RequestParam("creatorId") String creatorId,
+            @RequestParam(value = "signerIds", defaultValue = "") String signerIds) {
 
         try {
             if (!TypeAction.isValid(typeAction)) {

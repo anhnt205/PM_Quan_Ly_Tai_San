@@ -59,7 +59,7 @@ public class TaiSanController {
         }
     }
     @GetMapping
-    public ResponseEntity<ApiResponse<Object>> getAll(@RequestParam String idcongty) {
+    public ResponseEntity<ApiResponse<Object>> getAll(@RequestParam("idcongty") String idcongty) {
         try {
             List<TaiSanDTO> result = taiSanService.getAll(idcongty);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách tài sản thành công", result, null));
@@ -68,7 +68,7 @@ public class TaiSanController {
         }
     }
     @GetMapping("/paged")
-    public ResponseEntity<ApiResponse<Object>> getAllPaged(@RequestParam String idcongty, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size, @RequestParam(required = false) String sortBy, @RequestParam(required = false) String sortDir, @RequestParam(required = false) String search, @RequestParam(required = false) String idNhomTaiSan, @RequestParam(required = false) String idLoaiTaiSan,@RequestParam(required = false) String iddonvihienthoi) {
+    public ResponseEntity<ApiResponse<Object>> getAllPaged(@RequestParam("idcongty") String idcongty, @RequestParam(value = "page", defaultValue = "0") int page, @RequestParam(value = "size", defaultValue = "20") int size, @RequestParam(value = "sortBy", required = false) String sortBy, @RequestParam(value = "sortDir", required = false) String sortDir, @RequestParam(value = "search", required = false) String search, @RequestParam(value = "idNhomTaiSan", required = false) String idNhomTaiSan, @RequestParam(value = "idLoaiTaiSan", required = false) String idLoaiTaiSan, @RequestParam(value = "iddonvihienthoi", required = false) String iddonvihienthoi) {
         try {
             PageResponse<TaiSanDTO> result = taiSanService.getAllPaged(idcongty, page, size, sortBy, sortDir, search, idNhomTaiSan, idLoaiTaiSan,iddonvihienthoi);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách tài sản phân trang thành công", result, null));
@@ -77,7 +77,7 @@ public class TaiSanController {
         }
     }
     @GetMapping("/paged-ban-giao")
-    public ResponseEntity<ApiResponse<Object>> getAllPagedWithBanGiaoStatus(@RequestParam String idcongty, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size, @RequestParam(required = false) String sortBy, @RequestParam(required = false) String sortDir, @RequestParam(required = false) String search, @RequestParam(required = false) String idNhomTaiSan,@RequestParam(required = false) String iddonvihienthoi) {
+    public ResponseEntity<ApiResponse<Object>> getAllPagedWithBanGiaoStatus(@RequestParam("idcongty") String idcongty, @RequestParam(value = "page", defaultValue = "0") int page, @RequestParam(value = "size", defaultValue = "20") int size, @RequestParam(value = "sortBy", required = false) String sortBy, @RequestParam(value = "sortDir", required = false) String sortDir, @RequestParam(value = "search", required = false) String search, @RequestParam(value = "idNhomTaiSan", required = false) String idNhomTaiSan, @RequestParam(value = "iddonvihienthoi", required = false) String iddonvihienthoi) {
         try {
             Map<String, Object> result = taiSanService.getAllPagedWithBanGiaoStatus(idcongty, page, size, sortBy, sortDir, search, idNhomTaiSan,iddonvihienthoi);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách tài sản theo trạng thái bàn giao thành công", result, null));
@@ -86,7 +86,7 @@ public class TaiSanController {
         }
     }
     @GetMapping("/paged-da-ban-giao")
-    public ResponseEntity<ApiResponse<Object>> getPagedDaBanGiao(@RequestParam String idcongty, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size, @RequestParam(required = false) String sortBy, @RequestParam(required = false) String sortDir, @RequestParam(required = false) String search, @RequestParam(required = false) String idNhomTaiSan,@RequestParam(required = false) String iddonvihienthoi) {
+    public ResponseEntity<ApiResponse<Object>> getPagedDaBanGiao(@RequestParam("idcongty") String idcongty, @RequestParam(value = "page", defaultValue = "0") int page, @RequestParam(value = "size", defaultValue = "20") int size, @RequestParam(value = "sortBy", required = false) String sortBy, @RequestParam(value = "sortDir", required = false) String sortDir, @RequestParam(value = "search", required = false) String search, @RequestParam(value = "idNhomTaiSan", required = false) String idNhomTaiSan, @RequestParam(value = "iddonvihienthoi", required = false) String iddonvihienthoi) {
         try {
             PageResponse<TaiSanDTO> result = taiSanService.getPagedByBanGiaoStatus(idcongty, page, size, sortBy, sortDir, search, idNhomTaiSan,iddonvihienthoi, true);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách tài sản đã bàn giao thành công", result, null));
@@ -95,7 +95,7 @@ public class TaiSanController {
         }
     }
     @GetMapping("/paged-chua-ban-giao")
-    public ResponseEntity<ApiResponse<Object>> getPagedChuaBanGiao(@RequestParam String idcongty, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size, @RequestParam(required = false) String sortBy, @RequestParam(required = false) String sortDir, @RequestParam(required = false) String search, @RequestParam(required = false) String idNhomTaiSan,@RequestParam(required = false) String iddonvihienthoi) {
+    public ResponseEntity<ApiResponse<Object>> getPagedChuaBanGiao(@RequestParam("idcongty") String idcongty, @RequestParam(value = "page", defaultValue = "0") int page, @RequestParam(value = "size", defaultValue = "20") int size, @RequestParam(value = "sortBy", required = false) String sortBy, @RequestParam(value = "sortDir", required = false) String sortDir, @RequestParam(value = "search", required = false) String search, @RequestParam(value = "idNhomTaiSan", required = false) String idNhomTaiSan, @RequestParam(value = "iddonvihienthoi", required = false) String iddonvihienthoi) {
         try {
             PageResponse<TaiSanDTO> result = taiSanService.getPagedByBanGiaoStatus(idcongty, page, size, sortBy, sortDir, search, idNhomTaiSan,iddonvihienthoi, false);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách tài sản chưa bàn giao thành công", result, null));
@@ -105,12 +105,12 @@ public class TaiSanController {
     }
     @GetMapping("/by-donvi-bandau/paged")
     public ResponseEntity<ApiResponse<Object>> getByDonViBanDauPaged(
-            @RequestParam String idcongty,
-            @RequestParam String iddonvibandau,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir) {
+            @RequestParam("idcongty") String idcongty,
+            @RequestParam("iddonvibandau") String iddonvibandau,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir) {
         try {
             PageResponse<TaiSanDTO> result = taiSanService.getByDonViBanDauPaged(idcongty, iddonvibandau, page, size, sortBy, sortDir);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách tài sản theo đơn vị ban đầu thành công", result, null));
@@ -120,14 +120,14 @@ public class TaiSanController {
     }
     @GetMapping("/by-donvi-hienthoi/paged")
     public ResponseEntity<ApiResponse<Object>> getByDonViHienThoiPaged(
-            @RequestParam String idcongty,
-            @RequestParam String iddonvihienthoi,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String idNhomTaiSan,
-            @RequestParam(required = false) String search) {
+            @RequestParam("idcongty") String idcongty,
+            @RequestParam("iddonvihienthoi") String iddonvihienthoi,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "idNhomTaiSan", required = false) String idNhomTaiSan,
+            @RequestParam(value = "search", required = false) String search) {
         try {
             PageResponse<TaiSanDTO> result = taiSanService.getByDonViHienThoiPaged(idcongty, iddonvihienthoi, page, size, sortBy, sortDir, idNhomTaiSan, search);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách tài sản theo đơn vị hiện thời thành công", result, null));
@@ -136,7 +136,7 @@ public class TaiSanController {
         }
     }
     @GetMapping("/loaitaisan/")
-    public ResponseEntity<ApiResponse<Object>> getByLoai(@RequestParam String idloataisan) {
+    public ResponseEntity<ApiResponse<Object>> getByLoai(@RequestParam("idloataisan") String idloataisan) {
         try {
             List<TaiSanDTO> result = taiSanService.getByLoai(idloataisan);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách tài sản theo loại thành công", result, null));
@@ -145,7 +145,7 @@ public class TaiSanController {
         }
     }
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable("id") String id) {
         try {
             TaiSanDTO result = taiSanService.getById(id);
             if (result != null) {
@@ -191,7 +191,7 @@ public class TaiSanController {
         }
     }
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody TaiSan ts) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody TaiSan ts) {
         try {
             ts.setId(id);
             int result = taiSanService.update(ts);
@@ -221,7 +221,7 @@ public class TaiSanController {
         }
     }
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             // Lấy thông tin tài sản trước khi xóa để có thông tin công ty
             TaiSanDTO taiSan = taiSanService.getById(id);
@@ -258,6 +258,15 @@ public class TaiSanController {
                 return ResponseEntity.ok(ApiResponse.success("Xóa danh sách tài sản thành công", null, total));
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.failure("Xóa danh sách tài sản thất bại", total));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+    @DeleteMapping("/delete-all")
+    public ResponseEntity<ApiResponse<Object>> deleteAll() {
+        try {
+            int result = taiSanService.deleteAll();
+            return ResponseEntity.ok(ApiResponse.success("Xóa toàn bộ tài sản thành công", null, result));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
         }
@@ -308,7 +317,7 @@ public class TaiSanController {
         }
     }
     @GetMapping("/taisancon/{idTaiSan}")
-    public ResponseEntity<ApiResponse<Object>> getTaiSanConByTaiSan(@PathVariable String idTaiSan) {
+    public ResponseEntity<ApiResponse<Object>> getTaiSanConByTaiSan(@PathVariable("idTaiSan") String idTaiSan) {
         try {
             List<TaiSanCon> result = taiSanService.getTaiSanCon(idTaiSan);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách tài sản con thành công", result, null));
@@ -326,7 +335,7 @@ public class TaiSanController {
         }
     }
     @DeleteMapping("/taisancon/")
-    public ResponseEntity<ApiResponse<Object>> deleteTaiSanCon(@RequestParam String idTaiSanCon) {
+    public ResponseEntity<ApiResponse<Object>> deleteTaiSanCon(@RequestParam("idTaiSanCon") String idTaiSanCon) {
         try {
             int result = taiSanService.deleteTaiSanCon(idTaiSanCon);
             if (result > 0) {
@@ -339,15 +348,15 @@ public class TaiSanController {
     }
     @GetMapping("/khauhaotaisan")
     public ResponseEntity<ApiResponse<Object>> getKhauHaoTaiSan(
-            @RequestParam String idcongty,
-            @RequestParam int ngay,
-            @RequestParam int thang,
-            @RequestParam int nam,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search) {
+            @RequestParam("idcongty") String idcongty,
+            @RequestParam("ngay") int ngay,
+            @RequestParam("thang") int thang,
+            @RequestParam("nam") int nam,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search) {
         try {
             PageResponse<KhauHaoTaiSan> result = taiSanService.getKhauHaoTaiSanPaged(
                     idcongty, ngay, thang, nam, page, size, sortBy, sortDir, search
@@ -360,17 +369,17 @@ public class TaiSanController {
     }
     @GetMapping("/khauhaotaisanbynhom")
     public ResponseEntity<ApiResponse<Object>> getKhauHaoTaiSanByNhom(
-            @RequestParam String idcongty,
-            @RequestParam int ngay,
-            @RequestParam int thang,
-            @RequestParam int nam,
-            @RequestParam String idNhomTaiSan,
-            @RequestParam(required = false) String idDonViHienThoi,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search) {
+            @RequestParam("idcongty") String idcongty,
+            @RequestParam("ngay") int ngay,
+            @RequestParam("thang") int thang,
+            @RequestParam("nam") int nam,
+            @RequestParam("idNhomTaiSan") String idNhomTaiSan,
+            @RequestParam(value = "idDonViHienThoi", required = false) String idDonViHienThoi,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search) {
         try {
             PageResponse<KhauHaoTaiSan> result = taiSanService.getKhauHaoTaiSanByNhomPaged(
                     idcongty, ngay, thang, nam, idNhomTaiSan,idDonViHienThoi, page, size, sortBy, sortDir, search
@@ -444,7 +453,7 @@ public class TaiSanController {
     }
     @GetMapping("/export/excel")
     public void exportToExcel(
-            @RequestParam String idcongty,
+            @RequestParam("idcongty") String idcongty,
             HttpServletResponse response) throws IOException {
         try {
             // Tạo tên file với timestamp

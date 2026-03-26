@@ -28,16 +28,16 @@ public class NguonKinhPhiController {
 
     @GetMapping("/paged")
     public PageResponse<NguonKinhPhi> getNguonKinhPhiPaged(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search) {
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search) {
         return nguonKinhPhiService.getAllPaged(page, size, sortBy, sortDir, search);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<NguonKinhPhi>> getById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<NguonKinhPhi>> getById(@PathVariable("id") String id) {
         NguonKinhPhi nkp = nguonKinhPhiService.getById(id);
         if (nkp == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -82,7 +82,7 @@ public class NguonKinhPhiController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody NguonKinhPhi nkp) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody NguonKinhPhi nkp) {
         try {
             nkp.setId(id);
             int result = nguonKinhPhiService.update(nkp);
@@ -98,7 +98,7 @@ public class NguonKinhPhiController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             NguonKinhPhi nkp = nguonKinhPhiService.getById(id);
             if (nkp == null) {

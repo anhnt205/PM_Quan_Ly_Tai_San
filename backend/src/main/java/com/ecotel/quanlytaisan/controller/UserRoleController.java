@@ -19,12 +19,12 @@ public class UserRoleController {
 
     @GetMapping("/user/{userId}/paged")
     public PageResponse<UserRole> getRolesByUserPaged(
-            @PathVariable String userId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search){
+            @PathVariable("userId") String userId,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search){
 
         return userRoleService.getPagedResponseByUserId(userId, page, size, sortBy, sortDir, search);
     }
@@ -34,17 +34,17 @@ public class UserRoleController {
     }
 
     @GetMapping("/user/{userId}")
-    public List<UserRole> getByUserId(@PathVariable String userId) {
+    public List<UserRole> getByUserId(@PathVariable("userId") String userId) {
         return userRoleService.getByUserId(userId);
     }
 
     @GetMapping("/role/{roleId}")
-    public List<UserRole> getByRoleId(@PathVariable String roleId) {
+    public List<UserRole> getByRoleId(@PathVariable("roleId") String roleId) {
         return userRoleService.getByRoleId(roleId);
     }
 
     @GetMapping("/user/{userId}/role/{roleId}")
-    public UserRole getByUserAndRole(@PathVariable String userId, @PathVariable String roleId) {
+    public UserRole getByUserAndRole(@PathVariable("userId") String userId, @PathVariable("roleId") String roleId) {
         return userRoleService.getByUserAndRole(userId, roleId);
     }
 
@@ -65,7 +65,7 @@ public class UserRoleController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody UserRole userRole) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody UserRole userRole) {
         try {
             userRole.setId(id);
             int result = userRoleService.update(userRole);
@@ -81,7 +81,7 @@ public class UserRoleController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = userRoleService.delete(id);
             if (result > 0) {
@@ -96,7 +96,7 @@ public class UserRoleController {
     }
 
     @DeleteMapping("/user/{userId}")
-    public ResponseEntity<ApiResponse<Object>> deleteByUserId(@PathVariable String userId) {
+    public ResponseEntity<ApiResponse<Object>> deleteByUserId(@PathVariable("userId") String userId) {
         try {
             int result = userRoleService.deleteByUserId(userId);
             return ResponseEntity.ok(ApiResponse.success("Xóa tất cả vai trò của người dùng thành công", null, result));
@@ -107,7 +107,7 @@ public class UserRoleController {
     }
 
     @DeleteMapping("/role/{roleId}")
-    public ResponseEntity<ApiResponse<Object>> deleteByRoleId(@PathVariable String roleId) {
+    public ResponseEntity<ApiResponse<Object>> deleteByRoleId(@PathVariable("roleId") String roleId) {
         try {
             int result = userRoleService.deleteByRoleId(roleId);
             return ResponseEntity.ok(ApiResponse.success("Xóa tất cả người dùng khỏi vai trò thành công", null, result));

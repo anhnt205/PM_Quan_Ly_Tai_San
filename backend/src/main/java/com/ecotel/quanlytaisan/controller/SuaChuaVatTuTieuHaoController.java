@@ -29,7 +29,7 @@ public class SuaChuaVatTuTieuHaoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable("id") String id) {
         try {
             SuaChuaVatTuTieuHao item = service.getById(id);
             if (item != null) {
@@ -44,7 +44,7 @@ public class SuaChuaVatTuTieuHaoController {
     }
 
     @GetMapping("/by-suachua/{idSuaChua}")
-    public ResponseEntity<ApiResponse<Object>> getByIdSuaChua(@PathVariable String idSuaChua) {
+    public ResponseEntity<ApiResponse<Object>> getByIdSuaChua(@PathVariable("idSuaChua") String idSuaChua) {
         try {
             List<SuaChuaVatTuTieuHao> list = service.getByIdSuaChua(idSuaChua);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách theo phiếu sủa chữa thành công", list, null));
@@ -71,7 +71,7 @@ public class SuaChuaVatTuTieuHaoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody SuaChuaVatTuTieuHao entity) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody SuaChuaVatTuTieuHao entity) {
         try {
             entity.setId(id);
             SuaChuaVatTuTieuHao updated = service.update(entity);
@@ -87,7 +87,7 @@ public class SuaChuaVatTuTieuHaoController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             boolean deleted = service.delete(id);
             if (deleted) {

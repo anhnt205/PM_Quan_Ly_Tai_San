@@ -23,17 +23,17 @@ public class LichSuSuaChuaController {
     }
 
     @GetMapping("/taisan/{idTaiSan}")
-    public ResponseEntity<List<LichSuSuaChuaDTO>> findByTaiSan(@PathVariable String idTaiSan) {
+    public ResponseEntity<List<LichSuSuaChuaDTO>> findByTaiSan(@PathVariable("idTaiSan") String idTaiSan) {
         return ResponseEntity.ok(lichSuService.findByTaiSan(idTaiSan));
     }
 
     @GetMapping("/ketqua/{idKetQuaSuaChua}")
-    public ResponseEntity<List<LichSuSuaChuaDTO>> findByKetQuaSuaChua(@PathVariable String idKetQuaSuaChua) {
+    public ResponseEntity<List<LichSuSuaChuaDTO>> findByKetQuaSuaChua(@PathVariable("idKetQuaSuaChua") String idKetQuaSuaChua) {
         return ResponseEntity.ok(lichSuService.findByKetQuaSuaChua(idKetQuaSuaChua));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<LichSuSuaChuaDTO> findById(@PathVariable String id) {
+    public ResponseEntity<LichSuSuaChuaDTO> findById(@PathVariable("id") String id) {
         LichSuSuaChuaDTO dto = lichSuService.findByIdDTO(id);
         if (dto == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(dto);
@@ -46,7 +46,7 @@ public class LichSuSuaChuaController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<LichSuSuaChua> update(@PathVariable String id, @RequestBody LichSuSuaChua entity) {
+    public ResponseEntity<LichSuSuaChua> update(@PathVariable("id") String id, @RequestBody LichSuSuaChua entity) {
         entity.setId(id);
         LichSuSuaChua updated = lichSuService.update(entity);
         if (updated == null) return ResponseEntity.notFound().build();
@@ -54,14 +54,14 @@ public class LichSuSuaChuaController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") String id) {
         int result = lichSuService.delete(id);
         if (result == 0) return ResponseEntity.notFound().build();
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/by-ketqua/{idKetQuaSuaChua}")
-    public ResponseEntity<Integer> deleteByIdKetQuaSuaChua(@PathVariable String idKetQuaSuaChua) {
+    public ResponseEntity<Integer> deleteByIdKetQuaSuaChua(@PathVariable("idKetQuaSuaChua") String idKetQuaSuaChua) {
         int result = lichSuService.deleteByIdKetQuaSuaChua(idKetQuaSuaChua);
         return ResponseEntity.ok(result);
     }

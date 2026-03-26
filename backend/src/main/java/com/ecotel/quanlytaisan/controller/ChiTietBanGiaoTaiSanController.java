@@ -20,12 +20,12 @@ public class ChiTietBanGiaoTaiSanController {
     private ChiTietBanGiaoTaiSanService service;
 
     @GetMapping
-    public List<ChiTietBanGiaoTaiSanDTO> getAll(@RequestParam String  idbangiaotiasan) {
+    public List<ChiTietBanGiaoTaiSanDTO> getAll(@RequestParam("idbangiaotiasan") String  idbangiaotiasan) {
         return service.findAll(idbangiaotiasan);
     }
 
     @GetMapping("/{id}")
-    public ChiTietBanGiaoTaiSanDTO getById(@PathVariable String id) {
+    public ChiTietBanGiaoTaiSanDTO getById(@PathVariable("id") String id) {
         return service.findById(id);
     }
 
@@ -99,7 +99,7 @@ public class ChiTietBanGiaoTaiSanController {
 
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = service.delete(id);
             if (result > 0) {

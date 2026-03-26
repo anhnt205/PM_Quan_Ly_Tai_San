@@ -24,21 +24,21 @@ public class LoaiTaiSanConController {
 
     @GetMapping("/paged")
     public PageResponse<LoaiTaiSanCon> getAllPaged(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search) {
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search) {
         return loaiTaiSanConService.getAllPaged(page, size, sortBy, sortDir, search);
     }
 
     @GetMapping("/{id}")
-    public LoaiTaiSanCon getById(@PathVariable String id) {
+    public LoaiTaiSanCon getById(@PathVariable("id") String id) {
         return loaiTaiSanConService.getById(id);
     }
 
     @GetMapping("/byloaitaisan/{idLoaiTs}")
-    public List<LoaiTaiSanCon> getByIdLoaiTs(@PathVariable String idLoaiTs) {
+    public List<LoaiTaiSanCon> getByIdLoaiTs(@PathVariable("idLoaiTs") String idLoaiTs) {
         return loaiTaiSanConService.getByIdLoaiTs(idLoaiTs);
     }
 
@@ -78,7 +78,7 @@ public class LoaiTaiSanConController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody LoaiTaiSanCon ltsc) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody LoaiTaiSanCon ltsc) {
         try {
             ltsc.setId(id);
             int result = loaiTaiSanConService.update(ltsc);
@@ -94,7 +94,7 @@ public class LoaiTaiSanConController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = loaiTaiSanConService.delete(id);
             if (result > 0) {

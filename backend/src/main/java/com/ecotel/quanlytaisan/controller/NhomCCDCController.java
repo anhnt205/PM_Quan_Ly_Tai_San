@@ -24,24 +24,24 @@ public class NhomCCDCController {
     private NhomCCDCService nhomCCDCService;
 
     @GetMapping
-    public List<NhomCCDC> getAll(@RequestParam String idcongty) {
+    public List<NhomCCDC> getAll(@RequestParam("idcongty") String idcongty) {
         return nhomCCDCService.getAll(idcongty);
     }
 
     @GetMapping("/paged")
     public PageResponse<NhomCCDC> getAllPaged(
-            @RequestParam String idCongTy,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search) {
+            @RequestParam("idCongTy") String idCongTy,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search) {
 
         return nhomCCDCService.getAllPaged(idCongTy, page, size, sortBy, sortDir, search);
     }
 
     @GetMapping("/{id}")
-    public NhomCCDC getById(@PathVariable String id) {
+    public NhomCCDC getById(@PathVariable("id") String id) {
         return nhomCCDCService.getById(id);
     }
 
@@ -62,7 +62,7 @@ public class NhomCCDCController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody NhomCCDC nccdc) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody NhomCCDC nccdc) {
         try {
             nccdc.setId(id);
             int result = nhomCCDCService.update(nccdc);
@@ -78,7 +78,7 @@ public class NhomCCDCController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = nhomCCDCService.delete(id);
             if (result > 0) {

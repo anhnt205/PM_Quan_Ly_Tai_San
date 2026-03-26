@@ -24,24 +24,24 @@ public class NhomTaiSanController {
     private NhomTaiSanService nhomTaiSanService;
 
     @GetMapping
-    public List<NhomTaiSan> getAll(@RequestParam String idcongty) {
+    public List<NhomTaiSan> getAll(@RequestParam("idcongty") String idcongty) {
         return nhomTaiSanService.getAll(idcongty);
     }
 
     @GetMapping("/paged")
     public PageResponse<NhomTaiSan> getAllPaged(
-            @RequestParam String idCongTy,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search) {
+            @RequestParam("idCongTy") String idCongTy,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search) {
 
         return nhomTaiSanService.getAllPaged(idCongTy, page, size, sortBy, sortDir, search);
     }
 
     @GetMapping("/{id}")
-    public NhomTaiSan getById(@PathVariable String id) {
+    public NhomTaiSan getById(@PathVariable("id") String id) {
         return nhomTaiSanService.getById(id);
     }
 
@@ -81,7 +81,7 @@ public class NhomTaiSanController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody NhomTaiSan nts) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody NhomTaiSan nts) {
         try {
             nts.setId(id);
             int result = nhomTaiSanService.update(nts);
@@ -97,7 +97,7 @@ public class NhomTaiSanController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = nhomTaiSanService.delete(id);
             if (result > 0) {

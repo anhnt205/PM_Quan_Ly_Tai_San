@@ -28,19 +28,19 @@ public class KeHoachSuaChuaController {
      */
     @GetMapping
     public ResponseEntity<PageResponse<KeHoachSuaChuaDTO>> findAll(
-            @RequestParam String idCongTy,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(defaultValue = "desc") String sortDir,
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) String loaiKeHoach,
-            @RequestParam(required = false) String idDonVigiao,
-            @RequestParam(required = false) String idDonViThucHien,
-            @RequestParam(required = false) String trangThai,
-            @RequestParam(required = false) Integer ngay,
-            @RequestParam(required = false) Integer thang,
-            @RequestParam(required = false) Integer nam
+            @RequestParam("idCongTy") String idCongTy,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", defaultValue = "desc") String sortDir,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "loaiKeHoach", required = false) String loaiKeHoach,
+            @RequestParam(value = "idDonVigiao", required = false) String idDonVigiao,
+            @RequestParam(value = "idDonViThucHien", required = false) String idDonViThucHien,
+            @RequestParam(value = "trangThai", required = false) String trangThai,
+            @RequestParam(value = "ngay", required = false) Integer ngay,
+            @RequestParam(value = "thang", required = false) Integer thang,
+            @RequestParam(value = "nam", required = false) Integer nam
     ) throws SQLException {
         PageResponse<KeHoachSuaChuaDTO> response = keHoachSuaChuaService.findAllPaged(
                 idCongTy, page, size, sortBy, sortDir, search,
@@ -75,7 +75,7 @@ public class KeHoachSuaChuaController {
      * Lấy thông tin kế hoạch theo ID (trả về DTO)
      */
     @GetMapping("/{id}")
-    public ResponseEntity<KeHoachSuaChuaDTO> findById(@PathVariable String id) throws SQLException {
+    public ResponseEntity<KeHoachSuaChuaDTO> findById(@PathVariable("id") String id) throws SQLException {
         KeHoachSuaChuaDTO dto = keHoachSuaChuaService.findByIdDTO(id);
         if (dto == null) {
             return ResponseEntity.notFound().build();
@@ -96,7 +96,7 @@ public class KeHoachSuaChuaController {
      * Cập nhật kế hoạch sửa chữa
      */
     @PutMapping("/{id}")
-    public ResponseEntity<KeHoachSuaChua> update(@PathVariable String id, @RequestBody KeHoachSuaChua entity) throws SQLException {
+    public ResponseEntity<KeHoachSuaChua> update(@PathVariable("id") String id, @RequestBody KeHoachSuaChua entity) throws SQLException {
         entity.setId(id);
         KeHoachSuaChua updated = keHoachSuaChuaService.update(entity);
         if (updated == null) {
@@ -111,8 +111,8 @@ public class KeHoachSuaChuaController {
      */
     @PatchMapping("/{id}/trang-thai")
     public ResponseEntity<?> updateTrangThai(
-            @PathVariable String id,
-            @RequestParam String trangThai
+            @PathVariable("id") String id,
+            @RequestParam("trangThai") String trangThai
     ) {
         try {
             int result = keHoachSuaChuaService.updateTrangThai(id, trangThai);
@@ -133,7 +133,7 @@ public class KeHoachSuaChuaController {
      * Xóa kế hoạch sửa chữa
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) throws SQLException {
+    public ResponseEntity<Void> delete(@PathVariable("id") String id) throws SQLException {
         int result = keHoachSuaChuaService.delete(id);
         if (result == 0) {
             return ResponseEntity.notFound().build();

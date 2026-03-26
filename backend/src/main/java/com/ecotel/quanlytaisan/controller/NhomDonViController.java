@@ -23,12 +23,12 @@ public class NhomDonViController {
     private NhomDonViService nhomDonViService;
 
     @GetMapping
-    public List<NhomDonVi> getAll(@RequestParam String idcongty) {
+    public List<NhomDonVi> getAll(@RequestParam("idcongty") String idcongty) {
         return nhomDonViService.getAll(idcongty);
     }
 
     @GetMapping("/{id}")
-    public NhomDonVi getById(@PathVariable String id) {
+    public NhomDonVi getById(@PathVariable("id") String id) {
         return nhomDonViService.getById(id);
     }
 
@@ -68,7 +68,7 @@ public class NhomDonViController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody NhomDonVi ndv) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody NhomDonVi ndv) {
         try {
             ndv.setId(id);
             int result = nhomDonViService.update(ndv);
@@ -84,7 +84,7 @@ public class NhomDonViController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = nhomDonViService.delete(id);
             if (result > 0) {

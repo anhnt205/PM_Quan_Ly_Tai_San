@@ -19,11 +19,11 @@ public class RoleController {
 
     @GetMapping("/paged")
     public PageResponse<Role> getAllPaged(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search ){
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search ){
 
         return roleService.getAllPagedResponse(page, size, sortBy, sortDir, search);
     }
@@ -33,12 +33,12 @@ public class RoleController {
     }
 
     @GetMapping("/{id}")
-    public Role getById(@PathVariable String id) {
+    public Role getById(@PathVariable("id") String id) {
         return roleService.getById(id);
     }
 
     @GetMapping("/code/{roleCode}")
-    public Role getByCode(@PathVariable String roleCode) {
+    public Role getByCode(@PathVariable("roleCode") String roleCode) {
         return roleService.getByCode(roleCode);
     }
 
@@ -59,7 +59,7 @@ public class RoleController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody Role role) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody Role role) {
         try {
             role.setId(id);
             int result = roleService.update(role);
@@ -75,7 +75,7 @@ public class RoleController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = roleService.delete(id);
             if (result > 0) {

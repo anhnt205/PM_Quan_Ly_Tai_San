@@ -37,11 +37,11 @@ public class LichSuDieuChuyenCCDCVatTuController {
 
     @GetMapping
     public ResponseEntity<PageResponse<LichSuDieuChuyenCCDCVatTu>> getAllPaged(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String idCCDCVatTu,
-            @RequestParam(required = false) String fromDate,
-            @RequestParam(required = false) String toDate
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "idCCDCVatTu", required = false) String idCCDCVatTu,
+            @RequestParam(value = "fromDate", required = false) String fromDate,
+            @RequestParam(value = "toDate", required = false) String toDate
     ) {
         PageResponse<LichSuDieuChuyenCCDCVatTu> response = lichSuDieuChuyenCCDCVatTuService.getAllPaged(page, size, idCCDCVatTu, fromDate, toDate);
         return ResponseEntity.ok(response);

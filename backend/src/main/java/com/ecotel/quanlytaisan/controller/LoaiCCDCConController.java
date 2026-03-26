@@ -21,11 +21,11 @@ public class LoaiCCDCConController {
     // Phân trang toàn bộ
     @GetMapping("/paged")
     public PageResponse<LoaiCCDCCon> getAllPaged(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search) {
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search) {
 
         return loaiCCDCConService.getAllPagedResponse(page, size, sortBy, sortDir, search);
     }
@@ -33,12 +33,12 @@ public class LoaiCCDCConController {
     // Phân trang theo loại cha (phổ biến nhất)
     @GetMapping("/byloaiccdc/{idLoaiCCDC}/paged")
     public PageResponse<LoaiCCDCCon> getByIdLoaiCCDCPaged(
-            @PathVariable String idLoaiCCDC,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search) {
+            @PathVariable("idLoaiCCDC") String idLoaiCCDC,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search) {
 
         return loaiCCDCConService.getPagedResponseByIdLoaiCCDC(idLoaiCCDC, page, size, sortBy, sortDir, search);
     }
@@ -49,12 +49,12 @@ public class LoaiCCDCConController {
     }
 
     @GetMapping("/{id}")
-    public LoaiCCDCCon getById(@PathVariable String id) {
+    public LoaiCCDCCon getById(@PathVariable("id") String id) {
         return loaiCCDCConService.getById(id);
     }
 
     @GetMapping("/byloaiccdc/{idLoaiCCDC}")
-    public List<LoaiCCDCCon> getByIdLoaiCCDC(@PathVariable String idLoaiCCDC) {
+    public List<LoaiCCDCCon> getByIdLoaiCCDC(@PathVariable("idLoaiCCDC") String idLoaiCCDC) {
         return loaiCCDCConService.getByIdLoaiCCDC(idLoaiCCDC);
     }
 
@@ -94,7 +94,7 @@ public class LoaiCCDCConController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody LoaiCCDCCon lccdc) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody LoaiCCDCCon lccdc) {
         try {
             lccdc.setId(id);
             int result = loaiCCDCConService.update(lccdc);
@@ -110,7 +110,7 @@ public class LoaiCCDCConController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = loaiCCDCConService.delete(id);
             if (result > 0) {

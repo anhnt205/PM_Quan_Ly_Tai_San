@@ -55,7 +55,7 @@ public class VersionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Version>> getById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Version>> getById(@PathVariable("id") String id) {
         try {
             Version version = versionService.getById(id);
             if (version != null) {
@@ -71,7 +71,7 @@ public class VersionController {
     }
 
     @GetMapping("/code/{versionCode}")
-    public ResponseEntity<ApiResponse<Version>> getByVersionCode(@PathVariable String versionCode) {
+    public ResponseEntity<ApiResponse<Version>> getByVersionCode(@PathVariable("versionCode") String versionCode) {
         try {
             Version version = versionService.getByVersionCode(versionCode);
             if (version != null) {
@@ -115,7 +115,7 @@ public class VersionController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody Version version) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody Version version) {
         try {
             // Validate version code format if provided
             if (version.getVersionCode() != null && !versionService.isValidVersionCode(version.getVersionCode())) {
@@ -138,7 +138,7 @@ public class VersionController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = versionService.delete(id);
             if (result > 0) {
@@ -154,7 +154,7 @@ public class VersionController {
     }
 
     @PutMapping("/{id}/deactivate")
-    public ResponseEntity<ApiResponse<Object>> deactivate(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> deactivate(@PathVariable("id") String id) {
         try {
             int result = versionService.deactivate(id);
             if (result > 0) {
@@ -170,7 +170,7 @@ public class VersionController {
     }
 
     @PutMapping("/{id}/activate")
-    public ResponseEntity<ApiResponse<Object>> activate(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> activate(@PathVariable("id") String id) {
         try {
             int result = versionService.activate(id);
             if (result > 0) {

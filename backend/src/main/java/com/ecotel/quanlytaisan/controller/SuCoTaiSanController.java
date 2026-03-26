@@ -23,16 +23,16 @@ public class SuCoTaiSanController {
 
     @GetMapping
     public ResponseEntity<PageResponse<SuCoTaiSan>> getAllPaged(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String tuNgay,
-            @RequestParam(required = false) String denNgay,
-            @RequestParam(required = false) String noiSuaChua) {
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "tuNgay", required = false) String tuNgay,
+            @RequestParam(value = "denNgay", required = false) String denNgay,
+            @RequestParam(value = "noiSuaChua", required = false) String noiSuaChua) {
         return ResponseEntity.ok(service.getAllPaged(page, size, tuNgay, denNgay, noiSuaChua));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable("id") String id) {
         try {
             SuCoTaiSan result = service.getById(id);
             if (result != null) {
@@ -63,7 +63,7 @@ public class SuCoTaiSanController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody SuCoTaiSanDTO dto) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody SuCoTaiSanDTO dto) {
         try {
             int result = service.update(id, dto);
             if (result > 0) {
@@ -78,7 +78,7 @@ public class SuCoTaiSanController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = service.delete(id);
             if (result > 0) {

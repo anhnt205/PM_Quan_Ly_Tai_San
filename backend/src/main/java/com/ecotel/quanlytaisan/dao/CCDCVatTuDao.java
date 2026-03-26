@@ -260,4 +260,19 @@ public class CCDCVatTuDao {
         String sql = "DELETE FROM CCDCVatTu WHERE Id=?";
         return jdbcTemplate.update(sql, id);
     }
+
+    public int deleteAllChiTietTaiSan() {
+        String sql = "DELETE FROM ChiTietTaiSan WHERE IdTaiSan IN (SELECT Id FROM CCDCVatTu)";
+        return jdbcTemplate.update(sql);
+    }
+
+    public int deleteAllChiTietDonViSoHuu() {
+        String sql = "DELETE FROM ChiTietDonViSoHuu WHERE IdCCDCVT IN (SELECT Id FROM CCDCVatTu)";
+        return jdbcTemplate.update(sql);
+    }
+
+    public int deleteAll() {
+        String sql = "DELETE FROM CCDCVatTu";
+        return jdbcTemplate.update(sql);
+    }
 }

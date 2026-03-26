@@ -28,16 +28,16 @@ public class TaiKhoanController {
 
     @GetMapping("/paged")
     public PageResponse<TaiKhoan> getAllPaged(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search) {
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search) {
         return taiKhoanService.getAllPaged(page, size, sortBy, sortDir, search);
     }
 
     @GetMapping("/{id}")
-    public TaiKhoan getById(@PathVariable String id) {
+    public TaiKhoan getById(@PathVariable("id") String id) {
         return taiKhoanService.getById(id);
     }
 
@@ -77,7 +77,7 @@ public class TaiKhoanController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody TaiKhoan tk) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody TaiKhoan tk) {
         try {
             tk.setId(id);
             int result = taiKhoanService.update(tk);
@@ -93,7 +93,7 @@ public class TaiKhoanController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = taiKhoanService.delete(id);
             if (result > 0) {

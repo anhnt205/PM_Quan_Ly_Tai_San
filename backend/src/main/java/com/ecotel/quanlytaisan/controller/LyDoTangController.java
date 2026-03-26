@@ -23,11 +23,11 @@ public class LyDoTangController {
 //   /api/lydotang/paged?page=0&size=20&search=&sortBy=Ten&sortDir=asc
     @GetMapping("/paged")
     public PageResponse<LyDoTang> getAllPaged(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search) {
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search) {
 
         return lyDoTangService.getAllPagedResponse(page, size, sortBy, sortDir, search);
     }
@@ -44,7 +44,7 @@ public class LyDoTangController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable("id") String id) {
         try {
             LyDoTang lyDoTang = lyDoTangService.getById(id);
             if (lyDoTang != null) {
@@ -75,7 +75,7 @@ public class LyDoTangController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody LyDoTang lyDoTang) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody LyDoTang lyDoTang) {
         try {
             lyDoTang.setId(id);
             int result = lyDoTangService.update(lyDoTang);
@@ -91,7 +91,7 @@ public class LyDoTangController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = lyDoTangService.delete(id);
             if (result > 0) {

@@ -21,13 +21,13 @@ public class KeHoachSuaChuaChiTietTaiSanController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<KeHoachSuaChuaChiTietTaiSan> getById(@PathVariable String id) {
+    public ResponseEntity<KeHoachSuaChuaChiTietTaiSan> getById(@PathVariable("id") String id) {
         KeHoachSuaChuaChiTietTaiSan entity = chiTietTaiSanService.getById(id);
         return entity != null ? ResponseEntity.ok(entity) : ResponseEntity.notFound().build();
     }
 
     @GetMapping("/kehoach/{idKeHoach}")
-    public ResponseEntity<List<KeHoachSuaChuaChiTietTaiSan>> getByIdKeHoach(@PathVariable String idKeHoach) {
+    public ResponseEntity<List<KeHoachSuaChuaChiTietTaiSan>> getByIdKeHoach(@PathVariable("idKeHoach") String idKeHoach) {
         return ResponseEntity.ok(chiTietTaiSanService.getByIdKeHoach(idKeHoach));
     }
 
@@ -38,7 +38,7 @@ public class KeHoachSuaChuaChiTietTaiSanController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<KeHoachSuaChuaChiTietTaiSan> update(@PathVariable String id,
+    public ResponseEntity<KeHoachSuaChuaChiTietTaiSan> update(@PathVariable("id") String id,
                                                               @RequestBody KeHoachSuaChuaChiTietTaiSan entity) {
         entity.setId(id);
         KeHoachSuaChuaChiTietTaiSan updated = chiTietTaiSanService.update(entity);
@@ -46,7 +46,7 @@ public class KeHoachSuaChuaChiTietTaiSanController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") String id) {
         return chiTietTaiSanService.delete(id) ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
     }
 

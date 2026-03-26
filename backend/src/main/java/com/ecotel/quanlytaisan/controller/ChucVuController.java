@@ -38,7 +38,7 @@ public class ChucVuController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody ChucVu cv) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody ChucVu cv) {
         try {
             cv.setId(id);
             int result = chucVuService.update(cv);
@@ -73,7 +73,7 @@ public class ChucVuController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = chucVuService.delete(id);
             if (result > 0) {
@@ -106,7 +106,7 @@ public class ChucVuController {
     }
 
     @GetMapping("/congty/{idCongTy}")
-    public ResponseEntity<ApiResponse<Object>> findAll(@PathVariable String idCongTy) {
+    public ResponseEntity<ApiResponse<Object>> findAll(@PathVariable("idCongTy") String idCongTy) {
         try {
             List<ChucVu> list = chucVuService.findAll(idCongTy);
             return ResponseEntity.ok(ApiResponse.success("Danh sách chức vụ", list, list.size()));
@@ -118,17 +118,17 @@ public class ChucVuController {
 
     @GetMapping("/congty/{idCongTy}/paged")
     public PageResponse<ChucVu> findAllPaged(
-            @PathVariable String idCongTy,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search) {
+            @PathVariable("idCongTy") String idCongTy,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search) {
         return chucVuService.findAllPaged(idCongTy, page, size, sortBy, sortDir, search);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> findById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> findById(@PathVariable("id") String id) {
         try {
             ChucVu cv = chucVuService.findById(id);
             if (cv != null) {
@@ -143,7 +143,7 @@ public class ChucVuController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<Object>> findByTen(@RequestParam String ten) {
+    public ResponseEntity<ApiResponse<Object>> findByTen(@RequestParam("ten") String ten) {
         try {
             List<ChucVu> list = chucVuService.findByTen(ten);
             return ResponseEntity.ok(ApiResponse.success("Kết quả tìm kiếm", list, list.size()));

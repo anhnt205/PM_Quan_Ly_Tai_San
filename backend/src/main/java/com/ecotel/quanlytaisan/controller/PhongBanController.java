@@ -29,23 +29,23 @@ public class PhongBanController {
     @Autowired
     private NotificationService notificationService;
     @GetMapping
-    public List<PhongBanDTO> getAll(@RequestParam String idcongty) {
+    public List<PhongBanDTO> getAll(@RequestParam("idcongty") String idcongty) {
         return phongBanService.getAll(idcongty);
     }
 
     @GetMapping("/paged")
     public PageResponse<PhongBanDTO> getAllPaged(
-            @RequestParam String idcongty,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search) {
+            @RequestParam("idcongty") String idcongty,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search) {
         return phongBanService.getAllPaged(idcongty, page, size, sortBy, sortDir, search);
     }
 
     @GetMapping("/{id}")
-    public PhongBanDTO getById(@PathVariable String id) {
+    public PhongBanDTO getById(@PathVariable("id") String id) {
         return phongBanService.getById(id);
     }
 
@@ -68,7 +68,7 @@ public class PhongBanController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody PhongBan pb) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody PhongBan pb) {
         try {
             pb.setId(id);
             int result = phongBanService.update(pb);
@@ -110,7 +110,7 @@ public class PhongBanController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             // Lấy thông tin phòng ban trước khi xóa để có thông tin công ty
             PhongBanDTO phongBan = phongBanService.getById(id);

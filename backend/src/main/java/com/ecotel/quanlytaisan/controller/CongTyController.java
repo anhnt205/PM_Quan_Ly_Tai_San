@@ -29,18 +29,18 @@ public class CongTyController {
 
     @GetMapping("/paged")
     public ResponseEntity<PageResponse<CongTy>> getAllPaged(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "Id") String sortBy,
-            @RequestParam(defaultValue = "ASC") String sortDir,
-            @RequestParam(required = false) String search
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sortBy", defaultValue = "Id") String sortBy,
+            @RequestParam(value = "sortDir", defaultValue = "ASC") String sortDir,
+            @RequestParam(value = "search", required = false) String search
     ) {
         PageResponse<CongTy> response = congTyService.getAllPaged(page, size, sortBy, sortDir, search);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
-    public CongTy getById(@PathVariable String id) {
+    public CongTy getById(@PathVariable("id") String id) {
         return congTyService.getById(id);
     }
 
@@ -80,7 +80,7 @@ public class CongTyController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody CongTy ct) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody CongTy ct) {
         try {
             ct.setId(id);
             int result = congTyService.update(ct);
@@ -96,7 +96,7 @@ public class CongTyController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = congTyService.delete(id);
             if (result > 0) {

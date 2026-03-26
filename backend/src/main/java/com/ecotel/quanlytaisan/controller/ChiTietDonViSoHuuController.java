@@ -35,7 +35,7 @@ public class ChiTietDonViSoHuuController {
 
     // --- GET BY ID ---
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ChiTietDonViSoHuu>> getById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<ChiTietDonViSoHuu>> getById(@PathVariable("id") String id) {
         try {
             ChiTietDonViSoHuu data = service.getById(id);
             if (data == null) {
@@ -51,7 +51,7 @@ public class ChiTietDonViSoHuuController {
 
     // --- SEARCH ---
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<List<ChiTietDonViSoHuu>>> search(@RequestParam String q) {
+    public ResponseEntity<ApiResponse<List<ChiTietDonViSoHuu>>> search(@RequestParam("q") String q) {
         try {
             List<ChiTietDonViSoHuu> list = service.search(q);
             return ResponseEntity.ok(ApiResponse.success("Tìm kiếm thành công", list, list.size()));
@@ -63,7 +63,7 @@ public class ChiTietDonViSoHuuController {
 
     // --- GET BY IdCCDCVT ---
     @GetMapping("/by-ccdcvt/{id}")
-    public ResponseEntity<ApiResponse<List<ChiTietDonViSoHuu>>> getByIdCCDCVT(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<List<ChiTietDonViSoHuu>>> getByIdCCDCVT(@PathVariable("id") String id) {
         try {
             List<ChiTietDonViSoHuu> list = service.getByIdCCDCVT(id);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách theo IdCCDCVT thành công", list, list.size()));
@@ -75,7 +75,7 @@ public class ChiTietDonViSoHuuController {
 
     // --- GET BY IdDonViSoHuu ---
     @GetMapping("/by-donvisohuu/{id}")
-    public ResponseEntity<ApiResponse<List<ChiTietDonViSoHuu>>> getByIdDonViSoHuu(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<List<ChiTietDonViSoHuu>>> getByIdDonViSoHuu(@PathVariable("id") String id) {
         try {
             List<ChiTietDonViSoHuu> list = service.getByIdDonViSoHuu(id);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách theo IdDonViSoHuu thành công", list, list.size()));
@@ -100,7 +100,7 @@ public class ChiTietDonViSoHuuController {
 
     // --- UPDATE ---
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id,
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id,
                                                       @RequestBody ChiTietDonViSoHuu entity) {
         try {
             boolean ok = service.update(id, entity);
@@ -165,7 +165,7 @@ public class ChiTietDonViSoHuuController {
 
     // --- DELETE ---
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             boolean ok = service.delete(id);
             if (ok) {

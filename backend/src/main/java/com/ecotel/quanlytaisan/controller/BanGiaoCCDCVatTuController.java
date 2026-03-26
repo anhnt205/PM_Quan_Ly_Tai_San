@@ -27,52 +27,52 @@ public class BanGiaoCCDCVatTuController {
 
 
     @GetMapping
-    public List<BanGiaoCCDCVatTuDTO> getAll(@RequestParam String idcongty) {
+    public List<BanGiaoCCDCVatTuDTO> getAll(@RequestParam("idcongty") String idcongty) {
         return service.findAll(idcongty);
     }
 
     @GetMapping("/paged")
     public PageResponse<BanGiaoCCDCVatTuDTO> getAllPaged(
-            @RequestParam String idcongty,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) String userid,
-            @RequestParam(required = false) Integer trangThai,
-            @RequestParam(required = false) String idDonViGiao) throws SQLException {
+            @RequestParam("idcongty") String idcongty,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "userid", required = false) String userid,
+            @RequestParam(value = "trangThai", required = false) Integer trangThai,
+            @RequestParam(value = "idDonViGiao", required = false) String idDonViGiao) throws SQLException {
         return service.findAllPaged(idcongty, page, size, sortBy, sortDir, search, userid, trangThai, idDonViGiao);
     }
 
     @GetMapping("/getbyuserid/{userid}")
-    public List<BanGiaoCCDCVatTuDTO> getbyuserid(@PathVariable String userid) throws SQLException {
+    public List<BanGiaoCCDCVatTuDTO> getbyuserid(@PathVariable("userid") String userid) throws SQLException {
         return service.getByUserId(userid);
     }
 
     @GetMapping("/getbyuseridstatus")
-    public List<BanGiaoCCDCVatTuDTO> getByUserIdStatus(@RequestParam String userid, @RequestParam int trangthai) throws SQLException {
+    public List<BanGiaoCCDCVatTuDTO> getByUserIdStatus(@RequestParam("userid") String userid, @RequestParam("trangthai") int trangthai) throws SQLException {
         return service.getByUserIdStatus(userid, trangthai);
     }
 
     @GetMapping("/getbystatus")
-    public List<BanGiaoCCDCVatTuDTO> getByStatus(@RequestParam int trangthai) throws SQLException {
+    public List<BanGiaoCCDCVatTuDTO> getByStatus(@RequestParam("trangthai") int trangthai) throws SQLException {
         return service.getByStatus(trangthai);
     }
 
     @GetMapping("/details")
-    public List<BanGiaoCCDCVatTuDetailResponse> getAllDetailByCongTy(@RequestParam String idcongty) {
+    public List<BanGiaoCCDCVatTuDetailResponse> getAllDetailByCongTy(@RequestParam("idcongty") String idcongty) {
         return detailService.getBanGiaoCCDCVatTuDetailByIdCongTy(idcongty);
     }
 
     @GetMapping("/details-by_user/{userid}")
-    public List<BanGiaoCCDCVatTuDetailResponse> getAllDetailByUserId(@PathVariable String userid) throws SQLException {
+    public List<BanGiaoCCDCVatTuDetailResponse> getAllDetailByUserId(@PathVariable("userid") String userid) throws SQLException {
         return detailService.getBanGiaoCCDCVatTuDetailByUserId(userid);
     }
 
 
     @GetMapping("/{id}")
-    public BanGiaoCCDCVatTu getById(@PathVariable String id) {
+    public BanGiaoCCDCVatTu getById(@PathVariable("id") String id) {
         return service.findById(id);
     }
 
@@ -153,7 +153,7 @@ public class BanGiaoCCDCVatTuController {
 
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             // Lấy thông tin trước khi xóa để gửi thông báo
             BanGiaoCCDCVatTu existingItem = service.findById(id);
@@ -194,7 +194,7 @@ public class BanGiaoCCDCVatTuController {
     }
 
     @PostMapping("/capnhattrangthai")
-    public ResponseEntity<ApiResponse<Object>> capNhatTrangThai(@RequestParam String id, @RequestParam String userId) throws SQLException {
+    public ResponseEntity<ApiResponse<Object>> capNhatTrangThai(@RequestParam("id") String id, @RequestParam("userId") String userId) throws SQLException {
         try {
             // Lấy thông tin trước khi cập nhật để gửi thông báo
             BanGiaoCCDCVatTu existingItem = service.findById(id);
@@ -213,7 +213,7 @@ public class BanGiaoCCDCVatTuController {
     }
 
     @PostMapping("/huytrangthai")
-    public ResponseEntity<ApiResponse<Object>> huyTrangThai(@RequestParam String id) throws SQLException {
+    public ResponseEntity<ApiResponse<Object>> huyTrangThai(@RequestParam("id") String id) throws SQLException {
         try {
             // Lấy thông tin trước khi cập nhật để gửi thông báo
             BanGiaoCCDCVatTu existingItem = service.findById(id);

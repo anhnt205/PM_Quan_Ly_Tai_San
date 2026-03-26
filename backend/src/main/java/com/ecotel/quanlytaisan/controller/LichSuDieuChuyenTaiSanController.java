@@ -36,7 +36,7 @@ public class LichSuDieuChuyenTaiSanController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody LichSuDieuChuyenTaiSanDTO item) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody LichSuDieuChuyenTaiSanDTO item) {
         try {
             int result = lichSuDieuChuyenTaiSanService.update(id, item);
             if (result > 0) {
@@ -51,7 +51,7 @@ public class LichSuDieuChuyenTaiSanController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = lichSuDieuChuyenTaiSanService.delete(id);
             if (result > 0) {
@@ -67,11 +67,11 @@ public class LichSuDieuChuyenTaiSanController {
 
     @GetMapping
     public ResponseEntity<PageResponse<LichSuDieuChuyenTaiSan>> getAllPaged(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String idTaiSan,
-            @RequestParam(required = false) String fromDate,
-            @RequestParam(required = false) String toDate
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "idTaiSan", required = false) String idTaiSan,
+            @RequestParam(value = "fromDate", required = false) String fromDate,
+            @RequestParam(value = "toDate", required = false) String toDate
     ) {
         PageResponse<LichSuDieuChuyenTaiSan> response = lichSuDieuChuyenTaiSanService.getAllPaged(page, size, idTaiSan, fromDate, toDate);
         return ResponseEntity.ok(response);
