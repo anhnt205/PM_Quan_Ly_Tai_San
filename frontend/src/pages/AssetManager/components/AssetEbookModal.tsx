@@ -14,19 +14,25 @@ import * as pdfjsLib from "pdfjs-dist";
 import {
   generateAssetManentancePDF,
   generateAssetPdf,
+  generateAssetCoverPDF,
   generateMonthlyActivityReport,
   generateTransferHistoryPDF,
+  generateSparePartsPDF,
+  generateMaintenanceMonthlyPDF,
   mergePdf,
 } from "../config";
 import AssetInfo from "./AssetEBook/AssetInfo";
 import TransferHistoryPage from "./AssetEBook/TransferHistoryPage";
 import {
   useAssetHoursByGroupPageQuery,
+  useAssetHoursPageQuery,
   useHistoryAssethandoverQuery,
 } from "../Mutation";
 import HoursAsset from "./AssetEBook/HoursAsset";
 import AssetMaintenance from "./AssetEBook/AssetMaintenance";
 import AssetEbookCover from "./AssetEBook/AssetEbookCover";
+import SparePartsPage from "./AssetEBook/SparePartsPage";
+import MaintenanceMonthlyPage from "./AssetEBook/MaintenanceMonthlyPage";
 
 if (typeof window !== "undefined") {
   pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
@@ -63,7 +69,7 @@ const AssetEbookModal = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pdfDoc, setPdfDoc] = useState<any>(null);
-  const [totalPages] = useState(5);
+  const [totalPages] = useState(7);
   const [pdfBlob, setPdfBlob] = useState<Uint8Array | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -86,10 +92,8 @@ const AssetEbookModal = ({
       selectedAsset?.id,
     );
 
-  const { data: assetHoursByYear = [] } = useAssetHoursByGroupPageQuery(
-    selectedAsset?.id,
-  );
-
+  const { data: assetHoursPage = { items: [], totalItems: 0 } } =
+    useAssetHoursPageQuery(0, 999, selectedAsset?.id);
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
@@ -98,6 +102,12 @@ const AssetEbookModal = ({
       setError(null);
       try {
         const listPdf = [];
+
+        // Trang 1: Bìa
+        const cover = await generateAssetCoverPDF(selectedAsset);
+        if (cover) listPdf.push(cover);
+
+        // Trang 2: Thông tin tài sản
         const info = await generateAssetPdf(
           selectedAsset,
           allAssetModel,
@@ -108,12 +118,28 @@ const AssetEbookModal = ({
           allReasonIncreases,
         );
         if (info) listPdf.push(info);
+
+        // Trang 3: Theo dõi di chuyển lắp đặt máy
         const transfer = await generateTransferHistoryPDF(historyData.items);
         if (transfer) listPdf.push(transfer);
-        const activity = await generateMonthlyActivityReport(assetHoursByYear);
+
+        // Trang 4: Bảng kê các phụ tùng chính của máy
+        const spareParts = await generateSparePartsPDF([]);
+        if (spareParts) listPdf.push(spareParts);
+
+        // Trang 5: Giờ (km) hoạt động theo năm
+        const activity = await generateMonthlyActivityReport(
+          assetHoursPage.items,
+        );
         if (activity) listPdf.push(activity);
-        const maintenance = await generateAssetManentancePDF([]);
-        if (maintenance) listPdf.push(maintenance);
+
+        // Trang 6: Theo dõi tình hình sự cố xảy ra hàng tháng
+        const incident = await generateAssetManentancePDF([]);
+        if (incident) listPdf.push(incident);
+
+        // Trang 7: Theo dõi sửa chữa máy từng tháng
+        const maintenanceMonthly = await generateMaintenanceMonthlyPDF([]);
+        if (maintenanceMonthly) listPdf.push(maintenanceMonthly);
 
         const merge = await mergePdf(listPdf);
         if (cancelled) return;
@@ -141,7 +167,7 @@ const AssetEbookModal = ({
     return () => {
       cancelled = true;
     };
-  }, [open, selectedAsset, historyData.totalItems, assetHoursByYear.length]);
+  }, [open, selectedAsset, historyData.totalItems, assetHoursPage.totalItems]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -240,7 +266,7 @@ const AssetEbookModal = ({
         }}
       >
         {/* Pagination Cố định & Căn giữa */}
-        <Box 
+        <Box
           sx={{
             position: "sticky",
             top: 0,
@@ -269,8 +295,16 @@ const AssetEbookModal = ({
           >
             ← Trang trước
           </Button>
-          <Box sx={{ display: 'flex', alignItems: 'center', color: "#026e42", fontWeight: "bold", fontSize: "16px" }}>
-             Trang {currentPage} / {totalPages}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              color: "#026e42",
+              fontWeight: "bold",
+              fontSize: "16px",
+            }}
+          >
+            Trang {currentPage} / {totalPages}
           </Box>
           <Button
             onClick={() => handlePageChange(currentPage + 1)}
@@ -324,7 +358,7 @@ const AssetEbookModal = ({
               }}
             >
               {currentPage === 1 ? (
-                <AssetEbookCover 
+                <AssetEbookCover
                   asset={selectedAsset}
                   onPageChange={handlePageChange}
                   currentPage={currentPage}
@@ -359,6 +393,16 @@ const AssetEbookModal = ({
                   totalPages={totalPages}
                 />
               ) : currentPage === 4 ? (
+                <SparePartsPage
+                  asset={selectedAsset}
+                  readOnly={readOnly}
+                  onEdit={onEdit}
+                  onCancel={onCancel}
+                  onPageChange={handlePageChange}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                />
+              ) : currentPage === 5 ? (
                 <HoursAsset
                   readOnly={readOnly}
                   onEdit={onEdit}
@@ -367,9 +411,20 @@ const AssetEbookModal = ({
                   onPageChange={handlePageChange}
                   currentPage={currentPage}
                   totalPages={totalPages}
+                  allDepartments={allDepartments}
+                />
+              ) : currentPage === 6 ? (
+                <AssetMaintenance
+                  readOnly={readOnly}
+                  onEdit={onEdit}
+                  onCancel={onCancel}
+                  onPageChange={handlePageChange}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
                 />
               ) : (
-                <AssetMaintenance
+                <MaintenanceMonthlyPage
+                  asset={selectedAsset}
                   readOnly={readOnly}
                   onEdit={onEdit}
                   onCancel={onCancel}

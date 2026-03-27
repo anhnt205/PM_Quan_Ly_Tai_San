@@ -687,7 +687,7 @@ export const useAssetHoursPageQuery = (
       });
       return res.data.data || res.data;
     },
-    enabled: !!idTaiSan && !!nam,
+    enabled: !!idTaiSan,
   });
 };
 export const useAssetHoursByGroupPageQuery = (idTaiSan?: string) => {

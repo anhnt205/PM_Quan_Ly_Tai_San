@@ -1,6 +1,7 @@
 import { Box, Chip, Typography } from "@mui/material";
 import dayjs from "dayjs";
 import "../../../assets/fonts/times_new_roman-normal";
+import "../../../assets/fonts/times_new_roman-bold";
 
 export const ShowStatus = (data: any) => {
   const soNgayBaoTruoc = data.soNgayBaoTruoc || 20;
@@ -91,7 +92,7 @@ export const showDownloadFile = (fileName: string, onDownload: () => void) => {
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import {
-  AssetHoursGroupYearType,
+  AssetHoursType,
   AssetType,
   MaintenanceIncidentType,
   TransferHistoryData,
@@ -100,14 +101,79 @@ import { FileDownloadOutlined } from "@mui/icons-material";
 import { findById } from "../../../utils/helpers";
 import { PDFDocument } from "pdf-lib";
 
-interface Attachment {
-  id: string;
-  tenFile: string;
-  loaiFile: string; // 'image/png', 'application/pdf', ...
-  url?: string; // đường dẫn (có thể dùng để tải nội dung nếu cần nhúng)
-  data?: string | ArrayBuffer; // nếu có sẵn dữ liệu base64 (tuỳ chọn)
-}
+// Trang 1: BÌA - LÝ LỊCH THIẾT BỊ
+export const generateAssetCoverPDF = async (
+  asset: AssetType,
+): Promise<Uint8Array> => {
+  const doc = new jsPDF();
+  doc.setFont("times_new_roman", "normal");
 
+  // Nền màu hồng toàn trang
+  doc.setFillColor(212, 111, 158);
+  doc.rect(0, 0, 210, 297, "F");
+
+  // Viền ngoài đậm
+  doc.setDrawColor(26, 26, 26);
+  doc.setLineWidth(0.8);
+  doc.rect(8, 8, 194, 281);
+  // Viền trong mảnh
+  doc.setLineWidth(0.3);
+  doc.rect(11, 11, 188, 275);
+
+  // Header – tên tập đoàn / công ty
+  doc.setTextColor(14, 14, 14);
+  doc.setFont("times_new_roman", "bold");
+  doc.setFontSize(13);
+  doc.text("TẬP ĐOÀN CÔNG NGHIỆP THAN - KHOÁNG SẢN VIỆT NAM", 105, 30, {
+    align: "center",
+  });
+  doc.text("CÔNG TY CỔ PHẦN THAN UÔNG BÍ - TKV", 105, 40, { align: "center" });
+
+  // Tiêu đề chính
+  doc.setFontSize(30);
+  doc.setFont("times_new_roman", "bold");
+  (doc as any).setCharSpace(3);
+  doc.text("LÝ LỊCH THIẾT BỊ", 90, 100, { align: "center" });
+  (doc as any).setCharSpace(0);
+
+  // Các trường thông tin (style đường kẻ chấm đứt)
+  const drawField = (label: string, value: string, y: number) => {
+    doc.setFont("times_new_roman", "bold");
+    doc.setFontSize(14);
+    doc.text(label, 30, y);
+    const labelWidth = doc.getTextWidth(label);
+    doc.setFont("times_new_roman", "normal");
+    doc.setFontSize(14);
+    if (value) doc.text(value, 35 + labelWidth, y);
+    // Đường kẻ chấm từ sau label đến lề phải
+    (doc as any).setLineDash([1, 2]);
+    doc.setLineWidth(0.2);
+    doc.setDrawColor(26, 26, 26);
+    doc.line(
+      35 + labelWidth + (value ? doc.getTextWidth(value) + 2 : 0),
+      y + 1,
+      178,
+      y + 1,
+    );
+    (doc as any).setLineDash([]);
+  };
+
+  drawField("Tên thiết bị :", asset?.tenTaiSan || "", 130);
+  drawField("Mã hiệu :", asset?.kyHieu || "", 150);
+  drawField("Số chế tạo :", "", 170);
+  drawField("Số kiểm kê :", "", 190);
+
+  // Footer
+  doc.setFont("times_new_roman", "normal");
+  doc.setFontSize(13);
+  doc.setTextColor(14, 14, 14);
+  const year = dayjs().year();
+  doc.text(`Tháng ..... năm ......`, 105, 265, { align: "center" });
+
+  return new Uint8Array(doc.output("arraybuffer"));
+};
+
+// Trang 2: THÔNG TIN TÀI SẢN (theo layout AssetInfo)
 export const generateAssetPdf = async (
   asset: AssetType,
   allAssetModel: any[],
@@ -119,8 +185,63 @@ export const generateAssetPdf = async (
 ): Promise<Uint8Array> => {
   const doc = new jsPDF();
   doc.setFont("times_new_roman", "normal");
+
+  // Tiêu đề
+  doc.setFont("times_new_roman", "bold");
   doc.setFontSize(16);
-  doc.text("THÔNG TIN TÀI SẢN", 105, 15, { align: "center" });
+  doc.text("LÝ LỊCH THIẾT BỊ", 105, 15, { align: "center" });
+
+  // ---- Header thông tin bìa (giống phần đầu AssetInfo) ----
+  let y = 25;
+  const drawDottedField = (
+    label: string,
+    value: string,
+    yPos: number,
+    x1 = 15,
+    x2 = 195,
+  ) => {
+    doc.setFont("times_new_roman", "normal");
+    doc.setFontSize(11);
+    doc.text(label, x1, yPos);
+    const lw = doc.getTextWidth(label);
+    if (value) {
+      doc.setFont("times_new_roman", "bold");
+      doc.text(value, x1 + lw + 2, yPos);
+    }
+    (doc as any).setLineDash([1, 2]);
+    doc.setLineWidth(0.2);
+    doc.setDrawColor(26, 26, 26);
+    const usedWidth = lw + (value ? doc.getTextWidth(value) + 4 : 2);
+    doc.line(x1 + usedWidth, yPos + 1, x2, yPos + 1);
+    (doc as any).setLineDash([]);
+  };
+
+  drawDottedField(
+    "Tên thiết bị, mã hiệu:  ",
+    `${asset?.tenTaiSan || ""}${asset?.kyHieu ? " - " + asset.kyHieu : ""}`,
+    y,
+  );
+  y += 10;
+  drawDottedField("Số chế tạo:  ", "", y, 15, 100);
+  drawDottedField("Số kiểm kê:  ", "", y, 110, 195);
+  y += 10;
+  drawDottedField("Tên nhà máy chế tạo:  ", "", y);
+  y += 10;
+  drawDottedField("Nước chế tạo:  ", asset?.nuocSanXuat || "", y, 15, 100);
+  drawDottedField(
+    "Năm chế tạo:  ",
+    asset?.namSanXuat ? String(asset.namSanXuat) : "",
+    y,
+    110,
+    195,
+  );
+  y += 14;
+
+  // Tiêu đề phần chi tiết
+  doc.setFont("times_new_roman", "bold");
+  doc.setFontSize(16);
+  doc.text("ĐẶC TÍNH KĨ THUẬT", 105, y, { align: "center" });
+  y += 5;
 
   // --- Phần thông tin chính (giữ nguyên) ---
   const pairs: [string, any][] = [
@@ -197,7 +318,7 @@ export const generateAssetPdf = async (
   ];
 
   autoTable(doc, {
-    startY: 25,
+    startY: y + 4,
     body: tableBody,
     theme: "plain",
     styles: { font: "times_new_roman", fontSize: 11, cellPadding: 2 },
@@ -210,7 +331,7 @@ export const generateAssetPdf = async (
     margin: { left: 15, right: 15 },
   });
 
-  let y = (doc as any).lastAutoTable.finalY + 10;
+  let yFinal = (doc as any).lastAutoTable.finalY + 10;
 
   // --- Phần tài sản con (liệt kê dạng văn bản, không kẻ bảng) ---
   if (asset.taiSanConList && asset.taiSanConList.length > 0) {
@@ -218,8 +339,8 @@ export const generateAssetPdf = async (
     if (conList.length > 0) {
       doc.setFont("times_new_roman", "bold");
       doc.setFontSize(12);
-      doc.text("Danh sách tài sản con:", 20, y);
-      y += 6;
+      doc.text("Danh sách tài sản con:", 20, yFinal);
+      yFinal += 6;
       doc.setFontSize(10);
 
       conList.forEach((con: any, idx: number) => {
@@ -227,25 +348,25 @@ export const generateAssetPdf = async (
         const line = `${idx + 1}. ${con.idTaiSanCon || ""} - ${con.tenTaiSan || "N/A"}`;
         // Tự động xuống dòng nếu nội dung quá dài
         const lines = doc.splitTextToSize(line, 170); // chiều rộng vùng in (A4 trừ lề)
-        doc.text(lines, 25, y);
-        y += lines.length * 5; // mỗi dòng cao 5mm (có thể điều chỉnh)
+        doc.text(lines, 25, yFinal);
+        yFinal += lines.length * 5; // mỗi dòng cao 5mm (có thể điều chỉnh)
       });
 
-      y += 5; // khoảng cách sau danh sách
+      yFinal += 5; // khoảng cách sau danh sách
     }
   }
 
   // --- Phần danh sách tệp đính kèm (chỉ tên) ---
   if (asset.fileDinhKemList && asset.fileDinhKemList.length > 0) {
     doc.setFontSize(12);
-    doc.text("Danh sách tệp đính kèm:", 20, y);
-    y += 6;
+    doc.text("Danh sách tệp đính kèm:", 20, yFinal);
+    yFinal += 6;
     asset.fileDinhKemList
       .filter((file: any) => !file.isDeleted)
       .forEach((att, idx) => {
         doc.setFontSize(10);
-        doc.text(`${idx + 1}. ${att.tenFile}`, 25, y);
-        y += 5;
+        doc.text(`${idx + 1}. ${att.tenFile}`, 25, yFinal);
+        yFinal += 5;
       });
   }
 
@@ -254,154 +375,148 @@ export const generateAssetPdf = async (
 };
 
 export const generateMonthlyActivityReport = async (
-  data: AssetHoursGroupYearType[],
+  data: AssetHoursType[],
 ): Promise<Uint8Array> => {
-  const reportData =
-    data && data.length > 0 ? data : [{} as AssetHoursGroupYearType];
-  const sortedData = [...reportData].sort(
-    (a, b) => (a.nam || 0) - (b.nam || 0),
-  );
-  const doc = new jsPDF();
-  let currentPage = 0;
-  const totalPages = sortedData.length;
+  const doc = new jsPDF({ orientation: "landscape" });
+  doc.setFont("times_new_roman", "bold");
+  doc.setFontSize(15);
+  doc.text("THEO DÕI TÌNH HÌNH HOẠT ĐỘNG HÀNG THÁNG", 148, 14, {
+    align: "center",
+  });
 
-  for (let index = 0; index < sortedData.length; index++) {
-    const yearData = sortedData[index];
-    const year = yearData.nam || new Date().getFullYear();
-    const yearItems = yearData.data || [];
+  // Sắp xếp theo ngày tăng dần
+  const sorted = [...(data || [])].sort((a, b) => {
+    const da = `${a.nam}-${String(a.thang).padStart(2, "0")}-${String(a.ngay).padStart(2, "0")}`;
+    const db = `${b.nam}-${String(b.thang).padStart(2, "0")}-${String(b.ngay).padStart(2, "0")}`;
+    return da.localeCompare(db);
+  });
 
-    if (index > 0) {
-      doc.addPage();
-    }
-    // Set font và tiêu đề
-    doc.setFont("times_new_roman", "normal");
-    doc.setFontSize(16);
-    doc.text(`GIỜ (KM) HOẠT ĐỘNG CỦA THIẾT BỊ TRONG NĂM ${year}`, 105, 15, {
-      align: "center",
-    });
+  // Map sang dòng bảng
+  const tableData: any[][] = sorted.map((item) => {
+    const dateStr = item.ngay
+      ? `${String(item.ngay).padStart(2, "0")}/${String(item.thang).padStart(2, "0")}/${item.nam}`
+      : `${String(item.thang).padStart(2, "0")}/${item.nam}`;
+    return [
+      dateStr,
+      item.tenDonVi || "",
+      item.gioHoatDong > 0 ? item.gioHoatDong : "",
+      item.ketQuaHoatDong || "",
+      item.gioNgungMay_HongMay > 0 ? item.gioNgungMay_HongMay : "",
+      item.gioNgungMay_ChoDoi > 0 ? item.gioNgungMay_ChoDoi : "",
+      item.gioNgungMay_MatDien > 0 ? item.gioNgungMay_MatDien : "",
+      item.gioNgungMay_ThieuNguyenLieu > 0
+        ? item.gioNgungMay_ThieuNguyenLieu
+        : "",
+      item.gioNgungMay_LyDoKhac > 0 ? item.gioNgungMay_LyDoKhac : "",
+      item.ghiChu || "",
+    ];
+  });
 
-    // Chuẩn bị dữ liệu cho bảng (tạo đủ 12 tháng)
-    const tableData = Array.from({ length: 12 }, (_, i) => {
-      const month = i + 1;
-      const monthData = yearItems.find((item) => item.thang === month);
-
-      return [
-        `${month}`,
-        monthData?.gioHoatDong || "",
-        monthData?.gioSauSCL || "",
-        monthData?.gioSauBcc || "",
-        monthData?.ngaySCT_Vao || "",
-        monthData?.ngaySCT_Ra || "",
-        monthData?.ngayBcc_Vao || "",
-        monthData?.ngayBcc_Ra || "",
-        monthData?.soLanBaoDuongCapI || "",
-        monthData?.soLanBaoDuongCapII || "",
-        monthData?.ghiChu || "",
-      ];
-    });
-    let totalGioKm = 0;
-
-    yearItems?.forEach((item) => {
-      if (item.gioHoatDong && typeof item.gioHoatDong === "number") {
-        totalGioKm += item.gioHoatDong;
-      }
-    });
-
-    // Thêm hàng tổng cộng vào cuối bảng
-    tableData.push([
-      "CỘNG",
-      totalGioKm > 0 ? totalGioKm.toString() : "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-    ]);
-
-    // Tạo bảng với autoTable
-    autoTable(doc, {
-      startY: 30,
-      head: [
-        [
-          { content: "Tháng", rowSpan: 2 }, // Chiếm 2 hàng
-          { content: "Giờ (km)", colSpan: 3, rowSpan: 1 }, // Chiếm 2 hàng
-          { content: "Ngày SCT", colSpan: 2, rowSpan: 1 }, // Gộp 2 cột, chỉ 1 hàng
-          { content: "Ngày BCC", colSpan: 2, rowSpan: 1 }, // Gộp 2 cột, chỉ 1 hàng
-          { content: "Số lần Báo đường", colSpan: 2, rowSpan: 1 }, // Gộp 2 cột, chỉ 1 hàng
-          { content: "Ghi chú", rowSpan: 2 }, // Chiếm 2 hàng
-        ],
-        // Hàng header thứ hai (tầng 2)
-        [
-          "Hoạt động",
-          "Sau SCL",
-          "Sau Bcc",
-          "Vào", // Dưới Ngày SCT
-          "Ra", // Dưới Ngày SCT
-          "Vào", // Dưới Ngày BCC
-          "Ra", // Dưới Ngày BCC
-          "Cấp I", // Dưới Số lần Báo đường
-          "Cấp II", // Dưới Số lần Báo đường
-        ],
-      ],
-      headStyles: {
-        fillColor: [255, 255, 255],
-        textColor: [0, 0, 0],
-        fontStyle: "bold",
-        valign: "middle",
-        halign: "center",
-        fontSize: 10,
-      },
-      body: tableData,
-      bodyStyles: {
-        fontSize: 9,
-        cellPadding: 2,
-      },
-      columnStyles: {
-        0: { cellWidth: 16, halign: "center" }, // Tháng
-        1: { cellWidth: 16, halign: "center" }, // Giờ (km)
-        2: { cellWidth: 16, halign: "center" }, // Ngày SCT Vào
-        3: { cellWidth: 16, halign: "center" }, // Ngày SCT Ra
-        4: { cellWidth: 16, halign: "center" }, // Ngày BCC Vào
-        5: { cellWidth: 16, halign: "center" }, // Ngày BCC Ra
-        6: { cellWidth: 16, halign: "center" }, // Cấp I
-        7: { cellWidth: 16, halign: "center" }, // Cấp II
-        8: { cellWidth: 16, halign: "center" }, // Ghi chú
-        9: { cellWidth: 16, halign: "center" }, // Ghi chú
-        10: { cellWidth: 16, halign: "center" }, // Ghi chú
-        11: { cellWidth: 16, halign: "center" }, // Ghi chú
-      },
-      margin: { left: 20, right: 20 },
-      theme: "grid",
-      styles: {
-        font: "times_new_roman",
-        lineColor: [0, 0, 0],
-        lineWidth: 0.1,
-      },
-      didDrawCell: (data) => {
-        // Vẽ border cho các cột gộp
-        if (data.section === "head") {
-          const { doc, cursor, settings } = data;
-          const { x, y, width, height } = data.cell;
-
-          // Vẽ đường phân cách giữa các nhóm cột gộp
-          if (data.column.index === 2) {
-            doc.setDrawColor(0);
-            doc.line(x, y, x, y + height);
-          }
-          if (data.column.index === 4) {
-            doc.setDrawColor(0);
-            doc.line(x, y, x, y + height);
-          }
-          if (data.column.index === 6) {
-            doc.setDrawColor(0);
-            doc.line(x, y, x, y + height);
-          }
-        }
-      },
-    });
+  // Đảm bảo ít nhất 15 dòng
+  const EMPTY_ROWS = 15;
+  while (tableData.length < EMPTY_ROWS) {
+    tableData.push(["", "", "", "", "", "", "", "", "", ""]);
   }
+
+  // Dòng tổng
+  const sum = (field: keyof AssetHoursType) =>
+    sorted.reduce((s, r) => s + (Number(r[field]) || 0), 0);
+  tableData.push([
+    {
+      content: "TỔNG",
+      colSpan: 2,
+      styles: { halign: "center", fontStyle: "bold" },
+    },
+    sum("gioHoatDong") > 0 ? sum("gioHoatDong") : "",
+    "",
+    sum("gioNgungMay_HongMay") > 0 ? sum("gioNgungMay_HongMay") : "",
+    sum("gioNgungMay_ChoDoi") > 0 ? sum("gioNgungMay_ChoDoi") : "",
+    sum("gioNgungMay_MatDien") > 0 ? sum("gioNgungMay_MatDien") : "",
+    sum("gioNgungMay_ThieuNguyenLieu") > 0
+      ? sum("gioNgungMay_ThieuNguyenLieu")
+      : "",
+    sum("gioNgungMay_LyDoKhac") > 0 ? sum("gioNgungMay_LyDoKhac") : "",
+    "",
+  ]);
+
+  autoTable(doc, {
+    startY: 20,
+    head: [
+      [
+        {
+          content: "Ngày/tháng/năm",
+          rowSpan: 2,
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content: "Đơn vị quản lý",
+          rowSpan: 2,
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content: "Giờ hoạt động trong tháng",
+          rowSpan: 2,
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content: "Kết quả hoạt động của thiết bị",
+          rowSpan: 2,
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content: "Giờ ngừng máy (h)",
+          colSpan: 5,
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content: "Ghi chú",
+          rowSpan: 2,
+          styles: { halign: "center", valign: "middle" },
+        },
+      ],
+      [
+        { content: "Hỏng máy", styles: { halign: "center" } },
+        { content: "Chờ đợi", styles: { halign: "center" } },
+        { content: "Mất điện", styles: { halign: "center" } },
+        { content: "Thiếu N.liệu", styles: { halign: "center" } },
+        { content: "Lý do khác", styles: { halign: "center" } },
+      ],
+    ],
+    body: tableData,
+    headStyles: {
+      fillColor: [255, 255, 255],
+      textColor: [0, 0, 0],
+      fontStyle: "bold",
+      fontSize: 9,
+      valign: "middle",
+      halign: "center",
+      lineColor: [0, 0, 0],
+      lineWidth: 0.2,
+    },
+    bodyStyles: {
+      fontSize: 9,
+      cellPadding: 3,
+      minCellHeight: 10,
+      lineColor: [0, 0, 0],
+      lineWidth: 0.1,
+    },
+    columnStyles: {
+      0: { cellWidth: 28, halign: "center" },
+      1: { cellWidth: 45 },
+      2: { cellWidth: 22, halign: "center" },
+      3: { cellWidth: 45 },
+      4: { cellWidth: 18, halign: "center" },
+      5: { cellWidth: 18, halign: "center" },
+      6: { cellWidth: 18, halign: "center" },
+      7: { cellWidth: 22, halign: "center" },
+      8: { cellWidth: 18, halign: "center" },
+      9: { cellWidth: 30 },
+    },
+    margin: { left: 8, right: 8 },
+    theme: "grid",
+    styles: { font: "times_new_roman", lineColor: [0, 0, 0], lineWidth: 0.1 },
+  });
+
   return new Uint8Array(doc.output("arraybuffer"));
 };
 
@@ -409,34 +524,46 @@ export const generateTransferHistoryPDF = async (
   data: TransferHistoryData[],
 ): Promise<Uint8Array> => {
   const doc = new jsPDF();
+  doc.setFont("times_new_roman", "bold");
+  doc.setFontSize(16);
+  doc.text("THEO DÕI DI CHUYỂN LẮP ĐẶT MÁY", 105, 15, { align: "center" });
 
-  // Set font
-  doc.setFont("times_new_roman", "normal");
+  // Map data sang 4 cột đúng với component
+  const tableData = data.map((item) => [
+    item.thoiGianBanGiao
+      ? dayjs(item.thoiGianBanGiao).format("DD/MM/YYYY")
+      : "",
+    (item as any).tenDonViNhan || (item as any).idDonViNhan || "",
+    "",
+    "", // Họ tên và chữ ký – trống (ký tay)
+  ]);
 
-  // Tiêu đề chính
-  doc.setFontSize(18);
-  doc.text("ĐIỀU CHUYỂN TÀI SẢN", 105, 20, { align: "center" });
-  console.log("data", data);
+  // Đảm bảo ít nhất 15 dòng trống (giống component dùng EMPTY_ROWS)
+  const EMPTY_ROWS_TARGET = 15;
+  while (tableData.length < EMPTY_ROWS_TARGET) {
+    tableData.push(["", "", "", ""]);
+  }
 
-  // Chuẩn bị dữ liệu cho bảng
-  const tableData = data.map((item, index) => {
-    return [
-      item.thoiGianBanGiao
-        ? dayjs(item.thoiGianBanGiao).format("DD/MM/YYYY")
-        : "-",
-      item.tenDonViNhan || item.idDonViNhan || "",
-      "",
-    ];
-  });
-
-  // Tạo bảng
   autoTable(doc, {
-    startY: 30,
+    startY: 22,
     head: [
       [
-        { content: "Ngày tháng", styles: { halign: "center" } },
-        { content: "Đơn vị quản lý", styles: { halign: "center" } },
-        { content: "Ghi Chú", styles: { halign: "center" } },
+        {
+          content: "Ngày/tháng/năm",
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content: "Địa điểm đặt máy",
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content: "Đối tượng phục vụ",
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content: "Họ tên và chữ ký người\nchịu trách nhiệm lắp đặt",
+          styles: { halign: "center", valign: "middle" },
+        },
       ],
     ],
     body: tableData,
@@ -444,31 +571,36 @@ export const generateTransferHistoryPDF = async (
       fillColor: [255, 255, 255],
       textColor: [0, 0, 0],
       fontStyle: "bold",
-      halign: "center",
-      fontSize: 10,
+      fontSize: 11,
       valign: "middle",
+      halign: "center",
+      lineColor: [0, 0, 0],
+      lineWidth: 0.3,
     },
     bodyStyles: {
-      fontSize: 9,
-      cellPadding: 4,
-      halign: "center",
-      valign: "middle",
+      fontSize: 10,
+      cellPadding: 5,
+      minCellHeight: 12,
+      lineColor: [0, 0, 0],
     },
     columnStyles: {
-      0: { cellWidth: 25, halign: "center" },
-      1: { cellWidth: 50, halign: "center" },
+      0: { cellWidth: 32, halign: "center" },
+      1: { cellWidth: 55 },
+      2: { cellWidth: 50 },
+      3: { cellWidth: 52 },
     },
-    margin: { left: 20, right: 20 },
+    margin: { left: 10, right: 10 },
     theme: "grid",
     styles: {
       font: "times_new_roman",
       lineColor: [0, 0, 0],
       lineWidth: 0.1,
     },
-    didParseCell: (data: any) => {
-      // Căn trái cho cột đơn vị quản lý
-      if (data.section === "body" && data.column.index === 2) {
-        data.cell.styles.halign = "left";
+    // Dòng data: viền ngang là nét đứt, viền dọc vẫn solid (giống component)
+    didParseCell: (hookData: any) => {
+      if (hookData.section === "body") {
+        hookData.cell.styles.lineColor = [0, 0, 0];
+        hookData.cell.styles.lineWidth = 0.1;
       }
     },
   });
@@ -476,77 +608,257 @@ export const generateTransferHistoryPDF = async (
   return new Uint8Array(doc.output("arraybuffer"));
 };
 
+// Trang 6: THEO DÕI TÌNH HÌNH SỰ CỐ XẢY RA HÀNG THÁNG
 export const generateAssetManentancePDF = async (
-  data: MaintenanceIncidentType[],
+  data: any[],
 ): Promise<Uint8Array> => {
-  const doc = new jsPDF();
-
-  // Set font
+  const doc = new jsPDF({ orientation: "landscape" });
   doc.setFont("times_new_roman", "bold");
-
-  // Tiêu đề chính
-  doc.setFontSize(18);
-  doc.text("DIỄN BIẾN KỸ THUẬT VÀ TAI NẠN, SỰ CỐ PHẢI SỬA CHỮA", 105, 20, {
+  doc.setFontSize(15);
+  doc.text("THEO DÕI TÌNH HÌNH SỰ CỐ XẢY RA HÀNG THÁNG", 148, 15, {
     align: "center",
   });
 
-  // Chuẩn bị dữ liệu cho bảng
-  const tableData = data.map((item, index) => {
-    return [
-      item.tuNgay ? dayjs(item.tuNgay).format("DD/MM/YYYY") : "-",
-      item.denNgay ? dayjs(item.denNgay).format("DD/MM/YYYY") : "-",
-      item.loaiSuCo || "",
-      item.noiSuaChua || "",
-    ];
-  });
+  const tableData = data.map((item: any) => [
+    item.ca || "",
+    item.ngayThangNam ? dayjs(item.ngayThangNam).format("DD/MM/YYYY") : "",
+    item.hoTenVanHanh || "",
+    item.nguyenNhan || "",
+    item.hoTenSuaChua || "",
+    item.gioNgung || "",
+    item.tienCongSC || "",
+    item.tienNguyenVatLieu || "",
+    item.tongCong || "",
+  ]);
 
-  // Tạo bảng
   autoTable(doc, {
-    startY: 30,
+    startY: 22,
     head: [
       [
-        { content: "Từ ngày", styles: { halign: "center" } },
-        { content: "Đến ngày", styles: { halign: "center" } },
         {
-          content: "Loại sự cố, tai nạn, nội dung hư hỏng",
+          content: "Ca",
+          rowSpan: 2,
+          styles: { halign: "center", valign: "middle" },
         },
         {
-          content: "Nơi sửa chữa",
+          content: "Ngày/tháng/năm",
+          rowSpan: 2,
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content: "Họ tên và chữ ký người vận hành ca máy xảy ra sự cố",
+          rowSpan: 2,
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content: "Nguyên nhân sự cố, tình trạng và cách giải quyết hư hỏng",
+          rowSpan: 2,
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content: "Họ tên và chữ ký người sửa chữa",
+          rowSpan: 2,
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content: "Thiệt hại vì sự cố",
+          colSpan: 4,
+          styles: { halign: "center", valign: "middle" },
         },
       ],
+      [
+        { content: "Giờ ngừng (h)", styles: { halign: "center" } },
+        { content: "Tiền công s/c", styles: { halign: "center" } },
+        { content: "Tiền nguyên vật liệu", styles: { halign: "center" } },
+        { content: "Tổng cộng (đ)", styles: { halign: "center" } },
+      ],
     ],
-    body: tableData,
+    body:
+      tableData.length > 0 ? tableData : [["", "", "", "", "", "", "", "", ""]],
     headStyles: {
       fillColor: [255, 255, 255],
       textColor: [0, 0, 0],
       fontStyle: "bold",
-      halign: "center",
+      fontSize: 9,
+    },
+    bodyStyles: { fontSize: 9, cellPadding: 3, minCellHeight: 10 },
+    columnStyles: {
+      0: { cellWidth: 14, halign: "center" },
+      1: { cellWidth: 22, halign: "center" },
+      2: { cellWidth: 40 },
+      3: { cellWidth: 55 },
+      4: { cellWidth: 40 },
+      5: { cellWidth: 18, halign: "center" },
+      6: { cellWidth: 22, halign: "center" },
+      7: { cellWidth: 26, halign: "center" },
+      8: { cellWidth: 22, halign: "center" },
+    },
+    margin: { left: 10, right: 10 },
+    theme: "grid",
+    styles: { font: "times_new_roman", lineColor: [0, 0, 0], lineWidth: 0.1 },
+  });
+
+  return new Uint8Array(doc.output("arraybuffer"));
+};
+
+// Trang 4: BẢNG KÊ CÁC PHỤ TÙNG CHÍNH CỦA MÁY
+export const generateSparePartsPDF = async (
+  data: any[],
+): Promise<Uint8Array> => {
+  const doc = new jsPDF();
+  doc.setFont("times_new_roman", "bold");
+  doc.setFontSize(15);
+  doc.text("BẢNG KÊ CÁC PHỤ TÙNG CHÍNH CỦA MÁY", 105, 15, { align: "center" });
+
+  const tableData = data.map((item: any, idx: number) => [
+    idx + 1,
+    item.tenVaQuyCache || "",
+    item.donViTinh || "",
+    item.soLuong || "",
+    item.trongLuong || "",
+    item.nguyenLieu || "",
+  ]);
+
+  autoTable(doc, {
+    startY: 22,
+    head: [
+      [
+        { content: "TT", styles: { halign: "center" } },
+        { content: "Tên và quy cách phụ tùng", styles: { halign: "center" } },
+        { content: "Đơn vị tính", styles: { halign: "center" } },
+        { content: "Số lượng", styles: { halign: "center" } },
+        { content: "Trọng lượng (kg)", styles: { halign: "center" } },
+        { content: "Nguyên liệu chế tạo", styles: { halign: "center" } },
+      ],
+    ],
+    body: tableData.length > 0 ? tableData : [["", "", "", "", "", ""]],
+    headStyles: {
+      fillColor: [255, 255, 255],
+      textColor: [0, 0, 0],
+      fontStyle: "bold",
       fontSize: 10,
       valign: "middle",
-    },
-    bodyStyles: {
-      fontSize: 9,
-      cellPadding: 4,
       halign: "center",
+    },
+    bodyStyles: { fontSize: 9, cellPadding: 4, minCellHeight: 10 },
+    columnStyles: {
+      0: { cellWidth: 12, halign: "center" },
+      1: { cellWidth: 65 },
+      2: { cellWidth: 22, halign: "center" },
+      3: { cellWidth: 22, halign: "center" },
+      4: { cellWidth: 28, halign: "center" },
+      5: { cellWidth: 30 },
+    },
+    margin: { left: 15, right: 15 },
+    theme: "grid",
+    styles: { font: "times_new_roman", lineColor: [0, 0, 0], lineWidth: 0.1 },
+  });
+
+  return new Uint8Array(doc.output("arraybuffer"));
+};
+
+// Trang 7: THEO DÕI SỬA CHỮA MÁY TỪNG THÁNG
+export const generateMaintenanceMonthlyPDF = async (
+  data: any[],
+): Promise<Uint8Array> => {
+  const doc = new jsPDF({ orientation: "landscape" });
+  doc.setFont("times_new_roman", "bold");
+  doc.setFontSize(15);
+  doc.text("THEO DÕI SỬA CHỮA MÁY TỪNG THÁNG", 148, 15, { align: "center" });
+
+  const tableData = data.map((item: any, idx: number) => [
+    idx + 1,
+    item.capSuaChua || "",
+    item.ngayVao ? dayjs(item.ngayVao).format("DD/MM/YYYY") : "",
+    item.ngayRa ? dayjs(item.ngayRa).format("DD/MM/YYYY") : "",
+    item.thayTheSuaChua || "",
+    item.cong_keHoach || "",
+    item.cong_thucHien || "",
+    item.tongKimLoai || "",
+    item.hoTenKyThuat || "",
+    item.xacNhanKetQua || "",
+  ]);
+
+  autoTable(doc, {
+    startY: 22,
+    head: [
+      [
+        {
+          content: "TT",
+          rowSpan: 2,
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content: "Cấp sửa chữa",
+          rowSpan: 2,
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content: "Thời gian sửa chữa",
+          colSpan: 2,
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content: "Thay thế sửa chữa hoặc cải tiến bộ phận nào của máy",
+          rowSpan: 2,
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content: "Số công sửa chữa (Công)",
+          colSpan: 2,
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content: "Tổng kim loại màu phục vụ cho sửa chữa (kg)",
+          rowSpan: 2,
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content:
+            "Họ tên và chữ ký người chịu trách nhiệm sửa chữa và kiểm tra kỹ thuật sau s/c",
+          rowSpan: 2,
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content: "Xác nhận kết quả sau sửa chữa",
+          rowSpan: 2,
+          styles: { halign: "center", valign: "middle" },
+        },
+      ],
+      [
+        { content: "Ngày vào", styles: { halign: "center" } },
+        { content: "Ngày ra", styles: { halign: "center" } },
+        { content: "Kế hoạch", styles: { halign: "center" } },
+        { content: "Thực hiện", styles: { halign: "center" } },
+      ],
+    ],
+    body:
+      tableData.length > 0
+        ? tableData
+        : [["", "", "", "", "", "", "", "", "", ""]],
+    headStyles: {
+      fillColor: [255, 255, 255],
+      textColor: [0, 0, 0],
+      fontStyle: "bold",
+      fontSize: 8,
       valign: "middle",
     },
+    bodyStyles: { fontSize: 8, cellPadding: 3, minCellHeight: 10 },
     columnStyles: {
-      0: { cellWidth: 25, halign: "center" },
-      1: { cellWidth: 50, halign: "center" },
+      0: { cellWidth: 10, halign: "center" },
+      1: { cellWidth: 20, halign: "center" },
+      2: { cellWidth: 22, halign: "center" },
+      3: { cellWidth: 22, halign: "center" },
+      4: { cellWidth: 45 },
+      5: { cellWidth: 18, halign: "center" },
+      6: { cellWidth: 18, halign: "center" },
+      7: { cellWidth: 22, halign: "center" },
+      8: { cellWidth: 42 },
+      9: { cellWidth: 38 },
     },
-    margin: { left: 20, right: 20 },
+    margin: { left: 8, right: 8 },
     theme: "grid",
-    styles: {
-      font: "times_new_roman",
-      lineColor: [0, 0, 0],
-      lineWidth: 0.1,
-    },
-    didParseCell: (data: any) => {
-      // Căn trái cho cột đơn vị quản lý
-      if (data.section === "body" && data.column.index === 2) {
-        data.cell.styles.halign = "left";
-      }
-    },
+    styles: { font: "times_new_roman", lineColor: [0, 0, 0], lineWidth: 0.1 },
   });
 
   return new Uint8Array(doc.output("arraybuffer"));

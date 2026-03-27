@@ -9,6 +9,7 @@ public class GioHoatDong {
     private String nam;
     private String thang;
     private String ngay;
+    private String idDonVi;
     private Float gioHoatDong;
     private String ketQuaHoatDong;
     private Float gioNgungMay_HongMay;
@@ -19,4 +20,6 @@ public class GioHoatDong {
     private String ghiChu;
     private String ngayTao;
     private String ngayCapNhat;
+
+    private String tenDonVi;
 }

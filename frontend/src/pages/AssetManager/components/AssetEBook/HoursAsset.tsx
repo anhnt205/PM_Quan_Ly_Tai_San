@@ -12,26 +12,29 @@ import {
   Typography,
   Button,
   IconButton,
-  MenuItem,
-  Select,
   FormControl,
   InputLabel,
+  MenuItem,
+  Select,
+  Autocomplete,
 } from "@mui/material";
-import { Add, Delete, Save } from "@mui/icons-material";
+import { Add, Delete } from "@mui/icons-material";
+import dayjs from "dayjs";
 import { AssetHoursType } from "../../types";
 import { useAssetHoursPageQuery, useGioHoatDongMutation } from "../../Mutation";
 import SaveBtn from "../../../../components/Button/SaveBtn";
 import CancelBtn from "../../../../components/Button/CancelBtn";
 import EditButton from "../../../../components/Button/EditButton";
+import { DepartmentType } from "../../../Department/types";
+import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
 
-// Style sách
+// ---- Style sách ----
 const bookStyles = {
   container: {
     width: "210mm",
     minHeight: "297mm",
     margin: "0 auto",
     backgroundColor: "#ffffff",
-    // backgroundImage: "linear-gradient(to bottom, #ffffff, #e6f7f0)",
     borderRadius: "2px",
     boxShadow:
       "0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.8)",
@@ -66,10 +69,7 @@ const bookStyles = {
       borderBottomRightRadius: "12px",
     },
   },
-  content: {
-    flex: 1,
-    overflow: "auto",
-  },
+  content: { flex: 1, overflow: "auto" },
   footer: {
     marginTop: "auto",
     paddingTop: "24px",
@@ -83,23 +83,53 @@ const bookStyles = {
     bottom: 0,
     right: "20px",
     fontSize: "12px",
-    color: "#026e42b6a",
     fontStyle: "italic" as const,
   },
 };
 
-const MONTHS = [...Array(12)].map((_, i) => ({
-  value: i + 1,
-  label: `Tháng ${i + 1}`,
-}));
+// Cell style helpers
+const hCell = (extra?: object) => ({
+  fontFamily: '"Times New Roman", Times, serif',
+  fontWeight: "bold",
+  fontSize: "14px",
+  border: "1px solid black",
+  backgroundColor: "transparent",
+  textAlign: "center" as const,
+  verticalAlign: "middle" as const,
+  padding: "6px 4px",
+  ...extra,
+});
+
+const dCell = (extra?: object) => ({
+  fontFamily: '"Times New Roman", Times, serif',
+  fontSize: "13px",
+  borderTop: "none",
+  borderBottom: "1px dashed black",
+  borderLeft: "1px solid black",
+  borderRight: "1px solid black",
+  padding: "4px 6px",
+  height: "38px",
+  verticalAlign: "middle" as const,
+  ...extra,
+});
+
+// Row type kết hợp thêm trường UI
+interface RowState extends AssetHoursType {
+  _dateStr: string; // YYYY-MM-DD dùng cho date input
+  _isNew: boolean;
+}
+
+const EMPTY_ROWS = 12;
+
 export default function HoursAsset({
   asset,
   onPageChange,
-  currentPage = 3,
-  totalPages = 4,
+  currentPage = 5,
+  totalPages = 7,
   readOnly = true,
   onEdit,
   onCancel,
+  allDepartments = [],
 }: {
   asset: any;
   onPageChange?: (page: number) => void;
@@ -108,260 +138,223 @@ export default function HoursAsset({
   readOnly?: boolean;
   onEdit: () => void;
   onCancel: () => void;
+  allDepartments: DepartmentType[];
 }) {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
-  const [rows, setRows] = useState<AssetHoursType[]>([]);
-  const [originalData, setOriginalData] = useState<Map<number, AssetHoursType>>(
-    new Map(),
-  );
+  const [rows, setRows] = useState<RowState[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const { createMutation, updateMutation, deleteManyMutation } =
     useGioHoatDongMutation();
-
   const {
     data: historyData,
     isLoading,
     refetch,
   } = useAssetHoursPageQuery(0, 100, asset?.id, selectedYear);
-  const resetData = () => {
-    if (historyData?.items) {
-      const dataMap = new Map<number, AssetHoursType>();
-      historyData.items.forEach((item: AssetHoursType) => {
-        dataMap.set(item.thang, {
-          id: item.id,
-          thang: item.thang,
-          gioHoatDong: item.gioHoatDong || 0,
-          gioSauSCL: item.gioSauSCL || 0,
-          gioSauBcc: item.gioSauBcc || 0,
-          ngaySCT_Vao: item.ngaySCT_Vao ? item.ngaySCT_Vao.slice(0, 10) : "",
-          ngaySCT_Ra: item.ngaySCT_Ra ? item.ngaySCT_Ra.slice(0, 10) : "",
-          ngayBcc_Vao: item.ngayBcc_Vao ? item.ngayBcc_Vao.slice(0, 10) : "",
-          ngayBcc_Ra: item.ngayBcc_Ra ? item.ngayBcc_Ra.slice(0, 10) : "",
-          soLanBaoDuongCapI: item.soLanBaoDuongCapI || 0,
-          soLanBaoDuongCapII: item.soLanBaoDuongCapII || 0,
-          ghiChu: item.ghiChu || "",
-          isNew: false,
-        });
-      });
 
-      setOriginalData(dataMap);
-
-      const allRows: AssetHoursType[] = MONTHS.map((month) => {
-        const existingData = dataMap.get(month.value);
-        if (existingData) {
-          return existingData;
-        }
-        return {
-          id: `new-${month.value}`,
-          thang: month.value,
-          gioHoatDong: 0,
-          gioSauSCL: 0,
-          gioSauBcc: 0,
-          ngaySCT_Vao: "",
-          ngaySCT_Ra: "",
-          ngayBcc_Vao: "",
-          ngayBcc_Ra: "",
-          soLanBaoDuongCapI: 0,
-          soLanBaoDuongCapII: 0,
-          ghiChu: "",
-          isNew: true,
-        };
-      });
-      setRows(allRows);
+  // ---- Load data từ API ----
+  const loadRows = () => {
+    if (historyData?.items && historyData.items.length > 0) {
+      const loaded: RowState[] = historyData.items.map(
+        (item: AssetHoursType) => ({
+          ...item,
+          _dateStr: item.ngay
+            ? `${item.nam}-${String(item.thang).padStart(2, "0")}-${String(item.ngay).padStart(2, "0")}`
+            : `${item.nam}-${String(item.thang).padStart(2, "0")}-01`,
+          _isNew: false,
+        }),
+      );
+      setRows(loaded);
     } else {
-      const emptyRows: AssetHoursType[] = MONTHS.map((month) => ({
-        id: `new-${month.value}`,
-        thang: month.value,
-        gioHoatDong: 0,
-        gioSauSCL: 0,
-        gioSauBcc: 0,
-        ngaySCT_Vao: "",
-        ngaySCT_Ra: "",
-        ngayBcc_Vao: "",
-        ngayBcc_Ra: "",
-        soLanBaoDuongCapI: 0,
-        soLanBaoDuongCapII: 0,
-        ghiChu: "",
-        isNew: true,
-      }));
-      setRows(emptyRows);
-      setOriginalData(new Map());
+      setRows([]);
     }
     setHasChanges(false);
   };
 
-  const handleCancel = () => {
-    resetData();
-    onCancel();
-  };
   useEffect(() => {
-    resetData();
+    loadRows();
   }, [historyData, selectedYear]);
 
-  const handleChange = (
-    thang: number,
-    field: keyof AssetHoursType,
-    value: any,
-  ) => {
+  const handleEditMode = () => {
+    setIsEditMode(true);
+    onEdit();
+  };
+  const handleCancel = () => {
+    loadRows();
+    setIsEditMode(false);
+    onCancel();
+  };
+
+  // ---- Thêm dòng mới ----
+  const handleAddRow = () => {
+    const todayStr = dayjs().format("YYYY-MM-DD");
+    const newRow: RowState = {
+      id: `temp-${Date.now()}`,
+      idTaiSan: asset?.id || "",
+      nam: String(selectedYear),
+      thang: String(dayjs().month() + 1),
+      ngay: String(dayjs().date()),
+      idDonVi: asset?.idDonViHienThoi || asset?.idDonViBanDau || "",
+      gioHoatDong: 0,
+      ketQuaHoatDong: "",
+      gioNgungMay_HongMay: 0,
+      gioNgungMay_ChoDoi: 0,
+      gioNgungMay_MatDien: 0,
+      gioNgungMay_ThieuNguyenLieu: 0,
+      gioNgungMay_LyDoKhac: 0,
+      ghiChu: "",
+      ngayTao: "",
+      ngayCapNhat: "",
+      _dateStr: todayStr,
+      _isNew: true,
+    };
+    setRows((prev) => [...prev, newRow]);
+    setHasChanges(true);
+  };
+
+  // ---- Xóa dòng ----
+  const handleDeleteRow = (id: string) => {
+    setRows((prev) => prev.filter((r) => r.id !== id));
+    setHasChanges(true);
+  };
+
+  // ---- Thay đổi ngày (tách ra nam/thang/ngay) ----
+  const handleDateChange = (id: string, dateStr: string) => {
+    const d = dayjs(dateStr);
     setRows((prev) =>
-      prev.map((row) =>
-        row.thang === thang ? { ...row, [field]: value } : row,
+      prev.map((r) =>
+        r.id === id
+          ? {
+              ...r,
+              _dateStr: dateStr,
+              nam: String(d.year()),
+              thang: String(d.month() + 1),
+              ngay: String(d.date()),
+            }
+          : r,
       ),
     );
     setHasChanges(true);
   };
 
-  // Lấy danh sách cần tạo mới, cập nhật, xóa
-  const getChanges = () => {
-    const toCreate: any[] = [];
-    const toUpdate: any[] = [];
-    const toDelete: string[] = [];
-
-    rows.forEach((row) => {
-      const original = originalData.get(row.thang);
-
-      // Bỏ qua nếu không có giờ hoạt động và không phải dữ liệu cũ
-      if (!row.gioHoatDong && !original) {
-        return;
-      }
-
-      if (row.isNew && row.gioHoatDong) {
-        // Tạo mới
-        toCreate.push({
-          idTaiSan: asset.id,
-          nam: selectedYear,
-          thang: row.thang,
-          gioHoatDong: Number(row.gioHoatDong) || 0,
-          gioSauSCL: Number(row.gioSauSCL) || 0,
-          gioSauBcc: Number(row.gioSauBcc) || 0,
-          ngaySCT_Vao: row.ngaySCT_Vao ? `${row.ngaySCT_Vao}T00:00:00` : null,
-          ngaySCT_Ra: row.ngaySCT_Ra ? `${row.ngaySCT_Ra}T00:00:00` : null,
-          ngayBcc_Vao: row.ngayBcc_Vao ? `${row.ngayBcc_Vao}T00:00:00` : null,
-          ngayBcc_Ra: row.ngayBcc_Ra ? `${row.ngayBcc_Ra}T00:00:00` : null,
-          soLanBaoDuongCapI: Number(row.soLanBaoDuongCapI) || 0,
-          soLanBaoDuongCapII: Number(row.soLanBaoDuongCapII) || 0,
-          ghiChu: row.ghiChu || "",
-        });
-      } else if (!row.isNew && original) {
-        // Kiểm tra có thay đổi không
-        const hasChange =
-          Number(original.gioHoatDong) !== Number(row.gioHoatDong) ||
-          original.gioSauSCL !== row.gioSauSCL ||
-          original.gioSauBcc !== row.gioSauBcc ||
-          original.ngaySCT_Vao !== row.ngaySCT_Vao ||
-          original.ngaySCT_Ra !== row.ngaySCT_Ra ||
-          original.ngayBcc_Vao !== row.ngayBcc_Vao ||
-          original.ngayBcc_Ra !== row.ngayBcc_Ra ||
-          original.soLanBaoDuongCapI !== row.soLanBaoDuongCapI ||
-          original.soLanBaoDuongCapII !== row.soLanBaoDuongCapII ||
-          original.ghiChu !== row.ghiChu;
-
-        if (hasChange) {
-          toUpdate.push({
-            id: row.id,
-            idTaiSan: asset.id,
-            nam: selectedYear,
-            thang: row.thang,
-            gioHoatDong: Number(row.gioHoatDong) || 0,
-            gioSauSCL: Number(row.gioSauSCL) || 0,
-            gioSauBcc: Number(row.gioSauBcc) || 0,
-            ngaySCT_Vao: row.ngaySCT_Vao ? `${row.ngaySCT_Vao}T00:00:00` : null,
-            ngaySCT_Ra: row.ngaySCT_Ra ? `${row.ngaySCT_Ra}T00:00:00` : null,
-            ngayBcc_Vao: row.ngayBcc_Vao ? `${row.ngayBcc_Vao}T00:00:00` : null,
-            ngayBcc_Ra: row.ngayBcc_Ra ? `${row.ngayBcc_Ra}T00:00:00` : null,
-            soLanBaoDuongCapI: Number(row.soLanBaoDuongCapI) || 0,
-            soLanBaoDuongCapII: Number(row.soLanBaoDuongCapII) || 0,
-            ghiChu: row.ghiChu || "",
-          });
-        }
-      }
-    });
-
-    // Tìm các tháng bị xóa (có trong original nhưng không có trong rows mới?)
-    // Trong trường hợp này, vì luôn hiển thị 12 tháng nên không có xóa
-
-    // Nếu có API xóa, bạn có thể thêm logic xóa ở đây
-
-    return { toCreate, toUpdate, toDelete };
+  // ---- Thay đổi trường số/text ----
+  const handleChange = (
+    id: string,
+    field: keyof AssetHoursType,
+    value: any,
+  ) => {
+    setRows((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, [field]: value } : r)),
+    );
+    setHasChanges(true);
   };
 
-  const handleSaveAll = async () => {
+  // ---- Lưu ----
+  const handleSave = async () => {
     if (isSaving) return;
     setIsSaving(true);
-
     try {
-      const { toCreate, toUpdate, toDelete } = getChanges();
+      const toCreate: any[] = [];
+      const toUpdate: any[] = [];
 
-      // 1. Xử lý xóa (nếu có)
-      if (toDelete.length > 0 && deleteManyMutation) {
-        await new Promise((resolve, reject) => {
-          deleteManyMutation.mutate(toDelete, {
-            onSuccess: resolve,
-            onError: reject,
-          });
-        });
-      }
+      rows.forEach((row) => {
+        const payload = {
+          idTaiSan: asset?.id,
+          nam: row.nam,
+          thang: row.thang,
+          ngay: row.ngay,
+          idDonVi: row.idDonVi,
+          gioHoatDong: Number(row.gioHoatDong) || 0,
+          ketQuaHoatDong: row.ketQuaHoatDong || "",
+          gioNgungMay_HongMay: Number(row.gioNgungMay_HongMay) || 0,
+          gioNgungMay_ChoDoi: Number(row.gioNgungMay_ChoDoi) || 0,
+          gioNgungMay_MatDien: Number(row.gioNgungMay_MatDien) || 0,
+          gioNgungMay_ThieuNguyenLieu:
+            Number(row.gioNgungMay_ThieuNguyenLieu) || 0,
+          gioNgungMay_LyDoKhac: Number(row.gioNgungMay_LyDoKhac) || 0,
+          ghiChu: row.ghiChu || "",
+        };
+        if (row._isNew) {
+          toCreate.push(payload);
+        } else {
+          toUpdate.push({ ...payload, id: row.id });
+        }
+      });
 
-      // 2. Xử lý tạo mới hàng loạt
       if (toCreate.length > 0 && createMutation) {
-        await new Promise((resolve, reject) => {
-          createMutation.mutate(toCreate, {
-            onSuccess: resolve,
-            onError: reject,
-          });
-        });
+        await new Promise((res, rej) =>
+          createMutation.mutate(toCreate, { onSuccess: res, onError: rej }),
+        );
       }
-
-      // 3. Xử lý cập nhật hàng loạt
       if (toUpdate.length > 0 && updateMutation) {
-        await new Promise((resolve, reject) => {
-          updateMutation.mutate(toUpdate, {
-            onSuccess: resolve,
-            onError: reject,
-          });
-        });
+        await new Promise((res, rej) =>
+          updateMutation.mutate(toUpdate, { onSuccess: res, onError: rej }),
+        );
       }
 
-      // Refresh dữ liệu
       await refetch();
       setHasChanges(false);
+      setIsEditMode(false);
       onCancel();
-    } catch (error) {
-      console.error("Lỗi khi lưu:", error);
+    } catch (err) {
+      console.error("Lỗi khi lưu:", err);
       alert("Có lỗi xảy ra khi lưu dữ liệu!");
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Tính tổng
-  const totals = {
-    gioHoatDong: rows.reduce(
-      (sum, row) => sum + (Number(row.gioHoatDong) || 0),
-      0,
-    ),
-    gioSauSCL: rows.reduce((sum, row) => sum + (Number(row.gioSauSCL) || 0), 0),
-    gioSauBcc: rows.reduce((sum, row) => sum + (Number(row.gioSauBcc) || 0), 0),
-    soLanBaoDuongCapI: rows.reduce(
-      (sum, row) => sum + (Number(row.soLanBaoDuongCapI) || 0),
-      0,
-    ),
-    soLanBaoDuongCapII: rows.reduce(
-      (sum, row) => sum + (Number(row.soLanBaoDuongCapII) || 0),
-      0,
-    ),
-  };
+  // ---- Tổng ----
+  const total = (field: keyof AssetHoursType) =>
+    rows.reduce((s, r) => s + (Number(r[field]) || 0), 0);
+
+  // ---- Render ô số ----
+  const NumCell = ({
+    row,
+    field,
+  }: {
+    row: RowState;
+    field: keyof AssetHoursType;
+  }) => (
+    <TableCell align="center" sx={dCell()}>
+      {isEditMode ? (
+        <TextField
+          fullWidth
+          size="small"
+          variant="standard"
+          type="number"
+          InputProps={{
+            disableUnderline: true,
+            inputProps: { min: 0, style: { textAlign: "center" } },
+          }}
+          value={row[field] as number}
+          onChange={(e) => handleChange(row.id, field, e.target.value)}
+        />
+      ) : (
+        <Typography
+          sx={{
+            fontFamily: '"Times New Roman", Times, serif',
+            fontSize: "13px",
+            textAlign: "center",
+          }}
+        >
+          {Number(row[field]) > 0 ? (row[field] as number) : ""}
+        </Typography>
+      )}
+    </TableCell>
+  );
+
+  const emptyCount = Math.max(0, EMPTY_ROWS - rows.length);
 
   return (
     <Box sx={bookStyles.container}>
-      {/* Button actions */}
+      {/* Toolbar */}
       <Box
         sx={{
           display: "flex",
-          alignItems: "center",
           justifyContent: "flex-end",
           mb: 2,
           position: "sticky",
@@ -372,23 +365,29 @@ export default function HoursAsset({
         <Box sx={{ display: "flex", gap: 2 }}>
           {!readOnly && (
             <>
-              <SaveBtn onSave={handleSaveAll} />
+              <SaveBtn onSave={handleSave} />
               <CancelBtn onClick={handleCancel} />
             </>
           )}
-          {readOnly && <EditButton onClick={onEdit} />}
+          {readOnly && <EditButton onClick={handleEditMode} />}
         </Box>
       </Box>
 
-      {/* Header sách */}
+      {/* Tiêu đề */}
       <Typography
         textAlign="center"
-        fontSize={20}
+        fontSize={17}
         fontWeight={700}
-        sx={{ mb: 2 }}
+        sx={{
+          letterSpacing: "1px",
+          mb: 1,
+          fontFamily: '"Times New Roman", Times, serif',
+        }}
       >
-        THEO DÕI TÌNH HÌNH HOẠT ĐỘNG HÀNG THÁNG NĂM {selectedYear}
+        THEO DÕI TÌNH HÌNH HOẠT ĐỘNG HÀNG THÁNG
       </Typography>
+
+      {/* Chọn năm */}
       <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
         <FormControl size="small" sx={{ minWidth: 120 }}>
           <InputLabel>Năm</InputLabel>
@@ -397,129 +396,96 @@ export default function HoursAsset({
             label="Năm"
             onChange={(e) => setSelectedYear(Number(e.target.value))}
           >
-            <MenuItem value={currentYear - 1}>{currentYear - 1}</MenuItem>
-            <MenuItem value={currentYear}>{currentYear}</MenuItem>
-            <MenuItem value={currentYear + 1}>{currentYear + 1}</MenuItem>
+            {[
+              currentYear - 2,
+              currentYear - 1,
+              currentYear,
+              currentYear + 1,
+            ].map((y) => (
+              <MenuItem key={y} value={y}>
+                {y}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
       </Box>
 
+      {/* Nút thêm dòng */}
+      {isEditMode && (
+        <Box display="flex" justifyContent="flex-end" mb={2}>
+          <Button
+            variant="outlined"
+            startIcon={<Add />}
+            onClick={handleAddRow}
+            sx={{
+              borderColor: "#009e60",
+              color: "#009e60",
+              "&:hover": { borderColor: "#66bb6a", bgcolor: "#e6f7f0" },
+              textTransform: "none",
+            }}
+          >
+            Thêm dòng
+          </Button>
+        </Box>
+      )}
+
+      {/* Bảng */}
       <Box sx={bookStyles.content}>
         <TableContainer
           component={Paper}
           elevation={0}
-          sx={{
-            borderRadius: "0px",
-            overflowX: "auto",
-            width: "100%",
-          }}
+          sx={{ borderRadius: "0px", overflowX: "auto", width: "100%" }}
         >
-          <Table size="small" sx={{ borderCollapse: 'collapse', border: '1px solid black', minWidth: 1200 }}>
+          <Table
+            size="small"
+            sx={{
+              borderCollapse: "collapse",
+              border: "1px solid black",
+              minWidth: 1100,
+            }}
+          >
             <TableHead>
+              {/* Header tầng 1 */}
               <TableRow>
-                <TableCell
-                  rowSpan={2}
-                  align="center"
-                  sx={{
-                    fontFamily: '"Times New Roman", Times, serif',
-                    fontWeight: 'bold',
-                    fontSize: '16px',
-                    minWidth: 120,
-                    border: "1px solid black",
-                    backgroundColor: "transparent",
-                  }}
-                >
-                  Ngày/tháng
+                <TableCell rowSpan={2} sx={hCell({ minWidth: 100 })}>
+                  Ngày/tháng/năm
                 </TableCell>
-                <TableCell
-                  rowSpan={2}
-                  align="center"
-                  sx={{
-                    fontFamily: '"Times New Roman", Times, serif',
-                    fontWeight: 'bold',
-                    fontSize: '16px',
-                    minWidth: 200,
-                    border: "1px solid black",
-                    backgroundColor: "transparent",
-                  }}
-                >
+                <TableCell rowSpan={2} sx={hCell({ minWidth: 160 })}>
                   Đơn vị quản lý
                 </TableCell>
-                <TableCell
-                  rowSpan={2}
-                  align="center"
-                  sx={{
-                    fontFamily: '"Times New Roman", Times, serif',
-                    fontWeight: 'bold',
-                    fontSize: '16px',
-                    minWidth: 150,
-                    border: "1px solid black",
-                    backgroundColor: "transparent",
-                  }}
-                >
-                  Giờ hoạt động<br/>trong tháng
+                <TableCell rowSpan={2} sx={hCell({ minWidth: 90 })}>
+                  Giờ hoạt động trong tháng
                 </TableCell>
-                <TableCell
-                  rowSpan={2}
-                  align="center"
-                  sx={{
-                    fontFamily: '"Times New Roman", Times, serif',
-                    fontWeight: 'bold',
-                    fontSize: '16px',
-                    minWidth: 180,
-                    border: "1px solid black",
-                    backgroundColor: "transparent",
-                  }}
-                >
-                  Kết quả hoạt<br/>động của thiết bị
+                <TableCell rowSpan={2} sx={hCell({ minWidth: 140 })}>
+                  Kết quả hoạt động của thiết bị
                 </TableCell>
-                <TableCell
-                  colSpan={5}
-                  align="center"
-                  sx={{
-                    fontFamily: '"Times New Roman", Times, serif',
-                    fontWeight: 'bold',
-                    fontSize: '16px',
-                    border: "1px solid black",
-                    backgroundColor: "transparent",
-                  }}
-                >
+                <TableCell colSpan={5} align="center" sx={hCell()}>
                   Giờ ngừng máy (h)
                 </TableCell>
-                <TableCell
-                  rowSpan={2}
-                  align="center"
-                  sx={{
-                    fontFamily: '"Times New Roman", Times, serif',
-                    fontWeight: 'bold',
-                    fontSize: '16px',
-                    minWidth: 150,
-                    border: "1px solid black",
-                    backgroundColor: "transparent",
-                  }}
-                >
+                <TableCell rowSpan={2} sx={hCell({ minWidth: 120 })}>
                   Ghi chú
                 </TableCell>
+                {isEditMode && (
+                  <TableCell rowSpan={2} sx={hCell({ minWidth: 60 })}>
+                    Thao tác
+                  </TableCell>
+                )}
               </TableRow>
+              {/* Header tầng 2 */}
               <TableRow>
-                {['Hỏng máy', 'Chờ đợi', 'Mất điện', 'Thiếu N.liệu', 'Lý do khác'].map((text) => (
+                {[
+                  "Hỏng máy",
+                  "Chờ đợi",
+                  "Mất điện",
+                  "Thiếu N.liệu",
+                  "Lý do khác",
+                ].map((t) => (
                   <TableCell
-                    key={text}
+                    key={t}
                     align="center"
-                    sx={{
-                      fontFamily: '"Times New Roman", Times, serif',
-                      fontWeight: 'bold',
-                      fontSize: '15px',
-                      border: "1px solid black",
-                      backgroundColor: "transparent",
-                      minWidth: 90,
-                    }}
+                    sx={hCell({ minWidth: 70 })}
                   >
-                    {text === 'Hỏng máy' ? <>Hỏng<br/>máy</> : 
-                     text === 'Chờ đợi' ? <>Chờ<br/>đợi</> : 
-                     text === 'Mất điện' ? <>Mất<br/>điện</> : 
-                     text === 'Thiếu N.liệu' ? <>Thiếu<br/>N.liệu</> : 
-                     <>Lý do<br/>khác</>}
+                    {t}
                   </TableCell>
                 ))}
               </TableRow>
@@ -528,88 +494,292 @@ export default function HoursAsset({
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={10} align="center" sx={{ border: "1px solid black" }}>
+                  <TableCell
+                    colSpan={isEditMode ? 11 : 10}
+                    align="center"
+                    sx={{ border: "1px solid black" }}
+                  >
                     Đang tải dữ liệu...
                   </TableCell>
                 </TableRow>
               ) : (
-                rows.map((row) => {
-                  const hasData = !row.isNew || Number(row.gioHoatDong) > 0;
-                  return (
+                <>
+                  {rows.map((row: any) => (
                     <TableRow key={row.id}>
-                      <TableCell align="center" sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px', fontFamily: '"Times New Roman", Times, serif', fontSize: '16px', fontWeight: 'bold' }}>
-                        Tháng {row.thang}
-                      </TableCell>
-                      <TableCell align="center" sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px', fontFamily: '"Times New Roman", Times, serif', fontSize: '16px' }}>
-                        {hasData ? (asset?.tenDonViHienThoi || asset?.tenDonViBanDau || "") : ""}
-                      </TableCell>
-                      <TableCell align="center" sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}>
-                        {readOnly ? (
-                          <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: '16px' }}>{row?.gioHoatDong || ""}</Typography>
-                        ) : (
+                      {/* Ngày */}
+                      <TableCell align="center" sx={dCell()}>
+                        {isEditMode ? (
                           <TextField
                             fullWidth
                             size="small"
                             variant="standard"
-                            type="number"
-                            value={row.gioHoatDong}
+                            type="date"
+                            InputProps={{ disableUnderline: true }}
+                            value={row._dateStr}
                             onChange={(e) =>
-                              handleChange(
-                                row.thang,
-                                "gioHoatDong",
-                                e.target.value,
-                              )
+                              handleDateChange(row.id, e.target.value)
                             }
-                            placeholder="Nhập giờ/km"
-                            InputProps={{ inputProps: { min: 0 }, disableUnderline: true }}
-                            sx={{ '& .MuiInputBase-input': { textAlign: 'center', fontFamily: '"Times New Roman", Times, serif', fontSize: '16px' } }}
+                          />
+                        ) : (
+                          <Typography
+                            sx={{
+                              fontFamily: '"Times New Roman", Times, serif',
+                              fontSize: "13px",
+                            }}
+                          >
+                            {row._dateStr
+                              ? dayjs(row._dateStr).format("DD/MM/YYYY")
+                              : ""}
+                          </Typography>
+                        )}
+                      </TableCell>
+
+                      {/* Đơn vị */}
+                      <TableCell sx={dCell()}>
+                        {readOnly ? (
+                          <Typography
+                            sx={{
+                              fontFamily: '"Times New Roman", Times, serif',
+                              fontSize: "13px",
+                            }}
+                          >
+                            {row?.tenDonVi || ""}
+                          </Typography>
+                        ) : (
+                          <Autocomplete
+                            options={allDepartments}
+                            getOptionLabel={(option) =>
+                              option?.tenPhongBan || ""
+                            }
+                            isOptionEqualToValue={(option, value) =>
+                              option.id === value?.id
+                            }
+                            value={
+                              allDepartments.find(
+                                (d) => d.id === row.idDonVi,
+                              ) || null
+                            }
+                            onChange={(_, newValue) => {
+                              handleChange(
+                                row.id,
+                                "idDonVi",
+                                newValue?.id || "",
+                              );
+                              handleChange(
+                                row.id,
+                                "tenDonVi",
+                                newValue?.tenPhongBan || "",
+                              );
+                            }}
+                            renderInput={(params) => (
+                              <TextField
+                                {...params}
+                                variant="standard"
+                                InputProps={{
+                                  ...params.InputProps,
+                                  disableUnderline: true,
+                                }}
+                                placeholder="Chọn đơn vị..."
+                              />
+                            )}
+                            sx={{ width: "100%" }}
                           />
                         )}
                       </TableCell>
-                      <TableCell sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}></TableCell>
-                      <TableCell sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}></TableCell>
-                      <TableCell sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}></TableCell>
-                      <TableCell sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}></TableCell>
-                      <TableCell sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}></TableCell>
-                      <TableCell sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}></TableCell>
-                      <TableCell sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}></TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
 
-              {/* Dòng tổng */}
-              {!isLoading && (
-                <TableRow>
-                  <TableCell
-                    align="center"
-                    sx={{ borderTop: "none", borderBottom: '1px solid black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px', fontFamily: '"Times New Roman", Times, serif', fontSize: '16px', fontWeight: 'bold' }}
-                  >
-                    TỔNG
-                  </TableCell>
-                  <TableCell
-                    sx={{ borderTop: "none", borderBottom: '1px solid black', borderLeft: "1px solid black", borderRight: "1px solid black" }}
-                  ></TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{ borderTop: "none", borderBottom: '1px solid black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px', fontFamily: '"Times New Roman", Times, serif', fontSize: '16px', fontWeight: 'bold' }}
-                  >
-                    {totals.gioHoatDong.toLocaleString()}
-                  </TableCell>
-                  <TableCell sx={{ borderTop: "none", borderBottom: '1px solid black', borderLeft: "1px solid black", borderRight: "1px solid black" }}></TableCell>
-                  <TableCell sx={{ borderTop: "none", borderBottom: '1px solid black', borderLeft: "1px solid black", borderRight: "1px solid black" }}></TableCell>
-                  <TableCell sx={{ borderTop: "none", borderBottom: '1px solid black', borderLeft: "1px solid black", borderRight: "1px solid black" }}></TableCell>
-                  <TableCell sx={{ borderTop: "none", borderBottom: '1px solid black', borderLeft: "1px solid black", borderRight: "1px solid black" }}></TableCell>
-                  <TableCell sx={{ borderTop: "none", borderBottom: '1px solid black', borderLeft: "1px solid black", borderRight: "1px solid black" }}></TableCell>
-                  <TableCell sx={{ borderTop: "none", borderBottom: '1px solid black', borderLeft: "1px solid black", borderRight: "1px solid black" }}></TableCell>
-                  <TableCell sx={{ borderTop: "none", borderBottom: '1px solid black', borderLeft: "1px solid black", borderRight: "1px solid black" }}></TableCell>
-                </TableRow>
+                      {/* Giờ hoạt động */}
+                      <NumCell row={row} field="gioHoatDong" />
+
+                      {/* Kết quả hoạt động */}
+                      <TableCell sx={dCell()}>
+                        {isEditMode ? (
+                          <TextField
+                            fullWidth
+                            size="small"
+                            variant="standard"
+                            InputProps={{ disableUnderline: true }}
+                            value={row.ketQuaHoatDong as string}
+                            onChange={(e) =>
+                              handleChange(
+                                row.id,
+                                "ketQuaHoatDong",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="Nhập kết quả..."
+                          />
+                        ) : (
+                          <Typography
+                            sx={{
+                              fontFamily: '"Times New Roman", Times, serif',
+                              fontSize: "13px",
+                            }}
+                          >
+                            {row.ketQuaHoatDong as string}
+                          </Typography>
+                        )}
+                      </TableCell>
+
+                      {/* Giờ ngừng: 5 cột */}
+                      <NumCell row={row} field="gioNgungMay_HongMay" />
+                      <NumCell row={row} field="gioNgungMay_ChoDoi" />
+                      <NumCell row={row} field="gioNgungMay_MatDien" />
+                      <NumCell row={row} field="gioNgungMay_ThieuNguyenLieu" />
+                      <NumCell row={row} field="gioNgungMay_LyDoKhac" />
+
+                      {/* Ghi chú */}
+                      <TableCell sx={dCell()}>
+                        {isEditMode ? (
+                          <TextField
+                            fullWidth
+                            size="small"
+                            variant="standard"
+                            InputProps={{ disableUnderline: true }}
+                            value={row.ghiChu as string}
+                            onChange={(e) =>
+                              handleChange(row.id, "ghiChu", e.target.value)
+                            }
+                          />
+                        ) : (
+                          <Typography
+                            sx={{
+                              fontFamily: '"Times New Roman", Times, serif',
+                              fontSize: "13px",
+                            }}
+                          >
+                            {row.ghiChu as string}
+                          </Typography>
+                        )}
+                      </TableCell>
+
+                      {/* Xóa */}
+                      {isEditMode && (
+                        <TableCell align="center" sx={dCell()}>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDeleteRow(row.id)}
+                            sx={{ color: "#d32f2f" }}
+                          >
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+
+                  {/* Dòng trống khi không edit */}
+                  {!isEditMode &&
+                    Array.from({ length: emptyCount }).map((_, i) => (
+                      <TableRow key={`empty-${i}`}>
+                        {Array.from({ length: 10 }).map((__, ci) => (
+                          <TableCell key={ci} sx={dCell()} />
+                        ))}
+                      </TableRow>
+                    ))}
+
+                  {/* Dòng tổng */}
+                  <TableRow>
+                    <TableCell
+                      align="center"
+                      colSpan={2}
+                      sx={{
+                        ...dCell(),
+                        borderBottom: "1px solid black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      TỔNG
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{
+                        ...dCell(),
+                        borderBottom: "1px solid black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {total("gioHoatDong") > 0 ? total("gioHoatDong") : ""}
+                    </TableCell>
+                    <TableCell
+                      sx={{ ...dCell(), borderBottom: "1px solid black" }}
+                    />
+                    <TableCell
+                      align="center"
+                      sx={{
+                        ...dCell(),
+                        borderBottom: "1px solid black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {total("gioNgungMay_HongMay") > 0
+                        ? total("gioNgungMay_HongMay")
+                        : ""}
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{
+                        ...dCell(),
+                        borderBottom: "1px solid black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {total("gioNgungMay_ChoDoi") > 0
+                        ? total("gioNgungMay_ChoDoi")
+                        : ""}
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{
+                        ...dCell(),
+                        borderBottom: "1px solid black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {total("gioNgungMay_MatDien") > 0
+                        ? total("gioNgungMay_MatDien")
+                        : ""}
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{
+                        ...dCell(),
+                        borderBottom: "1px solid black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {total("gioNgungMay_ThieuNguyenLieu") > 0
+                        ? total("gioNgungMay_ThieuNguyenLieu")
+                        : ""}
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{
+                        ...dCell(),
+                        borderBottom: "1px solid black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {total("gioNgungMay_LyDoKhac") > 0
+                        ? total("gioNgungMay_LyDoKhac")
+                        : ""}
+                    </TableCell>
+                    <TableCell
+                      sx={{ ...dCell(), borderBottom: "1px solid black" }}
+                    />
+                    {isEditMode && (
+                      <TableCell
+                        sx={{ ...dCell(), borderBottom: "1px solid black" }}
+                      />
+                    )}
+                  </TableRow>
+                </>
               )}
             </TableBody>
           </Table>
         </TableContainer>
       </Box>
-      {/* Footer - luôn ở dưới cùng */}
+
+      {/* Footer */}
       <Box sx={bookStyles.footer}>
         <Box sx={bookStyles.pageNumber}>Trang {currentPage}</Box>
       </Box>

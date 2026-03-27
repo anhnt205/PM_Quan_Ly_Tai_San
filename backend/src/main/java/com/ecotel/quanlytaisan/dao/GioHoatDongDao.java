@@ -22,7 +22,7 @@ public class GioHoatDongDao {
     private JdbcTemplate jdbcTemplate;
 
     public List<GioHoatDong> findAllPaged(int offset, int limit, String idTaiSan, String nam, String thang, String ngay) {
-        StringBuilder sql = new StringBuilder("SELECT * FROM giohoatdong WHERE 1=1");
+        StringBuilder sql = new StringBuilder("SELECT gh.*, pb.TenPhongBan as tenDonVi FROM giohoatdong gh LEFT JOIN phongban pb ON gh.IdDonVi = pb.Id WHERE 1=1");
         List<Object> params = new ArrayList<>();
 
         if (idTaiSan != null && !idTaiSan.isEmpty()) {
@@ -133,14 +133,14 @@ public class GioHoatDongDao {
         }
         String sql = """
             INSERT INTO giohoatdong 
-            (Id, IdTaiSan, Nam, Thang, Ngay, GioHoatDong, KetQuaHoatDong,
+            (Id, IdTaiSan, Nam, Thang, Ngay,IdDonVi, GioHoatDong, KetQuaHoatDong,
              GioNgungMay_HongMay, GioNgungMay_ChoDoi, GioNgungMay_MatDien,
              GioNgungMay_ThieuNguyenLieu, GioNgungMay_LyDoKhac,
              GhiChu, NgayTao, NgayCapNhat)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)
             """;
         return jdbcTemplate.update(sql,
-                dto.getId(), dto.getIdTaiSan(), dto.getNam(), dto.getThang(), dto.getNgay(),
+                dto.getId(), dto.getIdTaiSan(), dto.getNam(), dto.getThang(), dto.getNgay(),dto.getIdDonVi(),
                 dto.getGioHoatDong(), dto.getKetQuaHoatDong(),
                 dto.getGioNgungMay_HongMay(), dto.getGioNgungMay_ChoDoi(),
                 dto.getGioNgungMay_MatDien(), dto.getGioNgungMay_ThieuNguyenLieu(),
@@ -151,7 +151,7 @@ public class GioHoatDongDao {
     public int update(String id, GioHoatDongDTO dto) {
         String sql = """
             UPDATE giohoatdong SET
-                IdTaiSan = ?, Nam = ?, Thang = ?, Ngay = ?,
+                IdTaiSan = ?, Nam = ?, Thang = ?, Ngay = ?,IdDonVi = ?, 
                 GioHoatDong = ?, KetQuaHoatDong = ?,
                 GioNgungMay_HongMay = ?, GioNgungMay_ChoDoi = ?,
                 GioNgungMay_MatDien = ?, GioNgungMay_ThieuNguyenLieu = ?,
@@ -160,7 +160,7 @@ public class GioHoatDongDao {
             WHERE Id = ?
             """;
         return jdbcTemplate.update(sql,
-                dto.getIdTaiSan(), dto.getNam(), dto.getThang(), dto.getNgay(),
+                dto.getIdTaiSan(), dto.getNam(), dto.getThang(), dto.getNgay(),dto.getIdDonVi(),
                 dto.getGioHoatDong(), dto.getKetQuaHoatDong(),
                 dto.getGioNgungMay_HongMay(), dto.getGioNgungMay_ChoDoi(),
                 dto.getGioNgungMay_MatDien(), dto.getGioNgungMay_ThieuNguyenLieu(),
@@ -179,8 +179,8 @@ public class GioHoatDongDao {
             (Id, IdTaiSan, Nam, Thang, Ngay, GioHoatDong, KetQuaHoatDong,
              GioNgungMay_HongMay, GioNgungMay_ChoDoi, GioNgungMay_MatDien,
              GioNgungMay_ThieuNguyenLieu, GioNgungMay_LyDoKhac,
-             GhiChu, NgayTao, NgayCapNhat)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             GhiChu, NgayTao, NgayCapNhat,IdDonVi)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)
             """;
         for (GioHoatDongDTO dto : list) {
             if (dto.getId() == null || dto.getId().isEmpty()) {
@@ -206,6 +206,7 @@ public class GioHoatDongDao {
                 ps.setString(13, dto.getGhiChu());
                 ps.setString(14, dto.getNgayTao());
                 ps.setString(15, dto.getNgayCapNhat());
+                ps.setString(16, dto.getIdDonVi());
             }
             @Override
             public int getBatchSize() {
@@ -222,7 +223,7 @@ public class GioHoatDongDao {
                 GioNgungMay_HongMay = ?, GioNgungMay_ChoDoi = ?,
                 GioNgungMay_MatDien = ?, GioNgungMay_ThieuNguyenLieu = ?,
                 GioNgungMay_LyDoKhac = ?,
-                GhiChu = ?, NgayCapNhat = ?
+                GhiChu = ?, NgayCapNhat = ?,IdDonVi = ?
             WHERE Id = ?
             """;
         return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
@@ -242,7 +243,8 @@ public class GioHoatDongDao {
                 ps.setObject(11, dto.getGioNgungMay_LyDoKhac());
                 ps.setString(12, dto.getGhiChu());
                 ps.setString(13, dto.getNgayCapNhat());
-                ps.setString(14, dto.getId());
+                ps.setString(14, dto.getIdDonVi());
+                ps.setString(15, dto.getId());
             }
             @Override
             public int getBatchSize() {

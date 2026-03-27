@@ -22,8 +22,8 @@ public class GioHoatDongController {
 
     @GetMapping
     public ResponseEntity<PageResponse<GioHoatDong>> getAllPaged(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
             @RequestParam(value = "idTaiSan", required = false) String idTaiSan,
             @RequestParam(value = "nam",required = false) String nam,
             @RequestParam(value = "thang",required = false) String thang,

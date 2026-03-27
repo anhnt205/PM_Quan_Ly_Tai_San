@@ -9,6 +9,7 @@ public class GioHoatDongDTO {
     private String nam;
     private String thang;
     private String ngay;
+    private String idDonVi;
     private Float gioHoatDong;
     private String ketQuaHoatDong;
     private Float gioNgungMay_HongMay;
