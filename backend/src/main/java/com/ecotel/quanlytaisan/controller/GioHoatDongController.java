@@ -20,27 +20,27 @@ public class GioHoatDongController {
     @Autowired
     private GioHoatDongService service;
 
-    // ================== CRUD ==================
     @GetMapping
     public ResponseEntity<PageResponse<GioHoatDong>> getAllPaged(
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "20") int size,
-            @RequestParam(value = "idTaiSan", required = false) String idTaiSan,
-            @RequestParam(value = "nam", required = false) Integer nam,
-            @RequestParam(value = "thang", required = false) Integer thang
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String idTaiSan,
+            @RequestParam(required = false) String nam,
+            @RequestParam(required = false) String thang,
+            @RequestParam(required = false) String ngay
     ) {
-        return ResponseEntity.ok(service.getAllPaged(page, size, idTaiSan, nam, thang));
+        return ResponseEntity.ok(service.getAllPaged(page, size, idTaiSan, nam, thang, ngay));
     }
 
     @GetMapping("group_year")
     public ResponseEntity<List<GioHoatDongYearData>> getGroupByYear(
-        @RequestParam(value = "idTaiSan", required = true) String idTaiSan
-    ){
+            @RequestParam(required = true) String idTaiSan
+    ) {
         return ResponseEntity.ok(service.getYearsWithData(idTaiSan));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable("id") String id) {
+    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable String id) {
         try {
             GioHoatDong result = service.getById(id);
             if (result != null) {
@@ -71,7 +71,7 @@ public class GioHoatDongController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody GioHoatDongDTO dto) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody GioHoatDongDTO dto) {
         try {
             int result = service.update(id, dto);
             if (result > 0) {
@@ -86,7 +86,7 @@ public class GioHoatDongController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable String id) {
         try {
             int result = service.delete(id);
             if (result > 0) {
@@ -100,7 +100,6 @@ public class GioHoatDongController {
         }
     }
 
-    // ================== BATCH OPERATIONS ==================
     @PostMapping("/batch")
     public ResponseEntity<ApiResponse<Object>> createBatch(@RequestBody List<GioHoatDongDTO> list) {
         try {

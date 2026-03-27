@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class GioHoatDongService {
@@ -21,7 +20,6 @@ public class GioHoatDongService {
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    // ================== CRUD ==================
     public int create(GioHoatDongDTO dto) {
         if (dto.getNgayTao() == null || dto.getNgayTao().isEmpty()) {
             dto.setNgayTao(LocalDateTime.now().format(formatter));
@@ -46,23 +44,17 @@ public class GioHoatDongService {
     }
 
     public List<GioHoatDongYearData> getYearsWithData(String idTaiSan) {
-        // Fetch all records for the asset, already sorted by year desc, month desc
         List<GioHoatDong> allRecords = dao.findByIdTaiSan(idTaiSan);
+        Map<String, List<GioHoatDong>> grouped = new LinkedHashMap<>();
 
-        // Group by year
-        Map<Integer, List<GioHoatDong>> grouped = allRecords.stream()
-                .collect(Collectors.groupingBy(
-                        GioHoatDong::getNam,
-                        LinkedHashMap::new, // preserve order (years desc)
-                        Collectors.toList()
-                ));
+        for (GioHoatDong record : allRecords) {
+            grouped.computeIfAbsent(record.getNam(), k -> new ArrayList<>()).add(record);
+        }
 
-        // Build result list
         List<GioHoatDongYearData> result = new ArrayList<>();
-        for (Map.Entry<Integer, List<GioHoatDong>> entry : grouped.entrySet()) {
+        for (Map.Entry<String, List<GioHoatDong>> entry : grouped.entrySet()) {
             GioHoatDongYearData yearData = new GioHoatDongYearData();
             yearData.setNam(entry.getKey());
-            // Sort months ascending for each year
             List<GioHoatDong> monthlyData = entry.getValue();
             monthlyData.sort(Comparator.comparing(GioHoatDong::getThang));
             yearData.setData(monthlyData);
@@ -71,15 +63,13 @@ public class GioHoatDongService {
         return result;
     }
 
-    public PageResponse<GioHoatDong> getAllPaged(int page, int size, String idTaiSan, Integer nam, Integer thang) {
+    public PageResponse<GioHoatDong> getAllPaged(int page, int size, String idTaiSan, String nam, String thang, String ngay) {
         int offset = page * size;
-        List<GioHoatDong> list = dao.findAllPaged(offset, size, idTaiSan, nam, thang);
-        long total = dao.countAll(idTaiSan, nam, thang);
+        List<GioHoatDong> list = dao.findAllPaged(offset, size, idTaiSan, nam, thang, ngay);
+        long total = dao.countAll(idTaiSan, nam, thang, ngay);
         return new PageResponse<>(list, total, page, size);
     }
 
-
-    // ================== BATCH OPERATIONS ==================
     public int createBatch(List<GioHoatDongDTO> list) {
         if (list == null || list.isEmpty()) return 0;
         String now = LocalDateTime.now().format(formatter);
