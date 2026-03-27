@@ -24,17 +24,17 @@ public class GioHoatDongController {
     public ResponseEntity<PageResponse<GioHoatDong>> getAllPaged(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String idTaiSan,
-            @RequestParam(required = false) String nam,
-            @RequestParam(required = false) String thang,
-            @RequestParam(required = false) String ngay
+            @RequestParam(value = "idTaiSan", required = false) String idTaiSan,
+            @RequestParam(value = "nam",required = false) String nam,
+            @RequestParam(value = "thang",required = false) String thang,
+            @RequestParam(value = "ngay",required = false) String ngay
     ) {
         return ResponseEntity.ok(service.getAllPaged(page, size, idTaiSan, nam, thang, ngay));
     }
 
     @GetMapping("group_year")
     public ResponseEntity<List<GioHoatDongYearData>> getGroupByYear(
-            @RequestParam(required = true) String idTaiSan
+            @RequestParam("idTaiSan") String idTaiSan
     ) {
         return ResponseEntity.ok(service.getYearsWithData(idTaiSan));
     }
