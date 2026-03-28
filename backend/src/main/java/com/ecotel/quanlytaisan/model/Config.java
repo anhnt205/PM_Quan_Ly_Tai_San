@@ -7,6 +7,5 @@ public class Config {
     private String idAccount;
     private Integer thoiHanTaiLieu;
     private Integer ngayBaoHetHan;
-
-
+    private Integer ngayBaoDangKiem;
 }

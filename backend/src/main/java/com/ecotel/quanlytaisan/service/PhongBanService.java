@@ -49,6 +49,10 @@ public class PhongBanService {
         return phongBanDao.findById(id);
     }
 
+    public List<PhongBanDTO> getByLoaiKhoAndCongTy(String idCongTy, int loaiKho) {
+        return phongBanDao.findByLoaiKhoAndCongTy(idCongTy, loaiKho);
+    }
+
     public int create(PhongBan pb) {
         return phongBanDao.insert(pb);
     }

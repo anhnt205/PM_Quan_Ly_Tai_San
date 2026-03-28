@@ -229,6 +229,33 @@ public class PhongBanDao {
 
     }
 
+    public List<PhongBanDTO> findByLoaiKhoAndCongTy(String idCongTy, int loaiKho) {
+        String sql = """
+                SELECT
+                    pb.Id,
+                    pb.IdNhomDonVi,
+                    pb.TenPhongBan,
+                    pb.IdQuanLy,
+                    pb.IdCongTy,
+                    pb.PhongCapTren,
+                    pb.MauSac,
+                    ndv.TenNhom,
+                    nv.HoTen,
+                    pb.NguoiTao,
+                    pb.NguoiCapNhat,
+                    pb.IsKho,
+                    pb.IsLanhDao,
+                    pb.LoaiKho
+                FROM
+                    PhongBan
+                WHERE
+                    pb.IdCongTy = ? AND pb.LoaiKho = ?
+                """;
+        List<PhongBanDTO> result = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(PhongBanDTO.class), idCongTy, loaiKho);
+        return result;
+
+    }
+
     public int insert(PhongBan pb) {
         System.out.println(pb.toString());
         

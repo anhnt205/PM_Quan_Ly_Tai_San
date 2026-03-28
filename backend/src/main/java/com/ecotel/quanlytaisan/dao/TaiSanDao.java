@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -95,25 +96,168 @@ public class TaiSanDao {
         }
     }
 
-    public long countByCongTy(String idCongTy) {
-        String sql = "SELECT COUNT(*) FROM TaiSan ts WHERE ts.IdCongTy = ?";
+    public long countByCongTy(String idCongTy, int soNgayThongBaoKiemDinh, Boolean trangThaiKiemDinh) {
+        String whereClause = "WHERE ts.IdCongTy = ?";
+        if (trangThaiKiemDinh != null) {
+            String inspectionStatusSql = String.format("""
+                (CASE 
+                    WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
+                        (CASE 
+                            WHEN CURRENT_DATE BETWEEN 
+                                DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
+                                AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
+                            THEN 0 ELSE 1
+                        END)
+                    ELSE 1
+                END)
+                """, soNgayThongBaoKiemDinh);
+            whereClause += " AND " + inspectionStatusSql + (trangThaiKiemDinh ? " = 1" : " = 0");
+        }
+        String sql = "SELECT COUNT(*) FROM TaiSan ts " + whereClause;
         return jdbcTemplate.queryForObject(sql, Long.class, idCongTy);
     }
 
-    public long countByCongTyAndNhom(String idCongTy, String idNhomTaiSan) {
-        String sql = "SELECT COUNT(*) FROM TaiSan ts WHERE ts.IdCongTy = ? AND ts.IdNhomTaiSan = ?";
+    public long countByCongTyAndNhom(String idCongTy, String idNhomTaiSan, int soNgayThongBaoKiemDinh, Boolean trangThaiKiemDinh) {
+        String whereClause = "WHERE ts.IdCongTy = ? AND ts.IdNhomTaiSan = ?";
+        if (trangThaiKiemDinh != null) {
+            String inspectionStatusSql = String.format("""
+                (CASE 
+                    WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
+                        (CASE 
+                            WHEN CURRENT_DATE BETWEEN 
+                                DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
+                                AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
+                            THEN 0 ELSE 1
+                        END)
+                    ELSE 1
+                END)
+                """, soNgayThongBaoKiemDinh);
+            whereClause += " AND " + inspectionStatusSql + (trangThaiKiemDinh ? " = 1" : " = 0");
+        }
+        String sql = "SELECT COUNT(*) FROM TaiSan ts " + whereClause;
         return jdbcTemplate.queryForObject(sql, Long.class, idCongTy, idNhomTaiSan);
     }
 
-    public long countByDonViBanDau(String idCongTy, String idDonViBanDau) {
-        String sql = "SELECT COUNT(*) FROM TaiSan ts WHERE ts.IdCongTy = ? AND ts.IdDonViBanDau = ? AND (ts.IdDonViHienThoi IS NULL OR ts.IdDonViHienThoi = '')";
-        return jdbcTemplate.queryForObject(sql, Long.class, idCongTy, idDonViBanDau);
+   public long countByDonViBanDau(
+        String idCongTy, 
+        String idDonViBanDau,
+        String search, 
+        int soNgayThongBaoKiemDinh, 
+        Boolean trangThaiKiemDinh) {
+    
+        StringBuilder whereClause = new StringBuilder();
+        List<Object> params = new ArrayList<>();
+        
+        whereClause.append("WHERE ts.IdCongTy = ?");
+        params.add(idCongTy);
+        
+        // Xử lý filter theo idDonViBanDau
+        if (idDonViBanDau != null && !idDonViBanDau.trim().isEmpty()) {
+            whereClause.append(" AND ts.IdDonViBanDau = ?");
+            params.add(idDonViBanDau);
+        } else {
+            whereClause.append(" AND ts.IdDonViBanDau IN (SELECT Id FROM PhongBan WHERE IdCongTy = ? AND LoaiKho = 1 AND IsKho = 1)");
+            params.add(idCongTy);
+        }
+        if (search != null && !search.trim().isEmpty()) {
+            whereClause.append(" AND (ts.Id LIKE ? OR ts.TenTaiSan LIKE ? OR ts.SoThe LIKE ? OR ts.KyHieu LIKE ? OR ts.SoKyHieu LIKE ? OR ts.CongSuat LIKE ? OR ts.NuocSanXuat LIKE ? OR ts.DonViTinh LIKE ? OR ts.MoTa LIKE ?) ");
+            String searchPattern = "%" + search + "%";
+            for (int i = 0; i < 9; i++) {
+                params.add(searchPattern);
+            }
+        }
+        
+        whereClause.append(" AND (ts.IdDonViHienThoi IS NULL OR ts.IdDonViHienThoi = '')");
+        
+        if (trangThaiKiemDinh != null) {
+            String inspectionStatusSql = String.format("""
+                (CASE 
+                    WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
+                        (CASE 
+                            WHEN CURRENT_DATE BETWEEN 
+                                DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
+                                AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
+                            THEN 0 ELSE 1
+                        END)
+                    ELSE 1
+                END)
+                """, soNgayThongBaoKiemDinh);
+            whereClause.append(" AND ").append(inspectionStatusSql).append(trangThaiKiemDinh ? " = 1" : " = 0");
+        }
+        
+        String sql = "SELECT COUNT(*) FROM TaiSan ts " + whereClause.toString();
+        return jdbcTemplate.queryForObject(sql, Long.class, params.toArray());
+    }
+    
+
+    public long countByDonViThuHoi(
+        String idCongTy, 
+        String idDonViThuHoi, 
+        String search,
+        int soNgayThongBaoKiemDinh, 
+        Boolean trangThaiKiemDinh) {
+    
+        StringBuilder whereClause = new StringBuilder();
+        List<Object> params = new ArrayList<>();
+        
+        whereClause.append("WHERE ts.IdCongTy = ?");
+        params.add(idCongTy);
+        
+        // Xử lý filter theo idDonViThuHoi
+        if (idDonViThuHoi != null && !idDonViThuHoi.trim().isEmpty()) {
+            whereClause.append(" AND ts.IdDonViHienThoi = ?");
+            params.add(idDonViThuHoi);
+        } else {
+            whereClause.append(" AND ts.IdDonViHienThoi IN (SELECT Id FROM PhongBan WHERE IdCongTy = ? AND LoaiKho = 2 AND IsKho = 1)");
+            params.add(idCongTy);
+        }
+        if (search != null && !search.trim().isEmpty()) {
+            whereClause.append(" AND (ts.Id LIKE ? OR ts.TenTaiSan LIKE ? OR ts.SoThe LIKE ? OR ts.KyHieu LIKE ? OR ts.SoKyHieu LIKE ? OR ts.CongSuat LIKE ? OR ts.NuocSanXuat LIKE ? OR ts.DonViTinh LIKE ? OR ts.MoTa LIKE ?) ");
+            String searchPattern = "%" + search + "%";
+            for (int i = 0; i < 9; i++) {
+                params.add(searchPattern);
+            }
+        }
+        // Filter theo trạng thái kiểm định
+        if (trangThaiKiemDinh != null) {
+            String inspectionStatusSql = String.format("""
+                (CASE 
+                    WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
+                        (CASE 
+                            WHEN CURRENT_DATE BETWEEN 
+                                DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
+                                AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
+                            THEN 0 ELSE 1
+                        END)
+                    ELSE 1
+                END)
+                """, soNgayThongBaoKiemDinh);
+            whereClause.append(" AND ").append(inspectionStatusSql).append(trangThaiKiemDinh ? " = 1" : " = 0");
+        }
+        
+        String sql = "SELECT COUNT(*) FROM TaiSan ts " + whereClause.toString();
+        return jdbcTemplate.queryForObject(sql, Long.class, params.toArray());
     }
 
-    public long countByDonViHienThoi(String idCongTy, String idDonViHienThoi, String idNhomTaiSan) {
+    public long countByDonViHienThoi(String idCongTy, String idDonViHienThoi, String idNhomTaiSan, int soNgayThongBaoKiemDinh, Boolean trangThaiKiemDinh) {
         String whereClause = "WHERE ts.IdCongTy = ? AND ts.IdDonViHienThoi = ?";
         if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
             whereClause += " AND ts.IdNhomTaiSan = ?";
+        }
+        if (trangThaiKiemDinh != null) {
+            String inspectionStatusSql = String.format("""
+                (CASE 
+                    WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
+                        (CASE 
+                            WHEN CURRENT_DATE BETWEEN 
+                                DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
+                                AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
+                            THEN 0 ELSE 1
+                        END)
+                    ELSE 1
+                END)
+                """, soNgayThongBaoKiemDinh);
+            whereClause += " AND " + inspectionStatusSql + (trangThaiKiemDinh ? " = 1" : " = 0");
         }
         String sql = "SELECT COUNT(*) FROM TaiSan ts " + whereClause;
         if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
@@ -151,7 +295,7 @@ public class TaiSanDao {
         return counts;
     }
 
-    public List<TaiSanDTO> findAllPaged(String idCongTy, int offset, int limit, String sortBy, String sortDir, String idNhomTaiSan) {
+    public List<TaiSanDTO> findAllPaged(String idCongTy, int offset, int limit, String sortBy, String sortDir, String idNhomTaiSan, int soNgayThongBaoKiemDinh, Boolean trangThaiKiemDinh) {
         String normalizedSortBy = sortBy != null ? sortBy.trim().toLowerCase() : "ngaycapnhat";
         String orderColumn;
         switch (normalizedSortBy) {
@@ -177,9 +321,25 @@ public class TaiSanDao {
                 break;
         }
         String direction = (sortDir != null && sortDir.equalsIgnoreCase("asc")) ? "ASC" : "DESC";
+        String inspectionStatusSql = String.format("""
+            (CASE 
+                WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
+                    (CASE 
+                        WHEN CURRENT_DATE BETWEEN 
+                            DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
+                            AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
+                        THEN 0 ELSE 1
+                    END)
+                ELSE 1
+            END)
+            """, soNgayThongBaoKiemDinh);
+
         String whereClause = "WHERE ts.IdCongTy = ?";
         if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
             whereClause += " AND ts.IdNhomTaiSan = ?";
+        }
+        if (trangThaiKiemDinh != null) {
+            whereClause += " AND " + inspectionStatusSql + (trangThaiKiemDinh ? " = 1" : " = 0");
         }
         String sql = String.format("""
                 SELECT 
@@ -231,7 +391,7 @@ public class TaiSanDao {
                     ts.vonKhac,
                     ts.tgKiemDinh,
                     ts.chuKyKiemDinh,
-                    ts.trangThaiKiemDinh,
+                    %s AS trangThaiKiemDinh,
                     pb1.TenPhongBan AS tenDonViBanDau,
                     pb2.TenPhongBan AS tenDonViHienThoi,
                     dvt.TenDonVi AS tenDonViTinh
@@ -247,7 +407,7 @@ public class TaiSanDao {
                 %s
                 ORDER BY %s %s
                 LIMIT ? OFFSET ?
-                """, whereClause, orderColumn, direction);
+                """, inspectionStatusSql, whereClause, orderColumn, direction);
         if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
             return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(TaiSanDTO.class), idCongTy, idNhomTaiSan, limit, offset);
         } else {
@@ -255,7 +415,17 @@ public class TaiSanDao {
         }
     }
 
-    public List<TaiSanDTO> findByDonViBanDauPaged(String idCongTy, String idDonViBanDau, int offset, int limit, String sortBy, String sortDir) {
+    public List<TaiSanDTO> findByDonViBanDauPaged(
+        String idCongTy, 
+        String idDonViBanDau, // Có thể null
+        int offset, 
+        int limit, 
+        String sortBy, 
+        String sortDir, 
+        String search,
+        int soNgayThongBaoKiemDinh, 
+        Boolean trangThaiKiemDinh) {
+        
         String normalizedSortBy = sortBy != null ? sortBy.trim().toLowerCase() : "ngaycapnhat";
         String orderColumn;
         switch (normalizedSortBy) {
@@ -281,7 +451,53 @@ public class TaiSanDao {
                 break;
         }
         String direction = (sortDir != null && sortDir.equalsIgnoreCase("asc")) ? "ASC" : "DESC";
-        String whereClause = "WHERE ts.IdCongTy = ? AND ts.IdDonViBanDau = ? AND (ts.IdDonViHienThoi IS NULL OR ts.IdDonViHienThoi = '')";
+        
+        String inspectionStatusSql = String.format("""
+            (CASE 
+                WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
+                    (CASE 
+                        WHEN CURRENT_DATE BETWEEN 
+                            DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
+                            AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
+                        THEN 0 ELSE 1
+                    END)
+                ELSE 1
+            END)
+            """, soNgayThongBaoKiemDinh);
+
+        // Xây dựng whereClause linh hoạt
+        StringBuilder whereClause = new StringBuilder();
+        List<Object> params = new ArrayList<>();
+        
+        whereClause.append("WHERE ts.IdCongTy = ?");
+        params.add(idCongTy);
+        
+        // Xử lý filter theo idDonViBanDau
+        if (idDonViBanDau != null && !idDonViBanDau.trim().isEmpty()) {
+            // Nếu có idDonViBanDau, filter theo nó
+            whereClause.append(" AND ts.IdDonViBanDau = ?");
+            params.add(idDonViBanDau);
+        } else {
+            // Nếu không có, lấy tất cả phòng ban có loaiKho = 1
+            whereClause.append(" AND ts.IdDonViBanDau IN (SELECT Id FROM PhongBan WHERE IdCongTy = ? AND LoaiKho = 1 AND IsKho = 1)");
+            params.add(idCongTy);
+        }
+        if (search != null && !search.trim().isEmpty()) {
+            whereClause.append(" AND (ts.Id LIKE ? OR ts.TenTaiSan LIKE ? OR ts.SoThe LIKE ? OR ts.KyHieu LIKE ? OR ts.SoKyHieu LIKE ? OR ts.CongSuat LIKE ? OR ts.NuocSanXuat LIKE ? OR ts.DonViTinh LIKE ? OR ts.MoTa LIKE ?) ");
+            String searchPattern = "%" + search + "%";
+            for (int i = 0; i < 9; i++) {
+                params.add(searchPattern);
+            }
+        }
+        
+        // Điều kiện: idDonViHienThoi rỗng hoặc null
+        whereClause.append(" AND (ts.IdDonViHienThoi IS NULL OR ts.IdDonViHienThoi = '')");
+        
+        // Filter theo trạng thái kiểm định
+        if (trangThaiKiemDinh != null) {
+            whereClause.append(" AND ").append(inspectionStatusSql).append(trangThaiKiemDinh ? " = 1" : " = 0");
+        }
+        
         String sql = String.format("""
                 SELECT 
                     ts.Id,
@@ -332,7 +548,7 @@ public class TaiSanDao {
                     ts.vonKhac,
                     ts.tgKiemDinh,
                     ts.chuKyKiemDinh,
-                    ts.trangThaiKiemDinh,
+                    %s AS trangThaiKiemDinh,
                     pb1.TenPhongBan AS tenDonViBanDau,
                     pb2.TenPhongBan AS tenDonViHienThoi,
                     dvt.TenDonVi AS tenDonViTinh
@@ -348,11 +564,170 @@ public class TaiSanDao {
                 %s
                 ORDER BY %s %s
                 LIMIT ? OFFSET ?
-                """, whereClause, orderColumn, direction);
-        return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(TaiSanDTO.class), idCongTy, idDonViBanDau, limit, offset);
+                """, inspectionStatusSql, whereClause.toString(), orderColumn, direction);
+        
+        // Thêm limit và offset vào params
+        params.add(limit);
+        params.add(offset);
+        
+        return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(TaiSanDTO.class), params.toArray());
     }
 
-    public List<TaiSanDTO> findByDonViHienThoiPaged(String idCongTy, String idDonViHienThoi, int offset, int limit, String sortBy, String sortDir, String idNhomTaiSan) {
+    public List<TaiSanDTO> findByDonViThuHoiPaged(
+        String idCongTy, 
+        String idDonViThuHoi, // Có thể null
+        int offset, 
+        int limit, 
+        String sortBy, 
+        String sortDir, 
+        String search,
+        int soNgayThongBaoKiemDinh, 
+        Boolean trangThaiKiemDinh) {
+    
+        String normalizedSortBy = sortBy != null ? sortBy.trim().toLowerCase() : "ngaycapnhat";
+        String orderColumn;
+        switch (normalizedSortBy) {
+            case "tents":
+            case "tentaisan":
+                orderColumn = "ts.TenTaiSan";
+                break;
+            case "sothe":
+                orderColumn = "ts.SoThe";
+                break;
+            case "ngaysudung":
+                orderColumn = "ts.NgaySuDung";
+                break;
+            case "nguyengia":
+                orderColumn = "ts.NguyenGia";
+                break;
+            case "ngaytao":
+                orderColumn = "ts.NgayTao";
+                break;
+            case "ngaycapnhat":
+            default:
+                orderColumn = "ts.NgayCapNhat";
+                break;
+        }
+        String direction = (sortDir != null && sortDir.equalsIgnoreCase("asc")) ? "ASC" : "DESC";
+        
+        String inspectionStatusSql = String.format("""
+            (CASE 
+                WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
+                    (CASE 
+                        WHEN CURRENT_DATE BETWEEN 
+                            DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
+                            AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
+                        THEN 0 ELSE 1
+                    END)
+                ELSE 1
+            END)
+            """, soNgayThongBaoKiemDinh);
+
+        // Xây dựng whereClause
+        StringBuilder whereClause = new StringBuilder();
+        List<Object> params = new ArrayList<>();
+        
+        whereClause.append("WHERE ts.IdCongTy = ?");
+        params.add(idCongTy);
+        
+        // Xử lý filter theo idDonViThuHoi (đây là đơn vị hiện thời)
+        if (idDonViThuHoi != null && !idDonViThuHoi.trim().isEmpty()) {
+            // Nếu có idDonViThuHoi, filter theo nó
+            whereClause.append(" AND ts.IdDonViHienThoi = ?");
+            params.add(idDonViThuHoi);
+        } else {
+            // Nếu không có, lấy tất cả phòng ban có loaiKho = 2 (kho thu hồi)
+            whereClause.append(" AND ts.IdDonViHienThoi IN (SELECT Id FROM PhongBan WHERE IdCongTy = ? AND LoaiKho = 2 AND IsKho = 1)");
+            params.add(idCongTy);
+        }
+        if (search != null && !search.trim().isEmpty()) {
+            whereClause.append(" AND (ts.Id LIKE ? OR ts.TenTaiSan LIKE ? OR ts.SoThe LIKE ? OR ts.KyHieu LIKE ? OR ts.SoKyHieu LIKE ? OR ts.CongSuat LIKE ? OR ts.NuocSanXuat LIKE ? OR ts.DonViTinh LIKE ? OR ts.MoTa LIKE ?) ");
+            String searchPattern = "%" + search + "%";
+            for (int i = 0; i < 9; i++) {
+                params.add(searchPattern);
+            }
+        }
+        
+        // Filter theo trạng thái kiểm định
+        if (trangThaiKiemDinh != null) {
+            whereClause.append(" AND ").append(inspectionStatusSql).append(trangThaiKiemDinh ? " = 1" : " = 0");
+        }
+        
+        String sql = String.format("""
+                SELECT 
+                    ts.Id,
+                    ts.TenTaiSan,
+                    ts.NguyenGia,
+                    ts.GiaTriKhauHaoBanDau,
+                    ts.KyKhauHaoBanDau,
+                    ts.GiaTriThanhLy,
+                    ts.IdMoHinhTaiSan,
+                    mhts.TenMoHinh,
+                    ts.IdNhomTaiSan,
+                    nts.TenNhom,
+                    ts.IdDuDan as idDuAn,
+                    da.TenDuAn,
+                    ts.IdNguonVon,
+                    nv.TenNguonKinhPhi,
+                    ts.PhuongPhapKhauHao,
+                    ts.SoKyKhauHao,
+                    ts.TaiKhoanTaiSan,
+                    ts.TaiKhoanKhauHao,
+                    ts.TaiKhoanChiPhi,
+                    ts.NgayVaoSo,
+                    ts.NgaySuDung,
+                    ts.KyHieu,
+                    ts.SoKyHieu,
+                    ts.CongSuat,
+                    ts.NuocSanXuat,
+                    ts.NamSanXuat,
+                    ts.LyDoTang,
+                    ts.HienTrang,
+                    ts.SoLuong,
+                    ts.DonViTinh,
+                    ts.GhiChu,
+                    ts.IdDonViBanDau,
+                    ts.IdDonViHienThoi,
+                    ts.MoTa,
+                    ts.IdCongTy,
+                    ts.NgayTao,
+                    ts.NgayCapNhat,
+                    ts.NguoiTao,
+                    ts.NguoiCapNhat,
+                    ts.IsActive,
+                    ts.IsTaiSanCon,
+                    ts.IdLoaiTaiSanCon,
+                    ts.SoThe,
+                    ts.nvNS,
+                    ts.vonVay,
+                    ts.vonKhac,
+                    ts.tgKiemDinh,
+                    ts.chuKyKiemDinh,
+                    %s AS trangThaiKiemDinh,
+                    pb1.TenPhongBan AS tenDonViBanDau,
+                    pb2.TenPhongBan AS tenDonViHienThoi,
+                    dvt.TenDonVi AS tenDonViTinh
+                FROM 
+                    TaiSan AS ts
+                LEFT JOIN MoHinhTaiSan AS mhts ON ts.IdMoHinhTaiSan = mhts.Id
+                LEFT JOIN NhomTaiSan AS nts ON ts.IdNhomTaiSan = nts.Id
+                LEFT JOIN DuAn AS da ON ts.IdDuDan = da.Id
+                LEFT JOIN NguonVon AS nv ON ts.IdNguonVon = nv.Id
+                LEFT JOIN PhongBan AS pb1 ON ts.IdDonViBanDau = pb1.Id
+                LEFT JOIN PhongBan AS pb2 ON ts.IdDonViHienThoi = pb2.Id
+                LEFT JOIN DonViTinh AS dvt ON ts.DonViTinh = dvt.Id
+                %s
+                ORDER BY %s %s
+                LIMIT ? OFFSET ?
+                """, inspectionStatusSql, whereClause.toString(), orderColumn, direction);
+        
+        params.add(limit);
+        params.add(offset);
+        
+        return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(TaiSanDTO.class), params.toArray());
+    }
+
+    public List<TaiSanDTO> findByDonViHienThoiPaged(String idCongTy, String idDonViHienThoi, int offset, int limit, String sortBy, String sortDir, String idNhomTaiSan, int soNgayThongBaoKiemDinh, Boolean trangThaiKiemDinh) {
         String normalizedSortBy = sortBy != null ? sortBy.trim().toLowerCase() : "ngaycapnhat";
         String orderColumn;
         switch (normalizedSortBy) {
@@ -378,11 +753,27 @@ public class TaiSanDao {
                 break;
         }
         String direction = "ASC".equalsIgnoreCase(sortDir) ? "ASC" : "DESC";
+        String inspectionStatusSql = String.format("""
+            (CASE 
+                WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
+                    (CASE 
+                        WHEN CURRENT_DATE BETWEEN 
+                            DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
+                            AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
+                        THEN 0 ELSE 1
+                    END)
+                ELSE 1
+            END)
+            """, soNgayThongBaoKiemDinh);
+
         String whereClause;
         if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
             whereClause = "WHERE ts.IdCongTy = ? AND ts.IdDonViHienThoi = ? AND ts.IdNhomTaiSan = ?";
         } else {
             whereClause = "WHERE ts.IdCongTy = ? AND ts.IdDonViHienThoi = ?";
+        }
+        if (trangThaiKiemDinh != null) {
+            whereClause += " AND " + inspectionStatusSql + (trangThaiKiemDinh ? " = 1" : " = 0");
         }
         String sql = String.format("""
                     SELECT
@@ -434,7 +825,7 @@ public class TaiSanDao {
                         ts.vonKhac,
                         ts.tgKiemDinh,
                         ts.chuKyKiemDinh,
-                        ts.trangThaiKiemDinh,
+                        %s AS trangThaiKiemDinh,
                         pb1.TenPhongBan AS tenDonViBanDau,
                         pb2.TenPhongBan AS tenDonViHienThoi,
                         dvt.TenDonVi AS tenDonViTinh
@@ -449,8 +840,7 @@ public class TaiSanDao {
                     %s
                     ORDER BY %s %s
                     LIMIT ? OFFSET ?
-                """, whereClause, orderColumn, direction);
-        if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
+                """, inspectionStatusSql, whereClause, orderColumn, direction);        if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
             return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(TaiSanDTO.class), idCongTy, idDonViHienThoi, idNhomTaiSan, limit, offset);
         } else {
             return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(TaiSanDTO.class), idCongTy, idDonViHienThoi, limit, offset);
@@ -725,7 +1115,243 @@ public class TaiSanDao {
         return ids.stream().collect(Collectors.toSet());
     }
 
-    public List<TaiSanDTO> findAllPagedWithBanGiaoStatus(String idCongTy, int offset, int limit, String sortBy, String sortDir, String idNhomTaiSan, boolean daBanGiao) {
+    public List<TaiSanDTO> findByBanGiaoStatusPaged(
+        String idCongTy,
+        boolean isBanGiao,
+        int offset,
+        int limit,
+        String sortBy,
+        String sortDir,
+        String search,
+        String idNhomTaiSan,
+        String idDonViHienThoi,
+        int soNgayThongBaoKiemDinh,
+        Boolean trangThaiKiemDinh) {
+    
+        String normalizedSortBy = sortBy != null ? sortBy.trim().toLowerCase() : "ngaycapnhat";
+        String orderColumn;
+        switch (normalizedSortBy) {
+            case "tents":
+            case "tentaisan":
+                orderColumn = "ts.TenTaiSan";
+                break;
+            case "sothe":
+                orderColumn = "ts.SoThe";
+                break;
+            case "ngaysudung":
+                orderColumn = "ts.NgaySuDung";
+                break;
+            case "nguyengia":
+                orderColumn = "ts.NguyenGia";
+                break;
+            case "ngaytao":
+                orderColumn = "ts.NgayTao";
+                break;
+            case "ngaycapnhat":
+            default:
+                orderColumn = "ts.NgayCapNhat";
+                break;
+        }
+        String direction = (sortDir != null && sortDir.equalsIgnoreCase("asc")) ? "ASC" : "DESC";
+        
+        String inspectionStatusSql = String.format("""
+            (CASE 
+                WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
+                    (CASE 
+                        WHEN CURRENT_DATE BETWEEN 
+                            DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
+                            AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
+                        THEN 0 ELSE 1
+                    END)
+                ELSE 1
+            END)
+            """, soNgayThongBaoKiemDinh);
+
+        // Xây dựng whereClause
+        StringBuilder whereClause = new StringBuilder();
+        List<Object> params = new ArrayList<>();
+        
+        whereClause.append("WHERE ts.IdCongTy = ?");
+        params.add(idCongTy);
+        
+        // Logic bàn giao
+        if (isBanGiao) {
+            // Đã bàn giao: có IdDonViHienThoi và không phải kho (loaiKho = 1 hoặc 2)
+            whereClause.append(" AND ts.IdDonViHienThoi IS NOT NULL AND ts.IdDonViHienThoi <> ''");
+            whereClause.append(" AND ts.IdDonViHienThoi NOT IN (SELECT Id FROM PhongBan WHERE IdCongTy = ? AND IsKho = 1 AND LoaiKho IN (1, 2))");
+            params.add(idCongTy);
+        } else {
+            // Chưa bàn giao: IdDonViHienThoi rỗng/null HOẶC đang ở kho (loaiKho = 1 hoặc 2)
+            whereClause.append(" AND (ts.IdDonViHienThoi IS NULL OR ts.IdDonViHienThoi = ''");
+            whereClause.append(" OR ts.IdDonViHienThoi IN (SELECT Id FROM PhongBan WHERE IdCongTy = ? AND IsKho = 1 AND LoaiKho IN (1, 2)))");
+            params.add(idCongTy);
+        }
+        
+        // Lọc theo nhóm tài sản
+        if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
+            whereClause.append(" AND ts.IdNhomTaiSan = ?");
+            params.add(idNhomTaiSan);
+        }
+        
+        // Lọc theo đơn vị hiện thời
+        if (idDonViHienThoi != null && !idDonViHienThoi.trim().isEmpty()) {
+            whereClause.append(" AND ts.IdDonViHienThoi = ?");
+            params.add(idDonViHienThoi);
+        }
+        
+        // Lọc theo search
+        if (search != null && !search.trim().isEmpty()) {
+            whereClause.append(" AND (ts.Id LIKE ? OR ts.TenTaiSan LIKE ? OR ts.SoThe LIKE ? OR ts.KyHieu LIKE ? OR ts.SoKyHieu LIKE ? OR ts.CongSuat LIKE ? OR ts.NuocSanXuat LIKE ? OR ts.DonViTinh LIKE ? OR ts.MoTa LIKE ?)");
+            String searchPattern = "%" + search + "%";
+            for (int i = 0; i < 9; i++) {
+                params.add(searchPattern);
+            }
+        }
+        
+        // Lọc theo trạng thái kiểm định
+        if (trangThaiKiemDinh != null) {
+            whereClause.append(" AND ").append(inspectionStatusSql).append(trangThaiKiemDinh ? " = 1" : " = 0");
+        }
+        
+        String sql = String.format("""
+                SELECT 
+                    ts.Id,
+                    ts.TenTaiSan,
+                    ts.NguyenGia,
+                    ts.GiaTriKhauHaoBanDau,
+                    ts.KyKhauHaoBanDau,
+                    ts.GiaTriThanhLy,
+                    ts.IdMoHinhTaiSan,
+                    mhts.TenMoHinh,
+                    ts.IdNhomTaiSan,
+                    nts.TenNhom,
+                    ts.IdDuDan as idDuAn,
+                    da.TenDuAn,
+                    ts.IdNguonVon,
+                    nv.TenNguonKinhPhi,
+                    ts.PhuongPhapKhauHao,
+                    ts.SoKyKhauHao,
+                    ts.TaiKhoanTaiSan,
+                    ts.TaiKhoanKhauHao,
+                    ts.TaiKhoanChiPhi,
+                    ts.NgayVaoSo,
+                    ts.NgaySuDung,
+                    ts.KyHieu,
+                    ts.SoKyHieu,
+                    ts.CongSuat,
+                    ts.NuocSanXuat,
+                    ts.NamSanXuat,
+                    ts.LyDoTang,
+                    ts.HienTrang,
+                    ts.SoLuong,
+                    ts.DonViTinh,
+                    ts.GhiChu,
+                    ts.IdDonViBanDau,
+                    ts.IdDonViHienThoi,
+                    ts.MoTa,
+                    ts.IdCongTy,
+                    ts.NgayTao,
+                    ts.NgayCapNhat,
+                    ts.NguoiTao,
+                    ts.NguoiCapNhat,
+                    ts.IsActive,
+                    ts.IsTaiSanCon,
+                    ts.IdLoaiTaiSanCon,
+                    ts.SoThe,
+                    ts.nvNS,
+                    ts.vonVay,
+                    ts.vonKhac,
+                    ts.tgKiemDinh,
+                    ts.chuKyKiemDinh,
+                    %s AS trangThaiKiemDinh,
+                    pb1.TenPhongBan AS tenDonViBanDau,
+                    pb2.TenPhongBan AS tenDonViHienThoi,
+                    dvt.TenDonVi AS tenDonViTinh
+                FROM 
+                    TaiSan AS ts
+                LEFT JOIN MoHinhTaiSan AS mhts ON ts.IdMoHinhTaiSan = mhts.Id
+                LEFT JOIN NhomTaiSan AS nts ON ts.IdNhomTaiSan = nts.Id
+                LEFT JOIN DuAn AS da ON ts.IdDuDan = da.Id
+                LEFT JOIN NguonVon AS nv ON ts.IdNguonVon = nv.Id
+                LEFT JOIN PhongBan AS pb1 ON ts.IdDonViBanDau = pb1.Id
+                LEFT JOIN PhongBan AS pb2 ON ts.IdDonViHienThoi = pb2.Id
+                LEFT JOIN DonViTinh AS dvt ON ts.DonViTinh = dvt.Id
+                %s
+                ORDER BY %s %s
+                LIMIT ? OFFSET ?
+                """, inspectionStatusSql, whereClause.toString(), orderColumn, direction);
+        
+        params.add(limit);
+        params.add(offset);
+        
+        return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(TaiSanDTO.class), params.toArray());
+    }
+
+    public long countByBanGiaoStatus(
+        String idCongTy,
+        boolean isBanGiao,
+        String search,
+        String idNhomTaiSan,
+        String idDonViHienThoi,
+        int soNgayThongBaoKiemDinh,
+        Boolean trangThaiKiemDinh) {
+    
+        StringBuilder whereClause = new StringBuilder();
+        List<Object> params = new ArrayList<>();
+        
+        whereClause.append("WHERE ts.IdCongTy = ?");
+        params.add(idCongTy);
+        
+        // Logic bàn giao
+        if (isBanGiao) {
+            whereClause.append(" AND ts.IdDonViHienThoi IS NOT NULL AND ts.IdDonViHienThoi <> ''");
+            whereClause.append(" AND ts.IdDonViHienThoi NOT IN (SELECT Id FROM PhongBan WHERE IdCongTy = ? AND IsKho = 1 AND LoaiKho IN (1, 2))");
+            params.add(idCongTy);
+        } else {
+            whereClause.append(" AND (ts.IdDonViHienThoi IS NULL OR ts.IdDonViHienThoi = ''");
+            whereClause.append(" OR ts.IdDonViHienThoi IN (SELECT Id FROM PhongBan WHERE IdCongTy = ? AND IsKho = 1 AND LoaiKho IN (1, 2)))");
+            params.add(idCongTy);
+        }
+        
+        if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
+            whereClause.append(" AND ts.IdNhomTaiSan = ?");
+            params.add(idNhomTaiSan);
+        }
+        
+        if (idDonViHienThoi != null && !idDonViHienThoi.trim().isEmpty()) {
+            whereClause.append(" AND ts.IdDonViHienThoi = ?");
+            params.add(idDonViHienThoi);
+        }
+        
+        if (search != null && !search.trim().isEmpty()) {
+            whereClause.append(" AND (ts.Id LIKE ? OR ts.TenTaiSan LIKE ? OR ts.SoThe LIKE ? OR ts.KyHieu LIKE ? OR ts.SoKyHieu LIKE ? OR ts.CongSuat LIKE ? OR ts.NuocSanXuat LIKE ? OR ts.DonViTinh LIKE ? OR ts.MoTa LIKE ?)");
+            String searchPattern = "%" + search + "%";
+            for (int i = 0; i < 9; i++) {
+                params.add(searchPattern);
+            }
+        }
+        
+        if (trangThaiKiemDinh != null) {
+            String inspectionStatusSql = String.format("""
+                (CASE 
+                    WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
+                        (CASE 
+                            WHEN CURRENT_DATE BETWEEN 
+                                DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
+                                AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
+                            THEN 0 ELSE 1
+                        END)
+                    ELSE 1
+                END)
+                """, soNgayThongBaoKiemDinh);
+            whereClause.append(" AND ").append(inspectionStatusSql).append(trangThaiKiemDinh ? " = 1" : " = 0");
+        }
+        
+        String sql = "SELECT COUNT(*) FROM TaiSan ts " + whereClause.toString();
+        return jdbcTemplate.queryForObject(sql, Long.class, params.toArray());
+    }
+
+    public List<TaiSanDTO> findAllPagedWithBanGiaoStatus(String idCongTy, int offset, int limit, String sortBy, String sortDir, String idNhomTaiSan, boolean daBanGiao, int soNgayThongBaoKiemDinh, Boolean trangThaiKiemDinh) {
         String normalizedSortBy = sortBy != null ? sortBy.trim().toLowerCase() : "ngaycapnhat";
         String orderColumn;
         switch (normalizedSortBy) {
@@ -757,6 +1383,23 @@ public class TaiSanDao {
             whereClause += " AND (ts.IdDonViHienThoi IS NOT NULL AND ts.IdDonViHienThoi <> '') ";
         } else {
             whereClause += " AND (ts.IdDonViHienThoi IS NULL OR ts.IdDonViHienThoi = '') ";
+        }
+
+        String inspectionStatusSql = String.format("""
+            (CASE 
+                WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
+                    (CASE 
+                        WHEN CURRENT_DATE BETWEEN 
+                            DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
+                            AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
+                        THEN 0 ELSE 1
+                    END)
+                ELSE 1
+            END)
+            """, soNgayThongBaoKiemDinh);
+
+        if (trangThaiKiemDinh != null) {
+            whereClause += " AND " + inspectionStatusSql + (trangThaiKiemDinh ? " = 1" : " = 0");
         }
         String sql = """
                 SELECT 
@@ -808,7 +1451,7 @@ public class TaiSanDao {
                     ts.vonKhac,
                     ts.tgKiemDinh,
                     ts.chuKyKiemDinh,
-                    ts.trangThaiKiemDinh,
+                    %s AS trangThaiKiemDinh,
                     pb1.TenPhongBan AS tenDonViBanDau,
                     pb2.TenPhongBan AS tenDonViHienThoi,
                     dvt.TenDonVi AS tenDonViTinh
@@ -822,12 +1465,13 @@ public class TaiSanDao {
                 LEFT JOIN PhongBan AS pb2 ON ts.IdDonViHienThoi = pb2.Id
                 LEFT JOIN DonViTinh AS dvt ON ts.DonViTinh = dvt.Id
                 """ + whereClause + " ORDER BY " + orderColumn + " " + sortDirection + " LIMIT ? OFFSET ? ";
+        String sqlFull = String.format(sql, inspectionStatusSql);
         params.add(limit);
         params.add(offset);
-        return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(TaiSanDTO.class), params.toArray());
+        return jdbcTemplate.query(sqlFull, new BeanPropertyRowMapper<>(TaiSanDTO.class), params.toArray());
     }
 
-    public long countByCongTyAndBanGiaoStatus(String idCongTy, String idNhomTaiSan, boolean daBanGiao) {
+    public long countByCongTyAndBanGiaoStatus(String idCongTy, String idNhomTaiSan, boolean daBanGiao, int soNgayThongBaoKiemDinh, Boolean trangThaiKiemDinh) {
         String whereClause = " WHERE ts.IdCongTy = ? ";
         List<Object> params = new ArrayList<>();
         params.add(idCongTy);
@@ -840,6 +1484,23 @@ public class TaiSanDao {
         } else {
             whereClause += " AND (ts.IdDonViHienThoi IS NULL OR ts.IdDonViHienThoi = '') ";
         }
+
+        if (trangThaiKiemDinh != null) {
+            String inspectionStatusSql = String.format("""
+                (CASE 
+                    WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
+                        (CASE 
+                            WHEN CURRENT_DATE BETWEEN 
+                                DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
+                                AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
+                            THEN 0 ELSE 1
+                        END)
+                    ELSE 1
+                END)
+                """, soNgayThongBaoKiemDinh);
+            whereClause += " AND " + inspectionStatusSql + (trangThaiKiemDinh ? " = 1" : " = 0");
+        }
+
         String sql = "SELECT COUNT(*) FROM TaiSan AS ts " + whereClause;
         return jdbcTemplate.queryForObject(sql, Long.class, params.toArray());
     }
@@ -903,29 +1564,134 @@ public class TaiSanDao {
             }
         }
         String sql = """
-        SELECT 
-            ts.IdNhomTaiSan AS idNhomTaiSan,
-            nts.TenNhom AS tenNhom,
-            COUNT(ts.Id) AS soLuong
-        FROM TaiSan ts
-        LEFT JOIN NhomTaiSan nts ON ts.IdNhomTaiSan = nts.Id
-        """ + whereClause.toString() + """
-        GROUP BY ts.IdNhomTaiSan, nts.TenNhom
-        """;
-        List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, params.toArray());
-        Map<String, Long> counts = new java.util.HashMap<>();
-        for (Map<String, Object> row : results) {
-            String id = (String) row.get("idNhomTaiSan");
-            Long count = ((Number) row.get("soLuong")).longValue();
-            if (id == null || id.isEmpty()) {
-                counts.put("UNKNOWN", count);
-            } else {
-                counts.put(id, count);
+            SELECT 
+                ts.IdNhomTaiSan AS idNhomTaiSan,
+                nts.TenNhom AS tenNhom,
+                COUNT(ts.Id) AS soLuong
+            FROM TaiSan ts
+            LEFT JOIN NhomTaiSan nts ON ts.IdNhomTaiSan = nts.Id
+            """ + whereClause.toString() + """
+            GROUP BY ts.IdNhomTaiSan, nts.TenNhom
+            """;
+            List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, params.toArray());
+            Map<String, Long> counts = new java.util.HashMap<>();
+            for (Map<String, Object> row : results) {
+                String id = (String) row.get("idNhomTaiSan");
+                Long count = ((Number) row.get("soLuong")).longValue();
+                if (id == null || id.isEmpty()) {
+                    counts.put("UNKNOWN", count);
+                } else {
+                    counts.put(id, count);
+                }
+            }
+            return counts;
+        }
+        public Map<String, Long> getCountByTrangThaiKiemDinh(
+            String idCongTy,
+            String type, // "CAP_PHAT", "THU_HOI", "DA_BAN_GIAO"
+            String idDonVi, // idDonViBanDau hoặc idDonViHienThoi (có thể null)
+            String search,
+            String idNhomTaiSan,
+            String idDonViHienThoi, // chỉ dùng cho type = "DA_BAN_GIAO"
+            int soNgayThongBaoKiemDinh) {
+        
+        StringBuilder whereClause = new StringBuilder();
+        List<Object> params = new ArrayList<>();
+        
+        whereClause.append("WHERE ts.IdCongTy = ?");
+        params.add(idCongTy);
+        
+        // Logic theo từng loại
+        switch (type) {
+            case "CAP_PHAT":
+                if (idDonVi != null && !idDonVi.trim().isEmpty()) {
+                    whereClause.append(" AND ts.IdDonViBanDau = ?");
+                    params.add(idDonVi);
+                } else {
+                    whereClause.append(" AND ts.IdDonViBanDau IN (SELECT Id FROM PhongBan WHERE IdCongTy = ? AND LoaiKho = 1)");
+                    params.add(idCongTy);
+                }
+                whereClause.append(" AND (ts.IdDonViHienThoi IS NULL OR ts.IdDonViHienThoi = '')");
+                break;
+                
+            case "THU_HOI":
+                if (idDonVi != null && !idDonVi.trim().isEmpty()) {
+                    whereClause.append(" AND ts.IdDonViHienThoi = ?");
+                    params.add(idDonVi);
+                } else {
+                    whereClause.append(" AND ts.IdDonViHienThoi IN (SELECT Id FROM PhongBan WHERE IdCongTy = ? AND LoaiKho = 2)");
+                    params.add(idCongTy);
+                }
+                break;
+                
+            case "DA_BAN_GIAO":
+                whereClause.append(" AND ts.IdDonViHienThoi IS NOT NULL AND ts.IdDonViHienThoi <> ''");
+                whereClause.append(" AND ts.IdDonViHienThoi NOT IN (SELECT Id FROM PhongBan WHERE IdCongTy = ? AND LoaiKho IN (1, 2))");
+                params.add(idCongTy);
+                
+                if (idDonViHienThoi != null && !idDonViHienThoi.trim().isEmpty()) {
+                    whereClause.append(" AND ts.IdDonViHienThoi = ?");
+                    params.add(idDonViHienThoi);
+                }
+                break;
+        }
+        
+        // Lọc theo nhóm tài sản
+        if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
+            whereClause.append(" AND ts.IdNhomTaiSan = ?");
+            params.add(idNhomTaiSan);
+        }
+        
+        // Lọc theo search
+        if (search != null && !search.trim().isEmpty()) {
+            whereClause.append(" AND (ts.Id LIKE ? OR ts.TenTaiSan LIKE ? OR ts.SoThe LIKE ? OR ts.KyHieu LIKE ? OR ts.SoKyHieu LIKE ? OR ts.CongSuat LIKE ? OR ts.NuocSanXuat LIKE ? OR ts.DonViTinh LIKE ? OR ts.MoTa LIKE ?)");
+            String searchPattern = "%" + search + "%";
+            for (int i = 0; i < 9; i++) {
+                params.add(searchPattern);
             }
         }
+        
+        String inspectionStatusSql = String.format("""
+            (CASE 
+                WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
+                    (CASE 
+                        WHEN CURRENT_DATE BETWEEN 
+                            DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
+                            AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
+                        THEN 0 ELSE 1
+                    END)
+                ELSE 1
+            END)
+            """, soNgayThongBaoKiemDinh);
+        
+        String sql = String.format("""
+            SELECT 
+                CASE 
+                    WHEN %s = 0 THEN 'Chua kiem dinh'
+                    ELSE 'Da kiem dinh'
+                END AS trang_thai,
+                COUNT(*) AS so_luong
+            FROM TaiSan ts
+            %s
+            GROUP BY trang_thai
+            """, inspectionStatusSql, whereClause.toString());
+        
+        List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, params.toArray());
+        
+        Map<String, Long> counts = new HashMap<>();
+        counts.put("Tat ca", 0L);
+        counts.put("Chua kiem dinh", 0L);
+        counts.put("Da kiem dinh", 0L);
+        
+        for (Map<String, Object> row : results) {
+            String trangThai = (String) row.get("trang_thai");
+            Long soLuong = ((Number) row.get("so_luong")).longValue();
+            counts.put(trangThai, soLuong);
+            counts.put("Tat ca", counts.get("Tat ca") + soLuong);
+        }
+        
         return counts;
     }
-
     public PagedResult<KhauHaoTaiSan> getKhauHaoTaiSanPaged(String idCongTy, int ngay, int thang, int nam,
                                                             int offset, int limit, String sortBy, String sortDir, String search) {
         StringBuilder whereClause = new StringBuilder();

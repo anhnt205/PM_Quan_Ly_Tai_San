@@ -59,6 +59,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import { useAllDepartmentsQuery } from "../pages/Department/Mutation";
 import { useAllPositionsQuery } from "../pages/Position/Mutation";
+import { showErrorAlert } from "../components/Alert";
+import { useConfig } from "../hooks/useContext";
 
 const isMenuActive = (item: any, pathname: string): boolean => {
   if (item.path === pathname) {
@@ -338,70 +340,68 @@ export default function Menuheader() {
     handleCloseMssqlDialog();
   };
 
-  const {data:chucVu=[]}=useAllPositionsQuery()
+  const { data: chucVu = [] } = useAllPositionsQuery();
+  const { config, setConfig } = useConfig();
 
   // 1. Lấy dữ liệu cấu hình (Gọi endpoint chung /config)
   const { data: configResponse } = useQuery({
     queryKey: ["expirationConfig", user?.taiKhoan?.tenDangNhap],
     queryFn: async () => {
-      const res = await api.get("/config"); // Không truyền ID lên URL nữa
+      const res = await api.get(`/config/${user?.taiKhoan?.tenDangNhap}`); // Không truyền ID lên URL nữa
+      setConfig(res.data);
       return res.data;
     },
     enabled: !!user?.taiKhoan?.tenDangNhap,
   });
-
-  // 2. Bóc tách dữ liệu:
-  // Vì gọi /config thường trả về mảng hoặc object chứa data,
-  // ta cần tìm đúng config của user hiện tại trong mảng đó.
-  const config = React.useMemo(() => {
-    const rawData = configResponse?.data || configResponse;
-    console.log("Dữ liệu thô từ API:", rawData); // Thêm dòng này
-
-    if (Array.isArray(rawData)) {
-      // Nếu là mảng, tìm cái nào có idAccount khớp với user đang đăng nhập
-      return rawData.find(
-        (item: any) => item.idAccount === user?.taiKhoan?.tenDangNhap,
-      );
-    }
-    // Nếu là object đơn lẻ (Trường hợp Server tự lọc theo Token)
-    return rawData;
-  }, [configResponse, user]);
 
   // 2. Mutation để lưu dữ liệu (Tương đương ConfigReponsitory bên Flutter)
   const updateConfigMutation = useMutation({
     mutationFn: async (newConfig: {
       thoiHanTaiLieu: number;
       ngayBaoHetHan: number;
+      ngayBaoDangKiem: number;
     }) =>
       await api.post("/config", {
         idAccount: user?.taiKhoan?.tenDangNhap,
         thoiHanTaiLieu: newConfig.thoiHanTaiLieu,
         ngayBaoHetHan: newConfig.ngayBaoHetHan,
+        ngayBaoDangKiem: newConfig.ngayBaoDangKiem,
       }),
-    onSuccess: () => {
+    onSuccess: (response, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["expirationConfig", user?.taiKhoan?.tenDangNhap],
+      });
+      setConfig({
+        idAccount: user?.taiKhoan?.tenDangNhap,
+        thoiHanTaiLieu: variables.thoiHanTaiLieu,
+        ngayBaoHetHan: variables.ngayBaoHetHan,
+        ngayBaoDangKiem: variables.ngayBaoDangKiem,
       });
       setOpenSnackbar(true);
       handleCloseExpirationDialog();
     },
     onError: (error: any) => {
-      console.error("Lỗi POST config:", error);
+      showErrorAlert(
+        `Lỗi cấu hình: ${error.response.data.message || error.response.data}`,
+      );
     },
   });
 
   const handleConfirmExpiration = async (
     expirationDays: number,
     warningDays: number,
+    registrationWarningDays: number,
   ) => {
     // Kiểm tra nếu có thay đổi mới gọi API (giống logic Flutter)
     if (
       config?.thoiHanTaiLieu !== expirationDays ||
-      config?.ngayBaoHetHan !== warningDays
+      config?.ngayBaoHetHan !== warningDays ||
+      config?.ngayBaoDangKiem !== registrationWarningDays
     ) {
       updateConfigMutation.mutate({
         thoiHanTaiLieu: expirationDays,
         ngayBaoHetHan: warningDays,
+        ngayBaoDangKiem: registrationWarningDays,
       });
     } else {
       handleCloseExpirationDialog();
@@ -429,72 +429,74 @@ export default function Menuheader() {
     999999,
   );
 
-   const { data: transferAssetPage = { items: [], totalItems: 0 } } =
-      useAssetTransferPageQuery(
-        0,
-        999999,
-        "",
-        undefined,
-        undefined,
-        4,
-        user.taiKhoan?.phongBanId,
-        true,
-      );
-      const { data: transferToolPage = { items: [], totalItems: 0, loaiCounts: {} } } =
-          useToolTransferPageQuery(
-            0,
-            999999,
-            "",
-            undefined,
-            undefined,
-            4,
-            true,
-            user.taiKhoan?.phongBanId,
-          );
+  const { data: transferAssetPage = { items: [], totalItems: 0 } } =
+    useAssetTransferPageQuery(
+      0,
+      999999,
+      "",
+      undefined,
+      undefined,
+      4,
+      user.taiKhoan?.phongBanId,
+      true,
+    );
+  const {
+    data: transferToolPage = { items: [], totalItems: 0, loaiCounts: {} },
+  } = useToolTransferPageQuery(
+    0,
+    999999,
+    "",
+    undefined,
+    undefined,
+    4,
+    true,
+    user.taiKhoan?.phongBanId,
+  );
   const { data: maintenanceRepair = { items: [] } } =
     useMaintenanceRepairPageQuery(0, 999999);
   const { data: maintenanceRepairResult = { items: [] } } =
     useMaintenanceRepairResultPageQuery(0, 999999);
 
-    const isBanHanh=findById(chucVu,user?.taiKhoan?.chucVuId)?.banHanhQuyetDinh||false as boolean
-    
+  const isBanHanh =
+    findById(chucVu, user?.taiKhoan?.chucVuId)?.banHanhQuyetDinh ||
+    (false as boolean);
+
   const assetTransferCount1 = getAssetTransferCount(
     1,
     user?.taiKhoan?.tenDangNhap,
     assetTransfer.items,
-   isBanHanh
+    isBanHanh,
   );
   const assetTransferCount2 = getAssetTransferCount(
     2,
     user?.taiKhoan?.tenDangNhap,
     assetTransfer.items,
-   isBanHanh
-
+    isBanHanh,
   );
   const assetTransferCount3 = getAssetTransferCount(
     3,
     user?.taiKhoan?.tenDangNhap,
     assetTransfer.items,
-    isBanHanh
+    isBanHanh,
   );
 
   const toolTransferCount1 = getToolTransferCount(
     1,
     user?.taiKhoan?.tenDangNhap,
     toolTransfer.items,
-    isBanHanh
+    isBanHanh,
   );
   const toolTransferCount2 = getToolTransferCount(
     2,
     user?.taiKhoan?.tenDangNhap,
     toolTransfer.items,
-    isBanHanh
+    isBanHanh,
   );
   const toolTransferCount3 = getToolTransferCount(
     3,
     user?.taiKhoan?.tenDangNhap,
     toolTransfer.items,
-    isBanHanh
+    isBanHanh,
   );
 
   const assetHandoverCount = getAssetHandoverCount(
@@ -625,19 +627,23 @@ export default function Menuheader() {
       text: "Bàn giao thiết bị",
       icon: <Handshake fontSize="small" />,
       path: "#",
-      count: assetHandoverCount + toolHandoverCount + transferAssetPage.totalItems + transferToolPage.totalItems,
+      count:
+        assetHandoverCount +
+        toolHandoverCount +
+        transferAssetPage.totalItems +
+        transferToolPage.totalItems,
       subMenu: [
         {
           text: "Bàn giao tài sản",
           path: "/ban_giao_tai_san",
           code: "BANGIAO_TAISAN",
-          count: assetHandoverCount+transferAssetPage.totalItems,
+          count: assetHandoverCount + transferAssetPage.totalItems,
         },
         {
           text: "Bàn giao CCDC-Vật tư",
           path: ROUTES.TOOLHANDOVER,
           code: "BANGIAO_CCDC",
-          count: toolHandoverCount+transferToolPage.totalItems,
+          count: toolHandoverCount + transferToolPage.totalItems,
         },
       ].filter((sub) => hasPermission(sub.code)),
     },
@@ -886,7 +892,7 @@ export default function Menuheader() {
         open={openExpirationDialog}
         onClose={handleCloseExpirationDialog}
         onConfirm={handleConfirmExpiration}
-        initialConfig={config}
+        initialConfig={config || undefined}
         loading={updateConfigMutation.isPending}
       />
 

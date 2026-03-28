@@ -9,6 +9,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import theme from "./theme/theme";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ConfigProvider } from "./hooks/useContext";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
@@ -18,10 +19,12 @@ root.render(
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <App />
+          <ConfigProvider>
+            <CssBaseline />
+            <App />
+          </ConfigProvider>
         </ThemeProvider>
       </PersistGate>
     </Provider>
-  </QueryClientProvider>
+  </QueryClientProvider>,
 );

@@ -166,22 +166,22 @@ export const useAssetManagerMutation = (
     },
   });
   const deleteAllMutation = useMutation({
-       mutationFn: async () => {
-         const res = await api.delete(`/taisan/delete-all`);
-         return res.data.message;
-       },
-       onSuccess: (data) => { 
-         queryClient.invalidateQueries({ queryKey: ["assetsPage"] });
-         showSuccessAlert(data || "Xóa tài sản thành công");
-       },
-       onError: (error: any) => {
-         showErrorAlert(
-           error.response?.data?.message ||
-             error.message ||
-             "Xóa tài sản thất bại",
-         );
-       },
-     });
+    mutationFn: async () => {
+      const res = await api.delete(`/taisan/delete-all`);
+      return res.data.message;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["assetsPage"] });
+      showSuccessAlert(data || "Xóa tài sản thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa tài sản thất bại",
+      );
+    },
+  });
 
   // taisancon
   const createChildAssetBulkMutation = useMutation({
@@ -587,7 +587,7 @@ export const useAssetManagerMutation = (
     deleteOneChildAsssetMutation,
     createManyHistoryAssetMutation,
     updateAssetOwnershipMutation,
-    deleteAllMutation
+    deleteAllMutation,
   };
 };
 
@@ -630,7 +630,10 @@ export const useGioHoatDongMutation = () => {
       return res.data;
     },
     onSuccess: (data, payload) => {
-      queryClient.invalidateQueries({ queryKey: ["assetHoursGroup"], exact: false });
+      queryClient.invalidateQueries({
+        queryKey: ["assetHoursGroup"],
+        exact: false,
+      });
       showSuccessAlert("Sửa giờ hoạt động thành công");
     },
     onError: (error: any) => {
@@ -688,6 +691,7 @@ export const useAssetHoursPageQuery = (
       return res.data.data || res.data;
     },
     enabled: !!idTaiSan,
+    placeholderData: (previousData) => previousData,
   });
 };
 export const useAssetHoursByGroupPageQuery = (idTaiSan?: string) => {
@@ -702,6 +706,7 @@ export const useAssetHoursByGroupPageQuery = (idTaiSan?: string) => {
       return res.data.data || res.data || [];
     },
     enabled: !!idTaiSan,
+    placeholderData: (previousData) => previousData,
   });
 };
 
@@ -713,6 +718,8 @@ export const useAssetPageQuery = (
   idNhomTaiSan?: string,
   idDonViHienThoi?: string,
   soNgayThongBaoKiemDinh?: number,
+  idDonViBanDau?: string,
+  trangThaiKiemDinh?: boolean,
 ) => {
   return useQuery({
     queryKey: [
@@ -724,16 +731,17 @@ export const useAssetPageQuery = (
       tab,
       idDonViHienThoi,
       soNgayThongBaoKiemDinh,
+      trangThaiKiemDinh,
     ], // Key để cache dữ liệu
     queryFn: async () => {
       const res = await api.get(
         tab === 0
-          ? "/taisan/by-donvi-hienthoi/paged"
+          ? "/taisan/by-donvi-thuhoi/paged"
           : tab === 1
             ? "/taisan/paged-da-ban-giao"
             : tab === 2
-              ? "/taisan/paged-chua-ban-giao"
-              : "/taisan/by-donvi-hienthoi/paged",
+              ? "/taisan/by-donvi-bandau/paged"
+              : "/taisan/by-donvi-thuhoi/paged",
         {
           params: {
             idcongty: CongTy.CT001,
@@ -743,12 +751,15 @@ export const useAssetPageQuery = (
             idNhomTaiSan: idNhomTaiSan,
             iddonvihienthoi: tab === 0 ? "kth" : idDonViHienThoi,
             soNgayThongBaoKiemDinh: soNgayThongBaoKiemDinh,
+            iddonvibandau: idDonViBanDau,
+            trangThaiKiemDinh: trangThaiKiemDinh,
           },
         },
       );
       return res.data.data || res.data;
     },
     enabled: tab !== undefined && tab >= 0,
+    placeholderData: (previousData) => previousData,
   });
 };
 

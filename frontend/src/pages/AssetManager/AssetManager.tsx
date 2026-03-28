@@ -50,6 +50,8 @@ import AssetEbookModal from "./components/AssetEbookModal";
 import { Action } from "../../utils/const";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
+import { useConfig } from "../../hooks/useContext";
+import { FilterOption } from "../../components/common/FilterStatusGroup";
 
 export default function AssetManager() {
   const [tab, setTab] = React.useState(0);
@@ -64,7 +66,9 @@ export default function AssetManager() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.user);
-  
+  const { config } = useConfig();
+  const [status, setStatus] = useState("");
+
   const [modalOpenBook, setModalOpenBook] = useState(false);
 
   const [paginationModel, setPaginationModel] = useState({
@@ -86,16 +90,40 @@ export default function AssetManager() {
   });
   const valueDebounce = useDebounce(searchValue, 600);
 
-  const { data: assetsPage = { items: [], totalItems: 0 }, isLoading } =
-    useAssetPageQuery(
-      tab < 4 ? tab : -1,
-      paginationModel.page,
-      paginationModel.pageSize,
-      valueDebounce,
-      selectedGroup,
-      selectedDepartment,
-      10,
-    );
+  const {
+    data: assetsPage = { items: [], totalItems: 0, loaiCounts: {} },
+    isLoading,
+  } = useAssetPageQuery(
+    tab < 4 ? tab : -1,
+    paginationModel.page,
+    paginationModel.pageSize,
+    valueDebounce,
+    selectedGroup,
+    selectedDepartment,
+    config?.ngayBaoDangKiem,
+    undefined,
+    status === "0" ? false : status === "1" ? true : undefined,
+  );
+  const statusOptions: FilterOption[] = [
+    {
+      label: "Tất cả",
+      count: assetsPage.loaiCounts?.["Tat ca"] ?? 0,
+      color: "default",
+      value: "",
+    },
+    {
+      label: "Chưa đăng kiểm",
+      count: assetsPage?.loaiCounts?.["Chua kiem dinh"] ?? 0,
+      color: "error",
+      value: "0",
+    },
+    {
+      label: "Đã đăng kiểm",
+      count: assetsPage?.loaiCounts?.["Da kiem dinh"] ?? 0,
+      color: "success",
+      value: "1",
+    },
+  ];
 
   const { data: allDepartments = [] } = useAllDepartmentsQuery();
   const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
@@ -122,11 +150,6 @@ export default function AssetManager() {
       navigate(location.pathname, { replace: true });
     }
   }, [location, navigate]);
-
-  const handleOpenHistory = (asset: any) => {
-    setSelectedAsset(asset);
-    setIsHistoryOpen(true);
-  };
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedAsset(params.row);
@@ -315,7 +338,7 @@ export default function AssetManager() {
       minWidth: 150,
       align: "center",
       headerAlign: "center",
-      renderCell: (params) => ShowStatus(params.row),
+      renderCell: (params) => ShowStatus(params.row.trangThaiKiemDinh ?? true),
     },
     {
       field: "action",
@@ -526,6 +549,11 @@ export default function AssetManager() {
             setSelectedDepartment={setSelectedDepartment}
             onDeleteAll={deleteAllMutation.mutate}
             showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
+            statusOptions={statusOptions}
+            onStatusChange={(value) => {
+              setStatus(value);
+            }}
+            statusValue={status}
           />
         </Box>
       </Box>

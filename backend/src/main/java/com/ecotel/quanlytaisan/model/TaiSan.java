@@ -52,7 +52,6 @@ public class TaiSan {
     private Float vonKhac;
     private String tgKiemDinh;
     private Integer chuKyKiemDinh;
-    private Boolean trangThaiKiemDinh;
 
     public static TaiSan mapToTaiSan(String[] line) {
         TaiSan ts = new TaiSan();

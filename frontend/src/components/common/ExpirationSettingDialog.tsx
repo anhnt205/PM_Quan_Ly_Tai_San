@@ -1,21 +1,35 @@
-import { Close, Add, Remove } from "@mui/icons-material";
+import { Close } from "@mui/icons-material";
 import {
   Box,
   Button,
   Dialog,
   DialogContent,
+  DialogTitle,
   IconButton,
   Typography,
+  TextField,
+  InputAdornment,
+  Paper,
+  Divider,
+  Alert,
+  alpha,
+  useTheme,
+  DialogActions,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 
 interface ExpirationSettingDialogProps {
   open: boolean;
   onClose: () => void;
-  initialConfig?: { thoiHanTaiLieu: number; ngayBaoHetHan: number };
+  initialConfig?: {
+    thoiHanTaiLieu: number;
+    ngayBaoHetHan: number;
+    ngayBaoDangKiem?: number;
+  };
   onConfirm?: (
     expirationDays: number,
     warningDays: number,
+    registrationWarningDays: number,
   ) => void | Promise<void>;
   loading?: boolean;
 }
@@ -27,17 +41,15 @@ export default function ExpirationSettingDialog({
   onConfirm,
   loading = false,
 }: ExpirationSettingDialogProps) {
-  const [expirationDays, setExpirationDays] = useState<string>("60");
-  const [warningDays, setWarningDays] = useState<string>("3");
-
-  const [expirationFocused, setExpirationFocused] = useState(false);
-  const [warningFocused, setWarningFocused] = useState(false);
+  const theme = useTheme();
+  const [expirationDays, setExpirationDays] = useState<string>("0");
+  const [warningDays, setWarningDays] = useState<string>("0");
+  const [registrationWarningDays, setRegistrationWarningDays] =
+    useState<string>("0");
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
-    // Chỉ cập nhật khi Dialog mở và initialConfig thực sự có dữ liệu
     if (open && initialConfig) {
-      console.log("Dialog nhận được config:", initialConfig);
-
       const data = (initialConfig as any).data || initialConfig;
 
       if (data.thoiHanTaiLieu !== undefined && data.thoiHanTaiLieu !== null) {
@@ -46,79 +58,48 @@ export default function ExpirationSettingDialog({
       if (data.ngayBaoHetHan !== undefined && data.ngayBaoHetHan !== null) {
         setWarningDays(String(data.ngayBaoHetHan));
       }
+      if (data.ngayBaoDangKiem !== undefined && data.ngayBaoDangKiem !== null) {
+        setRegistrationWarningDays(String(data.ngayBaoDangKiem));
+      }
+      setError("");
     }
   }, [open, initialConfig]);
 
   const MIN_VALUE = 1;
   const MAX_VALUE = 999;
 
-  // Hàm chuẩn hóa giá trị trong khoảng cho phép
   const normalizeValue = (value: string): string => {
     if (value === "") return value;
     const num = parseInt(value);
+    if (isNaN(num)) return "";
     if (num < MIN_VALUE) return String(MIN_VALUE);
     if (num > MAX_VALUE) return String(MAX_VALUE);
     return String(num);
   };
 
-  const handleIncreaseExpiration = () => {
-    setExpirationDays((prev) => {
-      const num = (parseInt(prev) || 0) + 1;
-      return num > MAX_VALUE ? String(MAX_VALUE) : String(num);
-    });
-  };
-
-  const handleDecreaseExpiration = () => {
-    setExpirationDays((prev) => {
-      const num = parseInt(prev) || 0;
-      if (num <= MIN_VALUE) return "";
-      return String(num - 1);
-    });
-  };
-
-  const handleIncreaseWarning = () => {
-    setWarningDays((prev) => {
-      const num = (parseInt(prev) || 0) + 1;
-      return num > MAX_VALUE ? String(MAX_VALUE) : String(num);
-    });
-  };
-
-  const handleDecreaseWarning = () => {
-    setWarningDays((prev) => {
-      const num = parseInt(prev) || 0;
-      if (num <= MIN_VALUE) return "";
-      return String(num - 1);
-    });
-  };
-
-  const handleExpirationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    // Chỉ cho phép nhập số nguyên không âm hoặc để trống
-    if (value === "" || /^\d+$/.test(value)) {
-      setExpirationDays(normalizeValue(value));
-    }
-  };
-
-  const handleWarningChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    // Chỉ cho phép nhập số nguyên không âm hoặc để trống
-    if (value === "" || /^\d+$/.test(value)) {
-      setWarningDays(normalizeValue(value));
-    }
-  };
-
   const handleConfirm = async () => {
     const exp = parseInt(expirationDays) || 0;
     const warn = parseInt(warningDays) || 0;
+    const regWarn = parseInt(registrationWarningDays) || 0;
 
-    if (warn > exp) {
-      // Bạn có thể dùng Alert của dự án tại đây
-      alert("Số ngày báo trước không được lớn hơn thời hạn tài liệu!");
-      return;
-    }
+    // if (exp === 0 || warn === 0 || regWarn === 0) {
+    //   setError("Vui lòng nhập đầy đủ thông tin");
+    //   return;
+    // }
 
+    // if (warn > exp) {
+    //   setError("Số ngày báo trước không được lớn hơn thời hạn tài liệu!");
+    //   return;
+    // }
+
+    // if (regWarn > 365) {
+    //   setError("Số ngày báo đăng kiểm không được vượt quá 365 ngày");
+    //   return;
+    // }
+
+    setError("");
     if (onConfirm) {
-      await onConfirm(exp, warn);
+      await onConfirm(exp, warn, regWarn);
     }
     onClose();
   };
@@ -131,223 +112,259 @@ export default function ExpirationSettingDialog({
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: "16px",
-          padding: "16px",
+          borderRadius: 3,
+          overflow: "hidden",
         },
       }}
     >
+      {/* Header với gradient */}
       <Box
         sx={{
-          display: "flex",
-          justifyContent: "flex-end",
-          position: "absolute",
-          right: 8,
-          top: 8,
+          background: `linear-gradient(135deg, #1b8a4a 0%, #1b8a4a 100%)`,
+          position: "relative",
         }}
       >
-        <IconButton onClick={onClose}>
-          <Close />
-        </IconButton>
+        <DialogTitle sx={{ m: 0, p: 2.5 }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Box>
+              <Typography variant="h6" fontWeight="bold" color="white">
+                Cấu hình thời gian hết hạn
+              </Typography>
+              <Typography
+                variant="caption"
+                color={alpha(theme.palette.common.white, 0.8)}
+              >
+                Thiết lập cảnh báo tự động cho tài liệu
+              </Typography>
+            </Box>
+            <IconButton
+              onClick={onClose}
+              size="small"
+              sx={{
+                color: "white",
+                "&:hover": {
+                  backgroundColor: alpha(theme.palette.common.white, 0.1),
+                },
+              }}
+            >
+              <Close />
+            </IconButton>
+          </Box>
+        </DialogTitle>
       </Box>
 
-      <DialogContent sx={{ pt: 4 }}>
-        {/* Tiêu đề */}
-        <Typography
-          variant="h5"
-          sx={{
-            color: "#1b8a4a",
-            fontWeight: "bold",
-            textAlign: "center",
-            mb: 3,
-          }}
-        >
-          Thiết lập thời gian hết hạn
-        </Typography>
+      <DialogContent sx={{ p: 3, backgroundColor: theme.palette.grey[50] }}>
+        {error && (
+          <Alert
+            severity="error"
+            sx={{ mb: 3, borderRadius: 2 }}
+            onClose={() => setError("")}
+          >
+            {error}
+          </Alert>
+        )}
 
-        {/* Mô tả 1 */}
-        <Typography
-          sx={{
-            textAlign: "center",
-            mb: 2,
-            color: "#333",
-          }}
-        >
-          Nhập số ngày để thiết lập thời gian hết hạn cho các biên bản
-        </Typography>
-
-        {/* Input số ngày hết hạn */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            mb: 3,
-          }}
-        >
-          <IconButton
-            onClick={handleDecreaseExpiration}
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+          {/* Thời hạn hiệu lực */}
+          <Paper
+            elevation={0}
             sx={{
-              backgroundColor: "#1b8a4a",
-              color: "white",
-              borderRadius: "8px",
-              width: 48,
-              height: 48,
+              p: 2,
+              borderRadius: 2,
+              backgroundColor: "white",
+              border: `1px solid ${theme.palette.grey[200]}`,
+              transition: "all 0.2s",
               "&:hover": {
-                backgroundColor: "#15703c",
+                borderColor: theme.palette.primary.light,
+                boxShadow: `0 2px 8px ${alpha(theme.palette.primary.main, 0.1)}`,
               },
             }}
           >
-            <Remove />
-          </IconButton>
-          <Box
-            sx={{
-              flex: 1,
-              textAlign: "center",
-              border: "1px solid #e0e0e0",
-              borderRadius: "8px",
-              py: 1.5,
-              mx: 1,
-            }}
-          >
-            <input
-              type="text"
-              inputMode="numeric"
+            <Typography
+              variant="subtitle2"
+              fontWeight="bold"
+              sx={{ mb: 1.5, display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <Box
+                component="span"
+                sx={{
+                  width: 4,
+                  height: 20,
+                  bgcolor: theme.palette.primary.main,
+                  borderRadius: 1,
+                  display: "inline-block",
+                }}
+              />
+              Thời hạn hiệu lực tài liệu
+            </Typography>
+            <TextField
+              fullWidth
+              type="number"
               value={expirationDays}
-              onChange={handleExpirationChange}
-              onFocus={() => setExpirationFocused(true)}
-              onBlur={() => setExpirationFocused(false)}
-              placeholder={expirationFocused ? "Nhập số" : ""}
-              style={{
-                width: "100%",
-                border: "none",
-                outline: "none",
-                textAlign: "center",
-                fontSize: "1.25rem",
-                fontWeight: 500,
-                fontFamily: "inherit",
-                backgroundColor: "transparent",
+              onChange={(e) =>
+                setExpirationDays(normalizeValue(e.target.value))
+              }
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">ngày</InputAdornment>
+                ),
+                sx: { backgroundColor: theme.palette.grey[50] },
+              }}
+              variant="outlined"
+              size="medium"
+              helperText="Quy định số ngày tài liệu có hiệu lực kể từ ngày ký"
+              FormHelperTextProps={{
+                sx: { ml: 0, mt: 0.5, color: theme.palette.grey[600] },
               }}
             />
-          </Box>
-          <IconButton
-            onClick={handleIncreaseExpiration}
+          </Paper>
+
+          {/* Cảnh báo hết hạn */}
+          <Paper
+            elevation={0}
             sx={{
-              backgroundColor: "#1b8a4a",
-              color: "white",
-              borderRadius: "8px",
-              width: 48,
-              height: 48,
+              p: 2,
+              borderRadius: 2,
+              backgroundColor: "white",
+              border: `1px solid ${theme.palette.grey[200]}`,
+              transition: "all 0.2s",
               "&:hover": {
-                backgroundColor: "#15703c",
+                borderColor: theme.palette.warning.light,
+                boxShadow: `0 2px 8px ${alpha(theme.palette.warning.main, 0.1)}`,
               },
             }}
           >
-            <Add />
-          </IconButton>
-        </Box>
-
-        {/* Mô tả 2 */}
-        <Typography
-          sx={{
-            textAlign: "center",
-            mb: 2,
-            color: "#333",
-          }}
-        >
-          Nhập số ngày báo hết hạn (tính theo ngày)
-        </Typography>
-
-        {/* Input số ngày báo hết hạn */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            mb: 4,
-          }}
-        >
-          <IconButton
-            onClick={handleDecreaseWarning}
-            sx={{
-              backgroundColor: "#1b8a4a",
-              color: "white",
-              borderRadius: "8px",
-              width: 48,
-              height: 48,
-              "&:hover": {
-                backgroundColor: "#15703c",
-              },
-            }}
-          >
-            <Remove />
-          </IconButton>
-          <Box
-            sx={{
-              flex: 1,
-              textAlign: "center",
-              border: "1px solid #e0e0e0",
-              borderRadius: "8px",
-              py: 1.5,
-              mx: 1,
-            }}
-          >
-            <input
-              type="text"
-              inputMode="numeric"
+            <Typography
+              variant="subtitle2"
+              fontWeight="bold"
+              sx={{ mb: 1.5, display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <Box
+                component="span"
+                sx={{
+                  width: 4,
+                  height: 20,
+                  bgcolor: theme.palette.warning.main,
+                  borderRadius: 1,
+                  display: "inline-block",
+                }}
+              />
+              Cảnh báo hết hạn tài liệu
+            </Typography>
+            <TextField
+              fullWidth
+              type="number"
               value={warningDays}
-              onChange={handleWarningChange}
-              onFocus={() => setWarningFocused(true)}
-              onBlur={() => setWarningFocused(false)}
-              placeholder={warningFocused ? "Nhập số" : ""}
-              style={{
-                width: "100%",
-                border: "none",
-                outline: "none",
-                textAlign: "center",
-                fontSize: "1.25rem",
-                fontWeight: 500,
-                fontFamily: "inherit",
-                backgroundColor: "transparent",
+              onChange={(e) => setWarningDays(normalizeValue(e.target.value))}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">ngày</InputAdornment>
+                ),
+                sx: { backgroundColor: theme.palette.grey[50] },
+              }}
+              variant="outlined"
+              size="medium"
+              helperText="Hệ thống sẽ gửi cảnh báo trước khi tài liệu hết hạn"
+              FormHelperTextProps={{
+                sx: { ml: 0, mt: 0.5, color: theme.palette.grey[600] },
               }}
             />
-          </Box>
-          <IconButton
-            onClick={handleIncreaseWarning}
+          </Paper>
+
+          {/* Cảnh báo đăng kiểm */}
+          <Paper
+            elevation={0}
             sx={{
-              backgroundColor: "#1b8a4a",
-              color: "white",
-              borderRadius: "8px",
-              width: 48,
-              height: 48,
+              p: 2,
+              borderRadius: 2,
+              backgroundColor: "white",
+              border: `1px solid ${theme.palette.grey[200]}`,
+              transition: "all 0.2s",
               "&:hover": {
-                backgroundColor: "#15703c",
+                borderColor: theme.palette.info.light,
+                boxShadow: `0 2px 8px ${alpha(theme.palette.info.main, 0.1)}`,
               },
             }}
           >
-            <Add />
-          </IconButton>
+            <Typography
+              variant="subtitle2"
+              fontWeight="bold"
+              sx={{ mb: 1.5, display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <Box
+                component="span"
+                sx={{
+                  width: 4,
+                  height: 20,
+                  bgcolor: theme.palette.info.main,
+                  borderRadius: 1,
+                  display: "inline-block",
+                }}
+              />
+              Cảnh báo hết hạn đăng kiểm
+            </Typography>
+            <TextField
+              fullWidth
+              type="number"
+              value={registrationWarningDays}
+              onChange={(e) =>
+                setRegistrationWarningDays(normalizeValue(e.target.value))
+              }
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">ngày</InputAdornment>
+                ),
+                sx: { backgroundColor: theme.palette.grey[50] },
+              }}
+              variant="outlined"
+              size="medium"
+              helperText="Hệ thống sẽ gửi cảnh báo trước khi đến kỳ đăng kiểm"
+              FormHelperTextProps={{
+                sx: { ml: 0, mt: 0.5, color: theme.palette.grey[600] },
+              }}
+            />
+          </Paper>
         </Box>
+      </DialogContent>
 
-        {/* --- SỬA 3: Nút bấm có trạng thái Loading --- */}
+      <Divider />
+
+      <DialogActions sx={{ px: 3, py: 2, backgroundColor: "white" }}>
         <Button
-          fullWidth
-          variant="contained"
+          onClick={onClose}
+          variant="outlined"
+          sx={{
+            borderRadius: 2,
+            textTransform: "none",
+            px: 3,
+          }}
+        >
+          Hủy bỏ
+        </Button>
+        <Button
           onClick={handleConfirm}
-          disabled={loading} // Tránh click tặc khi đang gọi API
+          variant="contained"
+          disabled={loading}
           sx={{
             backgroundColor: "#1b8a4a",
-            color: "white",
-            py: 1.5,
-            borderRadius: "8px",
-            fontWeight: "bold",
-            fontSize: "16px",
+            borderRadius: 2,
             textTransform: "none",
+            px: 4,
             "&:hover": {
-              backgroundColor: "#15703c",
+              backgroundColor: "#17c45fff",
+              transform: "translateY(-1px)",
+              boxShadow: theme.shadows[4],
             },
+            transition: "all 0.2s",
           }}
         >
-          {loading ? "ĐANG XỬ LÝ..." : "XÁC NHẬN"}
+          {loading ? "Đang lưu..." : "Lưu cấu hình"}
         </Button>
-      </DialogContent>
+      </DialogActions>
     </Dialog>
   );
 }
