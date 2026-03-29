@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { Box, Grid, IconButton, Tooltip } from "@mui/material";
-import { Visibility as VisibilityIcon } from "@mui/icons-material";
+import { Box, Grid, IconButton, Tooltip, Tabs, Tab } from "@mui/material";
+import { Visibility as VisibilityIcon, VisibilityOff } from "@mui/icons-material";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import AssetTransferForm from "./components/AssetTransferForm";
 import SignerSidebar from "./components/SignerSidebar";
 import SignDocumentForm from "./components/SignDocumentForm";
-import BienBanDialog from "./components/BienBanDialog";
+import BienBanTabContent from "./components/BienBanTabContent";
 import TableCustom from "../../components/common/TableCustom";
 import { AssetTransferData, SignaturesData } from "./types";
 import PageAction from "../../components/common/PageAction";
@@ -29,7 +29,7 @@ import {
 } from "./config";
 import { showConfirmAlert } from "../../components/Alert";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
-import { Building, Trash2 } from "lucide-react";
+import { Building, Trash2, Edit } from "lucide-react";
 import { AssetHandoverData } from "../AssetHandover/types";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useAllStaffsQuery } from "../Staff/Mutation";
@@ -61,6 +61,11 @@ export default function AssetTransfer() {
   const [showBienBanDialog, setShowBienBanDialog] = useState(false);
   const [readOnly, setReadOnly] = useState(false);
   const [assetHandover, setAssetHandover] = useState<AssetHandoverData[]>([]);
+  const [sidebarMode, setSidebarMode] = useState<"signer" | "document" | null>(
+    null,
+  );
+  const [isFullPageSign, setIsFullPageSign] = useState(false);
+  const [tabValue, setTabValue] = useState(0);
 
   const [searchParams] = useSearchParams();
   const type = searchParams.get("type");
@@ -149,6 +154,9 @@ export default function AssetTransfer() {
     setShowForm(false);
     setShowSidebar(false);
     setReadOnly(false);
+    setSidebarMode(null);
+    setIsFullPageSign(false);
+    setTabValue(0);
   }, [type]);
 
   useEffect(() => {
@@ -168,12 +176,26 @@ export default function AssetTransfer() {
 
   const { title, label } = getTypeInfo(type);
 
-  const handleRowClick = (params: GridRowParams) => {
+  const handleRowClick = async (params: GridRowParams) => {
     const data = params.row as AssetTransferData;
     setSelectedRow(data);
-    setShowForm(true);
+    setShowForm(false);
     setReadOnly(true);
     setShowSidebar(true);
+    setSidebarMode("document");
+    setShowSignDocument(true);
+    setIsFullPageSign(false);
+    setTabValue(0);
+    setSelectedDocument(data.taiLieuCuoi);
+    setAssetTransferDetail(data.chiTietDieuDongTaiSanDTOS || []);
+
+    // Tự động tải biên bản khi click row
+    if (data.coPhieuBanGiao) {
+      const result: any[] = await getAssetHandoverMutation.mutateAsync(data.id);
+      setAssetHandover(result);
+    } else {
+      setAssetHandover([]);
+    }
   };
 
   const handleEdit = () => {
@@ -189,6 +211,9 @@ export default function AssetTransfer() {
     setShowSidebar(false);
     setReadOnly(false);
     setAssetHandover([]);
+    setSidebarMode(null);
+    setIsFullPageSign(false);
+    setTabValue(0);
   };
 
   const handleSend = (items: any[]) => {
@@ -247,6 +272,7 @@ export default function AssetTransfer() {
   const handleViewSignAssets = async (fileName: string, item: any) => {
     setSelectedDocument(fileName);
     setShowSignDocument(true);
+    setIsFullPageSign(true);
     setSelectedRow(item);
     setAssetTransferDetail(item.chiTietDieuDongTaiSanDTOS);
     setShowSignerSidebar(true);
@@ -255,11 +281,13 @@ export default function AssetTransfer() {
   const handleViewBienBan = async (id: string) => {
     const result: any[] = await getAssetHandoverMutation.mutateAsync(id);
     setAssetHandover(result);
-    setShowBienBanDialog(true);
+    setShowSidebar(true);
+    setSidebarMode("document");
+    setTabValue(2);
   };
 
   const columns: GridColDef<any>[] = [
-        {
+    {
       field: "trangThai",
       headerName: "Trạng thái phiếu",
       width: 140,
@@ -410,6 +438,23 @@ export default function AssetTransfer() {
         const rowData = params.row as AssetTransferData;
         return (
           <Box sx={{ display: "flex", gap: 0.5, justifyContent: "center" }}>
+            <Tooltip title="Chỉnh sửa">
+              <IconButton
+                color="primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedRow(rowData);
+                  setShowForm(true);
+                  setReadOnly(true);
+                }}
+                sx={{
+                  padding: "4px",
+                  "&:hover": { bgcolor: "rgba(25, 118, 210, 0.08)" },
+                }}
+              >
+                <Edit size={20} strokeWidth={2} />
+              </IconButton>
+            </Tooltip>
             <Tooltip title="Xóa">
               <IconButton
                 color="error"
@@ -431,7 +476,7 @@ export default function AssetTransfer() {
                 <Trash2 size={20} strokeWidth={2} />
               </IconButton>
             </Tooltip>
-
+            {/* 
             <Tooltip title="Xem phiếu bàn giao">
               <IconButton
                 color="primary"
@@ -459,8 +504,12 @@ export default function AssetTransfer() {
                     rowData.chiTietDieuDongTaiSanDTOS || [],
                   );
                   setShowSignerSidebar(false); // Ẩn sidebar khi xem
-                  setSelectedIds([rowData.id]);
+                  setSelectedIds([]);
                   setShowSignDocument(true);
+                  setIsFullPageSign(false);
+                  setSidebarMode("document");
+                  setShowSidebar(true);
+                  setTabValue(0);
                 }}
                 sx={{
                   padding: "4px",
@@ -469,7 +518,7 @@ export default function AssetTransfer() {
               >
                 <VisibilityIcon sx={{ fontSize: 20 }} />
               </IconButton>
-            </Tooltip>
+            </Tooltip> */}
           </Box>
         );
       },
@@ -478,14 +527,9 @@ export default function AssetTransfer() {
 
   return (
     <>
-      <BienBanDialog
-        open={showBienBanDialog}
-        onClose={() => setShowBienBanDialog(false)}
-        assetHandover={assetHandover}
-        handleSignatureList={handleSignatureList}
-      />
+      {/* Biên bản Dialog không còn dùng trực tiếp ở đây nữa vì đã tích hợp vào Tab */}
 
-      {showSignDocument ? (
+      {showSignDocument && isFullPageSign ? (
         <SignDocumentForm
           selectedIds={selectedIds}
           document={selectedDocument}
@@ -545,7 +589,9 @@ export default function AssetTransfer() {
               }}
             >
               <Grid
-                size={{ xs: showSidebar ? 9 : 12 }}
+                size={{
+                  xs: showSidebar ? (sidebarMode === "document" ? 6 : 9) : 12,
+                }}
                 sx={{
                   transition: "all 0.3s ease",
                   borderRight: showSidebar ? "1px solid" : "none",
@@ -591,17 +637,116 @@ export default function AssetTransfer() {
 
               {showSidebar && (
                 <Grid
-                  size={{ xs: 3 }}
+                  size={{ xs: sidebarMode === "document" ? 6 : 3 }}
                   sx={{
                     display: "flex",
                     flexDirection: "column",
-                    bgcolor: "#fafafa",
+                    bgcolor: "background.paper",
+                    borderLeft: "1px solid",
+                    borderColor: "divider",
                   }}
                 >
-                  <SignerSidebar
-                    selectedRow={selectedRow}
-                    onClose={() => setShowSidebar(false)}
-                  />
+                  <Box
+                    sx={{
+                      borderBottom: 1,
+                      borderColor: "divider",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      pr: 1,
+                    }}
+                  >
+                    <Tabs
+                      value={tabValue}
+                      onChange={(_, newValue) => setTabValue(newValue)}
+                      variant="scrollable"
+                      scrollButtons="auto"
+                      sx={{
+                        "& .MuiTabs-indicator": {
+                          backgroundColor: "#04b46eff",
+                        },
+                        "& .MuiTab-root": {
+                          textTransform: "none",
+                          fontWeight: 600,
+                          fontSize: "0.875rem",
+                          minWidth: 100,
+                          "&.Mui-selected": {
+                            color: "#04b46eff",
+                          },
+                        },
+                      }}
+                    >
+                      <Tab label="Tài liệu" />
+                      <Tab label="Quy trình ký" />
+                      <Tab
+                        label="Biên bản"
+                        disabled={assetHandover.length === 0}
+                      />
+                    </Tabs>
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        setShowSidebar(false);
+                        setSidebarMode(null);
+                      }}
+                    >
+                      <VisibilityOff
+                        sx={{ fontSize: 20 }}
+                      />
+                    </IconButton>
+                  </Box>
+                  <Box sx={{ flex: 1, overflow: "hidden" }}>
+                    {tabValue === 0 ? (
+                      <Box
+                        sx={{
+                          height: "calc(100vh - 120px)",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <SignDocumentForm
+                          selectedIds={selectedIds}
+                          document={selectedDocument}
+                          onCancel={handleClose}
+                          onSign={handleSign}
+                          assetTransferDetail={assetTransferDetail}
+                          showSignerSidebar={false}
+                          allUnits={allUnits}
+                          allCurrentStatus={allCurrentStatus}
+                          fullscreen={false}
+                          staffs={allStaffs}
+                          isEdit={false}
+                        />
+                      </Box>
+                    ) : tabValue === 1 ? (
+                      <Box
+                        sx={{
+                          height: "calc(100vh - 120px)",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <SignerSidebar
+                          selectedRow={selectedRow}
+                          onClose={() => {
+                            setShowSidebar(false);
+                            setSidebarMode(null);
+                          }}
+                        />
+                      </Box>
+                    ) : (
+                      <Box
+                        sx={{
+                          height: "calc(100vh - 120px)",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <BienBanTabContent
+                          assetHandover={assetHandover}
+                          handleSignatureList={handleSignatureList}
+                          onClose={handleClose}
+                        />
+                      </Box>
+                    )}
+                  </Box>
                 </Grid>
               )}
             </Grid>

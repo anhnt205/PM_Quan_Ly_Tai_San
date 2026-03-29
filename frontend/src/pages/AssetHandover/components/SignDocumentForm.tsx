@@ -693,19 +693,17 @@ export default function SignDocumentForm({
         width: "100%",
         display: "flex",
         flexDirection: "column",
-        minHeight: "100vh",
+        height: fullscreen ? "100vh" : "100%",
         bgcolor: "#f5f5f5",
         ...(fullscreen && { position: "fixed", inset: 0, zIndex: 9999 }),
       }}
     >
       {/* --- Header --- */}
-      {fullscreen && (
-        <SignHeader
-          pagesCount={pages.length}
-          handleExportPDF={handleExportPDF}
-          onCancel={onCancel}
-        />
-      )}
+      <SignHeader
+        pagesCount={pages.length}
+        handleExportPDF={handleExportPDF}
+        onCancel={onCancel}
+      />
 
       {/* --- Body --- */}
       <Box

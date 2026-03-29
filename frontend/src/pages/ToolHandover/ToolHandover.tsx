@@ -2,17 +2,11 @@ import { SyntheticEvent, useEffect, useState } from "react";
 import {
   Badge,
   Box,
-  Button,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
   Grid,
   IconButton,
   Tab,
   Tabs,
+  Tooltip,
 } from "@mui/material";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import { useSearchParams } from "react-router-dom";
@@ -26,8 +20,8 @@ import {
   ToolHandoverFormValues,
 } from "./types";
 import { useToolHandoverMutation, useToolHandoverPageQuery } from "./Mutation";
-import { Download, Eye, Trash2, ListPlus } from "lucide-react";
-import { ClassOutlined, TableChart } from "@mui/icons-material";
+import { ClassOutlined, TableChart, VisibilityOff } from "@mui/icons-material";
+import { Edit, Eye, Trash2, ListPlus } from "lucide-react";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
 import {
   showDownloadFile,
@@ -52,7 +46,7 @@ import { ToolTransferData } from "../ToolTransfer/types";
 import SignDocumentForm from "./components/SignDocumentForm";
 import SignerSidebar from "./components/SignerSidebar";
 import dayjs from "dayjs";
-import { useAllStaffsQuery, useStaffMutation } from "../Staff/Mutation";
+import { useAllStaffsQuery } from "../Staff/Mutation";
 import { useToolTransferPageQuery } from "../ToolTransfer/Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useAllDepartmentsQuery } from "../Department/Mutation";
@@ -72,17 +66,19 @@ export default function ToolHandover() {
   const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
   const [searchValue, setSearchValue] = useState("");
   const [showSignDocument, setShowSignDocument] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [readOnly, setReadOnly] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const [searchParams] = useSearchParams();
   const type = searchParams.get("type");
   const handleEdit = () => setReadOnly(false);
-  const [previewFileName, setPreviewFileName] = useState<string | null>(null);
   const [currentStatus, setCurrentStatus] = useState("");
   const [currentType, setCurrentType] = useState("");
   const [showSidebar, setShowSidebar] = useState(false);
-  const [showSignerSidebar, setShowSignerSidebar] = useState(true);
+  const [tabValue, setTabValue] = useState(0);
+  const [sidebarMode, setSidebarMode] = useState<"document" | "signer" | null>(
+    null,
+  );
+  const [isFullPageSign, setIsFullPageSign] = useState(false);
   const { user } = useSelector((state: RootState) => state.user);
 
   const {
@@ -93,8 +89,8 @@ export default function ToolHandover() {
     deleteOneMutation,
     signMutation,
     handleSignatureList,
-    handleDownloadFile,
   } = useToolHandoverMutation();
+
   useEffect(() => {
     setSelectedIds([]);
     setSelectedRow(null);
@@ -104,6 +100,7 @@ export default function ToolHandover() {
 
   const handleTabChange = (_event: SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
+    handleClose();
   };
 
   const searchDebounce = useDebounce(searchValue, 600);
@@ -114,6 +111,7 @@ export default function ToolHandover() {
       searchDebounce,
       currentStatus ? Number(currentStatus) : undefined,
     );
+
   const [storedLoaiCounts, setStoredLoaiCounts] = useState<any>({});
   const { data: transferPage = { items: [], totalItems: 0, loaiCounts: {} } } =
     useToolTransferPageQuery(
@@ -126,6 +124,7 @@ export default function ToolHandover() {
       true,
       user.taiKhoan?.phongBanId,
     );
+
   useEffect(() => {
     if (!currentType && transferPage?.loaiCounts) {
       if (
@@ -151,6 +150,7 @@ export default function ToolHandover() {
     user?.taiKhoan?.tenDangNhap,
     toolHandover.items,
   );
+
   const statusOptions: FilterOption[] = [
     {
       label: "Tất cả",
@@ -219,12 +219,21 @@ export default function ToolHandover() {
   ];
 
   const handleRowClick = (params: GridRowParams) => {
-    if (activeTab !== 0) return;
-    window.scrollTo({ top: 140, behavior: "smooth" });
-    setSelectedRow({ ...params.row, isNew: false });
+    const data = params.row as any;
+    setSelectedRow({ ...data, isNew: false });
     setReadOnly(true);
-    setShowForm(true);
+    setShowForm(false);
     setShowSidebar(true);
+    setSidebarMode("document");
+    setShowSignDocument(true);
+    setIsFullPageSign(false);
+    setTabValue(0);
+
+    if (activeTab === 0) {
+      setSelectedDocument(data.taiLieuBangKe);
+    } else if (activeTab === 1) {
+      setSelectedDocument(data.taiLieuCuoi);
+    }
   };
 
   const handleCancel = async () => {
@@ -238,14 +247,17 @@ export default function ToolHandover() {
       }
     }
   };
+
   const handleViewSignTools = async (fileName: string, item: any) => {
     setShowSignDocument(true);
     setSelectedRow(item);
-    setShowSignerSidebar(true); // Hiện sidebar khi ký
+    setIsFullPageSign(true);
   };
+
   const handleSend = (items: any[]) => {
     handleSendToSigner(items, updateManyMutation.mutateAsync, handleClose);
   };
+
   const handleSave = async (values: any) => {
     if (!values.isNew) {
       await updateMutation.mutate(values);
@@ -274,7 +286,7 @@ export default function ToolHandover() {
   };
 
   const columns: GridColDef<ToolHandoverFormValues>[] = [
-        {
+    {
       field: "trangThaiPhieu",
       headerName: "Trạng thái phiếu",
       width: 200,
@@ -376,42 +388,54 @@ export default function ToolHandover() {
       align: "center",
       renderCell: (params) => (
         <Box sx={{ display: "flex", gap: 1 }}>
-          <IconButton
-            size="small"
-            disabled={!isCheckShowDelete(params.row, user)}
-            onClick={async (e) => {
-              e.stopPropagation();
-              const confirm = await showConfirmAlert(
-                `Xóa phiếu biên bản bàn giao "${params.row?.id}"`,
-              );
-              if (confirm.isConfirmed) {
-                deleteOneMutation.mutate(params.row);
-              }
-            }}
-          >
-            <Trash2 size={20} strokeWidth={2} color="#f44336" />
-          </IconButton>
-
-          <IconButton
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedRow(params.row || []);
-              setShowSignerSidebar(false); // Ẩn sidebar khi xem
-              // setDepartmentId(params.row.idDonViGiao);
-              setSelectedIds([params.row.id]);
-              // await handleAssetTransfer(params.row.idDonViGiao);
-              setShowSignDocument(true);
-            }}
-          >
-            <Eye size={20} strokeWidth={2} color="#4caf50" />
-          </IconButton>
+          <Tooltip title="Xóa">
+            <IconButton
+              size="small"
+              disabled={!isCheckShowDelete(params.row, user)}
+              onClick={async (e) => {
+                e.stopPropagation();
+                const confirm = await showConfirmAlert(
+                  `Xóa phiếu biên bản bàn giao "${params.row?.id}"`,
+                );
+                if (confirm.isConfirmed) {
+                  deleteOneMutation.mutate(params.row);
+                }
+              }}
+            >
+              <Trash2 size={20} strokeWidth={2} color="#f44336" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Sửa">
+            <IconButton
+              size="small"
+              color="info"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedRow({ ...params.row, isNew: false });
+                setReadOnly(true);
+                setShowForm(true);
+                setShowSidebar(false);
+              }}
+            >
+              <Edit size={20} strokeWidth={2} />
+            </IconButton>
+          </Tooltip>
+          {/* <Tooltip title="Xem">
+            <IconButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRowClick({ row: params.row } as any);
+              }}
+            >
+              <Eye size={20} strokeWidth={2} color="#4caf50" />
+            </IconButton>
+          </Tooltip> */}
         </Box>
       ),
     },
   ];
 
-  const [toolTransfer, setToolTransfer] = useState<any | null>(null);
   const columnsTransfer: GridColDef<ToolTransferData>[] = [
     {
       field: "id",
@@ -474,23 +498,19 @@ export default function ToolHandover() {
       align: "center",
       renderCell: (params) => (
         <Box sx={{ display: "flex", gap: 1 }}>
-          <IconButton
+          {/* <IconButton
             size="small"
             onClick={async () => {
-              setSelectedDocument(params.row.taiLieuCuoi);
-              setToolTransfer(params.row);
-              setShowSignerSidebar(false); // Ẩn sidebar khi xem
-              setShowSignDocument(true);
+              handleRowClick({ row: params.row } as any);
             }}
           >
             <Eye size={20} strokeWidth={2} color="#4caf50" />
-          </IconButton>
+          </IconButton> */}
           <IconButton
             size="small"
             title="Tạo biên bản bàn giao ccdc - vật tư"
             onClick={(e) => {
               e.stopPropagation();
-              console.log(params.row.chiTietDieuDongCCDCVatTuDTOS);
               window.scrollTo({ top: 140, behavior: "smooth" });
               setSelectedRow({
                 id: "",
@@ -569,14 +589,14 @@ export default function ToolHandover() {
 
   return (
     <>
-      {showSignDocument ? (
+      {showSignDocument && isFullPageSign ? (
         activeTab === 0 ? (
           <SignDocumentForm
             selectedIds={selectedIds}
             onCancel={handleClose}
             onSign={handleSign}
             toolHandover={selectedRow}
-            showSignerSidebar={showSignerSidebar}
+            showSignerSidebar={true}
             allUnits={allUnits}
             fullscreen={true}
             staffs={staffs}
@@ -592,7 +612,7 @@ export default function ToolHandover() {
             document={selectedDocument}
             onCancel={handleClose}
             onSign={() => {}}
-            toolTransferDetail={toolTransfer.chiTietDieuDongCCDCVatTuDTOS || []}
+            toolTransferDetail={selectedRow.chiTietDieuDongCCDCVatTuDTOS || []}
             showSignerSidebar={false}
             allUnits={allUnits}
             fullscreen={true}
@@ -628,24 +648,24 @@ export default function ToolHandover() {
                   departments={departments}
                   positions={positions}
                   allUnits={allUnits}
-                  staffs={(staffs || []).filter(
-                    (staff: any) => staff.hasAccount,
-                  )}
+                  staffs={staffs}
                 />
               </Box>
             )}
 
-            <Grid
-              container
-              sx={{
-                border: "1px solid #e0e0e0",
-                borderRadius: "8px",
-                overflow: "hidden",
-              }}
-            >
+            <Grid container spacing={2}>
               <Grid
                 size={{
-                  xs: activeTab === 0 && showSidebar && selectedRow ? 9 : 12,
+                  xs: showSidebar && sidebarMode === "document" ? 6 : 12,
+                }}
+                sx={{
+                  transition: "all 0.3s ease",
+                  borderRight:
+                    showSidebar && sidebarMode === "document"
+                      ? "1px solid"
+                      : "none",
+                  borderColor: "divider",
+                  overflow: "hidden",
                 }}
               >
                 <Box
@@ -670,12 +690,7 @@ export default function ToolHandover() {
                   >
                     <Tab
                       icon={
-                        <Badge
-                          badgeContent={
-                            toolHandoverCount
-                          }
-                          color="error"
-                        >
+                        <Badge badgeContent={toolHandoverCount} color="error">
                           <ClassOutlined />
                         </Badge>
                       }
@@ -740,15 +755,122 @@ export default function ToolHandover() {
                 />
               </Grid>
 
-              {activeTab === 0 && showSidebar && selectedRow && (
+              {showSidebar && sidebarMode === "document" && (
                 <Grid
-                  size={{ xs: 3 }}
-                  sx={{ bgcolor: "#fafafa", borderLeft: "1px solid #e0e0e0" }}
+                  size={{ xs: 6 }}
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    bgcolor: "white",
+                    height: "100%",
+                    overflow: "hidden",
+                  }}
                 >
-                  <SignerSidebar
-                    selectedRow={selectedRow}
-                    onClose={() => setShowSidebar(false)}
-                  />
+                  <Box
+                    sx={{
+                      p: 1,
+                      borderBottom: "1px solid",
+                      borderColor: "divider",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      bgcolor: "white",
+                      pr: 1,
+                    }}
+                  >
+                    <Tabs
+                      value={tabValue}
+                      onChange={(_, newValue) => setTabValue(newValue)}
+                      variant="scrollable"
+                      scrollButtons="auto"
+                      sx={{
+                        "& .MuiTabs-indicator": {
+                          backgroundColor: "#04b46eff",
+                        },
+                        "& .MuiTab-root": {
+                          textTransform: "none",
+                          fontWeight: 600,
+                          fontSize: "0.875rem",
+                          minWidth: 100,
+                          "&.Mui-selected": {
+                            color: "#04b46eff",
+                          },
+                        },
+                      }}
+                    >
+                      <Tab label="Tài liệu" />
+                      {activeTab === 0 && <Tab label="Quy trình ký" />}
+                    </Tabs>
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        setShowSidebar(false);
+                        setSidebarMode(null);
+                      }}
+                    >
+                      <VisibilityOff sx={{ fontSize: 20 }} />
+                    </IconButton>
+                  </Box>
+
+                  <Box sx={{ flex: 1, overflow: "hidden" }}>
+                    {tabValue === 0 ? (
+                      <Box
+                        sx={{
+                          height: "calc(100vh - 120px)",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {activeTab === 0 ? (
+                          <SignDocumentForm
+                            selectedIds={selectedIds}
+                            onCancel={handleClose}
+                            onSign={handleSign}
+                            toolHandover={selectedRow}
+                            showSignerSidebar={false}
+                            allUnits={allUnits}
+                            fullscreen={false}
+                            staffs={staffs}
+                            departments={departments}
+                            positions={positions}
+                            handleSignatureList={handleSignatureList}
+                            isEdit={false}
+                            bangKe={selectedRow.taiLieuBangKe}
+                          />
+                        ) : (
+                          <SignDocumentTransferForm
+                            selectedIds={selectedIds}
+                            document={selectedDocument}
+                            onCancel={handleClose}
+                            onSign={() => {}}
+                            toolTransferDetail={
+                              selectedRow.chiTietDieuDongCCDCVatTuDTOS || []
+                            }
+                            showSignerSidebar={false}
+                            allUnits={allUnits}
+                            fullscreen={false}
+                            staffs={staffs}
+                            handleSignatureList={handleSignatureList}
+                            isEdit={false}
+                          />
+                        )}
+                      </Box>
+                    ) : (
+                      <Box
+                        sx={{
+                          height: "calc(100vh - 120px)",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <SignerSidebar
+                          selectedRow={selectedRow}
+                          onClose={() => {
+                            setShowSidebar(false);
+                            setSidebarMode(null);
+                          }}
+                        />
+                      </Box>
+                    )}
+                  </Box>
                 </Grid>
               )}
             </Grid>

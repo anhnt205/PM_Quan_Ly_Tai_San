@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Box, Grid, IconButton, Tooltip } from "@mui/material";
+import { Box, Grid, IconButton, Tooltip, Tabs, Tab } from "@mui/material";
+import { VisibilityOff } from "@mui/icons-material";
 
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import ToolTransferForm from "./components/ToolTransferForm";
@@ -24,8 +25,8 @@ import {
   showShareStatus,
   showStatus,
   showStatusDocument,
-} from "../ToolTransfer/config";
-import { Building, Eye, Trash2 } from "lucide-react";
+} from "../AssetTransfer/config"; // Dùng chung config
+import { Building, Eye, Trash2, Edit } from "lucide-react";
 import { ToolSignature, ToolTransferData } from "./types";
 import { useToolTransferMutation, useToolTransferPageQuery } from "./Mutation";
 import SignDocumentForm from "./components/SignDocumentForm";
@@ -37,6 +38,7 @@ import { useAllStaffsQuery, useStaffMutation } from "../Staff/Mutation";
 import { useAllDepartmentsQuery } from "../Department/Mutation";
 import { useAllUnitsQuery } from "../Unit/Mutation";
 import S3Service from "../../services/S3Service";
+import BienBanTabContent from "./components/BienBanTabContent";
 
 export default function ToolTransfer() {
   const { user } = useSelector((state: any) => state.user);
@@ -64,6 +66,12 @@ export default function ToolTransfer() {
   const [showBienBanDialog, setShowBienBanDialog] = useState(false);
   const [toolTransferDetail, setToolTransferDetail] = useState<any[]>([]);
   const [status, setStatus] = useState("");
+  const [tabValue, setTabValue] = useState(0);
+  const [sidebarMode, setSidebarMode] = useState<"document" | "signer" | null>(
+    null,
+  );
+  const [isFullPageSign, setIsFullPageSign] = useState(false);
+  const [toolHandover, setToolHandover] = useState<any[]>([]);
   const {
     handleDownloadFile,
     createMutation,
@@ -188,16 +196,22 @@ export default function ToolTransfer() {
   const handleRowClick = async (params: GridRowParams) => {
     const data = params.row as ToolTransferData;
     setSelectedRow(data);
+    setShowForm(false);
     setReadOnly(true);
+    setShowSidebar(true);
+    setSidebarMode("document");
+    setShowSignDocument(true);
+    setIsFullPageSign(false);
+    setTabValue(0);
+    setSelectedDocument(data.taiLieuCuoi);
+    setToolTransferDetail(data.chiTietDieuDongCCDCVatTuDTOS || []);
 
-    try {
-      await getToolHandoverMutation.mutateAsync(data.id);
-
-      setShowSidebar(true);
-      setShowForm(true);
-    } catch (error) {
-      console.error("Lỗi khi lấy chi tiết bàn giao:", error);
-      setShowSidebar(true);
+    // Tải biên bản
+    if (data.coPhieuBanGiao) {
+      const result: any[] = await getToolHandoverMutation.mutateAsync(data.id);
+      setToolHandover(result);
+    } else {
+      setToolHandover([]);
     }
   };
 
@@ -255,16 +269,17 @@ export default function ToolTransfer() {
   const handleViewSignAssets = async (fileName: string, item: any) => {
     setSelectedDocument(fileName);
     setShowSignDocument(true);
+    setIsFullPageSign(true); // Luôn cho full screen khi click action Ký
     setSelectedRow(item);
     setToolTransferDetail(item.chiTietDieuDongCCDCVatTuDTOS || []);
-    setShowSignerSidebar(true); // Hiện sidebar khi ký
   };
 
-  const [toolHandover, setToolHandover] = useState<ToolHandoverData[]>([]);
   const handleViewBienBan = async (id: string) => {
     const result: any[] = await getToolHandoverMutation.mutateAsync(id);
     setToolHandover(result);
-    setShowBienBanDialog(true);
+    setShowSidebar(true);
+    setSidebarMode("document");
+    setTabValue(2);
   };
 
   const columns: GridColDef<ToolTransferData>[] = [
@@ -426,7 +441,23 @@ export default function ToolTransfer() {
                 <Trash2 size={18} />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Xem phiếu bàn giao">
+            <Tooltip title="Sửa">
+              <IconButton
+                size="small"
+                color="info"
+                // disabled={rowData.trangThai !== 0}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedRow(rowData);
+                  setReadOnly(true);
+                  setShowForm(true);
+                  setShowSidebar(false);
+                }}
+              >
+                <Edit size={18} />
+              </IconButton>
+            </Tooltip>
+            {/* <Tooltip title="Xem phiếu bàn giao">
               <IconButton
                 size="small"
                 color="primary"
@@ -434,10 +465,6 @@ export default function ToolTransfer() {
                 onClick={(e) => {
                   e.stopPropagation();
                   handleViewBienBan(rowData.id);
-                }}
-                sx={{
-                  padding: "4px",
-                  "&:hover": { bgcolor: "action.hover" }, // Sửa lại theo chuẩn Semantic Colors của dự án
                 }}
               >
                 <Building size={18} />
@@ -449,18 +476,12 @@ export default function ToolTransfer() {
                 color="success"
                 onClick={async (e) => {
                   e.stopPropagation();
-                  setSelectedDocument(rowData.taiLieuCuoi);
-                  setToolTransferDetail(
-                    rowData.chiTietDieuDongCCDCVatTuDTOS || [],
-                  );
-                  setShowSignerSidebar(false);
-                  setSelectedIds([rowData.id]);
-                  setShowSignDocument(true);
+                  handleRowClick({ row: rowData } as any);
                 }}
               >
                 <Eye size={18} />
               </IconButton>
-            </Tooltip>
+            </Tooltip> */}
           </Box>
         );
       },
@@ -469,14 +490,9 @@ export default function ToolTransfer() {
 
   return (
     <>
-      <BienBanDialog
-        open={showBienBanDialog}
-        onClose={() => setShowBienBanDialog(false)}
-        toolHandover={toolHandover}
-        handleSignatureList={handleSignatureList}
-      />
+      {/* Biên bản Dialog không còn dùng trực tiếp vì chuyển sang Tab */}
 
-      {showSignDocument ? (
+      {showSignDocument && isFullPageSign ? (
         <SignDocumentForm
           selectedIds={selectedIds}
           document={selectedDocument}
@@ -537,31 +553,19 @@ export default function ToolTransfer() {
                 overflow: "hidden",
                 border: "1px solid",
                 borderColor: "divider",
-                // 1. Cố định chiều cao ở đây
                 height: "calc(100vh)",
               }}
             >
               <Grid
-                size={{ xs: showSidebar ? 9 : 12 }}
+                size={{ xs: showSidebar && sidebarMode === "document" ? 6 : 12 }}
                 sx={{
                   transition: "all 0.3s ease",
                   borderRight: showSidebar ? "1px solid" : "none",
                   borderColor: "divider",
-                  height: "100%", // Chiếm 100% chiều cao cha
+                  height: "100%",
                   display: "flex",
                   flexDirection: "column",
-                  // 2. Cho phép scroll bên trong nếu nội dung quá dài
                   overflow: "hidden",
-                  "& .MuiPaper-root": {
-                    margin: 0,
-                    boxShadow: "none",
-                    borderRadius: 0,
-                    display: "flex",
-                    flexDirection: "column",
-                    flexGrow: 1,
-                    height: "100%", // Ép Paper chiếm hết chiều cao
-                    overflow: "hidden",
-                  },
                 }}
               >
                 <TableCustom
@@ -596,22 +600,119 @@ export default function ToolTransfer() {
                 />
               </Grid>
 
-              {showSidebar && (
+              {showSidebar && sidebarMode === "document" && (
                 <Grid
-                  size={{ xs: 3 }}
+                  size={{ xs: 6 }}
                   sx={{
                     display: "flex",
                     flexDirection: "column",
-                    bgcolor: "#fafafa",
+                    bgcolor: "white",
                     height: "100%",
-                    overflowY: "auto",
+                    overflow: "hidden",
                   }}
                 >
-                  <SignerSidebar
-                    selectedRow={selectedRow}
-                    handoverDetails={detailData}
-                    onClose={() => setShowSidebar(false)}
-                  />
+                  <Box
+                    sx={{
+                      p: 1,
+                      borderBottom: "1px solid",
+                      borderColor: "divider",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      bgcolor: "white",
+                      pr: 1,
+                    }}
+                  >
+                    <Tabs
+                      value={tabValue}
+                      onChange={(_, newValue) => setTabValue(newValue)}
+                      variant="scrollable"
+                      scrollButtons="auto"
+                      sx={{
+                        "& .MuiTabs-indicator": {
+                          backgroundColor: "#04b46eff",
+                        },
+                        "& .MuiTab-root": {
+                          textTransform: "none",
+                          fontWeight: 600,
+                          fontSize: "0.875rem",
+                          minWidth: 100,
+                          "&.Mui-selected": {
+                            color: "#04b46eff",
+                          },
+                        },
+                      }}
+                    >
+                      <Tab label="Tài liệu" />
+                      <Tab label="Quy trình ký" />
+                      <Tab
+                        label="Biên bản"
+                        disabled={toolHandover.length === 0}
+                      />
+                    </Tabs>
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        setShowSidebar(false);
+                        setSidebarMode(null);
+                      }}
+                    >
+                      <VisibilityOff sx={{ fontSize: 20 }} />
+                    </IconButton>
+                  </Box>
+
+                  <Box sx={{ flex: 1, overflow: "hidden" }}>
+                    {tabValue === 0 ? (
+                      <Box
+                        sx={{
+                          height: "calc(100vh - 120px)",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <SignDocumentForm
+                          selectedIds={selectedIds}
+                          document={selectedDocument}
+                          onCancel={handleClose}
+                          onSign={handleSign}
+                          toolTransferDetail={toolTransferDetail}
+                          showSignerSidebar={false}
+                          allUnits={allUnits}
+                          fullscreen={false}
+                          staffs={allStaffs}
+                          isEdit={false}
+                        />
+                      </Box>
+                    ) : tabValue === 1 ? (
+                      <Box
+                        sx={{
+                          height: "calc(100vh - 120px)",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <SignerSidebar
+                          selectedRow={selectedRow}
+                          handoverDetails={detailData}
+                          onClose={() => {
+                            setShowSidebar(false);
+                            setSidebarMode(null);
+                          }}
+                        />
+                      </Box>
+                    ) : (
+                      <Box
+                        sx={{
+                          height: "calc(100vh - 120px)",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <BienBanTabContent
+                          toolHandover={toolHandover}
+                          handleSignatureList={handleSignatureList}
+                          onClose={handleClose}
+                        />
+                      </Box>
+                    )}
+                  </Box>
                 </Grid>
               )}
             </Grid>
