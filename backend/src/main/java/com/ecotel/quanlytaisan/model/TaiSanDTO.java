@@ -64,7 +64,7 @@ public class TaiSanDTO {
     private Double vonKhac;
     private String tgKiemDinh;
     private Integer chuKyKiemDinh;
-    private Boolean trangThaiKiemDinh;
+    private String trangThaiKiemDinh;
     private String tenDonViBanDau;
     private String tenDonViHienThoi;
     private List<NguonKinhPhi> nguonKinhPhiList;

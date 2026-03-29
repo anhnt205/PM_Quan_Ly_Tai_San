@@ -3,13 +3,21 @@ import dayjs from "dayjs";
 import "../../../assets/fonts/times_new_roman-normal";
 import "../../../assets/fonts/times_new_roman-bold";
 
-export const ShowStatus = (trangThai: boolean) => {
-
+export const ShowStatus = (trangThai: string) => {
   let label = "Đã đăng kiểm";
   let color = "#4caf50";
 
-  if (!trangThai) {
-    label = "Sắp hết hạn đăng kiểm";
+  if (trangThai === "DA_DANG_KIEM") {
+    label = "Đã đăng kiểm";
+    color = "#4caf50";
+  } else if (trangThai === "SAP_DEN_HAN") {
+    label = "Sắp đến hạn đăng kiểm";
+    color = "#ff9800";
+  } else if (trangThai === "QUA_HAN") {
+    label = "Quá hạn đăng kiểm";
+    color = "#f44336";
+  } else {
+    label = "Quá hạn đăng kiểm";
     color = "#f44336";
   }
 

@@ -13,10 +13,10 @@ const COLORS = {
   default: "#424242",
   success: "#4caf50",
   info: "#2196f3",
-  error: "#ff7043",
+  error: "#f44336",
   primary: "#1976d2",
   secondary: "#9c27b0",
-  warning: "#ed6c02",
+  warning: "#ff9800",
 };
 
 const BpIcon = styled("span")<{ customColor: string }>(({ customColor }) => ({
@@ -175,4 +175,3 @@ export const FilterStatusGroup = ({
     </Box>
   );
 };
-

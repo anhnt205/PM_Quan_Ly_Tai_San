@@ -33,8 +33,6 @@ public class TaiSanService {
      @Autowired
     private TaiSanFileDao taiSanFileDao;
     @Autowired
-    private ChiTietBanGiaoTaiSanDao chiTietBanGiaoTaiSanDao;
-    @Autowired
     private PhongBanDao phongBanDao;
 
 
@@ -44,7 +42,7 @@ public class TaiSanService {
         return taiSanDTOList;
     }
 
-    public PageResponse<TaiSanDTO> getAllPaged(String idCongTy, int page, int size, String sortBy, String sortDir, String search, String idNhomTaiSan, String idLoaiTaiSan, String idDonViHienThoi, int soNgayThongBaoKiemDinh, Boolean trangThaiKiemDinh) {
+    public PageResponse<TaiSanDTO> getAllPaged(String idCongTy, int page, int size, String sortBy, String sortDir, String search, String idNhomTaiSan, String idLoaiTaiSan, String idDonViHienThoi, int soNgayThongBaoKiemDinh, String trangThaiKiemDinh) {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
 
@@ -65,12 +63,6 @@ public class TaiSanService {
                     if (idDonViHienThoi != null && !idDonViHienThoi.trim().isEmpty()
                             && !idDonViHienThoi.equals(item.getIdDonViHienThoi())) {
                         continue;
-                    }
-                    if (trangThaiKiemDinh != null) {
-                        boolean calculatedStatus = calculateTrangThaiKiemDinh(item, soNgayThongBaoKiemDinh);
-                        if (calculatedStatus != trangThaiKiemDinh) {
-                            continue;
-                        }
                     }
                     if (matchesTaiSanSearch(item, q)) {
                         filtered.add(item);
@@ -125,9 +117,10 @@ public class TaiSanService {
         int size, 
         String sortBy, 
         String sortDir, 
+        String idNhomTaiSan,
         String search,
         int soNgayThongBaoKiemDinh, 
-        Boolean trangThaiKiemDinh) {
+        String trangThaiKiemDinh) {
     
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
@@ -136,18 +129,18 @@ public class TaiSanService {
         int offset = page * size;
         
         // Lấy tổng số từ DAO (DAO đã filter theo idDonViBanDau, loaiKho=1, idDonViHienThoi rỗng, và trangThaiKiemDinh)
-        long total = taiSanDao.countByDonViBanDau(idCongTy, idDonViBanDau,search, soNgayThongBaoKiemDinh, trangThaiKiemDinh);
+        long total = taiSanDao.countByDonViBanDau(idCongTy, idDonViBanDau,search,idNhomTaiSan, soNgayThongBaoKiemDinh, trangThaiKiemDinh);
         
         // Lấy danh sách phân trang từ DAO
         List<TaiSanDTO> items = taiSanDao.findByDonViBanDauPaged(
-            idCongTy, idDonViBanDau, offset, size, sortBy, sortDir, search,
+            idCongTy, idDonViBanDau, offset, size, sortBy, sortDir,idNhomTaiSan, search,
             soNgayThongBaoKiemDinh, trangThaiKiemDinh
         );
 
         // Enrich children lists
         enrichTaiSanDTOList(items);
         Map<String, Long> kiemDinhCounts = taiSanDao.getCountByTrangThaiKiemDinh(
-            idCongTy, "CAP_PHAT", idDonViBanDau, null, null, null, soNgayThongBaoKiemDinh
+            idCongTy, "CAP_PHAT", idDonViBanDau,search,idNhomTaiSan, null, soNgayThongBaoKiemDinh
         );
         PageResponse<TaiSanDTO> response = new PageResponse<>(items, total, page, size);
         response.setLoaiCounts(kiemDinhCounts);
@@ -162,9 +155,10 @@ public class TaiSanService {
         int size, 
         String sortBy, 
         String sortDir, 
+        String idNhomTaiSan,
         String search,
         int soNgayThongBaoKiemDinh, 
-        Boolean trangThaiKiemDinh) {
+        String trangThaiKiemDinh) {
     
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
@@ -173,18 +167,18 @@ public class TaiSanService {
         int offset = page * size;
         
         // Lấy tổng số từ DAO
-        long total = taiSanDao.countByDonViThuHoi(idCongTy, idDonViThuHoi,search, soNgayThongBaoKiemDinh, trangThaiKiemDinh);
+        long total = taiSanDao.countByDonViThuHoi(idCongTy, idDonViThuHoi,search,idNhomTaiSan, soNgayThongBaoKiemDinh, trangThaiKiemDinh);
         
         // Lấy danh sách phân trang từ DAO
         List<TaiSanDTO> items = taiSanDao.findByDonViThuHoiPaged(
-            idCongTy, idDonViThuHoi, offset, size, sortBy, sortDir,search, 
+            idCongTy, idDonViThuHoi, offset, size, sortBy, sortDir,idNhomTaiSan,search, 
             soNgayThongBaoKiemDinh, trangThaiKiemDinh
         );
         
         // Enrich children lists
         enrichTaiSanDTOList(items);
         Map<String, Long> kiemDinhCounts = taiSanDao.getCountByTrangThaiKiemDinh(
-            idCongTy, "THU_HOI", idDonViThuHoi, null, null, null, soNgayThongBaoKiemDinh
+            idCongTy, "THU_HOI",idDonViThuHoi,search,idNhomTaiSan, null, soNgayThongBaoKiemDinh
         );
         PageResponse<TaiSanDTO> response = new PageResponse<>(items, total, page, size);
         response.setLoaiCounts(kiemDinhCounts);
@@ -192,7 +186,7 @@ public class TaiSanService {
         return response;
     }
 
-    public PageResponse<TaiSanDTO> getByDonViHienThoiPaged(String idCongTy, String idDonViHienThoi, int page, int size, String sortBy, String sortDir, String idNhomTaiSan, String search, int soNgayThongBaoKiemDinh, Boolean trangThaiKiemDinh) {
+    public PageResponse<TaiSanDTO> getByDonViHienThoiPaged(String idCongTy, String idDonViHienThoi, int page, int size, String sortBy, String sortDir, String idNhomTaiSan, String search, int soNgayThongBaoKiemDinh, String trangThaiKiemDinh) {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
 
@@ -210,12 +204,6 @@ public class TaiSanService {
             }
             if (q != null && !matchesTaiSanSearch(item, q)) {
                 continue;
-            }
-            if (trangThaiKiemDinh != null) {
-                boolean calculatedStatus = calculateTrangThaiKiemDinh(item, soNgayThongBaoKiemDinh);
-                if (calculatedStatus != trangThaiKiemDinh) {
-                    continue;
-                }
             }
             filtered.add(item);
         }
@@ -781,7 +769,7 @@ public class TaiSanService {
      */
     public Map<String, Object> getAllPagedWithBanGiaoStatus(String idCongTy, int page, int size,
                                                             String sortBy, String sortDir,
-                                                            String search, String idNhomTaiSan, String idDonViHienThoi, int soNgayThongBaoKiemDinh, Boolean trangThaiKiemDinh) {
+                                                            String search, String idNhomTaiSan, String idDonViHienThoi, int soNgayThongBaoKiemDinh, String trangThaiKiemDinh) {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
 
@@ -827,7 +815,7 @@ public class TaiSanService {
         String idDonViHienThoi, 
         boolean isBanGiao, 
         int soNgayThongBaoKiemDinh, 
-        Boolean trangThaiKiemDinh) {
+        String trangThaiKiemDinh) {
     
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
@@ -1222,26 +1210,5 @@ public class TaiSanService {
         if (a == null) return -1;
         if (b == null) return 1;
         return a.compareTo(b);
-    }
-
-    private boolean calculateTrangThaiKiemDinh(TaiSanDTO item, int soNgayThongBaoKiemDinh) {
-        if (item.getTgKiemDinh() == null || item.getTgKiemDinh().isEmpty() || item.getChuKyKiemDinh() == null) {
-            return true; // Default to true if no data
-        }
-        try {
-            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            java.time.LocalDate lastInspectionDate = java.time.LocalDate.parse("01/" + item.getTgKiemDinh(), formatter);
-            java.time.LocalDate nextInspectionDate = lastInspectionDate.plusMonths(item.getChuKyKiemDinh() - 1).with(java.time.temporal.TemporalAdjusters.lastDayOfMonth());
-            java.time.LocalDate warningDate = nextInspectionDate.minusDays(soNgayThongBaoKiemDinh);
-            java.time.LocalDate today = java.time.LocalDate.now();
-
-            // Status is false (0) if today is within the warning window
-            if (!today.isBefore(warningDate) && !today.isAfter(nextInspectionDate)) {
-                return false;
-            }
-        } catch (Exception e) {
-            // Ignore parse errors
-        }
-        return true;
     }
 }

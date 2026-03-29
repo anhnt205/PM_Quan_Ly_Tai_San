@@ -719,7 +719,7 @@ export const useAssetPageQuery = (
   idDonViHienThoi?: string,
   soNgayThongBaoKiemDinh?: number,
   idDonViBanDau?: string,
-  trangThaiKiemDinh?: boolean,
+  trangThaiKiemDinh?: string,
 ) => {
   return useQuery({
     queryKey: [

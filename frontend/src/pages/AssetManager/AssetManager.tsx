@@ -102,7 +102,7 @@ export default function AssetManager() {
     selectedDepartment,
     config?.ngayBaoDangKiem,
     undefined,
-    status === "0" ? false : status === "1" ? true : undefined,
+    status,
   );
   const statusOptions: FilterOption[] = [
     {
@@ -112,16 +112,22 @@ export default function AssetManager() {
       value: "",
     },
     {
-      label: "Chưa đăng kiểm",
-      count: assetsPage?.loaiCounts?.["Chua kiem dinh"] ?? 0,
-      color: "error",
-      value: "0",
+      label: "Đã đăng kiểm",
+      count: assetsPage?.loaiCounts?.["Da dang kiem"] ?? 0,
+      color: "success",
+      value: "DA_DANG_KIEM",
     },
     {
-      label: "Đã đăng kiểm",
-      count: assetsPage?.loaiCounts?.["Da kiem dinh"] ?? 0,
-      color: "success",
-      value: "1",
+      label: "Sắp đến hạn đăng kiểm",
+      count: assetsPage?.loaiCounts?.["Sap den han"] ?? 0,
+      color: "warning",
+      value: "SAP_DEN_HAN",
+    },
+    {
+      label: "Quá hạn đăng kiểm",
+      count: assetsPage?.loaiCounts?.["Qua han"] ?? 0,
+      color: "error",
+      value: "QUA_HAN",
     },
   ];
 

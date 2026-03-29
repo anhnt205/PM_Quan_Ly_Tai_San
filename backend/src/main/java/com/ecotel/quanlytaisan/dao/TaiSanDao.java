@@ -96,54 +96,60 @@ public class TaiSanDao {
         }
     }
 
-    public long countByCongTy(String idCongTy, int soNgayThongBaoKiemDinh, Boolean trangThaiKiemDinh) {
+    public long countByCongTy(String idCongTy, int soNgayThongBaoKiemDinh, String trangThaiKiemDinh) {
         String whereClause = "WHERE ts.IdCongTy = ?";
-        if (trangThaiKiemDinh != null) {
-            String inspectionStatusSql = String.format("""
-                (CASE 
-                    WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
-                        (CASE 
-                            WHEN CURRENT_DATE BETWEEN 
-                                DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
-                                AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
-                            THEN 0 ELSE 1
-                        END)
-                    ELSE 1
-                END)
-                """, soNgayThongBaoKiemDinh);
-            whereClause += " AND " + inspectionStatusSql + (trangThaiKiemDinh ? " = 1" : " = 0");
+         String inspectionStatusSql = getInspectionStatusSql(soNgayThongBaoKiemDinh);
+        // Filter theo trạng thái kiểm định
+       // Lọc theo trạng thái kiểm định (thay vì Boolean, dùng String)
+        if (trangThaiKiemDinh != null && !trangThaiKiemDinh.trim().isEmpty()) {
+            switch (trangThaiKiemDinh) {
+                case "DA_DANG_KIEM":
+                    whereClause +=" AND "+ inspectionStatusSql + " = 'DA_DANG_KIEM'";
+                    break;
+                case "SAP_DEN_HAN":
+                    whereClause +=" AND "+ inspectionStatusSql + " = 'SAP_DEN_HAN'";
+                    break;
+                case "QUA_HAN":
+                    whereClause +=" AND "+ inspectionStatusSql + " = 'QUA_HAN'";
+                    break;
+            }
         }
+
         String sql = "SELECT COUNT(*) FROM TaiSan ts " + whereClause;
-        return jdbcTemplate.queryForObject(sql, Long.class, idCongTy);
+        Long result = jdbcTemplate.queryForObject(sql, Long.class, idCongTy);
+        return result != null ? result : 0L;
     }
 
-    public long countByCongTyAndNhom(String idCongTy, String idNhomTaiSan, int soNgayThongBaoKiemDinh, Boolean trangThaiKiemDinh) {
+    public long countByCongTyAndNhom(String idCongTy, String idNhomTaiSan, int soNgayThongBaoKiemDinh, String trangThaiKiemDinh) {
         String whereClause = "WHERE ts.IdCongTy = ? AND ts.IdNhomTaiSan = ?";
-        if (trangThaiKiemDinh != null) {
-            String inspectionStatusSql = String.format("""
-                (CASE 
-                    WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
-                        (CASE 
-                            WHEN CURRENT_DATE BETWEEN 
-                                DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
-                                AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
-                            THEN 0 ELSE 1
-                        END)
-                    ELSE 1
-                END)
-                """, soNgayThongBaoKiemDinh);
-            whereClause += " AND " + inspectionStatusSql + (trangThaiKiemDinh ? " = 1" : " = 0");
+         String inspectionStatusSql = getInspectionStatusSql(soNgayThongBaoKiemDinh);
+        // Filter theo trạng thái kiểm định
+       // Lọc theo trạng thái kiểm định (thay vì Boolean, dùng String)
+        if (trangThaiKiemDinh != null && !trangThaiKiemDinh.trim().isEmpty()) {
+            switch (trangThaiKiemDinh) {
+                case "DA_DANG_KIEM":
+                    whereClause +=" AND "+ inspectionStatusSql + " = 'DA_DANG_KIEM'";
+                    break;
+                case "SAP_DEN_HAN":
+                    whereClause +=" AND "+ inspectionStatusSql + " = 'SAP_DEN_HAN'";
+                    break;
+                case "QUA_HAN":
+                    whereClause +=" AND "+ inspectionStatusSql + " = 'QUA_HAN'";
+                    break;
+            }
         }
         String sql = "SELECT COUNT(*) FROM TaiSan ts " + whereClause;
-        return jdbcTemplate.queryForObject(sql, Long.class, idCongTy, idNhomTaiSan);
+        Long result = jdbcTemplate.queryForObject(sql, Long.class, idCongTy, idNhomTaiSan);
+        return result != null ? result : 0L;
     }
 
    public long countByDonViBanDau(
         String idCongTy, 
         String idDonViBanDau,
         String search, 
+        String idNhomTaiSan,
         int soNgayThongBaoKiemDinh, 
-        Boolean trangThaiKiemDinh) {
+        String trangThaiKiemDinh) {
     
         StringBuilder whereClause = new StringBuilder();
         List<Object> params = new ArrayList<>();
@@ -166,27 +172,33 @@ public class TaiSanDao {
                 params.add(searchPattern);
             }
         }
+        if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
+            whereClause.append(" AND ts.IdNhomTaiSan = ?");
+            params.add(idNhomTaiSan);
+        }
         
         whereClause.append(" AND (ts.IdDonViHienThoi IS NULL OR ts.IdDonViHienThoi = '')");
         
-        if (trangThaiKiemDinh != null) {
-            String inspectionStatusSql = String.format("""
-                (CASE 
-                    WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
-                        (CASE 
-                            WHEN CURRENT_DATE BETWEEN 
-                                DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
-                                AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
-                            THEN 0 ELSE 1
-                        END)
-                    ELSE 1
-                END)
-                """, soNgayThongBaoKiemDinh);
-            whereClause.append(" AND ").append(inspectionStatusSql).append(trangThaiKiemDinh ? " = 1" : " = 0");
+         String inspectionStatusSql = getInspectionStatusSql(soNgayThongBaoKiemDinh);
+        // Filter theo trạng thái kiểm định
+       // Lọc theo trạng thái kiểm định (thay vì Boolean, dùng String)
+        if (trangThaiKiemDinh != null && !trangThaiKiemDinh.trim().isEmpty()) {
+            switch (trangThaiKiemDinh) {
+                case "DA_DANG_KIEM":
+                    whereClause.append(" AND ").append(inspectionStatusSql).append(" = 'DA_DANG_KIEM'");
+                    break;
+                case "SAP_DEN_HAN":
+                    whereClause.append(" AND ").append(inspectionStatusSql).append(" = 'SAP_DEN_HAN'");
+                    break;
+                case "QUA_HAN":
+                    whereClause.append(" AND ").append(inspectionStatusSql).append(" = 'QUA_HAN'");
+                    break;
+            }
         }
         
         String sql = "SELECT COUNT(*) FROM TaiSan ts " + whereClause.toString();
-        return jdbcTemplate.queryForObject(sql, Long.class, params.toArray());
+        Long result = jdbcTemplate.queryForObject(sql, Long.class, params.toArray());
+        return result != null ? result : 0L;
     }
     
 
@@ -194,8 +206,9 @@ public class TaiSanDao {
         String idCongTy, 
         String idDonViThuHoi, 
         String search,
+        String idNhomTaiSan,
         int soNgayThongBaoKiemDinh, 
-        Boolean trangThaiKiemDinh) {
+        String trangThaiKiemDinh) {
     
         StringBuilder whereClause = new StringBuilder();
         List<Object> params = new ArrayList<>();
@@ -218,53 +231,62 @@ public class TaiSanDao {
                 params.add(searchPattern);
             }
         }
+        if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
+            whereClause.append(" AND ts.IdNhomTaiSan = ?");
+            params.add(idNhomTaiSan);
+        }
+
+        String inspectionStatusSql = getInspectionStatusSql(soNgayThongBaoKiemDinh);
         // Filter theo trạng thái kiểm định
-        if (trangThaiKiemDinh != null) {
-            String inspectionStatusSql = String.format("""
-                (CASE 
-                    WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
-                        (CASE 
-                            WHEN CURRENT_DATE BETWEEN 
-                                DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
-                                AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
-                            THEN 0 ELSE 1
-                        END)
-                    ELSE 1
-                END)
-                """, soNgayThongBaoKiemDinh);
-            whereClause.append(" AND ").append(inspectionStatusSql).append(trangThaiKiemDinh ? " = 1" : " = 0");
+       // Lọc theo trạng thái kiểm định (thay vì Boolean, dùng String)
+        if (trangThaiKiemDinh != null && !trangThaiKiemDinh.trim().isEmpty()) {
+            switch (trangThaiKiemDinh) {
+                case "DA_DANG_KIEM":
+                    whereClause.append(" AND ").append(inspectionStatusSql).append(" = 'DA_DANG_KIEM'");
+                    break;
+                case "SAP_DEN_HAN":
+                    whereClause.append(" AND ").append(inspectionStatusSql).append(" = 'SAP_DEN_HAN'");
+                    break;
+                case "QUA_HAN":
+                    whereClause.append(" AND ").append(inspectionStatusSql).append(" = 'QUA_HAN'");
+                    break;
+            }
         }
         
         String sql = "SELECT COUNT(*) FROM TaiSan ts " + whereClause.toString();
-        return jdbcTemplate.queryForObject(sql, Long.class, params.toArray());
+        Long result = jdbcTemplate.queryForObject(sql, Long.class, params.toArray());
+        return result != null ? result : 0L;
     }
 
-    public long countByDonViHienThoi(String idCongTy, String idDonViHienThoi, String idNhomTaiSan, int soNgayThongBaoKiemDinh, Boolean trangThaiKiemDinh) {
-        String whereClause = "WHERE ts.IdCongTy = ? AND ts.IdDonViHienThoi = ?";
+    public long countByDonViHienThoi(
+        String idCongTy, 
+        String idDonViHienThoi, 
+        String idNhomTaiSan, 
+        int soNgayThongBaoKiemDinh, 
+        String trangThaiKiemDinh) {
+    
+        StringBuilder whereClause = new StringBuilder("WHERE ts.IdCongTy = ? AND ts.IdDonViHienThoi = ?");
+        List<Object> params = new ArrayList<>();
+        params.add(idCongTy);
+        params.add(idDonViHienThoi);
+        
+        // Lọc theo nhóm tài sản
         if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
-            whereClause += " AND ts.IdNhomTaiSan = ?";
+            whereClause.append(" AND ts.IdNhomTaiSan = ?");
+            params.add(idNhomTaiSan);
         }
-        if (trangThaiKiemDinh != null) {
-            String inspectionStatusSql = String.format("""
-                (CASE 
-                    WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
-                        (CASE 
-                            WHEN CURRENT_DATE BETWEEN 
-                                DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
-                                AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
-                            THEN 0 ELSE 1
-                        END)
-                    ELSE 1
-                END)
-                """, soNgayThongBaoKiemDinh);
-            whereClause += " AND " + inspectionStatusSql + (trangThaiKiemDinh ? " = 1" : " = 0");
+        
+        String inspectionStatusSql = getInspectionStatusSql(soNgayThongBaoKiemDinh);
+        
+        // Lọc theo trạng thái kiểm định
+        if (trangThaiKiemDinh != null && !trangThaiKiemDinh.trim().isEmpty()) {
+            whereClause.append(" AND ").append(inspectionStatusSql).append(" = ?");
+            params.add(trangThaiKiemDinh);
         }
-        String sql = "SELECT COUNT(*) FROM TaiSan ts " + whereClause;
-        if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
-            return jdbcTemplate.queryForObject(sql, Long.class, idCongTy, idDonViHienThoi, idNhomTaiSan);
-        } else {
-            return jdbcTemplate.queryForObject(sql, Long.class, idCongTy, idDonViHienThoi);
-        }
+        
+        String sql = "SELECT COUNT(*) FROM TaiSan ts " + whereClause.toString();
+        Long result = jdbcTemplate.queryForObject(sql, Long.class, params.toArray());
+        return result != null ? result : 0L;
     }
 
     /**
@@ -295,7 +317,7 @@ public class TaiSanDao {
         return counts;
     }
 
-    public List<TaiSanDTO> findAllPaged(String idCongTy, int offset, int limit, String sortBy, String sortDir, String idNhomTaiSan, int soNgayThongBaoKiemDinh, Boolean trangThaiKiemDinh) {
+    public List<TaiSanDTO> findAllPaged(String idCongTy, int offset, int limit, String sortBy, String sortDir, String idNhomTaiSan, int soNgayThongBaoKiemDinh, String trangThaiKiemDinh) {
         String normalizedSortBy = sortBy != null ? sortBy.trim().toLowerCase() : "ngaycapnhat";
         String orderColumn;
         switch (normalizedSortBy) {
@@ -321,25 +343,26 @@ public class TaiSanDao {
                 break;
         }
         String direction = (sortDir != null && sortDir.equalsIgnoreCase("asc")) ? "ASC" : "DESC";
-        String inspectionStatusSql = String.format("""
-            (CASE 
-                WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
-                    (CASE 
-                        WHEN CURRENT_DATE BETWEEN 
-                            DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
-                            AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
-                        THEN 0 ELSE 1
-                    END)
-                ELSE 1
-            END)
-            """, soNgayThongBaoKiemDinh);
 
         String whereClause = "WHERE ts.IdCongTy = ?";
         if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
             whereClause += " AND ts.IdNhomTaiSan = ?";
         }
-        if (trangThaiKiemDinh != null) {
-            whereClause += " AND " + inspectionStatusSql + (trangThaiKiemDinh ? " = 1" : " = 0");
+         String inspectionStatusSql = getInspectionStatusSql(soNgayThongBaoKiemDinh);
+        // Filter theo trạng thái kiểm định
+       // Lọc theo trạng thái kiểm định (thay vì Boolean, dùng String)
+        if (trangThaiKiemDinh != null && !trangThaiKiemDinh.trim().isEmpty()) {
+            switch (trangThaiKiemDinh) {
+                case "DA_DANG_KIEM":
+                    whereClause +=" AND "+ inspectionStatusSql + " = 'DA_DANG_KIEM'";
+                    break;
+                case "SAP_DEN_HAN":
+                    whereClause +=" AND "+ inspectionStatusSql + " = 'SAP_DEN_HAN'";
+                    break;
+                case "QUA_HAN":
+                    whereClause +=" AND "+ inspectionStatusSql + " = 'QUA_HAN'";
+                    break;
+            }
         }
         String sql = String.format("""
                 SELECT 
@@ -422,9 +445,10 @@ public class TaiSanDao {
         int limit, 
         String sortBy, 
         String sortDir, 
+        String idNhomTaiSan,
         String search,
         int soNgayThongBaoKiemDinh, 
-        Boolean trangThaiKiemDinh) {
+        String trangThaiKiemDinh) {
         
         String normalizedSortBy = sortBy != null ? sortBy.trim().toLowerCase() : "ngaycapnhat";
         String orderColumn;
@@ -452,18 +476,7 @@ public class TaiSanDao {
         }
         String direction = (sortDir != null && sortDir.equalsIgnoreCase("asc")) ? "ASC" : "DESC";
         
-        String inspectionStatusSql = String.format("""
-            (CASE 
-                WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
-                    (CASE 
-                        WHEN CURRENT_DATE BETWEEN 
-                            DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
-                            AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
-                        THEN 0 ELSE 1
-                    END)
-                ELSE 1
-            END)
-            """, soNgayThongBaoKiemDinh);
+        String inspectionStatusSql = getInspectionStatusSql(soNgayThongBaoKiemDinh);
 
         // Xây dựng whereClause linh hoạt
         StringBuilder whereClause = new StringBuilder();
@@ -489,13 +502,28 @@ public class TaiSanDao {
                 params.add(searchPattern);
             }
         }
+        if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
+            whereClause.append(" AND ts.IdNhomTaiSan = ?");
+            params.add(idNhomTaiSan);
+        }
         
         // Điều kiện: idDonViHienThoi rỗng hoặc null
         whereClause.append(" AND (ts.IdDonViHienThoi IS NULL OR ts.IdDonViHienThoi = '')");
         
         // Filter theo trạng thái kiểm định
-        if (trangThaiKiemDinh != null) {
-            whereClause.append(" AND ").append(inspectionStatusSql).append(trangThaiKiemDinh ? " = 1" : " = 0");
+        // Lọc theo trạng thái kiểm định (thay vì Boolean, dùng String)
+        if (trangThaiKiemDinh != null && !trangThaiKiemDinh.trim().isEmpty()) {
+            switch (trangThaiKiemDinh) {
+                case "DA_DANG_KIEM":
+                    whereClause.append(" AND ").append(inspectionStatusSql).append(" = 'DA_DANG_KIEM'");
+                    break;
+                case "SAP_DEN_HAN":
+                    whereClause.append(" AND ").append(inspectionStatusSql).append(" = 'SAP_DEN_HAN'");
+                    break;
+                case "QUA_HAN":
+                    whereClause.append(" AND ").append(inspectionStatusSql).append(" = 'QUA_HAN'");
+                    break;
+            }
         }
         
         String sql = String.format("""
@@ -580,9 +608,10 @@ public class TaiSanDao {
         int limit, 
         String sortBy, 
         String sortDir, 
+        String idNhomTaiSan,
         String search,
         int soNgayThongBaoKiemDinh, 
-        Boolean trangThaiKiemDinh) {
+        String trangThaiKiemDinh) {
     
         String normalizedSortBy = sortBy != null ? sortBy.trim().toLowerCase() : "ngaycapnhat";
         String orderColumn;
@@ -610,18 +639,7 @@ public class TaiSanDao {
         }
         String direction = (sortDir != null && sortDir.equalsIgnoreCase("asc")) ? "ASC" : "DESC";
         
-        String inspectionStatusSql = String.format("""
-            (CASE 
-                WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
-                    (CASE 
-                        WHEN CURRENT_DATE BETWEEN 
-                            DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
-                            AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
-                        THEN 0 ELSE 1
-                    END)
-                ELSE 1
-            END)
-            """, soNgayThongBaoKiemDinh);
+        String inspectionStatusSql = getInspectionStatusSql(soNgayThongBaoKiemDinh);
 
         // Xây dựng whereClause
         StringBuilder whereClause = new StringBuilder();
@@ -647,10 +665,25 @@ public class TaiSanDao {
                 params.add(searchPattern);
             }
         }
+        if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
+            whereClause.append(" AND ts.IdNhomTaiSan = ?");
+            params.add(idNhomTaiSan);
+        }
         
         // Filter theo trạng thái kiểm định
-        if (trangThaiKiemDinh != null) {
-            whereClause.append(" AND ").append(inspectionStatusSql).append(trangThaiKiemDinh ? " = 1" : " = 0");
+        // Lọc theo trạng thái kiểm định (thay vì Boolean, dùng String)
+        if (trangThaiKiemDinh != null && !trangThaiKiemDinh.trim().isEmpty()) {
+            switch (trangThaiKiemDinh) {
+                case "DA_DANG_KIEM":
+                    whereClause.append(" AND ").append(inspectionStatusSql).append(" = 'DA_DANG_KIEM'");
+                    break;
+                case "SAP_DEN_HAN":
+                    whereClause.append(" AND ").append(inspectionStatusSql).append(" = 'SAP_DEN_HAN'");
+                    break;
+                case "QUA_HAN":
+                    whereClause.append(" AND ").append(inspectionStatusSql).append(" = 'QUA_HAN'");
+                    break;
+            }
         }
         
         String sql = String.format("""
@@ -727,7 +760,7 @@ public class TaiSanDao {
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(TaiSanDTO.class), params.toArray());
     }
 
-    public List<TaiSanDTO> findByDonViHienThoiPaged(String idCongTy, String idDonViHienThoi, int offset, int limit, String sortBy, String sortDir, String idNhomTaiSan, int soNgayThongBaoKiemDinh, Boolean trangThaiKiemDinh) {
+    public List<TaiSanDTO> findByDonViHienThoiPaged(String idCongTy, String idDonViHienThoi, int offset, int limit, String sortBy, String sortDir, String idNhomTaiSan, int soNgayThongBaoKiemDinh, String trangThaiKiemDinh) {
         String normalizedSortBy = sortBy != null ? sortBy.trim().toLowerCase() : "ngaycapnhat";
         String orderColumn;
         switch (normalizedSortBy) {
@@ -753,18 +786,7 @@ public class TaiSanDao {
                 break;
         }
         String direction = "ASC".equalsIgnoreCase(sortDir) ? "ASC" : "DESC";
-        String inspectionStatusSql = String.format("""
-            (CASE 
-                WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
-                    (CASE 
-                        WHEN CURRENT_DATE BETWEEN 
-                            DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
-                            AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
-                        THEN 0 ELSE 1
-                    END)
-                ELSE 1
-            END)
-            """, soNgayThongBaoKiemDinh);
+        String inspectionStatusSql = getInspectionStatusSql(soNgayThongBaoKiemDinh);
 
         String whereClause;
         if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
@@ -772,8 +794,23 @@ public class TaiSanDao {
         } else {
             whereClause = "WHERE ts.IdCongTy = ? AND ts.IdDonViHienThoi = ?";
         }
-        if (trangThaiKiemDinh != null) {
-            whereClause += " AND " + inspectionStatusSql + (trangThaiKiemDinh ? " = 1" : " = 0");
+        // Filter theo trạng thái kiểm định
+       // Lọc theo trạng thái kiểm định (thay vì Boolean, dùng String)
+        if (trangThaiKiemDinh != null && !trangThaiKiemDinh.trim().isEmpty()) {
+            switch (trangThaiKiemDinh) {
+                case "DA_DANG_KIEM":
+                    whereClause +=" AND "+ inspectionStatusSql + " = 'DA_DANG_KIEM'";
+                    break;
+                case "SAP_DEN_HAN":
+                    whereClause +=" AND "+ inspectionStatusSql + " = 'SAP_DEN_HAN'";
+                    break;
+                case "QUA_HAN":
+                    whereClause +=" AND "+ inspectionStatusSql + " = 'QUA_HAN'";
+                    break;
+                case "CHUA_DANG_KIEM":
+                    whereClause +=" AND "+ inspectionStatusSql + " = 'CHUA_DANG_KIEM'";
+                    break;
+            }
         }
         String sql = String.format("""
                     SELECT
@@ -868,7 +905,8 @@ public class TaiSanDao {
             throw new IllegalArgumentException("Id không được null hoặc rỗng");
         }
         String checkSql = "SELECT COUNT(*) FROM TaiSan WHERE Id = ?";
-        int count = jdbcTemplate.queryForObject(checkSql, Integer.class, taiSan.getId());
+        Long result = jdbcTemplate.queryForObject(checkSql, Long.class, taiSan.getId());
+        int count = result != null ? result.intValue() : 0;
         if (count > 0) {
             return update(taiSan);
         } else {
@@ -977,7 +1015,8 @@ public class TaiSanDao {
 
     public int insertTaiSanCon(TaiSanCon tsc) {
         String checkSql = "SELECT COUNT(*) FROM TaiSanCon WHERE Id = ?";
-        int count = jdbcTemplate.queryForObject(checkSql, Integer.class, tsc.getId());
+        Long result = jdbcTemplate.queryForObject(checkSql, Long.class, tsc.getId());
+        int count = result != null ? result.intValue() : 0;
         if (count > 0) {
             return updateTaiSanCon(tsc);
         } else {
@@ -1126,7 +1165,7 @@ public class TaiSanDao {
         String idNhomTaiSan,
         String idDonViHienThoi,
         int soNgayThongBaoKiemDinh,
-        Boolean trangThaiKiemDinh) {
+        String trangThaiKiemDinh) {
     
         String normalizedSortBy = sortBy != null ? sortBy.trim().toLowerCase() : "ngaycapnhat";
         String orderColumn;
@@ -1154,18 +1193,7 @@ public class TaiSanDao {
         }
         String direction = (sortDir != null && sortDir.equalsIgnoreCase("asc")) ? "ASC" : "DESC";
         
-        String inspectionStatusSql = String.format("""
-            (CASE 
-                WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
-                    (CASE 
-                        WHEN CURRENT_DATE BETWEEN 
-                            DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
-                            AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
-                        THEN 0 ELSE 1
-                    END)
-                ELSE 1
-            END)
-            """, soNgayThongBaoKiemDinh);
+        String inspectionStatusSql = getInspectionStatusSql(soNgayThongBaoKiemDinh);
 
         // Xây dựng whereClause
         StringBuilder whereClause = new StringBuilder();
@@ -1208,9 +1236,22 @@ public class TaiSanDao {
             }
         }
         
-        // Lọc theo trạng thái kiểm định
-        if (trangThaiKiemDinh != null) {
-            whereClause.append(" AND ").append(inspectionStatusSql).append(trangThaiKiemDinh ? " = 1" : " = 0");
+        // Lọc theo trạng thái kiểm định (thay vì Boolean, dùng String)
+        if (trangThaiKiemDinh != null && !trangThaiKiemDinh.trim().isEmpty()) {
+            switch (trangThaiKiemDinh) {
+                case "DA_DANG_KIEM":
+                    whereClause.append(" AND ").append(inspectionStatusSql).append(" = 'DA_DANG_KIEM'");
+                    break;
+                case "SAP_DEN_HAN":
+                    whereClause.append(" AND ").append(inspectionStatusSql).append(" = 'SAP_DEN_HAN'");
+                    break;
+                case "QUA_HAN":
+                    whereClause.append(" AND ").append(inspectionStatusSql).append(" = 'QUA_HAN'");
+                    break;
+                case "CHUA_DANG_KIEM":
+                    whereClause.append(" AND ").append(inspectionStatusSql).append(" = 'CHUA_DANG_KIEM'");
+                    break;
+            }
         }
         
         String sql = String.format("""
@@ -1294,7 +1335,7 @@ public class TaiSanDao {
         String idNhomTaiSan,
         String idDonViHienThoi,
         int soNgayThongBaoKiemDinh,
-        Boolean trangThaiKiemDinh) {
+        String trangThaiKiemDinh) {
     
         StringBuilder whereClause = new StringBuilder();
         List<Object> params = new ArrayList<>();
@@ -1309,7 +1350,7 @@ public class TaiSanDao {
             params.add(idCongTy);
         } else {
             whereClause.append(" AND (ts.IdDonViHienThoi IS NULL OR ts.IdDonViHienThoi = ''");
-            whereClause.append(" OR ts.IdDonViHienThoi IN (SELECT Id FROM PhongBan WHERE IdCongTy = ? AND IsKho = 1 AND LoaiKho IN (1, 2)))");
+            whereClause.append(" OR ts.IdDonViHienThoi IN (SELECT Id FROM PhongBan WHERE IdCongTy = ? AND IsKho = 1 AND LoaiKho IN (1, 2))");
             params.add(idCongTy);
         }
         
@@ -1331,27 +1372,32 @@ public class TaiSanDao {
             }
         }
         
-        if (trangThaiKiemDinh != null) {
-            String inspectionStatusSql = String.format("""
-                (CASE 
-                    WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
-                        (CASE 
-                            WHEN CURRENT_DATE BETWEEN 
-                                DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
-                                AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
-                            THEN 0 ELSE 1
-                        END)
-                    ELSE 1
-                END)
-                """, soNgayThongBaoKiemDinh);
-            whereClause.append(" AND ").append(inspectionStatusSql).append(trangThaiKiemDinh ? " = 1" : " = 0");
+         String inspectionStatusSql = getInspectionStatusSql(soNgayThongBaoKiemDinh);
+        // Filter theo trạng thái kiểm định
+       // Lọc theo trạng thái kiểm định (thay vì Boolean, dùng String)
+        if (trangThaiKiemDinh != null && !trangThaiKiemDinh.trim().isEmpty()) {
+            switch (trangThaiKiemDinh) {
+                case "DA_DANG_KIEM":
+                    whereClause.append(" AND ").append(inspectionStatusSql).append(" = 'DA_DANG_KIEM'");
+                    break;
+                case "SAP_DEN_HAN":
+                    whereClause.append(" AND ").append(inspectionStatusSql).append(" = 'SAP_DEN_HAN'");
+                    break;
+                case "QUA_HAN":
+                    whereClause.append(" AND ").append(inspectionStatusSql).append(" = 'QUA_HAN'");
+                    break;
+                case "CHUA_DANG_KIEM":
+                    whereClause.append(" AND ").append(inspectionStatusSql).append(" = 'CHUA_DANG_KIEM'");
+                    break;
+            }
         }
         
         String sql = "SELECT COUNT(*) FROM TaiSan ts " + whereClause.toString();
-        return jdbcTemplate.queryForObject(sql, Long.class, params.toArray());
+        Long result = jdbcTemplate.queryForObject(sql, Long.class, params.toArray());
+        return result != null ? result : 0L;
     }
 
-    public List<TaiSanDTO> findAllPagedWithBanGiaoStatus(String idCongTy, int offset, int limit, String sortBy, String sortDir, String idNhomTaiSan, boolean daBanGiao, int soNgayThongBaoKiemDinh, Boolean trangThaiKiemDinh) {
+    public List<TaiSanDTO> findAllPagedWithBanGiaoStatus(String idCongTy, int offset, int limit, String sortBy, String sortDir, String idNhomTaiSan, boolean daBanGiao, int soNgayThongBaoKiemDinh, String trangThaiKiemDinh) {
         String normalizedSortBy = sortBy != null ? sortBy.trim().toLowerCase() : "ngaycapnhat";
         String orderColumn;
         switch (normalizedSortBy) {
@@ -1385,21 +1431,25 @@ public class TaiSanDao {
             whereClause += " AND (ts.IdDonViHienThoi IS NULL OR ts.IdDonViHienThoi = '') ";
         }
 
-        String inspectionStatusSql = String.format("""
-            (CASE 
-                WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
-                    (CASE 
-                        WHEN CURRENT_DATE BETWEEN 
-                            DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
-                            AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
-                        THEN 0 ELSE 1
-                    END)
-                ELSE 1
-            END)
-            """, soNgayThongBaoKiemDinh);
 
-        if (trangThaiKiemDinh != null) {
-            whereClause += " AND " + inspectionStatusSql + (trangThaiKiemDinh ? " = 1" : " = 0");
+         String inspectionStatusSql = getInspectionStatusSql(soNgayThongBaoKiemDinh);
+        // Filter theo trạng thái kiểm định
+       // Lọc theo trạng thái kiểm định (thay vì Boolean, dùng String)
+        if (trangThaiKiemDinh != null && !trangThaiKiemDinh.trim().isEmpty()) {
+            switch (trangThaiKiemDinh) {
+                case "DA_DANG_KIEM":
+                    whereClause +=" AND "+ inspectionStatusSql + " = 'DA_DANG_KIEM'";
+                    break;
+                case "SAP_DEN_HAN":
+                    whereClause +=" AND "+ inspectionStatusSql + " = 'SAP_DEN_HAN'";
+                    break;
+                case "QUA_HAN":
+                    whereClause +=" AND "+ inspectionStatusSql + " = 'QUA_HAN'";
+                    break;
+                case "CHUA_DANG_KIEM":
+                    whereClause +=" AND "+ inspectionStatusSql + " = 'CHUA_DANG_KIEM'";
+                    break;
+            }
         }
         String sql = """
                 SELECT 
@@ -1471,7 +1521,7 @@ public class TaiSanDao {
         return jdbcTemplate.query(sqlFull, new BeanPropertyRowMapper<>(TaiSanDTO.class), params.toArray());
     }
 
-    public long countByCongTyAndBanGiaoStatus(String idCongTy, String idNhomTaiSan, boolean daBanGiao, int soNgayThongBaoKiemDinh, Boolean trangThaiKiemDinh) {
+    public long countByCongTyAndBanGiaoStatus(String idCongTy, String idNhomTaiSan, boolean daBanGiao, int soNgayThongBaoKiemDinh, String trangThaiKiemDinh) {
         String whereClause = " WHERE ts.IdCongTy = ? ";
         List<Object> params = new ArrayList<>();
         params.add(idCongTy);
@@ -1485,24 +1535,29 @@ public class TaiSanDao {
             whereClause += " AND (ts.IdDonViHienThoi IS NULL OR ts.IdDonViHienThoi = '') ";
         }
 
-        if (trangThaiKiemDinh != null) {
-            String inspectionStatusSql = String.format("""
-                (CASE 
-                    WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
-                        (CASE 
-                            WHEN CURRENT_DATE BETWEEN 
-                                DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
-                                AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
-                            THEN 0 ELSE 1
-                        END)
-                    ELSE 1
-                END)
-                """, soNgayThongBaoKiemDinh);
-            whereClause += " AND " + inspectionStatusSql + (trangThaiKiemDinh ? " = 1" : " = 0");
+         String inspectionStatusSql = getInspectionStatusSql(soNgayThongBaoKiemDinh);
+        // Filter theo trạng thái kiểm định
+       // Lọc theo trạng thái kiểm định (thay vì Boolean, dùng String)
+        if (trangThaiKiemDinh != null && !trangThaiKiemDinh.trim().isEmpty()) {
+            switch (trangThaiKiemDinh) {
+                case "DA_DANG_KIEM":
+                    whereClause +=" AND "+ inspectionStatusSql + " = 'DA_DANG_KIEM'";
+                    break;
+                case "SAP_DEN_HAN":
+                    whereClause +=" AND "+ inspectionStatusSql + " = 'SAP_DEN_HAN'";
+                    break;
+                case "QUA_HAN":
+                    whereClause +=" AND "+ inspectionStatusSql + " = 'QUA_HAN'";
+                    break;
+                case "CHUA_DANG_KIEM":
+                    whereClause +=" AND "+ inspectionStatusSql + " = 'CHUA_DANG_KIEM'";
+                    break;
+            }
         }
 
         String sql = "SELECT COUNT(*) FROM TaiSan AS ts " + whereClause;
-        return jdbcTemplate.queryForObject(sql, Long.class, params.toArray());
+        Long result = jdbcTemplate.queryForObject(sql, Long.class, params.toArray());
+        return result != null ? result : 0L;
     }
 
     public Map<String, Long> getCountByNhomTaiSanWithBanGiaoStatus(String idCongTy, Boolean daBanGiao, String search, String idDonViHienThoi) {
@@ -1586,7 +1641,7 @@ public class TaiSanDao {
             }
             return counts;
         }
-        public Map<String, Long> getCountByTrangThaiKiemDinh(
+    public Map<String, Long> getCountByTrangThaiKiemDinh(
             String idCongTy,
             String type, // "CAP_PHAT", "THU_HOI", "DA_BAN_GIAO"
             String idDonVi, // idDonViBanDau hoặc idDonViHienThoi (có thể null)
@@ -1595,103 +1650,102 @@ public class TaiSanDao {
             String idDonViHienThoi, // chỉ dùng cho type = "DA_BAN_GIAO"
             int soNgayThongBaoKiemDinh) {
         
-        StringBuilder whereClause = new StringBuilder();
-        List<Object> params = new ArrayList<>();
-        
-        whereClause.append("WHERE ts.IdCongTy = ?");
-        params.add(idCongTy);
-        
-        // Logic theo từng loại
-        switch (type) {
-            case "CAP_PHAT":
-                if (idDonVi != null && !idDonVi.trim().isEmpty()) {
-                    whereClause.append(" AND ts.IdDonViBanDau = ?");
-                    params.add(idDonVi);
-                } else {
-                    whereClause.append(" AND ts.IdDonViBanDau IN (SELECT Id FROM PhongBan WHERE IdCongTy = ? AND LoaiKho = 1)");
+            StringBuilder whereClause = new StringBuilder();
+            List<Object> params = new ArrayList<>();
+            
+            whereClause.append("WHERE ts.IdCongTy = ?");
+            params.add(idCongTy);
+            
+            // Logic theo từng loại
+            switch (type) {
+                case "CAP_PHAT":
+                    if (idDonVi != null && !idDonVi.trim().isEmpty()) {
+                        whereClause.append(" AND ts.IdDonViBanDau = ?");
+                        params.add(idDonVi);
+                    } else {
+                        whereClause.append(" AND ts.IdDonViBanDau IN (SELECT Id FROM PhongBan WHERE IdCongTy = ? AND IsKho=1 AND LoaiKho = 1)");
+                        params.add(idCongTy);
+                    }
+                    whereClause.append(" AND (ts.IdDonViHienThoi IS NULL OR ts.IdDonViHienThoi = '')");
+                    break;
+                    
+                case "THU_HOI":
+                    if (idDonVi != null && !idDonVi.trim().isEmpty()) {
+                        whereClause.append(" AND ts.IdDonViHienThoi = ?");
+                        params.add(idDonVi);
+                    } else {
+                        whereClause.append(" AND ts.IdDonViHienThoi IN (SELECT Id FROM PhongBan WHERE IdCongTy = ? AND IsKho=1 AND LoaiKho = 2)");
+                        params.add(idCongTy);
+                    }
+                    break;
+                case "DA_BAN_GIAO":
+                    whereClause.append(" AND ts.IdDonViHienThoi IS NOT NULL AND ts.IdDonViHienThoi <> ''");
+                    whereClause.append(" AND ts.IdDonViHienThoi NOT IN (SELECT Id FROM PhongBan WHERE IdCongTy = ? AND IsKho = 1 AND LoaiKho IN (1, 2))");
                     params.add(idCongTy);
-                }
-                whereClause.append(" AND (ts.IdDonViHienThoi IS NULL OR ts.IdDonViHienThoi = '')");
-                break;
-                
-            case "THU_HOI":
-                if (idDonVi != null && !idDonVi.trim().isEmpty()) {
-                    whereClause.append(" AND ts.IdDonViHienThoi = ?");
-                    params.add(idDonVi);
-                } else {
-                    whereClause.append(" AND ts.IdDonViHienThoi IN (SELECT Id FROM PhongBan WHERE IdCongTy = ? AND LoaiKho = 2)");
-                    params.add(idCongTy);
-                }
-                break;
-                
-            case "DA_BAN_GIAO":
-                whereClause.append(" AND ts.IdDonViHienThoi IS NOT NULL AND ts.IdDonViHienThoi <> ''");
-                whereClause.append(" AND ts.IdDonViHienThoi NOT IN (SELECT Id FROM PhongBan WHERE IdCongTy = ? AND LoaiKho IN (1, 2))");
-                params.add(idCongTy);
-                
-                if (idDonViHienThoi != null && !idDonViHienThoi.trim().isEmpty()) {
-                    whereClause.append(" AND ts.IdDonViHienThoi = ?");
-                    params.add(idDonViHienThoi);
-                }
-                break;
-        }
-        
-        // Lọc theo nhóm tài sản
-        if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
-            whereClause.append(" AND ts.IdNhomTaiSan = ?");
-            params.add(idNhomTaiSan);
-        }
-        
-        // Lọc theo search
-        if (search != null && !search.trim().isEmpty()) {
-            whereClause.append(" AND (ts.Id LIKE ? OR ts.TenTaiSan LIKE ? OR ts.SoThe LIKE ? OR ts.KyHieu LIKE ? OR ts.SoKyHieu LIKE ? OR ts.CongSuat LIKE ? OR ts.NuocSanXuat LIKE ? OR ts.DonViTinh LIKE ? OR ts.MoTa LIKE ?)");
-            String searchPattern = "%" + search + "%";
-            for (int i = 0; i < 9; i++) {
-                params.add(searchPattern);
+                    
+                    if (idDonViHienThoi != null && !idDonViHienThoi.trim().isEmpty()) {
+                        whereClause.append(" AND ts.IdDonViHienThoi = ?");
+                        params.add(idDonViHienThoi);
+                    }
+                    break;
             }
+            
+            // Lọc theo nhóm tài sản
+            if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
+                whereClause.append(" AND ts.IdNhomTaiSan = ?");
+                params.add(idNhomTaiSan);
+            }
+            
+            // Lọc theo search
+            if (search != null && !search.trim().isEmpty()) {
+                whereClause.append(" AND (ts.Id LIKE ? OR ts.TenTaiSan LIKE ? OR ts.SoThe LIKE ? OR ts.KyHieu LIKE ? OR ts.SoKyHieu LIKE ? OR ts.CongSuat LIKE ? OR ts.NuocSanXuat LIKE ? OR ts.DonViTinh LIKE ? OR ts.MoTa LIKE ?)");
+                String searchPattern = "%" + search + "%";
+                for (int i = 0; i < 9; i++) {
+                    params.add(searchPattern);
+                }
+            }
+            
+            String inspectionStatusSql = getInspectionStatusSql(soNgayThongBaoKiemDinh);
+            
+            String sql = String.format("""
+                SELECT 
+                    %s AS trang_thai,
+                    COUNT(*) AS so_luong
+                FROM TaiSan ts
+                %s
+                GROUP BY trang_thai
+                """, inspectionStatusSql, whereClause.toString());
+            
+            List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, params.toArray());
+            
+            Map<String, Long> counts = new HashMap<>();
+            counts.put("Tat ca", 0L);
+            counts.put("Da dang kiem", 0L);      // Đã đăng kiểm
+            counts.put("Sap den han", 0L);        // Sắp đến hạn
+            counts.put("Qua han", 0L);            // Quá hạn
+            
+            for (Map<String, Object> row : results) {
+                String trangThai = (String) row.get("trang_thai");
+                Long soLuong = ((Number) row.get("so_luong")).longValue();
+                
+                if (trangThai != null) {
+                    switch (trangThai) {
+                        case "DA_DANG_KIEM":
+                            counts.put("Da dang kiem", soLuong);
+                            break;
+                        case "SAP_DEN_HAN":
+                            counts.put("Sap den han", soLuong);
+                            break;
+                        case "QUA_HAN":
+                            counts.put("Qua han", counts.get("Qua han") + soLuong);
+                            break;
+                    }
+                    counts.put("Tat ca", counts.get("Tat ca") + soLuong);
+                }
+            }
+            
+            return counts;
         }
-        
-        String inspectionStatusSql = String.format("""
-            (CASE 
-                WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
-                    (CASE 
-                        WHEN CURRENT_DATE BETWEEN 
-                            DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY)
-                            AND LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH))
-                        THEN 0 ELSE 1
-                    END)
-                ELSE 1
-            END)
-            """, soNgayThongBaoKiemDinh);
-        
-        String sql = String.format("""
-            SELECT 
-                CASE 
-                    WHEN %s = 0 THEN 'Chua kiem dinh'
-                    ELSE 'Da kiem dinh'
-                END AS trang_thai,
-                COUNT(*) AS so_luong
-            FROM TaiSan ts
-            %s
-            GROUP BY trang_thai
-            """, inspectionStatusSql, whereClause.toString());
-        
-        List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, params.toArray());
-        
-        Map<String, Long> counts = new HashMap<>();
-        counts.put("Tat ca", 0L);
-        counts.put("Chua kiem dinh", 0L);
-        counts.put("Da kiem dinh", 0L);
-        
-        for (Map<String, Object> row : results) {
-            String trangThai = (String) row.get("trang_thai");
-            Long soLuong = ((Number) row.get("so_luong")).longValue();
-            counts.put(trangThai, soLuong);
-            counts.put("Tat ca", counts.get("Tat ca") + soLuong);
-        }
-        
-        return counts;
-    }
     public PagedResult<KhauHaoTaiSan> getKhauHaoTaiSanPaged(String idCongTy, int ngay, int thang, int nam,
                                                             int offset, int limit, String sortBy, String sortDir, String search) {
         StringBuilder whereClause = new StringBuilder();
@@ -1780,6 +1834,21 @@ public class TaiSanDao {
         return new PagedResult<>(items, total);
     }
 
+    private String getInspectionStatusSql(int soNgayThongBaoKiemDinh) {
+        return String.format("""
+            (CASE 
+                WHEN (ts.tgKiemDinh IS NOT NULL AND ts.tgKiemDinh <> '' AND ts.chuKyKiemDinh IS NOT NULL) THEN 
+                    (CASE 
+                        -- Ngày hết hạn là ngày cuối cùng của tháng (tgKiemDinh + chuKy - 1)
+                        WHEN CURRENT_DATE > LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)) THEN 'QUA_HAN'
+                        -- Trong khoảng cảnh báo (sắp đến hạn): bắt đầu từ n ngày trước khi hết hạn cho đến hết ngày hạn chót
+                        WHEN CURRENT_DATE >= DATE_SUB(LAST_DAY(DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%%d/%%m/%%Y'), INTERVAL (ts.chuKyKiemDinh - 1) MONTH)), INTERVAL %d DAY) THEN 'SAP_DEN_HAN'
+                        ELSE 'DA_DANG_KIEM'
+                    END)
+                ELSE 'QUA_HAN'
+            END)
+            """, soNgayThongBaoKiemDinh);
+    }
     public static class PagedResult<T> {
         private List<T> items;
         private Long total;
