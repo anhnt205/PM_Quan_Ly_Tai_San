@@ -410,11 +410,11 @@ export default function AssetInfo({
             {/* Số thẻ tài sản */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Số thẻ tài sản:
                   </Typography>
-                  <Typography>{formik.values.soThe || "N/A"}</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>{formik.values.soThe || "N/A"}</Typography>
                 </Box>
               ) : (
                 <FieldInput
@@ -429,11 +429,11 @@ export default function AssetInfo({
             {/* Tên tài sản */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Tên tài sản:
                   </Typography>
-                  <Typography>{formik.values.tenTaiSan || "N/A"}</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>{formik.values.tenTaiSan || "N/A"}</Typography>
                 </Box>
               ) : (
                 <FieldInput
@@ -448,11 +448,11 @@ export default function AssetInfo({
             {/* Nguyên giá */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Nguyên giá:
                   </Typography>
-                  <Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
                     {formatDecimal(formik.values.nguyenGia)} đ
                   </Typography>
                 </Box>
@@ -469,11 +469,11 @@ export default function AssetInfo({
             {/* Giá trị khấu hao ban đầu */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Giá trị khấu hao ban đầu:
                   </Typography>
-                  <Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
                     {formatDecimal(formik.values.giaTriKhauHaoBanDau)} đ
                   </Typography>
                 </Box>
@@ -490,11 +490,11 @@ export default function AssetInfo({
             {/* Kỳ khấu hao ban đầu */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Kỳ khấu hao ban đầu:
                   </Typography>
-                  <Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
                     {formik.values.kyKhauHaoBanDau || "N/A"}
                   </Typography>
                 </Box>
@@ -511,11 +511,11 @@ export default function AssetInfo({
             {/* Giá trị thanh lý */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Giá trị thanh lý:
                   </Typography>
-                  <Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
                     {formatDecimal(formik.values.giaTriThanhLy)} đ
                   </Typography>
                 </Box>
@@ -532,11 +532,11 @@ export default function AssetInfo({
             {/* Mô hình tài sản */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Mô hình tài sản:
                   </Typography>
-                  <Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
                     {findById(allAssetModel, formik.values.idMoHinhTaiSan)
                       ?.tenMoHinh || "N/A"}
                   </Typography>
@@ -578,11 +578,11 @@ export default function AssetInfo({
             {/* Phương pháp khấu hao */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Phương pháp khấu hao:
                   </Typography>
-                  <Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
                     {formik.values.phuongPhapKhauHao === 1
                       ? "Đường thẳng"
                       : "Khác"}
@@ -606,11 +606,11 @@ export default function AssetInfo({
             {/* Số kỳ khấu hao */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Số kỳ khấu hao:
                   </Typography>
-                  <Typography>{formik.values.soKyKhauHao}</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>{formik.values.soKyKhauHao}</Typography>
                 </Box>
               ) : (
                 <FieldInput
@@ -625,11 +625,11 @@ export default function AssetInfo({
             {/* Tài khoản tài sản */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Tài khoản tài sản:
                   </Typography>
-                  <Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
                     {formik.values.taiKhoanTaiSan || "N/A"}
                   </Typography>
                 </Box>
@@ -646,11 +646,11 @@ export default function AssetInfo({
             {/* Tài khoản khấu hao */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Tài khoản khấu hao:
                   </Typography>
-                  <Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
                     {formik.values.taiKhoanKhauHao || "N/A"}
                   </Typography>
                 </Box>
@@ -667,11 +667,11 @@ export default function AssetInfo({
             {/* Tài khoản chi phí */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Tài khoản chi phí:
                   </Typography>
-                  <Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
                     {formik.values.taiKhoanChiPhi || "N/A"}
                   </Typography>
                 </Box>
@@ -688,11 +688,11 @@ export default function AssetInfo({
             {/* Nhóm tài sản */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Nhóm tài sản:
                   </Typography>
-                  <Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
                     {findById(assetGroups, formik.values.idNhomTaiSan)
                       ?.tenNhom || "N/A"}
                   </Typography>
@@ -712,11 +712,11 @@ export default function AssetInfo({
             {/* Loại tài sản */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Loại tài sản:
                   </Typography>
-                  <Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
                     {findById(
                       typeAssetsByAssetGroup,
                       formik.values.idLoaiTaiSanCon,
@@ -738,11 +738,11 @@ export default function AssetInfo({
             {/* Ngày vào sổ */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Ngày vào sổ:
                   </Typography>
-                  <Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
                     {dayjs(formik.values.ngayVaoSo).format(
                       "DD/MM/YYYY HH:mm:ss",
                     )}
@@ -761,11 +761,11 @@ export default function AssetInfo({
             {/* Ngày sử dụng */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Ngày sử dụng:
                   </Typography>
-                  <Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
                     {dayjs(formik.values.ngaySuDung).format(
                       "DD/MM/YYYY HH:mm:ss",
                     )}
@@ -789,11 +789,11 @@ export default function AssetInfo({
             {/* Dự án */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Dự án:
                   </Typography>
-                  <Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
                     {findById(allProjects, formik.values.idDuDan)?.tenDuAn ||
                       "N/A"}
                   </Typography>
@@ -813,11 +813,11 @@ export default function AssetInfo({
             {/* Vốn NS */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Vốn NS:
                   </Typography>
-                  <Typography>{formatDecimal(formik.values.nvNS)} đ</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>{formatDecimal(formik.values.nvNS)} đ</Typography>
                 </Box>
               ) : (
                 <TextFieldNumber
@@ -840,11 +840,11 @@ export default function AssetInfo({
             {/* Vốn vay */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Vốn vay:
                   </Typography>
-                  <Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
                     {formatDecimal(formik.values.vonVay)} đ
                   </Typography>
                 </Box>
@@ -869,11 +869,11 @@ export default function AssetInfo({
             {/* Vốn khác */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Vốn khác:
                   </Typography>
-                  <Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
                     {formatDecimal(formik.values.vonKhac)} đ
                   </Typography>
                 </Box>
@@ -898,11 +898,11 @@ export default function AssetInfo({
             {/* Mã hiệu */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Mã hiệu:
                   </Typography>
-                  <Typography>{formik.values.kyHieu || "N/A"}</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>{formik.values.kyHieu || "N/A"}</Typography>
                 </Box>
               ) : (
                 <FieldInput
@@ -917,11 +917,11 @@ export default function AssetInfo({
             {/* Số mã hiệu */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Số mã hiệu:
                   </Typography>
-                  <Typography>{formik.values.soKyHieu || "N/A"}</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>{formik.values.soKyHieu || "N/A"}</Typography>
                 </Box>
               ) : (
                 <FieldInput
@@ -936,11 +936,11 @@ export default function AssetInfo({
             {/* Công suất */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Công suất:
                   </Typography>
-                  <Typography>{formik.values.congSuat || "N/A"}</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>{formik.values.congSuat || "N/A"}</Typography>
                 </Box>
               ) : (
                 <FieldInput
@@ -955,11 +955,11 @@ export default function AssetInfo({
             {/* Nước sản xuất */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Nước sản xuất:
                   </Typography>
-                  <Typography>{formik.values.nuocSanXuat || "N/A"}</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>{formik.values.nuocSanXuat || "N/A"}</Typography>
                 </Box>
               ) : (
                 <Autocomplete
@@ -988,11 +988,11 @@ export default function AssetInfo({
             {/* Năm sản xuất */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Năm sản xuất:
                   </Typography>
-                  <Typography>{formik.values.namSanXuat}</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>{formik.values.namSanXuat}</Typography>
                 </Box>
               ) : (
                 <FieldInput
@@ -1008,11 +1008,11 @@ export default function AssetInfo({
             {/* Lý do tăng */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Lý do tăng:
                   </Typography>
-                  <Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
                     {findById(allReasonIncreases, formik.values.lyDoTang)
                       ?.ten || "N/A"}
                   </Typography>
@@ -1032,11 +1032,11 @@ export default function AssetInfo({
             {/* Hiện trạng */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Hiện trạng:
                   </Typography>
-                  <Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
                     {findById(allCurrentStatus, formik.values.hienTrang)
                       ?.tenHTKT || "N/A"}
                   </Typography>
@@ -1056,11 +1056,11 @@ export default function AssetInfo({
             {/* Số lượng */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Số lượng:
                   </Typography>
-                  <Typography>{formik.values.soLuong || "N/A"}</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>{formik.values.soLuong || "N/A"}</Typography>
                 </Box>
               ) : (
                 <TextFieldNumber
@@ -1075,11 +1075,11 @@ export default function AssetInfo({
             {/* Đơn vị tính */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Đơn vị tính:
                   </Typography>
-                  <Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
                     {findById(allUnits, formik.values.donViTinh)?.tenDonVi ||
                       "N/A"}
                   </Typography>
@@ -1099,11 +1099,11 @@ export default function AssetInfo({
             {/* Ghi chú */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Ghi chú:
                   </Typography>
-                  <Typography>{formik.values.ghiChu || "N/A"}</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>{formik.values.ghiChu || "N/A"}</Typography>
                 </Box>
               ) : (
                 <FieldInput
@@ -1118,11 +1118,11 @@ export default function AssetInfo({
             {/* Kho */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Kho:
                   </Typography>
-                  <Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
                     {findById(allDepartments, formik.values.idDonViBanDau)
                       ?.tenPhongBan || "N/A"}
                   </Typography>
@@ -1144,11 +1144,11 @@ export default function AssetInfo({
             {/* Đơn vị hiện thời */}
             <Box sx={bookStyles.fieldRow}>
               {readOnly ? (
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="flex-start">
                   <Typography sx={bookStyles.label} width="140px">
                     Đơn vị hiện thời:
                   </Typography>
-                  <Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
                     {findById(allDepartments, formik.values.idDonViHienThoi)
                       ?.tenPhongBan || "N/A"}
                   </Typography>
@@ -1396,15 +1396,15 @@ export default function AssetInfo({
                   key={i.id || index}
                   sx={{
                     display: "flex",
-                    alignItems: "center",
+                    alignItems: "flex-start",
                     gap: 1,
-                    py: 0.5,
+                    py: 1,
                     borderBottom: "1px dashed #e8f5e9",
                   }}
                 >
                   <Typography
                     variant="body2"
-                    sx={{ color: "#009e60", minWidth: "25px" }}
+                    sx={{ color: "#009e60", minWidth: "25px", mt: "2px" }}
                   >
                     {index + 1}.
                   </Typography>
@@ -1477,14 +1477,15 @@ export default function AssetInfo({
                   key={i.id || index}
                   sx={{
                     display: "flex",
-                    alignItems: "center",
+                    alignItems: "flex-start",
                     gap: 1,
-                    py: 0.5,
+                    py: 1,
                     borderBottom: "1px dashed #e8f5e9",
                   }}
                 >
                   <Typography
                     variant="body2"
+                    sx={{ minWidth: "25px", mt: "2px" }}
                   >
                     {index + 1}.
                   </Typography>

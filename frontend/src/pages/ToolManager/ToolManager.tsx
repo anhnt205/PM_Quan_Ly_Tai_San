@@ -59,7 +59,7 @@ export default function ToolManager() {
     exportExcelMutation,
     importExcelMutation,
     syncBakMutation,
-    deleteAllMutation
+    deleteAllMutation,
   } = useToolManagerMutation((messages) => {
     setImportErrors(messages);
     setOpenErrorModal(true);
@@ -89,15 +89,22 @@ export default function ToolManager() {
     setShowSidebar(false); // Ẩn sidebar nếu nó đang mở
   };
 
+  const handleRowEdit = (row: any) => {
+    setSelectedTool(row);
+    setReadOnly(true);
+    setShowForm(true);
+    setShowSidebar(false);
+  };
+
   const [columns, setColumns] = useState(() =>
-    createColumns(handleOpenHistory, handleCopy),
+    createColumns(handleOpenHistory, handleCopy, handleRowEdit),
   );
 
-  const handleRowClick = (params: GridRowParams) => {
-    setSelectedTool(params.row);
-    setReadOnly(true);
-    setShowForm(false);
-  };
+  // const handleRowClick = (params: GridRowParams) => {
+  //   setSelectedTool(params.row);
+  //   setReadOnly(true);
+  //   setShowForm(false);
+  // };
 
   const handleEdit = () => {
     setReadOnly(false);
@@ -154,7 +161,11 @@ export default function ToolManager() {
         loading={exportExcelMutation.isPending || importExcelMutation.isPending}
         onExport={() => exportExcelMutation.mutate()}
         onImport={(file) => importExcelMutation.mutate(file)}
-        onSyncDb={user?.taiKhoan?.tenDangNhap==="admin"?() => syncBakMutation.mutate():undefined}
+        onSyncDb={
+          user?.taiKhoan?.tenDangNhap === "admin"
+            ? () => syncBakMutation.mutate()
+            : undefined
+        }
         showExcel={true}
       />
       <Box p={2}>
@@ -209,8 +220,8 @@ export default function ToolManager() {
               onColumnsChange={setColumns}
               onRowClick={(row) => {
                 setSelectedTool(row);
-                setReadOnly(true);
-                setShowForm(true);
+                // setReadOnly(true);
+                // setShowForm(true);
                 setShowSidebar(true);
               }}
               selectedIds={selectedIds}

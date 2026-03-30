@@ -5,6 +5,8 @@ import {
   ContentCopy,
   ContentCopyTwoTone,
   MenuBookTwoTone,
+  Edit,
+  Close,
 } from "@mui/icons-material";
 import {
   Box,
@@ -20,6 +22,7 @@ import {
   Tabs,
   Tooltip,
   Typography,
+  Grid,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import PageAction from "../../components/common/PageAction";
@@ -47,6 +50,7 @@ import AssetHistoryModal from "./components/AssetHistoryModal";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ShowStatus } from "./config";
 import AssetEbookModal from "./components/AssetEbookModal";
+import AssetEbookContent from "./components/AssetEbookContent";
 import { Action } from "../../utils/const";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
@@ -57,6 +61,7 @@ export default function AssetManager() {
   const [tab, setTab] = React.useState(0);
   const [showForm, setShowForm] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<any>(null);
+  const [showSidebar, setShowSidebar] = useState(false);
   const [readOnly, setReadOnly] = useState(true);
   const [isCopy, setIsCopy] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -159,8 +164,8 @@ export default function AssetManager() {
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedAsset(params.row);
-    setReadOnly(true);
-    setShowForm(true);
+    setShowSidebar(true);
+    setShowForm(false);
   };
 
   const handleEdit = () => {
@@ -354,6 +359,19 @@ export default function AssetManager() {
       headerAlign: "center",
       renderCell: (params) => (
         <>
+          <Tooltip title="Chỉnh sửa">
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedAsset(params.row);
+                setReadOnly(false);
+                setShowForm(true);
+                setShowSidebar(false);
+              }}
+            >
+              <Edit color="success" />
+            </IconButton>
+          </Tooltip>
           <Tooltip title="Sao chép">
             <IconButton
               onClick={(e) => {
@@ -383,7 +401,7 @@ export default function AssetManager() {
             </IconButton>
           </Tooltip>
 
-          <Tooltip title="Xem lý lịch">
+          {/* <Tooltip title="Xem lý lịch">
             <IconButton
               onClick={(e) => {
                 e.stopPropagation();
@@ -393,7 +411,7 @@ export default function AssetManager() {
             >
               <MenuBookTwoTone color="success" />
             </IconButton>
-          </Tooltip>
+          </Tooltip> */}
           {/* <Tooltip title="Xem">
             <IconButton
               onClick={(e) => {
@@ -525,42 +543,90 @@ export default function AssetManager() {
               />
             </Tabs>
           </Box>
-          <TableCustom
-            tableId="assetManager"
-            title={
-              tab === 0
-                ? "Quản lý tài sản - Kho thu hồi"
-                : tab === 1
-                  ? "Quản lý tài sản - Tài sản đã bàn giao"
-                  : tab === 2
-                    ? "Quản lý tài sản - Kho công ty"
-                    : ""
-            }
-            columns={columns}
-            rows={assetsPage.items}
-            total={assetsPage.totalItems}
-            paginationModel={paginationModel}
-            onPaginationModelChange={setPaginationModel}
-            loading={tab < 3 ? isLoading : false}
-            onRowClick={handleRowClick}
-            selectedIds={selectedIds}
-            onSelectionChange={setSelectedIds}
-            onDelete={deleteManyMutation.mutate}
-            searchValue={searchValue}
-            setSearchValue={setSearchValue}
-            isDepreciation={true}
-            departments={allDepartments}
-            isFilterDepartment={tab === 1}
-            selectedDepartment={selectedDepartment}
-            setSelectedDepartment={setSelectedDepartment}
-            onDeleteAll={deleteAllMutation.mutate}
-            showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
-            statusOptions={statusOptions}
-            onStatusChange={(value) => {
-              setStatus(value);
+          <Grid
+            container
+            sx={{
+              border: "1px solid #e0e0e0",
+              borderRadius: "8px",
+              overflow: "hidden",
+              alignItems: "stretch",
             }}
-            statusValue={status}
-          />
+          >
+            <Grid
+              size={{ xs: showSidebar ? 6 : 12 }}
+              sx={{
+                transition: "all 0.3s ease",
+                borderRight: showSidebar ? "1px solid #e0e0e0" : "none",
+              }}
+            >
+              <TableCustom
+                tableId="assetManager"
+                title={
+                  tab === 0
+                    ? "Quản lý tài sản - Kho thu hồi"
+                    : tab === 1
+                      ? "Quản lý tài sản - Tài sản đã bàn giao"
+                      : tab === 2
+                        ? "Quản lý tài sản - Kho công ty"
+                        : ""
+                }
+                columns={columns}
+                rows={assetsPage.items}
+                total={assetsPage.totalItems}
+                paginationModel={paginationModel}
+                onPaginationModelChange={setPaginationModel}
+                loading={tab < 3 ? isLoading : false}
+                onRowClick={handleRowClick}
+                selectedIds={selectedIds}
+                onSelectionChange={setSelectedIds}
+                onDelete={deleteManyMutation.mutate}
+                searchValue={searchValue}
+                setSearchValue={setSearchValue}
+                isDepreciation={true}
+                departments={allDepartments}
+                isFilterDepartment={tab === 1}
+                selectedDepartment={selectedDepartment}
+                setSelectedDepartment={setSelectedDepartment}
+                onDeleteAll={deleteAllMutation.mutate}
+                showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
+                statusOptions={statusOptions}
+                onStatusChange={(value) => {
+                  setStatus(value);
+                }}
+                statusValue={status}
+              />
+            </Grid>
+            {showSidebar && (
+              <Grid
+                size={{ xs: 6 }}
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  bgcolor: "white",
+                }}
+              >
+                <Box sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                  <AssetEbookContent
+                    selectedAsset={selectedAsset}
+                    readOnly={readOnly}
+                    onEdit={handleEdit}
+                    onCancel={() => {
+                      // setShowSidebar(false);
+                      setShowForm(false);
+                      setReadOnly(true);
+                    }}
+                    onSave={handleSave}
+                    allAssetModel={allModelAsset}
+                    allCurrentStatus={allCurrentStatus}
+                    assetGroups={assetGroups}
+                    allDepartments={allDepartments}
+                    allUnits={allUnits}
+                    allReasonIncreases={allReasonIncreases}
+                  />
+                </Box>
+              </Grid>
+            )}
+          </Grid>
         </Box>
       </Box>
       <AssetHistoryModal
@@ -572,7 +638,7 @@ export default function AssetManager() {
         }}
         selectedAsset={selectedAsset}
       />
-      <AssetEbookModal
+      {/* <AssetEbookModal
         open={modalOpenBook}
         onClose={() => {
           setModalOpenBook(false);
@@ -595,7 +661,7 @@ export default function AssetManager() {
         allDepartments={allDepartments}
         allUnits={allUnits}
         allReasonIncreases={allReasonIncreases}
-      />
+      /> */}
     </Box>
   );
 }

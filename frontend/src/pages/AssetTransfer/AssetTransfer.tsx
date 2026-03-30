@@ -680,7 +680,6 @@ export default function AssetTransfer() {
                       <Tab label="Quy trình ký" />
                       <Tab
                         label="Biên bản"
-                        disabled={assetHandover.length === 0}
                       />
                     </Tabs>
                     <IconButton
@@ -715,6 +714,7 @@ export default function AssetTransfer() {
                           fullscreen={false}
                           staffs={allStaffs}
                           isEdit={false}
+                          title={`${selectedRow?.tenPhieu || ""} (${selectedRow?.id || ""})`}
                         />
                       </Box>
                     ) : tabValue === 1 ? (

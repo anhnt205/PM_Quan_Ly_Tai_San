@@ -835,6 +835,7 @@ export default function ToolHandover() {
                             handleSignatureList={handleSignatureList}
                             isEdit={false}
                             bangKe={selectedRow.taiLieuBangKe}
+                            title={`${selectedRow?.banGiaoCCDCVatTu || ""} (${selectedRow?.id || ""})`}
                           />
                         ) : (
                           <SignDocumentTransferForm
@@ -851,6 +852,7 @@ export default function ToolHandover() {
                             staffs={staffs}
                             handleSignatureList={handleSignatureList}
                             isEdit={false}
+                            title={`${selectedRow?.soPhieu || ""} (${selectedRow?.id || ""})`}
                           />
                         )}
                       </Box>

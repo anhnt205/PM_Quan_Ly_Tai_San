@@ -1,5 +1,5 @@
 import { Box, Chip, IconButton, Tooltip, Typography } from "@mui/material";
-import { ContentCopy, History as HistoryIcon } from "@mui/icons-material";
+import { ContentCopy, Edit, History as HistoryIcon } from "@mui/icons-material";
 import { ReactNode } from "react";
 
 export interface ColumnConfig {
@@ -10,11 +10,13 @@ export interface ColumnConfig {
   visible: boolean;
   isShow: boolean;
   render?: (value: any, row?: any) => ReactNode;
+  handleRowEdit?: (row: any) => void;
 }
 
 export const createColumns = (
   handleOpenHistory: (row: any) => void,
   handleCopy: (row: any) => void,
+  handleRowEdit: (row: any) => void,
 ): ColumnConfig[] => [
   {
     key: "id",
@@ -146,6 +148,16 @@ export const createColumns = (
     width: 100,
     render: (_: any, row: any) => (
       <Box display="flex" gap={1} justifyContent="center" alignItems="center">
+        <Tooltip title="Chỉnh sửa">
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRowEdit(row);
+            }}
+          >
+            <Edit color="success" />
+          </IconButton>
+        </Tooltip>
         <IconButton
           onClick={(e) => {
             e.stopPropagation();

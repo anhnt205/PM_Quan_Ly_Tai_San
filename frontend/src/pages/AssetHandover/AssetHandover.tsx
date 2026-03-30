@@ -864,6 +864,7 @@ export default function AssetHandover() {
                             handleSignatureList={handleSignatureList}
                             isEdit={false}
                             bangKe={selectedRow.taiLieuBangKe}
+                            title={`${selectedRow?.banGiaoTaiSan || ""} (${selectedRow?.id || ""})`}
                           />
                         ) : (
                           <SignDocumentTransferForm
@@ -880,6 +881,7 @@ export default function AssetHandover() {
                             fullscreen={false}
                             staffs={staffs}
                             isEdit={false}
+                            title={`${selectedRow?.soPhieu || ""} (${selectedRow?.id || ""})`}
                           />
                         )}
                       </Box>

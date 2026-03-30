@@ -302,7 +302,7 @@ export default function BienBanTabContent({
           </Box>
         ) : (
           <Typography sx={{ mt: 5, color: "text.secondary" }}>
-            Không có dữ liệu biên bản
+            không có biên bản bàn giao
           </Typography>
         )}
       </Box>

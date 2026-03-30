@@ -16,17 +16,19 @@ const CoverWrapper = styled(Box)({
 });
 
 const A4Paper = styled(Box)({
-  width: '210mm',
+  width: '100%',
+  maxWidth: '210mm',
   minHeight: '297mm',
   display: 'flex',
   flexDirection: 'column',
-  backgroundColor: '#d46f9e', // Màu hồng đậm giống bìa hồ sơ thực tế
-  padding: '25px', // Khoảng cách từ mép giấy đến viền ngoài
+  backgroundColor: '#d46f9e', // Khôi phục màu gốc theo ý user
+  padding: '15px', 
   boxSizing: 'border-box',
   fontFamily: '"Times New Roman", Times, serif',
   color: '#0e0e0e',
-  boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+  boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
   position: 'relative',
+  margin: '0 auto',
 });
 
 const OuterBorder = styled(Box)({
@@ -39,10 +41,10 @@ const OuterBorder = styled(Box)({
 });
 
 const InnerBorder = styled(Box)({
-  border: '1px solid #1a1a1a', // Viền trong mảnh
+  border: '1px solid #1a1a1a', 
   flex: 1,
   boxSizing: 'border-box',
-  padding: '60px 40px',
+  padding: '40px 20px',
   display: 'flex',
   flexDirection: 'column',
 });
@@ -57,12 +59,11 @@ const HeaderText = styled(Typography)({
 
 const TitleText = styled(Typography)({
   fontFamily: '"Times New Roman", Times, serif',
-  fontSize: '44px',
+  fontSize: '32px',
   fontWeight: 'bold',
   textAlign: 'center',
-  marginTop: '90px',
-  letterSpacing: '3px',
-  marginRight: '-3px', // Chỉnh lại center bù phần bị lệch do spacing
+  marginTop: '80px',
+  letterSpacing: '2px',
 });
 
 const SubTitleText = styled(Typography)({
@@ -76,12 +77,12 @@ const SubTitleText = styled(Typography)({
 });
 
 const ContentWrapper = styled(Box)({
-  marginTop: '80px',
+  marginTop: '70px',
   marginBottom: 'auto',
   display: 'flex',
   flexDirection: 'column',
   width: '100%',
-  padding: '0 40px',
+  padding: '0 20px',
   boxSizing: 'border-box',
 });
 
@@ -94,9 +95,9 @@ const FieldRow = styled(Box)({
 
 const FieldLabel = styled(Typography)({
   fontFamily: '"Times New Roman", Times, serif',
-  fontSize: '19px',
+  fontSize: '17px',
   fontWeight: 'bold',
-  marginRight: '12px',
+  marginRight: '10px',
   textTransform: 'uppercase',
   whiteSpace: 'nowrap',
 });
@@ -120,7 +121,7 @@ const FieldValueWrapper = styled(Box)({
 const ValueText = styled(Typography)({
   fontFamily: '"Times New Roman", Times, serif',
   fontStyle: 'italic',
-  fontSize: '18px', // Chữ nhỏ lại theo ý user
+  fontSize: '17px', 
   lineHeight: 1.5,
   wordBreak: 'break-word',
   width: '100%',
@@ -130,11 +131,11 @@ const ValueText = styled(Typography)({
 
 const FooterText = styled(Typography)({
   fontFamily: '"Times New Roman", Times, serif',
-  fontSize: '18px',
+  fontSize: '16px',
   fontStyle: 'italic',
   textAlign: 'center',
   marginTop: '60px',
-  marginBottom: '20px',
+  marginBottom: '15px',
 });
 
 export default function AssetEbookCover({

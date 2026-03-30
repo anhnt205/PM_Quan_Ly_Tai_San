@@ -45,6 +45,7 @@ interface SignDocumentFormProps {
   staffs?: any[];
   handleSignatureList?: (idTaiLieu: string) => Promise<any>;
   isEdit?: boolean;
+  title?: string;
 }
 
 export default function SignDocumentForm({
@@ -59,11 +60,13 @@ export default function SignDocumentForm({
   staffs = [],
   handleSignatureList,
   isEdit = false,
+  title,
 }: SignDocumentFormProps) {
   const [signatureType, setSignatureType] = useState(0);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const { user } = useSelector((state: RootState) => state.user);
   const employee = findById(staffs, user?.taiKhoan?.tenDangNhap);
+  const hasAutoSigned = useRef(false);
   // State quản lý danh sách chữ ký
   const [signatures, setSignatures] = useState<ToolSignature[]>([]);
   const [bangKeBytes, setBangKeBytes] = useState<Uint8Array | null>(null);
@@ -265,6 +268,26 @@ export default function SignDocumentForm({
 
     setSignatures([...signatures, newSignature]);
   };
+
+  useEffect(() => {
+    if (employee && !hasAutoSigned.current && signatures.length === 0) {
+      if (employee.kySo) setSignatureType(3);
+      else if (employee.kyThuong) setSignatureType(2);
+      else if (employee.kyNhay) setSignatureType(1);
+    }
+  }, [employee, signatures.length]);
+
+  useEffect(() => {
+    if (
+      signatureType > 0 &&
+      employee &&
+      !hasAutoSigned.current &&
+      signatures.length === 0
+    ) {
+      hasAutoSigned.current = true;
+      handleSign();
+    }
+  }, [signatureType, employee, signatures.length]);
 
   useEffect(() => {
     const renderDigitalSignatures = async () => {
@@ -653,6 +676,7 @@ export default function SignDocumentForm({
         pagesCount={pages.length}
         handleExportPDF={handleExportPDF}
         onCancel={onCancel}
+        title={title}
       />
 
       {/* --- 2. Body --- */}

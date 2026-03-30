@@ -647,7 +647,6 @@ export default function ToolTransfer() {
                       <Tab label="Quy trình ký" />
                       <Tab
                         label="Biên bản"
-                        disabled={toolHandover.length === 0}
                       />
                     </Tabs>
                     <IconButton
@@ -680,6 +679,7 @@ export default function ToolTransfer() {
                           fullscreen={false}
                           staffs={allStaffs}
                           isEdit={false}
+                          title={`${selectedRow?.tenPhieu || ""} (${selectedRow?.id || ""})`}
                         />
                       </Box>
                     ) : tabValue === 1 ? (

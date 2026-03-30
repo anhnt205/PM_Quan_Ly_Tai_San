@@ -193,7 +193,7 @@ const SparePartsPage: React.FC<SparePartsPageProps> = ({
               <CancelBtn onClick={handleCancel} />
             </>
           )}
-          {!isEditMode && !readOnly && <EditButton onClick={handleEdit} />}
+          {!isEditMode && readOnly && <EditButton onClick={handleEdit} />}
         </Box>
       </Box>
 

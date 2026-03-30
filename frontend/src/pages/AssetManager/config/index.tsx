@@ -63,10 +63,9 @@ export const showDownloadFile = (fileName: string, onDownload: () => void) => {
         sx={{
           fontSize: "13px",
           fontWeight: 500,
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          maxWidth: "250px", // Giới hạn độ dài để không vỡ layout
+          whiteSpace: "normal",
+          wordBreak: "break-all",
+          flex: 1,
         }}
       >
         {fileName || "Tài liệu đính kèm"}

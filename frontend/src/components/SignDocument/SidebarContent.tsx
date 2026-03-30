@@ -283,7 +283,7 @@ const SidebarContent = ({
             },
           }}
         >
-          Xác nhận & Lưu
+          Ký xác nhận
         </Button>
 
         <Button

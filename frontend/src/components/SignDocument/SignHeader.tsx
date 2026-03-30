@@ -5,10 +5,12 @@ export const SignHeader = ({
   pagesCount,
   handleExportPDF,
   onCancel,
+  title,
 }: {
   pagesCount: number;
   handleExportPDF: () => void;
   onCancel: () => void;
+  title?: string;
 }) => (
   <Box
     sx={{
@@ -49,7 +51,7 @@ export const SignHeader = ({
             mb: 0.25,
           }}
         >
-          Soạn & Ký Tài Liệu
+          {title || "Soạn & Ký Tài Liệu"}
         </Typography>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Chip
