@@ -39,13 +39,12 @@ public class DatabaseMigrationService {
         }
     }
 
-    public void processMigration() {
+    public void processMigration(String dbConfigId) {
         try {
-            List<DbConfig> configs = dbConfigDao.findAll();
-            if (configs.isEmpty()) {
+            DbConfig config = dbConfigDao.findById(dbConfigId);
+            if (config == null) {
                 throw new RuntimeException("Chưa cấu hình Cơ sở dữ liệu để đồng bộ!");
             }
-            DbConfig config = configs.get(0);
             String dbms = config.getDbms() != null ? config.getDbms().toUpperCase() : "MSSQL";
             if (!"MSSQL".equals(dbms)) {
                 throw new RuntimeException("Tính năng đồng bộ hiện chỉ hỗ trợ dữ liệu MS SQL Server.");

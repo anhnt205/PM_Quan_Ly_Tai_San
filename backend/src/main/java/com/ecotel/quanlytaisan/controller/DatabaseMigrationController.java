@@ -1,7 +1,6 @@
 package com.ecotel.quanlytaisan.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,17 +11,13 @@ import com.ecotel.quanlytaisan.service.DatabaseMigrationService;
 @CrossOrigin("*") // Cho phép Frontend gọi API
 public class DatabaseMigrationController {
 
-    // Lấy đường dẫn thư mục C:/SQLBackups từ file cấu hình
-    @Value("${backup.upload.dir:C:/SQLBackups}")
-    private String uploadDir;
-
     @Autowired
     private DatabaseMigrationService migrationService;
 
-    @PostMapping("/sync")
-    public ResponseEntity<?> syncDatabase() {
+    @PostMapping("/sync/{dbConfigId}")
+    public ResponseEntity<?> syncDatabase(@PathVariable String dbConfigId) {
         try {
-            migrationService.processMigration();
+            migrationService.processMigration(dbConfigId);
             return ResponseEntity.ok("Đồng bộ dữ liệu CSDL thành công! Hệ thống đã cập nhật danh mục vật tư.");
         } catch (Exception e) {
             e.printStackTrace();

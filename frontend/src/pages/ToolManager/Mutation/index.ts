@@ -29,8 +29,8 @@ export const useToolManagerMutation = (
   const now = dayjs(new Date()).format("YYYY-MM-DDTHH:mm:ss");
 
   const syncBakMutation = useMutation({
-    mutationFn: async () => {
-      const res = await api.post("/migration/sync");
+    mutationFn: async (dbConfigId: string) => {
+      const res = await api.post(`/migration/sync/${dbConfigId}`);
       return res.data;
     },
     onSuccess: (data) => {
@@ -168,22 +168,22 @@ export const useToolManagerMutation = (
     },
   });
   const deleteAllMutation = useMutation({
-     mutationFn: async () => {
-       const res = await api.delete(`/ccdcvattu/delete-all`);
-       return res.data.message;
-     },
-     onSuccess: (data) => {
-       queryClient.invalidateQueries({ queryKey: ["toolsPage"] });
-       showSuccessAlert(data || "Xóa ccdc vật tư thành công");
-     },
-     onError: (error: any) => {
-       showErrorAlert(
-         error.response?.data?.message ||
-           error.message ||
-           "Xóa ccdc vật tư thất bại",
-       );
-     },
-   });
+    mutationFn: async () => {
+      const res = await api.delete(`/ccdcvattu/delete-all`);
+      return res.data.message;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["toolsPage"] });
+      showSuccessAlert(data || "Xóa ccdc vật tư thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa ccdc vật tư thất bại",
+      );
+    },
+  });
 
   // --- QUERIES ---
 
@@ -650,7 +650,7 @@ export const useToolManagerMutation = (
     createManyHistoryToolMutation,
     updateAssetOwnershipMutation,
     syncBakMutation,
-    deleteAllMutation
+    deleteAllMutation,
   };
 };
 

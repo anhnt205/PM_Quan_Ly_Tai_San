@@ -334,10 +334,7 @@ export default function Menuheader() {
   };
 
   const handleSaveMssqlConfig = (config: any) => {
-    console.log("MSSQL Config:", config);
-    // TODO: Connect to backend API
     setOpenSnackbar(true);
-    handleCloseMssqlDialog();
   };
 
   const { data: chucVu = [] } = useAllPositionsQuery();
@@ -517,7 +514,20 @@ export default function Menuheader() {
     maintenanceRepairResult.items,
   );
 
-  const menuItems = [
+  const filterMenuItemsRecursive = (items: any[]): any[] => {
+    return items
+      .filter((item) => hasPermission(item.code))
+      .map((item) => {
+        if (item.subMenu) {
+          const filteredSubMenu = filterMenuItemsRecursive(item.subMenu);
+          return { ...item, subMenu: filteredSubMenu };
+        }
+        return item;
+      })
+      .filter((item) => (item.subMenu ? item.subMenu.length > 0 : true));
+  };
+
+  const menuItemsRaw = [
     {
       text: "Tổng quan",
       icon: <Dashboard fontSize="small" />,
@@ -528,26 +538,42 @@ export default function Menuheader() {
       icon: <Category fontSize="small" />,
       path: "#",
       subMenu: [
-        { text: "Quản lý nhân viên", path: ROUTES.STAFF, code: "NHANVIEN" },
         {
-          text: "Quản lý phòng ban",
-          path: ROUTES.DEPARTMENT,
-          code: "PHONGBAN",
+          text: "Danh mục hệ thống",
+          path: "#",
+          subMenu: [
+            { text: "Quản lý nhân viên", path: ROUTES.STAFF, code: "NHANVIEN" },
+            {
+              text: "Quản lý phòng ban",
+              path: ROUTES.DEPARTMENT,
+              code: "PHONGBAN",
+            },
+            { text: "Quản lý chức vụ", path: ROUTES.POSITION },
+          ],
         },
-        { text: "Quản lý chức vụ", path: ROUTES.POSITION },
-        { text: "Quản lý dự án", path: ROUTES.PROJECT, code: "DUAN" },
-        { text: "Quản lý nguồn vốn", path: ROUTES.CAPITALSOURCE },
-        { text: "Nhóm tài sản", path: ROUTES.ASSETGROUP },
-        { text: "Mô hình tài sản", path: ROUTES.MODELASSET },
-        { text: "Loại tài sản", path: ROUTES.TYPEASSET },
-        { text: "Nhóm ccdc", path: ROUTES.TOOLGROUP },
-        { text: "Loại ccdc", path: ROUTES.TOOLTYPE },
-        // { text: "Loại kế hoạch sửa chữa", path: ROUTES.PlanType },
-        // { text: "Loại sửa chữa bảo dưỡng", path: ROUTES.MAINTENANCEREPAIRTYPE },
-        { text: "Đơn vị tính", path: ROUTES.UNIT },
-        { text: "Lý do tăng", path: ROUTES.REASONINCREASE },
-        { text: "Hiện trạng", path: ROUTES.CURRENTSTATUS },
-      ].filter((sub) => hasPermission(sub.code)),
+        {
+          text: "Danh mục thiết bị",
+          path: "#",
+          subMenu: [
+            { text: "Nhóm tài sản", path: ROUTES.ASSETGROUP },
+            { text: "Mô hình tài sản", path: ROUTES.MODELASSET },
+            { text: "Loại tài sản", path: ROUTES.TYPEASSET },
+            { text: "Nhóm ccdc", path: ROUTES.TOOLGROUP },
+            { text: "Loại ccdc", path: ROUTES.TOOLTYPE },
+          ],
+        },
+        {
+          text: "Danh mục khác",
+          path: "#",
+          subMenu: [
+            { text: "Quản lý dự án", path: ROUTES.PROJECT, code: "DUAN" },
+            { text: "Quản lý nguồn vốn", path: ROUTES.CAPITALSOURCE },
+            { text: "Đơn vị tính", path: ROUTES.UNIT },
+            { text: "Lý do tăng", path: ROUTES.REASONINCREASE },
+            { text: "Hiện trạng", path: ROUTES.CURRENTSTATUS },
+          ],
+        },
+      ],
     },
     {
       text: "Quản lý thiết bị",
@@ -560,7 +586,7 @@ export default function Menuheader() {
           path: ROUTES.TOOLMANAGER,
           code: "CCDCVT",
         },
-      ].filter((sub) => hasPermission(sub.code)),
+      ],
     },
     {
       text: "Điều chuyển thiết bị",
@@ -621,7 +647,7 @@ export default function Menuheader() {
             },
           ],
         },
-      ].filter((sub) => hasPermission(sub.code)),
+      ],
     },
     {
       text: "Bàn giao thiết bị",
@@ -645,40 +671,17 @@ export default function Menuheader() {
           code: "BANGIAO_CCDC",
           count: toolHandoverCount + transferToolPage.totalItems,
         },
-      ].filter((sub) => hasPermission(sub.code)),
+      ],
     },
-    // {
-    //   text: "Sửa chữa bảo dưỡng",
-    //   icon: <Engineering fontSize="small" />,
-    //   path: "/",
-    //   count: maintenanceRepairCount + maintenanceRepairResultCount,
-    //   subMenu: [
-    //     {
-    //       text: "Kế hoạch sửa chữa bảo dưỡng",
-    //       path: `${ROUTES.MAINTENANCEPLANREPAIR}`,
-    //     },
-    //     {
-    //       text: "Phiếu sửa chữa bảo dưỡng",
-    //       path: `${ROUTES.MAINTENANCEREPAIR}`,
-    //       count: maintenanceRepairCount + maintenanceRepairResultCount,
-    //     },
-    //   ],
-    // },
     {
       text: "Báo cáo",
       icon: <Assessment fontSize="small" />,
       path: ROUTES.REPORT,
       code: "BAOCAO",
     },
-  ].filter((item) => {
-    // 1. Kiểm tra quyền của menu chính
-    const canSeeMenu = hasPermission(item.code);
-    // 2. Nếu menu chính có subMenu, chỉ hiện menu chính nếu có ít nhất 1 subMenu bên trong
-    if (item.subMenu) {
-      return canSeeMenu && item.subMenu.length > 0;
-    }
-    return canSeeMenu;
-  });
+  ];
+
+  const menuItems = filterMenuItemsRecursive(menuItemsRaw);
 
   // Hàm kiểm tra xem có thể cuộn hay không
   const checkScroll = () => {

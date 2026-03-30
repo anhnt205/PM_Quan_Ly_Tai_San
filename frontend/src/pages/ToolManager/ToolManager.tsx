@@ -17,6 +17,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import SyncLoadingModal from "../../components/common/SyncLoadingModal";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
+import SelectDbDialog from "../../components/common/SelectDbDialog";
 
 export default function ToolManager() {
   const [showForm, setShowForm] = useState(false);
@@ -28,6 +29,7 @@ export default function ToolManager() {
   const [searchValue, setSearchValue] = useState("");
   const [openHistory, setOpenHistory] = useState(false);
   const [selectedHistoryTool, setSelectedHistoryTool] = useState<any>(null);
+  const [openSelectDb, setOpenSelectDb] = useState(false);
   const { user } = useSelector((state: RootState) => state.user);
 
   const [importErrors, setImportErrors] = useState<string[]>([]);
@@ -142,6 +144,11 @@ export default function ToolManager() {
         onClose={() => setOpenErrorModal(false)}
         errors={importErrors}
       />
+      <SelectDbDialog
+        open={openSelectDb}
+        onClose={() => setOpenSelectDb(false)}
+        onConfirm={(dbId) => syncBakMutation.mutate(dbId)}
+      />
       <SyncLoadingModal
         open={importExcelMutation.isPending || syncBakMutation.isPending}
         title={
@@ -163,7 +170,7 @@ export default function ToolManager() {
         onImport={(file) => importExcelMutation.mutate(file)}
         onSyncDb={
           user?.taiKhoan?.tenDangNhap === "admin"
-            ? () => syncBakMutation.mutate()
+            ? () => setOpenSelectDb(true)
             : undefined
         }
         showExcel={true}
