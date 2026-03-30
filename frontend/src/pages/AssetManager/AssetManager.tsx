@@ -60,7 +60,7 @@ import { FilterOption } from "../../components/common/FilterStatusGroup";
 export default function AssetManager() {
   const [tab, setTab] = React.useState(0);
   const [showForm, setShowForm] = useState(false);
-  const [selectedAsset, setSelectedAsset] = useState<any>(null);
+  const [selectedAssets, setSelectedAssets] = useState<any[]>([]);
   const [showSidebar, setShowSidebar] = useState(false);
   const [readOnly, setReadOnly] = useState(true);
   const [isCopy, setIsCopy] = useState(false);
@@ -73,8 +73,6 @@ export default function AssetManager() {
   const { user } = useSelector((state: RootState) => state.user);
   const { config } = useConfig();
   const [status, setStatus] = useState("");
-
-  const [modalOpenBook, setModalOpenBook] = useState(false);
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
@@ -89,6 +87,7 @@ export default function AssetManager() {
     exportAssetMutation,
     importAssetMutation,
     deleteAllMutation,
+    createBatchMutation,
   } = useAssetManagerMutation((messages) => {
     setImportErrors(messages); // Lưu mảng lỗi vào state
     setOpenErrorModal(true); // Mở Modal MUI hiển thị danh sách lỗi
@@ -155,7 +154,7 @@ export default function AssetManager() {
   useEffect(() => {
     if (location.state?.autoCreate) {
       setShowForm(true);
-      setSelectedAsset(null);
+      setSelectedAssets([]);
       setReadOnly(false);
 
       navigate(location.pathname, { replace: true });
@@ -163,7 +162,7 @@ export default function AssetManager() {
   }, [location, navigate]);
 
   const handleRowClick = (params: GridRowParams) => {
-    setSelectedAsset(params.row);
+    setSelectedAssets([params.row]);
     setShowSidebar(true);
     setShowForm(false);
   };
@@ -172,22 +171,31 @@ export default function AssetManager() {
     setReadOnly(false);
   };
 
-  const handleSave = (values: any) => {
-    if (selectedAsset && !isCopy) {
-      updateMutation.mutate(values, {
-        onSuccess: () =>
-          setSelectedAsset({
-            ...values,
-            taiSanConList: values.taiSanConList.filter(
-              (item: any) => !item.isDeleted,
-            ),
-            fileDinhKemList: values.fileDinhKemList.filter(
-              (item: any) => item.action !== Action.DELETE,
-            ),
-          }),
+  const handleSave = (values: any[]) => {
+    if (values.length > 0) {
+      values.forEach((data) => {
+        if (data.isNew) {
+          createMutation.mutate(data);
+        } else {
+          updateMutation.mutate(data, {
+            onSuccess: () => {
+              if (values.length === 1) {
+                setSelectedAssets([
+                  {
+                    ...data,
+                    taiSanConList: (data.taiSanConList || []).filter(
+                      (item: any) => !item.isDeleted,
+                    ),
+                    fileDinhKemList: (data.fileDinhKemList || []).filter(
+                      (item: any) => item.action !== Action.DELETE,
+                    ),
+                  },
+                ]);
+              }
+            },
+          });
+        }
       });
-    } else {
-      createMutation.mutate(values);
     }
     setShowForm(false);
     setReadOnly(true);
@@ -363,8 +371,8 @@ export default function AssetManager() {
             <IconButton
               onClick={(e) => {
                 e.stopPropagation();
-                setSelectedAsset(params.row);
-                setReadOnly(false);
+                setSelectedAssets([{ ...params.row, isNew: false }]);
+                setReadOnly(true);
                 setShowForm(true);
                 setShowSidebar(false);
               }}
@@ -377,7 +385,20 @@ export default function AssetManager() {
               onClick={(e) => {
                 e.stopPropagation();
                 const { id, ...copyData } = params.row;
-                setSelectedAsset({ ...copyData, id: "" });
+                setSelectedAssets([
+                  {
+                    ...copyData,
+                    id: "",
+                    isNew: true,
+                    fileDinhKemList: [],
+                    taiSanConList: copyData.taiSanConList.map((item: any) => ({
+                      ...item,
+                      id: "",
+                      idTaiSanCha: "",
+                      isInsert: true,
+                    })),
+                  },
+                ]);
                 setIsCopy(true);
                 setReadOnly(false);
                 setShowForm(true);
@@ -450,7 +471,7 @@ export default function AssetManager() {
         title="Quản lý tài sản"
         onNewClick={() => {
           setShowForm(true);
-          setSelectedAsset(null);
+          setSelectedAssets([]);
           setReadOnly(false);
         }}
         loading={exportAssetMutation.isPending || importAssetMutation.isPending}
@@ -464,10 +485,10 @@ export default function AssetManager() {
             <AssetManagerForm
               onCancel={() => {
                 setShowForm(false);
-                setSelectedAsset(null);
-                setReadOnly(false);
+                setSelectedAssets([]);
+                setReadOnly(true);
               }}
-              selectedAsset={selectedAsset}
+              selectedAssets={selectedAssets}
               readOnly={readOnly}
               onEdit={handleEdit}
               onSave={handleSave}
@@ -579,6 +600,27 @@ export default function AssetManager() {
                 onRowClick={handleRowClick}
                 selectedIds={selectedIds}
                 onSelectionChange={setSelectedIds}
+                checkboxSelection={true}
+                extraActions={
+                  selectedIds.length > 0 && (
+                    <Button
+                      variant="contained"
+                      size="small"
+                      color="info"
+                      onClick={() => {
+                        const mapped = assetsPage.items.filter((item: any) =>
+                          selectedIds.includes(item.id || item.soThe),
+                        );
+                        setSelectedAssets(mapped);
+                        setReadOnly(true);
+                        setShowForm(true);
+                        setShowSidebar(false);
+                      }}
+                    >
+                      Chỉnh sửa ({selectedIds.length})
+                    </Button>
+                  )
+                }
                 onDelete={deleteManyMutation.mutate}
                 searchValue={searchValue}
                 setSearchValue={setSearchValue}
@@ -614,7 +656,7 @@ export default function AssetManager() {
                   }}
                 >
                   <AssetEbookContent
-                    selectedAsset={selectedAsset}
+                    selectedAsset={selectedAssets[0]}
                     readOnly={readOnly}
                     onEdit={handleEdit}
                     onCancel={() => {
@@ -622,9 +664,12 @@ export default function AssetManager() {
                     }}
                     onClose={() => {
                       setShowSidebar(false);
+                      setSelectedAssets([]);
                       setReadOnly(true);
                     }}
-                    onSave={handleSave}
+                    onSave={(values) => {
+                      handleSave([values]);
+                    }}
                     allAssetModel={allModelAsset}
                     allCurrentStatus={allCurrentStatus}
                     assetGroups={assetGroups}
@@ -642,35 +687,11 @@ export default function AssetManager() {
         open={isHistoryOpen}
         onClose={() => {
           setIsHistoryOpen(false);
-          setSelectedAsset(null);
+          setSelectedAssets([]);
           setShowForm(false);
         }}
-        selectedAsset={selectedAsset}
+        selectedAsset={selectedAssets[0]}
       />
-      {/* <AssetEbookModal
-        open={modalOpenBook}
-        onClose={() => {
-          setModalOpenBook(false);
-          setSelectedAsset(null);
-          setShowForm(false);
-          setReadOnly(true);
-        }}
-        onCancel={() => {
-          setShowForm(false);
-          // setSelectedAsset(null);
-          setReadOnly(true);
-        }}
-        selectedAsset={selectedAsset}
-        readOnly={readOnly}
-        onEdit={handleEdit}
-        onSave={handleSave}
-        allAssetModel={allModelAsset}
-        allCurrentStatus={allCurrentStatus}
-        assetGroups={assetGroups}
-        allDepartments={allDepartments}
-        allUnits={allUnits}
-        allReasonIncreases={allReasonIncreases}
-      /> */}
     </Box>
   );
 }

@@ -999,7 +999,7 @@ public class TaiSanDao {
             return java.util.Collections.emptyList();
         }
         String inSql = String.join(",", java.util.Collections.nCopies(taiSanIds.size(), "?"));
-        String sql = String.format("SELECT TaiSanCon.*, ts.TenTaiSan FROM TaiSanCon LEFT JOIN TaiSan ts ON ts.Id = TaiSanCon.IdTaiSanCon WHERE IdTaiSanCha IN (%s)", inSql);
+        String sql = String.format("SELECT TaiSanCon.*, ts.TenTaiSan, ts.HienTrang,ts.DonViTinh,ts.SoLuong,ts.GhiChu FROM TaiSanCon LEFT JOIN TaiSan ts ON ts.Id = TaiSanCon.IdTaiSanCon WHERE IdTaiSanCha IN (%s)", inSql);
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(TaiSanCon.class), taiSanIds.toArray());
     }
 

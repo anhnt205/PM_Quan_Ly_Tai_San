@@ -49,6 +49,7 @@ export const useAssetManagerMutation = (
         (payload?.taiSanConList || []).map((i) => ({
           ...i,
           id: generateCode(i.idTaiSanCon + "-"),
+          idTaiSanCha: payload.id,
           nguoiTao: user?.taiKhoan?.tenDangNhap || "",
           ngayTao: now,
         })),
@@ -84,9 +85,8 @@ export const useAssetManagerMutation = (
       const listDeleted = (payload?.taiSanConList || []).filter(
         (i) => i.isDeleted,
       );
-      console.log(listDeleted);
       const listUpdated = (payload?.taiSanConList || []).filter(
-        (i) => i.isInsert,
+        (i) => i.isInsert && !i.isDeleted,
       );
       const listFileDeleted = (payload?.fileDinhKemList || []).filter(
         (i) => i.action === Action.DELETE && i.id,
@@ -99,6 +99,7 @@ export const useAssetManagerMutation = (
           (listUpdated || []).map((i) => ({
             ...i,
             id: i.id ? i.id : generateCode(i.idTaiSanCon + "-"),
+            idTaiSanCha: payload.id,
             nguoiCapNhat: user?.taiKhoan?.tenDangNhap || "",
             ngayCapNhat: now,
           })),
@@ -165,6 +166,42 @@ export const useAssetManagerMutation = (
       );
     },
   });
+
+  const createBatchMutation = useMutation({
+    mutationFn: async (data: AssetType[]) => {
+      const formattedData = data.map((item) => ({
+        ...item,
+        nguoiTao: user?.taiKhoan?.tenDangNhap || "",
+        ngayTao: now,
+      }));
+      const res = await api.post("/taisan/batch", formattedData);
+      return { res: res.data, payload: data };
+    },
+    onSuccess: (data) => {
+      // For each asset in the batch, we might need to create child assets
+      data.payload.forEach((asset) => {
+        if (asset.taiSanConList && asset.taiSanConList.length > 0) {
+          const listToCreate = asset.taiSanConList.filter((i) => !i.isDeleted);
+          if (listToCreate.length > 0) {
+            createChildAssetBulkMutation.mutate(
+              listToCreate.map((i) => ({
+                ...i,
+                id: generateCode(i.idTaiSanCon + "-"),
+                nguoiTao: user?.taiKhoan?.tenDangNhap || "",
+                ngayTao: now,
+              })),
+            );
+          }
+        }
+      });
+      queryClient.invalidateQueries({ queryKey: ["assetsPage"], exact: false });
+      showSuccessAlert("Tạo danh sách tài sản thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(error.response?.data?.message || "Tạo danh sách tài sản thất bại");
+    },
+  });
+
   const deleteAllMutation = useMutation({
     mutationFn: async () => {
       const res = await api.delete(`/taisan/delete-all`);
@@ -588,6 +625,7 @@ export const useAssetManagerMutation = (
     createManyHistoryAssetMutation,
     updateAssetOwnershipMutation,
     deleteAllMutation,
+    createBatchMutation,
   };
 };
 

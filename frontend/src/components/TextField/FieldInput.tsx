@@ -11,6 +11,7 @@ interface Props {
   InputProps?: any;
   InputLabelProps?: any;
   onChange?: (newValue: any) => void;
+  onClick?: (e: any) => void;
 }
 export default function FieldInput({
   title,
@@ -22,12 +23,18 @@ export default function FieldInput({
   InputProps,
   InputLabelProps,
   onChange,
+  onClick,
 }: Props) {
   const currentValue = formik && field ? getIn(formik.values, field) : "";
   const touched = formik && field ? getIn(formik.touched, field) : false;
   const error = formik && field ? getIn(formik.errors, field) : "";
   return (
     <TextField
+      onClick={(e) => {
+        if (onClick) {
+          onClick(e);
+        }
+      }}
       disabled={disabled}
       fullWidth
       type={type}
