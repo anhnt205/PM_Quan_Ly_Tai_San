@@ -59,6 +59,7 @@ const AssetEbookModal = ({
           readOnly={readOnly}
           onEdit={onEdit}
           onCancel={onCancel}
+          onClose={onClose}
           onSave={onSave}
           allAssetModel={allAssetModel}
           allCurrentStatus={allCurrentStatus}

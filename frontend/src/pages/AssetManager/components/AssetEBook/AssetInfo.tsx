@@ -62,7 +62,8 @@ const bookStyles = {
       top: 0,
       bottom: 0,
       width: "6px",
-      background: "linear-gradient(to right, rgba(0, 158, 96, 0.2), transparent)",
+      background:
+        "linear-gradient(to right, rgba(0, 158, 96, 0.2), transparent)",
       pointerEvents: "none" as const,
     },
   },
@@ -110,8 +111,9 @@ export default function AssetInfo({
   allUnits,
   allReasonIncreases,
   onPageChange,
-  currentPage=2,
-  totalPages=4,
+  currentPage = 2,
+  totalPages = 4,
+  onClose,
 }: {
   readOnly?: boolean;
   onEdit: () => void;
@@ -127,6 +129,7 @@ export default function AssetInfo({
   onPageChange?: (page: number) => void;
   currentPage?: number;
   totalPages?: number;
+  onClose: () => void;
 }) {
   const [previewFile, setPreviewFile] = useState("");
   const formik = useFormik({
@@ -351,54 +354,178 @@ export default function AssetInfo({
         textAlign="center"
         fontSize={20}
         fontWeight={700}
-        sx={{  letterSpacing: "2px", mb: 3 }}
+        sx={{ letterSpacing: "2px", mb: 3 }}
       >
         LÝ LỊCH THIẾT BỊ
       </Typography>
 
       {/* Thông tin mô phỏng bìa giấy */}
-      <Box sx={{ mb: 4, fontFamily: '"Times New Roman", Times, serif', fontSize: '18px', lineHeight: 1.8 }}>
-        <Box sx={{ display: 'flex', mb: 1 }}>
-          <Box sx={{ whiteSpace: 'nowrap', mr: 1 }}>Tên thiết bị, mã hiệu:</Box>
-          <Box sx={{ flexGrow: 1, borderBottom: '2px dotted #1a1a1a', display: 'flex', alignItems: 'flex-end', fontStyle: 'italic', pb: '2px', paddingLeft: '8px' }}>
-            <Typography sx={{ fontFamily: 'inherit', fontStyle: 'inherit', fontSize: 'inherit', lineHeight: 1 }}>
-              {formik.values.tenTaiSan} {formik.values.kyHieu ? `- ${formik.values.kyHieu}` : ''}
+      <Box
+        sx={{
+          mb: 4,
+          fontFamily: '"Times New Roman", Times, serif',
+          fontSize: "18px",
+          lineHeight: 1.8,
+        }}
+      >
+        <Box sx={{ display: "flex", mb: 1 }}>
+          <Box sx={{ whiteSpace: "nowrap", mr: 1 }}>Tên thiết bị, mã hiệu:</Box>
+          <Box
+            sx={{
+              flexGrow: 1,
+              borderBottom: "2px dotted #1a1a1a",
+              display: "flex",
+              alignItems: "flex-end",
+              fontStyle: "italic",
+              pb: "2px",
+              paddingLeft: "8px",
+            }}
+          >
+            <Typography
+              sx={{
+                fontFamily: "inherit",
+                fontStyle: "inherit",
+                fontSize: "inherit",
+                lineHeight: 1,
+              }}
+            >
+              {formik.values.tenTaiSan}{" "}
+              {formik.values.kyHieu ? `- ${formik.values.kyHieu}` : ""}
             </Typography>
           </Box>
         </Box>
-        <Box sx={{ display: 'flex', mb: 1, gap: 1 }}>
-          <Box sx={{ whiteSpace: 'nowrap' }}>Số chế tạo:</Box>
-          <Box sx={{ flexGrow: 1, borderBottom: '2px dotted #1a1a1a', fontStyle: 'italic', color: '#1818a8', display: 'flex', alignItems: 'flex-end', pb: '2px', paddingLeft: '8px' }}>
-            <Typography sx={{ fontFamily: 'inherit', fontStyle: 'inherit', fontSize: 'inherit', lineHeight: 1 }}></Typography>
+        <Box sx={{ display: "flex", mb: 1, gap: 1 }}>
+          <Box sx={{ whiteSpace: "nowrap" }}>Số chế tạo:</Box>
+          <Box
+            sx={{
+              flexGrow: 1,
+              borderBottom: "2px dotted #1a1a1a",
+              fontStyle: "italic",
+              color: "#1818a8",
+              display: "flex",
+              alignItems: "flex-end",
+              pb: "2px",
+              paddingLeft: "8px",
+            }}
+          >
+            <Typography
+              sx={{
+                fontFamily: "inherit",
+                fontStyle: "inherit",
+                fontSize: "inherit",
+                lineHeight: 1,
+              }}
+            ></Typography>
           </Box>
-          <Box sx={{ whiteSpace: 'nowrap', ml: 2 }}>Số kiểm kê:</Box>
-          <Box sx={{ flexGrow: 1, borderBottom: '2px dotted #1a1a1a', fontStyle: 'italic', color: '#1818a8', display: 'flex', alignItems: 'flex-end', pb: '2px', paddingLeft: '8px' }}>
-            <Typography sx={{ fontFamily: 'inherit', fontStyle: 'inherit', fontSize: 'inherit', lineHeight: 1 }}></Typography>
+          <Box sx={{ whiteSpace: "nowrap", ml: 2 }}>Số kiểm kê:</Box>
+          <Box
+            sx={{
+              flexGrow: 1,
+              borderBottom: "2px dotted #1a1a1a",
+              fontStyle: "italic",
+              color: "#1818a8",
+              display: "flex",
+              alignItems: "flex-end",
+              pb: "2px",
+              paddingLeft: "8px",
+            }}
+          >
+            <Typography
+              sx={{
+                fontFamily: "inherit",
+                fontStyle: "inherit",
+                fontSize: "inherit",
+                lineHeight: 1,
+              }}
+            ></Typography>
           </Box>
         </Box>
-        <Box sx={{ display: 'flex', mb: 1 }}>
-          <Box sx={{ whiteSpace: 'nowrap', mr: 1 }}>Tên nhà máy chế tạo:</Box>
-          <Box sx={{ flexGrow: 1, borderBottom: '2px dotted #1a1a1a', fontStyle: 'italic', color: '#1818a8', display: 'flex', alignItems: 'flex-end', pb: '2px', paddingLeft: '8px' }}>
-            <Typography sx={{ fontFamily: 'inherit', fontStyle: 'inherit', fontSize: 'inherit', lineHeight: 1 }}></Typography>
+        <Box sx={{ display: "flex", mb: 1 }}>
+          <Box sx={{ whiteSpace: "nowrap", mr: 1 }}>Tên nhà máy chế tạo:</Box>
+          <Box
+            sx={{
+              flexGrow: 1,
+              borderBottom: "2px dotted #1a1a1a",
+              fontStyle: "italic",
+              color: "#1818a8",
+              display: "flex",
+              alignItems: "flex-end",
+              pb: "2px",
+              paddingLeft: "8px",
+            }}
+          >
+            <Typography
+              sx={{
+                fontFamily: "inherit",
+                fontStyle: "inherit",
+                fontSize: "inherit",
+                lineHeight: 1,
+              }}
+            ></Typography>
           </Box>
         </Box>
-        <Box sx={{ display: 'flex', mb: 1, gap: 1 }}>
-          <Box sx={{ whiteSpace: 'nowrap' }}>Nước chế tạo:</Box>
-          <Box sx={{ flexGrow: 1, borderBottom: '2px dotted #1a1a1a', fontStyle: 'italic', color: '#1818a8', display: 'flex', alignItems: 'flex-end', pb: '2px', paddingLeft: '8px' }}>
-            <Typography sx={{ fontFamily: 'inherit', fontStyle: 'inherit', fontSize: 'inherit', lineHeight: 1 }}>
+        <Box sx={{ display: "flex", mb: 1, gap: 1 }}>
+          <Box sx={{ whiteSpace: "nowrap" }}>Nước chế tạo:</Box>
+          <Box
+            sx={{
+              flexGrow: 1,
+              borderBottom: "2px dotted #1a1a1a",
+              fontStyle: "italic",
+              color: "#1818a8",
+              display: "flex",
+              alignItems: "flex-end",
+              pb: "2px",
+              paddingLeft: "8px",
+            }}
+          >
+            <Typography
+              sx={{
+                fontFamily: "inherit",
+                fontStyle: "inherit",
+                fontSize: "inherit",
+                lineHeight: 1,
+              }}
+            >
               {formik.values.nuocSanXuat}
             </Typography>
           </Box>
-          <Box sx={{ whiteSpace: 'nowrap', ml: 2 }}>Năm chế tạo:</Box>
-          <Box sx={{ flexGrow: 1, borderBottom: '2px dotted #1a1a1a', fontStyle: 'italic', color: '#1818a8', display: 'flex', alignItems: 'flex-end', pb: '2px', paddingLeft: '8px' }}>
-            <Typography sx={{ fontFamily: 'inherit', fontStyle: 'inherit', fontSize: 'inherit', lineHeight: 1 }}>
+          <Box sx={{ whiteSpace: "nowrap", ml: 2 }}>Năm chế tạo:</Box>
+          <Box
+            sx={{
+              flexGrow: 1,
+              borderBottom: "2px dotted #1a1a1a",
+              fontStyle: "italic",
+              color: "#1818a8",
+              display: "flex",
+              alignItems: "flex-end",
+              pb: "2px",
+              paddingLeft: "8px",
+            }}
+          >
+            <Typography
+              sx={{
+                fontFamily: "inherit",
+                fontStyle: "inherit",
+                fontSize: "inherit",
+                lineHeight: 1,
+              }}
+            >
               {formik.values.namSanXuat}
             </Typography>
           </Box>
         </Box>
       </Box>
 
-      <Typography variant="h6" sx={{ fontSize: '18px', fontWeight: 'bold', mb: 2, color: '#026e42', textTransform: 'uppercase' }}>
+      <Typography
+        variant="h6"
+        sx={{
+          fontSize: "18px",
+          fontWeight: "bold",
+          mb: 2,
+          color: "#026e42",
+          textTransform: "uppercase",
+        }}
+      >
         Thông tin chi tiết
       </Typography>
 
@@ -414,7 +541,9 @@ export default function AssetInfo({
                   <Typography sx={bookStyles.label} width="140px">
                     Số thẻ tài sản:
                   </Typography>
-                  <Typography sx={{ fontSize: "13px" }}>{formik.values.soThe || "N/A"}</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
+                    {formik.values.soThe || "N/A"}
+                  </Typography>
                 </Box>
               ) : (
                 <FieldInput
@@ -433,7 +562,9 @@ export default function AssetInfo({
                   <Typography sx={bookStyles.label} width="140px">
                     Tên tài sản:
                   </Typography>
-                  <Typography sx={{ fontSize: "13px" }}>{formik.values.tenTaiSan || "N/A"}</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
+                    {formik.values.tenTaiSan || "N/A"}
+                  </Typography>
                 </Box>
               ) : (
                 <FieldInput
@@ -610,7 +741,9 @@ export default function AssetInfo({
                   <Typography sx={bookStyles.label} width="140px">
                     Số kỳ khấu hao:
                   </Typography>
-                  <Typography sx={{ fontSize: "13px" }}>{formik.values.soKyKhauHao}</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
+                    {formik.values.soKyKhauHao}
+                  </Typography>
                 </Box>
               ) : (
                 <FieldInput
@@ -817,7 +950,9 @@ export default function AssetInfo({
                   <Typography sx={bookStyles.label} width="140px">
                     Vốn NS:
                   </Typography>
-                  <Typography sx={{ fontSize: "13px" }}>{formatDecimal(formik.values.nvNS)} đ</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
+                    {formatDecimal(formik.values.nvNS)} đ
+                  </Typography>
                 </Box>
               ) : (
                 <TextFieldNumber
@@ -902,7 +1037,9 @@ export default function AssetInfo({
                   <Typography sx={bookStyles.label} width="140px">
                     Mã hiệu:
                   </Typography>
-                  <Typography sx={{ fontSize: "13px" }}>{formik.values.kyHieu || "N/A"}</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
+                    {formik.values.kyHieu || "N/A"}
+                  </Typography>
                 </Box>
               ) : (
                 <FieldInput
@@ -921,7 +1058,9 @@ export default function AssetInfo({
                   <Typography sx={bookStyles.label} width="140px">
                     Số mã hiệu:
                   </Typography>
-                  <Typography sx={{ fontSize: "13px" }}>{formik.values.soKyHieu || "N/A"}</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
+                    {formik.values.soKyHieu || "N/A"}
+                  </Typography>
                 </Box>
               ) : (
                 <FieldInput
@@ -940,7 +1079,9 @@ export default function AssetInfo({
                   <Typography sx={bookStyles.label} width="140px">
                     Công suất:
                   </Typography>
-                  <Typography sx={{ fontSize: "13px" }}>{formik.values.congSuat || "N/A"}</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
+                    {formik.values.congSuat || "N/A"}
+                  </Typography>
                 </Box>
               ) : (
                 <FieldInput
@@ -959,7 +1100,9 @@ export default function AssetInfo({
                   <Typography sx={bookStyles.label} width="140px">
                     Nước sản xuất:
                   </Typography>
-                  <Typography sx={{ fontSize: "13px" }}>{formik.values.nuocSanXuat || "N/A"}</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
+                    {formik.values.nuocSanXuat || "N/A"}
+                  </Typography>
                 </Box>
               ) : (
                 <Autocomplete
@@ -992,7 +1135,9 @@ export default function AssetInfo({
                   <Typography sx={bookStyles.label} width="140px">
                     Năm sản xuất:
                   </Typography>
-                  <Typography sx={{ fontSize: "13px" }}>{formik.values.namSanXuat}</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
+                    {formik.values.namSanXuat}
+                  </Typography>
                 </Box>
               ) : (
                 <FieldInput
@@ -1060,7 +1205,9 @@ export default function AssetInfo({
                   <Typography sx={bookStyles.label} width="140px">
                     Số lượng:
                   </Typography>
-                  <Typography sx={{ fontSize: "13px" }}>{formik.values.soLuong || "N/A"}</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
+                    {formik.values.soLuong || "N/A"}
+                  </Typography>
                 </Box>
               ) : (
                 <TextFieldNumber
@@ -1103,7 +1250,9 @@ export default function AssetInfo({
                   <Typography sx={bookStyles.label} width="140px">
                     Ghi chú:
                   </Typography>
-                  <Typography sx={{ fontSize: "13px" }}>{formik.values.ghiChu || "N/A"}</Typography>
+                  <Typography sx={{ fontSize: "13px" }}>
+                    {formik.values.ghiChu || "N/A"}
+                  </Typography>
                 </Box>
               ) : (
                 <FieldInput
@@ -1432,10 +1581,7 @@ export default function AssetInfo({
             {formik.values.fileDinhKemList.filter(
               (e) => e.loai === 0 && e.action !== Action.DELETE,
             ).length === 0 && (
-              <Typography
-                variant="body2"
-                sx={{ fontStyle: "italic" }}
-              >
+              <Typography variant="body2" sx={{ fontStyle: "italic" }}>
                 Không có tệp đính kèm.
               </Typography>
             )}
@@ -1513,10 +1659,7 @@ export default function AssetInfo({
             {formik.values.fileDinhKemList.filter(
               (e) => e.loai === 1 && e.action !== Action.DELETE,
             ).length === 0 && (
-              <Typography
-                variant="body2"
-                sx={{ fontStyle: "italic" }}
-              >
+              <Typography variant="body2" sx={{ fontStyle: "italic" }}>
                 Không có tệp đính kèm.
               </Typography>
             )}

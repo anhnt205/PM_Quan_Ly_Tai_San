@@ -6,7 +6,7 @@ import {
   CircularProgress,
   IconButton,
 } from "@mui/material";
-import { Download, PictureAsPdf, Close } from "@mui/icons-material";
+import { Download, PictureAsPdf, Close, Fullscreen, FullscreenExit } from "@mui/icons-material";
 import {
   generateAssetManentancePDF,
   generateAssetPdf,
@@ -39,6 +39,7 @@ interface AssetEbookContentProps {
   readOnly?: boolean;
   onEdit: () => void;
   onCancel: () => void;
+  onClose: () => void;
   onSave: (values: any) => void;
   allAssetModel: any[];
   allCurrentStatus: any[];
@@ -53,6 +54,7 @@ const AssetEbookContent = ({
   readOnly,
   onEdit,
   onCancel,
+  onClose,
   onSave,
   allAssetModel,
   allCurrentStatus,
@@ -67,6 +69,7 @@ const AssetEbookContent = ({
   const [pdfBlob, setPdfBlob] = useState<Uint8Array | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     setPdfDoc(null);
@@ -164,6 +167,7 @@ const AssetEbookContent = ({
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+    onCancel();
   };
 
   const handleDownloadPdf = () => {
@@ -185,7 +189,13 @@ const AssetEbookContent = ({
         flex: 1,
         display: "flex",
         flexDirection: "column",
-        height: "100%",
+        height: isFullscreen ? "100vh" : "100%",
+        width: isFullscreen ? "100vw" : "100%",
+        position: isFullscreen ? "fixed" : "relative",
+        top: isFullscreen ? 0 : "unset",
+        left: isFullscreen ? 0 : "unset",
+        zIndex: isFullscreen ? 1300 : 1,
+        bgcolor: "white",
         overflow: "hidden",
       }}
     >
@@ -240,7 +250,14 @@ const AssetEbookContent = ({
           >
             Tải PDF
           </Button>
-          <IconButton onClick={onCancel} sx={{ color: "white" }}>
+          <IconButton
+            onClick={() => setIsFullscreen(!isFullscreen)}
+            sx={{ color: "white" }}
+            title={isFullscreen ? "Thu nhỏ" : "Phóng to"}
+          >
+            {isFullscreen ? <FullscreenExit /> : <Fullscreen />}
+          </IconButton>
+          <IconButton onClick={onClose} sx={{ color: "white" }}>
             <Close />
           </IconButton>
         </Box>
@@ -335,6 +352,7 @@ const AssetEbookContent = ({
                 readOnly={readOnly}
                 onEdit={onEdit}
                 onCancel={onCancel}
+                onClose={onClose}
                 selectedAsset={selectedAsset}
                 onSave={onSave}
                 allAssetModel={allAssetModel}

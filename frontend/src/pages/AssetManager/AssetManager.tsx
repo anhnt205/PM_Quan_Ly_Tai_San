@@ -605,14 +605,23 @@ export default function AssetManager() {
                   bgcolor: "white",
                 }}
               >
-                <Box sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                <Box
+                  sx={{
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    overflow: "hidden",
+                  }}
+                >
                   <AssetEbookContent
                     selectedAsset={selectedAsset}
                     readOnly={readOnly}
                     onEdit={handleEdit}
                     onCancel={() => {
-                      // setShowSidebar(false);
-                      setShowForm(false);
+                      setReadOnly(true);
+                    }}
+                    onClose={() => {
+                      setShowSidebar(false);
                       setReadOnly(true);
                     }}
                     onSave={handleSave}
