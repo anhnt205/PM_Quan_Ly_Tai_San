@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Box, Grid, IconButton, Tooltip, Tabs, Tab } from "@mui/material";
-import { Visibility as VisibilityIcon, VisibilityOff } from "@mui/icons-material";
+import {
+  Visibility as VisibilityIcon,
+  VisibilityOff,
+} from "@mui/icons-material";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import AssetTransferForm from "./components/AssetTransferForm";
 import SignerSidebar from "./components/SignerSidebar";
@@ -678,9 +681,7 @@ export default function AssetTransfer() {
                     >
                       <Tab label="Tài liệu" />
                       <Tab label="Quy trình ký" />
-                      <Tab
-                        label="Biên bản"
-                      />
+                      <Tab label="Biên bản" />
                     </Tabs>
                     <IconButton
                       size="small"
@@ -689,9 +690,7 @@ export default function AssetTransfer() {
                         setSidebarMode(null);
                       }}
                     >
-                      <VisibilityOff
-                        sx={{ fontSize: 20 }}
-                      />
+                      <VisibilityOff sx={{ fontSize: 20 }} />
                     </IconButton>
                   </Box>
                   <Box sx={{ flex: 1, overflow: "hidden" }}>

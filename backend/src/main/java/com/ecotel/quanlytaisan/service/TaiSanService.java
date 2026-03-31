@@ -109,6 +109,20 @@ public class TaiSanService {
         return response;
     }
 
+    public PageResponse<TaiSanDTO> getSapHetHanKiemDinhPaged(String idCongTy, int page, int size, int soNgayThongBaoKiemDinh) {
+        if (page < 0) page = 0;
+        if (size <= 0) size = 20;
+
+        long total = taiSanDao.countSapHetHanKiemDinh(idCongTy, soNgayThongBaoKiemDinh);
+        if (total == 0) {
+            return new PageResponse<>(List.of(), 0, page, size);
+        }
+
+        int offset = page * size;
+        List<TaiSanDTO> items = taiSanDao.findSapHetHanKiemDinhPaged(idCongTy, offset, size, soNgayThongBaoKiemDinh);
+        return new PageResponse<>(items, total, page, size);
+    }
+
 
     public PageResponse<TaiSanDTO> getByDonViBanDauPaged(
         String idCongTy, 

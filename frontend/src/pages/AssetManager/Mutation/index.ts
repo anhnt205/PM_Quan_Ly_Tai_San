@@ -198,7 +198,9 @@ export const useAssetManagerMutation = (
       showSuccessAlert("Tạo danh sách tài sản thành công");
     },
     onError: (error: any) => {
-      showErrorAlert(error.response?.data?.message || "Tạo danh sách tài sản thất bại");
+      showErrorAlert(
+        error.response?.data?.message || "Tạo danh sách tài sản thất bại",
+      );
     },
   });
 
@@ -729,6 +731,28 @@ export const useAssetHoursPageQuery = (
       return res.data.data || res.data;
     },
     enabled: !!idTaiSan,
+    placeholderData: (previousData) => previousData,
+  });
+};
+
+export const useAssetInspectionPageQuery = (
+  page?: number,
+  pageSize?: number,
+  soNgayThongBaoKiemDinh?: number,
+) => {
+  return useQuery({
+    queryKey: ["assetInspectionPage", page, pageSize, soNgayThongBaoKiemDinh], // Key để cache dữ liệu
+    queryFn: async () => {
+      const res = await api.get("taisan/sap-het-han-kiem-dinh", {
+        params: {
+          idcongty: CongTy.CT001,
+          page: page,
+          size: pageSize,
+          soNgayThongBaoKiemDinh,
+        },
+      });
+      return res.data.data || res.data;
+    },
     placeholderData: (previousData) => previousData,
   });
 };

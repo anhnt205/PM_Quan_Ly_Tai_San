@@ -65,7 +65,10 @@ const fetchTaiSanTheoLoai = async (nhomId?: string) => {
 };
 const fetchCCDCTheoLoai = async (nhomId?: string) => {
   const res = await api.get("/dashboard/ccdc-theo-nhom-loai-con-phan-tram", {
-    params: nhomId ? { nhomId } : {},
+    params: {
+      nhomId,
+      idcongty: CongTy.CT001,
+    },
   });
   return res.data.data;
 };

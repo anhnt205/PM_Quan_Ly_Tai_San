@@ -228,14 +228,12 @@ export default function ToolForm({
                 }}
               />
             )}
-            {!readOnly && (
-              <CancelBtn
-                onClick={() => {
-                  onCancel();
-                }}
-              />
-            )}
             {readOnly && <EditButton onClick={onEdit} />}
+            <CancelBtn
+              onClick={() => {
+                onCancel(); 
+              }}
+            />
           </Box>
           <Box
             sx={{

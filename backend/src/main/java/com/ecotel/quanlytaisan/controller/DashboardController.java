@@ -82,9 +82,11 @@ public class DashboardController {
     }
 
     @GetMapping("/ccdc-theo-nhom-loai-con-phan-tram")
-    public ResponseEntity<ApiResponse<Object>> getCCDCTheoNhomLoaiConPhanTram() {
+    public ResponseEntity<ApiResponse<Object>> getCCDCTheoNhomLoaiConPhanTram(
+        @RequestParam(value = "nhomId", required = false) String nhomId,
+        @RequestParam("idcongty") String idcongty) {
         try {
-            Map<String, List<Map<String, Object>>> data = service.getCCDCTheoNhomLoaiConPhanTram();
+            Map<String, List<Map<String, Object>>> data = service.getCCDCTheoNhomLoaiConPhanTram(idcongty, nhomId);
             return ResponseEntity.ok(ApiResponse.success("Lấy thống kê CCDC theo nhóm và loại con với phần trăm thành công", data, data.size()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

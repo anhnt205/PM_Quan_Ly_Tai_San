@@ -185,8 +185,8 @@ export default function SignDocumentForm({
       idNguoiKy: user?.taiKhoan?.tenDangNhap,
       loaiKy: signatureType,
       ngayKy: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-      x: 0.5, // Giữa trang theo chiều ngang
-      y: 0.2, // Vị trí dọc chuẩn hóa
+      x: 0.2, // Giữa trang theo chiều ngang
+      y: 0.8, // Vị trí dọc chuẩn hóa
       chuKyNhay:
         (signatureType === 1 || signatureType === 5) && employee?.chuKyNhay,
       chuKyThuong:
@@ -254,8 +254,8 @@ export default function SignDocumentForm({
       idNguoiKy: user?.taiKhoan?.tenDangNhap,
       loaiKy: signatureType,
       ngayKy: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-      x: 0.5, // Giữa trang theo chiều ngang
-      y: 0.2, // Vị trí dọc chuẩn hóa
+      x: 0.2, // Giữa trang theo chiều ngang
+      y: 0.8, // Vị trí dọc chuẩn hóa
       chuKyNhay:
         (signatureType === 1 || signatureType === 5) && employee?.chuKyNhay,
       chuKyThuong:
@@ -276,18 +276,6 @@ export default function SignDocumentForm({
       else if (employee.kyNhay) setSignatureType(1);
     }
   }, [employee, signatures.length]);
-
-  useEffect(() => {
-    if (
-      signatureType > 0 &&
-      employee &&
-      !hasAutoSigned.current &&
-      signatures.length === 0
-    ) {
-      hasAutoSigned.current = true;
-      handleSign();
-    }
-  }, [signatureType, employee, signatures.length]);
 
   useEffect(() => {
     const renderDigitalSignatures = async () => {
@@ -675,7 +663,10 @@ export default function SignDocumentForm({
       <SignHeader
         pagesCount={pages.length}
         handleExportPDF={handleExportPDF}
-        onCancel={onCancel}
+        onCancel={() => {
+          onCancel();
+          setSignatures([]);
+        }}
         title={title}
       />
 
@@ -692,7 +683,13 @@ export default function SignDocumentForm({
         {showSignerSidebar &&
           (isMobile ? (
             <CollapsibleSidebar>
-              <SidebarContent {...sidebarProps} />
+              <SidebarContent
+                {...sidebarProps}
+                onCancel={() => {
+                  onCancel();
+                  setSignatures([]);
+                }}
+              />
             </CollapsibleSidebar>
           ) : (
             <Paper
@@ -705,7 +702,13 @@ export default function SignDocumentForm({
                 overflowY: "auto",
               }}
             >
-              <SidebarContent {...sidebarProps} />
+              <SidebarContent
+                {...sidebarProps}
+                onCancel={() => {
+                  onCancel();
+                  setSignatures([]);
+                }}
+              />
             </Paper>
           ))}
 

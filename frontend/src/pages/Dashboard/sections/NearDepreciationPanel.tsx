@@ -22,59 +22,28 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import InsertChartOutlinedIcon from "@mui/icons-material/InsertChartOutlined";
 import Pagination from "@mui/material/Pagination";
 import { useDashboardMutation } from "../Mutation";
-
-
-type AssetRow = {
-  Id?: string | number;
-  id?: string | number;
-  Ma?: string | number;
-  TenTaiSan?: string;
-  name?: string;
-  NgaySuDung?: string | number | null;
-  SoKyKhauHao?: number | null;
-  NguyenGia?: number | string | null;
-  NgayHetHan?: string | number | null;
-  ThoiHanConLai?: string | number | null;
-  ThoiHan?: string | number | null;
-  TrangThai?: string;
-};
+import { useAssetInspectionPageQuery } from "../../AssetManager/Mutation";
+import { useConfig } from "../../../hooks/useContext";
 
 export default function NearDepreciationPanel() {
-  const { taiSanSapHet = [], isLoading } = useDashboardMutation();
-  const rows = (
-    Array.isArray(taiSanSapHet) ? taiSanSapHet : taiSanSapHet?.data || []
-  ) as AssetRow[];
+  const { config } = useConfig();
   const [rowsPerPage, setRowsPerPage] = useState<number | "all">(20);
-  const [page, setPage] = useState<number>(1);
-
-  useEffect(() => {
-    setPage(1);
-  }, [rowsPerPage, rows.length]);
+  const [page, setPage] = useState(0);
+  const { data: taiSanSapHet = { items: [], totalItems: 0 }, isLoading } =
+    useAssetInspectionPageQuery(
+      page,
+      rowsPerPage === "all" ? 9999999 : rowsPerPage,
+      config?.ngayBaoDangKiem,
+    );
 
   const handleRowsPerPageChange = (e: any) => {
     const v = e.target.value;
-    setRowsPerPage(v === "all" ? "all" : Number(v));
-    setPage(1);
+    setRowsPerPage(v === "all" ? 9999999 : Number(v));
+    setPage(0);
   };
 
   const handlePageChange = (_: any, value: number) => {
-    setPage(value);
-  };
-
-  const displayedRows =
-    rowsPerPage === "all"
-      ? rows
-      : rows.slice(
-          (page - 1) * (rowsPerPage as number),
-          page * (rowsPerPage as number),
-        );
-
-  const getStatusFor = (val: any) => {
-    const n = Number(val);
-    if (Number.isNaN(n)) return null;
-    if (n <= 0 || n === 1) return { label: "Khẩn cấp", bg: "#ffeaea", color: "#d14343" };
-    if (n === 2) return { label: "Cảnh báo", bg: "#fffbe6", color: "#f59e0b" };
-    return { label: "Bình thường", bg: "#e6f4ea", color: "#0b9d55" };
+    setPage(value - 1);
   };
 
   return (
@@ -86,7 +55,7 @@ export default function NearDepreciationPanel() {
               variant="h6"
               sx={{ color: "#0b9d55", fontWeight: 700, fontSize: 22 }}
             >
-              Tài sản sắp hết hạn khấu hao
+              Tài sản sắp hết hạn đăng kiểm
             </Typography>
           </Grid>
 
@@ -131,7 +100,7 @@ export default function NearDepreciationPanel() {
                   variant="body2"
                   sx={{ color: "#f97316", fontWeight: 600 }}
                 >
-                  {rows.length.toLocaleString()} tài sản
+                  {taiSanSapHet?.totalItems.toLocaleString()} tài sản
                 </Typography>
               </Box>
             </Box>
@@ -148,7 +117,7 @@ export default function NearDepreciationPanel() {
             maxHeight: 360,
           }}
         >
-          <Table size="small" stickyHeader sx={{ minWidth: 2000 }}>
+          <Table size="small" stickyHeader sx={{}}>
             <TableHead>
               <TableRow sx={{ backgroundColor: "#eaf7ee", height: 64 }}>
                 <TableCell
@@ -166,8 +135,8 @@ export default function NearDepreciationPanel() {
                   sx={{
                     fontWeight: 700,
                     color: "#0b9d55",
-                    minWidth: 700,
                     bgcolor: "#eaf7ee",
+                    minWidth: 200,
                   }}
                 >
                   Tên tài sản
@@ -175,51 +144,18 @@ export default function NearDepreciationPanel() {
                 <TableCell
                   align="left"
                   sx={{
-                    width: 280,
+                    minWidth: 200,
                     fontWeight: 700,
                     color: "#0b9d55",
                     bgcolor: "#eaf7ee",
                   }}
                 >
-                  Ngày sử dụng
+                  Ngày hết hạn đăng kiểm
                 </TableCell>
                 <TableCell
                   align="left"
                   sx={{
-                    width: 280,
-                    fontWeight: 700,
-                    color: "#0b9d55",
-                    bgcolor: "#eaf7ee",
-                  }}
-                >
-                  Số kỳ khấu hao
-                </TableCell>
-                <TableCell
-                  align="left"
-                  sx={{
-                    width: 280,
-                    fontWeight: 700,
-                    color: "#0b9d55",
-                    bgcolor: "#eaf7ee",
-                  }}
-                >
-                  Nguyên giá
-                </TableCell>
-                <TableCell
-                  align="left"
-                  sx={{
-                    width: 280,
-                    fontWeight: 700,
-                    color: "#0b9d55",
-                    bgcolor: "#eaf7ee",
-                  }}
-                >
-                  Ngày hết hạn
-                </TableCell>
-                <TableCell
-                  align="left"
-                  sx={{
-                    width: 280,
+                    minWidth: 150,
                     fontWeight: 700,
                     color: "#0b9d55",
                     bgcolor: "#eaf7ee",
@@ -227,29 +163,18 @@ export default function NearDepreciationPanel() {
                 >
                   Thời hạn còn lại
                 </TableCell>
-                <TableCell
-                  align="left"
-                  sx={{
-                    width: 280,
-                    fontWeight: 700,
-                    color: "#0b9d55",
-                    bgcolor: "#eaf7ee",
-                  }}
-                >
-                  Trạng thái
-                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {displayedRows.map((row, idx) => (
+              {taiSanSapHet?.items?.map((row: any, idx: number) => (
                 <TableRow
-                  key={String(row.Id || row.id || row.Ma || idx)}
+                  key={String(row.id || row.soThe || idx)}
                   hover
                   sx={{ backgroundColor: "#fff" }}
                 >
                   <TableCell align="left">
                     <Chip
-                      label={row.Id}
+                      label={row.soThe}
                       sx={{
                         bgcolor: "#e6f4ea",
                         color: "#0b9d55",
@@ -257,22 +182,18 @@ export default function NearDepreciationPanel() {
                       }}
                     />
                   </TableCell>
-                  <TableCell align="left" sx={{ maxWidth: 800 }}>
-                    <Typography noWrap sx={{ maxWidth: { xs: 320, md: 900 } }}>
-                      {row.TenTaiSan || row.name || ""}
+                  <TableCell sx={{}}>
+                    <Typography noWrap sx={{}}>
+                      {row.tenTaiSan || ""}
                     </Typography>
                   </TableCell>
-                  <TableCell align="left" sx={{ width: 280 }}>
-                    <Typography noWrap sx={{ maxWidth: { xs: 320, md: 900 } }}>
-                      {row.NgaySuDung
-                        ? new Date(row.NgaySuDung).toLocaleDateString("en-GB")
-                        : ""}
-                    </Typography>
+                  <TableCell sx={{ width: 280 }}>
+                    <Typography>{row.ngayDangKiemTiepTheo || ""}</Typography>
                   </TableCell>
-                  <TableCell align="left" sx={{ width: 280 }}>
-                    {row.SoKyKhauHao != null ? (
+                  <TableCell sx={{ width: 280 }}>
+                    {row.thoiHanConLai != null ? (
                       <Chip
-                        label={`${row.SoKyKhauHao} kỳ`}
+                        label={`${row.thoiHanConLai} ngày`}
                         sx={{
                           bgcolor: "#e6f4ea",
                           color: "#0b9d55",
@@ -282,53 +203,6 @@ export default function NearDepreciationPanel() {
                     ) : (
                       <Typography />
                     )}
-                  </TableCell>
-                  <TableCell align="left" sx={{ width: 280 }}>
-                    <Typography>
-                      {row.NguyenGia != null
-                        ? Number(row.NguyenGia).toLocaleString() + " đ"
-                        : ""}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="left" sx={{ width: 280 }}>
-                    <Typography>
-                      {row.NgayHetHan
-                        ? new Date(row.NgayHetHan).toLocaleDateString("en-GB")
-                        : ""}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="left" sx={{ width: 280 }}>
-                    {row.ThoiHanConLai != null ? (
-                      <Chip
-                        label={`${row.ThoiHanConLai} tháng`}
-                        sx={{
-                          bgcolor: "#e6f4ea",
-                          color: "#0b9d55",
-                          fontWeight: 700,
-                        }}
-                      />
-                    ) : (
-                      <Typography />
-                    )}
-                  </TableCell>
-                  <TableCell align="left" sx={{ width: 280 }}>
-                    {(() => {
-                      const status = getStatusFor(
-                        (row.ThoiHanConLai ?? row.ThoiHan) || row.ThoiHanConLai,
-                      );
-                      return status ? (
-                        <Chip
-                          label={status.label}
-                          sx={{
-                            bgcolor: status.bg,
-                            color: status.color,
-                            fontWeight: 700,
-                          }}
-                        />
-                      ) : (
-                        <Typography>{row.TrangThai || ""}</Typography>
-                      );
-                    })()}
                   </TableCell>
                 </TableRow>
               ))}
@@ -347,26 +221,29 @@ export default function NearDepreciationPanel() {
           <Box>
             <Typography variant="caption" color="text.secondary">
               {(() => {
-                const total = rows.length;
+                const total = taiSanSapHet?.totalItems || 0;
                 if (total === 0) return `Hiển thị 0 kết quả`;
                 if (rowsPerPage === "all")
                   return `Hiển thị 1–${total} trong ${total} kết quả`;
-                const start = (page - 1) * (rowsPerPage as number) + 1;
-                const end = Math.min(page * (rowsPerPage as number), total);
+                const start = page * (rowsPerPage as number) + 1;
+                const end = Math.min((page + 1) * (rowsPerPage as number), total);
                 return `Hiển thị ${start}–${end} trong ${total} kết quả`;
               })()}
             </Typography>
           </Box>
           <Box>
-            {rowsPerPage !== "all" && rows.length > (rowsPerPage as number) && (
-              <Pagination
-                count={Math.ceil(rows.length / (rowsPerPage as number))}
-                page={page}
-                onChange={handlePageChange}
-                color="primary"
-                size="small"
-              />
-            )}
+            {rowsPerPage !== "all" &&
+              (taiSanSapHet?.totalItems || 0) > (rowsPerPage as number) && (
+                <Pagination
+                  count={Math.ceil(
+                    (taiSanSapHet?.totalItems || 0) / (rowsPerPage as number),
+                  )}
+                  page={page}
+                  onChange={handlePageChange}
+                  color="primary"
+                  size="small"
+                />
+              )}
           </Box>
         </Box>
       </CardContent>

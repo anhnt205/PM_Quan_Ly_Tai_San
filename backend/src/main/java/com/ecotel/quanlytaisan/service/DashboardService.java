@@ -52,7 +52,7 @@ public class DashboardService {
     }
 
     // CCDC theo nhóm và loại con với phần trăm (có tham số)
-    public Map<String, List<Map<String, Object>>> getCCDCTheoNhomLoaiConPhanTram() {
+    public Map<String, List<Map<String, Object>>> getCCDCTheoNhomLoaiConPhanTram(String idCongTy, String idNhomCCDC) {
         List<NhomCCDC> nhomCCDCList = nhomCCDCDAO.findAll("");
         Map<String, List<Map<String, Object>>> result = new HashMap<>();
         for (NhomCCDC nhomCCDC : nhomCCDCList) {

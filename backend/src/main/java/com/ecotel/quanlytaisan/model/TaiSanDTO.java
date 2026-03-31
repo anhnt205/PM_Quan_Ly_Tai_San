@@ -65,6 +65,8 @@ public class TaiSanDTO {
     private String tgKiemDinh;
     private Integer chuKyKiemDinh;
     private String trangThaiKiemDinh;
+    private String ngayDangKiemTiepTheo;
+    private Long thoiHanConLai;
     private String tenDonViBanDau;
     private String tenDonViHienThoi;
     private List<NguonKinhPhi> nguonKinhPhiList;

@@ -807,7 +807,6 @@ export default function AssetManagerForm({
           <Typography>Chi tiết tài sản</Typography>
           <Box display="flex" gap={1.5} alignItems="center">
             {!readOnly && <SaveBtn onSave={formik.submitForm} />}
-            {!readOnly && <CancelBtn onClick={onCancel} />}
             {readOnly && <EditButton onClick={onEdit} />}
             {!readOnly && (
               <Button
@@ -831,6 +830,7 @@ export default function AssetManagerForm({
                 Thêm tài sản
               </Button>
             )}
+            <CancelBtn onClick={onCancel} />
           </Box>
         </Box>
 

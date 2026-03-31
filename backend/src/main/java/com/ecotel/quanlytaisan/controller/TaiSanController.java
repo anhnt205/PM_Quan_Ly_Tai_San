@@ -167,6 +167,20 @@ public class TaiSanController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
         }
     }
+    @GetMapping("/sap-het-han-kiem-dinh")
+    public ResponseEntity<ApiResponse<Object>> getSapHetHanKiemDinhPaged(
+            @RequestParam("idcongty") String idcongty,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "soNgayThongBaoKiemDinh", defaultValue = "10") int soNgayThongBaoKiemDinh
+    ) {
+        try {
+            PageResponse<TaiSanDTO> result = taiSanService.getSapHetHanKiemDinhPaged(idcongty, page, size, soNgayThongBaoKiemDinh);
+            return ResponseEntity.ok(ApiResponse.success("Lấy danh sách tài sản sắp hết hạn đăng kiểm thành công", result, null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
     @GetMapping("/loaitaisan/")
     public ResponseEntity<ApiResponse<Object>> getByLoai(@RequestParam("idloataisan") String idloataisan) {
         try {

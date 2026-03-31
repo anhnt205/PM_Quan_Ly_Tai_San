@@ -1834,6 +1834,44 @@ public class TaiSanDao {
         return new PagedResult<>(items, total);
     }
 
+    public long countSapHetHanKiemDinh(String idCongTy, int soNgayThongBaoKiemDinh) {
+        String inspectionStatusSql = getInspectionStatusSql(soNgayThongBaoKiemDinh);
+        String sql = "SELECT COUNT(*) FROM TaiSan ts WHERE ts.IdCongTy = ? AND " + inspectionStatusSql + " = 'SAP_DEN_HAN'";
+        Long result = jdbcTemplate.queryForObject(sql, Long.class, idCongTy);
+        return result != null ? result : 0L;
+    }
+
+    public List<TaiSanDTO> findSapHetHanKiemDinhPaged(String idCongTy, int offset, int limit, int soNgayThongBaoKiemDinh) {
+        String inspectionStatusSql = getInspectionStatusSql(soNgayThongBaoKiemDinh);
+        // NgayDangKiemTiepTheo = 01/(tgKiemDinh + chuKy)
+        String deadlineSql = "DATE_ADD(STR_TO_DATE(CONCAT('01/', ts.tgKiemDinh), '%d/%m/%Y'), INTERVAL ts.chuKyKiemDinh MONTH)";
+        
+        String sql = String.format("""
+                SELECT 
+                    ts.Id,
+                    ts.TenTaiSan,
+                    ts.SoThe,
+                    ts.tgKiemDinh,
+                    ts.chuKyKiemDinh,
+                    DATE_FORMAT(%s, '%%d/%%m/%%Y') AS ngayDangKiemTiepTheo,
+                    DATEDIFF(%s, CURRENT_DATE) AS thoiHanConLai,
+                    'SAP_DEN_HAN' AS trangThaiKiemDinh,
+                    pb1.TenPhongBan AS tenDonViBanDau,
+                    pb2.TenPhongBan AS tenDonViHienThoi,
+                    dvt.TenDonVi AS tenDonViTinh
+                FROM 
+                    TaiSan AS ts
+                LEFT JOIN PhongBan AS pb1 ON ts.IdDonViBanDau = pb1.Id
+                LEFT JOIN PhongBan AS pb2 ON ts.IdDonViHienThoi = pb2.Id
+                LEFT JOIN DonViTinh AS dvt ON ts.DonViTinh = dvt.Id
+                WHERE ts.IdCongTy = ? AND %s = 'SAP_DEN_HAN'
+                ORDER BY thoiHanConLai ASC
+                LIMIT ? OFFSET ?
+                """, deadlineSql, deadlineSql, inspectionStatusSql);
+        
+        return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(TaiSanDTO.class), idCongTy, limit, offset);
+    }
+
     private String getInspectionStatusSql(int soNgayThongBaoKiemDinh) {
         return String.format("""
             (CASE 

@@ -25,7 +25,7 @@ export const SignHeader = ({
     }}
   >
     {/* Left Section */}
-    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+    <Box sx={{ display: "flex", alignItems: "center", gap: 2, flex: 1, minWidth: 0 }}>
       <Box
         sx={{
           width: 40,
@@ -36,19 +36,23 @@ export const SignHeader = ({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          flexShrink: 0,
         }}
       >
         <Description sx={{ color: "white", fontSize: 22 }} />
       </Box>
 
-      <Box>
+      <Box sx={{ minWidth: 0 }}>
         <Typography
           variant="h6"
           sx={{
             fontWeight: 600,
-            fontSize: "1.125rem",
+            fontSize: title ? "0.8rem" : "1.125rem",
             color: "#111827",
             mb: 0.25,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
           }}
         >
           {title || "Soạn & Ký Tài Liệu"}
@@ -71,7 +75,7 @@ export const SignHeader = ({
     </Box>
 
     {/* Right Section */}
-    <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
+    <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", flexShrink: 0 }}>
       <Button
         variant="contained"
         size="medium"
