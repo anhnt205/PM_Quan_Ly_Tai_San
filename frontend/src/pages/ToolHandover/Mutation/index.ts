@@ -63,6 +63,35 @@ export const useToolHandoverMutation = () => {
         });
       }
 
+      if (data.trangThai === 3) {
+        updateAssetOwnershipMutation.mutate(
+          data.chiTietBanGiaoCCDCVatTu.map((item: any) => ({
+            idCCDCVT: item.idCCDCVatTu,
+            idDonViGui: data.idDonViGiao,
+            idDonViNhan: data.idDonViNhan,
+            idTsCon: item.idChiTietCCDCVatTu,
+            soLuongBanGiao: item.soLuong,
+            thoiGianBanGiao: now,
+          })),
+        );
+        updateStateAssetTransferMutation.mutate({
+          id: data.lenhDieuDong,
+          trangThaiBanGiao: true,
+        });
+        createManyHistoryToolMutation.mutate(
+          data.chiTietBanGiaoCCDCVatTu.map((item: any) => ({
+            id: generateCode("LSDCCCDC-") + `${item.idCCDCVatTu} -`,
+            idBanGiaoCCDCVatTu: idBGTS,
+            idCCDCVatTu: item.idCCDCVatTu,
+            idChiTietCCDCVatTu: item.idChiTietCCDCVatTu,
+            idDonViNhan: data.idDonViNhan,
+            idDonViGiao: data.idDonViGiao,
+            soLuong: item.soLuong,
+            thoiGianBanGiao: now,
+          })),
+        );
+      }
+
       const list = await listNguoiKy([data]);
       socketService.send({
         type: MessageTypeFunctions.TOOL_HANDOVER,
@@ -397,7 +426,7 @@ export const useToolHandoverMutation = () => {
       );
       return res.data.data;
     },
-    onSuccess: (response, data) => {
+    onSuccess: async (response, data) => {
       queryClient.invalidateQueries({ queryKey: [mainKey] });
       if (response === 3) {
         updateAssetOwnershipMutation.mutate(
@@ -427,6 +456,11 @@ export const useToolHandoverMutation = () => {
           })),
         );
       }
+      const list = await listNguoiKy([data.assetHandover]);
+      socketService.send({
+        type: MessageTypeFunctions.TOOL_HANDOVER,
+        recieve: list,
+      });
       console.log("Cập nhật trạng thái ký thành công");
     },
     onError: (error: any) => {

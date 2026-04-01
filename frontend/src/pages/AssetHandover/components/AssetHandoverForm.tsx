@@ -18,6 +18,12 @@ import {
   TableRow,
   TableHead,
   TextField,
+  Checkbox,
+  FormControlLabel,
+  Radio,
+  RadioGroup,
+  FormControl,
+  FormLabel,
 } from "@mui/material";
 import {
   ArrowDropDown,
@@ -187,7 +193,7 @@ export default function AssetHandoverForm({
       share: false,
       duongDanFile: "",
       tenFile: "",
-      byStep: false,
+      byStep: true,
       giamDocKy: false,
       taiLieuBangKe: "",
       nguoiKyList: [] as any[],
@@ -282,12 +288,23 @@ export default function AssetHandoverForm({
       } else {
         await S3Service.updatePresignedPutUrl(keyTaiLieuBangKe, bobBangKe);
       }
+      const isSigningRequired = values.byStep;
+
       onSave({
         ...values,
-        trangThai: 0,
+        trangThai: isSigningRequired ? 0 : 3,
+        share: !isSigningRequired,
+        daiDienBenGiaoXacNhan:
+          !isSigningRequired && values.idDaiDienBenGiao ? true : false,
+        daiDienBenNhanXacNhan:
+          !isSigningRequired && values.idDaiDienBenNhan ? true : false,
+        giamDocKy: !isSigningRequired && values.idGiamDoc ? true : false,
         quyetDinhDieuDongSo: values.lenhDieuDong,
         chiTietBanGiaoTaiSan,
-        nguoiKyList,
+        nguoiKyList: nguoiKyList.map((item: any) => ({
+          ...item,
+          trangThai: !isSigningRequired ? 1 : 0,
+        })),
         duongDanFile: keyTailieu,
         taiLieuBangKe: keyTaiLieuBangKe,
       });
@@ -702,6 +719,50 @@ export default function AssetHandoverForm({
                       )}
                       disabled={readOnly}
                     />
+                  </Grid>
+
+                  <Grid size={12}>
+                    <FormControl
+                      component="fieldset"
+                      disabled={readOnly}
+                      sx={{ mb: 1 }}
+                    >
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight={600}
+                        gutterBottom
+                      >
+                        Thực hiện luồng ký duyệt?
+                      </Typography>
+                      <RadioGroup
+                        row
+                        name="byStep"
+                        value={formik.values.byStep ? "true" : "false"}
+                        onChange={(e) => {
+                          formik.setFieldValue(
+                            "byStep",
+                            e.target.value === "true",
+                          );
+                        }}
+                      >
+                        <FormControlLabel
+                          value="true"
+                          control={<Radio color="primary" />}
+                          label={
+                            <Typography sx={{ fontWeight: 500 }}>Có</Typography>
+                          }
+                        />
+                        <FormControlLabel
+                          value="false"
+                          control={<Radio color="primary" />}
+                          label={
+                            <Typography sx={{ fontWeight: 500 }}>
+                              Không
+                            </Typography>
+                          }
+                        />
+                      </RadioGroup>
+                    </FormControl>
                   </Grid>
                 </Grid>
               </Grid>

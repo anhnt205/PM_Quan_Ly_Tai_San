@@ -11,6 +11,45 @@ import autoTable from "jspdf-autotable";
 import { findById, formatted } from "../../../utils/helpers";
 import jsPDF from "jspdf";
 
+const getStatusDetails = (status: number) => {
+  switch (status) {
+    case 0:
+      return { label: "Nháp", color: "#9e9e9e" }; // Đỏ
+    case 1:
+      return { label: "Duyệt", color: "#ff9800" }; // Cam
+    case 2:
+      return { label: "Hủy", color: "#4caf50" }; // Xanh lá
+    case 3:
+      return { label: "Chưa ban hành", color: "#9c27b0" }; // Xanh lá
+    case 4:
+      return { label: "Đã ban hành", color: "#68b9f0" }; // Xanh lá
+    default:
+      return { label: "Nháp", color: "#9e9e9e" }; // Xám
+  }
+};
+
+export const showStatus = (status: number) => {
+  const { label, color } = getStatusDetails(status);
+
+  return (
+    <Chip
+      label={label}
+      sx={{
+        backgroundColor: color,
+        color: "white",
+        fontWeight: 500,
+        fontSize: "12px",
+        borderRadius: "4px", // BorderRadius.circular(4)
+        height: "auto",
+        padding: "1px 5px", // EdgeInsets.symmetric(horizontal: 5, vertical: 1)
+        mb: "2px", // margin: const EdgeInsets.only(bottom: 2)
+        "& .MuiChip-label": {
+          padding: 0,
+        },
+      }}
+    />
+  );
+};
 export const getStatusHandoverText = (status: number) => {
   switch (status) {
     case 0:

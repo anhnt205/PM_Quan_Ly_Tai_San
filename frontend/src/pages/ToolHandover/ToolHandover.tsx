@@ -603,7 +603,6 @@ export default function ToolHandover() {
             staffs={staffs}
             departments={departments}
             positions={positions}
-            handleSignatureList={handleSignatureList}
             isEdit={false}
             bangKe={selectedRow.taiLieuBangKe}
           />
@@ -835,7 +834,6 @@ export default function ToolHandover() {
                             staffs={staffs}
                             departments={departments}
                             positions={positions}
-                            handleSignatureList={handleSignatureList}
                             isEdit={false}
                             bangKe={selectedRow.taiLieuBangKe}
                             title={`${selectedRow?.banGiaoCCDCVatTu || ""} (${selectedRow?.id || ""})`}

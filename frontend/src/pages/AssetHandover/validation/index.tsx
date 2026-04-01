@@ -10,9 +10,9 @@ export const assetHandoverValidationSchema = yup.object({
   ngayQuyetDinh: yup.string().required("Chọn ngày quyết định"),
   ngayBanGiao: yup.string().required("Chọn ngày bàn giao"),
   ngayTaoChungTu: yup.string().required("Chọn ngày tạo chứng từ"),
-  idDaiDienBenGiao: yup.string().required("Chọn đại diện đơn vị giao"),
-  idDaiDienBenNhan: yup.string().required("Chọn đại diện đơn vị nhận"),
-  idGiamDoc: yup.string().required("Chọn giám đốc xác nhận"),
+  // idDaiDienBenGiao: yup.string().required("Chọn đại diện đơn vị giao"),
+  // idDaiDienBenNhan: yup.string().required("Chọn đại diện đơn vị nhận"),
+  // idGiamDoc: yup.string().required("Chọn giám đốc xác nhận"),
   tenFile: yup.string().required("Chọn tài liệu quyết định"),
   chiTietBanGiaoTaiSan: yup.array().of(
     yup.object({

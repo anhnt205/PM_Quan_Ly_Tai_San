@@ -55,6 +55,29 @@ export const useAssetHandoverMutation = () => {
         });
       }
 
+      if (data.trangThai === 3) {
+        updateAssetOwnershipMutation.mutate(
+          data.chiTietBanGiaoTaiSan.map((item) => ({
+            id: item.idTaiSan,
+            idDonVi: data.idDonViNhan,
+          })),
+        );
+        updateStateAssetTransferMutation.mutate({
+          id: data.lenhDieuDong,
+          trangThaiBanGiao: true,
+        });
+        createManyHistoryAssetMutation.mutate(
+          data.chiTietBanGiaoTaiSan.map((item, index) => ({
+            id: generateCode("LSDCTS-") + `${item.idTaiSan} -`,
+            idBanGiaoTaiSan: idBGTS,
+            idTaiSan: item.idTaiSan,
+            idDonViNhan: data.idDonViNhan,
+            idDonViGiao: data.idDonViGiao,
+            thoiGianBanGiao: dayjs(new Date()).format("YYYY-MM-DD"),
+          })),
+        );
+      }
+
       const list = await listNguoiKy([data]);
       socketService.send({
         type: MessageTypeFunctions.ASSET_HANDOVER,
