@@ -27,7 +27,6 @@ import { FilterOption } from "../../components/common/FilterStatusGroup";
 import {
   showDownloadFile,
   showShareStatus,
-  showStatus,
   showStatusDocument,
 } from "../AssetTransfer/config";
 import { useSelector } from "react-redux";
@@ -39,6 +38,7 @@ import {
   isCheckShowDelete,
   isCheckShowShare,
   ShowPermissionSigning,
+  showStatus,
   StatusHandover,
 } from "./config";
 import { showConfirmAlert } from "../../components/Alert";
@@ -620,7 +620,7 @@ export default function AssetHandover() {
             staffs={staffs}
             departments={departments}
             positions={positions}
-            handleSignatureList={handleSignatureList}
+            // handleSignatureList={handleSignatureList}
             isEdit={false}
             bangKe={selectedRow.taiLieuBangKe}
           />
@@ -864,7 +864,7 @@ export default function AssetHandover() {
                             staffs={staffs}
                             departments={departments}
                             positions={positions}
-                            handleSignatureList={handleSignatureList}
+                            // handleSignatureList={handleSignatureList}
                             isEdit={false}
                             bangKe={selectedRow.taiLieuBangKe}
                             title={`${selectedRow?.banGiaoTaiSan || ""} (${selectedRow?.id || ""})`}

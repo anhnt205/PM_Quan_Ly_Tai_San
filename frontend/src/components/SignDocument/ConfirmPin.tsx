@@ -9,7 +9,6 @@ import {
   IconButton,
   InputAdornment,
   Typography,
-  Box,
 } from "@mui/material";
 import { Close, Visibility, VisibilityOff } from "@mui/icons-material";
 

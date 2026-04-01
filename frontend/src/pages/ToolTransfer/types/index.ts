@@ -1,20 +1,5 @@
-export interface ToolSignature {
-  id: string;
-  idTaiLieu: string;
-  loaiKy: number;
-  x: number;
-  y: number;
-  isLocked: boolean;
-  page?: number;
-  idNguoiKy: string;
-  chuKySo: string;
-  ngayKy: string;
-  stt: number;
-  chuKyNhay: string;
-  chuKyThuong: string;
-  scale: number;
-  width: number;
-}
+import { SignaturesData as ToolSignature } from "../../../components/SignDocument/types";
+export type { ToolSignature };
 
 export interface ToolSigner {
   id: string;
