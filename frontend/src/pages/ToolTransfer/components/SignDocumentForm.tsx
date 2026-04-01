@@ -271,9 +271,14 @@ export default function SignDocumentForm({
 
   useEffect(() => {
     if (employee && !hasAutoSigned.current && signatures.length === 0) {
-      if (employee.kySo) setSignatureType(3);
-      else if (employee.kyThuong) setSignatureType(2);
-      else if (employee.kyNhay) setSignatureType(1);
+      if (employee.kySo) {
+        if (employee.kyThuong) setSignatureType(4);
+        else if (employee.kyNhay) setSignatureType(5);
+        else setSignatureType(3);
+      } else {
+        if (employee.kyThuong) setSignatureType(2);
+        else if (employee.kyNhay) setSignatureType(1);
+      }
     }
   }, [employee, signatures.length]);
 
@@ -764,3 +769,4 @@ export default function SignDocumentForm({
     </Box>
   );
 }
+

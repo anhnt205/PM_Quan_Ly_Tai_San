@@ -283,7 +283,7 @@ export default function ToolTransfer() {
   };
 
   const columns: GridColDef<ToolTransferData>[] = [
-        {
+    {
       field: "trangThai",
       headerName: "Trạng thái phiếu",
       width: 140,
@@ -494,6 +494,7 @@ export default function ToolTransfer() {
 
       {showSignDocument && isFullPageSign ? (
         <SignDocumentForm
+          key={selectedRow?.id}
           selectedIds={selectedIds}
           document={selectedDocument}
           onCancel={handleClose}
@@ -557,7 +558,9 @@ export default function ToolTransfer() {
               }}
             >
               <Grid
-                size={{ xs: showSidebar && sidebarMode === "document" ? 6 : 12 }}
+                size={{
+                  xs: showSidebar && sidebarMode === "document" ? 6 : 12,
+                }}
                 sx={{
                   transition: "all 0.3s ease",
                   borderRight: showSidebar ? "1px solid" : "none",
@@ -645,9 +648,7 @@ export default function ToolTransfer() {
                     >
                       <Tab label="Tài liệu" />
                       <Tab label="Quy trình ký" />
-                      <Tab
-                        label="Biên bản"
-                      />
+                      <Tab label="Biên bản" />
                     </Tabs>
                     <IconButton
                       size="small"
@@ -669,6 +670,7 @@ export default function ToolTransfer() {
                         }}
                       >
                         <SignDocumentForm
+                          key={selectedRow?.id}
                           selectedIds={selectedIds}
                           document={selectedDocument}
                           onCancel={handleClose}
@@ -690,6 +692,7 @@ export default function ToolTransfer() {
                         }}
                       >
                         <SignerSidebar
+                          key={selectedRow?.id}
                           selectedRow={selectedRow}
                           handoverDetails={detailData}
                           onClose={() => {

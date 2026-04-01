@@ -20,7 +20,7 @@ import { RootState } from "../../../redux/store";
 import { ToolHandoverData, SignaturesData } from "../types";
 import dayjs from "dayjs";
 import { showErrorAlert } from "../../../components/Alert";
-import { canUserSign, generateBienBanPdf } from "../config";
+import { canUserSign, canSign, generateBienBanPdf } from "../config";
 import axios from "axios";
 import { ConfirmPin } from "../../AssetTransfer/components/ConfirmPin";
 import { SignHeader } from "../../../components/SignDocument/SignHeader";
@@ -31,6 +31,7 @@ import { useStaffMutation } from "../../Staff/Mutation";
 import api from "../../../config/api.config";
 import renderDigitalSignatureToImage from "../../../components/SignDocument/DigitalSignatureToImage";
 import S3Service from "../../../services/S3Service";
+import SignActionBar from "../../../components/SignDocument/SignDocumentActionBar";
 
 // --- Config Worker ---
 if (typeof window !== "undefined") {
@@ -293,12 +294,16 @@ export default function SignDocumentForm({
 
   useEffect(() => {
     if (employee && !hasAutoSigned.current && signatures.length === 0) {
-      if (employee.kySo) setSignatureType(3);
-      else if (employee.kyThuong) setSignatureType(2);
-      else if (employee.kyNhay) setSignatureType(1);
+      if (employee.kySo) {
+        if (employee.kyThuong) setSignatureType(4);
+        else if (employee.kyNhay) setSignatureType(5);
+        else setSignatureType(3);
+      } else {
+        if (employee.kyThuong) setSignatureType(2);
+        else if (employee.kyNhay) setSignatureType(1);
+      }
     }
   }, [employee, signatures.length]);
-
 
   // 3. Cập nhật hàm xử lý vị trí (Nhận ratio thay vì pixel)
   const handleUpdatePosition = (
@@ -453,8 +458,8 @@ export default function SignDocumentForm({
             // Chế độ SIGN/VIEW: Tải file đã chốt từ S3
             const blob = await S3Service.preview(bangKe);
             finalBytes = new Uint8Array(await blob.arrayBuffer());
-          }else{
-            return showErrorAlert("Không có tài liệu đính kèm để hiển thị")
+          } else {
+            return showErrorAlert("Không có tài liệu đính kèm để hiển thị");
           }
         } else {
           // Chế độ CREATE/EDIT: Tự động generate PDF từ dữ liệu hiện tại
@@ -488,7 +493,7 @@ export default function SignDocumentForm({
     return () => {
       if (pdfUrl) URL.revokeObjectURL(pdfUrl);
     };
-  }, [documentUrl, previewDocument, isEdit, toolHandover]); // Thêm assetHandover để re-gen khi dữ liệu thay đổi
+  }, [documentUrl, previewDocument, isEdit, toolHandover, bangKe]); // Thêm assetHandover để re-gen khi dữ liệu thay đổi
 
   // --- Render PDF ---
   useEffect(() => {
@@ -741,6 +746,20 @@ export default function SignDocumentForm({
               {pdfError}
             </Alert>
           )}
+
+          {/* {!fullscreen && employee && canSign([toolHandover], user) && (
+            <SignActionBar
+              signatureType={signatureType}
+              setSignatureType={setSignatureType}
+              employee={employee}
+              handleSign={handleSign}
+              handleConfirmSign={handleConfirmSign}
+              onCancel={() => {
+                onCancel();
+                setSignatures([]);
+              }}
+            />
+          )} */}
 
           {loading ? (
             <CircularProgress sx={{ mt: 10 }} />

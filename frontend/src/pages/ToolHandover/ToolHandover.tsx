@@ -592,6 +592,7 @@ export default function ToolHandover() {
       {showSignDocument && isFullPageSign ? (
         activeTab === 0 ? (
           <SignDocumentForm
+            key={selectedRow?.id}
             selectedIds={selectedIds}
             onCancel={handleClose}
             onSign={handleSign}
@@ -608,6 +609,7 @@ export default function ToolHandover() {
           />
         ) : (
           <SignDocumentTransferForm
+            key={selectedRow?.id}
             selectedIds={selectedIds}
             document={selectedDocument}
             onCancel={handleClose}
@@ -822,6 +824,7 @@ export default function ToolHandover() {
                       >
                         {activeTab === 0 ? (
                           <SignDocumentForm
+                            key={selectedRow?.id}
                             selectedIds={selectedIds}
                             onCancel={handleClose}
                             onSign={handleSign}
@@ -839,6 +842,7 @@ export default function ToolHandover() {
                           />
                         ) : (
                           <SignDocumentTransferForm
+                            key={selectedRow?.id}
                             selectedIds={selectedIds}
                             document={selectedDocument}
                             onCancel={handleClose}
@@ -864,6 +868,7 @@ export default function ToolHandover() {
                         }}
                       >
                         <SignerSidebar
+                          key={selectedRow?.id}
                           selectedRow={selectedRow}
                           onClose={() => {
                             setShowSidebar(false);

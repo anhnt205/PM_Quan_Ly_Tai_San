@@ -307,6 +307,7 @@ export const canSign = (items: any[], userInfo: any): boolean => {
     return false;
   }
   const item = items[0];
+  if(item.trangThai === 2) return false;
   const signatureFlow = buildSignatureFlow(item);
 
   // Tìm vị trí của người dùng hiện tại trong luồng ký

@@ -181,6 +181,7 @@ export default function AssetTransfer() {
 
   const handleRowClick = async (params: GridRowParams) => {
     const data = params.row as AssetTransferData;
+    setSelectedIds([data.id]);
     setSelectedRow(data);
     setShowForm(false);
     setReadOnly(true);
@@ -534,6 +535,7 @@ export default function AssetTransfer() {
 
       {showSignDocument && isFullPageSign ? (
         <SignDocumentForm
+          key={selectedRow?.id}
           selectedIds={selectedIds}
           document={selectedDocument}
           onCancel={handleClose}
@@ -702,6 +704,7 @@ export default function AssetTransfer() {
                         }}
                       >
                         <SignDocumentForm
+                          key={selectedRow?.id}
                           selectedIds={selectedIds}
                           document={selectedDocument}
                           onCancel={handleClose}
@@ -724,6 +727,7 @@ export default function AssetTransfer() {
                         }}
                       >
                         <SignerSidebar
+                          key={selectedRow?.id}
                           selectedRow={selectedRow}
                           onClose={() => {
                             setShowSidebar(false);

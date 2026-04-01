@@ -144,7 +144,7 @@ export default function AssetHandover() {
 
   const handleTabChange = (_event: SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
-    handleClose()
+    handleClose();
   };
 
   const { data: assetHandover = { items: [] } } = useAssetHandoverPageQuery(
@@ -609,6 +609,7 @@ export default function AssetHandover() {
       {showSignDocument && isFullPageSign ? (
         activeTab === 0 ? (
           <SignDocumentForm
+            key={selectedRow?.id}
             selectedIds={selectedIds}
             onCancel={handleClose}
             onSign={handleSign}
@@ -625,11 +626,12 @@ export default function AssetHandover() {
           />
         ) : (
           <SignDocumentTransferForm
-            selectedIds={[assetTransfer.id]}
+            key={selectedRow?.id}
+            selectedIds={[selectedRow.id]}
             document={selectedDocument}
             onCancel={handleClose}
             onSign={() => {}}
-            assetTransferDetail={assetTransfer.chiTietDieuDongTaiSanDTOS || []}
+            assetTransferDetail={selectedRow.chiTietDieuDongTaiSanDTOS || []}
             showSignerSidebar={showSignerSidebar}
             allUnits={allUnits}
             allCurrentStatus={allCurrentStatus}
@@ -851,7 +853,8 @@ export default function AssetHandover() {
                       >
                         {activeTab === 0 ? (
                           <SignDocumentForm
-                            selectedIds={selectedIds}
+                            key={selectedRow?.id}
+                            selectedIds={[selectedRow?.id]}
                             onCancel={handleClose}
                             onSign={handleSign}
                             assetHandover={selectedRow}
@@ -868,6 +871,7 @@ export default function AssetHandover() {
                           />
                         ) : (
                           <SignDocumentTransferForm
+                            key={selectedRow?.id}
                             selectedIds={[selectedRow.id]}
                             document={selectedDocument}
                             onCancel={handleClose}
@@ -893,6 +897,7 @@ export default function AssetHandover() {
                         }}
                       >
                         <SignerSidebar
+                          key={selectedRow?.id}
                           selectedRow={selectedRow}
                           onClose={() => {
                             setShowSidebar(false);

@@ -18,7 +18,7 @@ import { RootState } from "../../../redux/store";
 import { AssetHandoverData, SignaturesData } from "../types";
 import dayjs from "dayjs";
 import { showErrorAlert } from "../../../components/Alert";
-import { canUserSign, generateBienBanPdf } from "../config";
+import { canUserSign, canSign, generateBienBanPdf } from "../config";
 import axios from "axios";
 import { ConfirmPin } from "../../AssetTransfer/components/ConfirmPin";
 import CollapsibleSidebar from "../../../components/SignDocument/CollapsibleSidebar";
@@ -28,6 +28,7 @@ import { SignHeader } from "../../../components/SignDocument/SignHeader";
 
 import renderDigitalSignatureToImage from "../../../components/SignDocument/DigitalSignatureToImage";
 import S3Service from "../../../services/S3Service";
+import SignDocumentActionBar from "../../../components/SignDocument/SignDocumentActionBar";
 
 if (typeof window !== "undefined") {
   pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
@@ -272,9 +273,14 @@ export default function SignDocumentForm({
 
   useEffect(() => {
     if (employee && !hasAutoSigned.current && signatures.length === 0) {
-      if (employee.kySo) setSignatureType(3);
-      else if (employee.kyThuong) setSignatureType(2);
-      else if (employee.kyNhay) setSignatureType(1);
+      if (employee.kySo) {
+        if (employee.kyThuong) setSignatureType(4);
+        else if (employee.kyNhay) setSignatureType(5);
+        else setSignatureType(3);
+      } else {
+        if (employee.kyThuong) setSignatureType(2);
+        else if (employee.kyNhay) setSignatureType(1);
+      }
     }
   }, [employee, signatures.length]);
 
@@ -492,7 +498,7 @@ export default function SignDocumentForm({
     return () => {
       if (pdfUrl) URL.revokeObjectURL(pdfUrl);
     };
-  }, [documentUrl, previewDocument, isEdit, assetHandover]); // Thêm assetHandover để re-gen khi dữ liệu thay đổi
+  }, [documentUrl, previewDocument, isEdit, assetHandover, bangKe]); // Thêm assetHandover và bangKe để re-gen khi dữ liệu thay đổi
 
   // --- Render PDF ---
   useEffect(() => {
@@ -780,6 +786,20 @@ export default function SignDocumentForm({
               {pdfError}
             </Alert>
           )}
+
+          {/* {!fullscreen && employee && canSign([assetHandover], user) && (
+            <SignDocumentActionBar
+              signatureType={signatureType}
+              setSignatureType={setSignatureType}
+              employee={employee}
+              handleSign={handleSign}
+              handleConfirmSign={handleConfirmSign}
+              onCancel={() => {
+                onCancel();
+                setSignatures([]);
+              }}
+            />
+          )} */}
 
           {loading ? (
             <CircularProgress />
