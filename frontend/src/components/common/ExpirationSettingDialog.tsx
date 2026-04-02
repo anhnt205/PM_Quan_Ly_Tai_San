@@ -15,8 +15,12 @@ import {
   alpha,
   useTheme,
   DialogActions,
+  MenuItem,
 } from "@mui/material";
 import { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import api from "../../config/api.config";
+import { showErrorAlert, showSuccessAlert } from "../Alert";
 
 interface ExpirationSettingDialogProps {
   open: boolean;
@@ -47,6 +51,46 @@ export default function ExpirationSettingDialog({
   const [registrationWarningDays, setRegistrationWarningDays] =
     useState<string>("0");
   const [error, setError] = useState<string>("");
+
+  const [selectedDbConfigId, setSelectedDbConfigId] = useState<string>("");
+  const [syncIntervalHours, setSyncIntervalHours] = useState<string>("0");
+
+  const queryClient = useQueryClient();
+
+  const { data: dbConfigs = [] } = useQuery({
+    queryKey: ["dbConfigList_Expiration"],
+    queryFn: async () => {
+      const res = await api.get("/dbconfig");
+      return res.data.data || [];
+    },
+    enabled: open,
+  });
+
+  useEffect(() => {
+    if (dbConfigs.length > 0) {
+      const defaultDb = dbConfigs.find((db: any) => db.isDefault === true || db.isDefault === 1);
+      if (defaultDb) {
+        setSelectedDbConfigId(defaultDb.id);
+        setSyncIntervalHours(String(defaultDb.syncIntervalHours || 0));
+      }
+    }
+  }, [dbConfigs]);
+
+  const updateDbConfigDefaultMutation = useMutation({
+    mutationFn: async ({ id, hours }: { id: string; hours: number }) => {
+      if (!id) return;
+      await api.put(`/dbconfig/${id}/default?syncIntervalHours=${hours}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dbConfigList_Expiration"] });
+      showSuccessAlert("Cấu hình thời gian được lưu thành công!");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message || "Đã xảy ra lỗi khi cấu hình thời gian!"
+      );
+    }
+  });
 
   useEffect(() => {
     if (open && initialConfig) {
@@ -99,6 +143,16 @@ export default function ExpirationSettingDialog({
 
     setError("");
     if (onConfirm) {
+      if (selectedDbConfigId) {
+        try {
+          await updateDbConfigDefaultMutation.mutateAsync({
+            id: selectedDbConfigId,
+            hours: parseInt(syncIntervalHours) || 0,
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      }
       await onConfirm(exp, warn, regWarn);
     }
     onClose();
@@ -327,6 +381,77 @@ export default function ExpirationSettingDialog({
                 sx: { ml: 0, mt: 0.5, color: theme.palette.grey[600] },
               }}
             />
+          </Paper>
+
+          {/* Thiết lập đồng bộ cơ sở dữ liệu */}
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              backgroundColor: "white",
+              border: `1px solid ${theme.palette.grey[200]}`,
+              transition: "all 0.2s",
+              "&:hover": {
+                borderColor: theme.palette.secondary.light,
+                boxShadow: `0 2px 8px ${alpha(theme.palette.secondary.main, 0.1)}`,
+              },
+            }}
+          >
+            <Typography
+              variant="subtitle2"
+              fontWeight="bold"
+              sx={{ mb: 1.5, display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <Box
+                component="span"
+                sx={{
+                  width: 4,
+                  height: 20,
+                  bgcolor: theme.palette.secondary.main,
+                  borderRadius: 1,
+                  display: "inline-block",
+                }}
+              />
+              Thiết lập đồng bộ cơ sở dữ liệu
+            </Typography>
+            <Box display="flex" gap={2}>
+              <TextField
+                select
+                fullWidth
+                label="Chọn cơ sở dữ liệu đồng bộ"
+                value={selectedDbConfigId}
+                onChange={(e) => setSelectedDbConfigId(e.target.value)}
+                variant="outlined"
+                size="medium"
+                sx={{ backgroundColor: theme.palette.grey[50], flex: 2 }}
+              >
+                <MenuItem value="">
+                  <em>Không chọn</em>
+                </MenuItem>
+                {dbConfigs.map((db: any) => (
+                  <MenuItem key={db.id} value={db.id}>
+                    {db.dbName} ({db.dbms} - {db.ip})
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                fullWidth
+                type="number"
+                label="Chu kỳ tự động đồng bộ"
+                value={syncIntervalHours}
+                onChange={(e) => setSyncIntervalHours(normalizeValue(e.target.value))}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">giờ</InputAdornment>
+                  ),
+                  sx: { backgroundColor: theme.palette.grey[50] },
+                }}
+                variant="outlined"
+                size="medium"
+                sx={{ flex: 1 }}
+              />
+            </Box>
           </Paper>
         </Box>
       </DialogContent>

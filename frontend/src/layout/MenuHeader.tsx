@@ -866,7 +866,7 @@ export default function Menuheader() {
             <ListItemIcon>
               <Settings fontSize="small" color="success" />
             </ListItemIcon>
-            <Typography>Thiết lập thời gian hết hạn</Typography>
+            <Typography>Thiết lập thời gian</Typography>
           </MenuItem>
           <MenuItem sx={{ py: 2 }} onClick={handleOpenMssqlDialog}>
             <ListItemIcon>

@@ -13,4 +13,6 @@ public class DbConfig {
     private String password;
     private String ngayTao;
     private String ngayCapNhat;
+    private Boolean isDefault;
+    private Integer syncIntervalHours;
 }

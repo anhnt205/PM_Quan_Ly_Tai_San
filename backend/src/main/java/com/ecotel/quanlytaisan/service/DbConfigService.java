@@ -4,6 +4,7 @@ import com.ecotel.quanlytaisan.dao.DbConfigDao;
 import com.ecotel.quanlytaisan.model.DbConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -27,6 +28,18 @@ public class DbConfigService {
 
     public int update(DbConfig config) {
         return dbConfigDao.update(config);
+    }
+
+    @Transactional
+    public int setDefault(String id, Integer syncIntervalHours) {
+        dbConfigDao.clearDefault();
+        DbConfig config = dbConfigDao.findById(id);
+        if (config != null) {
+            config.setIsDefault(true);
+            config.setSyncIntervalHours(syncIntervalHours);
+            return dbConfigDao.update(config);
+        }
+        return 0;
     }
 
     public int delete(String id) {

@@ -27,6 +27,16 @@ export const generateCode = (prefix: string) => {
   return `${prefix}${yyyy}${MM}${dd}-${HH}${mm}${ss}-${random}`;
 };
 
+export const loadImage = (url: string): Promise<HTMLImageElement> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = (err) => reject(err);
+    img.src = url;
+  });
+};
+
 export const formattedPrice = (price?: number | null) => {
   if (!price) return "";
 
@@ -95,11 +105,11 @@ export function getAssetTransferCount(
 ) {
   if (!assetTransferList || assetTransferList.length === 0) return 0;
 
-  if(isBanHanh){
+  if (isBanHanh) {
     return assetTransferList.filter((item) => {
       if (item.loai !== type) return false;
-      return item.trangThai === 3
-    }).length
+      return item.trangThai === 3;
+    }).length;
   }
   return assetTransferList.filter((item) => {
     // ===== Filter 1: share hoặc người tạo =====
@@ -178,11 +188,11 @@ export const getToolTransferCount = (
   isBanHanh?: boolean,
 ): number => {
   if (!toolAndMaterialList || toolAndMaterialList.length === 0) return 0;
-   if(isBanHanh){
+  if (isBanHanh) {
     return toolAndMaterialList.filter((item) => {
       if (item.loai !== type) return false;
-      return item.trangThai === 3
-    }).length
+      return item.trangThai === 3;
+    }).length;
   }
 
   return toolAndMaterialList.filter((item) => {
@@ -451,5 +461,3 @@ export const getMaintenanceRepairCount = (
     return true;
   }).length;
 };
-
-

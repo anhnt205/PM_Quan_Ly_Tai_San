@@ -8,8 +8,9 @@ import {
 import socketService from "../../../services/socketService";
 import { MessageTypeFunctions } from "../../../utils/const";
 import autoTable from "jspdf-autotable";
-import { findById, formatted } from "../../../utils/helpers";
+import { findById, formatted, loadImage } from "../../../utils/helpers";
 import jsPDF from "jspdf";
+import imgSig from "../../../assets/images/tick.png";
 
 const getStatusDetails = (status: number) => {
   switch (status) {
@@ -580,6 +581,16 @@ export const generateBienBanPdf = async (
 
   const doc = new jsPDF("p", "mm", "a4");
 
+  // Load ảnh "tíck" hoặc "chữ ký giả" (sign.png)
+  let checkMarkImg: HTMLImageElement | null = null;
+  if (!toolHandover.byStep) {
+    try {
+      checkMarkImg = await loadImage(imgSig);
+    } catch (error) {
+      console.warn("Không load được ảnh sign.png", error);
+    }
+  }
+
   // Đảm bảo font times_new_roman đã được add trước đó
   doc.setFont("times_new_roman", "normal");
 
@@ -756,7 +767,15 @@ export const generateBienBanPdf = async (
     const donViLines = doc.splitTextToSize(s?.donVi || "", colWidth);
     doc.text(donViLines, x, y, { align: "center" });
 
-    // 2️⃣ Họ tên người ký
+    // 2️⃣ Dấu tích (ảnh) khi không chọn luồng duyệt yều cầu
+    if (!toolHandover.byStep && checkMarkImg) {
+      // Điều chỉnh toạ độ X, Y để ảnh lọt vào khoảng trống giữa phòng ban và tên (nameY = y + 35)
+      const imgW = 8;
+      const imgH = 8;
+      doc.addImage(checkMarkImg, "PNG", x - imgW / 2, y + 12, imgW, imgH);
+    }
+
+    // 3️⃣ Họ tên người ký
     // Cố định khoảng cách nameY để tạo khoảng trống cho chữ ký tay
     const nameY = y + 35;
     const hoTenLines = doc.splitTextToSize(s?.hoTen || "", colWidth);

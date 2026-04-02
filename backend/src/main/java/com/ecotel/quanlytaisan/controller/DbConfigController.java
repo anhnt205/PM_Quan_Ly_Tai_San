@@ -106,4 +106,19 @@ public class DbConfigController {
                     .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
         }
     }
+
+    @PutMapping("/{id}/default")
+    public ResponseEntity<ApiResponse<Object>> setDefaultDb(@PathVariable("id") String id, @RequestParam("syncIntervalHours") Integer syncIntervalHours) {
+        try {
+            int result = dbConfigService.setDefault(id, syncIntervalHours);
+            if (result > 0) {
+                return ResponseEntity.ok(ApiResponse.success("Bật cờ mặc định cho DB thành công", null, result));
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.failure("Không tìm thấy cấu hình DB", result));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
 }

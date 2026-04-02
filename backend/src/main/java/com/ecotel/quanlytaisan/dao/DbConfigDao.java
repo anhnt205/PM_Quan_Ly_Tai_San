@@ -29,6 +29,17 @@ public class DbConfigDao {
         return result.isEmpty() ? null : result.get(0);
     }
 
+    public DbConfig findDefault() {
+        String sql = "SELECT * FROM DbConfig WHERE IsDefault = 1";
+        List<DbConfig> result = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(DbConfig.class));
+        return result.isEmpty() ? null : result.get(0);
+    }
+
+    public void clearDefault() {
+        String sql = "UPDATE DbConfig SET IsDefault = 0";
+        jdbcTemplate.update(sql);
+    }
+
     public int insert(DbConfig config) {
         if (config.getId() == null || config.getId().isEmpty()) {
             config.setId(UUID.randomUUID().toString());
@@ -38,11 +49,12 @@ public class DbConfigDao {
         config.setNgayCapNhat(now);
 
         String sql = """
-                INSERT INTO DbConfig (Id, Dbms, Ip, Port, DbName, Username, Password, NgayTao, NgayCapNhat)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO DbConfig (Id, Dbms, Ip, Port, DbName, Username, Password, NgayTao, NgayCapNhat, IsDefault, SyncIntervalHours)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
         return jdbcTemplate.update(sql, config.getId(), config.getDbms(), config.getIp(),
-                config.getPort(), config.getDbName(), config.getUsername(), config.getPassword(), config.getNgayTao(), config.getNgayCapNhat());
+                config.getPort(), config.getDbName(), config.getUsername(), config.getPassword(), 
+                config.getNgayTao(), config.getNgayCapNhat(), config.getIsDefault(), config.getSyncIntervalHours());
     }
 
     public int update(DbConfig config) {
@@ -57,11 +69,14 @@ public class DbConfigDao {
                     DbName = ?,
                     Username = ?,
                     Password = ?,
-                    NgayCapNhat = ?
+                    NgayCapNhat = ?,
+                    IsDefault = ?,
+                    SyncIntervalHours = ?
                 WHERE Id = ?
                 """;
         return jdbcTemplate.update(sql, config.getDbms(), config.getIp(), config.getPort(),
-                config.getDbName(), config.getUsername(), config.getPassword(), config.getNgayCapNhat(), config.getId());
+                config.getDbName(), config.getUsername(), config.getPassword(), config.getNgayCapNhat(), 
+                config.getIsDefault(), config.getSyncIntervalHours(), config.getId());
     }
 
     public int delete(String id) {
