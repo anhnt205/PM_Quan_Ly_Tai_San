@@ -48,6 +48,7 @@ import { generateBangKePdf } from "../config";
 import S3Service from "../../../services/S3Service";
 import { mergeBangKeWithOriginalPdf } from "../../AssetTransfer/config";
 import { CongTy } from "../../../utils/const";
+import ExcelAssetUploader from "../../../components/common/ExcelAssetUploader";
 
 const CustomTableCell = styled(TableCell)(({ theme }) => ({
   borderBottom: "1px solid rgba(224, 224, 224, 1)",
@@ -147,8 +148,9 @@ export default function ToolTransferForm({
     validationSchema: toolTransferValidationSchema,
     onSubmit: async (values) => {
       // Logic map ID tương tự nhưng dùng prefix của Tool
-      const chiTietDieuDongCCDCVatTuDTOS =
-        values.chiTietDieuDongCCDCVatTuDTOS.map((item: any, index) => ({
+      const chiTietDieuDongCCDCVatTuDTOS = values.chiTietDieuDongCCDCVatTuDTOS
+        .filter((i: any) => i.idCCDCVatTu !== "" && i.idCCDCVatTu !== undefined)
+        .map((item: any, index) => ({
           ...item,
           id: `${generateCode("CTBG-")}-${index}`,
         }));
@@ -575,9 +577,70 @@ export default function ToolTransferForm({
 
             {/* --- PHẦN 3: CHI TIẾT TÀI SẢN --- */}
             <Box>
-              <Typography variant="subtitle1" fontWeight={600} mb={2}>
-                Chi tiết ccdc-vật tư điều chuyển:
-              </Typography>
+              <Box display={"flex"} justifyContent={"space-between"}>
+                <Typography variant="subtitle1" fontWeight={600} mb={2}>
+                  Chi tiết ccdc-vật tư điều chuyển:
+                </Typography>
+                <ExcelAssetUploader
+                  availableAssets={[
+                    ...tools,
+                    ...((selectedTool?.chiTietDieuDongCCDCVatTuDTOS as any[]) ||
+                      []),
+                  ].map((item: any) => ({
+                    id: item.idCCDCVatTu || "",
+                    name:
+                      item.tenCCDCVatTu ||
+                      item.ten ||
+                      item.tenDetailAsset ||
+                      "",
+                    originalData: item,
+                  }))}
+                  onUploadSuccess={(matchedWrapperAssets) => {
+                    const existingIds =
+                      formik.values.chiTietDieuDongCCDCVatTuDTOS.map(
+                        (i) => i.idCCDCVatTu,
+                      );
+                    const newItems = matchedWrapperAssets
+                      .map((wrapper) => wrapper.originalData)
+                      .filter(
+                        (item) =>
+                          !existingIds.includes(item.idCCDCVatTu || item.id),
+                      )
+                      .map((item) => ({
+                        idChiTietCCDCVatTu:
+                          item.idChiTietCCDCVatTu || item.idDetaiAsset || "",
+                        idCCDCVatTu: item.idCCDCVatTu || "",
+                        tenCCDCVatTu:
+                          item.tenCCDCVatTu ||
+                          item.ten ||
+                          item.tenDetailAsset ||
+                          "",
+                        donViTinh: item.donViTinh || "",
+                        soLuong: item.soLuong || 0,
+                        soLuongXuat: 1,
+                        soLuongDaBanGiao: 0,
+                        ghiChu: "",
+                        hienTrang: item.hienTrang || "Đang sử dụng",
+                        moTa: item.moTa || "",
+                        isActive: true,
+                        namSanXuat: item.namSanXuat || "",
+                        kyHieu: item.kyHieu || "",
+                        soKyHieu: item.soKyHieu || "",
+                      }));
+
+                    if (newItems.length > 0) {
+                      formik.setFieldValue("chiTietDieuDongCCDCVatTuDTOS", [
+                        ...formik.values.chiTietDieuDongCCDCVatTuDTOS,
+                        ...newItems,
+                      ]);
+                    } else {
+                      alert(
+                        "Không tìm thấy dữ liệu hợp lệ mới nào từ file. Hoặc tất cả công cụ/dụng cụ đã có trong danh sách.",
+                      );
+                    }
+                  }}
+                />
+              </Box>
               <Table
                 size="small"
                 sx={{

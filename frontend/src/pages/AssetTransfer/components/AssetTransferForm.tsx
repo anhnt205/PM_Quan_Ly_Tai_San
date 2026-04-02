@@ -45,6 +45,7 @@ import { generateBangKePdf, mergeBangKeWithOriginalPdf } from "../config";
 import S3Service from "../../../services/S3Service";
 import { assetTransferValidationSchema } from "../validation";
 import { CongTy } from "../../../utils/const";
+import ExcelAssetUploader from "../../../components/common/ExcelAssetUploader";
 
 const CustomTableCell = styled(TableCell)(({ theme }) => ({
   borderBottom: "1px solid rgba(224, 224, 224, 1)",
@@ -155,13 +156,15 @@ export default function AssetTransferForm({
     },
     validationSchema: assetTransferValidationSchema,
     onSubmit: async (values) => {
-      const chiTietDieuDongTaiSanDTOS = values.chiTietDieuDongTaiSanDTOS.map(
-        (item, index) => ({
+      const chiTietDieuDongTaiSanDTOS = values.chiTietDieuDongTaiSanDTOS
+        .filter(
+          (item: any) => item.idTaiSan !== "" || item.idTaiSan !== undefined,
+        )
+        .map((item, index) => ({
           ...item,
           id: `${generateCode("CTDD-")}-${index}`,
           idDieuDongTaiSan: values.id,
-        }),
-      );
+        }));
       const nguoiKyList = values.nguoiKyList.map((item: any, index) => ({
         ...item,
         id: `${generateCode("NK-")}-${index}`,
@@ -574,9 +577,62 @@ export default function AssetTransferForm({
 
             {/* --- PHẦN 3: CHI TIẾT TÀI SẢN --- */}
             <Box>
-              <Typography variant="subtitle1" fontWeight={600} mb={2}>
-                Chi tiết tài sản điều chuyển:
-              </Typography>
+              <Box display={"flex"} justifyContent={"space-between"}>
+                <Typography variant="subtitle1" fontWeight={600} mb={2}>
+                  Chi tiết tài sản điều chuyển:
+                </Typography>
+                <ExcelAssetUploader
+                  availableAssets={[
+                    ...allAssetsByDonVi.items,
+                    ...((selectedTransfer?.chiTietDieuDongTaiSanDTOS as any[]) ||
+                      []),
+                  ].map((item: any) => ({
+                    id: item.id || item.idTaiSan || "",
+                    name: item.tenTaiSan || item.ten || "",
+                    originalData: item,
+                  }))}
+                  onUploadSuccess={(matchedWrapperAssets) => {
+                    const existingIds =
+                      formik.values.chiTietDieuDongTaiSanDTOS.map(
+                        (i) => i.idTaiSan,
+                      );
+                    const newItems = matchedWrapperAssets
+                      .map((wrapper) => wrapper.originalData)
+                      .filter(
+                        (item) =>
+                          !existingIds.includes(item.id || item.idTaiSan),
+                      )
+                      .map((item) => ({
+                        id: "",
+                        idDieuDongTaiSan: "",
+                        tenTaiSan: item.tenTaiSan || item.ten || "",
+                        idTaiSan: item.id || item.idTaiSan,
+                        soLuong: 1,
+                        ghiChu: "",
+                        ngayTao: "",
+                        ngayCapNhat: "",
+                        nguoiTao: "",
+                        nguoiCapNhat: "",
+                        isActive: true,
+                        hienTrang: item.hienTrang || "Đang sử dụng",
+                        moTa: item.moTa || "",
+                        donViTinh: item.donViTinh || "",
+                        daBanGiao: false,
+                      }));
+
+                    if (newItems.length > 0) {
+                      formik.setFieldValue("chiTietDieuDongTaiSanDTOS", [
+                        ...formik.values.chiTietDieuDongTaiSanDTOS,
+                        ...newItems,
+                      ]);
+                    } else {
+                      alert(
+                        "Không tìm thấy tài sản hợp lệ mới nào từ file. Hoặc tất cả tài sản đã có trong danh sách.",
+                      );
+                    }
+                  }}
+                />
+              </Box>
               <Table
                 size="small"
                 sx={{
@@ -717,7 +773,7 @@ export default function AssetTransferForm({
                 </TableBody>
               </Table>
               {!readOnly && (
-                <Box mt={2}>
+                <Box mt={2} display="flex" gap={2} alignItems="center">
                   <Button
                     startIcon={<Add />}
                     variant="text"
