@@ -66,8 +66,8 @@ export default function ToolTableCustom({
   onPaginationModelChange,
   loading = false,
   allDepartments = [],
-  showDeleteAll=false,
-  onDeleteAll
+  showDeleteAll = false,
+  onDeleteAll,
 }: Props) {
   const [expandedRows, setExpandedRows] = useState<Set<string | number>>(
     new Set(),
@@ -334,7 +334,7 @@ export default function ToolTableCustom({
                       <TableCell>Ký hiệu</TableCell>
                       <TableCell>Đơn vị sở hữu</TableCell>
                       <TableCell>Số lượng đang sở hữu</TableCell>
-                      <TableCell>Thời gian bàn giao</TableCell>
+                      {/* <TableCell>Thời gian bàn giao</TableCell> */}
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -352,19 +352,21 @@ export default function ToolTableCustom({
                           </TableCell>
                           <TableCell sx={{ border: "1px solid #e0e0e0" }}>
                             {findById(allDepartments, detail.idDonViSoHuu)
-                              ?.tenPhongBan || "-"}
+                              ?.tenPhongBan ||
+                              detail.idDonViSoHuu ||
+                              "-"}
                           </TableCell>
                           <TableCell sx={{ border: "1px solid #e0e0e0" }}>
                             {detail.soLuong || 0}
                           </TableCell>
-                          <TableCell sx={{ border: "1px solid #e0e0e0" }}>
+                          {/* <TableCell sx={{ border: "1px solid #e0e0e0" }}>
                             {detail.thoiGianBanGiao || "-"}
-                          </TableCell>
+                          </TableCell> */}
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={4} align="center" sx={{ py: 2 }}>
+                        <TableCell colSpan={3} align="center" sx={{ py: 2 }}>
                           Không có dữ liệu chi tiết
                         </TableCell>
                       </TableRow>
@@ -477,25 +479,25 @@ export default function ToolTableCustom({
               </Button>
             )}
             {showDeleteAll && (
-                <Button
-                  size="small"
-                  variant="contained"
-                  color="error"
-                  startIcon={<Delete />}
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    const confirm = await showConfirmAlert(
-                      `Xác nhận xóa tất cả bản ghi?. bạn không thể hoàn tác!.`,
-                    );
-                    if (confirm.isConfirmed) {
-                      onDeleteAll?.();
-                      onSelectionChange?.([]);
-                    }
-                  }}
-                >
-                  Xóa tất cả
-                </Button>
-              )}
+              <Button
+                size="small"
+                variant="contained"
+                color="error"
+                startIcon={<Delete />}
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const confirm = await showConfirmAlert(
+                    `Xác nhận xóa tất cả bản ghi?. bạn không thể hoàn tác!.`,
+                  );
+                  if (confirm.isConfirmed) {
+                    onDeleteAll?.();
+                    onSelectionChange?.([]);
+                  }
+                }}
+              >
+                Xóa tất cả
+              </Button>
+            )}
           </Box>
         </Grid>
       </Grid>

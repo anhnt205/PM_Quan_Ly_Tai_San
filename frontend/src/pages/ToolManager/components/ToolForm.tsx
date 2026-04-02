@@ -331,7 +331,7 @@ export default function ToolForm({
                     disabled={readOnly}
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                {/* <Grid size={{ xs: 12 }}>
                   <FieldAutoCompleted
                     title="Đơn vị nhập"
                     data={departments}
@@ -340,7 +340,7 @@ export default function ToolForm({
                     formik={formik}
                     disabled={readOnly}
                   />
-                </Grid>
+                </Grid> */}
                 <Grid size={{ xs: 12 }}>
                   <FieldDateTime
                     title="Ngày nhập"
@@ -513,7 +513,7 @@ export default function ToolForm({
                     </TableCell>
 
                     {/* Nút Xóa */}
-                    <TableCell>
+                    {/* <TableCell>
                       <IconButton
                         color="error"
                         onClick={() => {
@@ -539,11 +539,11 @@ export default function ToolForm({
                       >
                         <Delete />
                       </IconButton>
-                    </TableCell>
+                    </TableCell> */}
                   </TableRow>
                 ))}
             </TableBody>
-            {!readOnly && (
+            {/* {!readOnly && (
               <Button
                 startIcon={<Add />}
                 onClick={() => {
@@ -568,7 +568,7 @@ export default function ToolForm({
               >
                 Thêm một dòng
               </Button>
-            )}
+            )} */}
           </Table>
         </Paper>
       </AccordionDetails>

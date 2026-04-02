@@ -57,17 +57,17 @@ export const useToolManagerMutation = (
     },
     onSuccess: (_responseData, variables) => {
       queryClient.invalidateQueries({ queryKey: ["toolsPage"] });
-      if (
-        variables.chiTietTaiSanList &&
-        variables.chiTietTaiSanList.length > 0
-      ) {
-        createManyAssetDetailMutation.mutate(
-          variables.chiTietTaiSanList.map((item: any) => ({
-            ...item,
-            id: generateCode(item.idTaiSan + "-"),
-          })),
-        );
-      }
+      // if (
+      //   variables.chiTietTaiSanList &&
+      //   variables.chiTietTaiSanList.length > 0
+      // ) {
+      //   createManyAssetDetailMutation.mutate(
+      //     variables.chiTietTaiSanList.map((item: any) => ({
+      //       ...item,
+      //       id: generateCode(item.idTaiSan + "-"),
+      //     })),
+      //   );
+      // }
       showSuccessAlert("Tạo CCDC/Vật tư thành công");
     },
     onError: (error: any) => {
@@ -87,40 +87,40 @@ export const useToolManagerMutation = (
     onSuccess: (_response, variables) => {
       queryClient.invalidateQueries({ queryKey: ["toolsPage"] });
 
-      if (
-        variables.chiTietTaiSanList &&
-        variables.chiTietTaiSanList.length > 0
-      ) {
-        // 1. Xử lý XÓA
-        const deleteData = variables.chiTietTaiSanList
-          .filter((item: any) => item.isDeleted && !item.isInserted) // Chỉ xóa nếu đã có trên server
-          .map((item: any) => item.id);
-        if (deleteData.length > 0) {
-          deleteManyAssetDetailMutation.mutate({
-            ids: deleteData,
-            ownerList: variables.chiTietDonViSoHuuList,
-          });
-        }
+      // if (
+      //   variables.chiTietTaiSanList &&
+      //   variables.chiTietTaiSanList.length > 0
+      // ) {
+      //   // 1. Xử lý XÓA
+      //   const deleteData = variables.chiTietTaiSanList
+      //     .filter((item: any) => item.isDeleted && !item.isInserted) // Chỉ xóa nếu đã có trên server
+      //     .map((item: any) => item.id);
+      //   if (deleteData.length > 0) {
+      //     deleteManyAssetDetailMutation.mutate({
+      //       ids: deleteData,
+      //       ownerList: variables.chiTietDonViSoHuuList,
+      //     });
+      //   }
 
-        // 2. Xử lý THÊM MỚI (Dòng mới bấm nút "Thêm một dòng")
-        const insertData = variables.chiTietTaiSanList
-          .filter((item: any) => item.isInserted && !item.isDeleted)
-          .map((i: any) => ({
-            ...i,
-            id: generateCode(i.idTaiSan + "-"), // Sinh ID mới
-          }));
-        if (insertData.length > 0) {
-          createManyAssetDetailMutation.mutate(insertData);
-        }
+      //   // 2. Xử lý THÊM MỚI (Dòng mới bấm nút "Thêm một dòng")
+      //   const insertData = variables.chiTietTaiSanList
+      //     .filter((item: any) => item.isInserted && !item.isDeleted)
+      //     .map((i: any) => ({
+      //       ...i,
+      //       id: generateCode(i.idTaiSan + "-"), // Sinh ID mới
+      //     }));
+      //   if (insertData.length > 0) {
+      //     createManyAssetDetailMutation.mutate(insertData);
+      //   }
 
-        // 3. Xử lý CẬP NHẬT (Dòng cũ bị sửa thông tin)
-        const updateData = variables.chiTietTaiSanList.filter(
-          (item: any) => item.isUpdated && !item.isInserted && !item.isDeleted,
-        );
-        if (updateData.length > 0) {
-          updateManyAssetDetailMutation.mutate(updateData);
-        }
-      }
+      //   // 3. Xử lý CẬP NHẬT (Dòng cũ bị sửa thông tin)
+      //   const updateData = variables.chiTietTaiSanList.filter(
+      //     (item: any) => item.isUpdated && !item.isInserted && !item.isDeleted,
+      //   );
+      //   if (updateData.length > 0) {
+      //     updateManyAssetDetailMutation.mutate(updateData);
+      //   }
+      // }
       showSuccessAlert("Cập nhật CCDC/Vật tư thành công");
     },
     onError: (error: any) => {
