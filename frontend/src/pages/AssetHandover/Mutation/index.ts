@@ -28,6 +28,11 @@ export const useAssetHandoverMutation = () => {
   // --- 2. MUTATIONS ---
   const createMutation = useMutation({
     mutationFn: async (data: AssetHandoverFormValues) => {
+      console.log({
+        isSigningRequired: data.byStep,
+        idGiamDoc: data.idGiamDoc,
+        computed_giamDocKy: !data.byStep && data.idGiamDoc ? true : false,
+      });
       const res = await api.post("/bangiaotaisan", {
         ...data,
         ngayTao: now,

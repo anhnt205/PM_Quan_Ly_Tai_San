@@ -181,7 +181,7 @@ export default function AssetTransfer() {
 
   const handleRowClick = async (params: GridRowParams) => {
     const data = params.row as AssetTransferData;
-    setSelectedIds([data.id]);
+    // setSelectedIds([data.id]);
     setSelectedRow(data);
     setShowForm(false);
     setReadOnly(true);

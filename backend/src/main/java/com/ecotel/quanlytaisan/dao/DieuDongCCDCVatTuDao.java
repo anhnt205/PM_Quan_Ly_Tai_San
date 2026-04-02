@@ -30,6 +30,7 @@ public class DieuDongCCDCVatTuDao {
                 SELECT 
                     ddts.Id,
                     ddts.SoQuyetDinh,
+                    ddts.ngayQuyetDinh,
                     ddts.TenPhieu,
                 
                     -- Đơn vị giao
@@ -183,6 +184,7 @@ public class DieuDongCCDCVatTuDao {
                 SELECT 
                     ddts.Id,
                     ddts.SoQuyetDinh,
+                    ddts.ngayQuyetDinh,
                     ddts.TenPhieu,
                     ddts.IdDonViGiao,
                     pbGiao.TenPhongBan AS TenDonViGiao,
@@ -255,6 +257,7 @@ public class DieuDongCCDCVatTuDao {
                  SELECT 
                     ddts.Id,
                     ddts.SoQuyetDinh,
+                    ddts.ngayQuyetDinh,
                     ddts.TenPhieu,
                 
                     -- Đơn vị giao
@@ -572,9 +575,9 @@ public class DieuDongCCDCVatTuDao {
                         IdTrinhDuyetGiamDoc, TrinhDuyetGiamDocXacNhan,
                         DiaDiemGiaoNhan, IdPhongBanXemPhieu, NoiNhan, TrangThai,
                         IdCongTy, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat,
-                        CoHieuLuc, Loai, Share, TrichYeu, DuongDanFile, TenFile, NgayKy,DaBanGiao,ByStep, taiLieuCuoi
+                        CoHieuLuc, Loai, Share, TrichYeu, DuongDanFile, TenFile, NgayKy,DaBanGiao,ByStep, taiLieuCuoi,ngayQuyetDinh
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,False,?,?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,False,?,?,?)
                     """;
 
             int result = jdbcTemplate.update(sql,
@@ -610,7 +613,8 @@ public class DieuDongCCDCVatTuDao {
                     obj.getTenFile(),
                     obj.getNgayKy(),
                     obj.getByStep(),
-                    obj.getTaiLieuCuoi()
+                    obj.getTaiLieuCuoi(),
+                    obj.getNgayQuyetDinh()
             );
             return obj;
         }
@@ -644,7 +648,7 @@ public class DieuDongCCDCVatTuDao {
                     IdTrinhDuyetGiamDoc=?, TrinhDuyetGiamDocXacNhan=?,
                     DiaDiemGiaoNhan=?, IdPhongBanXemPhieu=?, NoiNhan=?, TrangThai=?,
                     IdCongTy=?, NgayTao=?, NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?,
-                    CoHieuLuc=?, Loai=?, Share=?, TrichYeu=?, DuongDanFile=?, TenFile=?, NgayKy=?,ByStep=?, taiLieuCuoi=?
+                    CoHieuLuc=?, Loai=?, Share=?, TrichYeu=?, DuongDanFile=?, TenFile=?, NgayKy=?,ByStep=?, taiLieuCuoi=?,ngayQuyetDinh=?
                 WHERE Id=?
                 """;
 
@@ -681,6 +685,7 @@ public class DieuDongCCDCVatTuDao {
                 obj.getNgayKy(),
                 obj.getByStep(),
                 obj.getTaiLieuCuoi(),
+                obj.getNgayQuyetDinh(),
                 obj.getId()  // điều kiện WHERE
         );
         return result > 0 ? findById(obj.getId()) : null;
@@ -780,7 +785,7 @@ public class DieuDongCCDCVatTuDao {
     public int[] banHanhQuyetDinh(List<BanHanhRequest> requests) {
         String sql = """
                 UPDATE DieuDongCCDCVatTu
-                SET TrangThai = ?, soQuyetDinh = ?
+                SET TrangThai = ?, SoQuyetDinh = ?,ngayQuyetDinh=?
                 WHERE Id = ?
                 """;
 
@@ -790,7 +795,8 @@ public class DieuDongCCDCVatTuDao {
                 BanHanhRequest item = requests.get(i);
                 ps.setInt(1, 4); // TrangThai = 4
                 ps.setString(2, item.getSoQuyetDinh());
-                ps.setString(3, item.getId());
+                ps.setString(3,item.getNgayQuyetDinh());
+                ps.setString(4, item.getId());
             }
 
             @Override
@@ -836,6 +842,7 @@ public class DieuDongCCDCVatTuDao {
                 SELECT DISTINCT
                     ddts.Id,
                     ddts.SoQuyetDinh,
+                    ddts.ngayQuyetDinh,
                     ddts.TenPhieu,
 
                     ddts.IdDonViGiao,

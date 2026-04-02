@@ -588,6 +588,10 @@ export default function ToolHandoverForm({
                         formik.setFieldValue("idDonViGiao", value.idDonViGiao);
                         formik.setFieldValue("idDonViNhan", value.idDonViNhan);
                         formik.setFieldValue("soQuyetDinh", value.soQuyetDinh);
+                        formik.setFieldValue(
+                          "ngayQuyetDinh",
+                          value.ngayQuyetDinh,
+                        );
                         formik.setFieldValue("chiTietBanGiaoCCDCVatTu", []);
                         getListTool(value.id);
                       }}

@@ -41,6 +41,7 @@ export interface ToolTransferDetail {
 export interface ToolTransferData {
   id: string;
   soQuyetDinh: string;
+  ngayQuyetDinh: string;
   tenPhieu: string;
   idDonViGiao: string;
   tenDonViGiao: string;

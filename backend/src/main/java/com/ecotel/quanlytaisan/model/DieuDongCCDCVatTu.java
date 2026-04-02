@@ -58,6 +58,7 @@ public class DieuDongCCDCVatTu {
     private Boolean byStep;
     private Boolean coPhieuBanGiao;
     private String taiLieuCuoi;
+    private String ngayQuyetDinh;
 
     public static DieuDongCCDCVatTu mapToDieuDongCCDCVatTu(String[] row) {
         DieuDongCCDCVatTu dd = new DieuDongCCDCVatTu();
@@ -92,6 +93,7 @@ public class DieuDongCCDCVatTu {
         dd.setDuongDanFile(row[28]);
         dd.setTenFile(row[29]);
         dd.setNgayKy(row[30]);
+        dd.setNgayQuyetDinh(row[31]);
         return dd;
     }
     public static DieuDongCCDCVatTu mapToDieuDongCCDCVatTu(Row row) {
@@ -127,6 +129,7 @@ public class DieuDongCCDCVatTu {
         dd.setDuongDanFile(getCellStringValue(row.getCell(28)));
         dd.setTenFile(getCellStringValue(row.getCell(29)));
         dd.setNgayKy(getCellStringValue(row.getCell(30)));
+        dd.setNgayQuyetDinh(getCellStringValue(row.getCell(31)));
         return dd;
     }
 

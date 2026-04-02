@@ -1,3 +1,55 @@
+// ============================================================
+// THAY ĐỔI 1: Trong handleSign và handleConfirmPinDialog
+// Thêm widthRatio khi tạo newSignature
+// ============================================================
+
+// Trong handleSign — thay dòng width: 120 bằng:
+//
+//   const displayWidth = canvasDisplaySizes[0]?.width || 800;
+//   widthRatio: 120 / displayWidth,   // lưu tỉ lệ, không lưu px tuyệt đối
+//   width: 120,                        // giữ lại để tương thích export PDF
+//
+// Tương tự trong handleConfirmPinDialog.
+
+// ============================================================
+// THAY ĐỔI 2: Pass setCanvasDisplaySizes xuống PdfViewer
+// ============================================================
+//
+// <PdfViewer
+//   pages={pages}
+//   signatures={signatures}
+//   canvasDisplaySizes={canvasDisplaySizes}
+//   setCanvasDisplaySizes={setCanvasDisplaySizes}   // ← THÊM DÒNG NÀY
+//   digitalSignatureMap={digitalSignatureMap}
+//   handleUpdatePosition={handleUpdatePosition}
+//   handleUpdateScale={handleUpdateScale}
+//   handleDeleteSignature={handleDeleteSignature}
+// />
+
+// ============================================================
+// THAY ĐỔI 3: Xóa useEffect ResizeObserver cũ trong SharedSignDocumentForm
+// (vì PdfViewer tự quản lý việc observe canvas của nó)
+// ============================================================
+//
+// XÓA đoạn này:
+//
+// useEffect(() => {
+//   if (pages.length === 0) return;
+//   const observer = new ResizeObserver(() => {
+//     const sizes = pages.map((canvas) => ({
+//       width: canvas.getBoundingClientRect().width || canvas.width,
+//       height: canvas.getBoundingClientRect().height || canvas.height,
+//     }));
+//     setCanvasDisplaySizes(sizes);
+//   });
+//   pages.forEach((canvas) => observer.observe(canvas));
+//   return () => observer.disconnect();
+// }, [pages]);
+
+// ============================================================
+// File đầy đủ với tất cả thay đổi đã áp dụng:
+// ============================================================
+
 import {
   Box,
   Paper,
@@ -41,7 +93,6 @@ interface SharedSignDocumentFormProps {
   canUserSign: (type: number, currentSignatures: SignaturesData[]) => boolean;
   fullscreen?: boolean;
   showSignerSidebar?: boolean;
-  // Optional source bytes for export if different from pdfUrl
   sourcePdfBytes?: Uint8Array | null;
 }
 
@@ -81,7 +132,6 @@ export default function SharedSignDocumentForm({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
-  // Sync initial signatures if they change
   useEffect(() => {
     if (initialSignatures.length > 0) {
       setSignatures(initialSignatures);
@@ -148,14 +198,18 @@ export default function SharedSignDocumentForm({
     const result = await handleSigning(
       user?.taiKhoan?.tenDangNhap,
       "document-id",
-    ); // Placeholder ID
+    );
 
     if (!result) return;
+
+    // [FIX] Lưu widthRatio thay vì px tuyệt đối
+    const displayWidth = canvasDisplaySizes[0]?.width || 800;
+    const baseWidthPx = 120;
 
     const newSignature: SignaturesData = {
       stt: signatures.length + 1,
       id: `temp-${Date.now()}`,
-      idTaiLieu: idTaiLieu, // Will be filled by parent if needed
+      idTaiLieu: idTaiLieu,
       idNguoiKy: user?.taiKhoan?.tenDangNhap,
       loaiKy: signatureType,
       ngayKy: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
@@ -165,8 +219,9 @@ export default function SharedSignDocumentForm({
         (signatureType === 1 || signatureType === 5) && employee.chuKyNhay,
       chuKyThuong:
         (signatureType === 2 || signatureType === 4) && employee.chuKyThuong,
-      width: 120,
-      scale: 2,
+      width: baseWidthPx,
+      widthRatio: baseWidthPx / displayWidth, // [FIX] tỉ lệ không đổi khi resize
+      scale: 1,
       chuKySo: result,
       isLocked: false,
     };
@@ -209,6 +264,10 @@ export default function SharedSignDocumentForm({
       key = result;
     }
 
+    // [FIX] Lưu widthRatio thay vì px tuyệt đối
+    const displayWidth = canvasDisplaySizes[0]?.width || 800;
+    const baseWidthPx = 120;
+
     const newSignature: SignaturesData = {
       stt: signatures.length + 1,
       id: `temp-${Date.now()}`,
@@ -222,8 +281,9 @@ export default function SharedSignDocumentForm({
         (signatureType === 1 || signatureType === 5) && employee.chuKyNhay,
       chuKyThuong:
         (signatureType === 2 || signatureType === 4) && employee.chuKyThuong,
-      width: 120,
-      scale: signatureType === 2 || signatureType === 4 ? 2 : 1, // Default scale for regular signatures
+      width: baseWidthPx,
+      widthRatio: baseWidthPx / displayWidth, // [FIX]
+      scale: signatureType === 2 || signatureType === 4 ? 2 : 1,
       chuKySo: key,
       isLocked: false,
     };
@@ -302,7 +362,6 @@ export default function SharedSignDocumentForm({
       const pages = pdfDoc.getPages();
       const firstPage = pages[0];
       const { width: pageWidth, height: pageHeight } = firstPage.getSize();
-      const displayWidth = canvasDisplaySizes[0]?.width || 800;
 
       for (const sig of signatures) {
         let imageBytes: ArrayBuffer | undefined;
@@ -328,8 +387,14 @@ export default function SharedSignDocumentForm({
 
         if (imageBytes) {
           const pdfImage = await pdfDoc.embedPng(imageBytes);
-          const widthRatio = (sig.width * (sig.scale || 1)) / displayWidth;
-          const pdfImageWidth = widthRatio * pageWidth;
+
+          // [FIX] Dùng widthRatio để tính kích thước trong PDF — không phụ thuộc displayWidth
+          const effectiveWidthRatio =
+            sig.widthRatio ??
+            (sig.width * (sig.scale || 1)) /
+              (canvasDisplaySizes[0]?.width || 800);
+          const pdfImageWidth =
+            effectiveWidthRatio * (sig.scale || 1) * pageWidth;
           const pdfImageHeight =
             (pdfImage.height / pdfImage.width) * pdfImageWidth;
           const x = sig.x * pageWidth;
@@ -372,7 +437,6 @@ export default function SharedSignDocumentForm({
       const pdfDoc = await PDFDocument.load(sourceBytes);
       const page = pdfDoc.getPages()[0];
       const { width, height } = page.getSize();
-      const displayWidth = canvasDisplaySizes[0]?.width || 800;
 
       for (const sig of signatures) {
         let imageBytes: ArrayBuffer | undefined;
@@ -393,7 +457,11 @@ export default function SharedSignDocumentForm({
 
         if (imageBytes) {
           const img = await pdfDoc.embedPng(imageBytes);
-          const pdfW = ((sig.width * sig.scale) / displayWidth) * width;
+          // [FIX] Dùng widthRatio
+          const effectiveWidthRatio =
+            sig.widthRatio ??
+            (sig.width * sig.scale) / (canvasDisplaySizes[0]?.width || 800);
+          const pdfW = effectiveWidthRatio * sig.scale * width;
           const pdfH = (img.height / img.width) * pdfW;
           page.drawImage(img, {
             x: sig.x * width,
@@ -456,18 +524,7 @@ export default function SharedSignDocumentForm({
     renderPDF();
   }, [pdfUrl]);
 
-  useEffect(() => {
-    if (pages.length === 0) return;
-    const observer = new ResizeObserver(() => {
-      const sizes = pages.map((canvas) => ({
-        width: canvas.getBoundingClientRect().width || canvas.width,
-        height: canvas.getBoundingClientRect().height || canvas.height,
-      }));
-      setCanvasDisplaySizes(sizes);
-    });
-    pages.forEach((canvas) => observer.observe(canvas));
-    return () => observer.disconnect();
-  }, [pages]);
+  // [FIX] Xóa ResizeObserver cũ ở đây — PdfViewer tự quản lý observe canvas DOM thực
 
   const sidebarProps = {
     signatureType,
@@ -563,6 +620,7 @@ export default function SharedSignDocumentForm({
               pages={pages}
               signatures={signatures}
               canvasDisplaySizes={canvasDisplaySizes}
+              setCanvasDisplaySizes={setCanvasDisplaySizes} // [FIX] thêm dòng này
               digitalSignatureMap={digitalSignatureMap}
               handleUpdatePosition={handleUpdatePosition}
               handleUpdateScale={handleUpdateScale}

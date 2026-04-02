@@ -156,7 +156,7 @@ export default function AssetHandoverForm({
     undefined,
     4,
     user.taiKhoan?.phongBanId,
-    selectedAssetHandover ? undefined : true,
+    selectedAssetHandover?.id ? undefined : true,
   );
   const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
   const { assetTransferDetailAllMutation } = useAssetTranferMutation();
@@ -527,7 +527,7 @@ export default function AssetHandoverForm({
                       formik={formik}
                       field="lenhDieuDong"
                       data={AssetTransferData.items || []}
-                      labelkey="soQuyetDinh"
+                      labelkey="id"
                       onChange={async (value) => {
                         formik.setFieldValue("idDonViGiao", value.idDonViGiao);
                         formik.setFieldValue("idDonViNhan", value.idDonViNhan);

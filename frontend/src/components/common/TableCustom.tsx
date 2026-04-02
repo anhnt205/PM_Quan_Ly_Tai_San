@@ -79,7 +79,7 @@ interface Props {
   showDelete?: boolean;
   handleSendToSigner?: (selectedItem: any[]) => void;
   handleAssetTransfer?: (department: string) => void;
-  isCheckShowShare?: (item: any) => boolean;
+  isCheckShowShare?: (item: any[]) => boolean;
   handleSignDocument?: (item: any, user: any, onSign: () => void) => void;
   titleSearch?: string;
   extraActions?: React.ReactNode;

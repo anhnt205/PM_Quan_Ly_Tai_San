@@ -135,6 +135,7 @@ export interface AssetTransferDetail {
 export interface AssetTransferData {
   id: string;
   soQuyetDinh: string;
+  ngayQuyetDinh: string;
   tenPhieu: string;
   idDonViGiao: string;
   idDonViNhan: string;

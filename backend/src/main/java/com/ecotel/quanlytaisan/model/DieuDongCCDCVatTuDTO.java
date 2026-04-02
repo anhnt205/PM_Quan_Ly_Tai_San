@@ -7,6 +7,7 @@ import java.util.List;
 public class DieuDongCCDCVatTuDTO {
     private String id;
     private String soQuyetDinh;
+    private String ngayQuyetDinh;
     private String tenPhieu;
     //don vi giao
     private String idDonViGiao;

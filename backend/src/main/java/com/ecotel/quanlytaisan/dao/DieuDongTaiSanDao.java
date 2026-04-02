@@ -41,6 +41,7 @@ public class DieuDongTaiSanDao {
             SELECT 
                 ddts.Id,
                 ddts.SoQuyetDinh,
+                ddts.ngayQuyetDinh,
                 ddts.TenPhieu,
             
                 -- Đơn vị giao
@@ -211,6 +212,7 @@ public class DieuDongTaiSanDao {
             SELECT 
                 ddts.Id,
                 ddts.SoQuyetDinh,
+                ddts.ngayQuyetDinh,
                 ddts.TenPhieu,
                 ddts.IdDonViGiao,
                 pbGiao.TenPhongBan AS TenDonViGiao,
@@ -287,6 +289,7 @@ public class DieuDongTaiSanDao {
              SELECT 
                 ddts.Id,
                 ddts.SoQuyetDinh,
+                ddts.ngayQuyetDinh,
                 ddts.TenPhieu,
             
                 -- Đơn vị giao
@@ -640,12 +643,12 @@ public class DieuDongTaiSanDao {
                         IdTrinhDuyetGiamDoc, TrinhDuyetGiamDocXacNhan,
                         DiaDiemGiaoNhan, IdPhongBanXemPhieu, NoiNhan, TrangThai,
                         IdCongTy, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat,
-                        CoHieuLuc, Loai, Share, TrichYeu, DuongDanFile, TenFile, NgayKy,DaBanGiao,ByStep, taiLieuCuoi
+                        CoHieuLuc, Loai, Share, TrichYeu, DuongDanFile, TenFile, NgayKy,DaBanGiao,ByStep, taiLieuCuoi,ngayQuyetDinh
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,False,?,?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,False,?,?,?)
                     """;
 
-            int result = jdbcTemplate.update(sql, obj.getId(), obj.getSoQuyetDinh(), obj.getTenPhieu(), obj.getIdDonViGiao(), obj.getIdDonViNhan(), obj.getIdNguoiKyNhay(), obj.getTrangThaiKyNhay(), obj.getNguoiLapPhieuKyNhay(), obj.getIdDonViDeNghi(), obj.getTgGnTuNgay(), obj.getTgGnDenNgay(), obj.getIdTrinhDuyetCapPhong(), obj.getTrinhDuyetCapPhongXacNhan(), obj.getIdTrinhDuyetGiamDoc(), obj.getTrinhDuyetGiamDocXacNhan(), obj.getDiaDiemGiaoNhan(), obj.getIdPhongBanXemPhieu(), obj.getNoiNhan(), obj.getTrangThai(), "CT001", obj.getNgayTao(), obj.getNgayCapNhat(), obj.getNguoiTao(), obj.getNguoiCapNhat(), obj.getCoHieuLuc(), obj.getLoai(), obj.getShare(), obj.getTrichYeu(), obj.getDuongDanFile(), obj.getTenFile(), obj.getNgayKy(), obj.getByStep(), obj.getTaiLieuCuoi());
+            int result = jdbcTemplate.update(sql, obj.getId(), obj.getSoQuyetDinh(), obj.getTenPhieu(), obj.getIdDonViGiao(), obj.getIdDonViNhan(), obj.getIdNguoiKyNhay(), obj.getTrangThaiKyNhay(), obj.getNguoiLapPhieuKyNhay(), obj.getIdDonViDeNghi(), obj.getTgGnTuNgay(), obj.getTgGnDenNgay(), obj.getIdTrinhDuyetCapPhong(), obj.getTrinhDuyetCapPhongXacNhan(), obj.getIdTrinhDuyetGiamDoc(), obj.getTrinhDuyetGiamDocXacNhan(), obj.getDiaDiemGiaoNhan(), obj.getIdPhongBanXemPhieu(), obj.getNoiNhan(), obj.getTrangThai(), "CT001", obj.getNgayTao(), obj.getNgayCapNhat(), obj.getNguoiTao(), obj.getNguoiCapNhat(), obj.getCoHieuLuc(), obj.getLoai(), obj.getShare(), obj.getTrichYeu(), obj.getDuongDanFile(), obj.getTenFile(), obj.getNgayKy(), obj.getByStep(), obj.getTaiLieuCuoi(),obj.getNgayQuyetDinh());
             if (result > 0) {
                 CompletableFuture.runAsync(this::refreshCache);
             }
@@ -663,11 +666,11 @@ public class DieuDongTaiSanDao {
                     IdTrinhDuyetGiamDoc=?, TrinhDuyetGiamDocXacNhan=?,
                     DiaDiemGiaoNhan=?, IdPhongBanXemPhieu=?, NoiNhan=?, TrangThai=?,
                     IdCongTy=?, NgayTao=?, NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?,
-                    CoHieuLuc=?, Loai=?, Share=?, TrichYeu=?, DuongDanFile=?, TenFile=?, NgayKy=?, ByStep=?, taiLieuCuoi=?
+                    CoHieuLuc=?, Loai=?, Share=?, TrichYeu=?, DuongDanFile=?, TenFile=?, NgayKy=?, ByStep=?, taiLieuCuoi=?,ngayQuyetDinh=?
                 WHERE Id=?
                 """;
 
-        int result = jdbcTemplate.update(sql, obj.getSoQuyetDinh(), obj.getTenPhieu(), obj.getIdDonViGiao(), obj.getIdDonViNhan(), obj.getIdNguoiKyNhay(), obj.getTrangThaiKyNhay(), obj.getNguoiLapPhieuKyNhay(), obj.getIdDonViDeNghi(), obj.getTgGnTuNgay(), obj.getTgGnDenNgay(), obj.getIdTrinhDuyetCapPhong(), obj.getTrinhDuyetCapPhongXacNhan(), obj.getIdTrinhDuyetGiamDoc(), obj.getTrinhDuyetGiamDocXacNhan(), obj.getDiaDiemGiaoNhan(), obj.getIdPhongBanXemPhieu(), obj.getNoiNhan(), obj.getTrangThai(), "CT001", obj.getNgayTao(), obj.getNgayCapNhat(), obj.getNguoiTao(), obj.getNguoiCapNhat(), obj.getCoHieuLuc(), obj.getLoai(), obj.getShare(), obj.getTrichYeu(), obj.getDuongDanFile(), obj.getTenFile(), obj.getNgayKy(), obj.getByStep(), obj.getTaiLieuCuoi(), obj.getId()  // điều kiện WHERE
+        int result = jdbcTemplate.update(sql, obj.getSoQuyetDinh(), obj.getTenPhieu(), obj.getIdDonViGiao(), obj.getIdDonViNhan(), obj.getIdNguoiKyNhay(), obj.getTrangThaiKyNhay(), obj.getNguoiLapPhieuKyNhay(), obj.getIdDonViDeNghi(), obj.getTgGnTuNgay(), obj.getTgGnDenNgay(), obj.getIdTrinhDuyetCapPhong(), obj.getTrinhDuyetCapPhongXacNhan(), obj.getIdTrinhDuyetGiamDoc(), obj.getTrinhDuyetGiamDocXacNhan(), obj.getDiaDiemGiaoNhan(), obj.getIdPhongBanXemPhieu(), obj.getNoiNhan(), obj.getTrangThai(), "CT001", obj.getNgayTao(), obj.getNgayCapNhat(), obj.getNguoiTao(), obj.getNguoiCapNhat(), obj.getCoHieuLuc(), obj.getLoai(), obj.getShare(), obj.getTrichYeu(), obj.getDuongDanFile(), obj.getTenFile(), obj.getNgayKy(), obj.getByStep(), obj.getTaiLieuCuoi(),obj.getNgayQuyetDinh(), obj.getId()  // điều kiện WHERE
         );
         if (result > 0) {
             CompletableFuture.runAsync(this::refreshCache);
@@ -702,7 +705,7 @@ public class DieuDongTaiSanDao {
    public int[] banHanhQuyetDinh(List<BanHanhRequest> requests) {
     String sql = """
             UPDATE DieuDongTaiSan
-            SET TrangThai = ?, soQuyetDinh = ?
+            SET TrangThai = ?, SoQuyetDinh = ?,ngayQuyetDinh=?
             WHERE Id = ?
             """;
 
@@ -712,7 +715,8 @@ public class DieuDongTaiSanDao {
                 BanHanhRequest item = requests.get(i);
                 ps.setInt(1, 4); // TrangThai = 4
                 ps.setString(2, item.getSoQuyetDinh());
-                ps.setString(3, item.getId());
+                ps.setString(3,item.getNgayQuyetDinh());
+                ps.setString(4, item.getId());
             }
 
             @Override
@@ -745,6 +749,7 @@ public class DieuDongTaiSanDao {
             SELECT 
                 ddts.Id,
                 ddts.SoQuyetDinh,
+                ddts.ngayQuyetDinh,
                 ddts.TenPhieu,
             
                 -- Đơn vị giao
@@ -947,6 +952,7 @@ public class DieuDongTaiSanDao {
             SELECT DISTINCT
                 ddts.Id,
                 ddts.SoQuyetDinh,
+                ddts.ngayQuyetDinh,
                 ddts.TenPhieu,
 
                 ddts.IdDonViGiao,

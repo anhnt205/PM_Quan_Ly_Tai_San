@@ -12,5 +12,6 @@ export interface SignaturesData {
   chuKyThuong: string;
   scale: number;
   width: number;
+  widthRatio: number;
   isLocked: boolean;
 }

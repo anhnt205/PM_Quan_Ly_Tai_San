@@ -521,7 +521,9 @@ export default function ToolHandover() {
                 idDonViGiao: params.row.idDonViGiao,
                 idDonViNhan: params.row.idDonViNhan,
                 ngayBanGiao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-                ngayQuyetDinh: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+                ngayQuyetDinh:
+                  params.row.ngayQuyetDinh ||
+                  dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
                 ngayTaoChungTu: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
                 diaDiemQuyetDinh: "",
                 idGiamDoc: "",

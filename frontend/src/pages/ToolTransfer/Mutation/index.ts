@@ -199,6 +199,7 @@ export const useToolTransferMutation = (
         data.map((item) => ({
           id: item.id,
           soQuyetDinh: item.soQuyetDinh,
+          ngayQuyetDinh: item.ngayQuyetDinh,
         })),
       );
       return res.data;

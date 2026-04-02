@@ -58,6 +58,8 @@ public class DieuDongTaiSan {
     private Boolean coPhieuBanGiao;
     private String taiLieuCuoi;
 
+    private String ngayQuyetDinh;
+
     // Custom getters for null safety
     public Boolean getTrangThaiKyNhay() {
         return trangThaiKyNhay != null ? trangThaiKyNhay : false;

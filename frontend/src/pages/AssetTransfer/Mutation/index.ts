@@ -202,12 +202,12 @@ export const useAssetTranferMutation = () => {
 
   const decisionMutation = useMutation({
     mutationFn: async (data: any[]) => {
-      console.log(data);
       const res = await api.post(
         `/dieudongtaisan/banhanhquyetdinh`,
         data.map((item) => ({
           id: item.id,
           soQuyetDinh: item.soQuyetDinh,
+          ngayQuyetDinh: item.ngayQuyetDinh,
         })),
       );
       return res.data;

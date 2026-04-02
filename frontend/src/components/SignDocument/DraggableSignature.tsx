@@ -5,10 +5,16 @@ import { useGetFileQuery } from "../../pages/Staff/Mutation";
 
 interface DraggableSignatureProps {
   id: string;
-  initialX: number;
-  initialY: number;
+  /** Tỉ lệ X so với containerWidth (0.0 → 1.0) */
+  xRatio: number;
+  /** Tỉ lệ Y so với containerHeight (0.0 → 1.0) */
+  yRatio: number;
+  /**
+   * Chiều rộng chữ ký tính theo tỉ lệ container (0.0 → 1.0).
+   * Nếu không truyền, fallback về widthPx / containerWidth.
+   */
+  widthRatio?: number;
   initialScale?: number;
-  width: number;
   sig: any;
   digitalSignatureMap: any;
   containerWidth: number;
@@ -21,10 +27,10 @@ interface DraggableSignatureProps {
 
 export default function DraggableSignature({
   id,
-  initialX,
-  initialY,
+  xRatio,
+  yRatio,
+  widthRatio,
   initialScale = 1,
-  width,
   sig,
   digitalSignatureMap,
   containerWidth,
@@ -36,135 +42,130 @@ export default function DraggableSignature({
 }: DraggableSignatureProps) {
   const [showMobileControls, setShowMobileControls] = useState(false);
   const lastTapRef = useRef<number>(0);
-  // 1. Đồng bộ state scale
+
   const [scale, setScale] = useState(initialScale);
   useEffect(() => {
-    if (!isNaN(initialScale)) {
-      setScale(initialScale);
-    }
+    if (!isNaN(initialScale)) setScale(initialScale);
   }, [initialScale]);
 
   const { data: fileUrl } = useGetFileQuery(sig.chuKyNhay || sig.chuKyThuong);
 
-  // 2. Xử lý vị trí an toàn
-  const safeInitialX = isNaN(initialX) ? 0 : initialX;
-  const safeInitialY = isNaN(initialY) ? 0 : initialY;
+  // ─── Tính vị trí pixel từ ratio ───────────────────────────────────────────
+  // containerWidth/Height có thể thay đổi khi resize → tính lại mỗi render
+  const safeX = isNaN(xRatio) ? 0 : xRatio;
+  const safeY = isNaN(yRatio) ? 0 : yRatio;
 
-  const positionRef = useRef({ x: safeInitialX, y: safeInitialY });
-  const parentBoxRef = useRef<HTMLDivElement>(null);
+  // Chiều rộng hiển thị: ưu tiên widthRatio, fallback về sig.width (px cũ)
+  const baseWidthPx = widthRatio
+    ? widthRatio * containerWidth
+    : sig.width || 120;
+  const displayWidthPx = baseWidthPx * scale;
 
-  // Cập nhật DOM khi props thay đổi
-  useEffect(() => {
-    positionRef.current = { x: safeInitialX, y: safeInitialY };
-    if (parentBoxRef.current) {
-      parentBoxRef.current.style.left = `${safeInitialX}px`;
-      parentBoxRef.current.style.top = `${safeInitialY}px`;
-    }
-  }, [safeInitialX, safeInitialY]);
+  // Vị trí pixel tính từ ratio × kích thước container hiện tại
+  const leftPx = safeX * containerWidth;
+  const topPx = safeY * containerHeight;
 
-  const updateDOMPosition = () => {
-    if (parentBoxRef.current) {
-      parentBoxRef.current.style.left = `${positionRef.current.x}px`;
-      parentBoxRef.current.style.top = `${positionRef.current.y}px`;
+  // ─── Dragging ref (chỉ lưu ratio, không lưu px) ───────────────────────────
+  const ratioRef = useRef({ x: safeX, y: safeY });
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  // Cập nhật DOM position trực tiếp (bypass React re-render khi kéo)
+  const applyPositionToDOM = (xR: number, yR: number) => {
+    if (boxRef.current) {
+      boxRef.current.style.left = `${xR * containerWidth}px`;
+      boxRef.current.style.top = `${yR * containerHeight}px`;
     }
   };
 
+  // Khi container resize → vị trí pixel tự cập nhật qua leftPx/topPx
+  useEffect(() => {
+    ratioRef.current = { x: safeX, y: safeY };
+    applyPositionToDOM(safeX, safeY);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [safeX, safeY, containerWidth, containerHeight]);
+
+  // ─── Zoom ─────────────────────────────────────────────────────────────────
   const handleZoom = (newScale: number) => {
     if (isLocked) return;
-    const clampedScale = Math.min(Math.max(newScale, 0.5), 2.0);
-    setScale(clampedScale);
-    onUpdateScale(id, clampedScale);
+    const clamped = Math.min(Math.max(newScale, 0.5), 2.0);
+    setScale(clamped);
+    onUpdateScale(id, clamped);
   };
 
-  // Logic Dragging
+  // ─── Mouse drag ───────────────────────────────────────────────────────────
   const handleMouseDown = (e: React.MouseEvent) => {
     if (isLocked) return;
-    e.stopPropagation(); // Ngăn sự kiện nổi lên cha
-    e.preventDefault(); // Ngăn hành vi mặc định (chọn text/ảnh)
+    e.stopPropagation();
+    e.preventDefault();
 
     const startMouseX = e.clientX;
     const startMouseY = e.clientY;
-    const startPosX = positionRef.current.x;
-    const startPosY = positionRef.current.y;
+    const startRatioX = ratioRef.current.x;
+    const startRatioY = ratioRef.current.y;
 
-    const handleMouseMove = (moveEvent: MouseEvent) => {
-      const dx = moveEvent.clientX - startMouseX;
-      const dy = moveEvent.clientY - startMouseY;
+    const handleMouseMove = (ev: MouseEvent) => {
+      const dx = ev.clientX - startMouseX;
+      const dy = ev.clientY - startMouseY;
 
-      let newX = startPosX + dx;
-      let newY = startPosY + dy;
+      let newX = startRatioX + dx / containerWidth;
+      let newY = startRatioY + dy / containerHeight;
 
-      const currentWidth = width * scale;
-      // const currentHeight = BASE_HEIGHT * scale;
+      // Clamp: không cho chạy ra ngoài container
+      const maxX = (containerWidth - displayWidthPx) / containerWidth;
+      newX = Math.max(0, Math.min(newX, maxX));
+      newY = Math.max(0, Math.min(newY, 1));
 
-      // Giới hạn trong khung
-      newX = Math.max(0, Math.min(newX, containerWidth - currentWidth));
-      // newY = Math.max(0, Math.min(newY, containerHeight - currentHeight));
-
-      positionRef.current = { x: newX, y: newY };
-      updateDOMPosition();
+      ratioRef.current = { x: newX, y: newY };
+      applyPositionToDOM(newX, newY);
     };
 
     const handleMouseUp = () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
-
-      if (containerWidth > 0 && containerHeight > 0) {
-        const xRatio = positionRef.current.x / containerWidth;
-        const yRatio = positionRef.current.y / containerHeight;
-        onUpdatePosition(id, xRatio, yRatio);
-      }
+      onUpdatePosition(id, ratioRef.current.x, ratioRef.current.y);
     };
 
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
   };
 
-  // Logic Dragging cho Điện thoại (Touch)
+  // ─── Touch drag ───────────────────────────────────────────────────────────
   const handleTouchStart = (e: React.TouchEvent) => {
     if (isLocked) return;
 
     const now = Date.now();
-    const DOUBLE_TAP_DELAY = 300;
-
-    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
-      // Nếu chạm 2 lần nhanh -> Đảo ngược trạng thái hiện menu
-      setShowMobileControls(!showMobileControls);
+    if (now - lastTapRef.current < 300) {
+      setShowMobileControls((prev) => !prev);
     }
     lastTapRef.current = now;
 
     const touch = e.touches[0];
     const startTouchX = touch.clientX;
     const startTouchY = touch.clientY;
-    const startPosX = positionRef.current.x;
-    const startPosY = positionRef.current.y;
+    const startRatioX = ratioRef.current.x;
+    const startRatioY = ratioRef.current.y;
 
-    const handleTouchMove = (moveEvent: TouchEvent) => {
-      if (moveEvent.cancelable) moveEvent.preventDefault();
+    const handleTouchMove = (ev: TouchEvent) => {
+      if (ev.cancelable) ev.preventDefault();
+      const t = ev.touches[0];
+      const dx = t.clientX - startTouchX;
+      const dy = t.clientY - startTouchY;
 
-      const touchMove = moveEvent.touches[0];
-      const dx = touchMove.clientX - startTouchX;
-      const dy = touchMove.clientY - startTouchY;
+      let newX = startRatioX + dx / containerWidth;
+      let newY = startRatioY + dy / containerHeight;
 
-      let newX = startPosX + dx;
-      let newY = startPosY + dy;
+      const maxX = (containerWidth - displayWidthPx) / containerWidth;
+      newX = Math.max(0, Math.min(newX, maxX));
+      newY = Math.max(0, Math.min(newY, 1));
 
-      const currentWidth = width * scale;
-      newX = Math.max(0, Math.min(newX, containerWidth - currentWidth));
-
-      positionRef.current = { x: newX, y: newY };
-      updateDOMPosition();
+      ratioRef.current = { x: newX, y: newY };
+      applyPositionToDOM(newX, newY);
     };
 
     const handleTouchEnd = () => {
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
-
-      if (containerWidth > 0 && containerHeight > 0) {
-        const xRatio = positionRef.current.x / containerWidth;
-        const yRatio = positionRef.current.y / containerHeight;
-        onUpdatePosition(id, xRatio, yRatio);
-      }
+      onUpdatePosition(id, ratioRef.current.x, ratioRef.current.y);
     };
 
     window.addEventListener("touchmove", handleTouchMove, { passive: false });
@@ -173,37 +174,27 @@ export default function DraggableSignature({
 
   return (
     <Box
-      ref={parentBoxRef}
+      ref={boxRef}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
       sx={{
         position: "absolute",
-        left: safeInitialX,
-        top: safeInitialY,
-        width: width * scale,
+        left: leftPx,
+        top: topPx,
+        width: displayWidthPx,
         zIndex: 100,
-        padding: 0, // 1. Xóa padding để ảnh sát viền
+        padding: 0,
         margin: 0,
         touchAction: "none",
-        // 👉 Logic style khi Locked vs Unlocked
-        cursor: isLocked ? "default" : "grab", // Locked thì chuột bình thường
-        border: isLocked ? "none" : "1px dashed #1976d2", // Locked thì ẩn viền
-        pointerEvents: "auto", // Vẫn bắt click để chặn click xuyên thấu (nếu muốn)
-
+        cursor: isLocked ? "default" : "grab",
+        border: isLocked ? "none" : "1px dashed #1976d2",
+        pointerEvents: "auto",
         "&:active": { cursor: isLocked ? "default" : "grabbing" },
-
-        // 👉 Chỉ hiện Controls khi hover VÀ chưa bị khóa
         "&:hover": {
           borderColor: isLocked ? "transparent" : "#1565c0",
-          // Menu hiện khi hover (Desktop)
-          "& .controls": { display: isLocked ? "none" : "flex" },
+          "& .sig-controls": { display: isLocked ? "none" : "flex" },
         },
-        borderColor:
-          showMobileControls && !isLocked
-            ? "#1565c0"
-            : isLocked
-              ? "transparent"
-              : "1px dashed #1976d2",
+        ...(showMobileControls && !isLocked && { borderColor: "#1565c0" }),
       }}
     >
       <img
@@ -212,18 +203,16 @@ export default function DraggableSignature({
         style={{
           width: "100%",
           height: "100%",
-          objectFit: "contain", // Giữ tỷ lệ ảnh
+          objectFit: "contain",
           display: "block",
-          // --- QUAN TRỌNG: NGĂN TRÌNH DUYỆT KÉO ẢNH RA NGOÀI ---
-          pointerEvents: "none", // Ảnh không bắt sự kiện, để Box cha bắt
+          pointerEvents: "none",
           userSelect: "none",
         }}
       />
 
-      {/* Controls Toolbar */}
       {!isLocked && (
         <Box
-          className="controls"
+          className="sig-controls"
           sx={{
             display: showMobileControls ? "flex" : "none",
             position: "absolute",
@@ -238,8 +227,6 @@ export default function DraggableSignature({
             alignItems: "center",
             zIndex: 101,
             whiteSpace: "nowrap",
-
-            // --- Đảm bảo Toolbar cũng bấm được ---
             pointerEvents: "auto",
           }}
           onTouchStart={(e) => e.stopPropagation()}
@@ -250,7 +237,6 @@ export default function DraggableSignature({
               <Remove fontSize="small" />
             </IconButton>
           </Tooltip>
-
           <Box sx={{ width: 60, px: 1 }}>
             <Slider
               size="small"
@@ -261,15 +247,12 @@ export default function DraggableSignature({
               onChange={(_, val) => handleZoom(val as number)}
             />
           </Box>
-
           <Tooltip title="Tăng">
             <IconButton size="small" onClick={() => handleZoom(scale + 0.1)}>
               <Add fontSize="small" />
             </IconButton>
           </Tooltip>
-
           <Box sx={{ width: 1, height: 20, bgcolor: "#ddd", mx: 0.5 }} />
-
           <Tooltip title="Xóa">
             <IconButton size="small" color="error" onClick={() => onDelete(id)}>
               <Close fontSize="small" />

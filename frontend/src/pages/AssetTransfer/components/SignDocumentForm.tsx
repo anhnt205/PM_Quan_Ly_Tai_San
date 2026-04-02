@@ -96,7 +96,10 @@ export default function SignDocumentForm({
     };
   }, [isEdit, documentUrl, bangKeBytes]);
 
-  const handleSignComplete = async (newSignatures: SignaturesData[], pdfBlob: Blob) => {
+  const handleSignComplete = async (
+    newSignatures: SignaturesData[],
+    pdfBlob: Blob,
+  ) => {
     try {
       // Step 2: Save signature metadata and update file on S3
       await onSign(newSignatures);
@@ -104,7 +107,9 @@ export default function SignDocumentForm({
       onCancel();
     } catch (error: any) {
       console.error("Lỗi khi lưu chữ ký:", error);
-      showErrorAlert(`Có lỗi xảy ra: ${error.message || "Không thể lưu chữ ký."}`);
+      showErrorAlert(
+        `Có lỗi xảy ra: ${error.message || "Không thể lưu chữ ký."}`,
+      );
     }
   };
 

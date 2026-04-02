@@ -481,7 +481,9 @@ public class BanGiaoCCDCVatTuDao {
         entity.setId(generateNextId());
 
         entity.setNgayTao(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-        entity.setGiamDocKy(false);
+        if (entity.getByStep() != null && entity.getByStep()) {
+            entity.setGiamDocKy(false);
+        }
         String sql = """
                 INSERT INTO BanGiaoCCDCVatTu (
                     Id, IdCongTy, BanGiaoCCDCVatTu, QuyetDinhDieuDongSo, LenhDieuDong,
