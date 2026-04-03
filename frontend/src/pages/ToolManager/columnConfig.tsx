@@ -40,7 +40,7 @@ export const createColumns = (
   //   width: 200,
   // },
   {
-    key: "idNhomCCDC",
+    key: "tenNhomCCDC",
     label: "Nhóm CCDC",
     visible: true,
     isShow: true,

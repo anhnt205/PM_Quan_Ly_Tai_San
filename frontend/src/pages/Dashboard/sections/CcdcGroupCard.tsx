@@ -32,7 +32,7 @@ export default function CcdcGroupCard({
         <Box sx={{ flexShrink: 0 }}>
           <PieChart data={ccdcPieData} size={100} />
         </Box>
-        <Box sx={{ flex: 1 }}>
+        <Box sx={{ flex: 1, maxHeight: 180, overflowY: "auto" }}>
           {!hideCcdcLegend &&
             (ccdcPieData || []).map((item: any, index: number) => (
               <Box

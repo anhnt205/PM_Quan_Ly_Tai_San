@@ -337,7 +337,7 @@ export default function ToolHandoverForm({
               return {
                 ...i,
                 id: i.idChiTietCCDCVatTu,
-                tenVatTu: i.tenVatTu + `- (${i.soKyHieu}) -` + i.namSanXuat,
+                tenVatTu: i.tenVatTu + `- (${i.soKyHieu})`,
                 soLuongConLai: chitiet?.soLuongConLai ?? 0,
                 soLuongXuat: chitiet?.soLuongXuat ?? 0,
                 kyHieu: i.soKyHieu,
@@ -412,7 +412,7 @@ export default function ToolHandoverForm({
       (result || []).map((i: any) => ({
         ...i,
         id: i.idChiTietCCDCVatTu,
-        tenVatTu: i.tenCCDCVatTu + `- (${i.soKyHieu}) -` + i.namSanXuat,
+        tenVatTu: i.tenCCDCVatTu + `- (${i.soKyHieu})`,
         idCCDCVatTu: i.idCCDCVatTu,
         idChiTietCCDCVatTu: i.idChiTietCCDCVatTu,
         idChiTietDieuDong: i.id,

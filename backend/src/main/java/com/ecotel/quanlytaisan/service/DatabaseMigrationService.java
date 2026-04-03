@@ -4,10 +4,14 @@ import com.ecotel.quanlytaisan.dao.CCDCVatTuDao;
 import com.ecotel.quanlytaisan.dao.ChiTietDonViSoHuuDao;
 import com.ecotel.quanlytaisan.dao.ChiTietTaiSanDao;
 import com.ecotel.quanlytaisan.dao.DbConfigDao;
+import com.ecotel.quanlytaisan.dao.NhomCCDCDAO;
+import com.ecotel.quanlytaisan.dao.PhongBanDao;
+import com.ecotel.quanlytaisan.model.PhongBan;
 import com.ecotel.quanlytaisan.model.CCDCVatTu;
 import com.ecotel.quanlytaisan.model.ChiTietDonViSoHuu;
 import com.ecotel.quanlytaisan.model.ChiTietTaiSan;
 import com.ecotel.quanlytaisan.model.DbConfig;
+import com.ecotel.quanlytaisan.model.NhomCCDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -33,6 +37,12 @@ public class DatabaseMigrationService {
 
     @Autowired
     private ChiTietDonViSoHuuDao chiTietDonViSoHuuDao;
+
+    @Autowired
+    private NhomCCDCDAO nhomCCDCDAO;
+
+    @Autowired
+    private PhongBanDao phongBanDao;
 
     // ─── Wrapper gom nhóm dữ liệu cha–con trong quá trình migration ──────────
     private static class MigrationGroup {
@@ -66,14 +76,20 @@ public class DatabaseMigrationService {
         // 2. Tạo JdbcTemplate trỏ tới remote MSSQL
         JdbcTemplate remote = buildRemoteJdbcTemplate(config, dbStr);
 
-        // 3. Lấy danh sách vật tư (DM_VTHH + VTHH_CT)
+        // 3. Đồng bộ danh mục NhomCCDC từ DM_NHOM_VTHH
+        loadAndSyncNhomVthh(remote, dbStr);
+
+        // 3b. Đồng bộ danh mục PhongBan từ DM_DTHH (chỉ những đơn vị có trong MA_PBAN_NHAP)
+        loadAndSyncPhongBan(remote, dbStr);
+
+        // 4. Lấy danh sách vật tư (DM_VTHH + VTHH_CT)
         Map<String, MigrationGroup> groupMap = loadVatTuList(remote, dbStr);
         System.out.println("  Tổng số mã vật tư từ DM_VTHH: " + groupMap.size());
 
-        // 4. Với mỗi vật tư, lấy phiếu xuất + chi tiết → nhóm theo MA_PBAN_NHAP
+        // 5. Với mỗi vật tư, lấy phiếu xuất + chi tiết → nhóm theo MA_PBAN_NHAP
         loadPhieuXuatGroups(remote, dbStr, groupMap);
 
-        // 5. Ghi vào MySQL
+        // 6. Ghi vào MySQL
         persistToMySQL(groupMap);
 
         System.out.println("=== Đồng bộ hoàn tất: " + groupMap.size() + " mã vật tư ===");
@@ -101,15 +117,15 @@ public class DatabaseMigrationService {
      */
     private Map<String, MigrationGroup> loadVatTuList(JdbcTemplate remote, String dbStr) {
         // TOP 1 per MA_VTHH: lấy GIA_GOC đầu tiên có giá trị hợp lệ
+        // Đổi MA_NHOM_VTHH1 → MA_NHOM_VTHH để đúng cột và gán idNhomCCDC chính xác
         String sql = String.format(
-            "SELECT dmvt.MA_VTHH, dmvt.TEN_VTHH, dmvt.MA_DVT, dmvt.MA_NHOM_VTHH1, " +
+            "SELECT dmvt.MA_VTHH, dmvt.TEN_VTHH, dmvt.MA_DVT, dmvt.MA_NHOM_VTHH, " +
             "       (SELECT TOP 1 vc.GIA_GOC " +
             "        FROM [%s].dbo.VTHH_CT vc " +
             "        WHERE vc.MA_VTHH = dmvt.MA_VTHH AND vc.GIA_GOC IS NOT NULL AND vc.GIA_GOC > 0 " +
             "        ORDER BY vc.GIA_GOC DESC) AS GIA_GOC " +
             "FROM [%s].dbo.DM_VTHH dmvt " +
-            "WHERE dmvt.MA_NHOM_VTHH1 = '49' " +
-            "  AND EXISTS (" +
+            "WHERE EXISTS (" +
             "      SELECT 1 FROM [%s].dbo.VTHHPX_CT px " +
             "      JOIN [%s].dbo.VTHHPX px_h ON px_h.PR_KEY = px.FR_KEY " +
             "      WHERE px.MA_VTHH = dmvt.MA_VTHH AND px_h.TRAN_ID = 'NKHOPX'" +
@@ -138,7 +154,7 @@ public class DatabaseMigrationService {
             vatTu.setSoKyHieu(maVthh);
             vatTu.setTen(nvl(row.get("TEN_VTHH")));
             vatTu.setDonViTinh(nvl(row.get("MA_DVT")));
-            vatTu.setIdNhomCCDC(nvl(row.get("MA_NHOM_VTHH1")));
+            vatTu.setIdNhomCCDC(nvl(row.get("MA_NHOM_VTHH")));   // dùng MA_NHOM_VTHH thay MA_NHOM_VTHH1
             vatTu.setIdCongTy("ct001");
             vatTu.setIsActive(true);
             vatTu.setNgayTao(now);
@@ -151,6 +167,113 @@ public class DatabaseMigrationService {
         }
 
         return groupMap;
+    }
+
+    // ─── Bước mới: Đồng bộ danh mục nhóm từ DM_NHOM_VTHH ────────────────────
+    /**
+     * Query bảng DM_NHOM_VTHH trên remote để lấy (MA_NHOM_VTHH, TEN_NHOM_VTHH)
+     * rồi upsert vào bảng NhomCCDC local (id = MA_NHOM_VTHH, ten = TEN_NHOM_VTHH).
+     */
+    private void loadAndSyncNhomVthh(JdbcTemplate remote, String dbStr) {
+        System.out.println("  Đồng bộ danh mục NhomCCDC từ DM_NHOM_VTHH...");
+        String sql = String.format(
+            "SELECT MA_NHOM_VTHH, TEN_NHOM_VTHH FROM [%s].dbo.DM_NHOM_VTHH",
+            dbStr
+        );
+
+        List<Map<String, Object>> rows;
+        try {
+            rows = remote.queryForList(sql);
+        } catch (Exception e) {
+            System.err.println("  [CẢNH BÁO] Không thể query DM_NHOM_VTHH: " + e.getMessage());
+            return;
+        }
+
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+        String now = LocalDateTime.now().format(fmt);
+        int count = 0;
+
+        for (Map<String, Object> row : rows) {
+            String maNhom = nvl(row.get("MA_NHOM_VTHH"));
+            String tenNhom = nvl(row.get("TEN_NHOM_VTHH"));
+            if (maNhom.isEmpty()) continue;
+
+            NhomCCDC nhom = new NhomCCDC();
+            nhom.setId(maNhom);
+            nhom.setTen(tenNhom);
+            nhom.setHieuLuc(true);
+            nhom.setIdCongTy("ct001");
+            nhom.setNgayTao(now);
+            nhom.setNgayCapNhat(now);
+            nhom.setNguoiTao("system");
+            nhom.setNguoiCapNhat("system");
+
+            try {
+                nhomCCDCDAO.insert(nhom);  // insert() đã có logic check tồn tại → upsert
+                count++;
+            } catch (Exception e) {
+                System.err.println("  [LỖI] Không thể upsert NhomCCDC id=" + maNhom + ": " + e.getMessage());
+            }
+        }
+        System.out.println("  Đã đồng bộ " + count + " nhóm vật tư vào NhomCCDC.");
+    }
+
+    // ─── Bước 3b: Đồng bộ danh mục PhongBan từ DM_DTTH ───────────────────────
+    /**
+     * Query bảng DM_DTTH trên remote để lấy (MA_DTTH, TEN_DTTH),
+     * chỉ lấy những MA_DTTH thực sự xuất hiện trong cột MA_PBAN_NHAP của bảng VTHHPX
+     * (phiếu nhập kho TRAN_ID = 'NKHOPX'), rồi upsert vào bảng PhongBan local.
+     */
+    private void loadAndSyncPhongBan(JdbcTemplate remote, String dbStr) {
+        System.out.println("  Đồng bộ danh mục PhongBan từ DM_DTTH (lọc theo MA_PBAN_NHAP)...");
+        String sql = String.format(
+            "SELECT d.MA_DTTH, d.TEN_DTTH " +
+            "FROM [%s].dbo.DM_DTTH d " +
+            "WHERE d.MA_DTTH IN (" +
+            "    SELECT DISTINCT px.MA_PBAN_NHAP " +
+            "    FROM [%s].dbo.VTHHPX px " +
+            "    WHERE px.TRAN_ID = 'NKHOPX' " +
+            "      AND px.MA_PBAN_NHAP IS NOT NULL " +
+            "      AND px.MA_PBAN_NHAP <> ''" +
+            ")",
+            dbStr, dbStr
+        );
+
+        List<Map<String, Object>> rows;
+        try {
+            rows = remote.queryForList(sql);
+        } catch (Exception e) {
+            System.err.println("  [CẢNH BÁO] Không thể query DM_DTHH: " + e.getMessage());
+            return;
+        }
+
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+        String now = LocalDateTime.now().format(fmt);
+        int count = 0;
+
+        for (Map<String, Object> row : rows) {
+            String maDthh  = nvl(row.get("MA_DTTH"));
+            String tenDthh = nvl(row.get("TEN_DTTH"));
+            if (maDthh.isEmpty()) continue;
+
+            PhongBan pb = new PhongBan();
+            pb.setId(maDthh);
+            pb.setTenPhongBan(tenDthh);
+            pb.setIdCongTy("ct001");
+            pb.setIsActive(true);
+            pb.setNgayTao(now);
+            pb.setNgayCapNhat(now);
+            pb.setNguoiTao("system");
+            pb.setNguoiCapNhat("system");
+
+            try {
+                phongBanDao.insert(pb);  // insert() đã có logic check tồn tại → upsert
+                count++;
+            } catch (Exception e) {
+                System.err.println("  [LỖI] Không thể upsert PhongBan id=" + maDthh + ": " + e.getMessage());
+            }
+        }
+        System.out.println("  Đã đồng bộ " + count + " phòng ban vào PhongBan.");
     }
 
     // ─── Bước 3: Load VTHHPX + VTHHPX_CT, nhóm theo MA_PBAN_NHAP ────────────
