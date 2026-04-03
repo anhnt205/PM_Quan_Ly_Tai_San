@@ -582,6 +582,7 @@ export default function ToolTransferForm({
                   Chi tiết ccdc-vật tư điều chuyển:
                 </Typography>
                 <ExcelAssetUploader
+                  readOnly={readOnly}
                   availableAssets={[
                     ...tools,
                     ...((selectedTool?.chiTietDieuDongCCDCVatTuDTOS as any[]) ||

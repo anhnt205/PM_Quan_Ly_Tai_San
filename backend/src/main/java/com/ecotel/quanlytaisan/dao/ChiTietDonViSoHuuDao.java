@@ -48,6 +48,17 @@ public class ChiTietDonViSoHuuDao {
         String sql = "SELECT * FROM ChiTietDonViSoHuu WHERE IdDonViSoHuu = ?";
         return jdbcTemplate.query(sql, rowMapper, idDonViSoHuu);
     }
+    public List<ChiTietDonViSoHuu> findByIdCCDCVTAndIdDonViSoHuu(
+        String idCCDCVT, String idDonViSoHuu) {
+        String sql = """
+                SELECT dvsh.*, ctts.SoKyHieu AS soKyHieu
+                FROM ChiTietDonViSoHuu dvsh
+                LEFT JOIN chitiettaisan ctts ON ctts.id = dvsh.idTsCon
+                WHERE dvsh.IdCCDCVT = ?
+                AND dvsh.IdDonViSoHuu = ?
+                """;
+        return jdbcTemplate.query(sql, rowMapper, idCCDCVT, idDonViSoHuu);
+    }
 
 // --- INSERT/UPDATE (Id tự sinh) ---
     public int insert(ChiTietDonViSoHuu entity) {

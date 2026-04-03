@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalTime;
+import java.time.ZoneId;
 
 @Component
 @EnableScheduling
@@ -21,7 +22,7 @@ public class DatabaseSyncScheduler {
     private DatabaseMigrationService databaseMigrationService;
 
     // Chạy ngầm định kỳ vào giây thứ 0 của mỗi đầu giờ (VD: 07:00, 08:00, ...)
-    @Scheduled(cron = "0 0 * * * *")
+    @Scheduled(cron = "0 0 * * * *", zone = "Asia/Ho_Chi_Minh")
     public void executeDatabaseSync() {
         System.out.println("Scheduler triggered: Checking for default DB configuration...");
         
@@ -30,7 +31,7 @@ public class DatabaseSyncScheduler {
             Integer intervalHours = defaultDb.getSyncIntervalHours();
             // Nếu có intervalHours cấu hình hợp lệ
             if (intervalHours != null && intervalHours > 0) {
-                int currentHour = LocalTime.now().getHour();
+                int currentHour = LocalTime.now(ZoneId.of("Asia/Ho_Chi_Minh")).getHour();
                 // Thực thi nếu chia dư bằng 0
                 if (currentHour % intervalHours == 0) {
                     System.out.println("Condition matched [currentHour=" + currentHour + ", interval=" + intervalHours + "]. Starting Sync for DbConfig ID: " + defaultDb.getId());

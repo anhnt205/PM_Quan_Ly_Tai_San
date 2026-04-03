@@ -5,7 +5,7 @@ import com.ecotel.quanlytaisan.dao.ChiTietDonViSoHuuDao;
 import com.ecotel.quanlytaisan.dao.ChiTietTaiSanDao;
 import com.ecotel.quanlytaisan.dao.TaiSanDao;
 import com.ecotel.quanlytaisan.model.*;
-import com.ecotel.quanlytaisan.model.PageResponse;
+
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,48 +45,34 @@ public class CCDCVatTuService {
         return taiSanDTOList;
     }
 
-    public PageResponse<CCDCVatTuDTO> getAllPaged(String idCongTy, int page, int size, String sortBy, String sortDir, String search) {
+    public PageResponse<CCDCVatTuDTO> getAllPaged(
+        String idCongTy, int page, int size,
+        String sortBy, String sortDir,
+        String search, String idDonViSoHuu,String idNhomCCDC) {
+
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
 
-        List<CCDCVatTuDTO> items;
-        long total;
+        boolean hasDonVi = idDonViSoHuu != null && !idDonViSoHuu.trim().isEmpty();
 
-        if (search != null && !search.trim().isEmpty()) {
-            String q = search.toLowerCase();
-            // Tối ưu: Gọi DAO trực tiếp để lấy list cơ bản, KHÔNG gọi getAll() để tránh load chi tiết cho toàn bộ DB
-            List<CCDCVatTuDTO> all = ccdcVatTuDao.findAll(idCongTy);
-            List<CCDCVatTuDTO> filtered = new ArrayList<>();
-            for (CCDCVatTuDTO item : all) {
-                // Search theo cac truong cu the
-                if (matchesCCDCSearch(item, q)) {
-                    filtered.add(item);
-                }
-            }
-            // Apply sorting
-            filtered.sort(getComparator(sortBy, sortDir));
-            total = filtered.size();
-            int from = Math.min(page * size, filtered.size());
-            int to = Math.min(from + size, filtered.size());
-            items = new ArrayList<>(filtered.subList(from, to));
-        } else {
-            total = ccdcVatTuDao.countByCongTy(idCongTy);
-            if (total == 0) {
-                return new PageResponse<>(List.of(), 0, page, size);
-            }
-            int offset = page * size;
-            items = ccdcVatTuDao.findAllPaged(idCongTy, offset, size, sortBy, sortDir);
-        }
+        long total = ccdcVatTuDao.countAllPaged(idCongTy, search, idDonViSoHuu,idNhomCCDC);
+        if (total == 0) return new PageResponse<>(List.of(), 0, page, size);
 
-        // Chỉ load thông tin chi tiết cho các phần tử trong trang hiện tại (ví dụ: 20 items)
+        int offset = page * size;
+        List<CCDCVatTuDTO> items = ccdcVatTuDao.findAllPaged(
+                idCongTy, offset, size, sortBy, sortDir, search, idDonViSoHuu,idNhomCCDC);
+
         for (CCDCVatTuDTO item : items) {
-            List<ChiTietTaiSan> chiTietTaiSanList = chiTietTaiSanDao.findAll(item.getId());
-            item.setChiTietTaiSanList(chiTietTaiSanList);
-            List<TaiSanCon> taiSanConList = taiSanDao.getTaiSanConByTaiSan(item.getId());
-            item.setTaiSanConList(taiSanConList);
-            List<ChiTietDonViSoHuu>chiTietDonViSoHuuList = chiTietDonViSoHuuDao.findByIdCCDCVT(item.getId());
-            item.setChiTietDonViSoHuuList(chiTietDonViSoHuuList);
+            item.setChiTietTaiSanList(chiTietTaiSanDao.findAll(item.getId()));
+            item.setTaiSanConList(taiSanDao.getTaiSanConByTaiSan(item.getId()));
+
+            // Nếu lọc theo đơn vị: chỉ trả ChiTietDonViSoHuu của đơn vị đó
+            List<ChiTietDonViSoHuu> chiTietList = hasDonVi
+                    ? chiTietDonViSoHuuDao.findByIdCCDCVTAndIdDonViSoHuu(item.getId(), idDonViSoHuu)
+                    : chiTietDonViSoHuuDao.findByIdCCDCVT(item.getId());
+            item.setChiTietDonViSoHuuList(chiTietList);
         }
+
         return new PageResponse<>(items, total, page, size);
     }
 

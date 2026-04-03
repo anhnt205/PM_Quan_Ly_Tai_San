@@ -576,7 +576,7 @@ export default function Menuheader() {
       ],
     },
     {
-      text: "Quản lý thiết bị",
+      text: "Quản lý tài sản",
       icon: <Inventory fontSize="small" />,
       path: "#",
       subMenu: [

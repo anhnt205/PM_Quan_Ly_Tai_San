@@ -658,10 +658,19 @@ export const useToolPageQuery = (
   page?: number,
   pageSize?: number,
   searchValue?: string,
+  idDonViSoHuu?: string,
+  idNhomCCDC?: string,
 ) => {
   const idcongty = CongTy.CT001;
   return useQuery({
-    queryKey: ["toolsPage", page, pageSize, searchValue],
+    queryKey: [
+      "toolsPage",
+      page,
+      pageSize,
+      searchValue,
+      idDonViSoHuu,
+      idNhomCCDC,
+    ],
     queryFn: async () => {
       const res = await api.get("/ccdcvattu/paged", {
         params: {
@@ -669,6 +678,8 @@ export const useToolPageQuery = (
           page: page,
           size: pageSize,
           search: searchValue,
+          iddonvisohuu: idDonViSoHuu,
+          idnhomccdc: idNhomCCDC,
         },
       });
       return res.data.data || res.data;

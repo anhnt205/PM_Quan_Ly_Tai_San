@@ -13,14 +13,14 @@ interface ExcelAssetUploaderProps {
   availableAssets: ExcelAssetItem[];
   onUploadSuccess: (matchedAssets: ExcelAssetItem[]) => void;
   fileName?: string;
-  disabled?: boolean;
+  readOnly?: boolean;
 }
 
 export default function ExcelAssetUploader({
   availableAssets,
   onUploadSuccess,
   fileName = "Template_Tai_San",
-  disabled = false,
+  readOnly = false,
 }: ExcelAssetUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -106,7 +106,7 @@ export default function ExcelAssetUploader({
         size="small"
         startIcon={<Download />}
         onClick={handleDownloadTemplate}
-        disabled={disabled || !availableAssets.length}
+        disabled={readOnly}
         sx={{ textTransform: "none", bgcolor: "#f5f5f5" }}
       >
         Tải file mẫu
@@ -118,7 +118,7 @@ export default function ExcelAssetUploader({
         size="small"
         startIcon={<Upload />}
         onClick={() => fileInputRef.current?.click()}
-        disabled={disabled || !availableAssets.length}
+        disabled={readOnly}
         sx={{ textTransform: "none", bgcolor: "#f5f5f5" }}
       >
         Tải lên (Upload)

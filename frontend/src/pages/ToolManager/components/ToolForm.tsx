@@ -415,7 +415,7 @@ export default function ToolForm({
             <TableHead>
               <TableRow>
                 <TableCell>STT</TableCell>
-                <TableCell>Ký hiệu</TableCell>
+                {/* <TableCell>Ký hiệu</TableCell> */}
                 <TableCell>Số lượng</TableCell>
                 <TableCell>Công suất</TableCell>
                 <TableCell>Nước sản xuất</TableCell>
@@ -442,7 +442,7 @@ export default function ToolForm({
                     </TableCell>
 
                     {/* Số ký hiệu */}
-                    <TableCell>
+                    {/* <TableCell>
                       <FieldInput
                         formik={formik}
                         field={`chiTietTaiSanList.${row.originalIndex}.soKyHieu`}
@@ -451,7 +451,7 @@ export default function ToolForm({
                           handleFieldChange(e, row.originalIndex)
                         }
                       />
-                    </TableCell>
+                    </TableCell> */}
 
                     {/* Số lượng */}
                     <TableCell>

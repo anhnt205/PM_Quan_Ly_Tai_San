@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Repository
@@ -63,21 +64,88 @@ public class CCDCVatTuDao {
         return jdbcTemplate.queryForObject(sql, Long.class, idCongTy);
     }
 
-    public List<CCDCVatTuDTO> findAllPaged(String idCongTy, int offset, int limit, String sortBy, String sortDir) {
-        String orderColumn = resolveOrderColumn(sortBy);
-        String direction = resolveDirection(sortDir);
+    public long countAllPaged(String idCongTy, String search, String idDonViSoHuu,String idNhomCCDC) {
+    boolean hasSearch = search != null && !search.trim().isEmpty();
+    boolean hasDonVi  = idDonViSoHuu != null && !idDonViSoHuu.trim().isEmpty();
+    boolean hasNhomCCDC = idNhomCCDC != null && !idNhomCCDC.trim().isEmpty();
 
-        String sql = """
-                SELECT 
+    StringBuilder sql = new StringBuilder("""
+            SELECT COUNT(DISTINCT ccdc.Id)
+            FROM CCDCVatTu ccdc
+            LEFT JOIN PhongBan pb ON ccdc.IdDonVi = pb.Id
+            LEFT JOIN NhomCCDC nccdc ON nccdc.Id = ccdc.IdNhomCCDC
+            """);
+
+    if (hasDonVi) {
+        sql.append(" INNER JOIN ChiTietDonViSoHuu ctdv ON ctdv.IdCCDCVT = ccdc.Id AND ctdv.IdDonViSoHuu = ? ");
+    }
+
+    sql.append(" WHERE ccdc.IdCongTy = ? ");
+     if (hasNhomCCDC) {
+        sql.append(" AND ccdc.IdNhomCCDC = ? \n");
+    }
+
+    if (hasSearch) {
+        sql.append("""
+                AND (
+                    ccdc.Id           LIKE ? OR
+                    ccdc.Ten          LIKE ? OR
+                    pb.TenPhongBan    LIKE ? OR
+                    nccdc.Ten         LIKE ? OR
+                    ccdc.KyHieu       LIKE ? OR
+                    ccdc.SoKyHieu     LIKE ? OR
+                    ccdc.CongSuat     LIKE ? OR
+                    ccdc.NuocSanXuat  LIKE ? OR
+                    ccdc.DonViTinh    LIKE ? OR
+                    ccdc.GhiChu       LIKE ?
+                )
+                """);
+    }
+
+    List<Object> params = new ArrayList<>();
+    if (hasDonVi)  params.add(idDonViSoHuu);
+    params.add(idCongTy);
+    if (hasNhomCCDC) params.add(idNhomCCDC);
+    if (hasSearch) {
+        String like = "%" + search.trim() + "%";
+        for (int i = 0; i < 10; i++) params.add(like);
+    }
+
+    return jdbcTemplate.queryForObject(sql.toString(), Long.class, params.toArray());
+}
+
+    public List<CCDCVatTuDTO> findAllPaged(
+            String idCongTy, int offset, int limit,
+            String sortBy, String sortDir,
+            String search, String idDonViSoHuu,String idNhomCCDC) {
+
+        boolean hasSearch = search != null && !search.trim().isEmpty();
+        boolean hasDonVi  = idDonViSoHuu != null && !idDonViSoHuu.trim().isEmpty();
+        boolean hasNhomCCDC = idNhomCCDC != null && !idNhomCCDC.trim().isEmpty();
+
+        String orderColumn = resolveOrderColumn(sortBy);
+        String direction   = resolveDirection(sortDir);
+
+        // SoLuong: nếu lọc theo đơn vị thì SUM của đơn vị đó, ngược lại lấy gốc
+        String soLuongExpr = hasDonVi
+                ? "COALESCE(SUM(ctdv.SoLuong), 0) AS SoLuong"
+                : "ccdc.SoLuong";
+
+        StringBuilder sql = new StringBuilder();
+        sql.append("""
+                SELECT
                     ccdc.Id,
                     ccdc.Ten,
                     ccdc.IdDonVi,
                     pb.TenPhongBan AS TenDonVi,
                     ccdc.IdNhomCCDC,
-                    nccdc.Ten as TenNhomCCDC,
+                    nccdc.Ten AS TenNhomCCDC,
                     ccdc.NgayNhap,
                     ccdc.DonVitinh,
-                    ccdc.SoLuong,
+                    """);
+        sql.append("       ccdc.IdNhomCCDC, nccdc.Ten AS TenNhomCCDC, ccdc.NgayNhap, ccdc.DonVitinh,\n");
+        sql.append("       ").append(soLuongExpr).append(",\n");
+        sql.append("""
                     ccdc.GiaTri,
                     ccdc.SoKyHieu,
                     ccdc.KyHieu,
@@ -91,22 +159,69 @@ public class CCDCVatTuDao {
                     ccdc.NguoiTao,
                     ccdc.NguoiCapNhat,
                     ccdc.IsActive,
-                    ccdc.IdLoaiCCDCCon, 
+                    ccdc.IdLoaiCCDCCon,
                     ccdc.HienTrang
-                FROM 
-                    CCDCVatTu AS ccdc
-                LEFT JOIN 
-                    PhongBan AS pb ON ccdc.IdDonVi = pb.Id
-                LEFT JOIN 
-                    NhomCCDC as nccdc on nccdc.Id = ccdc.IdNhomCCDC
-                WHERE ccdc.IdCongTy = ?
-                ORDER BY %s %s
-                LIMIT ? OFFSET ?
-                """;
-        String finalSql = String.format(sql, orderColumn, direction);
-        return jdbcTemplate.query(finalSql, new BeanPropertyRowMapper<>(CCDCVatTuDTO.class), idCongTy, limit, offset);
-    }
+                FROM CCDCVatTu AS ccdc
+                LEFT JOIN PhongBan AS pb ON ccdc.IdDonVi = pb.Id
+                LEFT JOIN NhomCCDC AS nccdc ON nccdc.Id = ccdc.IdNhomCCDC
+                """);
 
+        if (hasDonVi) {
+            sql.append(" INNER JOIN ChiTietDonViSoHuu ctdv ON ctdv.IdCCDCVT = ccdc.Id AND ctdv.IdDonViSoHuu = ? \n");
+        }
+
+        sql.append(" WHERE ccdc.IdCongTy = ? \n");
+        if (hasNhomCCDC) {
+            sql.append(" AND ccdc.IdNhomCCDC = ? \n");
+        }
+
+        if (hasSearch) {
+            sql.append("""
+                    AND (
+                        ccdc.Id           LIKE ? OR
+                        ccdc.Ten          LIKE ? OR
+                        pb.TenPhongBan    LIKE ? OR
+                        nccdc.Ten         LIKE ? OR
+                        ccdc.KyHieu       LIKE ? OR
+                        ccdc.SoKyHieu     LIKE ? OR
+                        ccdc.CongSuat     LIKE ? OR
+                        ccdc.NuocSanXuat  LIKE ? OR
+                        ccdc.DonViTinh    LIKE ? OR
+                        ccdc.GhiChu       LIKE ?
+                    )
+                    """);
+        }
+
+        if (hasDonVi) {
+            sql.append("""
+                    GROUP BY
+                        ccdc.Id, ccdc.Ten, ccdc.IdDonVi, pb.TenPhongBan,
+                        ccdc.IdNhomCCDC, nccdc.Ten, ccdc.NgayNhap, ccdc.DonVitinh,
+                        ccdc.GiaTri, ccdc.SoKyHieu, ccdc.KyHieu, ccdc.CongSuat,
+                        ccdc.NuocSanXuat, ccdc.NamSanXuat, ccdc.GhiChu, ccdc.IdCongTy,
+                        ccdc.NgayTao, ccdc.NgayCapNhat, ccdc.NguoiTao, ccdc.NguoiCapNhat,
+                        ccdc.IsActive, ccdc.IdLoaiCCDCCon, ccdc.HienTrang
+                    """);
+        }
+
+        sql.append(" ORDER BY ").append(orderColumn).append(" ").append(direction).append("\n");
+        sql.append(" LIMIT ? OFFSET ? ");
+
+        List<Object> params = new ArrayList<>();
+        if (hasDonVi)  params.add(idDonViSoHuu);
+        params.add(idCongTy);
+        if (hasNhomCCDC) params.add(idNhomCCDC);
+        if (hasSearch) {
+            String like = "%" + search.trim() + "%";
+            for (int i = 0; i < 10; i++) params.add(like);
+        }
+        params.add(limit);
+        params.add(offset);
+
+        return jdbcTemplate.query(sql.toString(),
+                new BeanPropertyRowMapper<>(CCDCVatTuDTO.class),
+                params.toArray());
+    }
     private String resolveOrderColumn(String sortBy) {
         String normalizedSortBy = sortBy != null ? sortBy.trim().toLowerCase() : "ngaycapnhat";
         switch (normalizedSortBy) {

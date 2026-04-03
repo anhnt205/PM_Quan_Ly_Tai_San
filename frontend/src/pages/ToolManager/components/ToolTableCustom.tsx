@@ -15,6 +15,7 @@ import {
   Checkbox,
   TablePagination,
   CircularProgress,
+  Autocomplete,
 } from "@mui/material";
 import {
   Delete,
@@ -47,6 +48,11 @@ interface Props {
   allDepartments?: any[];
   showDeleteAll?: boolean;
   onDeleteAll?: () => void;
+  selectedDepartment?: string;
+  onSelectedDepartmentChange?: (id: string) => void;
+  toolGroups?: any[];
+  selectedToolGroup?: string;
+  onSelectedToolGroupChange?: (id: string) => void;
 }
 
 export default function ToolTableCustom({
@@ -68,6 +74,11 @@ export default function ToolTableCustom({
   allDepartments = [],
   showDeleteAll = false,
   onDeleteAll,
+  selectedDepartment,
+  onSelectedDepartmentChange,
+  toolGroups = [],
+  selectedToolGroup,
+  onSelectedToolGroupChange,
 }: Props) {
   const [expandedRows, setExpandedRows] = useState<Set<string | number>>(
     new Set(),
@@ -331,7 +342,7 @@ export default function ToolTableCustom({
                         },
                       }}
                     >
-                      <TableCell>Ký hiệu</TableCell>
+                      {/* <TableCell>Ký hiệu</TableCell> */}
                       <TableCell>Đơn vị sở hữu</TableCell>
                       <TableCell>Số lượng đang sở hữu</TableCell>
                       {/* <TableCell>Thời gian bàn giao</TableCell> */}
@@ -347,9 +358,9 @@ export default function ToolTableCustom({
                     ) : detailsToShow.length > 0 ? (
                       detailsToShow.map((detail: any) => (
                         <TableRow key={`detail-item-${detail.soKyHieu}`}>
-                          <TableCell sx={{ border: "1px solid #e0e0e0" }}>
+                          {/* <TableCell sx={{ border: "1px solid #e0e0e0" }}>
                             {detail.soKyHieu || "-"}
-                          </TableCell>
+                          </TableCell> */}
                           <TableCell sx={{ border: "1px solid #e0e0e0" }}>
                             {findById(allDepartments, detail.idDonViSoHuu)
                               ?.tenPhongBan ||
@@ -460,7 +471,50 @@ export default function ToolTableCustom({
             variant="outlined"
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 8 }}>
+        <Grid size={{ xs: 12, sm: 3 }}>
+          <Autocomplete
+            options={allDepartments}
+            getOptionLabel={(option) => option.tenPhongBan}
+            value={
+              allDepartments.find((item) => item.id === selectedDepartment) ||
+              null
+            }
+            onChange={(event, newValue) => {
+              onSelectedDepartmentChange?.(newValue?.id || "");
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Đơn vị sở hữu"
+                fullWidth
+                size="small"
+                variant="outlined"
+              />
+            )}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 2 }}>
+          <Autocomplete
+            options={toolGroups}
+            getOptionLabel={(option) => option.ten}
+            value={
+              toolGroups.find((item) => item.id === selectedToolGroup) || null
+            }
+            onChange={(event, newValue) => {
+              onSelectedToolGroupChange?.(newValue?.id || "");
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Nhóm ccdc"
+                fullWidth
+                size="small"
+                variant="outlined"
+              />
+            )}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 3 }}>
           <Box display="flex" justifyContent="flex-end" gap={2}>
             {/* <Button variant="outlined" size="small" startIcon={<Settings />}>
               Cấu hình cột

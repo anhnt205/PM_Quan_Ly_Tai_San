@@ -582,6 +582,7 @@ export default function AssetTransferForm({
                   Chi tiết tài sản điều chuyển:
                 </Typography>
                 <ExcelAssetUploader
+                  readOnly={readOnly}
                   availableAssets={[
                     ...allAssetsByDonVi.items,
                     ...((selectedTransfer?.chiTietDieuDongTaiSanDTOS as any[]) ||

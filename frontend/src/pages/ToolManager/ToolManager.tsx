@@ -34,6 +34,8 @@ export default function ToolManager() {
 
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [openErrorModal, setOpenErrorModal] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [selectedToolGroup, setSelectedToolGroup] = useState("");
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
@@ -72,6 +74,8 @@ export default function ToolManager() {
     paginationModel.page,
     paginationModel.pageSize,
     searchDebounce,
+    selectedDepartment,
+    selectedToolGroup,
   );
   const { data: allDepartments = [] } = useAllDepartmentsQuery();
   const { data: toolTypes = [] } = useAllToolTypeQuery();
@@ -242,6 +246,11 @@ export default function ToolManager() {
               onPaginationModelChange={setPaginationModel}
               loading={isLoading}
               allDepartments={allDepartments}
+              selectedDepartment={selectedDepartment}
+              onSelectedDepartmentChange={setSelectedDepartment}
+              toolGroups={toolGroups}
+              selectedToolGroup={selectedToolGroup}
+              onSelectedToolGroupChange={setSelectedToolGroup}
               onDeleteAll={deleteAllMutation.mutate}
               showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
             />
