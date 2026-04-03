@@ -40,7 +40,7 @@ public class ChiTietDonViSoHuuDao {
 
     // --- EXISTING FILTERS ---
     public List<ChiTietDonViSoHuu> findByIdCCDCVT(String idCCDCVT) {
-        String sql = "SELECT dvsh.*,ctts.SoKyHieu AS soKyHieu FROM ChiTietDonViSoHuu dvsh LEFT JOIN chitiettaisan ctts ON ctts.id=dvsh.idTsCon WHERE dvsh.IdCCDCVT = ?";
+        String sql = "SELECT dvsh.*,ctts.SoKyHieu AS soKyHieu FROM ChiTietDonViSoHuu dvsh LEFT JOIN chitiettaisan ctts ON ctts.id=dvsh.idTsCon WHERE dvsh.IdCCDCVT = ? ORDER BY dvsh.NgayTao DESC";
         return jdbcTemplate.query(sql, rowMapper, idCCDCVT);
     }
 
@@ -56,45 +56,59 @@ public class ChiTietDonViSoHuuDao {
                 LEFT JOIN chitiettaisan ctts ON ctts.id = dvsh.idTsCon
                 WHERE dvsh.IdCCDCVT = ?
                 AND dvsh.IdDonViSoHuu = ?
+                ORDER BY dvsh.NgayTao DESC
                 """;
         return jdbcTemplate.query(sql, rowMapper, idCCDCVT, idDonViSoHuu);
     }
 
 // --- INSERT/UPDATE (Id tự sinh) ---
     public int insert(ChiTietDonViSoHuu entity) {
-        // Kiểm tra tồn tại theo IdCCDCVT, IdDonViSoHuu, IdTsCon
-        String checkSql = "SELECT COUNT(*) FROM ChiTietDonViSoHuu WHERE IdCCDCVT = ? AND IdDonViSoHuu = ? AND IdTsCon = ?";
-        int count = jdbcTemplate.queryForObject(
-                checkSql,
-                Integer.class,
+        // Nếu có SoChungTu: check tồn tại theo SoChungTu + IdCCDCVT (1 phiếu nhập = 1 bản ghi duy nhất)
+        // Nếu không có SoChungTu (tạo thủ công): check theo IdCCDCVT + IdDonViSoHuu + IdTsCon như cũ
+        boolean hasSoChungTu = entity.getSoChungTu() != null && !entity.getSoChungTu().trim().isEmpty();
+
+        if (hasSoChungTu) {
+            String checkSql = "SELECT COUNT(*) FROM ChiTietDonViSoHuu WHERE SoChungTu = ? AND IdCCDCVT = ?";
+            Integer count = jdbcTemplate.queryForObject(checkSql, Integer.class,
+                    entity.getSoChungTu(), entity.getIdCCDCVT());
+            if (count != null && count > 0) {
+                // UPDATE bằng WHERE SoChungTu + IdCCDCVT (không dùng Id vì chưa fetch)
+                return jdbcTemplate.update(
+                    "UPDATE ChiTietDonViSoHuu SET SoLuong = ?, IdDonViSoHuu = ?, NgayTao = ?, " +
+                    "NguoiTao = ?, IdTsCon = ?, ThoiGianBanGiao = ? " +
+                    "WHERE SoChungTu = ? AND IdCCDCVT = ?",
+                    entity.getSoLuong(), entity.getIdDonViSoHuu(), entity.getNgayTao(),
+                    entity.getNguoiTao(), entity.getIdTsCon(), entity.getThoiGianBanGiao(),
+                    entity.getSoChungTu(), entity.getIdCCDCVT()
+                );
+            }
+        } else {
+            String checkSql = "SELECT COUNT(*) FROM ChiTietDonViSoHuu WHERE IdCCDCVT = ? AND IdDonViSoHuu = ? AND IdTsCon = ?";
+            Integer count = jdbcTemplate.queryForObject(checkSql, Integer.class,
+                    entity.getIdCCDCVT(), entity.getIdDonViSoHuu(), entity.getIdTsCon());
+            if (count != null && count > 0) {
+                return update(entity);
+            }
+        }
+
+        // Insert mới
+        String newId = UUID.randomUUID().toString();
+        String sql = "INSERT INTO ChiTietDonViSoHuu " +
+                "(Id, IdCCDCVT, IdDonViSoHuu, SoLuong, ThoiGianBanGiao, NgayTao, NguoiTao, IdTsCon, SoChungTu) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        int rows = jdbcTemplate.update(sql,
+                newId,
                 entity.getIdCCDCVT(),
                 entity.getIdDonViSoHuu(),
-                entity.getIdTsCon()
+                entity.getSoLuong(),
+                entity.getThoiGianBanGiao(),
+                entity.getNgayTao(),
+                entity.getNguoiTao(),
+                entity.getIdTsCon(),
+                entity.getSoChungTu()
         );
-
-        if (count > 0) {
-            // Nếu tồn tại thì update
-            return update(entity);
-        } else {
-            // Nếu chưa tồn tại thì insert
-            String newId = UUID.randomUUID().toString();
-            String sql = "INSERT INTO ChiTietDonViSoHuu " +
-                    "(Id, IdCCDCVT, IdDonViSoHuu, SoLuong, ThoiGianBanGiao, NgayTao, NguoiTao, IdTsCon) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-            int rows = jdbcTemplate.update(
-                    sql,
-                    newId,
-                    entity.getIdCCDCVT(),
-                    entity.getIdDonViSoHuu(),
-                    entity.getSoLuong(),
-                    entity.getThoiGianBanGiao(),
-                    entity.getNgayTao(),
-                    entity.getNguoiTao(),
-                    entity.getIdTsCon()
-            );
-            entity.setId(newId);
-            return rows;
-        }
+        entity.setId(newId);
+        return rows;
     }
 
 

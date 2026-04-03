@@ -343,9 +343,10 @@ export default function ToolTableCustom({
                       }}
                     >
                       {/* <TableCell>Ký hiệu</TableCell> */}
+                      <TableCell>Số chứng từ</TableCell>
                       <TableCell>Đơn vị sở hữu</TableCell>
                       <TableCell>Số lượng đang sở hữu</TableCell>
-                      {/* <TableCell>Thời gian bàn giao</TableCell> */}
+                      <TableCell>Ngày vào sổ</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -362,6 +363,9 @@ export default function ToolTableCustom({
                             {detail.soKyHieu || "-"}
                           </TableCell> */}
                           <TableCell sx={{ border: "1px solid #e0e0e0" }}>
+                            {detail.soChungTu || "-"}
+                          </TableCell>
+                          <TableCell sx={{ border: "1px solid #e0e0e0" }}>
                             {findById(allDepartments, detail.idDonViSoHuu)
                               ?.tenPhongBan ||
                               detail.idDonViSoHuu ||
@@ -370,9 +374,9 @@ export default function ToolTableCustom({
                           <TableCell sx={{ border: "1px solid #e0e0e0" }}>
                             {detail.soLuong || 0}
                           </TableCell>
-                          {/* <TableCell sx={{ border: "1px solid #e0e0e0" }}>
-                            {detail.thoiGianBanGiao || "-"}
-                          </TableCell> */}
+                          <TableCell sx={{ border: "1px solid #e0e0e0" }}>
+                            {detail.ngayTao || "-"}
+                          </TableCell>
                         </TableRow>
                       ))
                     ) : (

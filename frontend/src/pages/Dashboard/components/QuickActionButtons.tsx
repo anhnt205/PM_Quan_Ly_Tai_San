@@ -60,16 +60,16 @@ export const QuickActionButtons = () => {
       icon: <AssignmentReturnIcon fontSize="large" />,
       path: `${ROUTES.TOOLTRANSFER}?type=3`,
     },
-    {
-      label: "+ Kế hoạch sửa chữa bảo dưỡng",
-      icon: <Engineering fontSize="large" />,
-      path: `${ROUTES.MAINTENANCEREPAIR}?type=2`,
-    },
-    {
-      label: "+ Sửa chữa bảo dưỡng",
-      icon: <Engineering fontSize="large" />,
-      path: `${ROUTES.MAINTENANCEREPAIR}?type=1`,
-    },
+    // {
+    //   label: "+ Kế hoạch sửa chữa bảo dưỡng",
+    //   icon: <Engineering fontSize="large" />,
+    //   path: `${ROUTES.MAINTENANCEREPAIR}?type=2`,
+    // },
+    // {
+    //   label: "+ Sửa chữa bảo dưỡng",
+    //   icon: <Engineering fontSize="large" />,
+    //   path: `${ROUTES.MAINTENANCEREPAIR}?type=1`,
+    // },
   ];
 
   const handleNavigate = (path: string) => {
@@ -173,7 +173,7 @@ export const QuickActionButtons = () => {
 
   return (
     <Box sx={{ mb: 3 }}>
-      <Grid container spacing={2} columns={10}>
+      <Grid container spacing={2} columns={8}>
         {actions.map((action, index) => (
           <Grid size={{ xs: 1 }} key={index}>
             <Box

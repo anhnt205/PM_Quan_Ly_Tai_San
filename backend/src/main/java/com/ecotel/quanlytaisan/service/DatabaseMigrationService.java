@@ -8,7 +8,6 @@ import com.ecotel.quanlytaisan.dao.NhomCCDCDAO;
 import com.ecotel.quanlytaisan.dao.PhongBanDao;
 import com.ecotel.quanlytaisan.model.PhongBan;
 import com.ecotel.quanlytaisan.model.CCDCVatTu;
-import com.ecotel.quanlytaisan.model.ChiTietDonViSoHuu;
 import com.ecotel.quanlytaisan.model.ChiTietTaiSan;
 import com.ecotel.quanlytaisan.model.DbConfig;
 import com.ecotel.quanlytaisan.model.NhomCCDC;
@@ -45,10 +44,25 @@ public class DatabaseMigrationService {
     private PhongBanDao phongBanDao;
 
     // ─── Wrapper gom nhóm dữ liệu cha–con trong quá trình migration ──────────
+    /** Thông tin 1 phiếu nhập kho (1 bản ghi VTHHPX + VTHHPX_CT) */
+    private static class PhieuNhap {
+        String maPbanNhap;
+        int    soLuong;
+        String soChungTu;   // SO_CTU từ VTHHPX
+        String ngayVaoSo;   // NGAY_VAO_SO từ VTHHPX → ngayTao của ChiTietDonViSoHuu
+
+        PhieuNhap(String maPbanNhap, int soLuong, String soChungTu, String ngayVaoSo) {
+            this.maPbanNhap = maPbanNhap;
+            this.soLuong    = soLuong;
+            this.soChungTu  = soChungTu;
+            this.ngayVaoSo  = ngayVaoSo;
+        }
+    }
+
     private static class MigrationGroup {
         CCDCVatTu vatTu;
-        // Key: "MA_VTHH|MA_PBAN_NHAP" → tổng số lượng của nhóm đó
-        Map<String, Integer> pbanNhapSoLuong = new LinkedHashMap<>();
+        // Danh sách từng phiếu nhập kho — không gộp — 1 phiếu = 1 ChiTietDonViSoHuu
+        List<PhieuNhap> phieuNhapList = new ArrayList<>();
 
         public MigrationGroup(CCDCVatTu vatTu) {
             this.vatTu = vatTu;
@@ -119,7 +133,7 @@ public class DatabaseMigrationService {
         // TOP 1 per MA_VTHH: lấy GIA_GOC đầu tiên có giá trị hợp lệ
         // Đổi MA_NHOM_VTHH1 → MA_NHOM_VTHH để đúng cột và gán idNhomCCDC chính xác
         String sql = String.format(
-            "SELECT dmvt.MA_VTHH, dmvt.TEN_VTHH, dmvt.MA_DVT, dmvt.MA_NHOM_VTHH, " +
+            "SELECT dmvt.MA_VTHH, dmvt.TEN_VTHH, dmvt.MA_DVT, dmvt.MA_NHOM_VTHH, dmvt.PROPERTY1, " +
             "       (SELECT TOP 1 vc.GIA_GOC " +
             "        FROM [%s].dbo.VTHH_CT vc " +
             "        WHERE vc.MA_VTHH = dmvt.MA_VTHH AND vc.GIA_GOC IS NOT NULL AND vc.GIA_GOC > 0 " +
@@ -155,6 +169,7 @@ public class DatabaseMigrationService {
             vatTu.setTen(nvl(row.get("TEN_VTHH")));
             vatTu.setDonViTinh(nvl(row.get("MA_DVT")));
             vatTu.setIdNhomCCDC(nvl(row.get("MA_NHOM_VTHH")));   // dùng MA_NHOM_VTHH thay MA_NHOM_VTHH1
+            vatTu.setNuocSanXuat(nvl(row.get("PROPERTY1")));      // PROPERTY1 = nuớc sản xuất
             vatTu.setIdCongTy("ct001");
             vatTu.setIsActive(true);
             vatTu.setNgayTao(now);
@@ -304,20 +319,19 @@ public class DatabaseMigrationService {
     private void processBatchPhieuXuat(JdbcTemplate remote, String dbStr,
                                        List<String> maVthhBatch,
                                        Map<String, MigrationGroup> groupMap) {
-        // Tạo placeholders cho IN clause
         String placeholders = String.join(",",
                 Collections.nCopies(maVthhBatch.size(), "?"));
 
-        // Join VTHHPX (phiếu) với VTHHPX_CT (chi tiết phiếu)
-        // Lọc TRAN_ID = 'NKHOPX' để chỉ lấy phiếu nhập kho
-        // Nhóm luôn theo MA_VTHH + MA_PBAN_NHAP để lấy tổng SO_LUONG
+        // GROUP BY MA_VTHH + MA_PBAN_NHAP + SO_CTU để gom tất cả dòng cùng chứng từ
+        // Dùng MIN(NGAY_VAO_SO) vì nhiều VTHHPX có cùng SO_CTU nhưng NGAY_VAO_SO có thể lệch milliseconds
         String sql = String.format(
-            "SELECT px.MA_VTHH, px_header.MA_PBAN_NHAP, SUM(px.SO_LUONG) AS TONG_SL " +
+            "SELECT px.MA_VTHH, px_h.MA_PBAN_NHAP, SUM(px.SO_LUONG) AS SO_LUONG, " +
+            "       px_h.SO_CTU, MIN(px_h.NGAY_VAO_SO) AS NGAY_VAO_SO " +
             "FROM [%s].dbo.VTHHPX_CT px " +
-            "JOIN [%s].dbo.VTHHPX px_header ON px_header.PR_KEY = px.FR_KEY " +
-            "WHERE px_header.TRAN_ID = 'NKHOPX' " +
+            "JOIN [%s].dbo.VTHHPX px_h ON px_h.PR_KEY = px.FR_KEY " +
+            "WHERE px_h.TRAN_ID = 'NKHOPX' " +
             "  AND px.MA_VTHH IN (%s) " +
-            "GROUP BY px.MA_VTHH, px_header.MA_PBAN_NHAP",
+            "GROUP BY px.MA_VTHH, px_h.MA_PBAN_NHAP, px_h.SO_CTU",
             dbStr, dbStr, placeholders
         );
 
@@ -325,21 +339,21 @@ public class DatabaseMigrationService {
 
         for (Map<String, Object> row : rows) {
             String maVthh    = String.valueOf(row.get("MA_VTHH")).trim();
-            String maPbanNhap = String.valueOf(row.get("MA_PBAN_NHAP")).trim();
-            int tongSl = row.get("TONG_SL") != null
-                    ? ((Number) row.get("TONG_SL")).intValue() : 0;
+            String maPbanNhap = nvl(row.get("MA_PBAN_NHAP"));
+            int sl = row.get("SO_LUONG") != null
+                    ? ((Number) row.get("SO_LUONG")).intValue() : 0;
+            String soChungTu = nvl(row.get("SO_CTU"));
+            String ngayVaoSo = row.get("NGAY_VAO_SO") != null
+                    ? row.get("NGAY_VAO_SO").toString() : null;
 
             MigrationGroup group = groupMap.get(maVthh);
-            if (group == null) continue; // không nằm trong danh mục → bỏ qua
+            if (group == null) continue;
 
-            // Nhóm key: dùng dấu | làm separator (MA_PBAN_NHAP không chứa |)
-            String groupKey = maVthh + "|" + maPbanNhap;
+            // Thêm từng phiếu vào list (không gộp)
+            group.phieuNhapList.add(new PhieuNhap(maPbanNhap, sl, soChungTu, ngayVaoSo));
 
-            // Cộng dồn vào nhóm MA_VTHH + MA_PBAN_NHAP
-            group.pbanNhapSoLuong.merge(groupKey, tongSl, Integer::sum);
-
-            // Cộng dồn vào tổng số lượng của CCDCVatTu
-            group.vatTu.setSoLuong(group.vatTu.getSoLuong() + tongSl);
+            // Cộng dồn vào tổng SoLuong CCDCVatTu
+            group.vatTu.setSoLuong(group.vatTu.getSoLuong() + sl);
         }
     }
 
@@ -366,34 +380,69 @@ public class DatabaseMigrationService {
                 chiTiet.setSoKyHieu(chiTietId);
                 chiTiet.setIdTaiSan(maVthh);
                 chiTiet.setSoLuong(g.vatTu.getSoLuong()); // tổng đã cộng ở bước 3
+                chiTiet.setNuocSanXuat(g.vatTu.getNuocSanXuat()); // PROPERTY1 từ DM_VTHH
                 chiTietTaiSanDao.insert(chiTiet);
 
-                // 4c. Tạo ChiTietDonViSoHuu: 1 bản ghi per nhóm MA_VTHH + MA_PBAN_NHAP
-                for (Map.Entry<String, Integer> entry : g.pbanNhapSoLuong.entrySet()) {
-                    // Parse lại key "MA_VTHH|MA_PBAN_NHAP"
-                    String[] parts     = entry.getKey().split("\\|", 2);
-                    String maPbanNhap  = parts.length > 1 ? parts[1] : "";
-                    int    rawSl       = entry.getValue();
+                // 4c. ChiTietDonViSoHuu: chỉ xóa record cũ (NULL SoChungTu), giữ record bàn giao
+                jdbcTemplate.update(
+                    "DELETE FROM ChiTietDonViSoHuu WHERE IdCCDCVT = ? AND (SoChungTu IS NULL OR SoChungTu = '')",
+                    maVthh
+                );
 
-                    // --- Trừ số lượng đã bàn giao trong năm ---
-                    int soLuongDaBanGiao = getSoLuongDaBanGiaoTrongNam(maVthh, maPbanNhap, chiTietId);
-                    int soLuongThucTe = Math.max(0, rawSl - soLuongDaBanGiao);
+                if (!g.phieuNhapList.isEmpty()) {
+                    // Fetch 1 lần các SoChungTu đã tồn tại để tránh N × SELECT COUNT
+                    Set<String> existingSct = new HashSet<>(
+                        jdbcTemplate.queryForList(
+                            "SELECT SoChungTu FROM ChiTietDonViSoHuu WHERE IdCCDCVT = ? AND SoChungTu IS NOT NULL",
+                            String.class, maVthh
+                        )
+                    );
 
-                    ChiTietDonViSoHuu dvsh = new ChiTietDonViSoHuu();
-                    dvsh.setIdCCDCVT(maVthh);
-                    dvsh.setIdDonViSoHuu(maPbanNhap);
-                    dvsh.setIdTsCon(chiTietId);    // trỏ về ChiTietTaiSan vừa tạo ở 4b
-                    dvsh.setSoLuong(soLuongThucTe);
-                    dvsh.setNgayTao(now);
-                    dvsh.setNguoiTao("system");
-                    chiTietDonViSoHuuDao.insert(dvsh);
+                    List<Object[]> toInsert = new ArrayList<>();
+                    List<Object[]> toUpdate = new ArrayList<>();
+
+                    for (PhieuNhap phieu : g.phieuNhapList) {
+                        String ngay = phieu.ngayVaoSo != null ? phieu.ngayVaoSo : now;
+                        if (phieu.soChungTu != null && existingSct.contains(phieu.soChungTu)) {
+                            // Cập nhật lại SoLuong của phiếu đã tồn tại
+                            toUpdate.add(new Object[]{
+                                phieu.soLuong, phieu.maPbanNhap, ngay, chiTietId,
+                                phieu.soChungTu, maVthh
+                            });
+                        } else {
+                            // Phiếu mới → insert
+                            toInsert.add(new Object[]{
+                                UUID.randomUUID().toString(),
+                                maVthh, phieu.maPbanNhap, phieu.soLuong,
+                                null, ngay, "system", chiTietId, phieu.soChungTu
+                            });
+                        }
+                    }
+
+                    if (!toInsert.isEmpty()) {
+                        jdbcTemplate.batchUpdate(
+                            "INSERT INTO ChiTietDonViSoHuu " +
+                            "(Id, IdCCDCVT, IdDonViSoHuu, SoLuong, ThoiGianBanGiao, NgayTao, NguoiTao, IdTsCon, SoChungTu) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                            toInsert
+                        );
+                    }
+                    if (!toUpdate.isEmpty()) {
+                        jdbcTemplate.batchUpdate(
+                            "UPDATE ChiTietDonViSoHuu SET SoLuong = ?, IdDonViSoHuu = ?, NgayTao = ?, IdTsCon = ? " +
+                            "WHERE SoChungTu = ? AND IdCCDCVT = ?",
+                            toUpdate
+                        );
+                    }
                 }
 
-                // 4d. Tính tổng lại số lượng từ ChiTietDonViSoHuu (bao gồm các phòng ban nhận bàn giao)
-                int totalSoLuong = getTongSoLuongTuDonViSoHuu(maVthh);
+                // 4d. Tổng số lượng = tính luôn từ phieuNhapList (không SELECT lại DB)
+                int totalSoLuong = g.phieuNhapList.stream()
+                        .mapToInt(p -> p.soLuong)
+                        .sum();
                 if (totalSoLuong != g.vatTu.getSoLuong()) {
-                     jdbcTemplate.update("UPDATE CCDCVatTu SET SoLuong = ? WHERE Id = ?", totalSoLuong, maVthh);
-                     jdbcTemplate.update("UPDATE ChiTietTaiSan SET SoLuong = ? WHERE Id = ?", totalSoLuong, chiTietId);
+                    jdbcTemplate.update("UPDATE CCDCVatTu SET SoLuong = ? WHERE Id = ?", totalSoLuong, maVthh);
+                    jdbcTemplate.update("UPDATE ChiTietTaiSan SET SoLuong = ? WHERE Id = ?", totalSoLuong, chiTietId);
                 }
 
                 successCount++;
