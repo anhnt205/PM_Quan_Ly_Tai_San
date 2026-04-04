@@ -125,29 +125,29 @@ public class ChiTietDonViSoHuuDao {
         return jdbcTemplate.update(sql, id);
     }
 
-    public int updateSoLuong(String idCCDCVT, String idDonViGui, String idDonViNhan, int soLuongBanGiao, String thoiGianBanGiao, String idTaiSanCon) {
+    public int updateSoLuong(String idCCDCVT, String idDonViGui, String idDonViNhan, int soLuongBanGiao, String soQuyetDinh, String soChungTu, String thoiGianBanGiao, String idTaiSanCon) {
         // Kiểm tra đơn vị nhận đã có chưa
-        String sql = "SELECT * FROM ChiTietDonViSoHuu WHERE IdDonViSoHuu = ? AND IdCCDCVT = ? AND IdTsCon=?";
-        List<ChiTietDonViSoHuu> listNhan = jdbcTemplate.query(sql, rowMapper, idDonViNhan, idCCDCVT, idTaiSanCon);
+        String sql = "SELECT * FROM ChiTietDonViSoHuu WHERE IdDonViSoHuu = ? AND IdCCDCVT = ? AND IdTsCon=? AND SoChungTu=? ";
+        List<ChiTietDonViSoHuu> listNhan = jdbcTemplate.query(sql, rowMapper, idDonViNhan, idCCDCVT, idTaiSanCon, soQuyetDinh);
 
         int rowsAffected = 0;
 
         if (listNhan.isEmpty()) {
             // Nếu đơn vị nhận chưa có → Insert mới
             String newId = UUID.randomUUID().toString();
-            sql = "INSERT INTO ChiTietDonViSoHuu " + "(Id, IdCCDCVT, IdDonViSoHuu, SoLuong, ThoiGianBanGiao, NgayTao, NguoiTao, IdTsCon) " + "VALUES (?, ?, ?, ?, ?, ?, ?,?)";
-            rowsAffected += jdbcTemplate.update(sql, newId, idCCDCVT, idDonViNhan, soLuongBanGiao, thoiGianBanGiao, new java.sql.Date(System.currentTimeMillis()), "system", idTaiSanCon);
+            sql = "INSERT INTO ChiTietDonViSoHuu " + "(Id, IdCCDCVT, IdDonViSoHuu,SoChungTu, SoLuong, ThoiGianBanGiao, NgayTao, NguoiTao, IdTsCon) " + "VALUES (?, ?, ?, ?, ?, ?, ?,?,?)";
+            rowsAffected += jdbcTemplate.update(sql, newId, idCCDCVT, idDonViNhan, soQuyetDinh, soLuongBanGiao, thoiGianBanGiao, thoiGianBanGiao, "system", idTaiSanCon);
         } else {
             // Nếu đã tồn tại → Cộng thêm số lượng
             ChiTietDonViSoHuu nhan = listNhan.get(0);
             int soLuongMoi = nhan.getSoLuong() + soLuongBanGiao;
 
-            sql = "UPDATE ChiTietDonViSoHuu SET SoLuong = ?, ThoiGianBanGiao = ? " + "WHERE IdDonViSoHuu = ? AND IdCCDCVT = ? AND IdTsCon=?";
-            rowsAffected += jdbcTemplate.update(sql, soLuongMoi, thoiGianBanGiao, idDonViNhan, idCCDCVT, idTaiSanCon);
+            sql = "UPDATE ChiTietDonViSoHuu SET SoLuong = ? " + "WHERE IdDonViSoHuu = ? AND IdCCDCVT = ? AND IdTsCon=? AND SoChungTu=? ";
+            rowsAffected += jdbcTemplate.update(sql, soLuongMoi, idDonViNhan, idCCDCVT, idTaiSanCon, soQuyetDinh);
         }
 
         // Giảm số lượng bên gửi
-        List<ChiTietDonViSoHuu> listGui = jdbcTemplate.query("SELECT * FROM ChiTietDonViSoHuu WHERE IdDonViSoHuu = ? AND IdCCDCVT = ?  AND IdTsCon=?", rowMapper, idDonViGui, idCCDCVT, idTaiSanCon);
+        List<ChiTietDonViSoHuu> listGui = jdbcTemplate.query("SELECT * FROM ChiTietDonViSoHuu WHERE IdDonViSoHuu = ? AND IdCCDCVT = ?  AND IdTsCon=? AND SoChungTu=?", rowMapper, idDonViGui, idCCDCVT, idTaiSanCon, soChungTu);
 
         if (listGui.isEmpty()) {
             return rowsAffected;
@@ -164,8 +164,9 @@ public class ChiTietDonViSoHuuDao {
         }
         try {
             int soLuongMoiGui = gui.getSoLuong() - soLuongBanGiao;
-            sql = "UPDATE ChiTietDonViSoHuu SET SoLuong = ?, ThoiGianBanGiao = ? " + "WHERE IdDonViSoHuu = ? AND IdCCDCVT = ?  AND IdTsCon=?";
-            rowsAffected += jdbcTemplate.update(sql, soLuongMoiGui, thoiGianBanGiao, idDonViGui, idCCDCVT, idTaiSanCon);
+            int soLuongDaBanGiao=gui.getSoLuongDaBanGiao()+soLuongBanGiao;
+            sql = "UPDATE ChiTietDonViSoHuu SET SoLuong = ?, SoLuongDaBanGiao = ?, ThoiGianBanGiao = ? " + "WHERE IdDonViSoHuu = ? AND IdCCDCVT = ?  AND IdTsCon=? AND SoChungTu=?";
+            rowsAffected += jdbcTemplate.update(sql, soLuongMoiGui,soLuongDaBanGiao, thoiGianBanGiao, idDonViGui, idCCDCVT, idTaiSanCon, soChungTu);
         } catch (Exception e) {
             return rowsAffected;
         }

@@ -336,10 +336,11 @@ export default function ToolHandoverForm({
 
               return {
                 ...i,
-                id: i.idChiTietCCDCVatTu,
-                tenVatTu: i.tenVatTu + `- (${i.soKyHieu})`,
+                idCustom: i.soChungTu + "_" + i.idCCDCVatTu,
+                tenVatTu: i.tenVatTu + `- (${i.soChungTu})`,
                 soLuongConLai: chitiet?.soLuongConLai ?? 0,
                 soLuongXuat: chitiet?.soLuongXuat ?? 0,
+                soChungTu: i.soChungTu,
                 kyHieu: i.soKyHieu,
                 nuocSanXuat: i.nuocSanXuat,
                 donViTinh: i.donViTinh,
@@ -411,11 +412,12 @@ export default function ToolHandoverForm({
     setListTools(
       (result || []).map((i: any) => ({
         ...i,
-        id: i.idChiTietCCDCVatTu,
-        tenVatTu: i.tenCCDCVatTu + `- (${i.soKyHieu})`,
+        id: i.soChungTu + "_" + i.idCCDCVatTu,
+        tenVatTu: i.tenCCDCVatTu + `- (${i.soChungTu})`,
         idCCDCVatTu: i.idCCDCVatTu,
         idChiTietCCDCVatTu: i.idChiTietCCDCVatTu,
         idChiTietDieuDong: i.id,
+        soChungTu: i.soChungTu,
         moTa: i.moTa,
         ghiChu: i.ghiChu,
         kyHieu: i.kyHieu,
@@ -993,7 +995,7 @@ export default function ToolHandoverForm({
                                   labelOption="idCCDCVatTu"
                                   title=""
                                   formik={formik}
-                                  field={`chiTietBanGiaoCCDCVatTu.${index}.idChiTietCCDCVatTu`}
+                                  field={`chiTietBanGiaoCCDCVatTu.${index}.idCustom`}
                                   data={listTools}
                                   disabled={readOnly}
                                   onChange={(newValue: any) => {
@@ -1022,10 +1024,14 @@ export default function ToolHandoverForm({
                                         `chiTietBanGiaoCCDCVatTu.${index}.idCCDCVatTu`,
                                         newValue.idCCDCVatTu,
                                       );
-                                      // formik.setFieldValue(
-                                      //   `chiTietBanGiaoCCDCVatTu.${index}.idChiTietCCDCVatTu`,
-                                      //   newValue.idChiTietCCDCVatTu,
-                                      // );
+                                      formik.setFieldValue(
+                                        `chiTietBanGiaoCCDCVatTu.${index}.idChiTietCCDCVatTu`,
+                                        newValue.idChiTietCCDCVatTu,
+                                      );
+                                      formik.setFieldValue(
+                                        `chiTietBanGiaoCCDCVatTu.${index}.soChungTu`,
+                                        newValue.soChungTu,
+                                      );
                                       formik.setFieldValue(
                                         `chiTietBanGiaoCCDCVatTu.${index}.idChiTietDieuDong`,
                                         newValue.idChiTietDieuDong,

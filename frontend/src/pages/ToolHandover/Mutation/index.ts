@@ -24,7 +24,7 @@ export const useToolHandoverMutation = () => {
   const mainKey = "toolHandoverPage";
   const idCongTy = CongTy.CT001;
   const { user } = useSelector((state: RootState) => state.user);
-  const now = dayjs(new Date()).format("YYYY-MM-DDTHH:mm:ss");
+  const now = dayjs().startOf("day").format("YYYY-MM-DDTHH:mm:ss");
 
   // --- 2. MUTATIONS ---
   const createMutation = useMutation({
@@ -71,7 +71,11 @@ export const useToolHandoverMutation = () => {
             idDonViNhan: data.idDonViNhan,
             idTsCon: item.idChiTietCCDCVatTu,
             soLuongBanGiao: item.soLuong,
-            thoiGianBanGiao: now,
+            soQuyetDinh: data.soQuyetDinh,
+            soChungTu: item.soChungTu,
+            thoiGianBanGiao: dayjs(data.ngayBanGiao)
+              .startOf("day")
+              .format("YYYY-MM-DD HH:mm:ss.0"),
           })),
         );
         updateStateAssetTransferMutation.mutate({
@@ -385,6 +389,8 @@ export const useToolHandoverMutation = () => {
         idDonViNhan: string;
         idTsCon: string;
         soLuongBanGiao: number;
+        soQuyetDinh: string;
+        soChungTu: string;
         thoiGianBanGiao: string;
       }[],
     ) => {
@@ -436,7 +442,11 @@ export const useToolHandoverMutation = () => {
             idDonViNhan: data.assetHandover.idDonViNhan,
             idTsCon: item.idChiTietCCDCVatTu,
             soLuongBanGiao: item.soLuong,
-            thoiGianBanGiao: now,
+            soQuyetDinh: data.assetHandover.soQuyetDinh,
+            soChungTu: item.soChungTu,
+            thoiGianBanGiao: dayjs(data.assetHandover.ngayBanGiao)
+              .startOf("day")
+              .format("YYYY-MM-DD HH:mm:ss.0"),
           })),
         );
         updateStateAssetTransferMutation.mutate({

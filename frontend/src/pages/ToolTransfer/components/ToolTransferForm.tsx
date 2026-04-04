@@ -745,6 +745,7 @@ export default function ToolTransferForm({
                                 value?.soKyHieu || "",
                               );
                             }}
+                            limitOptions={20}
                             disabled={readOnly}
                           />
                         </CustomTableCell>

@@ -8,6 +8,8 @@ public class UpdateChiTietDonViSoHuu {
     private String idDonViGui;
     private String idDonViNhan;
     private Integer soLuongBanGiao;
+    private String soQuyetDinh;
+    private String soChungTu;
     private String thoiGianBanGiao;
     private String idTsCon;
 }

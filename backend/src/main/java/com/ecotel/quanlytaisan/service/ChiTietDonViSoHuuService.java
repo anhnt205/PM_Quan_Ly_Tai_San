@@ -76,12 +76,16 @@ public class ChiTietDonViSoHuuService {
                              String idDonViGui,
                              String idDonViNhan,
                              int soLuongBanGiao,
+                             String soQuyetDinh,
+                             String soChungTu,
                              String thoiGianBanGiao, String idTaiSanCon) {
         return dao.updateSoLuong(
                 idCCDCVT,
                 idDonViGui,
                 idDonViNhan,
                 soLuongBanGiao,
+                soQuyetDinh,
+                soChungTu,
                 thoiGianBanGiao, idTaiSanCon
         );
     }

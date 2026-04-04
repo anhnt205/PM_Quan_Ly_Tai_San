@@ -124,8 +124,8 @@ public class ChiTietBanGiaoCCDCVatTuDao {
             return update(obj);
         } else {
             // Nếu chưa tồn tại thì insert
-            String sql = "INSERT INTO ChiTietBanGiaoCCDCVatTu (Id, IdBanGiaoCCDCVatTu, IdCCDCVatTu, SoLuong, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive, IdChiTietCCDCVatTu, IdChiTietDieuDong, HienTrang, MoTa, GhiChu) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
-            int result = jdbcTemplate.update(sql, obj.getId(), obj.getIdBanGiaoCCDCVatTu(), obj.getIdCCDCVatTu(), obj.getSoLuong(), obj.getNgayTao(), obj.getNgayCapNhat(), obj.getNguoiTao(), obj.getNguoiCapNhat(), obj.getIsActive(), obj.getIdChiTietCCDCVatTu(), obj.getIdChiTietDieuDong(), obj.getHienTrang(), obj.getMoTa(), obj.getGhiChu());
+            String sql = "INSERT INTO ChiTietBanGiaoCCDCVatTu (Id, IdBanGiaoCCDCVatTu, IdCCDCVatTu,SoChungTu, SoLuong, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive, IdChiTietCCDCVatTu, IdChiTietDieuDong, HienTrang, MoTa, GhiChu) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
+            int result = jdbcTemplate.update(sql, obj.getId(), obj.getIdBanGiaoCCDCVatTu(), obj.getIdCCDCVatTu(), obj.getSoChungTu(), obj.getSoLuong(), obj.getNgayTao(), obj.getNgayCapNhat(), obj.getNguoiTao(), obj.getNguoiCapNhat(), obj.getIsActive(), obj.getIdChiTietCCDCVatTu(), obj.getIdChiTietDieuDong(), obj.getHienTrang(), obj.getMoTa(), obj.getGhiChu());
 
             // Cập nhật SoLuongConLai của ChiTietDieuDongCCDCVatTu
             if (result > 0 && obj.getIdChiTietDieuDong() != null && !obj.getIdChiTietDieuDong().trim().isEmpty()) {

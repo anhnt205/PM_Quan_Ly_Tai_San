@@ -21,9 +21,7 @@ const getStatusDetails = (status: number) => {
     case 2:
       return { label: "Hủy", color: "#4caf50" }; // Xanh lá
     case 3:
-      return { label: "Chưa ban hành", color: "#9c27b0" }; // Xanh lá
-    case 4:
-      return { label: "Đã ban hành", color: "#68b9f0" }; // Xanh lá
+      return { label: "Đã hoàn thành", color: "#68b9f0" }; // Xanh lá
     default:
       return { label: "Nháp", color: "#9e9e9e" }; // Xám
   }

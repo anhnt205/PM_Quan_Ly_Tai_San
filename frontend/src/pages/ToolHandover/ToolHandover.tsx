@@ -26,7 +26,6 @@ import { FilterOption } from "../../components/common/FilterStatusGroup";
 import {
   showDownloadFile,
   showShareStatus,
-  showStatus,
   showStatusDocument,
 } from "../ToolTransfer/config";
 import {
@@ -38,6 +37,7 @@ import {
   isCheckShowShare,
   ShowPermissionSigning,
   StatusHandover,
+  showStatus,
 } from "./config";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
@@ -559,6 +559,7 @@ export default function ToolHandover() {
                         soLuongXuat: item?.soLuongXuat,
                         soLuongConLai: item?.soLuongConLai,
                         idChiTietCCDCVatTu: item?.idChiTietCCDCVatTu,
+                        soChungTu: item?.soChungTu,
                         donViTinh: item?.donViTinh,
                         soKyHieu: item?.soKyHieu,
                         nuocSanXuat: item?.nuocSanXuat,
@@ -651,7 +652,7 @@ export default function ToolHandover() {
                   departments={departments}
                   positions={positions}
                   allUnits={allUnits}
-                  staffs={staffs}
+                  staffs={staffs.filter((s: any) => s.hasAccount)}
                 />
               </Box>
             )}

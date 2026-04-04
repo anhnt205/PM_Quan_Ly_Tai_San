@@ -4,6 +4,7 @@ export interface ToolHandoverDetail {
   tenPhieuBanGiao?: string;
   idCCDCVatTu: string;
   tenVatTu?: string;
+  soChungTu?: string;
   donViTinh?: string;
   kyHieu?: string;
   soKyHieu?: string;

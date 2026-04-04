@@ -203,6 +203,8 @@ public class ChiTietDonViSoHuuController {
                     request.getIdDonViGui(),
                     request.getIdDonViNhan(),
                     request.getSoLuongBanGiao(),
+                    request.getSoQuyetDinh(),
+                    request.getSoChungTu(),
                     request.getThoiGianBanGiao(),
                     request.getIdTsCon()
 
@@ -233,6 +235,8 @@ public class ChiTietDonViSoHuuController {
                         request.getIdDonViGui(),
                         request.getIdDonViNhan(),
                         request.getSoLuongBanGiao(),
+                        request.getSoQuyetDinh(),
+                        request.getSoChungTu(),
                         request.getThoiGianBanGiao(),
                         request.getIdTsCon()
 
