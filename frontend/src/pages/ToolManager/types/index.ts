@@ -26,10 +26,11 @@ export interface OwnerUnitType {
   idDonViSoHuu: string;
   soLuong: number;
   thoiGianBanGiao: string;
-  soChungTu: string;
+  soChungTu?: string;
   ngayTao: string;
   nguoiTao: string;
   idTsCon: string;
+  soLuongDaBanGiao?: number;
 }
 
 export interface AssetDetailType {

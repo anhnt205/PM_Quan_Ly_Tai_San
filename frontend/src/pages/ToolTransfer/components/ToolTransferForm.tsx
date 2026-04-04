@@ -129,7 +129,10 @@ export default function ToolTransferForm({
       nguoiKyList: [],
       chiTietDieuDongCCDCVatTuDTOS: [
         {
+          idCustom: "",
           idCCDCVatTu: "",
+          soChungTu: "",
+          idChiTietCCDCVatTu: "",
           donViTinh: "",
           soLuong: 0,
           soLuongXuat: 0,
@@ -211,6 +214,13 @@ export default function ToolTransferForm({
         initialChiTiet: (selectedTool.chiTietDieuDongCCDCVatTuDTOS || []).map(
           (i: any) => i.id,
         ),
+        chiTietDieuDongCCDCVatTuDTOS: (
+          selectedTool.chiTietDieuDongCCDCVatTuDTOS || []
+        ).map((i: any) => ({
+          ...i,
+          idCustom: i.soChungTu + "_" + i.idCCDCVatTu,
+          tenCCDCVatTu: `${i.tenCCDCVatTu} - (${i.soChungTu || ""})`,
+        })),
         initialNguoiKy: (selectedTool.nguoiKyList || []).map((i: any) => i.id),
       });
       setDocument(
@@ -227,10 +237,10 @@ export default function ToolTransferForm({
   const isThuHoi = type === 3;
 
   const dvGiao = departments.filter((i) =>
-    isCapPhat ? i.isKho === true && i.loaiKho === 1 : i.isKho === false,
+    isCapPhat ? i.isKho === true && i.loaiKho === 1 : !i.isKho,
   );
   const dvNhan = departments.filter((i) =>
-    isThuHoi ? i.isKho === true && i.loaiKho === 2 : i.isKho === false,
+    isThuHoi ? i.isKho === true && i.loaiKho === 2 : !i.isKho,
   );
 
   const [nvThamMuu, setNVThamMuu] = useState<any[]>([]);
@@ -371,7 +381,7 @@ export default function ToolTransferForm({
                       <FieldInput
                         title="Số chứng từ"
                         formik={formik}
-                        field="soQuyetDinh"
+                        field="id"
                         disabled={true}
                       />
                     </Grid>
@@ -687,15 +697,12 @@ export default function ToolTransferForm({
                                 selectedTool?.chiTietDieuDongCCDCVatTuDTOS || []
                               ).map((i: any) => ({
                                 ...i,
-                                id:
-                                  i.idChiTietCCDCVatTu ||
-                                  i.idDetaiAsset ||
-                                  i.idCCDCVatTu,
-                                tenDetailAsset: `${i.tenCCDCVatTu} - (${i.soKyHieu || ""}) - ${i.namSanXuat || ""}`,
+                                id: i.soChungTu + "_" + i.idCCDCVatTu,
+                                tenDetailAsset: `${i.tenCCDCVatTu} - (${i.soChungTu || ""})`,
                               })),
                             ]}
                             formik={formik}
-                            field={`chiTietDieuDongCCDCVatTuDTOS.${index}.idChiTietCCDCVatTu`}
+                            field={`chiTietDieuDongCCDCVatTuDTOS.${index}.idCustom`}
                             labelOption="idCCDCVatTu"
                             onChange={(value) => {
                               // Component FieldAutoCompleted đã tự động lưu value.id vào 'idChiTietCCDCVatTu' ở trên.
@@ -704,7 +711,14 @@ export default function ToolTransferForm({
                                 `chiTietDieuDongCCDCVatTuDTOS.${index}.idCCDCVatTu`,
                                 value?.idCCDCVatTu || value?.idTaiSan || "",
                               );
-
+                              formik.setFieldValue(
+                                `chiTietDieuDongCCDCVatTuDTOS.${index}.soChungTu`,
+                                value?.soChungTu || "",
+                              );
+                              formik.setFieldValue(
+                                `chiTietDieuDongCCDCVatTuDTOS.${index}.idChiTietCCDCVatTu`,
+                                value?.idChiTietCCDCVatTu || "",
+                              );
                               // Các setFieldValue khác giữ nguyên như cũ của bạn
                               formik.setFieldValue(
                                 `chiTietDieuDongCCDCVatTuDTOS.${index}.donViTinh`,

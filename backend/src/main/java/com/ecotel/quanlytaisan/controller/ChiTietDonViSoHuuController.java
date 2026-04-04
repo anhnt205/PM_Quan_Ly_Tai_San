@@ -2,7 +2,7 @@ package com.ecotel.quanlytaisan.controller;
 
 import com.ecotel.quanlytaisan.model.ApiResponse;
 import com.ecotel.quanlytaisan.model.ChiTietDonViSoHuu;
-import com.ecotel.quanlytaisan.model.ChiTietDonViSoHuu;
+import com.ecotel.quanlytaisan.model.ChiTietDonViSoHuuEnrichedDTO;
 import com.ecotel.quanlytaisan.model.UpdateChiTietDonViSoHuu;
 import com.ecotel.quanlytaisan.service.ChiTietDonViSoHuuService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,6 +79,20 @@ public class ChiTietDonViSoHuuController {
         try {
             List<ChiTietDonViSoHuu> list = service.getByIdDonViSoHuu(id);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách theo IdDonViSoHuu thành công", list, list.size()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
+    // --- GET BY IdDonViSoHuu (ENRICHED - JOIN CCDCVatTu + ChiTietTaiSan) ---
+    @GetMapping("/by-donvisohuu-enriched/{id}")
+    public ResponseEntity<ApiResponse<List<ChiTietDonViSoHuuEnrichedDTO>>> getEnrichedByIdDonViSoHuu(
+            @PathVariable("id") String id) {
+        try {
+            List<ChiTietDonViSoHuuEnrichedDTO> list = service.getEnrichedByIdDonViSoHuu(id);
+            return ResponseEntity.ok(
+                    ApiResponse.success("Lấy danh sách enriched theo IdDonViSoHuu thành công", list, list.size()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));

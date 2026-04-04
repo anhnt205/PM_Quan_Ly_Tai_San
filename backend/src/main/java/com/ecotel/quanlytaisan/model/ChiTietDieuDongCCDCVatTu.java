@@ -11,6 +11,7 @@ public class ChiTietDieuDongCCDCVatTu {
     private String id;
     private String idDieuDongCCDCVatTu;
     private String idCCDCVatTu;
+    private String soChungTu;
     private Double soLuong;
     private Double soLuongXuat;
     private String ghiChu;

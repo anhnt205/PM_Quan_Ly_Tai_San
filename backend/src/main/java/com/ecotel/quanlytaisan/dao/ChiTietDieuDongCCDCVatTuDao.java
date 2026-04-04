@@ -29,6 +29,7 @@ public class ChiTietDieuDongCCDCVatTuDao {
                 
                   ct.IdCCDCVatTu,
                   ccdc.Ten AS TenCCDCVatTu,
+                  ct.SoChungTu,
                   ccdc.DonVitinh,
                   ts_info.CongSuat,
                   ts_info.NuocSanXuat,
@@ -84,6 +85,7 @@ public class ChiTietDieuDongCCDCVatTuDao {
                 
                        ct.IdCCDCVatTu,
                        ccdc.Ten AS TenCCDCVatTu,
+                       ct.SoChungTu,
                        ccdc.DonVitinh,
                        ts_info.CongSuat,
                        ts_info.NuocSanXuat,
@@ -143,9 +145,9 @@ public class ChiTietDieuDongCCDCVatTuDao {
             Double soLuongConLai = soLuongXuat;
 
             // Nếu chưa tồn tại thì insert
-            String sql = "INSERT INTO ChiTietDieuDongCCDCVatTu (Id, IdDieuDongCCDCVatTu, IdCCDCVatTu, SoLuong, SoLuongXuat, GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive, IdChiTietCCDCVatTu, SoLuongDaBanGiao, SoLuongConLai, HienTrang, MoTa) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO ChiTietDieuDongCCDCVatTu (Id, IdDieuDongCCDCVatTu, IdCCDCVatTu, SoChungTu, SoLuong, SoLuongXuat, GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive, IdChiTietCCDCVatTu, SoLuongDaBanGiao, SoLuongConLai, HienTrang, MoTa) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             return jdbcTemplate.update(sql,
-                    obj.getId(), obj.getIdDieuDongCCDCVatTu(), obj.getIdCCDCVatTu(), obj.getSoLuong(),
+                    obj.getId(), obj.getIdDieuDongCCDCVatTu(), obj.getIdCCDCVatTu(), obj.getSoChungTu(), obj.getSoLuong(),
                     soLuongXuat, obj.getGhiChu(), obj.getNgayTao(), obj.getNgayCapNhat(),
                     obj.getNguoiTao(), obj.getNguoiCapNhat(), obj.getIsActive(), obj.getIdChiTietCCDCVatTu(),
                     soLuongDaBanGiao, soLuongConLai, obj.getHienTrang(), obj.getMoTa());
@@ -153,9 +155,9 @@ public class ChiTietDieuDongCCDCVatTuDao {
     }
 
     public int update(ChiTietDieuDongCCDCVatTu obj) {
-        String sql = "UPDATE ChiTietDieuDongCCDCVatTu SET IdDieuDongCCDCVatTu=?, IdCCDCVatTu=?, SoLuong=?, SoLuongXuat=?, GhiChu=?, NgayTao=?, NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?, IsActive=?, IdChiTietCCDCVatTu=?, SoLuongDaBanGiao=?, SoLuongConLai=?, HienTrang=?, MoTa=? WHERE Id=?";
+        String sql = "UPDATE ChiTietDieuDongCCDCVatTu SET IdDieuDongCCDCVatTu=?, IdCCDCVatTu=?, SoChungTu=?, SoLuong=?, SoLuongXuat=?, GhiChu=?, NgayTao=?, NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?, IsActive=?, IdChiTietCCDCVatTu=?, SoLuongDaBanGiao=?, SoLuongConLai=?, HienTrang=?, MoTa=? WHERE Id=?";
         return jdbcTemplate.update(sql,
-                obj.getIdDieuDongCCDCVatTu(), obj.getIdCCDCVatTu(), obj.getSoLuong(), obj.getSoLuongXuat(),
+                obj.getIdDieuDongCCDCVatTu(), obj.getIdCCDCVatTu(), obj.getSoChungTu(), obj.getSoLuong(), obj.getSoLuongXuat(),
                 obj.getGhiChu(), obj.getNgayTao(), obj.getNgayCapNhat(), obj.getNguoiTao(), obj.getNguoiCapNhat(),
                 obj.getIsActive(), obj.getIdChiTietCCDCVatTu(), obj.getSoLuongDaBanGiao(), obj.getSoLuongConLai(), obj.getHienTrang(), obj.getMoTa(), obj.getId());
     }
@@ -179,6 +181,7 @@ public class ChiTietDieuDongCCDCVatTuDao {
 
                   ct.IdCCDCVatTu,
                   ccdc.Ten AS TenCCDCVatTu,
+                  ct.SoChungTu,
                   ccdc.DonVitinh,
                   ts_info.CongSuat,
                   ts_info.NuocSanXuat,

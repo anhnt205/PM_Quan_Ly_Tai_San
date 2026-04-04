@@ -414,7 +414,7 @@ export default function ToolForm({
           <Table size="medium">
             <TableHead>
               <TableRow>
-                <TableCell>STT</TableCell>
+                {/* <TableCell>STT</TableCell> */}
                 {/* <TableCell>Ký hiệu</TableCell> */}
                 <TableCell>Số lượng</TableCell>
                 <TableCell>Công suất</TableCell>
@@ -432,14 +432,6 @@ export default function ToolForm({
                 .filter((row: any) => !row.isDeleted)
                 .map((row: any) => (
                   <TableRow key={row.originalIndex}>
-                    {/* STT - Chỉ đọc */}
-                    <TableCell>
-                      <FieldInput
-                        formik={formik}
-                        field={`chiTietTaiSanList.${row.originalIndex}.stt`}
-                        disabled={true}
-                      />
-                    </TableCell>
 
                     {/* Số ký hiệu */}
                     {/* <TableCell>

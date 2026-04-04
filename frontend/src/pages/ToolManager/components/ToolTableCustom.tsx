@@ -346,6 +346,7 @@ export default function ToolTableCustom({
                       <TableCell>Số chứng từ</TableCell>
                       <TableCell>Đơn vị sở hữu</TableCell>
                       <TableCell>Số lượng đang sở hữu</TableCell>
+                      <TableCell>Số lượng đã bàn giao</TableCell>
                       <TableCell>Ngày vào sổ</TableCell>
                     </TableRow>
                   </TableHead>
@@ -373,6 +374,9 @@ export default function ToolTableCustom({
                           </TableCell>
                           <TableCell sx={{ border: "1px solid #e0e0e0" }}>
                             {detail.soLuong || 0}
+                          </TableCell>
+                          <TableCell sx={{ border: "1px solid #e0e0e0" }}>
+                            {detail.soLuongDaBanGiao || 0}
                           </TableCell>
                           <TableCell sx={{ border: "1px solid #e0e0e0" }}>
                             {detail.ngayTao || "-"}

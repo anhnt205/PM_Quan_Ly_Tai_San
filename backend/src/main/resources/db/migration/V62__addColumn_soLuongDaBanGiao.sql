@@ -1,0 +1,2 @@
+ALTER TABLE ChiTietDonViSoHuu
+    ADD COLUMN SoLuongDaBanGiao INT DEFAULT 0;

@@ -16,6 +16,7 @@ export interface ToolTransferDetail {
   tenPhieu: string;
   soQuyetDinh: string;
   idCCDCVatTu: string;
+  soChungTu: string;
   tenCCDCVatTu: string;
   donViTinh: string;
   congSuat: string;

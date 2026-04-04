@@ -18,6 +18,7 @@ public class ChiTietDonViSoHuu {
     private String idTsCon;
     private String soKyHieu;
     private String soChungTu;  // SO_CTU từ VTHHPX
+    private Integer soLuongDaBanGiao;
     public static ChiTietDonViSoHuu mapToChiTietDonViSoHuu(String[] row) {
         ChiTietDonViSoHuu dv = new ChiTietDonViSoHuu();
         dv.setId(row[0]);

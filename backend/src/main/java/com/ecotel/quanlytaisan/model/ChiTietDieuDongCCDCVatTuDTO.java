@@ -6,6 +6,7 @@ import lombok.Data;
 public class ChiTietDieuDongCCDCVatTuDTO {
     private String id;
     private String idDieuDongCCDCVatTu;
+    private String soChungTu;
     private String tenPhieu;
     private String soQuyetDinh;
     private String idCCDCVatTu;

@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.ecotel.quanlytaisan.model.ChiTietDonViSoHuu;
+import com.ecotel.quanlytaisan.model.ChiTietDonViSoHuuEnrichedDTO;
 
 @Repository
 public class ChiTietDonViSoHuuDao {
@@ -176,6 +177,37 @@ public class ChiTietDonViSoHuuDao {
     public List<String> getNhomDonViSoHuu(String idTaiSan) {
         String sql = "SELECT MIN(IdDonViSoHuu) as IdDonViSoHuu " + "FROM ChiTietDonViSoHuu " + "WHERE IdCCDCVT = ? " + "GROUP BY IdDonViSoHuu";
         return jdbcTemplate.queryForList(sql, String.class, idTaiSan);
+    }
+
+    /**
+     * Lấy danh sách ChiTietDonViSoHuu theo idDonViSoHuu, JOIN sẵn thông tin
+     * từ CCDCVatTu và ChiTietTaiSan (chỉ những bản ghi có cả idCCDCVT và idTsCon hợp lệ).
+     * Tránh phải fetch toàn bộ CCDCVatTu rồi join ở tầng ứng dụng.
+     */
+    public List<ChiTietDonViSoHuuEnrichedDTO> findEnrichedByIdDonViSoHuu(String idDonViSoHuu) {
+        String sql = """
+                SELECT
+                    dvsh.Id            AS id,
+                    dvsh.IdCCDCVT      AS idCCDCVT,
+                    dvsh.IdDonViSoHuu  AS idDonViSoHuu,
+                    dvsh.SoLuong       AS soLuong,
+                    dvsh.IdTsCon       AS idTsCon,
+                    dvsh.SoChungTu     AS soChungTu,
+                    dvsh.SoLuongDaBanGiao AS soLuongDaBanGiao,
+                    ccdc.Ten       AS tenCCDCVatTu,
+                    ccdc.DonViTinh     AS donViTinh,
+                    ccdc.GiaTri        AS giaTri,
+                    ctts.NamSanXuat    AS namSanXuat,
+                    ctts.NuocSanXuat   AS nuocSanXuat
+                FROM ChiTietDonViSoHuu dvsh
+                INNER JOIN CCDCVatTu ccdc  ON ccdc.Id  = dvsh.IdCCDCVT
+                INNER JOIN ChiTietTaiSan ctts ON ctts.Id = dvsh.IdTsCon
+                WHERE dvsh.IdDonViSoHuu = ?
+                ORDER BY dvsh.NgayTao DESC
+                """;
+        return jdbcTemplate.query(sql,
+                new BeanPropertyRowMapper<>(ChiTietDonViSoHuuEnrichedDTO.class),
+                idDonViSoHuu);
     }
 
 }

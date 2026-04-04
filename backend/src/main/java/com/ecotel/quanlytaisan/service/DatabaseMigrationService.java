@@ -133,7 +133,7 @@ public class DatabaseMigrationService {
         // TOP 1 per MA_VTHH: lấy GIA_GOC đầu tiên có giá trị hợp lệ
         // Đổi MA_NHOM_VTHH1 → MA_NHOM_VTHH để đúng cột và gán idNhomCCDC chính xác
         String sql = String.format(
-            "SELECT dmvt.MA_VTHH, dmvt.TEN_VTHH, dmvt.MA_DVT, dmvt.MA_NHOM_VTHH, dmvt.PROPERTY1, " +
+            "SELECT dmvt.MA_VTHH, dmvt.TEN_VTHH, dmvt.MA_DVT, dmvt.MA_NHOM_VTHH,dmvt.LOAI_VTHH, dmvt.PROPERTY1, " +
             "       (SELECT TOP 1 vc.GIA_GOC " +
             "        FROM [%s].dbo.VTHH_CT vc " +
             "        WHERE vc.MA_VTHH = dmvt.MA_VTHH AND vc.GIA_GOC IS NOT NULL AND vc.GIA_GOC > 0 " +
@@ -165,11 +165,12 @@ public class DatabaseMigrationService {
 
             CCDCVatTu vatTu = new CCDCVatTu();
             vatTu.setId(maVthh);
-            vatTu.setSoKyHieu(maVthh);
+            // vatTu.setSoKyHieu(maVthh);
             vatTu.setTen(nvl(row.get("TEN_VTHH")));
             vatTu.setDonViTinh(nvl(row.get("MA_DVT")));
             vatTu.setIdNhomCCDC(nvl(row.get("MA_NHOM_VTHH")));   // dùng MA_NHOM_VTHH thay MA_NHOM_VTHH1
             vatTu.setNuocSanXuat(nvl(row.get("PROPERTY1")));      // PROPERTY1 = nuớc sản xuất
+            vatTu.setIdLoaiCCDCCon(nvl(row.get("LOAI_VTHH")));
             vatTu.setIdCongTy("ct001");
             vatTu.setIsActive(true);
             vatTu.setNgayTao(now);
@@ -377,7 +378,7 @@ public class DatabaseMigrationService {
                 String chiTietId = maVthh + "_1";
                 ChiTietTaiSan chiTiet = new ChiTietTaiSan();
                 chiTiet.setId(chiTietId);
-                chiTiet.setSoKyHieu(chiTietId);
+                // chiTiet.setSoKyHieu(chiTietId);
                 chiTiet.setIdTaiSan(maVthh);
                 chiTiet.setSoLuong(g.vatTu.getSoLuong()); // tổng đã cộng ở bước 3
                 chiTiet.setNuocSanXuat(g.vatTu.getNuocSanXuat()); // PROPERTY1 từ DM_VTHH

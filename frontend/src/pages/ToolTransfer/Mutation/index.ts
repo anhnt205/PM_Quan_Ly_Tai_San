@@ -648,84 +648,117 @@ export const useToolTransferPageQuery = (
   });
 };
 
+// export const useToolByDepartmentPageQuery = ({
+//   departmentId,
+// }: {
+//   departmentId: string;
+// }) => {
+//   const allToolsQuery = useAllToolQuery(); // đã được cache ở nhiều nơi
+
+//   const detailQuery = useQuery({
+//     queryKey: ["chitietdonvisohuu", departmentId],
+//     queryFn: async () => {
+//       if (!departmentId) return [];
+//       const res = await api.get(
+//         `/chitietdonvisohuu/by-donvisohuu/${departmentId}`,
+//       );
+//       return res.data?.data || res.data || [];
+//     },
+//     enabled: !!departmentId,
+//     // staleTime: 5 * 60 * 1000,
+//   });
+
+//   const processedData = useMemo(() => {
+//     // Ép kiểu tạm thời thành any[] để tránh lỗi TypeScript
+//     const allTools = (allToolsQuery.data || []) as any[];
+//     const details = (detailQuery.data || []) as any[];
+//     if (!details.length || !allTools.length) return [];
+
+//     // Tạo Map để lookup nhanh
+//     const toolMap = new Map(allTools.map((tool: any) => [tool.id, tool]));
+//     const detailMap = new Map();
+//     allTools.forEach((tool: any) => {
+//       tool?.chiTietTaiSanList?.forEach((detail: any) => {
+//         detailMap.set(detail.id, {
+//           ...detail,
+//           assetTen: tool.ten,
+//           assetDonVi: tool.donViTinh,
+//         });
+//       });
+//     });
+
+//     return details.reduce((acc: any[], e: any) => {
+//       if (!e?.idCCDCVT || !e?.idTsCon) return acc;
+//       const asset = toolMap.get(e.idCCDCVT) as any;
+//       const detailAsset = detailMap.get(e.idTsCon) as any;
+//       if (asset?.id && detailAsset?.id) {
+//         acc.push({
+//           id: detailAsset.id,
+//           idCCDCVatTu: e.idCCDCVT,
+//           tenCCDCVatTu: asset.ten || "N/A",
+//           idDetaiAsset: detailAsset.id,
+//           tenDetailAsset: `${asset.ten || "N/A"} (${e.soChungTu || ""})`,
+//           idDonVi: e.idDonViSoHuu,
+//           donViTinh: asset.donViTinh,
+//           namSanXuat: detailAsset.namSanXuat ?? 0,
+//           soLuong: e.soLuong || 0,
+//           soLuongConLai: e.soLuong || 0,
+//           giaTri: asset.giaTri || 0,
+//           ghiChu: detailAsset.ghiChu,
+//           soKyHieu: detailAsset.soKyHieu,
+//           kyHieu: asset.kyHieu,
+//           soLuongDaBanGiao: 0,
+//           idNhomCCDC: asset.idNhomCCDC,
+//           tenNhomCCDC: asset.tenNhomCCDC,
+//           asset: asset,
+//         });
+//       }
+//       return acc;
+//     }, []);
+//   }, [allToolsQuery.data, detailQuery.data]);
+
+//   return {
+//     data: processedData,
+//     isLoading: allToolsQuery.isLoading || detailQuery.isLoading,
+//     isError: detailQuery.isError,
+//     error: detailQuery.error,
+//     refetch: detailQuery.refetch,
+//   };
+// };
+
 export const useToolByDepartmentPageQuery = ({
   departmentId,
 }: {
   departmentId: string;
 }) => {
-  const allToolsQuery = useAllToolQuery(); // đã được cache ở nhiều nơi
-
-  const detailQuery = useQuery({
+  return useQuery({
     queryKey: ["chitietdonvisohuu", departmentId],
     queryFn: async () => {
       if (!departmentId) return [];
       const res = await api.get(
-        `/chitietdonvisohuu/by-donvisohuu/${departmentId}`,
+        `/chitietdonvisohuu/by-donvisohuu-enriched/${departmentId}`,
       );
-      return res.data?.data || res.data || [];
+      const data = res.data?.data || res.data || [];
+      return data.map((item: any) => ({
+        ...item,
+        idCustom: item.soChungTu + "_" + item.idCCDCVT,
+        idCCDCVatTu: item.idCCDCVT,
+        idChiTietCCDCVatTu: item.idTsCon,
+        tenDetailAsset: `${item.tenCCDCVatTu || ""} (${item.soChungTu || ""})`,
+        tenCCDCVatTu: item.assetTen,
+        donViTinh: item.donViTinh,
+        namSanXuat: item.namSanXuat,
+        soLuong: item.soLuong,
+        soLuongConLai: item.soLuong,
+        giaTri: item.giaTri,
+        ghiChu: item.ghiChu,
+        asset: item,
+      }));
     },
     enabled: !!departmentId,
     // staleTime: 5 * 60 * 1000,
   });
-
-  const processedData = useMemo(() => {
-    // Ép kiểu tạm thời thành any[] để tránh lỗi TypeScript
-    const allTools = (allToolsQuery.data || []) as any[];
-    const details = (detailQuery.data || []) as any[];
-    if (!details.length || !allTools.length) return [];
-
-    // Tạo Map để lookup nhanh
-    const toolMap = new Map(allTools.map((tool: any) => [tool.id, tool]));
-    const detailMap = new Map();
-    allTools.forEach((tool: any) => {
-      tool?.chiTietTaiSanList?.forEach((detail: any) => {
-        detailMap.set(detail.id, {
-          ...detail,
-          assetTen: tool.ten,
-          assetDonVi: tool.donViTinh,
-        });
-      });
-    });
-
-    return details.reduce((acc: any[], e: any) => {
-      if (!e?.idCCDCVT || !e?.idTsCon) return acc;
-      const asset = toolMap.get(e.idCCDCVT) as any;
-      const detailAsset = detailMap.get(e.idTsCon) as any;
-      if (asset?.id && detailAsset?.id) {
-        acc.push({
-          id: detailAsset.id,
-          idCCDCVatTu: e.idCCDCVT,
-          tenCCDCVatTu: asset.ten || "N/A",
-          idDetaiAsset: detailAsset.id,
-          tenDetailAsset: `${asset.ten || "N/A"} (${detailAsset.soKyHieu || ""}) - ${detailAsset.namSanXuat || ""}`,
-          idDonVi: e.idDonViSoHuu,
-          donViTinh: asset.donViTinh,
-          namSanXuat: detailAsset.namSanXuat ?? 2010,
-          soLuong: e.soLuong || 0,
-          soLuongConLai: e.soLuong || 0,
-          giaTri: asset.giaTri || 0,
-          ghiChu: detailAsset.ghiChu,
-          soKyHieu: detailAsset.soKyHieu,
-          kyHieu: asset.kyHieu,
-          soLuongDaBanGiao: 0,
-          idNhomCCDC: asset.idNhomCCDC,
-          tenNhomCCDC: asset.tenNhomCCDC,
-          asset: asset,
-        });
-      }
-      return acc;
-    }, []);
-  }, [allToolsQuery.data, detailQuery.data]);
-
-  return {
-    data: processedData,
-    isLoading: allToolsQuery.isLoading || detailQuery.isLoading,
-    isError: detailQuery.isError,
-    error: detailQuery.error,
-    refetch: detailQuery.refetch,
-  };
 };
-
 export const useToolDetailAllQuery = () => {
   const allToolsQuery = useAllToolQuery(); // đã được cache ở nhiều nơi
 

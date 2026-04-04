@@ -8,6 +8,7 @@ public class ChiTietBanGiaoCCDCVatTuDTO {
     private String idBanGiaoCCDCVatTu;
     private String tenPhieuBanGiao;
     private String idCCDCVatTu;
+    private String soChungTu;
     private String tenVatTu;
     private String donViTinh;
     private String kyHieu;

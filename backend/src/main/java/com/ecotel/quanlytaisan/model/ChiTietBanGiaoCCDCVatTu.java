@@ -12,6 +12,7 @@ public class ChiTietBanGiaoCCDCVatTu {
     private String id;
     private String idBanGiaoCCDCVatTu;
     private String idCCDCVatTu;
+    private String soChungTu;
     private Double soLuong;
     private String idChiTietCCDCVatTu;
     private String ngayTao;

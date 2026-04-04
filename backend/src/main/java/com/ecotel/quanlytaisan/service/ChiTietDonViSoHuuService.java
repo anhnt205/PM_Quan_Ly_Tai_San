@@ -2,7 +2,7 @@ package com.ecotel.quanlytaisan.service;
 
 import com.ecotel.quanlytaisan.dao.ChiTietDonViSoHuuDao;
 import com.ecotel.quanlytaisan.model.ChiTietDonViSoHuu;
-import com.ecotel.quanlytaisan.model.ChiTietDonViSoHuu;
+import com.ecotel.quanlytaisan.model.ChiTietDonViSoHuuEnrichedDTO;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -45,6 +45,14 @@ public class ChiTietDonViSoHuuService {
 
     public List<ChiTietDonViSoHuu> getByIdDonViSoHuu(String idDonViSoHuu) {
         return dao.findByIdDonViSoHuu(idDonViSoHuu);
+    }
+
+    /**
+     * Lấy danh sách ChiTietDonViSoHuu theo idDonViSoHuu, đã JOIN sẵn thông tin
+     * CCDCVatTu và ChiTietTaiSan trong một câu SQL dữ liệu đầy đủ.
+     */
+    public List<ChiTietDonViSoHuuEnrichedDTO> getEnrichedByIdDonViSoHuu(String idDonViSoHuu) {
+        return dao.findEnrichedByIdDonViSoHuu(idDonViSoHuu);
     }
 
     public ChiTietDonViSoHuu add(ChiTietDonViSoHuu entity) {
