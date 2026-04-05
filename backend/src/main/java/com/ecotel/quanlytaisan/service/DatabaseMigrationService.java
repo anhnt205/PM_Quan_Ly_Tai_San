@@ -90,20 +90,22 @@ public class DatabaseMigrationService {
         // 2. Tạo JdbcTemplate trỏ tới remote MSSQL
         JdbcTemplate remote = buildRemoteJdbcTemplate(config, dbStr);
 
-        // 3. Đồng bộ danh mục NhomCCDC từ DM_NHOM_VTHH
-        loadAndSyncNhomVthh(remote, dbStr);
+        // Xác định ngày bắt đầu đồng bộ
+        LocalDateTime fromDate = getLastSyncDate();
+        if (fromDate != null) {
+            System.out.println("  Incremental sync từ: " + fromDate);
+        } else {
+            System.out.println("  Full sync (lần đầu hoặc bảng rỗng).");
+        }
 
-        // 3b. Đồng bộ danh mục PhongBan từ DM_DTHH (chỉ những đơn vị có trong MA_PBAN_NHAP)
+        loadAndSyncNhomVthh(remote, dbStr);
         loadAndSyncPhongBan(remote, dbStr);
 
-        // 4. Lấy danh sách vật tư (DM_VTHH + VTHH_CT)
-        Map<String, MigrationGroup> groupMap = loadVatTuList(remote, dbStr);
-        System.out.println("  Tổng số mã vật tư từ DM_VTHH: " + groupMap.size());
+        // Truyền fromDate vào loadVatTuList
+        Map<String, MigrationGroup> groupMap = loadVatTuList(remote, dbStr, fromDate);
+        System.out.println("  Tổng số mã vật tư cần đồng bộ: " + groupMap.size());
 
-        // 5. Với mỗi vật tư, lấy phiếu xuất + chi tiết → nhóm theo MA_PBAN_NHAP
-        loadPhieuXuatGroups(remote, dbStr, groupMap);
-
-        // 6. Ghi vào MySQL
+        loadPhieuXuatGroups(remote, dbStr, groupMap, fromDate);
         persistToMySQL(groupMap);
 
         System.out.println("=== Đồng bộ hoàn tất: " + groupMap.size() + " mã vật tư ===");
@@ -129,11 +131,14 @@ public class DatabaseMigrationService {
      * Chỉ cần lấy 1 dòng VTHH_CT có GIA_GOC khác null và > 0.
      * Dùng subquery lấy MIN(GIA_GOC) hợp lệ để tránh duplicate MA_VTHH.
      */
-    private Map<String, MigrationGroup> loadVatTuList(JdbcTemplate remote, String dbStr) {
-        // TOP 1 per MA_VTHH: lấy GIA_GOC đầu tiên có giá trị hợp lệ
-        // Đổi MA_NHOM_VTHH1 → MA_NHOM_VTHH để đúng cột và gán idNhomCCDC chính xác
+    private Map<String, MigrationGroup> loadVatTuList(JdbcTemplate remote, String dbStr, LocalDateTime fromDate) {
+       // Nếu có fromDate thì chỉ lấy MA_VTHH xuất hiện trong phiếu mới
+    String dateFilter = fromDate != null
+            ? "AND px_h.NGAY_VAO_SO >= '" + fromDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "' "
+            : "";
+
         String sql = String.format(
-            "SELECT dmvt.MA_VTHH, dmvt.TEN_VTHH, dmvt.MA_DVT, dmvt.MA_NHOM_VTHH,dmvt.LOAI_VTHH, dmvt.PROPERTY1, " +
+            "SELECT dmvt.MA_VTHH, dmvt.TEN_VTHH, dmvt.MA_DVT, dmvt.MA_NHOM_VTHH, dmvt.LOAI_VTHH, dmvt.PROPERTY1, " +
             "       (SELECT TOP 1 vc.GIA_GOC " +
             "        FROM [%s].dbo.VTHH_CT vc " +
             "        WHERE vc.MA_VTHH = dmvt.MA_VTHH AND vc.GIA_GOC IS NOT NULL AND vc.GIA_GOC > 0 " +
@@ -142,7 +147,8 @@ public class DatabaseMigrationService {
             "WHERE EXISTS (" +
             "      SELECT 1 FROM [%s].dbo.VTHHPX_CT px " +
             "      JOIN [%s].dbo.VTHHPX px_h ON px_h.PR_KEY = px.FR_KEY " +
-            "      WHERE px.MA_VTHH = dmvt.MA_VTHH AND px_h.TRAN_ID = 'NKHOPX'" +
+            "      WHERE px.MA_VTHH = dmvt.MA_VTHH AND px_h.TRAN_ID = 'NKHOPX' " +
+            dateFilter +  // <-- chỉ vật tư có phiếu mới
             "  )",
             dbStr, dbStr, dbStr, dbStr
         );
@@ -303,7 +309,7 @@ public class DatabaseMigrationService {
      * Query theo từng batch MA_VTHH để tránh N+1 và vẫn dễ đọc.
      */
     private void loadPhieuXuatGroups(JdbcTemplate remote, String dbStr,
-                                     Map<String, MigrationGroup> groupMap) {
+                                     Map<String, MigrationGroup> groupMap, LocalDateTime fromDate) {
         if (groupMap.isEmpty()) return;
 
         // Tạo danh sách MA_VTHH để dùng IN clause (batch toàn bộ 1 lần)
@@ -313,18 +319,21 @@ public class DatabaseMigrationService {
         int batchSize = 500;
         for (int i = 0; i < allMaVthh.size(); i += batchSize) {
             List<String> batch = allMaVthh.subList(i, Math.min(i + batchSize, allMaVthh.size()));
-            processBatchPhieuXuat(remote, dbStr, batch, groupMap);
+            processBatchPhieuXuat(remote, dbStr, batch, groupMap,fromDate);
         }
     }
 
     private void processBatchPhieuXuat(JdbcTemplate remote, String dbStr,
-                                       List<String> maVthhBatch,
-                                       Map<String, MigrationGroup> groupMap) {
+                                   List<String> maVthhBatch,
+                                   Map<String, MigrationGroup> groupMap,
+                                   LocalDateTime fromDate) {
         String placeholders = String.join(",",
                 Collections.nCopies(maVthhBatch.size(), "?"));
 
-        // GROUP BY MA_VTHH + MA_PBAN_NHAP + SO_CTU để gom tất cả dòng cùng chứng từ
-        // Dùng MIN(NGAY_VAO_SO) vì nhiều VTHHPX có cùng SO_CTU nhưng NGAY_VAO_SO có thể lệch milliseconds
+        String dateFilter = fromDate != null
+                ? "AND px_h.NGAY_VAO_SO >= '" + fromDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "' "
+                : "";
+
         String sql = String.format(
             "SELECT px.MA_VTHH, px_h.MA_PBAN_NHAP, SUM(px.SO_LUONG) AS SO_LUONG, " +
             "       px_h.SO_CTU, MIN(px_h.NGAY_VAO_SO) AS NGAY_VAO_SO " +
@@ -332,6 +341,7 @@ public class DatabaseMigrationService {
             "JOIN [%s].dbo.VTHHPX px_h ON px_h.PR_KEY = px.FR_KEY " +
             "WHERE px_h.TRAN_ID = 'NKHOPX' " +
             "  AND px.MA_VTHH IN (%s) " +
+            dateFilter +  // <-- chỉ phiếu từ fromDate trở đi
             "GROUP BY px.MA_VTHH, px_h.MA_PBAN_NHAP, px_h.SO_CTU",
             dbStr, dbStr, placeholders
         );
@@ -360,109 +370,138 @@ public class DatabaseMigrationService {
 
     // ─── Bước 4: Ghi toàn bộ vào MySQL ───────────────────────────────────────
     private void persistToMySQL(Map<String, MigrationGroup> groupMap) {
-        System.out.println("Đang ghi vào MySQL...");
-        int successCount = 0;
-        int errorCount   = 0;
-        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
-        String now = LocalDateTime.now().format(fmt);
+    System.out.println("Đang ghi vào MySQL...");
+    int successCount = 0, errorCount = 0;
+    DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+    String now = LocalDateTime.now().format(fmt);
 
-        for (MigrationGroup g : groupMap.values()) {
-            try {
-                String maVthh = g.vatTu.getId();
+    List<String> allIds = new ArrayList<>(groupMap.keySet());
 
-                // 4a. Upsert CCDCVatTu (cha)
-                ccdcVatTuDao.insert(g.vatTu);
-
-                // 4b. Tạo ChiTietTaiSan: 1 bản ghi per MA_VTHH
-                //     id = MA_VTHH + "_1", soLuong = tổng toàn bộ phòng ban
-                String chiTietId = maVthh + "_1";
-                ChiTietTaiSan chiTiet = new ChiTietTaiSan();
-                chiTiet.setId(chiTietId);
-                // chiTiet.setSoKyHieu(chiTietId);
-                chiTiet.setIdTaiSan(maVthh);
-                chiTiet.setSoLuong(g.vatTu.getSoLuong()); // tổng đã cộng ở bước 3
-                chiTiet.setNuocSanXuat(g.vatTu.getNuocSanXuat()); // PROPERTY1 từ DM_VTHH
-                chiTietTaiSanDao.insert(chiTiet);
-
-                // 4c. ChiTietDonViSoHuu: chỉ xóa record cũ (NULL SoChungTu), giữ record bàn giao
-                jdbcTemplate.update(
-                    "DELETE FROM ChiTietDonViSoHuu WHERE IdCCDCVT = ? AND (SoChungTu IS NULL OR SoChungTu = '')",
-                    maVthh
-                );
-
-                if (!g.phieuNhapList.isEmpty()) {
-                    // Fetch 1 lần các SoChungTu đã tồn tại để tránh N × SELECT COUNT
-                    Set<String> existingSct = new HashSet<>(
-                        jdbcTemplate.queryForList(
-                            "SELECT SoChungTu FROM ChiTietDonViSoHuu WHERE IdCCDCVT = ? AND SoChungTu IS NOT NULL",
-                            String.class, maVthh
-                        )
-                    );
-
-                    List<Object[]> toInsert = new ArrayList<>();
-                    List<Object[]> toUpdate = new ArrayList<>();
-
-                    for (PhieuNhap phieu : g.phieuNhapList) {
-                        String ngay = phieu.ngayVaoSo != null ? phieu.ngayVaoSo : now;
-                        if (phieu.soChungTu != null && existingSct.contains(phieu.soChungTu)) {
-                            // Cập nhật lại SoLuong của phiếu đã tồn tại
-                            toUpdate.add(new Object[]{
-                                phieu.soLuong, phieu.maPbanNhap, ngay, chiTietId,
-                                phieu.soChungTu, maVthh
-                            });
-                        } else {
-                            // Phiếu mới → insert
-                            toInsert.add(new Object[]{
-                                UUID.randomUUID().toString(),
-                                maVthh, phieu.maPbanNhap, phieu.soLuong,
-                                null, ngay, "system", chiTietId, phieu.soChungTu
-                            });
-                        }
-                    }
-
-                    if (!toInsert.isEmpty()) {
-                        jdbcTemplate.batchUpdate(
-                            "INSERT INTO ChiTietDonViSoHuu " +
-                            "(Id, IdCCDCVT, IdDonViSoHuu, SoLuong, ThoiGianBanGiao, NgayTao, NguoiTao, IdTsCon, SoChungTu) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                            toInsert
-                        );
-                    }
-                    if (!toUpdate.isEmpty()) {
-                        jdbcTemplate.batchUpdate(
-                            "UPDATE ChiTietDonViSoHuu SET SoLuong = ?, IdDonViSoHuu = ?, NgayTao = ?, IdTsCon = ? " +
-                            "WHERE SoChungTu = ? AND IdCCDCVT = ?",
-                            toUpdate
-                        );
-                    }
-                }
-
-                // 4d. Tổng số lượng = tính luôn từ phieuNhapList (không SELECT lại DB)
-                int totalSoLuong = g.phieuNhapList.stream()
-                        .mapToInt(p -> p.soLuong)
-                        .sum();
-                if (totalSoLuong != g.vatTu.getSoLuong()) {
-                    jdbcTemplate.update("UPDATE CCDCVatTu SET SoLuong = ? WHERE Id = ?", totalSoLuong, maVthh);
-                    jdbcTemplate.update("UPDATE ChiTietTaiSan SET SoLuong = ? WHERE Id = ?", totalSoLuong, chiTietId);
-                }
-
-                successCount++;
-
-            } catch (Exception ex) {
-                errorCount++;
-                System.err.println("  [LỖI] Vật tư " + g.vatTu.getId()
-                        + ": " + ex.getMessage());
+    // ── BATCH 1: Fetch toàn bộ record hiện tại của ChiTietDonViSoHuu ──────────
+    // Map<maVthh, Map<soChungTu, soLuongDaBanGiao>>
+    Map<String, Map<String, Integer>> existingMap = new HashMap<>();
+    if (!allIds.isEmpty()) {
+        String inClause = String.join(",", Collections.nCopies(allIds.size(), "?"));
+        jdbcTemplate.query(
+            "SELECT IdCCDCVT, SoChungTu, COALESCE(SoLuongDaBanGiao, 0) AS SoLuongDaBanGiao " +
+            "FROM ChiTietDonViSoHuu " +
+            "WHERE IdCCDCVT IN (" + inClause + ") AND SoChungTu IS NOT NULL",
+            allIds.toArray(),
+            rs -> {
+                existingMap
+                    .computeIfAbsent(rs.getString("IdCCDCVT"), k -> new HashMap<>())
+                    .put(rs.getString("SoChungTu"), rs.getInt("SoLuongDaBanGiao"));
             }
-        }
-
-        System.out.println("  Thành công: " + successCount
-                + " | Lỗi: " + errorCount + " mã vật tư.");
+        );
     }
+
+    // ── Vòng lặp chính ────────────────────────────────────────────────────────
+    for (MigrationGroup g : groupMap.values()) {
+        try {
+            String maVthh    = g.vatTu.getId();
+            String chiTietId = maVthh + "_1";
+            Map<String, Integer> existingSctMap = existingMap.getOrDefault(maVthh, Collections.emptyMap());
+
+            // 4a. Upsert CCDCVatTu
+            ccdcVatTuDao.insert(g.vatTu);
+
+            // 4b. Upsert ChiTietTaiSan (tổng sẽ cập nhật lại cuối bước)
+            ChiTietTaiSan chiTiet = new ChiTietTaiSan();
+            chiTiet.setId(chiTietId);
+            chiTiet.setIdTaiSan(maVthh);
+            chiTiet.setSoLuong(g.vatTu.getSoLuong());
+            chiTiet.setNuocSanXuat(g.vatTu.getNuocSanXuat());
+            chiTietTaiSanDao.insert(chiTiet);
+
+            // 4c. Xoá chỉ các record chưa có SoChungTu (migration cũ / null)
+            jdbcTemplate.update(
+                "DELETE FROM ChiTietDonViSoHuu WHERE IdCCDCVT = ? AND (SoChungTu IS NULL OR SoChungTu = '')",
+                maVthh
+            );
+
+            if (!g.phieuNhapList.isEmpty()) {
+                List<Object[]> toInsert = new ArrayList<>();
+                List<Object[]> toUpdate = new ArrayList<>();
+                int totalEffective = 0;
+
+                for (PhieuNhap phieu : g.phieuNhapList) {
+                    String ngay = phieu.ngayVaoSo != null ? phieu.ngayVaoSo : now;
+
+                    if (phieu.soChungTu != null && existingSctMap.containsKey(phieu.soChungTu)) {
+                        // Record đã tồn tại → lấy SoLuongDaBanGiao hiện tại rồi trừ
+                        int daBanGiao   = existingSctMap.get(phieu.soChungTu);
+                        int effectiveSl = Math.max(0, phieu.soLuong - daBanGiao);
+                        totalEffective += effectiveSl;
+
+                        toUpdate.add(new Object[]{
+                            effectiveSl, phieu.maPbanNhap, ngay, chiTietId,
+                            phieu.soChungTu, maVthh
+                        });
+                    } else {
+                        // Phiếu mới → chưa có bàn giao, ghi nguyên soLuong
+                        totalEffective += phieu.soLuong;
+
+                        toInsert.add(new Object[]{
+                            UUID.randomUUID().toString(),
+                            maVthh, phieu.maPbanNhap, phieu.soLuong,
+                            null, ngay, "system", chiTietId, phieu.soChungTu
+                        });
+                    }
+                }
+
+                if (!toInsert.isEmpty()) {
+                    jdbcTemplate.batchUpdate(
+                        "INSERT INTO ChiTietDonViSoHuu " +
+                        "(Id, IdCCDCVT, IdDonViSoHuu, SoLuong, ThoiGianBanGiao, NgayTao, NguoiTao, IdTsCon, SoChungTu) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        toInsert
+                    );
+                }
+                if (!toUpdate.isEmpty()) {
+                    jdbcTemplate.batchUpdate(
+                        "UPDATE ChiTietDonViSoHuu SET SoLuong = ?, IdDonViSoHuu = ?, NgayTao = ?, IdTsCon = ? " +
+                        "WHERE SoChungTu = ? AND IdCCDCVT = ?",
+                        toUpdate
+                    );
+                }
+
+                // 4d. Cập nhật tổng effective vào CCDCVatTu + ChiTietTaiSan
+                int tongSoLuong = getTongSoLuongTuDonViSoHuu(maVthh);
+                jdbcTemplate.update("UPDATE CCDCVatTu SET SoLuong = ? WHERE Id = ?", tongSoLuong, maVthh);
+                jdbcTemplate.update("UPDATE ChiTietTaiSan SET SoLuong = ? WHERE Id = ?", tongSoLuong, chiTietId);
+            }
+
+            successCount++;
+
+        } catch (Exception ex) {
+            errorCount++;
+            System.err.println("  [LỖI] Vật tư " + g.vatTu.getId() + ": " + ex.getMessage());
+        }
+    }
+
+    System.out.println("  Thành công: " + successCount + " | Lỗi: " + errorCount + " mã vật tư.");
+}
 
     // ─── Utility ──────────────────────────────────────────────────────────────
     /** Chuyển Object → String, trả về "" nếu null */
     private String nvl(Object val) {
         return val != null ? String.valueOf(val).trim() : "";
+    }
+    private LocalDateTime getLastSyncDate() {
+        String sql = "SELECT MAX(NgayTao) FROM ChiTietDonViSoHuu WHERE NgayTao IS NOT NULL";
+        try {
+            String maxDate = jdbcTemplate.queryForObject(sql, String.class);
+            if (maxDate == null || maxDate.isBlank()) return null;
+            // Trim về 19 ký tự để parse an toàn dù format có milliseconds
+            String normalized = maxDate.substring(0, 19).replace(" ", "T");
+            LocalDateTime latest = LocalDateTime.parse(normalized,
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"));
+            // Trừ 1 ngày làm buffer an toàn
+            return latest.minusDays(1);
+        } catch (Exception e) {
+            System.err.println("  [CẢNH BÁO] Không lấy được MaxNgayTao, sẽ full sync: " + e.getMessage());
+            return null; // null = full sync toàn bộ lịch sử
+        }
     }
 
     private int getSoLuongDaBanGiaoTrongNam(String maVthh, String idDonViGiao, String idChiTietTaiSan) {

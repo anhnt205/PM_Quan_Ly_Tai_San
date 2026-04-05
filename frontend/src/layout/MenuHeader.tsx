@@ -15,6 +15,7 @@ import {
   Engineering,
   Assessment,
   Storage,
+  Description,
 } from "@mui/icons-material";
 import {
   Avatar,
@@ -678,6 +679,11 @@ export default function Menuheader() {
       icon: <Assessment fontSize="small" />,
       path: ROUTES.REPORT,
       code: "BAOCAO",
+    },
+    {
+      text: "HDSD",
+      icon: <Description fontSize="small" />,
+      path: ROUTES.HUONGDAN,
     },
   ];
 

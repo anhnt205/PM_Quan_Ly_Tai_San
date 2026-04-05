@@ -29,4 +29,5 @@ export const ROUTES = {
   ACCOUNT: "/tai_khoan",
   DASHBOARD: "/dashboard",
   PlanType: "/loai_ke_hoach_sua_chua",
+  HUONGDAN: "/huong_dan_su_dung",
 } as const;

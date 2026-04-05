@@ -36,6 +36,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { MessageTypeFunctions } from "./utils/const";
 import MaintenancePlanRepair from "./pages/MainenancePlanRepair/MaintenancePlanRepair";
 import PlanType from "./pages/PlanType/PlanType";
+import HuongDanSuDung from "./pages/HuongDanSuDung/HuongDanSuDung";
 
 const ProtectedRoute = ({
   allowedRoles,
@@ -244,6 +245,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path={ROUTES.HUONGDAN} element={<HuongDanSuDung />} />
           <Route path={ROUTES.ACCOUNT} element={<Account />} />
         </Route>
         <Route path="*" element={<Navigate to={ROUTES.NOT_FOUND} replace />} />
