@@ -598,29 +598,24 @@ export default function ToolTransferForm({
                     ...((selectedTool?.chiTietDieuDongCCDCVatTuDTOS as any[]) ||
                       []),
                   ].map((item: any) => ({
-                    id: item.idCCDCVatTu || "",
-                    name:
-                      item.tenCCDCVatTu ||
-                      item.ten ||
-                      item.tenDetailAsset ||
-                      "",
+                    id: item.soChungTu + "_" + item.idCCDCVatTu,
+                    name: `${item.tenDetailAsset} (SL: ${item.soLuong || 0})`,
                     originalData: item,
                   }))}
                   onUploadSuccess={(matchedWrapperAssets) => {
                     const existingIds =
                       formik.values.chiTietDieuDongCCDCVatTuDTOS.map(
-                        (i) => i.idCCDCVatTu,
+                        (i) => i.idCustom,
                       );
                     const newItems = matchedWrapperAssets
                       .map((wrapper) => wrapper.originalData)
-                      .filter(
-                        (item) =>
-                          !existingIds.includes(item.idCCDCVatTu || item.id),
-                      )
+                      .filter((item) => !existingIds.includes(item.idCustom))
                       .map((item) => ({
+                        idCustom: item.id,
                         idChiTietCCDCVatTu:
                           item.idChiTietCCDCVatTu || item.idDetaiAsset || "",
                         idCCDCVatTu: item.idCCDCVatTu || "",
+                        soChungTu: item.soChungTu || "",
                         tenCCDCVatTu:
                           item.tenCCDCVatTu ||
                           item.ten ||
