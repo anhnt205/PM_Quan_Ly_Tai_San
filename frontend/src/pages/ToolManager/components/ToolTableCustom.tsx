@@ -23,6 +23,7 @@ import {
   TableView,
   ExpandMore,
   ExpandLess,
+  TableChart,
 } from "@mui/icons-material";
 import { ColumnConfig } from "../columnConfig";
 import ColumnConfigMenu from "./ColumnConfig";
@@ -48,6 +49,7 @@ interface Props {
   allDepartments?: any[];
   showDeleteAll?: boolean;
   onDeleteAll?: () => void;
+  onViewOwnership?: () => void;
   selectedDepartment?: string;
   onSelectedDepartmentChange?: (id: string) => void;
   toolGroups?: any[];
@@ -74,6 +76,7 @@ export default function ToolTableCustom({
   allDepartments = [],
   showDeleteAll = false,
   onDeleteAll,
+  onViewOwnership,
   selectedDepartment,
   onSelectedDepartmentChange,
   toolGroups = [],
@@ -563,11 +566,31 @@ export default function ToolTableCustom({
           </Box>
         </Grid>
       </Grid>
-      <Box display="flex" justifyContent="flex-start" gap={2}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        gap={2}
+        mb={1}
+      >
         <ColumnConfigMenu
           columns={columns.filter((col) => col.isShow)}
           onChange={handleColumnsChange}
         />
+        <Button
+          variant="outlined"
+          color="success"
+          size="small"
+          startIcon={<TableChart />}
+          onClick={onViewOwnership}
+          sx={{
+            borderRadius: "8px",
+            textTransform: "none",
+            fontWeight: 600,
+          }}
+        >
+          Danh sách nhập vật tư
+        </Button>
       </Box>
       {/* Table */}
       <Box

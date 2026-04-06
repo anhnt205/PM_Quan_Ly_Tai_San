@@ -92,6 +92,7 @@ interface Props {
   onDeleteAll?: () => void;
   isDecision?: (data: any[]) => boolean;
   handleDecision?: (item: any) => void;
+  titleSelectedDate?: string;
 }
 
 export default function TableCustom({
@@ -137,6 +138,7 @@ export default function TableCustom({
   onDeleteAll,
   isDecision,
   handleDecision,
+  titleSelectedDate = "Chọn thời gian",
 }: Props) {
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.user);
@@ -245,8 +247,8 @@ export default function TableCustom({
             }}
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 3 }}>
-          {isFilterDepartment && (
+        {isFilterDepartment && (
+          <Grid size={{ xs: 12, sm: 3 }}>
             <Autocomplete
               options={departments || []}
               value={
@@ -265,15 +267,17 @@ export default function TableCustom({
                 />
               )}
             />
-          )}
-          {isFilterDate && (
+          </Grid>
+        )}
+        {isFilterDate && (
+          <Grid size={{ xs: 12, sm: 2 }}>
             <FieldDate
               selectedDate={selectedDate}
               setSelectedDate={setSelectedDate}
-              title="Chọn thời gian khấu hao"
+              title={titleSelectedDate}
             />
-          )}
-        </Grid>
+          </Grid>
+        )}
         <Grid size={{ xs: 12, sm: 5 }}>
           <Box
             display={"flex"}

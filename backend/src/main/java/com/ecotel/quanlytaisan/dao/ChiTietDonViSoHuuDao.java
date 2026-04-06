@@ -1,5 +1,6 @@
 package com.ecotel.quanlytaisan.dao;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,6 +24,79 @@ public class ChiTietDonViSoHuuDao {
     public List<ChiTietDonViSoHuu> findAll() {
         String sql = "SELECT * FROM ChiTietDonViSoHuu";
         return jdbcTemplate.query(sql, rowMapper);
+    }
+
+    public int countAll(String search, String idDonViSoHuu, String date) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM ChiTietDonViSoHuu dvsh ");
+        sql.append("INNER JOIN CCDCVatTu ccdc ON ccdc.Id = dvsh.IdCCDCVT ");
+        sql.append("LEFT JOIN PhongBan pb ON pb.Id = dvsh.IdDonViSoHuu ");
+        sql.append("WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+        if (search != null && !search.trim().isEmpty()) {
+            String like = "%" + search.trim() + "%";
+            sql.append("AND (dvsh.SoChungTu LIKE ? OR ccdc.Ten LIKE ? OR pb.TenPhongBan LIKE ?) ");
+            params.add(like);
+            params.add(like);
+            params.add(like);
+        }
+        if (idDonViSoHuu != null && !idDonViSoHuu.trim().isEmpty()) {
+            sql.append("AND dvsh.IdDonViSoHuu = ? ");
+            params.add(idDonViSoHuu);
+        }
+        if (date != null && !date.trim().isEmpty()) {
+            sql.append("AND dvsh.NgayTao LIKE ? ");
+            params.add(date + "%");
+        }
+
+        Integer total = jdbcTemplate.queryForObject(sql.toString(), Integer.class, params.toArray());
+        return total != null ? total : 0;
+    }
+
+    public List<ChiTietDonViSoHuuEnrichedDTO> findAllPagedEnriched(int offset, int limit, String search, String idDonViSoHuu, String date) {
+        StringBuilder sql = new StringBuilder("""
+                SELECT
+                    dvsh.Id            AS id,
+                    dvsh.IdCCDCVT      AS idCCDCVT,
+                    dvsh.IdDonViSoHuu  AS idDonViSoHuu,
+                    dvsh.SoLuong       AS soLuong,
+                    dvsh.IdTsCon       AS idTsCon,
+                    dvsh.SoChungTu     AS soChungTu,
+                    dvsh.SoLuongDaBanGiao AS soLuongDaBanGiao,
+                    dvsh.ThoiGianBanGiao AS thoiGianBanGiao,
+                    dvsh.NgayTao         AS ngayTao,
+                    ccdc.Ten           AS tenCCDCVatTu,
+                    pb.TenPhongBan     AS tenPhongBan
+                FROM ChiTietDonViSoHuu dvsh
+                INNER JOIN CCDCVatTu ccdc ON ccdc.Id = dvsh.IdCCDCVT
+                LEFT JOIN PhongBan pb ON pb.Id = dvsh.IdDonViSoHuu
+                WHERE 1=1
+                """);
+
+        List<Object> params = new ArrayList<>();
+        if (search != null && !search.trim().isEmpty()) {
+            String like = "%" + search.trim() + "%";
+            sql.append("AND (dvsh.SoChungTu LIKE ? OR ccdc.Ten LIKE ? OR pb.TenPhongBan LIKE ?) ");
+            params.add(like);
+            params.add(like);
+            params.add(like);
+        }
+        if (idDonViSoHuu != null && !idDonViSoHuu.trim().isEmpty()) {
+            sql.append("AND dvsh.IdDonViSoHuu = ? ");
+            params.add(idDonViSoHuu);
+        }
+        if (date != null && !date.trim().isEmpty()) {
+            sql.append("AND dvsh.NgayTao LIKE ? ");
+            params.add(date + "%");
+        }
+
+        sql.append("ORDER BY dvsh.NgayTao DESC, dvsh.SoChungTu DESC LIMIT ? OFFSET ?");
+        params.add(limit);
+        params.add(offset);
+
+        return jdbcTemplate.query(sql.toString(),
+                new BeanPropertyRowMapper<>(ChiTietDonViSoHuuEnrichedDTO.class),
+                params.toArray());
     }
 
     // --- GET BY ID (optional, hữu ích cho update kiểm tra tồn tại) ---

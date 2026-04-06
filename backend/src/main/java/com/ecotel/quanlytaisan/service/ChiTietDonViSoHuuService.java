@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.ecotel.quanlytaisan.model.PageResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -117,6 +118,13 @@ public class ChiTietDonViSoHuuService {
         return list;
     }
 
+
+    public PageResponse<ChiTietDonViSoHuuEnrichedDTO> getPagedEnriched(int page, int size, String search, String idDonViSoHuu, String date) {
+        int offset = page * size;
+        int total = dao.countAll(search, idDonViSoHuu, date);
+        List<ChiTietDonViSoHuuEnrichedDTO> items = dao.findAllPagedEnriched(offset, size, search, idDonViSoHuu, date);
+        return new PageResponse<>(items, total, page, size);
+    }
 
     public List<ChiTietDonViSoHuu> readExcel(MultipartFile file) throws IOException {
         List<ChiTietDonViSoHuu> list = new ArrayList<>();

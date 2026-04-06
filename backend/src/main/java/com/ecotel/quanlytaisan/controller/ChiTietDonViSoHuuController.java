@@ -3,6 +3,7 @@ package com.ecotel.quanlytaisan.controller;
 import com.ecotel.quanlytaisan.model.ApiResponse;
 import com.ecotel.quanlytaisan.model.ChiTietDonViSoHuu;
 import com.ecotel.quanlytaisan.model.ChiTietDonViSoHuuEnrichedDTO;
+import com.ecotel.quanlytaisan.model.PageResponse;
 import com.ecotel.quanlytaisan.model.UpdateChiTietDonViSoHuu;
 import com.ecotel.quanlytaisan.service.ChiTietDonViSoHuuService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +44,23 @@ public class ChiTietDonViSoHuuController {
                         .body(ApiResponse.failure("Không tìm thấy Id = " + id, null));
             }
             return ResponseEntity.ok(ApiResponse.success("Lấy chi tiết thành công", data, 1));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
+    // --- GET PAGED ENRICHED ---
+    @GetMapping("/paged")
+    public ResponseEntity<ApiResponse<PageResponse<ChiTietDonViSoHuuEnrichedDTO>>> getPagedEnriched(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String idDonViSoHuu,
+            @RequestParam(required = false) String date) {
+        try {
+            PageResponse<ChiTietDonViSoHuuEnrichedDTO> result = service.getPagedEnriched(page, size, search, idDonViSoHuu, date);
+            return ResponseEntity.ok(ApiResponse.success("Lấy danh sách phân trang thành công", result, (int) result.getTotalItems()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));

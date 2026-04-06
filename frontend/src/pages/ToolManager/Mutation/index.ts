@@ -735,3 +735,35 @@ export const useHistoryAssethandoverQuery = (
     enabled: !!idCCDCVatTu,
   });
 };
+
+export const useToolOwnershipPageQuery = (
+  page?: number,
+  pageSize?: number,
+  searchValue?: string,
+  idDonViSoHuu?: string,
+  date?: string,
+) => {
+  return useQuery({
+    queryKey: [
+      "toolOwnershipPage",
+      page,
+      pageSize,
+      searchValue,
+      idDonViSoHuu,
+      date,
+    ],
+    queryFn: async () => {
+      const res = await api.get("/chitietdonvisohuu/paged", {
+        params: {
+          page: page,
+          size: pageSize,
+          search: searchValue,
+          idDonViSoHuu: idDonViSoHuu,
+          date: date,
+        },
+      });
+      return res.data.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};

@@ -17,6 +17,9 @@ public class ChiTietDonViSoHuuEnrichedDTO {
     private String idTsCon;
     private String soChungTu;
     private Integer soLuongDaBanGiao;
+    private String tenPhongBan;
+    private String thoiGianBanGiao;
+    private String ngayTao;
 
     // --- CCDCVatTu fields (JOIN) ---
     private String tenCCDCVatTu;

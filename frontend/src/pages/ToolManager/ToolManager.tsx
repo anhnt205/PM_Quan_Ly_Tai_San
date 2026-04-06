@@ -18,6 +18,7 @@ import SyncLoadingModal from "../../components/common/SyncLoadingModal";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 import SelectDbDialog from "../../components/common/SelectDbDialog";
+import ToolOwnershipModal from "./components/ToolOwnershipModal";
 
 export default function ToolManager() {
   const [showForm, setShowForm] = useState(false);
@@ -30,6 +31,7 @@ export default function ToolManager() {
   const [openHistory, setOpenHistory] = useState(false);
   const [selectedHistoryTool, setSelectedHistoryTool] = useState<any>(null);
   const [openSelectDb, setOpenSelectDb] = useState(false);
+  const [openOwnership, setOpenOwnership] = useState(false);
   const { user } = useSelector((state: RootState) => state.user);
 
   const [importErrors, setImportErrors] = useState<string[]>([]);
@@ -143,6 +145,11 @@ export default function ToolManager() {
         onClose={() => setOpenHistory(false)}
         selectedTool={selectedHistoryTool}
       />
+      <ToolOwnershipModal
+        open={openOwnership}
+        onClose={() => setOpenOwnership(false)}
+        departments={allDepartments}
+      />
       <ImportErrorDialog
         open={openErrorModal}
         onClose={() => setOpenErrorModal(false)}
@@ -253,6 +260,7 @@ export default function ToolManager() {
               onSelectedToolGroupChange={setSelectedToolGroup}
               onDeleteAll={deleteAllMutation.mutate}
               showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
+              onViewOwnership={() => setOpenOwnership(true)}
             />
           </Box>
 
