@@ -21,37 +21,42 @@ public class DatabaseSyncScheduler {
     @Autowired
     private DatabaseMigrationService databaseMigrationService;
 
-    // Chạy ngầm định kỳ vào giây thứ 0 của mỗi đầu giờ (VD: 07:00, 08:00, ...)
-    @Scheduled(cron = "0 0 * * * *", zone = "Asia/Ho_Chi_Minh")
+    // Chạy ngầm định kỳ mỗi phút để kiểm tra cấu hình đồng bộ
+    @Scheduled(cron = "0 * * * * *", zone = "Asia/Ho_Chi_Minh")
     public void executeDatabaseSync() {
-        System.out.println("Scheduler triggered: Checking for default DB configuration...");
-        
         DbConfig defaultDb = dbConfigDao.findDefault();
-        if (defaultDb != null) {
-            Integer intervalHours = defaultDb.getSyncIntervalHours();
-            // Nếu có intervalHours cấu hình hợp lệ
-            if (intervalHours != null && intervalHours > 0) {
-                int currentHour = LocalTime.now(ZoneId.of("Asia/Ho_Chi_Minh")).getHour();
-                // Thực thi nếu chia dư bằng 0
-                if (currentHour % intervalHours == 0) {
-                    System.out.println("Condition matched [currentHour=" + currentHour + ", interval=" + intervalHours + "]. Starting Sync for DbConfig ID: " + defaultDb.getId());
-                    
-                    try {
-                        // Gọi hàm xử lý sync
-                        databaseMigrationService.processMigration(defaultDb.getId());
-                        System.out.println("Sync Background Job executed successfully!");
-                    } catch (Exception e) {
-                        System.err.println("Sync Background Job failed: " + e.getMessage());
-                        // e.printStackTrace();
-                    }
-                } else {
-                    System.out.println("Condition skipped [currentHour=" + currentHour + ", interval=" + intervalHours + "].");
-                }
-            } else {
-                System.out.println("Invalid interval config: " + intervalHours);
+        if (defaultDb == null) return;
+
+        LocalTime now = LocalTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+        String syncTime = defaultDb.getSyncTime();
+        Integer intervalHours = defaultDb.getSyncIntervalHours();
+
+        boolean shouldSync = false;
+
+        // 1. Ưu tiên kiểm tra theo thời điểm cụ thể (syncTime)
+        if (syncTime != null && !syncTime.isEmpty()) {
+            // syncTime có định dạng HH:mm:ss hoặc HH:mm
+            String currentTimeStr = now.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+            if (syncTime.startsWith(currentTimeStr)) {
+                shouldSync = true;
+                System.out.println("Scheduled Sync [Time Match]: " + currentTimeStr);
             }
-        } else {
-            System.out.println("No default DbConfig found. Skipped.");
+        } 
+        // 2. Nếu không có syncTime, fallback về intervalHours (chỉ chạy vào phút thứ 0)
+        else if (intervalHours != null && intervalHours > 0 && now.getMinute() == 0) {
+            if (now.getHour() % intervalHours == 0) {
+                shouldSync = true;
+                System.out.println("Scheduled Sync [Interval Match]: hour=" + now.getHour() + ", interval=" + intervalHours);
+            }
+        }
+
+        if (shouldSync) {
+            try {
+                databaseMigrationService.processMigration(defaultDb.getId());
+                System.out.println("Sync Background Job executed successfully at " + now);
+            } catch (Exception e) {
+                System.err.println("Sync Background Job failed: " + e.getMessage());
+            }
         }
     }
 }

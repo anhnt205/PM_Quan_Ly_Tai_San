@@ -49,12 +49,12 @@ public class DbConfigDao {
         config.setNgayCapNhat(now);
 
         String sql = """
-                INSERT INTO DbConfig (Id, Dbms, Ip, Port, DbName, Username, Password, NgayTao, NgayCapNhat, IsDefault, SyncIntervalHours)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO DbConfig (Id, Dbms, Ip, Port, DbName, Username, Password, NgayTao, NgayCapNhat, IsDefault, SyncIntervalHours, SyncTime)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
         return jdbcTemplate.update(sql, config.getId(), config.getDbms(), config.getIp(),
                 config.getPort(), config.getDbName(), config.getUsername(), config.getPassword(), 
-                config.getNgayTao(), config.getNgayCapNhat(), config.getIsDefault(), config.getSyncIntervalHours());
+                config.getNgayTao(), config.getNgayCapNhat(), config.getIsDefault(), config.getSyncIntervalHours(), config.getSyncTime());
     }
 
     public int update(DbConfig config) {
@@ -71,12 +71,13 @@ public class DbConfigDao {
                     Password = ?,
                     NgayCapNhat = ?,
                     IsDefault = ?,
-                    SyncIntervalHours = ?
+                    SyncIntervalHours = ?,
+                    SyncTime = ?
                 WHERE Id = ?
                 """;
         return jdbcTemplate.update(sql, config.getDbms(), config.getIp(), config.getPort(),
                 config.getDbName(), config.getUsername(), config.getPassword(), config.getNgayCapNhat(), 
-                config.getIsDefault(), config.getSyncIntervalHours(), config.getId());
+                config.getIsDefault(), config.getSyncIntervalHours(), config.getSyncTime(), config.getId());
     }
 
     public int delete(String id) {

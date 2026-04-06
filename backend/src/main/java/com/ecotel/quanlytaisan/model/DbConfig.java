@@ -15,4 +15,5 @@ public class DbConfig {
     private String ngayCapNhat;
     private Boolean isDefault;
     private Integer syncIntervalHours;
+    private String syncTime;
 }

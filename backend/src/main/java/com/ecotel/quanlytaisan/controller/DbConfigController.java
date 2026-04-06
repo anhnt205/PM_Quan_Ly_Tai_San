@@ -108,9 +108,11 @@ public class DbConfigController {
     }
 
     @PutMapping("/{id}/default")
-    public ResponseEntity<ApiResponse<Object>> setDefaultDb(@PathVariable("id") String id, @RequestParam("syncIntervalHours") Integer syncIntervalHours) {
+    public ResponseEntity<ApiResponse<Object>> setDefaultDb(@PathVariable("id") String id, 
+            @RequestParam(value = "syncIntervalHours", required = false) Integer syncIntervalHours,
+            @RequestParam(value = "syncTime", required = false) String syncTime) {
         try {
-            int result = dbConfigService.setDefault(id, syncIntervalHours);
+            int result = dbConfigService.setDefault(id, syncIntervalHours, syncTime);
             if (result > 0) {
                 return ResponseEntity.ok(ApiResponse.success("Bật cờ mặc định cho DB thành công", null, result));
             }

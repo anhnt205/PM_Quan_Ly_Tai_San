@@ -4,6 +4,7 @@ import com.ecotel.quanlytaisan.dao.ChiTietTaiSanDao;
 import com.ecotel.quanlytaisan.dao.TaiSanDao;
 import com.ecotel.quanlytaisan.dao.TaiSanFileDao;
 import com.ecotel.quanlytaisan.dao.ChiTietBanGiaoTaiSanDao;
+import com.ecotel.quanlytaisan.dao.LichSuDieuChuyenTaiSanDao;
 import com.ecotel.quanlytaisan.dao.PhongBanDao;
 import com.ecotel.quanlytaisan.model.*;
 import org.apache.poi.ss.usermodel.*;
@@ -34,6 +35,8 @@ public class TaiSanService {
     private TaiSanFileDao taiSanFileDao;
     @Autowired
     private PhongBanDao phongBanDao;
+    @Autowired
+    private LichSuDieuChuyenTaiSanDao lichSuDieuChuyenTaiSanDao;
 
 
     public List<TaiSanDTO> getAll(String idCongTy) {
@@ -251,7 +254,25 @@ public class TaiSanService {
     }
 
     public int create(TaiSan ts) {
-        return taiSanDao.insert(ts);
+        int result = taiSanDao.insert(ts);
+        if (result > 0) {
+            createInitialHistory(ts);
+        }
+        return result;
+    }
+
+    private void createInitialHistory(TaiSan ts) {
+        LichSuDieuChuyenTaiSanDTO history = new LichSuDieuChuyenTaiSanDTO();
+        history.setIdTaiSan(ts.getId());
+        history.setIdDonViGiao(ts.getIdDonViBanDau());
+        
+        // Đơn vị nhận mặc định là đơn vị ban đầu khi khởi tạo
+        history.setIdDonViNhan(ts.getIdDonViBanDau());
+        
+        // Thời gian là ngày tạo hoặc hiện tại
+        history.setThoiGianBanGiao(ts.getNgayTao() != null ? ts.getNgayTao() : java.time.LocalDateTime.now().toString());
+        
+        lichSuDieuChuyenTaiSanDao.create(history);
     }
 
     public int update(TaiSan ts) {

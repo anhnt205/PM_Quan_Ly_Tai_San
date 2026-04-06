@@ -20,6 +20,24 @@ public class LichSuDieuChuyenTaiSanDao {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    public int create(LichSuDieuChuyenTaiSanDTO item) {
+        if (item.getId() == null || item.getId().isEmpty()) {
+            item.setId(UUID.randomUUID().toString());
+        }
+        String sql = """
+                INSERT INTO LichSuDieuChuyenTaiSan 
+                (Id, IdBanGiaoTaiSan, IdTaiSan, IdDonViGiao, IdDonViNhan, ThoiGianBanGiao) 
+                VALUES (?, ?, ?, ?, ?, ?)
+                """;
+        return jdbcTemplate.update(sql,
+                item.getId(),
+                item.getIdBanGiaoTaiSan(),
+                item.getIdTaiSan(),
+                item.getIdDonViGiao(),
+                item.getIdDonViNhan(),
+                item.getThoiGianBanGiao());
+    }
+
     public int createBatch(List<LichSuDieuChuyenTaiSanDTO> list) {
         String sql = """
                 INSERT INTO LichSuDieuChuyenTaiSan 

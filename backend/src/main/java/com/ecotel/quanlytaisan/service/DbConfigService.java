@@ -31,12 +31,13 @@ public class DbConfigService {
     }
 
     @Transactional
-    public int setDefault(String id, Integer syncIntervalHours) {
+    public int setDefault(String id, Integer syncIntervalHours, String syncTime) {
         dbConfigDao.clearDefault();
         DbConfig config = dbConfigDao.findById(id);
         if (config != null) {
             config.setIsDefault(true);
             config.setSyncIntervalHours(syncIntervalHours);
+            config.setSyncTime(syncTime);
             return dbConfigDao.update(config);
         }
         return 0;

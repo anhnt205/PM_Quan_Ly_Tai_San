@@ -53,7 +53,7 @@ export default function ExpirationSettingDialog({
   const [error, setError] = useState<string>("");
 
   const [selectedDbConfigId, setSelectedDbConfigId] = useState<string>("");
-  const [syncIntervalHours, setSyncIntervalHours] = useState<string>("0");
+  const [syncTime, setSyncTime] = useState<string>("");
 
   const queryClient = useQueryClient();
 
@@ -71,15 +71,15 @@ export default function ExpirationSettingDialog({
       const defaultDb = dbConfigs.find((db: any) => db.isDefault === true || db.isDefault === 1);
       if (defaultDb) {
         setSelectedDbConfigId(defaultDb.id);
-        setSyncIntervalHours(String(defaultDb.syncIntervalHours || 0));
+        setSyncTime(defaultDb.syncTime || "");
       }
     }
   }, [dbConfigs]);
 
   const updateDbConfigDefaultMutation = useMutation({
-    mutationFn: async ({ id, hours }: { id: string; hours: number }) => {
+    mutationFn: async ({ id, time }: { id: string; time: string }) => {
       if (!id) return;
-      await api.put(`/dbconfig/${id}/default?syncIntervalHours=${hours}`);
+      await api.put(`/dbconfig/${id}/default?syncTime=${time}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["dbConfigList_Expiration"] });
@@ -147,7 +147,7 @@ export default function ExpirationSettingDialog({
         try {
           await updateDbConfigDefaultMutation.mutateAsync({
             id: selectedDbConfigId,
-            hours: parseInt(syncIntervalHours) || 0,
+            time: syncTime,
           });
         } catch (e) {
           console.error(e);
@@ -437,19 +437,16 @@ export default function ExpirationSettingDialog({
               </TextField>
               <TextField
                 fullWidth
-                type="number"
-                label="Chu kỳ tự động đồng bộ"
-                value={syncIntervalHours}
-                onChange={(e) => setSyncIntervalHours(normalizeValue(e.target.value))}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">giờ</InputAdornment>
-                  ),
-                  sx: { backgroundColor: theme.palette.grey[50] },
+                type="time"
+                label="Thời điểm tự động đồng bộ hàng ngày"
+                value={syncTime}
+                onChange={(e) => setSyncTime(e.target.value)}
+                InputLabelProps={{
+                  shrink: true,
                 }}
                 variant="outlined"
                 size="medium"
-                sx={{ flex: 1 }}
+                sx={{ flex: 1, backgroundColor: theme.palette.grey[50] }}
               />
             </Box>
           </Paper>
