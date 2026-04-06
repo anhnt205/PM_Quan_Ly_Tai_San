@@ -30,4 +30,5 @@ export const ROUTES = {
   DASHBOARD: "/dashboard",
   PlanType: "/loai_ke_hoach_sua_chua",
   HUONGDAN: "/huong_dan_su_dung",
+  REPAIRLEVEL: "/cap_sua_chua",
 } as const;

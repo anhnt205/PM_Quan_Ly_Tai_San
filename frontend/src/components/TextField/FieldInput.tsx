@@ -12,6 +12,8 @@ interface Props {
   InputLabelProps?: any;
   onChange?: (newValue: any) => void;
   onClick?: (e: any) => void;
+  multiline?: boolean;
+  rows?: number;
 }
 export default function FieldInput({
   title,
@@ -24,6 +26,8 @@ export default function FieldInput({
   InputLabelProps,
   onChange,
   onClick,
+  multiline = false,
+  rows = 1,
 }: Props) {
   const currentValue = formik && field ? getIn(formik.values, field) : "";
   const touched = formik && field ? getIn(formik.touched, field) : false;
@@ -41,6 +45,8 @@ export default function FieldInput({
       size="small"
       label={title}
       value={currentValue}
+      multiline={multiline}
+      rows={rows}
       onChange={(e) => {
         if (field) {
           formik.setFieldError(field, undefined);
