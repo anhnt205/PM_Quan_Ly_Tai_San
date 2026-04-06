@@ -37,6 +37,7 @@ import { MessageTypeFunctions } from "./utils/const";
 import MaintenancePlanRepair from "./pages/MainenancePlanRepair/MaintenancePlanRepair";
 import PlanType from "./pages/PlanType/PlanType";
 import HuongDanSuDung from "./pages/HuongDanSuDung/HuongDanSuDung";
+import RepairLevel from "./pages/RepairLevel/RepairLevel";
 
 const ProtectedRoute = ({
   allowedRoles,
@@ -236,6 +237,10 @@ function App() {
           <Route
             path={ROUTES.MAINTENANCEREPAIR}
             element={<MaintenanceRepair />}
+          />
+          <Route
+            path={ROUTES.REPAIRLEVEL}
+            element={<RepairLevel />}
           />
           <Route
             path={ROUTES.REPORT}
