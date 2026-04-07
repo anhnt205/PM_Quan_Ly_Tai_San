@@ -34,14 +34,14 @@ public class CCDCVatTuService {
 
     public List<CCDCVatTuDTO> getAll(String idCongTy) {
         List<CCDCVatTuDTO> taiSanDTOList = ccdcVatTuDao.findAll(idCongTy);
-        for (CCDCVatTuDTO taiSanDTO : taiSanDTOList) {
-            List<ChiTietTaiSan> chiTietTaiSanList = chiTietTaiSanDao.findAll(taiSanDTO.getId());
-            taiSanDTO.setChiTietTaiSanList(chiTietTaiSanList);
-            List<TaiSanCon> taiSanConList = taiSanDao.getTaiSanConByTaiSan(taiSanDTO.getId());
-            taiSanDTO.setTaiSanConList(taiSanConList);
-            List<ChiTietDonViSoHuu>chiTietDonViSoHuuList = chiTietDonViSoHuuDao.findByIdCCDCVT(taiSanDTO.getId());
-            taiSanDTO.setChiTietDonViSoHuuList(chiTietDonViSoHuuList);
-        }
+        // for (CCDCVatTuDTO taiSanDTO : taiSanDTOList) {
+        //     List<ChiTietTaiSan> chiTietTaiSanList = chiTietTaiSanDao.findAll(taiSanDTO.getId());
+        //     taiSanDTO.setChiTietTaiSanList(chiTietTaiSanList);
+        //     List<TaiSanCon> taiSanConList = taiSanDao.getTaiSanConByTaiSan(taiSanDTO.getId());
+        //     taiSanDTO.setTaiSanConList(taiSanConList);
+        //     List<ChiTietDonViSoHuu>chiTietDonViSoHuuList = chiTietDonViSoHuuDao.findByIdCCDCVT(taiSanDTO.getId());
+        //     taiSanDTO.setChiTietDonViSoHuuList(chiTietDonViSoHuuList);
+        // }
         return taiSanDTOList;
     }
 

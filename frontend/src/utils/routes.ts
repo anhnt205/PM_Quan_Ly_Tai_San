@@ -31,4 +31,5 @@ export const ROUTES = {
   PlanType: "/loai_ke_hoach_sua_chua",
   HUONGDAN: "/huong_dan_su_dung",
   REPAIRLEVEL: "/cap_sua_chua",
+  REPAIRNORM: "/dinh_muc_sua_chua",
 } as const;
