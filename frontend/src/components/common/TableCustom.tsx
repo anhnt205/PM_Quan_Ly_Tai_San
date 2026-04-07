@@ -247,8 +247,8 @@ export default function TableCustom({
             }}
           />
         </Grid>
-        {isFilterDepartment && (
-          <Grid size={{ xs: 12, sm: 3 }}>
+        <Grid size={{ xs: 12, sm: 3 }}>
+          {isFilterDepartment && (
             <Autocomplete
               options={departments || []}
               value={
@@ -267,8 +267,8 @@ export default function TableCustom({
                 />
               )}
             />
-          </Grid>
-        )}
+          )}
+        </Grid>
         {isFilterDate && (
           <Grid size={{ xs: 12, sm: 2 }}>
             <FieldDate
