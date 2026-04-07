@@ -39,6 +39,8 @@ import PlanType from "./pages/PlanType/PlanType";
 import HuongDanSuDung from "./pages/HuongDanSuDung/HuongDanSuDung";
 import RepairLevel from "./pages/RepairLevel/RepairLevel";
 
+import RepairNorm from "./pages/RepairNorm/RepairNorm";
+
 const ProtectedRoute = ({
   allowedRoles,
   children,
@@ -241,6 +243,10 @@ function App() {
           <Route
             path={ROUTES.REPAIRLEVEL}
             element={<RepairLevel />}
+          />
+          <Route
+            path={ROUTES.REPAIRNORM}
+            element={<RepairNorm />}
           />
           <Route
             path={ROUTES.REPORT}

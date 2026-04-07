@@ -676,6 +676,27 @@ export default function Menuheader() {
       ],
     },
     {
+      text: "Sửa chữa bảo dưỡng",
+      icon: <Engineering fontSize="small" />,
+      path: "#",
+      count: maintenanceRepairCount + maintenanceRepairResultCount,
+      subMenu: [
+        {
+          text: "Kế hoạch sửa chữa",
+          path: ROUTES.MAINTENANCEPLANREPAIR,
+        },
+        {
+          text: "Phiếu sửa chữa",
+          path: ROUTES.MAINTENANCEREPAIR,
+          count: maintenanceRepairCount,
+        },
+        {
+          text: "Định mức sửa chữa",
+          path: ROUTES.REPAIRNORM,
+        },
+      ],
+    },
+    {
       text: "Báo cáo",
       icon: <Assessment fontSize="small" />,
       path: ROUTES.REPORT,
