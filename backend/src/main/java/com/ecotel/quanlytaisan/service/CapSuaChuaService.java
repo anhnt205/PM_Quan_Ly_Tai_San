@@ -67,6 +67,10 @@ public class CapSuaChuaService {
         dto.setChuKyThucHien(item.getChuKyThucHien());
         dto.setSoLanTrongChuKy(item.getSoLanTrongChuKy());
         dto.setThoiGianSuaChua(item.getThoiGianSuaChua());
+        dto.setIdLoaiTaiSan(item.getIdLoaiTaiSan());
+        dto.setTenLoaiTaiSan(item.getTenLoaiTaiSan());
+        dto.setMocGioDau(item.getMocGioDau());
+        dto.setMocGioCuoi(item.getMocGioCuoi());
         dto.setGhiChu(item.getGhiChu());
         return dto;
     }

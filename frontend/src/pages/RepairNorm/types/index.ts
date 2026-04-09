@@ -14,7 +14,6 @@ export interface DinhMucVatTu {
 
 export interface DinhMucSuaChua {
     id: string;
-    idLoaiTaiSan: string;
     tenLoaiTaiSan?: string;
     idCapSuaChua: string;
     tenCapSuaChua?: string;

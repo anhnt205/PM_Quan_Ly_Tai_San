@@ -10,5 +10,9 @@ public class CapSuaChuaDTO {
     private String chuKyThucHien;
     private Integer soLanTrongChuKy;
     private String thoiGianSuaChua;
+    private String idLoaiTaiSan;
+    private String tenLoaiTaiSan;
+    private Integer mocGioDau;
+    private Integer mocGioCuoi;
     private String ghiChu;
 }

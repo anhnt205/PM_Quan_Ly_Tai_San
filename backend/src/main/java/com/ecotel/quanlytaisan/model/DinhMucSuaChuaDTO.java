@@ -6,7 +6,6 @@ import java.util.List;
 @Data
 public class DinhMucSuaChuaDTO {
     private String id;
-    private String idLoaiTaiSan;
     private String tenLoaiTaiSan;
     private String idCapSuaChua;
     private String tenCapSuaChua;

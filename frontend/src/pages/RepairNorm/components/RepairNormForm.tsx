@@ -40,13 +40,11 @@ export default function RepairNormForm({
   onSave: (values: DinhMucSuaChua) => void;
 }) {
   const [expanded, setExpanded] = useState(true);
-  const { data: allTypeAssets = [] } = useAllTypeAssetQuery();
   const { data: allRepairLevels = [] } = useAllRepairLevelQuery();
 
   const formik = useFormik<DinhMucSuaChua>({
     initialValues: {
       id: "",
-      idLoaiTaiSan: "",
       idCapSuaChua: "",
       ghiChu: "",
       isActive: true,
@@ -107,17 +105,8 @@ export default function RepairNormForm({
             <Typography>Thông tin định mức sửa chữa</Typography>
           </Box>
           <Grid container spacing={2}>
-            <Grid size={{ xs: 6 }}>
-              <FieldAutoCompleted
-                title="Chủng loại thiết bị *"
-                data={allTypeAssets}
-                labelkey="tenLoai"
-                formik={formik}
-                field="idLoaiTaiSan"
-                disabled={readOnly}
-              />
-            </Grid>
-            <Grid size={{ xs: 6 }}>
+
+            <Grid size={{ xs: 12 }}>
               <FieldAutoCompleted
                 title="Cấp sửa chữa *"
                 data={allRepairLevels}

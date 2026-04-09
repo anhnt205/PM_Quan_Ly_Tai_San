@@ -114,11 +114,15 @@ const RepairNormVatTuTable: React.FC<RepairNormVatTuTableProps> = ({
                 )}
               </TableCell>
               <TableCell>
-                <FieldInput
-                  formik={formik}
-                  field={`dinhMucVatTuList.${index}.donViTinh`}
-                  disabled={true}
-                />
+                {readOnly ? (
+                  item.donViTinh
+                ) : (
+                  <FieldInput
+                    formik={formik}
+                    field={`dinhMucVatTuList.${index}.donViTinh`}
+                    disabled={true}
+                  />
+                )}
               </TableCell>
               <TableCell>
                 {readOnly ? (
@@ -132,11 +136,15 @@ const RepairNormVatTuTable: React.FC<RepairNormVatTuTableProps> = ({
                 )}
               </TableCell>
               <TableCell>
-                <FieldInput
-                  formik={formik}
-                  field={`dinhMucVatTuList.${index}.kyHieu`}
-                  disabled={true}
-                />
+                {readOnly ? (
+                  item.kyHieu
+                ) : (
+                  <FieldInput
+                    formik={formik}
+                    field={`dinhMucVatTuList.${index}.kyHieu`}
+                    disabled={true}
+                  />
+                )}
               </TableCell>
               <TableCell>
                 {readOnly ? (

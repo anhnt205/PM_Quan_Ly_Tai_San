@@ -25,6 +25,14 @@ public class CapSuaChuaDao {
             item.setChuKyThucHien(rs.getString("ChuKyThucHien"));
             item.setSoLanTrongChuKy(rs.getInt("SoLanTrongChuKy"));
             item.setThoiGianSuaChua(rs.getString("ThoiGianSuaChua"));
+            item.setIdLoaiTaiSan(rs.getString("IdLoaiTaiSan"));
+            try {
+                item.setTenLoaiTaiSan(rs.getString("tenLoaiTaiSan"));
+            } catch (SQLException e) {
+                // column not present, ignore
+            }
+            item.setMocGioDau(rs.getObject("MocGioDau") != null ? rs.getInt("MocGioDau") : null);
+            item.setMocGioCuoi(rs.getObject("MocGioCuoi") != null ? rs.getInt("MocGioCuoi") : null);
             item.setGhiChu(rs.getString("GhiChu"));
             item.setNgayTao(rs.getString("NgayTao"));
             item.setNgayCapNhat(rs.getString("NgayCapNhat"));
@@ -35,18 +43,18 @@ public class CapSuaChuaDao {
     };
 
     public List<CapSuaChua> findAll() {
-        String sql = "SELECT * FROM CapSuaChua";
+        String sql = "SELECT csc.*, lts.TenLoai AS tenLoaiTaiSan FROM CapSuaChua csc LEFT JOIN LoaiTaiSanCon lts ON csc.IdLoaiTaiSan = lts.Id";
         return jdbcTemplate.query(sql, rowMapper);
     }
 
     public List<CapSuaChua> findAllPaged(int offset, int limit, String sortBy, String sortDir, String keyword) {
-        String orderColumn = "Ten";
+        String orderColumn = "csc.Ten";
         if (sortBy != null && !sortBy.isEmpty()) {
             switch (sortBy.toLowerCase()) {
-                case "id": orderColumn = "Id"; break;
-                case "kyhieu": orderColumn = "KyHieu"; break;
-                case "ten": orderColumn = "Ten"; break;
-                case "ngaytao": orderColumn = "NgayTao"; break;
+                case "id": orderColumn = "csc.Id"; break;
+                case "kyhieu": orderColumn = "csc.KyHieu"; break;
+                case "ten": orderColumn = "csc.Ten"; break;
+                case "ngaytao": orderColumn = "csc.NgayTao"; break;
             }
         }
         String direction = (sortDir != null && sortDir.equalsIgnoreCase("asc")) ? "ASC" : "DESC";
@@ -54,10 +62,10 @@ public class CapSuaChuaDao {
         String whereClause = "";
         boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
         if (hasKeyword) {
-            whereClause = " WHERE (LOWER(Ten) LIKE LOWER(?) OR LOWER(KyHieu) LIKE LOWER(?))";
+            whereClause = " WHERE (LOWER(csc.Ten) LIKE LOWER(?) OR LOWER(csc.KyHieu) LIKE LOWER(?))";
         }
 
-        String sql = "SELECT * FROM CapSuaChua " + whereClause + " ORDER BY " + orderColumn + " " + direction + " LIMIT ? OFFSET ?";
+        String sql = "SELECT csc.*, lts.TenLoai AS tenLoaiTaiSan FROM CapSuaChua csc LEFT JOIN LoaiTaiSanCon lts ON csc.IdLoaiTaiSan = lts.Id " + whereClause + " ORDER BY " + orderColumn + " " + direction + " LIMIT ? OFFSET ?";
 
         if (hasKeyword) {
             String searchPattern = "%" + keyword.trim() + "%";
@@ -83,12 +91,12 @@ public class CapSuaChuaDao {
     }
 
     public CapSuaChua findById(String id) {
-        String sql = "SELECT * FROM CapSuaChua WHERE Id = ?";
+        String sql = "SELECT csc.*, lts.TenLoai AS tenLoaiTaiSan FROM CapSuaChua csc LEFT JOIN LoaiTaiSanCon lts ON csc.IdLoaiTaiSan = lts.Id WHERE csc.Id = ?";
         return jdbcTemplate.queryForObject(sql, rowMapper, id);
     }
 
     public int insert(CapSuaChua item) {
-        String sql = "INSERT INTO CapSuaChua (Id, KyHieu, Ten, ChuKyThucHien, SoLanTrongChuKy, ThoiGianSuaChua, GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO CapSuaChua (Id, KyHieu, Ten, ChuKyThucHien, SoLanTrongChuKy, ThoiGianSuaChua, IdLoaiTaiSan, MocGioDau, MocGioCuoi, GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         return jdbcTemplate.update(sql,
                 item.getId(),
                 item.getKyHieu(),
@@ -96,6 +104,9 @@ public class CapSuaChuaDao {
                 item.getChuKyThucHien(),
                 item.getSoLanTrongChuKy(),
                 item.getThoiGianSuaChua(),
+                item.getIdLoaiTaiSan(),
+                item.getMocGioDau(),
+                item.getMocGioCuoi(),
                 item.getGhiChu(),
                 item.getNgayTao(),
                 item.getNgayCapNhat(),
@@ -105,13 +116,16 @@ public class CapSuaChuaDao {
     }
 
     public int update(CapSuaChua item) {
-        String sql = "UPDATE CapSuaChua SET KyHieu=?, Ten=?, ChuKyThucHien=?, SoLanTrongChuKy=?, ThoiGianSuaChua=?, GhiChu=?, NgayTao=?, NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=? WHERE Id=?";
+        String sql = "UPDATE CapSuaChua SET KyHieu=?, Ten=?, ChuKyThucHien=?, SoLanTrongChuKy=?, ThoiGianSuaChua=?, IdLoaiTaiSan=?, MocGioDau=?, MocGioCuoi=?, GhiChu=?, NgayTao=?, NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=? WHERE Id=?";
         return jdbcTemplate.update(sql,
                 item.getKyHieu(),
                 item.getTen(),
                 item.getChuKyThucHien(),
                 item.getSoLanTrongChuKy(),
                 item.getThoiGianSuaChua(),
+                item.getIdLoaiTaiSan(),
+                item.getMocGioDau(),
+                item.getMocGioCuoi(),
                 item.getGhiChu(),
                 item.getNgayTao(),
                 item.getNgayCapNhat(),

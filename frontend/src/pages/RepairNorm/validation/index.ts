@@ -1,7 +1,6 @@
 import * as Yup from "yup";
 
 export const RepairNormValidation = Yup.object().shape({
-  idLoaiTaiSan: Yup.string().required("Chủng loại tài sản không được để trống"),
   idCapSuaChua: Yup.string().required("Cấp sửa chữa không được để trống"),
   dinhMucVatTuList: Yup.array().of(
     Yup.object().shape({
