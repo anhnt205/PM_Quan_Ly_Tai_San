@@ -54,7 +54,6 @@ public class DinhMucSuaChuaService {
         String now = getCurrentTime();
         DinhMucSuaChua norm = new DinhMucSuaChua();
         norm.setId(dto.getId());
-        norm.setIdLoaiTaiSan(dto.getIdLoaiTaiSan());
         norm.setIdCapSuaChua(dto.getIdCapSuaChua());
         norm.setGhiChu(dto.getGhiChu());
         norm.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : true);

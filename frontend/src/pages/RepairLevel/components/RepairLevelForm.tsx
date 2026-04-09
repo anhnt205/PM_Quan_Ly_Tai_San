@@ -21,6 +21,8 @@ import ViewBtn from "../../../components/Button/ViewBtn";
 import { RepairLevelValidation } from "../validation/Validation";
 import EditButton from "../../../components/Button/EditButton";
 import { RepairLevel } from "../types";
+import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
+import { useAllTypeAssetQuery } from "../../TypeAsset/Mutation";
 
 export default function RepairLevelForm({
   onEdit,
@@ -36,6 +38,7 @@ export default function RepairLevelForm({
   onSave: (values: RepairLevel) => void;
 }) {
   const [expanded, setExpanded] = useState(true);
+  const { data: allTypeAssets = [] } = useAllTypeAssetQuery();
   const formik = useFormik<RepairLevel>({
     initialValues: {
       id: "",
@@ -44,17 +47,39 @@ export default function RepairLevelForm({
       chuKyThucHien: "",
       soLanTrongChuKy: 0,
       thoiGianSuaChua: "",
+      idLoaiTaiSan: "",
+      mocGioDau: 0,
+      mocGioCuoi: 0,
       ghiChu: "",
     },
     validationSchema: RepairLevelValidation,
     onSubmit(values) {
-      onSave(values);
+      let finalValues = { ...values };
+      if (finalValues.chuKyThucHien) {
+        const parts = finalValues.chuKyThucHien.split(/[:\-]/);
+        if (parts.length >= 2) {
+            const dau = parseInt(parts[0].replace(/\D/g, ""), 10);
+            const cuoi = parseInt(parts[parts.length - 1].replace(/\D/g, ""), 10);
+            finalValues.mocGioDau = isNaN(dau) ? 0 : dau;
+            finalValues.mocGioCuoi = isNaN(cuoi) ? 0 : cuoi;
+        } else if (parts.length === 1) {
+            const num = parseInt(parts[0].replace(/\D/g, ""), 10);
+            const val = isNaN(num) ? 0 : num;
+            finalValues.mocGioDau = val;
+            finalValues.mocGioCuoi = val;
+        }
+      }
+      onSave(finalValues);
     },
   });
 
   useEffect(() => {
     if (selectedRepairLevel) {
-      formik.setValues(selectedRepairLevel);
+      let copyData = { ...selectedRepairLevel };
+      if ((!copyData.chuKyThucHien || copyData.chuKyThucHien === "") && copyData.mocGioDau != null && copyData.mocGioCuoi != null) {
+          copyData.chuKyThucHien = `${copyData.mocGioDau} : ${copyData.mocGioCuoi}`;
+      }
+      formik.setValues(copyData);
       formik.setErrors({});
     } else {
       formik.resetForm();
@@ -103,6 +128,17 @@ export default function RepairLevelForm({
                 title="Cấp sửa chữa bảo dưỡng *"
                 formik={formik}
                 field="ten"
+                disabled={readOnly}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 6 }}>
+              <FieldAutoCompleted
+                title="Chủng loại thiết bị *"
+                data={allTypeAssets}
+                labelkey="tenLoai"
+                formik={formik}
+                field="idLoaiTaiSan"
                 disabled={readOnly}
               />
             </Grid>

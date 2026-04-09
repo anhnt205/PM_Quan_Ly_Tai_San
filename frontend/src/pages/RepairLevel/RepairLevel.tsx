@@ -121,6 +121,13 @@ export default function RepairLevel() {
       minWidth: 150,
       align: "center",
       headerAlign: "center",
+      renderCell: (params) => {
+        const { mocGioDau, mocGioCuoi, chuKyThucHien } = params.row;
+        if (mocGioDau != null && mocGioCuoi != null) {
+          return `${mocGioDau} : ${mocGioCuoi}`;
+        }
+        return chuKyThucHien || "";
+      },
     },
     {
       field: "soLanTrongChuKy",
@@ -138,6 +145,15 @@ export default function RepairLevel() {
       align: "center",
       headerAlign: "center",
     },
+    {
+      field: "tenLoaiTaiSan",
+      headerName: "Loại tài sản",
+      flex: 1,
+      minWidth: 150,
+      align: "center",
+      headerAlign: "center",
+    },
+
     {
       field: "ghiChu",
       headerName: "Ghi chú",

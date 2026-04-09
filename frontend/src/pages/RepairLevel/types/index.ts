@@ -5,5 +5,9 @@ export interface RepairLevel {
   chuKyThucHien: string;
   soLanTrongChuKy: number;
   thoiGianSuaChua: string;
+  idLoaiTaiSan?: string;
+  tenLoaiTaiSan?: string;
+  mocGioDau?: number;
+  mocGioCuoi?: number;
   ghiChu: string;
 }

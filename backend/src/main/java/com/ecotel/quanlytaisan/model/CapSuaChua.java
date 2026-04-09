@@ -10,6 +10,10 @@ public class CapSuaChua {
     private String chuKyThucHien;
     private Integer soLanTrongChuKy;
     private String thoiGianSuaChua;
+    private String idLoaiTaiSan;
+    private String tenLoaiTaiSan;
+    private Integer mocGioDau;
+    private Integer mocGioCuoi;
     private String ghiChu;
     private String ngayTao;
     private String ngayCapNhat;
