@@ -3,7 +3,6 @@ package com.ecotel.quanlytaisan.service;
 import com.ecotel.quanlytaisan.dao.KeHoachSuaChuaDao;
 import com.ecotel.quanlytaisan.dao.KeHoachSuaChuaChiTietTaiSanDao;
 import com.ecotel.quanlytaisan.dao.KyTaiLieuDao;
-import com.ecotel.quanlytaisan.dao.NhanVienDao;
 import com.ecotel.quanlytaisan.model.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,37 +14,23 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Service kế hoạch sửa chữa – mirror DieuDongTaiSanService.
+ * Service kế hoạch sửa chữa.
  * TrangThai: 0=Nháp | 1=Chờ duyệt | 2=Đã hủy | 3=Đã duyệt/Hoàn thành
+ * Luồng ký: Người lập biểu → NguoiKy list → Giám đốc
  */
 @Service
 public class KeHoachSuaChuaService {
 
-    @Autowired
-    private KeHoachSuaChuaDao keHoachSuaChuaDao;
-
-    @Autowired
-    private KeHoachSuaChuaChiTietTaiSanDao suaChuaChiTietTaiSanDao;
-
-    @Autowired
-    private KyTaiLieuDao kyTaiLieuDao;
-
-    @Autowired
-    private NhanVienDao nhanVienDao;
-
-    @Autowired
-    private NhanVienService nhanVienService;
-
-    @Autowired
-    private ChucVuService chucVuService;
+    @Autowired private KeHoachSuaChuaDao keHoachSuaChuaDao;
+    @Autowired private KeHoachSuaChuaChiTietTaiSanDao suaChuaChiTietTaiSanDao;
+    @Autowired private KyTaiLieuDao kyTaiLieuDao;
 
     // ==================== Find all ====================
 
     public List<KeHoachSuaChuaDTO> findAll(String idCongTy) throws SQLException {
         List<KeHoachSuaChuaDTO> list = keHoachSuaChuaDao.findAll(idCongTy);
-        for (KeHoachSuaChuaDTO dto : list) {
+        for (KeHoachSuaChuaDTO dto : list)
             dto.setDanhSachTaiSan(suaChuaChiTietTaiSanDao.findByIdKeHoach(dto.getId()));
-        }
         return list;
     }
 
@@ -54,7 +39,7 @@ public class KeHoachSuaChuaService {
     public PageResponse<KeHoachSuaChuaDTO> findAllPaged(
             String idCongTy, int page, int size,
             String sortBy, String sortDir, String search,
-            String loaiKeHoach, String idDonViLap, String idDonViThucHien,
+            String loaiKeHoach, String idDonViGiao, String idDonViNhan,
             Integer trangThai, Integer nam, String userid
     ) throws SQLException {
         if (page < 0) page = 0;
@@ -62,35 +47,15 @@ public class KeHoachSuaChuaService {
 
         List<KeHoachSuaChuaDTO> sourceList = keHoachSuaChuaDao.findAll(idCongTy);
 
-        // Xác định quyền user (mirror DieuDong)
-        boolean skipTurnFilter = false;
-        boolean hasBanHanhQuyetDinh = false;
-
-        if (userid != null && !userid.trim().isEmpty()) {
-            if ("admin".equalsIgnoreCase(userid)) {
-                skipTurnFilter = true;
-            } else {
-                try {
-                    NhanVien nv = nhanVienService.findEntityById(userid);
-                    if (nv != null && nv.getChucVu() != null) {
-                        ChucVu cv = chucVuService.findById(nv.getChucVu());
-                        if (cv != null && Boolean.TRUE.equals(cv.getBanHanhQuyetDinh())) {
-                            skipTurnFilter = true;
-                            hasBanHanhQuyetDinh = true;
-                        }
-                    }
-                } catch (Exception ignored) {}
-            }
-            if (!skipTurnFilter) {
-                List<KeHoachSuaChuaDTO> turnFiltered = new ArrayList<>();
-                for (KeHoachSuaChuaDTO item : sourceList) {
-                    if (isUserTurnToSign(item, userid)) turnFiltered.add(item);
-                }
-                sourceList = turnFiltered;
-            }
+        // Turn-based filter (không có quyền ban hành – chỉ filter theo lượt ký)
+        if (userid != null && !userid.trim().isEmpty() && !"admin".equalsIgnoreCase(userid)) {
+            List<KeHoachSuaChuaDTO> filtered = new ArrayList<>();
+            for (KeHoachSuaChuaDTO item : sourceList)
+                if (isUserTurnToSign(item, userid)) filtered.add(item);
+            sourceList = filtered;
         }
 
-        // Bộ đếm trạng thái (tính trước khi filter)
+        // Đếm trạng thái (sau turn-filter, trước các filter còn lại)
         Map<String, Long> trangThaiCounts = new HashMap<>();
         for (KeHoachSuaChuaDTO item : sourceList) {
             if (item.getTrangThai() != null) {
@@ -99,34 +64,17 @@ public class KeHoachSuaChuaService {
             }
         }
 
-        // Filter người có quyền ban hành: chỉ hiện trangThai 3
-        if (hasBanHanhQuyetDinh) {
-            sourceList = sourceList.stream()
-                    .filter(i -> i.getTrangThai() != null && i.getTrangThai() == 3)
-                    .collect(Collectors.toList());
-        }
-
-        // Lọc loại kế hoạch
+        // Filters
         if (loaiKeHoach != null && !loaiKeHoach.trim().isEmpty())
             sourceList = sourceList.stream().filter(i -> loaiKeHoach.equals(i.getIdLoaiKeHoach())).collect(Collectors.toList());
-
-        // Lọc đơn vị lập
-        if (idDonViLap != null && !idDonViLap.trim().isEmpty())
-            sourceList = sourceList.stream().filter(i -> idDonViLap.equalsIgnoreCase(i.getIdDonViLap())).collect(Collectors.toList());
-
-        // Lọc đơn vị thực hiện
-        if (idDonViThucHien != null && !idDonViThucHien.trim().isEmpty())
-            sourceList = sourceList.stream().filter(i -> idDonViThucHien.equalsIgnoreCase(i.getIdDonViThucHien())).collect(Collectors.toList());
-
-        // Lọc trạng thái
+        if (idDonViGiao != null && !idDonViGiao.trim().isEmpty())
+            sourceList = sourceList.stream().filter(i -> idDonViGiao.equalsIgnoreCase(i.getIdDonViGiao())).collect(Collectors.toList());
+        if (idDonViNhan != null && !idDonViNhan.trim().isEmpty())
+            sourceList = sourceList.stream().filter(i -> idDonViNhan.equalsIgnoreCase(i.getIdDonViNhan())).collect(Collectors.toList());
         if (trangThai != null)
             sourceList = sourceList.stream().filter(i -> trangThai.equals(i.getTrangThai())).collect(Collectors.toList());
-
-        // Lọc năm
         if (nam != null)
             sourceList = sourceList.stream().filter(i -> nam.equals(i.getNam())).collect(Collectors.toList());
-
-        // Tìm kiếm
         if (search != null && !search.trim().isEmpty()) {
             String q = search.toLowerCase();
             sourceList = sourceList.stream()
@@ -139,10 +87,10 @@ public class KeHoachSuaChuaService {
 
         long total = sourceList.size();
         int from = Math.min(page * size, sourceList.size());
-        int to = Math.min(from + size, sourceList.size());
+        int to   = Math.min(from + size, sourceList.size());
         List<KeHoachSuaChuaDTO> items = new ArrayList<>(sourceList.subList(from, to));
 
-        // Enrich: chữ ký + chi tiết
+        // Enrich
         for (KeHoachSuaChuaDTO item : items) {
             item.setChuKyList(kyTaiLieuDao.findById(item.getId()));
             item.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId()));
@@ -156,49 +104,34 @@ public class KeHoachSuaChuaService {
 
     private Comparator<KeHoachSuaChuaDTO> getComparator(String sortBy, String sortDir) {
         if (sortBy == null || sortBy.trim().isEmpty()) {
-            Map<Integer, Integer> priorityMap = new HashMap<>();
-            priorityMap.put(0, 1); priorityMap.put(1, 2); priorityMap.put(3, 3); priorityMap.put(2, 4);
-            return Comparator.<KeHoachSuaChuaDTO>comparingInt(i -> priorityMap.getOrDefault(i.getTrangThai(), 5))
+            Map<Integer, Integer> pm = new HashMap<>();
+            pm.put(0, 1); pm.put(1, 2); pm.put(3, 3); pm.put(2, 4);
+            return Comparator.<KeHoachSuaChuaDTO>comparingInt(i -> pm.getOrDefault(i.getTrangThai(), 5))
                     .thenComparing(i -> i.getNgayTao() != null ? i.getNgayTao() : new Date(0),
                             Comparator.nullsLast(Comparator.reverseOrder()));
         }
-        String by = sortBy.trim().toLowerCase();
         boolean asc = "asc".equalsIgnoreCase(sortDir);
         Comparator<KeHoachSuaChuaDTO> comp;
-        switch (by) {
+        switch (sortBy.trim().toLowerCase()) {
             case "tenkehoach":
                 comp = Comparator.comparing(i -> i.getTenKeHoach() != null ? i.getTenKeHoach() : "",
-                        Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
-                break;
+                        Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)); break;
             case "nam":
                 comp = Comparator.comparing(i -> i.getNam() != null ? i.getNam() : 0,
-                        Comparator.nullsLast(Integer::compareTo));
-                break;
-            case "ngaybatdau":
-                comp = Comparator.comparing(i -> i.getNgayBatDau() != null ? i.getNgayBatDau() : new Date(0),
-                        Comparator.nullsLast(Date::compareTo));
-                break;
-            case "ngayketthuc":
-                comp = Comparator.comparing(i -> i.getNgayKetThuc() != null ? i.getNgayKetThuc() : new Date(0),
-                        Comparator.nullsLast(Date::compareTo));
-                break;
+                        Comparator.nullsLast(Integer::compareTo)); break;
             case "trangthai":
                 comp = Comparator.comparing(i -> i.getTrangThai() != null ? i.getTrangThai() : 0,
-                        Comparator.nullsLast(Integer::compareTo));
-                break;
+                        Comparator.nullsLast(Integer::compareTo)); break;
             case "ngaytao": default:
                 comp = Comparator.comparing(i -> i.getNgayTao() != null ? i.getNgayTao() : new Date(0),
-                        Comparator.nullsLast(Date::compareTo));
-                break;
+                        Comparator.nullsLast(Date::compareTo)); break;
         }
         return asc ? comp : comp.reversed();
     }
 
     // ==================== CRUD ====================
 
-    public KeHoachSuaChua findById(String id) {
-        return keHoachSuaChuaDao.findById(id);
-    }
+    public KeHoachSuaChua findById(String id) { return keHoachSuaChuaDao.findById(id); }
 
     public KeHoachSuaChuaDTO findByIdDTO(String id) throws SQLException {
         KeHoachSuaChuaDTO dto = keHoachSuaChuaDao.findByIdDTO(id);
@@ -219,12 +152,10 @@ public class KeHoachSuaChuaService {
     }
 
     /**
-     * Cập nhật trạng thái.
-     * Chỉ cho phép: 0=Nháp | 1=Chờ duyệt | 2=Đã hủy | 3=Đã duyệt
+     * trangThai: 0=Nháp | 1=Chờ duyệt | 2=Đã hủy | 3=Đã duyệt/Hoàn thành
      */
     public int updateTrangThai(String id, Integer trangThai) {
-        List<Integer> validValues = List.of(0, 1, 2, 3);
-        if (!validValues.contains(trangThai))
+        if (!List.of(0, 1, 2, 3).contains(trangThai))
             throw new IllegalArgumentException("Trạng thái không hợp lệ: " + trangThai);
         KeHoachSuaChua existing = keHoachSuaChuaDao.findById(id);
         if (existing == null)
@@ -234,12 +165,7 @@ public class KeHoachSuaChuaService {
         return keHoachSuaChuaDao.updateTrangThai(id, trangThai);
     }
 
-    /**
-     * Hủy kế hoạch (đặt trangThai = 2)
-     */
-    public int huyKeHoach(String id) {
-        return keHoachSuaChuaDao.huyKeHoach(id);
-    }
+    public int huyKeHoach(String id) { return keHoachSuaChuaDao.huyKeHoach(id); }
 
     @Transactional
     public int delete(String id) throws SQLException {
@@ -254,122 +180,104 @@ public class KeHoachSuaChuaService {
         keHoachSuaChuaDao.batchDelete(ids);
     }
 
-    // ==================== Workflow: turn-filter (mirror DieuDong) ====================
+    // ==================== Workflow: turn-filter ====================
+    // Luồng: Người lập biểu xác nhận → NguoiKy list → Giám đốc duyệt
 
     public boolean isUserTurnToSign(KeHoachSuaChuaDTO item, String userId) {
         if ("admin".equalsIgnoreCase(userId)) return true;
         if (userId != null && userId.equals(item.getNguoiTao())) return true;
         if (!Boolean.TRUE.equals(item.getShare())) return false;
 
-        // Bước 1: Người lập phiếu ký nháy
-        if (Boolean.TRUE.equals(item.getNguoiLapPhieuKyNhay())) {
-            if (!Boolean.TRUE.equals(item.getTrangThaiKyNhay()))
-                return userId != null && userId.equals(item.getIdNguoiKyNhay());
-            if (userId != null && userId.equals(item.getIdNguoiKyNhay())) return true;
+        // Bước 1: Người lập biểu
+        if (item.getIdNguoiLapBieu() != null && !item.getIdNguoiLapBieu().isEmpty()) {
+            if (!Boolean.TRUE.equals(item.getNguoiLapBieuXacNhan()))
+                return userId != null && userId.equals(item.getIdNguoiLapBieu());
+            if (userId != null && userId.equals(item.getIdNguoiLapBieu())) return true;
         }
 
-        // Bước 2: Trình duyệt cấp phòng
-        boolean kyNhayDone = !Boolean.TRUE.equals(item.getNguoiLapPhieuKyNhay())
-                || Boolean.TRUE.equals(item.getTrangThaiKyNhay());
-        if (kyNhayDone && !Boolean.TRUE.equals(item.getTrinhDuyetCapPhongXacNhan()))
-            return userId != null && userId.equals(item.getIdTrinhDuyetCapPhong());
-        if (Boolean.TRUE.equals(item.getTrinhDuyetCapPhongXacNhan())
-                && userId != null && userId.equals(item.getIdTrinhDuyetCapPhong()))
-            return true;
-
-        // Bước 3: NguoiKy theo thứ tự
-        if (Boolean.TRUE.equals(item.getTrinhDuyetCapPhongXacNhan())) {
-            List<NguoiKy> nguoiKyList = kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId());
-            if (nguoiKyList != null && !nguoiKyList.isEmpty()) {
+        // Bước 2: NguoiKy list & Giám đốc
+        boolean lapBieuDone = item.getIdNguoiLapBieu() == null || item.getIdNguoiLapBieu().isEmpty()
+                || Boolean.TRUE.equals(item.getNguoiLapBieuXacNhan());
+        if (lapBieuDone) {
+            List<NguoiKy> kyList = kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId());
+            if (kyList != null && !kyList.isEmpty()) {
                 NguoiKy firstUnsigned = null;
                 boolean allSigned = true;
-                boolean userInList = false, userSigned = false;
-                for (NguoiKy nk : nguoiKyList) {
-                    if (nk.getTrangThai() != 1) {
-                        allSigned = false;
-                        if (firstUnsigned == null) firstUnsigned = nk;
-                    }
+                boolean userSigned = false, userInList = false;
+                for (NguoiKy nk : kyList) {
+                    if (nk.getTrangThai() != 1) { allSigned = false; if (firstUnsigned == null) firstUnsigned = nk; }
                     if (userId != null && userId.equals(nk.getIdNguoiKy())) {
                         userInList = true;
                         if (nk.getTrangThai() == 1) userSigned = true;
                     }
                 }
                 if (userSigned) return true;
-                if (firstUnsigned != null && userInList && userId.equals(firstUnsigned.getIdNguoiKy())) return true;
+                if (firstUnsigned != null && userInList && userId != null && userId.equals(firstUnsigned.getIdNguoiKy())) return true;
+                // Tất cả đã ký → đến giám đốc
                 if (allSigned && !Boolean.TRUE.equals(item.getTrinhDuyetGiamDocXacNhan()))
                     return userId != null && userId.equals(item.getIdTrinhDuyetGiamDoc());
-                if (Boolean.TRUE.equals(item.getTrinhDuyetGiamDocXacNhan())
-                        && userId != null && userId.equals(item.getIdTrinhDuyetGiamDoc()))
-                    return true;
             } else {
+                // Không có NguoiKy → thẳng đến giám đốc
                 if (!Boolean.TRUE.equals(item.getTrinhDuyetGiamDocXacNhan()))
                     return userId != null && userId.equals(item.getIdTrinhDuyetGiamDoc());
-                if (Boolean.TRUE.equals(item.getTrinhDuyetGiamDocXacNhan())
-                        && userId != null && userId.equals(item.getIdTrinhDuyetGiamDoc()))
-                    return true;
             }
         }
+        if (Boolean.TRUE.equals(item.getTrinhDuyetGiamDocXacNhan())
+                && userId != null && userId.equals(item.getIdTrinhDuyetGiamDoc()))
+            return true;
+
         return false;
     }
 
-    // ==================== Permission signing (mirror DieuDong) ====================
+    // ==================== Permission signing ====================
 
     public int getPermissionSigning(KeHoachSuaChuaDTO item, String tenDangNhap) {
-        List<Map<String, Object>> signatureFlow = new ArrayList<>();
+        List<Map<String, Object>> flow = new ArrayList<>();
 
-        if (Boolean.TRUE.equals(item.getNguoiLapPhieuKyNhay())) {
-            Map<String, Object> step = new HashMap<>();
-            step.put("id", item.getIdNguoiKyNhay());
-            step.put("signed", Boolean.TRUE.equals(item.getTrangThaiKyNhay()));
-            NhanVienDTO nv = nhanVienDao.findById(item.getIdNguoiKyNhay() != null ? item.getIdNguoiKyNhay() : "");
-            step.put("label", "Người lập phiếu: " + (nv != null ? nv.getHoTen() : ""));
-            signatureFlow.add(step);
+        if (item.getIdNguoiLapBieu() != null && !item.getIdNguoiLapBieu().isEmpty()) {
+            Map<String, Object> s = new HashMap<>();
+            s.put("id", item.getIdNguoiLapBieu());
+            s.put("signed", Boolean.TRUE.equals(item.getNguoiLapBieuXacNhan()));
+            s.put("label", "Người lập biểu: " + item.getTenNguoiLapBieu());
+            flow.add(s);
         }
-        if (item.getIdTrinhDuyetCapPhong() != null && !item.getIdTrinhDuyetCapPhong().isEmpty()) {
-            Map<String, Object> step = new HashMap<>();
-            step.put("id", item.getIdTrinhDuyetCapPhong());
-            step.put("signed", Boolean.TRUE.equals(item.getTrinhDuyetCapPhongXacNhan()));
-            step.put("label", "Người duyệt: " + item.getTenTrinhDuyetCapPhong());
-            signatureFlow.add(step);
-        }
+
         List<NguoiKy> kyList = kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId());
         if (kyList != null) {
             for (int i = 0; i < kyList.size(); i++) {
-                NguoiKy sign = kyList.get(i);
-                if (sign.getIdNguoiKy() != null && !sign.getIdNguoiKy().isEmpty()) {
-                    Map<String, Object> step = new HashMap<>();
-                    step.put("id", sign.getIdNguoiKy());
-                    step.put("signed", sign.getTrangThai() == 1);
-                    step.put("label", "Người ký " + (i + 1) + ": " + sign.getTenNguoiKy());
-                    signatureFlow.add(step);
+                NguoiKy nk = kyList.get(i);
+                if (nk.getIdNguoiKy() != null && !nk.getIdNguoiKy().isEmpty()) {
+                    Map<String, Object> s = new HashMap<>();
+                    s.put("id", nk.getIdNguoiKy());
+                    s.put("signed", nk.getTrangThai() == 1);
+                    s.put("label", "Người ký " + (i + 1) + ": " + nk.getTenNguoiKy());
+                    flow.add(s);
                 }
             }
         }
+
         if (item.getIdTrinhDuyetGiamDoc() != null && !item.getIdTrinhDuyetGiamDoc().isEmpty()) {
-            Map<String, Object> step = new HashMap<>();
-            step.put("id", item.getIdTrinhDuyetGiamDoc());
-            step.put("signed", Boolean.TRUE.equals(item.getTrinhDuyetGiamDocXacNhan()));
-            step.put("label", "Người phê duyệt: " + item.getTenTrinhDuyetGiamDoc());
-            signatureFlow.add(step);
+            Map<String, Object> s = new HashMap<>();
+            s.put("id", item.getIdTrinhDuyetGiamDoc());
+            s.put("signed", Boolean.TRUE.equals(item.getTrinhDuyetGiamDocXacNhan()));
+            s.put("label", "Giám đốc duyệt: " + item.getTenTrinhDuyetGiamDoc());
+            flow.add(s);
         }
 
-        signatureFlow = signatureFlow.stream()
+        flow = flow.stream()
                 .filter(s -> s.get("id") != null && !((String) s.get("id")).isEmpty())
                 .collect(Collectors.toList());
 
-        int currentIndex = -1;
-        for (int i = 0; i < signatureFlow.size(); i++) {
-            if (Objects.equals(signatureFlow.get(i).get("id"), tenDangNhap)) { currentIndex = i; break; }
-        }
-        if (currentIndex == -1) return 2;
+        int idx = -1;
+        for (int i = 0; i < flow.size(); i++)
+            if (Objects.equals(flow.get(i).get("id"), tenDangNhap)) { idx = i; break; }
+        if (idx == -1) return 2;
 
-        Object signedObj = signatureFlow.get(currentIndex).get("signed");
+        Object signedObj = flow.get(idx).get("signed");
         boolean signed = signedObj instanceof Boolean && (Boolean) signedObj;
-
         if (Objects.equals(item.getNguoiTao(), tenDangNhap) && signedObj != null) return signed ? 4 : 5;
         if (signed) return 3;
-        boolean previousNotSigned = signatureFlow.subList(0, currentIndex).stream()
-                .anyMatch(s -> Boolean.FALSE.equals(s.get("signed")));
-        return previousNotSigned ? 1 : 0;
+        boolean prevNotSigned = flow.subList(0, idx).stream().anyMatch(s -> Boolean.FALSE.equals(s.get("signed")));
+        return prevNotSigned ? 1 : 0;
     }
 }

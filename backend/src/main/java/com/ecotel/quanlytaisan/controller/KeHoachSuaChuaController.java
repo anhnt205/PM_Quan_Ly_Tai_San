@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Controller kế hoạch sửa chữa – mirror DieuDongTaiSanController.
+ * Controller kế hoạch sửa chữa.
  * TrangThai: 0=Nháp | 1=Chờ duyệt | 2=Đã hủy | 3=Đã duyệt/Hoàn thành
  */
 @RestController
@@ -34,8 +34,8 @@ public class KeHoachSuaChuaController {
             @RequestParam(value = "sortDir", defaultValue = "desc") String sortDir,
             @RequestParam(value = "search", required = false) String search,
             @RequestParam(value = "loaiKeHoach", required = false) String loaiKeHoach,
-            @RequestParam(value = "idDonViLap", required = false) String idDonViLap,
-            @RequestParam(value = "idDonViThucHien", required = false) String idDonViThucHien,
+            @RequestParam(value = "idDonViGiao", required = false) String idDonViGiao,
+            @RequestParam(value = "idDonViNhan", required = false) String idDonViNhan,
             @RequestParam(value = "trangThai", required = false) Integer trangThai,
             @RequestParam(value = "nam", required = false) Integer nam,
             @RequestParam(value = "userid", required = false) String userid
@@ -43,7 +43,7 @@ public class KeHoachSuaChuaController {
         try {
             PageResponse<KeHoachSuaChuaDTO> response = keHoachSuaChuaService.findAllPaged(
                     idCongTy, page, size, sortBy, sortDir, search,
-                    loaiKeHoach, idDonViLap, idDonViThucHien, trangThai, nam, userid
+                    loaiKeHoach, idDonViGiao, idDonViNhan, trangThai, nam, userid
             );
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", response, (int) response.getTotalItems()));
         } catch (Exception e) {

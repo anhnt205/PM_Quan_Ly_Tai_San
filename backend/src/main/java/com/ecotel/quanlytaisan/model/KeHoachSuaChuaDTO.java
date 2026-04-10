@@ -6,7 +6,8 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * DTO kế hoạch sửa chữa – mirror DieuDongTaiSanDTO với đầy đủ join fields.
+ * DTO kế hoạch sửa chữa với join fields.
+ * TrangThai: 0=Nháp | 1=Chờ duyệt | 2=Đã hủy | 3=Đã duyệt/Hoàn thành
  */
 @Data
 public class KeHoachSuaChuaDTO {
@@ -22,40 +23,23 @@ public class KeHoachSuaChuaDTO {
     private String tenLoaiSuaChua;
     private Integer nam;
 
-    // Đơn vị lập kế hoạch (join)
-    private String idDonViLap;
-    private String tenDonViLap;
+    // Đơn vị giao
+    private String idDonViGiao;
+    private String tenDonViGiao;
 
-    // Đơn vị thực hiện (join)
-    private String idDonViThucHien;
-    private String tenDonViThucHien;
+    // Đơn vị nhận
+    private String idDonViNhan;
+    private String tenDonViNhan;
 
-    // Người lập phiếu ký nháy
-    private String idNguoiKyNhay;
-    private String tenNguoiKyNhay;
-    private Boolean trangThaiKyNhay;
-    private Boolean nguoiLapPhieuKyNhay;
-
-    // Trình duyệt cấp phòng
-    private String idTrinhDuyetCapPhong;
-    private String tenTrinhDuyetCapPhong;
-    private Boolean trinhDuyetCapPhongXacNhan;
+    // Người lập biểu
+    private String idNguoiLapBieu;
+    private String tenNguoiLapBieu;
+    private Boolean nguoiLapBieuXacNhan;
 
     // Trình duyệt giám đốc
     private String idTrinhDuyetGiamDoc;
     private String tenTrinhDuyetGiamDoc;
     private Boolean trinhDuyetGiamDocXacNhan;
-
-    // Phòng ban xem phiếu
-    private String idPhongBanXemPhieu;
-    private String tenPhongBanXemPhieu;
-
-    // Ngày kế hoạch
-    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Ho_Chi_Minh")
-    private Date ngayBatDau;
-
-    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Ho_Chi_Minh")
-    private Date ngayKetThuc;
 
     // Thông tin chung
     private Integer trangThai;
@@ -70,12 +54,14 @@ public class KeHoachSuaChuaDTO {
     private String tenNguoiTao;
     private String nguoiCapNhat;
 
-    // Nội dung / file
+    // File đính kèm chính
     private String ghiChu;
-    private String trichYeu;
     private String duongDanFile;
     private String tenFile;
     private String ngayKy;
+
+    // Tài liệu bảng kê (file riêng)
+    private String duongDanTaiLieuBangKe;
 
     // Workflow flags
     private Boolean share;
@@ -85,15 +71,13 @@ public class KeHoachSuaChuaDTO {
     private List<KyTaiLieu> chuKyList;
     private List<NguoiKy> nguoiKyList;
 
-    // Danh sách chi tiết tài sản sửa chữa
+    // Danh sách chi tiết tài sản
     private List<KeHoachSuaChuaChiTietTaiSan> danhSachTaiSan;
 
-    // Custom getters for null safety
-    public Integer getTrangThai() { return trangThai != null ? trangThai : 0; }
-    public Boolean getTrangThaiKyNhay() { return trangThaiKyNhay != null ? trangThaiKyNhay : false; }
-    public Boolean getNguoiLapPhieuKyNhay() { return nguoiLapPhieuKyNhay != null ? nguoiLapPhieuKyNhay : false; }
-    public Boolean getTrinhDuyetCapPhongXacNhan() { return trinhDuyetCapPhongXacNhan != null ? trinhDuyetCapPhongXacNhan : false; }
+    // Null-safe getters
+    public Integer getTrangThai()                { return trangThai != null ? trangThai : 0; }
+    public Boolean getNguoiLapBieuXacNhan()      { return nguoiLapBieuXacNhan != null ? nguoiLapBieuXacNhan : false; }
     public Boolean getTrinhDuyetGiamDocXacNhan() { return trinhDuyetGiamDocXacNhan != null ? trinhDuyetGiamDocXacNhan : false; }
-    public Boolean getShare() { return share != null ? share : false; }
-    public Boolean getByStep() { return byStep != null ? byStep : false; }
+    public Boolean getShare()                    { return share != null ? share : false; }
+    public Boolean getByStep()                   { return byStep != null ? byStep : false; }
 }
