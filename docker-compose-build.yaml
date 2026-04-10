@@ -6,16 +6,16 @@ services:
   #   image: ${REGISTRY}/qlts_reverse_proxy_img:${VERSION}
 
 
-  qlts_reverse_proxy_service:
+  qlts_demo_reverse_proxy_service:
     build:
       context: ./reverse_proxy
-    image: ${REGISTRY}/qlts_reverse_proxy_img:${VERSION}
-  qlts_frontend_service:
+    image: ${REGISTRY}/qlts_demo_reverse_proxy_img:${VERSION}
+  qlts_demo_frontend_service:
     build:
       context: ./frontend
-    image: ${REGISTRY}/qlts_frontend_img:${VERSION}
+    image: ${REGISTRY}/qlts_demo_frontend_img:${VERSION}
 
-  qlts_backend_service:
+  qlts_demo_backend_service:
     build:
       context: ./backend
-    image: ${REGISTRY}/qlts_backend_img:${VERSION}
+    image: ${REGISTRY}/qlts_demo_backend_img:${VERSION}
