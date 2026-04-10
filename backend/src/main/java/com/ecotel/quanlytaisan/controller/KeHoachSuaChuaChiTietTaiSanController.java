@@ -1,13 +1,19 @@
 package com.ecotel.quanlytaisan.controller;
 
+import com.ecotel.quanlytaisan.model.ApiResponse;
 import com.ecotel.quanlytaisan.model.KeHoachSuaChuaChiTietTaiSan;
 import com.ecotel.quanlytaisan.service.KeHoachSuaChuaChiTietTaiSanService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Controller chi tiết kế hoạch sửa chữa tài sản – theo pattern ChiTietDieuDongTaiSanController.
+ * Mỗi dòng chi tiết chứa 12 trường capSuaChuaThang1-12 để chọn cấp sửa chữa theo từng tháng.
+ */
 @RestController
 @RequestMapping("/api/kehoachsuachua-chitiet-taisan")
 public class KeHoachSuaChuaChiTietTaiSanController {
@@ -15,53 +21,165 @@ public class KeHoachSuaChuaChiTietTaiSanController {
     @Autowired
     private KeHoachSuaChuaChiTietTaiSanService chiTietTaiSanService;
 
+    // ==================== GET BY idKeHoach ====================
+
     @GetMapping
-    public ResponseEntity<List<KeHoachSuaChuaChiTietTaiSan>> getAll() {
-        return ResponseEntity.ok(chiTietTaiSanService.getAll());
+    public ResponseEntity<ApiResponse<Object>> getAll(
+            @RequestParam("idkehoachsuachua") String idKeHoachSuaChua) {
+        try {
+            List<KeHoachSuaChuaChiTietTaiSan> list = chiTietTaiSanService.getByIdKeHoach(idKeHoachSuaChua);
+            return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", list, list.size()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
     }
+
+    // ==================== GET BY ID ====================
 
     @GetMapping("/{id}")
-    public ResponseEntity<KeHoachSuaChuaChiTietTaiSan> getById(@PathVariable("id") String id) {
-        KeHoachSuaChuaChiTietTaiSan entity = chiTietTaiSanService.getById(id);
-        return entity != null ? ResponseEntity.ok(entity) : ResponseEntity.notFound().build();
+    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable("id") String id) {
+        try {
+            KeHoachSuaChuaChiTietTaiSan entity = chiTietTaiSanService.getById(id);
+            if (entity == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.failure("Không tìm thấy chi tiết kế hoạch sửa chữa tài sản", null));
+            }
+            return ResponseEntity.ok(ApiResponse.success("Lấy thông tin thành công", entity, 1));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
     }
+
+    // ==================== GET BY idKeHoach (path variable variant) ====================
 
     @GetMapping("/kehoach/{idKeHoach}")
-    public ResponseEntity<List<KeHoachSuaChuaChiTietTaiSan>> getByIdKeHoach(@PathVariable("idKeHoach") String idKeHoach) {
-        return ResponseEntity.ok(chiTietTaiSanService.getByIdKeHoach(idKeHoach));
+    public ResponseEntity<ApiResponse<Object>> getByIdKeHoach(@PathVariable("idKeHoach") String idKeHoach) {
+        try {
+            List<KeHoachSuaChuaChiTietTaiSan> list = chiTietTaiSanService.getByIdKeHoach(idKeHoach);
+            return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", list, list.size()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
     }
+
+    // ==================== CREATE ====================
 
     @PostMapping
-    public ResponseEntity<KeHoachSuaChuaChiTietTaiSan> create(@RequestBody KeHoachSuaChuaChiTietTaiSan entity) {
-        KeHoachSuaChuaChiTietTaiSan created = chiTietTaiSanService.create(entity);
-        return created != null ? ResponseEntity.ok(created) : ResponseEntity.badRequest().build();
+    public ResponseEntity<ApiResponse<Object>> create(@RequestBody KeHoachSuaChuaChiTietTaiSan entity) {
+        try {
+            KeHoachSuaChuaChiTietTaiSan created = chiTietTaiSanService.create(entity);
+            if (created != null) {
+                return ResponseEntity.status(HttpStatus.CREATED)
+                        .body(ApiResponse.success("Tạo chi tiết kế hoạch sửa chữa tài sản thành công", created, 1));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.failure("Tạo chi tiết kế hoạch sửa chữa tài sản thất bại", 0));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
     }
+
+    // ==================== CREATE BATCH ====================
+
+    @PostMapping("/batch")
+    public ResponseEntity<ApiResponse<Object>> createBatch(@RequestBody List<KeHoachSuaChuaChiTietTaiSan> list) {
+        try {
+            int total = 0;
+            for (KeHoachSuaChuaChiTietTaiSan item : list) {
+                KeHoachSuaChuaChiTietTaiSan created = chiTietTaiSanService.create(item);
+                if (created != null) total++;
+            }
+            if (total > 0) {
+                return ResponseEntity.status(HttpStatus.CREATED)
+                        .body(ApiResponse.success("Tạo danh sách chi tiết kế hoạch sửa chữa tài sản thành công", null, total));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.failure("Tạo danh sách chi tiết kế hoạch sửa chữa tài sản thất bại", total));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
+    // ==================== UPDATE ====================
 
     @PutMapping("/{id}")
-    public ResponseEntity<KeHoachSuaChuaChiTietTaiSan> update(@PathVariable("id") String id,
-                                                              @RequestBody KeHoachSuaChuaChiTietTaiSan entity) {
-        entity.setId(id);
-        KeHoachSuaChuaChiTietTaiSan updated = chiTietTaiSanService.update(entity);
-        return updated != null ? ResponseEntity.ok(updated) : ResponseEntity.notFound().build();
+    public ResponseEntity<ApiResponse<Object>> update(
+            @PathVariable("id") String id,
+            @RequestBody KeHoachSuaChuaChiTietTaiSan entity) {
+        try {
+            entity.setId(id);
+            KeHoachSuaChuaChiTietTaiSan updated = chiTietTaiSanService.update(entity);
+            if (updated != null) {
+                return ResponseEntity.ok(ApiResponse.success("Cập nhật chi tiết kế hoạch sửa chữa tài sản thành công", updated, 1));
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.failure("Không tìm thấy chi tiết kế hoạch sửa chữa tài sản để cập nhật", 0));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
     }
+
+    // ==================== UPDATE BATCH ====================
+
+    @PutMapping("/batch")
+    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<KeHoachSuaChuaChiTietTaiSan> list) {
+        try {
+            int total = 0;
+            for (KeHoachSuaChuaChiTietTaiSan item : list) {
+                KeHoachSuaChuaChiTietTaiSan updated = chiTietTaiSanService.update(item);
+                if (updated != null) total++;
+            }
+            if (total > 0) {
+                return ResponseEntity.ok(ApiResponse.success("Cập nhật danh sách chi tiết kế hoạch sửa chữa tài sản thành công", null, total));
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.failure("Không tìm thấy chi tiết kế hoạch sửa chữa tài sản để cập nhật", total));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
+    // ==================== DELETE ====================
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable("id") String id) {
-        return chiTietTaiSanService.delete(id) ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
+        try {
+            boolean deleted = chiTietTaiSanService.delete(id);
+            if (deleted) {
+                return ResponseEntity.ok(ApiResponse.success("Xóa chi tiết kế hoạch sửa chữa tài sản thành công", null, 1));
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.failure("Không tìm thấy chi tiết kế hoạch sửa chữa tài sản để xóa", 0));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
     }
 
-    @PostMapping("/batch-insert")
-    public ResponseEntity<Integer> batchInsert(@RequestBody List<KeHoachSuaChuaChiTietTaiSan> list) {
-        return ResponseEntity.ok(chiTietTaiSanService.batchInsert(list));
-    }
+    // ==================== DELETE BATCH ====================
 
-    @PutMapping("/batch-update")
-    public ResponseEntity<Integer> batchUpdate(@RequestBody List<KeHoachSuaChuaChiTietTaiSan> list) {
-        return ResponseEntity.ok(chiTietTaiSanService.batchUpdate(list));
-    }
-
-    @DeleteMapping("/batch-delete")
-    public ResponseEntity<Integer> batchDelete(@RequestBody List<String> ids) {
-        return ResponseEntity.ok(chiTietTaiSanService.batchDelete(ids));
+    @DeleteMapping("/batch")
+    public ResponseEntity<ApiResponse<Object>> deleteBatch(@RequestBody List<String> ids) {
+        try {
+            int total = 0;
+            for (String id : ids) {
+                if (chiTietTaiSanService.delete(id)) total++;
+            }
+            if (total > 0) {
+                return ResponseEntity.ok(ApiResponse.success("Xóa danh sách chi tiết kế hoạch sửa chữa tài sản thành công", null, total));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.failure("Xóa danh sách chi tiết kế hoạch sửa chữa tài sản thất bại", total));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
     }
 }

@@ -18,36 +18,48 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    // ==================== Các phương thức query ====================
+    // ==================== Query ====================
 
-    // Lấy tất cả bản ghi (chỉ active)
     public List<KeHoachSuaChuaChiTietTaiSan> findAll() {
         String sql = "SELECT * FROM kehoachsuachua_chitiet_taisan";
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(KeHoachSuaChuaChiTietTaiSan.class));
     }
 
-    // Lấy theo Id
     public KeHoachSuaChuaChiTietTaiSan findById(String id) {
         String sql = "SELECT * FROM kehoachsuachua_chitiet_taisan WHERE Id = ?";
         List<KeHoachSuaChuaChiTietTaiSan> list = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(KeHoachSuaChuaChiTietTaiSan.class), id);
         return list.isEmpty() ? null : list.get(0);
     }
 
-    // Lấy danh sách theo IdKeHoachSuaChua
     public List<KeHoachSuaChuaChiTietTaiSan> findByIdKeHoach(String idKeHoach) {
-        String sql = "SELECT *,kh.GhiChu, ts.TenTaiSan AS tenTaiSan,ts.DonViTinh AS donViTinh FROM kehoachsuachua_chitiet_taisan kh LEFT JOIN TaiSan ts ON kh.IdTaiSan = ts.Id WHERE IdKeHoachSuaChua = ?";
+        String sql = """
+            SELECT kh.*,
+                   ts.TenTaiSan AS tenTaiSan,
+                   ts.DonViTinh AS donViTinh
+            FROM kehoachsuachua_chitiet_taisan kh
+                LEFT JOIN TaiSan ts ON kh.IdTaiSan = ts.Id
+            WHERE kh.IdKeHoachSuaChua = ?
+            """;
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(KeHoachSuaChuaChiTietTaiSan.class), idKeHoach);
     }
 
-    // ==================== Sinh ID ====================
+    // ==================== ID ====================
     public String generateNextId() {
-        // Sử dụng UUID để đảm bảo duy nhất, có thể thay bằng logic sinh ID theo format riêng
         return "CTTS_" + UUID.randomUUID().toString();
     }
 
     // ==================== Insert ====================
     public int insert(KeHoachSuaChuaChiTietTaiSan entity) {
-        String sql = "INSERT INTO kehoachsuachua_chitiet_taisan (Id, IdKeHoachSuaChua, IdTaiSan,SoLuong, GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
+        String sql = """
+            INSERT INTO kehoachsuachua_chitiet_taisan (
+                Id, IdKeHoachSuaChua, IdTaiSan, SoLuong, GhiChu,
+                NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive,
+                CapSuaChuaThang1, CapSuaChuaThang2, CapSuaChuaThang3,
+                CapSuaChuaThang4, CapSuaChuaThang5, CapSuaChuaThang6,
+                CapSuaChuaThang7, CapSuaChuaThang8, CapSuaChuaThang9,
+                CapSuaChuaThang10, CapSuaChuaThang11, CapSuaChuaThang12
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """;
         return jdbcTemplate.update(sql,
                 entity.getId(),
                 entity.getIdKeHoachSuaChua(),
@@ -58,12 +70,33 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
                 entity.getNgayCapNhat(),
                 entity.getNguoiTao(),
                 entity.getNguoiCapNhat(),
-                entity.getIsActive());
+                entity.getIsActive() != null ? entity.getIsActive() : true,
+                entity.getCapSuaChuaThang1(),
+                entity.getCapSuaChuaThang2(),
+                entity.getCapSuaChuaThang3(),
+                entity.getCapSuaChuaThang4(),
+                entity.getCapSuaChuaThang5(),
+                entity.getCapSuaChuaThang6(),
+                entity.getCapSuaChuaThang7(),
+                entity.getCapSuaChuaThang8(),
+                entity.getCapSuaChuaThang9(),
+                entity.getCapSuaChuaThang10(),
+                entity.getCapSuaChuaThang11(),
+                entity.getCapSuaChuaThang12()
+        );
     }
 
-    // Insert nhiều bản ghi (batch)
     public int[] batchInsert(List<KeHoachSuaChuaChiTietTaiSan> list) {
-        String sql = "INSERT INTO kehoachsuachua_chitiet_taisan (Id, IdKeHoachSuaChua, IdTaiSan,SoLuong, GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive) VALUES (?, ?, ?, ?,?, ?, ?, ?, ?, ?)";
+        String sql = """
+            INSERT INTO kehoachsuachua_chitiet_taisan (
+                Id, IdKeHoachSuaChua, IdTaiSan, SoLuong, GhiChu,
+                NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive,
+                CapSuaChuaThang1, CapSuaChuaThang2, CapSuaChuaThang3,
+                CapSuaChuaThang4, CapSuaChuaThang5, CapSuaChuaThang6,
+                CapSuaChuaThang7, CapSuaChuaThang8, CapSuaChuaThang9,
+                CapSuaChuaThang10, CapSuaChuaThang11, CapSuaChuaThang12
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """;
 
         return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
@@ -83,6 +116,18 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
                 ps.setString(8, entity.getNguoiTao());
                 ps.setString(9, entity.getNguoiCapNhat());
                 ps.setBoolean(10, entity.getIsActive() != null ? entity.getIsActive() : true);
+                ps.setString(11, entity.getCapSuaChuaThang1());
+                ps.setString(12, entity.getCapSuaChuaThang2());
+                ps.setString(13, entity.getCapSuaChuaThang3());
+                ps.setString(14, entity.getCapSuaChuaThang4());
+                ps.setString(15, entity.getCapSuaChuaThang5());
+                ps.setString(16, entity.getCapSuaChuaThang6());
+                ps.setString(17, entity.getCapSuaChuaThang7());
+                ps.setString(18, entity.getCapSuaChuaThang8());
+                ps.setString(19, entity.getCapSuaChuaThang9());
+                ps.setString(20, entity.getCapSuaChuaThang10());
+                ps.setString(21, entity.getCapSuaChuaThang11());
+                ps.setString(22, entity.getCapSuaChuaThang12());
             }
 
             @Override
@@ -94,7 +139,16 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
 
     // ==================== Update ====================
     public int update(KeHoachSuaChuaChiTietTaiSan entity) {
-        String sql = "UPDATE kehoachsuachua_chitiet_taisan SET IdTaiSan = ?,SoLuong=?, GhiChu = ?, NgayCapNhat = ?, NguoiCapNhat = ?, IsActive = ? WHERE Id = ?";
+        String sql = """
+            UPDATE kehoachsuachua_chitiet_taisan SET
+                IdTaiSan = ?, SoLuong = ?, GhiChu = ?,
+                NgayCapNhat = ?, NguoiCapNhat = ?, IsActive = ?,
+                CapSuaChuaThang1 = ?, CapSuaChuaThang2 = ?, CapSuaChuaThang3 = ?,
+                CapSuaChuaThang4 = ?, CapSuaChuaThang5 = ?, CapSuaChuaThang6 = ?,
+                CapSuaChuaThang7 = ?, CapSuaChuaThang8 = ?, CapSuaChuaThang9 = ?,
+                CapSuaChuaThang10 = ?, CapSuaChuaThang11 = ?, CapSuaChuaThang12 = ?
+            WHERE Id = ?
+            """;
         return jdbcTemplate.update(sql,
                 entity.getIdTaiSan(),
                 entity.getSoLuong(),
@@ -102,12 +156,33 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
                 entity.getNgayCapNhat(),
                 entity.getNguoiCapNhat(),
                 entity.getIsActive(),
-                entity.getId());
+                entity.getCapSuaChuaThang1(),
+                entity.getCapSuaChuaThang2(),
+                entity.getCapSuaChuaThang3(),
+                entity.getCapSuaChuaThang4(),
+                entity.getCapSuaChuaThang5(),
+                entity.getCapSuaChuaThang6(),
+                entity.getCapSuaChuaThang7(),
+                entity.getCapSuaChuaThang8(),
+                entity.getCapSuaChuaThang9(),
+                entity.getCapSuaChuaThang10(),
+                entity.getCapSuaChuaThang11(),
+                entity.getCapSuaChuaThang12(),
+                entity.getId()
+        );
     }
 
-    // Update nhiều bản ghi (batch)
     public int[] batchUpdate(List<KeHoachSuaChuaChiTietTaiSan> list) {
-        String sql = "UPDATE kehoachsuachua_chitiet_taisan SET IdTaiSan = ?,SoLuong=?, GhiChu = ?, NgayCapNhat = ?, NguoiCapNhat = ?, IsActive = ? WHERE Id = ?";
+        String sql = """
+            UPDATE kehoachsuachua_chitiet_taisan SET
+                IdTaiSan = ?, SoLuong = ?, GhiChu = ?,
+                NgayCapNhat = ?, NguoiCapNhat = ?, IsActive = ?,
+                CapSuaChuaThang1 = ?, CapSuaChuaThang2 = ?, CapSuaChuaThang3 = ?,
+                CapSuaChuaThang4 = ?, CapSuaChuaThang5 = ?, CapSuaChuaThang6 = ?,
+                CapSuaChuaThang7 = ?, CapSuaChuaThang8 = ?, CapSuaChuaThang9 = ?,
+                CapSuaChuaThang10 = ?, CapSuaChuaThang11 = ?, CapSuaChuaThang12 = ?
+            WHERE Id = ?
+            """;
 
         return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
@@ -123,7 +198,19 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
                 ps.setString(4, entity.getNgayCapNhat());
                 ps.setString(5, entity.getNguoiCapNhat());
                 ps.setBoolean(6, entity.getIsActive() != null ? entity.getIsActive() : true);
-                ps.setString(7, entity.getId());
+                ps.setString(7, entity.getCapSuaChuaThang1());
+                ps.setString(8, entity.getCapSuaChuaThang2());
+                ps.setString(9, entity.getCapSuaChuaThang3());
+                ps.setString(10, entity.getCapSuaChuaThang4());
+                ps.setString(11, entity.getCapSuaChuaThang5());
+                ps.setString(12, entity.getCapSuaChuaThang6());
+                ps.setString(13, entity.getCapSuaChuaThang7());
+                ps.setString(14, entity.getCapSuaChuaThang8());
+                ps.setString(15, entity.getCapSuaChuaThang9());
+                ps.setString(16, entity.getCapSuaChuaThang10());
+                ps.setString(17, entity.getCapSuaChuaThang11());
+                ps.setString(18, entity.getCapSuaChuaThang12());
+                ps.setString(19, entity.getId());
             }
 
             @Override
@@ -133,50 +220,18 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
         });
     }
 
-    // ==================== Delete (soft) ====================
-    // Xóa mềm theo IdKeHoachSuaChua (cập nhật IsActive = 0)
+    // ==================== Delete ====================
     public int deleteByIdKeHoach(String idKeHoach) {
         String sql = "DELETE FROM kehoachsuachua_chitiet_taisan WHERE IdKeHoachSuaChua = ?";
         return jdbcTemplate.update(sql, idKeHoach);
     }
 
-    // Xóa mềm theo Id
     public int deleteById(String id) {
         String sql = "DELETE FROM kehoachsuachua_chitiet_taisan WHERE Id = ?";
         return jdbcTemplate.update(sql, id);
     }
 
-    // Xóa mềm nhiều bản ghi (batch) theo danh sách Id
     public int[] batchDelete(List<String> ids) {
-        String sql = "DELETE FROM kehoachsuachua_chitiet_taisan WHERE Id = ?";
-        return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
-            @Override
-            public void setValues(PreparedStatement ps, int i) throws SQLException {
-                ps.setString(1, ids.get(i));
-            }
-
-            @Override
-            public int getBatchSize() {
-                return ids.size();
-            }
-        });
-    }
-
-    // ==================== Hard delete (nếu cần) ====================
-    // Xóa cứng theo IdKeHoachSuaChua
-    public int hardDeleteByIdKeHoach(String idKeHoach) {
-        String sql = "DELETE FROM kehoachsuachua_chitiet_taisan WHERE IdKeHoachSuaChua = ?";
-        return jdbcTemplate.update(sql, idKeHoach);
-    }
-
-    // Xóa cứng theo Id
-    public int hardDeleteById(String id) {
-        String sql = "DELETE FROM kehoachsuachua_chitiet_taisan WHERE Id = ?";
-        return jdbcTemplate.update(sql, id);
-    }
-
-    // Xóa cứng nhiều bản ghi (batch)
-    public int[] hardBatchDelete(List<String> ids) {
         String sql = "DELETE FROM kehoachsuachua_chitiet_taisan WHERE Id = ?";
         return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
