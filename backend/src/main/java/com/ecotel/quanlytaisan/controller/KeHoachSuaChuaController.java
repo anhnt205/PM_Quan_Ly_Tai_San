@@ -1,21 +1,21 @@
 package com.ecotel.quanlytaisan.controller;
 
-import com.ecotel.quanlytaisan.model.BulkKeHoachSuaChuaRequest;
-import com.ecotel.quanlytaisan.model.KeHoachSuaChua;
-import com.ecotel.quanlytaisan.model.KeHoachSuaChuaDTO;
-import com.ecotel.quanlytaisan.model.PageResponse;
+import com.ecotel.quanlytaisan.model.*;
 import com.ecotel.quanlytaisan.service.KeHoachSuaChuaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller kế hoạch sửa chữa – mirror DieuDongTaiSanController.
+ * TrangThai: 0=Nháp | 1=Chờ duyệt | 2=Đã hủy | 3=Đã duyệt/Hoàn thành
+ */
 @RestController
 @RequestMapping("/api/kehoach-suachua")
 public class KeHoachSuaChuaController {
@@ -23,11 +23,10 @@ public class KeHoachSuaChuaController {
     @Autowired
     private KeHoachSuaChuaService keHoachSuaChuaService;
 
-    /**
-     * Lấy danh sách kế hoạch sửa chữa có phân trang, lọc, sắp xếp
-     */
-    @GetMapping
-    public ResponseEntity<PageResponse<KeHoachSuaChuaDTO>> findAll(
+    // ==================== GET ALL (paged) ====================
+
+    @GetMapping("/paged")
+    public ResponseEntity<ApiResponse<Object>> getAllPaged(
             @RequestParam("idCongTy") String idCongTy,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size,
@@ -35,129 +34,226 @@ public class KeHoachSuaChuaController {
             @RequestParam(value = "sortDir", defaultValue = "desc") String sortDir,
             @RequestParam(value = "search", required = false) String search,
             @RequestParam(value = "loaiKeHoach", required = false) String loaiKeHoach,
-            @RequestParam(value = "idDonVigiao", required = false) String idDonVigiao,
+            @RequestParam(value = "idDonViLap", required = false) String idDonViLap,
             @RequestParam(value = "idDonViThucHien", required = false) String idDonViThucHien,
-            @RequestParam(value = "trangThai", required = false) String trangThai,
-            @RequestParam(value = "ngay", required = false) Integer ngay,
-            @RequestParam(value = "thang", required = false) Integer thang,
-            @RequestParam(value = "nam", required = false) Integer nam
+            @RequestParam(value = "trangThai", required = false) Integer trangThai,
+            @RequestParam(value = "nam", required = false) Integer nam,
+            @RequestParam(value = "userid", required = false) String userid
     ) throws SQLException {
-        PageResponse<KeHoachSuaChuaDTO> response = keHoachSuaChuaService.findAllPaged(
-                idCongTy, page, size, sortBy, sortDir, search,
-                loaiKeHoach, idDonVigiao, idDonViThucHien, trangThai,
-                ngay, thang, nam
-        );
-        return ResponseEntity.ok(response);
+        try {
+            PageResponse<KeHoachSuaChuaDTO> response = keHoachSuaChuaService.findAllPaged(
+                    idCongTy, page, size, sortBy, sortDir, search,
+                    loaiKeHoach, idDonViLap, idDonViThucHien, trangThai, nam, userid
+            );
+            return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", response, (int) response.getTotalItems()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
     }
 
-    // Bulk Create
-    @PostMapping("/bulk-create")
-    public ResponseEntity<?> bulkCreate(@RequestBody List<KeHoachSuaChua> list) throws SQLException {
-        keHoachSuaChuaService.bulkCreate(list);
-        return ResponseEntity.ok().build();
+    // ==================== GET ALL (no paging) ====================
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<Object>> getAll(@RequestParam("idcongty") String idCongTy) throws SQLException {
+        try {
+            List<KeHoachSuaChuaDTO> list = keHoachSuaChuaService.findAll(idCongTy);
+            return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", list, list.size()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
     }
 
-    // Bulk Update
-    @PutMapping("/bulk-update")
-    public ResponseEntity<?> bulkUpdate(@RequestBody List<KeHoachSuaChua> list) throws SQLException {
-        keHoachSuaChuaService.bulkUpdate(list);
-        return ResponseEntity.ok().build();
-    }
+    // ==================== GET BY ID ====================
 
-    // Bulk Delete
-    @DeleteMapping("/bulk-delete")
-    public ResponseEntity<?> bulkDelete(@RequestBody List<String> ids) throws SQLException {
-        keHoachSuaChuaService.bulkDelete(ids);
-        return ResponseEntity.ok().build();
-    }
-
-    /**
-     * Lấy thông tin kế hoạch theo ID (trả về DTO)
-     */
     @GetMapping("/{id}")
-    public ResponseEntity<KeHoachSuaChuaDTO> findById(@PathVariable("id") String id) throws SQLException {
-        KeHoachSuaChuaDTO dto = keHoachSuaChuaService.findByIdDTO(id);
-        if (dto == null) {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable("id") String id) throws SQLException {
+        try {
+            KeHoachSuaChuaDTO dto = keHoachSuaChuaService.findByIdDTO(id);
+            if (dto == null) return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.failure("Không tìm thấy kế hoạch sửa chữa", null));
+            return ResponseEntity.ok(ApiResponse.success("Lấy thông tin thành công", dto, 1));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
         }
-        return ResponseEntity.ok(dto);
     }
 
-    /**
-     * Tạo mới kế hoạch sửa chữa
-     */
+    // ==================== CREATE ====================
+
     @PostMapping
-    public ResponseEntity<KeHoachSuaChua> insert(@RequestBody KeHoachSuaChua entity) throws SQLException {
-        KeHoachSuaChua created = keHoachSuaChuaService.insert(entity);
-        return new ResponseEntity<>(created, HttpStatus.CREATED);
-    }
-
-    /**
-     * Cập nhật kế hoạch sửa chữa
-     */
-    @PutMapping("/{id}")
-    public ResponseEntity<KeHoachSuaChua> update(@PathVariable("id") String id, @RequestBody KeHoachSuaChua entity) throws SQLException {
-        entity.setId(id);
-        KeHoachSuaChua updated = keHoachSuaChuaService.update(entity);
-        if (updated == null) {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<ApiResponse<Object>> create(@RequestBody KeHoachSuaChua entity) throws SQLException {
+        try {
+            KeHoachSuaChua result = keHoachSuaChuaService.insert(entity);
+            if (result != null) return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.success("Tạo kế hoạch sửa chữa thành công", result, 1));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.failure("Tạo kế hoạch sửa chữa thất bại", 0));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
         }
-        return ResponseEntity.ok(updated);
     }
 
+    // ==================== CREATE BATCH ====================
+
+    @PostMapping("/batch")
+    public ResponseEntity<ApiResponse<Object>> createBatch(@RequestBody List<KeHoachSuaChua> list) {
+        try {
+            int total = 0;
+            for (KeHoachSuaChua item : list) {
+                if (keHoachSuaChuaService.insert(item) != null) total++;
+            }
+            if (total > 0) return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.success("Tạo danh sách kế hoạch sửa chữa thành công", null, total));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.failure("Tạo danh sách kế hoạch sửa chữa thất bại", total));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
+    // ==================== UPDATE ====================
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<Object>> update(
+            @PathVariable("id") String id, @RequestBody KeHoachSuaChua entity) throws SQLException {
+        try {
+            entity.setId(id);
+            KeHoachSuaChua result = keHoachSuaChuaService.update(entity);
+            if (result != null) return ResponseEntity.ok(ApiResponse.success("Cập nhật kế hoạch sửa chữa thành công", result, 1));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.failure("Không tìm thấy kế hoạch sửa chữa để cập nhật", 0));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
+    // ==================== UPDATE BATCH ====================
+
+    @PutMapping("/batch")
+    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<KeHoachSuaChua> list) {
+        try {
+            int total = 0;
+            for (KeHoachSuaChua item : list) {
+                if (keHoachSuaChuaService.update(item) != null) total++;
+            }
+            if (total > 0) return ResponseEntity.ok(ApiResponse.success("Cập nhật danh sách kế hoạch sửa chữa thành công", null, total));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.failure("Không tìm thấy kế hoạch sửa chữa để cập nhật", total));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
+    // ==================== DELETE ====================
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) throws SQLException {
+        try {
+            int result = keHoachSuaChuaService.delete(id);
+            if (result > 0) return ResponseEntity.ok(ApiResponse.success("Xóa kế hoạch sửa chữa thành công", null, result));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.failure("Không tìm thấy kế hoạch sửa chữa để xóa", result));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
+    // ==================== DELETE BATCH ====================
+
+    @DeleteMapping("/batch")
+    public ResponseEntity<ApiResponse<Object>> deleteBatch(@RequestBody List<String> ids) throws SQLException {
+        try {
+            int total = 0;
+            for (String id : ids) total += keHoachSuaChuaService.delete(id);
+            if (total > 0) return ResponseEntity.ok(ApiResponse.success("Xóa danh sách kế hoạch sửa chữa thành công", null, total));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.failure("Xóa danh sách kế hoạch sửa chữa thất bại", total));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
+    // ==================== CẬP NHẬT TRẠNG THÁI ====================
+
     /**
-     * Cập nhật trạng thái kế hoạch sửa chữa
-     * trangThai: CHUA_THUC_HIEN | DANG_THUC_HIEN | DA_HOAN_THANH
+     * trangThai: 0=Nháp | 1=Chờ duyệt | 2=Đã hủy | 3=Đã duyệt/Hoàn thành
      */
-    @PatchMapping("/{id}/trang-thai")
-    public ResponseEntity<?> updateTrangThai(
-            @PathVariable("id") String id,
-            @RequestParam("trangThai") String trangThai
+    @PostMapping("/capnhattrangthai")
+    public ResponseEntity<ApiResponse<Object>> updateTrangThai(
+            @RequestParam("id") String id,
+            @RequestParam("trangThai") Integer trangThai
     ) {
         try {
             int result = keHoachSuaChuaService.updateTrangThai(id, trangThai);
-            if (result == 0) {
-                return ResponseEntity.notFound().build();
-            }
-            return ResponseEntity.ok(Map.of("message", "Cập nhật thành công", "trangThai", trangThai));
+            if (result > 0) return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái thành công", result, result));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.failure("Không tìm thấy kế hoạch sửa chữa", result));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+            return ResponseEntity.badRequest().body(ApiResponse.failure(e.getMessage(), null));
         } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)  // 409
-                    .body(Map.of("message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.failure(e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
         }
     }
 
+    // ==================== HỦY ====================
 
-    /**
-     * Xóa kế hoạch sửa chữa
-     */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable("id") String id) throws SQLException {
-        int result = keHoachSuaChuaService.delete(id);
-        if (result == 0) {
-            return ResponseEntity.notFound().build();
+    @PostMapping("/huy")
+    public ResponseEntity<ApiResponse<Object>> huyKeHoach(@RequestParam("id") String id) {
+        try {
+            int result = keHoachSuaChuaService.huyKeHoach(id);
+            if (result > 0) return ResponseEntity.ok(ApiResponse.success("Hủy kế hoạch thành công", null, result));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.failure("Không tìm thấy kế hoạch sửa chữa", result));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
         }
-        return ResponseEntity.noContent().build();
     }
 
-    // ==================== IMPORT ====================
+    // ==================== PERMISSION SIGNING ====================
 
-    /**
-     * Import từ file CSV
-     */
-    @PostMapping("/import/csv")
-    public ResponseEntity<List<KeHoachSuaChua>> importCsv(@RequestParam("file") MultipartFile file) throws IOException {
-        List<KeHoachSuaChua> list = keHoachSuaChuaService.readCsv(file);
-        return ResponseEntity.ok(list);
+    @GetMapping("/permission-signing/{id}")
+    public ResponseEntity<ApiResponse<Object>> getPermissionSigning(
+            @PathVariable("id") String id,
+            @RequestParam("tenDangNhap") String tenDangNhap) throws SQLException {
+        try {
+            KeHoachSuaChuaDTO item = keHoachSuaChuaService.findByIdDTO(id);
+            if (item == null) return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.failure("Không tìm thấy kế hoạch sửa chữa với ID: " + id, null));
+
+            int permission = keHoachSuaChuaService.getPermissionSigning(item, tenDangNhap);
+            Map<String, Object> response = new HashMap<>();
+            response.put("permission", permission);
+            response.put("permissionDescription", getPermissionDescription(permission));
+            response.put("itemId", id);
+            response.put("tenDangNhap", tenDangNhap);
+            return ResponseEntity.ok(ApiResponse.success("Lấy thông tin quyền ký thành công", response, 1));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
     }
 
-    /**
-     * Import từ file Excel
-     */
-    @PostMapping("/import/excel")
-    public ResponseEntity<List<KeHoachSuaChua>> importExcel(@RequestParam("file") MultipartFile file) throws IOException {
-        List<KeHoachSuaChua> list = keHoachSuaChuaService.readExcel(file);
-        return ResponseEntity.ok(list);
+    private String getPermissionDescription(int permission) {
+        switch (permission) {
+            case 0: return "Có thể ký";
+            case 1: return "Chờ người trước ký";
+            case 2: return "Không nằm trong flow ký";
+            case 3: return "Đã ký";
+            case 4: return "Đã tạo phiếu";
+            case 5: return "Có thể tạo phiếu";
+            default: return "Trạng thái không xác định";
+        }
     }
 }

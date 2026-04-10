@@ -2,28 +2,53 @@ package com.ecotel.quanlytaisan.model;
 
 import lombok.Data;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import org.apache.poi.ss.usermodel.Row;
 import java.util.Date;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import static com.ecotel.quanlytaisan.utils.ParserHelper.*;
 
+/**
+ * Kế hoạch sửa chữa – mirror DieuDongTaiSan với workflow ký duyệt đầy đủ.
+ * TrangThai: 0=Nháp | 1=Chờ duyệt | 2=Đã hủy | 3=Đã duyệt/Hoàn thành
+ */
 @Data
 public class KeHoachSuaChua {
     private String id;
     private String idCongTy;
+
+    // Thông tin cơ bản
+    private String soKeHoach;
     private String tenKeHoach;
     private String idLoaiKeHoach;
     private String idLoaiSuaChua;
-    private String idDonViThucHien;
-    private String idDonViGiao;
-    private String idNguoiPhuTrach;
+    private Integer nam;
 
+    // Đơn vị (tương tự idDonViGiao / idDonViNhan)
+    private String idDonViLap;
+    private String idDonViThucHien;
+
+    // Người lập phiếu ký nháy
+    private String idNguoiKyNhay;
+    private Boolean trangThaiKyNhay;
+    private Boolean nguoiLapPhieuKyNhay;
+
+    // Trình duyệt cấp phòng
+    private String idTrinhDuyetCapPhong;
+    private Boolean trinhDuyetCapPhongXacNhan;
+
+    // Trình duyệt giám đốc
+    private String idTrinhDuyetGiamDoc;
+    private Boolean trinhDuyetGiamDocXacNhan;
+
+    // Phòng ban xem phiếu
+    private String idPhongBanXemPhieu;
+
+    // Ngày thực hiện
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Ho_Chi_Minh")
     private Date ngayBatDau;
 
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Ho_Chi_Minh")
     private Date ngayKetThuc;
+
+    // Thông tin chung
+    private Integer trangThai;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
     private Date ngayTao;
@@ -31,85 +56,46 @@ public class KeHoachSuaChua {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
     private Date ngayCapNhat;
 
-    private String ghiChu;
-    private String trangThai;
+    private String nguoiTao;
+    private String nguoiCapNhat;
 
-    // Các trường hiển thị (được gán từ join)
-    private String tenDonViThucHien;
-    private String tenNguoiPhuTrach;
+    // File / nội dung
+    private String ghiChu;
+    private String trichYeu;
+    private String duongDanFile;
+    private String tenFile;
+    private String ngayKy;
+
+    // Workflow flags
+    private Boolean share;
+    private Boolean byStep;
 
     // Custom getters for null safety
-    public String getTrangThai() {
-        return trangThai != null ? trangThai : "CHUA_THUC_HIEN";
+    public Integer getTrangThai() {
+        return trangThai != null ? trangThai : 0;
     }
 
-    // Map từ mảng String (import CSV)
-    public static KeHoachSuaChua mapToKeHoachSuaChua(String[] row) {
-        KeHoachSuaChua kh = new KeHoachSuaChua();
-        kh.setId(safeGet(row, 0));
-        kh.setIdCongTy(safeGet(row, 1));
-        kh.setTenKeHoach(safeGet(row, 2));
-        kh.setIdLoaiKeHoach(safeGet(row, 3));
-        kh.setIdDonViGiao(safeGet(row, 4));
-        kh.setIdDonViThucHien(safeGet(row, 5));
-        kh.setIdNguoiPhuTrach(safeGet(row, 6));
-        kh.setNgayBatDau(parseDate(safeGet(row, 7), "yyyy-MM-dd"));
-        kh.setNgayKetThuc(parseDate(safeGet(row, 8), "yyyy-MM-dd"));
-        kh.setNgayTao(parseDate(safeGet(row, 9), "yyyy-MM-dd HH:mm:ss"));
-        kh.setNgayCapNhat(parseDate(safeGet(row, 10), "yyyy-MM-dd HH:mm:ss"));
-        kh.setGhiChu(safeGet(row, 11));
-        kh.setTrangThai(safeGet(row, 12));
-        return kh;
+    public Boolean getTrangThaiKyNhay() {
+        return trangThaiKyNhay != null ? trangThaiKyNhay : false;
     }
 
-    // Map từ Row của Apache POI (import Excel)
-    public static KeHoachSuaChua mapToKeHoachSuaChua(Row row) {
-        KeHoachSuaChua kh = new KeHoachSuaChua();
-        kh.setId(getCellStringValue(row.getCell(0)));
-        kh.setIdCongTy(getCellStringValue(row.getCell(1)));
-        kh.setTenKeHoach(getCellStringValue(row.getCell(2)));
-        kh.setIdLoaiKeHoach(getCellStringValue(row.getCell(3)));
-        kh.setIdDonViGiao(getCellStringValue(row.getCell(4)));
-        kh.setIdDonViThucHien(getCellStringValue(row.getCell(5)));
-        kh.setIdNguoiPhuTrach(getCellStringValue(row.getCell(6)));
-
-        LocalDateTime ngayBD = getCellDate(row.getCell(7));
-        kh.setNgayBatDau(ngayBD != null ? Date.from(ngayBD.atZone(ZoneId.systemDefault()).toInstant()) : null);
-
-        LocalDateTime ngayKT = getCellDate(row.getCell(8));
-        kh.setNgayKetThuc(ngayKT != null ? Date.from(ngayKT.atZone(ZoneId.systemDefault()).toInstant()) : null);
-
-        LocalDateTime ngayTao = getCellDate(row.getCell(9));
-        kh.setNgayTao(ngayTao != null ? Date.from(ngayTao.atZone(ZoneId.systemDefault()).toInstant()) : null);
-
-        LocalDateTime ngayCapNhat = getCellDate(row.getCell(10));
-        kh.setNgayCapNhat(ngayCapNhat != null ? Date.from(ngayCapNhat.atZone(ZoneId.systemDefault()).toInstant()) : null);
-
-        kh.setGhiChu(getCellStringValue(row.getCell(11)));
-        kh.setTrangThai(getCellStringValue(row.getCell(12)));
-        return kh;
+    public Boolean getNguoiLapPhieuKyNhay() {
+        return nguoiLapPhieuKyNhay != null ? nguoiLapPhieuKyNhay : false;
     }
 
-    // Helper methods (giống các model khác)
-    private static String safeGet(String[] arr, int index) {
-        return (arr != null && index < arr.length) ? arr[index] : null;
+    public Boolean getTrinhDuyetCapPhongXacNhan() {
+        return trinhDuyetCapPhongXacNhan != null ? trinhDuyetCapPhongXacNhan : false;
     }
 
-    private static Integer parseInt(String val) {
-        try {
-            return val != null ? Integer.parseInt(val) : 0;
-        } catch (NumberFormatException e) {
-            return 0;
-        }
+    public Boolean getTrinhDuyetGiamDocXacNhan() {
+        return trinhDuyetGiamDocXacNhan != null ? trinhDuyetGiamDocXacNhan : false;
     }
 
-    private static Date parseDate(String val, String pattern) {
-        if (val == null || val.isEmpty()) return null;
-        try {
-            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(pattern);
-            return sdf.parse(val);
-        } catch (Exception e) {
-            return null;
-        }
+    public Boolean getShare() {
+        return share != null ? share : false;
+    }
+
+    public Boolean getByStep() {
+        return byStep != null ? byStep : false;
     }
 }
