@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class DinhMucSuaChua {
     private String id;
-    private String idCapSuaChua;
+    private String idLoaiSuaChua;
     private String ghiChu;
     private String ngayTao;
     private String ngayCapNhat;

@@ -23,8 +23,7 @@ import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted
 import RepairNormVatTuTable from "./RepairNormVatTuTable";
 import { DinhMucSuaChua, DinhMucVatTu } from "../types";
 import { RepairNormValidation } from "../validation";
-import { useAllTypeAssetQuery } from "../../TypeAsset/Mutation";
-import { useAllRepairLevelQuery } from "../../RepairLevel/Mutation";
+import { useAllLoaiSCBDQuery } from "../../MaintenanceRepairType/Mutation";
 
 export default function RepairNormForm({
   onEdit,
@@ -40,12 +39,12 @@ export default function RepairNormForm({
   onSave: (values: DinhMucSuaChua) => void;
 }) {
   const [expanded, setExpanded] = useState(true);
-  const { data: allRepairLevels = [] } = useAllRepairLevelQuery();
+  const { data: allRepairTypes = [] } = useAllLoaiSCBDQuery();
 
   const formik = useFormik<DinhMucSuaChua>({
     initialValues: {
       id: "",
-      idCapSuaChua: "",
+      idLoaiSuaChua: "",
       ghiChu: "",
       isActive: true,
       dinhMucVatTuList: [],
@@ -108,11 +107,11 @@ export default function RepairNormForm({
 
             <Grid size={{ xs: 12 }}>
               <FieldAutoCompleted
-                title="Cấp sửa chữa *"
-                data={allRepairLevels}
+                title="Loại sửa chữa *"
+                data={allRepairTypes}
                 labelkey="ten"
                 formik={formik}
-                field="idCapSuaChua"
+                field="idLoaiSuaChua"
                 disabled={readOnly}
               />
             </Grid>

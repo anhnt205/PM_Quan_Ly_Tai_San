@@ -39,6 +39,7 @@ export default function MaintenanceRepairTypeForm({
     initialValues: {
       id: "",
       ten: "",
+      ghiChu: "",
     },
     validationSchema: MaintenanceRepairTypeValidation,
     onSubmit(values) {
@@ -97,6 +98,14 @@ export default function MaintenanceRepairTypeForm({
                 title="Tên loại sửa chữa *"
                 formik={formik}
                 field="ten"
+                disabled={readOnly}
+              />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <FieldInput
+                title="Ghi chú"
+                formik={formik}
+                field="ghiChu"
                 disabled={readOnly}
               />
             </Grid>

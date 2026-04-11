@@ -111,6 +111,14 @@ export default function MaintenanceRepairType() {
       headerAlign: "center",
     },
     {
+      field: "ghiChu",
+      headerName: "Ghi chú",
+      flex: 1,
+      minWidth: 200,
+      align: "center",
+      headerAlign: "center",
+    },
+    {
       field: "action",
       headerName: "Hành động",
       width: 100,
