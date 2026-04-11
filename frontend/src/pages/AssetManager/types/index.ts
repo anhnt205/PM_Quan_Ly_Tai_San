@@ -56,7 +56,19 @@ export interface AssetType {
   vonKhac: number;
   taiSanConList?: AssetChildType[];
   fileDinhKemList?: AssetFileType[];
+  chuKySuaChuaList?: ChuKySuaChuaType[];
 }
+
+export interface ChuKySuaChuaType {
+  id: string;
+  idTaiSan: string;
+  idLoaiSuaChua: string;
+  chuKy: number;
+  donViChuKy: string;
+  isInserted?: boolean;
+  isDeleted?: boolean;
+}
+
 export interface AssetFileType {
   id?: number;
   idTaiSan: string;

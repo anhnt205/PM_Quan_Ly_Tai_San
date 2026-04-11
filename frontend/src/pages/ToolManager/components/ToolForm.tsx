@@ -231,7 +231,7 @@ export default function ToolForm({
             {readOnly && <EditButton onClick={onEdit} />}
             <CancelBtn
               onClick={() => {
-                onCancel(); 
+                onCancel();
               }}
             />
           </Box>
@@ -432,7 +432,6 @@ export default function ToolForm({
                 .filter((row: any) => !row.isDeleted)
                 .map((row: any) => (
                   <TableRow key={row.originalIndex}>
-
                     {/* Số ký hiệu */}
                     {/* <TableCell>
                       <FieldInput

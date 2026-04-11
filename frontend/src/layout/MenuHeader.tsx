@@ -682,17 +682,12 @@ export default function Menuheader() {
       count: maintenanceRepairCount + maintenanceRepairResultCount,
       subMenu: [
         {
-          text: "Kế hoạch sửa chữa",
-          path: ROUTES.MAINTENANCEPLANREPAIR,
-        },
-        {
-          text: "Phiếu sửa chữa",
-          path: ROUTES.MAINTENANCEREPAIR,
-          count: maintenanceRepairCount,
-        },
-        {
           text: "Định mức sửa chữa",
           path: ROUTES.REPAIRNORM,
+        },
+        {
+          text: "Kế hoạch sửa chữa",
+          path: ROUTES.MAINTENANCEPLANREPAIR,
         },
       ],
     },

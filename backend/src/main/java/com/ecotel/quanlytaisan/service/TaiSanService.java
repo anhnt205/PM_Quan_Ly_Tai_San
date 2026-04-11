@@ -7,6 +7,7 @@ import com.ecotel.quanlytaisan.dao.ChiTietBanGiaoTaiSanDao;
 import com.ecotel.quanlytaisan.dao.LichSuDieuChuyenTaiSanDao;
 import com.ecotel.quanlytaisan.dao.PhongBanDao;
 import com.ecotel.quanlytaisan.model.*;
+import com.ecotel.quanlytaisan.dao.ChuKySuaChuaDao;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,8 @@ public class TaiSanService {
     private TaiSanDao taiSanDao;
     @Autowired
     private ChiTietTaiSanDao chiTietTaiSanDao;
+    @Autowired
+    private ChuKySuaChuaDao chuKySuaChuaDao;
      @Autowired
     private TaiSanFileDao taiSanFileDao;
     @Autowired
@@ -912,17 +915,22 @@ public class TaiSanService {
             taiSanFileDao.findAllByTaiSanIds(ids)
         );
         System.out.println("5");
+        CompletableFuture<List<ChuKySuaChua>> chuKySuaChuaFuture = CompletableFuture.supplyAsync(() ->
+            chuKySuaChuaDao.findAllByTaiSanIds(ids)
+        );
 
 
         // Wait for all to complete and get results
         List<ChiTietTaiSan> allChiTiet;
         List<TaiSanCon> allTaiSanCon;
         List<TaiSanFile> allTaiSanFile;
+        List<ChuKySuaChua> allChuKySuaChua;
         try {
-            CompletableFuture.allOf(chiTietFuture, taiSanConFuture, taiSanFileFuture).join();
+            CompletableFuture.allOf(chiTietFuture, taiSanConFuture, taiSanFileFuture, chuKySuaChuaFuture).join();
             allChiTiet = chiTietFuture.get();
             allTaiSanCon = taiSanConFuture.get();
             allTaiSanFile = taiSanFileFuture.get();
+            allChuKySuaChua = chuKySuaChuaFuture.get();
         } catch (Exception e) {
             e.printStackTrace();
             return;
@@ -936,12 +944,15 @@ public class TaiSanService {
                 .collect(Collectors.groupingBy(TaiSanCon::getIdTaiSanCha));
         Map<String, List<TaiSanFile>> taiSanFileMap = allTaiSanFile.stream()
                 .collect(Collectors.groupingBy(TaiSanFile::getIdTaiSan));
+        Map<String, List<ChuKySuaChua>> chuKySuaChuaMap = allChuKySuaChua.stream()
+                .collect(Collectors.groupingBy(ChuKySuaChua::getIdTaiSan));
 
         // Assign back to DTOs
         for (TaiSanDTO dto : taiSanDTOList) {
             dto.setChiTietTaiSanList(chiTietMap.getOrDefault(dto.getId(), new ArrayList<>()));
             dto.setTaiSanConList(taiSanConMap.getOrDefault(dto.getId(), new ArrayList<>()));
             dto.setFileDinhKemList(taiSanFileMap.getOrDefault(dto.getId(), new ArrayList<>()));
+            dto.setChuKySuaChuaList(chuKySuaChuaMap.getOrDefault(dto.getId(), new ArrayList<>()));
         }
     }
 
