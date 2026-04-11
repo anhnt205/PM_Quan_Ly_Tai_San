@@ -42,6 +42,7 @@ import {
 } from "../TypeAsset/Mutation";
 import { useAllUnitsQuery } from "../Unit/Mutation";
 import { useAllReasonIncreaseQuery } from "../ReasonIncrease/Mutation";
+import { useAllLoaiSCBDQuery } from "../MaintenanceRepairType/Mutation";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useAllModelAssetQuery } from "../ModelAsset/Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
@@ -145,6 +146,7 @@ export default function AssetManager() {
   const { data: allUnits = [] } = useAllUnitsQuery();
   const { data: allModelAsset = [] } = useAllModelAssetQuery();
   const { data: allReasonIncreases = [] } = useAllReasonIncreaseQuery();
+  const { data: allRepairTypes = [] } = useAllLoaiSCBDQuery();
 
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [openErrorModal, setOpenErrorModal] = useState(false);
@@ -498,6 +500,7 @@ export default function AssetManager() {
               allDepartments={allDepartments}
               allUnits={allUnits}
               allReasonIncreases={allReasonIncreases}
+              allRepairTypes={allRepairTypes}
             />
           </Box>
         )}

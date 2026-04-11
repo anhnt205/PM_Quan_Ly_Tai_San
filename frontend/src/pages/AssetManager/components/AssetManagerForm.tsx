@@ -12,7 +12,9 @@ import {
   Button,
   Grid,
   IconButton,
+  MenuItem,
   Paper,
+  Select,
   Table,
   TableBody,
   TableCell,
@@ -32,11 +34,12 @@ import FieldInput from "../../../components/TextField/FieldInput";
 import { useFormik, FieldArray, FormikProvider } from "formik";
 import EditButton from "../../../components/Button/EditButton";
 import { findById } from "../../../utils/helpers";
-import { useAssetByTypeQuery, useCountriesQuery } from "../Mutation";
 import { useAllTypeAssetByGroupQuery } from "../../TypeAsset/Mutation";
+import { useAssetByTypeQuery, useCountriesQuery } from "../Mutation";
 import { useAllProjectsQuery } from "../../Project/Mutation";
 import dayjs from "dayjs";
 import TextFieldNumber from "../../../components/TextField/TextFieldNumber";
+import { useChuKySuaChuaQuery } from "../Mutation";
 import { CongTy } from "../../../utils/const";
 import FieldDateTime from "../../../components/TextField/FieldDateTime";
 import FieldYearMonth from "../../../components/TextField/FieldYearMonth";
@@ -90,6 +93,7 @@ const defaultAsset = {
   vonVay: 0,
   vonKhac: 0,
   taiSanConList: [],
+  chuKySuaChuaList: [],
 };
 
 interface AssetRowProps {
@@ -106,6 +110,7 @@ interface AssetRowProps {
   allReasonIncreases: any[];
   allProjects: any[];
   countries: any[];
+  allRepairTypes: any[];
 }
 
 const AssetRow = ({
@@ -122,6 +127,7 @@ const AssetRow = ({
   allReasonIncreases,
   allProjects,
   countries,
+  allRepairTypes,
 }: AssetRowProps) => {
   const [isExpanded, setIsExpanded] = useState(index === 0);
   const asset = formik.values.assets[index];
@@ -722,6 +728,179 @@ const AssetRow = ({
               </Table>
             </Box>
           )}
+
+          {/* Section Chu kỳ sửa chữa */}
+          <Box
+            sx={{
+              mt: 4,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <Typography
+              variant="subtitle2"
+              fontWeight={700}
+              sx={{ color: "#009e60" }}
+            >
+              Chu kỳ sửa chữa
+            </Typography>
+            {!readOnly && (
+              <Button
+                startIcon={<Add />}
+                size="small"
+                variant="outlined"
+                color="success"
+                onClick={() => {
+                  const currentList = (asset.chuKySuaChuaList as any[]) || [];
+                  formik.setFieldValue(`assets.${index}.chuKySuaChuaList`, [
+                    ...currentList,
+                    {
+                      id: "",
+                      idTaiSan: "",
+                      idLoaiSuaChua: "",
+                      chuKy: "",
+                      donViChuKy: "thang",
+                      isInserted: true,
+                    },
+                  ]);
+                }}
+              >
+                Thêm một dòng
+              </Button>
+            )}
+          </Box>
+          <Table size="small" sx={{ mt: 1 }}>
+            <TableHead>
+              <TableRow sx={{ bgcolor: alpha("#009e60", 0.05) }}>
+                <TableCell sx={{ width: 40, fontWeight: 700 }}>STT</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Loại sửa chữa</TableCell>
+                <TableCell sx={{ width: 160, fontWeight: 700 }}>
+                  Chu kỳ
+                </TableCell>
+                <TableCell sx={{ width: 140, fontWeight: 700 }}>
+                  Đơn vị
+                </TableCell>
+                {!readOnly && <TableCell sx={{ width: 50 }} />}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {((asset.chuKySuaChuaList as any[]) || [])
+                .map((row: any, subIdx: number) => ({
+                  ...row,
+                  subIdx,
+                }))
+                .filter((row: any) => !row.isDeleted)
+                .map((row: any, displayIndex: number) => (
+                  <TableRow key={row.subIdx}>
+                    <TableCell sx={{ color: "text.secondary", fontSize: 13 }}>
+                      {displayIndex + 1}
+                    </TableCell>
+
+                    {/* Loại sửa chữa */}
+                    <TableCell>
+                      <Select
+                        fullWidth
+                        size="small"
+                        displayEmpty
+                        disabled={readOnly}
+                        value={row.idLoaiSuaChua || ""}
+                        onChange={(e) => {
+                          formik.setFieldValue(
+                            `assets.${index}.chuKySuaChuaList.${row.subIdx}.idLoaiSuaChua`,
+                            e.target.value,
+                          );
+                        }}
+                        sx={{ fontSize: 13 }}
+                      >
+                        <MenuItem value="" disabled>
+                          <em>Chọn loại sửa chữa</em>
+                        </MenuItem>
+                        {allRepairTypes.map((rt: any) => (
+                          <MenuItem key={rt.id} value={rt.id}>
+                            {rt.ten}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </TableCell>
+
+                    {/* Chu kỳ */}
+                    <TableCell>
+                      <TextFieldNumber
+                        title=""
+                        formik={formik}
+                        field={`assets.${index}.chuKySuaChuaList.${row.subIdx}.chuKy`}
+                        disabled={readOnly}
+                      />
+                    </TableCell>
+
+                    {/* Đơn vị */}
+                    <TableCell>
+                      <Select
+                        fullWidth
+                        size="small"
+                        disabled={readOnly}
+                        value={row.donViChuKy || "thang"}
+                        onChange={(e) => {
+                          formik.setFieldValue(
+                            `assets.${index}.chuKySuaChuaList.${row.subIdx}.donViChuKy`,
+                            e.target.value,
+                          );
+                        }}
+                        sx={{ fontSize: 13 }}
+                      >
+                        <MenuItem value="Tháng">Tháng</MenuItem>
+                        <MenuItem value="Tuần">Tuần</MenuItem>
+                        <MenuItem value="Năm">Năm</MenuItem>
+                      </Select>
+                    </TableCell>
+
+                    {/* Nút xóa */}
+                    {!readOnly && (
+                      <TableCell align="center">
+                        <IconButton
+                          color="error"
+                          size="small"
+                          onClick={() => {
+                            const currentList =
+                              (asset.chuKySuaChuaList as any[]) || [];
+                            const currentRow = currentList[row.subIdx];
+                            if (currentRow.isInserted) {
+                              const newList = [...currentList];
+                              newList.splice(row.subIdx, 1);
+                              formik.setFieldValue(
+                                `assets.${index}.chuKySuaChuaList`,
+                                newList,
+                              );
+                            } else {
+                              formik.setFieldValue(
+                                `assets.${index}.chuKySuaChuaList.${row.subIdx}.isDeleted`,
+                                true,
+                              );
+                            }
+                          }}
+                        >
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+              {((asset.chuKySuaChuaList as any[]) || []).filter(
+                (r: any) => !r.isDeleted,
+              ).length === 0 && (
+                <TableRow>
+                  <TableCell
+                    colSpan={readOnly ? 4 : 5}
+                    align="center"
+                    sx={{ color: "text.disabled", fontSize: 13, py: 2 }}
+                  >
+                    Chưa có chu kỳ sửa chữa nào
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </Box>
       </Collapse>
     </Paper>
@@ -740,6 +919,7 @@ export default function AssetManagerForm({
   allDepartments,
   allUnits,
   allReasonIncreases,
+  allRepairTypes,
 }: {
   onEdit: () => void;
   onCancel: () => void;
@@ -752,6 +932,7 @@ export default function AssetManagerForm({
   allDepartments: any[];
   allUnits: any[];
   allReasonIncreases: any[];
+  allRepairTypes: any[];
 }) {
   const { data: countries = [] } = useCountriesQuery();
   const { data: allProjects = [] } = useAllProjectsQuery();
@@ -872,6 +1053,7 @@ export default function AssetManagerForm({
                     allReasonIncreases={allReasonIncreases}
                     allProjects={allProjects}
                     countries={countries}
+                    allRepairTypes={allRepairTypes}
                   />
                 ))}
               </React.Fragment>

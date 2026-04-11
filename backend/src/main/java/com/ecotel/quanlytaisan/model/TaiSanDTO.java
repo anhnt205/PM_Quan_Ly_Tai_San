@@ -57,6 +57,7 @@ public class TaiSanDTO {
     private List<ChiTietTaiSan> chiTietTaiSanList;
     private List<TaiSanCon> taiSanConList;
     private List<TaiSanFile> fileDinhKemList;
+    private List<ChuKySuaChua> chuKySuaChuaList;
     private String idLoaiTaiSanCon;
     private String soThe;
     private Double nvNS;
