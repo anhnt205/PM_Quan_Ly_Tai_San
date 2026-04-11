@@ -228,8 +228,8 @@ export default function RepairNormTableCustom({
         onClick={() => onRowClick?.(row)}
       >
         <TableCell
-          width="20px"
           align="center"
+          sx={{ width: "40px", minWidth: "40px", padding: "0 4px" }}
           onClick={(e) => e.stopPropagation()}
         >
           <IconButton size="small" onClick={() => handleExpandClick(row.id)}>
@@ -237,8 +237,8 @@ export default function RepairNormTableCustom({
           </IconButton>
         </TableCell>
         <TableCell
-          width="20px"
           align="center"
+          sx={{ width: "40px", minWidth: "40px", padding: "0 4px" }}
           onClick={(e) => e.stopPropagation()}
         >
           <Checkbox
@@ -394,16 +394,14 @@ export default function RepairNormTableCustom({
           <TableHead>
             <TableRow sx={{ backgroundColor: "#1FA463" }}>
               <TableCell
-                width="20px"
                 align="center"
-                sx={{ color: "#fff", padding: "6px" }}
+                sx={{ color: "#fff", padding: "0 4px", width: "40px", minWidth: "40px" }}
               >
                 <ExpandMore />
               </TableCell>
               <TableCell
-                width="20px"
                 align="center"
-                sx={{ color: "#fff !important", padding: "6px" }}
+                sx={{ color: "#fff !important", padding: "0 4px", width: "40px", minWidth: "40px" }}
               >
                 <Checkbox
                   checked={isAllSelected}

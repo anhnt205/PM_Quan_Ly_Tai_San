@@ -20,11 +20,9 @@ public class DinhMucSuaChuaDao {
     private final String SELECT_DTO = """
             SELECT 
                 dm.*, 
-                lts.TenLoai AS tenLoaiTaiSan, 
-                csc.Ten AS tenCapSuaChua
+                csc.Ten AS tenLoaiSuaChua
             FROM DinhMucSuaChua dm
-            LEFT JOIN CapSuaChua csc ON dm.IdCapSuaChua = csc.Id
-            LEFT JOIN LoaiTaiSanCon lts ON csc.IdLoaiTaiSan = lts.Id
+            LEFT JOIN LoaiSCBD csc ON dm.IdLoaiSuaChua = csc.Id
             """;
 
     public List<DinhMucSuaChuaDTO> findAllPaged(int page, int size, String search) {
@@ -33,9 +31,8 @@ public class DinhMucSuaChuaDao {
         List<Object> params = new ArrayList<>();
 
         if (search != null && !search.isEmpty()) {
-            sql.append(" WHERE lts.TenLoai LIKE ? OR csc.Ten LIKE ? OR dm.GhiChu LIKE ? ");
+            sql.append(" WHERE csc.Ten LIKE ? OR dm.GhiChu LIKE ? ");
             String likeParam = "%" + search + "%";
-            params.add(likeParam);
             params.add(likeParam);
             params.add(likeParam);
         }
@@ -48,13 +45,12 @@ public class DinhMucSuaChuaDao {
     }
 
     public int countAll(String search) {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM DinhMucSuaChua dm LEFT JOIN CapSuaChua csc ON dm.IdCapSuaChua = csc.Id LEFT JOIN LoaiTaiSanCon lts ON csc.IdLoaiTaiSan = lts.Id");
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM DinhMucSuaChua dm LEFT JOIN LoaiSCBD csc ON dm.IdLoaiSuaChua = csc.Id");
         List<Object> params = new ArrayList<>();
 
         if (search != null && !search.isEmpty()) {
-            sql.append(" WHERE lts.TenLoai LIKE ? OR csc.Ten LIKE ? OR dm.GhiChu LIKE ? ");
+            sql.append(" WHERE csc.Ten LIKE ? OR dm.GhiChu LIKE ? ");
             String likeParam = "%" + search + "%";
-            params.add(likeParam);
             params.add(likeParam);
             params.add(likeParam);
         }
@@ -73,13 +69,13 @@ public class DinhMucSuaChuaDao {
         if (dm.getId() == null || dm.getId().isEmpty()) {
             dm.setId(UUID.randomUUID().toString());
         }
-        String sql = "INSERT INTO DinhMucSuaChua (Id, IdCapSuaChua, GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        return jdbcTemplate.update(sql, dm.getId(), dm.getIdCapSuaChua(), dm.getGhiChu(), dm.getNgayTao(), dm.getNgayCapNhat(), dm.getNguoiTao(), dm.getNguoiCapNhat(), dm.getIsActive());
+        String sql = "INSERT INTO DinhMucSuaChua (Id, IdLoaiSuaChua, GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        return jdbcTemplate.update(sql, dm.getId(), dm.getIdLoaiSuaChua(), dm.getGhiChu(), dm.getNgayTao(), dm.getNgayCapNhat(), dm.getNguoiTao(), dm.getNguoiCapNhat(), dm.getIsActive());
     }
 
     public int update(DinhMucSuaChua dm) {
-        String sql = "UPDATE DinhMucSuaChua SET IdCapSuaChua = ?, GhiChu = ?, NgayCapNhat = ?, NguoiCapNhat = ?, IsActive = ? WHERE Id = ?";
-        return jdbcTemplate.update(sql, dm.getIdCapSuaChua(), dm.getGhiChu(), dm.getNgayCapNhat(), dm.getNguoiCapNhat(), dm.getIsActive(), dm.getId());
+        String sql = "UPDATE DinhMucSuaChua SET IdLoaiSuaChua = ?, GhiChu = ?, NgayCapNhat = ?, NguoiCapNhat = ?, IsActive = ? WHERE Id = ?";
+        return jdbcTemplate.update(sql, dm.getIdLoaiSuaChua(), dm.getGhiChu(), dm.getNgayCapNhat(), dm.getNguoiCapNhat(), dm.getIsActive(), dm.getId());
     }
 
     public int delete(String id) {

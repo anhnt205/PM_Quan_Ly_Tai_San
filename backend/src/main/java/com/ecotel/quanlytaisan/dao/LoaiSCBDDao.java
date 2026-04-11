@@ -42,7 +42,8 @@ public class LoaiSCBDDao {
 
         String sql = """
         SELECT lcsbd.Id,
-               lcsbd.Ten
+               lcsbd.Ten,
+               lcsbd.GhiChu
         FROM LoaiSCBD AS lcsbd
         %s
         ORDER BY %s %s
@@ -101,14 +102,14 @@ public class LoaiSCBDDao {
             return update(loaiSCBD);
         } else {
             // Nếu chưa tồn tại thì insert
-            String sql = "INSERT INTO LoaiSCBD (Id, Ten) VALUES (?, ?)";
-            return jdbcTemplate.update(sql, loaiSCBD.getId(), loaiSCBD.getTen());
+            String sql = "INSERT INTO LoaiSCBD (Id, Ten, GhiChu) VALUES (?, ?, ?)";
+            return jdbcTemplate.update(sql, loaiSCBD.getId(), loaiSCBD.getTen(), loaiSCBD.getGhiChu());
         }
     }
 
     public int update(LoaiSCBD loaiSCBD) {
-        String sql = "UPDATE LoaiSCBD SET Ten=? WHERE Id=?";
-        return jdbcTemplate.update(sql, loaiSCBD.getTen(), loaiSCBD.getId());
+        String sql = "UPDATE LoaiSCBD SET Ten=?, GhiChu=? WHERE Id=?";
+        return jdbcTemplate.update(sql, loaiSCBD.getTen(), loaiSCBD.getGhiChu(), loaiSCBD.getId());
     }
 
     public int delete(String id) {
@@ -117,9 +118,9 @@ public class LoaiSCBDDao {
     }
 
     public int insertBatch(List<LoaiSCBD> loaiSCBDs) {
-        String sql = "INSERT INTO LoaiSCBD (Id, Ten) VALUES (?, ?) " +
+        String sql = "INSERT INTO LoaiSCBD (Id, Ten, GhiChu) VALUES (?, ?, ?) " +
                 "ON DUPLICATE KEY UPDATE " +
-                "Ten = VALUES(Ten)";
+                "Ten = VALUES(Ten), GhiChu = VALUES(GhiChu)";
 
         int[] results = jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
@@ -127,6 +128,7 @@ public class LoaiSCBDDao {
                 LoaiSCBD loaiSCBD = loaiSCBDs.get(i);
                 ps.setString(1, loaiSCBD.getId());
                 ps.setString(2, loaiSCBD.getTen());
+                ps.setString(3, loaiSCBD.getGhiChu());
             }
 
             @Override
@@ -138,13 +140,14 @@ public class LoaiSCBDDao {
     }
 
     public int updateBatch(List<LoaiSCBD> loaiSCBDs) {
-        String sql = "UPDATE LoaiSCBD SET Ten=? WHERE Id=?";
+        String sql = "UPDATE LoaiSCBD SET Ten=?, GhiChu=? WHERE Id=?";
         int[] results = jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
                 LoaiSCBD loaiSCBD = loaiSCBDs.get(i);
                 ps.setString(1, loaiSCBD.getTen());
-                ps.setString(2, loaiSCBD.getId());
+                ps.setString(2, loaiSCBD.getGhiChu());
+                ps.setString(3, loaiSCBD.getId());
             }
 
             @Override
