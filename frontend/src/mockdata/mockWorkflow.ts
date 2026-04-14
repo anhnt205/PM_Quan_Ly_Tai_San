@@ -111,8 +111,8 @@ export const initialAnnualPlans: AnnualPlan[] = [
       'TB-004': ['CST','CST','','','SCN','','','CST','','SCC','','CST'],
     },
     signers: [
-      { userId: 'NV-01', userName: 'Nguyễn Văn An', departmentId: 'PB-01', departmentName: 'Phân xưởng khai thác 1', role: 'creator', signed: true, signedAt: '2024-01-05' },
-      { userId: 'NV-14', userName: 'Dương Văn Phong', departmentId: 'PB-10', departmentName: 'Ban Giám đốc', role: 'director', signed: true, signedAt: '2024-01-10' },
+      { userId: 'NV-01', userName: 'Nguyễn Văn An', departmentId: 'PB-01', departmentName: 'Phân xưởng khai thác 1', order: 1, signed: true, signedAt: '2024-01-05' },
+      { userId: 'NV-14', userName: 'Dương Văn Phong', departmentId: 'PB-10', departmentName: 'Ban Giám đốc', order: 2, signed: true, signedAt: '2024-01-10' },
     ],
   },
   {
