@@ -1,8 +1,7 @@
-import { useState } from 'react';
 import {
-  Box, Card, CardContent, Typography, Chip, TextField,
+  Box, Typography, Chip, TextField, Checkbox,
+  FormControlLabel, Alert, Divider,
 } from '@mui/material';
-import { DataGrid, type GridColDef, type GridRowSelectionModel, type GridRenderEditCellParams } from '@mui/x-data-grid';
 import { devices } from '../../../../mockdata/mockDevices';
 import { departmentDeviceMap } from '../../../../mockdata/mockDepartments';
 
@@ -18,86 +17,91 @@ const StepAssets = ({ sourceDeptId, selectedAssetIds, quantities, onSelectionCha
   const deptDeviceIds = departmentDeviceMap[sourceDeptId] || [];
   const deptDevices = devices.filter(d => deptDeviceIds.includes(d.id));
 
-  const columns: GridColDef[] = [
-    { field: 'name', headerName: 'Tên thiết bị', flex: 1, minWidth: 180 },
-    { field: 'group', headerName: 'Nhóm TB', width: 100 },
-    {
-      field: 'assetType', headerName: 'Loại TS', width: 90,
-      renderCell: (params) => (
-        <Chip label={params.value} size="small"
-          color={params.value === 'TSCĐ' ? 'primary' : 'default'} variant="outlined" />
-      ),
-    },
-    {
-      field: 'quantity', headerName: 'SL', width: 90,
-      renderCell: (params) => (
-        <TextField
-          type="number"
-          size="small"
-          value={quantities[params.row.id] ?? params.value}
-          onChange={(e) => {
-            const val = Math.max(1, parseInt(e.target.value) || 1);
-            onQuantityChange({ ...quantities, [params.row.id]: val });
-          }}
-          onClick={(e) => e.stopPropagation()}
-          inputProps={{ min: 1, style: { padding: '2px 6px', width: 56 } }}
-          variant="outlined"
-        />
-      ),
-    },
-    { field: 'maintenanceUnit', headerName: 'Đơn vị bảo trì', width: 150 },
-    {
-      field: 'status', headerName: 'Trạng thái', width: 120,
-      renderCell: (params) => (
-        <Chip
-          label={params.value === 'active' ? 'Hoạt động' : params.value === 'maintenance' ? 'Bảo dưỡng' : 'Hỏng'}
-          color={params.value === 'active' ? 'success' : params.value === 'maintenance' ? 'warning' : 'error'}
-          size="small"
-        />
-      ),
-    },
-    {
-      field: 'operatingHours', headerName: 'Giờ vận hành', width: 120,
-      valueFormatter: (value: number) => `${value.toLocaleString()} h`,
-    },
-  ];
+  const toggleDevice = (id: string) => {
+    if (selectedAssetIds.includes(id)) {
+      onSelectionChange(selectedAssetIds.filter(a => a !== id));
+    } else {
+      onSelectionChange([...selectedAssetIds, id]);
+    }
+  };
+
+  if (deptDevices.length === 0) {
+    return <Typography color="text.secondary" fontSize={14}>Đơn vị này chưa có thiết bị nào.</Typography>;
+  }
 
   return (
-    <Box>
-      <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-        Chọn thiết bị cần lập kế hoạch bảo dưỡng
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+      <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5 }}>
+        Chọn thiết bị và nhập số lượng — đã chọn <strong>{selectedAssetIds.length}</strong>/{deptDevices.length}
       </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Đã chọn: {selectedAssetIds.length} thiết bị. Có thể chỉnh sửa số lượng trực tiếp trên bảng.
-      </Typography>
-      <Card>
-        <CardContent>
-          {deptDevices.length === 0 ? (
-            <Typography color="text.secondary">Đơn vị này chưa có thiết bị nào.</Typography>
-          ) : (
-            <Box sx={{ height: 420 }}>
-              <DataGrid
-                rows={deptDevices}
-                columns={columns}
-                checkboxSelection
-                rowSelectionModel={{ type: 'include', ids: new Set(selectedAssetIds) }}
-                onRowSelectionModelChange={(model: GridRowSelectionModel) => {
-                  if (model.type === 'include') {
-                    onSelectionChange(Array.from(model.ids) as string[]);
-                  } else {
-                    // type === 'exclude': chọn tất cả trừ ids trong set
-                    const allIds = deptDevices.map(d => d.id);
-                    const excluded = Array.from(model.ids) as string[];
-                    onSelectionChange(allIds.filter(id => !excluded.includes(id)));
-                  }
-                }}
-                disableRowSelectionOnClick
-                density="compact"
+
+      {deptDevices.map((device, idx) => {
+        const isSelected = selectedAssetIds.includes(device.id);
+        return (
+          <Box key={device.id}>
+            <Box
+              sx={{
+                display: 'flex', alignItems: 'center', gap: 1.5,
+                p: 1.5, borderRadius: 2,
+                border: '1px solid',
+                borderColor: isSelected ? 'primary.main' : 'divider',
+                bgcolor: isSelected ? 'primary.50' : 'background.paper',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                '&:hover': { borderColor: 'primary.light', bgcolor: 'grey.50' }
+              }}
+              onClick={() => toggleDevice(device.id)}
+            >
+              <Checkbox
+                checked={isSelected}
+                size="small"
+                onClick={e => e.stopPropagation()}
+                onChange={() => toggleDevice(device.id)}
+                sx={{ p: 0 }}
               />
+
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography fontSize={13} fontWeight={isSelected ? 600 : 400} noWrap>
+                  {device.name}
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5, flexWrap: 'wrap' }}>
+                  <Chip label={device.group} size="small" sx={{ fontSize: 10, height: 18 }} />
+                  <Chip
+                    label={device.assetType}
+                    size="small"
+                    color={device.assetType === 'TSCĐ' ? 'primary' : 'default'}
+                    variant="outlined"
+                    sx={{ fontSize: 10, height: 18 }}
+                  />
+                  <Chip
+                    label={device.status === 'active' ? 'Hoạt động' : device.status === 'maintenance' ? 'Bảo dưỡng' : 'Hỏng'}
+                    size="small"
+                    color={device.status === 'active' ? 'success' : device.status === 'maintenance' ? 'warning' : 'error'}
+                    sx={{ fontSize: 10, height: 18 }}
+                  />
+                </Box>
+              </Box>
+
+              {isSelected && (
+                <TextField
+                  type="number"
+                  size="small"
+                  label="SL"
+                  value={quantities[device.id] ?? device.quantity ?? 1}
+                  onChange={e => {
+                    const val = Math.max(1, parseInt(e.target.value) || 1);
+                    onQuantityChange({ ...quantities, [device.id]: val });
+                  }}
+                  onClick={e => e.stopPropagation()}
+                  inputProps={{ min: 1 }}
+                  sx={{ width: 80, flexShrink: 0 }}
+                />
+              )}
             </Box>
-          )}
-        </CardContent>
-      </Card>
+            {idx < deptDevices.length - 1 && <Divider sx={{ my: 0.5, opacity: 0.4 }} />}
+          </Box>
+        );
+      })}
     </Box>
   );
 };

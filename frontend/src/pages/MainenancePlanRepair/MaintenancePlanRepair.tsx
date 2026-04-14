@@ -16,6 +16,7 @@ import { useCmms } from '../../hooks/CmmsContext';
 // import PlanDetailPanel from '@/components/planning/PlanDetailPanel';
 import type { AnnualPlan } from '../../mockdata/mockWorkflow';
 import CreatePlanInline from '../Maintenance/components/planning/CreatePlan';
+import CreatePlanDialog from '../Maintenance/components/planning/CreatePlan';
 
 // ── Status config (từ Planning.tsx cũ) ──────────────────
 const planStatusConfig: Record<string, {
@@ -74,6 +75,11 @@ export default function MaintenancePlanRepair() {
   // ── Đếm theo status cho filter tabs ─────────────────────
   const countByStatus = (s: string) => annualPlans.filter(p => p.status === s).length;
 
+  const handleSendToSigner = async (selectedItems: AnnualPlan[]) => {
+    // TODO: gọi API gửi duyệt
+    console.log('Gửi duyệt:', selectedItems);
+  };
+
   const statusOptions: FilterOption[] = [
     { label: 'Tất cả', value: '', count: annualPlans.length, color: 'primary' },
     { label: 'Bản nháp', value: 'draft', count: countByStatus('draft'), color: 'default' },
@@ -122,21 +128,10 @@ export default function MaintenancePlanRepair() {
       {/* ✅ PageAction của code mới — nút Mới điều hướng sang CreatePlan */}
       <PageAction
         title="Lập kế hoạch sửa chữa bảo dưỡng"
-        onNewClick={() => {
-          setShowForm(true);
-        }}
+        onNewClick={() => setShowForm(true)}
       />
 
       <Box sx={{ p: 2 }}>
-        {showForm && (
-          <CreatePlanInline
-            onClose={() => setShowForm(false)}
-            onSave={(plan) => {
-              addAnnualPlan(plan);   // lưu vào context
-              setShowForm(false);
-            }}
-          />
-        )}
         <Box sx={{ display: 'flex', gap: 2, height: 'calc(100vh - 180px)', minHeight: 500 }}>
 
           {/* ── Bảng danh sách ── */}
@@ -170,6 +165,12 @@ export default function MaintenancePlanRepair() {
                 setSearchValue={setSearchValue}
                 onDelete={() => { }}
                 showDelete={false}
+                isRowSelectable={(params) => params.row.status === 'draft'}
+                isCheckShowShare={(items: any[]) =>
+                  items.length > 0 && items.every(item => item.status === 'draft')
+                }
+                handleSendToSigner={handleSendToSigner}
+
                 customContent={
                   showCalendar && !isDetailOpen ? (
                     <MaintenancePlanCalendar
@@ -217,6 +218,14 @@ export default function MaintenancePlanRepair() {
           )}
         </Box>
       </Box>
+      <CreatePlanDialog
+        open={showForm}
+        onClose={() => setShowForm(false)}
+        onSave={(plan) => {
+          addAnnualPlan(plan);
+          setShowForm(false);
+        }}
+      />
     </>
   );
 }

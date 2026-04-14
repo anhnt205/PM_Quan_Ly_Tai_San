@@ -32,15 +32,16 @@ const StepPreview = ({ sourceDeptId, executionDeptId, assetIds, quantities, sche
   const month = today.getMonth() + 1;
   const year = today.getFullYear();
 
-  const creatorSigner = signers.find(s => s.role === 'creator');
-  const directorSigner = signers.find(s => s.role === 'director');
-  const middleSigners = signers.filter(s => s.role === 'middle');
+  const sortedSigners = [...signers].sort((a, b) => a.order - b.order);
 
-  const signatureColumns = [
-    { label: 'NGƯỜI LẬP', signer: creatorSigner },
-    ...middleSigners.map(s => ({ label: s.departmentName.toUpperCase(), signer: s })),
-    { label: 'PHÓ GIÁM ĐỐC', signer: directorSigner },
-  ];
+  const signatureColumns = sortedSigners.map((s, idx) => ({
+    label: idx === 0
+      ? 'NGƯỜI LẬP'
+      : idx === sortedSigners.length - 1
+        ? 'PHÓ GIÁM ĐỐC'
+        : s.departmentName.toUpperCase(),
+    signer: s,
+  }));
 
   return (
     <Card variant="outlined" sx={{ border: '2px solid #1976d2' }}>

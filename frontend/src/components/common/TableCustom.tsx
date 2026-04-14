@@ -93,6 +93,7 @@ interface Props {
   isDecision?: (data: any[]) => boolean;
   handleDecision?: (item: any) => void;
   titleSelectedDate?: string;
+  isRowSelectable?: (params: any) => boolean;
 }
 
 export default function TableCustom({
@@ -138,6 +139,7 @@ export default function TableCustom({
   onDeleteAll,
   isDecision,
   handleDecision,
+  isRowSelectable,
   titleSelectedDate = "Chọn thời gian",
 }: Props) {
   const navigate = useNavigate();
@@ -437,6 +439,7 @@ export default function TableCustom({
             }}
             disableRowSelectionOnClick
             showToolbar
+            isRowSelectable={isRowSelectable}
             slots={{ toolbar: GridToolbar, filterPanel: CustomFilterPanel }}
             localeText={viVN.components.MuiDataGrid.defaultProps.localeText}
             slotProps={{
