@@ -3,12 +3,21 @@ package com.ecotel.quanlytaisan.service;
 import com.ecotel.quanlytaisan.dao.TaiKhoanDao;
 import com.ecotel.quanlytaisan.model.TaiKhoan;
 import com.ecotel.quanlytaisan.model.PageResponse;
+import com.nimbusds.jose.*;
+import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.opencsv.CSVReader;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,12 +26,22 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
 public class TaiKhoanService {
+
+    @NonFinal
+    @Value("${JWT_SECRET_KEY}")
+    protected String SIGNER_KEY;
+
+    @NonFinal
+    @Value("${JWT_SECRET_EXPIRATION}")
+    protected long EXPIRATION;
+
     @Autowired
     private TaiKhoanDao taiKhoanDao;
 
@@ -64,7 +83,16 @@ public class TaiKhoanService {
     }
 
     public Map<String, Object> login(String tenDangNhap, String matKhau) {
-        return taiKhoanDao.login(tenDangNhap, matKhau);
+        var queryResult=taiKhoanDao.login(tenDangNhap, matKhau);
+        if (queryResult == null || queryResult.isEmpty()) {
+            throw new RuntimeException("Tên đăng nhập hoặc mật khẩu không chính xác");
+        }
+        Map<String, Object> result = new HashMap<>(queryResult);
+        var token=generateToken(tenDangNhap);
+        result.put("token",token);
+
+        System.out.println(result);
+        return result;
     }
     public List<TaiKhoan> readCsv(MultipartFile file) throws IOException {
         List<TaiKhoan> list = new ArrayList<>();
@@ -103,5 +131,29 @@ public class TaiKhoanService {
         }
         workbook.close();
         return list;
+    }
+
+    public String generateToken(String username){
+        Date now =new Date();
+        Date expiration=new Date(now.getTime()+EXPIRATION);
+        JWSHeader header=new JWSHeader(JWSAlgorithm.HS512);
+        JWTClaimsSet jwtClaimsSet=new JWTClaimsSet.Builder()
+                .subject(username)
+                .issuer("uongbi.com")
+                .issueTime(new Date())
+                .expirationTime(expiration)
+                .claim("scope","User")
+                .build();
+
+        Payload payload=new Payload(jwtClaimsSet.toJSONObject());
+        JWSObject jwsObject=new JWSObject(header,payload);
+
+        try {
+            jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
+        } catch (JOSEException e) {
+            log.error("Cannot create token",e);
+            throw new RuntimeException(e);
+        }
+        return jwsObject.serialize();
     }
 }

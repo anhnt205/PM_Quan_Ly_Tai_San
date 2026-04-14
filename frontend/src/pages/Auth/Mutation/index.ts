@@ -22,6 +22,11 @@ export const useAuthMutation = () => {
       // This replaces the need to call usePermissionQuery inside onSuccess
       const permissionRes = await api.get(
         `/userpermission/user/${userData.taiKhoan.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${userData.token}`,
+          },
+        },
       );
       const permissions = permissionRes.data || [];
 

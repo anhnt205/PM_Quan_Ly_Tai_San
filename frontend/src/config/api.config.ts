@@ -3,8 +3,7 @@ import { store } from "../redux/store";
 import { logout } from "../redux/userSlice";
 import { ROUTES } from "../utils/routes";
 
-const API_URL =
-  import.meta.env.VITE_BASE_API || "http://localhost:5000/api";
+const API_URL = import.meta.env.VITE_BASE_API || "http://localhost:5000/api";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -16,7 +15,8 @@ const api = axios.create({
 api.interceptors.request.use(
   (config: any) => {
     const state = store.getState();
-    const token = state.user?.token;
+    const token = state.user?.user?.token;
+    console.log("token", token);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -24,18 +24,18 @@ api.interceptors.request.use(
   },
   (error: any) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 api.interceptors.response.use(
   (response: any) => response,
   (error: any) => {
     if (error.response?.status === 401) {
-      store.dispatch(logout());
-      window.location.href = ROUTES.LOGIN;
+      // store.dispatch(logout());
+      // window.location.href = ROUTES.LOGIN;
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;
