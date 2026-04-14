@@ -270,7 +270,14 @@ function App() {
 
           <Route path={ROUTES.MAINTENANCE_MANAGER} element={<MaintenanceManagerPage />} />
           <Route path={ROUTES.MAINTENANCE_CYCLE} element={<MaintenanceCyclePage />} />
-          <Route path={ROUTES.MAINTENANCE_APPROVAL} element={<MaintenanceApprovalPage />} />
+          <Route
+            path={ROUTES.MAINTENANCE_APPROVAL}
+            element={
+              <CmmsProvider>
+                <MaintenanceApprovalPage />
+              </CmmsProvider>
+            }
+          />
           <Route path={ROUTES.MAINTENANCE_RECORD} element={<MaintenanceRecordPage />} />
         </Route>
         <Route path="*" element={<Navigate to={ROUTES.NOT_FOUND} replace />} />

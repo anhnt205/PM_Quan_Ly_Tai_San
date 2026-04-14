@@ -15,7 +15,6 @@ import { ROUTES } from '../../utils/routes';
 import { useCmms } from '../../hooks/CmmsContext';
 // import PlanDetailPanel from '@/components/planning/PlanDetailPanel';
 import type { AnnualPlan } from '../../mockdata/mockWorkflow';
-import CreatePlanInline from '../Maintenance/components/planning/CreatePlan';
 import CreatePlanDialog from '../Maintenance/components/planning/CreatePlan';
 
 // ── Status config (từ Planning.tsx cũ) ──────────────────
