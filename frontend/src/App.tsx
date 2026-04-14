@@ -40,6 +40,11 @@ import HuongDanSuDung from "./pages/HuongDanSuDung/HuongDanSuDung";
 import RepairLevel from "./pages/RepairLevel/RepairLevel";
 
 import RepairNorm from "./pages/RepairNorm/RepairNorm";
+import MaintenanceManagerPage from "./pages/Maintenance/page/MaintenancePage";
+import MaintenanceCyclePage from "./pages/Maintenance/page/MaintenanceCycle";
+import MaintenanceApprovalPage from "./pages/Maintenance/page/MaintenanceApproval";
+import MaintenanceRecordPage from "./pages/Maintenance/page/MaintenanceRecord";
+import { CmmsProvider } from "./hooks/CmmsContext";
 
 const ProtectedRoute = ({
   allowedRoles,
@@ -234,7 +239,11 @@ function App() {
           />
           <Route
             path={ROUTES.MAINTENANCEPLANREPAIR}
-            element={<MaintenancePlanRepair />}
+            element={
+              <CmmsProvider>
+                <MaintenancePlanRepair />
+              </CmmsProvider>
+            }
           />
           <Route
             path={ROUTES.MAINTENANCEREPAIR}
@@ -258,6 +267,11 @@ function App() {
           />
           <Route path={ROUTES.HUONGDAN} element={<HuongDanSuDung />} />
           <Route path={ROUTES.ACCOUNT} element={<Account />} />
+
+          <Route path={ROUTES.MAINTENANCE_MANAGER} element={<MaintenanceManagerPage />} />
+          <Route path={ROUTES.MAINTENANCE_CYCLE} element={<MaintenanceCyclePage />} />
+          <Route path={ROUTES.MAINTENANCE_APPROVAL} element={<MaintenanceApprovalPage />} />
+          <Route path={ROUTES.MAINTENANCE_RECORD} element={<MaintenanceRecordPage />} />
         </Route>
         <Route path="*" element={<Navigate to={ROUTES.NOT_FOUND} replace />} />
       </Routes>

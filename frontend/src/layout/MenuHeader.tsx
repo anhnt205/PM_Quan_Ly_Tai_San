@@ -682,12 +682,28 @@ export default function Menuheader() {
       count: maintenanceRepairCount + maintenanceRepairResultCount,
       subMenu: [
         {
-          text: "Định mức sửa chữa",
+          text: "Quản lý sửa chữa",
+          path: ROUTES.MAINTENANCE_MANAGER,
+        },
+        {
+          text: "Chu kỳ bảo dưỡng",
+          path: ROUTES.MAINTENANCE_CYCLE,
+        },
+        {
+          text: "Định mức",
           path: ROUTES.REPAIRNORM,
         },
         {
           text: "Kế hoạch sửa chữa",
           path: ROUTES.MAINTENANCEPLANREPAIR,
+        },
+        {
+          text: "Phê duyệt",
+          path: ROUTES.MAINTENANCE_APPROVAL,
+        },
+        {
+          text: "Quản lý biên bản",
+          path: ROUTES.MAINTENANCE_RECORD,
         },
       ],
     },
