@@ -32,4 +32,8 @@ export const ROUTES = {
   HUONGDAN: "/huong_dan_su_dung",
   REPAIRLEVEL: "/cap_sua_chua",
   REPAIRNORM: "/dinh_muc_sua_chua",
+  MAINTENANCE_MANAGER: "/sua_chua_bao_duong/quan_ly_sua_chua",
+  MAINTENANCE_CYCLE: "/sua_chua_bao_duong/chu_ky_bao_duong",
+  MAINTENANCE_APPROVAL: "/sua_chua_bao_duong/phe_duyet",
+  MAINTENANCE_RECORD: "/sua_chua_bao_duong/quan_ly_bien_ban",
 } as const;
