@@ -39,9 +39,6 @@ const StepSchedule = ({ assetIds, schedule, onScheduleChange }: Props) => {
 
   return (
     <Box>
-      <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-        Lập lịch bảo dưỡng 12 tháng
-      </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         Chọn cấp bảo dưỡng cho từng thiết bị theo từng tháng.
       </Typography>

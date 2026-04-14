@@ -18,7 +18,7 @@ export interface PlanSigner {
   userName: string;
   departmentId: string;
   departmentName: string;
-  role: 'creator' | 'middle' | 'director';
+  order: number;
   position?: 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right'; // thêm ?
   signed: boolean;
   signedAt?: string;
