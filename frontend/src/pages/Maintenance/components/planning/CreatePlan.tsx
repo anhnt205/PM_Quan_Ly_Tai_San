@@ -1,392 +1,339 @@
 import { useState } from 'react';
 import {
-    Box, Stepper, Step, StepLabel, Button, Paper, IconButton,
-    Typography, FormControl, InputLabel, Select, MenuItem,
-    Divider, List, ListItem, ListItemText, ListItemSecondaryAction, Chip,
+    Box, Button, IconButton, Typography, FormControl, InputLabel,
+    Select, MenuItem, Divider, Chip, Dialog, DialogTitle,
+    DialogContent, DialogActions, Alert,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
-import DeleteIcon from '@mui/icons-material/Delete';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { departments, users } from '../../../../mockdata/mockDepartments';
 import type { MaintenanceLevel, PlanSigner } from '../../../../mockdata/mockPlans';
 import type { AnnualPlan } from '../../../../mockdata/mockWorkflow';
-import StepDepartments from '../step/StepDepartments';
 import StepAssets from '../step/StepAssets';
 import StepSchedule from '../step/StepSchedule';
 import StepPreview from '../step/StepPreview';
-import StepComplete from '../step/StepComplete';
-
-const steps = [
-    'Chọn đơn vị & Người ký',
-    'Chọn thiết bị',
-    'Lịch 12 tháng',
-    'Xem trước',
-    'Hoàn thành',
-];
 
 interface Props {
+    open: boolean;
     onClose: () => void;
     onSave: (plan: AnnualPlan) => void;
 }
 
-const CreatePlanInline = ({ onClose, onSave }: Props) => {
-    const [activeStep, setActiveStep] = useState(0);
+const CreatePlanDialog = ({ open, onClose, onSave }: Props) => {
     const [sourceDeptId, setSourceDeptId] = useState('');
     const [executionDeptId, setExecutionDeptId] = useState('');
     const [selectedAssetIds, setSelectedAssetIds] = useState<string[]>([]);
     const [schedule, setSchedule] = useState<Record<string, MaintenanceLevel[]>>({});
-    const [planStatus, setPlanStatus] = useState<'draft' | 'pending-approval'>('draft');
     const [quantities, setQuantities] = useState<Record<string, number>>({});
-    const [creatorDeptId, setCreatorDeptId] = useState('');
-    const [creatorUserId, setCreatorUserId] = useState('');
-    const [directorDeptId, setDirectorDeptId] = useState('');
-    const [directorUserId, setDirectorUserId] = useState('');
 
-    // ── State riêng cho phần người ký (trên Stepper) ──
+    const [signers, setSigners] = useState<PlanSigner[]>([]);
     const [addDeptId, setAddDeptId] = useState('');
     const [addUserId, setAddUserId] = useState('');
+    const [editingSignerId, setEditingSignerId] = useState<string | null>(null);
+    const [editDeptId, setEditDeptId] = useState('');
+    const [editUserId, setEditUserId] = useState('');
 
-    const creatorUsers = users.filter(u => u.departmentId === creatorDeptId);
-    const directorUsers = users.filter(u => u.departmentId === directorDeptId);
-    const deptUsers = users.filter(u => u.departmentId === addDeptId);
+    const handleClose = () => {
+        setSourceDeptId(''); setExecutionDeptId('');
+        setSelectedAssetIds([]); setSchedule({}); setQuantities({});
+        setSigners([]); setAddDeptId(''); setAddUserId('');
+        onClose();
+    };
 
-    const buildSigner = (
-        userId: string, deptId: string,
-        role: 'creator' | 'director' | 'middle'
-    ): PlanSigner | null => {
-        const user = users.find(u => u.id === userId);
-        const dept = departments.find(d => d.id === deptId);
-        if (!user || !dept) return null;
-        return {
+    const handleAddSigner = () => {
+        if (!addUserId || !addDeptId) return;
+        if (signers.some(s => s.userId === addUserId)) return;
+        const user = users.find(u => u.id === addUserId);
+        const dept = departments.find(d => d.id === addDeptId);
+        if (!user || !dept) return;
+        setSigners(prev => [...prev, {
             userId: user.id, userName: user.name,
             departmentId: dept.id, departmentName: dept.name,
-            role, signed: false,
-        };
+            order: prev.length + 1, signed: false
+        }]);
+        setAddDeptId(''); setAddUserId('');
     };
 
-    // Tổng hợp signers theo đúng thứ tự khi submit
-    const buildSigners = (): PlanSigner[] => {
-        const result: PlanSigner[] = [];
-        const creator = buildSigner(creatorUserId, creatorDeptId, 'creator');
-        if (creator) result.push(creator);
-        result.push(...middleSigners);
-        const director = buildSigner(directorUserId, directorDeptId, 'director');
-        if (director) result.push(director);
-        return result;
+    const handleRemoveSigner = (userId: string) => {
+        setSigners(signers.filter(s => s.userId !== userId).map((s, i) => ({ ...s, order: i + 1 })));
     };
 
-    const [middleSigners, setMiddleSigners] = useState<PlanSigner[]>([]);
-
-    const addMiddleSigner = () => {
-        if (!addUserId || !addDeptId) return;
-        const signer = buildSigner(addUserId, addDeptId, 'middle');
-        if (!signer) return;
-        if (middleSigners.some(s => s.userId === addUserId)) return;
-        setMiddleSigners(prev => [...prev, signer]);
-        setAddUserId('');
-        setAddDeptId('');
+    const handleEdit = (signer: PlanSigner) => {
+        setEditingSignerId(signer.userId);
+        setEditDeptId(signer.departmentId);
+        setEditUserId(signer.userId);
     };
 
-    const removeMiddleSigner = (userId: string) => {
-        setMiddleSigners(prev => prev.filter(s => s.userId !== userId));
+    const handleSaveEdit = () => {
+        setSigners(prev => prev.map(s =>
+            s.userId === editingSignerId ? {
+                ...s,
+                userId: editUserId,
+                userName: users.find(u => u.id === editUserId)?.name || '',
+                departmentId: editDeptId,
+                departmentName: departments.find(d => d.id === editDeptId)?.name || '',
+            } : s
+        ));
+        setEditingSignerId(null);
     };
 
-    const canNext = (): boolean => {
-        switch (activeStep) {
-            case 0: return !!sourceDeptId && !!executionDeptId && sourceDeptId !== executionDeptId;
-            case 1: return selectedAssetIds.length > 0;
-            case 2: return Object.keys(schedule).length > 0;
-            case 3: return true;
-            default: return false;
-        }
-    };
+    const canSave = !!sourceDeptId && !!executionDeptId
+        && sourceDeptId !== executionDeptId
+        && selectedAssetIds.length > 0
+        && Object.keys(schedule).length > 0
+        && signers.length > 0;
 
-    const handleFinish = () => {
+    const handleSave = (status: 'draft' | 'cho-duyet') => {
         const newPlan: AnnualPlan = {
             id: `KH-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`,
             year: new Date().getFullYear(),
             deviceIds: selectedAssetIds,
-            status: planStatus === 'pending-approval' ? 'cho-duyet' : 'draft',
+            status,
             createdDate: new Date().toISOString().slice(0, 10),
             description: `Kế hoạch SCBD - ${departments.find(d => d.id === sourceDeptId)?.name || sourceDeptId}`,
             sourceDepartmentId: sourceDeptId,
             executionDepartmentId: executionDeptId,
             monthlySchedule: schedule as any,
-            signers: buildSigners(),
+            signers,
         };
         onSave(newPlan);
-        onClose();
-    };
-
-    const renderStep = () => {
-        switch (activeStep) {
-            case 0: return (
-                <StepDepartments
-                    sourceDeptId={sourceDeptId}
-                    executionDeptId={executionDeptId}
-                    onSourceChange={(id) => {
-                        setSourceDeptId(id);
-                        setSelectedAssetIds([]);
-                        setSchedule({});
-                    }}
-                    onExecutionChange={setExecutionDeptId}
-                />
-            );
-            case 1: return (
-                <StepAssets
-                    sourceDeptId={sourceDeptId}
-                    selectedAssetIds={selectedAssetIds}
-                    quantities={quantities}
-                    onSelectionChange={setSelectedAssetIds}
-                    onQuantityChange={setQuantities}
-                />
-            );
-            case 2: return (
-                <StepSchedule
-                    assetIds={selectedAssetIds}
-                    schedule={schedule}
-                    onScheduleChange={setSchedule}
-                />
-            );
-            case 3: return (
-                <StepPreview
-                    sourceDeptId={sourceDeptId}
-                    executionDeptId={executionDeptId}
-                    assetIds={selectedAssetIds}
-                    quantities={quantities}
-                    schedule={schedule}
-                    signers={buildSigners()}
-                />
-            );
-            case 4: return (
-                <StepComplete
-                    sourceDeptId={sourceDeptId}
-                    executionDeptId={executionDeptId}
-                    assetCount={selectedAssetIds.length}
-                    signerCount={buildSigners().length}
-                    status={planStatus}
-                    onSubmitForApproval={() => setPlanStatus('pending-approval')}
-                />
-            );
-            default: return null;
-        }
+        handleClose();
     };
 
     return (
-        <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 3, mb: 2 }}>
+        <Dialog open={open} onClose={handleClose} maxWidth="xl" fullWidth
+            PaperProps={{ sx: { height: '90vh' } }}>
 
-            {/* ── Header ── */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="subtitle1" fontWeight={600}>Tạo kế hoạch mới</Typography>
-                <IconButton size="small" onClick={onClose}><CloseIcon fontSize="small" /></IconButton>
-            </Box>
+            <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
+                <Typography variant="h6" fontWeight={600}>Tạo kế hoạch mới</Typography>
+                <IconButton size="small" onClick={handleClose}><CloseIcon /></IconButton>
+            </DialogTitle>
 
-            {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-          PHẦN NGƯỜI KÝ — cố định trên Stepper
-      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-            <Box sx={{
-                p: 2, mb: 2,
-                border: '1px solid', borderColor: 'divider',
-                borderRadius: 1.5, bgcolor: 'grey.50',
-            }}>
-                <Typography variant="caption" fontWeight={600} color="text.secondary"
-                    sx={{ textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', mb: 2 }}>
-                    Danh sách người ký
-                </Typography>
+            <Divider />
 
-                {/* ── 1. Người lập phiếu ── */}
-                <Box sx={{ mb: 2 }}>
-                    <Typography variant="caption" fontWeight={600} sx={{ display: 'block', mb: 1 }}>
-                        Người lập phiếu
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
-                        <FormControl size="small" sx={{ minWidth: 160 }}>
-                            <InputLabel>Phòng ban</InputLabel>
-                            <Select
-                                value={creatorDeptId}
-                                label="Phòng ban"
-                                onChange={e => { setCreatorDeptId(e.target.value); setCreatorUserId(''); }}
-                            >
-                                {departments.map(d => (
-                                    <MenuItem key={d.id} value={d.id}>{d.name}</MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        <FormControl size="small" sx={{ minWidth: 160 }} disabled={!creatorDeptId}>
-                            <InputLabel>Nhân viên</InputLabel>
-                            <Select
-                                value={creatorUserId}
-                                label="Nhân viên"
-                                onChange={e => setCreatorUserId(e.target.value)}
-                            >
-                                {creatorUsers.map(u => (
-                                    <MenuItem key={u.id} value={u.id}>{u.name} – {u.title}</MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        {creatorUserId && (
-                            <Chip
-                                size="small"
-                                label={users.find(u => u.id === creatorUserId)?.name}
-                                color="primary" variant="outlined"
-                                onDelete={() => { setCreatorUserId(''); setCreatorDeptId(''); }}
-                            />
-                        )}
-                    </Box>
-                </Box>
+            <DialogContent sx={{ p: 3, overflow: 'auto' }}>
+                {/* ── ROW 1: 2 cột trên cùng ── */}
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 3, mb: 3 }}>
 
-                <Divider sx={{ mb: 2 }} />
+                    {/* ── CỘT TRÁI: Đơn vị + Chọn thiết bị ── */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
 
-                {/* ── 2. Người ký thêm ── */}
-                <Box sx={{ mb: 2 }}>
-                    <Typography variant="caption" fontWeight={600} sx={{ display: 'block', mb: 1 }}>
-                        Người ký thêm
-                    </Typography>
-
-                    {middleSigners.length > 0 && (
-                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 1.5 }}>
-                            {middleSigners.map((s, idx) => (
-                                <Chip
-                                    key={s.userId}
-                                    label={`${idx + 1}. ${s.userName} (${s.departmentName})`}
-                                    size="small"
-                                    onDelete={() => removeMiddleSigner(s.userId)}
-                                    variant="outlined"
-                                />
-                            ))}
+                        {/* Đơn vị */}
+                        <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3, p: 3 }}>
+                            <Typography variant="subtitle1" fontWeight={600} mb={2}>
+                                1. Đơn vị
+                            </Typography>
+                            <Box sx={{ display: 'flex', gap: 2 }}>
+                                <FormControl size="small" sx={{ flex: 1 }}>
+                                    <InputLabel>Đơn vị quản lý (Nguồn)</InputLabel>
+                                    <Select value={sourceDeptId} label="Đơn vị quản lý (Nguồn)"
+                                        onChange={e => { setSourceDeptId(e.target.value); setSelectedAssetIds([]); setSchedule({}); }}>
+                                        {departments.filter(d => !['PB-09', 'PB-10'].includes(d.id)).map(d => (
+                                            <MenuItem key={d.id} value={d.id}>{d.name}</MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                                <FormControl size="small" sx={{ flex: 1 }}>
+                                    <InputLabel>Đơn vị thực hiện</InputLabel>
+                                    <Select value={executionDeptId} label="Đơn vị thực hiện"
+                                        onChange={e => setExecutionDeptId(e.target.value)}>
+                                        {departments.filter(d => !['PB-09', 'PB-10'].includes(d.id)).map(d => (
+                                            <MenuItem key={d.id} value={d.id} disabled={d.id === sourceDeptId}>
+                                                {d.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Box>
                         </Box>
-                    )}
 
-                    <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-                        <FormControl size="small" sx={{ minWidth: 160 }}>
-                            <InputLabel>Phòng ban</InputLabel>
-                            <Select
-                                value={addDeptId}
-                                label="Phòng ban"
-                                onChange={e => { setAddDeptId(e.target.value); setAddUserId(''); }}
-                            >
-                                {departments.map(d => (
-                                    <MenuItem key={d.id} value={d.id}>{d.name}</MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        <FormControl size="small" sx={{ minWidth: 160 }} disabled={!addDeptId}>
-                            <InputLabel>Người ký</InputLabel>
-                            <Select
-                                value={addUserId}
-                                label="Người ký"
-                                onChange={e => setAddUserId(e.target.value)}
-                            >
-                                {deptUsers.map(u => (
-                                    <MenuItem key={u.id} value={u.id}
-                                        disabled={middleSigners.some(s => s.userId === u.id)}>
-                                        {u.name} – {u.title}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        <Button
-                            size="small" variant="outlined"
-                            startIcon={<PersonAddIcon />}
-                            onClick={addMiddleSigner}
-                            disabled={!addUserId}
-                        >
-                            Thêm
-                        </Button>
+                        {/* Chọn thiết bị */}
+                        <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3, p: 3 }}>
+                            <Typography variant="subtitle1" fontWeight={600} mb={2}>
+                                2. Chọn thiết bị
+                            </Typography>
+                            {!sourceDeptId ? (
+                                <Alert severity="info">Vui lòng chọn đơn vị quản lý trước</Alert>
+                            ) : (
+                                <StepAssets
+                                    sourceDeptId={sourceDeptId}
+                                    selectedAssetIds={selectedAssetIds}
+                                    quantities={quantities}
+                                    onSelectionChange={setSelectedAssetIds}
+                                    onQuantityChange={setQuantities}
+                                />
+                            )}
+                        </Box>
+                    </Box>
+
+                    {/* ── CỘT PHẢI: Quy trình duyệt ── */}
+                    <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3, p: 3, display: 'flex', flexDirection: 'column' }}>
+                        <Typography variant="subtitle1" fontWeight={600} mb={3} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            Quy trình duyệt
+                            <Chip label={`${signers.length} người`} size="small" color="primary" variant="outlined" sx={{ fontWeight: 400 }} />
+                        </Typography>
+
+                        {/* Timeline */}
+                        <Box sx={{ flex: 1, overflowY: 'auto' }}>
+                            {signers.length > 0 ? (
+                                <Box sx={{ position: 'relative', pl: 5, mb: 3 }}>
+                                    <Box sx={{ position: 'absolute', left: 16, top: 8, bottom: 8, width: '1px', bgcolor: 'divider' }} />
+                                    {signers.map((s, idx) => {
+                                        const user = users.find(u => u.id === s.userId);
+                                        const isEditingThis = editingSignerId === s.userId;
+                                        return (
+                                            <Box key={s.userId} sx={{ position: 'relative', mb: 1.5 }}>
+                                                <Box sx={{
+                                                    position: 'absolute', left: -37, top: 14,
+                                                    width: 24, height: 24, borderRadius: '50%',
+                                                    bgcolor: 'green', color: 'white',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    fontSize: 11, fontWeight: 600, zIndex: 1,
+                                                    boxShadow: '0 0 0 3px white'
+                                                }}>{idx + 1}</Box>
+
+                                                <Box sx={{
+                                                    border: '1px solid',
+                                                    borderColor: isEditingThis ? 'primary.main' : 'divider',
+                                                    borderRadius: 2, p: 1.5,
+                                                    bgcolor: isEditingThis ? 'primary.50' : 'background.paper',
+                                                    transition: 'all 0.2s',
+                                                    '&:hover': !isEditingThis ? { boxShadow: 1, borderColor: 'grey.300' } : {}
+                                                }}>
+                                                    {isEditingThis ? (
+                                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                                            <FormControl size="small" fullWidth>
+                                                                <InputLabel>Phòng ban</InputLabel>
+                                                                <Select value={editDeptId} label="Phòng ban"
+                                                                    onChange={e => { setEditDeptId(e.target.value); setEditUserId(''); }}>
+                                                                    {departments.map(d => <MenuItem key={d.id} value={d.id}>{d.name}</MenuItem>)}
+                                                                </Select>
+                                                            </FormControl>
+                                                            <FormControl size="small" fullWidth>
+                                                                <InputLabel>Người duyệt</InputLabel>
+                                                                <Select value={editUserId} label="Người duyệt"
+                                                                    onChange={e => setEditUserId(e.target.value)}>
+                                                                    {users.filter(u => u.departmentId === editDeptId).map(u => (
+                                                                        <MenuItem key={u.id} value={u.id}>{u.name}</MenuItem>
+                                                                    ))}
+                                                                </Select>
+                                                            </FormControl>
+                                                            <Box sx={{ display: 'flex', gap: 1 }}>
+                                                                <Button variant="contained" size="small" onClick={handleSaveEdit}>Lưu</Button>
+                                                                <Button size="small" onClick={() => setEditingSignerId(null)}>Hủy</Button>
+                                                            </Box>
+                                                        </Box>
+                                                    ) : (
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                                                <Box sx={{
+                                                                    width: 36, height: 36, borderRadius: '50%',
+                                                                    bgcolor: 'green', color: 'white',
+                                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                    fontWeight: 600, fontSize: 13, flexShrink: 0,
+                                                                }}>
+                                                                    {user?.name?.charAt(0) ?? '?'}
+                                                                </Box>
+                                                                <Box>
+                                                                    <Typography fontWeight={600} fontSize={13}>{user?.name}</Typography>
+                                                                    <Typography variant="caption" color="text.secondary">{user?.title}</Typography>
+                                                                    <Box sx={{ mt: 0.5 }}>
+                                                                        <Chip
+                                                                            label={departments.find(d => d.id === s.departmentId)?.name ?? s.departmentId}
+                                                                            size="small"
+                                                                            sx={{ fontSize: 10, height: 18, bgcolor: 'grey.100' }}
+                                                                        />
+                                                                    </Box>
+                                                                </Box>
+                                                            </Box>
+                                                            <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                                                <Button size="small" variant="outlined" onClick={() => handleEdit(s)} sx={{ minWidth: 0, px: 1, fontSize: 12 }}>Sửa</Button>
+                                                                <Button size="small" color="error" variant="outlined" onClick={() => handleRemoveSigner(s.userId)} sx={{ minWidth: 0, px: 1, fontSize: 12 }}>Xóa</Button>
+                                                            </Box>
+                                                        </Box>
+                                                    )}
+                                                </Box>
+                                            </Box>
+                                        );
+                                    })}
+                                </Box>
+                            ) : (
+                                <Alert severity="info" sx={{ mb: 2 }}>Chưa có người duyệt</Alert>
+                            )}
+                        </Box>
+
+                        {/* Add signer form */}
+                        <Box sx={{
+                            display: 'flex', flexDirection: 'column', gap: 1.5,
+                            p: 2, bgcolor: 'grey.50', borderRadius: 2,
+                            border: '1px dashed', borderColor: 'divider', mt: 'auto'
+                        }}>
+                            <FormControl size="small" fullWidth>
+                                <InputLabel>Phòng ban</InputLabel>
+                                <Select value={addDeptId} label="Phòng ban"
+                                    onChange={e => { setAddDeptId(e.target.value); setAddUserId(''); }}>
+                                    {departments.map(d => <MenuItem key={d.id} value={d.id}>{d.name}</MenuItem>)}
+                                </Select>
+                            </FormControl>
+                            <FormControl size="small" fullWidth disabled={!addDeptId}>
+                                <InputLabel>Người duyệt</InputLabel>
+                                <Select value={addUserId} label="Người duyệt" onChange={e => setAddUserId(e.target.value)}>
+                                    {users.filter(u => u.departmentId === addDeptId).map(u => (
+                                        <MenuItem key={u.id} value={u.id} disabled={signers.some(s => s.userId === u.id)}>
+                                            {u.name} – {u.title}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                            <Button variant="contained" startIcon={<PersonAddIcon />}
+                                onClick={handleAddSigner} disabled={!addUserId} fullWidth>
+                                Thêm người duyệt
+                            </Button>
+                        </Box>
                     </Box>
                 </Box>
 
-                <Divider sx={{ mb: 2 }} />
+                <Divider sx={{ my: 1 }} />
 
-                {/* ── 3. Giám đốc ── */}
-                <Box>
-                    <Typography variant="caption" fontWeight={600} sx={{ display: 'block', mb: 1 }}>
-                        Giám đốc
+                {/* ── Lịch sửa chữa ── */}
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>
+                        3. Lịch sửa chữa bảo dưỡng
                     </Typography>
-                    <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
-                        <FormControl size="small" sx={{ minWidth: 160 }}>
-                            <InputLabel>Phòng ban</InputLabel>
-                            <Select
-                                value={directorDeptId}
-                                label="Phòng ban"
-                                onChange={e => { setDirectorDeptId(e.target.value); setDirectorUserId(''); }}
-                            >
-                                {departments.map(d => (
-                                    <MenuItem key={d.id} value={d.id}>{d.name}</MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        <FormControl size="small" sx={{ minWidth: 160 }} disabled={!directorDeptId}>
-                            <InputLabel>Nhân viên</InputLabel>
-                            <Select
-                                value={directorUserId}
-                                label="Nhân viên"
-                                onChange={e => setDirectorUserId(e.target.value)}
-                            >
-                                {directorUsers.map(u => (
-                                    <MenuItem key={u.id} value={u.id}>{u.name} – {u.title}</MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        {directorUserId && (
-                            <Chip
-                                size="small"
-                                label={users.find(u => u.id === directorUserId)?.name}
-                                color="secondary" variant="outlined"
-                                onDelete={() => { setDirectorUserId(''); setDirectorDeptId(''); }}
-                            />
-                        )}
-                    </Box>
+                    {selectedAssetIds.length === 0 ? (
+                        <Alert severity="info">Vui lòng chọn thiết bị trước</Alert>
+                    ) : (
+                        <StepSchedule assetIds={selectedAssetIds} schedule={schedule} onScheduleChange={setSchedule} />
+                    )}
                 </Box>
-            </Box>
 
-            <Divider sx={{ mb: 2 }} />
+                <Divider sx={{ my: 1 }} />
 
-            {/* ── Stepper ── */}
-            <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 3 }}>
-                {steps.map(label => (
-                    <Step key={label}><StepLabel>{label}</StepLabel></Step>
-                ))}
-            </Stepper>
+                {/* ── Xem trước ── */}
+                <Box>
+                    <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>
+                        4. Xem trước kế hoạch
+                    </Typography>
+                    <StepPreview
+                        sourceDeptId={sourceDeptId}
+                        executionDeptId={executionDeptId}
+                        assetIds={selectedAssetIds}
+                        quantities={quantities}
+                        schedule={schedule}
+                        signers={signers}
+                    />
+                </Box>
+            </DialogContent>
 
-            {/* ── Nội dung bước ── */}
-            <Box sx={{ minHeight: 300 }}>
-                {renderStep()}
-            </Box>
+            <Divider />
 
-            {/* ── Navigation ── */}
-            <Box sx={{
-                display: 'flex',
-                justifyContent: activeStep === 4 ? 'center' : 'space-between',
-                mt: 3, pt: 2,
-                borderTop: '1px solid', borderColor: 'divider',
-            }}>
-                {activeStep < 4 && (
-                    <>
-                        <Button disabled={activeStep === 0} onClick={() => setActiveStep(p => p - 1)} startIcon={<ArrowBackIcon />}>
-                            Quay lại
-                        </Button>
-                        <Button
-                            variant="contained"
-                            onClick={() => setActiveStep(p => p + 1)}
-                            disabled={!canNext()}
-                            endIcon={activeStep === 3 ? <CheckIcon /> : <ArrowForwardIcon />}
-                        >
-                            {activeStep === 3 ? 'Hoàn thành' : 'Tiếp theo'}
-                        </Button>
-                    </>
-                )}
-                {activeStep === 4 && (
-                    <Button variant="contained" color="primary" onClick={handleFinish}>
-                        Lưu kế hoạch & Đóng
-                    </Button>
-                )}
-            </Box>
-        </Paper>
+            <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+                <Button onClick={handleClose} color="inherit">Hủy</Button>
+                <Button variant="outlined" disabled={!canSave} onClick={() => handleSave('draft')}>Lưu nháp</Button>
+                <Button variant="contained" disabled={!canSave} onClick={() => handleSave('cho-duyet')}>Gửi phê duyệt</Button>
+            </DialogActions>
+        </Dialog>
     );
 };
 
-export default CreatePlanInline;
+export default CreatePlanDialog;
