@@ -295,7 +295,6 @@ const RepairRequestDialog = ({
 
           {/* ── Hàng dưới: Preview FULL WIDTH ── */}
           <Box>
-            <Typography variant="subtitle1" fontWeight={600} mb={1.5}>Xem trước</Typography>
             <RepairRequestPreview
               plan={plan}
               deviceIds={selectedDeviceIds}
