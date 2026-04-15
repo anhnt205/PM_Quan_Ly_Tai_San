@@ -179,7 +179,7 @@ export default function MaintenancePlanRepair() {
                 setSearchValue={setSearchValue}
                 onDelete={() => { }}
                 showDelete={false}
-                isRowSelectable={(params) => params.row.status === 'draft'}
+                isRowSelectable={(params) => params?.row?.status === 'draft'}
                 isCheckShowShare={(items: any[]) =>
                   items.length > 0 && items.every(item => item.status === 'draft')
                 }

@@ -1,11 +1,16 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     Box, Typography, Tabs, Tab, Table, TableBody, TableCell,
     TableContainer, TableHead, TableRow, Paper, Chip, Checkbox,
     Button, IconButton, Select, MenuItem, FormControl, InputLabel,
+    Collapse, Tooltip,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PostAddIcon from '@mui/icons-material/PostAdd';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import { devices } from '../../../../mockdata/mockDevices';
 import { departments } from '../../../../mockdata/mockDepartments';
 import {
@@ -16,134 +21,222 @@ import {
 } from '../../../../mockdata/mockPlans';
 import type { AnnualPlan } from '../../../../mockdata/mockWorkflow';
 import type { RepairRequest } from '../../../../mockdata/mockRepairRequests';
-import { calculatePlanMaterials } from '../../../../mockdata/mockNorms';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-// import InspectionRecordDialog from './InspectionRecordDialog';
-import type { AcceptanceTestRecord, MaterialQualityRecord, TechnicalInspectionRecord } from '../../../../mockdata/mockInspectionRecords';
+import type {
+    AcceptanceTestRecord,
+    MaterialQualityRecord,
+    TechnicalInspectionRecord,
+} from '../../../../mockdata/mockInspectionRecords';
 import RepairRequestDialog from '../dialog/RepairRequestDialog';
-// import AcceptanceTestDialog from './AcceptanceDialog';
-// import MaterialQualityDialog from './MaterialQualityDialog';
+import InspectionRecordDialog from '../dialog/InspectionRecordDialog';
+import AcceptanceTestDialog from '../dialog/AcceptanceTestDialog';
+import MaterialDialog from '../dialog/MaterialDialog';
 
 interface Props {
     plan: AnnualPlan;
     repairRequests: RepairRequest[];
-    inspectionRecords: TechnicalInspectionRecord[];       // thêm
+    inspectionRecords: TechnicalInspectionRecord[];
     acceptanceTestRecords: AcceptanceTestRecord[];
     materialQualityRecords: MaterialQualityRecord[];
-    onCreateMaterialQualityRecord: (record: MaterialQualityRecord) => void;
     onClose: () => void;
     onCreateRepairRequest: (req: RepairRequest) => void;
-    onCreateInspectionRecord: (record: TechnicalInspectionRecord) => void;  // thêm
-    onCreateAcceptanceRecord: (record: AcceptanceTestRecord) => void;        // thêm
+    onCreateInspectionRecord: (record: TechnicalInspectionRecord) => void;
+    onCreateAcceptanceRecord: (record: AcceptanceTestRecord) => void;
+    onCreateMaterialQualityRecord: (record: MaterialQualityRecord) => void;
 }
 
+// ── Helpers ───────────────────────────────────────────────
+const StatusChip = ({ status }: { status: string }) => {
+    const map: Record<string, { label: string; color: any }> = {
+        draft: { label: 'Bản nháp', color: 'default' },
+        'cho-duyet': { label: 'Chờ duyệt', color: 'warning', },
+        'da-duyet': { label: 'Đã duyệt', color: 'success' },
+        'tu-choi': { label: 'Từ chối', color: 'error' },
+        'dang-ky': { label: 'Đang ký', color: 'info' },
+    };
+    const cfg = map[status] ?? { label: status, color: 'default' };
+    return <Chip label={cfg.label} color={cfg.color} size="small" sx={{ color: '#fff' }}/>;
+};
+const ROW_H = 36;
+const CONNECTOR_WIDTH = 16;
+const MAX_DEPTH = 4;
+const INDENT_SPACE = CONNECTOR_WIDTH * MAX_DEPTH;
+// ── Tree connector component ──────────────────────────────
+// Vẽ đường dọc (nếu không phải node cuối) + đường ngang vào node
+interface TreeConnectorProps {
+    depth: number;       // 1 = cấp 1 (GĐN), 2 = BB GĐ, 3 = BB NT, 4 = BB VT
+    isLast: boolean;     // node cuối trong nhóm → không cần đường dọc tiếp
+    rowHeight?: number;  // chiều cao row, default 36
+}
+
+
+const TreeConnector = ({ depth, isLast, rowHeight = 36 }: TreeConnectorProps) => {
+    // Màu đường nối theo cấp
+    const lineColor = ['#90caf9', '#a5d6a7', '#ffcc80', '#ce93d8'][depth - 1] ?? '#bdbdbd';
+
+    return (
+        <Box sx={{ display: 'flex', alignItems: 'stretch', height: rowHeight, flexShrink: 0 }}>
+            {/* Các đường dọc của cấp cha (chỉ là spacer có đường) */}
+            {Array.from({ length: depth - 1 }).map((_, i) => (
+                <Box
+                    key={i}
+                    sx={{
+                        width: CONNECTOR_WIDTH,
+                        flexShrink: 0,
+                        position: 'relative',
+                        '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            left: CONNECTOR_WIDTH / 2 - 0.75,
+                            top: 0,
+                            bottom: 0,
+                            width: 1.5,
+                            bgcolor: lineColor,
+                            opacity: 0.5,
+                        },
+                    }}
+                />
+            ))}
+            {/* Đường nối của cấp hiện tại: dọc (½ chiều cao xuống) + ngang sang phải */}
+            <Box sx={{ width: CONNECTOR_WIDTH, flexShrink: 0, position: 'relative' }}>
+                {/* Đường dọc — từ trên xuống giữa (hoặc hết nếu không phải last) */}
+                <Box sx={{
+                    position: 'absolute',
+                    left: CONNECTOR_WIDTH / 2 - 0.75,
+                    top: 0,
+                    height: isLast ? '50%' : '100%',
+                    width: 1.5,
+                    bgcolor: lineColor,
+                }} />
+                {/* Đường ngang */}
+                <Box sx={{
+                    position: 'absolute',
+                    left: CONNECTOR_WIDTH / 2 - 0.75,
+                    top: '50%',
+                    width: CONNECTOR_WIDTH / 2 + 0.75,
+                    height: 1.5,
+                    bgcolor: lineColor,
+                    transform: 'translateY(-50%)',
+                }} />
+            </Box>
+        </Box>
+    );
+};
+
+// ── ActionCell: nút Xem + Tạo (icon only) ────────────────
+interface ActionCellProps {
+    onView?: () => void;
+    onAdd?: () => void;
+    addTooltip?: string;
+    addColor?: 'primary' | 'success' | 'warning' | 'secondary';
+}
+
+const ActionCell = ({ onView, onAdd, addTooltip = 'Tạo biên bản', addColor = 'primary' }: ActionCellProps) => (
+    <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end', alignItems: 'center' }}>
+        {onView && (
+            <Tooltip title="Xem chi tiết" placement="top">
+                <IconButton size="small" onClick={e => { e.stopPropagation(); onView(); }}>
+                    <VisibilityOutlinedIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+            </Tooltip>
+        )}
+        {onAdd && (
+            <Tooltip title={addTooltip} placement="top">
+                <IconButton
+                    size="small"
+                    color={addColor}
+                    onClick={e => { e.stopPropagation(); onAdd(); }}
+                >
+                    <AddCircleOutlineIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+            </Tooltip>
+        )}
+    </Box>
+);
+
+// ── Component chính ───────────────────────────────────────
 const PlanDetailPanel = ({
-    plan, repairRequests, inspectionRecords, acceptanceTestRecords, materialQualityRecords,
-    onClose, onCreateRepairRequest, onCreateInspectionRecord, onCreateAcceptanceRecord, onCreateMaterialQualityRecord
+    plan, repairRequests, inspectionRecords, acceptanceTestRecords,
+    materialQualityRecords, onClose, onCreateRepairRequest,
+    onCreateInspectionRecord, onCreateAcceptanceRecord, onCreateMaterialQualityRecord,
 }: Props) => {
     const [tab, setTab] = useState(0);
-    const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
     const [selectedDeviceIds, setSelectedDeviceIds] = useState<string[]>([]);
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null);
-    const [inspectionDialogOpen, setInspectionDialogOpen] = useState(false);
-    const [activeRepairRequest, setActiveRepairRequest] = useState<typeof repairRequests[0] | null>(null);
-    const [acceptanceDialogOpen, setAcceptanceDialogOpen] = useState(false);
-    const [activeInspectionRecord, setActiveInspectionRecord] = useState<TechnicalInspectionRecord | null>(null);
-    const [materialQualityDialogOpen, setMaterialQualityDialogOpen] = useState(false);
-    const [activeMaterialAcceptance, setActiveMaterialAcceptance] = useState<AcceptanceTestRecord | null>(null);
+    const [repairDialogOpen, setRepairDialogOpen] = useState(false);
 
+    const [expandedRequests, setExpandedRequests] = useState<Set<string>>(new Set());
+    const [expandedInspections, setExpandedInspections] = useState<Set<string>>(new Set());
+    const [expandedAcceptances, setExpandedAcceptances] = useState<Set<string>>(new Set());
+
+    const [inspectionParentReqId, setInspectionParentReqId] = useState<string | null>(null);
+    const [acceptanceParentInspId, setAcceptanceParentInspId] = useState<string | null>(null);
+    const [materialParentAccId, setMaterialParentAccId] = useState<string | null>(null);
+
+    const schedule: Record<string, MaintenanceLevel[]> = (plan as any).monthlySchedule ?? {};
     const planRequests = repairRequests.filter(r => r.planId === plan.id);
 
+    // ── Tab 0 helpers ─────────────────────────────────────
     const usedDeviceIds = useMemo(() => {
         const ids = new Set<string>();
         planRequests
-            .filter(r => r.month === selectedMonth + 1)  // +1 vì selectedMonth là 0-based
+            .filter(r => r.month === selectedMonth + 1)
             .forEach(r => r.deviceIds.forEach(id => ids.add(id)));
         return ids;
     }, [planRequests, selectedMonth]);
-
-    const schedule: Record<string, MaintenanceLevel[]> = (plan as any).monthlySchedule || {};
 
     const devicesForMonth = useMemo(() => {
         return plan.deviceIds
             .map(id => devices.find(d => d.id === id))
             .filter(Boolean)
-            .filter(d => {
-                const row = schedule[d!.id];
-                if (!row) return true;
-                return row[selectedMonth] && (row[selectedMonth] as string) !== '';
-            })
+            .filter(d => { const row = schedule[d!.id]; return !row || !!row[selectedMonth]; })
             .map(d => d!);
     }, [plan.deviceIds, schedule, selectedMonth]);
 
     const availableDevices = devicesForMonth.filter(d => !usedDeviceIds.has(d.id));
 
-    const handleToggle = (deviceId: string) => {
-        setSelectedDeviceIds(prev =>
-            prev.includes(deviceId) ? prev.filter(id => id !== deviceId) : [...prev, deviceId]
+    const handleToggle = (id: string) =>
+        setSelectedDeviceIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+
+    const handleSelectAll = () =>
+        setSelectedDeviceIds(
+            selectedDeviceIds.length === availableDevices.length ? [] : availableDevices.map(d => d.id)
         );
-    };
 
-    const handleSelectAll = () => {
-        if (selectedDeviceIds.length === availableDevices.length) {
-            setSelectedDeviceIds([]);
-        } else {
-            setSelectedDeviceIds(availableDevices.map(d => d.id));
-        }
-    };
-
-    const handleOpenDialog = () => setDialogOpen(true);
-
-    const handleCreateRequest = (req: RepairRequest) => {
-        onCreateRepairRequest(req);
-        setSelectedDeviceIds([]);
-        setDialogOpen(false);
-    };
-
-    const handleCreateInspection = (record: TechnicalInspectionRecord) => {
-        onCreateInspectionRecord(record);   // ← dùng prop thay vì local state
-        setInspectionDialogOpen(false);
-        setActiveRepairRequest(null);
-    };
-
-    const handleCreateAcceptance = (record: AcceptanceTestRecord) => {
-        onCreateAcceptanceRecord(record);
-        setAcceptanceDialogOpen(false);
-        setActiveInspectionRecord(null);
-    };
-
-    const handleCreateMaterialQuality = (record: MaterialQualityRecord) => {
-        onCreateMaterialQualityRecord(record);
-        setMaterialQualityDialogOpen(false);
-        setActiveMaterialAcceptance(null);
+    const toggle = (set: Set<string>, id: string, setter: (s: Set<string>) => void) => {
+        const next = new Set(set);
+        next.has(id) ? next.delete(id) : next.add(id);
+        setter(next);
     };
 
     const sourceDept = departments.find(d => d.id === (plan as any).sourceDepartmentId);
     const execDept = departments.find(d => d.id === (plan as any).executionDepartmentId);
 
+    const canCreateInspectionForReq = (req: RepairRequest) =>
+        req.status === 'da-duyet' &&
+        inspectionRecords.filter(r => r.repairRequestId === req.id).length === 0;
+
+    const canCreateAcceptanceForInsp = (insp: TechnicalInspectionRecord) =>
+        insp.status === 'da-duyet' &&
+        acceptanceTestRecords.filter(a => a.inspectionRecordId === insp.id).length === 0;
+
+    const canCreateMaterialForAcc = (acc: AcceptanceTestRecord) =>
+        acc.status === 'da-duyet' &&
+        materialQualityRecords.filter(m => m.acceptanceRecordId === acc.id).length === 0;
+
     return (
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            {/* Header */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                <Typography variant="h6" fontWeight={700}>
-                    Chi tiết: {plan.id}
-                </Typography>
+                <Typography variant="h6" fontWeight={700}>Chi tiết: {plan.id}</Typography>
                 <IconButton onClick={onClose} size="small"><CloseIcon /></IconButton>
             </Box>
 
-            <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
                 <Typography variant="body2"><b>Năm:</b> {plan.year}</Typography>
                 <Typography variant="body2"><b>Ngày tạo:</b> {plan.createdDate}</Typography>
                 {sourceDept && <Typography variant="body2"><b>ĐV quản lý:</b> {sourceDept.name}</Typography>}
                 {execDept && <Typography variant="body2"><b>ĐV thực hiện:</b> {execDept.name}</Typography>}
-                <Chip
-                    label={plan.status === 'da-duyet' ? 'Đã duyệt' : plan.status === 'cho-duyet' ? 'Chờ duyệt' : plan.status === 'tu-choi' ? 'Từ chối' : 'Bản nháp'}
-                    color={plan.status === 'da-duyet' ? 'success' : plan.status === 'cho-duyet' ? 'warning' : plan.status === 'tu-choi' ? 'error' : 'default'}
-                    size="small"
-                />
+                <StatusChip status={plan.status} />
             </Box>
 
             <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
@@ -151,19 +244,17 @@ const PlanDetailPanel = ({
                 <Tab label="Xem theo biên bản" />
             </Tabs>
 
+            {/* ══════════════ TAB 0: Thiết bị ══════════════ */}
             {tab === 0 && (
                 <Box sx={{ flex: 1, overflow: 'auto' }}>
                     {plan.status === 'da-duyet' && (
-                        <Box sx={{ display: 'flex', gap: 2, mt: 2, mb: 2, alignItems: 'center' }}>
+                        <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
                             <FormControl size="small" sx={{ minWidth: 150 }}>
                                 <InputLabel>Tháng SCBD</InputLabel>
                                 <Select
                                     value={selectedMonth}
                                     label="Tháng SCBD"
-                                    onChange={(e) => {
-                                        setSelectedMonth(e.target.value as number);
-                                        setSelectedDeviceIds([]);
-                                    }}
+                                    onChange={e => { setSelectedMonth(e.target.value as number); setSelectedDeviceIds([]); }}
                                 >
                                     {monthLabels.map((m, idx) => (
                                         <MenuItem key={idx} value={idx}>{m}</MenuItem>
@@ -174,7 +265,7 @@ const PlanDetailPanel = ({
                                 variant="contained"
                                 startIcon={<PostAddIcon />}
                                 disabled={selectedDeviceIds.length === 0}
-                                onClick={handleOpenDialog}
+                                onClick={() => setRepairDialogOpen(true)}
                                 size="small"
                             >
                                 Tạo Giấy đề nghị SC ({selectedDeviceIds.length})
@@ -182,7 +273,7 @@ const PlanDetailPanel = ({
                         </Box>
                     )}
 
-                    <TableContainer component={Paper} sx={{ maxHeight: 350 }}>
+                    <TableContainer component={Paper} sx={{ maxHeight: 400 }}>
                         <Table size="small" stickyHeader>
                             <TableHead>
                                 <TableRow>
@@ -232,11 +323,10 @@ const PlanDetailPanel = ({
                                             </TableCell>
                                             <TableCell>{device.quantity}</TableCell>
                                             <TableCell>
-                                                {isUsed ? (
-                                                    <Chip label="Đã lập lệnh" size="small" color="info" />
-                                                ) : (
-                                                    <Chip label="Chưa lập" size="small" variant="outlined" />
-                                                )}
+                                                {isUsed
+                                                    ? <Chip label="Đã lập lệnh" size="small" color="info" />
+                                                    : <Chip label="Chưa lập" size="small" variant="outlined" />
+                                                }
                                             </TableCell>
                                         </TableRow>
                                     );
@@ -254,324 +344,237 @@ const PlanDetailPanel = ({
                 </Box>
             )}
 
+            {/* ══════════════ TAB 1: Biên bản — tree view ══════════════ */}
             {tab === 1 && (
                 <Box sx={{ flex: 1, overflow: 'auto' }}>
-                    <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-                        Danh sách Giấy đề nghị sửa chữa
-                    </Typography>
-                    {planRequests.length === 0 ? (
-                        <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
-                            Chưa có giấy đề nghị nào được tạo từ kế hoạch này
-                        </Typography>
-                    ) : (
-                        <TableContainer component={Paper} variant="outlined">
-                            <Table size="small">
-                                <TableHead>
-                                    <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                                        <TableCell width={40} />
-                                        <TableCell sx={{ fontWeight: 700 }}>Số</TableCell>
-                                        <TableCell sx={{ fontWeight: 700 }}>Tháng/Năm</TableCell>
-                                        <TableCell sx={{ fontWeight: 700 }}>Số TB</TableCell>
-                                        <TableCell sx={{ fontWeight: 700 }}>Ngày tạo</TableCell>
-                                        <TableCell sx={{ fontWeight: 700 }}>Trạng thái GĐN</TableCell>
-                                        <TableCell sx={{ fontWeight: 700 }}>BB Giám định</TableCell>
+                    <TableContainer component={Paper} variant="outlined" sx={{ overflowX: 'auto' }}>
+                        <Table size="small" sx={{ minWidth: 900 }}>
+                            <TableHead>
+                                <TableRow sx={{ bgcolor: 'action.hover' }}>
+                                    <TableCell sx={{ fontWeight: 700 }}>Biên bản</TableCell>
+                                    <TableCell sx={{ fontWeight: 700 }}>Loại</TableCell>
+                                    <TableCell sx={{ fontWeight: 700 }}>Ngày</TableCell>
+                                    <TableCell sx={{ fontWeight: 700 }}>Trạng thái</TableCell>
+                                    <TableCell sx={{ fontWeight: 700 }} align="right">Thao tác</TableCell>
+                                </TableRow>
+                            </TableHead>
+
+                            <TableBody>
+                                {planRequests.length === 0 && (
+                                    <TableRow>
+                                        <TableCell colSpan={5} align="center">
+                                            Không có dữ liệu
+                                        </TableCell>
                                     </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {planRequests.map(req => {
-                                        const isExpanded = expandedRequestId === req.id;
-                                        const relatedInspections = inspectionRecords.filter(r => r.repairRequestId === req.id);
-                                        const canCreateInspection = req.status === 'da-duyet' && relatedInspections.length === 0;
+                                )}
 
-                                        return (
-                                            <>
-                                                <TableRow
-                                                    key={req.id}
-                                                    hover
-                                                    sx={{ cursor: 'pointer', bgcolor: isExpanded ? 'action.selected' : undefined }}
-                                                    onClick={() => setExpandedRequestId(isExpanded ? null : req.id)}
+                                {planRequests.map((req, reqIdx) => {
+                                    const inspections = inspectionRecords.filter(i => i.repairRequestId === req.id);
+                                    const isReqLast = reqIdx === planRequests.length - 1;
+
+                                    return (
+                                        <React.Fragment key={req.id}>
+                                            {/* Level 1 */}
+                                            <TableRow hover>
+                                                <TableCell
+                                                    sx={{
+                                                        pl: 2,
+                                                        position: 'relative',
+                                                        height: ROW_H,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                    }}
                                                 >
-                                                    <TableCell padding="checkbox">
-                                                        <IconButton size="small">
-                                                            {isExpanded ? <KeyboardArrowUpIcon fontSize="small" /> : <KeyboardArrowDownIcon fontSize="small" />}
-                                                        </IconButton>
-                                                    </TableCell>
-                                                    <TableCell sx={{ fontWeight: 500 }}>{req.number || req.id}</TableCell>
-                                                    <TableCell>{req.month}/{req.year}</TableCell>
-                                                    <TableCell>{req.deviceIds.length}</TableCell>
-                                                    <TableCell>{req.createdDate}</TableCell>
-                                                    <TableCell>
-                                                        <Chip
-                                                            label={req.status === 'cho-duyet' ? 'Chờ duyệt' : req.status === 'da-duyet' ? 'Đã duyệt' : 'Bản nháp'}
-                                                            color={req.status === 'cho-duyet' ? 'warning' : req.status === 'da-duyet' ? 'success' : 'default'}
+                                                    <Box
+                                                        sx={{
+                                                            position: 'absolute',
+                                                            left: 0,
+                                                            top: 0,
+                                                            height: '100%',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                        }}
+                                                    >
+                                                        <TreeConnector depth={1} isLast={isReqLast} />
+                                                    </Box>
+                                                    {inspections.length > 0 && (
+                                                        <IconButton
                                                             size="small"
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {relatedInspections.length > 0 ? (
-                                                            <Chip
-                                                                icon={<AssignmentIcon sx={{ fontSize: 14 }} />}
-                                                                label={relatedInspections[0].status === 'cho-duyet' ? 'Chờ duyệt' : 'Đã duyệt'}
-                                                                color={relatedInspections[0].status === 'cho-duyet' ? 'warning' : 'success'}
-                                                                size="small"
-                                                                variant="outlined"
-                                                            />
-                                                        ) : canCreateInspection ? (
-                                                            <Button
-                                                                size="small"
-                                                                variant="outlined"
-                                                                color="primary"
-                                                                startIcon={<AddCircleOutlineIcon sx={{ fontSize: 14 }} />}
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setActiveRepairRequest(req);
-                                                                    setInspectionDialogOpen(true);
-                                                                }}
-                                                                sx={{ fontSize: '0.75rem', py: 0.25 }}
-                                                            >
-                                                                Tạo BB giám định
-                                                            </Button>
-                                                        ) : (
-                                                            <Typography variant="caption" color="text.disabled">
-                                                                {req.status !== 'da-duyet' ? 'Chờ GĐN duyệt' : '—'}
-                                                            </Typography>
-                                                        )}
-                                                    </TableCell>
-                                                </TableRow>
+                                                            sx={{ ml: `${CONNECTOR_WIDTH * 1 - 6}px` }}
+                                                            onClick={() => toggle(expandedRequests, req.id, setExpandedRequests)}
+                                                        >
+                                                            {expandedRequests.has(req.id) ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                                                        </IconButton>
+                                                    )}
+                                                    <Typography variant="body2" sx={{ ml: `${CONNECTOR_WIDTH * 1 + 8}px` }}>{req.number}</Typography>
+                                                </TableCell>
+                                                <TableCell><Chip label="GĐ Sửa chữa" size="small" /></TableCell>
+                                                <TableCell>{req.createdDate}</TableCell>
+                                                <TableCell><StatusChip status={req.status} /></TableCell>
+                                                <TableCell align="right">
+                                                    <ActionCell
+                                                        onView={() => { }}
+                                                        onAdd={canCreateInspectionForReq(req) ? () => setInspectionParentReqId(req.id) : undefined}
+                                                        addTooltip="Tạo BB Giám định"
+                                                        addColor="success"
+                                                    />
+                                                </TableCell>
+                                            </TableRow>
 
-                                                {/* Expanded: chi tiết BB giám định */}
-                                                {isExpanded && (
-                                                    <TableRow key={`${req.id}-detail`}>
-                                                        <TableCell colSpan={7} sx={{ py: 0, bgcolor: 'action.hover' }}>
-                                                            <Box sx={{ px: 3, py: 1.5 }}>
-                                                                {relatedInspections.length === 0 ? (
-                                                                    <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                                                                        {req.status === 'da-duyet'
-                                                                            ? 'Chưa có biên bản giám định. Nhấn "Tạo BB giám định" để tạo mới.'
-                                                                            : 'Giấy đề nghị chưa được duyệt. Biên bản giám định sẽ có thể tạo sau khi GĐN được duyệt.'}
-                                                                    </Typography>
-                                                                ) : (
-                                                                    relatedInspections.map(record => (
-                                                                        <Box key={record.id} sx={{ mb: 1 }}>
-                                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                                                                                <AssignmentIcon fontSize="small" color="primary" />
-                                                                                <Typography variant="body2" fontWeight={600}>{record.number}</Typography>
-                                                                                <Typography variant="caption" color="text.secondary">
-                                                                                    Ngày: {record.inspectionDate}
-                                                                                </Typography>
-                                                                                <Typography variant="caption" color="text.secondary">
-                                                                                    Tại: {record.location}
-                                                                                </Typography>
-                                                                                <Chip
-                                                                                    label={record.status === 'cho-duyet' ? 'Chờ duyệt' : record.status === 'dang-ky' ? 'Đang ký' : 'Đã duyệt'}
-                                                                                    color={record.status === 'cho-duyet' ? 'warning' : record.status === 'dang-ky' ? 'info' : 'success'}
-                                                                                    size="small"
-                                                                                />
-                                                                            </Box>
+                                            {/* Level 2 */}
+                                            {expandedRequests.has(req.id) && inspections.map((insp, inspIdx) => {
+                                                const acceptances = acceptanceTestRecords.filter(a => a.inspectionRecordId === insp.id);
+                                                const isInspLast = inspIdx === inspections.length - 1;
 
-                                                                            {/* Thành phần ký */}
-                                                                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', ml: 3.5 }}>
-                                                                                {record.signers.map(signer => (
-                                                                                    <Chip
-                                                                                        key={signer.order}
-                                                                                        label={`${signer.order}. ${signer.name || '?'} (${signer.title})`}
-                                                                                        size="small"
-                                                                                        variant={signer.signed ? 'filled' : 'outlined'}
-                                                                                        color={signer.signed ? 'success' : 'default'}
-                                                                                    />
-                                                                                ))}
-                                                                            </Box>
-
-                                                                            {/* Thiết bị */}
-                                                                            <Table size="small" sx={{ mt: 1, ml: 3.5 }}>
-                                                                                <TableHead>
-                                                                                    <TableRow>
-                                                                                        <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>Thiết bị</TableCell>
-                                                                                        <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>Tình trạng KT</TableCell>
-                                                                                        <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>Biện pháp</TableCell>
-                                                                                    </TableRow>
-                                                                                </TableHead>
-                                                                                <TableBody>
-                                                                                    {record.deviceEntries.map((entry, i) => (
-                                                                                        <TableRow key={i}>
-                                                                                            <TableCell sx={{ fontSize: '0.75rem' }}>{entry.deviceName}</TableCell>
-                                                                                            <TableCell sx={{ fontSize: '0.75rem' }}>{entry.technicalCondition}</TableCell>
-                                                                                            <TableCell sx={{ fontSize: '0.75rem' }}>
-                                                                                                {entry.actionRepair && <Chip label="S.chữa" size="small" sx={{ mr: 0.5, bgcolor: '#fff3e0' }} />}
-                                                                                                {entry.actionReplace && <Chip label="Thay mới" size="small" sx={{ bgcolor: '#fce4ec' }} />}
-                                                                                            </TableCell>
-                                                                                        </TableRow>
-                                                                                    ))}
-                                                                                </TableBody>
-                                                                            </Table>
-                                                                            <Box sx={{ mt: 1.5, ml: 3.5 }}>
-                                                                                {(() => {
-                                                                                    const relatedAcceptance = acceptanceTestRecords.filter(
-                                                                                        a => a.inspectionRecordId === record.id
-                                                                                    );
-                                                                                    const canCreateAcceptance = record.status === 'da-duyet' && relatedAcceptance.length === 0;
-                                                                                    return (
-                                                                                        <Box sx={{
-                                                                                            p: 1, border: '1px dashed',
-                                                                                            borderColor: relatedAcceptance.length > 0 ? 'success.light' : 'divider',
-                                                                                            borderRadius: 1,
-                                                                                        }}>
-                                                                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                                                                <Typography variant="caption" fontWeight={600} color="text.secondary">
-                                                                                                    BB Nghiệm thu chạy thử
-                                                                                                </Typography>
-                                                                                                {relatedAcceptance.length > 0 ? (
-                                                                                                    <Chip
-                                                                                                        label={relatedAcceptance[0].status === 'cho-duyet' ? 'Chờ duyệt' : 'Đã duyệt'}
-                                                                                                        color={relatedAcceptance[0].status === 'cho-duyet' ? 'warning' : 'success'}
-                                                                                                        size="small"
-                                                                                                    />
-                                                                                                ) : canCreateAcceptance ? (
-                                                                                                    <Button
-                                                                                                        size="small" variant="outlined" color="success"
-                                                                                                        startIcon={<AddCircleOutlineIcon sx={{ fontSize: 14 }} />}
-                                                                                                        onClick={(e) => {
-                                                                                                            e.stopPropagation();
-                                                                                                            setActiveInspectionRecord(record);
-                                                                                                            setAcceptanceDialogOpen(true);
-                                                                                                        }}
-                                                                                                        sx={{ fontSize: '0.72rem', py: 0.25 }}
-                                                                                                    >
-                                                                                                        Tạo BB nghiệm thu
-                                                                                                    </Button>
-                                                                                                ) : (
-                                                                                                    <Typography variant="caption" color="text.disabled">
-                                                                                                        Chờ BB giám định duyệt
-                                                                                                    </Typography>
-                                                                                                )}
-                                                                                            </Box>
-                                                                                            {relatedAcceptance.length > 0 && (
-                                                                                                <Box sx={{ mt: 0.5 }}>
-                                                                                                    <Typography variant="caption" color="text.secondary">
-                                                                                                        {relatedAcceptance[0].number} — Ngày: {relatedAcceptance[0].date}
-                                                                                                    </Typography>
-                                                                                                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
-                                                                                                        {relatedAcceptance[0].signers.map(s => (
-                                                                                                            <Chip
-                                                                                                                key={s.order}
-                                                                                                                label={`${s.order}. ${s.name || '?'} (${s.title})`}
-                                                                                                                size="small"
-                                                                                                                variant={s.signed ? 'filled' : 'outlined'}
-                                                                                                                color={s.signed ? 'success' : 'default'}
-                                                                                                            />
-                                                                                                        ))}
-                                                                                                        <Box sx={{
-                                                                                                            mt: 1, p: 1, border: '1px dashed',
-                                                                                                            borderColor: materialQualityRecords.filter(m => m.acceptanceRecordId === relatedAcceptance[0].id).length > 0
-                                                                                                                ? 'warning.light' : 'divider',
-                                                                                                            borderRadius: 1,
-                                                                                                        }}>
-                                                                                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                                                                                <Typography variant="caption" fontWeight={600} color="text.secondary">
-                                                                                                                    BB Đánh giá VT thu hồi
-                                                                                                                    <Typography component="span" variant="caption" color="text.disabled" sx={{ ml: 0.5 }}>
-                                                                                                                        (tùy chọn)
-                                                                                                                    </Typography>
-                                                                                                                </Typography>
-                                                                                                                {(() => {
-                                                                                                                    const relatedMQ = materialQualityRecords.filter(
-                                                                                                                        m => m.acceptanceRecordId === relatedAcceptance[0].id
-                                                                                                                    );
-                                                                                                                    const canCreate = relatedAcceptance[0].status === 'da-duyet' && relatedMQ.length === 0;
-                                                                                                                    if (relatedMQ.length > 0) return (
-                                                                                                                        <Chip
-                                                                                                                            label={relatedMQ[0].status === 'cho-duyet' ? 'Chờ duyệt' : 'Đã duyệt'}
-                                                                                                                            color={relatedMQ[0].status === 'cho-duyet' ? 'warning' : 'success'}
-                                                                                                                            size="small"
-                                                                                                                        />
-                                                                                                                    );
-                                                                                                                    if (canCreate) return (
-                                                                                                                        <Button
-                                                                                                                            size="small" variant="outlined" color="warning"
-                                                                                                                            startIcon={<AddCircleOutlineIcon sx={{ fontSize: 14 }} />}
-                                                                                                                            onClick={(e) => {
-                                                                                                                                e.stopPropagation();
-                                                                                                                                setActiveMaterialAcceptance(relatedAcceptance[0]);
-                                                                                                                                setMaterialQualityDialogOpen(true);
-                                                                                                                            }}
-                                                                                                                            sx={{ fontSize: '0.72rem', py: 0.25 }}
-                                                                                                                        >
-                                                                                                                            Tạo BB đánh giá VT
-                                                                                                                        </Button>
-                                                                                                                    );
-                                                                                                                    return (
-                                                                                                                        <Typography variant="caption" color="text.disabled">
-                                                                                                                            Chờ BB nghiệm thu duyệt
-                                                                                                                        </Typography>
-                                                                                                                    );
-                                                                                                                })()}
-                                                                                                            </Box>
-                                                                                                        </Box>
-                                                                                                    </Box>
-                                                                                                </Box>
-                                                                                            )}
-                                                                                        </Box>
-                                                                                    );
-                                                                                })()}
-                                                                            </Box>
-                                                                        </Box>
-                                                                    ))
+                                                return (
+                                                    <React.Fragment key={insp.id}>
+                                                        <TableRow hover>
+                                                            <TableCell sx={{ pl: 2, position: 'relative', height: ROW_H, display: 'flex', alignItems: 'center' }}>
+                                                                <Box sx={{ position: 'absolute', left: 0, top: 0, height: '100%', display: 'flex', alignItems: 'center' }}>
+                                                                    <TreeConnector depth={2} isLast={isInspLast} />
+                                                                </Box>
+                                                                {acceptances.length > 0 && (
+                                                                    <IconButton size="small" sx={{ ml: `${CONNECTOR_WIDTH * 2 - 6}px` }} onClick={() => toggle(expandedInspections, insp.id, setExpandedInspections)}>
+                                                                        {expandedInspections.has(insp.id) ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                                                                    </IconButton>
                                                                 )}
-                                                            </Box>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                )}
-                                            </>
-                                        );
-                                    })}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    )}
+                                                                <Typography variant="body2" sx={{ ml: `${CONNECTOR_WIDTH * 2 + 8}px` }}>{insp.number}</Typography>
+                                                            </TableCell>
+                                                            <TableCell><Chip label="BB Giám định" size="small" color="success" sx={{ color: '#fff' }} /></TableCell>
+                                                            <TableCell>{insp.inspectionDate}</TableCell>
+                                                            <TableCell><StatusChip status={insp.status} /></TableCell>
+                                                            <TableCell align="right">
+                                                                <ActionCell
+                                                                    onView={() => { }}
+                                                                    onAdd={canCreateAcceptanceForInsp(insp) ? () => setAcceptanceParentInspId(insp.id) : undefined}
+                                                                    addTooltip="Tạo BB Nghiệm thu"
+                                                                    addColor="warning"
+                                                                />
+                                                            </TableCell>
+                                                        </TableRow>
 
-                    {/* Dialog tạo BB giám định */}
-                    {/* {activeRepairRequest && (
-            <InspectionRecordDialog
-              open={inspectionDialogOpen}
-              onClose={() => { setInspectionDialogOpen(false); setActiveRepairRequest(null); }}
-              plan={plan}
-              repairRequest={activeRepairRequest}
-              onSubmit={handleCreateInspection}
-            />
-          )} */}
+                                                        {/* Level 3 */}
+                                                        {expandedInspections.has(insp.id) && acceptances.map((acc, accIdx) => {
+                                                            const materials = materialQualityRecords.filter(m => m.acceptanceRecordId === acc.id);
+                                                            const isAccLast = accIdx === acceptances.length - 1;
 
-                    {/* {activeInspectionRecord && (
-            <AcceptanceTestDialog
-              open={acceptanceDialogOpen}
-              onClose={() => { setAcceptanceDialogOpen(false); setActiveInspectionRecord(null); }}
-              plan={plan}
-              repairRequest={planRequests.find(r => r.id === activeInspectionRecord.repairRequestId)!}
-              inspectionRecord={activeInspectionRecord}
-              onSubmit={handleCreateAcceptance}
-            />
-          )} */}
+                                                            return (
+                                                                <React.Fragment key={acc.id}>
+                                                                    <TableRow hover>
+                                                                        <TableCell sx={{ pl: 2, position: 'relative', height: ROW_H, display: 'flex', alignItems: 'center' }}>
+                                                                            <Box sx={{ position: 'absolute', left: 0, top: 0, height: '100%', display: 'flex', alignItems: 'center' }}>
+                                                                                <TreeConnector depth={3} isLast={isAccLast} />
+                                                                            </Box>
+                                                                            {materials.length > 0 && (
+                                                                                <IconButton size="small" sx={{ ml: `${CONNECTOR_WIDTH * 3 - 6}px` }} onClick={() => toggle(expandedAcceptances, acc.id, setExpandedAcceptances)}>
+                                                                                    {expandedAcceptances.has(acc.id) ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                                                                                </IconButton>
+                                                                            )}
+                                                                            <Typography variant="body2" sx={{ ml: `${CONNECTOR_WIDTH * 3 + 8}px` }}>{acc.number}</Typography>
+                                                                        </TableCell>
+                                                                        <TableCell><Chip label="BB Nghiệm thu" size="small" color="warning" sx={{ color: '#fff' }} /></TableCell>
+                                                                        <TableCell>{acc.date}</TableCell>
+                                                                        <TableCell><StatusChip status={acc.status} /></TableCell>
+                                                                        <TableCell align="right">
+                                                                            <ActionCell
+                                                                                onView={() => { }}
+                                                                                onAdd={canCreateMaterialForAcc(acc) ? () => setMaterialParentAccId(acc.id) : undefined}
+                                                                                addTooltip="Tạo BB Vật tư"
+                                                                                addColor="secondary"
+                                                                            />
+                                                                        </TableCell>
+                                                                    </TableRow>
 
-                    {/* {activeMaterialAcceptance && (
-            <MaterialQualityDialog
-              open={materialQualityDialogOpen}
-              onClose={() => { setMaterialQualityDialogOpen(false); setActiveMaterialAcceptance(null); }}
-              plan={plan}
-              repairRequest={planRequests.find(r => r.id === activeMaterialAcceptance.repairRequestId)!}
-              acceptanceRecord={activeMaterialAcceptance}
-              onSubmit={handleCreateMaterialQuality}
-            />
-          )} */}
+                                                                    {/* Level 4 */}
+                                                                    {expandedAcceptances.has(acc.id) && materials.map((mat) => (
+                                                                        <TableRow hover key={mat.id}>
+                                                                            <TableCell sx={{ pl: 2, position: 'relative', height: ROW_H, display: 'flex', alignItems: 'center' }}>
+                                                                                <Box sx={{ position: 'absolute', left: 0, top: 0, height: '100%', display: 'flex', alignItems: 'center' }}>
+                                                                                    <TreeConnector depth={4} isLast={false} />
+                                                                                </Box>
+                                                                                <Typography variant="body2" sx={{ ml: `${CONNECTOR_WIDTH * 4 + 8}px` }}>{mat.number}</Typography>
+                                                                            </TableCell>
+                                                                            <TableCell><Chip label="BB Vật tư" size="small" color="secondary" /></TableCell>
+                                                                            <TableCell>{(mat as any).date || '—'}</TableCell>
+                                                                            <TableCell><StatusChip status={mat.status} /></TableCell>
+                                                                            <TableCell align="right">
+                                                                                <ActionCell onView={() => { }} />
+                                                                            </TableCell>
+                                                                        </TableRow>
+                                                                    ))}
+                                                                </React.Fragment>
+                                                            );
+                                                        })}
+                                                    </React.Fragment>
+                                                );
+                                            })}
+                                        </React.Fragment>
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
                 </Box>
             )}
 
+            {/* Dialog tạo giấy đề nghị SC */}
             <RepairRequestDialog
-                open={dialogOpen}
-                onClose={() => setDialogOpen(false)}
+                open={repairDialogOpen}
+                onClose={() => setRepairDialogOpen(false)}
                 plan={plan}
                 selectedDeviceIds={selectedDeviceIds}
                 selectedMonth={selectedMonth}
-                onSubmit={handleCreateRequest}
+                onSubmit={req => {
+                    onCreateRepairRequest(req);
+                    setSelectedDeviceIds([]);
+                    setRepairDialogOpen(false);
+                }}
             />
+
+            {/* Dialog tạo biên bản giám định (mở khi setInspectionParentReqId) */}
+            {inspectionParentReqId && (() => {
+                const parentReq = repairRequests.find(r => r.id === inspectionParentReqId);
+                return parentReq ? (
+                    <InspectionRecordDialog
+                        open={true}
+                        onClose={() => setInspectionParentReqId(null)}
+                        plan={plan}
+                        repairRequest={parentReq}
+                        onSubmit={record => { onCreateInspectionRecord(record); setInspectionParentReqId(null); }}
+                    />
+                ) : null;
+            })()}
+
+            {/* Dialog tạo biên bản nghiệm thu (mở khi setAcceptanceParentInspId) */}
+            {acceptanceParentInspId && (() => {
+                const parentInsp = inspectionRecords.find(r => r.id === acceptanceParentInspId);
+                const parentReq = parentInsp ? repairRequests.find(rr => rr.id === parentInsp.repairRequestId) : null;
+                return parentInsp ? (
+                    <AcceptanceTestDialog
+                        open={true}
+                        onClose={() => setAcceptanceParentInspId(null)}
+                        plan={plan}
+                        repairRequest={parentReq!}
+                        inspectionRecord={parentInsp}
+                        onSubmit={record => { onCreateAcceptanceRecord(record); setAcceptanceParentInspId(null); }}
+                    />
+                ) : null;
+            })()}
+
+                        {materialParentAccId && (() => {
+                                const parentAcc = acceptanceTestRecords.find(a => a.id === materialParentAccId);
+                                const parentReq = parentAcc ? repairRequests.find(rr => rr.id === parentAcc.repairRequestId) : null;
+                                return parentAcc ? (
+                                        <MaterialDialog
+                                                open={true}
+                                                onClose={() => setMaterialParentAccId(null)}
+                                                plan={plan}
+                                                repairRequest={parentReq!}
+                                                acceptanceRecord={parentAcc}
+                                                onSubmit={record => { onCreateMaterialQualityRecord(record); setMaterialParentAccId(null); }}
+                                        />
+                                ) : null;
+                        })()}
         </Box>
     );
 };
