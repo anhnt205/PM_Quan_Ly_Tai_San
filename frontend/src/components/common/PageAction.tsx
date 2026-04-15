@@ -15,7 +15,7 @@ import ImportSignatureModal from "./ImportSignatureModal";
 interface Props {
   loading?: boolean;
   title: string;
-  onNewClick: () => void;
+  onNewClick?: () => void;
   onExport?: () => void;
   onImport?: (file: File) => void;
   onSyncDb?: () => void;
@@ -81,7 +81,7 @@ export default function PageAction({
         borderColor: "divider",
       }}
     >
-      <NewButton onClick={onNewClick} />
+      {onNewClick && <NewButton onClick={onNewClick} />}
       <Typography sx={{ fontWeight: "medium", color: "text.primary" }}>
         {title}
       </Typography>
