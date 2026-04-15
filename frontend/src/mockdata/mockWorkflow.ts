@@ -105,10 +105,10 @@ export const initialAnnualPlans: AnnualPlan[] = [
     sourceDepartmentId: 'PB-01',
     executionDepartmentId: 'PB-04',
     monthlySchedule: {
-      'TB-001': ['CST','','SCN','','CST','','SCC','','CST','','SCN',''],
-      'TB-002': ['','CST','','SCN','','CST','','SCC','','CST','','SCN'],
-      'TB-003': ['SCN','','CST','','SCN','','CST','','SCC','','CST',''],
-      'TB-004': ['CST','CST','','','SCN','','','CST','','SCC','','CST'],
+      'TB-001': ['CST', '', 'SCN', '', 'CST', '', 'SCC', '', 'CST', '', 'SCN', ''],
+      'TB-002': ['', 'CST', '', 'SCN', '', 'CST', '', 'SCC', '', 'CST', '', 'SCN'],
+      'TB-003': ['SCN', '', 'CST', '', 'SCN', '', 'CST', '', 'SCC', '', 'CST', ''],
+      'TB-004': ['CST', 'CST', '', '', 'SCN', '', '', 'CST', '', 'SCC', '', 'CST'],
     },
     signers: [
       { userId: 'NV-01', userName: 'Nguyễn Văn An', departmentId: 'PB-01', departmentName: 'Phân xưởng khai thác 1', order: 1, signed: true, signedAt: '2024-01-05' },
@@ -135,6 +135,20 @@ export const initialAnnualPlans: AnnualPlan[] = [
 
 // Mock Work Orders (auto-generated from approved plans)
 export const initialWorkOrders: WorkOrder[] = [
+  {
+    id: 'SC-20240101', planId: 'KH-2024-001', deviceId: 'TB-001',
+    deviceName: 'Máy xúc lật CAT 994K', type: 'Sửa chữa thường xuyên',
+    status: 'cho-duyet',   // ← đổi thành cho-duyet để hiện trên approval
+    createdDate: '2024-01-11', assignedTo: 'Nguyễn Văn A',
+    description: 'Thay dầu, kiểm tra hệ thống thủy lực',
+  },
+  {
+    id: 'SC-20240102', planId: 'KH-2024-001', deviceId: 'TB-002',
+    deviceName: 'Máy khoan Sandvik DR461i', type: 'Sửa chữa thường xuyên',
+    status: 'cho-duyet',
+    createdDate: '2024-01-11', assignedTo: 'Trần Văn B',
+    description: 'Kiểm tra mũi khoan, thay lọc gió',
+  },
   { id: 'SC-20240101', planId: 'KH-2024-001', deviceId: 'TB-001', deviceName: 'Máy xúc lật CAT 994K', type: 'Sửa chữa thường xuyên', status: 'hoan-thanh', createdDate: '2024-01-11', assignedTo: 'Nguyễn Văn A', description: 'Thay dầu, kiểm tra hệ thống thủy lực' },
   { id: 'SC-20240102', planId: 'KH-2024-001', deviceId: 'TB-002', deviceName: 'Máy khoan Sandvik DR461i', type: 'Sửa chữa thường xuyên', status: 'cho-nghiem-thu', createdDate: '2024-01-11', assignedTo: 'Trần Văn B', description: 'Kiểm tra mũi khoan, thay lọc gió' },
   { id: 'SC-20240103', planId: 'KH-2024-001', deviceId: 'TB-003', deviceName: 'Xe tải Belaz 75710', type: 'Sửa chữa thường xuyên', status: 'dang-thuc-hien', createdDate: '2024-01-11', assignedTo: 'Lê Văn C', description: 'Đại tu động cơ diesel' },
