@@ -1,6 +1,13 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Box, Card, CardContent, Paper, Chip,
+  Typography,
+  TableContainer,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
 } from '@mui/material';
 import { Trash2, Calendar } from 'lucide-react';
 import { Button } from '@mui/material';
@@ -13,9 +20,11 @@ import { ROUTES } from '../../utils/routes';
 
 // ✅ Giữ nguyên context và types từ luồng cũ
 import { useCmms } from '../../hooks/CmmsContext';
-// import PlanDetailPanel from '@/components/planning/PlanDetailPanel';
+
 import type { AnnualPlan } from '../../mockdata/mockWorkflow';
 import CreatePlanDialog from '../Maintenance/components/planning/CreatePlan';
+import PlanDetailPanel from '../Maintenance/components/planning/PlanDetailPanel';
+import { calculatePlanMaterials } from '../../mockdata/mockNorms';
 
 // ── Status config (từ Planning.tsx cũ) ──────────────────
 const planStatusConfig: Record<string, {
@@ -56,6 +65,12 @@ export default function MaintenancePlanRepair() {
     addAcceptanceTestRecord,
     addMaterialQualityRecord,
   } = useCmms();
+
+  const selectedSchedule: Record<string, any> = (selectedPlan as any)?.monthlySchedule ?? {};
+  const yearlyMaterials = useMemo(
+    () => selectedPlan ? calculatePlanMaterials(selectedSchedule) : [],
+    [selectedPlan]
+  );
 
   // ── Lọc + phân trang client-side ────────────────────────
   const filtered = annualPlans.filter(p => {
@@ -201,7 +216,7 @@ export default function MaintenancePlanRepair() {
                 bgcolor: 'background.paper',
               }}
             >
-              {/* <PlanDetailPanel
+              <PlanDetailPanel
                 plan={selectedPlan}
                 repairRequests={repairRequests}
                 inspectionRecords={inspectionRecords}
@@ -212,11 +227,42 @@ export default function MaintenancePlanRepair() {
                 onCreateInspectionRecord={addInspectionRecord}
                 onCreateAcceptanceRecord={addAcceptanceTestRecord}
                 onCreateMaterialQualityRecord={addMaterialQualityRecord}
-              /> */}
+              />
             </Paper>
           )}
         </Box>
       </Box>
+
+      {selectedPlan && yearlyMaterials.length > 0 && (
+        <Box sx={{ mt: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 2 }}>
+          <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+            Tổng hợp vật tư cần thiết — Kế hoạch năm {selectedPlan.year} ({selectedPlan.id})
+          </Typography>
+          <TableContainer component={Paper} variant="outlined">
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+                  <TableCell sx={{ fontWeight: 700 }}>STT</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Tên vật tư</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }} align="right">Tổng số lượng</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Đơn vị</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {yearlyMaterials.map((mat, i) => (
+                  <TableRow key={mat.name}>
+                    <TableCell>{i + 1}</TableCell>
+                    <TableCell>{mat.name}</TableCell>
+                    <TableCell align="right">{mat.quantity.toLocaleString()}</TableCell>
+                    <TableCell>{mat.unit}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+      )}
+
       <CreatePlanDialog
         open={showForm}
         onClose={() => setShowForm(false)}
