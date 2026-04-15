@@ -93,4 +93,22 @@ export const initialRepairRequests: RepairRequest[] = [
     createdBy: 'NV-01',
     note: 'SC lớn tháng 7 - Đại tu hệ thống',
   },
+  {
+    id: 'GDN-2024-005',
+    planId: 'KH-2024-001',
+    number: 'PX-KT1-005',
+    month: 8,
+    year: 2024,
+    deviceIds: ['TB-007'],
+    sourceDepartmentId: 'PB-04',
+    executionDepartmentId: 'PB-04',
+    signers: [
+      { userId: 'NV-06', userName: 'Ngô Văn Phúc', departmentId: 'PB-04', departmentName: 'Phân xưởng cơ khí', order: 1, signed: true, signedAt: '01/08/2024' },
+      { userId: 'NV-12', userName: 'Lý Văn Nam', departmentId: 'PB-09', departmentName: 'Phòng Kỹ thuật', order: 2, signed: true, signedAt: '02/08/2024' },
+    ],
+    status: 'da-duyet',
+    createdDate: '01/08/2024',
+    createdBy: 'NV-06',
+    note: 'Yêu cầu sửa thử nghiệm — đã được duyệt, chờ lập biên bản giám định',
+  },
 ];

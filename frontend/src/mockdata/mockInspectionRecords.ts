@@ -230,6 +230,35 @@ export const initialInspectionRecords: TechnicalInspectionRecord[] = [
     status: 'cho-duyet',
     createdDate: '08/07/2024',
   },
+  {
+    id: 'BBGD-2024-004',
+    repairRequestId: 'GDN-2024-005',
+    planId: 'KH-2024-001',
+    number: 'BBGD/PX-COK/004/2024',
+    inspectionDate: '01/08/2024',
+    location: 'Phân xưởng cơ khí',
+    deviceEntries: [
+      {
+        deviceId: 'TB-007',
+        deviceName: 'Cẩu trục CT-50T',
+        unit: 'Cái',
+        quantity: 1,
+        technicalCondition: 'Cáp nâng mòn, cần kiểm tra và thay cáp nếu vượt giới hạn an toàn',
+        actionRepair: true,
+        actionReplace: false,
+        note: 'Kiểm tra an toàn trước khi sửa',
+      },
+    ],
+    recoveryCount: 0,
+    scrapCount: 0,
+    destroyCount: 0,
+    signers: [
+      { order: 1, name: 'Ngô Văn Phúc', title: 'Quản đốc', departmentName: 'Phân xưởng cơ khí', signed: true, signedAt: '01/08/2024' },
+      { order: 2, name: 'Lý Văn Nam', title: 'Trưởng phòng KT', departmentName: 'Phòng Kỹ thuật', signed: true, signedAt: '02/08/2024' },
+    ],
+    status: 'da-duyet',
+    createdDate: '01/08/2024',
+  },
 ];
 
 export const initialAcceptanceTestRecords: AcceptanceTestRecord[] = [
@@ -290,6 +319,31 @@ export const initialAcceptanceTestRecords: AcceptanceTestRecord[] = [
     ],
     status: 'cho-duyet',
     createdDate: '18/03/2024',
+  },
+  {
+    id: 'NT-2024-003',
+    inspectionRecordId: 'BBGD-2024-004',
+    repairRequestId: 'GDN-2024-005',
+    planId: 'KH-2024-001',
+    number: 'BB-NT/PX-COK/003/2024',
+    date: '2024-08-05',
+    location: 'Phân xưởng cơ khí',
+    deviceName: 'Cẩu trục CT-50T',
+    registrationNumber: 'DK-003/2024',
+    repairLevel: 'Sửa chữa thử nghiệm',
+    materialItems: [
+      { groupLabel: 'I/', groupDevice: 'Cẩu trục CT-50T', code: 'VT-100', name: 'Cáp thép 12mm', unit: 'm', quantity: 20, note: 'Dự phòng thay thế' },
+      { groupLabel: 'I/', groupDevice: 'Cẩu trục CT-50T', code: 'VT-101', name: 'Buli dẫn cáp', unit: 'Cái', quantity: 2, note: '' },
+    ],
+    testResult: 'Thiết bị chạy thử ổn định, đáp ứng yêu cầu an toàn',
+    acceptanceContent: 'Kiểm tra tải thử, thay cáp hỏng và bôi mỡ các chi tiết mòn. Thiết bị hoạt động bình thường.',
+    signers: [
+      { order: 1, name: 'Ngô Văn Phúc', title: 'Quản đốc', departmentName: 'Phân xưởng cơ khí', signed: true, signedAt: '01/08/2024' },
+      { order: 2, name: 'Lý Văn Nam', title: 'Trưởng phòng KT', departmentName: 'Phòng Kỹ thuật', signed: true, signedAt: '02/08/2024' },
+      { order: 3, name: 'Dương Văn Phong', title: 'Phó Giám đốc', departmentName: 'Ban Giám đốc', signed: true, signedAt: '03/08/2024' },
+    ],
+    status: 'da-duyet',
+    createdDate: '05/08/2024',
   },
 ];
 

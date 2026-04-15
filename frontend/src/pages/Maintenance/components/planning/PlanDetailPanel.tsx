@@ -27,6 +27,9 @@ import type {
     TechnicalInspectionRecord,
 } from '../../../../mockdata/mockInspectionRecords';
 import RepairRequestDialog from '../dialog/RepairRequestDialog';
+import InspectionRecordDialog from '../dialog/InspectionRecordDialog';
+import AcceptanceTestDialog from '../dialog/AcceptanceTestDialog';
+import MaterialDialog from '../dialog/MaterialDialog';
 
 interface Props {
     plan: AnnualPlan;
@@ -45,13 +48,13 @@ interface Props {
 const StatusChip = ({ status }: { status: string }) => {
     const map: Record<string, { label: string; color: any }> = {
         draft: { label: 'Bản nháp', color: 'default' },
-        'cho-duyet': { label: 'Chờ duyệt', color: 'warning' },
+        'cho-duyet': { label: 'Chờ duyệt', color: 'warning', },
         'da-duyet': { label: 'Đã duyệt', color: 'success' },
         'tu-choi': { label: 'Từ chối', color: 'error' },
         'dang-ky': { label: 'Đang ký', color: 'info' },
     };
     const cfg = map[status] ?? { label: status, color: 'default' };
-    return <Chip label={cfg.label} color={cfg.color} size="small" />;
+    return <Chip label={cfg.label} color={cfg.color} size="small" sx={{ color: '#fff' }}/>;
 };
 const ROW_H = 36;
 const CONNECTOR_WIDTH = 16;
@@ -344,8 +347,8 @@ const PlanDetailPanel = ({
             {/* ══════════════ TAB 1: Biên bản — tree view ══════════════ */}
             {tab === 1 && (
                 <Box sx={{ flex: 1, overflow: 'auto' }}>
-                    <TableContainer component={Paper} variant="outlined">
-                        <Table size="small">
+                    <TableContainer component={Paper} variant="outlined" sx={{ overflowX: 'auto' }}>
+                        <Table size="small" sx={{ minWidth: 900 }}>
                             <TableHead>
                                 <TableRow sx={{ bgcolor: 'action.hover' }}>
                                     <TableCell sx={{ fontWeight: 700 }}>Biên bản</TableCell>
@@ -371,7 +374,7 @@ const PlanDetailPanel = ({
 
                                     return (
                                         <React.Fragment key={req.id}>
-                                            {/* ───────── CẤP 1: Repair Request ───────── */}
+                                            {/* Level 1 */}
                                             <TableRow hover>
                                                 <TableCell
                                                     sx={{
@@ -397,24 +400,15 @@ const PlanDetailPanel = ({
                                                     {inspections.length > 0 && (
                                                         <IconButton
                                                             size="small"
-                                                            sx={{
-                                                                ml: `${INDENT_SPACE - 20}px`, // icon nằm trước text
-                                                            }}
+                                                            sx={{ ml: `${CONNECTOR_WIDTH * 1 - 6}px` }}
                                                             onClick={() => toggle(expandedRequests, req.id, setExpandedRequests)}
                                                         >
                                                             {expandedRequests.has(req.id) ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
                                                         </IconButton>
                                                     )}
-                                                    <Typography
-                                                        variant="body2"
-                                                        sx={{
-                                                            ml: `${INDENT_SPACE}px`,
-                                                        }}
-                                                    >{req.number}</Typography>
+                                                    <Typography variant="body2" sx={{ ml: `${CONNECTOR_WIDTH * 1 + 8}px` }}>{req.number}</Typography>
                                                 </TableCell>
-                                                <TableCell>
-                                                    <Chip label="GĐ Sửa chữa" size="small" />
-                                                </TableCell>
+                                                <TableCell><Chip label="GĐ Sửa chữa" size="small" /></TableCell>
                                                 <TableCell>{req.createdDate}</TableCell>
                                                 <TableCell><StatusChip status={req.status} /></TableCell>
                                                 <TableCell align="right">
@@ -427,213 +421,93 @@ const PlanDetailPanel = ({
                                                 </TableCell>
                                             </TableRow>
 
-                                            {/* ───────── CẤP 2: Inspections (collapsed) ───────── */}
-                                            <TableRow>
-                                                <TableCell colSpan={5} sx={{ p: 0 }}>
-                                                    <Collapse in={expandedRequests.has(req.id)} timeout="auto" unmountOnExit>
-                                                        <Table size="small">
-                                                            <TableBody>
-                                                                {inspections.map((insp, inspIdx) => {
-                                                                    const acceptances = acceptanceTestRecords.filter(a => a.inspectionRecordId === insp.id);
-                                                                    const isInspLast = inspIdx === inspections.length - 1;
+                                            {/* Level 2 */}
+                                            {expandedRequests.has(req.id) && inspections.map((insp, inspIdx) => {
+                                                const acceptances = acceptanceTestRecords.filter(a => a.inspectionRecordId === insp.id);
+                                                const isInspLast = inspIdx === inspections.length - 1;
 
-                                                                    return (
-                                                                        <React.Fragment key={insp.id}>
-                                                                            <TableRow hover>
-                                                                                <TableCell
-                                                                                    sx={{
-                                                                                        pl: 2,
-                                                                                        position: 'relative',
-                                                                                        height: ROW_H,
-                                                                                        display: 'flex',
-                                                                                        alignItems: 'center',
-                                                                                    }}
-                                                                                >
-                                                                                    <Box
-                                                                                        sx={{
-                                                                                            position: 'absolute',
-                                                                                            left: 0,
-                                                                                            top: 0,
-                                                                                            height: '100%',
-                                                                                            display: 'flex',
-                                                                                            alignItems: 'center',
-                                                                                        }}
-                                                                                    >
-                                                                                        <TreeConnector depth={2} isLast={isInspLast} />
-                                                                                    </Box>
-                                                                                    {acceptances.length > 0 && (
-                                                                                        <IconButton
-                                                                                            size="small"
-                                                                                            sx={{
-                                                                                                ml: `${INDENT_SPACE - 20}px`, // icon nằm trước text
-                                                                                            }}
-                                                                                            onClick={() => toggle(expandedInspections, insp.id, setExpandedInspections)}
-                                                                                        >
-                                                                                            {expandedInspections.has(insp.id) ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-                                                                                        </IconButton>
-                                                                                    )}
-                                                                                    <Typography
-                                                                                        variant="body2"
-                                                                                        sx={{
-                                                                                            ml: `${INDENT_SPACE}px`,
-                                                                                        }}
-                                                                                    >{insp.number}</Typography>
-                                                                                </TableCell>
-                                                                                <TableCell>
-                                                                                    <Chip label="BB Giám định" size="small" color="success" />
-                                                                                </TableCell>
-                                                                                <TableCell>{insp.inspectionDate}</TableCell>
-                                                                                <TableCell><StatusChip status={insp.status} /></TableCell>
-                                                                                <TableCell align="right">
-                                                                                    <ActionCell
-                                                                                        onView={() => { }}
-                                                                                        onAdd={canCreateAcceptanceForInsp(insp) ? () => setAcceptanceParentInspId(insp.id) : undefined}
-                                                                                        addTooltip="Tạo BB Nghiệm thu"
-                                                                                        addColor="warning"
-                                                                                    />
-                                                                                </TableCell>
-                                                                            </TableRow>
+                                                return (
+                                                    <React.Fragment key={insp.id}>
+                                                        <TableRow hover>
+                                                            <TableCell sx={{ pl: 2, position: 'relative', height: ROW_H, display: 'flex', alignItems: 'center' }}>
+                                                                <Box sx={{ position: 'absolute', left: 0, top: 0, height: '100%', display: 'flex', alignItems: 'center' }}>
+                                                                    <TreeConnector depth={2} isLast={isInspLast} />
+                                                                </Box>
+                                                                {acceptances.length > 0 && (
+                                                                    <IconButton size="small" sx={{ ml: `${CONNECTOR_WIDTH * 2 - 6}px` }} onClick={() => toggle(expandedInspections, insp.id, setExpandedInspections)}>
+                                                                        {expandedInspections.has(insp.id) ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                                                                    </IconButton>
+                                                                )}
+                                                                <Typography variant="body2" sx={{ ml: `${CONNECTOR_WIDTH * 2 + 8}px` }}>{insp.number}</Typography>
+                                                            </TableCell>
+                                                            <TableCell><Chip label="BB Giám định" size="small" color="success" sx={{ color: '#fff' }} /></TableCell>
+                                                            <TableCell>{insp.inspectionDate}</TableCell>
+                                                            <TableCell><StatusChip status={insp.status} /></TableCell>
+                                                            <TableCell align="right">
+                                                                <ActionCell
+                                                                    onView={() => { }}
+                                                                    onAdd={canCreateAcceptanceForInsp(insp) ? () => setAcceptanceParentInspId(insp.id) : undefined}
+                                                                    addTooltip="Tạo BB Nghiệm thu"
+                                                                    addColor="warning"
+                                                                />
+                                                            </TableCell>
+                                                        </TableRow>
 
-                                                                            {/* ───────── CẤP 3: Acceptances (collapsed) ───────── */}
-                                                                            <TableRow>
-                                                                                <TableCell colSpan={5} sx={{ p: 0 }}>
-                                                                                    <Collapse in={expandedInspections.has(insp.id)} timeout="auto" unmountOnExit>
-                                                                                        <Table size="small">
-                                                                                            <TableBody>
-                                                                                                {acceptances.map((acc, accIdx) => {
-                                                                                                    const materials = materialQualityRecords.filter(m => m.acceptanceRecordId === acc.id);
-                                                                                                    const isAccLast = accIdx === acceptances.length - 1;
+                                                        {/* Level 3 */}
+                                                        {expandedInspections.has(insp.id) && acceptances.map((acc, accIdx) => {
+                                                            const materials = materialQualityRecords.filter(m => m.acceptanceRecordId === acc.id);
+                                                            const isAccLast = accIdx === acceptances.length - 1;
 
-                                                                                                    return (
-                                                                                                        <React.Fragment key={acc.id}>
-                                                                                                            <TableRow hover>
-                                                                                                                <TableCell
-                                                                                                                    sx={{
-                                                                                                                        pl: 2,
-                                                                                                                        position: 'relative',
-                                                                                                                        height: ROW_H,
-                                                                                                                        display: 'flex',
-                                                                                                                        alignItems: 'center',
-                                                                                                                    }}
-                                                                                                                >
+                                                            return (
+                                                                <React.Fragment key={acc.id}>
+                                                                    <TableRow hover>
+                                                                        <TableCell sx={{ pl: 2, position: 'relative', height: ROW_H, display: 'flex', alignItems: 'center' }}>
+                                                                            <Box sx={{ position: 'absolute', left: 0, top: 0, height: '100%', display: 'flex', alignItems: 'center' }}>
+                                                                                <TreeConnector depth={3} isLast={isAccLast} />
+                                                                            </Box>
+                                                                            {materials.length > 0 && (
+                                                                                <IconButton size="small" sx={{ ml: `${CONNECTOR_WIDTH * 3 - 6}px` }} onClick={() => toggle(expandedAcceptances, acc.id, setExpandedAcceptances)}>
+                                                                                    {expandedAcceptances.has(acc.id) ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                                                                                </IconButton>
+                                                                            )}
+                                                                            <Typography variant="body2" sx={{ ml: `${CONNECTOR_WIDTH * 3 + 8}px` }}>{acc.number}</Typography>
+                                                                        </TableCell>
+                                                                        <TableCell><Chip label="BB Nghiệm thu" size="small" color="warning" sx={{ color: '#fff' }} /></TableCell>
+                                                                        <TableCell>{acc.date}</TableCell>
+                                                                        <TableCell><StatusChip status={acc.status} /></TableCell>
+                                                                        <TableCell align="right">
+                                                                            <ActionCell
+                                                                                onView={() => { }}
+                                                                                onAdd={canCreateMaterialForAcc(acc) ? () => setMaterialParentAccId(acc.id) : undefined}
+                                                                                addTooltip="Tạo BB Vật tư"
+                                                                                addColor="secondary"
+                                                                            />
+                                                                        </TableCell>
+                                                                    </TableRow>
 
-                                                                                                                    <Box
-                                                                                                                        sx={{
-                                                                                                                            position: 'absolute',
-                                                                                                                            left: 0,
-                                                                                                                            top: 0,
-                                                                                                                            height: '100%',
-                                                                                                                            display: 'flex',
-                                                                                                                            alignItems: 'center',
-                                                                                                                        }}
-                                                                                                                    >
-                                                                                                                        <TreeConnector depth={3} isLast={isAccLast} />
-                                                                                                                    </Box>
-                                                                                                                    {materials.length > 0 && (
-                                                                                                                        <IconButton
-                                                                                                                            size="small"
-                                                                                                                            sx={{
-                                                                                                                                ml: `${INDENT_SPACE - 20}px`, // icon nằm trước text
-                                                                                                                            }}
-                                                                                                                            onClick={() => toggle(expandedAcceptances, acc.id, setExpandedAcceptances)}
-                                                                                                                        >
-                                                                                                                            {expandedAcceptances.has(acc.id) ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-                                                                                                                        </IconButton>
-                                                                                                                    )}
-                                                                                                                    <Typography
-                                                                                                                        variant="body2"
-                                                                                                                        sx={{
-                                                                                                                            ml: `${INDENT_SPACE}px`,
-                                                                                                                        }}
-                                                                                                                    >{acc.number}</Typography>
-                                                                                                                </TableCell>
-                                                                                                                <TableCell>
-                                                                                                                    <Chip label="BB Nghiệm thu" size="small" color="warning" />
-                                                                                                                </TableCell>
-                                                                                                                <TableCell>{acc.date}</TableCell>
-                                                                                                                <TableCell><StatusChip status={acc.status} /></TableCell>
-                                                                                                                <TableCell align="right">
-                                                                                                                    <ActionCell
-                                                                                                                        onView={() => { }}
-                                                                                                                        onAdd={canCreateMaterialForAcc(acc) ? () => setMaterialParentAccId(acc.id) : undefined}
-                                                                                                                        addTooltip="Tạo BB Vật tư"
-                                                                                                                        addColor="secondary"
-                                                                                                                    />
-                                                                                                                </TableCell>
-                                                                                                            </TableRow>
-
-                                                                                                            {/* ───────── CẤP 4: Materials (collapsed) ───────── */}
-                                                                                                            <TableRow>
-                                                                                                                <TableCell colSpan={5} sx={{ p: 0 }}>
-                                                                                                                    <Collapse in={expandedAcceptances.has(acc.id)} timeout="auto" unmountOnExit>
-                                                                                                                        <Table size="small">
-                                                                                                                            <TableBody>
-                                                                                                                                {materials.map((mat, matIdx) => {
-                                                                                                                                    const isMatLast = matIdx === materials.length - 1;
-
-                                                                                                                                    return (
-                                                                                                                                        <TableRow key={mat.id} hover>
-                                                                                                                                            <TableCell
-                                                                                                                                                sx={{
-                                                                                                                                                    pl: 2,
-                                                                                                                                                    position: 'relative',
-                                                                                                                                                    height: ROW_H,
-                                                                                                                                                    display: 'flex',
-                                                                                                                                                    alignItems: 'center',
-                                                                                                                                                }}
-                                                                                                                                            >
-
-                                                                                                                                                <Box
-                                                                                                                                                    sx={{
-                                                                                                                                                        position: 'absolute',
-                                                                                                                                                        left: 0,
-                                                                                                                                                        top: 0,
-                                                                                                                                                        height: '100%',
-                                                                                                                                                        display: 'flex',
-                                                                                                                                                        alignItems: 'center',
-                                                                                                                                                    }}
-                                                                                                                                                >
-                                                                                                                                                    <TreeConnector depth={4} isLast={isMatLast} />
-                                                                                                                                                </Box>
-                                                                                                                                                <Typography
-                                                                                                                                                    variant="body2"
-                                                                                                                                                    sx={{
-                                                                                                                                                        ml: `${INDENT_SPACE}px`,
-                                                                                                                                                    }}
-                                                                                                                                                >{mat.number}</Typography>
-                                                                                                                                            </TableCell>
-                                                                                                                                            <TableCell>
-                                                                                                                                                <Chip label="BB Vật tư" size="small" color="secondary" />
-                                                                                                                                            </TableCell>
-                                                                                                                                            <TableCell>{(mat as any).date || '—'}</TableCell>
-                                                                                                                                            <TableCell><StatusChip status={mat.status} /></TableCell>
-                                                                                                                                            <TableCell align="right">
-                                                                                                                                                <ActionCell onView={() => { }} />
-                                                                                                                                            </TableCell>
-                                                                                                                                        </TableRow>
-                                                                                                                                    );
-                                                                                                                                })}
-                                                                                                                            </TableBody>
-                                                                                                                        </Table>
-                                                                                                                    </Collapse>
-                                                                                                                </TableCell>
-                                                                                                            </TableRow>
-                                                                                                        </React.Fragment>
-                                                                                                    );
-                                                                                                })}
-                                                                                            </TableBody>
-                                                                                        </Table>
-                                                                                    </Collapse>
-                                                                                </TableCell>
-                                                                            </TableRow>
-                                                                        </React.Fragment>
-                                                                    );
-                                                                })}
-                                                            </TableBody>
-                                                        </Table>
-                                                    </Collapse>
-                                                </TableCell>
-                                            </TableRow>
+                                                                    {/* Level 4 */}
+                                                                    {expandedAcceptances.has(acc.id) && materials.map((mat) => (
+                                                                        <TableRow hover key={mat.id}>
+                                                                            <TableCell sx={{ pl: 2, position: 'relative', height: ROW_H, display: 'flex', alignItems: 'center' }}>
+                                                                                <Box sx={{ position: 'absolute', left: 0, top: 0, height: '100%', display: 'flex', alignItems: 'center' }}>
+                                                                                    <TreeConnector depth={4} isLast={false} />
+                                                                                </Box>
+                                                                                <Typography variant="body2" sx={{ ml: `${CONNECTOR_WIDTH * 4 + 8}px` }}>{mat.number}</Typography>
+                                                                            </TableCell>
+                                                                            <TableCell><Chip label="BB Vật tư" size="small" color="secondary" /></TableCell>
+                                                                            <TableCell>{(mat as any).date || '—'}</TableCell>
+                                                                            <TableCell><StatusChip status={mat.status} /></TableCell>
+                                                                            <TableCell align="right">
+                                                                                <ActionCell onView={() => { }} />
+                                                                            </TableCell>
+                                                                        </TableRow>
+                                                                    ))}
+                                                                </React.Fragment>
+                                                            );
+                                                        })}
+                                                    </React.Fragment>
+                                                );
+                                            })}
                                         </React.Fragment>
                                     );
                                 })}
@@ -657,30 +531,50 @@ const PlanDetailPanel = ({
                 }}
             />
 
-            {/*
-              TODO: Uncomment và truyền đúng parentId khi mở dialog:
+            {/* Dialog tạo biên bản giám định (mở khi setInspectionParentReqId) */}
+            {inspectionParentReqId && (() => {
+                const parentReq = repairRequests.find(r => r.id === inspectionParentReqId);
+                return parentReq ? (
+                    <InspectionRecordDialog
+                        open={true}
+                        onClose={() => setInspectionParentReqId(null)}
+                        plan={plan}
+                        repairRequest={parentReq}
+                        onSubmit={record => { onCreateInspectionRecord(record); setInspectionParentReqId(null); }}
+                    />
+                ) : null;
+            })()}
 
-              <InspectionRecordDialog
-                open={!!inspectionParentReqId}
-                repairRequest={repairRequests.find(r => r.id === inspectionParentReqId)!}
-                onClose={() => setInspectionParentReqId(null)}
-                onSubmit={record => { onCreateInspectionRecord(record); setInspectionParentReqId(null); }}
-              />
+            {/* Dialog tạo biên bản nghiệm thu (mở khi setAcceptanceParentInspId) */}
+            {acceptanceParentInspId && (() => {
+                const parentInsp = inspectionRecords.find(r => r.id === acceptanceParentInspId);
+                const parentReq = parentInsp ? repairRequests.find(rr => rr.id === parentInsp.repairRequestId) : null;
+                return parentInsp ? (
+                    <AcceptanceTestDialog
+                        open={true}
+                        onClose={() => setAcceptanceParentInspId(null)}
+                        plan={plan}
+                        repairRequest={parentReq!}
+                        inspectionRecord={parentInsp}
+                        onSubmit={record => { onCreateAcceptanceRecord(record); setAcceptanceParentInspId(null); }}
+                    />
+                ) : null;
+            })()}
 
-              <AcceptanceTestDialog
-                open={!!acceptanceParentInspId}
-                inspectionRecord={inspectionRecords.find(r => r.id === acceptanceParentInspId)!}
-                onClose={() => setAcceptanceParentInspId(null)}
-                onSubmit={record => { onCreateAcceptanceRecord(record); setAcceptanceParentInspId(null); }}
-              />
-
-              <MaterialQualityDialog
-                open={!!materialParentAccId}
-                acceptanceRecord={acceptanceTestRecords.find(r => r.id === materialParentAccId)!}
-                onClose={() => setMaterialParentAccId(null)}
-                onSubmit={record => { onCreateMaterialQualityRecord(record); setMaterialParentAccId(null); }}
-              />
-            */}
+                        {materialParentAccId && (() => {
+                                const parentAcc = acceptanceTestRecords.find(a => a.id === materialParentAccId);
+                                const parentReq = parentAcc ? repairRequests.find(rr => rr.id === parentAcc.repairRequestId) : null;
+                                return parentAcc ? (
+                                        <MaterialDialog
+                                                open={true}
+                                                onClose={() => setMaterialParentAccId(null)}
+                                                plan={plan}
+                                                repairRequest={parentReq!}
+                                                acceptanceRecord={parentAcc}
+                                                onSubmit={record => { onCreateMaterialQualityRecord(record); setMaterialParentAccId(null); }}
+                                        />
+                                ) : null;
+                        })()}
         </Box>
     );
 };
