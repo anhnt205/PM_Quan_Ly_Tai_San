@@ -33,6 +33,7 @@ export default function MaintenanceApprovalPage() {
   const [justSigned, setJustSigned] = useState<string | null>(null);
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
+  const [detailTab, setDetailTab] = useState(0);
 
   const [currentStatus0, setCurrentStatus0] = useState('');
   const [currentStatus1, setCurrentStatus1] = useState('');
@@ -80,10 +81,9 @@ export default function MaintenanceApprovalPage() {
   const currentStatusVal = statusValues[activeTab];
 
   const filtered = currentAllRows.filter(r => {
-    if (r.status === 'draft') return false;
+    // MaintenanceApproval page only shows items pending approval
     const matchSearch = !searchValue || r.id.toLowerCase().includes(searchValue.toLowerCase());
-    const matchStatus = !currentStatusVal || r.status === currentStatusVal;
-    return matchSearch && matchStatus;
+    return r.status === 'cho-duyet' && matchSearch;
   });
 
   const paginated = filtered.slice(
@@ -173,6 +173,70 @@ export default function MaintenanceApprovalPage() {
     }
   };
 
+  const renderSignProcess = (row: any) => {
+    const signers = row?.signers ?? [];
+    if (!signers || signers.length === 0) return (
+      <Alert severity="info">Không có quy trình ký cho biên bản này.</Alert>
+    );
+
+    return (
+      <Box>
+        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+          Quy trình ký
+          <Chip label={`${signers.length} người`} size="small" color="primary" variant="outlined" sx={{ fontWeight: 400 }} />
+        </Typography>
+        <Box sx={{ position: 'relative', pl: 5 }}>
+          <Box sx={{ position: 'absolute', left: 16, top: 8, bottom: 8, width: '1px', bgcolor: 'divider' }} />
+          {signers.map((s: any, idx: number) => (
+            <Box key={`${s.name}-${idx}`} sx={{ position: 'relative', mb: 1.5 }}>
+              <Box sx={{
+                position: 'absolute', left: -37, top: 14,
+                width: 24, height: 24, borderRadius: '50%',
+                bgcolor: 'primary.main', color: 'white',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 11, fontWeight: 600, zIndex: 1,
+                boxShadow: '0 0 0 3px white',
+              }}>{idx + 1}</Box>
+
+              <Box sx={{
+                border: '1px solid', borderColor: 'divider',
+                borderRadius: 2, p: 1.5,
+                bgcolor: 'background.paper',
+                transition: 'all 0.2s',
+                '&:hover': { boxShadow: 1, borderColor: 'grey.300' },
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Box sx={{
+                      width: 36, height: 36, borderRadius: '50%',
+                      bgcolor: 'primary.main', color: 'white',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontWeight: 600, fontSize: 13, flexShrink: 0,
+                    }}>{s.name?.charAt(0) ?? '?'}</Box>
+                    <Box>
+                      <Typography fontWeight={600} fontSize={13}>{s.name || '—'}</Typography>
+                      <Typography variant="caption" color="text.secondary">{s.title || ''}</Typography>
+                      <Box sx={{ mt: 0.5 }}>
+                        <Chip label={s.departmentName || ''} size="small" sx={{ fontSize: 10, height: 18, bgcolor: 'grey.100' }} />
+                      </Box>
+                    </Box>
+                  </Box>
+                  <Box sx={{ textAlign: 'right' }}>
+                    {s.signed ? (
+                      <Chip label={`Đã ký${s.signedAt ? ` • ${s.signedAt}` : ''}`} size="small" color="success" />
+                    ) : (
+                      <Chip label="Chưa ký" size="small" color="warning" />
+                    )}
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+          ))}
+        </Box>
+      </Box>
+    );
+  };
+
   const isDetailOpen = !!selectedRow;
 
   return (
@@ -243,15 +307,9 @@ export default function MaintenanceApprovalPage() {
                   searchValue={searchValue}
                   setSearchValue={setSearchValue}
                   showDelete={false}
-                  onRowClick={(params) => setSelectedRow(params.row)}
+                  onRowClick={(params) => { setSelectedRow(params.row); setDetailTab(0); }}
                   isRowSelectable={(params) => params?.row?.status === 'cho-duyet'}
-                  showStatusFilter={true}
-                  statusOptions={buildStatusOptions(currentAllRows)}
-                  statusValue={currentStatusVal}
-                  onStatusChange={(val) => {
-                    statusSetters[activeTab](val);
-                    setPaginationModel(prev => ({ ...prev, page: 0 }));
-                  }}
+                  showStatusFilter={false}
                   canSign={(items) => items.length > 0 && items.every(i => i.status === 'cho-duyet')}
                   handleSignDocument={(items, _user, _onSign) => handleSign(items)}
                   onSign={() => { }}
@@ -271,15 +329,17 @@ export default function MaintenanceApprovalPage() {
                   bgcolor: 'background.paper',
                 }}
               >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    Xem trước: {selectedRow.id}
-                  </Typography>
-                  <IconButton size="small" onClick={() => setSelectedRow(null)}>
-                    <CloseIcon fontSize="small" />
-                  </IconButton>
+                <Box sx={{ mb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="subtitle1" fontWeight={600}>Xem trước: {selectedRow.id}</Typography>
+                  <IconButton size="small" onClick={() => setSelectedRow(null)}><CloseIcon fontSize="small" /></IconButton>
                 </Box>
-                {renderPreview()}
+
+                <Tabs value={detailTab} onChange={(_, v) => setDetailTab(v)} sx={{ mb: 2 }}>
+                  <Tab label="Biên bản" />
+                  <Tab label="Quy trình ký" />
+                </Tabs>
+
+                {detailTab === 0 ? renderPreview() : renderSignProcess(selectedRow)}
               </Paper>
             )}
           </Box>

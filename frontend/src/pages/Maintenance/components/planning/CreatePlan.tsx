@@ -2,16 +2,17 @@ import { useState } from 'react';
 import {
     Box, Button, IconButton, Typography, FormControl, InputLabel,
     Select, MenuItem, Divider, Chip, Dialog, DialogTitle,
-    DialogContent, DialogActions, Alert,
+    DialogContent, DialogActions, Alert, TextField,
 } from '@mui/material';
+import FieldDate from '../../../../components/TextField/FieldDate';
 import CloseIcon from '@mui/icons-material/Close';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { departments, users } from '../../../../mockdata/mockDepartments';
 import type { MaintenanceLevel, PlanSigner } from '../../../../mockdata/mockPlans';
 import type { AnnualPlan } from '../../../../mockdata/mockWorkflow';
-import StepAssets from '../step/StepAssets';
 import StepSchedule from '../step/StepSchedule';
 import StepPreview from '../step/StepPreview';
+import StepAssets from '../step/StepAssets';
 
 interface Props {
     open: boolean;
@@ -27,6 +28,9 @@ const CreatePlanDialog = ({ open, onClose, onSave }: Props) => {
     const [quantities, setQuantities] = useState<Record<string, number>>({});
 
     const [signers, setSigners] = useState<PlanSigner[]>([]);
+    const [planCode, setPlanCode] = useState('');
+    const [planName, setPlanName] = useState('');
+    const [planDate, setPlanDate] = useState('');
     const [addDeptId, setAddDeptId] = useState('');
     const [addUserId, setAddUserId] = useState('');
     const [editingSignerId, setEditingSignerId] = useState<string | null>(null);
@@ -37,6 +41,7 @@ const CreatePlanDialog = ({ open, onClose, onSave }: Props) => {
         setSourceDeptId(''); setExecutionDeptId('');
         setSelectedAssetIds([]); setSchedule({}); setQuantities({});
         setSigners([]); setAddDeptId(''); setAddUserId('');
+        setPlanCode(''); setPlanName(''); setPlanDate('');
         onClose();
     };
 
@@ -81,16 +86,20 @@ const CreatePlanDialog = ({ open, onClose, onSave }: Props) => {
         && sourceDeptId !== executionDeptId
         && selectedAssetIds.length > 0
         && Object.keys(schedule).length > 0
-        && signers.length > 0;
+        && signers.length > 0
+        && planCode.trim() !== ''
+        && planName.trim() !== ''
+        && planDate.trim() !== '';
 
     const handleSave = (status: 'draft' | 'cho-duyet') => {
+        const year = planDate ? parseInt(planDate.slice(0, 4)) : new Date().getFullYear();
         const newPlan: AnnualPlan = {
-            id: `KH-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`,
-            year: new Date().getFullYear(),
+            id: planCode.trim() || `KH-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`,
+            year,
             deviceIds: selectedAssetIds,
             status,
-            createdDate: new Date().toISOString().slice(0, 10),
-            description: `Kế hoạch SCBD - ${departments.find(d => d.id === sourceDeptId)?.name || sourceDeptId}`,
+            createdDate: planDate || new Date().toISOString().slice(0, 10),
+            description: planName || `Kế hoạch SCBD - ${departments.find(d => d.id === sourceDeptId)?.name || sourceDeptId}`,
             sourceDepartmentId: sourceDeptId,
             executionDepartmentId: executionDeptId,
             monthlySchedule: schedule as any,
@@ -117,6 +126,18 @@ const CreatePlanDialog = ({ open, onClose, onSave }: Props) => {
 
                     {/* ── CỘT TRÁI: Đơn vị + Chọn thiết bị ── */}
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+
+                        {/* Thông tin kế hoạch */}
+                        <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3, p: 3 }}>
+                            <Typography variant="subtitle1" fontWeight={600} mb={2}>Thông tin kế hoạch</Typography>
+                            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                                <TextField label="Mã phiếu" size="small" value={planCode} onChange={e => setPlanCode(e.target.value)} />
+                                <TextField label="Tên kế hoạch" size="small" value={planName} onChange={e => setPlanName(e.target.value)} />
+                            </Box>
+                            <Box sx={{ mt: 2 }}>
+                                <FieldDate title="Thời gian lập kế hoạch" selectedDate={planDate} setSelectedDate={setPlanDate} />
+                            </Box>
+                        </Box>
 
                         {/* Đơn vị */}
                         <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3, p: 3 }}>
