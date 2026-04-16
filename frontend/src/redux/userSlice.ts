@@ -1,7 +1,14 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+
+// Define the shape of the user slice state
+interface UserState {
+  user: any | null; // can be refined to a proper user type if available
+  loading: boolean;
+  error: boolean;
+}
 
 // khởi tạo giá trị ban đầu
-const initialState = {
+const initialState: UserState = {
   user: null,
   loading: false,
   error: false,
@@ -15,7 +22,7 @@ export const userSlice = createSlice({
     loginStart: (state) => {
       state.loading = true;
     },
-    loginSuccess: (state, action) => {
+    loginSuccess: (state, action: PayloadAction<any>) => {
       state.loading = false;
       state.user = action.payload;
     },
