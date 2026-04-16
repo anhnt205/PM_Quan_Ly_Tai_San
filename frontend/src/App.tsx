@@ -278,7 +278,14 @@ function App() {
               </CmmsProvider>
             }
           />
-          <Route path={ROUTES.MAINTENANCE_RECORD} element={<MaintenanceRecordPage />} />
+          <Route
+            path={ROUTES.MAINTENANCE_RECORD}
+            element={
+              <CmmsProvider>
+                <MaintenanceRecordPage />
+              </CmmsProvider>
+            }
+          />
         </Route>
         <Route path="*" element={<Navigate to={ROUTES.NOT_FOUND} replace />} />
       </Routes>

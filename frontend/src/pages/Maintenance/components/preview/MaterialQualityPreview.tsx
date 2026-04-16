@@ -1,67 +1,136 @@
-// src/pages/Maintenance/components/preview/MaterialQualityPreview.tsx
-import { Box, Typography, Divider, Chip, Table, TableBody,
-  TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
-import type { MaterialRequest } from '../../../../mockdata/mockWorkflow';
+import {
+  Box, Typography, Table, TableBody,
+  TableCell, TableContainer, TableHead, TableRow, Paper, Divider,
+} from '@mui/material';
+import type { MaterialQualityRecord } from '../../../../mockdata/mockInspectionRecords';
 
-export default function MaterialQualityPreview({ row }: { row: MaterialRequest }) {
+interface Props {
+  row: MaterialQualityRecord;
+}
+
+const MaterialQualityPreview = ({ row }: Props) => {
+  if (!row) return null;
+
+  const d = row.date ? new Date(row.date) : new Date();
+  const signers = row.signers ?? [];
+  const items = row.items ?? [];
+
   return (
-    <Box sx={{ border: '2px solid #1976d2', borderRadius: 2, p: 3 }}>
-      <Typography variant="subtitle2" align="center" sx={{ textTransform: 'uppercase', mb: 0.5 }}>
-        Biên bản đánh giá vật tư
-      </Typography>
-      <Typography variant="h6" align="center" fontWeight={700}>{row.id}</Typography>
-      <Divider sx={{ my: 2 }} />
-      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>
+    <Box sx={{ fontFamily: 'serif', fontSize: '0.875rem', lineHeight: 1.8, border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 3 }}>
+
+      {/* Header 2 cột */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
         <Box>
-          <Typography variant="caption" color="text.secondary">Thiết bị</Typography>
-          <Typography fontWeight={600}>{row.deviceName}</Typography>
+          <Typography variant="caption" display="block">TẬP ĐOÀN CÔNG NGHIỆP</Typography>
+          <Typography variant="caption" display="block">THAN – KHOÁNG SẢN VIỆT NAM</Typography>
+          <Typography variant="caption" display="block" fontWeight={700}>CÔNG <u>TY THAN UÔNG BÍ</u> - TKV</Typography>
         </Box>
-        <Box>
-          <Typography variant="caption" color="text.secondary">Ngày tạo</Typography>
-          <Typography>{row.createdDate}</Typography>
-        </Box>
-        <Box>
-          <Typography variant="caption" color="text.secondary">Trạng thái</Typography>
-          <Box mt={0.5}><Chip label="Chờ duyệt" color="warning" size="small" /></Box>
+        <Box sx={{ textAlign: 'center' }}>
+          <Typography variant="caption" display="block" fontWeight={700}>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</Typography>
+          <Typography variant="caption" display="block" fontWeight={700}><u>Độc lập – Tự do – Hạnh phúc</u></Typography>
         </Box>
       </Box>
-      <Typography variant="caption" color="text.secondary" display="block" mb={1}>
-        Danh sách vật tư
+
+      {/* Địa danh ngày tháng */}
+      <Typography variant="caption" display="block" sx={{ textAlign: 'right', fontStyle: 'italic', mb: 2 }}>
+        Quảng Ninh, ngày {d.getDate()} tháng {d.getMonth() + 1} năm {d.getFullYear()}
       </Typography>
-      <TableContainer component={Paper} variant="outlined">
-        <Table size="small">
+
+      {/* Tiêu đề */}
+      <Typography variant="subtitle2" align="center" fontWeight={700} sx={{ color: 'primary.main', mb: 0.25 }} display="block">BIÊN BẢN</Typography>
+      <Typography variant="subtitle2" align="center" fontWeight={700} sx={{ mb: 2 }} display="block">
+        ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA
+      </Typography>
+
+      {/* Mở đầu */}
+      <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>
+        Hôm nay, ngày {d.getDate()} tháng {d.getMonth() + 1} năm {d.getFullYear()}. Tại {row.location || '………………………'}
+      </Typography>
+      <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>
+        Hội đồng đánh giá chất lượng vật tư phụ tùng thu hồi sau sửa chữa cấp: <b>{row.repairLevel || '……………'}</b>
+      </Typography>
+      <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>
+        Của thiết bị: <b>{row.deviceName || '……………'}</b> Kiểu: {row.deviceType || '………'} Số: {row.deviceSerial || '……………………………'}
+      </Typography>
+      <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>
+        Đơn vị quản lý vận hành: {row.managementUnit || '………………'}
+      </Typography>
+      <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>Thành phần gồm:</Typography>
+      <Box sx={{ pl: 2, mb: 1.5 }}>
+        {signers.map((s: any, i: number) => (
+          <Box key={i} sx={{ display: 'flex', gap: 3, mb: 0.25 }}>
+            <Typography variant="caption" sx={{ minWidth: 16 }}>{i + 1}.</Typography>
+            <Typography variant="caption" sx={{ minWidth: 150, fontWeight: 500 }}>{s.name || '………………………'}</Typography>
+            <Typography variant="caption" sx={{ minWidth: 120 }}>{s.title}</Typography>
+            <Typography variant="caption">{s.departmentName}</Typography>
+          </Box>
+        ))}
+      </Box>
+
+      <Typography variant="caption" display="block" sx={{ mb: 1.5 }}>
+        Đã tiến hành kiểm tra chi tiết các vật tư phụ tùng thu hồi sau sửa chữa cụ thể như sau:
+      </Typography>
+
+      {/* Bảng vật tư thu hồi */}
+      <TableContainer component={Paper} variant="outlined" sx={{ mb: 1.5 }}>
+        <Table size="small" sx={{ tableLayout: 'fixed' }}>
           <TableHead>
-            <TableRow sx={{ bgcolor: 'grey.50' }}>
-              <TableCell sx={{ fontWeight: 700 }}>STT</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>Tên vật tư</TableCell>
-              <TableCell align="center" sx={{ fontWeight: 700 }}>Số lượng</TableCell>
-              <TableCell align="center" sx={{ fontWeight: 700 }}>Đơn vị</TableCell>
+            <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+              <TableCell sx={{ fontWeight: 700, width: 40, fontSize: '0.72rem' }}>STT</TableCell>
+              <TableCell sx={{ fontWeight: 700, fontSize: '0.72rem' }}>Tên vật tư, thiết bị</TableCell>
+              <TableCell sx={{ fontWeight: 700, width: 45, fontSize: '0.72rem' }}>ĐVT</TableCell>
+              <TableCell sx={{ fontWeight: 700, width: 40, fontSize: '0.72rem' }}>SL</TableCell>
+              <TableCell sx={{ fontWeight: 700, fontSize: '0.72rem' }}>Tình trạng</TableCell>
+              <TableCell sx={{ fontWeight: 700, fontSize: '0.72rem' }}>Biện pháp xử lý</TableCell>
+              <TableCell sx={{ fontWeight: 700, width: 70, fontSize: '0.72rem' }}>Ghi chú</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {row.items?.map((item, idx) => (
+            {items.map((item: any, idx: number) => (
               <TableRow key={idx}>
-                <TableCell>{idx + 1}</TableCell>
-                <TableCell>{item.name}</TableCell>
-                <TableCell align="center">{item.quantity}</TableCell>
-                <TableCell align="center">{item.unit}</TableCell>
+                <TableCell sx={{ fontSize: '0.72rem' }}>{String(idx + 1).padStart(2, '0')}</TableCell>
+                <TableCell sx={{ fontSize: '0.72rem' }}>{item.name}</TableCell>
+                <TableCell sx={{ fontSize: '0.72rem' }}>{item.unit}</TableCell>
+                <TableCell sx={{ fontSize: '0.72rem' }}>{item.quantity}</TableCell>
+                <TableCell sx={{ fontSize: '0.72rem' }}>{item.condition}</TableCell>
+                <TableCell sx={{ fontSize: '0.72rem' }}>{item.treatment}</TableCell>
+                <TableCell sx={{ fontSize: '0.72rem' }}>{item.note}</TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
-      <Divider sx={{ my: 3 }} />
-      <Box sx={{ display: 'flex', justifyContent: 'space-around' }}>
-        {['Người lập', 'Trưởng phòng vật tư', 'Phó giám đốc'].map((label) => (
-          <Box key={label} sx={{ textAlign: 'center' }}>
-            <Typography variant="caption" fontWeight={700} display="block" sx={{ textTransform: 'uppercase' }}>
-              {label}
+
+      {/* Tổng kết */}
+      <Typography variant="caption" display="block">Số để lại phục hồi phục vụ cho sản xuất: {row.recoveryCount ?? '…………'}.</Typography>
+      <Typography variant="caption" display="block">Số để làm phế liệu: {row.scrapCount ?? '…………'} (mục)</Typography>
+      <Typography variant="caption" display="block" sx={{ mb: 1.5 }}>Số lượng hủy: {row.destroyCount ?? '…………'} (mục)</Typography>
+
+      <Divider sx={{ mb: 2 }} />
+
+      {/* Chữ ký — 4 cột */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
+        {[
+          { label: signers[2]?.departmentName || 'Phân xưởng', signer: signers[2] },
+          { label: signers[3]?.departmentName || 'Phân xưởng', signer: signers[3] },
+          { label: 'Phòng CV', signer: signers[0] },
+          { label: 'PHÓ GIÁM ĐỐC', signer: signers[signers.length - 1] },
+        ].map((col, idx) => (
+          <Box key={idx} sx={{ flex: 1, textAlign: 'center' }}>
+            <Typography variant="caption" fontWeight={700} display="block" sx={{ textTransform: 'uppercase', fontSize: idx === 3 ? '0.75rem' : '0.7rem' }}>
+              {col.label}
             </Typography>
-            <Typography variant="caption" color="text.secondary" fontStyle="italic">(Ký, ghi rõ họ tên)</Typography>
-            <Box sx={{ borderBottom: '1px solid', borderColor: 'text.primary', width: 120, mx: 'auto', mt: 4, mb: 0.5 }} />
+            <Typography variant="caption" color="text.secondary" display="block" sx={{ fontStyle: 'italic', mb: 3, fontSize: '0.7rem' }}>
+              (Ký, ghi rõ họ tên)
+            </Typography>
+            <Box sx={{ borderBottom: '1px solid', borderColor: 'text.primary', width: '75%', mx: 'auto', mb: 0.5 }} />
+            <Typography variant="caption" fontWeight={600} display="block" sx={{ fontSize: '0.72rem' }}>{col.signer?.name || ''}</Typography>
+            <Typography variant="caption" color="text.secondary" display="block" sx={{ fontSize: '0.7rem' }}>{col.signer?.title || ''}</Typography>
           </Box>
         ))}
       </Box>
     </Box>
   );
-}
+};
+
+export default MaterialQualityPreview;
