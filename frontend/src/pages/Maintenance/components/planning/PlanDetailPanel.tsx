@@ -414,7 +414,7 @@ const PlanDetailPanel = ({
                                                 <TableCell align="right">
                                                     <ActionCell
                                                         onView={() => { }}
-                                                        onAdd={canCreateInspectionForReq(req) ? () => setInspectionParentReqId(req.id) : undefined}
+                                                        onAdd={() => setInspectionParentReqId(req.id)}
                                                         addTooltip="Tạo BB Giám định"
                                                         addColor="success"
                                                     />
@@ -446,7 +446,7 @@ const PlanDetailPanel = ({
                                                             <TableCell align="right">
                                                                 <ActionCell
                                                                     onView={() => { }}
-                                                                    onAdd={canCreateAcceptanceForInsp(insp) ? () => setAcceptanceParentInspId(insp.id) : undefined}
+                                                                    onAdd={() => setAcceptanceParentInspId(insp.id)}
                                                                     addTooltip="Tạo BB Nghiệm thu"
                                                                     addColor="warning"
                                                                 />
@@ -478,7 +478,7 @@ const PlanDetailPanel = ({
                                                                         <TableCell align="right">
                                                                             <ActionCell
                                                                                 onView={() => { }}
-                                                                                onAdd={canCreateMaterialForAcc(acc) ? () => setMaterialParentAccId(acc.id) : undefined}
+                                                                                onAdd={() => setMaterialParentAccId(acc.id)}
                                                                                 addTooltip="Tạo BB Vật tư"
                                                                                 addColor="secondary"
                                                                             />
