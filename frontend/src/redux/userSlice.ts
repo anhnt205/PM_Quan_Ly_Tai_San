@@ -8,8 +8,8 @@ interface UserState {
 }
 
 // khởi tạo giá trị ban đầu
-const initialState: UserState = {
-  user: null,
+const initialState = {
+  user: null as any,
   loading: false,
   error: false,
 };

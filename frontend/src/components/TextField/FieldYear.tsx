@@ -15,21 +15,27 @@ export default function FieldYear({
   title,
   formik,
   field,
+  selectedYear,
+  setSelectedYear,
   disabled = false,
 }: {
   title: string;
   formik?: any;
   field?: string;
+  selectedYear?: number;
+  setSelectedYear?: (val: number) => void;
   disabled?: boolean;
 }) {
   const value =
-    formik && field ? getIn(formik.values, field) : new Date().getFullYear();
+    formik && field ? getIn(formik.values, field) : selectedYear ?? new Date().getFullYear();
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [startYear, setStartYear] = useState(Math.floor(value / 10) * 10);
 
   const setValue = (val: number) => {
     if (formik && field) {
       formik.setFieldValue(field, val);
+    } else {
+      setSelectedYear?.(val);
     }
     setAnchorEl(null);
   };

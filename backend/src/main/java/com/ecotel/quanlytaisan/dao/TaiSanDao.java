@@ -28,15 +28,18 @@ public class TaiSanDao {
                 ts.*, 
                 mhts.TenMoHinh, 
                 nts.TenNhom, 
+                lts.TenLoai,
                 da.TenDuAn, 
                 nv.TenNguonKinhPhi,
                 pb1.TenPhongBan AS tenDonViBanDau,
                 pb2.TenPhongBan AS tenDonViHienThoi,
                 dvt.TenDonVi AS tenDonViTinh,
                 ts.IdDuDan as idDuAn
+                
             FROM TaiSan AS ts
             LEFT JOIN MoHinhTaiSan AS mhts ON ts.IdMoHinhTaiSan = mhts.Id
             LEFT JOIN NhomTaiSan AS nts ON ts.IdNhomTaiSan = nts.Id
+            LEFT JOIN LoaiTaiSanCon AS lts ON Ts.idLoaiTaiSanCon = lts.Id
             LEFT JOIN DuAn AS da ON ts.IdDuDan = da.Id
             LEFT JOIN NguonVon AS nv ON ts.IdNguonVon = nv.Id
             LEFT JOIN PhongBan AS pb1 ON ts.IdDonViBanDau = pb1.Id
@@ -261,6 +264,7 @@ public class TaiSanDao {
     public long countByDonViHienThoi(
         String idCongTy, 
         String idDonViHienThoi, 
+        String search,
         String idNhomTaiSan, 
         int soNgayThongBaoKiemDinh, 
         String trangThaiKiemDinh) {
@@ -269,6 +273,14 @@ public class TaiSanDao {
         List<Object> params = new ArrayList<>();
         params.add(idCongTy);
         params.add(idDonViHienThoi);
+        
+        if (search != null && !search.trim().isEmpty()) {
+            whereClause.append(" AND (ts.Id LIKE ? OR ts.TenTaiSan LIKE ? OR ts.SoThe LIKE ? OR ts.KyHieu LIKE ? OR ts.SoKyHieu LIKE ? OR ts.CongSuat LIKE ? OR ts.NuocSanXuat LIKE ? OR ts.DonViTinh LIKE ? OR ts.MoTa LIKE ?) ");
+            String searchPattern = "%" + search + "%";
+            for (int i = 0; i < 9; i++) {
+                params.add(searchPattern);
+            }
+        }
         
         // Lọc theo nhóm tài sản
         if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
@@ -408,6 +420,7 @@ public class TaiSanDao {
                     ts.IsActive,
                     ts.IsTaiSanCon,
                     ts.IdLoaiTaiSanCon,
+                    lts.TenLoai,
                     ts.SoThe,
                     ts.nvNS,
                     ts.vonVay,
@@ -422,6 +435,7 @@ public class TaiSanDao {
                     TaiSan AS ts
                 LEFT JOIN MoHinhTaiSan AS mhts ON ts.IdMoHinhTaiSan = mhts.Id
                 LEFT JOIN NhomTaiSan AS nts ON ts.IdNhomTaiSan = nts.Id
+                LEFT JOIN LoaiTaiSanCon AS lts ON Ts.idLoaiTaiSanCon = lts.Id
                 LEFT JOIN DuAn AS da ON ts.IdDuDan = da.Id
                 LEFT JOIN NguonVon AS nv ON ts.IdNguonVon = nv.Id
                 LEFT JOIN PhongBan AS pb1 ON ts.IdDonViBanDau = pb1.Id
@@ -570,6 +584,7 @@ public class TaiSanDao {
                     ts.IsActive,
                     ts.IsTaiSanCon,
                     ts.IdLoaiTaiSanCon,
+                    lts.TenLoai,
                     ts.SoThe,
                     ts.nvNS,
                     ts.vonVay,
@@ -584,6 +599,7 @@ public class TaiSanDao {
                     TaiSan AS ts
                 LEFT JOIN MoHinhTaiSan AS mhts ON ts.IdMoHinhTaiSan = mhts.Id
                 LEFT JOIN NhomTaiSan AS nts ON ts.IdNhomTaiSan = nts.Id
+                LEFT JOIN LoaiTaiSanCon AS lts ON Ts.idLoaiTaiSanCon = lts.Id
                 LEFT JOIN DuAn AS da ON ts.IdDuDan = da.Id
                 LEFT JOIN NguonVon AS nv ON ts.IdNguonVon = nv.Id
                 LEFT JOIN PhongBan AS pb1 ON ts.IdDonViBanDau = pb1.Id
@@ -730,6 +746,7 @@ public class TaiSanDao {
                     ts.IsActive,
                     ts.IsTaiSanCon,
                     ts.IdLoaiTaiSanCon,
+                    lts.TenLoai,
                     ts.SoThe,
                     ts.nvNS,
                     ts.vonVay,
@@ -744,6 +761,7 @@ public class TaiSanDao {
                     TaiSan AS ts
                 LEFT JOIN MoHinhTaiSan AS mhts ON ts.IdMoHinhTaiSan = mhts.Id
                 LEFT JOIN NhomTaiSan AS nts ON ts.IdNhomTaiSan = nts.Id
+                LEFT JOIN LoaiTaiSanCon AS lts ON Ts.idLoaiTaiSanCon = lts.Id
                 LEFT JOIN DuAn AS da ON ts.IdDuDan = da.Id
                 LEFT JOIN NguonVon AS nv ON ts.IdNguonVon = nv.Id
                 LEFT JOIN PhongBan AS pb1 ON ts.IdDonViBanDau = pb1.Id
@@ -760,7 +778,7 @@ public class TaiSanDao {
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(TaiSanDTO.class), params.toArray());
     }
 
-    public List<TaiSanDTO> findByDonViHienThoiPaged(String idCongTy, String idDonViHienThoi, int offset, int limit, String sortBy, String sortDir, String idNhomTaiSan, int soNgayThongBaoKiemDinh, String trangThaiKiemDinh) {
+    public List<TaiSanDTO> findByDonViHienThoiPaged(String idCongTy, String idDonViHienThoi, int offset, int limit, String sortBy, String sortDir, String idNhomTaiSan, String search, int soNgayThongBaoKiemDinh, String trangThaiKiemDinh) {
         String normalizedSortBy = sortBy != null ? sortBy.trim().toLowerCase() : "ngaycapnhat";
         String orderColumn;
         switch (normalizedSortBy) {
@@ -788,27 +806,41 @@ public class TaiSanDao {
         String direction = "ASC".equalsIgnoreCase(sortDir) ? "ASC" : "DESC";
         String inspectionStatusSql = getInspectionStatusSql(soNgayThongBaoKiemDinh);
 
-        String whereClause;
-        if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
-            whereClause = "WHERE ts.IdCongTy = ? AND ts.IdDonViHienThoi = ? AND ts.IdNhomTaiSan = ?";
-        } else {
-            whereClause = "WHERE ts.IdCongTy = ? AND ts.IdDonViHienThoi = ?";
+        // Xây dựng whereClause linh hoạt
+        StringBuilder whereClause = new StringBuilder();
+        List<Object> params = new ArrayList<>();
+        
+        whereClause.append("WHERE ts.IdCongTy = ? AND ts.IdDonViHienThoi = ?");
+        params.add(idCongTy);
+        params.add(idDonViHienThoi);
+
+        if (search != null && !search.trim().isEmpty()) {
+            whereClause.append(" AND (ts.Id LIKE ? OR ts.TenTaiSan LIKE ? OR ts.SoThe LIKE ? OR ts.KyHieu LIKE ? OR ts.SoKyHieu LIKE ? OR ts.CongSuat LIKE ? OR ts.NuocSanXuat LIKE ? OR ts.DonViTinh LIKE ? OR ts.MoTa LIKE ?) ");
+            String searchPattern = "%" + search + "%";
+            for (int i = 0; i < 9; i++) {
+                params.add(searchPattern);
+            }
         }
+
+        if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
+            whereClause.append(" AND ts.IdNhomTaiSan = ?");
+            params.add(idNhomTaiSan);
+        }
+        
         // Filter theo trạng thái kiểm định
-       // Lọc theo trạng thái kiểm định (thay vì Boolean, dùng String)
         if (trangThaiKiemDinh != null && !trangThaiKiemDinh.trim().isEmpty()) {
             switch (trangThaiKiemDinh) {
                 case "DA_DANG_KIEM":
-                    whereClause +=" AND "+ inspectionStatusSql + " = 'DA_DANG_KIEM'";
+                    whereClause.append(" AND ").append(inspectionStatusSql).append(" = 'DA_DANG_KIEM'");
                     break;
                 case "SAP_DEN_HAN":
-                    whereClause +=" AND "+ inspectionStatusSql + " = 'SAP_DEN_HAN'";
+                    whereClause.append(" AND ").append(inspectionStatusSql).append(" = 'SAP_DEN_HAN'");
                     break;
                 case "QUA_HAN":
-                    whereClause +=" AND "+ inspectionStatusSql + " = 'QUA_HAN'";
+                    whereClause.append(" AND ").append(inspectionStatusSql).append(" = 'QUA_HAN'");
                     break;
                 case "CHUA_DANG_KIEM":
-                    whereClause +=" AND "+ inspectionStatusSql + " = 'CHUA_DANG_KIEM'";
+                    whereClause.append(" AND ").append(inspectionStatusSql).append(" = 'CHUA_DANG_KIEM'");
                     break;
             }
         }
@@ -856,6 +888,7 @@ public class TaiSanDao {
                         ts.IsActive,
                         ts.IsTaiSanCon,
                         ts.IdLoaiTaiSanCon,
+                        lts.TenLoai,
                         ts.SoThe,
                         ts.nvNS,
                         ts.vonVay,
@@ -869,6 +902,7 @@ public class TaiSanDao {
                     FROM TaiSan ts
                     LEFT JOIN MoHinhTaiSan mhts ON ts.IdMoHinhTaiSan = mhts.Id
                     LEFT JOIN NhomTaiSan nts ON ts.IdNhomTaiSan = nts.Id
+                    LEFT JOIN LoaiTaiSanCon AS lts ON Ts.idLoaiTaiSanCon = lts.Id
                     LEFT JOIN DuAn da ON ts.IdDuDan = da.Id
                     LEFT JOIN NguonVon nv ON ts.IdNguonVon = nv.Id
                     LEFT JOIN PhongBan pb1 ON ts.IdDonViBanDau = pb1.Id
@@ -877,11 +911,13 @@ public class TaiSanDao {
                     %s
                     ORDER BY %s %s
                     LIMIT ? OFFSET ?
-                """, inspectionStatusSql, whereClause, orderColumn, direction);        if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()) {
-            return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(TaiSanDTO.class), idCongTy, idDonViHienThoi, idNhomTaiSan, limit, offset);
-        } else {
-            return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(TaiSanDTO.class), idCongTy, idDonViHienThoi, limit, offset);
-        }
+                """, inspectionStatusSql, whereClause.toString(), orderColumn, direction);
+        
+        // Thêm limit và offset vào params
+        params.add(limit);
+        params.add(offset);
+        
+        return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(TaiSanDTO.class), params.toArray());
     }
 
     public List<TaiSanDTO> findByIdLoaiTS(String idLoaiTS) {
@@ -1298,6 +1334,7 @@ public class TaiSanDao {
                     ts.IsActive,
                     ts.IsTaiSanCon,
                     ts.IdLoaiTaiSanCon,
+                    lts.TenLoai,
                     ts.SoThe,
                     ts.nvNS,
                     ts.vonVay,
@@ -1312,6 +1349,7 @@ public class TaiSanDao {
                     TaiSan AS ts
                 LEFT JOIN MoHinhTaiSan AS mhts ON ts.IdMoHinhTaiSan = mhts.Id
                 LEFT JOIN NhomTaiSan AS nts ON ts.IdNhomTaiSan = nts.Id
+                LEFT JOIN LoaiTaiSanCon AS lts ON Ts.idLoaiTaiSanCon = lts.Id
                 LEFT JOIN DuAn AS da ON ts.IdDuDan = da.Id
                 LEFT JOIN NguonVon AS nv ON ts.IdNguonVon = nv.Id
                 LEFT JOIN PhongBan AS pb1 ON ts.IdDonViBanDau = pb1.Id
@@ -1495,6 +1533,7 @@ public class TaiSanDao {
                     ts.IsActive,
                     ts.IsTaiSanCon,
                     ts.IdLoaiTaiSanCon, 
+                    lts.TenLoai,
                     ts.SoThe,
                     ts.nvNS,
                     ts.vonVay,
@@ -1509,6 +1548,7 @@ public class TaiSanDao {
                     TaiSan AS ts
                 LEFT JOIN MoHinhTaiSan AS mhts ON ts.IdMoHinhTaiSan = mhts.Id
                 LEFT JOIN NhomTaiSan AS nts ON ts.IdNhomTaiSan = nts.Id
+                LEFT JOIN LoaiTaiSanCon AS lts ON Ts.idLoaiTaiSanCon = lts.Id
                 LEFT JOIN DuAn AS da ON ts.IdDuDan = da.Id
                 LEFT JOIN NguonVon AS nv ON ts.IdNguonVon = nv.Id
                 LEFT JOIN PhongBan AS pb1 ON ts.IdDonViBanDau = pb1.Id

@@ -78,6 +78,12 @@ public class DinhMucSuaChuaDao {
         return jdbcTemplate.update(sql, dm.getIdLoaiSuaChua(), dm.getGhiChu(), dm.getNgayCapNhat(), dm.getNguoiCapNhat(), dm.getIsActive(), dm.getId());
     }
 
+    public DinhMucSuaChua findByLoaiSuaChuaId(String idLoaiSuaChua) {
+        String sql = "SELECT * FROM DinhMucSuaChua WHERE IdLoaiSuaChua = ? LIMIT 1";
+        List<DinhMucSuaChua> list = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(DinhMucSuaChua.class), idLoaiSuaChua);
+        return list.isEmpty() ? null : list.get(0);
+    }
+
     public int delete(String id) {
         String sql = "DELETE FROM DinhMucSuaChua WHERE Id = ?";
         return jdbcTemplate.update(sql, id);

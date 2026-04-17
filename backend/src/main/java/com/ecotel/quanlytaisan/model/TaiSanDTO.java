@@ -58,7 +58,10 @@ public class TaiSanDTO {
     private List<TaiSanCon> taiSanConList;
     private List<TaiSanFile> fileDinhKemList;
     private List<ChuKySuaChua> chuKySuaChuaList;
+
     private String idLoaiTaiSanCon;
+    private String tenLoai;
+
     private String soThe;
     private Double nvNS;
     private Double vonVay;

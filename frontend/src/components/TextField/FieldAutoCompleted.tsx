@@ -20,6 +20,10 @@ interface Props {
   componentsProps?: any;
   autocompleteSx?: any;
   limitOptions?: number;
+  value?: any;
+  setValue?: (val: any) => void;
+  noBorder?: boolean;
+  fontSize?: string;
 }
 
 export default function FieldAutoCompleted({
@@ -35,8 +39,16 @@ export default function FieldAutoCompleted({
   componentsProps,
   autocompleteSx,
   limitOptions,
+  value: valueProp,
+  setValue: setValueProp,
+  noBorder,
+  fontSize,
 }: Props) {
-  const currentValue = formik && field ? getIn(formik.values, field) : null;
+// ... (omitting middle for brevity, but I should provide the full block in a real tool call)
+// actually I'll just use shorter chunks
+
+  const currentValue =
+    formik && field ? getIn(formik.values, field) : valueProp;
   const touched = field ? getIn(formik.touched, field) : false;
   const error = field ? getIn(formik.errors, field) : null;
 
@@ -102,6 +114,9 @@ export default function FieldAutoCompleted({
         if (onChange) {
           onChange(newValue);
         }
+        if (setValueProp) {
+          setValueProp(newValue?.id || "");
+        }
       }}
       onInputChange={(_, value) => onSearch?.(value)}
       renderOption={(props, option, state) => {
@@ -138,6 +153,16 @@ export default function FieldAutoCompleted({
             }
           }}
           size="small"
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                border: noBorder ? "none" : undefined, // ❌ bỏ viền nếu noBorder=true
+              },
+            },
+            "& .MuiInputBase-input": {
+              fontSize: fontSize || "inherit", // 🖋️ chỉnh font chữ
+            },
+          }}
         />
       )}
     />

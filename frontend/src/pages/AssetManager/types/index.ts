@@ -17,6 +17,7 @@ export interface AssetType {
   taiKhoanChiPhi: number;
   idNhomTaiSan: string;
   tenNhom?: string;
+  tenLoai?: string;
   ngayVaoSo: string;
   ngaySuDung: string;
   tgKiemDinh?: string;
