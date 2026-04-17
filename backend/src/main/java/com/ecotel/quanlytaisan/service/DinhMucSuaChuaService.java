@@ -51,6 +51,12 @@ public class DinhMucSuaChuaService {
 
     @Transactional
     public DinhMucSuaChuaDTO save(DinhMucSuaChuaDTO dto, String username) {
+        // Check uniqueness of idLoaiSuaChua
+        DinhMucSuaChua existing = normDao.findByLoaiSuaChuaId(dto.getIdLoaiSuaChua());
+        if (existing != null && (dto.getId() == null || !existing.getId().equals(dto.getId()))) {
+            throw new RuntimeException("Loại sửa chữa này đã có định mức.");
+        }
+
         String now = getCurrentTime();
         DinhMucSuaChua norm = new DinhMucSuaChua();
         norm.setId(dto.getId());

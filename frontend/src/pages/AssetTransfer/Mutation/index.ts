@@ -659,9 +659,15 @@ export const useAssetTransferPageQuery = (
 };
 // danh sach tai san
 
-export const useAssetByDonViQuery = (loai?: number, idDonViGiao?: string) => {
+export const useAssetByDonViQuery = (
+  loai?: number,
+  idDonViGiao?: string,
+  search?: string,
+  page: number = 0,
+  pageSize: number = 99999,
+) => {
   return useQuery({
-    queryKey: ["allAssetsByDonVi", loai, idDonViGiao], // Key để cache dữ liệu
+    queryKey: ["allAssetsByDonVi", loai, idDonViGiao, search, page, pageSize], // Key để cache dữ liệu
     queryFn: async () => {
       const res = await api.get(
         loai === 1
@@ -670,8 +676,9 @@ export const useAssetByDonViQuery = (loai?: number, idDonViGiao?: string) => {
         {
           params: {
             idcongty: CongTy.CT001,
-            page: 0,
-            size: 9999,
+            page: page,
+            size: pageSize,
+            search: search,
             ...(loai === 1
               ? {
                   iddonvibandau: idDonViGiao,

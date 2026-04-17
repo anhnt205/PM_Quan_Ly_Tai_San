@@ -1,8 +1,6 @@
 package com.ecotel.quanlytaisan.service;
 
-import com.ecotel.quanlytaisan.dao.KeHoachSuaChuaDao;
-import com.ecotel.quanlytaisan.dao.KeHoachSuaChuaChiTietTaiSanDao;
-import com.ecotel.quanlytaisan.dao.KyTaiLieuDao;
+import com.ecotel.quanlytaisan.dao.*;
 import com.ecotel.quanlytaisan.model.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +22,8 @@ public class KeHoachSuaChuaService {
     @Autowired private KeHoachSuaChuaDao keHoachSuaChuaDao;
     @Autowired private KeHoachSuaChuaChiTietTaiSanDao suaChuaChiTietTaiSanDao;
     @Autowired private KyTaiLieuDao kyTaiLieuDao;
+    @Autowired private DinhMucSuaChuaDao normDao;
+    @Autowired private DinhMucVatTuDao materialNormDao;
 
     // ==================== Find all ====================
 
@@ -279,5 +279,58 @@ public class KeHoachSuaChuaService {
         if (signed) return 3;
         boolean prevNotSigned = flow.subList(0, idx).stream().anyMatch(s -> Boolean.FALSE.equals(s.get("signed")));
         return prevNotSigned ? 1 : 0;
+    }
+
+    // ==================== Material Aggregation ====================
+
+    public List<DinhMucVatTuDTO> getTongVatTu(String idKeHoach) {
+        List<KeHoachSuaChuaChiTietTaiSan> details = suaChuaChiTietTaiSanDao.findByIdKeHoach(idKeHoach);
+        Map<String, DinhMucVatTuDTO> aggregateMap = new HashMap<>();
+        Map<String, List<DinhMucVatTuDTO>> normCache = new HashMap<>();
+
+        for (KeHoachSuaChuaChiTietTaiSan detail : details) {
+            int assetQty = detail.getSoLuong() != null ? detail.getSoLuong() : 1;
+            String[] months = {
+                detail.getCapSuaChuaThang1(), detail.getCapSuaChuaThang2(), detail.getCapSuaChuaThang3(),
+                detail.getCapSuaChuaThang4(), detail.getCapSuaChuaThang5(), detail.getCapSuaChuaThang6(),
+                detail.getCapSuaChuaThang7(), detail.getCapSuaChuaThang8(), detail.getCapSuaChuaThang9(),
+                detail.getCapSuaChuaThang10(), detail.getCapSuaChuaThang11(), detail.getCapSuaChuaThang12()
+            };
+
+            for (String loaiSuaChuaId : months) {
+                if (loaiSuaChuaId != null && !loaiSuaChuaId.isEmpty()) {
+                    List<DinhMucVatTuDTO> materials = normCache.get(loaiSuaChuaId);
+                    if (materials == null) {
+                        DinhMucSuaChua norm = normDao.findByLoaiSuaChuaId(loaiSuaChuaId);
+                        if (norm != null) {
+                            materials = materialNormDao.findByDinhMucId(norm.getId());
+                            normCache.put(loaiSuaChuaId, materials);
+                        } else {
+                            normCache.put(loaiSuaChuaId, new ArrayList<>());
+                            continue;
+                        }
+                    }
+
+                    for (DinhMucVatTuDTO mat : materials) {
+                        String key = mat.getIdCCDCVT();
+                        int totalNeeded = (mat.getSoLuong() != null ? mat.getSoLuong() : 0) * assetQty;
+
+                        if (aggregateMap.containsKey(key)) {
+                            DinhMucVatTuDTO existing = aggregateMap.get(key);
+                            existing.setSoLuong(existing.getSoLuong() + totalNeeded);
+                        } else {
+                            DinhMucVatTuDTO newItem = new DinhMucVatTuDTO();
+                            newItem.setIdCCDCVT(mat.getIdCCDCVT());
+                            newItem.setTenCCDCVT(mat.getTenCCDCVT());
+                            newItem.setDonViTinh(mat.getDonViTinh());
+                            newItem.setKyHieu(mat.getKyHieu());
+                            newItem.setSoLuong(totalNeeded);
+                            aggregateMap.put(key, newItem);
+                        }
+                    }
+                }
+            }
+        }
+        return new ArrayList<>(aggregateMap.values());
     }
 }

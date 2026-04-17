@@ -256,4 +256,17 @@ public class KeHoachSuaChuaController {
             default: return "Trạng thái không xác định";
         }
     }
+
+    // ==================== TỔNG HỢP VẬT TƯ ====================
+
+    @GetMapping("/{id}/tong-vattu")
+    public ResponseEntity<ApiResponse<Object>> getTongVatTu(@PathVariable("id") String id) {
+        try {
+            List<DinhMucVatTuDTO> list = keHoachSuaChuaService.getTongVatTu(id);
+            return ResponseEntity.ok(ApiResponse.success("Lấy danh sách tổng hợp vật tư thành công", list, list.size()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống khi tổng hợp vật tư: " + e.getMessage(), null));
+        }
+    }
 }

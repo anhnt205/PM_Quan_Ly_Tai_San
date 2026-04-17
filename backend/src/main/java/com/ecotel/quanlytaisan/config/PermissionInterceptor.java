@@ -1,8 +1,5 @@
 package com.ecotel.quanlytaisan.config;
 
-import com.ecotel.quanlytaisan.service.UserPermissionService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -13,9 +10,6 @@ import java.util.Map;
 
 @Component
 public class PermissionInterceptor implements HandlerInterceptor {
-
-    @Autowired
-    private UserPermissionService userPermissionService;
 
     // Mapping từ URL pattern đến permission code
     private static final Map<String, String> URL_PERMISSION_MAPPING = new HashMap<>();
@@ -84,7 +78,7 @@ public class PermissionInterceptor implements HandlerInterceptor {
         }
 
         // Xác định action dựa trên HTTP method
-        String action = getActionFromMethod(method);
+        // String action = getActionFromMethod(method);
 
         // Kiểm tra quyền
 //        boolean hasPermission = userPermissionService.hasPermission(userId, permissionCode, action);

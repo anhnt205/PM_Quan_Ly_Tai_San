@@ -210,30 +210,10 @@ public class TaiSanService {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
 
-        List<TaiSanDTO> all = taiSanDao.findAll(idCongTy);
-        List<TaiSanDTO> filtered = new ArrayList<>();
-        String q = (search != null && !search.trim().isEmpty()) ? search.toLowerCase() : null;
-
-        for (TaiSanDTO item : all) {
-            if (!idDonViHienThoi.equals(item.getIdDonViHienThoi())) {
-                continue;
-            }
-            if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()
-                    && !idNhomTaiSan.equals(item.getIdNhomTaiSan())) {
-                continue;
-            }
-            if (q != null && !matchesTaiSanSearch(item, q)) {
-                continue;
-            }
-            filtered.add(item);
-        }
-
-        sortTaiSanList(filtered, sortBy, sortDir);
-
         // Pagination
-        long total = taiSanDao.countByDonViHienThoi(idCongTy, idDonViHienThoi, idNhomTaiSan, soNgayThongBaoKiemDinh, trangThaiKiemDinh);
+        long total = taiSanDao.countByDonViHienThoi(idCongTy, idDonViHienThoi, search, idNhomTaiSan, soNgayThongBaoKiemDinh, trangThaiKiemDinh);
         int offset = page * size;
-        List<TaiSanDTO> items = taiSanDao.findByDonViHienThoiPaged(idCongTy, idDonViHienThoi, offset, size, sortBy, sortDir, idNhomTaiSan, soNgayThongBaoKiemDinh, trangThaiKiemDinh);
+        List<TaiSanDTO> items = taiSanDao.findByDonViHienThoiPaged(idCongTy, idDonViHienThoi, offset, size, sortBy, sortDir, idNhomTaiSan, search, soNgayThongBaoKiemDinh, trangThaiKiemDinh);
 
         enrichTaiSanDTOList(items);
 

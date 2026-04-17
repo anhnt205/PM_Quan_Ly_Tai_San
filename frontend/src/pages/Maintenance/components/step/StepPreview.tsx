@@ -5,27 +5,44 @@ import {
   TableHead, TableRow, Paper, TextField,
 } from '@mui/material';
 import { devices } from '../../../../mockdata/mockDevices';
-import { departments } from '../../../../mockdata/mockDepartments';
+// import { departments } from '../../../../mockdata/mockDepartments';
 import {
   months, maintenanceLevelColors,
   type MaintenanceLevel, type PlanSigner,
 } from '../../../../mockdata/mockPlans';
 
+interface PlanAsset {
+  deviceId: string;
+  quantity: number;
+  month1: MaintenanceLevel;
+  month2: MaintenanceLevel;
+  month3: MaintenanceLevel;
+  month4: MaintenanceLevel;
+  month5: MaintenanceLevel;
+  month6: MaintenanceLevel;
+  month7: MaintenanceLevel;
+  month8: MaintenanceLevel;
+  month9: MaintenanceLevel;
+  month10: MaintenanceLevel;
+  month11: MaintenanceLevel;
+  month12: MaintenanceLevel;
+}
+
 interface Props {
   sourceDeptId: string;
   executionDeptId: string;
-  assetIds: string[];
-  quantities: Record<string, number>;
-  schedule: Record<string, MaintenanceLevel[]>;
+  assets: PlanAsset[];
   signers: PlanSigner[];
+  deptDevices: any; 
+  departments: any;
+  formik: any;
 }
 
-const StepPreview = ({ sourceDeptId, executionDeptId, assetIds, quantities, schedule, signers }: Props) => {
-  const [qdNumber, setQdNumber] = useState('');
+const StepPreview = ({ sourceDeptId, executionDeptId, assets, signers, deptDevices, departments, formik }: Props) => {
 
-  const sourceDept = departments.find(d => d.id === sourceDeptId);
-  const execDept = departments.find(d => d.id === executionDeptId);
-  const selectedDevices = devices.filter(d => assetIds.includes(d.id));
+  const sourceDept = departments.find((d: any) => d.id === sourceDeptId);
+  const execDept = departments.find((d: any) => d.id === executionDeptId);
+  const selectedDevices = (deptDevices?.items || []).filter((d: any) => assets.some(a => a.deviceId === d.id));
 
   const today = new Date();
   const day = today.getDate();
@@ -51,17 +68,17 @@ const StepPreview = ({ sourceDeptId, executionDeptId, assetIds, quantities, sche
           Kế hoạch sửa chữa bảo dưỡng thiết bị năm {year}
         </Typography>
         <Typography variant="h6" align="center" fontWeight={700} sx={{ textTransform: 'uppercase' }}>
-          Phân xưởng: {sourceDept?.name || '…'}
+          Phân xưởng: {sourceDept?.tenPhongBan || sourceDeptId || '…'}
         </Typography>
         <Typography variant="body2" align="center" color="text.secondary" sx={{ mt: 0.5, fontStyle: 'italic' }}>
           (Theo QĐ số{' '}
           <TextField
             variant="standard"
             size="small"
+            name="decisionNo"
             placeholder="số QĐ"
-            value={qdNumber}
-            onChange={e => setQdNumber(e.target.value)}
-            onClick={e => e.stopPropagation()}
+            value={formik.values.decisionNo}
+            onChange={formik.handleChange}
             inputProps={{ style: { width: 80, textAlign: 'center', fontSize: '0.875rem' } }}
             sx={{ mx: 0.5, verticalAlign: 'middle' }}
           />
@@ -78,7 +95,7 @@ const StepPreview = ({ sourceDeptId, executionDeptId, assetIds, quantities, sche
                 <TableCell align="center" sx={{ fontWeight: 700, fontSize: '0.7rem', width: 36, p: 0.5 }}>STT</TableCell>
                 <TableCell align="center" sx={{ fontWeight: 700, fontSize: '0.7rem', width: 60, p: 0.5 }}>Mã TB</TableCell>
                 <TableCell align="center" sx={{ fontWeight: 700, fontSize: '0.7rem', width: 130, p: 0.5 }}>Tên thiết bị</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 700, fontSize: '0.7rem', width: 65, p: 0.5 }}>Nhóm TB (QĐ 3021)</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 700, fontSize: '0.7rem', width: 65, p: 0.5 }}>Nhóm TB</TableCell>
                 <TableCell align="center" sx={{ fontWeight: 700, fontSize: '0.7rem', width: 55, p: 0.5 }}>Loại TS</TableCell>
                 <TableCell align="center" sx={{ fontWeight: 700, fontSize: '0.7rem', width: 36, p: 0.5 }}>SL</TableCell>
                 <TableCell align="center" sx={{ fontWeight: 700, fontSize: '0.7rem', width: 80, p: 0.5 }}>Đơn vị QL</TableCell>
@@ -91,21 +108,26 @@ const StepPreview = ({ sourceDeptId, executionDeptId, assetIds, quantities, sche
               </TableRow>
             </TableHead>
             <TableBody>
-              {selectedDevices.map((device, idx) => {
-                const row = schedule[device.id] || Array(12).fill('');
+              {selectedDevices.map((device: any, idx: number) => {
+                const asset = assets.find(a => a.deviceId === device.id);
+                const row = asset ? [
+                    asset.month1, asset.month2, asset.month3, asset.month4,
+                    asset.month5, asset.month6, asset.month7, asset.month8,
+                    asset.month9, asset.month10, asset.month11, asset.month12
+                ] : Array(12).fill('');
                 return (
                   <TableRow key={device.id}>
                     <TableCell align="center" sx={{ fontSize: '0.7rem', p: 0.5 }}>{idx + 1}</TableCell>
                     <TableCell align="center" sx={{ fontSize: '0.7rem', p: 0.5 }}>{device.id}</TableCell>
-                    <TableCell sx={{ fontSize: '0.7rem', p: 0.5 }}>{device.name}</TableCell>
-                    <TableCell align="center" sx={{ fontSize: '0.7rem', p: 0.5 }}>{device.group}</TableCell>
-                    <TableCell align="center" sx={{ fontSize: '0.7rem', p: 0.5 }}>{device.assetType}</TableCell>
+                    <TableCell sx={{ fontSize: '0.7rem', p: 0.5 }}>{device.name || device.tenTaiSan}</TableCell>
+                    <TableCell align="center" sx={{ fontSize: '0.7rem', p: 0.5 }}>{device.group || device.tenNhom}</TableCell>
+                    <TableCell align="center" sx={{ fontSize: '0.7rem', p: 0.5 }}>{device.assetType || device.tenLoai}</TableCell>
                     <TableCell align="center" sx={{ fontSize: '0.7rem', p: 0.5 }}>
-                      {quantities[device.id] ?? device.quantity}
+                      {asset?.quantity ?? device.quantity}
                     </TableCell>
-                    <TableCell align="center" sx={{ fontSize: '0.65rem', p: 0.5 }}>{sourceDept?.name}</TableCell>
-                    <TableCell align="center" sx={{ fontSize: '0.65rem', p: 0.5 }}>{execDept?.name}</TableCell>
-                    {row.map((level: MaintenanceLevel, mi: number) => (
+                    <TableCell align="center" sx={{ fontSize: '0.65rem', p: 0.5 }}>{sourceDept?.tenPhongBan || sourceDeptId}</TableCell>
+                    <TableCell align="center" sx={{ fontSize: '0.65rem', p: 0.5 }}>{execDept?.tenPhongBan || executionDeptId}</TableCell>
+                    {row.map((level: any, mi: number) => (
                       <TableCell
                         key={mi}
                         align="center"
