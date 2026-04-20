@@ -49,6 +49,12 @@ const CustomFilterPanel = (props: any) => {
   );
 };
 
+const CustomToolbar = ({ isCompact }: { isCompact: boolean }) => {
+  if (isCompact) return null; // 🔥 Ẩn luôn khi thu nhỏ
+
+  return <GridToolbar />;
+};
+
 interface Props {
   tableId?: string;
   title: string;
@@ -94,6 +100,7 @@ interface Props {
   handleDecision?: (item: any) => void;
   titleSelectedDate?: string;
   isRowSelectable?: (params: any) => boolean;
+  isCompact?: boolean;
 }
 
 export default function TableCustom({
@@ -141,6 +148,7 @@ export default function TableCustom({
   handleDecision,
   isRowSelectable,
   titleSelectedDate = "Chọn thời gian",
+  isCompact = false,
 }: Props) {
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.user);
@@ -222,7 +230,7 @@ export default function TableCustom({
         </Box>
 
         {/* Cụm Checkbox trạng thái hiển thị dựa trên biến boolean */}
-        {showStatusFilter && (
+        {showStatusFilter && !isCompact && (
           <FilterStatusGroup
             options={statusOptions}
             selectedValue={statusValue}
@@ -232,7 +240,7 @@ export default function TableCustom({
       </Box>
 
       <Grid container spacing={2} p={2}>
-        <Grid size={{ xs: 12, sm: 4 }}>
+        <Grid size={{ xs: 12, sm: isCompact ? 12 : 4 }}>
           <TextField
             label={titleSearch}
             fullWidth
@@ -249,8 +257,8 @@ export default function TableCustom({
             }}
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 3 }}>
-          {isFilterDepartment && (
+        <Grid size={{ xs: 12, sm: isCompact ? 12 : 3 }}>
+          {isFilterDepartment && !isCompact && (
             <Autocomplete
               options={departments || []}
               value={
@@ -271,7 +279,7 @@ export default function TableCustom({
             />
           )}
         </Grid>
-        {isFilterDate && (
+        {isFilterDate && !isCompact && (
           <Grid size={{ xs: 12, sm: 2 }}>
             <FieldDate
               selectedDate={selectedDate}
@@ -280,11 +288,11 @@ export default function TableCustom({
             />
           </Grid>
         )}
-        <Grid size={{ xs: 12, sm: 5 }}>
+        <Grid size={{ xs: 12, sm: isCompact ? 12 : 5 }}>
           <Box
             display={"flex"}
-            justifyContent={"flex-end"}
-            gap={2}
+            justifyContent={isCompact ? "flex-start" : "flex-end"}
+            gap={1}
             flexWrap="wrap"
           >
             {/* <Button variant="outlined" size="small" startIcon={<Settings />}>
@@ -301,7 +309,7 @@ export default function TableCustom({
                   handleSignDocument?.(selectedItem[0], user, () =>
                     onSign?.(
                       selectedItem[0]?.taiLieuCuoi ||
-                        selectedItem[0]?.taiLieuBangKe,
+                      selectedItem[0]?.taiLieuBangKe,
                       selectedItem[0],
                     ),
                   );
@@ -440,7 +448,10 @@ export default function TableCustom({
             disableRowSelectionOnClick
             showToolbar
             isRowSelectable={isRowSelectable}
-            slots={{ toolbar: GridToolbar, filterPanel: CustomFilterPanel }}
+            slots={{
+              toolbar: () => <CustomToolbar isCompact={isCompact} />,
+              filterPanel: CustomFilterPanel,
+            }}
             localeText={viVN.components.MuiDataGrid.defaultProps.localeText}
             slotProps={{
               filterPanel: { disableAddFilterButton: false },
