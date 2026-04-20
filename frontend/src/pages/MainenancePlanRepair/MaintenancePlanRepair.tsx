@@ -30,6 +30,7 @@ import { ROUTES } from '../../utils/routes';
 
 // ✅ Giữ nguyên context và types từ luồng cũ
 import { useCmms } from '../../hooks/CmmsContext';
+import IncidentDialog from '../Maintenance/components/dialog/IncidentDialog';
 
 import type { AnnualPlan } from '../../mockdata/mockWorkflow';
 import CreatePlanDialog from '../Maintenance/components/planning/CreatePlan';
@@ -74,6 +75,8 @@ export default function MaintenancePlanRepair() {
     addInspectionRecord,
     addAcceptanceTestRecord,
     addMaterialQualityRecord,
+    incidentReports,
+    addIncidentReport,
   } = useCmms();
 
   // 🔍 DEBUG
@@ -147,10 +150,14 @@ export default function MaintenancePlanRepair() {
     );
   };
 
-  const isPlanSelectable = (plan: AnnualPlan) => plan.status === 'draft';
+  // allow selecting any plan (remove previous restriction to only drafts)
+  const isPlanSelectable = (plan: AnnualPlan) => true;
 
   const selectedPlans = annualPlans.filter((plan) => selectedIds.includes(plan.id));
   const canSendToSigner = selectedPlans.length > 0 && selectedPlans.every((plan) => plan.status === 'draft');
+  const canCreateIncident = selectedPlans.length > 0 && selectedPlans.every((plan) => plan.status === 'da-duyet');
+
+  const [showIncidentDialog, setShowIncidentDialog] = useState(false);
 
   // ── Đếm theo status cho filter tabs ─────────────────────
   const countByStatus = (s: string) => annualPlans.filter(p => p.status === s).length;
@@ -255,16 +262,29 @@ export default function MaintenancePlanRepair() {
                 onDelete={() => { }}
                 showDelete={false}
                 extraActions={
-                  <Button
-                    size="small"
-                    variant="contained"
-                    color="warning"
-                    sx={{ display: isDetailOpen ? 'none' : undefined }}
-                    disabled={!canSendToSigner}
-                    onClick={async () => await handleSendToSigner(selectedPlans)}
-                  >
-                    Trình duyệt người ký ({selectedPlans.length})
-                  </Button>
+                  <>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="error"
+                      sx={{ display: isDetailOpen ? 'none' : undefined }}
+                      disabled={!canCreateIncident}
+                      onClick={() => setShowIncidentDialog(true)}
+                    >
+                      Tạo phiếu báo sự cố ({selectedPlans.length})
+                    </Button>
+
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="warning"
+                      sx={{ display: isDetailOpen ? 'none' : undefined }}
+                      disabled={!canSendToSigner}
+                      onClick={async () => await handleSendToSigner(selectedPlans)}
+                    >
+                      Trình duyệt người ký ({selectedPlans.length})
+                    </Button>
+                  </>
                 }
                 customContent={
                   !isDetailOpen ? (
@@ -384,12 +404,14 @@ export default function MaintenancePlanRepair() {
                   repairRequests={repairRequests}
                   inspectionRecords={inspectionRecords}
                   acceptanceTestRecords={acceptanceTestRecords}
+                    incidentReports={(incidentReports as any) || []}
                   materialQualityRecords={materialQualityRecords}
                   onClose={() => setSelectedPlan(null)}
                   onCreateRepairRequest={addRepairRequest}
                   onCreateInspectionRecord={addInspectionRecord}
                   onCreateAcceptanceRecord={addAcceptanceTestRecord}
                   onCreateMaterialQualityRecord={addMaterialQualityRecord}
+                    onCreateIncidentRecord={addIncidentReport}
                 />
               </Paper>
             </>
@@ -433,6 +455,16 @@ export default function MaintenancePlanRepair() {
         onSave={(plan) => {
           addAnnualPlan(plan);
           setShowForm(false);
+        }}
+      />
+      <IncidentDialog
+        open={showIncidentDialog}
+        onClose={() => setShowIncidentDialog(false)}
+        selectedPlans={selectedPlans}
+        onSubmit={(rec) => {
+          addIncidentReport(rec);
+          setShowIncidentDialog(false);
+          setSelectedIds([]);
         }}
       />
     </>
