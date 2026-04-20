@@ -3,7 +3,7 @@ import {
     Box, Typography, Tabs, Tab, Table, TableBody, TableCell,
     TableContainer, TableHead, TableRow, Paper, Chip, Checkbox,
     Button, IconButton, Select, MenuItem, FormControl, InputLabel,
-    Collapse, Tooltip,
+    Collapse, Tooltip, Dialog, DialogTitle, DialogActions, DialogContent,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PostAddIcon from '@mui/icons-material/PostAdd';
@@ -26,10 +26,12 @@ import type {
     MaterialQualityRecord,
     TechnicalInspectionRecord,
 } from '../../../../mockdata/mockInspectionRecords';
+import type { IncidentReport } from '../../../../mockdata/mockIncidentReports';
 import RepairRequestDialog from '../dialog/RepairRequestDialog';
 import InspectionRecordDialog from '../dialog/InspectionRecordDialog';
 import AcceptanceTestDialog from '../dialog/AcceptanceTestDialog';
 import MaterialDialog from '../dialog/MaterialDialog';
+import IncidentPreview from '../preview/IncidentPreview';
 
 interface Props {
     plan: AnnualPlan;
@@ -37,11 +39,13 @@ interface Props {
     inspectionRecords: TechnicalInspectionRecord[];
     acceptanceTestRecords: AcceptanceTestRecord[];
     materialQualityRecords: MaterialQualityRecord[];
+    incidentReports?: IncidentReport[];
     onClose: () => void;
     onCreateRepairRequest: (req: RepairRequest) => void;
     onCreateInspectionRecord: (record: TechnicalInspectionRecord) => void;
     onCreateAcceptanceRecord: (record: AcceptanceTestRecord) => void;
     onCreateMaterialQualityRecord: (record: MaterialQualityRecord) => void;
+    onCreateIncidentRecord?: (record: IncidentReport) => void;
 }
 
 // ── Helpers ───────────────────────────────────────────────
@@ -158,7 +162,9 @@ const PlanDetailPanel = ({
     plan, repairRequests, inspectionRecords, acceptanceTestRecords,
     materialQualityRecords, onClose, onCreateRepairRequest,
     onCreateInspectionRecord, onCreateAcceptanceRecord, onCreateMaterialQualityRecord,
+    incidentReports = [], onCreateIncidentRecord,
 }: Props) => {
+    const [incidentPreviewId, setIncidentPreviewId] = useState<string | null>(null);
     const [tab, setTab] = useState(0);
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
     const [selectedDeviceIds, setSelectedDeviceIds] = useState<string[]>([]);
@@ -174,6 +180,7 @@ const PlanDetailPanel = ({
 
     const schedule: Record<string, MaintenanceLevel[]> = (plan as any).monthlySchedule ?? {};
     const planRequests = repairRequests.filter(r => r.planId === plan.id);
+    const planIncidents = incidentReports.filter(ir => ir.planIds?.includes(plan.id));
 
     // ── Tab 0 helpers ─────────────────────────────────────
     const usedDeviceIds = useMemo(() => {
@@ -575,6 +582,34 @@ const PlanDetailPanel = ({
                                         />
                                 ) : null;
                         })()}
+
+            {/* Incident preview dialog */}
+            {incidentPreviewId && (() => {
+                const inc = (incidentReports || []).find(i => i.id === incidentPreviewId);
+                return inc ? (
+                    <Dialog open={true} onClose={() => setIncidentPreviewId(null)} maxWidth="md" fullWidth>
+                        <DialogTitle>Phiếu báo sự cố — {inc.number}</DialogTitle>
+                        <DialogContent dividers>
+                            <IncidentPreview
+                                number={inc.number}
+                                detectedAt={inc.detectedAt}
+                                reporter={inc.reporter}
+                                reporterDeptId={inc.reporterDeptId}
+                                signers={inc.signers}
+                                systemName={inc.systemName}
+                                location={inc.location}
+                                description={inc.description}
+                                severity={inc.severity}
+                                deviceIds={inc.deviceEntries.map(de => de.deviceId)}
+                                planIds={inc.planIds}
+                            />
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={() => setIncidentPreviewId(null)}>Đóng</Button>
+                        </DialogActions>
+                    </Dialog>
+                ) : null;
+            })()}
         </Box>
     );
 };
