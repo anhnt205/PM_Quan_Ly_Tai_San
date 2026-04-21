@@ -281,6 +281,82 @@ const StepAssets = ({ sourceDeptId, assets, onAssetsChange }: Props) => {
               }}
             />
           </Box>
+
+          {localSelection.length > 0 && (
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ mb: 0.75, display: "block" }}>
+                Đã chọn (<strong>{localSelection.length}</strong> thiết bị)
+              </Typography>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1, maxHeight: 220, overflowY: "auto", pr: 0.5 }}>
+                {localSelection.map((id) => {
+                  const device = allDeptDevices.items.find((d: any) => d.id === id);
+                  return (
+                    <Box
+                      key={id}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1.5,
+                        p: 1.5,
+                        borderRadius: 2,
+                        border: "1px solid",
+                        borderColor: "primary.light",
+                        bgcolor: "primary.50",
+                        width: "100%",
+                        minWidth: 0,
+                      }}
+                    >
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography fontSize={13} fontWeight={600} noWrap display="block">
+                          {device?.tenTaiSan || id}
+                        </Typography>
+                        <Box sx={{ display: "flex", gap: 0.5, mt: 0.5, flexWrap: "wrap" }}>
+                          {device?.tenNhom && (
+                            <Chip label={device.tenNhom} size="small" sx={{ fontSize: 10, height: 18 }} />
+                          )}
+                          {device?.tenLoai && (
+                            <Chip
+                              label={device.tenLoai}
+                              size="small"
+                              variant="outlined"
+                              sx={{ fontSize: 10, height: 18 }}
+                            />
+                          )}
+                        </Box>
+                      </Box>
+
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <TextField
+                          type="number"
+                          size="small"
+                          label="SL"
+                          value={localQuantities[id] ?? 1}
+                          onChange={(e) =>
+                            setLocalQuantities({
+                              ...localQuantities,
+                              [id]: Math.max(1, parseInt(e.target.value) || 1),
+                            })
+                          }
+                          inputProps={{ min: 1 }}
+                          sx={{ width: 70, "& .MuiInputBase-input": { py: 0.5 } }}
+                        />
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() =>
+                            setLocalSelection(localSelection.filter((sid) => sid !== id))
+                          }
+                          sx={{ p: 0.5 }}
+                        >
+                          <DeleteOutline fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    </Box>
+                  );
+                })}
+              </Box>
+            </Box>
+          )}
           <Paper sx={{ width: "100%", overflow: "auto", boxShadow: "none" }}>
             <Table size="small">
               <TableHead>
