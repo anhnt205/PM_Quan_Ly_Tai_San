@@ -5,6 +5,7 @@ import {
   type AnnualPlan, type WorkOrder, type InspectionReport,
   type MaterialRequest, type AcceptanceRecord,
 } from '../mockdata/mockWorkflow';
+import { initialIncidentReports, type IncidentReport } from '../mockdata/mockIncidentReports';
 import { devices as allDevices } from '../mockdata/mockDevices';
 import { initialRepairRequests, type RepairRequest } from '../mockdata/mockRepairRequests';
 import { type TechnicalInspectionRecord, type AcceptanceTestRecord, type MaterialQualityRecord, initialInspectionRecords, initialAcceptanceTestRecords, initialMaterialQualityRecords } from '../mockdata/mockInspectionRecords';
@@ -19,8 +20,10 @@ interface CmmsState {
   inspectionRecords: TechnicalInspectionRecord[];
   acceptanceTestRecords: AcceptanceTestRecord[];
   materialQualityRecords: MaterialQualityRecord[];
+  incidentReports: IncidentReport[];
   selectedDeviceId: string | null;
   addMaterialQualityRecord: (record: MaterialQualityRecord) => void;
+  addIncidentReport: (rec: IncidentReport) => void;
   setSelectedDeviceId: (id: string | null) => void;
   approvePlan: (planId: string) => void;
   addAnnualPlan: (plan: AnnualPlan) => void;
@@ -31,6 +34,7 @@ interface CmmsState {
   signInspectionRecords: (ids: string[]) => void;
   signAcceptanceRecords: (ids: string[]) => void;
   signMaterialQualityRecords: (ids: string[]) => void;
+  signIncidentReports: (ids: string[]) => void;
 }
 
 const CmmsContext = createContext<CmmsState | null>(null);
@@ -52,6 +56,7 @@ export const CmmsProvider = ({ children }: { children: ReactNode }) => {
   const [acceptanceTestRecords, setAcceptanceTestRecords] = useState<AcceptanceTestRecord[]>(initialAcceptanceTestRecords);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
   const [materialQualityRecords, setMaterialQualityRecords] = useState<MaterialQualityRecord[]>(initialMaterialQualityRecords);
+  const [incidentReports, setIncidentReports] = useState<IncidentReport[]>(initialIncidentReports);
 
   const approvePlan = useCallback((planId: string) => {
     setAnnualPlans(prev => prev.map(p =>
@@ -99,6 +104,10 @@ export const CmmsProvider = ({ children }: { children: ReactNode }) => {
     setMaterialQualityRecords(prev => [...prev, record]);
   }, []);
 
+  const addIncidentReport = useCallback((rec: IncidentReport) => {
+    setIncidentReports(prev => [...prev, rec]);
+  }, []);
+
   const signRepairRequests = useCallback((ids: string[]) => {
     const now = new Date().toLocaleDateString('vi-VN');
     setRepairRequests(prev => prev.map(r =>
@@ -143,16 +152,23 @@ export const CmmsProvider = ({ children }: { children: ReactNode }) => {
     ));
   }, []);
 
+  const signIncidentReports = useCallback((ids: string[]) => {
+    const now = new Date().toLocaleDateString('vi-VN');
+    setIncidentReports(prev => prev.map(r =>
+      ids.includes(r.id) ? { ...r, status: 'da-duyet', signers: (r.signers || []).map((s: any) => ({ ...s, signed: true, signedAt: now })) } : r
+    ));
+  }, []);
+
   return (
     <CmmsContext.Provider value={{
       annualPlans, workOrders, inspections, materialRequests, acceptances,
       repairRequests, inspectionRecords, acceptanceTestRecords,
-      selectedDeviceId, materialQualityRecords,
-      addMaterialQualityRecord, setSelectedDeviceId,
+      selectedDeviceId, materialQualityRecords, incidentReports,
+      addMaterialQualityRecord, addIncidentReport, setSelectedDeviceId,
       approvePlan, addAnnualPlan, addRepairRequest,
       addInspectionRecord, addAcceptanceTestRecord,
       signRepairRequests, signInspectionRecords,
-      signAcceptanceRecords, signMaterialQualityRecords,
+      signAcceptanceRecords, signMaterialQualityRecords, signIncidentReports,
     }}>
       {children}
     </CmmsContext.Provider>

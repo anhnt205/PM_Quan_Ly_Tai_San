@@ -3,7 +3,7 @@ import {
     Box, Typography, Tabs, Tab, Table, TableBody, TableCell,
     TableContainer, TableHead, TableRow, Paper, Chip, Checkbox,
     Button, IconButton, Select, MenuItem, FormControl, InputLabel,
-    Collapse, Tooltip,
+    Collapse, Tooltip, Dialog, DialogTitle, DialogActions, DialogContent,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PostAddIcon from '@mui/icons-material/PostAdd';
@@ -26,10 +26,14 @@ import type {
     MaterialQualityRecord,
     TechnicalInspectionRecord,
 } from '../../../../mockdata/mockInspectionRecords';
+import type { IncidentReport } from '../../../../mockdata/mockIncidentReports';
 import RepairRequestDialog from '../dialog/RepairRequestDialog';
 import InspectionRecordDialog from '../dialog/InspectionRecordDialog';
 import AcceptanceTestDialog from '../dialog/AcceptanceTestDialog';
 import MaterialDialog from '../dialog/MaterialDialog';
+import IncidentPreview from '../preview/IncidentPreview';
+import IncidentInspectionDialog from '../dialog/Incidentinspectiondialog';
+import type { IncidentInspectionRecord } from '../../../../mockdata/mockIncidentInspection';
 
 interface Props {
     plan: AnnualPlan;
@@ -37,11 +41,15 @@ interface Props {
     inspectionRecords: TechnicalInspectionRecord[];
     acceptanceTestRecords: AcceptanceTestRecord[];
     materialQualityRecords: MaterialQualityRecord[];
+    incidentReports?: IncidentReport[];
     onClose: () => void;
     onCreateRepairRequest: (req: RepairRequest) => void;
     onCreateInspectionRecord: (record: TechnicalInspectionRecord) => void;
     onCreateAcceptanceRecord: (record: AcceptanceTestRecord) => void;
     onCreateMaterialQualityRecord: (record: MaterialQualityRecord) => void;
+    onCreateIncidentRecord?: (record: IncidentReport) => void;
+    incidentInspectionRecords?: IncidentInspectionRecord[];
+    onCreateIncidentInspectionRecord?: (record: IncidentInspectionRecord) => void;
 }
 
 // ── Helpers ───────────────────────────────────────────────
@@ -54,7 +62,7 @@ const StatusChip = ({ status }: { status: string }) => {
         'dang-ky': { label: 'Đang ký', color: 'info' },
     };
     const cfg = map[status] ?? { label: status, color: 'default' };
-    return <Chip label={cfg.label} color={cfg.color} size="small" sx={{ color: '#fff' }}/>;
+    return <Chip label={cfg.label} color={cfg.color} size="small" sx={{ color: '#fff' }} />;
 };
 const ROW_H = 36;
 const CONNECTOR_WIDTH = 16;
@@ -158,7 +166,10 @@ const PlanDetailPanel = ({
     plan, repairRequests, inspectionRecords, acceptanceTestRecords,
     materialQualityRecords, onClose, onCreateRepairRequest,
     onCreateInspectionRecord, onCreateAcceptanceRecord, onCreateMaterialQualityRecord,
+    incidentReports = [], onCreateIncidentRecord,
+    incidentInspectionRecords = [], onCreateIncidentInspectionRecord,
 }: Props) => {
+    const [incidentPreviewId, setIncidentPreviewId] = useState<string | null>(null);
     const [tab, setTab] = useState(0);
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
     const [selectedDeviceIds, setSelectedDeviceIds] = useState<string[]>([]);
@@ -171,9 +182,16 @@ const PlanDetailPanel = ({
     const [inspectionParentReqId, setInspectionParentReqId] = useState<string | null>(null);
     const [acceptanceParentInspId, setAcceptanceParentInspId] = useState<string | null>(null);
     const [materialParentAccId, setMaterialParentAccId] = useState<string | null>(null);
+    const [incidentInspectionParentId, setIncidentInspectionParentId] = useState<string | null>(null);
+    const [expandedIncidents, setExpandedIncidents] = useState<Set<string>>(new Set());
+    const [expandedBBKTKSC, setExpandedBBKTKSC] = useState<Set<string>>(new Set());
+    const [expandedIncInspections, setExpandedIncInspections] = useState<Set<string>>(new Set());
+    const [expandedIncAcceptances, setExpandedIncAcceptances] = useState<Set<string>>(new Set());
+    const [incInspectionParentBBKTKSCId, setIncInspectionParentBBKTKSCId] = useState<string | null>(null);
 
     const schedule: Record<string, MaintenanceLevel[]> = (plan as any).monthlySchedule ?? {};
     const planRequests = repairRequests.filter(r => r.planId === plan.id);
+    const planIncidents = incidentReports.filter(ir => ir.planIds?.includes(plan.id));
 
     // ── Tab 0 helpers ─────────────────────────────────────
     const usedDeviceIds = useMemo(() => {
@@ -222,6 +240,10 @@ const PlanDetailPanel = ({
     const canCreateMaterialForAcc = (acc: AcceptanceTestRecord) =>
         acc.status === 'da-duyet' &&
         materialQualityRecords.filter(m => m.acceptanceRecordId === acc.id).length === 0;
+
+    const canCreateIncidentInspectionForInc = (inc: IncidentReport) =>
+        inc.status === 'da-duyet' &&
+        (incidentInspectionRecords || []).filter(r => r.incidentReportId === inc.id).length === 0;
 
     return (
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -360,7 +382,7 @@ const PlanDetailPanel = ({
                             </TableHead>
 
                             <TableBody>
-                                {planRequests.length === 0 && (
+                                {planRequests.length === 0 && planIncidents.length === 0 && (
                                     <TableRow>
                                         <TableCell colSpan={5} align="center">
                                             Không có dữ liệu
@@ -368,6 +390,193 @@ const PlanDetailPanel = ({
                                     </TableRow>
                                 )}
 
+                                {/* ─── Phiếu báo sự cố (Cấp 1) ─── */}
+                                {planIncidents.map((inc, incIdx) => {
+                                    const bbktkscs = incidentInspectionRecords.filter(r => r.incidentReportId === inc.id);
+                                    const isIncExpanded = expandedIncidents.has(inc.id);
+
+                                    return (
+                                        <React.Fragment key={`inc-${inc.id}`}>
+                                            {/* ── Depth 1: Phiếu báo sự cố ── */}
+                                            <TableRow hover>
+                                                <TableCell sx={{ pl: 2 }}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                        {bbktkscs.length > 0 && (
+                                                            <IconButton
+                                                                size="small"
+                                                                onClick={() => toggle(expandedIncidents, inc.id, setExpandedIncidents)}
+                                                            >
+                                                                {isIncExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                                                            </IconButton>
+                                                        )}
+                                                        <Typography variant="body2" sx={{ ml: bbktkscs.length > 0 ? 0 : '28px' }}>
+                                                            {inc.number}
+                                                        </Typography>
+                                                    </Box>
+                                                </TableCell>
+                                                <TableCell><Chip label="Phiếu báo sự cố" size="small" color="error" sx={{ color: '#fff' }} /></TableCell>
+                                                <TableCell>{inc.detectedAt}</TableCell>
+                                                <TableCell><StatusChip status={inc.status ?? 'cho-duyet'} /></TableCell>
+                                                <TableCell align="right">
+                                                    <ActionCell
+                                                        onView={() => setIncidentPreviewId(inc.id)}
+                                                        onAdd={() => setIncidentInspectionParentId(inc.id)}
+                                                        addTooltip="Tạo BB Kiểm tra sự cố"
+                                                        addColor="primary"
+                                                    />
+                                                </TableCell>
+                                            </TableRow>
+
+                                            {/* ── Depth 2: BBKTKSC ── */}
+                                            {isIncExpanded && bbktkscs.map((bbktksc) => {
+                                                const incInspections = inspectionRecords.filter(
+                                                    r => (r as any).incidentInspectionRecordId === bbktksc.id
+                                                );
+                                                const isBBExpanded = expandedBBKTKSC.has(bbktksc.id);
+
+                                                return (
+                                                    <React.Fragment key={`bbktksc-${bbktksc.id}`}>
+                                                        <TableRow hover>
+                                                            <TableCell sx={{ pl: 6 }}>
+                                                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                                    {incInspections.length > 0 && (
+                                                                        <IconButton
+                                                                            size="small"
+                                                                            onClick={() => toggle(expandedBBKTKSC, bbktksc.id, setExpandedBBKTKSC)}
+                                                                        >
+                                                                            {isBBExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                                                                        </IconButton>
+                                                                    )}
+                                                                    <Typography variant="body2" sx={{ ml: incInspections.length > 0 ? 0 : '28px' }}>
+                                                                        {bbktksc.number}
+                                                                    </Typography>
+                                                                </Box>
+                                                            </TableCell>
+                                                            <TableCell><Chip label="BB Kiểm tra SC" size="small" color="warning" sx={{ color: '#fff' }} /></TableCell>
+                                                            <TableCell>{bbktksc.inspectionDate}</TableCell>
+                                                            <TableCell><StatusChip status={bbktksc.status} /></TableCell>
+                                                            <TableCell align="right">
+                                                                <ActionCell
+                                                                    onView={() => { }}
+                                                                    onAdd={
+                                                                        bbktksc.status === 'da-duyet' && incInspections.length === 0
+                                                                            ? () => setIncInspectionParentBBKTKSCId(bbktksc.id)
+                                                                            : undefined
+                                                                    }
+                                                                    addTooltip="Tạo BB Giám định"
+                                                                    addColor="success"
+                                                                />
+                                                            </TableCell>
+                                                        </TableRow>
+
+                                                        {/* ── Depth 3: BB Giám định (từ sự cố) ── */}
+                                                        {isBBExpanded && incInspections.map((insp) => {
+                                                            const incAcceptances = acceptanceTestRecords.filter(a => a.inspectionRecordId === insp.id);
+                                                            const isInspExpanded = expandedIncInspections.has(insp.id);
+
+                                                            return (
+                                                                <React.Fragment key={`incinsp-${insp.id}`}>
+                                                                    <TableRow hover>
+                                                                        <TableCell sx={{ pl: 10 }}>
+                                                                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                                                {incAcceptances.length > 0 && (
+                                                                                    <IconButton
+                                                                                        size="small"
+                                                                                        onClick={() => toggle(expandedIncInspections, insp.id, setExpandedIncInspections)}
+                                                                                    >
+                                                                                        {isInspExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                                                                                    </IconButton>
+                                                                                )}
+                                                                                <Typography variant="body2" sx={{ ml: incAcceptances.length > 0 ? 0 : '28px' }}>
+                                                                                    {insp.number}
+                                                                                </Typography>
+                                                                            </Box>
+                                                                        </TableCell>
+                                                                        <TableCell><Chip label="BB Giám định" size="small" color="success" sx={{ color: '#fff' }} /></TableCell>
+                                                                        <TableCell>{insp.inspectionDate}</TableCell>
+                                                                        <TableCell><StatusChip status={insp.status} /></TableCell>
+                                                                        <TableCell align="right">
+                                                                            <ActionCell
+                                                                                onView={() => { }}
+                                                                                onAdd={
+                                                                                    insp.status === 'da-duyet' && incAcceptances.length === 0
+                                                                                        ? () => setAcceptanceParentInspId(insp.id)
+                                                                                        : undefined
+                                                                                }
+                                                                                addTooltip="Tạo BB Nghiệm thu"
+                                                                                addColor="warning"
+                                                                            />
+                                                                        </TableCell>
+                                                                    </TableRow>
+
+                                                                    {/* ── Depth 4: BB Nghiệm thu (từ sự cố) ── */}
+                                                                    {isInspExpanded && incAcceptances.map((acc) => {
+                                                                        const incMaterials = materialQualityRecords.filter(m => m.acceptanceRecordId === acc.id);
+                                                                        const isAccExpanded = expandedIncAcceptances.has(acc.id);
+
+                                                                        return (
+                                                                            <React.Fragment key={`incacc-${acc.id}`}>
+                                                                                <TableRow hover>
+                                                                                    <TableCell sx={{ pl: 14 }}>
+                                                                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                                                            {incMaterials.length > 0 && (
+                                                                                                <IconButton
+                                                                                                    size="small"
+                                                                                                    onClick={() => toggle(expandedIncAcceptances, acc.id, setExpandedIncAcceptances)}
+                                                                                                >
+                                                                                                    {isAccExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                                                                                                </IconButton>
+                                                                                            )}
+                                                                                            <Typography variant="body2" sx={{ ml: incMaterials.length > 0 ? 0 : '28px' }}>
+                                                                                                {acc.number}
+                                                                                            </Typography>
+                                                                                        </Box>
+                                                                                    </TableCell>
+                                                                                    <TableCell><Chip label="BB Nghiệm thu" size="small" color="warning" sx={{ color: '#fff' }} /></TableCell>
+                                                                                    <TableCell>{acc.date}</TableCell>
+                                                                                    <TableCell><StatusChip status={acc.status} /></TableCell>
+                                                                                    <TableCell align="right">
+                                                                                        <ActionCell
+                                                                                            onView={() => { }}
+                                                                                            onAdd={
+                                                                                                acc.status === 'da-duyet' && incMaterials.length === 0
+                                                                                                    ? () => setMaterialParentAccId(acc.id)
+                                                                                                    : undefined
+                                                                                            }
+                                                                                            addTooltip="Tạo BB Vật tư"
+                                                                                            addColor="secondary"
+                                                                                        />
+                                                                                    </TableCell>
+                                                                                </TableRow>
+
+                                                                                {/* ── Depth 5: BB Vật tư (từ sự cố) ── */}
+                                                                                {isAccExpanded && incMaterials.map((mat) => (
+                                                                                    <TableRow hover key={`incmat-${mat.id}`}>
+                                                                                        <TableCell sx={{ pl: 18 }}>
+                                                                                            <Typography variant="body2">{mat.number}</Typography>
+                                                                                        </TableCell>
+                                                                                        <TableCell><Chip label="BB Vật tư" size="small" color="secondary" /></TableCell>
+                                                                                        <TableCell>{mat.date}</TableCell>
+                                                                                        <TableCell><StatusChip status={mat.status} /></TableCell>
+                                                                                        <TableCell align="right">
+                                                                                            <ActionCell onView={() => { }} />
+                                                                                        </TableCell>
+                                                                                    </TableRow>
+                                                                                ))}
+                                                                            </React.Fragment>
+                                                                        );
+                                                                    })}
+                                                                </React.Fragment>
+                                                            );
+                                                        })}
+                                                    </React.Fragment>
+                                                );
+                                            })}
+                                        </React.Fragment>
+                                    );
+                                })}
+
+                                {/* ─── Giấy đề nghị sửa chữa (Cấp 1) ─── */}
                                 {planRequests.map((req, reqIdx) => {
                                     const inspections = inspectionRecords.filter(i => i.repairRequestId === req.id);
                                     const isReqLast = reqIdx === planRequests.length - 1;
@@ -395,7 +604,7 @@ const PlanDetailPanel = ({
                                                             alignItems: 'center',
                                                         }}
                                                     >
-                                                        <TreeConnector depth={1} isLast={isReqLast} />
+                                                        <TreeConnector depth={1} isLast={isReqLast && planIncidents.length === 0} />
                                                     </Box>
                                                     {inspections.length > 0 && (
                                                         <IconButton
@@ -561,20 +770,85 @@ const PlanDetailPanel = ({
                 ) : null;
             })()}
 
-                        {materialParentAccId && (() => {
-                                const parentAcc = acceptanceTestRecords.find(a => a.id === materialParentAccId);
-                                const parentReq = parentAcc ? repairRequests.find(rr => rr.id === parentAcc.repairRequestId) : null;
-                                return parentAcc ? (
-                                        <MaterialDialog
-                                                open={true}
-                                                onClose={() => setMaterialParentAccId(null)}
-                                                plan={plan}
-                                                repairRequest={parentReq!}
-                                                acceptanceRecord={parentAcc}
-                                                onSubmit={record => { onCreateMaterialQualityRecord(record); setMaterialParentAccId(null); }}
-                                        />
-                                ) : null;
-                        })()}
+            {materialParentAccId && (() => {
+                const parentAcc = acceptanceTestRecords.find(a => a.id === materialParentAccId);
+                const parentReq = parentAcc ? repairRequests.find(rr => rr.id === parentAcc.repairRequestId) : null;
+                return parentAcc ? (
+                    <MaterialDialog
+                        open={true}
+                        onClose={() => setMaterialParentAccId(null)}
+                        plan={plan}
+                        repairRequest={parentReq!}
+                        acceptanceRecord={parentAcc}
+                        onSubmit={record => { onCreateMaterialQualityRecord(record); setMaterialParentAccId(null); }}
+                    />
+                ) : null;
+            })()}
+
+            {incidentInspectionParentId && (() => {
+                const parentInc = (incidentReports || []).find(i => i.id === incidentInspectionParentId);
+                return parentInc ? (
+                    <IncidentInspectionDialog
+                        open={true}
+                        onClose={() => setIncidentInspectionParentId(null)}
+                        plan={plan}
+                        incidentReport={parentInc}
+                        onSubmit={record => {
+                            onCreateIncidentInspectionRecord?.(record);
+                            setIncidentInspectionParentId(null);
+                        }}
+                    />
+                ) : null;
+            })()}
+
+            {incInspectionParentBBKTKSCId && (() => {
+                const parentBBKTKSC = incidentInspectionRecords.find(r => r.id === incInspectionParentBBKTKSCId);
+                return parentBBKTKSC ? (
+                    <InspectionRecordDialog
+                        open={true}
+                        onClose={() => setIncInspectionParentBBKTKSCId(null)}
+                        plan={plan}
+                        repairRequest={null as any}
+                        onSubmit={record => {
+                            onCreateInspectionRecord({
+                                ...record,
+                                incidentInspectionRecordId: parentBBKTKSC.id,
+                                repairRequestId: '',
+                            });
+                            setIncInspectionParentBBKTKSCId(null);
+                        }}
+                    />
+                ) : null;
+            })()}
+
+            {/* Incident preview dialog */}
+            {incidentPreviewId && (() => {
+                const inc = (incidentReports || []).find(i => i.id === incidentPreviewId);
+                return inc ? (
+                    <Dialog open={true} onClose={() => setIncidentPreviewId(null)} maxWidth="md" fullWidth>
+                        <DialogTitle>Phiếu báo sự cố — {inc.number}</DialogTitle>
+                        <DialogContent dividers>
+                            <IncidentPreview
+                                number={inc.number}
+                                detectedAt={inc.detectedAt}
+                                reporter={inc.reporter}
+                                reporterDeptId={inc.reporterDeptId}
+                                signers={inc.signers}
+                                systemName={inc.systemName}
+                                location={inc.location}
+                                description={inc.description}
+                                severity={inc.severity}
+                                subsystem={inc.subsystem}
+                                deviceEntries={inc.deviceEntries}
+                                planIds={inc.planIds}
+                            />
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={() => setIncidentPreviewId(null)}>Đóng</Button>
+                        </DialogActions>
+                    </Dialog>
+                ) : null;
+            })()}
         </Box>
     );
 };
