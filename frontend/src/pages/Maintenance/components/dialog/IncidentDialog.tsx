@@ -28,6 +28,7 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
   const [severity, setSeverity] = useState<'Nhẹ' | 'Trung bình' | 'Nặng' | 'Nghiêm trọng'>('Nặng');
+  const [subsystem, setSubsystem] = useState(''); // Phân hệ/vị trí xây ra sự cố
 
   const planIds = selectedPlans.map(p => p.id);
   // department selection + API-backed device selector (reuse StepAssets)
@@ -109,7 +110,7 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
 
   const handleSubmit = () => {
     const today = new Date().toLocaleDateString('vi-VN');
-      const rec: IncidentReport = {
+    const rec: IncidentReport = {
       id: `INC-${Date.now()}`,
       planIds,
       number: number || `INC-${String(Date.now()).slice(-6)}`,
@@ -118,6 +119,7 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
       reporterDeptId: selectedDeptId,
       systemName,
       location,
+      subsystem,
       description,
       severity,
       deviceEntries: assets.map(a => {
@@ -131,7 +133,7 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
     };
     onSubmit(rec);
     // reset minimal state
-    setNumber(''); setDetectedAt(''); setReporter(''); setSystemName(''); setLocation(''); setDescription('');
+    setNumber(''); setDetectedAt(''); setReporter(''); setSystemName(''); setLocation(''); setSubsystem(''); setDescription('');
     onClose();
   };
 
@@ -147,23 +149,25 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
       <DialogContent sx={{ p: 3, overflow: 'auto' }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
 
-                  <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 380px', gap: 3 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 380px', gap: 3 }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {/* ───────── Thông tin chung ───────── */}
               <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3, p: 2.5 }}>
                 <Typography variant="subtitle1" fontWeight={600} mb={2}>Thông tin</Typography>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <TextField label="Số phiếu" value={number} onChange={e => setNumber(e.target.value)} size="small" fullWidth />
+                  
                   <FormControl size="small">
-                    <InputLabel>Phòng ban báo cáo</InputLabel>
-                    <Select value={selectedDeptId} label="Phòng ban báo cáo" onChange={e => setSelectedDeptId(e.target.value)}>
-                      <MenuItem value="">— Chọn phòng ban —</MenuItem>
+                    <InputLabel>Đơn vị báo cáo</InputLabel>
+                    <Select value={selectedDeptId} label="Đơn vị báo cáo" onChange={e => setSelectedDeptId(e.target.value)}>
+                      <MenuItem value="">— Chọn đơn vị —</MenuItem>
                       {departments.map(d => <MenuItem key={d.id} value={d.id}>{d.name}</MenuItem>)}
                     </Select>
                   </FormControl>
+                  
                   <TextField label="Ngày giờ phát hiện" value={detectedAt} onChange={e => setDetectedAt(e.target.value)} placeholder="YYYY-MM-DD hh:mm" size="small" fullWidth />
-                  <TextField label="Người báo" value={reporter} onChange={e => setReporter(e.target.value)} size="small" fullWidth />
-                  <TextField label="Hệ thống / TB" value={systemName} onChange={e => setSystemName(e.target.value)} size="small" fullWidth />
-                  <TextField label="Vị trí" value={location} onChange={e => setLocation(e.target.value)} size="small" fullWidth />
+                  <TextField label="Tên hệ thống/thiết bị gặp sự cố" value={systemName} onChange={e => setSystemName(e.target.value)} size="small" fullWidth />
+                  <TextField label="Phân hệ/vị trí xây ra sự cố" value={subsystem} onChange={e => setSubsystem(e.target.value)} size="small" fullWidth />
                   <FormControl size="small">
                     <InputLabel>Mức độ</InputLabel>
                     <Select value={severity} label="Mức độ" onChange={e => setSeverity(e.target.value as any)}>
@@ -173,14 +177,24 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
                       <MenuItem value="Nghiêm trọng">Nghiêm trọng</MenuItem>
                     </Select>
                   </FormControl>
-                  <TextField label="Mô tả tình trạng" value={description} onChange={e => setDescription(e.target.value)} multiline rows={4} size="small" fullWidth />
+                  <TextField 
+                    label="Mô tả tình trạng sự cố" 
+                    value={description} 
+                    onChange={e => setDescription(e.target.value)} 
+                    multiline 
+                    rows={4} 
+                    size="small" 
+                    fullWidth 
+                    placeholder="Mô tả chi tiết tình trạng sự cố"
+                  />
                 </Box>
               </Box>
 
+              {/* ───────── Danh sách thiết bị liên quan ───────── */}
               <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3, p: 2.5 }}>
                 <Typography variant="subtitle1" fontWeight={600} mb={1}>Danh sách thiết bị liên quan</Typography>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  {!selectedDeptId && <Typography variant="body2" color="text.secondary">Chọn phòng ban để xem thiết bị.</Typography>}
+                  {!selectedDeptId && <Typography variant="body2" color="text.secondary">Chọn đơn vị báo cáo để xem thiết bị.</Typography>}
                   {selectedDeptId && (
                     <StepAssets sourceDeptId={selectedDeptId} assets={assets} onAssetsChange={setAssets} />
                   )}
@@ -188,6 +202,7 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
               </Box>
             </Box>
 
+            {/* ───────── Quy trình duyệt (bên phải) ───────── */}
             <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3, p: 2.5, display: 'flex', flexDirection: 'column', height: '100%' }}>
               <Typography variant="subtitle1" fontWeight={600} mb={2} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 Quy trình duyệt
@@ -220,8 +235,8 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
                             {isEditingThis ? (
                               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                                 <FormControl size="small" fullWidth>
-                                  <InputLabel>Phòng ban</InputLabel>
-                                  <Select value={editDeptId} label="Phòng ban" onChange={e => { setEditDeptId(e.target.value); setEditUserId(''); }}>
+                                  <InputLabel>Đơn vị</InputLabel>
+                                  <Select value={editDeptId} label="Đơn vị" onChange={e => { setEditDeptId(e.target.value); setEditUserId(''); }}>
                                     {departments.map(d => <MenuItem key={d.id} value={d.id}>{d.name}</MenuItem>)}
                                   </Select>
                                 </FormControl>
@@ -274,8 +289,8 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
               {/* Form thêm người duyệt */}
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, p: 2, bgcolor: 'grey.50', borderRadius: 2, border: '1px dashed', borderColor: 'divider' }}>
                 <FormControl size="small" fullWidth>
-                  <InputLabel>Phòng ban</InputLabel>
-                  <Select value={addDeptId} label="Phòng ban" onChange={e => { setAddDeptId(e.target.value); setAddUserId(''); }}>
+                  <InputLabel>Đơn vị</InputLabel>
+                  <Select value={addDeptId} label="Đơn vị" onChange={e => { setAddDeptId(e.target.value); setAddUserId(''); }}>
                     {departments.map(d => <MenuItem key={d.id} value={d.id}>{d.name}</MenuItem>)}
                   </Select>
                 </FormControl>
@@ -293,6 +308,7 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
               </Box>
             </Box>
           </Box>
+
           {/* ── Hàng dưới: Preview FULL WIDTH ── */}
           <Box>
             <IncidentPreview
@@ -302,10 +318,15 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
               reporterDeptId={selectedDeptId}
               signers={signers}
               systemName={systemName}
+              subsystem={subsystem}
               location={location}
               description={description}
               severity={severity}
-              deviceIds={selectedDeviceIds}
+              deviceEntries={assets.map(a => {
+                const id = a.deviceId || a.deviceId;
+                const d = devices.find(dd => dd.id === id);
+                return { deviceId: id, deviceName: d?.name || (a.tenTaiSan || id), position: d?.location || a.position || '', note: '' };
+              })}
               planIds={planIds}
             />
           </Box>
@@ -317,7 +338,7 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
 
       <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
         <Button onClick={onClose} color="inherit">Hủy</Button>
-        <Button variant="contained" color="primary" onClick={handleSubmit} disabled={selectedDeviceIds.length === 0 || !description}>
+        <Button variant="contained" color="primary" onClick={handleSubmit} disabled={assets.length === 0 || !description}>
           Tạo Phiếu và Lưu
         </Button>
       </DialogActions>
