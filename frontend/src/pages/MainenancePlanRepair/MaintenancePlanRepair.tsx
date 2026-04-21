@@ -169,7 +169,7 @@ export default function MaintenancePlanRepair() {
 
   const selectedPlans = annualPlans.filter((plan) => selectedIds.includes(plan.id));
   const canSendToSigner = selectedPlans.length > 0 && selectedPlans.every((plan) => plan.status === 'draft');
-  const canCreateIncident = selectedPlans.length > 0 && selectedPlans.every((plan) => plan.status === 'da-duyet');
+  const canCreateIncident = selectedPlans.length > 0;
 
   const [showIncidentDialog, setShowIncidentDialog] = useState(false);
 

@@ -13,6 +13,18 @@ import { useAllDepartmentsQuery } from '../../../Department/Mutation';
 import { useAllStaffsQuery } from '../../../Staff/Mutation';
 import type { PlanSigner } from '../../../../mockdata/mockPlans';
 
+export interface DeviceEntryEditable {
+  deviceId: string;
+  deviceName: string;
+  position?: string;
+  status?: string;
+  group?: string;
+  system?: string;        // "Thuộc hệ thống" - không có trong API
+  maintenanceUnit?: string;
+  technicalUnit?: string; // "Đơn vị quản lý KT" - không có trong API
+  note?: string;
+}
+
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -28,22 +40,26 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
   const [severity, setSeverity] = useState<'Nhẹ' | 'Trung bình' | 'Nặng' | 'Nghiêm trọng'>('Nặng');
-  const [subsystem, setSubsystem] = useState(''); // Phân hệ/vị trí xây ra sự cố
+  const [subsystem, setSubsystem] = useState('');
 
   const planIds = selectedPlans.map(p => p.id);
-  // department selection + API-backed device selector (reuse StepAssets)
+
   const [selectedDeptId, setSelectedDeptId] = useState<string>('');
   const [assets, setAssets] = useState<any[]>([]);
-  const [selectedDeviceIds, setSelectedDeviceIds] = useState<string[]>([]);
 
-  // fetch departments & users from API (same as CreatePlan)
+  // deviceEntries là state riêng — được sync từ assets rồi có thể edit thủ công trong preview
+  const [deviceEntries, setDeviceEntries] = useState<DeviceEntryEditable[]>([]);
+
   const { data: apiDepartments = [] } = useAllDepartmentsQuery();
   const { data: apiUsers = [] } = useAllStaffsQuery();
 
   type SimpleDept = { id: string; name: string };
   type SimpleUser = { id: string; name: string; departmentId?: string; title?: string };
 
-  const departments: SimpleDept[] = (apiDepartments || []).map((d: any) => ({ id: String(d?.id ?? ''), name: String(d?.tenPhongBan ?? d?.name ?? '') }));
+  const departments: SimpleDept[] = (apiDepartments || []).map((d: any) => ({
+    id: String(d?.id ?? ''),
+    name: String(d?.tenPhongBan ?? d?.name ?? ''),
+  }));
   const users: SimpleUser[] = (apiUsers || []).map((u: any) => ({
     id: String(u?.id ?? ''),
     name: String(u?.hoTen ?? u?.name ?? ''),
@@ -51,19 +67,52 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
     title: String(u?.tenChucVu ?? u?.chucVu ?? u?.title ?? ''),
   }));
 
-  // reset selection when dept changes or dialog opens
+  // Reset khi dialog mở hoặc dept thay đổi
   useEffect(() => {
     if (!open) return;
     setAssets([]);
-    setSelectedDeviceIds([]);
+    setDeviceEntries([]);
   }, [open, selectedDeptId]);
 
-  // keep device id list in sync with assets from StepAssets
+  // Sync assets → deviceEntries, ưu tiên dữ liệu từ API response
   useEffect(() => {
-    setSelectedDeviceIds(assets.map(a => a.deviceId));
+    setDeviceEntries(prev => {
+      return assets.map(a => {
+        const id = a.deviceId ?? a.id ?? '';
+        const existing = prev.find(e => e.deviceId === id);
+        const mockDevice = devices.find(dd => dd.id === id);
+
+        // Map hienTrang (số) sang text dễ đọc
+        const hienTrangMap: Record<number, string> = {
+          1: 'Đang sử dụng',
+          2: 'Hỏng',
+          3: 'Chờ thanh lý',
+          0: 'Ngừng sử dụng',
+        };
+        const statusFromApi =
+          a.hienTrang !== undefined && a.hienTrang !== null
+            ? hienTrangMap[a.hienTrang] ?? String(a.hienTrang)
+            : undefined;
+
+        return {
+          deviceId: id,
+          deviceName: a.tenTaiSan || mockDevice?.name || id,
+          position: a.viTri || a.tenDonViHienThoi || mockDevice?.location || '',
+          // status: ưu tiên giữ lại nếu user đã sửa, fallback API, fallback mock
+          status: existing?.deviceId === id && existing?.status !== undefined
+            ? existing.status
+            : statusFromApi ?? mockDevice?.status ?? '',
+          group: a.tenNhom || mockDevice?.group || '',
+          system: existing?.system ?? '',          // không có trong API → để trống, user tự điền
+          maintenanceUnit: a.tenDonViHienThoi || mockDevice?.maintenanceUnit || '',
+          technicalUnit: existing?.technicalUnit ?? '', // không có trong API → để trống
+          note: existing?.note ?? '',
+        };
+      });
+    });
   }, [assets]);
 
-  // Signers (same pattern as other dialogs)
+  // Signers
   const [signers, setSigners] = useState<PlanSigner[]>([]);
   const [addDeptId, setAddDeptId] = useState('');
   const [addUserId, setAddUserId] = useState('');
@@ -106,7 +155,14 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
     setEditingSignerId(null);
   };
 
-  // toggleDevice removed — selection managed by StepAssets
+  // Validate: bắt buộc có thiết bị, các trường info (trừ mô tả)
+  const isSubmitDisabled =
+    assets.length === 0 ||
+    !selectedDeptId ||
+    !detectedAt ||
+    !systemName ||
+    !subsystem ||
+    !severity;
 
   const handleSubmit = () => {
     const today = new Date().toLocaleDateString('vi-VN');
@@ -122,18 +178,21 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
       subsystem,
       description,
       severity,
-      deviceEntries: assets.map(a => {
-        const id = a.deviceId || a.deviceId;
-        const d = devices.find(dd => dd.id === id);
-        return { deviceId: id, deviceName: d?.name || (a.tenTaiSan || id), position: d?.location, note: '' };
-      }),
-      signers: signers,
+      deviceEntries: deviceEntries.map(e => ({
+        deviceId: e.deviceId,
+        deviceName: e.deviceName,
+        position: e.position,
+        note: e.note,
+      })),
+      signers,
       status: 'cho-duyet',
       createdDate: today,
     };
     onSubmit(rec);
-    // reset minimal state
-    setNumber(''); setDetectedAt(''); setReporter(''); setSystemName(''); setLocation(''); setSubsystem(''); setDescription('');
+    // reset
+    setNumber(''); setDetectedAt(''); setReporter(''); setSystemName('');
+    setLocation(''); setSubsystem(''); setDescription('');
+    setSelectedDeptId(''); setAssets([]); setDeviceEntries([]); setSigners([]);
     onClose();
   };
 
@@ -151,50 +210,97 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
 
           <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 380px', gap: 3 }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+
               {/* ───────── Thông tin chung ───────── */}
               <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3, p: 2.5 }}>
                 <Typography variant="subtitle1" fontWeight={600} mb={2}>Thông tin</Typography>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <TextField label="Số phiếu" value={number} onChange={e => setNumber(e.target.value)} size="small" fullWidth />
-                  
-                  <FormControl size="small">
-                    <InputLabel>Đơn vị báo cáo</InputLabel>
-                    <Select value={selectedDeptId} label="Đơn vị báo cáo" onChange={e => setSelectedDeptId(e.target.value)}>
+
+                  <TextField
+                    label="Số phiếu"
+                    value={number}
+                    onChange={e => setNumber(e.target.value)}
+                    size="small"
+                    fullWidth
+                  />
+
+                  <FormControl size="small" required>
+                    <InputLabel required>Đơn vị báo cáo</InputLabel>
+                    <Select
+                      value={selectedDeptId}
+                      label="Đơn vị báo cáo *"
+                      onChange={e => setSelectedDeptId(e.target.value)}
+                    >
                       <MenuItem value="">— Chọn đơn vị —</MenuItem>
                       {departments.map(d => <MenuItem key={d.id} value={d.id}>{d.name}</MenuItem>)}
                     </Select>
                   </FormControl>
-                  
-                  <TextField label="Ngày giờ phát hiện" value={detectedAt} onChange={e => setDetectedAt(e.target.value)} placeholder="YYYY-MM-DD hh:mm" size="small" fullWidth />
-                  <TextField label="Tên hệ thống/thiết bị gặp sự cố" value={systemName} onChange={e => setSystemName(e.target.value)} size="small" fullWidth />
-                  <TextField label="Phân hệ/vị trí xây ra sự cố" value={subsystem} onChange={e => setSubsystem(e.target.value)} size="small" fullWidth />
-                  <FormControl size="small">
-                    <InputLabel>Mức độ</InputLabel>
-                    <Select value={severity} label="Mức độ" onChange={e => setSeverity(e.target.value as any)}>
+
+                  {/* Ngày giờ phát hiện — datetime-local picker */}
+                  <TextField
+                    label="Ngày giờ phát hiện"
+                    type="datetime-local"
+                    value={detectedAt}
+                    onChange={e => setDetectedAt(e.target.value)}
+                    size="small"
+                    fullWidth
+                    required
+                    InputLabelProps={{ shrink: true }}
+                  />
+
+                  <TextField
+                    label="Tên hệ thống/thiết bị gặp sự cố"
+                    value={systemName}
+                    onChange={e => setSystemName(e.target.value)}
+                    size="small"
+                    fullWidth
+                    required
+                  />
+
+                  <TextField
+                    label="Phân hệ/vị trí xảy ra sự cố"
+                    value={subsystem}
+                    onChange={e => setSubsystem(e.target.value)}
+                    size="small"
+                    fullWidth
+                    required
+                  />
+
+                  <FormControl size="small" required>
+                    <InputLabel required>Mức độ</InputLabel>
+                    <Select value={severity} label="Mức độ *" onChange={e => setSeverity(e.target.value as any)}>
                       <MenuItem value="Nhẹ">Nhẹ</MenuItem>
                       <MenuItem value="Trung bình">Trung bình</MenuItem>
                       <MenuItem value="Nặng">Nặng</MenuItem>
                       <MenuItem value="Nghiêm trọng">Nghiêm trọng</MenuItem>
                     </Select>
                   </FormControl>
-                  <TextField 
-                    label="Mô tả tình trạng sự cố" 
-                    value={description} 
-                    onChange={e => setDescription(e.target.value)} 
-                    multiline 
-                    rows={4} 
-                    size="small" 
-                    fullWidth 
-                    placeholder="Mô tả chi tiết tình trạng sự cố"
+
+                  {/* Mô tả — KHÔNG bắt buộc */}
+                  <TextField
+                    label="Mô tả tình trạng sự cố"
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    multiline
+                    rows={4}
+                    size="small"
+                    fullWidth
+                    placeholder="Mô tả chi tiết tình trạng sự cố (không bắt buộc)"
                   />
                 </Box>
               </Box>
 
               {/* ───────── Danh sách thiết bị liên quan ───────── */}
               <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3, p: 2.5 }}>
-                <Typography variant="subtitle1" fontWeight={600} mb={1}>Danh sách thiết bị liên quan</Typography>
+                <Typography variant="subtitle1" fontWeight={600} mb={1}>
+                  Danh sách thiết bị liên quan <span style={{ color: '#d32f2f' }}>*</span>
+                </Typography>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  {!selectedDeptId && <Typography variant="body2" color="text.secondary">Chọn đơn vị báo cáo để xem thiết bị.</Typography>}
+                  {!selectedDeptId && (
+                    <Typography variant="body2" color="text.secondary">
+                      Chọn đơn vị báo cáo để xem thiết bị.
+                    </Typography>
+                  )}
                   {selectedDeptId && (
                     <StepAssets sourceDeptId={selectedDeptId} assets={assets} onAssetsChange={setAssets} />
                   )}
@@ -299,17 +405,21 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
                   <InputLabel>Người duyệt</InputLabel>
                   <Select value={addUserId} label="Người duyệt" onChange={e => setAddUserId(e.target.value)}>
                     {users.filter(u => u.departmentId === addDeptId).map(u => (
-                      <MenuItem key={u.id} value={u.id} disabled={signers.some(s => s.userId === u.id)}>{u.name} – {u.title}</MenuItem>
+                      <MenuItem key={u.id} value={u.id} disabled={signers.some(s => s.userId === u.id)}>
+                        {u.name} – {u.title}
+                      </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
 
-                <Button variant="contained" onClick={handleAddSigner} disabled={!addUserId}>Thêm người duyệt</Button>
+                <Button variant="contained" onClick={handleAddSigner} disabled={!addUserId}>
+                  Thêm người duyệt
+                </Button>
               </Box>
             </Box>
           </Box>
 
-          {/* ── Hàng dưới: Preview FULL WIDTH ── */}
+          {/* ── Preview FULL WIDTH với deviceEntries có thể edit ── */}
           <Box>
             <IncidentPreview
               number={number}
@@ -322,11 +432,8 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
               location={location}
               description={description}
               severity={severity}
-              deviceEntries={assets.map(a => {
-                const id = a.deviceId || a.deviceId;
-                const d = devices.find(dd => dd.id === id);
-                return { deviceId: id, deviceName: d?.name || (a.tenTaiSan || id), position: d?.location || a.position || '', note: '' };
-              })}
+              deviceEntries={deviceEntries}
+              onDeviceEntriesChange={setDeviceEntries}
               planIds={planIds}
             />
           </Box>
@@ -338,7 +445,12 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
 
       <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
         <Button onClick={onClose} color="inherit">Hủy</Button>
-        <Button variant="contained" color="primary" onClick={handleSubmit} disabled={assets.length === 0 || !description}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSubmit}
+          disabled={isSubmitDisabled}
+        >
           Tạo Phiếu và Lưu
         </Button>
       </DialogActions>
