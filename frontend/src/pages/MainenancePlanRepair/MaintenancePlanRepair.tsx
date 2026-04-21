@@ -36,6 +36,8 @@ import type { AnnualPlan } from '../../mockdata/mockWorkflow';
 import CreatePlanDialog from '../Maintenance/components/planning/CreatePlan';
 import PlanDetailPanel from '../Maintenance/components/planning/PlanDetailPanel';
 import { calculatePlanMaterials } from '../../mockdata/mockNorms';
+import { initialIncidentInspectionRecords } from '../../mockdata/mockIncidentInspection';
+import { extendedIncidentReports } from '../../mockdata/mockIncidentReports';
 
 // ── Status config (từ Planning.tsx cũ) ──────────────────
 const planStatusConfig: Record<string, {
@@ -62,6 +64,9 @@ export default function MaintenancePlanRepair() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [expandedYears, setExpandedYears] = useState<Record<number, boolean>>({});
   const [showForm, setShowForm] = useState(false);
+  const [incidentInspectionRecords, setIncidentInspectionRecords] = useState(
+    initialIncidentInspectionRecords
+  );
 
   // ✅ Toàn bộ state và handler từ CmmsContext
   const {
@@ -96,6 +101,15 @@ export default function MaintenancePlanRepair() {
     () => selectedPlan ? calculatePlanMaterials(selectedSchedule) : [],
     [selectedPlan]
   );
+
+  const allIncidentReports = useMemo(() => {
+    const extended = extendedIncidentReports;
+    const fromContext = (incidentReports as any[]) || [];
+    return [
+      ...extended,
+      ...fromContext.filter(r => !extended.some((e: any) => e.id === r.id)),
+    ];
+  }, [incidentReports]);
 
   // ── Lọc client-side ────────────────────────
   const filtered = useMemo(() => {
@@ -404,14 +418,19 @@ export default function MaintenancePlanRepair() {
                   repairRequests={repairRequests}
                   inspectionRecords={inspectionRecords}
                   acceptanceTestRecords={acceptanceTestRecords}
-                    incidentReports={(incidentReports as any) || []}
                   materialQualityRecords={materialQualityRecords}
+                  incidentReports={allIncidentReports}
+                  incidentInspectionRecords={incidentInspectionRecords}
                   onClose={() => setSelectedPlan(null)}
                   onCreateRepairRequest={addRepairRequest}
                   onCreateInspectionRecord={addInspectionRecord}
                   onCreateAcceptanceRecord={addAcceptanceTestRecord}
                   onCreateMaterialQualityRecord={addMaterialQualityRecord}
-                    onCreateIncidentRecord={addIncidentReport}
+                  onCreateIncidentRecord={addIncidentReport}
+                  onCreateIncidentInspectionRecord={(record) => {
+                    {/* ← thêm */ }
+                    setIncidentInspectionRecords(prev => [...prev, record]);
+                  }}
                 />
               </Paper>
             </>
