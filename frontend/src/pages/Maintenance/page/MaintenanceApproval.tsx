@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box, Chip, Alert, Badge, Card, CardContent, Paper,
   Typography, IconButton, Tabs, Tab,
@@ -6,7 +6,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import {
   AssignmentOutlined, BuildOutlined, FactCheckOutlined,
-  PlaylistAddCheckOutlined, InventoryOutlined,
+  PlaylistAddCheckOutlined, InventoryOutlined, WarningOutlined, SearchOutlined,
 } from '@mui/icons-material';
 import PageAction from '../../../components/common/PageAction';
 import TableCustom from '../../../components/common/TableCustom';
@@ -17,6 +17,8 @@ import RepairRequestPreview from '../components/preview/RepairRequestPreview';
 import InspectionPreview from '../components/preview/InspectionPreview';
 import AcceptancePreview from '../components/preview/AcceptancePreview';
 import MaterialQualityPreview from '../components/preview/MaterialQualityPreview';
+import IncidentPreview from '../components/preview/IncidentPreview';
+import IncidentInspectionPreview from '../components/preview/IncidentInspectionPreview';
 
 export default function MaintenanceApprovalPage() {
   const {
@@ -25,6 +27,8 @@ export default function MaintenanceApprovalPage() {
     acceptanceTestRecords, materialQualityRecords,
     signAcceptanceRecords, signInspectionRecords,
     signMaterialQualityRecords, signRepairRequests,
+    incidentReports, signIncidentReports,
+    incidentInspectionRecords, signIncidentInspectionRecords,
   } = useCmms();
 
   const [activeTab, setActiveTab] = useState(0);
@@ -40,19 +44,21 @@ export default function MaintenanceApprovalPage() {
   const [currentStatus2, setCurrentStatus2] = useState('');
   const [currentStatus3, setCurrentStatus3] = useState('');
   const [currentStatus4, setCurrentStatus4] = useState('');
+  const [currentStatus5, setCurrentStatus5] = useState('');
+  const [currentStatus6, setCurrentStatus6] = useState('');
 
   const statusSetters = [
     setCurrentStatus0, setCurrentStatus1, setCurrentStatus2,
-    setCurrentStatus3, setCurrentStatus4,
+    setCurrentStatus3, setCurrentStatus4, setCurrentStatus5, setCurrentStatus6,
   ];
   const statusValues = [
     currentStatus0, currentStatus1, currentStatus2,
-    currentStatus3, currentStatus4,
+    currentStatus3, currentStatus4, currentStatus5, currentStatus6,
   ];
 
   const allRows = [
     annualPlans, repairRequests, inspectionRecords,
-    acceptanceTestRecords, materialQualityRecords,
+    acceptanceTestRecords, materialQualityRecords, incidentReports || [], incidentInspectionRecords || [],
   ];
 
   const pendingCounts = allRows.map(rows => rows.filter(r => r.status === 'cho-duyet').length);
@@ -75,6 +81,8 @@ export default function MaintenanceApprovalPage() {
     { label: 'BB Giám định', icon: <FactCheckOutlined />, idLabel: 'Số BB giám định' },
     { label: 'BB Nghiệm thu', icon: <PlaylistAddCheckOutlined />, idLabel: 'Số BB nghiệm thu' },
     { label: 'BB Đánh giá VT', icon: <InventoryOutlined />, idLabel: 'Số BB đánh giá' },
+    { label: 'Phiếu báo SỰ CỐ', icon: <WarningOutlined />, idLabel: 'Số phiếu' },
+    { label: 'BB Kiểm tra SỰ CỐ', icon: <SearchOutlined />, idLabel: 'Số BB kiểm tra' },
   ];
 
   const currentAllRows = allRows[activeTab];
@@ -98,6 +106,8 @@ export default function MaintenanceApprovalPage() {
     else if (activeTab === 2) signInspectionRecords(ids);
     else if (activeTab === 3) signAcceptanceRecords(ids);
     else if (activeTab === 4) signMaterialQualityRecords(ids);
+    else if (activeTab === 5) signIncidentReports?.(ids);
+    else if (activeTab === 6) signIncidentInspectionRecords?.(ids);
     setJustSigned(ids.join(', '));
     setSelectedIds([]);
     // Cập nhật selectedRow nếu đang xem row vừa ký
@@ -152,6 +162,8 @@ export default function MaintenanceApprovalPage() {
             quantities={{}}
             schedule={selectedRow.monthlySchedule ?? {}}
             signers={selectedRow.signers ?? []}
+            deptDevices={{}}
+            departments={[]}
           />
         );
       case 1: return (
@@ -169,6 +181,33 @@ export default function MaintenanceApprovalPage() {
       case 2: return <InspectionPreview row={selectedRow} />;
       case 3: return <AcceptancePreview row={selectedRow} />;
       case 4: return <MaterialQualityPreview row={selectedRow} />;
+      case 5: return (
+        <IncidentPreview
+          number={selectedRow.number}
+          detectedAt={selectedRow.detectedAt}
+          reporter={selectedRow.reporter}
+          reporterDeptId={selectedRow.reporterDeptId}
+          signers={selectedRow.signers}
+          systemName={selectedRow.systemName}
+          location={selectedRow.location}
+          description={selectedRow.description}
+          severity={selectedRow.severity}
+          subsystem={selectedRow.subsystem}
+          deviceEntries={selectedRow.deviceEntries}
+          planIds={selectedRow.planIds}
+        />
+      );
+      case 6: return (
+        <IncidentInspectionPreview
+          number={selectedRow.number}
+          inspectionDate={selectedRow.inspectionDate}
+          location={selectedRow.location}
+          findings={selectedRow.findings}
+          recommendation={selectedRow.recommendation}
+          items={selectedRow.items}
+          signers={selectedRow.signers}
+        />
+      );
       default: return null;
     }
   };
@@ -188,7 +227,7 @@ export default function MaintenanceApprovalPage() {
         <Box sx={{ position: 'relative', pl: 5 }}>
           <Box sx={{ position: 'absolute', left: 16, top: 8, bottom: 8, width: '1px', bgcolor: 'divider' }} />
           {signers.map((s: any, idx: number) => (
-            <Box key={`${s.name}-${idx}`} sx={{ position: 'relative', mb: 1.5 }}>
+            <Box key={`${s.name ?? s.userName}-${idx}`} sx={{ position: 'relative', mb: 1.5 }}>
               <Box sx={{
                 position: 'absolute', left: -37, top: 14,
                 width: 24, height: 24, borderRadius: '50%',
@@ -212,10 +251,12 @@ export default function MaintenanceApprovalPage() {
                       bgcolor: 'primary.main', color: 'white',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontWeight: 600, fontSize: 13, flexShrink: 0,
-                    }}>{s.name?.charAt(0) ?? '?'}</Box>
+                    }}>{(s.name ?? s.userName)?.charAt(0) ?? '?'}</Box>
                     <Box>
-                      <Typography fontWeight={600} fontSize={13}>{s.name || '—'}</Typography>
-                      <Typography variant="caption" color="text.secondary">{s.title || ''}</Typography>
+                      <Typography fontWeight={600} fontSize={13}>
+                        {s.name ?? s.userName ?? '—'}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">{s.title || s.departmentName || ''}</Typography>
                       <Box sx={{ mt: 0.5 }}>
                         <Chip label={s.departmentName || ''} size="small" sx={{ fontSize: 10, height: 18, bgcolor: 'grey.100' }} />
                       </Box>
@@ -254,7 +295,7 @@ export default function MaintenanceApprovalPage() {
         <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
           <Box sx={{
             borderBottom: 1, borderColor: 'divider', bgcolor: '#fff',
-            display: 'flex', justifyContent: 'flex-end',
+            display: 'flex', justifyContent: 'flex-end', overflowX: 'auto',
           }}>
             <Tabs
               value={activeTab}
