@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   Box, Chip, Alert, Badge, Card, CardContent, Paper,
   Typography, IconButton, Tabs, Tab,
@@ -11,7 +11,6 @@ import {
 import PageAction from '../../../components/common/PageAction';
 import TableCustom from '../../../components/common/TableCustom';
 import { useCmms } from '../../../hooks/CmmsContext';
-import { FilterOption } from '../../../components/common/FilterStatusGroup';
 import StepPreview from '../components/step/StepPreview';
 import RepairRequestPreview from '../components/preview/RepairRequestPreview';
 import InspectionPreview from '../components/preview/InspectionPreview';
@@ -39,59 +38,84 @@ export default function MaintenanceApprovalPage() {
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const [detailTab, setDetailTab] = useState(0);
 
-  const [currentStatus0, setCurrentStatus0] = useState('');
-  const [currentStatus1, setCurrentStatus1] = useState('');
-  const [currentStatus2, setCurrentStatus2] = useState('');
-  const [currentStatus3, setCurrentStatus3] = useState('');
-  const [currentStatus4, setCurrentStatus4] = useState('');
-  const [currentStatus5, setCurrentStatus5] = useState('');
-  const [currentStatus6, setCurrentStatus6] = useState('');
-
-  const statusSetters = [
-    setCurrentStatus0, setCurrentStatus1, setCurrentStatus2,
-    setCurrentStatus3, setCurrentStatus4, setCurrentStatus5, setCurrentStatus6,
-  ];
-  const statusValues = [
-    currentStatus0, currentStatus1, currentStatus2,
-    currentStatus3, currentStatus4, currentStatus5, currentStatus6,
-  ];
+  // ── Filter ngày ──────────────────────────────────────────────
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   const allRows = [
     annualPlans, repairRequests, inspectionRecords,
-    acceptanceTestRecords, materialQualityRecords, incidentReports || [], incidentInspectionRecords || [],
+    acceptanceTestRecords, materialQualityRecords,
+    incidentReports || [], incidentInspectionRecords || [],
   ];
 
   const pendingCounts = allRows.map(rows => rows.filter(r => r.status === 'cho-duyet').length);
 
-  const buildStatusOptions = (rows: any[]): FilterOption[] => {
-    const pending = rows.filter(r => r.status === 'cho-duyet').length;
-    const approved = rows.filter(r => r.status === 'da-duyet').length;
-    const rejected = rows.filter(r => r.status === 'tu-choi').length;
-    return [
-      { label: 'Tất cả', count: rows.length, color: 'default', value: '' },
-      { label: 'Chờ duyệt', count: pending, color: 'warning', value: 'cho-duyet' },
-      { label: 'Đã duyệt', count: approved, color: 'success', value: 'da-duyet' },
-      { label: 'Từ chối', count: rejected, color: 'error', value: 'tu-choi' },
-    ];
-  };
-
   const tabConfigs = [
-    { label: 'Kế hoạch', icon: <AssignmentOutlined />, idLabel: 'Mã KH' },
-    { label: 'Lệnh sửa chữa', icon: <BuildOutlined />, idLabel: 'Số lệnh SC' },
-    { label: 'BB Giám định', icon: <FactCheckOutlined />, idLabel: 'Số BB giám định' },
-    { label: 'BB Nghiệm thu', icon: <PlaylistAddCheckOutlined />, idLabel: 'Số BB nghiệm thu' },
-    { label: 'BB Đánh giá VT', icon: <InventoryOutlined />, idLabel: 'Số BB đánh giá' },
-    { label: 'Phiếu báo SỰ CỐ', icon: <WarningOutlined />, idLabel: 'Số phiếu' },
-    { label: 'BB Kiểm tra SỰ CỐ', icon: <SearchOutlined />, idLabel: 'Số BB kiểm tra' },
+    { label: 'Kế hoạch',           icon: <AssignmentOutlined />,      idLabel: 'Mã KH' },
+    { label: 'Lệnh sửa chữa',      icon: <BuildOutlined />,           idLabel: 'Số lệnh SC' },
+    { label: 'BB Giám định',        icon: <FactCheckOutlined />,       idLabel: 'Số BB giám định' },
+    { label: 'BB Nghiệm thu',       icon: <PlaylistAddCheckOutlined />, idLabel: 'Số BB nghiệm thu' },
+    { label: 'BB Đánh giá VT',      icon: <InventoryOutlined />,       idLabel: 'Số BB đánh giá' },
+    { label: 'Phiếu báo SỰ CỐ',    icon: <WarningOutlined />,         idLabel: 'Số phiếu' },
+    { label: 'BB Kiểm tra SỰ CỐ',  icon: <SearchOutlined />,          idLabel: 'Số BB kiểm tra' },
   ];
 
+  // ── Cấu hình cột cha cho từng tab ────────────────────────────
+  // tab 0 – Kế hoạch          : không có cột cha
+  // tab 1 – Lệnh sửa chữa     : mã kế hoạch
+  // tab 2 – BB Giám định       : mã lệnh SC + mã BB kiểm tra SC (2 luồng)
+  // tab 3 – BB Nghiệm thu      : mã BB giám định
+  // tab 4 – BB Đánh giá VT     : mã BB nghiệm thu
+  // tab 5 – Phiếu báo SC       : mã kế hoạch
+  // tab 6 – BB Kiểm tra SC     : mã phiếu báo SC
+  const parentColumnConfigs: Record<number, { field: string; headerName: string }[]> = {
+    1: [{ field: 'planId',                  headerName: 'Mã kế hoạch' }],
+    2: [
+      { field: 'repairRequestId',           headerName: 'Mã lệnh SC' },
+      { field: 'incidentInspectionId',      headerName: 'Mã BB kiểm tra SC' },
+    ],
+    3: [{ field: 'inspectionId',            headerName: 'Mã BB giám định' }],
+    4: [{ field: 'acceptanceId',            headerName: 'Mã BB nghiệm thu' }],
+    5: [{ field: 'planId',                  headerName: 'Mã kế hoạch' }],
+    6: [{ field: 'incidentReportId',        headerName: 'Mã phiếu báo SC' }],
+  };
+
+  // ── Helper lọc theo ngày ─────────────────────────────────────
+  const isInDateRange = (row: any) => {
+    // Ưu tiên field `createdDate`; fallback sang `date`, `inspectionDate`, `detectedAt`
+    const rawDate: string =
+      row.createdDate ?? row.date ?? row.inspectionDate ?? row.detectedAt ?? '';
+    if (!rawDate) return true;
+
+    // Chuyển chuỗi ngày VN "DD/MM/YYYY" → Date, hoặc chuỗi ISO cũng được
+    const parseVn = (s: string) => {
+      const parts = s.split('/');
+      if (parts.length === 3) {
+        return new Date(`${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`);
+      }
+      return new Date(s);
+    };
+
+    const d = parseVn(rawDate);
+    if (isNaN(d.getTime())) return true;
+
+    if (dateFrom) {
+      const from = new Date(dateFrom);
+      if (d < from) return false;
+    }
+    if (dateTo) {
+      const to = new Date(dateTo);
+      to.setHours(23, 59, 59, 999);
+      if (d > to) return false;
+    }
+    return true;
+  };
+
   const currentAllRows = allRows[activeTab];
-  const currentStatusVal = statusValues[activeTab];
 
   const filtered = currentAllRows.filter(r => {
-    // MaintenanceApproval page only shows items pending approval
     const matchSearch = !searchValue || r.id.toLowerCase().includes(searchValue.toLowerCase());
-    return r.status === 'cho-duyet' && matchSearch;
+    return r.status === 'cho-duyet' && matchSearch && isInDateRange(r);
   });
 
   const paginated = filtered.slice(
@@ -110,7 +134,6 @@ export default function MaintenanceApprovalPage() {
     else if (activeTab === 6) signIncidentInspectionRecords?.(ids);
     setJustSigned(ids.join(', '));
     setSelectedIds([]);
-    // Cập nhật selectedRow nếu đang xem row vừa ký
     if (selectedRow && ids.includes(selectedRow.id)) {
       setSelectedRow((prev: any) => ({ ...prev, status: 'da-duyet' }));
     }
@@ -124,48 +147,59 @@ export default function MaintenanceApprovalPage() {
   const statusChip = (status: string) => {
     if (status === 'cho-duyet') return <Chip label="Chờ duyệt" color="warning" size="small" />;
     if (status === 'da-duyet') return <Chip label="Đã duyệt" color="success" size="small" />;
-    if (status === 'draft') return <Chip label="Bản nháp" color="default" size="small" />;
-    if (status === 'tu-choi') return <Chip label="Từ chối" color="error" size="small" />;
+    if (status === 'draft')    return <Chip label="Bản nháp"  color="default" size="small" />;
+    if (status === 'tu-choi')  return <Chip label="Từ chối"   color="error"   size="small" />;
     return <Chip label={status} size="small" />;
   };
 
-  // Cột đầy đủ khi chưa mở detail
-  const columnsFull = [
-    { field: 'id', headerName: tabConfigs[activeTab].idLabel, width: 160 },
-    { field: 'description', headerName: 'Mô tả', flex: 1, minWidth: 200 },
-    { field: 'createdDate', headerName: 'Ngày tạo', width: 120 },
-    {
-      field: 'status', headerName: 'Trạng thái', width: 140,
-      renderCell: (params: any) => statusChip(params.row.status),
-    },
-  ];
+  // ── Xây dựng cột bảng ────────────────────────────────────────
+  const buildColumns = (collapsed: boolean) => {
+    const parentCols = (parentColumnConfigs[activeTab] ?? []).map(cfg => ({
+      field: cfg.field,
+      headerName: cfg.headerName,
+      width: 160,
+      // Hiển thị '—' nếu không có giá trị (biên bản thuộc luồng kia)
+      renderCell: (params: any) => (
+        <span style={{ color: params.value ? 'inherit' : '#bbb' }}>
+          {params.value || '—'}
+        </span>
+      ),
+    }));
 
-  // Cột thu gọn khi đang mở detail
-  const columnsCollapsed = [
-    { field: 'id', headerName: tabConfigs[activeTab].idLabel, flex: 1 },
-    {
-      field: 'status', headerName: 'TT', width: 110,
-      renderCell: (params: any) => statusChip(params.row.status),
-    },
-  ];
+    if (collapsed) {
+      return [
+        { field: 'id',     headerName: tabConfigs[activeTab].idLabel, flex: 1 },
+        { field: 'status', headerName: 'TT', width: 110,
+          renderCell: (params: any) => statusChip(params.row.status) },
+      ];
+    }
 
-  // Render đúng preview theo tab
+    return [
+      { field: 'id',          headerName: tabConfigs[activeTab].idLabel, width: 160 },
+      ...parentCols,
+      { field: 'description', headerName: 'Mô tả', flex: 1, minWidth: 200 },
+      { field: 'createdDate', headerName: 'Ngày tạo', width: 120 },
+      { field: 'status',      headerName: 'Trạng thái', width: 140,
+        renderCell: (params: any) => statusChip(params.row.status) },
+    ];
+  };
+
+  // ── Render preview theo tab ───────────────────────────────────
   const renderPreview = () => {
     if (!selectedRow) return null;
     switch (activeTab) {
-      case 0:
-        return (
-          <StepPreview
-            sourceDeptId={selectedRow.sourceDepartmentId ?? ''}
-            executionDeptId={selectedRow.executionDepartmentId ?? ''}
-            assetIds={selectedRow.deviceIds ?? []}
-            quantities={{}}
-            schedule={selectedRow.monthlySchedule ?? {}}
-            signers={selectedRow.signers ?? []}
-            deptDevices={{}}
-            departments={[]}
-          />
-        );
+      case 0: return (
+        <StepPreview
+          sourceDeptId={selectedRow.sourceDepartmentId ?? ''}
+          executionDeptId={selectedRow.executionDepartmentId ?? ''}
+          assetIds={selectedRow.deviceIds ?? []}
+          quantities={{}}
+          schedule={selectedRow.monthlySchedule ?? {}}
+          signers={selectedRow.signers ?? []}
+          deptDevices={{}}
+          departments={[]}
+        />
+      );
       case 1: return (
         <RepairRequestPreview
           plan={selectedRow}
@@ -214,9 +248,7 @@ export default function MaintenanceApprovalPage() {
 
   const renderSignProcess = (row: any) => {
     const signers = row?.signers ?? [];
-    if (!signers || signers.length === 0) return (
-      <Alert severity="info">Không có quy trình ký cho biên bản này.</Alert>
-    );
+    if (!signers.length) return <Alert severity="info">Không có quy trình ký cho biên bản này.</Alert>;
 
     return (
       <Box>
@@ -233,15 +265,11 @@ export default function MaintenanceApprovalPage() {
                 width: 24, height: 24, borderRadius: '50%',
                 bgcolor: 'primary.main', color: 'white',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 11, fontWeight: 600, zIndex: 1,
-                boxShadow: '0 0 0 3px white',
+                fontSize: 11, fontWeight: 600, zIndex: 1, boxShadow: '0 0 0 3px white',
               }}>{idx + 1}</Box>
-
               <Box sx={{
-                border: '1px solid', borderColor: 'divider',
-                borderRadius: 2, p: 1.5,
-                bgcolor: 'background.paper',
-                transition: 'all 0.2s',
+                border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 1.5,
+                bgcolor: 'background.paper', transition: 'all 0.2s',
                 '&:hover': { boxShadow: 1, borderColor: 'grey.300' },
               }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -253,9 +281,7 @@ export default function MaintenanceApprovalPage() {
                       fontWeight: 600, fontSize: 13, flexShrink: 0,
                     }}>{(s.name ?? s.userName)?.charAt(0) ?? '?'}</Box>
                     <Box>
-                      <Typography fontWeight={600} fontSize={13}>
-                        {s.name ?? s.userName ?? '—'}
-                      </Typography>
+                      <Typography fontWeight={600} fontSize={13}>{s.name ?? s.userName ?? '—'}</Typography>
                       <Typography variant="caption" color="text.secondary">{s.title || s.departmentName || ''}</Typography>
                       <Box sx={{ mt: 0.5 }}>
                         <Chip label={s.departmentName || ''} size="small" sx={{ fontSize: 10, height: 18, bgcolor: 'grey.100' }} />
@@ -263,11 +289,9 @@ export default function MaintenanceApprovalPage() {
                     </Box>
                   </Box>
                   <Box sx={{ textAlign: 'right' }}>
-                    {s.signed ? (
-                      <Chip label={`Đã ký${s.signedAt ? ` • ${s.signedAt}` : ''}`} size="small" color="success" />
-                    ) : (
-                      <Chip label="Chưa ký" size="small" color="warning" />
-                    )}
+                    {s.signed
+                      ? <Chip label={`Đã ký${s.signedAt ? ` • ${s.signedAt}` : ''}`} size="small" color="success" />
+                      : <Chip label="Chưa ký" size="small" color="warning" />}
                   </Box>
                 </Box>
               </Box>
@@ -291,8 +315,8 @@ export default function MaintenanceApprovalPage() {
           </Alert>
         )}
 
-        {/* Tab bar — tách ra ngoài để nằm trên cả 2 panel */}
         <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
+          {/* Tab bar */}
           <Box sx={{
             borderBottom: 1, borderColor: 'divider', bgcolor: '#fff',
             display: 'flex', justifyContent: 'flex-end', overflowX: 'auto',
@@ -303,7 +327,9 @@ export default function MaintenanceApprovalPage() {
                 setActiveTab(v);
                 setSelectedIds([]);
                 setSearchValue('');
-                setSelectedRow(null); // ← reset khi đổi tab
+                setDateFrom('');
+                setDateTo('');
+                setSelectedRow(null);
               }}
               sx={{ '& .MuiTab-root': { textTransform: 'none', fontWeight: 'bold', minHeight: 64 } }}
             >
@@ -316,6 +342,48 @@ export default function MaintenanceApprovalPage() {
                 />
               ))}
             </Tabs>
+          </Box>
+
+          {/* ── Filter thời gian ── */}
+          <Box sx={{
+            display: 'flex', alignItems: 'center', gap: 2, px: 2, py: 1.5,
+            borderBottom: '1px solid', borderColor: 'divider', bgcolor: '#fafafa',
+          }}>
+            <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+              Lọc theo ngày:
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="caption" color="text.secondary">Từ</Typography>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={e => { setDateFrom(e.target.value); setPaginationModel(m => ({ ...m, page: 0 })); }}
+                style={{
+                  border: '1px solid #ccc', borderRadius: 6, padding: '4px 8px',
+                  fontSize: 13, color: 'inherit', background: 'transparent',
+                }}
+              />
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="caption" color="text.secondary">Đến</Typography>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={e => { setDateTo(e.target.value); setPaginationModel(m => ({ ...m, page: 0 })); }}
+                style={{
+                  border: '1px solid #ccc', borderRadius: 6, padding: '4px 8px',
+                  fontSize: 13, color: 'inherit', background: 'transparent',
+                }}
+              />
+            </Box>
+            {(dateFrom || dateTo) && (
+              <Chip
+                label="Xóa bộ lọc"
+                size="small"
+                onDelete={() => { setDateFrom(''); setDateTo(''); }}
+                sx={{ fontSize: 11 }}
+              />
+            )}
           </Box>
 
           {/* Nội dung: bảng + panel detail song song */}
@@ -337,7 +405,7 @@ export default function MaintenanceApprovalPage() {
                 <TableCustom
                   title="Biên bản chờ ký duyệt"
                   rows={safeRows}
-                  columns={isDetailOpen ? columnsCollapsed : columnsFull}
+                  columns={buildColumns(isDetailOpen)}
                   total={filtered.length}
                   paginationModel={paginationModel}
                   onPaginationModelChange={setPaginationModel}
@@ -353,7 +421,7 @@ export default function MaintenanceApprovalPage() {
                   showStatusFilter={false}
                   canSign={(items) => items.length > 0 && items.every(i => i.status === 'cho-duyet')}
                   handleSignDocument={(items, _user, _onSign) => handleSign(items)}
-                  onSign={() => { }}
+                  onSign={() => {}}
                 />
               </CardContent>
             </Card>
@@ -362,17 +430,15 @@ export default function MaintenanceApprovalPage() {
             {isDetailOpen && (
               <Paper
                 elevation={0}
-                sx={{
-                  flex: 1,
-                  p: 2,
-                  overflow: 'auto',
-                  borderRadius: 0,
-                  bgcolor: 'background.paper',
-                }}
+                sx={{ flex: 1, p: 2, overflow: 'auto', borderRadius: 0, bgcolor: 'background.paper' }}
               >
                 <Box sx={{ mb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="subtitle1" fontWeight={600}>Xem trước: {selectedRow.id}</Typography>
-                  <IconButton size="small" onClick={() => setSelectedRow(null)}><CloseIcon fontSize="small" /></IconButton>
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    Xem trước: {selectedRow.id}
+                  </Typography>
+                  <IconButton size="small" onClick={() => setSelectedRow(null)}>
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
                 </Box>
 
                 <Tabs value={detailTab} onChange={(_, v) => setDetailTab(v)} sx={{ mb: 2 }}>

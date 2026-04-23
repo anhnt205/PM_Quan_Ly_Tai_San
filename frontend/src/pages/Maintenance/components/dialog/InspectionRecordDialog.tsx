@@ -23,14 +23,23 @@ interface Props {
     open: boolean;
     onClose: () => void;
     plan: AnnualPlan;
-    repairRequest: RepairRequest;
+    // null khi gọi từ luồng sự cố (không có GĐ sửa chữa)
+    repairRequest: RepairRequest | null;
+    // Danh sách deviceId override — dùng khi repairRequest là null
+    deviceIds?: string[];
     onSubmit: (record: TechnicalInspectionRecord) => void;
 }
 
-const InspectionRecordDialog = ({ open, onClose, plan, repairRequest, onSubmit }: Props) => {
-    if (!repairRequest) return null;
+const InspectionRecordDialog = ({ open, onClose, plan, repairRequest, deviceIds, onSubmit }: Props) => {
+    // Tính danh sách device để hiển thị:
+    // 1. Nếu có repairRequest → dùng repairRequest.deviceIds
+    // 2. Nếu không → dùng prop deviceIds
+    // 3. Fallback: mảng rỗng
+    const effectiveDeviceIds: string[] = repairRequest?.deviceIds ?? deviceIds ?? [];
 
-    const [number, setNumber] = useState(`BB-GD-${repairRequest.id}`);
+    const [number, setNumber] = useState(
+        repairRequest ? `BB-GD-${repairRequest.id}` : `BB-GD-SC-${Date.now()}`
+    );
     const [inspectionDate, setInspectionDate] = useState(new Date().toISOString().split('T')[0]);
     const [location, setLocation] = useState('');
     const [recoveryCount, setRecoveryCount] = useState(0);
@@ -38,7 +47,7 @@ const InspectionRecordDialog = ({ open, onClose, plan, repairRequest, onSubmit }
     const [destroyCount, setDestroyCount] = useState(0);
 
     const [entries, setEntries] = useState<DeviceInspectionEntry[]>(() =>
-        repairRequest.deviceIds.map(id => {
+        effectiveDeviceIds.map(id => {
             const device = devices.find(d => d.id === id);
             return {
                 deviceId: id,
@@ -69,10 +78,6 @@ const InspectionRecordDialog = ({ open, onClose, plan, repairRequest, onSubmit }
 
     const updateEntry = (idx: number, field: keyof DeviceInspectionEntry, value: unknown) => {
         setEntries(prev => prev.map((e, i) => i === idx ? { ...e, [field]: value } : e));
-    };
-
-    const updateSigner = (idx: number, field: keyof InspectionSigner, value: string) => {
-        setSigners(prev => prev.map((s, i) => i === idx ? { ...s, [field]: value } : s));
     };
 
     const handleAddSigner = () => {
@@ -120,7 +125,7 @@ const InspectionRecordDialog = ({ open, onClose, plan, repairRequest, onSubmit }
     const handleSubmit = () => {
         const record: TechnicalInspectionRecord = {
             id: `IR-${Date.now()}`,
-            repairRequestId: repairRequest.id,
+            repairRequestId: repairRequest?.id ?? '',
             planId: plan.id,
             number,
             inspectionDate,
@@ -139,6 +144,11 @@ const InspectionRecordDialog = ({ open, onClose, plan, repairRequest, onSubmit }
 
     const handleClose = () => { setEditingSignerIdx(null); onClose(); };
 
+    // Label tham chiếu ở header dialog — khác nhau tùy luồng
+    const referenceLabel = repairRequest
+        ? `${repairRequest.number || repairRequest.id} — Tháng ${repairRequest.month}/${repairRequest.year}`
+        : `Kế hoạch: ${plan.id}`;
+
     return (
         <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth PaperProps={{ sx: { height: '90vh' } }}>
             <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
@@ -149,7 +159,7 @@ const InspectionRecordDialog = ({ open, onClose, plan, repairRequest, onSubmit }
                             Biên bản giám định kỹ thuật và bàn giao thiết bị đưa vào sửa chữa
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                            Căn cứ: {repairRequest.number || repairRequest.id} — Tháng {repairRequest.month}/{repairRequest.year}
+                            Căn cứ: {referenceLabel}
                         </Typography>
                     </Box>
                 </Box>
@@ -159,7 +169,12 @@ const InspectionRecordDialog = ({ open, onClose, plan, repairRequest, onSubmit }
             <Divider />
 
             <DialogContent sx={{ p: 3, overflow: 'auto' }}>
-                {/* ── Edit mode: 2-column grid ── */}
+                {effectiveDeviceIds.length === 0 && (
+                    <Alert severity="warning" sx={{ mb: 2 }}>
+                        Không có thiết bị nào để giám định. Vui lòng kiểm tra lại dữ liệu đầu vào.
+                    </Alert>
+                )}
+
                 <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 420px', gap: 3 }}>
 
                     {/* Left: Thông tin + Số lượng vật tư */}
@@ -167,10 +182,39 @@ const InspectionRecordDialog = ({ open, onClose, plan, repairRequest, onSubmit }
                         <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3, p: 2.5 }}>
                             <Typography variant="subtitle1" fontWeight={600} mb={2}>Thông tin</Typography>
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                <TextField label="Số biên bản" value={number} onChange={e => setNumber(e.target.value)} placeholder={`VD: BBGD-${repairRequest.id}`} size="small" fullWidth />
-                                <TextField label="Ngày lập" type="date" value={inspectionDate} onChange={e => setInspectionDate(e.target.value)} size="small" fullWidth InputLabelProps={{ shrink: true }} />
-                                <TextField label="Địa điểm (Tại...)" value={location} onChange={e => setLocation(e.target.value)} size="small" fullWidth placeholder="vd: Phân xưởng khai thác 1, khu vực A" />
-                                <Typography variant="body2" color="text.secondary">Căn cứ vào giấy đề nghị: <b>{repairRequest.number}</b> — Ngày tạo: <b>{repairRequest.createdDate}</b></Typography>
+                                <TextField
+                                    label="Số biên bản"
+                                    value={number}
+                                    onChange={e => setNumber(e.target.value)}
+                                    size="small"
+                                    fullWidth
+                                />
+                                <TextField
+                                    label="Ngày lập"
+                                    type="date"
+                                    value={inspectionDate}
+                                    onChange={e => setInspectionDate(e.target.value)}
+                                    size="small"
+                                    fullWidth
+                                    InputLabelProps={{ shrink: true }}
+                                />
+                                <TextField
+                                    label="Địa điểm (Tại...)"
+                                    value={location}
+                                    onChange={e => setLocation(e.target.value)}
+                                    size="small"
+                                    fullWidth
+                                    placeholder="vd: Phân xưởng khai thác 1, khu vực A"
+                                />
+                                {repairRequest ? (
+                                    <Typography variant="body2" color="text.secondary">
+                                        Căn cứ vào giấy đề nghị: <b>{repairRequest.number}</b> — Ngày tạo: <b>{repairRequest.createdDate}</b>
+                                    </Typography>
+                                ) : (
+                                    <Typography variant="body2" color="text.secondary">
+                                        Căn cứ vào BB Kiểm tra sự cố — Kế hoạch: <b>{plan.id}</b>
+                                    </Typography>
+                                )}
                             </Box>
                         </Box>
 
@@ -184,7 +228,13 @@ const InspectionRecordDialog = ({ open, onClose, plan, repairRequest, onSubmit }
                                 ].map(({ label, value, setter }) => (
                                     <Box key={label} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                         <Typography variant="body2" sx={{ flex: 1 }}>{label}:</Typography>
-                                        <TextField type="number" value={value} onChange={e => setter(Math.max(0, parseInt(e.target.value) || 0))} size="small" inputProps={{ min: 0, style: { width: 120 } }} />
+                                        <TextField
+                                            type="number"
+                                            value={value}
+                                            onChange={e => setter(Math.max(0, parseInt(e.target.value) || 0))}
+                                            size="small"
+                                            inputProps={{ min: 0, style: { width: 120 } }}
+                                        />
                                     </Box>
                                 ))}
                             </Box>
@@ -214,7 +264,6 @@ const InspectionRecordDialog = ({ open, onClose, plan, repairRequest, onSubmit }
                                                     fontSize: 11, fontWeight: 600, zIndex: 1,
                                                     boxShadow: '0 0 0 3px white',
                                                 }}>{idx + 1}</Box>
-
                                                 <Box sx={{
                                                     border: '1px solid',
                                                     borderColor: isEditingThis ? 'primary.main' : 'divider',
@@ -284,18 +333,14 @@ const InspectionRecordDialog = ({ open, onClose, plan, repairRequest, onSubmit }
                                     {departments.map(d => <MenuItem key={d.id} value={d.id}>{d.name}</MenuItem>)}
                                 </Select>
                             </FormControl>
-
                             <FormControl size="small" fullWidth disabled={!addDeptId}>
                                 <InputLabel>Người duyệt</InputLabel>
                                 <Select value={addUserId} label="Người duyệt" onChange={e => setAddUserId(e.target.value)}>
                                     {users.filter(u => u.departmentId === addDeptId).map(u => (
-                                        <MenuItem key={u.id} value={u.id}>
-                                            {u.name} – {u.title}
-                                        </MenuItem>
+                                        <MenuItem key={u.id} value={u.id}>{u.name} – {u.title}</MenuItem>
                                     ))}
                                 </Select>
                             </FormControl>
-
                             <Button variant="contained" startIcon={<PersonAddIcon />} onClick={handleAddSigner} disabled={!addUserId} fullWidth>
                                 Thêm người duyệt
                             </Button>
@@ -303,7 +348,7 @@ const InspectionRecordDialog = ({ open, onClose, plan, repairRequest, onSubmit }
                     </Box>
                 </Box>
 
-                {/* ── Full-width: Tình trạng thiết bị (editable) ── */}
+                {/* Tình trạng thiết bị */}
                 <Box sx={{ mt: 3 }}>
                     <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>Tình trạng thiết bị</Typography>
                     <TableContainer component={Paper} variant="outlined">
@@ -326,61 +371,22 @@ const InspectionRecordDialog = ({ open, onClose, plan, repairRequest, onSubmit }
                                         <TableCell>{idx + 1}</TableCell>
                                         <TableCell sx={{ fontWeight: 500 }}>{entry.deviceName}</TableCell>
                                         <TableCell>
-                                            <TextField
-                                                value={entry.unit}
-                                                onChange={e => updateEntry(idx, 'unit', e.target.value)}
-                                                size="small"
-                                                variant="standard"
-                                                inputProps={{ style: { width: 40, fontSize: '0.8rem' } }}
-                                            />
+                                            <TextField value={entry.unit} onChange={e => updateEntry(idx, 'unit', e.target.value)} size="small" variant="standard" inputProps={{ style: { width: 40, fontSize: '0.8rem' } }} />
                                         </TableCell>
                                         <TableCell>
-                                            <TextField
-                                                type="number"
-                                                value={entry.quantity}
-                                                onChange={e => updateEntry(idx, 'quantity', parseInt(e.target.value) || 1)}
-                                                size="small"
-                                                variant="standard"
-                                                inputProps={{ min: 1, style: { width: 36, fontSize: '0.8rem' } }}
-                                            />
+                                            <TextField type="number" value={entry.quantity} onChange={e => updateEntry(idx, 'quantity', parseInt(e.target.value) || 1)} size="small" variant="standard" inputProps={{ min: 1, style: { width: 36, fontSize: '0.8rem' } }} />
                                         </TableCell>
                                         <TableCell>
-                                            <TextField
-                                                value={entry.technicalCondition}
-                                                onChange={e => updateEntry(idx, 'technicalCondition', e.target.value)}
-                                                size="small"
-                                                variant="outlined"
-                                                placeholder="Mô tả tình trạng..."
-                                                fullWidth
-                                                multiline
-                                                maxRows={2}
-                                                inputProps={{ style: { fontSize: '0.8rem' } }}
-                                                error={!entry.technicalCondition}
-                                            />
+                                            <TextField value={entry.technicalCondition} onChange={e => updateEntry(idx, 'technicalCondition', e.target.value)} size="small" variant="outlined" placeholder="Mô tả tình trạng..." fullWidth multiline maxRows={2} inputProps={{ style: { fontSize: '0.8rem' } }} error={!entry.technicalCondition} />
                                         </TableCell>
                                         <TableCell align="center">
-                                            <Checkbox
-                                                checked={entry.actionRepair}
-                                                onChange={e => updateEntry(idx, 'actionRepair', e.target.checked)}
-                                                size="small"
-                                            />
+                                            <Checkbox checked={entry.actionRepair} onChange={e => updateEntry(idx, 'actionRepair', e.target.checked)} size="small" />
                                         </TableCell>
                                         <TableCell align="center">
-                                            <Checkbox
-                                                checked={entry.actionReplace}
-                                                onChange={e => updateEntry(idx, 'actionReplace', e.target.checked)}
-                                                size="small"
-                                            />
+                                            <Checkbox checked={entry.actionReplace} onChange={e => updateEntry(idx, 'actionReplace', e.target.checked)} size="small" />
                                         </TableCell>
                                         <TableCell>
-                                            <TextField
-                                                value={entry.note}
-                                                onChange={e => updateEntry(idx, 'note', e.target.value)}
-                                                size="small"
-                                                variant="standard"
-                                                fullWidth
-                                                inputProps={{ style: { fontSize: '0.8rem' } }}
-                                            />
+                                            <TextField value={entry.note} onChange={e => updateEntry(idx, 'note', e.target.value)} size="small" variant="standard" fullWidth inputProps={{ style: { fontSize: '0.8rem' } }} />
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -389,47 +395,28 @@ const InspectionRecordDialog = ({ open, onClose, plan, repairRequest, onSubmit }
                     </TableContainer>
                 </Box>
 
-                {/* ── Full-width: Preview luôn hiển thị phía dưới ── */}
+                {/* Preview */}
                 <Box sx={{ mt: 4 }}>
                     <Divider sx={{ mb: 3 }}>
                         <Chip label="Xem trước biên bản" size="small" />
                     </Divider>
-
                     <Box sx={{ fontFamily: 'serif', fontSize: '0.875rem', lineHeight: 1.8, border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 3 }}>
-
-                        {/* Header 2 cột */}
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                             <Box sx={{ textAlign: 'left' }}>
                                 <Typography variant="caption" display="block">TẬP ĐOÀN CÔNG NGHIỆP</Typography>
                                 <Typography variant="caption" display="block">THAN – KHOÁNG SẢN VIỆT NAM</Typography>
-                                <Typography variant="caption" display="block" fontWeight={700} sx={{ textTransform: 'uppercase' }}>
-                                    Công <u>ty than Uông Bí</u> - TKV
-                                </Typography>
+                                <Typography variant="caption" display="block" fontWeight={700} sx={{ textTransform: 'uppercase' }}>Công <u>ty than Uông Bí</u> - TKV</Typography>
                             </Box>
                             <Box sx={{ textAlign: 'center' }}>
-                                <Typography variant="caption" display="block" fontWeight={700}>
-                                    CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
-                                </Typography>
-                                <Typography variant="caption" display="block" fontWeight={700}>
-                                    <u>Độc lập – Tự do – Hạnh phúc</u>
-                                </Typography>
+                                <Typography variant="caption" display="block" fontWeight={700}>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</Typography>
+                                <Typography variant="caption" display="block" fontWeight={700}><u>Độc lập – Tự do – Hạnh phúc</u></Typography>
                             </Box>
                         </Box>
-
-                        {/* Địa danh ngày tháng */}
                         <Typography variant="caption" display="block" sx={{ textAlign: 'right', fontStyle: 'italic', mb: 2 }}>
                             Quảng Ninh, ngày {new Date(inspectionDate).getDate()} tháng {new Date(inspectionDate).getMonth() + 1} năm {new Date(inspectionDate).getFullYear()}
                         </Typography>
-
-                        {/* Tiêu đề */}
-                        <Typography variant="subtitle2" align="center" fontWeight={700} display="block" sx={{ color: 'primary.main', mb: 0.5 }}>
-                            BIÊN BẢN
-                        </Typography>
-                        <Typography variant="subtitle2" align="center" fontWeight={700} display="block" sx={{ mb: 2 }}>
-                            GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ ĐƯA VÀO SỬA CHỮA
-                        </Typography>
-
-                        {/* Mở đầu */}
+                        <Typography variant="subtitle2" align="center" fontWeight={700} display="block" sx={{ color: 'primary.main', mb: 0.5 }}>BIÊN BẢN</Typography>
+                        <Typography variant="subtitle2" align="center" fontWeight={700} display="block" sx={{ mb: 2 }}>GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ ĐƯA VÀO SỬA CHỮA</Typography>
                         <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>
                             Hôm nay, ngày {new Date(inspectionDate).getDate()} tháng {new Date(inspectionDate).getMonth() + 1} năm {new Date(inspectionDate).getFullYear()}. Tại {location || '……………………………'}
                         </Typography>
@@ -444,22 +431,12 @@ const InspectionRecordDialog = ({ open, onClose, plan, repairRequest, onSubmit }
                                 </Box>
                             ))}
                         </Box>
-
-                        {/* Căn cứ */}
                         <Typography variant="caption" display="block" sx={{ mb: 1 }}>
                             Cùng tiến hành thực hiện giải thể và kiểm tra tình trạng kỹ thuật thiết bị theo văn bản đề nghị số{' '}
-                            <b>{repairRequest.number}</b> ngày {repairRequest.createdDate} của phân xưởng {(plan as any).sourceDepartmentName || '……………'}.
+                            <b>{repairRequest?.number ?? plan.id}</b> ngày {repairRequest?.createdDate ?? '—'} của phân xưởng {(plan as any).sourceDepartmentName || '……………'}.
                         </Typography>
-
-                        {/* Số đăng ký */}
-                        <Typography variant="caption" display="block">
-                            Số đăng ký: ……………… trước khi đưa vào sửa chữa cấp ………………
-                        </Typography>
-                        <Typography variant="caption" display="block" sx={{ mb: 1 }}>
-                            Với tình trạng kỹ thuật và nội dung sửa chữa như sau:
-                        </Typography>
-
-                        {/* Bảng thiết bị */}
+                        <Typography variant="caption" display="block">Số đăng ký: ……………… trước khi đưa vào sửa chữa cấp ………………</Typography>
+                        <Typography variant="caption" display="block" sx={{ mb: 1 }}>Với tình trạng kỹ thuật và nội dung sửa chữa như sau:</Typography>
                         <TableContainer component={Paper} variant="outlined" sx={{ mb: 1.5 }}>
                             <Table size="small" sx={{ tableLayout: 'fixed' }}>
                                 <TableHead>
@@ -479,9 +456,7 @@ const InspectionRecordDialog = ({ open, onClose, plan, repairRequest, onSubmit }
                                         <>
                                             <TableRow key={`group-${idx}`} sx={{ bgcolor: '#fafafa' }}>
                                                 <TableCell sx={{ fontSize: '0.75rem', fontWeight: 600 }}>{String.fromCharCode(73 + idx)}/</TableCell>
-                                                <TableCell colSpan={7} sx={{ fontSize: '0.75rem', fontWeight: 600 }}>
-                                                    Thiết bị: {entry.deviceName}
-                                                </TableCell>
+                                                <TableCell colSpan={7} sx={{ fontSize: '0.75rem', fontWeight: 600 }}>Thiết bị: {entry.deviceName}</TableCell>
                                             </TableRow>
                                             <TableRow key={`entry-${idx}`}>
                                                 <TableCell sx={{ fontSize: '0.75rem' }}></TableCell>
@@ -498,18 +473,12 @@ const InspectionRecordDialog = ({ open, onClose, plan, repairRequest, onSubmit }
                                 </TableBody>
                             </Table>
                         </TableContainer>
-
-                        {/* Tổng kết vật tư */}
-                        <Typography variant="caption" display="block">Số để lại phục hồi phục vụ cho sản xuất: {recoveryCount || '…………'}.</Typography>
+                        <Typography variant="caption" display="block">Số để lại phục hồi: {recoveryCount || '…………'}.</Typography>
                         <Typography variant="caption" display="block">Số để làm phế liệu: {scrapCount || '…………'} (mục)</Typography>
                         <Typography variant="caption" display="block" sx={{ mb: 1.5 }}>Số lượng hủy: {destroyCount || '…………'} (mục)</Typography>
-
-                        {/* Kết thúc */}
                         <Typography variant="caption" display="block" sx={{ mb: 2 }}>
                             Biên bản được lập xong lúc …… giờ cùng ngày và được các thành phần cùng thống nhất thông qua./.
                         </Typography>
-
-                        {/* Chữ ký — 3 cột */}
                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                             {[
                                 { label: signers[2]?.departmentName || 'Phân xưởng', signer: signers[2] },
@@ -517,19 +486,11 @@ const InspectionRecordDialog = ({ open, onClose, plan, repairRequest, onSubmit }
                                 { label: 'Phòng CV', signer: signers[0] },
                             ].map((col, idx) => (
                                 <Box key={idx} sx={{ flex: 1, textAlign: 'center' }}>
-                                    <Typography variant="caption" fontWeight={700} display="block" sx={{ textTransform: 'uppercase' }}>
-                                        {col.label}
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary" display="block" sx={{ fontStyle: 'italic', mb: 3 }}>
-                                        (Ký, ghi rõ họ tên)
-                                    </Typography>
+                                    <Typography variant="caption" fontWeight={700} display="block" sx={{ textTransform: 'uppercase' }}>{col.label}</Typography>
+                                    <Typography variant="caption" color="text.secondary" display="block" sx={{ fontStyle: 'italic', mb: 3 }}>(Ký, ghi rõ họ tên)</Typography>
                                     <Box sx={{ borderBottom: '1px solid', borderColor: 'text.primary', width: '70%', mx: 'auto', mb: 0.5 }} />
-                                    <Typography variant="caption" fontWeight={600} display="block">
-                                        {col.signer?.name || ''}
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary" display="block">
-                                        {col.signer?.title || ''}
-                                    </Typography>
+                                    <Typography variant="caption" fontWeight={600} display="block">{col.signer?.name || ''}</Typography>
+                                    <Typography variant="caption" color="text.secondary" display="block">{col.signer?.title || ''}</Typography>
                                 </Box>
                             ))}
                         </Box>
@@ -541,7 +502,12 @@ const InspectionRecordDialog = ({ open, onClose, plan, repairRequest, onSubmit }
 
             <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
                 <Button onClick={handleClose} color="inherit">Hủy</Button>
-                <Button variant="contained" color="primary" disabled={signers.length === 0} onClick={handleSubmit}>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    disabled={signers.length === 0 || effectiveDeviceIds.length === 0}
+                    onClick={handleSubmit}
+                >
                     Tạo biên bản
                 </Button>
             </DialogActions>
