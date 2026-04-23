@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   Accordion,
   AccordionDetails,
@@ -8,6 +8,7 @@ import {
   CardContent,
   Checkbox,
   Chip,
+  Collapse,
   Paper,
   Stack,
   Table,
@@ -18,31 +19,46 @@ import {
   TableRow,
   Typography,
   Button,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import ExpandMore from '@mui/icons-material/ExpandMore';
-import { Trash2, Calendar } from 'lucide-react';
-import PageAction from '../../components/common/PageAction';
-import TableCustom from '../../components/common/TableCustom';
-import MaintenancePlanCalendar from './components/MaintenancePlanCalendar';
-import { FilterOption } from '../../components/common/FilterStatusGroup';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../utils/routes';
 
-// ✅ Giữ nguyên context và types từ luồng cũ
 import { useCmms } from '../../hooks/CmmsContext';
 import IncidentDialog from '../Maintenance/components/dialog/IncidentDialog';
 
 import type { AnnualPlan } from '../../mockdata/mockWorkflow';
 import CreatePlanDialog from '../Maintenance/components/planning/CreatePlan';
 import PlanDetailPanel from '../Maintenance/components/planning/PlanDetailPanel';
+import IncidentDetailPanel from '../Maintenance/components/planning/IncidentDetailPanel';
 import { calculatePlanMaterials } from '../../mockdata/mockNorms';
 import { initialIncidentInspectionRecords } from '../../mockdata/mockIncidentInspection';
 import { extendedIncidentReports } from '../../mockdata/mockIncidentReports';
+import type { IncidentReport } from '../../mockdata/mockIncidentReports';
+import MaintenancePlanCalendar from './components/MaintenancePlanCalendar';
+import { FilterOption } from '../../components/common/FilterStatusGroup';
+import PageAction from '../../components/common/PageAction';
+import TableCustom from '../../components/common/TableCustom';
 
-// ── Status config (từ Planning.tsx cũ) ──────────────────
+// ── Status config ──────────────────────────────────────────
 const planStatusConfig: Record<string, {
   label: string;
   color: 'default' | 'warning' | 'success' | 'error';
+}> = {
+  'draft': { label: 'Bản nháp', color: 'default' },
+  'cho-duyet': { label: 'Chờ duyệt', color: 'warning' },
+  'da-duyet': { label: 'Đã duyệt', color: 'success' },
+  'tu-choi': { label: 'Từ chối', color: 'error' },
+};
+
+const incidentStatusConfig: Record<string, {
+  label: string;
+  color: 'default' | 'warning' | 'success' | 'error' | 'info';
 }> = {
   'draft': { label: 'Bản nháp', color: 'default' },
   'cho-duyet': { label: 'Chờ duyệt', color: 'warning' },
@@ -55,20 +71,34 @@ const renderStatus = (status: string) => {
   return <Chip label={cfg.label} color={cfg.color} size="small" />;
 };
 
+const renderIncidentStatus = (status: string) => {
+  const cfg = incidentStatusConfig[status] ?? incidentStatusConfig['cho-duyet'];
+  return <Chip label={cfg.label} color={cfg.color} size="small" />;
+};
+
 export default function MaintenancePlanRepair() {
   const navigate = useNavigate();
+
+  // ── View state ──────────────────────────────────────────
+  // selectedPlan + selectedIncident determine what's shown in the right panel:
+  //   null, null        → nothing open
+  //   plan, null        → PlanDetailPanel
+  //   plan, incident    → IncidentDetailPanel
   const [selectedPlan, setSelectedPlan] = useState<AnnualPlan | null>(null);
+  const [selectedIncident, setSelectedIncident] = useState<IncidentReport | null>(null);
+
   const [showCalendar, setShowCalendar] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [expandedYears, setExpandedYears] = useState<Record<number, boolean>>({});
+  // Track which plan rows have their incident sub-table open
+  const [expandedIncidentPlanIds, setExpandedIncidentPlanIds] = useState<Set<string>>(new Set());
   const [showForm, setShowForm] = useState(false);
   const [incidentInspectionRecords, setIncidentInspectionRecords] = useState(
     initialIncidentInspectionRecords
   );
 
-  // ✅ Toàn bộ state và handler từ CmmsContext
   const {
     annualPlans,
     addAnnualPlan,
@@ -84,53 +114,43 @@ export default function MaintenancePlanRepair() {
     addIncidentReport,
   } = useCmms();
 
-  // 🔍 DEBUG
   useEffect(() => {
     console.log('📋 [CMMS Context Data]', {
       totalPlans: annualPlans.length,
       years: Array.from(new Set(annualPlans.map(p => p.year))).sort((a, b) => b - a),
-      statusCounts: annualPlans.reduce((acc, p) => {
-        acc[p.status] = (acc[p.status] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>),
     });
   }, [annualPlans]);
+
+  // ── Merge static + context incident reports ───────────────
+  const allIncidentReports = useMemo<IncidentReport[]>(() => {
+    const extended = extendedIncidentReports as IncidentReport[];
+    const fromContext = (incidentReports as IncidentReport[]) || [];
+    return [
+      ...extended,
+      ...fromContext.filter(r => !extended.some(e => e.id === r.id)),
+    ];
+  }, [incidentReports]);
+
+  // ── Helper: get incidents for a plan ─────────────────────
+  const getIncidentsForPlan = (planId: string): IncidentReport[] =>
+    allIncidentReports.filter(inc => inc.planIds?.includes(planId));
 
   const selectedSchedule: Record<string, any> = (selectedPlan as any)?.monthlySchedule ?? {};
   const yearlyMaterials = useMemo(
     () => selectedPlan ? calculatePlanMaterials(selectedSchedule) : [],
-    [selectedPlan]
+    [selectedPlan, selectedSchedule]
   );
 
-  const allIncidentReports = useMemo(() => {
-    const extended = extendedIncidentReports;
-    const fromContext = (incidentReports as any[]) || [];
-    return [
-      ...extended,
-      ...fromContext.filter(r => !extended.some((e: any) => e.id === r.id)),
-    ];
-  }, [incidentReports]);
-
-  // ── Lọc client-side ────────────────────────
+  // ── Client-side filtering ─────────────────────────────────
   const filtered = useMemo(() => {
-    if (!annualPlans || annualPlans.length === 0) {
-      return [];
-    }
-
-    const result = annualPlans.filter(p => {
+    if (!annualPlans || annualPlans.length === 0) return [];
+    return annualPlans.filter(p => {
       const matchSearch = !searchValue
         || p.id.toLowerCase().includes(searchValue.toLowerCase())
         || p.description.toLowerCase().includes(searchValue.toLowerCase());
       const matchStatus = !statusFilter || p.status === statusFilter;
       return matchSearch && matchStatus;
     });
-
-    console.log('✅ [Filtered Plans]', {
-      totalIn: annualPlans.length,
-      totalOut: result.length,
-    });
-
-    return result;
   }, [annualPlans, searchValue, statusFilter]);
 
   const plansByYear = useMemo(() => {
@@ -140,40 +160,61 @@ export default function MaintenancePlanRepair() {
       acc.set(plan.year, list);
       return acc;
     }, new Map<number, AnnualPlan[]>());
-
-    const result = Array.from(groups.entries()).sort((a, b) => b[0] - a[0]);
-
-    console.log('🎯 [Plans by Year]', {
-      count: result.length,
-      years: result.map(([year, plans]) => ({ year, planCount: plans.length })),
-    });
-
-    return result;
+    return Array.from(groups.entries()).sort((a, b) => b[0] - a[0]);
   }, [filtered]);
 
-  const toggleYear = (year: number) => {
-    setExpandedYears((prev) => ({
-      ...prev,
-      [year]: !prev[year],
-    }));
+  // ── Toggle helpers ────────────────────────────────────────
+  const toggleYear = (year: number) =>
+    setExpandedYears(prev => ({ ...prev, [year]: !prev[year] }));
+
+  const toggleIncidentExpand = (planId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpandedIncidentPlanIds(prev => {
+      const next = new Set(prev);
+      next.has(planId) ? next.delete(planId) : next.add(planId);
+      return next;
+    });
   };
 
   const handleToggleSelect = (planId: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(planId) ? prev.filter((id) => id !== planId) : [...prev, planId],
+    setSelectedIds(prev =>
+      prev.includes(planId) ? prev.filter(id => id !== planId) : [...prev, planId]
     );
   };
 
-  // allow selecting any plan (remove previous restriction to only drafts)
-  const isPlanSelectable = (plan: AnnualPlan) => true;
+  // ── Row click handlers ────────────────────────────────────
+  const handlePlanRowClick = (plan: AnnualPlan) => {
+    // If clicking the same plan that's already showing an incident, keep incident open
+    // but if we click a different plan, reset incident selection
+    if (selectedPlan?.id !== plan.id) {
+      setSelectedIncident(null);
+    }
+    setSelectedPlan(plan);
+  };
 
-  const selectedPlans = annualPlans.filter((plan) => selectedIds.includes(plan.id));
-  const canSendToSigner = selectedPlans.length > 0 && selectedPlans.every((plan) => plan.status === 'draft');
+  const handleIncidentRowClick = (plan: AnnualPlan, incident: IncidentReport, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedPlan(plan);
+    setSelectedIncident(incident);
+  };
+
+  const handleCloseDetail = () => {
+    setSelectedPlan(null);
+    setSelectedIncident(null);
+  };
+
+  const handleCloseIncident = () => {
+    // Go back to PlanDetailPanel
+    setSelectedIncident(null);
+  };
+
+  // ── Selection helpers ─────────────────────────────────────
+  const selectedPlans = annualPlans.filter(plan => selectedIds.includes(plan.id));
+  const canSendToSigner = selectedPlans.length > 0 && selectedPlans.every(p => p.status === 'draft');
   const canCreateIncident = selectedPlans.length > 0;
 
   const [showIncidentDialog, setShowIncidentDialog] = useState(false);
 
-  // ── Đếm theo status cho filter tabs ─────────────────────
   const countByStatus = (s: string) => annualPlans.filter(p => p.status === s).length;
 
   const handleSendToSigner = async (selectedItems: AnnualPlan[]) => {
@@ -188,7 +229,7 @@ export default function MaintenancePlanRepair() {
     { label: 'Từ chối', value: 'tu-choi', count: countByStatus('tu-choi'), color: 'error' },
   ];
 
-  // ── Columns đầy đủ / thu gọn ─────────────────────────────
+  // ── Detail panel is open when a plan (or incident) is selected ───
   const isDetailOpen = !!selectedPlan;
 
   const columnsFull = [
@@ -224,6 +265,14 @@ export default function MaintenancePlanRepair() {
     },
   ];
 
+  // ── Severity color helper ─────────────────────────────────
+  const severityColor: Record<string, string> = {
+    'Nhẹ': '#4caf50',
+    'Trung bình': '#ff9800',
+    'Nặng': '#f44336',
+    'Nghiêm trọng': '#9c27b0',
+  };
+
   return (
     <>
       <PageAction
@@ -232,7 +281,6 @@ export default function MaintenancePlanRepair() {
       />
 
       <Box sx={{ p: 2 }}>
-        {/* 🔧 FIX: Tăng height của flex container */}
         <Box sx={{ display: 'flex', gap: 2, height: 'calc(100vh - 180px)', minHeight: 600, maxHeight: '80vh' }}>
 
           {/* ── Bảng danh sách ── */}
@@ -249,7 +297,6 @@ export default function MaintenancePlanRepair() {
               flexDirection: 'column',
             }}
           >
-            {/* 🔧 FIX: CardContent với flex layout + overflow auto */}
             <CardContent sx={{
               height: '100%',
               p: '0 !important',
@@ -265,7 +312,7 @@ export default function MaintenancePlanRepair() {
                 total={filtered.length}
                 isCompact={isDetailOpen}
                 checkboxSelection={!isDetailOpen}
-                onRowClick={(params) => setSelectedPlan(params.row as AnnualPlan)}
+                onRowClick={(params) => handlePlanRowClick(params.row as AnnualPlan)}
                 statusOptions={statusOptions}
                 statusValue={statusFilter}
                 onStatusChange={setStatusFilter}
@@ -308,7 +355,7 @@ export default function MaintenancePlanRepair() {
                           Không có kế hoạch phù hợp.
                         </Typography>
                       ) : (
-                        plansByYear.map(([year, plans]) => (
+                        plansByYear.map(([year, plans]: [number, AnnualPlan[]]) => (
                           <Accordion
                             key={year}
                             expanded={!!expandedYears[year]}
@@ -326,7 +373,7 @@ export default function MaintenancePlanRepair() {
                                 </Typography>
                                 <Chip label={`${plans.length} kế hoạch`} size="small" />
                                 <Typography color="text.secondary" sx={{ flexGrow: 1 }}>
-                                  Tổng TB: {plans.reduce((sum, plan) => sum + (plan.deviceIds?.length ?? 0), 0)}
+                                  Tổng TB: {plans.reduce((sum, p) => sum + (p.deviceIds?.length ?? 0), 0)}
                                 </Typography>
                               </Box>
                             </AccordionSummary>
@@ -335,6 +382,8 @@ export default function MaintenancePlanRepair() {
                                 <Table size="small">
                                   <TableHead>
                                     <TableRow sx={{ bgcolor: '#1FA463' }}>
+                                      {/* expand incident column */}
+                                      <TableCell padding="checkbox" sx={{ color: '#fff', width: 40 }} />
                                       <TableCell padding="checkbox" sx={{ color: '#fff' }} />
                                       <TableCell sx={{ fontWeight: 700, color: '#fff' }}>Mã kế hoạch</TableCell>
                                       <TableCell sx={{ fontWeight: 700, color: '#fff' }}>Mô tả</TableCell>
@@ -342,34 +391,173 @@ export default function MaintenancePlanRepair() {
                                       <TableCell sx={{ fontWeight: 700, color: '#fff' }}>Năm</TableCell>
                                       <TableCell sx={{ fontWeight: 700, color: '#fff' }}>Ngày tạo</TableCell>
                                       <TableCell sx={{ fontWeight: 700, color: '#fff' }} align="right">Số TB</TableCell>
+                                      <TableCell sx={{ fontWeight: 700, color: '#fff' }}>Sự cố</TableCell>
                                       <TableCell sx={{ fontWeight: 700, color: '#fff' }}>Trạng thái</TableCell>
                                     </TableRow>
                                   </TableHead>
                                   <TableBody>
-                                    {plans.map((plan) => (
-                                      <TableRow
-                                        key={plan.id}
-                                        hover
-                                        sx={{ cursor: 'pointer' }}
-                                        onClick={() => setSelectedPlan(plan)}
-                                      >
-                                        <TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
-                                          <Checkbox
-                                            size="small"
-                                            disabled={!isPlanSelectable(plan)}
-                                            checked={selectedIds.includes(plan.id)}
-                                            onChange={() => handleToggleSelect(plan.id)}
-                                          />
-                                        </TableCell>
-                                        <TableCell>{plan.id}</TableCell>
-                                        <TableCell>{plan.description}</TableCell>
-                                        <TableCell>{plan.sourceDepartmentId ?? '—'}</TableCell>
-                                        <TableCell>{plan.year}</TableCell>
-                                        <TableCell>{plan.createdDate}</TableCell>
-                                        <TableCell align="right">{plan.deviceIds?.length ?? 0}</TableCell>
-                                        <TableCell>{renderStatus(plan.status)}</TableCell>
-                                      </TableRow>
-                                    ))}
+                                    {plans.map((plan: AnnualPlan) => {
+                                      const planIncidents = getIncidentsForPlan(plan.id);
+                                      const isIncidentOpen = expandedIncidentPlanIds.has(plan.id);
+                                      const selectedPlanId: string | undefined = (selectedPlan as AnnualPlan | null)?.id;
+                                      const isSelected = selectedPlanId === plan.id && !selectedIncident;
+
+                                      return (
+                                        <React.Fragment key={plan.id}>
+                                          {/* ── Plan row ── */}
+                                          <TableRow
+                                            hover
+                                            selected={isSelected}
+                                            sx={{
+                                              cursor: 'pointer',
+                                              bgcolor: isSelected ? 'action.selected' : undefined,
+                                            }}
+                                            onClick={() => handlePlanRowClick(plan)}
+                                          >
+                                            {/* Incident expand button */}
+                                            <TableCell
+                                              padding="checkbox"
+                                              onClick={(e) => planIncidents.length > 0 && toggleIncidentExpand(plan.id, e)}
+                                              sx={{ width: 40 }}
+                                            >
+                                              {planIncidents.length > 0 && (
+                                                <Tooltip title={isIncidentOpen ? 'Ẩn sự cố' : `${planIncidents.length} sự cố`}>
+                                                  <IconButton size="small">
+                                                    {isIncidentOpen
+                                                      ? <KeyboardArrowUpIcon fontSize="small" />
+                                                      : <KeyboardArrowDownIcon fontSize="small" />}
+                                                  </IconButton>
+                                                </Tooltip>
+                                              )}
+                                            </TableCell>
+
+                                            {/* Checkbox */}
+                                            <TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
+                                              <Checkbox
+                                                size="small"
+                                                checked={selectedIds.includes(plan.id)}
+                                                onChange={() => handleToggleSelect(plan.id)}
+                                              />
+                                            </TableCell>
+
+                                            <TableCell>{plan.id}</TableCell>
+                                            <TableCell>{plan.description}</TableCell>
+                                            <TableCell>{plan.sourceDepartmentId ?? '—'}</TableCell>
+                                            <TableCell>{plan.year}</TableCell>
+                                            <TableCell>{plan.createdDate}</TableCell>
+                                            <TableCell align="right">{plan.deviceIds?.length ?? 0}</TableCell>
+                                            <TableCell>
+                                              {planIncidents.length > 0
+                                                ? <Chip
+                                                    icon={<WarningAmberIcon sx={{ fontSize: 14 }} />}
+                                                    label={planIncidents.length}
+                                                    size="small"
+                                                    color="warning"
+                                                    variant="outlined"
+                                                  />
+                                                : <Typography variant="caption" color="text.disabled">—</Typography>
+                                              }
+                                            </TableCell>
+                                            <TableCell>{renderStatus(plan.status)}</TableCell>
+                                          </TableRow>
+
+                                          {/* ── Incident sub-rows (dropdown) ── */}
+                                          {planIncidents.length > 0 && (
+                                            <TableRow>
+                                              <TableCell colSpan={10} sx={{ p: 0, border: 0 }}>
+                                                <Collapse in={isIncidentOpen} timeout="auto" unmountOnExit>
+                                                  <Box sx={{ bgcolor: '#fffde7', borderBottom: '1px solid', borderColor: 'divider' }}>
+                                                    <Table size="small">
+                                                      <TableHead>
+                                                        <TableRow sx={{ bgcolor: '#f9a825' }}>
+                                                          <TableCell sx={{ pl: 6, fontWeight: 700, color: '#fff', fontSize: 12 }}>
+                                                            Số phiếu
+                                                          </TableCell>
+                                                          <TableCell sx={{ fontWeight: 700, color: '#fff', fontSize: 12 }}>
+                                                            Ngày phát hiện
+                                                          </TableCell>
+                                                          <TableCell sx={{ fontWeight: 700, color: '#fff', fontSize: 12 }}>
+                                                            Hệ thống
+                                                          </TableCell>
+                                                          <TableCell sx={{ fontWeight: 700, color: '#fff', fontSize: 12 }}>
+                                                            Mức độ
+                                                          </TableCell>
+                                                          <TableCell sx={{ fontWeight: 700, color: '#fff', fontSize: 12 }}>
+                                                            Trạng thái
+                                                          </TableCell>
+                                                        </TableRow>
+                                                      </TableHead>
+                                                      <TableBody>
+                                                        {planIncidents.map((incident) => {
+                                                          const isIncidentSelected =
+                                                            selectedIncident?.id === incident.id;
+                                                          return (
+                                                            <TableRow
+                                                              key={incident.id}
+                                                              hover
+                                                              selected={isIncidentSelected}
+                                                              sx={{
+                                                                cursor: 'pointer',
+                                                                bgcolor: isIncidentSelected
+                                                                  ? 'rgba(249,168,37,0.15)'
+                                                                  : undefined,
+                                                                '&:hover': {
+                                                                  bgcolor: 'rgba(249,168,37,0.08)',
+                                                                },
+                                                              }}
+                                                              onClick={(e) =>
+                                                                handleIncidentRowClick(plan, incident, e)
+                                                              }
+                                                            >
+                                                              <TableCell sx={{ pl: 6 }}>
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                                  <WarningAmberIcon
+                                                                    sx={{ fontSize: 14, color: '#f9a825' }}
+                                                                  />
+                                                                  <Typography variant="body2" fontWeight={500}>
+                                                                    {incident.number}
+                                                                  </Typography>
+                                                                </Box>
+                                                              </TableCell>
+                                                              <TableCell>
+                                                                <Typography variant="body2">
+                                                                  {incident.detectedAt}
+                                                                </Typography>
+                                                              </TableCell>
+                                                              <TableCell>
+                                                                <Typography variant="body2">
+                                                                  {incident.systemName}
+                                                                </Typography>
+                                                              </TableCell>
+                                                              <TableCell>
+                                                                {incident.severity ? (
+                                                                  <Chip
+                                                                    label={incident.severity}
+                                                                    size="small"
+                                                                    sx={{
+                                                                      bgcolor: severityColor[incident.severity] || '#bdbdbd',
+                                                                      color: '#fff',
+                                                                      fontSize: 11,
+                                                                    }}
+                                                                  />
+                                                                ) : '—'}
+                                                              </TableCell>
+                                                              <TableCell>
+                                                                {renderIncidentStatus(incident.status ?? 'cho-duyet')}
+                                                              </TableCell>
+                                                            </TableRow>
+                                                          );
+                                                        })}
+                                                      </TableBody>
+                                                    </Table>
+                                                  </Box>
+                                                </Collapse>
+                                              </TableCell>
+                                            </TableRow>
+                                          )}
+                                        </React.Fragment>
+                                      );
+                                    })}
                                   </TableBody>
                                 </Table>
                               </TableContainer>
@@ -384,6 +572,7 @@ export default function MaintenancePlanRepair() {
                           plans={annualPlans as any}
                           onPlanClick={(plan: any) => {
                             setSelectedPlan(plan as AnnualPlan);
+                            setSelectedIncident(null);
                             setShowCalendar(false);
                           }}
                           onCreateRepair={() => navigate(ROUTES.ASSETGROUP)}
@@ -396,49 +585,59 @@ export default function MaintenancePlanRepair() {
             </CardContent>
           </Card>
 
-          {/* ── Panel chi tiết — Hiển thị toàn bộ kế hoạch khi detail open ── */}
+          {/* ── Panel chi tiết ── */}
           {isDetailOpen && selectedPlan && (
-            <>
-
-              {/* Panel chi tiết chính */}
-              <Paper
-                elevation={0}
-                sx={{
-                  flex: 1,
-                  p: 2,
-                  overflow: 'auto',
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: 2,
-                  bgcolor: 'background.paper',
-                }}
-              >
+            <Paper
+              elevation={0}
+              sx={{
+                flex: 1,
+                p: 2,
+                overflow: 'auto',
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 2,
+                bgcolor: 'background.paper',
+              }}
+            >
+              {selectedIncident ? (
+                /* ── IncidentDetailPanel khi đã chọn sự cố ── */
+                <IncidentDetailPanel
+                  incident={selectedIncident}
+                  plan={selectedPlan}
+                  inspectionRecords={inspectionRecords}
+                  acceptanceTestRecords={acceptanceTestRecords}
+                  materialQualityRecords={materialQualityRecords}
+                  incidentInspectionRecords={incidentInspectionRecords}
+                  onClose={handleCloseIncident}
+                  onCreateIncidentInspectionRecord={(record) =>
+                    setIncidentInspectionRecords(prev => [...prev, record])
+                  }
+                  onCreateInspectionRecord={addInspectionRecord}
+                  onCreateAcceptanceRecord={addAcceptanceTestRecord}
+                  onCreateMaterialQualityRecord={addMaterialQualityRecord}
+                />
+              ) : (
+                /* ── PlanDetailPanel khi chỉ chọn kế hoạch ── */
                 <PlanDetailPanel
                   plan={selectedPlan}
                   repairRequests={repairRequests}
                   inspectionRecords={inspectionRecords}
                   acceptanceTestRecords={acceptanceTestRecords}
                   materialQualityRecords={materialQualityRecords}
-                  incidentReports={allIncidentReports}
-                  incidentInspectionRecords={incidentInspectionRecords}
-                  onClose={() => setSelectedPlan(null)}
+                  onClose={handleCloseDetail}
                   onCreateRepairRequest={addRepairRequest}
                   onCreateInspectionRecord={addInspectionRecord}
                   onCreateAcceptanceRecord={addAcceptanceTestRecord}
                   onCreateMaterialQualityRecord={addMaterialQualityRecord}
-                  onCreateIncidentRecord={addIncidentReport}
-                  onCreateIncidentInspectionRecord={(record) => {
-                    {/* ← thêm */ }
-                    setIncidentInspectionRecords(prev => [...prev, record]);
-                  }}
                 />
-              </Paper>
-            </>
+              )}
+            </Paper>
           )}
         </Box>
       </Box>
 
-      {selectedPlan && yearlyMaterials.length > 0 && (
+      {/* Yearly materials summary */}
+      {selectedPlan && !selectedIncident && yearlyMaterials.length > 0 && (
         <Box sx={{ mt: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 2 }}>
           <Typography variant="subtitle1" fontWeight={700} gutterBottom>
             Tổng hợp vật tư cần thiết — Kế hoạch năm {selectedPlan.year} ({selectedPlan.id})
