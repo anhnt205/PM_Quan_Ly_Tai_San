@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Avatar,
   Box,
@@ -39,6 +39,20 @@ export default function Login() {
       loginMutation.mutate(values);
     },
   });
+  useEffect(() => {
+    const handleKeyDown = (e: any) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        formik.submitForm();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
   return (
     <Box
       sx={{

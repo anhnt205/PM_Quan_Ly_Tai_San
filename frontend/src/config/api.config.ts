@@ -16,7 +16,6 @@ api.interceptors.request.use(
   (config: any) => {
     const state = store.getState();
     const token = state.user?.user?.token;
-    console.log("token", token);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -31,8 +30,8 @@ api.interceptors.response.use(
   (response: any) => response,
   (error: any) => {
     if (error.response?.status === 401) {
-      // store.dispatch(logout());
-      // window.location.href = ROUTES.LOGIN;
+      store.dispatch(logout());
+      window.location.href = ROUTES.LOGIN;
     }
     return Promise.reject(error);
   },
