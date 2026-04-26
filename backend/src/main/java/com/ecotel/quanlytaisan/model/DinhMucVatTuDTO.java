@@ -9,6 +9,7 @@ public class DinhMucVatTuDTO {
     private String idCCDCVT;
     private String tenCCDCVT;
     private String donViTinh;
+    private String tenNhom;
     private Integer soLuong;
     private String kyHieu;
     private String ghiChu;

@@ -292,6 +292,7 @@ export default function RepairNormTableCustom({
                     <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                       <TableCell width="50px">STT</TableCell>
                       <TableCell>Tên vật tư</TableCell>
+                      <TableCell width="120px">Nhóm</TableCell>
                       <TableCell width="120px">ĐVT</TableCell>
                       <TableCell width="120px" align="center">
                         Số lượng
@@ -310,6 +311,7 @@ export default function RepairNormTableCustom({
                         <TableRow key={vt.id || idx}>
                           <TableCell>{idx + 1}</TableCell>
                           <TableCell>{vt.tenCCDCVT}</TableCell>
+                          <TableCell>{vt.tenNhom}</TableCell>
                           <TableCell>{vt.donViTinh}</TableCell>
                           <TableCell align="center">{vt.soLuong}</TableCell>
                           <TableCell align="center">{vt.kyHieu}</TableCell>
@@ -395,13 +397,23 @@ export default function RepairNormTableCustom({
             <TableRow sx={{ backgroundColor: "#1FA463" }}>
               <TableCell
                 align="center"
-                sx={{ color: "#fff", padding: "0 4px", width: "40px", minWidth: "40px" }}
+                sx={{
+                  color: "#fff",
+                  padding: "0 4px",
+                  width: "40px",
+                  minWidth: "40px",
+                }}
               >
                 <ExpandMore />
               </TableCell>
               <TableCell
                 align="center"
-                sx={{ color: "#fff !important", padding: "0 4px", width: "40px", minWidth: "40px" }}
+                sx={{
+                  color: "#fff !important",
+                  padding: "0 4px",
+                  width: "40px",
+                  minWidth: "40px",
+                }}
               >
                 <Checkbox
                   checked={isAllSelected}

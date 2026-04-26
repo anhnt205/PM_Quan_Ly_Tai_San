@@ -85,14 +85,10 @@ public class KeHoachSuaChuaChiTietTaiSanController {
 
     // ==================== CREATE BATCH ====================
 
-    @PostMapping("/batch")
+    @PostMapping("/batch-insert")
     public ResponseEntity<ApiResponse<Object>> createBatch(@RequestBody List<KeHoachSuaChuaChiTietTaiSan> list) {
         try {
-            int total = 0;
-            for (KeHoachSuaChuaChiTietTaiSan item : list) {
-                KeHoachSuaChuaChiTietTaiSan created = chiTietTaiSanService.create(item);
-                if (created != null) total++;
-            }
+            int total = chiTietTaiSanService.batchInsert(list);
             if (total > 0) {
                 return ResponseEntity.status(HttpStatus.CREATED)
                         .body(ApiResponse.success("Tạo danh sách chi tiết kế hoạch sửa chữa tài sản thành công", null, total));
@@ -127,14 +123,10 @@ public class KeHoachSuaChuaChiTietTaiSanController {
 
     // ==================== UPDATE BATCH ====================
 
-    @PutMapping("/batch")
+    @PutMapping("/batch-update")
     public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<KeHoachSuaChuaChiTietTaiSan> list) {
         try {
-            int total = 0;
-            for (KeHoachSuaChuaChiTietTaiSan item : list) {
-                KeHoachSuaChuaChiTietTaiSan updated = chiTietTaiSanService.update(item);
-                if (updated != null) total++;
-            }
+            int total = chiTietTaiSanService.batchUpdate(list);
             if (total > 0) {
                 return ResponseEntity.ok(ApiResponse.success("Cập nhật danh sách chi tiết kế hoạch sửa chữa tài sản thành công", null, total));
             }
@@ -165,13 +157,10 @@ public class KeHoachSuaChuaChiTietTaiSanController {
 
     // ==================== DELETE BATCH ====================
 
-    @DeleteMapping("/batch")
+    @DeleteMapping("/batch-delete")
     public ResponseEntity<ApiResponse<Object>> deleteBatch(@RequestBody List<String> ids) {
         try {
-            int total = 0;
-            for (String id : ids) {
-                if (chiTietTaiSanService.delete(id)) total++;
-            }
+            int total = chiTietTaiSanService.batchDelete(ids);
             if (total > 0) {
                 return ResponseEntity.ok(ApiResponse.success("Xóa danh sách chi tiết kế hoạch sửa chữa tài sản thành công", null, total));
             }

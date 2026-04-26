@@ -102,6 +102,14 @@ public class KeHoachSuaChuaService {
         return response;
     }
 
+    public Map<Integer, List<KeHoachSuaChuaDTO>> findAllGroupedByYear(String idCongTy) throws SQLException {
+        List<KeHoachSuaChuaDTO> list = findAll(idCongTy);
+        return list.stream()
+                .filter(i -> i.getNam() != null)
+                .collect(Collectors.groupingBy(KeHoachSuaChuaDTO::getNam));
+    }
+
+
     private Comparator<KeHoachSuaChuaDTO> getComparator(String sortBy, String sortDir) {
         if (sortBy == null || sortBy.trim().isEmpty()) {
             Map<Integer, Integer> pm = new HashMap<>();

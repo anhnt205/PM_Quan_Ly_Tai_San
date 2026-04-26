@@ -16,6 +16,7 @@ public class KeHoachSuaChua {
     // Thông tin cơ bản
     private String soKeHoach;
     private String tenKeHoach;
+    private String soQuyetDinh;
     private String idLoaiKeHoach;
     private String idLoaiSuaChua;
     private Integer nam;

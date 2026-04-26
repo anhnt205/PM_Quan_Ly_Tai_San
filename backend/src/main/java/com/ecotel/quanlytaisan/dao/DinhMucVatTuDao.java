@@ -22,10 +22,12 @@ public class DinhMucVatTuDao {
                     dmvt.*, 
                     ccdc.Ten AS tenCCDCVT, 
                     dvt.TenDonVi AS donViTinh,
-                    ccdc.KyHieu AS kyHieu
+                    ccdc.KyHieu AS kyHieu,
+                    nhom.Ten AS tenNhom
                 FROM DinhMucVatTu dmvt
                 LEFT JOIN CCDCVatTu ccdc ON dmvt.IdCCDCVT = ccdc.Id
                 LEFT JOIN DonViTinh dvt ON ccdc.DonViTinh = dvt.Id
+                LEFT JOIN NhomCCDC nhom ON ccdc.IdNhomCCDC = nhom.Id
                 WHERE dmvt.IdDinhMuc = ?
                 """;
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(DinhMucVatTuDTO.class), idDinhMuc);

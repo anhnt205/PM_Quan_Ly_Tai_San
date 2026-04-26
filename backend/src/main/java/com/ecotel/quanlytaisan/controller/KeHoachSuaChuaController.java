@@ -80,6 +80,18 @@ public class KeHoachSuaChuaController {
         }
     }
 
+     @GetMapping("/grouped-by-year")
+    public ResponseEntity<ApiResponse<Object>> getAllGroupedByYear(@RequestParam("idCongTy") String idCongTy) throws SQLException {
+        try {
+            Map<Integer, List<KeHoachSuaChuaDTO>> grouped = keHoachSuaChuaService.findAllGroupedByYear(idCongTy);
+            return ResponseEntity.ok(ApiResponse.success("Lấy danh sách theo năm thành công", grouped, grouped.size()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
+
     // ==================== CREATE ====================
 
     @PostMapping
