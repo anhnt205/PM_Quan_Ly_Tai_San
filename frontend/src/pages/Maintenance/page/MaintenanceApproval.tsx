@@ -18,6 +18,8 @@ import AcceptancePreview from '../components/preview/AcceptancePreview';
 import MaterialQualityPreview from '../components/preview/MaterialQualityPreview';
 import IncidentPreview from '../components/preview/IncidentPreview';
 import IncidentInspectionPreview from '../components/preview/IncidentInspectionPreview';
+import { useSignBatch } from '../../../hooks/useSignBatch';
+import { SignBatchModal } from '../../../components/SignDocument/Signbatchmodal';
 
 export default function MaintenanceApprovalPage() {
   const {
@@ -30,6 +32,8 @@ export default function MaintenanceApprovalPage() {
     incidentInspectionRecords, signIncidentInspectionRecords,
   } = useCmms();
 
+  const signBatch = useSignBatch();
+
   const [activeTab, setActiveTab] = useState(0);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState('');
@@ -37,10 +41,9 @@ export default function MaintenanceApprovalPage() {
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const [detailTab, setDetailTab] = useState(0);
-
-  // ── Filter ngày ──────────────────────────────────────────────
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [selectedItem, setSelectedItem] = useState<any[]>([]);
 
   const allRows = [
     annualPlans, repairRequests, inspectionRecords,
@@ -60,14 +63,6 @@ export default function MaintenanceApprovalPage() {
     { label: 'BB Kiểm tra SỰ CỐ',  icon: <SearchOutlined />,          idLabel: 'Số BB kiểm tra' },
   ];
 
-  // ── Cấu hình cột cha cho từng tab ────────────────────────────
-  // tab 0 – Kế hoạch          : không có cột cha
-  // tab 1 – Lệnh sửa chữa     : mã kế hoạch
-  // tab 2 – BB Giám định       : mã lệnh SC + mã BB kiểm tra SC (2 luồng)
-  // tab 3 – BB Nghiệm thu      : mã BB giám định
-  // tab 4 – BB Đánh giá VT     : mã BB nghiệm thu
-  // tab 5 – Phiếu báo SC       : mã kế hoạch
-  // tab 6 – BB Kiểm tra SC     : mã phiếu báo SC
   const parentColumnConfigs: Record<number, { field: string; headerName: string }[]> = {
     1: [{ field: 'planId',                  headerName: 'Mã kế hoạch' }],
     2: [
@@ -80,14 +75,11 @@ export default function MaintenanceApprovalPage() {
     6: [{ field: 'incidentReportId',        headerName: 'Mã phiếu báo SC' }],
   };
 
-  // ── Helper lọc theo ngày ─────────────────────────────────────
   const isInDateRange = (row: any) => {
-    // Ưu tiên field `createdDate`; fallback sang `date`, `inspectionDate`, `detectedAt`
     const rawDate: string =
       row.createdDate ?? row.date ?? row.inspectionDate ?? row.detectedAt ?? '';
     if (!rawDate) return true;
 
-    // Chuyển chuỗi ngày VN "DD/MM/YYYY" → Date, hoặc chuỗi ISO cũng được
     const parseVn = (s: string) => {
       const parts = s.split('/');
       if (parts.length === 3) {
@@ -139,6 +131,33 @@ export default function MaintenanceApprovalPage() {
     }
   };
 
+  const handleSignBatch = async (ids: string[]) => {
+    try {
+      if (activeTab === 0) {
+        ids.forEach(id => approvePlan(id));
+      } else if (activeTab === 1) {
+        signRepairRequests(ids);
+      } else if (activeTab === 2) {
+        signInspectionRecords(ids);
+      } else if (activeTab === 3) {
+        signAcceptanceRecords(ids);
+      } else if (activeTab === 4) {
+        signMaterialQualityRecords(ids);
+      } else if (activeTab === 5) {
+        signIncidentReports?.(ids);
+      } else if (activeTab === 6) {
+        signIncidentInspectionRecords?.(ids);
+      }
+
+      setJustSigned(ids.join(', '));
+      setSelectedItem([]);
+      setSelectedIds([]);
+    } catch (error) {
+      console.error('Lỗi ký biên bản:', error);
+      throw error;
+    }
+  };
+
   const safeRows = paginated.map(r => ({
     ...r,
     id: r.id || crypto.randomUUID(),
@@ -152,13 +171,11 @@ export default function MaintenanceApprovalPage() {
     return <Chip label={status} size="small" />;
   };
 
-  // ── Xây dựng cột bảng ────────────────────────────────────────
   const buildColumns = (collapsed: boolean) => {
     const parentCols = (parentColumnConfigs[activeTab] ?? []).map(cfg => ({
       field: cfg.field,
       headerName: cfg.headerName,
       width: 160,
-      // Hiển thị '—' nếu không có giá trị (biên bản thuộc luồng kia)
       renderCell: (params: any) => (
         <span style={{ color: params.value ? 'inherit' : '#bbb' }}>
           {params.value || '—'}
@@ -184,7 +201,6 @@ export default function MaintenanceApprovalPage() {
     ];
   };
 
-  // ── Render preview theo tab ───────────────────────────────────
   const renderPreview = () => {
     if (!selectedRow) return null;
     switch (activeTab) {
@@ -330,6 +346,7 @@ export default function MaintenanceApprovalPage() {
                 setDateFrom('');
                 setDateTo('');
                 setSelectedRow(null);
+                setSelectedItem([]);
               }}
               sx={{ '& .MuiTab-root': { textTransform: 'none', fontWeight: 'bold', minHeight: 64 } }}
             >
@@ -386,6 +403,14 @@ export default function MaintenanceApprovalPage() {
             )}
           </Box>
 
+          <SignBatchModal
+            open={signBatch.isOpen}
+            items={signBatch.items}
+            isProcessing={signBatch.isProcessing}
+            onConfirm={() => signBatch.confirmSign(handleSignBatch)}
+            onClose={signBatch.closeModal}
+          />
+
           {/* Nội dung: bảng + panel detail song song */}
           <Box sx={{ display: 'flex', gap: 0, minHeight: 500 }}>
 
@@ -412,15 +437,21 @@ export default function MaintenanceApprovalPage() {
                   paginationMode="client"
                   checkboxSelection={!isDetailOpen}
                   selectedIds={selectedIds}
-                  onSelectionChange={setSelectedIds}
+                  onSelectionChange={(ids) => {
+                    setSelectedIds(ids);
+                    const selected = safeRows.filter(row => ids.includes(row.id));
+                    setSelectedItem(selected);
+                  }}
                   searchValue={searchValue}
                   setSearchValue={setSearchValue}
                   showDelete={false}
                   onRowClick={(params) => { setSelectedRow(params.row); setDetailTab(0); }}
                   isRowSelectable={(params) => params?.row?.status === 'cho-duyet'}
                   showStatusFilter={false}
-                  canSign={(items) => items.length > 0 && items.every(i => i.status === 'cho-duyet')}
-                  handleSignDocument={(items, _user, _onSign) => handleSign(items)}
+                  canSign={(items) => items.length >= 2}
+                  handleSignDocument={(items, _user, _onSign) => {
+                    signBatch.openModal(items);
+                  }}
                   onSign={() => {}}
                 />
               </CardContent>

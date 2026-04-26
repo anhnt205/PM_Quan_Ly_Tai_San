@@ -76,14 +76,28 @@ const renderIncidentStatus = (status: string) => {
   return <Chip label={cfg.label} color={cfg.color} size="small" />;
 };
 
+// ── Severity color helper ─────────────────────────────────
+const severityColor: Record<string, string> = {
+  'Nhẹ': '#4caf50',
+  'Trung bình': '#ff9800',
+  'Nặng': '#f44336',
+  'Nghiêm trọng': '#9c27b0',
+};
+
 export default function MaintenancePlanRepair() {
   const navigate = useNavigate();
 
-  // ── View state ──────────────────────────────────────────
-  // selectedPlan + selectedIncident determine what's shown in the right panel:
-  //   null, null        → nothing open
-  //   plan, null        → PlanDetailPanel
-  //   plan, incident    → IncidentDetailPanel
+  /**
+   * Navigation state machine:
+   *   selectedPlan=null, selectedIncident=null  → List mode  (bảng full width)
+   *   selectedPlan≠null, selectedIncident=null  → Plan mode  (bảng 400px + PlanDetailPanel)
+   *   selectedPlan≠null, selectedIncident≠null  → Incident mode (bảng 400px + IncidentDetailPanel)
+   *
+   * Ở compact mode (plan/incident), bảng trái dùng TableCustom với columnsCollapsed
+   * hiển thị toàn bộ filtered — giữ nguyên như code gốc.
+   * Thêm mới: phía dưới TableCustom có incident sub-rows của plan đang chọn,
+   * cho phép chuyển đổi giữa chi tiết KH và từng SC dễ dàng.
+   */
   const [selectedPlan, setSelectedPlan] = useState<AnnualPlan | null>(null);
   const [selectedIncident, setSelectedIncident] = useState<IncidentReport | null>(null);
 
@@ -92,7 +106,6 @@ export default function MaintenancePlanRepair() {
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [expandedYears, setExpandedYears] = useState<Record<number, boolean>>({});
-  // Track which plan rows have their incident sub-table open
   const [expandedIncidentPlanIds, setExpandedIncidentPlanIds] = useState<Set<string>>(new Set());
   const [showForm, setShowForm] = useState(false);
   const [incidentInspectionRecords, setIncidentInspectionRecords] = useState(
@@ -131,7 +144,6 @@ export default function MaintenancePlanRepair() {
     ];
   }, [incidentReports]);
 
-  // ── Helper: get incidents for a plan ─────────────────────
   const getIncidentsForPlan = (planId: string): IncidentReport[] =>
     allIncidentReports.filter(inc => inc.planIds?.includes(planId));
 
@@ -182,29 +194,34 @@ export default function MaintenancePlanRepair() {
     );
   };
 
-  // ── Row click handlers ────────────────────────────────────
+  // ── Navigation handlers ───────────────────────────────────
+  // Case 1 & 4: Click KH → hiển thị chi tiết KH, ẩn SC
   const handlePlanRowClick = (plan: AnnualPlan) => {
-    // If clicking the same plan that's already showing an incident, keep incident open
-    // but if we click a different plan, reset incident selection
-    if (selectedPlan?.id !== plan.id) {
-      setSelectedIncident(null);
-    }
     setSelectedPlan(plan);
+    setSelectedIncident(null);
+    // Auto-expand incident sub-rows for this plan
+    setExpandedIncidentPlanIds(prev => {
+      const next = new Set(prev);
+      next.add(plan.id);
+      return next;
+    });
   };
 
+  // Case 2: Click SC → hiển thị chi tiết SC
   const handleIncidentRowClick = (plan: AnnualPlan, incident: IncidentReport, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedPlan(plan);
     setSelectedIncident(incident);
+    setExpandedIncidentPlanIds(prev => {
+      const next = new Set(prev);
+      next.add(plan.id);
+      return next;
+    });
   };
 
-  const handleCloseDetail = () => {
+  // Case 3 & 5: Đóng panel → về danh sách
+  const handleCloseAll = () => {
     setSelectedPlan(null);
-    setSelectedIncident(null);
-  };
-
-  const handleCloseIncident = () => {
-    // Go back to PlanDetailPanel
     setSelectedIncident(null);
   };
 
@@ -229,8 +246,13 @@ export default function MaintenancePlanRepair() {
     { label: 'Từ chối', value: 'tu-choi', count: countByStatus('tu-choi'), color: 'error' },
   ];
 
-  // ── Detail panel is open when a plan (or incident) is selected ───
   const isDetailOpen = !!selectedPlan;
+
+  // Incidents for the currently selected plan (used in compact incident sub-section)
+  const incidentsForSelectedPlan = selectedPlan ? getIncidentsForPlan(selectedPlan.id) : [];
+  const isCompactIncidentOpen = selectedPlan
+    ? expandedIncidentPlanIds.has(selectedPlan.id)
+    : false;
 
   const columnsFull = [
     { field: 'id', headerName: 'Mã kế hoạch', width: 140, editable: false },
@@ -265,14 +287,6 @@ export default function MaintenancePlanRepair() {
     },
   ];
 
-  // ── Severity color helper ─────────────────────────────────
-  const severityColor: Record<string, string> = {
-    'Nhẹ': '#4caf50',
-    'Trung bình': '#ff9800',
-    'Nặng': '#f44336',
-    'Nghiêm trọng': '#9c27b0',
-  };
-
   return (
     <>
       <PageAction
@@ -283,7 +297,7 @@ export default function MaintenancePlanRepair() {
       <Box sx={{ p: 2 }}>
         <Box sx={{ display: 'flex', gap: 2, height: 'calc(100vh - 180px)', minHeight: 600, maxHeight: '80vh' }}>
 
-          {/* ── Bảng danh sách ── */}
+          {/* ══ LEFT PANEL ══════════════════════════════════════ */}
           <Card
             elevation={0}
             sx={{
@@ -349,6 +363,7 @@ export default function MaintenancePlanRepair() {
                 }
                 customContent={
                   !isDetailOpen ? (
+                    /* ── LIST MODE: accordion theo năm ── */
                     <Stack spacing={2} sx={{ py: 1, px: 1, flex: 1, overflow: 'auto' }}>
                       {plansByYear.length === 0 ? (
                         <Typography variant="body2" color="text.secondary">
@@ -382,7 +397,6 @@ export default function MaintenancePlanRepair() {
                                 <Table size="small">
                                   <TableHead>
                                     <TableRow sx={{ bgcolor: '#1FA463' }}>
-                                      {/* expand incident column */}
                                       <TableCell padding="checkbox" sx={{ color: '#fff', width: 40 }} />
                                       <TableCell padding="checkbox" sx={{ color: '#fff' }} />
                                       <TableCell sx={{ fontWeight: 700, color: '#fff' }}>Mã kế hoạch</TableCell>
@@ -399,22 +413,19 @@ export default function MaintenancePlanRepair() {
                                     {plans.map((plan: AnnualPlan) => {
                                       const planIncidents = getIncidentsForPlan(plan.id);
                                       const isIncidentOpen = expandedIncidentPlanIds.has(plan.id);
-                                      const selectedPlanId: string | undefined = (selectedPlan as AnnualPlan | null)?.id;
-                                      const isSelected = selectedPlanId === plan.id && !selectedIncident;
+                                      const isPlanSelected = (selectedPlan as AnnualPlan | null)?.id === plan.id && !selectedIncident;
 
                                       return (
                                         <React.Fragment key={plan.id}>
-                                          {/* ── Plan row ── */}
                                           <TableRow
                                             hover
-                                            selected={isSelected}
+                                            selected={isPlanSelected}
                                             sx={{
                                               cursor: 'pointer',
-                                              bgcolor: isSelected ? 'action.selected' : undefined,
+                                              bgcolor: isPlanSelected ? 'action.selected' : undefined,
                                             }}
                                             onClick={() => handlePlanRowClick(plan)}
                                           >
-                                            {/* Incident expand button */}
                                             <TableCell
                                               padding="checkbox"
                                               onClick={(e) => planIncidents.length > 0 && toggleIncidentExpand(plan.id, e)}
@@ -430,8 +441,6 @@ export default function MaintenancePlanRepair() {
                                                 </Tooltip>
                                               )}
                                             </TableCell>
-
-                                            {/* Checkbox */}
                                             <TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
                                               <Checkbox
                                                 size="small"
@@ -439,7 +448,6 @@ export default function MaintenancePlanRepair() {
                                                 onChange={() => handleToggleSelect(plan.id)}
                                               />
                                             </TableCell>
-
                                             <TableCell>{plan.id}</TableCell>
                                             <TableCell>{plan.description}</TableCell>
                                             <TableCell>{plan.sourceDepartmentId ?? '—'}</TableCell>
@@ -461,7 +469,7 @@ export default function MaintenancePlanRepair() {
                                             <TableCell>{renderStatus(plan.status)}</TableCell>
                                           </TableRow>
 
-                                          {/* ── Incident sub-rows (dropdown) ── */}
+                                          {/* Incident sub-rows */}
                                           {planIncidents.length > 0 && (
                                             <TableRow>
                                               <TableCell colSpan={10} sx={{ p: 0, border: 0 }}>
@@ -470,27 +478,16 @@ export default function MaintenancePlanRepair() {
                                                     <Table size="small">
                                                       <TableHead>
                                                         <TableRow sx={{ bgcolor: '#f9a825' }}>
-                                                          <TableCell sx={{ pl: 6, fontWeight: 700, color: '#fff', fontSize: 12 }}>
-                                                            Số phiếu
-                                                          </TableCell>
-                                                          <TableCell sx={{ fontWeight: 700, color: '#fff', fontSize: 12 }}>
-                                                            Ngày phát hiện
-                                                          </TableCell>
-                                                          <TableCell sx={{ fontWeight: 700, color: '#fff', fontSize: 12 }}>
-                                                            Hệ thống
-                                                          </TableCell>
-                                                          <TableCell sx={{ fontWeight: 700, color: '#fff', fontSize: 12 }}>
-                                                            Mức độ
-                                                          </TableCell>
-                                                          <TableCell sx={{ fontWeight: 700, color: '#fff', fontSize: 12 }}>
-                                                            Trạng thái
-                                                          </TableCell>
+                                                          <TableCell sx={{ pl: 6, fontWeight: 700, color: '#fff', fontSize: 12 }}>Số phiếu</TableCell>
+                                                          <TableCell sx={{ fontWeight: 700, color: '#fff', fontSize: 12 }}>Ngày phát hiện</TableCell>
+                                                          <TableCell sx={{ fontWeight: 700, color: '#fff', fontSize: 12 }}>Hệ thống</TableCell>
+                                                          <TableCell sx={{ fontWeight: 700, color: '#fff', fontSize: 12 }}>Mức độ</TableCell>
+                                                          <TableCell sx={{ fontWeight: 700, color: '#fff', fontSize: 12 }}>Trạng thái</TableCell>
                                                         </TableRow>
                                                       </TableHead>
                                                       <TableBody>
                                                         {planIncidents.map((incident) => {
-                                                          const isIncidentSelected =
-                                                            selectedIncident?.id === incident.id;
+                                                          const isIncidentSelected = selectedIncident?.id === incident.id;
                                                           return (
                                                             <TableRow
                                                               key={incident.id}
@@ -498,36 +495,24 @@ export default function MaintenancePlanRepair() {
                                                               selected={isIncidentSelected}
                                                               sx={{
                                                                 cursor: 'pointer',
-                                                                bgcolor: isIncidentSelected
-                                                                  ? 'rgba(249,168,37,0.15)'
-                                                                  : undefined,
-                                                                '&:hover': {
-                                                                  bgcolor: 'rgba(249,168,37,0.08)',
-                                                                },
+                                                                bgcolor: isIncidentSelected ? 'rgba(249,168,37,0.15)' : undefined,
+                                                                '&:hover': { bgcolor: 'rgba(249,168,37,0.08)' },
                                                               }}
-                                                              onClick={(e) =>
-                                                                handleIncidentRowClick(plan, incident, e)
-                                                              }
+                                                              onClick={(e) => handleIncidentRowClick(plan, incident, e)}
                                                             >
                                                               <TableCell sx={{ pl: 6 }}>
                                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                                  <WarningAmberIcon
-                                                                    sx={{ fontSize: 14, color: '#f9a825' }}
-                                                                  />
+                                                                  <WarningAmberIcon sx={{ fontSize: 14, color: '#f9a825' }} />
                                                                   <Typography variant="body2" fontWeight={500}>
                                                                     {incident.number}
                                                                   </Typography>
                                                                 </Box>
                                                               </TableCell>
                                                               <TableCell>
-                                                                <Typography variant="body2">
-                                                                  {incident.detectedAt}
-                                                                </Typography>
+                                                                <Typography variant="body2">{incident.detectedAt}</Typography>
                                                               </TableCell>
                                                               <TableCell>
-                                                                <Typography variant="body2">
-                                                                  {incident.systemName}
-                                                                </Typography>
+                                                                <Typography variant="body2">{incident.systemName}</Typography>
                                                               </TableCell>
                                                               <TableCell>
                                                                 {incident.severity ? (
@@ -571,8 +556,7 @@ export default function MaintenancePlanRepair() {
                           onClose={() => setShowCalendar(false)}
                           plans={annualPlans as any}
                           onPlanClick={(plan: any) => {
-                            setSelectedPlan(plan as AnnualPlan);
-                            setSelectedIncident(null);
+                            handlePlanRowClick(plan as AnnualPlan);
                             setShowCalendar(false);
                           }}
                           onCreateRepair={() => navigate(ROUTES.ASSETGROUP)}
@@ -582,10 +566,86 @@ export default function MaintenancePlanRepair() {
                   ) : undefined
                 }
               />
+
+              {/* ── COMPACT MODE: incident sub-section bên dưới danh sách thu nhỏ ──
+                  Chỉ hiện khi đang xem chi tiết KH/SC và plan đó có sự cố.
+                  Cho phép người dùng click vào KH (row trên) hoặc SC bất kỳ bên dưới. ── */}
+              {isDetailOpen && selectedPlan && incidentsForSelectedPlan.length > 0 && (
+                <Box sx={{ borderTop: '2px solid', borderColor: 'divider', flexShrink: 0 }}>
+                  {/* Toggle header */}
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      px: 1.5,
+                      py: 0.75,
+                      bgcolor: '#fffde7',
+                      cursor: 'pointer',
+                      '&:hover': { bgcolor: '#fff9c4' },
+                      userSelect: 'none',
+                    }}
+                    onClick={(e) => toggleIncidentExpand(selectedPlan.id, e)}
+                  >
+                    <WarningAmberIcon sx={{ fontSize: 15, color: '#f9a825', mr: 0.75 }} />
+                    <Typography variant="caption" fontWeight={600} sx={{ flex: 1, color: '#795548' }}>
+                      {incidentsForSelectedPlan.length} sự cố — {selectedPlan.id}
+                    </Typography>
+                    <IconButton size="small" sx={{ p: 0.25 }} onClick={(e) => toggleIncidentExpand(selectedPlan.id, e)}>
+                      {isCompactIncidentOpen
+                        ? <KeyboardArrowUpIcon sx={{ fontSize: 16 }} />
+                        : <KeyboardArrowDownIcon sx={{ fontSize: 16 }} />}
+                    </IconButton>
+                  </Box>
+
+                  {/* Incident rows — same style as list mode sub-rows */}
+                  <Collapse in={isCompactIncidentOpen} timeout="auto" unmountOnExit>
+                    <Box sx={{ bgcolor: '#fffde7' }}>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow sx={{ bgcolor: '#f9a825' }}>
+                            <TableCell sx={{ pl: 2, fontWeight: 700, color: '#fff', fontSize: 12 }}>Số phiếu</TableCell>
+                            <TableCell sx={{ fontWeight: 700, color: '#fff', fontSize: 12 }}>Trạng thái</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {incidentsForSelectedPlan.map((incident) => {
+                            const isIncidentSelected = selectedIncident?.id === incident.id;
+                            return (
+                              <TableRow
+                                key={incident.id}
+                                hover
+                                selected={isIncidentSelected}
+                                sx={{
+                                  cursor: 'pointer',
+                                  bgcolor: isIncidentSelected ? 'rgba(249,168,37,0.15)' : undefined,
+                                  '&:hover': { bgcolor: 'rgba(249,168,37,0.08)' },
+                                }}
+                                onClick={(e) => handleIncidentRowClick(selectedPlan, incident, e)}
+                              >
+                                <TableCell sx={{ pl: 2 }}>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    <WarningAmberIcon sx={{ fontSize: 13, color: '#f9a825' }} />
+                                    <Typography variant="body2" fontWeight={isIncidentSelected ? 700 : 400}>
+                                      {incident.number}
+                                    </Typography>
+                                  </Box>
+                                </TableCell>
+                                <TableCell>
+                                  {renderIncidentStatus(incident.status ?? 'cho-duyet')}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </Box>
+                  </Collapse>
+                </Box>
+              )}
             </CardContent>
           </Card>
 
-          {/* ── Panel chi tiết ── */}
+          {/* ══ RIGHT PANEL ═════════════════════════════════════ */}
           {isDetailOpen && selectedPlan && (
             <Paper
               elevation={0}
@@ -600,7 +660,6 @@ export default function MaintenancePlanRepair() {
               }}
             >
               {selectedIncident ? (
-                /* ── IncidentDetailPanel khi đã chọn sự cố ── */
                 <IncidentDetailPanel
                   incident={selectedIncident}
                   plan={selectedPlan}
@@ -608,7 +667,7 @@ export default function MaintenancePlanRepair() {
                   acceptanceTestRecords={acceptanceTestRecords}
                   materialQualityRecords={materialQualityRecords}
                   incidentInspectionRecords={incidentInspectionRecords}
-                  onClose={handleCloseIncident}
+                  onClose={handleCloseAll}
                   onCreateIncidentInspectionRecord={(record) =>
                     setIncidentInspectionRecords(prev => [...prev, record])
                   }
@@ -617,14 +676,13 @@ export default function MaintenancePlanRepair() {
                   onCreateMaterialQualityRecord={addMaterialQualityRecord}
                 />
               ) : (
-                /* ── PlanDetailPanel khi chỉ chọn kế hoạch ── */
                 <PlanDetailPanel
                   plan={selectedPlan}
                   repairRequests={repairRequests}
                   inspectionRecords={inspectionRecords}
                   acceptanceTestRecords={acceptanceTestRecords}
                   materialQualityRecords={materialQualityRecords}
-                  onClose={handleCloseDetail}
+                  onClose={handleCloseAll}
                   onCreateRepairRequest={addRepairRequest}
                   onCreateInspectionRecord={addInspectionRecord}
                   onCreateAcceptanceRecord={addAcceptanceTestRecord}
