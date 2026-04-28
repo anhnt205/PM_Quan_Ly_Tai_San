@@ -102,9 +102,30 @@ public class KeHoachSuaChuaService {
         return response;
     }
 
-    public Map<Integer, List<KeHoachSuaChuaDTO>> findAllGroupedByYear(String idCongTy) throws SQLException {
-        List<KeHoachSuaChuaDTO> list = findAll(idCongTy);
-        return list.stream()
+    public Map<Integer, List<KeHoachSuaChuaDTO>> findAllGroupedByYear(
+            String idCongTy, String search, Integer trangThai, Integer nam, String userid) throws SQLException {
+        List<KeHoachSuaChuaDTO> sourceList = findAll(idCongTy);
+
+        if (userid != null && !userid.trim().isEmpty() && !"admin".equalsIgnoreCase(userid)) {
+            List<KeHoachSuaChuaDTO> filtered = new ArrayList<>();
+            for (KeHoachSuaChuaDTO item : sourceList)
+                if (isUserTurnToSign(item, userid)) filtered.add(item);
+            sourceList = filtered;
+        }
+
+        if (trangThai != null)
+            sourceList = sourceList.stream().filter(i -> trangThai.equals(i.getTrangThai())).collect(Collectors.toList());
+        if (nam != null)
+            sourceList = sourceList.stream().filter(i -> nam.equals(i.getNam())).collect(Collectors.toList());
+        if (search != null && !search.trim().isEmpty()) {
+            String q = search.toLowerCase();
+            sourceList = sourceList.stream()
+                    .filter(i -> (i.getTenKeHoach() != null && i.getTenKeHoach().toLowerCase().contains(q))
+                            || (i.getSoKeHoach() != null && i.getSoKeHoach().toLowerCase().contains(q)))
+                    .collect(Collectors.toList());
+        }
+
+        return sourceList.stream()
                 .filter(i -> i.getNam() != null)
                 .collect(Collectors.groupingBy(KeHoachSuaChuaDTO::getNam));
     }

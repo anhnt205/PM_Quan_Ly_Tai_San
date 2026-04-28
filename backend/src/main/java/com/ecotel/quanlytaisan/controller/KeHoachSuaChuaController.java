@@ -81,9 +81,15 @@ public class KeHoachSuaChuaController {
     }
 
      @GetMapping("/grouped-by-year")
-    public ResponseEntity<ApiResponse<Object>> getAllGroupedByYear(@RequestParam("idCongTy") String idCongTy) throws SQLException {
+    public ResponseEntity<ApiResponse<Object>> getAllGroupedByYear(
+            @RequestParam("idCongTy") String idCongTy,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "trangThai", required = false) Integer trangThai,
+            @RequestParam(value = "nam", required = false) Integer nam,
+            @RequestParam(value = "userid", required = false) String userid
+    ) throws SQLException {
         try {
-            Map<Integer, List<KeHoachSuaChuaDTO>> grouped = keHoachSuaChuaService.findAllGroupedByYear(idCongTy);
+            Map<Integer, List<KeHoachSuaChuaDTO>> grouped = keHoachSuaChuaService.findAllGroupedByYear(idCongTy, search, trangThai, nam, userid);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách theo năm thành công", grouped, grouped.size()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
