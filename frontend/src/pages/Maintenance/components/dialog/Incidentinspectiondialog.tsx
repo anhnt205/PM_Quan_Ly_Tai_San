@@ -8,17 +8,17 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import type { AnnualPlan } from '../../../../mockdata/mockWorkflow';
 import type { IncidentReport } from '../../../../mockdata/mockIncidentReports';
 import type { IncidentInspectionRecord, IncidentInspectionItem, IncidentInspectionSigner } from '../../../../mockdata/mockIncidentInspection';
 import IncidentInspectionPreview from '../preview/IncidentInspectionPreview';
 import { useAllDepartmentsQuery } from '../../../Department/Mutation';
 import { useAllStaffsQuery } from '../../../Staff/Mutation';
+import { MaintenancePlanData } from '../../../MainenancePlanRepair/types';
 
 interface Props {
     open: boolean;
     onClose: () => void;
-    plan: AnnualPlan;
+    plan: MaintenancePlanData;
     incidentReport: IncidentReport;
     onSubmit: (record: IncidentInspectionRecord) => void;
 }

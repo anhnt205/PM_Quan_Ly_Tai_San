@@ -4,15 +4,15 @@ import {
 } from '@mui/material';
 import { devices } from '../../../../mockdata/mockDevices';
 import { departments } from '../../../../mockdata/mockDepartments';
-import type { AnnualPlan } from '../../../../mockdata/mockWorkflow';
 import type { PlanSigner } from '../../../../mockdata/mockPlans';
 import {
   maintenanceLevelLabels,
   type MaintenanceLevel,
 } from '../../../../mockdata/mockPlans';
+import { MaintenancePlanData } from '../../../MainenancePlanRepair/types';
 
 interface Props {
-  plan: AnnualPlan;
+  plan: MaintenancePlanData;
   deviceIds: string[];
   month: number;
   year: number;

@@ -238,11 +238,6 @@ export default function MaintenanceStatPage() {
               {namList.map(n => <MenuItem key={n} value={n}>{n}</MenuItem>)}
             </Select>
           </FormControl>
-
-          <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
-            <Button variant="outlined" startIcon={<RefreshOutlined />} size="small" sx={{ textTransform: 'none', fontWeight: 600 }}>Làm mới</Button>
-            <Button variant="contained" startIcon={<EventAvailableOutlined />} size="small" sx={{ textTransform: 'none', fontWeight: 600 }}>Lịch</Button>
-          </Box>
         </Paper>
 
         <Grid container spacing={2}>

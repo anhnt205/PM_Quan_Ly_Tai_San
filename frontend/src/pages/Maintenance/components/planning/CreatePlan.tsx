@@ -35,6 +35,8 @@ import { useDebounce } from "../../../../hooks/useDebounce";
 import { useAssetByDonViQuery } from "../../../AssetTransfer/Mutation";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
 import FieldInput from "../../../../components/TextField/FieldInput";
+import { Action } from "../../../../utils/const";
+import { generateCode } from "../../../../utils/helpers";
 
 interface PlanAsset {
   deviceId: string;
@@ -56,10 +58,12 @@ interface PlanAsset {
 interface Props {
   open: boolean;
   onClose: () => void;
-  onSave: (plan: AnnualPlan) => void;
+  onSave: (plan: any, isEdit?: boolean) => void;
+  initialData?: any;
 }
 
-const CreatePlanDialog = ({ open, onClose, onSave }: Props) => {
+const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
+  const isEdit = !!initialData;
   const [addDeptId, setAddDeptId] = useState("");
   const [addUserId, setAddUserId] = useState("");
   const [editingSignerId, setEditingSignerId] = useState<string | null>(null);
@@ -68,15 +72,21 @@ const CreatePlanDialog = ({ open, onClose, onSave }: Props) => {
 
   const formik = useFormik({
     initialValues: {
-      planCode: "",
-      planName: "",
-      planYear: new Date().getFullYear(),
-      sourceDeptId: "",
-      executionDeptId: "",
-      decisionNo: "",
-      signers: [] as PlanSigner[],
-      assets: [] as PlanAsset[],
+      planCode: initialData?.id || "",
+      planName: initialData?.tenKeHoach || initialData?.description || "",
+      planYear: initialData?.year || new Date().getFullYear(),
+      sourceDeptId: initialData?.sourceDepartmentId || "",
+      executionDeptId: initialData?.executionDepartmentId || "",
+      decisionNo: initialData?.soQuyetDinh || "",
+      signers: initialData?.signers || ([] as PlanSigner[]),
+      assets: initialData?.assets || ([] as PlanAsset[]),
+      idCongTy: initialData?.idCongTy || "CT001",
+      idLoaiKeHoach: initialData?.idLoaiKeHoach || "THIET_BI",
+      trangThai: initialData?.trangThai || 0,
+      share: initialData?.share ?? true,
+      byStep: initialData?.byStep ?? true,
     },
+    enableReinitialize: true,
     onSubmit: (values) => {
       // Logic handled via handleSave for draft/approval differentiation
     },
@@ -97,7 +107,8 @@ const CreatePlanDialog = ({ open, onClose, onSave }: Props) => {
 
   const handleAddSigner = () => {
     if (!addUserId || !addDeptId) return;
-    if (formik.values.signers.some((s) => s.userId === addUserId)) return;
+    if (formik.values.signers.some((s: PlanSigner) => s.userId === addUserId))
+      return;
     const user = users.find((u: any) => u.id === addUserId);
     const dept = departments.find((d: any) => d.id === addDeptId);
     if (!user || !dept) return;
@@ -118,8 +129,8 @@ const CreatePlanDialog = ({ open, onClose, onSave }: Props) => {
 
   const handleRemoveSigner = (userId: string) => {
     const updatedSigners = formik.values.signers
-      .filter((s) => s.userId !== userId)
-      .map((s, i) => ({ ...s, order: i + 1 }));
+      .filter((s: PlanSigner) => s.userId !== userId)
+      .map((s: PlanSigner, i: number) => ({ ...s, order: i + 1 }));
     formik.setFieldValue("signers", updatedSigners);
   };
 
@@ -130,7 +141,7 @@ const CreatePlanDialog = ({ open, onClose, onSave }: Props) => {
   };
 
   const handleSaveEdit = () => {
-    const updatedSigners = formik.values.signers.map((s) =>
+    const updatedSigners = formik.values.signers.map((s: PlanSigner) =>
       s.userId === editingSignerId
         ? {
             ...s,
@@ -156,45 +167,71 @@ const CreatePlanDialog = ({ open, onClose, onSave }: Props) => {
     formik.values.planCode.trim() !== "" &&
     formik.values.planName.trim() !== "";
 
-  const handleSave = (status: "draft" | "cho-duyet") => {
-    // Chuyển đổi assets và schedule về định dạng cũ để tương thích với onSave hiện tại
-    const schedule: Record<string, MaintenanceLevel[]> = {};
-    formik.values.assets.forEach((a) => {
-      schedule[a.deviceId] = [
-        a.month1,
-        a.month2,
-        a.month3,
-        a.month4,
-        a.month5,
-        a.month6,
-        a.month7,
-        a.month8,
-        a.month9,
-        a.month10,
-        a.month11,
-        a.month12,
-      ];
-    });
+   const handleSave = (status: "draft" | "cho-duyet") => {
+     // 1. Ánh xạ chi tiết tài sản với 12 tháng
+     const danhSachTaiSan = formik.values.assets.map((a: PlanAsset) => ({
+       idTaiSan: a.deviceId,
+       soLuong: a.quantity || 1,
+       capSuaChuaThang1: a.month1,
+       capSuaChuaThang2: a.month2,
+       capSuaChuaThang3: a.month3,
+       capSuaChuaThang4: a.month4,
+       capSuaChuaThang5: a.month5,
+       capSuaChuaThang6: a.month6,
+       capSuaChuaThang7: a.month7,
+       capSuaChuaThang8: a.month8,
+       capSuaChuaThang9: a.month9,
+       capSuaChuaThang10: a.month10,
+       capSuaChuaThang11: a.month11,
+       capSuaChuaThang12: a.month12,
+       isActive: true,
+       action: Action.CREATE,
+     }));
 
-    const newPlan: AnnualPlan = {
-      id:
-        formik.values.planCode.trim() ||
-        `KH-${formik.values.planYear}-${Date.now().toString().slice(-4)}`,
-      year: formik.values.planYear,
-      deviceIds: formik.values.assets.map((a) => a.deviceId),
-      status,
-      createdDate: new Date().toISOString().slice(0, 10),
-      description:
-        formik.values.planName ||
-        `Kế hoạch SCBD - ${departments.find((d: any) => d.id === formik.values.sourceDeptId)?.tenPhongBan || formik.values.sourceDeptId}`,
-      sourceDepartmentId: formik.values.sourceDeptId,
-      executionDepartmentId: formik.values.executionDeptId,
-      monthlySchedule: schedule as any,
-      signers: formik.values.signers,
-    };
-    onSave(newPlan);
-    handleClose();
-  };
+     // 2. Phân tách người ký
+     const signers = formik.values.signers;
+     const idNguoiLapBieu = signers.length > 0 ? signers[0].userId : "";
+     const idTrinhDuyetGiamDoc =
+       signers.length > 1 ? signers[signers.length - 1].userId : "";
+
+     // Người ký trung gian (nếu có)
+     const intermediateSigners =
+       signers.length > 2
+         ? signers.slice(1, -1).map((s: PlanSigner, idx: number) => ({
+             id: `${generateCode("SIG-")}-${idx}`,
+             idNguoiKy: s.userId,
+             tenNguoiKy: s.userName,
+             idPhongBan: s.departmentId,
+             trangThai: 0,
+           }))
+         : [];
+
+     const newPlanData: any = {
+       // Dùng planCode làm ID nếu có, nếu không thì để null để Backend tự tạo hoặc Frontend tạo GUID
+       id: formik.values.planCode.trim() || undefined,
+       idCongTy: formik.values.idCongTy,
+       soKeHoach: formik.values.planCode,
+       tenKeHoach: formik.values.planName,
+       soQuyetDinh: formik.values.decisionNo,
+       idLoaiKeHoach: formik.values.idLoaiKeHoach,
+       nam: formik.values.planYear,
+       idDonViGiao: formik.values.sourceDeptId,
+       idDonViNhan: formik.values.executionDeptId,
+       idNguoiLapBieu: idNguoiLapBieu,
+       nguoiLapBieuXacNhan: false,
+       idTrinhDuyetGiamDoc: idTrinhDuyetGiamDoc,
+       trinhDuyetGiamDocXacNhan: false,
+       trangThai: 0,
+       share: status === "draft" ? false : true,
+       byStep: formik.values.byStep,
+       ghiChu: `Kế hoạch SCBD - ${departments.find((d: any) => d.id === formik.values.sourceDeptId)?.tenPhongBan || formik.values.sourceDeptId}`,
+       danhSachTaiSan: danhSachTaiSan,
+       nguoiKyList: intermediateSigners,
+     };
+
+     onSave(newPlanData, isEdit);
+     handleClose();
+   };
 
   return (
     <Dialog
@@ -288,7 +325,9 @@ const CreatePlanDialog = ({ open, onClose, onSave }: Props) => {
                 />
                 <FieldAutoCompleted
                   title="Đơn vị thực hiện"
-                  data={departments.filter((d: any) => d.id !== formik.values.sourceDeptId)}
+                  data={departments.filter(
+                    (d: any) => d.id !== formik.values.sourceDeptId,
+                  )}
                   labelkey="tenPhongBan"
                   formik={formik}
                   field="executionDeptId"
@@ -365,7 +404,7 @@ const CreatePlanDialog = ({ open, onClose, onSave }: Props) => {
                       bgcolor: "divider",
                     }}
                   />
-                  {formik.values.signers.map((s, idx) => {
+                  {formik.values.signers.map((s: PlanSigner, idx: number) => {
                     const user = users.find((u: any) => u.id === s.userId);
                     const isEditingThis = editingSignerId === s.userId;
                     return (
@@ -469,7 +508,7 @@ const CreatePlanDialog = ({ open, onClose, onSave }: Props) => {
                                     u.phongBanId ===
                                       formik.values.signers[idx].departmentId &&
                                     (!formik.values.signers.some(
-                                      (s) => s.userId === u.id,
+                                      (s: PlanSigner) => s.userId === u.id,
                                     ) ||
                                       u.id === s.userId),
                                 )}
@@ -494,14 +533,35 @@ const CreatePlanDialog = ({ open, onClose, onSave }: Props) => {
                               </Box>
                             </Box>
                           ) : (
-                            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
-                              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minWidth: 0 }}>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                gap: 2,
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 1.5,
+                                  minWidth: 0,
+                                }}
+                              >
                                 <Box
                                   sx={{
                                     width: 36,
                                     height: 36,
                                     borderRadius: "50%",
-                                    bgcolor: idx === 0 ? "primary.main" : (idx === formik.values.signers.length - 1 && idx > 0 ? "error.main" : "grey.400"),
+                                    bgcolor:
+                                      idx === 0
+                                        ? "primary.main"
+                                        : idx ===
+                                              formik.values.signers.length -
+                                                1 && idx > 0
+                                          ? "error.main"
+                                          : "grey.400",
                                     color: "white",
                                     display: "flex",
                                     alignItems: "center",
@@ -514,8 +574,19 @@ const CreatePlanDialog = ({ open, onClose, onSave }: Props) => {
                                   {user?.hoTen?.charAt(0) ?? "?"}
                                 </Box>
                                 <Box sx={{ minWidth: 0 }}>
-                                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-                                    <Typography fontWeight={600} fontSize={13} noWrap>
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 1,
+                                      flexWrap: "wrap",
+                                    }}
+                                  >
+                                    <Typography
+                                      fontWeight={600}
+                                      fontSize={13}
+                                      noWrap
+                                    >
                                       {user?.hoTen}
                                     </Typography>
                                     {idx === 0 && (
@@ -534,37 +605,56 @@ const CreatePlanDialog = ({ open, onClose, onSave }: Props) => {
                                         Người lập biểu
                                       </Typography>
                                     )}
-                                    {idx === formik.values.signers.length - 1 && idx > 0 && (
-                                      <Typography
-                                        sx={{
-                                          color: "error.dark",
-                                          fontWeight: 700,
-                                          fontSize: 10,
-                                          bgcolor: "error.50",
-                                          px: 0.5,
-                                          borderRadius: 0.5,
-                                          border: "1px solid",
-                                          borderColor: "error.100",
-                                        }}
-                                      >
-                                        Giám đốc
-                                      </Typography>
-                                    )}
+                                    {idx === formik.values.signers.length - 1 &&
+                                      idx > 0 && (
+                                        <Typography
+                                          sx={{
+                                            color: "error.dark",
+                                            fontWeight: 700,
+                                            fontSize: 10,
+                                            bgcolor: "error.50",
+                                            px: 0.5,
+                                            borderRadius: 0.5,
+                                            border: "1px solid",
+                                            borderColor: "error.100",
+                                          }}
+                                        >
+                                          Giám đốc
+                                        </Typography>
+                                      )}
                                   </Box>
-                                  <Typography variant="caption" color="text.secondary" display="block">
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    display="block"
+                                  >
                                     {user?.tenChucVu || "Cán bộ"}
                                   </Typography>
                                   <Box sx={{ mt: 0.5 }}>
                                     <Chip
-                                      label={departments.find((d: any) => d.id === s.departmentId)?.tenPhongBan ?? s.departmentId}
+                                      label={
+                                        departments.find(
+                                          (d: any) => d.id === s.departmentId,
+                                        )?.tenPhongBan ?? s.departmentId
+                                      }
                                       size="small"
-                                      sx={{ fontSize: 10, height: 18, bgcolor: "grey.100" }}
+                                      sx={{
+                                        fontSize: 10,
+                                        height: 18,
+                                        bgcolor: "grey.100",
+                                      }}
                                     />
                                   </Box>
                                 </Box>
                               </Box>
 
-                              <Box sx={{ display: "flex", gap: 0.5, flexShrink: 0 }}>
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  gap: 0.5,
+                                  flexShrink: 0,
+                                }}
+                              >
                                 <Button
                                   size="small"
                                   variant="outlined"
@@ -627,7 +717,7 @@ const CreatePlanDialog = ({ open, onClose, onSave }: Props) => {
                   (u: any) =>
                     u.hasAccount &&
                     u.phongBanId === addDeptId &&
-                    !formik.values.signers.some((s) => s.userId === u.id),
+                    !formik.values.signers.some((s: PlanSigner) => s.userId === u.id),
                 )}
                 labelkey="hoTen"
                 value={addUserId}

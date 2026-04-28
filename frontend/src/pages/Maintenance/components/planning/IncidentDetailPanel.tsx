@@ -14,7 +14,6 @@ import { devices } from '../../../../mockdata/mockDevices';
 import { departments } from '../../../../mockdata/mockDepartments';
 import type { IncidentReport } from '../../../../mockdata/mockIncidentReports';
 import type { IncidentInspectionRecord } from '../../../../mockdata/mockIncidentInspection';
-import type { AnnualPlan } from '../../../../mockdata/mockWorkflow';
 import type {
     AcceptanceTestRecord,
     MaterialQualityRecord,
@@ -26,10 +25,11 @@ import AcceptanceTestDialog from '../dialog/AcceptanceTestDialog';
 import MaterialDialog from '../dialog/MaterialDialog';
 import IncidentPreview from '../preview/IncidentPreview';
 import IncidentInspectionDialog from '../dialog/Incidentinspectiondialog';
+import { MaintenancePlanData } from '../../../MainenancePlanRepair/types';
 
 interface Props {
     incident: IncidentReport;
-    plan: AnnualPlan;
+    plan: MaintenancePlanData;
     inspectionRecords: TechnicalInspectionRecord[];
     acceptanceTestRecords: AcceptanceTestRecord[];
     materialQualityRecords: MaterialQualityRecord[];

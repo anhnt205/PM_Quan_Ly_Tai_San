@@ -4,7 +4,6 @@ import {
   Button, TextField, Box, Typography, Divider, IconButton, Select, MenuItem, FormControl, InputLabel, Checkbox, FormControlLabel
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import type { AnnualPlan } from '../../../../mockdata/mockWorkflow';
 import type { IncidentReport } from '../../../../mockdata/mockIncidentReports';
 import { devices } from '../../../../mockdata/mockDevices';
 import IncidentPreview from '../preview/IncidentPreview';
@@ -12,6 +11,7 @@ import StepAssets from '../step/StepAssets';
 import { useAllDepartmentsQuery } from '../../../Department/Mutation';
 import { useAllStaffsQuery } from '../../../Staff/Mutation';
 import type { PlanSigner } from '../../../../mockdata/mockPlans';
+import { MaintenancePlanData } from '../../../MainenancePlanRepair/types';
 
 export interface DeviceEntryEditable {
   deviceId: string;
@@ -28,7 +28,7 @@ export interface DeviceEntryEditable {
 interface Props {
   open: boolean;
   onClose: () => void;
-  selectedPlans: AnnualPlan[];
+  selectedPlans: MaintenancePlanData[];
   onSubmit: (rec: IncidentReport) => void;
 }
 

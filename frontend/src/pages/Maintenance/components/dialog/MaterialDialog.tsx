@@ -10,7 +10,6 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import type { AnnualPlan } from '../../../../mockdata/mockWorkflow';
 import type { RepairRequest } from '../../../../mockdata/mockRepairRequests';
 import type {
   AcceptanceTestRecord,
@@ -19,11 +18,12 @@ import type {
   InspectionSigner,
 } from '../../../../mockdata/mockInspectionRecords';
 import { departments, users } from '../../../../mockdata/mockDepartments';
+import { MaintenancePlanData } from '../../../MainenancePlanRepair/types';
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  plan: AnnualPlan;
+  plan: MaintenancePlanData;
   repairRequest: RepairRequest;
   acceptanceRecord: AcceptanceTestRecord;
   onSubmit: (record: MaterialQualityRecord) => void;

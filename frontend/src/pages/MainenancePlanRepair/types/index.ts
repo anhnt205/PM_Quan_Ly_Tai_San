@@ -1,67 +1,70 @@
-import { ActionType, StatusPlanType } from "../../../utils/const";
+import { ActionType } from "../../../utils/const";
 
+export interface PlanSigner {
+  id: string;
+  idTaiLieu: string;
+  idNguoiKy: string;
+  tenNguoiKy: string;
+  idPhongBan: string;
+  trangThai: number;
+}
 export interface MaintenancePlanData {
   id: string;
   idCongTy: string;
+  soKeHoach: string;
   tenKeHoach: string;
-  idLoaiKeHoach: string; // Đã bỏ enum THIET_BI | CHU_KY | GIO_MAY
+  soQuyetDinh?: string;
+  idLoaiKeHoach: string;
   idLoaiSuaChua: string;
-  tenLoaiSuaChua?: string;
-  tenLoaiKeHoach?: string;
-  idDonViGiao?: string;
+  nam: number;
+  idDonViGiao: string;
+  idDonViNhan: string;
   tenDonViGiao?: string;
-  idDonViThucHien: string;
-  tenDonViThucHien?: string;
-  idNguoiPhuTrach: string;
-  tenNguoiPhuTrach?: string;
-  ngayBatDau: string;
-  ngayKetThuc: string;
+  tenDonViNhan?: string;
+  idNguoiLapBieu: string;
+  nguoiLapBieuXacNhan: boolean;
+  idTrinhDuyetGiamDoc: string;
+  trinhDuyetGiamDocXacNhan: boolean;
+  trangThai: number;
   ngayTao?: string;
   ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
   ghiChu?: string;
-  trangThai?: StatusPlanType;
-  congViecs?: MaintenancePlanWorkItem[];
+  duongDanFile?: string;
+  tenFile?: string;
+  ngayKy?: string;
+  duongDanTaiLieuBangKe?: string;
+  share: boolean;
+  byStep: boolean;
   danhSachTaiSan?: MaintenancePlanAssetItem[];
-  danhSachVatTu?: MaintenancePlanCCDCItem[];
-  chiTiets?: any[]; // Dùng chung cho UI trước khi tách
-}
-
-export interface MaintenancePlanWorkItem {
-  id: string;
-  idKeHoach: string;
-  tenCongViec: string;
-  moTa?: string;
-  nguoiThucHien?: string;
-  thoiGianDuKien?: number;
-  ngayThucHien?: string;
-  ngayTao?: string;
-  ngayCapNhat?: string;
-  action: ActionType;
+  nguoiKyList?: any[];
 }
 
 // Bảng Tài Sản mới
 export interface MaintenancePlanAssetItem {
-  id: string;
+  id?: string;
   idKeHoachSuaChua: string;
   idTaiSan: string;
   soLuong?: number;
   tenTaiSan?: string;
+  tenNhom?: string;
+  donViTinh?: string;
   ghiChu?: string;
   ngayTao?: string;
   ngayCapNhat?: string;
-  action?: ActionType;
-}
-
-// Bảng CCDC (Vật tư tiêu hao) mới
-export interface MaintenancePlanCCDCItem {
-  id: string;
-  idKeHoachSuaChua: string;
-  idCCDC: string;
-  idChiTietCCDC: string;
-  tenVatTu?: string;
-  soLuong?: number;
-  ghiChu?: string;
-  ngayTao?: string;
-  ngayCapNhat?: string;
+  isActive?: boolean;
+  capSuaChuaThang1?: string;
+  capSuaChuaThang2?: string;
+  capSuaChuaThang3?: string;
+  capSuaChuaThang4?: string;
+  capSuaChuaThang5?: string;
+  capSuaChuaThang6?: string;
+  capSuaChuaThang7?: string;
+  capSuaChuaThang8?: string;
+  capSuaChuaThang9?: string;
+  capSuaChuaThang10?: string;
+  capSuaChuaThang11?: string;
+  capSuaChuaThang12?: string;
   action?: ActionType;
 }

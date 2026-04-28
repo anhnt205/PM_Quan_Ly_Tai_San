@@ -1,5 +1,7 @@
 import { Chip } from "@mui/material";
 import { PlanType, StatusPlan, StatusPlanType } from "../../../utils/const";
+import { MaintenancePlanData } from "../types";
+import { showConfirmAlert, showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 
 const getStatusDetails = (status: StatusPlanType) => {
   switch (status) {
@@ -37,19 +39,83 @@ export const showStatus = (status: StatusPlanType) => {
   );
 };
 
-export const showPeriod = (time: string) => {
-  if (!time) return "";
+export const isCheckShowShare = (items: any[]) => {
+  if (items.length === 0) {
+    return false;
+  }
+  const hasSharedItems = items.some((e) => e.share === true);
 
-  const date = new Date(time);
+  if (hasSharedItems) {
+    return false;
+  }
 
-  // Kiểm tra nếu string truyền vào không đúng định dạng ngày tháng
-  if (isNaN(date.getTime())) return "Thời gian không hợp lệ";
+  return items.some((e) => e.share !== true);
+};
 
-  const month = date.getMonth() + 1; // getMonth() trả về 0-11
-  const year = date.getFullYear();
+export const handleSendToSigner = async (
+  items: MaintenancePlanData[],
+  onUpdate: (data: any[]) => Promise<any>,
+  onClose: () => void,
+) => {
+  if (!items || items.length === 0) {
+    showErrorAlert("Không có phiếu nào cần trình duyệt");
+    return;
+  }
+  // 2. Hiển thị Dialog xác nhận (tương tự showConfirmDialog trong Flutter)
+  const confirm = await showConfirmAlert(
+    "Bạn có chắc muốn trình duyệt cho người ký?",
+  );
 
-  // Tính Quý: Tháng 1,2,3 -> Quý 1; Tháng 4,5,6 -> Quý 2...
-  const quarter = Math.ceil(month / 3);
+  if (confirm.isConfirmed) {
+    // 3. Lọc danh sách hợp lệ
+    const notSharedItems = getNotSharedAndNotify(items);
 
-  return `Tháng ${month}. Quý ${quarter}. Năm ${year}`;
+    if (notSharedItems.length > 0) {
+      try {
+        await onUpdate(notSharedItems.map((e) => ({ ...e, share: true })));
+        // const list = await listNguoiKy(items);
+        // socketService.send({
+        //   type: MessageTypeFunctions.ASSET_HANDOVER,
+        //   recieve: list,
+        // });
+        showSuccessAlert("Trình duyệt phiếu thành công!");
+        onClose();
+      } catch (error) {
+        showErrorAlert("Có lỗi xảy ra khi trình duyệt phiếu.");
+      }
+    }
+  }
+};
+export const getNotSharedAndNotify = (
+  items: MaintenancePlanData[],
+): MaintenancePlanData[] => {
+  if (!items || items.length === 0) {
+    showErrorAlert("Không có phiếu nào để chia sẻ");
+    return [];
+  }
+
+  const alreadyShared = items.filter((e) => e.share === true);
+  const notShared = items.filter((e) => e.share !== true);
+
+  if (notShared.length === 0) {
+    showErrorAlert("Các phiếu này đều đã được chia sẻ");
+    return [];
+  }
+
+  if (alreadyShared.length > 0) {
+    const names = alreadyShared
+      .map((e) =>
+        e.soKeHoach?.trim() ? e.soKeHoach : e.id || "",
+      )
+      .filter(Boolean)
+      .join(", ");
+
+    showErrorAlert(
+      names
+        ? `Các phiếu đã được chia sẻ: ${names}`
+        : "Có phiếu đã được chia sẻ trong danh sách chọn",
+    );
+  }
+
+  return notShared;
 };

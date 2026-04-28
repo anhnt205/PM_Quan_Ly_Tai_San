@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../../../config/api.config";
-import { MaintenancePlanData, MaintenancePlanWorkItem } from "../types";
+import { MaintenancePlanData, PlanSigner } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import { Action, CongTy } from "../../../utils/const";
 
@@ -33,6 +33,29 @@ export const useMaintenancePlanningPageQuery = (
       return res.data;
     },
     placeholderData: (previousData) => previousData,
+  });
+};
+
+export const useMaintenancePlanningGroupedQuery = (
+  idCongTy: string,
+  trangThai?: string,
+  search?: string,
+  userid?: string,
+) => {
+  return useQuery({
+    queryKey: [
+      "maintenancePlanningGrouped",
+      idCongTy,
+      trangThai,
+      search,
+      userid,
+    ],
+    queryFn: async () => {
+      const res = await api.get("/kehoach-suachua/grouped-by-year", {
+        params: { idCongTy, trangThai, search, userid },
+      });
+      return res.data;
+    },
   });
 };
 
@@ -84,112 +107,89 @@ export const useWorkItemsByPlanQuery = (idKeHoach: string | undefined) => {
 export const useMaintenancePlanningMutation = () => {
   const queryClient = useQueryClient();
 
+  // --- API TÀI SẢN ---
+  const createTaiSanManyMutation = useMutation({
+    mutationFn: async (data: any[]) => {
+      return (
+        await api.post("/kehoachsuachua-chitiet-taisan/batch-insert", data)
+      ).data;
+    },
+  });
+
+  const updateTaiSanManyMutation = useMutation({
+    mutationFn: async (data: any[]) => {
+      return (
+        await api.put(`/kehoachsuachua-chitiet-taisan/batch-update`, data)
+      ).data;
+    },
+  });
+
+  const deleteTaiSanManyMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      return (
+        await api.delete(`/kehoachsuachua-chitiet-taisan/batch-delete`, {
+          data: ids,
+        })
+      ).data;
+    },
+  });
+
   // TÁCH VÀ GỌI CÁC API CON
   const handleUpdate = (
     response: MaintenancePlanData | any,
     variables: MaintenancePlanData,
   ) => {
     const planId = response?.id || response?.data?.id;
-
     if (!planId) return;
 
-    // XỬ LÝ CHI TIẾT TÀI SẢN & CCDC (Tách ra từ mảng chiTiets chung)
-    if (variables.chiTiets && variables.chiTiets.length > 0) {
-      const taiSans = variables.chiTiets.filter((item: any) => item.idTaiSan);
-      const ccdcs = variables.chiTiets.filter((item: any) => item.idCCDC);
-
-      // --- Xử lý cho bảng TÀI SẢN ---
-      if (taiSans.length > 0) {
-        const createTS = taiSans.filter(
-          (i: any) => i.action === Action.CREATE || !i.id,
-        );
-        const updateTS = taiSans.filter(
-          (i: any) => i.action === Action.UPDATE && i.id,
-        );
-        const deleteTS = taiSans.filter(
-          (i: any) => i.action === Action.DELETE && i.id,
-        );
-
-        if (createTS.length > 0)
-          createTaiSanManyMutation.mutate(
-            createTS.map((i: any) => ({ ...i, idKeHoachSuaChua: planId })),
-          );
-        if (updateTS.length > 0)
-          updateTaiSanManyMutation.mutate(
-            updateTS.map((i: any) => ({ ...i, idKeHoachSuaChua: planId })),
-          );
-        if (deleteTS.length > 0)
-          deleteTaiSanManyMutation.mutate(deleteTS.map((i: any) => i.id));
-      }
-
-      // --- Xử lý cho bảng VẬT TƯ (CCDC) ---
-      if (ccdcs.length > 0) {
-        const createCC = ccdcs.filter(
-          (i: any) => i.action === Action.CREATE || !i.id,
-        );
-        const updateCC = ccdcs.filter(
-          (i: any) => i.action === Action.UPDATE && i.id,
-        );
-        const deleteCC = ccdcs.filter(
-          (i: any) => i.action === Action.DELETE && i.id,
-        );
-
-        // Lưu ý: Map tenCCDC từ giao diện vào trường tenVatTu của Backend
-        if (createCC.length > 0)
-          createCCDCManyMutation.mutate(
-            createCC.map((i: any) => ({
-              ...i,
-              idKeHoachSuaChua: planId,
-              tenVatTu: i.tenCCDC || i.tenVatTu,
-            })),
-          );
-        if (updateCC.length > 0)
-          updateCCDCManyMutation.mutate(
-            updateCC.map((i: any) => ({
-              ...i,
-              idKeHoachSuaChua: planId,
-              tenVatTu: i.tenCCDC || i.tenVatTu,
-            })),
-          );
-        if (deleteCC.length > 0)
-          deleteCCDCManyMutation.mutate(deleteCC.map((i: any) => i.id));
-      }
-    }
-
-    // XỬ LÝ CÔNG VIỆC
-    if (variables.congViecs && variables.congViecs.length > 0) {
-      const createCongViec = variables.congViecs.filter(
+    // XỬ LÝ CHI TIẾT TÀI SẢN
+    if (variables.danhSachTaiSan && variables.danhSachTaiSan.length > 0) {
+      const taiSans = variables.danhSachTaiSan;
+      const createTS = taiSans.filter(
         (i: any) => i.action === Action.CREATE || !i.id,
       );
-      const updateCongViec = variables.congViecs.filter(
+      const updateTS = taiSans.filter(
         (i: any) => i.action === Action.UPDATE && i.id,
       );
-      const deleteCongViec = variables.congViecs.filter(
+      const deleteTS = taiSans.filter(
         (i: any) => i.action === Action.DELETE && i.id,
       );
 
-      if (createCongViec.length > 0)
-        createWorkManyMutation.mutate(
-          createCongViec.map((i: any) => ({ ...i, idKeHoach: planId })),
+      if (createTS.length > 0)
+        createTaiSanManyMutation.mutate(
+          createTS.map((i: any) => ({ ...i, idKeHoachSuaChua: planId })),
         );
-      if (updateCongViec.length > 0)
-        updateWorkManyMutation.mutate(
-          updateCongViec.map((i: any) => ({ ...i, idKeHoach: planId })),
+      if (updateTS.length > 0)
+        updateTaiSanManyMutation.mutate(
+          updateTS.map((i: any) => ({ ...i, idKeHoachSuaChua: planId })),
         );
-      if (deleteCongViec.length > 0)
-        deleteWorkManyMutation.mutate(deleteCongViec.map((i: any) => i.id));
+      if (deleteTS.length > 0)
+        deleteTaiSanManyMutation.mutate(deleteTS.map((i: any) => i.id));
+    }
+    console.log(variables.nguoiKyList);
+
+    if (variables.nguoiKyList && variables.nguoiKyList.length > 0) {
+      updateSignerMutation.mutate({
+        idTaiLieu: planId,
+        data: variables.nguoiKyList.map((item) => ({
+          ...item,
+          idTaiLieu: planId,
+        })),
+      });
     }
   };
 
   // --- API KẾ HOẠCH ---
   const createMutation = useMutation({
     mutationFn: async (data: MaintenancePlanData) => {
-      const res = await api.post("/kehoach-suachua", data);
-      return res.data;
+      return (await api.post("/kehoach-suachua", data)).data;
     },
     onSuccess: async (response, variables) => {
       handleUpdate(response, variables);
       queryClient.invalidateQueries({ queryKey: ["maintenancePlanningPage"] });
+      queryClient.invalidateQueries({
+        queryKey: ["maintenancePlanningGrouped"],
+      });
       showSuccessAlert("Tạo kế hoạch sửa chữa thành công");
     },
     onError: (error: any) => {
@@ -201,12 +201,14 @@ export const useMaintenancePlanningMutation = () => {
 
   const updateMutation = useMutation({
     mutationFn: async (data: MaintenancePlanData) => {
-      const res = await api.put(`/kehoach-suachua/${data.id}`, data);
-      return res.data;
+      return (await api.put(`/kehoach-suachua/${data.id}`, data)).data;
     },
     onSuccess: async (response, variables) => {
       handleUpdate(response, variables);
       queryClient.invalidateQueries({ queryKey: ["maintenancePlanningPage"] });
+      queryClient.invalidateQueries({
+        queryKey: ["maintenancePlanningGrouped"],
+      });
       showSuccessAlert("Cập nhật kế hoạch bảo trì thành công");
     },
     onError: (error: any) => {
@@ -216,13 +218,36 @@ export const useMaintenancePlanningMutation = () => {
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: async (data: MaintenancePlanData) => {
-      const res = await api.delete(`/kehoach-suachua/${data.id}`);
+  const updateManyMutation = useMutation({
+    mutationFn: async (data: MaintenancePlanData[]) => {
+      const res = await api.put(`/kehoach-suachua/batch`, data);
       return res.data;
     },
-    onSuccess: (response, variables) => {
+    onSuccess: (response, data) => {
       queryClient.invalidateQueries({ queryKey: ["maintenancePlanningPage"] });
+      queryClient.invalidateQueries({
+        queryKey: ["maintenancePlanningGrouped"],
+      });
+      console.log("Sửa kế hoạch thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Sửa kế hoạch thất bại",
+      );
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (data: MaintenancePlanData) => {
+      return (await api.delete(`/kehoach-suachua/${data.id}`)).data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["maintenancePlanningPage"] });
+      queryClient.invalidateQueries({
+        queryKey: ["maintenancePlanningGrouped"],
+      });
       showSuccessAlert("Xóa kế hoạch bảo trì thành công");
     },
     onError: (error: any) => {
@@ -232,101 +257,61 @@ export const useMaintenancePlanningMutation = () => {
     },
   });
 
-  // --- API CÔNG VIỆC ---
-  const createWorkManyMutation = useMutation({
-    mutationFn: async (data: MaintenancePlanWorkItem[]) => {
-      const res = await api.post("/kehoach-congviec/bulk-create", data);
-      return res.data;
-    },
-  });
-
-  const updateWorkManyMutation = useMutation({
-    mutationFn: async (data: MaintenancePlanWorkItem[]) => {
-      const res = await api.put(`/kehoach-congviec/bulk-update`, data);
-      return res.data;
-    },
-  });
-
-  const deleteWorkManyMutation = useMutation({
-    mutationFn: async (ids: string[]) => {
-      const res = await api.delete(`/kehoach-congviec/bulk-delete`, {
-        data: ids,
-      });
-      return res.data;
-    },
-  });
-
-  // --- API TÀI SẢN ---
-  const createTaiSanManyMutation = useMutation({
-    mutationFn: async (data: any[]) => {
-      const res = await api.post(
-        "/kehoachsuachua-chitiet-taisan/batch-insert",
-        data,
-      );
-      return res.data;
-    },
-  });
-
-  const updateTaiSanManyMutation = useMutation({
-    mutationFn: async (data: any[]) => {
-      const res = await api.put(
-        `/kehoachsuachua-chitiet-taisan/batch-update`,
-        data,
-      );
-      return res.data;
-    },
-  });
-
-  const deleteTaiSanManyMutation = useMutation({
-    mutationFn: async (ids: string[]) => {
-      const res = await api.delete(
-        `/kehoachsuachua-chitiet-taisan/batch-delete`,
-        { data: ids },
-      );
-      return res.data;
-    },
-  });
-
-  // --- API CCDC ---
-  const createCCDCManyMutation = useMutation({
-    mutationFn: async (data: any[]) => {
-      const res = await api.post(
-        "/kehoachsuachua-vattu-tieuhao/batch-insert",
-        data,
-      );
-      return res.data;
-    },
-  });
-
-  const updateCCDCManyMutation = useMutation({
-    mutationFn: async (data: any[]) => {
-      const res = await api.put(
-        `/kehoachsuachua-vattu-tieuhao/batch-update`,
-        data,
-      );
-      return res.data;
-    },
-  });
-
-  const deleteCCDCManyMutation = useMutation({
-    mutationFn: async (ids: string[]) => {
-      const res = await api.delete(
-        `/kehoachsuachua-vattu-tieuhao/batch-delete`,
-        { data: ids },
-      );
-      return res.data;
-    },
-  });
-
-  // --- KHÁC ---
   const updateStatusPlanMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const res = await api.patch(
-        `/kehoach-suachua/${id}/trang-thai`,
-        {},
-        { params: { trangThai: status } },
-      );
+      return (
+        await api.patch(
+          `/kehoach-suachua/${id}/trang-thai`,
+          {},
+          { params: { trangThai: status } },
+        )
+      ).data;
+    },
+  });
+
+  // người kí\
+  const updateSignerMutation = useMutation({
+    mutationFn: async ({
+      idTaiLieu,
+      data,
+    }: {
+      idTaiLieu: string;
+      data: PlanSigner[];
+    }) => {
+      const res = await api.put(`/chuky/nguoi-ky/update/${idTaiLieu}`, data);
       return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["maintenancePlanningPage"],
+      });
+
+      console.log("Cập nhật người ký thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Cập nhật người ký thất bại",
+      );
+    },
+  });
+  const deleteSignerMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.delete(`/chuky/${id}`);
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: ["maintenancePlanningPage"] });
+
+      console.log("Xóa người ký thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa người ký thất bại",
+      );
     },
   });
 
@@ -335,5 +320,6 @@ export const useMaintenancePlanningMutation = () => {
     updateMutation,
     deleteMutation,
     updateStatusPlanMutation,
+    updateManyMutation,
   };
 };
