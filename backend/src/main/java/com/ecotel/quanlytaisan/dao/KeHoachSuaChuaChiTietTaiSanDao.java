@@ -35,6 +35,8 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
         String sql = """
             SELECT kh.*,
                    ts.TenTaiSan AS tenTaiSan,
+                   ts.IdNhomTaiSan AS idNhomTaiSan,
+                   ts.IdLoaiTaiSan AS idLoaiTaiSan,
                    ts.DonViTinh AS donViTinh
             FROM kehoachsuachua_chitiet_taisan kh
                 LEFT JOIN TaiSan ts ON kh.IdTaiSan = ts.Id

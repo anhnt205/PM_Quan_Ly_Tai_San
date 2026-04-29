@@ -94,6 +94,7 @@ interface SharedSignDocumentFormProps {
   fullscreen?: boolean;
   showSignerSidebar?: boolean;
   sourcePdfBytes?: Uint8Array | null;
+  showHeader?: boolean;
 }
 
 export default function SharedSignDocumentForm({
@@ -108,6 +109,7 @@ export default function SharedSignDocumentForm({
   fullscreen = true,
   showSignerSidebar = true,
   sourcePdfBytes: externalSourcePdfBytes,
+  showHeader = true,
 }: SharedSignDocumentFormProps) {
   const [signatureType, setSignatureType] = useState(0);
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -546,15 +548,17 @@ export default function SharedSignDocumentForm({
         ...(fullscreen && { position: "fixed", inset: 0, zIndex: 9999 }),
       }}
     >
-      <SignHeader
-        pagesCount={pages.length}
-        handleExportPDF={handleExportPDF}
-        onCancel={() => {
-          onCancel();
-          setSignatures([]);
-        }}
-        title={title}
-      />
+      {showHeader && (
+        <SignHeader
+          pagesCount={pages.length}
+          handleExportPDF={handleExportPDF}
+          onCancel={() => {
+            onCancel();
+            setSignatures([]);
+          }}
+          title={title}
+        />
+      )}
 
       <Box
         sx={{

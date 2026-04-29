@@ -8,8 +8,9 @@ export const useMaintenancePlanningPageQuery = (
   page?: number,
   pageSize?: number,
   searchValue?: string,
-  trangThai?: string,
+  trangThai?: number,
   idDonViGiao?: string,
+  userid?: string,
 ) => {
   return useQuery({
     queryKey: [
@@ -19,18 +20,20 @@ export const useMaintenancePlanningPageQuery = (
       searchValue,
       trangThai,
       idDonViGiao,
+      userid,
     ],
     queryFn: async () => {
-      const res = await api.get("/kehoach-suachua", {
+      const res = await api.get("/kehoach-suachua/paged", {
         params: {
           page: page,
           size: pageSize,
           idCongTy: CongTy.CT001,
           search: searchValue,
           trangThai: trangThai,
+          userid: userid,
         },
       });
-      return res.data;
+      return res.data.data || res.data;
     },
     placeholderData: (previousData) => previousData,
   });

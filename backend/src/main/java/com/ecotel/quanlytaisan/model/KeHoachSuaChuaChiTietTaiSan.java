@@ -17,6 +17,8 @@ public class KeHoachSuaChuaChiTietTaiSan {
 
     // Các trường hiển thị thêm (từ join)
     private String tenTaiSan;
+    private String idNhomTaiSan;
+    private String idLoaiTaiSan;
     private String donViTinh;
 
     // 12 trường cấp sửa chữa theo từng tháng (lưu ID của CapSuaChua)

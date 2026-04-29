@@ -46,6 +46,8 @@ export interface MaintenancePlanAssetItem {
   id?: string;
   idKeHoachSuaChua: string;
   idTaiSan: string;
+  idNhomTaiSan?: string;
+  idLoaiTaiSan?: string;
   soLuong?: number;
   tenTaiSan?: string;
   tenNhom?: string;

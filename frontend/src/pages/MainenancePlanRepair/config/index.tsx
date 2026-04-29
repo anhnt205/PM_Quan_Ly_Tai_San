@@ -1,7 +1,12 @@
 import { Chip } from "@mui/material";
 import { PlanType, StatusPlan, StatusPlanType } from "../../../utils/const";
 import { MaintenancePlanData } from "../types";
-import { showConfirmAlert, showErrorAlert, showSuccessAlert } from "../../../components/Alert";
+import {
+  showConfirmAlert,
+  showErrorAlert,
+  showSuccessAlert,
+} from "../../../components/Alert";
+import { findById } from "../../../utils/helpers";
 
 const getStatusDetails = (status: StatusPlanType) => {
   switch (status) {
@@ -104,9 +109,7 @@ export const getNotSharedAndNotify = (
 
   if (alreadyShared.length > 0) {
     const names = alreadyShared
-      .map((e) =>
-        e.soKeHoach?.trim() ? e.soKeHoach : e.id || "",
-      )
+      .map((e) => (e.soKeHoach?.trim() ? e.soKeHoach : e.id || ""))
       .filter(Boolean)
       .join(", ");
 
@@ -118,4 +121,74 @@ export const getNotSharedAndNotify = (
   }
 
   return notShared;
+};
+
+const getChucVu = async (idUser: string, staffs: any[], positions: any[]) => {
+  const nhanVien = await findById(staffs, idUser);
+  const chucVu = await findById(positions, nhanVien?.chucVuId ?? "");
+  return chucVu?.tenChucVu ?? "";
+};
+const getDonVi = async (idUser: string, staffs: any[], departments: any[]) => {
+  const nhanVien = await findById(staffs, idUser);
+  const donVi = await findById(departments, nhanVien?.phongBanId ?? "");
+  return donVi?.tenPhongBan ?? "";
+};
+
+export const listSigneInfo = async (
+  item?: any,
+  staffs: any[] = [],
+  departments: any[] = [],
+  positions: any[] = [],
+) => {
+  if (!item) return [];
+
+  const result: any[] = [];
+
+  if (item.idNguoiLapBieu) {
+    result.push({
+      idNhanVien: item.idNguoiLapBieu ?? "",
+      title: "Người lập biểu",
+      hoTen: item.tenNguoiLapBieu ?? "",
+      chucVu: await getChucVu(item.idNguoiLapBieu ?? "", staffs, positions),
+      donVi: await getDonVi(item.idNguoiLapBieu ?? "", staffs, departments),
+      signed: item.nguoiLapBieuXacNhan || false,
+    });
+  }
+
+  // ===== NGƯỜI KÝ BỔ SUNG =====
+  if (item.nguoiKyList?.length) {
+    for (let i = 0; i < item.nguoiKyList.length; i++) {
+      const sign = item.nguoiKyList[i];
+      result.push({
+        idNhanVien: sign.idNguoiKy ?? "",
+        title: `Đại diện ký ${i + 1}`,
+        hoTen: sign.tenNguoiKy ?? "",
+        chucVu: await getChucVu(sign.idNguoiKy ?? "", staffs, positions),
+        donVi: await getDonVi(sign.idNguoiKy ?? "", staffs, departments),
+        signed: item.trangThai || false,
+      });
+    }
+  }
+
+  // ===== GIÁM ĐỐC =====
+  if (item.idTrinhDuyetGiamDoc) {
+    result.push({
+      idNhanVien: item.idTrinhDuyetGiamDoc ?? "",
+      title: "Giám đốc ký duyệt",
+      hoTen: item.tenTrinhDuyetGiamDoc ?? "",
+      chucVu: await getChucVu(
+        item.idTrinhDuyetGiamDoc ?? "",
+        staffs,
+        positions,
+      ),
+      donVi: await getDonVi(
+        item.idTrinhDuyetGiamDoc ?? "",
+        staffs,
+        departments,
+      ),
+      signed: item.trinhDuyetGiamDocXacNhan || false,
+    });
+  }
+
+  return result;
 };
