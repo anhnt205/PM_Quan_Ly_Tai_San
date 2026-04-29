@@ -42,10 +42,18 @@ import { RootState } from "../../../redux/store";
 import { useAllPositionsQuery } from "../../Position/Mutation";
 import { useAllStaffsQuery } from "../../Staff/Mutation";
 import { useAllDepartmentsQuery } from "../../Department/Mutation";
-import { listSigneInfo, generateBienBanKeHoachPdf } from "../config";
+import {
+  listSigneInfo,
+  generateBienBanKeHoachPdf,
+  getPermissionSigning,
+  ShowPermissionSigning,
+  canSign,
+} from "../config";
 
 import SignDocumentForm from "../components/signdocument/SignDocumentForm";
 import { EditIcon } from "lucide-react";
+import { useMaintenanceMutation } from "../mutation";
+import { SignaturesData } from "../../../components/SignDocument/types";
 
 export default function MaintenanceApprovalPage() {
   const {
@@ -81,6 +89,8 @@ export default function MaintenanceApprovalPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [selectedItem, setSelectedItem] = useState<any[]>([]);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isSigning, setIsSigning] = useState(false);
 
   const { data: positions } = useAllPositionsQuery();
   const { data: staffs } = useAllStaffsQuery();
@@ -97,6 +107,11 @@ export default function MaintenanceApprovalPage() {
     undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
+  );
+
+  const { signMutation } = useMaintenanceMutation(
+    activeTab === 0 ? "maintenancePlanningPage" : "",
+    activeTab === 0 ? "kehoach-suachua" : "",
   );
 
   const allRows = [
@@ -191,20 +206,27 @@ export default function MaintenanceApprovalPage() {
 
   const currentAllRows = allRows[activeTab];
 
-  const handleSign = async (selectedItems: any[]) => {
-    const ids = selectedItems.map((i) => i.id);
-    if (activeTab === 0) ids.forEach((id) => approvePlan(id));
-    else if (activeTab === 1) signRepairRequests(ids);
-    else if (activeTab === 2) signInspectionRecords(ids);
-    else if (activeTab === 3) signAcceptanceRecords(ids);
-    else if (activeTab === 4) signMaterialQualityRecords(ids);
-    else if (activeTab === 5) signIncidentReports?.(ids);
-    else if (activeTab === 6) signIncidentInspectionRecords?.(ids);
-    setJustSigned(ids.join(", "));
-    setSelectedIds([]);
-    if (selectedRow && ids.includes(selectedRow.id)) {
-      setSelectedRow((prev: any) => ({ ...prev, status: "da-duyet" }));
-    }
+  // const handleSign = async (selectedItems: any[]) => {
+  //   const ids = selectedItems.map((i) => i.id);
+  //   if (activeTab === 0) ids.forEach((id) => approvePlan(id));
+  //   else if (activeTab === 1) signRepairRequests(ids);
+  //   else if (activeTab === 2) signInspectionRecords(ids);
+  //   else if (activeTab === 3) signAcceptanceRecords(ids);
+  //   else if (activeTab === 4) signMaterialQualityRecords(ids);
+  //   else if (activeTab === 5) signIncidentReports?.(ids);
+  //   else if (activeTab === 6) signIncidentInspectionRecords?.(ids);
+  //   setJustSigned(ids.join(", "));
+  //   setSelectedIds([]);
+  //   if (selectedRow && ids.includes(selectedRow.id)) {
+  //     setSelectedRow((prev: any) => ({ ...prev, status: "da-duyet" }));
+  //   }
+  // };
+
+  const handleSign = (data: SignaturesData[]) => {
+    signMutation.mutate({
+      SignaturesData: data,
+      asset: selectedRow,
+    });
   };
 
   const handleSignBatch = async (ids: string[]) => {
@@ -276,6 +298,13 @@ export default function MaintenanceApprovalPage() {
       { field: "moTa", headerName: "Mô tả", flex: 1, minWidth: 200 },
       { field: "ngayTao", headerName: "Ngày tạo", width: 120 },
       {
+        field: "trangThaiKy",
+        headerName: "Trạng thái ký",
+        width: 200,
+        renderCell: (params: any) =>
+          ShowPermissionSigning(getPermissionSigning(params.row, user)),
+      },
+      {
         field: "trangThai",
         headerName: "Trạng thái",
         width: 140,
@@ -290,6 +319,10 @@ export default function MaintenanceApprovalPage() {
             aria-label="edit"
             onClick={(e) => {
               e.stopPropagation();
+              if (canSign([params.row], user)) {
+                setSelectedRow(params.row);
+                setIsSigning(true);
+              }
             }}
             size="small"
           >
@@ -307,7 +340,10 @@ export default function MaintenanceApprovalPage() {
         return (
           <SignDocumentForm
             selectedIds={[selectedRow.id]}
-            onCancel={() => setSelectedRow(null)}
+            onCancel={() => {
+              setSelectedRow(null);
+              setIsDetailOpen(false);
+            }}
             onSign={() => {}}
             plan={selectedRow}
             staffs={staffs || []}
@@ -503,10 +539,25 @@ export default function MaintenanceApprovalPage() {
     );
   };
 
-  const isDetailOpen = !!selectedRow;
-
   return (
     <>
+      {selectedRow && isSigning && activeTab === 0 && (
+        <SignDocumentForm
+          selectedIds={[selectedRow?.id]}
+          onCancel={() => {
+            setIsSigning(false);
+            setSelectedRow(null);
+          }}
+          onSign={handleSign}
+          plan={selectedRow}
+          staffs={staffs || []}
+          departments={departments || []}
+          positions={positions || []}
+          fullscreen={true}
+          showSignerSidebar={true}
+        />
+      )}
+
       <PageAction title="Ký duyệt biên bản" />
 
       <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 2 }}>
@@ -689,8 +740,8 @@ export default function MaintenanceApprovalPage() {
                   showDelete={false}
                   onRowClick={(params) => {
                     setSelectedRow(params.row);
-                    console.log("njnkjdnfkdnkfndk", params.row);
                     setDetailTab(0);
+                    setIsDetailOpen(true);
                   }}
                   isRowSelectable={(params) =>
                     params?.row?.status === "cho-duyet"
@@ -706,7 +757,7 @@ export default function MaintenanceApprovalPage() {
             </Card>
 
             {/* ── Panel chi tiết / preview ── */}
-            {isDetailOpen && (
+            {isDetailOpen && selectedRow && (
               <Paper
                 elevation={0}
                 sx={{
@@ -728,7 +779,13 @@ export default function MaintenanceApprovalPage() {
                   <Typography variant="subtitle1" fontWeight={600}>
                     Xem trước: {selectedRow.id}
                   </Typography>
-                  <IconButton size="small" onClick={() => setSelectedRow(null)}>
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      setSelectedRow(null);
+                      setIsDetailOpen(false);
+                    }}
+                  >
                     <CloseIcon fontSize="small" />
                   </IconButton>
                 </Box>

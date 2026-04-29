@@ -207,10 +207,10 @@ public class KeHoachSuaChuaController {
     @PostMapping("/capnhattrangthai")
     public ResponseEntity<ApiResponse<Object>> updateTrangThai(
             @RequestParam("id") String id,
-            @RequestParam("trangThai") Integer trangThai
+            @RequestParam("userId") String userId
     ) {
         try {
-            int result = keHoachSuaChuaService.updateTrangThai(id, trangThai);
+            int result = keHoachSuaChuaService.updateTrangThai(id, userId);
             if (result > 0) return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái thành công", result, result));
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.failure("Không tìm thấy kế hoạch sửa chữa", result));

@@ -2,6 +2,7 @@ package com.ecotel.quanlytaisan.dao;
 
 import com.ecotel.quanlytaisan.model.SuCoThietBi;
 import com.ecotel.quanlytaisan.model.SuCoThietBiDTO;
+import com.ecotel.quanlytaisan.model.NguoiKy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -11,6 +12,7 @@ import javax.annotation.PostConstruct;
 import java.time.Year;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -26,6 +28,9 @@ public class SuCoThietBiDao {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private KyTaiLieuDao kyTaiLieuDao;
 
     /** Cache toàn bộ danh sách DTO (join sẵn) */
     private static List<SuCoThietBiDTO> cache = new java.util.ArrayList<>();
@@ -210,12 +215,70 @@ public class SuCoThietBiDao {
 
     // ==================== Trạng thái / Hủy ====================
 
-    public int updateTrangThai(String id, Integer trangThai) {
-        int r = jdbcTemplate.update(
-                "UPDATE suco_thietbi SET TrangThai = ?, NgayCapNhat = ? WHERE Id = ?",
-                trangThai, new Date(), id);
-        if (r > 0) CompletableFuture.runAsync(this::refreshCache);
-        return r;
+    public boolean checkAllOtherNguoiKy(String idTaiLieu) {
+        List<NguoiKy> nguoiKyList = kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(idTaiLieu);
+        if (nguoiKyList == null || nguoiKyList.isEmpty()) return true;
+        for (NguoiKy nguoiKy : nguoiKyList) {
+            if (nguoiKy.getTrangThai() != 1) return false;
+        }
+        return true;
+    }
+
+    public int updateTrangThaiKy(String id, String userId) {
+        NguoiKy nguoiKy = kyTaiLieuDao.getNguoiKy(userId, id);
+        if (nguoiKy != null) {
+            nguoiKy.setTrangThai(1);
+            return kyTaiLieuDao.updateTrangThai(nguoiKy.getId(), "1");
+        }
+        return 0;
+    }
+
+    // 0: Nháp, 1: Đã duyệt, 2: Hủy, 3: Hoàn thành
+    public int updateTrangThai(String id, String userId) {
+        SuCoThietBi sc = findById(id);
+        if (sc == null) return 0;
+        
+        int trangThai = sc.getTrangThai() != null ? sc.getTrangThai() : 0;
+
+        int status = updateTrangThaiKy(id, userId);
+        if (status == 1) {
+            trangThai = 1;
+        }
+
+        if (Objects.equals(userId, sc.getIdNguoiLap())) {
+            sc.setNguoiLapXacNhan(true);
+            trangThai = 1;
+        }
+
+        if (Objects.equals(userId, sc.getIdGiamDoc())) {
+            sc.setGiamDocXacNhan(true);
+            trangThai = 1;
+        }
+
+        boolean allKy = true;
+        if (sc.getIdNguoiLap() != null && !sc.getIdNguoiLap().isEmpty()) {
+            allKy = allKy && Boolean.TRUE.equals(sc.getNguoiLapXacNhan());
+        }
+        if (sc.getIdGiamDoc() != null && !sc.getIdGiamDoc().isEmpty()) {
+            allKy = allKy && Boolean.TRUE.equals(sc.getGiamDocXacNhan());
+        }
+
+        if (allKy) {
+            allKy = checkAllOtherNguoiKy(id);
+        }
+
+        if (allKy) {
+            trangThai = 3;
+        }
+
+        sc.setTrangThai(trangThai);
+        SuCoThietBi result = update(sc);
+        
+        if (result != null) {
+            CompletableFuture.runAsync(this::refreshCache);
+            return trangThai;
+        }
+        return 0;
     }
 
     public int huySuCo(String id) {

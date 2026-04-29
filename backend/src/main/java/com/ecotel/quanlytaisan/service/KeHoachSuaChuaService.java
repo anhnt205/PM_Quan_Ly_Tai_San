@@ -180,18 +180,8 @@ public class KeHoachSuaChuaService {
         return keHoachSuaChuaDao.update(entity);
     }
 
-    /**
-     * trangThai: 0=Nháp | 1=Chờ duyệt | 2=Đã hủy | 3=Đã duyệt/Hoàn thành
-     */
-    public int updateTrangThai(String id, Integer trangThai) {
-        if (!List.of(0, 1, 2, 3).contains(trangThai))
-            throw new IllegalArgumentException("Trạng thái không hợp lệ: " + trangThai);
-        KeHoachSuaChua existing = keHoachSuaChuaDao.findById(id);
-        if (existing == null)
-            throw new IllegalArgumentException("Không tìm thấy kế hoạch với ID: " + id);
-        if (Integer.valueOf(3).equals(existing.getTrangThai()))
-            throw new IllegalStateException("Kế hoạch đã hoàn thành, không thể thay đổi trạng thái");
-        return keHoachSuaChuaDao.updateTrangThai(id, trangThai);
+    public int updateTrangThai(String id, String userId) {
+        return keHoachSuaChuaDao.updateTrangThai(id, userId);
     }
 
     public int huyKeHoach(String id) { return keHoachSuaChuaDao.huyKeHoach(id); }

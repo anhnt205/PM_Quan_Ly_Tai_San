@@ -245,19 +245,13 @@ public class SuCoThietBiController {
 
     // ==================== CẬP NHẬT TRẠNG THÁI ====================
 
-    /**
-     * Cập nhật trạng thái phiếu sự cố.
-     *
-     * @param id        ID phiếu sự cố
-     * @param trangThai 0=Nháp | 1=Đã duyệt | 2=Hủy | 3=Hoàn thành
-     */
     @PostMapping("/capnhattrangthai")
     public ResponseEntity<ApiResponse<Object>> updateTrangThai(
             @RequestParam("id") String id,
-            @RequestParam("trangThai") Integer trangThai
+            @RequestParam("userId") String userId
     ) {
         try {
-            int result = suCoService.updateTrangThai(id, trangThai);
+            int result = suCoService.updateTrangThai(id, userId);
             if (result > 0) return ResponseEntity.ok(
                     ApiResponse.success("Cập nhật trạng thái thành công", result, result));
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

@@ -4,6 +4,7 @@ import { MaintenancePlanData } from "../../MainenancePlanRepair/types";
 import autoTable from "jspdf-autotable";
 import "../../../assets/fonts/times_new_roman-normal";
 import "../../../assets/fonts/times_new_roman-bold";
+import { Chip } from "@mui/material";
 
 const getChucVu = (idUser: string, staffs: any[], positions: any[]) => {
   const nhanVien = findById(staffs, idUser);
@@ -66,6 +67,130 @@ export const listSigneInfo = (
   return result;
 };
 
+export const ShowPermissionSigning = (status: number) => {
+  // Định nghĩa cấu hình cho từng trạng thái
+  const getStatusConfig = (status: number) => {
+    switch (status) {
+      case 1:
+        return { label: "Chưa đến lượt ký", color: "#f44336" }; // Red
+      case 2:
+        return { label: "Không được phép ký", color: "#ffab40" }; // OrangeAccent
+      case 3:
+        return { label: "Đã ký", color: "#2196f3" }; // Blue
+      case 4:
+        return { label: "Đã ký & tạo", color: "#9c27b0" }; // Purple
+      case 5:
+        return { label: "Cần ký & tạo", color: "#ff9800" }; // Orange
+      default:
+        return { label: "Cần ký", color: "#4caf50" }; // Green
+    }
+  };
+
+  const config = getStatusConfig(status);
+
+  return (
+    <Chip
+      label={config.label}
+      sx={{
+        backgroundColor: config.color,
+        color: "white",
+        fontWeight: 500,
+        fontSize: "12px",
+        borderRadius: "4px", // Bo góc theo mẫu Flutter (4)
+        height: "24px", // Tương đương với padding vertical của bạn
+        "& .MuiChip-label": {
+          paddingLeft: "5px",
+          paddingRight: "5px",
+        },
+      }}
+    />
+  );
+};
+export const getPermissionSigning = (data: any, user?: any): number => {
+  const signatureFlow = [
+    {
+      id: data.idNguoiLapBieu,
+      signed: data.nguoiLapBieuXacNhan === true,
+    },
+    ...(data.nguoiKyList?.length
+      ? data.nguoiKyList.map((e: any) => ({
+          id: e.idNguoiKy,
+          signed: e.trangThai === 1,
+        }))
+      : []),
+    {
+      id: data.idTrinhDuyetGiamDoc,
+      signed: data.trinhDuyetGiamDocXacNhan === true,
+    },
+  ].filter((step) => step.id && step.id.trim() !== "");
+
+  const currentIndex = signatureFlow.findIndex(
+    (s) => s.id === user?.taiKhoan?.tenDangNhap,
+  );
+
+  if (currentIndex === -1) return 2;
+
+  // Người đại diện đơn vị ban hành QĐ
+  if (data.idDaiDiendonviBanHanhQD === user?.taiKhoan?.tenDangNhap) {
+    return signatureFlow[currentIndex].signed ? 4 : 5;
+  }
+
+  if (signatureFlow[currentIndex].signed) return 3;
+
+  const previousNotSigned = signatureFlow
+    .slice(0, currentIndex)
+    .find((s) => s.signed === false);
+
+  if (previousNotSigned) return 1;
+
+  return 0;
+};
+
+interface SignatureStep {
+  id: string;
+  signed: boolean;
+}
+const buildSignatureFlow = (item: any): SignatureStep[] => {
+  if (!item) return [];
+
+  const steps: (SignatureStep | null)[] = [
+    {
+      id: item.idNguoiLapBieu,
+      signed: item.nguoiLapBieuXacNhan === true,
+    },
+    ...(Array.isArray(item.nguoiKyList)
+      ? item.nguoiKyList.map((e: any) => ({
+          id: e.idNguoiKy,
+          signed: e.trangThai === 1,
+        }))
+      : []),
+
+    {
+      id: item.idTrinhDuyetGiamDoc,
+      signed: item.trinhDuyetGiamDocXacNhan === true,
+    },
+  ];
+
+  return steps.filter((s): s is SignatureStep => Boolean(s?.id));
+};
+export const canSign = (items: any[], user?: any): boolean => {
+  if (!user || items.length !== 1) return false;
+
+  const item = items[0];
+  const signatureFlow = buildSignatureFlow(item);
+
+  const currentIndex = signatureFlow.findIndex(
+    (s) => s.id === user?.taiKhoan?.tenDangNhap,
+  );
+
+  // Không có trong flow hoặc đã ký rồi
+  if (currentIndex === -1 || signatureFlow[currentIndex].signed) {
+    return false;
+  }
+
+  // Tất cả bước trước đó phải đã ký
+  return signatureFlow.slice(0, currentIndex).every((s) => s.signed);
+};
 export const generateBienBanKeHoachPdf = async (
   plan: MaintenancePlanData,
   allUnits: any[],

@@ -129,19 +129,8 @@ public class SuCoThietBiService {
         return suCoDao.update(entity);
     }
 
-    /**
-     * Cập nhật trạng thái.
-     * TrangThai hợp lệ: 0=Nháp | 1=Đã duyệt | 2=Hủy | 3=Hoàn thành
-     */
-    public int updateTrangThai(String id, Integer trangThai) {
-        if (!List.of(0, 1, 2, 3).contains(trangThai))
-            throw new IllegalArgumentException("Trạng thái không hợp lệ: " + trangThai);
-        SuCoThietBi existing = suCoDao.findById(id);
-        if (existing == null)
-            throw new IllegalArgumentException("Không tìm thấy sự cố với ID: " + id);
-        if (Integer.valueOf(3).equals(existing.getTrangThai()))
-            throw new IllegalStateException("Phiếu sự cố đã hoàn thành, không thể thay đổi trạng thái");
-        return suCoDao.updateTrangThai(id, trangThai);
+    public int updateTrangThai(String id, String userId) {
+        return suCoDao.updateTrangThai(id, userId);
     }
 
     public int huySuCo(String id) { return suCoDao.huySuCo(id); }

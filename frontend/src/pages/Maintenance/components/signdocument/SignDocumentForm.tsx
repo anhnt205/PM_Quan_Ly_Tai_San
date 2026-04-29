@@ -1,11 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { generateBienBanKeHoachPdf } from "../../config";
 import SharedSignDocumentForm from "../../../../components/SignDocument/SharedSignDocumentForm";
+import api from "../../../../config/api.config";
+import { canUserSign } from "../../../MaintenanceRepair/config";
+import { SignaturesData } from "../../../../components/SignDocument/types";
 
 interface SignDocumentFormProps {
   selectedIds: string[];
   onCancel: () => void;
-  onSign: (data: any[], assetHandover: any) => void;
+  onSign: (data: any[], item: any) => void;
   fullscreen?: boolean;
   showSignerSidebar?: boolean;
   plan: any;
@@ -41,6 +44,39 @@ export default function SignDocumentForm({
 }: SignDocumentFormProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [sourcePdfBytes, setSourcePdfBytes] = useState<Uint8Array | null>(null);
+  const [signatures, setSignatures] = useState<any[]>([]);
+
+  const handleSignatureList = useCallback(async (idTaiLieu: string) => {
+    if (!idTaiLieu) return;
+    try {
+      const response = await api.get(`/chuky/${idTaiLieu}`);
+      return response.data;
+    } catch (error) {
+      console.log("Không thể tải chữ ký");
+      return null;
+    }
+  }, []);
+
+  const fetchSignatures = useCallback(async () => {
+    if (selectedIds[0] && handleSignatureList) {
+      try {
+        const data = await handleSignatureList(selectedIds[0]);
+        if (data) {
+          const initialSigs = data.map((item: any) => ({
+            ...item,
+            isLocked: true,
+          }));
+          setSignatures(initialSigs);
+        }
+      } catch (err) {
+        console.error("Lỗi lấy danh sách chữ ký:", err);
+      }
+    }
+  }, [selectedIds, handleSignatureList]);
+
+  useEffect(() => {
+    fetchSignatures();
+  }, [fetchSignatures]);
 
   useEffect(() => {
     const preparePdf = async () => {
@@ -73,19 +109,28 @@ export default function SignDocumentForm({
     };
   }, [plan]);
 
+  const handleSignComplete = async (
+    newSignatures: SignaturesData[],
+    pdfBlob: Blob,
+  ) => {
+    await onSign(newSignatures, plan);
+    onCancel();
+  };
+
   return (
     <SharedSignDocumentForm
       idTaiLieu={selectedIds[0]}
       pdfUrl={pdfUrl}
-      onSign={async (data, pdfBlob) => {}}
+      onSign={handleSignComplete}
       onCancel={onCancel}
       title={title}
       staffs={staffs || []}
-      canUserSign={(type, currentSignatures) => true}
+      canUserSign={canUserSign}
       fullscreen={fullscreen}
       showSignerSidebar={showSignerSidebar}
       sourcePdfBytes={sourcePdfBytes}
       showHeader={showHeader}
+      initialSignatures={signatures}
     />
   );
 }
