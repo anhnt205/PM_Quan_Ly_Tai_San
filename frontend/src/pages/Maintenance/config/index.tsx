@@ -191,25 +191,42 @@ export const canSign = (items: any[], user?: any): boolean => {
   // Tất cả bước trước đó phải đã ký
   return signatureFlow.slice(0, currentIndex).every((s) => s.signed);
 };
+export const getAutoSignatureType = (employee: any): number => {
+  if (!employee) return 0;
+  if (employee.kySo) {
+    if (employee.kyThuong) return 4;
+    if (employee.kyNhay) return 5;
+    return 3;
+  } else {
+    if (employee.kyThuong) return 2;
+    if (employee.kyNhay) return 1;
+    return 0;
+  }
+};
+
 export const generateBienBanKeHoachPdf = async (
   plan: MaintenancePlanData,
-  allUnits: any[],
   staffs: any[],
   departments: any[],
   positions: any[],
-): Promise<Uint8Array> => {
+): Promise<{
+  pdf: Uint8Array;
+  coordinates: Record<string, { xRatio: number; yRatio: number }>;
+}> => {
   const listSigneInfos: any[] = listSigneInfo(
     plan,
     staffs,
     departments,
     positions,
   );
+  console.log("listSigneInfos:", listSigneInfos);
   const doc = new jsPDF("l", "mm", "a4");
 
   doc.setFont("times_new_roman", "bold");
 
   doc.setFontSize(12);
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   const centerX = pageWidth / 2;
 
   doc.text(
@@ -344,7 +361,10 @@ export const generateBienBanKeHoachPdf = async (
   const colWidth = 45; // Độ rộng vùng text mỗi chữ ký
   const maxPerRow = 5; // Tối đa 4 chữ ký / hàng
   const rowGap = 70;
+  const coordinates: Record<string, { xRatio: number; yRatio: number }> = {};
   const baseY = finalY;
+  const baseWidthPx = 120;
+  const displayWidth = 800;
 
   listSigneInfos?.forEach((s, index) => {
     const rowIndex = Math.floor(index / maxPerRow);
@@ -367,7 +387,13 @@ export const generateBienBanKeHoachPdf = async (
       x = marginX + colIndex * gapSize;
     }
 
-    const y = baseY + rowIndex * rowGap;
+    const y = baseY + rowIndex * rowGap + 15;
+
+    const sigWidthMm = (baseWidthPx / displayWidth) * pageWidth;
+    coordinates[s.idNhanVien] = {
+      xRatio: Math.max(0, Math.min((x - sigWidthMm / 2) / pageWidth, 1)),
+      yRatio: Math.max(0, Math.min((y + 5) / pageHeight, 1)), // +5 để vào giữa khoảng trống
+    };
 
     // 1️⃣ Đơn vị (Phòng ban/Phân xưởng)
     // Dùng fontSize nhỏ hơn một chút nếu cần giống ảnh mẫu
@@ -385,5 +411,8 @@ export const generateBienBanKeHoachPdf = async (
     doc.text(hoTenLines, x, nameY, { align: "center" });
   });
 
-  return new Uint8Array(doc.output("arraybuffer"));
+  return {
+    pdf: new Uint8Array(doc.output("arraybuffer")),
+    coordinates,
+  };
 };

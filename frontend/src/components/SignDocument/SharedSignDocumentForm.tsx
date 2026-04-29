@@ -77,6 +77,7 @@ import SidebarContent from "./SidebarContent";
 import { PdfViewer } from "./PdfViewer";
 import renderDigitalSignatureToImage from "./DigitalSignatureToImage";
 import S3Service from "../../services/S3Service";
+import { handleSigning } from "../../utils/efySigning";
 
 if (typeof window !== "undefined") {
   pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
@@ -140,54 +141,12 @@ export default function SharedSignDocumentForm({
     }
   }, [initialSignatures]);
 
-  const handleLogin = async () => {
-    const url = "https://rms.efy.com.vn/clients/login";
-    const payload = {
-      username: "rp_test",
-      password: "rp_test",
-      rpCode: "RP_TEST",
-    };
-    try {
-      const response = await axios.post(url, payload, {
-        headers: { "Content-Type": "application/json" },
-      });
-      return response.data.token;
-    } catch (error) {
-      console.log("Đăng nhập thất bại!", error);
-      return null;
+  const executeSigning = async (idNguoiKy: string, idTaiLieu: string) => {
+    const result = await handleSigning(idNguoiKy, idTaiLieu);
+    if (!result) {
+      showErrorAlert("Ký không thành công hoặc đăng nhập thất bại!");
     }
-  };
-
-  const handleSigning = async (idNguoiKy: string, idTaiLieu: string) => {
-    const value = idNguoiKy + idTaiLieu;
-    const hash = generateSha256(value);
-    const token = await handleLogin();
-    if (!token) {
-      showErrorAlert("Đăng nhập thất bại!. Không thể ký");
-      return null;
-    }
-    const url = "https://rms.efy.com.vn/signing/hash";
-    const payload = {
-      agreementUUID: "02e80096-912a-4b30-a38e-334ddc110a1e",
-      authMode: "EXPLICIT/PIN",
-      authorizeCode: "efyvn@123",
-      encryption: "RSA",
-      hash: hash,
-      hashAlgorithm: "SHA-256",
-      mimeType: "application/sha256-binary",
-    };
-    try {
-      const result = await axios.post(url, payload, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      return result.data.signatureValue;
-    } catch (error) {
-      showErrorAlert("Ký không thành công!");
-      return null;
-    }
+    return result;
   };
 
   const handleConfirmPinDialog = async (pin: string) => {
@@ -197,7 +156,7 @@ export default function SharedSignDocumentForm({
     }
 
     setOpenConfirmPin(false);
-    const result = await handleSigning(
+    const result = await executeSigning(
       user?.taiKhoan?.tenDangNhap,
       "document-id",
     );
@@ -258,7 +217,7 @@ export default function SharedSignDocumentForm({
         setOpenConfirmPin(true);
         return;
       }
-      const result = await handleSigning(
+      const result = await executeSigning(
         user?.taiKhoan?.tenDangNhap,
         "document-id",
       );

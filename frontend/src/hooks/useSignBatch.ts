@@ -1,8 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 
 export interface SignItem {
   id: string;
-  status: 'pending' | 'success' | 'error';
+  status: "pending" | "success" | "error";
   errorMessage?: string;
   originalStatus?: string;
 }
@@ -13,8 +13,14 @@ export interface UseSignBatchReturn {
   isProcessing: boolean;
   openModal: (selectedItems: any[]) => void;
   closeModal: () => void;
-  confirmSign: (signFn: (ids: string[]) => Promise<void> | void) => Promise<void>;
-  updateItemStatus: (id: string, status: 'success' | 'error', errorMessage?: string) => void;
+  confirmSign: (
+    signFn: (ids: string[]) => Promise<void> | void,
+  ) => Promise<void>;
+  updateItemStatus: (
+    id: string,
+    status: "success" | "error",
+    errorMessage?: string,
+  ) => void;
   reset: () => void;
 }
 
@@ -25,11 +31,12 @@ export const useSignBatch = (): UseSignBatchReturn => {
 
   const openModal = useCallback((selectedItems: any[]) => {
     setItems(
-      selectedItems.map(item => ({
+      selectedItems.map((item) => ({
+        ...item,
         id: item.id,
-        status: 'pending' as const,
+        status: "pending" as const,
         originalStatus: item.status,
-      }))
+      })),
     );
     setIsOpen(true);
   }, []);
@@ -44,41 +51,42 @@ export const useSignBatch = (): UseSignBatchReturn => {
   }, []);
 
   const updateItemStatus = useCallback(
-    (id: string, status: 'success' | 'error', errorMessage?: string) => {
-      setItems(prev =>
-        prev.map(item =>
-          item.id === id ? { ...item, status, errorMessage } : item
-        )
+    (id: string, status: "success" | "error", errorMessage?: string) => {
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, status, errorMessage } : item,
+        ),
       );
     },
-    []
+    [],
   );
 
   const confirmSign = useCallback(
     async (signFn: (ids: string[]) => Promise<void> | void) => {
       setIsProcessing(true);
       try {
-        const ids = items.map(item => item.id);
+        const ids = items.map((item) => item.id);
         // Call signing function
         await Promise.resolve(signFn(ids));
 
         // Update từng item với delay nhỏ để có animation effect
         for (const item of items) {
-          await new Promise(resolve => setTimeout(resolve, 150));
-          updateItemStatus(item.id, 'success');
+          await new Promise((resolve) => setTimeout(resolve, 150));
+          updateItemStatus(item.id, "success");
         }
       } catch (error) {
-        console.error('Error signing batch:', error);
+        console.error("Error signing batch:", error);
         // Cập nhật tất cả status thành error
-        const errorMsg = error instanceof Error ? error.message : 'Lỗi ký biên bản';
-        items.forEach(item => {
-          updateItemStatus(item.id, 'error', errorMsg);
+        const errorMsg =
+          error instanceof Error ? error.message : "Lỗi ký biên bản";
+        items.forEach((item) => {
+          updateItemStatus(item.id, "error", errorMsg);
         });
       } finally {
         setIsProcessing(false);
       }
     },
-    [items, updateItemStatus]
+    [items, updateItemStatus],
   );
 
   const reset = useCallback(() => {

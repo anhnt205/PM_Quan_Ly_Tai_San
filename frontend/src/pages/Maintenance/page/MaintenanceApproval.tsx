@@ -206,54 +206,11 @@ export default function MaintenanceApprovalPage() {
 
   const currentAllRows = allRows[activeTab];
 
-  // const handleSign = async (selectedItems: any[]) => {
-  //   const ids = selectedItems.map((i) => i.id);
-  //   if (activeTab === 0) ids.forEach((id) => approvePlan(id));
-  //   else if (activeTab === 1) signRepairRequests(ids);
-  //   else if (activeTab === 2) signInspectionRecords(ids);
-  //   else if (activeTab === 3) signAcceptanceRecords(ids);
-  //   else if (activeTab === 4) signMaterialQualityRecords(ids);
-  //   else if (activeTab === 5) signIncidentReports?.(ids);
-  //   else if (activeTab === 6) signIncidentInspectionRecords?.(ids);
-  //   setJustSigned(ids.join(", "));
-  //   setSelectedIds([]);
-  //   if (selectedRow && ids.includes(selectedRow.id)) {
-  //     setSelectedRow((prev: any) => ({ ...prev, status: "da-duyet" }));
-  //   }
-  // };
-
   const handleSign = (data: SignaturesData[]) => {
     signMutation.mutate({
       SignaturesData: data,
       asset: selectedRow,
     });
-  };
-
-  const handleSignBatch = async (ids: string[]) => {
-    try {
-      if (activeTab === 0) {
-        ids.forEach((id) => approvePlan(id));
-      } else if (activeTab === 1) {
-        signRepairRequests(ids);
-      } else if (activeTab === 2) {
-        signInspectionRecords(ids);
-      } else if (activeTab === 3) {
-        signAcceptanceRecords(ids);
-      } else if (activeTab === 4) {
-        signMaterialQualityRecords(ids);
-      } else if (activeTab === 5) {
-        signIncidentReports?.(ids);
-      } else if (activeTab === 6) {
-        signIncidentInspectionRecords?.(ids);
-      }
-
-      setJustSigned(ids.join(", "));
-      setSelectedItem([]);
-      setSelectedIds([]);
-    } catch (error) {
-      console.error("Lỗi ký biên bản:", error);
-      throw error;
-    }
   };
 
   const statusChip = (status: number) => {
@@ -352,6 +309,14 @@ export default function MaintenanceApprovalPage() {
             fullscreen={false}
             showSignerSidebar={false}
             showHeader={false}
+            generatePdf={() =>
+              generateBienBanKeHoachPdf(
+                selectedRow,
+                staffs,
+                departments,
+                positions,
+              )
+            }
           />
         );
       case 1:
@@ -555,6 +520,14 @@ export default function MaintenanceApprovalPage() {
           positions={positions || []}
           fullscreen={true}
           showSignerSidebar={true}
+          generatePdf={() =>
+            generateBienBanKeHoachPdf(
+              selectedRow,
+              staffs,
+              departments,
+              positions,
+            )
+          }
         />
       )}
 
@@ -699,8 +672,18 @@ export default function MaintenanceApprovalPage() {
             open={signBatch.isOpen}
             items={signBatch.items}
             isProcessing={signBatch.isProcessing}
-            onConfirm={() => signBatch.confirmSign(handleSignBatch)}
-            onClose={signBatch.closeModal}
+            onSign={handleSign}
+            onClose={() => {
+              signBatch.closeModal();
+              setSelectedIds([]);
+              setSelectedItem([]);
+              setSelectedRow(null);
+            }}
+            generatePdf={generateBienBanKeHoachPdf}
+            staffs={staffs || []}
+            departments={departments || []}
+            positions={positions || []}
+            user={user}
           />
 
           {/* Nội dung: bảng + panel detail song song */}
@@ -743,11 +726,9 @@ export default function MaintenanceApprovalPage() {
                     setDetailTab(0);
                     setIsDetailOpen(true);
                   }}
-                  isRowSelectable={(params) =>
-                    params?.row?.status === "cho-duyet"
-                  }
+                  isRowSelectable={(params) => canSign([params.row], user)}
                   showStatusFilter={false}
-                  canSign={(items) => items.length >= 2}
+                  canSign={(items) => items.length >= 1}
                   handleSignDocument={(items, _user, _onSign) => {
                     signBatch.openModal(items);
                   }}

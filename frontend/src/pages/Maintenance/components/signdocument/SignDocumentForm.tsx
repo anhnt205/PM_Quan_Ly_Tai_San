@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { generateBienBanKeHoachPdf } from "../../config";
 import SharedSignDocumentForm from "../../../../components/SignDocument/SharedSignDocumentForm";
 import api from "../../../../config/api.config";
 import { canUserSign } from "../../../MaintenanceRepair/config";
@@ -22,6 +21,10 @@ interface SignDocumentFormProps {
   isEdit?: boolean;
   title?: string;
   showHeader?: boolean;
+  generatePdf?: () => Promise<{
+    pdf: Uint8Array;
+    coordinates: Record<string, { xRatio: number; yRatio: number }>;
+  }>;
 }
 
 export default function SignDocumentForm({
@@ -41,6 +44,7 @@ export default function SignDocumentForm({
   isEdit,
   title,
   showHeader = true,
+  generatePdf,
 }: SignDocumentFormProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [sourcePdfBytes, setSourcePdfBytes] = useState<Uint8Array | null>(null);
@@ -81,15 +85,14 @@ export default function SignDocumentForm({
   useEffect(() => {
     const preparePdf = async () => {
       try {
+        if (!generatePdf) {
+          setSourcePdfBytes(null);
+          setPdfUrl(null);
+          return;
+        }
         let finalBytes: Uint8Array | null = null;
 
-        finalBytes = await generateBienBanKeHoachPdf(
-          plan,
-          allUnits,
-          staffs || [],
-          departments || [],
-          positions || [],
-        );
+        finalBytes = (await generatePdf()).pdf;
 
         if (finalBytes) {
           setSourcePdfBytes(finalBytes);
@@ -107,7 +110,7 @@ export default function SignDocumentForm({
     return () => {
       if (pdfUrl) URL.revokeObjectURL(pdfUrl);
     };
-  }, [plan]);
+  }, [plan, generatePdf]);
 
   const handleSignComplete = async (
     newSignatures: SignaturesData[],

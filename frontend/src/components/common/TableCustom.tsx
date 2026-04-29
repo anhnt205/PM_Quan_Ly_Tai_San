@@ -304,18 +304,16 @@ export default function TableCustom({
                 variant="contained"
                 color="primary"
                 startIcon={<Edit />}
-                disabled={selectedItem.length < 2}
                 onClick={async (e) => {
                   e.stopPropagation();
                   handleSignDocument?.(selectedItem, user, () =>
                     onSign?.(
                       selectedItem[0]?.taiLieuCuoi ||
-                      selectedItem[0]?.taiLieuBangKe,
+                        selectedItem[0]?.taiLieuBangKe,
                       selectedItem[0],
                     ),
                   );
                 }}
-                title={selectedItem.length < 2 ? 'Vui lòng chọn ít nhất 2 biên bản để ký lô' : 'Ký lô biên bản'}
               >
                 Ký biên bản ({selectedItem.length})
               </Button>
