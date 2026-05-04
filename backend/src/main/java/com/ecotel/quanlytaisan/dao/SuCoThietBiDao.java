@@ -117,6 +117,11 @@ public class SuCoThietBiDao {
         } catch (Exception e) { return null; }
     }
 
+    public List<SuCoThietBiDTO> findByIdKeHoach(String idKeHoach) {
+        String sql = buildSelectSql() + " WHERE sc.IdKeHoach = ?";
+        return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(SuCoThietBiDTO.class), idKeHoach);
+    }
+
     // ==================== ID generation ====================
 
     public String generateNextId() {

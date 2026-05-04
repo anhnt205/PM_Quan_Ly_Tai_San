@@ -115,7 +115,7 @@ public class SuCoThietBiDTO {
     private List<NguoiKy> nguoiKyList;
 
     /** Danh sách chi tiết tài sản bị sự cố */
-    private List<SuCoThietBiChiTiet> danhSachChiTiet;
+    private List<SuCoThietBiChiTiet> danhSachTaiSan;
 
     // ---------- Null-safe getters ----------
 

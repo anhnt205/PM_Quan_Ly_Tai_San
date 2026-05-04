@@ -39,6 +39,7 @@ export interface MaintenancePlanData {
   byStep: boolean;
   danhSachTaiSan?: MaintenancePlanAssetItem[];
   nguoiKyList?: any[];
+  soLuongSuCo?: number;
 }
 
 // Bảng Tài Sản mới

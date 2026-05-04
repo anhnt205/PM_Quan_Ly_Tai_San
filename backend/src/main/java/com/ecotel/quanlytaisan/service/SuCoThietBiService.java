@@ -32,7 +32,7 @@ public class SuCoThietBiService {
     public List<SuCoThietBiDTO> findAll(String idCongTy) throws SQLException {
         List<SuCoThietBiDTO> list = suCoDao.findAll(idCongTy);
         for (SuCoThietBiDTO dto : list)
-            dto.setDanhSachChiTiet(chiTietDao.findByIdSuCo(dto.getId()));
+            dto.setDanhSachTaiSan(chiTietDao.findByIdSuCo(dto.getId()));
         return list;
     }
 
@@ -99,7 +99,7 @@ public class SuCoThietBiService {
         for (SuCoThietBiDTO item : items) {
             item.setChuKyList(kyTaiLieuDao.findById(item.getId()));
             item.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId()));
-            item.setDanhSachChiTiet(chiTietDao.findByIdSuCo(item.getId()));
+            item.setDanhSachTaiSan(chiTietDao.findByIdSuCo(item.getId()));
         }
 
         PageResponse<SuCoThietBiDTO> response = new PageResponse<>(items, total, page, size);
@@ -116,9 +116,19 @@ public class SuCoThietBiService {
         if (dto != null) {
             dto.setChuKyList(kyTaiLieuDao.findById(id));
             dto.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(id));
-            dto.setDanhSachChiTiet(chiTietDao.findByIdSuCo(id));
+            dto.setDanhSachTaiSan(chiTietDao.findByIdSuCo(id));
         }
         return dto;
+    }
+
+    public List<SuCoThietBiDTO> findByIdKeHoach(String idKeHoach) throws SQLException {
+        List<SuCoThietBiDTO> list = suCoDao.findByIdKeHoach(idKeHoach);
+        for (SuCoThietBiDTO dto : list) {
+            dto.setChuKyList(kyTaiLieuDao.findById(dto.getId()));
+            dto.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(dto.getId()));
+            dto.setDanhSachTaiSan(chiTietDao.findByIdSuCo(dto.getId()));
+        }
+        return list;
     }
 
     public SuCoThietBi insert(SuCoThietBi entity) throws SQLException {

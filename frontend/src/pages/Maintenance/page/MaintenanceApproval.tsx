@@ -34,9 +34,12 @@ import IncidentPreview from "../components/preview/IncidentPreview";
 import IncidentInspectionPreview from "../components/preview/IncidentInspectionPreview";
 import { useSignBatch } from "../../../hooks/useSignBatch";
 import { SignBatchModal } from "../../../components/SignDocument/Signbatchmodal";
-import { useMaintenancePlanningPageQuery } from "../../MainenancePlanRepair/Mutation";
+import {
+  useMaintenanceIncidentPageQuery,
+  useMaintenancePlanningPageQuery,
+} from "../../MainenancePlanRepair/Mutation";
 import { useDebounce } from "../../../hooks/useDebounce";
-import { PlanAdapter } from "../Adapter";
+import { IncidentAdapter, PlanAdapter } from "../Adapter";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import { useAllPositionsQuery } from "../../Position/Mutation";
@@ -109,9 +112,25 @@ export default function MaintenanceApprovalPage() {
     user?.taiKhoan?.tenDangNhap,
   );
 
+  const {
+    data: incidentPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
+    isLoading: isLoadingIncident,
+  } = useMaintenanceIncidentPageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchDebounce,
+    undefined,
+    undefined,
+    user?.taiKhoan?.tenDangNhap,
+  );
+
   const { signMutation } = useMaintenanceMutation(
-    activeTab === 0 ? "maintenancePlanningPage" : "",
-    activeTab === 0 ? "kehoach-suachua" : "",
+    activeTab === 0
+      ? "maintenancePlanningPage"
+      : activeTab === 5
+        ? "incidentPages"
+        : "",
+    activeTab === 0 ? "kehoach-suachua" : activeTab === 5 ? "suco-thietbi" : "",
   );
 
   const allRows = [
@@ -120,7 +139,7 @@ export default function MaintenanceApprovalPage() {
     inspectionRecords,
     acceptanceTestRecords,
     materialQualityRecords,
-    incidentReports || [],
+    { ...incidentPaged, items: incidentPaged.items.map(IncidentAdapter) },
     incidentInspectionRecords || [],
   ];
 

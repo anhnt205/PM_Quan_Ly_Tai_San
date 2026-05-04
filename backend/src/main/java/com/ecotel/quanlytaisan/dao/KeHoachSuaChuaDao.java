@@ -74,7 +74,9 @@ public class KeHoachSuaChuaDao {
                 kh.DuongDanTaiLieuBangKe,
 
                 kh.Share,
-                kh.ByStep
+                kh.ByStep,
+
+                (SELECT COUNT(*) FROM suco_thietbi sc WHERE sc.IdKeHoach = kh.Id) AS soLuongSuCo
 
             FROM kehoachsuachua kh
                 LEFT JOIN PhongBan pbGiao ON kh.IdDonViGiao          = pbGiao.Id

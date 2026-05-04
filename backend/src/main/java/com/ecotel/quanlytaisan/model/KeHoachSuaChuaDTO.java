@@ -75,6 +75,8 @@ public class KeHoachSuaChuaDTO {
     // Danh sách chi tiết tài sản
     private List<KeHoachSuaChuaChiTietTaiSan> danhSachTaiSan;
 
+    private Integer soLuongSuCo;
+
     // Null-safe getters
     public Integer getTrangThai()                { return trangThai != null ? trangThai : 0; }
     public Boolean getNguoiLapBieuXacNhan()      { return nguoiLapBieuXacNhan != null ? nguoiLapBieuXacNhan : false; }

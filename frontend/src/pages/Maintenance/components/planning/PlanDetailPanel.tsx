@@ -302,27 +302,6 @@ const PlanDetailPanel = ({
     setter(next);
   };
 
-  const sourceDept = departments.find(
-    (d) => d.id === (plan as any).sourceDepartmentId,
-  );
-  const execDept = departments.find(
-    (d) => d.id === (plan as any).executionDepartmentId,
-  );
-
-  const canCreateInspectionForReq = (req: RepairRequest) =>
-    req.status === "da-duyet" &&
-    inspectionRecords.filter((r) => r.repairRequestId === req.id).length === 0;
-
-  const canCreateAcceptanceForInsp = (insp: TechnicalInspectionRecord) =>
-    insp.status === "da-duyet" &&
-    acceptanceTestRecords.filter((a) => a.inspectionRecordId === insp.id)
-      .length === 0;
-
-  const canCreateMaterialForAcc = (acc: AcceptanceTestRecord) =>
-    acc.status === "da-duyet" &&
-    materialQualityRecords.filter((m) => m.acceptanceRecordId === acc.id)
-      .length === 0;
-
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       {/* Header */}

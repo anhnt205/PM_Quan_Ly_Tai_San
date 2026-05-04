@@ -39,6 +39,7 @@ public class TaiSanDTO {
     private Integer namSanXuat;
     private String lyDoTang;
     private Integer hienTrang;
+    private String tenHienTrang;
     private Integer soLuong;
     private String donViTinh;
     private String tenDonViTinh;

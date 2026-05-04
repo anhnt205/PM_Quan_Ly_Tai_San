@@ -44,7 +44,6 @@ import {
   useChiTietTaiSanByKeHoachQuery,
   useMaintenancePlanningMutation,
   useMaintenancePlanningPageQuery,
-  useVatTuTieuHaoByKeHoachQuery,
 } from "../../MainenancePlanRepair/Mutation";
 import { generateBangKePdf, mergeBangKeWithOriginalPdf } from "../config";
 import S3Service from "../../../services/S3Service";
@@ -98,7 +97,7 @@ export default function MaintenanceRepairForm({
   );
 
   const { data: MaintenancePlanningPage = { items: [] } } =
-    useMaintenancePlanningPageQuery(0, 9999, undefined, StatusPlan.PENDING);
+    useMaintenancePlanningPageQuery(0, 9999, undefined, undefined);
   const { data: maintenanceRepairTypes = [] } = useAllLoaiSCBDQuery();
 
   const currentStatus = selectedRepair?.trangThai ?? 0;
@@ -266,19 +265,11 @@ export default function MaintenanceRepairForm({
   const { data: taiSanDetails = [] } = useChiTietTaiSanByKeHoachQuery(
     formik.values.idKeHoach,
   );
-  const { data: ccdcDetails = [] } = useVatTuTieuHaoByKeHoachQuery(
-    formik.values.idKeHoach,
-  );
   useEffect(() => {
     if (taiSanDetails) {
       formik.setFieldValue("danhSachTaiSan", taiSanDetails);
     }
   }, [taiSanDetails.length, formik.values.idKeHoach]);
-  useEffect(() => {
-    if (ccdcDetails) {
-      formik.setFieldValue("danhSachVatTu", ccdcDetails);
-    }
-  }, [ccdcDetails.length, formik.values.idKeHoach]);
 
   const [nvThamMuu, setNVThamMuu] = useState<any[]>([]);
   const [nvPGD, setNVPGD] = useState<any[]>([]);
@@ -1012,7 +1003,7 @@ export default function MaintenanceRepairForm({
                           <CustomTableCell>
                             <FieldAutoCompleted
                               title="Chọn thiết bị / vật tư"
-                              data={ccdcDetails}
+                              data={[]}
                               labelkey="tenVatTu"
                               formik={formik}
                               limitOptions={20}

@@ -69,34 +69,41 @@ public class SuCoThietBiChiTietDao {
     // ==================== Insert đơn ====================
 
     public int insert(SuCoThietBiChiTiet e) {
+        if (e.getId() == null || e.getId().isBlank()) {
+            e.setId(generateNextId());
+        }
         String sql = """
             INSERT INTO suco_thietbi_chitiet (
                 Id, IdSuCo, IdTaiSan,
                 ThuocHeThong, TinhTrang, IdDonViQuanLyKyThuat,
-                NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, ViTri, SoLuong
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         return jdbcTemplate.update(sql,
                 e.getId(), e.getIdSuCo(), e.getIdTaiSan(),
                 e.getThuocHeThong(), e.getTinhTrang(), e.getIdDonViQuanLyKyThuat(),
-                e.getNgayTao(), e.getNgayCapNhat(), e.getNguoiTao(), e.getNguoiCapNhat()
+                e.getNgayTao(), e.getNgayCapNhat(), e.getNguoiTao(), e.getNguoiCapNhat(), e.getViTri(), e.getSoLuong()
         );
     }
 
     // ==================== Batch Insert ====================
 
     public int[] batchInsert(List<SuCoThietBiChiTiet> list) {
+        System.out.println("Insert " + list);
         String sql = """
             INSERT INTO suco_thietbi_chitiet (
                 Id, IdSuCo, IdTaiSan,
                 ThuocHeThong, TinhTrang, IdDonViQuanLyKyThuat,
-                NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, ViTri, SoLuong
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
                 SuCoThietBiChiTiet e = list.get(i);
+                if (e.getId() == null || e.getId().isBlank()) {
+                    e.setId(generateNextId());
+                }
                 ps.setString(1, e.getId());
                 ps.setString(2, e.getIdSuCo());
                 ps.setString(3, e.getIdTaiSan());
@@ -107,6 +114,8 @@ public class SuCoThietBiChiTietDao {
                 ps.setString(8, e.getNgayCapNhat());
                 ps.setString(9, e.getNguoiTao());
                 ps.setString(10, e.getNguoiCapNhat());
+                ps.setString(11, e.getViTri());
+                ps.setObject(12, e.getSoLuong());
             }
 
             @Override
@@ -120,13 +129,13 @@ public class SuCoThietBiChiTietDao {
         String sql = """
             UPDATE suco_thietbi_chitiet SET
                 IdTaiSan = ?,
-                ThuocHeThong = ?, TinhTrang = ?, IdDonViQuanLyKyThuat = ?,
+                ThuocHeThong = ?, TinhTrang = ?, IdDonViQuanLyKyThuat = ?, ViTri = ?, SoLuong = ?,
                 NgayCapNhat = ?, NguoiCapNhat = ?
             WHERE Id = ?
             """;
         return jdbcTemplate.update(sql,
                 e.getIdTaiSan(),
-                e.getThuocHeThong(), e.getTinhTrang(), e.getIdDonViQuanLyKyThuat(),
+                e.getThuocHeThong(), e.getTinhTrang(), e.getIdDonViQuanLyKyThuat(), e.getViTri(), e.getSoLuong(),
                 e.getNgayCapNhat(), e.getNguoiCapNhat(),
                 e.getId()
         );
@@ -139,7 +148,7 @@ public class SuCoThietBiChiTietDao {
             UPDATE suco_thietbi_chitiet SET
                 IdTaiSan = ?,
                 ThuocHeThong = ?, TinhTrang = ?, IdDonViQuanLyKyThuat = ?,
-                NgayCapNhat = ?, NguoiCapNhat = ?
+                NgayCapNhat = ?, NguoiCapNhat = ?, ViTri = ?, SoLuong = ?
             WHERE Id = ?
             """;
         return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
@@ -152,7 +161,9 @@ public class SuCoThietBiChiTietDao {
                 ps.setString(4, e.getIdDonViQuanLyKyThuat());
                 ps.setString(5, e.getNgayCapNhat());
                 ps.setString(6, e.getNguoiCapNhat());
-                ps.setString(7, e.getId());
+                ps.setString(7, e.getViTri());
+                ps.setObject(8, e.getSoLuong());
+                ps.setString(9, e.getId());
             }
 
             @Override

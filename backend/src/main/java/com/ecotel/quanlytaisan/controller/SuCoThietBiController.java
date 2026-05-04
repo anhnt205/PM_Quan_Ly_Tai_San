@@ -109,6 +109,19 @@ public class SuCoThietBiController {
         }
     }
 
+    @GetMapping("/by-kehoach/{idKeHoach}")
+    public ResponseEntity<ApiResponse<Object>> getByIdKeHoach(
+            @PathVariable("idKeHoach") String idKeHoach
+    ) throws SQLException {
+        try {
+            List<SuCoThietBiDTO> list = suCoService.findByIdKeHoach(idKeHoach);
+            return ResponseEntity.ok(ApiResponse.success("Lấy danh sách sự cố thành công", list, list.size()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
     // ==================== CREATE ====================
 
     /**

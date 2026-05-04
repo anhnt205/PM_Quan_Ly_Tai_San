@@ -100,6 +100,7 @@ const StepAssets = ({ sourceDeptId, assets, onAssetsChange }: Props) => {
       onAssetsChange([
         ...assets,
         {
+          ...device,
           deviceId: device.id,
           quantity: 1,
           month1: "",
@@ -186,7 +187,12 @@ const StepAssets = ({ sourceDeptId, assets, onAssetsChange }: Props) => {
                 }}
               >
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography fontSize={13} fontWeight={600} noWrap display="block">
+                  <Typography
+                    fontSize={13}
+                    fontWeight={600}
+                    noWrap
+                    display="block"
+                  >
                     {device?.tenTaiSan || asset.deviceId}
                   </Typography>
                   <Box
@@ -284,12 +290,27 @@ const StepAssets = ({ sourceDeptId, assets, onAssetsChange }: Props) => {
 
           {localSelection.length > 0 && (
             <Box sx={{ mb: 2 }}>
-              <Typography variant="caption" color="text.secondary" sx={{ mb: 0.75, display: "block" }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ mb: 0.75, display: "block" }}
+              >
                 Đã chọn (<strong>{localSelection.length}</strong> thiết bị)
               </Typography>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 1, maxHeight: 220, overflowY: "auto", pr: 0.5 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 1,
+                  maxHeight: 220,
+                  overflowY: "auto",
+                  pr: 0.5,
+                }}
+              >
                 {localSelection.map((id) => {
-                  const device = allDeptDevices.items.find((d: any) => d.id === id);
+                  const device = allDeptDevices.items.find(
+                    (d: any) => d.id === id,
+                  );
                   return (
                     <Box
                       key={id}
@@ -307,12 +328,28 @@ const StepAssets = ({ sourceDeptId, assets, onAssetsChange }: Props) => {
                       }}
                     >
                       <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography fontSize={13} fontWeight={600} noWrap display="block">
+                        <Typography
+                          fontSize={13}
+                          fontWeight={600}
+                          noWrap
+                          display="block"
+                        >
                           {device?.tenTaiSan || id}
                         </Typography>
-                        <Box sx={{ display: "flex", gap: 0.5, mt: 0.5, flexWrap: "wrap" }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            gap: 0.5,
+                            mt: 0.5,
+                            flexWrap: "wrap",
+                          }}
+                        >
                           {device?.tenNhom && (
-                            <Chip label={device.tenNhom} size="small" sx={{ fontSize: 10, height: 18 }} />
+                            <Chip
+                              label={device.tenNhom}
+                              size="small"
+                              sx={{ fontSize: 10, height: 18 }}
+                            />
                           )}
                           {device?.tenLoai && (
                             <Chip
@@ -325,7 +362,9 @@ const StepAssets = ({ sourceDeptId, assets, onAssetsChange }: Props) => {
                         </Box>
                       </Box>
 
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
                         <TextField
                           type="number"
                           size="small"
@@ -338,13 +377,18 @@ const StepAssets = ({ sourceDeptId, assets, onAssetsChange }: Props) => {
                             })
                           }
                           inputProps={{ min: 1 }}
-                          sx={{ width: 70, "& .MuiInputBase-input": { py: 0.5 } }}
+                          sx={{
+                            width: 70,
+                            "& .MuiInputBase-input": { py: 0.5 },
+                          }}
                         />
                         <IconButton
                           size="small"
                           color="error"
                           onClick={() =>
-                            setLocalSelection(localSelection.filter((sid) => sid !== id))
+                            setLocalSelection(
+                              localSelection.filter((sid) => sid !== id),
+                            )
                           }
                           sx={{ p: 0.5 }}
                         >

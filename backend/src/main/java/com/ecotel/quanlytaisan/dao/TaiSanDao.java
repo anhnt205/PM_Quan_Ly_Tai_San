@@ -34,6 +34,7 @@ public class TaiSanDao {
                 pb1.TenPhongBan AS tenDonViBanDau,
                 pb2.TenPhongBan AS tenDonViHienThoi,
                 dvt.TenDonVi AS tenDonViTinh,
+                ht.TenHTKT AS tenHienTrang,
                 ts.IdDuDan as idDuAn
                 
             FROM TaiSan AS ts
@@ -45,6 +46,7 @@ public class TaiSanDao {
             LEFT JOIN PhongBan AS pb1 ON ts.IdDonViBanDau = pb1.Id
             LEFT JOIN PhongBan AS pb2 ON ts.IdDonViHienThoi = pb2.Id
             LEFT JOIN DonViTinh AS dvt ON ts.DonViTinh = dvt.Id
+            LEFT JOIN HienTrangKyThuat AS ht ON ts.HienTrang = ht.Id
             """;
 
     public List<TaiSanDTO> findAll(String idCongTy) {
@@ -430,7 +432,8 @@ public class TaiSanDao {
                     %s AS trangThaiKiemDinh,
                     pb1.TenPhongBan AS tenDonViBanDau,
                     pb2.TenPhongBan AS tenDonViHienThoi,
-                    dvt.TenDonVi AS tenDonViTinh
+                    dvt.TenDonVi AS tenDonViTinh,
+                    ht.TenHTKT
                 FROM 
                     TaiSan AS ts
                 LEFT JOIN MoHinhTaiSan AS mhts ON ts.IdMoHinhTaiSan = mhts.Id
@@ -441,6 +444,7 @@ public class TaiSanDao {
                 LEFT JOIN PhongBan AS pb1 ON ts.IdDonViBanDau = pb1.Id
                 LEFT JOIN PhongBan AS pb2 ON ts.IdDonViHienThoi = pb2.Id
                 LEFT JOIN DonViTinh AS dvt ON ts.DonViTinh = dvt.Id
+                LEFT JOIN HienTrangKyThuat AS ht ON ts.HienTrang = ht.Id
                 %s
                 ORDER BY %s %s
                 LIMIT ? OFFSET ?
@@ -592,6 +596,7 @@ public class TaiSanDao {
                     ts.tgKiemDinh,
                     ts.chuKyKiemDinh,
                     %s AS trangThaiKiemDinh,
+                    ht.TenHTKT AS tenHienTrang,
                     pb1.TenPhongBan AS tenDonViBanDau,
                     pb2.TenPhongBan AS tenDonViHienThoi,
                     dvt.TenDonVi AS tenDonViTinh
@@ -605,6 +610,7 @@ public class TaiSanDao {
                 LEFT JOIN PhongBan AS pb1 ON ts.IdDonViBanDau = pb1.Id
                 LEFT JOIN PhongBan AS pb2 ON ts.IdDonViHienThoi = pb2.Id
                 LEFT JOIN DonViTinh AS dvt ON ts.DonViTinh = dvt.Id
+                LEFT JOIN HienTrangKyThuat AS ht ON ts.HienTrang = ht.Id
                 %s
                 ORDER BY %s %s
                 LIMIT ? OFFSET ?
@@ -754,6 +760,7 @@ public class TaiSanDao {
                     ts.tgKiemDinh,
                     ts.chuKyKiemDinh,
                     %s AS trangThaiKiemDinh,
+                    ht.TenHTKT AS tenHienTrang,
                     pb1.TenPhongBan AS tenDonViBanDau,
                     pb2.TenPhongBan AS tenDonViHienThoi,
                     dvt.TenDonVi AS tenDonViTinh
@@ -767,6 +774,7 @@ public class TaiSanDao {
                 LEFT JOIN PhongBan AS pb1 ON ts.IdDonViBanDau = pb1.Id
                 LEFT JOIN PhongBan AS pb2 ON ts.IdDonViHienThoi = pb2.Id
                 LEFT JOIN DonViTinh AS dvt ON ts.DonViTinh = dvt.Id
+                LEFT JOIN HienTrangKyThuat AS ht ON ts.HienTrang = ht.Id
                 %s
                 ORDER BY %s %s
                 LIMIT ? OFFSET ?
@@ -898,7 +906,8 @@ public class TaiSanDao {
                         %s AS trangThaiKiemDinh,
                         pb1.TenPhongBan AS tenDonViBanDau,
                         pb2.TenPhongBan AS tenDonViHienThoi,
-                        dvt.TenDonVi AS tenDonViTinh
+                        dvt.TenDonVi AS tenDonViTinh,
+                        ht.TenHTKT AS tenHienTrang
                     FROM TaiSan ts
                     LEFT JOIN MoHinhTaiSan mhts ON ts.IdMoHinhTaiSan = mhts.Id
                     LEFT JOIN NhomTaiSan nts ON ts.IdNhomTaiSan = nts.Id
@@ -908,6 +917,7 @@ public class TaiSanDao {
                     LEFT JOIN PhongBan pb1 ON ts.IdDonViBanDau = pb1.Id
                     LEFT JOIN PhongBan pb2 ON ts.IdDonViHienThoi = pb2.Id
                     LEFT JOIN DonViTinh dvt ON ts.DonViTinh = dvt.Id
+                    LEFT JOIN HienTrangKyThuat AS ht ON ts.HienTrang = ht.Id
                     %s
                     ORDER BY %s %s
                     LIMIT ? OFFSET ?
@@ -1342,6 +1352,7 @@ public class TaiSanDao {
                     ts.tgKiemDinh,
                     ts.chuKyKiemDinh,
                     %s AS trangThaiKiemDinh,
+                    ht.TenHTKT AS tenHienTrang,
                     pb1.TenPhongBan AS tenDonViBanDau,
                     pb2.TenPhongBan AS tenDonViHienThoi,
                     dvt.TenDonVi AS tenDonViTinh
@@ -1355,6 +1366,7 @@ public class TaiSanDao {
                 LEFT JOIN PhongBan AS pb1 ON ts.IdDonViBanDau = pb1.Id
                 LEFT JOIN PhongBan AS pb2 ON ts.IdDonViHienThoi = pb2.Id
                 LEFT JOIN DonViTinh AS dvt ON ts.DonViTinh = dvt.Id
+                LEFT JOIN HienTrangKyThuat AS ht ON ts.HienTrang = ht.Id
                 %s
                 ORDER BY %s %s
                 LIMIT ? OFFSET ?
@@ -1541,6 +1553,7 @@ public class TaiSanDao {
                     ts.tgKiemDinh,
                     ts.chuKyKiemDinh,
                     %s AS trangThaiKiemDinh,
+                    ht.TenHTKT AS tenHienTrang,
                     pb1.TenPhongBan AS tenDonViBanDau,
                     pb2.TenPhongBan AS tenDonViHienThoi,
                     dvt.TenDonVi AS tenDonViTinh
@@ -1554,6 +1567,7 @@ public class TaiSanDao {
                 LEFT JOIN PhongBan AS pb1 ON ts.IdDonViBanDau = pb1.Id
                 LEFT JOIN PhongBan AS pb2 ON ts.IdDonViHienThoi = pb2.Id
                 LEFT JOIN DonViTinh AS dvt ON ts.DonViTinh = dvt.Id
+                LEFT JOIN HienTrangKyThuat AS ht ON ts.HienTrang = ht.Id
                 """ + whereClause + " ORDER BY " + orderColumn + " " + sortDirection + " LIMIT ? OFFSET ? ";
         String sqlFull = String.format(sql, inspectionStatusSql);
         params.add(limit);
@@ -1898,12 +1912,14 @@ public class TaiSanDao {
                     'SAP_DEN_HAN' AS trangThaiKiemDinh,
                     pb1.TenPhongBan AS tenDonViBanDau,
                     pb2.TenPhongBan AS tenDonViHienThoi,
-                    dvt.TenDonVi AS tenDonViTinh
+                    dvt.TenDonVi AS tenDonViTinh,
+                    ht.TenHTKT AS tenHienTrang
                 FROM 
                     TaiSan AS ts
                 LEFT JOIN PhongBan AS pb1 ON ts.IdDonViBanDau = pb1.Id
                 LEFT JOIN PhongBan AS pb2 ON ts.IdDonViHienThoi = pb2.Id
                 LEFT JOIN DonViTinh AS dvt ON ts.DonViTinh = dvt.Id
+                LEFT JOIN HienTrangKyThuat AS ht ON ts.HienTrang = ht.Id
                 WHERE ts.IdCongTy = ? AND %s = 'SAP_DEN_HAN'
                 ORDER BY thoiHanConLai ASC
                 LIMIT ? OFFSET ?

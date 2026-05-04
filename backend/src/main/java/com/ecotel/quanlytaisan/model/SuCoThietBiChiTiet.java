@@ -25,6 +25,10 @@ public class SuCoThietBiChiTiet {
      */
     private String thuocHeThong;
 
+    private String viTri;
+
+    private Integer soLuong;
+
     /**
      * Tình trạng tài sản tại thời điểm sự cố – nhập tay
      * (ví dụ: "Hỏng hoàn toàn", "Còn hoạt động một phần", …)
