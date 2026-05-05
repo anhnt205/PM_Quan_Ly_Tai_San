@@ -48,6 +48,7 @@ import { useAllDepartmentsQuery } from "../../Department/Mutation";
 import {
   listSigneInfo,
   generateBienBanKeHoachPdf,
+  generatePhieuSuCoPdf,
   getPermissionSigning,
   ShowPermissionSigning,
   canSign,
@@ -128,7 +129,7 @@ export default function MaintenanceApprovalPage() {
     activeTab === 0
       ? "maintenancePlanningPage"
       : activeTab === 5
-        ? "incidentPages"
+        ? "incidentPage"
         : "",
     activeTab === 0 ? "kehoach-suachua" : activeTab === 5 ? "suco-thietbi" : "",
   );
@@ -170,6 +171,7 @@ export default function MaintenanceApprovalPage() {
       label: "Phiếu báo SỰ CỐ",
       icon: <WarningOutlined />,
       idLabel: "Số phiếu",
+      field: "soPhieu",
     },
     {
       label: "BB Kiểm tra SỰ CỐ",
@@ -258,7 +260,11 @@ export default function MaintenanceApprovalPage() {
 
     if (collapsed) {
       return [
-        { field: "id", headerName: tabConfigs[activeTab].idLabel, flex: 1 },
+        {
+          field: tabConfigs[activeTab].field || "id",
+          headerName: tabConfigs[activeTab].idLabel,
+          flex: 1,
+        },
         {
           field: "status",
           headerName: "TT",
@@ -269,7 +275,11 @@ export default function MaintenanceApprovalPage() {
     }
 
     return [
-      { field: "id", headerName: tabConfigs[activeTab].idLabel, width: 160 },
+      {
+        field: tabConfigs[activeTab].field || "id",
+        headerName: tabConfigs[activeTab].idLabel,
+        width: 160,
+      },
       ...parentCols,
       { field: "moTa", headerName: "Mô tả", flex: 1, minWidth: 200 },
       { field: "ngayTao", headerName: "Ngày tạo", width: 120 },
@@ -359,19 +369,23 @@ export default function MaintenanceApprovalPage() {
         return <MaterialQualityPreview row={selectedRow} />;
       case 5:
         return (
-          <IncidentPreview
-            number={selectedRow.number}
-            detectedAt={selectedRow.detectedAt}
-            reporter={selectedRow.reporter}
-            reporterDeptId={selectedRow.reporterDeptId}
-            signers={selectedRow.signers}
-            systemName={selectedRow.systemName}
-            location={selectedRow.location}
-            description={selectedRow.description}
-            severity={selectedRow.severity}
-            subsystem={selectedRow.subsystem}
-            deviceEntries={selectedRow.deviceEntries}
-            planIds={selectedRow.planIds}
+          <SignDocumentForm
+            selectedIds={[selectedRow.id]}
+            onCancel={() => {
+              setSelectedRow(null);
+              setIsDetailOpen(false);
+            }}
+            onSign={() => {}}
+            plan={selectedRow}
+            staffs={staffs || []}
+            departments={departments || []}
+            positions={positions || []}
+            fullscreen={false}
+            showSignerSidebar={false}
+            showHeader={false}
+            generatePdf={() =>
+              generatePhieuSuCoPdf(selectedRow, staffs, departments, positions)
+            }
           />
         );
       case 6:
@@ -550,6 +564,26 @@ export default function MaintenanceApprovalPage() {
         />
       )}
 
+      {selectedRow && isSigning && activeTab === 5 && (
+        <SignDocumentForm
+          selectedIds={[selectedRow?.id]}
+          onCancel={() => {
+            setIsSigning(false);
+            setSelectedRow(null);
+          }}
+          onSign={handleSign}
+          plan={selectedRow}
+          staffs={staffs || []}
+          departments={departments || []}
+          positions={positions || []}
+          fullscreen={true}
+          showSignerSidebar={true}
+          generatePdf={() =>
+            generatePhieuSuCoPdf(selectedRow, staffs, departments, positions)
+          }
+        />
+      )}
+
       <PageAction title="Ký duyệt biên bản" />
 
       <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 2 }}>
@@ -588,6 +622,7 @@ export default function MaintenanceApprovalPage() {
                 setDateTo("");
                 setSelectedRow(null);
                 setSelectedItem([]);
+                setIsDetailOpen(false);
               }}
               sx={{
                 "& .MuiTab-root": {
@@ -698,7 +733,9 @@ export default function MaintenanceApprovalPage() {
               setSelectedItem([]);
               setSelectedRow(null);
             }}
-            generatePdf={generateBienBanKeHoachPdf}
+            generatePdf={
+              activeTab === 5 ? generatePhieuSuCoPdf : generateBienBanKeHoachPdf
+            }
             staffs={staffs || []}
             departments={departments || []}
             positions={positions || []}

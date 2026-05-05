@@ -298,7 +298,7 @@ export const useMaintenanceIncidentPageQuery = (
 ) => {
   return useQuery({
     queryKey: [
-      "incidenPage",
+      "incidentPage",
       page,
       pageSize,
       searchValue,
