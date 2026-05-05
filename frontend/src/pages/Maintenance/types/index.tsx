@@ -1,5 +1,6 @@
 import { ActionType } from "../../../utils/const";
 
+// sự cố
 export interface IncidenData {
   id: string;
   idCongTy: string;
@@ -45,3 +46,40 @@ export interface IncidenDetailData {
   tenDonViQuanLyKyThuat?: string;
   action?: ActionType;
 }
+
+// sửa chữa
+
+export interface MaintenanceRepairData {
+  id?: string;
+  idCongTy?: string;
+  soPhieu?: string;
+  idKeHoach?: string;
+  thang?: number;
+  nam?: number;
+  ghiChu?: string;
+  idNguoiLap?: string;
+  nguoiLapXacNhan?: boolean;
+  idGiamDoc?: string;
+  giamDocXacNhan?: boolean;
+  share?: boolean;
+  trangThai?: number;
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+  danhSachTaiSan?: MaintenanceRepairDetailData[];
+  nguoiKyList?: any[];
+}
+
+export interface MaintenanceRepairDetailData {
+  id?: string;
+  idSuaChua?: string;
+  idTaiSan?: string;
+  idKeHoachChiTiet: string;
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+  action?: ActionType;
+}
+

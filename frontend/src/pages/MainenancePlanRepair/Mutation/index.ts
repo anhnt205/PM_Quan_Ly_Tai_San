@@ -3,7 +3,7 @@ import api from "../../../config/api.config";
 import { MaintenancePlanData, PlanSigner } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import { Action, CongTy } from "../../../utils/const";
-import { IncidenData } from "../../Maintenance/types";
+import { IncidenData, MaintenanceRepairData } from "../../Maintenance/types";
 
 export const useMaintenancePlanningPageQuery = (
   page?: number,
@@ -510,6 +510,216 @@ export const useMaintenanceIncidenMutation = () => {
         error.response?.data?.message ||
           error.message ||
           "Xóa người ký thất bại",
+      );
+    },
+  });
+
+  return {
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    updateManyMutation,
+  };
+};
+
+// sửa chữa
+
+export const useMaintenanceRepairPageQuery = (
+  page?: number,
+  pageSize?: number,
+  searchValue?: string,
+  trangThai?: number,
+  idDonViGiao?: string,
+  userid?: string,
+) => {
+  return useQuery({
+    queryKey: [
+      "repairPage",
+      page,
+      pageSize,
+      searchValue,
+      trangThai,
+      idDonViGiao,
+      userid,
+    ],
+    queryFn: async () => {
+      const res = await api.get("/suachua/paged", {
+        params: {
+          page: page,
+          size: pageSize,
+          idCongTy: CongTy.CT001,
+          search: searchValue,
+          trangThai: trangThai,
+          userid: userid,
+        },
+      });
+      return res.data.data || res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};
+
+export const useMaintenanceRepairMutation = () => {
+  const queryClient = useQueryClient();
+
+  // --- API CHI TIẾT ---
+  const createChiTietManyMutation = useMutation({
+    mutationFn: async (data: any[]) => {
+      return (await api.post("/suachua-chitiet/batch", data)).data;
+    },
+  });
+
+  const updateChiTietManyMutation = useMutation({
+    mutationFn: async (data: any[]) => {
+      return (await api.put(`/suachua-chitiet/batch`, data)).data;
+    },
+  });
+
+  const deleteChiTietManyMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      return (
+        await api.delete(`/suachua-chitiet/batch`, {
+          data: ids,
+        })
+      ).data;
+    },
+  });
+
+  // TÁCH VÀ GỌI CÁC API CON
+  const handleUpdate = (
+    response: MaintenanceRepairData | any,
+    variables: MaintenanceRepairData,
+  ) => {
+    const repairId = response?.id || response?.data?.id;
+    if (!repairId) return;
+
+    // XỬ LÝ CHI TIẾT
+    if (variables.danhSachTaiSan && variables.danhSachTaiSan.length > 0) {
+      const details = variables.danhSachTaiSan;
+      const createItems = details.filter(
+        (i: any) => i.action === Action.CREATE || !i.id,
+      );
+      const updateItems = details.filter(
+        (i: any) => i.action === Action.UPDATE && i.id,
+      );
+      const deleteItems = details.filter(
+        (i: any) => i.action === Action.DELETE && i.id,
+      );
+
+      if (createItems.length > 0)
+        createChiTietManyMutation.mutate(
+          createItems.map((i: any) => ({ ...i, idSuaChua: repairId })),
+        );
+      if (updateItems.length > 0)
+        updateChiTietManyMutation.mutate(
+          updateItems.map((i: any) => ({ ...i, idSuaChua: repairId })),
+        );
+      if (deleteItems.length > 0)
+        deleteChiTietManyMutation.mutate(deleteItems.map((i: any) => i.id));
+    }
+
+    if (variables.nguoiKyList && variables.nguoiKyList.length > 0) {
+      updateSignerMutation.mutate({
+        idTaiLieu: repairId,
+        data: variables.nguoiKyList.map((item) => ({
+          ...item,
+          idTaiLieu: repairId,
+        })),
+      });
+    }
+  };
+
+  // --- API SỬA CHỮA ---
+  const createMutation = useMutation({
+    mutationFn: async (data: MaintenanceRepairData) => {
+      return (await api.post("/suachua", data)).data;
+    },
+    onSuccess: async (response, variables) => {
+      handleUpdate(response, variables);
+      queryClient.invalidateQueries({ queryKey: ["repairPage"] });
+      showSuccessAlert("Tạo giấy đề nghị sửa chữa thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message || "Tạo giấy đề nghị sửa chữa thất bại",
+      );
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: MaintenanceRepairData) => {
+      return (await api.put(`/suachua/${data.id}`, data)).data;
+    },
+    onSuccess: async (response, variables) => {
+      handleUpdate(response, variables);
+      queryClient.invalidateQueries({ queryKey: ["repairPage"] });
+
+      showSuccessAlert("Cập nhật giấy đề nghị thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message || "Cập nhật giấy đề nghị thất bại",
+      );
+    },
+  });
+
+  const updateManyMutation = useMutation({
+    mutationFn: async (data: MaintenanceRepairData[]) => {
+      const res = await api.put(`/suachua/batch`, data);
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: ["repairPage"] });
+      console.log("Sửa giấy đề nghị thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Sửa giấy đề nghị thất bại",
+      );
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (data: MaintenanceRepairData) => {
+      return (await api.delete(`/suachua/${data.id}`)).data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["repairPage"] });
+      showSuccessAlert("Xóa giấy đề nghị thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message || "Xóa giấy đề nghị thất bại",
+      );
+    },
+  });
+
+  // người kí
+  const updateSignerMutation = useMutation({
+    mutationFn: async ({
+      idTaiLieu,
+      data,
+    }: {
+      idTaiLieu: string;
+      data: PlanSigner[];
+    }) => {
+      const res = await api.put(`/chuky/nguoi-ky/update/${idTaiLieu}`, data);
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["repairPage"],
+      });
+
+      console.log("Cập nhật người ký thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Cập nhật người ký thất bại",
       );
     },
   });

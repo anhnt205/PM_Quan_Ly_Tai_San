@@ -20,7 +20,7 @@ import EditButton from "../../../components/Button/EditButton";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import FieldInput from "../../../components/TextField/FieldInput";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
-import { MaintenancePlanData, MaintenancePlanWorkItem } from "../types";
+import { MaintenancePlanData } from "../types";
 import { MaintenancePlanValidation } from "../validation/Validation";
 import { useDepartmentsPageQuery } from "../../Department/Mutation";
 import dayjs from "dayjs";
@@ -75,7 +75,6 @@ export default function MaintenancePlanningForm({
       ngayBatDau: dayjs(new Date()).format("YYYY-MM-DD"),
       ngayKetThuc: dayjs(new Date()).format("YYYY-MM-DD"),
       ghiChu: "",
-      congViecs: [] as MaintenancePlanWorkItem[],
 
       chiTietsTaiSan: [] as any[],
       chiTietsCCDC: [] as any[],
@@ -110,7 +109,6 @@ export default function MaintenancePlanningForm({
   useEffect(() => {
     if (selectedPlan) {
       const taiSans = selectedPlan.danhSachTaiSan || [];
-      const ccdcs = selectedPlan.danhSachVatTu || [];
 
       formik.setValues({
         ...formik.initialValues,
@@ -121,16 +119,6 @@ export default function MaintenancePlanningForm({
           ...item,
           action: Action.UPDATE,
           tenTaiSan: item.tenTaiSan || "",
-        })),
-        chiTietsCCDC: ccdcs.map((item: any) => ({
-          ...item,
-          action: Action.UPDATE,
-          tenCCDC: item.tenVatTu || item.tenCCDC,
-          idChiTietCCDC: item.idChiTietCCDC || item.idCCDC || item.id,
-        })),
-        congViecs: (selectedPlan.congViecs || []).map((item: any) => ({
-          ...item,
-          action: Action.UPDATE,
         })),
       });
     } else {
@@ -194,15 +182,11 @@ export default function MaintenancePlanningForm({
           </Box>
         </AccordionSummary>
         <AccordionDetails>
-          {![StatusPlan.PROGRESS, StatusPlan.COMPLETED].includes(
-            selectedPlan?.trangThai as StatusPlanType,
-          ) && (
-            <Box display="flex" gap={2}>
-              {!readOnly && <SaveBtn onSave={formik.submitForm} />}
-              {!readOnly && <CancelBtn onClick={onClose} />}
-              {readOnly && <EditButton onClick={onEdit} />}
-            </Box>
-          )}
+          <Box display="flex" gap={2}>
+            {!readOnly && <SaveBtn onSave={formik.submitForm} />}
+            {!readOnly && <CancelBtn onClick={onClose} />}
+            {readOnly && <EditButton onClick={onEdit} />}
+          </Box>
 
           {/* Thông tin cơ bản */}
           <Paper sx={{ mt: 2, p: 2, borderRadius: "12px" }}>

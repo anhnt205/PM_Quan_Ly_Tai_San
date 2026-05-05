@@ -6,7 +6,7 @@ import lombok.Data;
 public class SuaChuaChiTiet {
     private String id;
     private String idSuaChua;
-    private String idKeHoach;
+    private String idTaiSan;
     private String idKeHoachChiTiet;
     
     // Audit

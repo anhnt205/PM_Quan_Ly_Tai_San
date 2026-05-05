@@ -35,12 +35,11 @@ import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import { devices } from "../../../../mockdata/mockDevices";
 import { departments } from "../../../../mockdata/mockDepartments";
 import {
-  months as monthLabels,
+  months,
   maintenanceLevelLabels,
   maintenanceLevelColors,
   type MaintenanceLevel,
 } from "../../../../mockdata/mockPlans";
-import type { RepairRequest } from "../../../../mockdata/mockRepairRequests";
 import type {
   AcceptanceTestRecord,
   MaterialQualityRecord,
@@ -51,16 +50,20 @@ import RepairRequestDialog from "../dialog/RepairRequestDialog";
 import InspectionRecordDialog from "../dialog/InspectionRecordDialog";
 import AcceptanceTestDialog from "../dialog/AcceptanceTestDialog";
 import MaterialDialog from "../dialog/MaterialDialog";
-import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
+import {
+  MaintenancePlanAssetItem,
+  MaintenancePlanData,
+} from "../../../MainenancePlanRepair/types";
+import { MaintenanceRepairData } from "../../types";
 
 interface Props {
   plan: MaintenancePlanData;
-  repairRequests: RepairRequest[];
+  repairRequests: MaintenanceRepairData[];
   inspectionRecords: TechnicalInspectionRecord[];
   acceptanceTestRecords: AcceptanceTestRecord[];
   materialQualityRecords: MaterialQualityRecord[];
   onClose: () => void;
-  onCreateRepairRequest: (req: RepairRequest) => void;
+  onCreateRepairRequest: (req: MaintenanceRepairData) => void;
   onCreateInspectionRecord: (record: TechnicalInspectionRecord) => void;
   onCreateAcceptanceRecord: (record: AcceptanceTestRecord) => void;
   onCreateMaterialQualityRecord: (record: MaterialQualityRecord) => void;
@@ -249,35 +252,35 @@ const PlanDetailPanel = ({
     null,
   );
 
-  const schedule: Record<string, MaintenanceLevel[]> =
-    (plan as any).monthlySchedule ?? {};
-  const planRequests = repairRequests.filter((r) => r.planId === plan.id);
+  // const schedule: Record<string, MaintenanceLevel[]> =
+  //   (plan as any).monthlySchedule ?? {};
+  // const planRequests = repairRequests.filter((r) => r.idKeHoach === plan.id);
 
   // ── Tab 0 helpers ─────────────────────────────────────
-  const usedDeviceIds = useMemo(() => {
-    const ids = new Set<string>();
-    planRequests
-      .filter((r) => r.month === selectedMonth + 1)
-      .forEach((r) => r.deviceIds.forEach((id) => ids.add(id)));
-    return ids;
-  }, [planRequests, selectedMonth]);
+  // const usedDeviceIds = useMemo(() => {
+  //   const ids = new Set<string>();
+  //   planRequests
+  //     .filter((r) => r.month === selectedMonth + 1)
+  //     .forEach((r) => r.deviceIds.forEach((id) => ids.add(id)));
+  //   return ids;
+  // }, [planRequests, selectedMonth]);
 
-  const devicesForMonth = useMemo(() => {
-    return (
-      plan.danhSachTaiSan ||
-      []
-        .map((ts: any) => devices.find((d) => d.id === ts.idTaiSan))
-        .filter(Boolean)
-        .filter((d) => {
-          const row = schedule[d!.id];
-          return !row || !!row[selectedMonth];
-        })
-        .map((d) => d!)
-    );
-  }, [plan.danhSachTaiSan, schedule, selectedMonth]);
+  // const devicesForMonth = useMemo(() => {
+  //   return (
+  //     plan.danhSachTaiSan ||
+  //     []
+  //       .map((ts: any) => devices.find((d) => d.id === ts.idTaiSan))
+  //       .filter(Boolean)
+  //       .filter((d) => {
+  //         const row = schedule[d!.id];
+  //         return !row || !!row[selectedMonth];
+  //       })
+  //       .map((d) => d!)
+  //   );
+  // }, [plan.danhSachTaiSan, schedule, selectedMonth]);
 
-  const availableDevices = devicesForMonth.filter(
-    (d) => !usedDeviceIds.has(d.id || ""),
+  const availableDevices = (plan?.danhSachTaiSan || []).filter(
+    (d: any) => d?.id,
   );
 
   const handleToggle = (id: string) =>
@@ -289,7 +292,7 @@ const PlanDetailPanel = ({
     setSelectedDeviceIds(
       selectedDeviceIds.length === availableDevices.length
         ? []
-        : availableDevices.map((d) => d.id || ""),
+        : availableDevices.map((d: any) => d.id || ""),
     );
 
   const toggle = (
@@ -301,6 +304,8 @@ const PlanDetailPanel = ({
     next.has(id) ? next.delete(id) : next.add(id);
     setter(next);
   };
+
+  const planRequests: MaintenanceRepairData[] = [];
 
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -369,7 +374,7 @@ const PlanDetailPanel = ({
                     setSelectedDeviceIds([]);
                   }}
                 >
-                  {monthLabels.map((m, idx) => (
+                  {months.map((m, idx) => (
                     <MenuItem key={idx} value={idx}>
                       {m}
                     </MenuItem>
@@ -422,7 +427,8 @@ const PlanDetailPanel = ({
                 {plan?.danhSachTaiSan?.map((device: any, idx) => {
                   const level =
                     device[`capSuaChuaThang${selectedMonth + 1}`] || "";
-                  const isUsed = usedDeviceIds.has(device.id || "");
+                  if (!level) return null;
+                  const isUsed = false;
                   return (
                     <TableRow
                       key={device.id}
@@ -438,9 +444,9 @@ const PlanDetailPanel = ({
                         </TableCell>
                       )}
                       <TableCell>{idx + 1}</TableCell>
-                      <TableCell>{device.id}</TableCell>
-                      <TableCell>{device.name}</TableCell>
-                      <TableCell>{device.group}</TableCell>
+                      <TableCell>{device.idTaiSan}</TableCell>
+                      <TableCell>{device.tenTaiSan}</TableCell>
+                      <TableCell>{device.idNhomTaiSan}</TableCell>
                       <TableCell>
                         <Chip
                           label={
@@ -456,7 +462,7 @@ const PlanDetailPanel = ({
                           }}
                         />
                       </TableCell>
-                      <TableCell>{device.quantity}</TableCell>
+                      <TableCell>{device.soLuong}</TableCell>
                       <TableCell>
                         {isUsed ? (
                           <Chip label="Đã lập lệnh" size="small" color="info" />
@@ -471,7 +477,7 @@ const PlanDetailPanel = ({
                     </TableRow>
                   );
                 })}
-                {devicesForMonth.length === 0 && (
+                {availableDevices.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
                       Không có thiết bị cần SCBD trong tháng {selectedMonth + 1}
@@ -553,12 +559,12 @@ const PlanDetailPanel = ({
                               onClick={() =>
                                 toggle(
                                   expandedRequests,
-                                  req.id,
+                                  req.id ?? "",
                                   setExpandedRequests,
                                 )
                               }
                             >
-                              {expandedRequests.has(req.id) ? (
+                              {expandedRequests.has(req.id ?? "") ? (
                                 <KeyboardArrowUpIcon />
                               ) : (
                                 <KeyboardArrowDownIcon />
@@ -569,20 +575,20 @@ const PlanDetailPanel = ({
                             variant="body2"
                             sx={{ ml: `${CONNECTOR_WIDTH * 1 + 8}px` }}
                           >
-                            {req.number}
+                            {req.soPhieu}
                           </Typography>
                         </TableCell>
                         <TableCell>
                           <Chip label="GĐ Sửa chữa" size="small" />
                         </TableCell>
-                        <TableCell>{req.createdDate}</TableCell>
+                        <TableCell>{req.ngayTao}</TableCell>
                         <TableCell>
-                          <StatusChip status={0} />
+                          <StatusChip status={Number(req.trangThai)} />
                         </TableCell>
                         <TableCell align="right">
                           <ActionCell
                             onView={() => {}}
-                            onAdd={() => setInspectionParentReqId(req.id)}
+                            onAdd={() => setInspectionParentReqId(req.id ?? "")}
                             addTooltip="Tạo BB Giám định"
                             addColor="success"
                           />
@@ -590,7 +596,7 @@ const PlanDetailPanel = ({
                       </TableRow>
 
                       {/* Level 2 */}
-                      {expandedRequests.has(req.id) &&
+                      {expandedRequests.has(req.id ?? "") &&
                         inspections.map((insp, inspIdx) => {
                           const acceptances = acceptanceTestRecords.filter(
                             (a) => a.inspectionRecordId === insp.id,

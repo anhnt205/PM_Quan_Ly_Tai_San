@@ -34,6 +34,8 @@ public class SuaChuaDao {
                 sc.IdCongTy,
                 sc.SoPhieu,
                 sc.IdKeHoach,
+                sc.Thang,
+                sc.Nam,
                 sc.GhiChu,
                 sc.IdNguoiLap,
                 nvLap.HoTen AS tenNguoiLap,
@@ -87,7 +89,7 @@ public class SuaChuaDao {
     public String generateNextId() {
         int currentYear = Year.now().getValue();
         String seqName = "SUACHUA";
-        String prefix = "SC-" + currentYear + "-";
+        String prefix = "SUACHUA-" + currentYear + "-";
         try {
             var result = jdbcTemplate.queryForMap("SELECT SeqYear, SeqValue FROM Sequence WHERE SeqName = ?", seqName);
             int seqYear = ((Number) result.get("SeqYear")).intValue();
@@ -111,17 +113,15 @@ public class SuaChuaDao {
 
     public SuaChua insert(SuaChua e) {
         e.setId(generateNextId());
-        e.setNgayTao(new Date());
-        e.setNgayCapNhat(e.getNgayTao());
         String sql = """
             INSERT INTO suachua (
-                Id, IdCongTy, SoPhieu, IdKeHoach, GhiChu,
+                Id, IdCongTy, SoPhieu, IdKeHoach, Thang, Nam, GhiChu,
                 IdNguoiLap, NguoiLapXacNhan, IdGiamDoc, GiamDocXacNhan,
                 Share, TrangThai, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         int r = jdbcTemplate.update(sql,
-                e.getId(), e.getIdCongTy(), e.getSoPhieu(), e.getIdKeHoach(), e.getGhiChu(),
+                e.getId(), e.getIdCongTy(), e.getSoPhieu(), e.getIdKeHoach(), e.getThang(), e.getNam(), e.getGhiChu(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai() != null ? e.getTrangThai() : 0, 
                 e.getNgayTao(), e.getNgayCapNhat(), e.getNguoiTao(), e.getNguoiCapNhat()
@@ -131,16 +131,15 @@ public class SuaChuaDao {
     }
 
     public SuaChua update(SuaChua e) {
-        e.setNgayCapNhat(new Date());
         String sql = """
             UPDATE suachua SET
-                SoPhieu = ?, IdKeHoach = ?, GhiChu = ?,
+                SoPhieu = ?, IdKeHoach = ?, Thang = ?, Nam = ?, GhiChu = ?,
                 IdNguoiLap = ?, NguoiLapXacNhan = ?, IdGiamDoc = ?, GiamDocXacNhan = ?,
                 Share = ?, TrangThai = ?, NgayCapNhat = ?, NguoiCapNhat = ?
             WHERE Id = ?
             """;
         int r = jdbcTemplate.update(sql,
-                e.getSoPhieu(), e.getIdKeHoach(), e.getGhiChu(),
+                e.getSoPhieu(), e.getIdKeHoach(), e.getThang(), e.getNam(), e.getGhiChu(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai(), e.getNgayCapNhat(), e.getNguoiCapNhat(),
                 e.getId()
@@ -150,7 +149,7 @@ public class SuaChuaDao {
     }
 
     public int updateTrangThai(String id, Integer trangThai) {
-        int r = jdbcTemplate.update("UPDATE suachua SET TrangThai = ?, NgayCapNhat = ? WHERE Id = ?", trangThai, new Date(), id);
+        int r = jdbcTemplate.update("UPDATE suachua SET TrangThai = ? WHERE Id = ?", trangThai, id);
         if (r > 0) CompletableFuture.runAsync(this::refreshCache);
         return r;
     }

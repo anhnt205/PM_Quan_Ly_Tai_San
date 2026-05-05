@@ -9,6 +9,8 @@ public class SuaChua {
     private String idCongTy;
     private String soPhieu;
     private String idKeHoach;
+    private Integer thang;
+    private Integer nam;
     private String ghiChu;
     
     // Người lập phiếu
@@ -24,8 +26,8 @@ public class SuaChua {
     private Integer trangThai; // 0:nháp, 1:duyệt, 2:hủy, 3:hoàn thành
     
     // Audit
-    private Date ngayTao;
-    private Date ngayCapNhat;
+    private String ngayTao;
+    private String ngayCapNhat;
     private String nguoiTao;
     private String nguoiCapNhat;
 

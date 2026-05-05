@@ -20,11 +20,17 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 
-import { departments, users } from "../../../../mockdata/mockDepartments";
 import type { PlanSigner } from "../../../../mockdata/mockPlans";
-import type { RepairRequest } from "../../../../mockdata/mockRepairRequests";
 import RepairRequestPreview from "../preview/RepairRequestPreview";
 import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
+import { useAllDepartmentsQuery } from "../../../Department/Mutation";
+import { useAllStaffsQuery } from "../../../Staff/Mutation";
+import { DepartmentType } from "../../../Department/types";
+import { StaffType } from "../../../Staff/types";
+import { generateCode } from "../../../../utils/helpers";
+import { CongTy } from "../../../../utils/const";
+import dayjs from "dayjs";
+import { MaintenanceRepairData } from "../../types";
 
 interface Props {
   open: boolean;
@@ -32,7 +38,7 @@ interface Props {
   plan: MaintenancePlanData;
   selectedDeviceIds: string[];
   selectedMonth: number;
-  onSubmit: (req: RepairRequest) => void;
+  onSubmit: (req: MaintenanceRepairData) => void;
 }
 
 const RepairRequestDialog = ({
@@ -60,19 +66,22 @@ const RepairRequestDialog = ({
   const sourceDeptId = plan.idDonViGiao || "";
   const execDeptId = plan.idDonViNhan || "";
 
+  const { data: apiDepartments = [] } = useAllDepartmentsQuery();
+  const { data: apiUsers = [] } = useAllStaffsQuery();
+
   const handleAddSigner = () => {
     if (!addUserId || !addDeptId) return;
     if (signers.some((s) => s.userId === addUserId)) return;
-    const user = users.find((u) => u.id === addUserId);
-    const dept = departments.find((d) => d.id === addDeptId);
+    const user = apiUsers.find((u: any) => u.id === addUserId);
+    const dept = apiDepartments.find((d: any) => d.id === addDeptId);
     if (!user || !dept) return;
     setSigners((prev) => [
       ...prev,
       {
         userId: user.id,
-        userName: user.name,
+        userName: user.hoTen,
         departmentId: dept.id,
-        departmentName: dept.name,
+        departmentName: dept.tenPhongBan,
         order: prev.length + 1,
         signed: false,
       },
@@ -102,10 +111,12 @@ const RepairRequestDialog = ({
           ? {
               ...s,
               userId: editUserId,
-              userName: users.find((u) => u.id === editUserId)?.name || "",
+              userName:
+                apiUsers.find((u: any) => u.id === editUserId)?.hoTen || "",
               departmentId: editDeptId,
               departmentName:
-                departments.find((d) => d.id === editDeptId)?.name || "",
+                apiDepartments.find((d: any) => d.id === editDeptId)
+                  ?.tenPhongBan || "",
             }
           : s,
       ),
@@ -114,34 +125,48 @@ const RepairRequestDialog = ({
   };
 
   const handleSubmit = () => {
-    const today = new Date().toLocaleDateString("vi-VN");
-    const req: RepairRequest = {
-      id: `GDN-${Date.now()}`,
-      planId: plan.id,
-      number:
-        number ||
-        `${sourceDeptId}-${String(selectedMonth + 1).padStart(2, "0")}-${plan.nam}`,
-      month: selectedMonth + 1,
-      year: plan.nam,
-      deviceIds: selectedDeviceIds,
-      sourceDepartmentId: sourceDeptId,
-      executionDepartmentId: execDeptId,
-      signers,
-      status: "cho-duyet",
-      createdDate: today,
-      createdBy: signers[0]?.userId || "",
-      note,
+    const idNguoiLapBieu = signers.length > 0 ? signers[0].userId : "";
+    const idTrinhDuyetGiamDoc =
+      signers.length > 1 ? signers[signers.length - 1].userId : "";
+
+    // Người ký trung gian (nếu có)
+    const intermediateSigners =
+      signers.length > 2
+        ? signers.slice(1, -1).map((s: PlanSigner, idx: number) => ({
+            id: `${generateCode("SIG-")}-${idx}`,
+            idNguoiKy: s.userId,
+            tenNguoiKy: s.userName,
+            idPhongBan: s.departmentId,
+            trangThai: 0,
+          }))
+        : [];
+    const req: MaintenanceRepairData = {
+      idCongTy: CongTy.CT001,
+      soPhieu: number,
+      idKeHoach: plan?.id || "",
+      thang: selectedMonth + 1,
+      nam: plan.nam,
+      ghiChu: note,
+      idNguoiLap: idNguoiLapBieu,
+      nguoiLapXacNhan: false,
+      idGiamDoc: idTrinhDuyetGiamDoc,
+      giamDocXacNhan: false,
+      share: true,
+      trangThai: 0,
+      ngayTao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      ngayCapNhat: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      danhSachTaiSan: plan?.danhSachTaiSan
+        ?.filter((item) => selectedDeviceIds.includes(item.id ?? ""))
+        ?.map((s) => ({
+          idKeHoachChiTiet: s.id || "",
+          idTaiSan: s.idTaiSan || "",
+        })),
+      nguoiKyList: intermediateSigners,
     };
     onSubmit(req);
     setNumber("");
     setNote("");
-    setSigners(
-      (plan.nguoiKyList as PlanSigner[] | undefined)?.map((s) => ({
-        ...s,
-        signed: false,
-        signedAt: undefined,
-      })) ?? [],
-    );
+    setSigners([]);
   };
 
   return (
@@ -259,7 +284,7 @@ const RepairRequestDialog = ({
                       }}
                     />
                     {signers.map((s, idx) => {
-                      const user = users.find((u) => u.id === s.userId);
+                      const user = apiUsers.find((u: any) => u.id === s.userId);
                       const isEditingThis = editingSignerId === s.userId;
                       return (
                         <Box
@@ -323,9 +348,9 @@ const RepairRequestDialog = ({
                                       setEditUserId("");
                                     }}
                                   >
-                                    {departments.map((d) => (
+                                    {apiDepartments.map((d: any) => (
                                       <MenuItem key={d.id} value={d.id}>
-                                        {d.name}
+                                        {d.tenPhongBan}
                                       </MenuItem>
                                     ))}
                                   </Select>
@@ -339,13 +364,15 @@ const RepairRequestDialog = ({
                                       setEditUserId(e.target.value)
                                     }
                                   >
-                                    {users
+                                    {apiUsers
                                       .filter(
-                                        (u) => u.departmentId === editDeptId,
+                                        (u: any) =>
+                                          u.phongBanId === editDeptId &&
+                                          u.hasAccount,
                                       )
-                                      .map((u) => (
+                                      .map((u: any) => (
                                         <MenuItem key={u.id} value={u.id}>
-                                          {u.name}
+                                          {u.hoTen}
                                         </MenuItem>
                                       ))}
                                   </Select>
@@ -396,25 +423,21 @@ const RepairRequestDialog = ({
                                       flexShrink: 0,
                                     }}
                                   >
-                                    {user?.name?.charAt(0) ?? "?"}
+                                    {user?.hoTen?.charAt(0) ?? "?"}
                                   </Box>
                                   <Box>
                                     <Typography fontWeight={600} fontSize={13}>
-                                      {user?.name}
+                                      {user?.hoTen}
                                     </Typography>
                                     <Typography
                                       variant="caption"
                                       color="text.secondary"
                                     >
-                                      {user?.title}
+                                      {user?.tenChucVu}
                                     </Typography>
                                     <Box sx={{ mt: 0.5 }}>
                                       <Chip
-                                        label={
-                                          departments.find(
-                                            (d) => d.id === s.departmentId,
-                                          )?.name ?? s.departmentId
-                                        }
+                                        label={user.tenPhongBan}
                                         size="small"
                                         sx={{
                                           fontSize: 10,
@@ -474,15 +497,15 @@ const RepairRequestDialog = ({
                   <InputLabel>Phòng ban</InputLabel>
                   <Select
                     value={addDeptId}
-                    label="Phòng ban"
+                    label="Đơn vị"
                     onChange={(e) => {
                       setAddDeptId(e.target.value);
                       setAddUserId("");
                     }}
                   >
-                    {departments.map((d) => (
+                    {apiDepartments.map((d: DepartmentType) => (
                       <MenuItem key={d.id} value={d.id}>
-                        {d.name}
+                        {d.tenPhongBan}
                       </MenuItem>
                     ))}
                   </Select>
@@ -495,15 +518,18 @@ const RepairRequestDialog = ({
                     label="Người duyệt"
                     onChange={(e) => setAddUserId(e.target.value)}
                   >
-                    {users
-                      .filter((u) => u.departmentId === addDeptId)
-                      .map((u) => (
+                    {apiUsers
+                      .filter(
+                        (u: StaffType) =>
+                          u.hasAccount && u.phongBanId === addDeptId,
+                      )
+                      .map((u: StaffType) => (
                         <MenuItem
                           key={u.id}
                           value={u.id}
                           disabled={signers.some((s) => s.userId === u.id)}
                         >
-                          {u.name} – {u.title}
+                          {u.hoTen}
                         </MenuItem>
                       ))}
                   </Select>

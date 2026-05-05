@@ -10,7 +10,6 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import type { RepairRequest } from '../../../../mockdata/mockRepairRequests';
 import type {
   AcceptanceTestRecord,
   MaterialQualityRecord,
@@ -19,12 +18,13 @@ import type {
 } from '../../../../mockdata/mockInspectionRecords';
 import { departments, users } from '../../../../mockdata/mockDepartments';
 import { MaintenancePlanData } from '../../../MainenancePlanRepair/types';
+import { MaintenanceRepairData } from '../../types';
 
 interface Props {
   open: boolean;
   onClose: () => void;
   plan: MaintenancePlanData;
-  repairRequest: RepairRequest;
+  repairRequest: MaintenanceRepairData;
   acceptanceRecord: AcceptanceTestRecord;
   onSubmit: (record: MaterialQualityRecord) => void;
 }
@@ -108,7 +108,7 @@ const MaterialDialog = ({ open, onClose, plan, repairRequest, acceptanceRecord, 
     const record: MaterialQualityRecord = {
       id: `DG-${Date.now()}`,
       acceptanceRecordId: acceptanceRecord.id,
-      repairRequestId: repairRequest.id,
+      repairRequestId: repairRequest.id || "",
       planId: plan.id,
       number,
       date,

@@ -107,4 +107,29 @@ public class SuaChuaChiTietController {
                     .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
         }
     }
+
+    @PutMapping("/batch")
+    public ResponseEntity<ApiResponse<Object>> batchUpdate(@RequestBody List<SuaChuaChiTiet> list) {
+        try {
+            int total = service.batchUpdate(list);
+            if (total > 0) return ResponseEntity.ok(
+                    ApiResponse.success("Cập nhật danh sách chi tiết thành công", null, total));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.failure("Cập nhật danh sách chi tiết thất bại", total));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
+    @DeleteMapping("/batch")
+    public ResponseEntity<ApiResponse<Object>> batchDelete(@RequestBody List<String> ids) {
+        try {
+            service.batchDelete(ids);
+            return ResponseEntity.ok(ApiResponse.success("Xóa danh sách chi tiết thành công", null, ids.size()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
 }

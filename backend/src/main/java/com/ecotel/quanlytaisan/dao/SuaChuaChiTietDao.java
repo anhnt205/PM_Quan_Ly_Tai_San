@@ -41,12 +41,12 @@ public class SuaChuaChiTietDao {
     public int insert(SuaChuaChiTiet entity) {
         String sql = """
             INSERT INTO suachua_chitiet (
-                Id, IdSuaChua, IdKeHoach, IdKeHoachChiTiet,
+                Id, IdSuaChua, IdTaiSan, IdKeHoachChiTiet,
                 NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """;
         return jdbcTemplate.update(sql,
-                entity.getId(), entity.getIdSuaChua(), entity.getIdKeHoach(), entity.getIdKeHoachChiTiet(),
+                entity.getId(), entity.getIdSuaChua(), entity.getIdTaiSan(), entity.getIdKeHoachChiTiet(),
                 entity.getNgayTao(), entity.getNgayCapNhat(), entity.getNguoiTao(), entity.getNguoiCapNhat()
         );
     }
@@ -54,7 +54,7 @@ public class SuaChuaChiTietDao {
     public int[] batchInsert(List<SuaChuaChiTiet> list) {
         String sql = """
             INSERT INTO suachua_chitiet (
-                Id, IdSuaChua, IdKeHoach, IdKeHoachChiTiet,
+                Id, IdSuaChua, IdTaiSan, IdKeHoachChiTiet,
                 NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """;
@@ -65,7 +65,7 @@ public class SuaChuaChiTietDao {
                 SuaChuaChiTiet entity = list.get(i);
                 ps.setString(1, entity.getId());
                 ps.setString(2, entity.getIdSuaChua());
-                ps.setString(3, entity.getIdKeHoach());
+                ps.setString(3, entity.getIdTaiSan());
                 ps.setString(4, entity.getIdKeHoachChiTiet());
                 ps.setString(5, entity.getNgayTao());
                 ps.setString(6, entity.getNgayCapNhat());
@@ -80,11 +80,11 @@ public class SuaChuaChiTietDao {
     public int update(SuaChuaChiTiet entity) {
         String sql = """
             UPDATE suachua_chitiet SET
-                IdKeHoach = ?, IdKeHoachChiTiet = ?, NgayCapNhat = ?, NguoiCapNhat = ?
+                IdTaiSan = ?, IdKeHoachChiTiet = ?, NgayCapNhat = ?, NguoiCapNhat = ?
             WHERE Id = ?
             """;
         return jdbcTemplate.update(sql,
-                entity.getIdKeHoach(), entity.getIdKeHoachChiTiet(), entity.getNgayCapNhat(),
+                entity.getIdTaiSan(), entity.getIdKeHoachChiTiet(), entity.getNgayCapNhat(),
                 entity.getNguoiCapNhat(), entity.getId()
         );
     }
@@ -97,5 +97,31 @@ public class SuaChuaChiTietDao {
     public int deleteById(String id) {
         String sql = "DELETE FROM suachua_chitiet WHERE Id = ?";
         return jdbcTemplate.update(sql, id);
+    }
+
+    public int[] batchUpdate(List<SuaChuaChiTiet> list) {
+        String sql = """
+            UPDATE suachua_chitiet SET
+                IdTaiSan = ?, IdKeHoachChiTiet = ?, NgayCapNhat = ?, NguoiCapNhat = ?
+            WHERE Id = ?
+            """;
+        return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                SuaChuaChiTiet entity = list.get(i);
+                ps.setString(1, entity.getIdTaiSan());
+                ps.setString(2, entity.getIdKeHoachChiTiet());
+                ps.setString(3, entity.getNgayCapNhat());
+                ps.setString(4, entity.getNguoiCapNhat());
+                ps.setString(5, entity.getId());
+            }
+            @Override
+            public int getBatchSize() { return list.size(); }
+        });
+    }
+
+    public void batchDelete(List<String> ids) {
+        String sql = "DELETE FROM suachua_chitiet WHERE Id = ?";
+        jdbcTemplate.batchUpdate(sql, ids, 50, (ps, id) -> ps.setString(1, id));
     }
 }

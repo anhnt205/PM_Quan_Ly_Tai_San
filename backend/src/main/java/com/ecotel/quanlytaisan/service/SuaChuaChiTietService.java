@@ -53,4 +53,15 @@ public class SuaChuaChiTietService {
     public boolean deleteByIdSuaChua(String idSuaChua) {
         return chiTietDao.deleteByIdSuaChua(idSuaChua) > 0;
     }
+
+    public int batchUpdate(List<SuaChuaChiTiet> list) {
+        int[] result = chiTietDao.batchUpdate(list);
+        int total = 0;
+        for (int i : result) total += i;
+        return total;
+    }
+
+    public void batchDelete(List<String> ids) {
+        chiTietDao.batchDelete(ids);
+    }
 }

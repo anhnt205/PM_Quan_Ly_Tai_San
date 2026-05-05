@@ -10,7 +10,6 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import type { RepairRequest } from '../../../../mockdata/mockRepairRequests';
 import type {
   TechnicalInspectionRecord,
   AcceptanceTestRecord,
@@ -19,12 +18,13 @@ import type {
 } from '../../../../mockdata/mockInspectionRecords';
 import { departments, users } from '../../../../mockdata/mockDepartments';
 import { MaintenancePlanData } from '../../../MainenancePlanRepair/types';
+import { MaintenanceRepairData } from '../../types';
 
 interface Props {
   open: boolean;
   onClose: () => void;
   plan: MaintenancePlanData;
-  repairRequest: RepairRequest;
+  repairRequest: MaintenanceRepairData;
   inspectionRecord: TechnicalInspectionRecord;
   onSubmit: (record: AcceptanceTestRecord) => void;
 }
@@ -145,7 +145,7 @@ const AcceptanceTestDialog = ({ open, onClose, plan, repairRequest, inspectionRe
     const record: AcceptanceTestRecord = {
       id: `NT-${Date.now()}`,
       inspectionRecordId: inspectionRecord.id,
-      repairRequestId: repairRequest.id,
+      repairRequestId: repairRequest.id || "",
       planId: plan.id,
       number,
       date,
@@ -184,7 +184,7 @@ const AcceptanceTestDialog = ({ open, onClose, plan, repairRequest, inspectionRe
               Biên bản nghiệm thu chạy thử và bàn giao thiết bị sau sửa chữa
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Căn cứ BB giám định: {inspectionRecord.number} — GĐN: {repairRequest.number || repairRequest.id}
+              Căn cứ BB giám định: {inspectionRecord.number} — GĐN: {repairRequest.soPhieu || repairRequest.id}
             </Typography>
           </Box>
         </Box>

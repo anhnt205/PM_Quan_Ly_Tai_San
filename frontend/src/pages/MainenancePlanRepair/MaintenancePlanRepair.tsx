@@ -44,6 +44,7 @@ import {
   useMaintenanceIncidentByPlanQuery,
   useMaintenancePlanningGroupedQuery,
   useMaintenancePlanningMutation,
+  useMaintenanceRepairMutation,
 } from "./Mutation";
 import { CongTy } from "../../utils/const";
 import { MaintenancePlanData } from "./types";
@@ -155,6 +156,7 @@ export default function MaintenancePlanRepair() {
     initialIncidentInspectionRecords,
   );
   const searchDebounce = useDebounce(searchValue, 500);
+  // kehoach
   const { data: groupedData, isLoading } = useMaintenancePlanningGroupedQuery(
     CongTy.CT001,
     statusFilter,
@@ -163,6 +165,8 @@ export default function MaintenancePlanRepair() {
   );
   const { createMutation, updateMutation, deleteMutation, updateManyMutation } =
     useMaintenancePlanningMutation();
+
+  // su co
   const {
     createMutation: createIncidentMutation,
     updateMutation: updateIncidentMutation,
@@ -174,12 +178,19 @@ export default function MaintenancePlanRepair() {
     expandedIncidentPlanIds.values().next().value,
   );
 
+  // sua chua
+  const {
+    createMutation: createRepairMutation,
+    updateMutation: updateRepairMutation,
+    deleteMutation: deleteRepairMutation,
+    updateManyMutation: updateManyRepairMutation,
+  } = useMaintenanceRepairMutation();
+
   const {
     repairRequests,
     inspectionRecords,
     acceptanceTestRecords,
     materialQualityRecords,
-    addRepairRequest,
     addInspectionRecord,
     addAcceptanceTestRecord,
     addMaterialQualityRecord,
@@ -1272,7 +1283,7 @@ export default function MaintenancePlanRepair() {
                   acceptanceTestRecords={acceptanceTestRecords}
                   materialQualityRecords={materialQualityRecords}
                   onClose={handleCloseAll}
-                  onCreateRepairRequest={addRepairRequest}
+                  onCreateRepairRequest={createRepairMutation.mutateAsync}
                   onCreateInspectionRecord={addInspectionRecord}
                   onCreateAcceptanceRecord={addAcceptanceTestRecord}
                   onCreateMaterialQualityRecord={addMaterialQualityRecord}

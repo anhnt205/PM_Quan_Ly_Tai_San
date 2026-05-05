@@ -30,21 +30,19 @@ import CloseIcon from "@mui/icons-material/Close";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import { devices } from "../../../../mockdata/mockDevices";
 import { departments, users } from "../../../../mockdata/mockDepartments";
-import type { RepairRequest } from "../../../../mockdata/mockRepairRequests";
 import type {
   TechnicalInspectionRecord,
   DeviceInspectionEntry,
   InspectionSigner,
 } from "../../../../mockdata/mockInspectionRecords";
 import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
+import { MaintenanceRepairData } from "../../types";
 
 interface Props {
   open: boolean;
   onClose: () => void;
   plan: MaintenancePlanData;
-  // null khi gọi từ luồng sự cố (không có GĐ sửa chữa)
-  repairRequest: RepairRequest | null;
-  // Danh sách deviceId override — dùng khi repairRequest là null
+  repairRequest: MaintenanceRepairData | null;
   deviceIds?: string[];
   onSubmit: (record: TechnicalInspectionRecord) => void;
 }
@@ -57,13 +55,6 @@ const InspectionRecordDialog = ({
   deviceIds,
   onSubmit,
 }: Props) => {
-  // Tính danh sách device để hiển thị:
-  // 1. Nếu có repairRequest → dùng repairRequest.deviceIds
-  // 2. Nếu không → dùng prop deviceIds
-  // 3. Fallback: mảng rỗng
-  const effectiveDeviceIds: string[] =
-    repairRequest?.deviceIds ?? deviceIds ?? [];
-
   const [number, setNumber] = useState(
     repairRequest ? `BB-GD-${repairRequest.id}` : `BB-GD-SC-${Date.now()}`,
   );
@@ -75,21 +66,7 @@ const InspectionRecordDialog = ({
   const [scrapCount, setScrapCount] = useState(0);
   const [destroyCount, setDestroyCount] = useState(0);
 
-  const [entries, setEntries] = useState<DeviceInspectionEntry[]>(() =>
-    effectiveDeviceIds.map((id) => {
-      const device = devices.find((d) => d.id === id);
-      return {
-        deviceId: id,
-        deviceName: device?.name || id,
-        unit: "Cái",
-        quantity: device?.quantity || 1,
-        technicalCondition: "",
-        actionRepair: true,
-        actionReplace: false,
-        note: "",
-      };
-    }),
-  );
+  const [entries, setEntries] = useState<DeviceInspectionEntry[]>([]);
 
   const defaultSigners: InspectionSigner[] = [
     {
@@ -227,7 +204,7 @@ const InspectionRecordDialog = ({
 
   // Label tham chiếu ở header dialog — khác nhau tùy luồng
   const referenceLabel = repairRequest
-    ? `${repairRequest.number || repairRequest.id} — Tháng ${repairRequest.month}/${repairRequest.year}`
+    ? `${repairRequest.soPhieu || repairRequest.id} — Tháng ${repairRequest.thang}/${repairRequest.nam}`
     : `Kế hoạch: ${plan.id}`;
 
   return (
@@ -265,7 +242,7 @@ const InspectionRecordDialog = ({
       <Divider />
 
       <DialogContent sx={{ p: 3, overflow: "auto" }}>
-        {effectiveDeviceIds.length === 0 && (
+        {repairRequest?.danhSachTaiSan?.length === 0 && (
           <Alert severity="warning" sx={{ mb: 2 }}>
             Không có thiết bị nào để giám định. Vui lòng kiểm tra lại dữ liệu
             đầu vào.
@@ -313,8 +290,8 @@ const InspectionRecordDialog = ({
                 />
                 {repairRequest ? (
                   <Typography variant="body2" color="text.secondary">
-                    Căn cứ vào giấy đề nghị: <b>{repairRequest.number}</b> —
-                    Ngày tạo: <b>{repairRequest.createdDate}</b>
+                    Căn cứ vào giấy đề nghị: <b>{repairRequest.soPhieu}</b> —
+                    Ngày tạo: <b>{repairRequest.ngayTao}</b>
                   </Typography>
                 ) : (
                   <Typography variant="body2" color="text.secondary">
@@ -889,9 +866,9 @@ const InspectionRecordDialog = ({
             <Typography variant="caption" display="block" sx={{ mb: 1 }}>
               Cùng tiến hành thực hiện giải thể và kiểm tra tình trạng kỹ thuật
               thiết bị theo văn bản đề nghị số{" "}
-              <b>{repairRequest?.number ?? plan.id}</b> ngày{" "}
-              {repairRequest?.createdDate ?? "—"} của phân xưởng{" "}
-              {(plan as any).sourceDepartmentName || "……………"}.
+              <b>{repairRequest?.soPhieu ?? plan.id}</b> ngày{" "}
+              {repairRequest?.ngayTao ?? "—"} của phân xưởng{" "}
+              {plan.tenDonViGiao || "……………"}.
             </Typography>
             <Typography variant="caption" display="block">
               Số đăng ký: ……………… trước khi đưa vào sửa chữa cấp ………………
@@ -1076,7 +1053,7 @@ const InspectionRecordDialog = ({
         <Button
           variant="contained"
           color="primary"
-          disabled={signers.length === 0 || effectiveDeviceIds.length === 0}
+          disabled={signers.length === 0 || repairRequest?.danhSachTaiSan?.length === 0}
           onClick={handleSubmit}
         >
           Tạo biên bản
