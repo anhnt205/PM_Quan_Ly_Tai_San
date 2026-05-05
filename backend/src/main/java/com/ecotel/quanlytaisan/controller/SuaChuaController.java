@@ -1,6 +1,7 @@
 package com.ecotel.quanlytaisan.controller;
 
 import com.ecotel.quanlytaisan.model.ApiResponse;
+import com.ecotel.quanlytaisan.model.PageResponse;
 import com.ecotel.quanlytaisan.model.SuaChua;
 import com.ecotel.quanlytaisan.model.SuaChuaDTO;
 import com.ecotel.quanlytaisan.service.SuaChuaService;
@@ -17,6 +18,28 @@ public class SuaChuaController {
 
     @Autowired
     private SuaChuaService service;
+
+    @GetMapping("/paged")
+    public ResponseEntity<ApiResponse<Object>> getAllPaged(
+            @RequestParam("idCongTy") String idCongTy,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", defaultValue = "desc") String sortDir,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "trangThai", required = false) Integer trangThai,
+            @RequestParam(value = "userid", required = false) String userid
+    ) {
+        try {
+            PageResponse<SuaChuaDTO> response = service.findAllPaged(
+                    idCongTy, page, size, sortBy, sortDir, search,
+                    trangThai, userid);
+            return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", response, (int) response.getTotalItems()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<Object>> getAll(@RequestParam("idCongTy") String idCongTy) {
@@ -99,13 +122,13 @@ public class SuaChuaController {
     @PostMapping("/capnhattrangthai")
     public ResponseEntity<ApiResponse<Object>> updateTrangThai(
             @RequestParam("id") String id,
-            @RequestParam("trangThai") Integer trangThai) {
+            @RequestParam("userId") String userId) {
         try {
-            int result = service.updateTrangThai(id, trangThai);
+            int result = service.updateTrangThai(id, userId);
             if (result > 0) return ResponseEntity.ok(
                     ApiResponse.success("Cập nhật trạng thái thành công", result, result));
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.failure("Không tìm thấy phiếu sửa chữa", result));
+                    .body(ApiResponse.failure("Không tìm thấy phiếu sửa chữa", 0));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(ApiResponse.failure(e.getMessage(), null));
         } catch (Exception e) {

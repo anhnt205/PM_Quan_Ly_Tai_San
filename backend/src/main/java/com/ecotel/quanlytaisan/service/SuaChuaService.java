@@ -7,8 +7,11 @@ import com.ecotel.quanlytaisan.model.SuaChuaDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.ecotel.quanlytaisan.dao.KyTaiLieuDao;
+import com.ecotel.quanlytaisan.model.*;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class SuaChuaService {
@@ -19,14 +22,145 @@ public class SuaChuaService {
     @Autowired
     private SuaChuaChiTietDao suaChuaChiTietDao;
 
+    @Autowired
+    private KyTaiLieuDao kyTaiLieuDao;
+
     public List<SuaChuaDTO> findAll(String idCongTy) {
         return suaChuaDao.findAll(idCongTy);
+    }
+
+    public PageResponse<SuaChuaDTO> findAllPaged(
+            String idCongTy, int page, int size,
+            String sortBy, String sortDir, String search,
+            Integer trangThai, String userid
+    ) {
+        if (page < 0) page = 0;
+        if (size <= 0) size = 20;
+
+        List<SuaChuaDTO> sourceList = suaChuaDao.findAll(idCongTy);
+
+        // Turn-based filter (chỉ hiển thị phiếu đến lượt user ký)
+        if (userid != null && !userid.trim().isEmpty() && !"admin".equalsIgnoreCase(userid)) {
+            List<SuaChuaDTO> filtered = new ArrayList<>();
+            for (SuaChuaDTO item : sourceList)
+                if (isUserTurnToSign(item, userid)) filtered.add(item);
+            sourceList = filtered;
+        }
+
+        // Đếm theo trạng thái
+        Map<String, Long> trangThaiCounts = new HashMap<>();
+        for (SuaChuaDTO item : sourceList) {
+            if (item.getTrangThai() != null) {
+                String key = item.getTrangThai().toString();
+                trangThaiCounts.put(key, trangThaiCounts.getOrDefault(key, 0L) + 1);
+            }
+        }
+
+        // Filters
+        if (trangThai != null)
+            sourceList = sourceList.stream()
+                    .filter(i -> trangThai.equals(i.getTrangThai()))
+                    .collect(Collectors.toList());
+        
+        if (search != null && !search.trim().isEmpty()) {
+            String q = search.toLowerCase();
+            sourceList = sourceList.stream()
+                    .filter(i -> (i.getSoPhieu() != null && i.getSoPhieu().toLowerCase().contains(q))
+                            || (i.getTenKeHoach() != null && i.getTenKeHoach().toLowerCase().contains(q))
+                            || (i.getGhiChu() != null && i.getGhiChu().toLowerCase().contains(q)))
+                    .collect(Collectors.toList());
+        }
+
+        sourceList.sort(getComparator(sortBy, sortDir));
+
+        long total = sourceList.size();
+        int from = Math.min(page * size, sourceList.size());
+        int to   = Math.min(from + size, sourceList.size());
+        List<SuaChuaDTO> items = new ArrayList<>(sourceList.subList(from, to));
+
+        // Enrich
+        for (SuaChuaDTO item : items) {
+            item.setChuKyList(kyTaiLieuDao.findById(item.getId()));
+            item.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId()));
+            item.setDanhSachTaiSan(suaChuaChiTietDao.findByIdSuaChua(item.getId()));
+        }
+
+        PageResponse<SuaChuaDTO> response = new PageResponse<>(items, total, page, size);
+        response.setTrangThaiCounts(trangThaiCounts);
+        return response;
+    }
+
+    public boolean isUserTurnToSign(SuaChuaDTO item, String userId) {
+        if ("admin".equalsIgnoreCase(userId)) return true;
+        if (userId != null && userId.equals(item.getNguoiTao())) return true;
+        if (!Boolean.TRUE.equals(item.getShare())) return false;
+
+        // Bước 1: Người lập
+        if (item.getIdNguoiLap() != null && !item.getIdNguoiLap().isEmpty()) {
+            if (!Boolean.TRUE.equals(item.getNguoiLapXacNhan()))
+                return userId != null && userId.equals(item.getIdNguoiLap());
+            if (userId != null && userId.equals(item.getIdNguoiLap())) return true;
+        }
+
+        // Bước 2: NguoiKy list & Giám đốc
+        boolean lapDone = item.getIdNguoiLap() == null || item.getIdNguoiLap().isEmpty()
+                || Boolean.TRUE.equals(item.getNguoiLapXacNhan());
+        if (lapDone) {
+            List<NguoiKy> kyList = kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId());
+            if (kyList != null && !kyList.isEmpty()) {
+                NguoiKy firstUnsigned = null;
+                boolean allSigned = true, userSigned = false, userInList = false;
+                for (NguoiKy nk : kyList) {
+                    if (nk.getTrangThai() != 1) { allSigned = false; if (firstUnsigned == null) firstUnsigned = nk; }
+                    if (userId != null && userId.equals(nk.getIdNguoiKy())) {
+                        userInList = true;
+                        if (nk.getTrangThai() == 1) userSigned = true;
+                    }
+                }
+                if (userSigned) return true;
+                if (firstUnsigned != null && userInList && userId != null && userId.equals(firstUnsigned.getIdNguoiKy())) return true;
+                if (allSigned && !Boolean.TRUE.equals(item.getGiamDocXacNhan()))
+                    return userId != null && userId.equals(item.getIdGiamDoc());
+            } else {
+                if (!Boolean.TRUE.equals(item.getGiamDocXacNhan()))
+                    return userId != null && userId.equals(item.getIdGiamDoc());
+            }
+        }
+        if (Boolean.TRUE.equals(item.getGiamDocXacNhan())
+                && userId != null && userId.equals(item.getIdGiamDoc()))
+            return true;
+
+        return false;
+    }
+
+    private Comparator<SuaChuaDTO> getComparator(String sortBy, String sortDir) {
+        if (sortBy == null || sortBy.trim().isEmpty()) {
+            Map<Integer, Integer> pm = new HashMap<>();
+            pm.put(0, 1); pm.put(1, 2); pm.put(3, 3); pm.put(2, 4);
+            return Comparator.<SuaChuaDTO>comparingInt(i -> pm.getOrDefault(i.getTrangThai(), 5))
+                    .thenComparing(i -> i.getNgayTao() != null ? i.getNgayTao() : "",
+                            Comparator.nullsLast(Comparator.reverseOrder()));
+        }
+        boolean asc = "asc".equalsIgnoreCase(sortDir);
+        Comparator<SuaChuaDTO> comp;
+        switch (sortBy.trim().toLowerCase()) {
+            case "sophieu":
+                comp = Comparator.comparing(i -> i.getSoPhieu() != null ? i.getSoPhieu() : "",
+                        Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)); break;
+            case "trangthai":
+                comp = Comparator.comparing(i -> i.getTrangThai() != null ? i.getTrangThai() : 0,
+                        Comparator.nullsLast(Integer::compareTo)); break;
+            case "ngaytao": default:
+                comp = Comparator.comparing(i -> i.getNgayTao() != null ? i.getNgayTao() : "",
+                        Comparator.nullsLast(String::compareTo)); break;
+        }
+        return asc ? comp : comp.reversed();
     }
 
     public SuaChuaDTO findByIdDTO(String id) {
         SuaChuaDTO dto = suaChuaDao.findByIdDTO(id);
         if (dto != null) {
-            dto.setDanhSachChiTiet(suaChuaChiTietDao.findByIdSuaChua(id));
+            dto.setDanhSachTaiSan(suaChuaChiTietDao.findByIdSuaChua(id));
         }
         return dto;
     }
@@ -46,11 +180,68 @@ public class SuaChuaService {
     }
 
     @Transactional
-    public int updateTrangThai(String id, Integer trangThai) {
-        if (trangThai < 0 || trangThai > 3) {
-            throw new IllegalArgumentException("Trạng thái không hợp lệ");
+    public int updateTrangThai(String id, String userId) {
+        SuaChua sc = suaChuaDao.findById(id);
+        if (sc == null) return 0;
+
+        int trangThai = sc.getTrangThai() != null ? sc.getTrangThai() : 0;
+
+        // 1. Cập nhật trạng thái ký trong bảng NguoiKy
+        updateTrangThaiKy(id, userId);
+
+        // 2. Cập nhật xác nhận của Người lập
+        if (Objects.equals(userId, sc.getIdNguoiLap())) {
+            sc.setNguoiLapXacNhan(true);
+            trangThai = 1;
         }
-        return suaChuaDao.updateTrangThai(id, trangThai);
+
+        // 3. Cập nhật xác nhận của Giám đốc
+        if (Objects.equals(userId, sc.getIdGiamDoc())) {
+            sc.setGiamDocXacNhan(true);
+            trangThai = 1;
+        }
+
+        // 4. Kiểm tra xem tất cả đã ký chưa
+        boolean allKy = true;
+        if (sc.getIdNguoiLap() != null && !sc.getIdNguoiLap().isEmpty()) {
+            allKy = allKy && Boolean.TRUE.equals(sc.getNguoiLapXacNhan());
+        }
+        if (sc.getIdGiamDoc() != null && !sc.getIdGiamDoc().isEmpty()) {
+            allKy = allKy && Boolean.TRUE.equals(sc.getGiamDocXacNhan());
+        }
+
+        if (allKy) {
+            allKy = checkAllOtherNguoiKy(id);
+        }
+
+        // Nếu tất cả đã ký thì chuyển trạng thái sang 3 (Đã hoàn thành)
+        if (allKy) {
+            trangThai = 3;
+        }
+
+        sc.setTrangThai(trangThai);
+        SuaChua result = suaChuaDao.update(sc);
+
+        return result != null ? result.getTrangThai() : 0;
+    }
+
+    private void updateTrangThaiKy(String id, String userId) {
+        NguoiKy nk = kyTaiLieuDao.getNguoiKy(userId, id);
+        if (nk != null) {
+            kyTaiLieuDao.updateTrangThai(nk.getId(), "1");
+        }
+    }
+
+    private boolean checkAllOtherNguoiKy(String id) {
+        List<NguoiKy> nkList = kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(id);
+        if (nkList != null && !nkList.isEmpty()) {
+            for (NguoiKy nk : nkList) {
+                if (nk.getTrangThai() != 1) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     @Transactional

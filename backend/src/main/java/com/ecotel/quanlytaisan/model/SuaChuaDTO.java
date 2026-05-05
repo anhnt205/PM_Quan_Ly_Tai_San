@@ -38,7 +38,7 @@ public class SuaChuaDTO {
     private String tenKeHoach;
 
     // Danh sách chi tiết
-    private List<SuaChuaChiTiet> danhSachChiTiet;
+    private List<SuaChuaChiTiet> danhSachTaiSan;
     
     // Workflow tracking
     private List<KyTaiLieu> chuKyList;

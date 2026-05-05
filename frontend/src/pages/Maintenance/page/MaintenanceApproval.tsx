@@ -37,9 +37,10 @@ import { SignBatchModal } from "../../../components/SignDocument/Signbatchmodal"
 import {
   useMaintenanceIncidentPageQuery,
   useMaintenancePlanningPageQuery,
+  useMaintenanceRepairPageQuery,
 } from "../../MainenancePlanRepair/Mutation";
 import { useDebounce } from "../../../hooks/useDebounce";
-import { IncidentAdapter, PlanAdapter } from "../Adapter";
+import { IncidentAdapter, PlanAdapter, RepairAdapter } from "../Adapter";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import { useAllPositionsQuery } from "../../Position/Mutation";
@@ -49,6 +50,7 @@ import {
   listSigneInfo,
   generateBienBanKeHoachPdf,
   generatePhieuSuCoPdf,
+  generateSuaChuaPdf,
   getPermissionSigning,
   ShowPermissionSigning,
   canSign,
@@ -124,19 +126,38 @@ export default function MaintenanceApprovalPage() {
     undefined,
     user?.taiKhoan?.tenDangNhap,
   );
+  const {
+    data: repairPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
+    isLoading: isLoadingRepair,
+  } = useMaintenanceRepairPageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchDebounce,
+    undefined,
+    undefined,
+    user?.taiKhoan?.tenDangNhap,
+  );
 
   const { signMutation } = useMaintenanceMutation(
     activeTab === 0
       ? "maintenancePlanningPage"
-      : activeTab === 5
-        ? "incidentPage"
-        : "",
-    activeTab === 0 ? "kehoach-suachua" : activeTab === 5 ? "suco-thietbi" : "",
+      : activeTab === 1
+        ? "repairPage"
+        : activeTab === 5
+          ? "incidentPage"
+          : "",
+    activeTab === 0
+      ? "kehoach-suachua"
+      : activeTab === 1
+        ? "suachua"
+        : activeTab === 5
+          ? "suco-thietbi"
+          : "",
   );
 
   const allRows = [
     { ...planPaged, items: planPaged.items.map(PlanAdapter) },
-    repairRequests,
+    { ...repairPaged, items: repairPaged.items.map(RepairAdapter) },
     inspectionRecords,
     acceptanceTestRecords,
     materialQualityRecords,
@@ -151,7 +172,12 @@ export default function MaintenanceApprovalPage() {
 
   const tabConfigs = [
     { label: "Kế hoạch", icon: <AssignmentOutlined />, idLabel: "Mã KH" },
-    { label: "Lệnh sửa chữa", icon: <BuildOutlined />, idLabel: "Số lệnh SC" },
+    {
+      label: "Lệnh sửa chữa",
+      icon: <BuildOutlined />,
+      idLabel: "Số lệnh SC",
+      field: "soPhieu",
+    },
     {
       label: "BB Giám định",
       icon: <FactCheckOutlined />,
@@ -186,7 +212,7 @@ export default function MaintenanceApprovalPage() {
   > = {
     1: [{ field: "planId", headerName: "Mã kế hoạch" }],
     2: [
-      { field: "repairRequestId", headerName: "Mã lệnh SC" },
+      { field: "id", headerName: "Mã lệnh SC" },
       { field: "incidentInspectionId", headerName: "Mã BB kiểm tra SC" },
     ],
     3: [{ field: "inspectionId", headerName: "Mã BB giám định" }],
@@ -350,15 +376,28 @@ export default function MaintenanceApprovalPage() {
         );
       case 1:
         return (
-          <RepairRequestPreview
+          <SignDocumentForm
+            selectedIds={[selectedRow.id]}
+            onCancel={() => {
+              setSelectedRow(null);
+              setIsDetailOpen(false);
+            }}
+            onSign={() => {}}
             plan={selectedRow}
-            deviceIds={selectedRow.deviceIds ?? []}
-            month={selectedRow.month ?? 1}
-            year={selectedRow.year ?? new Date().getFullYear()}
-            number={selectedRow.number ?? ""}
-            signers={selectedRow.signers ?? []}
-            sourceDeptId={selectedRow.sourceDepartmentId ?? ""}
-            execDeptId={selectedRow.executionDepartmentId ?? ""}
+            staffs={staffs || []}
+            departments={departments || []}
+            positions={positions || []}
+            fullscreen={false}
+            showSignerSidebar={false}
+            showHeader={false}
+            generatePdf={() =>
+              generateSuaChuaPdf(
+                selectedRow,
+                staffs,
+                departments,
+                positions,
+              )
+            }
           />
         );
       case 2:
@@ -555,6 +594,30 @@ export default function MaintenanceApprovalPage() {
           showSignerSidebar={true}
           generatePdf={() =>
             generateBienBanKeHoachPdf(
+              selectedRow,
+              staffs,
+              departments,
+              positions,
+            )
+          }
+        />
+      )}
+      {selectedRow && isSigning && activeTab === 1 && (
+        <SignDocumentForm
+          selectedIds={[selectedRow?.id]}
+          onCancel={() => {
+            setIsSigning(false);
+            setSelectedRow(null);
+          }}
+          onSign={handleSign}
+          plan={selectedRow}
+          staffs={staffs || []}
+          departments={departments || []}
+          positions={positions || []}
+          fullscreen={true}
+          showSignerSidebar={true}
+          generatePdf={() =>
+            generateSuaChuaPdf(
               selectedRow,
               staffs,
               departments,
