@@ -75,3 +75,49 @@ export interface MaintenancePlanAssetItem {
 
   action?: ActionType;
 }
+
+export interface InspectionRecordData {
+  id?: string;
+  idCongTy?: string;
+  idSuaChua?: string;
+  soPhieu?: string;
+  ngayGiamDinh?: string;
+  viTri?: string;
+  soDeLaiPhucHoi?: number;
+  soDeLamPheLieu?: number;
+  soLuongHuy?: number;
+  idNguoiLap?: string;
+  nguoiLapXacNhan?: boolean;
+  idGiamDoc?: string;
+  giamDocXacNhan?: boolean;
+  share?: boolean;
+  trangThai?: number;
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+
+  // Join fields
+  tenNguoiLap?: string;
+  tenGiamDoc?: string;
+  soPhieuSuaChua?: string;
+
+  danhSachChiTiet?: InspectionRecordDetailData[];
+  nguoiKyList?: any[];
+  chuKyList?: any[];
+}
+
+export interface InspectionRecordDetailData {
+  id?: string;
+  idGiamDinh?: string;
+  tinhTrang?: string;
+  suaChua?: boolean;
+  thayMoi?: boolean;
+  ghiChu?: string;
+  idTaiSan?: string;
+  idSuaChuaChiTiet?: string;
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+}

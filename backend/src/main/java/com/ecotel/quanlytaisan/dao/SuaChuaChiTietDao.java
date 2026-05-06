@@ -32,7 +32,12 @@ public class SuaChuaChiTietDao {
     public List<SuaChuaChiTiet> findByIdSuaChua(String idSuaChua) {
         String sql = """
             SELECT 
-                scct.*, ts.TenTaiSan, ts.IdNhomTaiSan as nhomTaiSan, kscctt.SoLuong, ksc.IdDonViGiao as donViQuanLy, ksc.IdDonViNhan as donViBaoTri,
+                scct.*, 
+                ts.TenTaiSan, 
+                ts.IdNhomTaiSan as nhomTaiSan, 
+                kscctt.SoLuong, ksc.IdDonViGiao as donViQuanLy, 
+                ksc.IdDonViNhan as donViBaoTri,
+                ts.DonViTinh,
                 CASE sc.Thang
                     WHEN 1  THEN kscctt.CapSuaChuaThang1
                     WHEN 2  THEN kscctt.CapSuaChuaThang2

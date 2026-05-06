@@ -63,6 +63,7 @@ export interface MaintenanceRepairData {
   giamDocXacNhan?: boolean;
   share?: boolean;
   trangThai?: number;
+  daCoGiamDinh?: number;
   ngayTao?: string;
   ngayCapNhat?: string;
   nguoiTao?: string;
@@ -77,6 +78,7 @@ export interface MaintenanceRepairDetailData {
   idTaiSan?: string;
   tenTaiSan?: string;
   nhomTaiSan?: string;
+  donViTinh?: string;
   capSuaChua?: string;
   soLuong?: number;
   donViQuanLy?: string;
@@ -88,4 +90,3 @@ export interface MaintenanceRepairDetailData {
   nguoiCapNhat?: string;
   action?: ActionType;
 }
-

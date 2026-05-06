@@ -26,7 +26,22 @@ export const IncidentAdapter = (s: any) => ({
 export const RepairAdapter = (s: any) => ({
   ...s,
   id: s.id,
-  planId:s.idKeHoach,
+  planId: s.idKeHoach,
+  idTrinhDuyetGiamDoc: s.idGiamDoc,
+  tenTrinhDuyetGiamDoc: s.tenGiamDoc,
+  trinhDuyetGiamDocXacNhan: s.giamDocXacNhan,
+  idNguoiLapBieu: s.idNguoiLap,
+  tenNguoiLapBieu: s.tenNguoiLap,
+  nguoiLapBieuXacNhan: s.nguoiLapXacNhan,
+  moTa: s.ghiChu,
+  ngayTao: s.ngayTao,
+  trangThai: s.trangThai,
+});
+
+export const InspectionAdapter = (s: any) => ({
+  ...s,
+  id: s.id,
+  planId: s.idKeHoach,
   idTrinhDuyetGiamDoc: s.idGiamDoc,
   tenTrinhDuyetGiamDoc: s.tenGiamDoc,
   trinhDuyetGiamDocXacNhan: s.giamDocXacNhan,

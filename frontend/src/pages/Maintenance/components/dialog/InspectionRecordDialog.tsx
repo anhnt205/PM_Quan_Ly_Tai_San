@@ -28,15 +28,28 @@ import {
 import EngineeringIcon from "@mui/icons-material/Engineering";
 import CloseIcon from "@mui/icons-material/Close";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
-import { devices } from "../../../../mockdata/mockDevices";
-import { departments, users } from "../../../../mockdata/mockDepartments";
 import type {
   TechnicalInspectionRecord,
   DeviceInspectionEntry,
-  InspectionSigner,
 } from "../../../../mockdata/mockInspectionRecords";
 import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
 import { MaintenanceRepairData } from "../../types";
+import { useMaintenanceInspectionMutation } from "../../../MainenancePlanRepair/Mutation";
+import { Action } from "../../../../utils/const";
+import { generateCode } from "../../../../utils/helpers";
+import { useAllDepartmentsQuery } from "../../../Department/Mutation";
+import { useAllStaffsQuery } from "../../../Staff/Mutation";
+import { PlanSigner } from "../../../../mockdata/mockPlans";
+import dayjs from "dayjs";
+import FieldDate from "../../../../components/TextField/FieldDate";
+
+type SimpleDept = { id: string; name: string };
+type SimpleUser = {
+  id: string;
+  name: string;
+  departmentId?: string;
+  title?: string;
+};
 
 interface Props {
   open: boolean;
@@ -59,50 +72,32 @@ const InspectionRecordDialog = ({
     repairRequest ? `BB-GD-${repairRequest.id}` : `BB-GD-SC-${Date.now()}`,
   );
   const [inspectionDate, setInspectionDate] = useState(
-    new Date().toISOString().split("T")[0],
+    dayjs().format("YYYY-MM-DD"),
   );
   const [location, setLocation] = useState("");
   const [recoveryCount, setRecoveryCount] = useState(0);
   const [scrapCount, setScrapCount] = useState(0);
   const [destroyCount, setDestroyCount] = useState(0);
 
-  const [entries, setEntries] = useState<DeviceInspectionEntry[]>([]);
-
-  const defaultSigners: InspectionSigner[] = [
-    {
-      order: 1,
-      name: "Lý Văn Nam",
-      title: "Trưởng phòng KT",
-      departmentName: "Phòng Kỹ thuật",
-      signed: false,
-    },
-    {
-      order: 2,
-      name: "Phan Văn Oanh",
-      title: "Phó phòng KT",
-      departmentName: "Phòng Kỹ thuật",
-      signed: false,
-    },
-    {
-      order: 3,
-      name: "",
-      title: "Phó quản đốc",
-      departmentName: (plan as any).sourceDepartmentName || "ĐV quản lý",
-      signed: false,
-    },
-    {
-      order: 4,
-      name: "",
-      title: "Phó quản đốc",
-      departmentName: (plan as any).executionDepartmentName || "ĐV thực hiện",
-      signed: false,
-    },
-  ];
-  const [signers, setSigners] = useState<InspectionSigner[]>(defaultSigners);
-
+  const [entries, setEntries] = useState<DeviceInspectionEntry[]>(
+    (repairRequest?.danhSachTaiSan || []).map((item) => {
+      return {
+        idSuaChuaChiTiet: item?.id ?? "",
+        deviceId: item?.id ?? "",
+        deviceName: item?.tenTaiSan ?? "",
+        unit: item?.donViTinh ?? "",
+        quantity: item?.soLuong ?? 0,
+        technicalCondition: "",
+        actionRepair: false,
+        actionReplace: false,
+        note: "",
+      };
+    }),
+  );
+  const [signers, setSigners] = useState<PlanSigner[]>([]);
   const [addDeptId, setAddDeptId] = useState("");
   const [addUserId, setAddUserId] = useState("");
-  const [editingSignerIdx, setEditingSignerIdx] = useState<number | null>(null);
+  const [editingSignerId, setEditingSignerId] = useState<string | null>(null);
   const [editDeptId, setEditDeptId] = useState("");
   const [editUserId, setEditUserId] = useState("");
 
@@ -116,89 +111,138 @@ const InspectionRecordDialog = ({
     );
   };
 
+  const { data: apiDepartments = [] } = useAllDepartmentsQuery();
+  const { data: apiUsers = [] } = useAllStaffsQuery();
+
+  const departments: SimpleDept[] = (apiDepartments || []).map((d: any) => ({
+    id: String(d?.id ?? ""),
+    name: String(d?.tenPhongBan ?? d?.name ?? ""),
+  }));
+  const users: SimpleUser[] = (apiUsers || [])
+    .filter((u: any) => u.hasAccount)
+    .map((u: any) => ({
+      id: String(u?.id ?? ""),
+      name: String(u?.hoTen ?? u?.name ?? ""),
+      departmentId: String(u?.phongBanId ?? u?.departmentId ?? ""),
+      title: String(u?.tenChucVu ?? u?.chucVu ?? u?.title ?? ""),
+    }));
+
+  const { createMutation, updateMutation } = useMaintenanceInspectionMutation();
+
   const handleAddSigner = () => {
     if (!addDeptId || !addUserId) return;
-    const user = users.find((u) => u.id === addUserId);
-    const dept = departments.find((d) => d.id === addDeptId);
+    const user = users.find((u: any) => u.id === addUserId);
+    const dept = departments.find((d: any) => d.id === addDeptId);
     if (!user || !dept) return;
     if (
       signers.some(
-        (s) => s.name === user.name && s.departmentName === dept.name,
+        (s: any) => s.idNguoiKy === user.id && s.idPhongBan === dept.id,
       )
     )
       return;
-    setSigners((prev) => [
-      ...prev,
-      {
-        order: prev.length + 1,
-        name: user.name,
-        title: user.title || "",
-        departmentName: dept.name,
-        signed: false,
-      },
-    ]);
+    setSigners(
+      (prev) =>
+        [
+          ...prev,
+          {
+            userId: user.id,
+            userName: user.name,
+            departmentId: dept.id,
+            departmentName: dept.name,
+            order: prev.length + 1,
+            signed: false,
+          },
+        ] as any,
+    );
     setAddDeptId("");
     setAddUserId("");
   };
 
-  const handleRemoveSigner = (idx: number) => {
+  const handleRemoveSigner = (userId: string) => {
     setSigners((prev) =>
-      prev.filter((_, i) => i !== idx).map((s, i) => ({ ...s, order: i + 1 })),
+      prev
+        .filter((s) => s.userId !== userId)
+        .map((s, i) => ({ ...s, order: i + 1 })),
     );
   };
 
-  const handleEdit = (idx: number) => {
-    setEditingSignerIdx(idx);
-    const s = signers[idx];
-    const dept = departments.find((d) => d.name === s.departmentName);
-    const user = users.find(
-      (u) => u.name === s.name && u.departmentId === dept?.id,
-    );
-    setEditDeptId(dept?.id || "");
-    setEditUserId(user?.id || "");
+  const handleEdit = (signer: PlanSigner) => {
+    setEditingSignerId(signer.userId);
+    setEditDeptId(signer.departmentId);
+    setEditUserId(signer.userId);
   };
 
   const handleSaveEdit = () => {
-    if (editingSignerIdx === null) return;
-    const user = users.find((u) => u.id === editUserId);
-    const dept = departments.find((d) => d.id === editDeptId);
     setSigners((prev) =>
-      prev.map((s, i) =>
-        i === editingSignerIdx
+      prev.map((s) =>
+        s.userId === editingSignerId
           ? {
               ...s,
-              name: user?.name || s.name,
-              title: user?.title || s.title,
-              departmentName: dept?.name || s.departmentName,
+              userId: editUserId,
+              userName: users.find((u) => u.id === editUserId)?.name || "",
+              departmentId: editDeptId,
+              departmentName:
+                departments.find((d) => d.id === editDeptId)?.name || "",
             }
           : s,
       ),
     );
-    setEditingSignerIdx(null);
+    setEditingSignerId(null);
   };
 
   const handleSubmit = () => {
-    const record: TechnicalInspectionRecord = {
-      id: `IR-${Date.now()}`,
-      repairRequestId: repairRequest?.id ?? "",
-      planId: plan.id,
-      number,
-      inspectionDate,
-      location,
-      deviceEntries: entries,
-      recoveryCount,
-      scrapCount,
-      destroyCount,
-      signers,
-      status: "cho-duyet",
-      createdDate: new Date().toLocaleDateString("vi-VN"),
+    const idNguoiLapBieu = signers.length > 0 ? signers[0].userId : "";
+    const idTrinhDuyetGiamDoc =
+      signers.length > 1 ? signers[signers.length - 1].userId : "";
+
+    // Người ký trung gian (nếu có)
+    const intermediateSigners =
+      signers.length > 2
+        ? signers.slice(1, -1).map((s: PlanSigner, idx: number) => ({
+            id: `${generateCode("SIG-")}-${idx}`,
+            idNguoiKy: s.userId,
+            tenNguoiKy: s.userName,
+            idPhongBan: s.departmentId,
+            trangThai: 0,
+          }))
+        : [];
+    const record: any = {
+      idSuaChua: repairRequest?.id ?? "",
+      idCongTy: plan.idCongTy,
+      soPhieu: number,
+      ngayGiamDinh: inspectionDate,
+      viTri: location,
+      soDeLaiPhucHoi: recoveryCount,
+      soDeLamPheLieu: scrapCount,
+      soLuongHuy: destroyCount,
+      idNguoiLap: idNguoiLapBieu,
+      nguoiLapXacNhan: false,
+      idGiamDoc: idTrinhDuyetGiamDoc,
+      giamDocXacNhan: false,
+      trangThai: 0,
+      share: true,
+      danhSachChiTiet: entries.map((e) => ({
+        idTaiSan: e.deviceId,
+        idSuaChuaChiTiet: e.idSuaChuaChiTiet,
+        tinhTrang: e.technicalCondition,
+        suaChua: e.actionRepair,
+        thayMoi: e.actionReplace,
+        ghiChu: e.note,
+        action: Action.CREATE,
+      })),
+      nguoiKyList: intermediateSigners,
     };
-    onSubmit(record);
-    handleClose();
+
+    createMutation.mutate(record, {
+      onSuccess: () => {
+        handleClose();
+      },
+    });
   };
 
   const handleClose = () => {
-    setEditingSignerIdx(null);
+    setAddDeptId("");
+    setAddUserId("");
     onClose();
   };
 
@@ -207,6 +251,7 @@ const InspectionRecordDialog = ({
     ? `${repairRequest.soPhieu || repairRequest.id} — Tháng ${repairRequest.thang}/${repairRequest.nam}`
     : `Kế hoạch: ${plan.id}`;
 
+  console.log("signers", signers);
   return (
     <Dialog
       open={open}
@@ -271,14 +316,10 @@ const InspectionRecordDialog = ({
                   size="small"
                   fullWidth
                 />
-                <TextField
-                  label="Ngày lập"
-                  type="date"
-                  value={inspectionDate}
-                  onChange={(e) => setInspectionDate(e.target.value)}
-                  size="small"
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
+                <FieldDate
+                  title="Ngày giám định"
+                  selectedDate={inspectionDate}
+                  setSelectedDate={setInspectionDate}
                 />
                 <TextField
                   label="Địa điểm (Tại...)"
@@ -394,10 +435,11 @@ const InspectionRecordDialog = ({
                     }}
                   />
                   {signers.map((s, idx) => {
-                    const isEditingThis = editingSignerIdx === idx;
+                    const user = users.find((u) => u.id === s.userId);
+                    const isEditingThis = editingSignerId === s.userId;
                     return (
                       <Box
-                        key={`${s.name}-${idx}`}
+                        key={s.userId}
                         sx={{ position: "relative", mb: 1.5 }}
                       >
                         <Box
@@ -421,6 +463,7 @@ const InspectionRecordDialog = ({
                         >
                           {idx + 1}
                         </Box>
+
                         <Box
                           sx={{
                             border: "1px solid",
@@ -432,10 +475,6 @@ const InspectionRecordDialog = ({
                             bgcolor: isEditingThis
                               ? "primary.50"
                               : "background.paper",
-                            transition: "all 0.2s",
-                            "&:hover": !isEditingThis
-                              ? { boxShadow: 1, borderColor: "grey.300" }
-                              : {},
                           }}
                         >
                           {isEditingThis ? (
@@ -447,10 +486,10 @@ const InspectionRecordDialog = ({
                               }}
                             >
                               <FormControl size="small" fullWidth>
-                                <InputLabel>Phòng ban</InputLabel>
+                                <InputLabel>Đơn vị</InputLabel>
                                 <Select
                                   value={editDeptId}
-                                  label="Phòng ban"
+                                  label="Đơn vị"
                                   onChange={(e) => {
                                     setEditDeptId(e.target.value);
                                     setEditUserId("");
@@ -493,7 +532,7 @@ const InspectionRecordDialog = ({
                                 </Button>
                                 <Button
                                   size="small"
-                                  onClick={() => setEditingSignerIdx(null)}
+                                  onClick={() => setEditingSignerId(null)}
                                 >
                                   Hủy
                                 </Button>
@@ -529,28 +568,29 @@ const InspectionRecordDialog = ({
                                     flexShrink: 0,
                                   }}
                                 >
-                                  {s.name?.charAt(0) ?? "?"}
+                                  {user?.name?.charAt(0) ?? "?"}
                                 </Box>
                                 <Box>
                                   <Typography fontWeight={600} fontSize={13}>
-                                    {s.name || "—"}
+                                    {user?.name}
                                   </Typography>
                                   <Typography
                                     variant="caption"
                                     color="text.secondary"
                                   >
-                                    {s.title}
+                                    {user?.title}
                                   </Typography>
                                   <Box sx={{ mt: 0.5 }}>
-                                    <Chip
-                                      label={s.departmentName}
-                                      size="small"
-                                      sx={{
-                                        fontSize: 10,
-                                        height: 18,
-                                        bgcolor: "grey.100",
-                                      }}
-                                    />
+                                    <Typography
+                                      variant="caption"
+                                      color="text.secondary"
+                                    >
+                                      {
+                                        departments.find(
+                                          (d) => d.id === s.departmentId,
+                                        )?.name
+                                      }
+                                    </Typography>
                                   </Box>
                                 </Box>
                               </Box>
@@ -558,7 +598,7 @@ const InspectionRecordDialog = ({
                                 <Button
                                   size="small"
                                   variant="outlined"
-                                  onClick={() => handleEdit(idx)}
+                                  onClick={() => handleEdit(s)}
                                 >
                                   Sửa
                                 </Button>
@@ -566,7 +606,7 @@ const InspectionRecordDialog = ({
                                   size="small"
                                   color="error"
                                   variant="outlined"
-                                  onClick={() => handleRemoveSigner(idx)}
+                                  onClick={() => handleRemoveSigner(s.userId)}
                                 >
                                   Xóa
                                 </Button>
@@ -680,7 +720,8 @@ const InspectionRecordDialog = ({
                       {entry.deviceName}
                     </TableCell>
                     <TableCell>
-                      <TextField
+                      {entry.unit}
+                      {/* <TextField
                         value={entry.unit}
                         onChange={(e) =>
                           updateEntry(idx, "unit", e.target.value)
@@ -690,10 +731,11 @@ const InspectionRecordDialog = ({
                         inputProps={{
                           style: { width: 40, fontSize: "0.8rem" },
                         }}
-                      />
+                      /> */}
                     </TableCell>
                     <TableCell>
-                      <TextField
+                      {entry.quantity}
+                      {/* <TextField
                         type="number"
                         value={entry.quantity}
                         onChange={(e) =>
@@ -709,7 +751,7 @@ const InspectionRecordDialog = ({
                           min: 1,
                           style: { width: 36, fontSize: "0.8rem" },
                         }}
-                      />
+                      /> */}
                     </TableCell>
                     <TableCell>
                       <TextField
@@ -854,10 +896,10 @@ const InspectionRecordDialog = ({
                     variant="caption"
                     sx={{ minWidth: 140, fontWeight: 500 }}
                   >
-                    {s.name || "………………………"}
+                    {s.userName || "………………………"}
                   </Typography>
                   <Typography variant="caption" sx={{ minWidth: 120 }}>
-                    {s.title}
+                    {s.position}
                   </Typography>
                   <Typography variant="caption">{s.departmentName}</Typography>
                 </Box>
@@ -985,60 +1027,85 @@ const InspectionRecordDialog = ({
               Biên bản được lập xong lúc …… giờ cùng ngày và được các thành phần
               cùng thống nhất thông qua./.
             </Typography>
-            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-              {[
-                {
-                  label: signers[2]?.departmentName || "Phân xưởng",
-                  signer: signers[2],
-                },
-                {
-                  label: signers[3]?.departmentName || "Phân xưởng",
-                  signer: signers[3],
-                },
-                { label: "Phòng CV", signer: signers[0] },
-              ].map((col, idx) => (
-                <Box key={idx} sx={{ flex: 1, textAlign: "center" }}>
-                  <Typography
-                    variant="caption"
-                    fontWeight={700}
-                    display="block"
-                    sx={{ textTransform: "uppercase" }}
-                  >
-                    {col.label}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    display="block"
-                    sx={{ fontStyle: "italic", mb: 3 }}
-                  >
-                    (Ký, ghi rõ họ tên)
-                  </Typography>
-                  <Box
-                    sx={{
-                      borderBottom: "1px solid",
-                      borderColor: "text.primary",
-                      width: "70%",
-                      mx: "auto",
-                      mb: 0.5,
-                    }}
-                  />
-                  <Typography
-                    variant="caption"
-                    fontWeight={600}
-                    display="block"
-                  >
-                    {col.signer?.name || ""}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    display="block"
-                  >
-                    {col.signer?.title || ""}
-                  </Typography>
-                </Box>
-              ))}
+            <Box
+              sx={{
+                mt: 4,
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 2,
+              }}
+            >
+              {(() => {
+                const sorted = [...(signers || [])].sort(
+                  (a, b) => (a.order || 0) - (b.order || 0),
+                );
+                const cols = sorted.map((s, idx) => ({
+                  label: (s.departmentName || "").toUpperCase(),
+                  signer: s,
+                }));
+
+                if (cols.length === 0) {
+                  return (
+                    <Box sx={{ flex: 1, textAlign: "center" }}>
+                      <Typography variant="caption" color="text.disabled">
+                        Chưa có người duyệt
+                      </Typography>
+                    </Box>
+                  );
+                }
+
+                return cols.map((col, idx) => (
+                  <Box key={idx} sx={{ flex: 1, textAlign: "center" }}>
+                    <Typography
+                      variant="caption"
+                      fontWeight={700}
+                      display="block"
+                      sx={{ textTransform: "uppercase", mb: 0.5 }}
+                    >
+                      {col.label}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      display="block"
+                      sx={{ fontStyle: "italic", mb: 4 }}
+                    >
+                      (Ký, ghi rõ họ tên)
+                    </Typography>
+                    <Box
+                      sx={{
+                        borderBottom: "1px solid",
+                        borderColor: "text.primary",
+                        width: "70%",
+                        mx: "auto",
+                        mb: 0.5,
+                      }}
+                    />
+                    {col.signer ? (
+                      <>
+                        <Typography
+                          variant="caption"
+                          fontWeight={600}
+                          display="block"
+                        >
+                          {col.signer.userName}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          display="block"
+                        >
+                          {col.signer.departmentName}
+                        </Typography>
+                      </>
+                    ) : (
+                      <Typography variant="caption" color="text.disabled">
+                        Chưa chọn
+                      </Typography>
+                    )}
+                  </Box>
+                ));
+              })()}
             </Box>
           </Box>
         </Box>
@@ -1053,7 +1120,9 @@ const InspectionRecordDialog = ({
         <Button
           variant="contained"
           color="primary"
-          disabled={signers.length === 0 || repairRequest?.danhSachTaiSan?.length === 0}
+          disabled={
+            signers.length === 0 || repairRequest?.danhSachTaiSan?.length === 0
+          }
           onClick={handleSubmit}
         >
           Tạo biên bản

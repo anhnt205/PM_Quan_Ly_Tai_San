@@ -1,18 +1,18 @@
 package com.ecotel.quanlytaisan.model;
 
 import lombok.Data;
-import java.util.Date;
-import java.util.List;
 
 @Data
-public class SuaChuaDTO {
+public class GiamDinh {
     private String id;
     private String idCongTy;
+    private String idSuaChua;
     private String soPhieu;
-    private String idKeHoach;
-    private Integer thang;
-    private Integer nam;
-    private String ghiChu;
+    private String ngayGiamDinh;
+    private String viTri;
+    private Integer soDeLaiPhucHoi;
+    private Integer soDeLamPheLieu;
+    private Integer soLuongHuy;
     
     // Người lập phiếu
     private String idNguoiLap;
@@ -32,21 +32,6 @@ public class SuaChuaDTO {
     private String nguoiTao;
     private String nguoiCapNhat;
 
-    // Join fields
-    private String tenNguoiLap;
-    private String tenGiamDoc;
-    private String tenKeHoach;
-
-    // Danh sách chi tiết
-    private List<SuaChuaChiTiet> danhSachTaiSan;
-    
-    // Workflow tracking
-    private List<KyTaiLieu> chuKyList;
-    private List<NguoiKy> nguoiKyList;
-
-    //
-    private Integer daCoGiamDinh;
-
     public Boolean getNguoiLapXacNhan() {
         return nguoiLapXacNhan != null ? nguoiLapXacNhan : false;
     }
@@ -58,4 +43,7 @@ public class SuaChuaDTO {
     public Boolean getShare() {
         return share != null ? share : false;
     }
+
+    private java.util.List<GiamDinhChiTiet> danhSachChiTiet;
+    private java.util.List<NguoiKy> nguoiKyList;
 }

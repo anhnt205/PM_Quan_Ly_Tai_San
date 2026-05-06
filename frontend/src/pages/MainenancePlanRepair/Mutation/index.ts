@@ -1,9 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../../../config/api.config";
-import { MaintenancePlanData, PlanSigner } from "../types";
+import {
+  InspectionRecordData,
+  InspectionRecordDetailData,
+  MaintenancePlanData,
+  PlanSigner,
+} from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import { Action, CongTy } from "../../../utils/const";
 import { IncidenData, MaintenanceRepairData } from "../../Maintenance/types";
+import dayjs from "dayjs";
+import { useSelector } from "react-redux";
 
 export const useMaintenancePlanningPageQuery = (
   page?: number,
@@ -98,12 +105,21 @@ export const useChiTietTaiSanByKeHoachQuery = (
 
 export const useMaintenancePlanningMutation = () => {
   const queryClient = useQueryClient();
+  const now = dayjs(new Date()).format("YYYY-MM-DD");
+  const { user } = useSelector((state: any) => state.user);
 
   // --- API TÀI SẢN ---
   const createTaiSanManyMutation = useMutation({
     mutationFn: async (data: any[]) => {
       return (
-        await api.post("/kehoachsuachua-chitiet-taisan/batch-insert", data)
+        await api.post(
+          "/kehoachsuachua-chitiet-taisan/batch-insert",
+          data.map((i) => ({
+            ...i,
+            nguoiTao: user?.taiKhoan?.tenDangNhap,
+            ngayTao: now,
+          })),
+        )
       ).data;
     },
   });
@@ -111,7 +127,14 @@ export const useMaintenancePlanningMutation = () => {
   const updateTaiSanManyMutation = useMutation({
     mutationFn: async (data: any[]) => {
       return (
-        await api.put(`/kehoachsuachua-chitiet-taisan/batch-update`, data)
+        await api.put(
+          `/kehoachsuachua-chitiet-taisan/batch-update`,
+          data.map((i) => ({
+            ...i,
+            nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
+            ngayCapNhat: now,
+          })),
+        )
       ).data;
     },
   });
@@ -174,7 +197,13 @@ export const useMaintenancePlanningMutation = () => {
   // --- API KẾ HOẠCH ---
   const createMutation = useMutation({
     mutationFn: async (data: MaintenancePlanData) => {
-      return (await api.post("/kehoach-suachua", data)).data;
+      return (
+        await api.post("/kehoach-suachua", {
+          ...data,
+          nguoiTao: user?.taiKhoan?.tenDangNhap,
+          ngayTao: now,
+        })
+      ).data;
     },
     onSuccess: async (response, variables) => {
       handleUpdate(response, variables);
@@ -193,7 +222,13 @@ export const useMaintenancePlanningMutation = () => {
 
   const updateMutation = useMutation({
     mutationFn: async (data: MaintenancePlanData) => {
-      return (await api.put(`/kehoach-suachua/${data.id}`, data)).data;
+      return (
+        await api.put(`/kehoach-suachua/${data.id}`, {
+          ...data,
+          nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
+          ngayCapNhat: now,
+        })
+      ).data;
     },
     onSuccess: async (response, variables) => {
       handleUpdate(response, variables);
@@ -212,7 +247,14 @@ export const useMaintenancePlanningMutation = () => {
 
   const updateManyMutation = useMutation({
     mutationFn: async (data: MaintenancePlanData[]) => {
-      const res = await api.put(`/kehoach-suachua/batch`, data);
+      const res = await api.put(
+        `/kehoach-suachua/batch`,
+        data.map((i) => ({
+          ...i,
+          nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
+          ngayCapNhat: now,
+        })),
+      );
       return res.data;
     },
     onSuccess: (response, data) => {
@@ -355,17 +397,37 @@ export const useMaintenanceIncidentByPlanQuery = (
 
 export const useMaintenanceIncidenMutation = () => {
   const queryClient = useQueryClient();
+  const now = dayjs(new Date()).format("YYYY-MM-DD");
+  const { user } = useSelector((state: any) => state.user);
 
   // --- API TÀI SẢN ---
   const createTaiSanManyMutation = useMutation({
     mutationFn: async (data: any[]) => {
-      return (await api.post("/suco-thietbi-chitiet/batch", data)).data;
+      return (
+        await api.post(
+          "/suco-thietbi-chitiet/batch",
+          data.map((i) => ({
+            ...i,
+            nguoiTao: user?.taiKhoan?.tenDangNhap,
+            ngayTao: now,
+          })),
+        )
+      ).data;
     },
   });
 
   const updateTaiSanManyMutation = useMutation({
     mutationFn: async (data: any[]) => {
-      return (await api.put(`/suco-thietbi-chitiet/batch`, data)).data;
+      return (
+        await api.put(
+          `/suco-thietbi-chitiet/batch`,
+          data.map((i) => ({
+            ...i,
+            nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
+            ngayCapNhat: now,
+          })),
+        )
+      ).data;
     },
   });
 
@@ -427,7 +489,13 @@ export const useMaintenanceIncidenMutation = () => {
   // --- API sự cố ---
   const createMutation = useMutation({
     mutationFn: async (data: IncidenData) => {
-      return (await api.post("/suco-thietbi", data)).data;
+      return (
+        await api.post("/suco-thietbi", {
+          ...data,
+          nguoiTao: user?.taiKhoan?.tenDangNhap,
+          ngayTao: now,
+        })
+      ).data;
     },
     onSuccess: async (response, variables) => {
       handleUpdate(response, variables);
@@ -441,7 +509,13 @@ export const useMaintenanceIncidenMutation = () => {
 
   const updateMutation = useMutation({
     mutationFn: async (data: IncidenData) => {
-      return (await api.put(`/suco-thietbi/${data.id}`, data)).data;
+      return (
+        await api.put(`/suco-thietbi/${data.id}`, {
+          ...data,
+          nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
+          ngayCapNhat: now,
+        })
+      ).data;
     },
     onSuccess: async (response, variables) => {
       handleUpdate(response, variables);
@@ -458,7 +532,14 @@ export const useMaintenanceIncidenMutation = () => {
 
   const updateManyMutation = useMutation({
     mutationFn: async (data: IncidenData[]) => {
-      const res = await api.put(`/suco-thietbi/batch`, data);
+      const res = await api.put(
+        `/suco-thietbi/batch`,
+        data.map((i) => ({
+          ...i,
+          nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
+          ngayCapNhat: now,
+        })),
+      );
       return res.data;
     },
     onSuccess: (response, data) => {
@@ -587,17 +668,37 @@ export const useMaintenanceRepairByPlanQuery = (idKeHoach?: string) => {
 };
 export const useMaintenanceRepairMutation = () => {
   const queryClient = useQueryClient();
+  const now = dayjs(new Date()).format("YYYY-MM-DD");
+  const { user } = useSelector((state: any) => state.user);
 
   // --- API CHI TIẾT ---
   const createChiTietManyMutation = useMutation({
     mutationFn: async (data: any[]) => {
-      return (await api.post("/suachua-chitiet/batch", data)).data;
+      return (
+        await api.post(
+          "/suachua-chitiet/batch",
+          data.map((i: any) => ({
+            ...i,
+            nguoiTao: user?.taiKhoan?.tenDangNhap,
+            ngayTao: now,
+          })),
+        )
+      ).data;
     },
   });
 
   const updateChiTietManyMutation = useMutation({
     mutationFn: async (data: any[]) => {
-      return (await api.put(`/suachua-chitiet/batch`, data)).data;
+      return (
+        await api.put(
+          `/suachua-chitiet/batch`,
+          data.map((i: any) => ({
+            ...i,
+            ngayCapNhat: now,
+            nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
+          })),
+        )
+      ).data;
     },
   });
 
@@ -658,7 +759,13 @@ export const useMaintenanceRepairMutation = () => {
   // --- API SỬA CHỮA ---
   const createMutation = useMutation({
     mutationFn: async (data: MaintenanceRepairData) => {
-      return (await api.post("/suachua", data)).data;
+      return (
+        await api.post("/suachua", {
+          ...data,
+          nguoiTao: user?.taiKhoan?.tenDangNhap,
+          ngayTao: now,
+        })
+      ).data;
     },
     onSuccess: async (response, variables) => {
       handleUpdate(response, variables);
@@ -674,7 +781,13 @@ export const useMaintenanceRepairMutation = () => {
 
   const updateMutation = useMutation({
     mutationFn: async (data: MaintenanceRepairData) => {
-      return (await api.put(`/suachua/${data.id}`, data)).data;
+      return (
+        await api.put(`/suachua/${data.id}`, {
+          ...data,
+          ngayCapNhat: now,
+          nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
+        })
+      ).data;
     },
     onSuccess: async (response, variables) => {
       handleUpdate(response, variables);
@@ -691,7 +804,14 @@ export const useMaintenanceRepairMutation = () => {
 
   const updateManyMutation = useMutation({
     mutationFn: async (data: MaintenanceRepairData[]) => {
-      const res = await api.put(`/suachua/batch`, data);
+      const res = await api.put(
+        `/suachua/batch`,
+        data.map((i) => ({
+          ...i,
+          ngayCapNhat: now,
+          nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
+        })),
+      );
       return res.data;
     },
     onSuccess: (response, data) => {
@@ -754,6 +874,287 @@ export const useMaintenanceRepairMutation = () => {
     createMutation,
     updateMutation,
     deleteMutation,
+    updateManyMutation,
+    updateSignerMutation,
+  };
+};
+
+// --- GIÁM ĐỊNH ---
+
+export const useMaintenanceInspectionPageQuery = (
+  page?: number,
+  pageSize?: number,
+  searchValue?: string,
+  trangThai?: number,
+  idDonViGiao?: string,
+  userid?: string,
+) => {
+  return useQuery({
+    queryKey: [
+      "inspectionPage",
+      page,
+      pageSize,
+      searchValue,
+      trangThai,
+      idDonViGiao,
+      userid,
+    ],
+    queryFn: async () => {
+      const res = await api.get("/giamdinh/paged", {
+        params: {
+          page: page,
+          size: pageSize,
+          idCongTy: CongTy.CT001,
+          search: searchValue,
+          trangThai: trangThai,
+          userid: userid,
+        },
+      });
+      return res.data.data || res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};
+export const useMaintenanceInspectionByRepairQuery = (idSuaChua?: string) => {
+  return useQuery({
+    queryKey: ["inspectionByRepair", idSuaChua],
+    queryFn: async () => {
+      const res = await api.get(`/giamdinh/suachua/${idSuaChua}`);
+      return res.data.data || res.data;
+    },
+    enabled: !!idSuaChua,
+  });
+};
+
+export const useMaintenanceInspectionMutation = () => {
+  const queryClient = useQueryClient();
+  const now = dayjs(new Date()).format("YYYY-MM-DD");
+  const { user } = useSelector((state: any) => state.user);
+
+  // --- API CHI TIẾT ---
+  const createChiTietManyMutation = useMutation({
+    mutationFn: async (data: any[]) => {
+      return (
+        await api.post(
+          "/giamdinh-chitiet/batch",
+          data.map((i: any) => ({
+            ...i,
+            nguoiTao: user?.taiKhoan?.tenDangNhap,
+            ngayTao: now,
+          })),
+        )
+      ).data;
+    },
+  });
+
+  const updateChiTietManyMutation = useMutation({
+    mutationFn: async (data: any[]) => {
+      return (
+        await api.put(
+          `/giamdinh-chitiet/batch`,
+          data.map((i: any) => ({
+            ...i,
+            ngayCapNhat: now,
+            nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
+          })),
+        )
+      ).data;
+    },
+  });
+
+  const deleteChiTietManyMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      return (await api.delete(`/giamdinh-chitiet/batch`, { data: ids })).data;
+    },
+  });
+
+  const handleUpdate = (
+    response: InspectionRecordData | any,
+    variables: InspectionRecordData,
+  ) => {
+    const giamDinhId = response?.id || response?.data?.id;
+    if (!giamDinhId) return;
+
+    if (variables.danhSachChiTiet && variables.danhSachChiTiet.length > 0) {
+      const details = variables.danhSachChiTiet;
+      const createItems = details.filter(
+        (i: any) => i.action === Action.CREATE || !i.id,
+      );
+      const updateItems = details.filter(
+        (i: any) => i.action === Action.UPDATE && i.id,
+      );
+      const deleteItems = details.filter(
+        (i: any) => i.action === Action.DELETE && i.id,
+      );
+
+      if (createItems.length > 0)
+        createChiTietManyMutation.mutate(
+          createItems.map((i: any) => ({ ...i, idGiamDinh: giamDinhId })),
+        );
+      if (updateItems.length > 0)
+        updateChiTietManyMutation.mutate(
+          updateItems.map((i: any) => ({ ...i, idGiamDinh: giamDinhId })),
+        );
+      if (deleteItems.length > 0)
+        deleteChiTietManyMutation.mutate(deleteItems.map((i: any) => i.id));
+    }
+
+    if (variables.nguoiKyList && variables.nguoiKyList.length > 0) {
+      updateSignerMutation.mutate({
+        idTaiLieu: giamDinhId,
+        data: variables.nguoiKyList.map((item) => ({
+          ...item,
+          idTaiLieu: giamDinhId,
+        })),
+      });
+    }
+  };
+
+  const updateSignerMutation = useMutation({
+    mutationFn: async ({
+      idTaiLieu,
+      data,
+    }: {
+      idTaiLieu: string;
+      data: any[];
+    }) => {
+      const res = await api.put(`/chuky/nguoi-ky/update/${idTaiLieu}`, data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
+    },
+  });
+
+  const deleteSignerMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.delete(`/chuky/${id}`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
+    },
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: InspectionRecordData) => {
+      return (
+        await api.post("/giamdinh", {
+          ...data,
+          nguoiTao: user?.taiKhoan?.tenDangNhap,
+          ngayTao: now,
+        })
+      ).data;
+    },
+    onSuccess: async (response, variables) => {
+      handleUpdate(response, variables);
+      queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
+      showSuccessAlert("Tạo biên bản giám định thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message || "Tạo biên bản giám định thất bại",
+      );
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: InspectionRecordData) => {
+      return (
+        await api.put(`/giamdinh/${data.id}`, {
+          ...data,
+          ngayCapNhat: now,
+          nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
+        })
+      ).data;
+    },
+    onSuccess: async (response, variables) => {
+      handleUpdate(response, variables);
+      queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
+      showSuccessAlert("Cập nhật biên bản giám định thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message || "Cập nhật biên bản giám định thất bại",
+      );
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return (await api.delete(`/giamdinh/${id}`)).data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
+      showSuccessAlert("Xóa biên bản giám định thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message || "Xóa biên bản giám định thất bại",
+      );
+    },
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, userId }: { id: string; userId: string }) => {
+      return (
+        await api.post(`/giamdinh/capnhattrangthai?id=${id}&userId=${userId}`)
+      ).data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
+      showSuccessAlert("Cập nhật trạng thái thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message || "Cập nhật trạng thái thất bại",
+      );
+    },
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return (await api.post(`/giamdinh/huy?id=${id}`)).data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
+      showSuccessAlert("Hủy biên bản thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(error.response?.data?.message || "Hủy biên bản thất bại");
+    },
+  });
+
+  const updateManyMutation = useMutation({
+    mutationFn: async (data: InspectionRecordData[]) => {
+      return (
+        await api.put(
+          `/giamdinh/batch`,
+          data.map((i) => ({
+            ...i,
+            ngayCapNhat: now,
+            nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
+          })),
+        )
+      ).data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
+      showSuccessAlert("Cập nhật danh sách thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message || "Cập nhật danh sách thất bại",
+      );
+    },
+  });
+
+  return {
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    updateStatusMutation,
+    cancelMutation,
     updateManyMutation,
   };
 };

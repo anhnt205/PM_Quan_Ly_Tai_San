@@ -36,11 +36,17 @@ import { useSignBatch } from "../../../hooks/useSignBatch";
 import { SignBatchModal } from "../../../components/SignDocument/Signbatchmodal";
 import {
   useMaintenanceIncidentPageQuery,
+  useMaintenanceInspectionPageQuery,
   useMaintenancePlanningPageQuery,
   useMaintenanceRepairPageQuery,
 } from "../../MainenancePlanRepair/Mutation";
 import { useDebounce } from "../../../hooks/useDebounce";
-import { IncidentAdapter, PlanAdapter, RepairAdapter } from "../Adapter";
+import {
+  IncidentAdapter,
+  InspectionAdapter,
+  PlanAdapter,
+  RepairAdapter,
+} from "../Adapter";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import { useAllPositionsQuery } from "../../Position/Mutation";
@@ -138,27 +144,43 @@ export default function MaintenanceApprovalPage() {
     user?.taiKhoan?.tenDangNhap,
   );
 
+  const {
+    data: inspectionPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
+    isLoading: isLoadingInspection,
+  } = useMaintenanceInspectionPageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchDebounce,
+    undefined,
+    undefined,
+    user?.taiKhoan?.tenDangNhap,
+  );
+
   const { signMutation } = useMaintenanceMutation(
     activeTab === 0
       ? "maintenancePlanningPage"
       : activeTab === 1
         ? "repairPage"
-        : activeTab === 5
-          ? "incidentPage"
-          : "",
+        : activeTab === 2
+          ? "inspectionPage"
+          : activeTab === 5
+            ? "incidentPage"
+            : "",
     activeTab === 0
       ? "kehoach-suachua"
       : activeTab === 1
         ? "suachua"
-        : activeTab === 5
-          ? "suco-thietbi"
-          : "",
+        : activeTab === 2
+          ? "giamdinh"
+          : activeTab === 5
+            ? "suco-thietbi"
+            : "",
   );
 
   const allRows = [
     { ...planPaged, items: planPaged.items.map(PlanAdapter) },
     { ...repairPaged, items: repairPaged.items.map(RepairAdapter) },
-    inspectionRecords,
+    { ...inspectionPaged, items: inspectionPaged.items.map(InspectionAdapter) },
     acceptanceTestRecords,
     materialQualityRecords,
     { ...incidentPaged, items: incidentPaged.items.map(IncidentAdapter) },
@@ -182,6 +204,7 @@ export default function MaintenanceApprovalPage() {
       label: "BB Giám định",
       icon: <FactCheckOutlined />,
       idLabel: "Số BB giám định",
+      field: "soPhieu",
     },
     {
       label: "BB Nghiệm thu",
@@ -212,7 +235,7 @@ export default function MaintenanceApprovalPage() {
   > = {
     1: [{ field: "planId", headerName: "Mã kế hoạch" }],
     2: [
-      { field: "id", headerName: "Mã lệnh SC" },
+      { field: "idSuaChua", headerName: "Mã lệnh SC" },
       { field: "incidentInspectionId", headerName: "Mã BB kiểm tra SC" },
     ],
     3: [{ field: "inspectionId", headerName: "Mã BB giám định" }],
@@ -391,12 +414,7 @@ export default function MaintenanceApprovalPage() {
             showSignerSidebar={false}
             showHeader={false}
             generatePdf={() =>
-              generateSuaChuaPdf(
-                selectedRow,
-                staffs,
-                departments,
-                positions,
-              )
+              generateSuaChuaPdf(selectedRow, staffs, departments, positions)
             }
           />
         );
@@ -617,12 +635,7 @@ export default function MaintenanceApprovalPage() {
           fullscreen={true}
           showSignerSidebar={true}
           generatePdf={() =>
-            generateSuaChuaPdf(
-              selectedRow,
-              staffs,
-              departments,
-              positions,
-            )
+            generateSuaChuaPdf(selectedRow, staffs, departments, positions)
           }
         />
       )}
