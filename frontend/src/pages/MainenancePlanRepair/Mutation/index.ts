@@ -63,6 +63,23 @@ export const useMaintenancePlanningGroupedQuery = (
   });
 };
 
+// kế hoạch chi tiết theo tháng
+export const useMaintenancePlanningDetailsByMonthQuery = (
+  idKeHoach: string,
+  thang: number,
+) => {
+  return useQuery({
+    queryKey: ["maintenancePlanningDetailsByMonth", idKeHoach, thang],
+    queryFn: async () => {
+      const res = await api.get(
+        `kehoachsuachua-chitiet-taisan/kehoach/${idKeHoach}/thang/${thang}`,
+      );
+      return res.data.data || res.data || [];
+    },
+    enabled: !!idKeHoach && !!thang,
+  });
+};
+
 // Hook lấy chi tiết Tài Sản theo Kế Hoạch
 export const useChiTietTaiSanByKeHoachQuery = (
   idKeHoach: string | undefined,
@@ -558,7 +575,16 @@ export const useMaintenanceRepairPageQuery = (
     placeholderData: (previousData) => previousData,
   });
 };
-
+export const useMaintenanceRepairByPlanQuery = (idKeHoach?: string) => {
+  return useQuery({
+    queryKey: ["repairPage", idKeHoach],
+    queryFn: async () => {
+      const res = await api.get(`/suachua/kehoach/${idKeHoach}`);
+      return res.data.data || res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};
 export const useMaintenanceRepairMutation = () => {
   const queryClient = useQueryClient();
 

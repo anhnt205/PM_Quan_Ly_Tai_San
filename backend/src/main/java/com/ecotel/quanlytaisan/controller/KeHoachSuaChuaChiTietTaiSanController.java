@@ -65,6 +65,19 @@ public class KeHoachSuaChuaChiTietTaiSanController {
         }
     }
 
+    @GetMapping("/kehoach/{idKeHoach}/thang/{thang}")
+    public ResponseEntity<ApiResponse<Object>> getByIdKeHoachAndThang(
+            @PathVariable("idKeHoach") String idKeHoach,
+            @PathVariable("thang") Integer thang) {
+        try {
+            List<KeHoachSuaChuaChiTietTaiSan> list = chiTietTaiSanService.getByIdKeHoachAndThang(idKeHoach, thang);
+            return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", list, list.size()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
     // ==================== CREATE ====================
 
     @PostMapping

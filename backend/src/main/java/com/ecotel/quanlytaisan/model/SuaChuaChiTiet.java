@@ -14,4 +14,14 @@ public class SuaChuaChiTiet {
     private String ngayCapNhat;
     private String nguoiTao;
     private String nguoiCapNhat;
+
+
+    //view
+    
+    private String tenTaiSan;
+    private String nhomTaiSan;
+    private String capSuaChua;
+    private int soLuong;
+    private String donViQuanLy;
+    private String donVibaoTri;
 }

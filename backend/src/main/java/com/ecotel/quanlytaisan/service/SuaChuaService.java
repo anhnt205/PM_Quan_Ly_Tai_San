@@ -165,6 +165,16 @@ public class SuaChuaService {
         return dto;
     }
 
+    public List<SuaChuaDTO> findByIdKeHoach(String idKeHoach) {
+        List<SuaChuaDTO> list = suaChuaDao.findByIdKeHoach(idKeHoach);
+        for (SuaChuaDTO item : list) {
+            item.setChuKyList(kyTaiLieuDao.findById(item.getId()));
+            item.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId()));
+            item.setDanhSachTaiSan(suaChuaChiTietDao.findByIdSuaChua(item.getId()));
+        }
+        return list;
+    }
+
     public SuaChua findById(String id) {
         return suaChuaDao.findById(id);
     }

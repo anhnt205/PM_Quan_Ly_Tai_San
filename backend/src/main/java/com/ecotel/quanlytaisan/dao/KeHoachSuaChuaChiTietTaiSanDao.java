@@ -31,6 +31,39 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
         return list.isEmpty() ? null : list.get(0);
     }
 
+    public List<KeHoachSuaChuaChiTietTaiSan> findByIdKeHoachAndThang(String idKeHoach, Integer thang) {
+        // Lấy cột capSuaChuaThangX theo tháng động
+        String colThang = "CapSuaChuaThang" + thang;
+        
+        String sql = """
+            SELECT 
+                kscctt.*,
+                %s as capSuaChua,
+                ts.TenTaiSan AS tenTaiSan,
+                ts.IdNhomTaiSan AS idNhomTaiSan,
+                CASE 
+                    WHEN EXISTS (
+                        SELECT 1 FROM suachua_chitiet scct
+                        INNER JOIN suachua sc ON scct.IdSuaChua = sc.id
+                        WHERE scct.idKeHoachChiTiet = kscctt.id
+                        AND sc.thang = ?
+                        AND sc.trangThai != 2 
+                    ) THEN 1 ELSE 0 
+                END as daCoLenhSuaChua
+            FROM kehoachsuachua_chitiet_taisan kscctt
+                LEFT JOIN TaiSan ts ON kscctt.IdTaiSan = ts.Id
+            WHERE kscctt.idKeHoachSuaChua = ?
+            AND %s IS NOT NULL
+            AND %s != ''
+            """.formatted(colThang, colThang, colThang);
+        
+        return jdbcTemplate.query(sql, 
+            new BeanPropertyRowMapper<>(KeHoachSuaChuaChiTietTaiSan.class), 
+            thang,       // cho EXISTS
+            idKeHoach   // WHERE idKeHoachSuaChua
+        );
+    }
+
     public List<KeHoachSuaChuaChiTietTaiSan> findByIdKeHoach(String idKeHoach) {
         String sql = """
             SELECT kh.*,

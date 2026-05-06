@@ -30,7 +30,30 @@ public class SuaChuaChiTietDao {
     }
 
     public List<SuaChuaChiTiet> findByIdSuaChua(String idSuaChua) {
-        String sql = "SELECT * FROM suachua_chitiet WHERE IdSuaChua = ?";
+        String sql = """
+            SELECT 
+                scct.*, ts.TenTaiSan, ts.IdNhomTaiSan as nhomTaiSan, kscctt.SoLuong, ksc.IdDonViGiao as donViQuanLy, ksc.IdDonViNhan as donViBaoTri,
+                CASE sc.Thang
+                    WHEN 1  THEN kscctt.CapSuaChuaThang1
+                    WHEN 2  THEN kscctt.CapSuaChuaThang2
+                    WHEN 3  THEN kscctt.CapSuaChuaThang3
+                    WHEN 4  THEN kscctt.CapSuaChuaThang4
+                    WHEN 5  THEN kscctt.CapSuaChuaThang5
+                    WHEN 6  THEN kscctt.CapSuaChuaThang6
+                    WHEN 7  THEN kscctt.CapSuaChuaThang7
+                    WHEN 8  THEN kscctt.CapSuaChuaThang8
+                    WHEN 9  THEN kscctt.CapSuaChuaThang9
+                    WHEN 10 THEN kscctt.CapSuaChuaThang10
+                    WHEN 11 THEN kscctt.CapSuaChuaThang11
+                    WHEN 12 THEN kscctt.CapSuaChuaThang12
+                END as capSuaChua
+                FROM suachua_chitiet scct 
+                LEFT JOIN suachua sc ON scct.IdSuaChua = sc.id
+                LEFT JOIN taisan ts on scct.idTaiSan = ts.id 
+                LEFT JOIN kehoachsuachua_chitiet_taisan kscctt on scct.idKeHoachChiTiet = kscctt.id 
+                LEFT JOIN kehoachsuachua ksc ON kscctt.idKeHoachSuaChua = ksc.id
+                WHERE scct.IdSuaChua = ?
+            """;
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(SuaChuaChiTiet.class), idSuaChua);
     }
 

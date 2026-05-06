@@ -12,10 +12,6 @@ import {
 } from "@mui/material";
 import { departments } from "../../../../mockdata/mockDepartments";
 import type { PlanSigner } from "../../../../mockdata/mockPlans";
-import {
-  maintenanceLevelLabels,
-  type MaintenanceLevel,
-} from "../../../../mockdata/mockPlans";
 import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
 
 interface Props {
@@ -42,8 +38,6 @@ const RepairRequestPreview = ({
   const sourceDept = departments.find((d) => d.id === sourceDeptId);
   const execDept = departments.find((d) => d.id === execDeptId);
 
-  const schedule: Record<string, MaintenanceLevel[]> =
-    (plan as any).monthlySchedule || {};
   const today = new Date();
   const dateStr = `Quảng Ninh, ngày ${today.getDate()} tháng ${today.getMonth() + 1} năm ${today.getFullYear()}`;
 
@@ -215,10 +209,7 @@ const RepairRequestPreview = ({
                   <TableCell align="center">{device.idTaiSan}</TableCell>
                   <TableCell>{device.tenTaiSan}</TableCell>
                   <TableCell align="center">{device.idNhomTaiSan}</TableCell>
-                  <TableCell align="center">
-                    {maintenanceLevelLabels[level as MaintenanceLevel] ||
-                      "Sửa chữa nhỏ"}
-                  </TableCell>
+                  <TableCell align="center">{level}</TableCell>
                   <TableCell align="center">{device.soLuong}</TableCell>
                   <TableCell align="center">{plan.idDonViGiao || ""}</TableCell>
                   <TableCell align="center">{plan.idDonViNhan || ""}</TableCell>

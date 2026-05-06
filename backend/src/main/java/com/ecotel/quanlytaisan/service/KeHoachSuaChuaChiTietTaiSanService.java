@@ -32,6 +32,10 @@ public class KeHoachSuaChuaChiTietTaiSanService {
         return chiTietTaiSanDao.findByIdKeHoach(idKeHoach);
     }
 
+    public List<KeHoachSuaChuaChiTietTaiSan> getByIdKeHoachAndThang(String idKeHoach, Integer thang) {
+        return chiTietTaiSanDao.findByIdKeHoachAndThang(idKeHoach, thang);
+    }
+
     @Transactional
     public KeHoachSuaChuaChiTietTaiSan create(KeHoachSuaChuaChiTietTaiSan entity) {
         entity.setId(chiTietTaiSanDao.generateNextId());

@@ -6,10 +6,6 @@ import "../../../assets/fonts/times_new_roman-normal";
 import "../../../assets/fonts/times_new_roman-bold";
 import "../../../assets/fonts/times_new_roman_italic-italic";
 import { Chip } from "@mui/material";
-import {
-  maintenanceLevelLabels,
-  type MaintenanceLevel,
-} from "../../../mockdata/mockPlans";
 
 import { IncidenData } from "../types";
 
@@ -454,7 +450,7 @@ export const generateSuaChuaPdf = async (
     align: "center",
   });
   const creatorDept = getDonVi(repair.idNguoiLapBieu, staffs, departments);
-  doc.text(`Đơn vị: ${ "................"}`, leftColCenter, 26, {
+  doc.text(`Đơn vị: ${"................"}`, leftColCenter, 26, {
     align: "center",
   });
   doc.line(leftColCenter - 15, 27, leftColCenter + 15, 27);
@@ -478,7 +474,9 @@ export const generateSuaChuaPdf = async (
   // Title
   doc.setFont("times_new_roman", "bold");
   doc.setFontSize(16);
-  doc.text("ĐỀ NGHỊ SỬA CHỮA, BẢO DƯỠNG THIẾT BỊ", pageWidth / 2, 50, { align: "center" });
+  doc.text("ĐỀ NGHỊ SỬA CHỮA, BẢO DƯỠNG THIẾT BỊ", pageWidth / 2, 50, {
+    align: "center",
+  });
   doc.setFontSize(12);
   doc.text(`Số: ${repair.soPhieu || "..."}`, pageWidth / 2, 58, {
     align: "center",
@@ -504,7 +502,11 @@ export const generateSuaChuaPdf = async (
 
   doc.text(`- Tên thiết bị: theo bảng kê chi tiết dưới đây`, 20, y);
   y += 8;
-  doc.text(`- Vị trí lắp đặt: ${ "..........................................."}`, 20, y);
+  doc.text(
+    `- Vị trí lắp đặt: ${"..........................................."}`,
+    20,
+    y,
+  );
   y += 8;
   doc.text(
     `- Thời gian hoạt động: tháng ${repair.thang || "..."}/${repair.nam || "..."}`,
@@ -516,20 +518,16 @@ export const generateSuaChuaPdf = async (
   // Table
   const tableData = (repair.danhSachTaiSan || []).map(
     (item: any, idx: number) => {
-      const level = item[`capSuaChuaThang${repair.thang}`] || "";
-      const levelLabel =
-        maintenanceLevelLabels[level as MaintenanceLevel] || "Sửa chữa nhỏ";
-
       return [
         idx + 1,
         item.idTaiSan || "",
         item.tenTaiSan || "",
-        item.idNhomTaiSan || "",
-        levelLabel,
+        item.nhomTaiSan || "",
+        item.capSuaChua || "",
         item.soLuong || 1,
-        "................",
-        "................",
-        item.ghiChu || "",
+        item.donViQuanLy || "",
+        item.donVibaoTri || "",
+        "",
       ];
     },
   );

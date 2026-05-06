@@ -86,6 +86,13 @@ public class SuaChuaDao {
         } catch (Exception e) { return null; }
     }
 
+    public List<SuaChuaDTO> findByIdKeHoach(String idKeHoach) {
+        refreshCache();
+        return cache.stream()
+                .filter(d -> idKeHoach != null && idKeHoach.equalsIgnoreCase(d.getIdKeHoach()))
+                .collect(Collectors.toList());
+    }
+
     public String generateNextId() {
         int currentYear = Year.now().getValue();
         String seqName = "SUACHUA";

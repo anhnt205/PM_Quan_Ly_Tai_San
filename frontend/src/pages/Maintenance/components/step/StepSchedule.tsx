@@ -8,16 +8,8 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Select,
-  MenuItem,
 } from "@mui/material";
-import { devices } from "../../../../mockdata/mockDevices";
-import {
-  months,
-  maintenanceLevelLabels,
-  maintenanceLevelColors,
-  type MaintenanceLevel,
-} from "../../../../mockdata/mockPlans";
+import { months, maintenanceLevelColors } from "../../../../mockdata/mockPlans";
 import { useAllRepairLevelQuery } from "../../../RepairLevel/Mutation";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
 import { useAllLoaiSCBDQuery } from "../../../MaintenanceRepairType/Mutation";
@@ -25,18 +17,18 @@ import { useAllLoaiSCBDQuery } from "../../../MaintenanceRepairType/Mutation";
 interface PlanAsset {
   deviceId: string;
   quantity: number;
-  month1: MaintenanceLevel;
-  month2: MaintenanceLevel;
-  month3: MaintenanceLevel;
-  month4: MaintenanceLevel;
-  month5: MaintenanceLevel;
-  month6: MaintenanceLevel;
-  month7: MaintenanceLevel;
-  month8: MaintenanceLevel;
-  month9: MaintenanceLevel;
-  month10: MaintenanceLevel;
-  month11: MaintenanceLevel;
-  month12: MaintenanceLevel;
+  month1: string;
+  month2: string;
+  month3: string;
+  month4: string;
+  month5: string;
+  month6: string;
+  month7: string;
+  month8: string;
+  month9: string;
+  month10: string;
+  month11: string;
+  month12: string;
 }
 
 interface Props {
@@ -52,11 +44,7 @@ const StepSchedule = ({ assets, onAssetsChange, deptDevices }: Props) => {
 
   const { data: levels = [] } = useAllLoaiSCBDQuery();
 
-  const handleChange = (
-    deviceId: string,
-    monthIdx: number,
-    level: MaintenanceLevel,
-  ) => {
+  const handleChange = (deviceId: string, monthIdx: number, level: string) => {
     const fieldName = `month${monthIdx + 1}` as keyof PlanAsset;
     const updatedAssets = assets.map((a) => {
       if (a.deviceId === deviceId) {
@@ -160,7 +148,7 @@ const StepSchedule = ({ assets, onAssetsChange, deptDevices }: Props) => {
                   <TableCell sx={{ fontSize: "0.75rem" }}>
                     {device.tenLoai}
                   </TableCell>
-                  {row.map((level: MaintenanceLevel, idx: number) => (
+                  {row.map((level: string, idx: number) => (
                     <TableCell
                       key={idx}
                       align="center"
@@ -174,11 +162,7 @@ const StepSchedule = ({ assets, onAssetsChange, deptDevices }: Props) => {
                         noBorder={true}
                         fontSize="0.75rem"
                         onChange={(e) =>
-                          handleChange(
-                            device.id,
-                            idx,
-                            (e?.id || "") as MaintenanceLevel,
-                          )
+                          handleChange(device.id, idx, (e?.id || "") as string)
                         }
                       />
                     </TableCell>

@@ -1,11 +1,3 @@
-export type MaintenanceLevel = "" | "CST" | "SCN" | "SCC";
-
-export const maintenanceLevelLabels: Record<MaintenanceLevel, string> = {
-  "": "Không",
-  CST: "Chăm sóc",
-  SCN: "SC nhỏ",
-  SCC: "SC lớn",
-};
 
 export const maintenanceLevelColors: Record<string, string> = {
   "": "transparent",
@@ -37,7 +29,7 @@ export interface MaintenancePlanDetail {
   executionDepartmentId: string;
   executionDepartmentName: string;
   assetIds: string[];
-  monthlySchedule: Record<string, MaintenanceLevel[]>; // deviceId -> 12 months
+  // monthlySchedule: Record<string, MaintenanceLevel[]>; // deviceId -> 12 months
   signers: PlanSigner[];
   status: "draft" | "pending-approval" | "approved" | "rejected";
   createdDate: string;

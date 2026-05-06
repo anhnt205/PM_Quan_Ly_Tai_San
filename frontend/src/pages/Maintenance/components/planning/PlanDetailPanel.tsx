@@ -19,12 +19,7 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Collapse,
   Tooltip,
-  Dialog,
-  DialogTitle,
-  DialogActions,
-  DialogContent,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import PostAddIcon from "@mui/icons-material/PostAdd";
@@ -32,14 +27,7 @@ import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
-import { devices } from "../../../../mockdata/mockDevices";
-import { departments } from "../../../../mockdata/mockDepartments";
-import {
-  months,
-  maintenanceLevelLabels,
-  maintenanceLevelColors,
-  type MaintenanceLevel,
-} from "../../../../mockdata/mockPlans";
+import { months, maintenanceLevelColors } from "../../../../mockdata/mockPlans";
 import type {
   AcceptanceTestRecord,
   MaterialQualityRecord,
@@ -55,10 +43,13 @@ import {
   MaintenancePlanData,
 } from "../../../MainenancePlanRepair/types";
 import { MaintenanceRepairData } from "../../types";
+import {
+  useMaintenancePlanningDetailsByMonthQuery,
+  useMaintenanceRepairByPlanQuery,
+} from "../../../MainenancePlanRepair/Mutation";
 
 interface Props {
   plan: MaintenancePlanData;
-  repairRequests: MaintenanceRepairData[];
   inspectionRecords: TechnicalInspectionRecord[];
   acceptanceTestRecords: AcceptanceTestRecord[];
   materialQualityRecords: MaterialQualityRecord[];
@@ -217,7 +208,6 @@ const ActionCell = ({
 // ── Component chính ───────────────────────────────────────
 const PlanDetailPanel = ({
   plan,
-  repairRequests,
   inspectionRecords,
   acceptanceTestRecords,
   materialQualityRecords,
@@ -252,35 +242,12 @@ const PlanDetailPanel = ({
     null,
   );
 
-  // const schedule: Record<string, MaintenanceLevel[]> =
-  //   (plan as any).monthlySchedule ?? {};
-  // const planRequests = repairRequests.filter((r) => r.idKeHoach === plan.id);
-
-  // ── Tab 0 helpers ─────────────────────────────────────
-  // const usedDeviceIds = useMemo(() => {
-  //   const ids = new Set<string>();
-  //   planRequests
-  //     .filter((r) => r.month === selectedMonth + 1)
-  //     .forEach((r) => r.deviceIds.forEach((id) => ids.add(id)));
-  //   return ids;
-  // }, [planRequests, selectedMonth]);
-
-  // const devicesForMonth = useMemo(() => {
-  //   return (
-  //     plan.danhSachTaiSan ||
-  //     []
-  //       .map((ts: any) => devices.find((d) => d.id === ts.idTaiSan))
-  //       .filter(Boolean)
-  //       .filter((d) => {
-  //         const row = schedule[d!.id];
-  //         return !row || !!row[selectedMonth];
-  //       })
-  //       .map((d) => d!)
-  //   );
-  // }, [plan.danhSachTaiSan, schedule, selectedMonth]);
-
-  const availableDevices = (plan?.danhSachTaiSan || []).filter(
-    (d: any) => d?.id,
+  const { data: chiTietTaiSanByKeHoach = [] } =
+    useMaintenancePlanningDetailsByMonthQuery(plan?.id, selectedMonth + 1);
+  const { data: maintenanceRepairByPlan = [] } =
+    useMaintenanceRepairByPlanQuery(plan?.id);
+  const availableDevices = (chiTietTaiSanByKeHoach || []).filter(
+    (d: any) => d?.daCoLenhSuaChua !== 1,
   );
 
   const handleToggle = (id: string) =>
@@ -424,22 +391,21 @@ const PlanDetailPanel = ({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {plan?.danhSachTaiSan?.map((device: any, idx) => {
-                  const level =
-                    device[`capSuaChuaThang${selectedMonth + 1}`] || "";
-                  if (!level) return null;
-                  const isUsed = false;
+                {chiTietTaiSanByKeHoach?.map((device: any, idx: number) => {
                   return (
                     <TableRow
                       key={device.id}
-                      sx={{ bgcolor: isUsed ? "#f5f5f5" : undefined }}
+                      sx={{
+                        bgcolor:
+                          device.daCoLenhSuaChua === 1 ? "#f5f5f5" : undefined,
+                      }}
                     >
                       {plan.trangThai === 3 && (
                         <TableCell padding="checkbox">
                           <Checkbox
                             checked={selectedDeviceIds.includes(device.id)}
                             onChange={() => handleToggle(device.id)}
-                            disabled={isUsed}
+                            disabled={device.daCoLenhSuaChua === 1}
                           />
                         </TableCell>
                       )}
@@ -449,22 +415,18 @@ const PlanDetailPanel = ({
                       <TableCell>{device.idNhomTaiSan}</TableCell>
                       <TableCell>
                         <Chip
-                          label={
-                            maintenanceLevelLabels[level as MaintenanceLevel] ||
-                            "Không"
-                          }
+                          label={device.capSuaChua}
                           size="small"
                           sx={{
                             bgcolor:
-                              maintenanceLevelColors[
-                                level as MaintenanceLevel
-                              ] || "transparent",
+                              maintenanceLevelColors[device.capSuaChua] ||
+                              "transparent",
                           }}
                         />
                       </TableCell>
                       <TableCell>{device.soLuong}</TableCell>
                       <TableCell>
-                        {isUsed ? (
+                        {device.daCoLenhSuaChua === 1 ? (
                           <Chip label="Đã lập lệnh" size="small" color="info" />
                         ) : (
                           <Chip
@@ -477,7 +439,7 @@ const PlanDetailPanel = ({
                     </TableRow>
                   );
                 })}
-                {availableDevices.length === 0 && (
+                {chiTietTaiSanByKeHoach?.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
                       Không có thiết bị cần SCBD trong tháng {selectedMonth + 1}
@@ -512,7 +474,7 @@ const PlanDetailPanel = ({
               </TableHead>
 
               <TableBody>
-                {planRequests.length === 0 && (
+                {maintenanceRepairByPlan.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={5} align="center">
                       Không có dữ liệu
@@ -521,324 +483,332 @@ const PlanDetailPanel = ({
                 )}
 
                 {/* ─── Giấy đề nghị sửa chữa (Cấp 1) ─── */}
-                {planRequests.map((req, reqIdx) => {
-                  const inspections = inspectionRecords.filter(
-                    (i) => i.repairRequestId === req.id,
-                  );
-                  const isReqLast = reqIdx === planRequests.length - 1;
+                {maintenanceRepairByPlan.map(
+                  (req: MaintenanceRepairData, reqIdx: number) => {
+                    const inspections = inspectionRecords.filter(
+                      (i) => i.repairRequestId === req.id,
+                    );
+                    const isReqLast =
+                      reqIdx === maintenanceRepairByPlan.length - 1;
 
-                  return (
-                    <React.Fragment key={req.id}>
-                      {/* Level 1 */}
-                      <TableRow hover>
-                        <TableCell
-                          sx={{
-                            pl: 2,
-                            position: "relative",
-                            height: ROW_H,
-                            display: "flex",
-                            alignItems: "center",
-                          }}
-                        >
-                          <Box
+                    return (
+                      <React.Fragment key={req.id}>
+                        {/* Level 1 */}
+                        <TableRow hover>
+                          <TableCell
                             sx={{
-                              position: "absolute",
-                              left: 0,
-                              top: 0,
-                              height: "100%",
+                              pl: 2,
+                              position: "relative",
+                              height: ROW_H,
                               display: "flex",
                               alignItems: "center",
                             }}
                           >
-                            <TreeConnector depth={1} isLast={isReqLast} />
-                          </Box>
-                          {inspections.length > 0 && (
-                            <IconButton
-                              size="small"
-                              sx={{ ml: `${CONNECTOR_WIDTH * 1 - 6}px` }}
-                              onClick={() =>
-                                toggle(
-                                  expandedRequests,
-                                  req.id ?? "",
-                                  setExpandedRequests,
-                                )
-                              }
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                left: 0,
+                                top: 0,
+                                height: "100%",
+                                display: "flex",
+                                alignItems: "center",
+                              }}
                             >
-                              {expandedRequests.has(req.id ?? "") ? (
-                                <KeyboardArrowUpIcon />
-                              ) : (
-                                <KeyboardArrowDownIcon />
-                              )}
-                            </IconButton>
-                          )}
-                          <Typography
-                            variant="body2"
-                            sx={{ ml: `${CONNECTOR_WIDTH * 1 + 8}px` }}
-                          >
-                            {req.soPhieu}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Chip label="GĐ Sửa chữa" size="small" />
-                        </TableCell>
-                        <TableCell>{req.ngayTao}</TableCell>
-                        <TableCell>
-                          <StatusChip status={Number(req.trangThai)} />
-                        </TableCell>
-                        <TableCell align="right">
-                          <ActionCell
-                            onView={() => {}}
-                            onAdd={() => setInspectionParentReqId(req.id ?? "")}
-                            addTooltip="Tạo BB Giám định"
-                            addColor="success"
-                          />
-                        </TableCell>
-                      </TableRow>
+                              <TreeConnector depth={1} isLast={isReqLast} />
+                            </Box>
+                            {inspections.length > 0 && (
+                              <IconButton
+                                size="small"
+                                sx={{ ml: `${CONNECTOR_WIDTH * 1 - 6}px` }}
+                                onClick={() =>
+                                  toggle(
+                                    expandedRequests,
+                                    req.id ?? "",
+                                    setExpandedRequests,
+                                  )
+                                }
+                              >
+                                {expandedRequests.has(req.id ?? "") ? (
+                                  <KeyboardArrowUpIcon />
+                                ) : (
+                                  <KeyboardArrowDownIcon />
+                                )}
+                              </IconButton>
+                            )}
+                            <Typography
+                              variant="body2"
+                              sx={{ ml: `${CONNECTOR_WIDTH * 1 + 8}px` }}
+                            >
+                              {req.soPhieu}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Chip label="GĐ Sửa chữa" size="small" />
+                          </TableCell>
+                          <TableCell>{req.ngayTao}</TableCell>
+                          <TableCell>
+                            <StatusChip status={Number(req.trangThai)} />
+                          </TableCell>
+                          <TableCell align="right">
+                            <ActionCell
+                              onView={() => {}}
+                              onAdd={() =>
+                                setInspectionParentReqId(req.id ?? "")
+                              }
+                              addTooltip="Tạo BB Giám định"
+                              addColor="success"
+                            />
+                          </TableCell>
+                        </TableRow>
 
-                      {/* Level 2 */}
-                      {expandedRequests.has(req.id ?? "") &&
-                        inspections.map((insp, inspIdx) => {
-                          const acceptances = acceptanceTestRecords.filter(
-                            (a) => a.inspectionRecordId === insp.id,
-                          );
-                          const isInspLast = inspIdx === inspections.length - 1;
+                        {/* Level 2 */}
+                        {expandedRequests.has(req.id ?? "") &&
+                          inspections.map((insp, inspIdx) => {
+                            const acceptances = acceptanceTestRecords.filter(
+                              (a) => a.inspectionRecordId === insp.id,
+                            );
+                            const isInspLast =
+                              inspIdx === inspections.length - 1;
 
-                          return (
-                            <React.Fragment key={insp.id}>
-                              <TableRow hover>
-                                <TableCell
-                                  sx={{
-                                    pl: 2,
-                                    position: "relative",
-                                    height: ROW_H,
-                                    display: "flex",
-                                    alignItems: "center",
-                                  }}
-                                >
-                                  <Box
+                            return (
+                              <React.Fragment key={insp.id}>
+                                <TableRow hover>
+                                  <TableCell
                                     sx={{
-                                      position: "absolute",
-                                      left: 0,
-                                      top: 0,
-                                      height: "100%",
+                                      pl: 2,
+                                      position: "relative",
+                                      height: ROW_H,
                                       display: "flex",
                                       alignItems: "center",
                                     }}
                                   >
-                                    <TreeConnector
-                                      depth={2}
-                                      isLast={isInspLast}
-                                    />
-                                  </Box>
-                                  {acceptances.length > 0 && (
-                                    <IconButton
-                                      size="small"
+                                    <Box
                                       sx={{
-                                        ml: `${CONNECTOR_WIDTH * 2 - 6}px`,
+                                        position: "absolute",
+                                        left: 0,
+                                        top: 0,
+                                        height: "100%",
+                                        display: "flex",
+                                        alignItems: "center",
                                       }}
-                                      onClick={() =>
-                                        toggle(
-                                          expandedInspections,
-                                          insp.id,
-                                          setExpandedInspections,
-                                        )
-                                      }
                                     >
-                                      {expandedInspections.has(insp.id) ? (
-                                        <KeyboardArrowUpIcon />
-                                      ) : (
-                                        <KeyboardArrowDownIcon />
-                                      )}
-                                    </IconButton>
-                                  )}
-                                  <Typography
-                                    variant="body2"
-                                    sx={{ ml: `${CONNECTOR_WIDTH * 2 + 8}px` }}
-                                  >
-                                    {insp.number}
-                                  </Typography>
-                                </TableCell>
-                                <TableCell>
-                                  <Chip
-                                    label="BB Giám định"
-                                    size="small"
-                                    color="success"
-                                    sx={{ color: "#fff" }}
-                                  />
-                                </TableCell>
-                                <TableCell>{insp.inspectionDate}</TableCell>
-                                <TableCell>
-                                  <StatusChip status={0} />
-                                </TableCell>
-                                <TableCell align="right">
-                                  <ActionCell
-                                    onView={() => {}}
-                                    onAdd={() =>
-                                      setAcceptanceParentInspId(insp.id)
-                                    }
-                                    addTooltip="Tạo BB Nghiệm thu"
-                                    addColor="warning"
-                                  />
-                                </TableCell>
-                              </TableRow>
+                                      <TreeConnector
+                                        depth={2}
+                                        isLast={isInspLast}
+                                      />
+                                    </Box>
+                                    {acceptances.length > 0 && (
+                                      <IconButton
+                                        size="small"
+                                        sx={{
+                                          ml: `${CONNECTOR_WIDTH * 2 - 6}px`,
+                                        }}
+                                        onClick={() =>
+                                          toggle(
+                                            expandedInspections,
+                                            insp.id,
+                                            setExpandedInspections,
+                                          )
+                                        }
+                                      >
+                                        {expandedInspections.has(insp.id) ? (
+                                          <KeyboardArrowUpIcon />
+                                        ) : (
+                                          <KeyboardArrowDownIcon />
+                                        )}
+                                      </IconButton>
+                                    )}
+                                    <Typography
+                                      variant="body2"
+                                      sx={{
+                                        ml: `${CONNECTOR_WIDTH * 2 + 8}px`,
+                                      }}
+                                    >
+                                      {insp.number}
+                                    </Typography>
+                                  </TableCell>
+                                  <TableCell>
+                                    <Chip
+                                      label="BB Giám định"
+                                      size="small"
+                                      color="success"
+                                      sx={{ color: "#fff" }}
+                                    />
+                                  </TableCell>
+                                  <TableCell>{insp.inspectionDate}</TableCell>
+                                  <TableCell>
+                                    <StatusChip status={0} />
+                                  </TableCell>
+                                  <TableCell align="right">
+                                    <ActionCell
+                                      onView={() => {}}
+                                      onAdd={() =>
+                                        setAcceptanceParentInspId(insp.id)
+                                      }
+                                      addTooltip="Tạo BB Nghiệm thu"
+                                      addColor="warning"
+                                    />
+                                  </TableCell>
+                                </TableRow>
 
-                              {/* Level 3 */}
-                              {expandedInspections.has(insp.id) &&
-                                acceptances.map((acc, accIdx) => {
-                                  const materials =
-                                    materialQualityRecords.filter(
-                                      (m) => m.acceptanceRecordId === acc.id,
-                                    );
-                                  const isAccLast =
-                                    accIdx === acceptances.length - 1;
+                                {/* Level 3 */}
+                                {expandedInspections.has(insp.id) &&
+                                  acceptances.map((acc, accIdx) => {
+                                    const materials =
+                                      materialQualityRecords.filter(
+                                        (m) => m.acceptanceRecordId === acc.id,
+                                      );
+                                    const isAccLast =
+                                      accIdx === acceptances.length - 1;
 
-                                  return (
-                                    <React.Fragment key={acc.id}>
-                                      <TableRow hover>
-                                        <TableCell
-                                          sx={{
-                                            pl: 2,
-                                            position: "relative",
-                                            height: ROW_H,
-                                            display: "flex",
-                                            alignItems: "center",
-                                          }}
-                                        >
-                                          <Box
+                                    return (
+                                      <React.Fragment key={acc.id}>
+                                        <TableRow hover>
+                                          <TableCell
                                             sx={{
-                                              position: "absolute",
-                                              left: 0,
-                                              top: 0,
-                                              height: "100%",
+                                              pl: 2,
+                                              position: "relative",
+                                              height: ROW_H,
                                               display: "flex",
                                               alignItems: "center",
                                             }}
                                           >
-                                            <TreeConnector
-                                              depth={3}
-                                              isLast={isAccLast}
-                                            />
-                                          </Box>
-                                          {materials.length > 0 && (
-                                            <IconButton
-                                              size="small"
+                                            <Box
                                               sx={{
-                                                ml: `${CONNECTOR_WIDTH * 3 - 6}px`,
-                                              }}
-                                              onClick={() =>
-                                                toggle(
-                                                  expandedAcceptances,
-                                                  acc.id,
-                                                  setExpandedAcceptances,
-                                                )
-                                              }
-                                            >
-                                              {expandedAcceptances.has(
-                                                acc.id,
-                                              ) ? (
-                                                <KeyboardArrowUpIcon />
-                                              ) : (
-                                                <KeyboardArrowDownIcon />
-                                              )}
-                                            </IconButton>
-                                          )}
-                                          <Typography
-                                            variant="body2"
-                                            sx={{
-                                              ml: `${CONNECTOR_WIDTH * 3 + 8}px`,
-                                            }}
-                                          >
-                                            {acc.number}
-                                          </Typography>
-                                        </TableCell>
-                                        <TableCell>
-                                          <Chip
-                                            label="BB Nghiệm thu"
-                                            size="small"
-                                            color="warning"
-                                            sx={{ color: "#fff" }}
-                                          />
-                                        </TableCell>
-                                        <TableCell>{acc.date}</TableCell>
-                                        <TableCell>
-                                          <StatusChip status={0} />
-                                        </TableCell>
-                                        <TableCell align="right">
-                                          <ActionCell
-                                            onView={() => {}}
-                                            onAdd={() =>
-                                              setMaterialParentAccId(acc.id)
-                                            }
-                                            addTooltip="Tạo BB Vật tư"
-                                            addColor="secondary"
-                                          />
-                                        </TableCell>
-                                      </TableRow>
-
-                                      {/* Level 4 */}
-                                      {expandedAcceptances.has(acc.id) &&
-                                        materials.map((mat) => (
-                                          <TableRow hover key={mat.id}>
-                                            <TableCell
-                                              sx={{
-                                                pl: 2,
-                                                position: "relative",
-                                                height: ROW_H,
+                                                position: "absolute",
+                                                left: 0,
+                                                top: 0,
+                                                height: "100%",
                                                 display: "flex",
                                                 alignItems: "center",
                                               }}
                                             >
-                                              <Box
+                                              <TreeConnector
+                                                depth={3}
+                                                isLast={isAccLast}
+                                              />
+                                            </Box>
+                                            {materials.length > 0 && (
+                                              <IconButton
+                                                size="small"
                                                 sx={{
-                                                  position: "absolute",
-                                                  left: 0,
-                                                  top: 0,
-                                                  height: "100%",
+                                                  ml: `${CONNECTOR_WIDTH * 3 - 6}px`,
+                                                }}
+                                                onClick={() =>
+                                                  toggle(
+                                                    expandedAcceptances,
+                                                    acc.id,
+                                                    setExpandedAcceptances,
+                                                  )
+                                                }
+                                              >
+                                                {expandedAcceptances.has(
+                                                  acc.id,
+                                                ) ? (
+                                                  <KeyboardArrowUpIcon />
+                                                ) : (
+                                                  <KeyboardArrowDownIcon />
+                                                )}
+                                              </IconButton>
+                                            )}
+                                            <Typography
+                                              variant="body2"
+                                              sx={{
+                                                ml: `${CONNECTOR_WIDTH * 3 + 8}px`,
+                                              }}
+                                            >
+                                              {acc.number}
+                                            </Typography>
+                                          </TableCell>
+                                          <TableCell>
+                                            <Chip
+                                              label="BB Nghiệm thu"
+                                              size="small"
+                                              color="warning"
+                                              sx={{ color: "#fff" }}
+                                            />
+                                          </TableCell>
+                                          <TableCell>{acc.date}</TableCell>
+                                          <TableCell>
+                                            <StatusChip status={0} />
+                                          </TableCell>
+                                          <TableCell align="right">
+                                            <ActionCell
+                                              onView={() => {}}
+                                              onAdd={() =>
+                                                setMaterialParentAccId(acc.id)
+                                              }
+                                              addTooltip="Tạo BB Vật tư"
+                                              addColor="secondary"
+                                            />
+                                          </TableCell>
+                                        </TableRow>
+
+                                        {/* Level 4 */}
+                                        {expandedAcceptances.has(acc.id) &&
+                                          materials.map((mat) => (
+                                            <TableRow hover key={mat.id}>
+                                              <TableCell
+                                                sx={{
+                                                  pl: 2,
+                                                  position: "relative",
+                                                  height: ROW_H,
                                                   display: "flex",
                                                   alignItems: "center",
                                                 }}
                                               >
-                                                <TreeConnector
-                                                  depth={4}
-                                                  isLast={false}
+                                                <Box
+                                                  sx={{
+                                                    position: "absolute",
+                                                    left: 0,
+                                                    top: 0,
+                                                    height: "100%",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                  }}
+                                                >
+                                                  <TreeConnector
+                                                    depth={4}
+                                                    isLast={false}
+                                                  />
+                                                </Box>
+                                                <Typography
+                                                  variant="body2"
+                                                  sx={{
+                                                    ml: `${CONNECTOR_WIDTH * 4 + 8}px`,
+                                                  }}
+                                                >
+                                                  {mat.number}
+                                                </Typography>
+                                              </TableCell>
+                                              <TableCell>
+                                                <Chip
+                                                  label="BB Vật tư"
+                                                  size="small"
+                                                  color="secondary"
                                                 />
-                                              </Box>
-                                              <Typography
-                                                variant="body2"
-                                                sx={{
-                                                  ml: `${CONNECTOR_WIDTH * 4 + 8}px`,
-                                                }}
-                                              >
-                                                {mat.number}
-                                              </Typography>
-                                            </TableCell>
-                                            <TableCell>
-                                              <Chip
-                                                label="BB Vật tư"
-                                                size="small"
-                                                color="secondary"
-                                              />
-                                            </TableCell>
-                                            <TableCell>
-                                              {(mat as any).date || "—"}
-                                            </TableCell>
-                                            <TableCell>
-                                              <StatusChip status={0} />
-                                            </TableCell>
-                                            <TableCell align="right">
-                                              <ActionCell onView={() => {}} />
-                                            </TableCell>
-                                          </TableRow>
-                                        ))}
-                                    </React.Fragment>
-                                  );
-                                })}
-                            </React.Fragment>
-                          );
-                        })}
-                    </React.Fragment>
-                  );
-                })}
+                                              </TableCell>
+                                              <TableCell>
+                                                {(mat as any).date || "—"}
+                                              </TableCell>
+                                              <TableCell>
+                                                <StatusChip status={0} />
+                                              </TableCell>
+                                              <TableCell align="right">
+                                                <ActionCell onView={() => {}} />
+                                              </TableCell>
+                                            </TableRow>
+                                          ))}
+                                      </React.Fragment>
+                                    );
+                                  })}
+                              </React.Fragment>
+                            );
+                          })}
+                      </React.Fragment>
+                    );
+                  },
+                )}
               </TableBody>
             </Table>
           </TableContainer>
@@ -861,8 +831,8 @@ const PlanDetailPanel = ({
 
       {inspectionParentReqId &&
         (() => {
-          const parentReq = repairRequests.find(
-            (r) => r.id === inspectionParentReqId,
+          const parentReq = maintenanceRepairByPlan.find(
+            (r:MaintenanceRepairData) => r.id === inspectionParentReqId,
           );
           return parentReq ? (
             <InspectionRecordDialog
@@ -884,7 +854,9 @@ const PlanDetailPanel = ({
             (r) => r.id === acceptanceParentInspId,
           );
           const parentReq = parentInsp
-            ? repairRequests.find((rr) => rr.id === parentInsp.repairRequestId)
+            ? maintenanceRepairByPlan.find(
+                (rr:MaintenanceRepairData) => rr.id === parentInsp.repairRequestId,
+              )
             : null;
           return parentInsp ? (
             <AcceptanceTestDialog
@@ -907,7 +879,9 @@ const PlanDetailPanel = ({
             (a) => a.id === materialParentAccId,
           );
           const parentReq = parentAcc
-            ? repairRequests.find((rr) => rr.id === parentAcc.repairRequestId)
+            ? maintenanceRepairByPlan.find(
+                (rr:MaintenanceRepairData) => rr.id === parentAcc.repairRequestId,
+              )
             : null;
           return parentAcc ? (
             <MaterialDialog
