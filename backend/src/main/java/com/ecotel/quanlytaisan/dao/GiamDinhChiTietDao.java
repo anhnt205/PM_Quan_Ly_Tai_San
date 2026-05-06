@@ -24,13 +24,27 @@ public class GiamDinhChiTietDao {
     }
 
     public GiamDinhChiTiet findById(String id) {
-        String sql = "SELECT * FROM giamdinh_chitiet WHERE Id = ?";
+        String sql = """
+                SELECT gdct.* ,ts.TenTaiSan,ts.DonViTinh,khscct.SoLuong
+                        FROM giamdinh_chitiet gdct
+                        INNER JOIN suachua_chitiet scct ON scct.Id = gdct.IdSuaChuaChiTiet
+                        INNER JOIN taisan ts ON ts.Id = gdct.IdTaiSan
+                        INNER JOIN kehoachsuachua_chitiet_taisan  khscct ON khscct.Id = scct.IdKeHoachChiTiet
+                    WHERE gdct.Id = ?
+                """;
         List<GiamDinhChiTiet> list = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(GiamDinhChiTiet.class), id);
         return list.isEmpty() ? null : list.get(0);
     }
 
     public List<GiamDinhChiTiet> findByIdGiamDinh(String idGiamDinh) {
-        String sql = "SELECT * FROM giamdinh_chitiet WHERE IdGiamDinh = ?";
+        String sql = """
+                SELECT gdct.* ,ts.TenTaiSan,ts.DonViTinh,khscct.SoLuong
+                        FROM giamdinh_chitiet gdct
+                        INNER JOIN suachua_chitiet scct ON scct.Id = gdct.IdSuaChuaChiTiet
+                        INNER JOIN taisan ts ON ts.Id = gdct.IdTaiSan
+                        INNER JOIN kehoachsuachua_chitiet_taisan  khscct ON khscct.Id = scct.IdKeHoachChiTiet
+                        WHERE gdct.IdGiamDinh = ?""" ;
+
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(GiamDinhChiTiet.class), idGiamDinh);
     }
 

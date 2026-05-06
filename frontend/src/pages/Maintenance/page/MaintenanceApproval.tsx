@@ -57,9 +57,11 @@ import {
   generateBienBanKeHoachPdf,
   generatePhieuSuCoPdf,
   generateSuaChuaPdf,
+  generateGiamDinhPdf,
   getPermissionSigning,
   ShowPermissionSigning,
   canSign,
+  showStatus,
 } from "../config";
 
 import SignDocumentForm from "../components/signdocument/SignDocumentForm";
@@ -69,20 +71,9 @@ import { SignaturesData } from "../../../components/SignDocument/types";
 
 export default function MaintenanceApprovalPage() {
   const {
-    annualPlans,
-    approvePlan,
-    repairRequests,
-    inspectionRecords,
     acceptanceTestRecords,
     materialQualityRecords,
-    signAcceptanceRecords,
-    signInspectionRecords,
-    signMaterialQualityRecords,
-    signRepairRequests,
-    incidentReports,
-    signIncidentReports,
     incidentInspectionRecords,
-    signIncidentInspectionRecords,
   } = useCmms();
 
   const signBatch = useSignBatch();
@@ -283,17 +274,6 @@ export default function MaintenanceApprovalPage() {
     });
   };
 
-  const statusChip = (status: number) => {
-    if (status === 0)
-      return <Chip label="Bản nháp" color="default" size="small" />;
-    if (status === 1)
-      return <Chip label="Chờ duyệt" color="warning" size="small" />;
-    if (status === 2)
-      return <Chip label="Từ chối" color="error" size="small" />;
-    if (status === 3)
-      return <Chip label="Đã duyệt" color="success" size="small" />;
-    return <Chip label="Bản nháp" color="default" size="small" />;
-  };
 
   const buildColumns = (collapsed: boolean) => {
     const parentCols = (parentColumnConfigs[activeTab] ?? []).map((cfg) => ({
@@ -315,10 +295,10 @@ export default function MaintenanceApprovalPage() {
           flex: 1,
         },
         {
-          field: "status",
+          field: "trangThai",
           headerName: "TT",
           width: 110,
-          renderCell: (params: any) => statusChip(params.row.status),
+          renderCell: (params: any) => showStatus(params.row.trangThai),
         },
       ];
     }
@@ -343,7 +323,7 @@ export default function MaintenanceApprovalPage() {
         field: "trangThai",
         headerName: "Trạng thái",
         width: 140,
-        renderCell: (params: any) => statusChip(params.row.trangThai),
+        renderCell: (params: any) => showStatus(params.row.trangThai),
       },
       {
         field: "sign",
@@ -419,7 +399,26 @@ export default function MaintenanceApprovalPage() {
           />
         );
       case 2:
-        return <InspectionPreview row={selectedRow} />;
+        return (
+          <SignDocumentForm
+            selectedIds={[selectedRow.id]}
+            onCancel={() => {
+              setSelectedRow(null);
+              setIsDetailOpen(false);
+            }}
+            onSign={() => {}}
+            plan={selectedRow}
+            staffs={staffs || []}
+            departments={departments || []}
+            positions={positions || []}
+            fullscreen={false}
+            showSignerSidebar={false}
+            showHeader={false}
+            generatePdf={() =>
+              generateGiamDinhPdf(selectedRow, staffs, departments, positions)
+            }
+          />
+        );
       case 3:
         return <AcceptancePreview row={selectedRow} />;
       case 4:
@@ -636,6 +635,25 @@ export default function MaintenanceApprovalPage() {
           showSignerSidebar={true}
           generatePdf={() =>
             generateSuaChuaPdf(selectedRow, staffs, departments, positions)
+          }
+        />
+      )}
+      {selectedRow && isSigning && activeTab === 2 && (
+        <SignDocumentForm
+          selectedIds={[selectedRow?.id]}
+          onCancel={() => {
+            setIsSigning(false);
+            setSelectedRow(null);
+          }}
+          onSign={handleSign}
+          plan={selectedRow}
+          staffs={staffs || []}
+          departments={departments || []}
+          positions={positions || []}
+          fullscreen={true}
+          showSignerSidebar={true}
+          generatePdf={() =>
+            generateGiamDinhPdf(selectedRow, staffs, departments, positions)
           }
         />
       )}

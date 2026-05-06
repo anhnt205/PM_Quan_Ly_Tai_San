@@ -48,6 +48,7 @@ import {
   useMaintenancePlanningDetailsByMonthQuery,
   useMaintenanceRepairByPlanQuery,
 } from "../../../MainenancePlanRepair/Mutation";
+import { showStatus } from "../../config";
 
 interface Props {
   plan: MaintenancePlanData;
@@ -60,25 +61,6 @@ interface Props {
   onCreateAcceptanceRecord: (record: AcceptanceTestRecord) => void;
   onCreateMaterialQualityRecord: (record: MaterialQualityRecord) => void;
 }
-
-// ── Helpers ───────────────────────────────────────────────
-const StatusChip = ({ status }: { status: number }) => {
-  const map: Record<number, { label: string; color: any }> = {
-    0: { label: "Bản nháp", color: "default" },
-    1: { label: "Chờ duyệt", color: "warning" },
-    2: { label: "Từ chối", color: "error" },
-    3: { label: "Đã duyệt", color: "success" },
-  };
-  const cfg = map[status] ?? { label: status, color: "default" };
-  return (
-    <Chip
-      label={cfg.label}
-      color={cfg.color}
-      size="small"
-      sx={{ color: "#fff" }}
-    />
-  );
-};
 
 const ROW_H = 36;
 const CONNECTOR_WIDTH = 16;
@@ -266,7 +248,6 @@ const PlanDetailPanel = ({
     setter(next);
   };
 
-
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       {/* Header */}
@@ -311,7 +292,7 @@ const PlanDetailPanel = ({
             <b>ĐV thực hiện:</b> {plan.tenDonViNhan}
           </Typography>
         )}
-        <StatusChip status={plan.trangThai as any} />
+        {showStatus(plan.trangThai)}
       </Box>
 
       <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
@@ -537,7 +518,7 @@ const PlanDetailPanel = ({
                           </TableCell>
                           <TableCell>{req.ngayTao}</TableCell>
                           <TableCell>
-                            <StatusChip status={Number(req.trangThai)} />
+                            {showStatus(req.trangThai ?? 0)}
                           </TableCell>
                           <TableCell align="right">
                             <ActionCell
@@ -630,7 +611,7 @@ const PlanDetailPanel = ({
                                     </TableCell>
                                     <TableCell>{insp.ngayGiamDinh}</TableCell>
                                     <TableCell>
-                                      <StatusChip status={insp.trangThai} />
+                                      {showStatus(insp.trangThai)}
                                     </TableCell>
                                     <TableCell align="right">
                                       <ActionCell
@@ -724,7 +705,7 @@ const PlanDetailPanel = ({
                                             </TableCell>
                                             <TableCell>{acc.date}</TableCell>
                                             <TableCell>
-                                              <StatusChip status={0} />
+                                              {showStatus(0)}
                                             </TableCell>
                                             <TableCell align="right">
                                               <ActionCell
@@ -785,7 +766,7 @@ const PlanDetailPanel = ({
                                                   {(mat as any).date || "—"}
                                                 </TableCell>
                                                 <TableCell>
-                                                  <StatusChip status={0} />
+                                                  {showStatus(0)}
                                                 </TableCell>
                                                 <TableCell align="right">
                                                   <ActionCell />

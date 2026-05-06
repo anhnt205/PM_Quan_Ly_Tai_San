@@ -9,6 +9,44 @@ import { Chip } from "@mui/material";
 
 import { IncidenData } from "../types";
 
+const getStatusDetails = (status: number) => {
+  switch (status) {
+    case 0:
+      return { label: "Nháp", color: "#9e9e9e" }; // Đỏ
+    case 1:
+      return { label: "Duyệt", color: "#ff9800" }; // Cam
+    case 2:
+      return { label: "Hủy", color: "#4caf50" }; // Xanh lá
+    case 3:
+      return { label: "Hoàn thành", color: "#68b9f0" }; // Xanh lá
+    default:
+      return { label: "Nháp", color: "#9e9e9e" }; // Xám
+  }
+};
+
+export const showStatus = (status: number) => {
+  const { label, color } = getStatusDetails(status);
+
+  return (
+    <Chip
+      label={label}
+      sx={{
+        backgroundColor: color,
+        color: "white",
+        fontWeight: 500,
+        fontSize: "12px",
+        borderRadius: "4px", // BorderRadius.circular(4)
+        height: "auto",
+        padding: "1px 5px", // EdgeInsets.symmetric(horizontal: 5, vertical: 1)
+        mb: "2px", // margin: const EdgeInsets.only(bottom: 2)
+        "& .MuiChip-label": {
+          padding: 0,
+        },
+      }}
+    />
+  );
+};
+
 const getChucVu = (idUser: string, staffs: any[], positions: any[]) => {
   const nhanVien = findById(staffs, idUser);
   const chucVu = findById(positions, nhanVien?.chucVuId ?? "");
@@ -845,6 +883,237 @@ export const generatePhieuSuCoPdf = async (
     doc.setFontSize(10);
     doc.text(s.title || s.donVi || "", x, yPos, { align: "center" });
     doc.setFont("times_new_roman", "italic");
+    doc.text("(Ký, ghi rõ họ tên)", x, yPos + 5, { align: "center" });
+    doc.setFont("times_new_roman", "bold");
+    doc.text(s.hoTen || "", x, yPos + 35, { align: "center" });
+  });
+
+  return {
+    pdf: new Uint8Array(doc.output("arraybuffer")),
+    coordinates,
+  };
+};
+export const generateGiamDinhPdf = async (
+  inspection: any,
+  staffs: any[],
+  departments: any[],
+  positions: any[],
+): Promise<{
+  pdf: Uint8Array;
+  coordinates: Record<string, { xRatio: number; yRatio: number }>;
+}> => {
+  const listSigneInfos: any[] = listSigneInfo(
+    inspection,
+    staffs,
+    departments,
+    positions,
+  );
+  const doc = new jsPDF("p", "mm", "a4");
+
+  doc.setFont("times_new_roman", "bold");
+  doc.setFontSize(11);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const leftColCenter = pageWidth / 4;
+  const rightColCenter = (pageWidth * 3) / 4;
+
+  // Header Left
+  doc.text("TẬP ĐOÀN CÔNG NGHIỆP", leftColCenter, 20, { align: "center" });
+  doc.text("THAN – KHOÁNG SẢN VIỆT NAM", leftColCenter, 26, { align: "center" });
+  doc.text("CÔNG TY THAN UÔNG BÍ - TKV", leftColCenter, 32, { align: "center" });
+  doc.line(leftColCenter - 15, 33, leftColCenter + 15, 33);
+
+  // Header Right
+  doc.text("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", rightColCenter, 20, {
+    align: "center",
+  });
+  doc.text("Độc lập - Tự do - Hạnh phúc", rightColCenter, 26, {
+    align: "center",
+  });
+  doc.line(rightColCenter - 15, 27, rightColCenter + 15, 27);
+
+  // Date
+  doc.setFont("times_new_roman_italic", "italic");
+  doc.setFontSize(10);
+  const today = new Date(inspection.ngayGiamDinh || new Date());
+  const dateStr = `Quảng Ninh, ngày ${today.getDate()} tháng ${today.getMonth() + 1} năm ${today.getFullYear()}`;
+  doc.text(dateStr, pageWidth - 20, 40, { align: "right" });
+
+  // Title
+  doc.setFont("times_new_roman", "bold");
+  doc.setFontSize(14);
+  doc.text("BIÊN BẢN", pageWidth / 2, 50, { align: "center" });
+  doc.text(
+    "GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ ĐƯA VÀO SỬA CHỮA",
+    pageWidth / 2,
+    58,
+    { align: "center" },
+  );
+
+  doc.setFont("times_new_roman", "normal");
+  doc.setFontSize(11);
+  let y = 70;
+
+  const d = new Date(inspection.ngayGiamDinh || new Date());
+  doc.text(
+    `Hôm nay, ngày ${d.getDate()} tháng ${d.getMonth() + 1} năm ${d.getFullYear()}. Tại ${inspection.viTri || "……………………………"}`,
+    20,
+    y,
+  );
+  y += 8;
+  doc.text("Chúng tôi gồm:", 20, y);
+  y += 8;
+
+  listSigneInfos.forEach((s, idx) => {
+    doc.text(`${idx + 1}.`, 25, y);
+    doc.setFont("times_new_roman", "bold");
+    doc.text(s.hoTen || "………………………", 35, y);
+    doc.setFont("times_new_roman", "normal");
+    doc.text(s.chucVu || "", 75, y);
+    doc.text(s.donVi || "", 115, y);
+    y += 7;
+  });
+
+  y += 3;
+  const canCuText = `Cùng tiến hành thực hiện giải thể và kiểm tra tình trạng kỹ thuật thiết bị theo văn bản đề nghị số ${inspection.soPhieuSuaChua || "……………"} của phân xưởng.`;
+  const canCuLines = doc.splitTextToSize(canCuText, pageWidth - 40);
+  canCuLines.forEach((line: string) => {
+    doc.text(line, 20, y);
+    y += 7;
+  });
+
+  doc.text(
+    "Số đăng ký: ……………… trước khi đưa vào sửa chữa cấp ………………",
+    20,
+    y,
+  );
+  y += 7;
+  doc.text("Với tình trạng kỹ thuật và nội dung sửa chữa như sau:", 20, y);
+  y += 8;
+
+  // Table
+  const tableData: any[] = [];
+  (inspection.danhSachChiTiet || []).forEach((item: any, idx: number) => {
+    // Group row (I/, II/, ...)
+    tableData.push([
+      {
+        content: `${String.fromCharCode(73 + idx)}/`,
+        styles: { fontStyle: "bold" },
+      },
+      {
+        content: `Thiết bị: ${item.tenTaiSan || ""}`,
+        colSpan: 7,
+        styles: { fontStyle: "bold" },
+      },
+    ]);
+    // Entry row
+    tableData.push([
+      "",
+      item.tenTaiSan || "",
+      item.donViTinh || "",
+      item.soLuong || "",
+      item.tinhTrang || "",
+      item.suaChua ? "X" : "",
+      item.thayMoi ? "X" : "",
+      item.ghiChu || "",
+    ]);
+  });
+
+  autoTable(doc, {
+    startY: y,
+    margin: { left: 15, right: 15 },
+    head: [
+      [
+        "STT",
+        "Tên vật tư, thiết bị",
+        "ĐVT",
+        "SL",
+        "Tình trạng kỹ thuật",
+        "S.chữa",
+        "Thay mới",
+        "Ghi chú",
+      ],
+    ],
+    body: tableData,
+    theme: "grid",
+    styles: { font: "times_new_roman", fontSize: 9 },
+    headStyles: {
+      fillColor: false,
+      textColor: 0,
+      lineWidth: 0.1,
+      lineColor: 0,
+      fontStyle: "bold",
+      halign: "center",
+    },
+    bodyStyles: { lineWidth: 0.1, lineColor: 0, textColor: 0 },
+    columnStyles: {
+      0: { cellWidth: 10, halign: "center" },
+      2: { cellWidth: 12, halign: "center" },
+      3: { cellWidth: 10, halign: "center" },
+      5: { cellWidth: 15, halign: "center" },
+      6: { cellWidth: 15, halign: "center" },
+    },
+  });
+
+  y = (doc as any).lastAutoTable.finalY + 10;
+  doc.text(
+    `Số để lại phục hồi phục vụ cho sản xuất: ${inspection.soDeLaiPhucHoi ?? "…………"}.`,
+    20,
+    y,
+  );
+  y += 7;
+  doc.text(
+    `Số để làm phế liệu: ${inspection.soDeLamPheLieu ?? "…………"} (mục)`,
+    20,
+    y,
+  );
+  y += 7;
+  doc.text(`Số lượng hủy: ${inspection.soLuongHuy ?? "…………"} (mục)`, 20, y);
+  y += 10;
+
+  doc.text(
+    "Biên bản được lập xong lúc …… giờ cùng ngày và được các thành phần cùng thống nhất thông qua./.",
+    20,
+    y,
+  );
+  y += 15;
+
+  // Signatures
+  const marginX = 25;
+  const printableWidth = pageWidth - 2 * marginX;
+  const maxPerRow = 3;
+  const rowGap = 60;
+  const coordinates: Record<string, { xRatio: number; yRatio: number }> = {};
+  const baseWidthPx = 120;
+  const displayWidth = 800;
+
+  listSigneInfos.forEach((s, index) => {
+    const rowIndex = Math.floor(index / maxPerRow);
+    const colIndex = index % maxPerRow;
+    const itemsInRow = Math.min(
+      maxPerRow,
+      listSigneInfos.length - rowIndex * maxPerRow,
+    );
+
+    let x;
+    if (itemsInRow === 1) x = pageWidth / 2;
+    else {
+      const gapSize = printableWidth / (itemsInRow - 1);
+      x = marginX + colIndex * gapSize;
+    }
+
+    const yPos = y + rowIndex * rowGap;
+    const sigWidthMm = (baseWidthPx / displayWidth) * pageWidth;
+
+    coordinates[s.idNhanVien] = {
+      xRatio: Math.max(0, Math.min((x - sigWidthMm / 2) / pageWidth, 1)),
+      yRatio: Math.max(0, Math.min((yPos + 10) / pageHeight, 1)),
+    };
+
+    doc.setFont("times_new_roman", "bold");
+    doc.setFontSize(10);
+    doc.text(s.title || s.donVi || "", x, yPos, { align: "center" });
+    doc.setFont("times_new_roman_italic", "italic");
     doc.text("(Ký, ghi rõ họ tên)", x, yPos + 5, { align: "center" });
     doc.setFont("times_new_roman", "bold");
     doc.text(s.hoTen || "", x, yPos + 35, { align: "center" });

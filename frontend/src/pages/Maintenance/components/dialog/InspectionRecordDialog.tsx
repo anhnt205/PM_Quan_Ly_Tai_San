@@ -83,7 +83,7 @@ const InspectionRecordDialog = ({
     (repairRequest?.danhSachTaiSan || []).map((item) => {
       return {
         idSuaChuaChiTiet: item?.id ?? "",
-        deviceId: item?.id ?? "",
+        deviceId: item?.idTaiSan ?? "",
         deviceName: item?.tenTaiSan ?? "",
         unit: item?.donViTinh ?? "",
         quantity: item?.soLuong ?? 0,
