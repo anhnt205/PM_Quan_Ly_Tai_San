@@ -35,6 +35,7 @@ import IncidentInspectionPreview from "../components/preview/IncidentInspectionP
 import { useSignBatch } from "../../../hooks/useSignBatch";
 import { SignBatchModal } from "../../../components/SignDocument/Signbatchmodal";
 import {
+  useMaintenanceAcceptanceTestPageQuery,
   useMaintenanceIncidentPageQuery,
   useMaintenanceInspectionPageQuery,
   useMaintenancePlanningPageQuery,
@@ -42,6 +43,7 @@ import {
 } from "../../MainenancePlanRepair/Mutation";
 import { useDebounce } from "../../../hooks/useDebounce";
 import {
+  AcceptanceTestAdapter,
   IncidentAdapter,
   InspectionAdapter,
   PlanAdapter,
@@ -147,6 +149,18 @@ export default function MaintenanceApprovalPage() {
     user?.taiKhoan?.tenDangNhap,
   );
 
+    const {
+      data: acceptanceTestPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
+      isLoading: isLoadingAcceptanceTest,
+    } = useMaintenanceAcceptanceTestPageQuery(
+      paginationModel.page,
+      paginationModel.pageSize,
+      searchDebounce,
+      undefined,
+      undefined,
+      user?.taiKhoan?.tenDangNhap,
+    );
+
   const { signMutation } = useMaintenanceMutation(
     activeTab === 0
       ? "maintenancePlanningPage"
@@ -154,6 +168,8 @@ export default function MaintenanceApprovalPage() {
         ? "repairPage"
         : activeTab === 2
           ? "inspectionPage"
+          : activeTab === 3
+            ? "acceptanceTestPage"
           : activeTab === 5
             ? "incidentPage"
             : "",
@@ -163,6 +179,8 @@ export default function MaintenanceApprovalPage() {
         ? "suachua"
         : activeTab === 2
           ? "giamdinh"
+          : activeTab === 3
+            ? "nghiemthu"
           : activeTab === 5
             ? "suco-thietbi"
             : "",
@@ -172,7 +190,7 @@ export default function MaintenanceApprovalPage() {
     { ...planPaged, items: planPaged.items.map(PlanAdapter) },
     { ...repairPaged, items: repairPaged.items.map(RepairAdapter) },
     { ...inspectionPaged, items: inspectionPaged.items.map(InspectionAdapter) },
-    acceptanceTestRecords,
+    { ...acceptanceTestPaged, items: acceptanceTestPaged.items.map(AcceptanceTestAdapter) },
     materialQualityRecords,
     { ...incidentPaged, items: incidentPaged.items.map(IncidentAdapter) },
     incidentInspectionRecords || [],

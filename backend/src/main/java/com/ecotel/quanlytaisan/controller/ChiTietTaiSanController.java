@@ -3,7 +3,6 @@ package com.ecotel.quanlytaisan.controller;
 
 import com.ecotel.quanlytaisan.model.ApiResponse;
 import com.ecotel.quanlytaisan.model.ChiTietTaiSan;
-import com.ecotel.quanlytaisan.model.ChiTietTaiSan;
 import com.ecotel.quanlytaisan.service.ChiTietTaiSanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,7 +24,7 @@ public class ChiTietTaiSanController {
 
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ChiTietTaiSan>>> getAll(@RequestParam("idTaiSan") String idTaiSan) {
+    public ResponseEntity<ApiResponse<List<ChiTietTaiSan>>> getAll(@RequestParam(value = "idTaiSan", required = false) String idTaiSan) {
         try {
             List<ChiTietTaiSan> list = service.getAll(idTaiSan);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", list, list.size()));

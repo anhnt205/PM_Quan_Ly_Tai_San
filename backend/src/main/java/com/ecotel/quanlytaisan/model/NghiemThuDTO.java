@@ -4,29 +4,31 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class GiamDinhDTO {
+public class NghiemThuDTO {
     private String id;
     private String idCongTy;
-    private String idSuaChua;
+    private String idGiamDinh;
     private String soPhieu;
-    private String ngayGiamDinh;
+    private String ngayNghiemThu;
     private String viTri;
-    private Integer soDeLaiPhucHoi;
-    private Integer soDeLamPheLieu;
-    private Integer soLuongHuy;
-    
+    private String tenThietBi;
+    private String soDangKi;
+    private String capSuaChua;
+    private String ketQua;
+    private String noiDung;
+
     // Người lập phiếu
     private String idNguoiLap;
     private Boolean nguoiLapXacNhan;
-    
+
     // Giám đốc duyệt
     private String idGiamDoc;
     private Boolean giamDocXacNhan;
-    
+
     // Workflow & trạng thái
     private Boolean share;
-    private Integer trangThai; // 0:nháp, 1:duyệt, 2:hủy, 3:hoàn thành
-    
+    private Integer trangThai;
+
     // Audit
     private String ngayTao;
     private String ngayCapNhat;
@@ -36,13 +38,10 @@ public class GiamDinhDTO {
     // Join fields
     private String tenNguoiLap;
     private String tenGiamDoc;
-    private String soPhieuSuaChua;
-    private Integer daCoNghiemThu;
+    private String soPhieuGiamDinh;
 
-    // Danh sách chi tiết
-    private List<GiamDinhChiTiet> danhSachChiTiet;
-    
-    // Workflow tracking
+    // Relations
+    private List<NghiemThuTaiSan> danhSachTaiSan;
     private List<KyTaiLieu> chuKyList;
     private List<NguoiKy> nguoiKyList;
 

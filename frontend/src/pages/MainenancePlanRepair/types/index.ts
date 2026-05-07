@@ -76,6 +76,7 @@ export interface MaintenancePlanAssetItem {
   action?: ActionType;
 }
 
+//giám định
 export interface InspectionRecordData {
   id?: string;
   idCongTy?: string;
@@ -101,6 +102,7 @@ export interface InspectionRecordData {
   tenNguoiLap?: string;
   tenGiamDoc?: string;
   soPhieuSuaChua?: string;
+  daCoNghiemThu?: number;
 
   danhSachChiTiet?: InspectionRecordDetailData[];
   nguoiKyList?: any[];
@@ -116,8 +118,12 @@ export interface InspectionRecordDetailData {
   ghiChu?: string;
   idTaiSan?: string;
   idSuaChuaChiTiet?: string;
+  daCoNghiemThu?:number;
   ngayTao?: string;
   ngayCapNhat?: string;
   nguoiTao?: string;
   nguoiCapNhat?: string;
 }
+
+
+// nghiệm thu

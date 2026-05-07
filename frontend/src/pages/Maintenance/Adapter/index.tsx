@@ -51,4 +51,19 @@ export const InspectionAdapter = (s: any) => ({
   moTa: s.ghiChu,
   ngayTao: s.ngayTao,
   trangThai: s.trangThai,
+  daCoNghiemThu: s.daCoNghiemThu,
+});
+
+export const AcceptanceTestAdapter = (s: any) => ({
+  ...s,
+  id: s.id,
+  idTrinhDuyetGiamDoc: s.idGiamDoc,
+  tenTrinhDuyetGiamDoc: s.tenGiamDoc,
+  trinhDuyetGiamDocXacNhan: s.giamDocXacNhan,
+  idNguoiLapBieu: s.idNguoiLap,
+  tenNguoiLapBieu: s.tenNguoiLap,
+  nguoiLapBieuXacNhan: s.nguoiLapXacNhan,
+  moTa: s.ghiChu,
+  ngayTao: s.ngayTao,
+  trangThai: s.trangThai,
 });

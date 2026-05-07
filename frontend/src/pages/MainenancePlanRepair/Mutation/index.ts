@@ -1158,3 +1158,285 @@ export const useMaintenanceInspectionMutation = () => {
     updateManyMutation,
   };
 };
+
+// --- nghiệm thu ---
+
+export const useMaintenanceAcceptanceTestPageQuery = (
+  page?: number,
+  pageSize?: number,
+  searchValue?: string,
+  trangThai?: number,
+  idDonViGiao?: string,
+  userid?: string,
+) => {
+  return useQuery({
+    queryKey: [
+      "acceptanceTestPage",
+      page,
+      pageSize,
+      searchValue,
+      trangThai,
+      idDonViGiao,
+      userid,
+    ],
+    queryFn: async () => {
+      const res = await api.get("/nghiemthu/paged", {
+        params: {
+          page: page,
+          size: pageSize,
+          idCongTy: CongTy.CT001,
+          search: searchValue,
+          trangThai: trangThai,
+          userid: userid,
+        },
+      });
+      return res.data.data || res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};
+
+export const useMaintenanceAcceptanceByInspectionQuery = (idGiamDinh?: string) => {
+  return useQuery({
+    queryKey: ["acceptanceByInspection", idGiamDinh],
+    queryFn: async () => {
+      const res = await api.get(`/nghiemthu/giamdinh/${idGiamDinh}`);
+      return res.data.data || res.data;
+    },
+    enabled: !!idGiamDinh,
+  });
+};
+
+export const useMaintenanceAcceptanceTestMutation = () => {
+  const queryClient = useQueryClient();
+  const now = dayjs(new Date()).format("YYYY-MM-DD");
+  const { user } = useSelector((state: any) => state.user);
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["acceptanceTestPage"] });
+    queryClient.invalidateQueries({ queryKey: ["acceptanceTestByGiamDinh"] });
+  };
+
+  // --- Tài sản trong biên bản ---
+  const batchInsertTaiSanMutation = useMutation({
+    mutationFn: async (data: any[]) => {
+      return (await api.post("/nghiemthu-taisan/taisan/batch", data)).data;
+    },
+  });
+
+  const deleteTaiSanMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return (await api.delete(`/nghiemthu-taisan/taisan/${id}`)).data;
+    },
+  });
+
+  // --- Vật tư trong từng tài sản ---
+  const batchInsertVatTuMutation = useMutation({
+    mutationFn: async (data: any[]) => {
+      return (await api.post("/nghiemthu-taisan/vattu/batch", data)).data;
+    },
+  });
+
+  const deleteVatTuBatchMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      return (
+        await api.delete("/nghiemthu-taisan/vattu/batch", { data: ids })
+      ).data;
+    },
+  });
+
+  // --- Xử lý sub-records sau khi tạo/cập nhật biên bản ---
+  const handleSubRecords = (nghiemThuId: string, variables: any) => {
+    // Xử lý danh sách tài sản
+    if (variables.danhSachTaiSan && variables.danhSachTaiSan.length > 0) {
+      const createTs = variables.danhSachTaiSan.filter(
+        (i: any) => i.action === Action.CREATE || !i.id,
+      );
+      const deleteTs = variables.danhSachTaiSan.filter(
+        (i: any) => i.action === Action.DELETE && i.id,
+      );
+
+      if (createTs.length > 0) {
+        batchInsertTaiSanMutation.mutate(
+          createTs.map((i: any) => ({ ...i, idBienBan: nghiemThuId })),
+        );
+
+        // Thu thập tất cả vật tư từ các tài sản mới
+        const allVatTu = createTs.reduce((acc: any[], ts: any) => {
+          if (ts.danhSachVatTu && ts.danhSachVatTu.length > 0) {
+            const mappedVatTu = ts.danhSachVatTu.map((vt: any) => ({
+              ...vt,
+              idBienBanTaiSan: ts.id,
+            }));
+            return [...acc, ...mappedVatTu];
+          }
+          return acc;
+        }, []);
+
+        if (allVatTu.length > 0) {
+          batchInsertVatTuMutation.mutate(allVatTu);
+        }
+      }
+      if (deleteTs.length > 0) {
+        deleteTs.forEach((ts: any) => deleteTaiSanMutation.mutate(ts.id));
+      }
+    }
+
+    // Xử lý người ký
+    if (variables.nguoiKyList && variables.nguoiKyList.length > 0) {
+      updateSignerMutation.mutate({
+        idTaiLieu: nghiemThuId,
+        data: variables.nguoiKyList.map((item: any) => ({
+          ...item,
+          idTaiLieu: nghiemThuId,
+        })),
+      });
+    }
+  };
+
+  const updateSignerMutation = useMutation({
+    mutationFn: async ({
+      idTaiLieu,
+      data,
+    }: {
+      idTaiLieu: string;
+      data: any[];
+    }) => {
+      const res = await api.put(`/chuky/nguoi-ky/update/${idTaiLieu}`, data);
+      return res.data;
+    },
+    onSuccess: () => {
+      invalidate();
+    },
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return (
+        await api.post("/nghiemthu", {
+          ...data,
+          nguoiTao: user?.taiKhoan?.tenDangNhap,
+          ngayTao: now,
+        })
+      ).data;
+    },
+    onSuccess: async (response, variables) => {
+      const nghiemThuId = response?.data?.id || response?.id;
+      if (nghiemThuId) handleSubRecords(nghiemThuId, variables);
+      invalidate();
+      showSuccessAlert("Tạo biên bản nghiệm thu thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message || "Tạo biên bản nghiệm thu thất bại",
+      );
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return (
+        await api.put(`/nghiemthu/${data.id}`, {
+          ...data,
+          ngayCapNhat: now,
+          nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
+        })
+      ).data;
+    },
+    onSuccess: async (response, variables) => {
+      const nghiemThuId = response?.data?.id || response?.id || variables?.id;
+      if (nghiemThuId) handleSubRecords(nghiemThuId, variables);
+      invalidate();
+      showSuccessAlert("Cập nhật biên bản nghiệm thu thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          "Cập nhật biên bản nghiệm thu thất bại",
+      );
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return (await api.delete(`/nghiemthu/${id}`)).data;
+    },
+    onSuccess: () => {
+      invalidate();
+      showSuccessAlert("Xóa biên bản nghiệm thu thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message || "Xóa biên bản nghiệm thu thất bại",
+      );
+    },
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, userId }: { id: string; userId: string }) => {
+      return (
+        await api.post(`/nghiemthu/capnhattrangthai?id=${id}&userId=${userId}`)
+      ).data;
+    },
+    onSuccess: () => {
+      invalidate();
+      showSuccessAlert("Cập nhật trạng thái thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message || "Cập nhật trạng thái thất bại",
+      );
+    },
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return (await api.post(`/nghiemthu/huy?id=${id}`)).data;
+    },
+    onSuccess: () => {
+      invalidate();
+      showSuccessAlert("Hủy biên bản nghiệm thu thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message || "Hủy biên bản nghiệm thu thất bại",
+      );
+    },
+  });
+
+  const updateManyMutation = useMutation({
+    mutationFn: async (data: any[]) => {
+      return (
+        await api.put(
+          `/nghiemthu/batch`,
+          data.map((i) => ({
+            ...i,
+            ngayCapNhat: now,
+            nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
+          })),
+        )
+      ).data;
+    },
+    onSuccess: () => {
+      invalidate();
+      showSuccessAlert("Cập nhật danh sách thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message || "Cập nhật danh sách thất bại",
+      );
+    },
+  });
+
+  return {
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    updateStatusMutation,
+    cancelMutation,
+    updateManyMutation,
+    batchInsertTaiSanMutation,
+    batchInsertVatTuMutation,
+    deleteVatTuBatchMutation,
+  };
+};
