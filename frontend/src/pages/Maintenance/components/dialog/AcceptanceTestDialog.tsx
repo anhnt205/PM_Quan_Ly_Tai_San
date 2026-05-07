@@ -280,7 +280,7 @@ const AcceptanceTestDialog = ({
       nguoiLapXacNhan: false,
       idGiamDoc,
       giamDocXacNhan: false,
-      share: false,
+      share: true,
       trangThai: 0,
       nguoiTao: user?.taiKhoan?.tenDangNhap,
       ngayTao: dayjs().format("YYYY-MM-DD HH:mm:ss"),

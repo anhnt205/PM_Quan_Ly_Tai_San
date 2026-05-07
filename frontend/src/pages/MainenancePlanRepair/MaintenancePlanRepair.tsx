@@ -132,7 +132,6 @@ export default function MaintenancePlanRepair() {
    * cho phép chuyển đổi giữa chi tiết KH và từng SC dễ dàng.
    */
 
-  const { user } = useSelector((state: RootState) => state.user);
   const [selectedPlan, setSelectedPlan] = useState<MaintenancePlanData | null>(
     null,
   );
@@ -405,7 +404,7 @@ export default function MaintenancePlanRepair() {
   const columnsCollapsed = [
     { field: "id", headerName: "Mã kế hoạch", flex: 1, editable: false },
     {
-      field: "status",
+      field: "trangThai",
       headerName: "Trạng thái",
       width: 120,
       editable: false,
@@ -1278,7 +1277,6 @@ export default function MaintenancePlanRepair() {
               ) : (
                 <PlanDetailPanel
                   plan={selectedPlan}
-                  repairRequests={repairRequests}
                   inspectionRecords={inspectionRecords}
                   acceptanceTestRecords={acceptanceTestRecords}
                   materialQualityRecords={materialQualityRecords}

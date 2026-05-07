@@ -63,7 +63,7 @@ export const AcceptanceTestAdapter = (s: any) => ({
   idNguoiLapBieu: s.idNguoiLap,
   tenNguoiLapBieu: s.tenNguoiLap,
   nguoiLapBieuXacNhan: s.nguoiLapXacNhan,
-  moTa: s.ghiChu,
+  moTa: s.noiDung,
   ngayTao: s.ngayTao,
   trangThai: s.trangThai,
 });

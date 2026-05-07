@@ -60,6 +60,7 @@ import {
   generatePhieuSuCoPdf,
   generateSuaChuaPdf,
   generateGiamDinhPdf,
+  generateNghiemThuPdf,
   getPermissionSigning,
   ShowPermissionSigning,
   canSign,
@@ -73,7 +74,6 @@ import { SignaturesData } from "../../../components/SignDocument/types";
 
 export default function MaintenanceApprovalPage() {
   const {
-    acceptanceTestRecords,
     materialQualityRecords,
     incidentInspectionRecords,
   } = useCmms();
@@ -247,7 +247,7 @@ export default function MaintenanceApprovalPage() {
       { field: "idSuaChua", headerName: "Mã lệnh SC" },
       { field: "incidentInspectionId", headerName: "Mã BB kiểm tra SC" },
     ],
-    3: [{ field: "inspectionId", headerName: "Mã BB giám định" }],
+    3: [{ field: "idGiamDinh", headerName: "Mã BB giám định" }],
     4: [{ field: "acceptanceId", headerName: "Mã BB nghiệm thu" }],
     5: [{ field: "planId", headerName: "Mã kế hoạch" }],
     6: [{ field: "incidentReportId", headerName: "Mã phiếu báo SC" }],
@@ -384,7 +384,7 @@ export default function MaintenanceApprovalPage() {
             positions={positions || []}
             fullscreen={false}
             showSignerSidebar={false}
-            showHeader={false}
+            showHeader={true}
             generatePdf={() =>
               generateBienBanKeHoachPdf(
                 selectedRow,
@@ -410,7 +410,7 @@ export default function MaintenanceApprovalPage() {
             positions={positions || []}
             fullscreen={false}
             showSignerSidebar={false}
-            showHeader={false}
+            showHeader={true}
             generatePdf={() =>
               generateSuaChuaPdf(selectedRow, staffs, departments, positions)
             }
@@ -438,7 +438,26 @@ export default function MaintenanceApprovalPage() {
           />
         );
       case 3:
-        return <AcceptancePreview row={selectedRow} />;
+        return (
+          <SignDocumentForm
+            selectedIds={[selectedRow.id]}
+            onCancel={() => {
+              setSelectedRow(null);
+              setIsDetailOpen(false);
+            }}
+            onSign={() => {}}
+            plan={selectedRow}
+            staffs={staffs || []}
+            departments={departments || []}
+            positions={positions || []}
+            fullscreen={false}
+            showSignerSidebar={false}
+            showHeader={false}
+            generatePdf={() =>
+              generateNghiemThuPdf(selectedRow, staffs, departments, positions)
+            }
+          />
+        );
       case 4:
         return <MaterialQualityPreview row={selectedRow} />;
       case 5:
@@ -846,7 +865,15 @@ export default function MaintenanceApprovalPage() {
               setSelectedRow(null);
             }}
             generatePdf={
-              activeTab === 5 ? generatePhieuSuCoPdf : generateBienBanKeHoachPdf
+              activeTab === 5
+                ? generatePhieuSuCoPdf
+                : activeTab === 1
+                  ? generateSuaChuaPdf
+                  : activeTab === 2
+                    ? generateGiamDinhPdf
+                    : activeTab === 3
+                      ? generateNghiemThuPdf
+                      : generateBienBanKeHoachPdf
             }
             staffs={staffs || []}
             departments={departments || []}

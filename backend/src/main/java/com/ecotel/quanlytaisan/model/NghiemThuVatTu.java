@@ -11,6 +11,7 @@ public class NghiemThuVatTu {
     private String ghiChu;
 
     // View fields (join CCDCVatTu)
+    private String idVatTu;
     private String tenVatTu;
     private String donViTinh;
 }

@@ -23,7 +23,7 @@ public class NghiemThuTaiSanDao {
         String sql = """
             SELECT nts.*, ts.TenTaiSan, ts.DonViTinh
             FROM nghiemthu_taisan nts
-                LEFT JOIN taisan ts ON ts.Id = nts.IdTaiSan
+                LEFT JOIN TaiSan ts ON ts.Id = nts.IdTaiSan
             WHERE nts.IdBienBan = ?
             """;
         List<NghiemThuTaiSan> list = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(NghiemThuTaiSan.class), idBienBan);
@@ -38,7 +38,7 @@ public class NghiemThuTaiSanDao {
         String sql = """
             SELECT nts.*, ts.TenTaiSan, ts.DonViTinh
             FROM nghiemthu_taisan nts
-                LEFT JOIN taisan ts ON ts.Id = nts.IdTaiSan
+                LEFT JOIN TaiSan ts ON ts.Id = nts.IdTaiSan
             WHERE nts.Id = ?
             """;
         List<NghiemThuTaiSan> list = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(NghiemThuTaiSan.class), id);
@@ -47,9 +47,10 @@ public class NghiemThuTaiSanDao {
 
     public List<NghiemThuVatTu> findVatTuByIdBienBanTaiSan(String idBienBanTaiSan) {
         String sql = """
-            SELECT ntvt.*, cv.Ten AS tenVatTu, cv.DonViTinh
+            SELECT ntvt.*, cv2.Ten AS tenVatTu, cv2.DonVitinh as donViTinh, cv2.Id as idVatTu
             FROM nghiemthu_vattu ntvt
-                LEFT JOIN CCDCVatTu cv ON cv.Id = ntvt.IdChiTietVatTu
+                LEFT JOIN ChiTietTaiSan ctvt ON ctvt.Id = ntvt.IdChiTietVatTu
+                LEFT JOIN CCDCVatTu cv2 ON cv2.Id = ctvt.IdTaiSan
             WHERE ntvt.IdBienBanTaiSan = ?
             """;
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(NghiemThuVatTu.class), idBienBanTaiSan);
