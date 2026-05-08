@@ -38,10 +38,11 @@ import InspectionRecordDialog from "../dialog/InspectionRecordDialog";
 import AcceptanceTestDialog from "../dialog/AcceptanceTestDialog";
 import MaterialDialog from "../dialog/MaterialDialog";
 import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
-import { MaintenanceRepairData } from "../../types";
+import { DanhGiaVatTuData, MaintenanceRepairData } from "../../types";
 import {
   useMaintenanceAcceptanceByInspectionQuery,
   useMaintenanceInspectionByRepairQuery,
+  useMaintenanceMaterialAssessmentByInspectionQuery,
   useMaintenancePlanningDetailsByMonthQuery,
   useMaintenanceRepairByPlanQuery,
 } from "../../../MainenancePlanRepair/Mutation";
@@ -176,7 +177,6 @@ const ActionCell = ({
 // ── Component chính ───────────────────────────────────────
 const PlanDetailPanel = ({
   plan,
-  materialQualityRecords,
   onClose,
   onCreateRepairRequest,
   onCreateInspectionRecord,
@@ -221,6 +221,11 @@ const PlanDetailPanel = ({
   const { data: acceptanceTestRecords = [] } =
     useMaintenanceAcceptanceByInspectionQuery(
       expandedInspections.values().next().value,
+    );
+
+  const { data: materialQualityRecords = [] } =
+    useMaintenanceMaterialAssessmentByInspectionQuery(
+      expandedAcceptances.values().next().value,
     );
 
   const availableDevices = (chiTietTaiSanByKeHoach || []).filter(
@@ -633,11 +638,6 @@ const PlanDetailPanel = ({
                                   {expandedInspections.has(insp.id) &&
                                     acceptanceTestRecords.map(
                                       (acc: any, accIdx: number) => {
-                                        const materials =
-                                          materialQualityRecords.filter(
-                                            (m: any) =>
-                                              m.acceptanceRecordId === acc.id,
-                                          );
                                         const isAccLast =
                                           accIdx === acceptances.length - 1;
 
@@ -668,7 +668,7 @@ const PlanDetailPanel = ({
                                                     isLast={isAccLast}
                                                   />
                                                 </Box>
-                                                {materials.length > 0 && (
+                                                {acc.daCoDanhGiaVatTu === 1 && (
                                                   <IconButton
                                                     size="small"
                                                     sx={{
@@ -708,7 +708,9 @@ const PlanDetailPanel = ({
                                                   sx={{ color: "#fff" }}
                                                 />
                                               </TableCell>
-                                              <TableCell>{acc.ngayNghiemThu}</TableCell>
+                                              <TableCell>
+                                                {acc.ngayNghiemThu}
+                                              </TableCell>
                                               <TableCell>
                                                 {showStatus(acc.trangThai)}
                                               </TableCell>
@@ -719,68 +721,80 @@ const PlanDetailPanel = ({
                                                       acc.id,
                                                     )
                                                   }
-                                                  addTooltip="Tạo BB Vật tư"
+                                                  addTooltip={
+                                                    acc.daCoDanhGiaVatTu === 1
+                                                      ? "Đã có BB Vật tư"
+                                                      : "Tạo BB Vật tư"
+                                                  }
                                                   addColor="secondary"
-                                                  isAdd={acc.trangThai === 3}
+                                                  isAdd={
+                                                    acc.trangThai === 3 &&
+                                                    acc.daCoDanhGiaVatTu !== 1
+                                                  }
                                                 />
                                               </TableCell>
                                             </TableRow>
 
                                             {/* Level 4 */}
                                             {expandedAcceptances.has(acc.id) &&
-                                              materials.map((mat) => (
-                                                <TableRow hover key={mat.id}>
-                                                  <TableCell
-                                                    sx={{
-                                                      pl: 2,
-                                                      position: "relative",
-                                                      height: ROW_H,
-                                                      display: "flex",
-                                                      alignItems: "center",
-                                                    }}
-                                                  >
-                                                    <Box
+                                              materialQualityRecords.map(
+                                                (mat: DanhGiaVatTuData) => (
+                                                  <TableRow hover key={mat.id}>
+                                                    <TableCell
                                                       sx={{
-                                                        position: "absolute",
-                                                        left: 0,
-                                                        top: 0,
-                                                        height: "100%",
+                                                        pl: 2,
+                                                        position: "relative",
+                                                        height: ROW_H,
                                                         display: "flex",
                                                         alignItems: "center",
                                                       }}
                                                     >
-                                                      <TreeConnector
-                                                        depth={4}
-                                                        isLast={false}
+                                                      <Box
+                                                        sx={{
+                                                          position: "absolute",
+                                                          left: 0,
+                                                          top: 0,
+                                                          height: "100%",
+                                                          display: "flex",
+                                                          alignItems: "center",
+                                                        }}
+                                                      >
+                                                        <TreeConnector
+                                                          depth={4}
+                                                          isLast={false}
+                                                        />
+                                                      </Box>
+                                                      <Typography
+                                                        variant="body2"
+                                                        sx={{
+                                                          ml: `${CONNECTOR_WIDTH * 4 + 8}px`,
+                                                        }}
+                                                      >
+                                                        {mat.soPhieu}
+                                                      </Typography>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                      <Chip
+                                                        label="BB Vật tư"
+                                                        size="small"
+                                                        color="secondary"
                                                       />
-                                                    </Box>
-                                                    <Typography
-                                                      variant="body2"
-                                                      sx={{
-                                                        ml: `${CONNECTOR_WIDTH * 4 + 8}px`,
-                                                      }}
-                                                    >
-                                                      {mat.number}
-                                                    </Typography>
-                                                  </TableCell>
-                                                  <TableCell>
-                                                    <Chip
-                                                      label="BB Vật tư"
-                                                      size="small"
-                                                      color="secondary"
-                                                    />
-                                                  </TableCell>
-                                                  <TableCell>
-                                                    {(mat as any).date || "—"}
-                                                  </TableCell>
-                                                  <TableCell>
-                                                    {showStatus(0)}
-                                                  </TableCell>
-                                                  <TableCell align="right">
-                                                    <ActionCell />
-                                                  </TableCell>
-                                                </TableRow>
-                                              ))}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                      {(mat as any)
+                                                        .ngayDanhGia || "—"}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                      {showStatus(
+                                                        mat.trangThai ?? 0,
+                                                      )}
+                                                    </TableCell>
+                                                    <TableCell align="right">
+                                                      <ActionCell />
+                                                    </TableCell>
+                                                  </TableRow>
+                                                ),
+                                              )}
                                           </React.Fragment>
                                         );
                                       },
@@ -860,7 +874,7 @@ const PlanDetailPanel = ({
       {materialParentAccId &&
         (() => {
           const parentAcc = acceptanceTestRecords.find(
-            (a:any) => a.id === materialParentAccId,
+            (a: any) => a.id === materialParentAccId,
           );
           const parentReq = parentAcc
             ? maintenanceRepairByPlan.find(
@@ -875,10 +889,10 @@ const PlanDetailPanel = ({
               plan={plan}
               repairRequest={parentReq!}
               acceptanceRecord={parentAcc}
-              onSubmit={(record) => {
-                onCreateMaterialQualityRecord(record);
-                setMaterialParentAccId(null);
-              }}
+              // onSubmit={(record) => {
+              //   onCreateMaterialQualityRecord(record);
+              //   setMaterialParentAccId(null);
+              // }}
             />
           ) : null;
         })()}

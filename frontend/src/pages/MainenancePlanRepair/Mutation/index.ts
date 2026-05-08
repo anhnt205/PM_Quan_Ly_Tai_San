@@ -8,7 +8,7 @@ import {
 } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import { Action, CongTy } from "../../../utils/const";
-import { IncidenData, MaintenanceRepairData } from "../../Maintenance/types";
+import { IncidenData, MaintenanceRepairData, DanhGiaVatTuData } from "../../Maintenance/types";
 import dayjs from "dayjs";
 import { useSelector } from "react-redux";
 
@@ -658,7 +658,7 @@ export const useMaintenanceRepairPageQuery = (
 };
 export const useMaintenanceRepairByPlanQuery = (idKeHoach?: string) => {
   return useQuery({
-    queryKey: ["repairPage", idKeHoach],
+    queryKey: ["repairByPlan", idKeHoach],
     queryFn: async () => {
       const res = await api.get(`/suachua/kehoach/${idKeHoach}`);
       return res.data.data || res.data;
@@ -1048,7 +1048,7 @@ export const useMaintenanceInspectionMutation = () => {
     },
     onSuccess: async (response, variables) => {
       handleUpdate(response, variables);
-      queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
+      queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
       showSuccessAlert("Tạo biên bản giám định thành công");
     },
     onError: (error: any) => {
@@ -1324,6 +1324,7 @@ export const useMaintenanceAcceptanceTestMutation = () => {
       const nghiemThuId = response?.data?.id || response?.id;
       if (nghiemThuId) handleSubRecords(nghiemThuId, variables);
       invalidate();
+      queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
       showSuccessAlert("Tạo biên bản nghiệm thu thành công");
     },
     onError: (error: any) => {
@@ -1347,6 +1348,9 @@ export const useMaintenanceAcceptanceTestMutation = () => {
       const nghiemThuId = response?.data?.id || response?.id || variables?.id;
       if (nghiemThuId) handleSubRecords(nghiemThuId, variables);
       invalidate();
+      queryClient.invalidateQueries({
+        queryKey: ["inspectionByRepair"],
+      });
       showSuccessAlert("Cập nhật biên bản nghiệm thu thành công");
     },
     onError: (error: any) => {
@@ -1438,5 +1442,143 @@ export const useMaintenanceAcceptanceTestMutation = () => {
     batchInsertTaiSanMutation,
     batchInsertVatTuMutation,
     deleteVatTuBatchMutation,
+  };
+};
+
+// đánh giá vật tư thu hồi
+
+export const useMaintenanceMaterialAssessmentPageQuery = (
+  page?: number,
+  pageSize?: number,
+  searchValue?: string,
+  trangThai?: number,
+  userid?: string,
+) => {
+  return useQuery({
+    queryKey: [
+      "materialAssessmentPage",
+      page,
+      pageSize,
+      searchValue,
+      trangThai,
+      userid,
+    ],
+    queryFn: async () => {
+      const res = await api.get("/danhgia-vattu/paged", {
+        params: {
+          page: page,
+          size: pageSize,
+          idcongty: CongTy.CT001,
+          search: searchValue,
+          trangThai: trangThai,
+          userid: userid,
+        },
+      }); 
+      return res.data.data || res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};
+
+export const useMaintenanceMaterialAssessmentByInspectionQuery = (
+  idNghiemThu?: string,
+) => {
+  return useQuery({
+    queryKey: ["materialAssessmentByInspection", idNghiemThu],
+    queryFn: async () => {
+      const res = await api.get(`/danhgia-vattu/nghiemthu/${idNghiemThu}`);
+      return res.data.data || res.data;
+    },
+    enabled: !!idNghiemThu,
+  });
+};
+export const useMaintenanceMaterialAssessmentMutation = () => {
+  const queryClient = useQueryClient();
+  const now = dayjs(new Date()).format("YYYY-MM-DD");
+  const { user } = useSelector((state: any) => state.user);
+
+  const createMutation = useMutation({
+    mutationFn: async (data: DanhGiaVatTuData) => {
+      return (
+        await api.post("/danhgia-vattu", {
+          ...data,
+          idCongTy: CongTy.CT001,
+          nguoiTao: user?.taiKhoan?.tenDangNhap,
+          ngayTao: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+        })
+      ).data;
+    },
+    onSuccess: async (response, variables) => {
+      const id = response?.id || response?.data?.id;
+      if (id && variables.nguoiKyList && variables.nguoiKyList.length > 0) {
+        await api.put(`/chuky/nguoi-ky/update/${id}`, variables.nguoiKyList);
+      }
+      queryClient.invalidateQueries({ queryKey: ["materialAssessmentPage"] });
+      queryClient.invalidateQueries({ queryKey: ["acceptanceByInspection"] });
+      showSuccessAlert("Tạo biên bản đánh giá vật tư thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message || "Tạo biên bản đánh giá vật tư thất bại",
+      );
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: DanhGiaVatTuData) => {
+      return (
+        await api.put(`/danhgia-vattu/${data.id}`, {
+          ...data,
+          nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
+          ngayCapNhat: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+        })
+      ).data;
+    },
+    onSuccess: async (response, variables) => {
+      const id = variables.id;
+      if (id && variables.nguoiKyList && variables.nguoiKyList.length > 0) {
+        await api.put(`/chuky/nguoi-ky/update/${id}`, variables.nguoiKyList);
+      }
+      queryClient.invalidateQueries({ queryKey: ["materialAssessmentPage"] });
+      showSuccessAlert("Cập nhật biên bản đánh giá vật tư thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message || "Cập nhật biên bản đánh giá vật tư thất bại",
+      );
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return (await api.delete(`/danhgia-vattu/${id}`)).data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["materialAssessmentPage"] });
+      showSuccessAlert("Xóa biên bản thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(error.response?.data?.message || "Xóa biên bản thất bại");
+    },
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return (await api.post(`/danhgia-vattu/huy?id=${id}`)).data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["materialAssessmentPage"] });
+      showSuccessAlert("Hủy biên bản thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(error.response?.data?.message || "Hủy biên bản thất bại");
+    },
+  });
+
+  return {
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    cancelMutation,
   };
 };

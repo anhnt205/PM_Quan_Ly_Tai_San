@@ -118,13 +118,62 @@ export interface InspectionRecordDetailData {
   ghiChu?: string;
   idTaiSan?: string;
   idSuaChuaChiTiet?: string;
-  daCoNghiemThu?:number;
+  daCoNghiemThu?: number;
   ngayTao?: string;
   ngayCapNhat?: string;
   nguoiTao?: string;
   nguoiCapNhat?: string;
 }
 
-
 // nghiệm thu
 
+export interface AcceptanceTestRecordData {
+  id?: string;
+  idCongTy?: string;
+  idGiamDinh?: string;
+  soPhieu?: string;
+  ngayNghiemThu?: string;
+  viTri?: string;
+  tenThietBi?: string;
+  soDangKi?: string;
+  capSuaChua?: string;
+  ketQua?: string;
+  noiDung?: string;
+  idNguoiLap?: string;
+  nguoiLapXacNhan?: boolean;
+  idGiamDoc?: string;
+  giamDocXacNhan?: boolean;
+  share?: boolean;
+  trangThai?: number;
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+  tenNguoiLap?: string;
+  tenGiamDoc?: string;
+  soPhieuGiamDinh?: string;
+  daCoDanhGiaVatTu?: number;
+  danhSachTaiSan?: AcceptanceTestRecordAssetData[];
+  chuKyList?: any[];
+  nguoiKyList?: any[];
+}
+
+export interface AcceptanceTestRecordAssetData {
+  id?: string;
+  idBienBan?: string;
+  idTaiSan?: string;
+  idChiTietGiamDinh?: string;
+  tenTaiSan?: string;
+  donViTinh?: string;
+  danhSachVatTu?: AcceptanceTestRecordToolData[];
+}
+export interface AcceptanceTestRecordToolData {
+  id?: string;
+  idBienBanTaiSan?: string;
+  idChiTietVatTu?: string;
+  soLuong?: number;
+  ghiChu?: string;
+  idVatTu?: string;
+  tenVatTu?: string;
+  donViTinh?: string;
+}

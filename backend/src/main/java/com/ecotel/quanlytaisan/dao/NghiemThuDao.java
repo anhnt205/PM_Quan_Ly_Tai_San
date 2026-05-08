@@ -36,7 +36,8 @@ public class NghiemThuDao {
                 nt.Share, nt.TrangThai, nt.NgayTao, nt.NgayCapNhat, nt.NguoiTao, nt.NguoiCapNhat,
                 nvLap.HoTen AS tenNguoiLap,
                 nvGD.HoTen AS tenGiamDoc,
-                gd.SoPhieu AS soPhieuGiamDinh
+                gd.SoPhieu AS soPhieuGiamDinh,
+                (SELECT COUNT(*) FROM danhgia_vattu dg WHERE dg.IdNghiemThu = nt.Id) AS daCoDanhGiaVatTu
             FROM nghiemthu nt
                 LEFT JOIN giamdinh gd ON nt.IdGiamDinh = gd.Id
                 LEFT JOIN NhanVien nvLap ON nt.IdNguoiLap = nvLap.Id

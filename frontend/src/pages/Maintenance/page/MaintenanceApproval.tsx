@@ -25,12 +25,7 @@ import {
 import PageAction from "../../../components/common/PageAction";
 import TableCustom from "../../../components/common/TableCustom";
 import { useCmms } from "../../../hooks/CmmsContext";
-import StepPreview from "../components/step/StepPreview";
-import RepairRequestPreview from "../components/preview/RepairRequestPreview";
-import InspectionPreview from "../components/preview/InspectionPreview";
-import AcceptancePreview from "../components/preview/AcceptancePreview";
 import MaterialQualityPreview from "../components/preview/MaterialQualityPreview";
-import IncidentPreview from "../components/preview/IncidentPreview";
 import IncidentInspectionPreview from "../components/preview/IncidentInspectionPreview";
 import { useSignBatch } from "../../../hooks/useSignBatch";
 import { SignBatchModal } from "../../../components/SignDocument/Signbatchmodal";
@@ -38,6 +33,7 @@ import {
   useMaintenanceAcceptanceTestPageQuery,
   useMaintenanceIncidentPageQuery,
   useMaintenanceInspectionPageQuery,
+  useMaintenanceMaterialAssessmentPageQuery,
   useMaintenancePlanningPageQuery,
   useMaintenanceRepairPageQuery,
 } from "../../MainenancePlanRepair/Mutation";
@@ -46,6 +42,7 @@ import {
   AcceptanceTestAdapter,
   IncidentAdapter,
   InspectionAdapter,
+  MaterialAssessmentAdapter,
   PlanAdapter,
   RepairAdapter,
 } from "../Adapter";
@@ -61,6 +58,7 @@ import {
   generateSuaChuaPdf,
   generateGiamDinhPdf,
   generateNghiemThuPdf,
+  generateDanhGiaVatTuPdf,
   getPermissionSigning,
   ShowPermissionSigning,
   canSign,
@@ -73,10 +71,7 @@ import { useMaintenanceMutation } from "../mutation";
 import { SignaturesData } from "../../../components/SignDocument/types";
 
 export default function MaintenanceApprovalPage() {
-  const {
-    materialQualityRecords,
-    incidentInspectionRecords,
-  } = useCmms();
+  const { materialQualityRecords, incidentInspectionRecords } = useCmms();
 
   const signBatch = useSignBatch();
   const { user } = useSelector((state: RootState) => state.user);
@@ -149,17 +144,36 @@ export default function MaintenanceApprovalPage() {
     user?.taiKhoan?.tenDangNhap,
   );
 
-    const {
-      data: acceptanceTestPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
-      isLoading: isLoadingAcceptanceTest,
-    } = useMaintenanceAcceptanceTestPageQuery(
-      paginationModel.page,
-      paginationModel.pageSize,
-      searchDebounce,
-      undefined,
-      undefined,
-      user?.taiKhoan?.tenDangNhap,
-    );
+  const {
+    data: acceptanceTestPaged = {
+      items: [],
+      totalItems: 0,
+      trangThaiCounts: {},
+    },
+    isLoading: isLoadingAcceptanceTest,
+  } = useMaintenanceAcceptanceTestPageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchDebounce,
+    undefined,
+    undefined,
+    user?.taiKhoan?.tenDangNhap,
+  );
+
+  const {
+    data: materialAssessmentPaged = {
+      items: [],
+      totalItems: 0,
+      trangThaiCounts: {},
+    },
+    isLoading: isLoadingMaterialAssessment,
+  } = useMaintenanceMaterialAssessmentPageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchDebounce,
+    undefined,
+    user?.taiKhoan?.tenDangNhap,
+  );
 
   const { signMutation } = useMaintenanceMutation(
     activeTab === 0
@@ -170,9 +184,11 @@ export default function MaintenanceApprovalPage() {
           ? "inspectionPage"
           : activeTab === 3
             ? "acceptanceTestPage"
-          : activeTab === 5
-            ? "incidentPage"
-            : "",
+            : activeTab === 4
+              ? "materialAssessmentPage"
+              : activeTab === 5
+                ? "incidentPage"
+                : "",
     activeTab === 0
       ? "kehoach-suachua"
       : activeTab === 1
@@ -181,17 +197,25 @@ export default function MaintenanceApprovalPage() {
           ? "giamdinh"
           : activeTab === 3
             ? "nghiemthu"
-          : activeTab === 5
-            ? "suco-thietbi"
-            : "",
+            : activeTab === 4
+              ? "danhgia-vattu"
+              : activeTab === 5
+                ? "suco-thietbi"
+                : "",
   );
 
   const allRows = [
     { ...planPaged, items: planPaged.items.map(PlanAdapter) },
     { ...repairPaged, items: repairPaged.items.map(RepairAdapter) },
     { ...inspectionPaged, items: inspectionPaged.items.map(InspectionAdapter) },
-    { ...acceptanceTestPaged, items: acceptanceTestPaged.items.map(AcceptanceTestAdapter) },
-    materialQualityRecords,
+    {
+      ...acceptanceTestPaged,
+      items: acceptanceTestPaged.items.map(AcceptanceTestAdapter),
+    },
+    {
+      ...materialAssessmentPaged,
+      items: materialAssessmentPaged.items.map(MaterialAssessmentAdapter),
+    },
     { ...incidentPaged, items: incidentPaged.items.map(IncidentAdapter) },
     incidentInspectionRecords || [],
   ];
@@ -248,7 +272,7 @@ export default function MaintenanceApprovalPage() {
       { field: "incidentInspectionId", headerName: "Mã BB kiểm tra SC" },
     ],
     3: [{ field: "idGiamDinh", headerName: "Mã BB giám định" }],
-    4: [{ field: "acceptanceId", headerName: "Mã BB nghiệm thu" }],
+    4: [{ field: "idNghiemThu", headerName: "Mã BB nghiệm thu" }],
     5: [{ field: "planId", headerName: "Mã kế hoạch" }],
     6: [{ field: "incidentReportId", headerName: "Mã phiếu báo SC" }],
   };
@@ -291,7 +315,6 @@ export default function MaintenanceApprovalPage() {
       asset: selectedRow,
     });
   };
-
 
   const buildColumns = (collapsed: boolean) => {
     const parentCols = (parentColumnConfigs[activeTab] ?? []).map((cfg) => ({
@@ -459,7 +482,26 @@ export default function MaintenanceApprovalPage() {
           />
         );
       case 4:
-        return <MaterialQualityPreview row={selectedRow} />;
+        return (
+          <SignDocumentForm
+            selectedIds={[selectedRow.id]}
+            onCancel={() => {
+              setSelectedRow(null);
+              setIsDetailOpen(false);
+            }}
+            onSign={() => {}}
+            plan={selectedRow}
+            staffs={staffs || []}
+            departments={departments || []}
+            positions={positions || []}
+            fullscreen={false}
+            showSignerSidebar={false}
+            showHeader={false}
+            generatePdf={() =>
+              generateDanhGiaVatTuPdf(selectedRow, staffs || [], departments || [], positions || [])
+            }
+          />
+        );
       case 5:
         return (
           <SignDocumentForm
@@ -694,6 +736,44 @@ export default function MaintenanceApprovalPage() {
           }
         />
       )}
+      {selectedRow && isSigning && activeTab === 3 && (
+        <SignDocumentForm
+          selectedIds={[selectedRow?.id]}
+          onCancel={() => {
+            setIsSigning(false);
+            setSelectedRow(null);
+          }}
+          onSign={handleSign}
+          plan={selectedRow}
+          staffs={staffs || []}
+          departments={departments || []}
+          positions={positions || []}
+          fullscreen={true}
+          showSignerSidebar={true}
+          generatePdf={() =>
+            generateNghiemThuPdf(selectedRow, staffs, departments, positions)
+          }
+        />
+      )}
+      {selectedRow && isSigning && activeTab === 4 && (
+        <SignDocumentForm
+          selectedIds={[selectedRow?.id]}
+          onCancel={() => {
+            setIsSigning(false);
+            setSelectedRow(null);
+          }}
+          onSign={handleSign}
+          plan={selectedRow}
+          staffs={staffs || []}
+          departments={departments || []}
+          positions={positions || []}
+          fullscreen={true}
+          showSignerSidebar={true}
+          generatePdf={() =>
+            generateDanhGiaVatTuPdf(selectedRow, staffs, departments, positions)
+          }
+        />
+      )}
 
       {selectedRow && isSigning && activeTab === 5 && (
         <SignDocumentForm
@@ -873,7 +953,9 @@ export default function MaintenanceApprovalPage() {
                     ? generateGiamDinhPdf
                     : activeTab === 3
                       ? generateNghiemThuPdf
-                      : generateBienBanKeHoachPdf
+                      : activeTab === 4
+                        ? generateDanhGiaVatTuPdf
+                        : generateBienBanKeHoachPdf
             }
             staffs={staffs || []}
             departments={departments || []}

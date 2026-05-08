@@ -1218,7 +1218,7 @@ export const generateNghiemThuPdf = async (
   );
   y += 6;
   doc.text(
-    `Số đăng ký: ${item.soDangKy || "............."} sau khi thực hiện sửa chữa cấp ${item.suaChuaCap || ".............."} với các nội dung cụ thể sau: `,
+    `Số đăng ký: ${item.soDangKi  || "............."} sau khi thực hiện sửa chữa cấp ${item.capSuaChua || ".............."} với các nội dung cụ thể sau: `,
     20,
     y,
   );
@@ -1274,7 +1274,7 @@ export const generateNghiemThuPdf = async (
     bodyStyles: { lineWidth: 0.1, lineColor: 0, textColor: 0 },
     columnStyles: {
       0: { cellWidth: 10, halign: "center" },
-      1: { cellWidth: 22, halign: "center" },
+      1: { cellWidth: 25, halign: "center" },
       3: { cellWidth: 15, halign: "center" },
       4: { cellWidth: 10, halign: "center" },
     },
@@ -1309,7 +1309,7 @@ export const generateNghiemThuPdf = async (
     bodyStyles: { lineWidth: 0.1, lineColor: 0, textColor: 0 },
     columnStyles: {
       0: { cellWidth: 10, halign: "center" },
-      1: { cellWidth: 22, halign: "center" },
+      1: { cellWidth: 25, halign: "center" },
       3: { cellWidth: 15, halign: "center" },
       4: { cellWidth: 10, halign: "center" },
     },
@@ -1328,6 +1328,219 @@ export const generateNghiemThuPdf = async (
   });
 
   y += 10;
+  // Signatures
+  const marginX = 25;
+  const printableWidth = pageWidth - 2 * marginX;
+  const maxPerRow = 3;
+  const rowGap = 60;
+  const coordinates: Record<string, { xRatio: number; yRatio: number }> = {};
+  const baseWidthPx = 120;
+  const displayWidth = 800;
+
+  listSigneInfos.forEach((s, index) => {
+    const rowIndex = Math.floor(index / maxPerRow);
+    const colIndex = index % maxPerRow;
+    const itemsInRow = Math.min(
+      maxPerRow,
+      listSigneInfos.length - rowIndex * maxPerRow,
+    );
+
+    let x;
+    if (itemsInRow === 1) x = pageWidth / 2;
+    else {
+      const gapSize = printableWidth / (itemsInRow - 1);
+      x = marginX + colIndex * gapSize;
+    }
+
+    const yPos = y + rowIndex * rowGap;
+    const sigWidthMm = (baseWidthPx / displayWidth) * pageWidth;
+
+    coordinates[s.idNhanVien] = {
+      xRatio: Math.max(0, Math.min((x - sigWidthMm / 2) / pageWidth, 1)),
+      yRatio: Math.max(0, Math.min((yPos + 10) / pageHeight, 1)),
+    };
+
+    doc.setFont("times_new_roman", "bold");
+    doc.setFontSize(10);
+    doc.text(s.title || s.donVi || "", x, yPos, { align: "center" });
+    doc.setFont("times_new_roman_italic", "italic");
+    doc.text("(Ký, ghi rõ họ tên)", x, yPos + 5, { align: "center" });
+    doc.setFont("times_new_roman", "bold");
+    doc.text(s.hoTen || "", x, yPos + 35, { align: "center" });
+  });
+
+  return {
+    pdf: new Uint8Array(doc.output("arraybuffer")),
+    coordinates,
+  };
+};
+
+export const generateDanhGiaVatTuPdf = async (
+  item: any,
+  staffs: any[],
+  departments: any[],
+  positions: any[],
+): Promise<{
+  pdf: Uint8Array;
+  coordinates: Record<string, { xRatio: number; yRatio: number }>;
+}> => {
+  const listSigneInfos: any[] = listSigneInfo(
+    item,
+    staffs,
+    departments,
+    positions,
+  );
+  const doc = new jsPDF("p", "mm", "a4");
+
+  doc.setFont("times_new_roman", "bold");
+  doc.setFontSize(11);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const leftColCenter = pageWidth / 4;
+  const rightColCenter = (pageWidth * 3) / 4;
+
+  // Header Left
+  doc.text("TẬP ĐOÀN CÔNG NGHIỆP", leftColCenter, 20, { align: "center" });
+  doc.text("THAN – KHOÁNG SẢN VIỆT NAM", leftColCenter, 26, {
+    align: "center",
+  });
+  doc.text("CÔNG TY THAN UÔNG BÍ - TKV", leftColCenter, 32, {
+    align: "center",
+  });
+  doc.line(leftColCenter - 15, 33, leftColCenter + 15, 33);
+
+  // Header Right
+  doc.text("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", rightColCenter, 20, {
+    align: "center",
+  });
+  doc.text("Độc lập - Tự do - Hạnh phúc", rightColCenter, 26, {
+    align: "center",
+  });
+  doc.line(rightColCenter - 15, 27, rightColCenter + 15, 27);
+
+  // Date
+  doc.setFont("times_new_roman_italic", "italic");
+  doc.setFontSize(10);
+  const today = new Date(item.ngayDanhGia || new Date());
+  const dateStr = `Quảng Ninh, ngày ${today.getDate()} tháng ${today.getMonth() + 1} năm ${today.getFullYear()}`;
+  doc.text(dateStr, pageWidth - 20, 40, { align: "right" });
+
+  // Title
+  doc.setFont("times_new_roman", "bold");
+  doc.setFontSize(14);
+  doc.text("BIÊN BẢN", pageWidth / 2, 50, { align: "center" });
+  doc.text(
+    "ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA",
+    pageWidth / 2,
+    58,
+    { align: "center" },
+  );
+
+  doc.setFont("times_new_roman", "normal");
+  doc.setFontSize(11);
+  let y = 70;
+
+  const d = new Date(item.ngayDanhGia || new Date());
+  doc.text(
+    `Hôm nay, ngày ${d.getDate()} tháng ${d.getMonth() + 1} năm ${d.getFullYear()}. Tại ${item.viTri || "……………………………"}`,
+    20,
+    y,
+  );
+  y += 8;
+  doc.text(
+    `Hội đồng đánh giá chất lượng vật tư phụ tùng thu hồi sau sửa chữa cấp: ${item.capSuaChua || "……………"}`,
+    20,
+    y,
+  );
+  y += 8;
+  doc.text(
+    `Của thiết bị: ${item.tenThietBi || "……………"} Kiểu: ${item.kieu || "………"} Số: ${item.soDangKi || "……………………………"}`,
+    20,
+    y,
+  );
+  y += 8;
+  doc.text(`Đơn vị quản lý vận hành: ${item.tenDonViQuanLy || "………………"}`, 20, y);
+  y += 8;
+  doc.text("Thành phần gồm:", 20, y);
+  y += 8;
+
+  listSigneInfos.forEach((s, idx) => {
+    doc.text(`${idx + 1}.`, 25, y);
+    doc.setFont("times_new_roman", "bold");
+    doc.text(s.hoTen || "………………………", 35, y);
+    doc.setFont("times_new_roman", "normal");
+    doc.text(s.chucVu || "", 75, y);
+    doc.text(s.donVi || "", 115, y);
+    y += 7;
+  });
+
+  y += 3;
+  doc.text(
+    "Đã tiến hành kiểm tra chi tiết các vật tư phụ tùng thu hồi sau sửa chữa cụ thể như sau:",
+    20,
+    y,
+  );
+  y += 8;
+
+  // Table
+  const tableData: any[] = (item.danhSachChiTiet || []).map(
+    (it: any, idx: number) => [
+      String(idx + 1).padStart(2, "0"),
+      it.tenVatTu || "",
+      it.donViTinh || "",
+      it.soLuong || "",
+      it.tinhTrang || "",
+      it.bienPhapXuLy || "",
+      it.ghiChu || "",
+    ],
+  );
+
+  autoTable(doc, {
+    startY: y,
+    margin: { left: 15, right: 15 },
+    head: [
+      [
+        "STT",
+        "Tên vật tư, thiết bị",
+        "ĐVT",
+        "SL",
+        "Tình trạng",
+        "Biện pháp xử lý",
+        "Ghi chú",
+      ],
+    ],
+    body: tableData,
+    theme: "grid",
+    styles: { font: "times_new_roman", fontSize: 9 },
+    headStyles: {
+      fillColor: false,
+      textColor: 0,
+      lineWidth: 0.1,
+      lineColor: 0,
+      fontStyle: "bold",
+      halign: "center",
+    },
+    bodyStyles: { lineWidth: 0.1, lineColor: 0, textColor: 0 },
+    columnStyles: {
+      0: { cellWidth: 10, halign: "center" },
+      2: { cellWidth: 15, halign: "center" },
+      3: { cellWidth: 10, halign: "center" },
+    },
+  });
+
+  y = (doc as any).lastAutoTable.finalY + 10;
+  doc.setFont("times_new_roman", "normal");
+  doc.text(
+    `Số để lại phục hồi phục vụ cho sản xuất: ${item.soLuongPhucHoi ?? "…………"}.`,
+    20,
+    y,
+  );
+  y += 8;
+  doc.text(`Số để làm phế liệu: ${item.soLuongPheLieu ?? "…………"} (mục)`, 20, y);
+  y += 8;
+  doc.text(`Số lượng hủy: ${item.soLuongHuy ?? "…………"} (mục)`, 20, y);
+  y += 10;
+
   // Signatures
   const marginX = 25;
   const printableWidth = pageWidth - 2 * marginX;

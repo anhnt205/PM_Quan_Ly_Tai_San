@@ -4,46 +4,43 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class NghiemThuDTO {
+public class DanhGiaVatTu {
     private String id;
     private String idCongTy;
-    private String idGiamDinh;
     private String soPhieu;
-    private String ngayNghiemThu;
+    private String ngayDanhGia;
     private String viTri;
-    private String tenThietBi;
-    private String soDangKi;
     private String capSuaChua;
-    private String ketQua;
-    private String noiDung;
-
+    private String tenThietBi;
+    private String kieu;
+    private String soDangKi;
+    private String idDonViQuanLy;
+    private String tenDonViQuanLy;
+    private String idNghiemThu;
+    
+    private Integer soLuongPhucHoi;
+    private Integer soLuongPheLieu;
+    private Integer soLuongHuy;
+    
     // Người lập phiếu
     private String idNguoiLap;
+    private String tenNguoiLap;
     private Boolean nguoiLapXacNhan;
-
+    
     // Giám đốc duyệt
     private String idGiamDoc;
+    private String tenGiamDoc;
     private Boolean giamDocXacNhan;
-
-    // Workflow & trạng thái
+    
     private Boolean share;
-    private Integer trangThai;
-
-    // Audit
+    private Integer trangThai; 
     private String ngayTao;
     private String ngayCapNhat;
     private String nguoiTao;
     private String nguoiCapNhat;
-
-    // Join fields
-    private String tenNguoiLap;
-    private String tenGiamDoc;
-    private String soPhieuGiamDinh;
-    private Integer daCoDanhGiaVatTu;
-
+    
     // Relations
-    private List<NghiemThuTaiSan> danhSachTaiSan;
-    private List<KyTaiLieu> chuKyList;
+    private List<ChiTietVatTuThuHoi> danhSachChiTiet;
     private List<NguoiKy> nguoiKyList;
 
     public Boolean getNguoiLapXacNhan() {
@@ -52,9 +49,5 @@ public class NghiemThuDTO {
 
     public Boolean getGiamDocXacNhan() {
         return giamDocXacNhan != null ? giamDocXacNhan : false;
-    }
-
-    public Boolean getShare() {
-        return share != null ? share : false;
     }
 }

@@ -90,3 +90,55 @@ export interface MaintenanceRepairDetailData {
   nguoiCapNhat?: string;
   action?: ActionType;
 }
+
+// Đánh giá vật tư thu hồi
+export interface DanhGiaVatTuData {
+  id?: string;
+  idCongTy?: string;
+  soPhieu?: string;
+  ngayDanhGia?: string;
+  viTri?: string;
+  capSuaChua?: string;
+  tenThietBi?: string;
+  kieu?: string;
+  soDangKi?: string;
+  idDonViQuanLy?: string;
+  tenDonViQuanLy?: string;
+  idNghiemThu?: string;
+  
+  soLuongPhucHoi?: number;
+  soLuongPheLieu?: number;
+  soLuongHuy?: number;
+
+  // Ký duyệt
+  idNguoiLap?: string;
+  tenNguoiLap?: string;
+  nguoiLapXacNhan?: boolean;
+  idGiamDoc?: string;
+  tenGiamDoc?: string;
+  giamDocXacNhan?: boolean;
+  
+  share?: boolean;
+  trangThai?: number;
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+  
+  danhSachChiTiet?: ChiTietVatTuThuHoiData[];
+  nguoiKyList?: any[];
+}
+
+export interface ChiTietVatTuThuHoiData {
+  id?: string;
+  idDanhGiaVatTu?: string;
+  idChiTietVatTu?: string;
+  soLuong?: number;
+  tinhTrang?: string;
+  bienPhapXuLy?: string;
+  ghiChu?: string;
+  
+  // Join fields
+  tenVatTu?: string;
+  donViTinh?: string;
+}

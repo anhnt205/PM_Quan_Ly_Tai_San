@@ -67,3 +67,16 @@ export const AcceptanceTestAdapter = (s: any) => ({
   ngayTao: s.ngayTao,
   trangThai: s.trangThai,
 });
+
+export const MaterialAssessmentAdapter = (s: any) => ({
+  ...s,
+  id: s.id,
+  idTrinhDuyetGiamDoc: s.idGiamDoc,
+  tenTrinhDuyetGiamDoc: s.tenGiamDoc,
+  trinhDuyetGiamDocXacNhan: s.giamDocXacNhan,
+  idNguoiLapBieu: s.idNguoiLap,
+  tenNguoiLapBieu: s.tenNguoiLap,
+  nguoiLapBieuXacNhan: s.nguoiLapXacNhan,
+  ngayTao: s.ngayTao,
+  trangThai: s.trangThai,
+});
