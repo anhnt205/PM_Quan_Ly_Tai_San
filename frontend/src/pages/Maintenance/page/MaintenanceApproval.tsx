@@ -498,7 +498,12 @@ export default function MaintenanceApprovalPage() {
             showSignerSidebar={false}
             showHeader={false}
             generatePdf={() =>
-              generateDanhGiaVatTuPdf(selectedRow, staffs || [], departments || [], positions || [])
+              generateDanhGiaVatTuPdf(
+                selectedRow,
+                staffs || [],
+                departments || [],
+                positions || [],
+              )
             }
           />
         );
