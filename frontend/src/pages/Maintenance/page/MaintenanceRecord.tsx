@@ -57,11 +57,11 @@ import {
   PlanAdapter,
   RepairAdapter,
 } from "../Adapter";
+import { FilterOption } from "../../../components/common/FilterStatusGroup";
 
 export default function MaintenanceRecordPage() {
   const [activeTab, setActiveTab] = useState(0);
   const [searchValue, setSearchValue] = useState("");
-  const debouncedSearch = useDebounce(searchValue, 500);
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
     pageSize: 10,
@@ -74,20 +74,11 @@ export default function MaintenanceRecordPage() {
   // Filter ngày & trạng thái
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-  const [statusFilter, setStatusFilter] = useState<number | undefined>(
-    undefined,
-  );
+  const [statusFilter, setStatusFilter] = useState("");
 
   const { data: staffs } = useAllStaffsQuery();
   const { data: departments } = useAllDepartmentsQuery();
   const { data: positions } = useAllPositionsQuery();
-
-  const queryParams = {
-    page: paginationModel.page,
-    pageSize: paginationModel.pageSize,
-    searchValue: debouncedSearch,
-    trangThai: statusFilter,
-  };
 
   const searchDebounce = useDebounce(searchValue, 500);
   const {
@@ -97,7 +88,7 @@ export default function MaintenanceRecordPage() {
     paginationModel.page,
     paginationModel.pageSize,
     searchDebounce,
-    undefined,
+    statusFilter ? Number(statusFilter) : undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
   );
@@ -109,7 +100,7 @@ export default function MaintenanceRecordPage() {
     paginationModel.page,
     paginationModel.pageSize,
     searchDebounce,
-    undefined,
+    statusFilter ? Number(statusFilter) : undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
   );
@@ -120,7 +111,7 @@ export default function MaintenanceRecordPage() {
     paginationModel.page,
     paginationModel.pageSize,
     searchDebounce,
-    undefined,
+    statusFilter ? Number(statusFilter) : undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
   );
@@ -132,7 +123,7 @@ export default function MaintenanceRecordPage() {
     paginationModel.page,
     paginationModel.pageSize,
     searchDebounce,
-    undefined,
+    statusFilter ? Number(statusFilter) : undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
   );
@@ -148,7 +139,7 @@ export default function MaintenanceRecordPage() {
     paginationModel.page,
     paginationModel.pageSize,
     searchDebounce,
-    undefined,
+    statusFilter ? Number(statusFilter) : undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
   );
@@ -164,7 +155,7 @@ export default function MaintenanceRecordPage() {
     paginationModel.page,
     paginationModel.pageSize,
     searchDebounce,
-    undefined,
+    statusFilter ? Number(statusFilter) : undefined,
     user?.taiKhoan?.tenDangNhap,
   );
 
@@ -561,17 +552,42 @@ export default function MaintenanceRecordPage() {
     setSearchValue("");
     setDateFrom("");
     setDateTo("");
-    setStatusFilter(undefined);
+    setStatusFilter("");
     setSelectedRow(null);
     setPaginationModel((m) => ({ ...m, page: 0 }));
   };
 
-  const statusOptions = [
-    { label: "Tất cả", value: undefined, color: "default" },
-    { label: "Bản nháp", value: 0, color: "default" },
-    { label: "Chờ duyệt", value: 1, color: "warning" },
-    { label: "Đã duyệt", value: 2, color: "success" },
-    { label: "Từ chối", value: 3, color: "error" },
+  const statusOptions: FilterOption[] = [
+    {
+      label: "Tất cả",
+      value: "",
+      count: currentAllData.totalItems,
+      color: "primary",
+    },
+    {
+      label: "Bản nháp",
+      value: 0,
+      count: currentAllData?.trangThaiCounts?.["0"] || 0,
+      color: "default",
+    },
+    {
+      label: "Chờ duyệt",
+      value: 1,
+      count: currentAllData?.trangThaiCounts?.["1"] || 0,
+      color: "warning",
+    },
+    {
+      label: "Từ chối",
+      value: 2,
+      count: currentAllData?.trangThaiCounts?.["2"] || 0,
+      color: "error",
+    },
+    {
+      label: "Đã duyệt",
+      value: 3,
+      count: currentAllData?.trangThaiCounts?.["3"] || 0,
+      color: "success",
+    },
   ];
 
   return (

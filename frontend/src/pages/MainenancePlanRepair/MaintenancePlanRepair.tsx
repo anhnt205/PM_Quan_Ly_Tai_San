@@ -73,19 +73,6 @@ const renderStatus = (status: number) => {
   return <Chip label={cfg.label} color={cfg.color} size="small" />;
 };
 
-const incidentStatusConfig: Record<
-  string,
-  {
-    label: string;
-    color: "default" | "warning" | "success" | "error" | "info";
-  }
-> = {
-  draft: { label: "Bản nháp", color: "default" },
-  "cho-duyet": { label: "Chờ duyệt", color: "warning" },
-  "da-duyet": { label: "Đã duyệt", color: "success" },
-  "tu-choi": { label: "Từ chối", color: "error" },
-};
-
 // ── Severity color helper ─────────────────────────────────
 const severityColor: Record<string, string> = {
   0: "#4caf50",
@@ -139,7 +126,6 @@ export default function MaintenancePlanRepair() {
     null,
   );
 
-  const [showCalendar, setShowCalendar] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -158,7 +144,7 @@ export default function MaintenancePlanRepair() {
   // kehoach
   const { data: groupedData, isLoading } = useMaintenancePlanningGroupedQuery(
     CongTy.CT001,
-    statusFilter,
+    statusFilter ? Number(statusFilter) : undefined,
     searchDebounce,
     undefined,
   );

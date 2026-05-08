@@ -49,7 +49,7 @@ export const useMaintenancePlanningPageQuery = (
 
 export const useMaintenancePlanningGroupedQuery = (
   idCongTy: string,
-  trangThai?: string,
+  trangThai?: number,
   search?: string,
   userid?: string,
 ) => {
