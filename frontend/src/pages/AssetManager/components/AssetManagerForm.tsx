@@ -849,8 +849,9 @@ const AssetRow = ({
                         }}
                         sx={{ fontSize: 13 }}
                       >
-                        <MenuItem value="Tháng">Tháng</MenuItem>
+                        <MenuItem value="Giờ">Giờ</MenuItem>
                         <MenuItem value="Tuần">Tuần</MenuItem>
+                        <MenuItem value="Tháng">Tháng</MenuItem>
                         <MenuItem value="Năm">Năm</MenuItem>
                       </Select>
                     </TableCell>

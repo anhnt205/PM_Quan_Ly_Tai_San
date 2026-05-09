@@ -2,6 +2,8 @@ package com.ecotel.quanlytaisan.service;
 
 import com.ecotel.quanlytaisan.dao.ChuKySuaChuaDao;
 import com.ecotel.quanlytaisan.model.ChuKySuaChua;
+import com.ecotel.quanlytaisan.model.ChuKySuaChuaDTO;
+import com.ecotel.quanlytaisan.model.PageResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +14,12 @@ import java.util.UUID;
 public class ChuKySuaChuaService {
     @Autowired
     private ChuKySuaChuaDao chuKySuaChuaDao;
+
+    public PageResponse<ChuKySuaChuaDTO> findPaged(int page, int pageSize, String searchValue) {
+        List<ChuKySuaChuaDTO> items = chuKySuaChuaDao.findPaged(page, pageSize, searchValue);
+        int total = chuKySuaChuaDao.count(searchValue);
+        return new PageResponse<>(items, total, page, pageSize);
+    }
 
     public List<ChuKySuaChua> getByIdTaiSan(String idTaiSan) {
         return chuKySuaChuaDao.findByIdTaiSan(idTaiSan);

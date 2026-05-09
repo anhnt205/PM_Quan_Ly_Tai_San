@@ -1,6 +1,7 @@
 package com.ecotel.quanlytaisan.dao;
 
 import com.ecotel.quanlytaisan.model.ChuKySuaChua;
+import com.ecotel.quanlytaisan.model.ChuKySuaChuaDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -63,5 +64,59 @@ public class ChuKySuaChuaDao {
     public int deleteByIdTaiSan(String idTaiSan) {
         String sql = "DELETE FROM ChuKySuaChua WHERE IdTaiSan = ?";
         return jdbcTemplate.update(sql, idTaiSan);
+    }
+
+    public List<ChuKySuaChuaDTO> findPaged(int page, int pageSize, String searchValue) {
+        StringBuilder sql = new StringBuilder("""
+            SELECT ck.*, ts.TenTaiSan, loai.Ten as TenLoaiSuaChua
+            FROM ChuKySuaChua ck
+            LEFT JOIN TaiSan ts ON ck.IdTaiSan = ts.Id
+            LEFT JOIN LoaiSCBD loai ON ck.IdLoaiSuaChua = loai.Id
+            WHERE 1=1
+            """);
+        
+        Object[] params;
+        if (searchValue != null && !searchValue.trim().isEmpty()) {
+            sql.append(" AND (ts.Id LIKE ? OR ts.TenTaiSan LIKE ?)");
+            String pattern = "%" + searchValue.trim() + "%";
+            params = new Object[]{pattern, pattern, pageSize, page * pageSize};
+        } else {
+            params = new Object[]{pageSize, page * pageSize};
+        }
+        
+        sql.append(" ORDER BY ts.Id ASC, ck.ChuKy ASC LIMIT ? OFFSET ?");
+        
+        return jdbcTemplate.query(sql.toString(), (rs, rowNum) -> {
+            ChuKySuaChuaDTO dto = new ChuKySuaChuaDTO();
+            dto.setId(rs.getString("Id"));
+            dto.setIdTaiSan(rs.getString("IdTaiSan"));
+            dto.setIdLoaiSuaChua(rs.getString("IdLoaiSuaChua"));
+            dto.setChuKy(rs.getInt("ChuKy"));
+            dto.setDonViChuKy(rs.getString("DonViChuKy"));
+            dto.setTenTaiSan(rs.getString("TenTaiSan"));
+            dto.setTenLoaiSuaChua(rs.getString("TenLoaiSuaChua"));
+            dto.setIsInserted(false);
+            dto.setIsDeleted(false);
+            return dto;
+        }, params);
+    }
+
+    public int count(String searchValue) {
+        StringBuilder sql = new StringBuilder("""
+            SELECT COUNT(*)
+            FROM ChuKySuaChua ck
+            LEFT JOIN TaiSan ts ON ck.IdTaiSan = ts.Id
+            WHERE 1=1
+            """);
+        
+        if (searchValue != null && !searchValue.trim().isEmpty()) {
+            sql.append(" AND (ts.Id LIKE ? OR ts.TenTaiSan LIKE ?)");
+            String pattern = "%" + searchValue.trim() + "%";
+            Integer count = jdbcTemplate.queryForObject(sql.toString(), Integer.class, pattern, pattern);
+            return count != null ? count : 0;
+        }
+        
+        Integer count = jdbcTemplate.queryForObject(sql.toString(), Integer.class);
+        return count != null ? count : 0;
     }
 }
