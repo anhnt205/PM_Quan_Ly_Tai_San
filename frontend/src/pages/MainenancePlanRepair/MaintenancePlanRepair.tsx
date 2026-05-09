@@ -1259,14 +1259,7 @@ export default function MaintenancePlanRepair() {
                 <IncidentDetailPanel
                   incident={selectedIncident}
                   plan={selectedPlan}
-                  inspectionRecords={[]}
-                  acceptanceTestRecords={acceptanceTestRecords}
-                  materialQualityRecords={materialQualityRecords}
-                  incidentInspectionRecords={incidentInspectionRecords}
                   onClose={handleCloseAll}
-                  onCreateInspectionRecord={addInspectionRecord}
-                  onCreateAcceptanceRecord={addAcceptanceTestRecord}
-                  onCreateMaterialQualityRecord={addMaterialQualityRecord}
                 />
               ) : (
                 <PlanDetailPanel

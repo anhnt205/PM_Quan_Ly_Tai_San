@@ -11,7 +11,7 @@ public class GiamDinhChiTiet {
     private Boolean thayMoi;
     private String ghiChu;
     private String idTaiSan;
-    private String idSuaChuaChiTiet;
+    private String idBienBanChiTiet;
 
     // Audit
     private String ngayTao;

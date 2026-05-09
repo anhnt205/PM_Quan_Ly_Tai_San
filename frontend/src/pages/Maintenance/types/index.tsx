@@ -22,7 +22,8 @@ export interface IncidenData {
   ngayTao: string;
   ngayCapNhat: string;
   nguoiTao: string;
-  nguoiCapNhat: string;
+  nguoiCapNhat?: string;
+  daCoGiamDinh?: number;
   danhSachTaiSan?: IncidenDetailData[];
   nguoiKyList?: any[];
 }
@@ -44,6 +45,7 @@ export interface IncidenDetailData {
   donViTinh?: string;
   tenNhomTaiSan?: string;
   tenDonViQuanLyKyThuat?: string;
+  daKiemTraSuCo?: number;
   action?: ActionType;
 }
 
@@ -164,6 +166,7 @@ export interface IncidentInspectionData {
   
   share?: boolean;
   trangThai?: number;
+  daCoGiamDinh?: number;
   ngayTao?: string;
   ngayCapNhat?: string;
   nguoiTao?: string;

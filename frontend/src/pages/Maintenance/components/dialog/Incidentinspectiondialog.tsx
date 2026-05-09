@@ -248,8 +248,10 @@ const IncidentInspectionDialog = ({
         };
       }),
     };
-    await createIncInspMutation.mutateAsync(record, {
-      onSuccess: () => onClose(),
+    createIncInspMutation.mutate(record, {
+      onSuccess: () => {
+        onClose();
+      },
     });
   };
 

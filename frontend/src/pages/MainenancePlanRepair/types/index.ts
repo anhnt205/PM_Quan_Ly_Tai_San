@@ -1,4 +1,4 @@
-import { ActionType } from "../../../utils/const";
+import { ActionType, TypeBienBanType } from "../../../utils/const";
 
 export interface PlanSigner {
   id: string;
@@ -8,6 +8,8 @@ export interface PlanSigner {
   idPhongBan: string;
   trangThai: number;
 }
+
+// kế hoạch
 export interface MaintenancePlanData {
   id: string;
   idCongTy: string;
@@ -42,7 +44,6 @@ export interface MaintenancePlanData {
   soLuongSuCo?: number;
 }
 
-// Bảng Tài Sản mới
 export interface MaintenancePlanAssetItem {
   id?: string;
   idKeHoachSuaChua: string;
@@ -80,7 +81,8 @@ export interface MaintenancePlanAssetItem {
 export interface InspectionRecordData {
   id?: string;
   idCongTy?: string;
-  idSuaChua?: string;
+  idBienBan?: string;
+  loaiBienBan?: TypeBienBanType;
   soPhieu?: string;
   ngayGiamDinh?: string;
   viTri?: string;
@@ -117,7 +119,7 @@ export interface InspectionRecordDetailData {
   thayMoi?: boolean;
   ghiChu?: string;
   idTaiSan?: string;
-  idSuaChuaChiTiet?: string;
+  idBienBanChiTiet?: string;
   daCoNghiemThu?: number;
   ngayTao?: string;
   ngayCapNhat?: string;

@@ -7,7 +7,8 @@ import java.util.List;
 public class GiamDinhDTO {
     private String id;
     private String idCongTy;
-    private String idSuaChua;
+    private String idBienBan;
+    private String loaiBienBan; // sua_chua, su_co
     private String soPhieu;
     private String ngayGiamDinh;
     private String viTri;
@@ -36,7 +37,7 @@ public class GiamDinhDTO {
     // Join fields
     private String tenNguoiLap;
     private String tenGiamDoc;
-    private String soPhieuSuaChua;
+    private String soPhieuBienBan;
     private Integer daCoNghiemThu;
 
     // Danh sách chi tiết

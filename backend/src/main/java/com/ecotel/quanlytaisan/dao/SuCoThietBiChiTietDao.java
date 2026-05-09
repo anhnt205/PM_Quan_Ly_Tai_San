@@ -35,7 +35,19 @@ public class SuCoThietBiChiTietDao {
     /** Lấy chi tiết theo ID dòng */
     public SuCoThietBiChiTiet findById(String id) {
         List<SuCoThietBiChiTiet> list = jdbcTemplate.query(
-                "SELECT * FROM suco_thietbi_chitiet WHERE Id = ?",
+                """
+                        SELECT stct.* ,
+                        CASE
+                    WHEN EXISTS (
+                            SELECT 1 FROM kiemtra_suco_chitiet ktct
+                            INNER JOIN kiemtra_suco ktsc ON ktct.IdKiemTraSuCo = ktsc.id
+                            WHERE ktct.IdSuCoChiTiet = stct.Id
+                            AND ktsc.trangThai != 2) THEN 1
+                    ELSE 0
+                    END as daKiemTraSuCo
+                        FROM suco_thietbi_chitiet stct
+                        WHERE Id = ?
+                    """,
                 new BeanPropertyRowMapper<>(SuCoThietBiChiTiet.class), id);
         return list.isEmpty() ? null : list.get(0);
     }
@@ -50,7 +62,15 @@ public class SuCoThietBiChiTietDao {
                    ts.TenTaiSan         AS tenTaiSan,
                    ts.DonViTinh         AS donViTinh,
                    nts.TenNhom          AS tenNhomTaiSan,
-                   pb.TenPhongBan       AS tenDonViQuanLyKyThuat
+                   pb.TenPhongBan       AS tenDonViQuanLyKyThuat,
+                   CASE
+                    WHEN EXISTS (
+                            SELECT 1 FROM kiemtra_suco_chitiet ktct
+                            INNER JOIN kiemtra_suco ktsc ON ktct.IdKiemTraSuCo = ktsc.id
+                            WHERE ktct.IdSuCoChiTiet = ct.Id
+                            AND ktsc.trangThai != 2) THEN 1
+                    ELSE 0
+                    END as daKiemTraSuCo
             FROM suco_thietbi_chitiet ct
                 LEFT JOIN TaiSan ts   ON ct.IdTaiSan              = ts.Id
                 LEFT JOIN NhomTaiSan nts ON ts.IdNhomTaiSan       = nts.Id

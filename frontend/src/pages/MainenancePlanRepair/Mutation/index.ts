@@ -924,10 +924,21 @@ export const useMaintenanceInspectionByRepairQuery = (idSuaChua?: string) => {
   return useQuery({
     queryKey: ["inspectionByRepair", idSuaChua],
     queryFn: async () => {
-      const res = await api.get(`/giamdinh/suachua/${idSuaChua}`);
+      const res = await api.get(`/giamdinh/bienban/${idSuaChua}`);
       return res.data.data || res.data;
     },
     enabled: !!idSuaChua,
+  });
+};
+
+export const useMaintenanceInspectionByBienBanQuery = (idBienBan?: string) => {
+  return useQuery({
+    queryKey: ["inspectionByBienBan", idBienBan],
+    queryFn: async () => {
+      const res = await api.get(`/giamdinh/bienban/${idBienBan}`);
+      return res.data.data || res.data;
+    },
+    enabled: !!idBienBan,
   });
 };
 
@@ -1052,9 +1063,14 @@ export const useMaintenanceInspectionMutation = () => {
       ).data;
     },
     onSuccess: async (response, variables) => {
-      handleUpdate(response, variables);
-      queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
-      showSuccessAlert("Tạo biên bản giám định thành công");
+      if (response.success || response.id) {
+        handleUpdate(response, variables);
+        queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
+        queryClient.invalidateQueries({ queryKey: ["incidentInspectionBySuCo"] });
+        showSuccessAlert("Tạo biên bản giám định thành công");
+      } else {
+        showErrorAlert(response.message || "Tạo biên bản giám định thất bại");
+      }
     },
     onError: (error: any) => {
       showErrorAlert(
@@ -1074,9 +1090,16 @@ export const useMaintenanceInspectionMutation = () => {
       ).data;
     },
     onSuccess: async (response, variables) => {
-      handleUpdate(response, variables);
-      queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
-      showSuccessAlert("Cập nhật biên bản giám định thành công");
+      if (response.success || response.id) {
+        handleUpdate(response, variables);
+        queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
+        queryClient.invalidateQueries({ queryKey: ["incidentInspectionBySuCo"] });
+        showSuccessAlert("Cập nhật biên bản giám định thành công");
+      } else {
+        showErrorAlert(
+          response.message || "Cập nhật biên bản giám định thất bại",
+        );
+      }
     },
     onError: (error: any) => {
       showErrorAlert(
@@ -1089,9 +1112,13 @@ export const useMaintenanceInspectionMutation = () => {
     mutationFn: async (id: string) => {
       return (await api.delete(`/giamdinh/${id}`)).data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
-      showSuccessAlert("Xóa biên bản giám định thành công");
+    onSuccess: (res: any) => {
+      if (res.success || res.id) {
+        queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
+        showSuccessAlert("Xóa biên bản giám định thành công");
+      } else {
+        showErrorAlert(res.message || "Xóa biên bản giám định thất bại");
+      }
     },
     onError: (error: any) => {
       showErrorAlert(
@@ -1106,9 +1133,13 @@ export const useMaintenanceInspectionMutation = () => {
         await api.post(`/giamdinh/capnhattrangthai?id=${id}&userId=${userId}`)
       ).data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
-      showSuccessAlert("Cập nhật trạng thái thành công");
+    onSuccess: (res: any) => {
+      if (res.success || res.id || res > 0) {
+        queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
+        showSuccessAlert("Cập nhật trạng thái thành công");
+      } else {
+        showErrorAlert(res.message || "Cập nhật trạng thái thất bại");
+      }
     },
     onError: (error: any) => {
       showErrorAlert(
@@ -1121,9 +1152,13 @@ export const useMaintenanceInspectionMutation = () => {
     mutationFn: async (id: string) => {
       return (await api.post(`/giamdinh/huy?id=${id}`)).data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
-      showSuccessAlert("Hủy biên bản thành công");
+    onSuccess: (res: any) => {
+      if (res.success || res.id || res > 0) {
+        queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
+        showSuccessAlert("Hủy biên bản thành công");
+      } else {
+        showErrorAlert(res.message || "Hủy biên bản thất bại");
+      }
     },
     onError: (error: any) => {
       showErrorAlert(error.response?.data?.message || "Hủy biên bản thất bại");
@@ -1642,6 +1677,7 @@ export const useMaintenanceIncidentInspectionBySuCoQuery = (
 };
 
 export const useMaintenanceIncidentInspectionMutation = () => {
+
   const queryClient = useQueryClient();
   const { user } = useSelector((state: any) => state.user);
 
@@ -1657,19 +1693,23 @@ export const useMaintenanceIncidentInspectionMutation = () => {
       ).data;
     },
     onSuccess: async (response, variables) => {
-      const id = response?.id || response?.data?.id;
-      if (id && variables.nguoiKyList && variables.nguoiKyList.length > 0) {
-        await api.put(
-          `/chuky/nguoi-ky/update/${id}`,
-          variables.nguoiKyList.map((item) => ({
-            ...item,
-            idTaiLieu: id,
-          })),
-        );
+      if (response.success || response.id) {
+        const id = response?.id || response?.data?.id;
+        if (id && variables.nguoiKyList && variables.nguoiKyList.length > 0) {
+          await api.put(
+            `/chuky/nguoi-ky/update/${id}`,
+            variables.nguoiKyList.map((item) => ({
+              ...item,
+              idTaiLieu: id,
+            })),
+          );
+        }
+        queryClient.invalidateQueries({ queryKey: ["incidentInspectionPage"] });
+        queryClient.invalidateQueries({ queryKey: ["incidentInspectionBySuCo"] });
+        showSuccessAlert("Tạo biên bản kiểm tra sự cố thành công");
+      } else {
+        showErrorAlert(response.message || "Tạo biên bản kiểm tra sự cố thất bại");
       }
-      queryClient.invalidateQueries({ queryKey: ["incidentInspectionPage"] });
-      queryClient.invalidateQueries({ queryKey: ["incidentInspectionBySuCo"] });
-      showSuccessAlert("Tạo biên bản kiểm tra sự cố thành công");
     },
     onError: (error: any) => {
       showErrorAlert(
@@ -1689,13 +1729,19 @@ export const useMaintenanceIncidentInspectionMutation = () => {
       ).data;
     },
     onSuccess: async (response, variables) => {
-      const id = variables.id;
-      if (id && variables.nguoiKyList && variables.nguoiKyList.length > 0) {
-        await api.put(`/chuky/nguoi-ky/update/${id}`, variables.nguoiKyList);
+      if (response.success || response.id) {
+        const id = variables.id;
+        if (id && variables.nguoiKyList && variables.nguoiKyList.length > 0) {
+          await api.put(`/chuky/nguoi-ky/update/${id}`, variables.nguoiKyList);
+        }
+        queryClient.invalidateQueries({ queryKey: ["incidentInspectionPage"] });
+        queryClient.invalidateQueries({ queryKey: ["incidentInspectionBySuCo"] });
+        showSuccessAlert("Cập nhật biên bản kiểm tra sự cố thành công");
+      } else {
+        showErrorAlert(
+          response.message || "Cập nhật biên bản kiểm tra sự cố thất bại",
+        );
       }
-      queryClient.invalidateQueries({ queryKey: ["incidentInspectionPage"] });
-      queryClient.invalidateQueries({ queryKey: ["incidentInspectionBySuCo"] });
-      showSuccessAlert("Cập nhật biên bản kiểm tra sự cố thành công");
     },
     onError: (error: any) => {
       showErrorAlert(
@@ -1709,10 +1755,14 @@ export const useMaintenanceIncidentInspectionMutation = () => {
     mutationFn: async (id: string) => {
       return (await api.delete(`/kiemtra-suco/${id}`)).data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["incidentInspectionPage"] });
-      queryClient.invalidateQueries({ queryKey: ["incidentInspectionBySuCo"] });
-      showSuccessAlert("Xóa biên bản thành công");
+    onSuccess: (res: any) => {
+      if (res.success || res > 0) {
+        queryClient.invalidateQueries({ queryKey: ["incidentInspectionPage"] });
+        queryClient.invalidateQueries({ queryKey: ["incidentInspectionBySuCo"] });
+        showSuccessAlert("Xóa biên bản thành công");
+      } else {
+        showErrorAlert(res.message || "Xóa biên bản thất bại");
+      }
     },
     onError: (error: any) => {
       showErrorAlert(error.response?.data?.message || "Xóa biên bản thất bại");

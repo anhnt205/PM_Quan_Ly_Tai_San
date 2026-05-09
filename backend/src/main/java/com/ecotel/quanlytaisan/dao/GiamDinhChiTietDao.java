@@ -25,11 +25,13 @@ public class GiamDinhChiTietDao {
 
     public GiamDinhChiTiet findById(String id) {
         String sql = """
-                SELECT gdct.* ,ts.TenTaiSan,ts.DonViTinh,khscct.SoLuong
+                SELECT gdct.* ,ts.TenTaiSan,ts.DonViTinh,
+                       COALESCE(khscct.SoLuong, ktscct.SoLuong) as SoLuong
                         FROM giamdinh_chitiet gdct
-                        INNER JOIN suachua_chitiet scct ON scct.Id = gdct.IdSuaChuaChiTiet
+                        LEFT JOIN suachua_chitiet scct ON scct.Id = gdct.IdBienBanChiTiet
+                        LEFT JOIN kiemtra_suco_chitiet ktscct ON ktscct.Id = gdct.IdBienBanChiTiet
                         INNER JOIN taisan ts ON ts.Id = gdct.IdTaiSan
-                        INNER JOIN kehoachsuachua_chitiet_taisan  khscct ON khscct.Id = scct.IdKeHoachChiTiet
+                        LEFT JOIN kehoachsuachua_chitiet_taisan khscct ON khscct.Id = scct.IdKeHoachChiTiet
                     WHERE gdct.Id = ?
                 """;
         List<GiamDinhChiTiet> list = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(GiamDinhChiTiet.class), id);
@@ -38,11 +40,13 @@ public class GiamDinhChiTietDao {
 
     public List<GiamDinhChiTiet> findByIdGiamDinh(String idGiamDinh) {
         String sql = """
-                SELECT gdct.* ,ts.TenTaiSan,ts.DonViTinh,khscct.SoLuong
+                SELECT gdct.* ,ts.TenTaiSan,ts.DonViTinh,
+                       COALESCE(khscct.SoLuong, ktscct.SoLuong) as SoLuong
                         FROM giamdinh_chitiet gdct
-                        INNER JOIN suachua_chitiet scct ON scct.Id = gdct.IdSuaChuaChiTiet
+                        LEFT JOIN suachua_chitiet scct ON scct.Id = gdct.IdBienBanChiTiet
+                        LEFT JOIN kiemtra_suco_chitiet ktscct ON ktscct.Id = gdct.IdBienBanChiTiet
                         INNER JOIN taisan ts ON ts.Id = gdct.IdTaiSan
-                        INNER JOIN kehoachsuachua_chitiet_taisan  khscct ON khscct.Id = scct.IdKeHoachChiTiet
+                        LEFT JOIN kehoachsuachua_chitiet_taisan khscct ON khscct.Id = scct.IdKeHoachChiTiet
                         WHERE gdct.IdGiamDinh = ?""" ;
 
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(GiamDinhChiTiet.class), idGiamDinh);
@@ -56,14 +60,14 @@ public class GiamDinhChiTietDao {
         String sql = """
             INSERT INTO giamdinh_chitiet (
                 Id, IdGiamDinh, TinhTrang, SuaChua, ThayMoi, GhiChu,
-                IdTaiSan, IdSuaChuaChiTiet, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat
+                IdTaiSan, IdBienBanChiTiet, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         if (entity.getId() == null) entity.setId(generateNextId());
         return jdbcTemplate.update(sql,
                 entity.getId(), entity.getIdGiamDinh(), entity.getTinhTrang(),
                 entity.getSuaChua(), entity.getThayMoi(), entity.getGhiChu(),
-                entity.getIdTaiSan(), entity.getIdSuaChuaChiTiet(),
+                entity.getIdTaiSan(), entity.getIdBienBanChiTiet(),
                 entity.getNgayTao(), entity.getNgayCapNhat(), entity.getNguoiTao(), entity.getNguoiCapNhat()
         );
     }
@@ -72,7 +76,7 @@ public class GiamDinhChiTietDao {
         String sql = """
             INSERT INTO giamdinh_chitiet (
                 Id, IdGiamDinh, TinhTrang, SuaChua, ThayMoi, GhiChu,
-                IdTaiSan, IdSuaChuaChiTiet, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat
+                IdTaiSan, IdBienBanChiTiet, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
@@ -87,7 +91,7 @@ public class GiamDinhChiTietDao {
                 ps.setBoolean(5, e.getThayMoi() != null ? e.getThayMoi() : false);
                 ps.setString(6, e.getGhiChu());
                 ps.setString(7, e.getIdTaiSan());
-                ps.setString(8, e.getIdSuaChuaChiTiet());
+                ps.setString(8, e.getIdBienBanChiTiet());
                 ps.setString(9, e.getNgayTao());
                 ps.setString(10, e.getNgayCapNhat());
                 ps.setString(11, e.getNguoiTao());
@@ -102,12 +106,12 @@ public class GiamDinhChiTietDao {
         String sql = """
             UPDATE giamdinh_chitiet SET
                 TinhTrang = ?, SuaChua = ?, ThayMoi = ?, GhiChu = ?,
-                IdTaiSan = ?, IdSuaChuaChiTiet = ?, NgayCapNhat = ?, NguoiCapNhat = ?
+                IdTaiSan = ?, IdBienBanChiTiet = ?, NgayCapNhat = ?, NguoiCapNhat = ?
             WHERE Id = ?
             """;
         return jdbcTemplate.update(sql,
                 entity.getTinhTrang(), entity.getSuaChua(), entity.getThayMoi(), entity.getGhiChu(),
-                entity.getIdTaiSan(), entity.getIdSuaChuaChiTiet(), entity.getNgayCapNhat(), entity.getNguoiCapNhat(),
+                entity.getIdTaiSan(), entity.getIdBienBanChiTiet(), entity.getNgayCapNhat(), entity.getNguoiCapNhat(),
                 entity.getId()
         );
     }
@@ -116,7 +120,7 @@ public class GiamDinhChiTietDao {
         String sql = """
             UPDATE giamdinh_chitiet SET
                 TinhTrang = ?, SuaChua = ?, ThayMoi = ?, GhiChu = ?,
-                IdTaiSan = ?, IdSuaChuaChiTiet = ?, NgayCapNhat = ?, NguoiCapNhat = ?
+                IdTaiSan = ?, IdBienBanChiTiet = ?, NgayCapNhat = ?, NguoiCapNhat = ?
             WHERE Id = ?
             """;
         return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
@@ -128,7 +132,7 @@ public class GiamDinhChiTietDao {
                 ps.setBoolean(3, e.getThayMoi() != null ? e.getThayMoi() : false);
                 ps.setString(4, e.getGhiChu());
                 ps.setString(5, e.getIdTaiSan());
-                ps.setString(6, e.getIdSuaChuaChiTiet());
+                ps.setString(6, e.getIdBienBanChiTiet());
                 ps.setString(7, e.getNgayCapNhat());
                 ps.setString(8, e.getNguoiCapNhat());
                 ps.setString(9, e.getId());

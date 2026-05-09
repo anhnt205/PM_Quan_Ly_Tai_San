@@ -1772,24 +1772,18 @@ export const generateKiemTraSuCoPdf = async (
     },
   });
 
-  let finalY = (doc as any).lastAutoTable.finalY + 10;
-
-  // // Kiểm tra nếu gần cuối trang
-  // if (finalY + 30 > pageHeight) {
-  //   doc.addPage();
-  //   finalY = 20;
-  // }
+  y = (doc as any).lastAutoTable.finalY + 10;
 
   doc.setFont("times_new_roman", "normal");
   doc.text(
     "Biên bản được lập xong lúc ...... giờ cùng ngày, được các thành phần thống nhất thông qua./.",
     15,
-    finalY,
+    y,
   );
 
-  finalY += 15; // ← tăng finalY sau dòng text này
+  y += 15;
 
-  // Signatures - dùng finalY thay vì y
+  // Signatures
   const marginX = 25;
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
@@ -1807,9 +1801,9 @@ export const generateKiemTraSuCoPdf = async (
     );
 
     // Nếu row mới tràn trang thì thêm page
-    if (rowIndex > 0 && finalY + rowIndex * rowGap > pageHeight - 20) {
+    if (rowIndex > 0 && y + rowIndex * rowGap > pageHeight - 20) {
       doc.addPage();
-      finalY = 20;
+      y = 20;
     }
 
     let x;
@@ -1819,7 +1813,7 @@ export const generateKiemTraSuCoPdf = async (
       x = marginX + colIndex * gapSize;
     }
 
-    const yPos = finalY + rowIndex * rowGap; // ← finalY thay vì y
+    const yPos = y + rowIndex * rowGap;
     const sigWidthMm = (baseWidthPx / displayWidth) * pageWidth;
 
     coordinates[s.idNhanVien] = {

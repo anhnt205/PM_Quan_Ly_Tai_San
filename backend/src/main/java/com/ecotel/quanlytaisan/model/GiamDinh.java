@@ -6,7 +6,8 @@ import lombok.Data;
 public class GiamDinh {
     private String id;
     private String idCongTy;
-    private String idSuaChua;
+    private String idBienBan;
+    private String loaiBienBan; // sua_chua, su_co
     private String soPhieu;
     private String ngayGiamDinh;
     private String viTri;

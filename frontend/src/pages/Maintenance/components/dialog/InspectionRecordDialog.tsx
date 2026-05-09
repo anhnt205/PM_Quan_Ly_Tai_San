@@ -33,9 +33,9 @@ import type {
   DeviceInspectionEntry,
 } from "../../../../mockdata/mockInspectionRecords";
 import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
-import { MaintenanceRepairData } from "../../types";
+import { IncidentInspectionData, MaintenanceRepairData } from "../../types";
 import { useMaintenanceInspectionMutation } from "../../../MainenancePlanRepair/Mutation";
-import { Action } from "../../../../utils/const";
+import { Action, TypeBienBan } from "../../../../utils/const";
 import { generateCode } from "../../../../utils/helpers";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
@@ -56,8 +56,7 @@ interface Props {
   onClose: () => void;
   plan: MaintenancePlanData;
   repairRequest: MaintenanceRepairData | null;
-  deviceIds?: string[];
-  onSubmit: (record: TechnicalInspectionRecord) => void;
+  incidentInspection?: IncidentInspectionData;
 }
 
 const InspectionRecordDialog = ({
@@ -65,8 +64,7 @@ const InspectionRecordDialog = ({
   onClose,
   plan,
   repairRequest,
-  deviceIds,
-  onSubmit,
+  incidentInspection,
 }: Props) => {
   const [number, setNumber] = useState(
     repairRequest ? `BB-GD-${repairRequest.id}` : `BB-GD-SC-${Date.now()}`,
@@ -80,9 +78,13 @@ const InspectionRecordDialog = ({
   const [destroyCount, setDestroyCount] = useState(0);
 
   const [entries, setEntries] = useState<DeviceInspectionEntry[]>(
-    (repairRequest?.danhSachTaiSan || []).map((item) => {
+    (
+      repairRequest?.danhSachTaiSan ||
+      incidentInspection?.danhSachChiTiet ||
+      []
+    ).map((item) => {
       return {
-        idSuaChuaChiTiet: item?.id ?? "",
+        idBienBanChiTiet: item?.id ?? "",
         deviceId: item?.idTaiSan ?? "",
         deviceName: item?.tenTaiSan ?? "",
         unit: item?.donViTinh ?? "",
@@ -208,7 +210,8 @@ const InspectionRecordDialog = ({
           }))
         : [];
     const record: any = {
-      idSuaChua: repairRequest?.id ?? "",
+      idBienBan: repairRequest?.id || incidentInspection?.id || "",
+      loaiBienBan: repairRequest ? TypeBienBan.SUA_CHUA : TypeBienBan.SU_CO,
       idCongTy: plan.idCongTy,
       soPhieu: number,
       ngayGiamDinh: inspectionDate,
@@ -224,7 +227,7 @@ const InspectionRecordDialog = ({
       share: true,
       danhSachChiTiet: entries.map((e) => ({
         idTaiSan: e.deviceId,
-        idSuaChuaChiTiet: e.idSuaChuaChiTiet,
+        idBienBanChiTiet: e.idBienBanChiTiet,
         tinhTrang: e.technicalCondition,
         suaChua: e.actionRepair,
         thayMoi: e.actionReplace,

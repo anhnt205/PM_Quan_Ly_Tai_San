@@ -58,4 +58,7 @@ public class SuCoThietBiChiTiet {
 
     /** Tên đơn vị quản lý kỹ thuật (join PhongBan) */
     private String tenDonViQuanLyKyThuat;
+
+    /** Có phiếu kiểm tra sự cố chưa */
+    private Integer daKiemTraSuCo;
 }

@@ -40,3 +40,9 @@ export const StatusPlan = {
   COMPLETED: "DA_HOAN_THANH",
 };
 export type StatusPlanType = (typeof StatusPlan)[keyof typeof StatusPlan];
+
+export const TypeBienBan = {
+  SUA_CHUA: "sua_chua",
+  SU_CO: "su_co",
+};
+export type TypeBienBanType = (typeof TypeBienBan)[keyof typeof TypeBienBan];

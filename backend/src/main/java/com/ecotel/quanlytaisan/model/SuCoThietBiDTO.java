@@ -117,6 +117,8 @@ public class SuCoThietBiDTO {
     /** Danh sách chi tiết tài sản bị sự cố */
     private List<SuCoThietBiChiTiet> danhSachTaiSan;
 
+    private Integer daCoGiamDinh;
+
     // ---------- Null-safe getters ----------
 
     public Integer getTrangThai()       { return trangThai != null ? trangThai : 0; }

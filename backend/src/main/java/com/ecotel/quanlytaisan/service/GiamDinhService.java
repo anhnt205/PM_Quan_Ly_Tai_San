@@ -42,9 +42,9 @@ public class GiamDinhService {
         return dto;
     }
 
-    public List<GiamDinhDTO> findByIdSuaChua(String idSuaChua) {
+    public List<GiamDinhDTO> findByIdBienBan(String idBienBan) {
         List<GiamDinhDTO> list = giamDinhDao.findAll(null).stream()
-                .filter(d -> idSuaChua != null && idSuaChua.equalsIgnoreCase(d.getIdSuaChua()))
+                .filter(d -> idBienBan != null && idBienBan.equalsIgnoreCase(d.getIdBienBan()))
                 .collect(Collectors.toList());
         for (GiamDinhDTO item : list) {
             enrichData(item);

@@ -38,7 +38,12 @@ public class KiemTraSuCoDTO {
     public Boolean getGiamDocXacNhan() {
         return giamDocXacNhan != null ? giamDocXacNhan : false;
     }
+
+    public Boolean getShare() {
+        return share != null ? share : false;
+    }
     
     private List<KiemTraSuCoChiTiet> danhSachChiTiet;
     private List<NguoiKy> nguoiKyList;
+    private Integer daCoGiamDinh;
 }

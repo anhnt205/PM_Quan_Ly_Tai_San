@@ -28,7 +28,6 @@ import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 
 import { devices } from "../../../../mockdata/mockDevices";
 import { departments } from "../../../../mockdata/mockDepartments";
-import type { IncidentInspectionRecord } from "../../../../mockdata/mockIncidentInspection";
 import type {
   AcceptanceTestRecord,
   MaterialQualityRecord,
@@ -41,32 +40,25 @@ import MaterialDialog from "../dialog/MaterialDialog";
 import IncidentPreview from "../preview/IncidentPreview";
 import IncidentInspectionDialog from "../dialog/Incidentinspectiondialog";
 import {
-  AcceptanceTestRecordData,
-  MaintenancePlanData,
-} from "../../../MainenancePlanRepair/types";
-import type {
-  DanhGiaVatTuData,
-  IncidenData,
-  IncidentInspectionData,
-} from "../../types";
+  useMaintenanceAcceptanceByInspectionQuery,
+  useMaintenanceIncidentInspectionBySuCoQuery,
+  useMaintenanceInspectionByBienBanQuery,
+  useMaintenanceMaterialAssessmentByInspectionQuery,
+} from "../../../MainenancePlanRepair/Mutation";
+import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
+import type { IncidenData } from "../../types";
 import { showStatus } from "../../config";
 
 interface Props {
   incident: IncidenData;
   plan: MaintenancePlanData;
-  inspectionRecords: IncidenData[];
-  acceptanceTestRecords: AcceptanceTestRecordData[];
-  materialQualityRecords: DanhGiaVatTuData[];
-  incidentInspectionRecords: IncidentInspectionData[];
   onClose: () => void;
-  onCreateInspectionRecord: (record: TechnicalInspectionRecord) => void;
-  onCreateAcceptanceRecord: (record: AcceptanceTestRecord) => void;
-  onCreateMaterialQualityRecord: (record: MaterialQualityRecord) => void;
 }
 
 const ActionCell = ({
   onView,
   onAdd,
+  isAdd = true,
   addTooltip = "Tạo biên bản",
   addColor = "primary",
 }: any) => (
@@ -92,6 +84,7 @@ const ActionCell = ({
     {onAdd && (
       <IconButton
         size="small"
+        disabled={!isAdd}
         color={addColor}
         onClick={(e) => {
           e.stopPropagation();
@@ -104,18 +97,7 @@ const ActionCell = ({
   </Box>
 );
 
-const IncidentDetailPanel = ({
-  incident,
-  plan,
-  inspectionRecords,
-  acceptanceTestRecords,
-  materialQualityRecords,
-  incidentInspectionRecords = [],
-  onClose,
-  onCreateInspectionRecord,
-  onCreateAcceptanceRecord,
-  onCreateMaterialQualityRecord,
-}: Props) => {
+const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
   const [tab, setTab] = useState(0);
   const [selectedDeviceIds, setSelectedDeviceIds] = useState<string[]>([]);
   const [expandedBBKTKSC, setExpandedBBKTKSC] = useState<Set<string>>(
@@ -142,14 +124,23 @@ const IncidentDetailPanel = ({
     null,
   );
 
-  // Lấy danh sách BB Kiểm tra sự cố thuộc incident này
-  const incidentInspections = useMemo(
-    () =>
-      (incidentInspectionRecords || []).filter(
-        (r: any) => (r.idSuCo || r.incidentReportId) === incident.id,
-      ),
-    [incident.id, incidentInspectionRecords],
-  );
+  const { data: incidentInspections = [] } =
+    useMaintenanceIncidentInspectionBySuCoQuery(incident?.id);
+
+  const { data: inspectionRecords = [] } =
+    useMaintenanceInspectionByBienBanQuery(
+      expandedBBKTKSC.values().next().value,
+    );
+
+  const { data: acceptanceTestRecords = [] } =
+    useMaintenanceAcceptanceByInspectionQuery(
+      expandedInspections.values().next().value,
+    );
+
+  const { data: materialQualityRecords = [] } =
+    useMaintenanceMaterialAssessmentByInspectionQuery(
+      expandedAcceptances.values().next().value,
+    );
 
   // Lấy danh sách thiết bị từ deviceEntries
   const deviceIds = useMemo(
@@ -166,12 +157,14 @@ const IncidentDetailPanel = ({
     setSelectedDeviceIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
-
+  const availableDevices = (incident?.danhSachTaiSan || []).filter(
+    (d: any) => d?.daCoLenhSuaChua !== 1,
+  );
   const handleSelectAll = () =>
     setSelectedDeviceIds(
-      selectedDeviceIds.length === devicesInIncident.length
+      selectedDeviceIds.length === availableDevices.length
         ? []
-        : devicesInIncident.map((d) => d.id),
+        : availableDevices.map((d: any) => d.id || ""),
     );
 
   const toggle = (
@@ -179,9 +172,13 @@ const IncidentDetailPanel = ({
     id: string,
     setter: (s: Set<string>) => void,
   ) => {
-    const next = new Set(set);
-    next.has(id) ? next.delete(id) : next.add(id);
-    setter(next);
+    const newSet = new Set(set);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setter(newSet);
   };
 
   const reporterDept = incident.idDonViBaoCao
@@ -320,19 +317,21 @@ const IncidentDetailPanel = ({
                   <TableCell sx={{ fontWeight: 700 }}>Nhóm</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Vị trí</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Tình trạng</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Trạng thái</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {(incident?.danhSachTaiSan ?? []).map((device, idx) => {
                   return (
                     <TableRow key={device.id}>
-                      {incident.trangThai === 3 && (
+                      {incident.trangThai === 3 && inc.daKiemTraSuCo !== 1 && (
                         <TableCell padding="checkbox">
                           <Checkbox
                             checked={selectedDeviceIds.includes(
                               device.id ?? "",
                             )}
                             onChange={() => handleToggle(device.id ?? "")}
+                            disabled={device.daKiemTraSuCo === 1}
                           />
                         </TableCell>
                       )}
@@ -342,6 +341,17 @@ const IncidentDetailPanel = ({
                       <TableCell>{device.tenNhomTaiSan}</TableCell>
                       <TableCell>{device?.viTri || "—"}</TableCell>
                       <TableCell>{device?.tinhTrang || "—"}</TableCell>
+                      <TableCell>
+                        {device.daKiemTraSuCo === 1 ? (
+                          <Chip label="Đã kiểm tra" size="small" color="info" />
+                        ) : (
+                          <Chip
+                            label="Chưa kiểm tra"
+                            size="small"
+                            variant="outlined"
+                          />
+                        )}
+                      </TableCell>
                     </TableRow>
                   );
                 })}
@@ -382,9 +392,9 @@ const IncidentDetailPanel = ({
                 )}
 
                 {/* ─── BB Kiểm tra sự cố (Cấp 1) ─── */}
-                {incidentInspections.map((bbktksc) => {
+                {incidentInspections.map((bbktksc: any) => {
                   const incInspections = inspectionRecords.filter(
-                    (r) => (r as any).incidentInspectionRecordId === bbktksc.id,
+                    (r: any) => r.idBienBan === bbktksc.id,
                   );
                   const isBBExpanded = expandedBBKTKSC.has(bbktksc.id ?? "");
 
@@ -394,7 +404,7 @@ const IncidentDetailPanel = ({
                       <TableRow hover>
                         <TableCell sx={{ pl: 2 }}>
                           <Box sx={{ display: "flex", alignItems: "center" }}>
-                            {incInspections.length > 0 && (
+                            {bbktksc.daCoGiamDinh === 1 && (
                               <IconButton
                                 size="small"
                                 onClick={() =>
@@ -431,24 +441,41 @@ const IncidentDetailPanel = ({
                           />
                         </TableCell>
                         <TableCell>{bbktksc.ngayKiemTra}</TableCell>
-                        <TableCell>{showStatus(0)}</TableCell>
+                        <TableCell>
+                          {showStatus(bbktksc.trangThai ?? 0)}
+                        </TableCell>
                         <TableCell align="right">
-                          <ActionCell
-                            onView={() => {}}
-                            onAdd={() =>
-                              setIncInspectionParentBBKTKSCId(bbktksc.id ?? "")
-                            }
-                            addTooltip="Tạo BB Giám định"
-                            addColor="success"
-                          />
+                          {bbktksc.daCoGiamDinh === 1 ? (
+                            <Chip
+                              label="Đã có BB GĐ"
+                              size="small"
+                              color="info"
+                              variant="outlined"
+                            />
+                          ) : (
+                            <ActionCell
+                              onView={() => setIncidentPreviewId(bbktksc.id)}
+                              onAdd={() =>
+                                setIncInspectionParentBBKTKSCId(
+                                  bbktksc.id ?? "",
+                                )
+                              }
+                              isAdd={
+                                bbktksc.trangThai === 3 &&
+                                bbktksc.daCoGiamDinh !== 1
+                              }
+                              addTooltip="Tạo BB Giám định"
+                              addColor="success"
+                            />
+                          )}
                         </TableCell>
                       </TableRow>
 
                       {/* Depth 2: BB Giám định */}
                       {isBBExpanded &&
-                        incInspections.map((insp) => {
-                          const incAcceptances = acceptanceTestRecords.filter(
-                            (a) => a.idGiamDinh === insp.id,
+                        inspectionRecords.map((insp: any) => {
+                          const acceptances = acceptanceTestRecords.filter(
+                            (a: any) => a.idGiamDinh === insp.id,
                           );
                           const isInspExpanded = expandedInspections.has(
                             insp.id,
@@ -464,7 +491,8 @@ const IncidentDetailPanel = ({
                                       alignItems: "center",
                                     }}
                                   >
-                                    {incAcceptances.length > 0 && (
+                                    {(insp.daCoNghiemThu === 1 ||
+                                      acceptances.length > 0) && (
                                       <IconButton
                                         size="small"
                                         onClick={() =>
@@ -486,7 +514,8 @@ const IncidentDetailPanel = ({
                                       variant="body2"
                                       sx={{
                                         ml:
-                                          incAcceptances.length > 0
+                                          insp.daCoNghiemThu === 1 ||
+                                          acceptances.length > 0
                                             ? 0
                                             : "28px",
                                       }}
@@ -503,7 +532,7 @@ const IncidentDetailPanel = ({
                                     sx={{ color: "#fff" }}
                                   />
                                 </TableCell>
-                                <TableCell>{insp.ngayPhatHien}</TableCell>
+                                <TableCell>{insp.ngayGiamDinh}</TableCell>
                                 <TableCell>
                                   {showStatus(insp.trangThai ?? 0)}
                                 </TableCell>
@@ -513,6 +542,10 @@ const IncidentDetailPanel = ({
                                     onAdd={() =>
                                       setAcceptanceParentInspId(insp.id)
                                     }
+                                    isAdd={
+                                      insp.trangThai === 3 &&
+                                      insp.daCoNghiemThu !== 1
+                                    }
                                     addTooltip="Tạo BB Nghiệm thu"
                                     addColor="warning"
                                   />
@@ -521,10 +554,10 @@ const IncidentDetailPanel = ({
 
                               {/* Depth 3: BB Nghiệm thu */}
                               {isInspExpanded &&
-                                incAcceptances.map((acc) => {
-                                  const incMaterials =
+                                acceptanceTestRecords.map((acc: any) => {
+                                  const materials =
                                     materialQualityRecords.filter(
-                                      (m) => m.idNghiemThu === acc.id,
+                                      (m: any) => m.idNghiemThu === acc.id,
                                     );
                                   const isAccExpanded = expandedAcceptances.has(
                                     acc.id ?? "",
@@ -540,7 +573,7 @@ const IncidentDetailPanel = ({
                                               alignItems: "center",
                                             }}
                                           >
-                                            {incMaterials.length > 0 && (
+                                            {acc.daCoDanhGiaVatTu === 1 && (
                                               <IconButton
                                                 size="small"
                                                 onClick={() =>
@@ -562,7 +595,8 @@ const IncidentDetailPanel = ({
                                               variant="body2"
                                               sx={{
                                                 ml:
-                                                  incMaterials.length > 0
+                                                  acc.daCoDanhGiaVatTu === 1 ||
+                                                  materials.length > 0
                                                     ? 0
                                                     : "28px",
                                               }}
@@ -593,6 +627,10 @@ const IncidentDetailPanel = ({
                                                 acc.id ?? "",
                                               )
                                             }
+                                            isAdd={
+                                              acc.trangThai === 3 &&
+                                              acc.daCoDanhGiaVatTu !== 1
+                                            }
                                             addTooltip="Tạo BB Vật tư"
                                             addColor="secondary"
                                           />
@@ -601,34 +639,36 @@ const IncidentDetailPanel = ({
 
                                       {/* Depth 4: BB Vật tư */}
                                       {isAccExpanded &&
-                                        incMaterials.map((mat) => (
-                                          <TableRow
-                                            hover
-                                            key={`incmat-${mat.id}`}
-                                          >
-                                            <TableCell sx={{ pl: 14 }}>
-                                              <Typography variant="body2">
-                                                {mat.soPhieu}
-                                              </Typography>
-                                            </TableCell>
-                                            <TableCell>
-                                              <Chip
-                                                label="BB Vật tư"
-                                                size="small"
-                                                color="secondary"
-                                              />
-                                            </TableCell>
-                                            <TableCell>
-                                              {(mat as any).date || "—"}
-                                            </TableCell>
-                                            <TableCell>
-                                              {showStatus(mat.trangThai ?? 0)}
-                                            </TableCell>
-                                            <TableCell align="right">
-                                              <ActionCell onView={() => {}} />
-                                            </TableCell>
-                                          </TableRow>
-                                        ))}
+                                        materialQualityRecords.map(
+                                          (mat: any) => (
+                                            <TableRow
+                                              hover
+                                              key={`incmat-${mat.id}`}
+                                            >
+                                              <TableCell sx={{ pl: 14 }}>
+                                                <Typography variant="body2">
+                                                  {mat.soPhieu}
+                                                </Typography>
+                                              </TableCell>
+                                              <TableCell>
+                                                <Chip
+                                                  label="BB Vật tư"
+                                                  size="small"
+                                                  color="secondary"
+                                                />
+                                              </TableCell>
+                                              <TableCell>
+                                                {mat.ngayDanhGia || "—"}
+                                              </TableCell>
+                                              <TableCell>
+                                                {showStatus(mat.trangThai ?? 0)}
+                                              </TableCell>
+                                              <TableCell align="right">
+                                                <ActionCell onView={() => {}} />
+                                              </TableCell>
+                                            </TableRow>
+                                          ),
+                                        )}
                                     </React.Fragment>
                                   );
                                 })}
@@ -656,13 +696,8 @@ const IncidentDetailPanel = ({
 
       {incInspectionParentBBKTKSCId &&
         (() => {
-          const parentBBKTKSC = incidentInspectionRecords.find(
-            (r) => r.id === incInspectionParentBBKTKSCId,
-          );
-          // Lấy danh sách deviceId từ BB Kiểm tra sự cố
-          // (items[].itemName không phải deviceId — dùng deviceEntries của incident)
-          const bbDeviceIds = (incident.danhSachTaiSan || []).map(
-            (e) => e.idTaiSan,
+          const parentBBKTKSC = incidentInspections.find(
+            (r: any) => r.id === incInspectionParentBBKTKSCId,
           );
 
           return parentBBKTKSC ? (
@@ -671,15 +706,7 @@ const IncidentDetailPanel = ({
               onClose={() => setIncInspectionParentBBKTKSCId(null)}
               plan={plan}
               repairRequest={null} // ← không có GĐ sửa chữa
-              deviceIds={bbDeviceIds} // ← truyền deviceIds từ incident
-              onSubmit={(record) => {
-                onCreateInspectionRecord({
-                  ...record,
-                  incidentInspectionRecordId: parentBBKTKSC.id,
-                  repairRequestId: "",
-                });
-                setIncInspectionParentBBKTKSCId(null);
-              }}
+              incidentInspection={parentBBKTKSC} // ← truyền deviceIds từ incident
             />
           ) : null;
         })()}
@@ -687,7 +714,7 @@ const IncidentDetailPanel = ({
       {acceptanceParentInspId &&
         (() => {
           const parentInsp = inspectionRecords.find(
-            (r) => r.id === acceptanceParentInspId,
+            (r: any) => r.id === acceptanceParentInspId,
           );
           return parentInsp ? (
             <AcceptanceTestDialog
@@ -707,7 +734,7 @@ const IncidentDetailPanel = ({
       {materialParentAccId &&
         (() => {
           const parentAcc = acceptanceTestRecords.find(
-            (a) => a.id === materialParentAccId,
+            (a: any) => a.id === materialParentAccId,
           );
           return parentAcc ? (
             <MaterialDialog

@@ -1,5 +1,5 @@
 export interface DeviceInspectionEntry {
-  idSuaChuaChiTiet?: string;
+  idBienBanChiTiet?: string;
   deviceId: string;
   deviceName: string;
   unit: string;

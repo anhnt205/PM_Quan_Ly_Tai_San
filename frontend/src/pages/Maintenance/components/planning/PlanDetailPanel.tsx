@@ -838,10 +838,6 @@ const PlanDetailPanel = ({
               onClose={() => setInspectionParentReqId(null)}
               plan={plan}
               repairRequest={parentReq}
-              onSubmit={(record) => {
-                onCreateInspectionRecord(record);
-                setInspectionParentReqId(null);
-              }}
             />
           ) : null;
         })()}

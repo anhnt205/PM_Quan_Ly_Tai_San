@@ -72,6 +72,7 @@ import SignDocumentForm from "../components/signdocument/SignDocumentForm";
 import { EditIcon } from "lucide-react";
 import { useMaintenanceMutation } from "../mutation";
 import { SignaturesData } from "../../../components/SignDocument/types";
+import { TypeBienBan } from "../../../utils/const";
 
 export default function MaintenanceApprovalPage() {
   const { materialQualityRecords, incidentInspectionRecords } = useCmms();
@@ -285,17 +286,26 @@ export default function MaintenanceApprovalPage() {
       label: "BB Kiểm tra SỰ CỐ",
       icon: <SearchOutlined />,
       idLabel: "Số BB kiểm tra",
+      field: "soPhieu",
     },
   ];
 
   const parentColumnConfigs: Record<
     number,
-    { field: string; headerName: string }[]
+    { field: string; headerName: string; key?: string }[]
   > = {
     1: [{ field: "planId", headerName: "Mã kế hoạch" }],
     2: [
-      { field: "idSuaChua", headerName: "Mã lệnh SC" },
-      { field: "incidentInspectionId", headerName: "Mã BB kiểm tra SC" },
+      {
+        field: "idBienBanSuaChua",
+        headerName: "Mã lệnh SC",
+        key: TypeBienBan.SUA_CHUA,
+      },
+      {
+        field: "idBienBanKiemTra",
+        headerName: "Mã BB kiểm tra SC",
+        key: TypeBienBan.SU_CO,
+      },
     ],
     3: [{ field: "idGiamDinh", headerName: "Mã BB giám định" }],
     4: [{ field: "idNghiemThu", headerName: "Mã BB nghiệm thu" }],
@@ -347,11 +357,21 @@ export default function MaintenanceApprovalPage() {
       field: cfg.field,
       headerName: cfg.headerName,
       width: 160,
-      renderCell: (params: any) => (
-        <span style={{ color: params.value ? "inherit" : "#bbb" }}>
-          {params.value || "—"}
-        </span>
-      ),
+      renderCell: (params: any) => {
+        // Tab giám định: hiển thị dữ liệu vào đúng cột loại biên bản
+        if (activeTab === 2) {
+          const loai = params.row.loaiBienBan; // 'sua_chua' | 'su_co'
+          if (loai === cfg.key) {
+            return <span>{params.row.idBienBan || "—"}</span>;
+          }
+          return <span style={{ color: "#bbb" }}>—</span>;
+        }
+        return (
+          <span style={{ color: params.value ? "inherit" : "#bbb" }}>
+            {params.value || "—"}
+          </span>
+        );
+      },
     }));
 
     if (collapsed) {

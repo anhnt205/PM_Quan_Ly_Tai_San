@@ -53,7 +53,7 @@ public class SuaChuaDao {
                 CASE 
                     WHEN EXISTS (
                         SELECT 1 FROM giamdinh gd
-                        WHERE gd.IdSuaChua = sc.id
+                        WHERE gd.IdBienBan = sc.id
                     ) THEN 1 ELSE 0 
                 END as daCoGiamDinh
             FROM suachua sc

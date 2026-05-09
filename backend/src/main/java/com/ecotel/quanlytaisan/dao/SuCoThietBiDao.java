@@ -74,7 +74,11 @@ public class SuCoThietBiDao {
                 sc.NgayCapNhat,
                 sc.NguoiTao,
                 nvNT.HoTen              AS tenNguoiTao,
-                sc.NguoiCapNhat
+                sc.NguoiCapNhat,
+                CASE
+                    WHEN EXISTS (SELECT 1 FROM kiemtra_suco kt WHERE kt.IdSuCo = sc.Id AND kt.TrangThai != 2) THEN 1
+                    ELSE 0
+                END AS daCoGiamDinh
 
             FROM suco_thietbi sc
                 LEFT JOIN PhongBan pb   ON sc.IdDonViBaoCao = pb.Id
