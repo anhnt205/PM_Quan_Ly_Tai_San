@@ -45,6 +45,8 @@ import {
   useMaintenancePlanningGroupedQuery,
   useMaintenancePlanningMutation,
   useMaintenanceRepairMutation,
+  useMaintenanceIncidentInspectionMutation,
+  useMaintenanceIncidentInspectionBySuCoQuery,
 } from "./Mutation";
 import { CongTy } from "../../utils/const";
 import { MaintenancePlanData } from "./types";
@@ -52,7 +54,7 @@ import { handleSendToSigner, isCheckShowShare } from "./config";
 import { useSelector } from "react-redux";
 import { useDebounce } from "../../hooks/useDebounce";
 import { RootState } from "../../redux/store";
-import { IncidenData } from "../Maintenance/types";
+import { IncidenData, IncidentInspectionData } from "../Maintenance/types";
 
 // ── Status config ──────────────────────────────────────────
 const planStatusConfig: Record<
@@ -137,9 +139,7 @@ export default function MaintenancePlanRepair() {
     Set<string>
   >(new Set());
   const [showForm, setShowForm] = useState(false);
-  const [incidentInspectionRecords, setIncidentInspectionRecords] = useState(
-    initialIncidentInspectionRecords,
-  );
+  const [incidentInspectionRecords, setIncidentInspectionRecords] = useState<any[]>([]);
   const searchDebounce = useDebounce(searchValue, 500);
   // kehoach
   const { data: groupedData, isLoading } = useMaintenancePlanningGroupedQuery(
@@ -170,6 +170,17 @@ export default function MaintenancePlanRepair() {
     deleteMutation: deleteRepairMutation,
     updateManyMutation: updateManyRepairMutation,
   } = useMaintenanceRepairMutation();
+
+
+  const { data: serverIncInspRecords = [] } = useMaintenanceIncidentInspectionBySuCoQuery(
+    selectedIncident?.id,
+  );
+
+  React.useEffect(() => {
+    if (serverIncInspRecords) {
+      setIncidentInspectionRecords(serverIncInspRecords);
+    }
+  }, [serverIncInspRecords]);
 
   const {
     repairRequests,
@@ -1248,14 +1259,11 @@ export default function MaintenancePlanRepair() {
                 <IncidentDetailPanel
                   incident={selectedIncident}
                   plan={selectedPlan}
-                  inspectionRecords={inspectionRecords}
+                  inspectionRecords={[]}
                   acceptanceTestRecords={acceptanceTestRecords}
                   materialQualityRecords={materialQualityRecords}
                   incidentInspectionRecords={incidentInspectionRecords}
                   onClose={handleCloseAll}
-                  onCreateIncidentInspectionRecord={(record) =>
-                    setIncidentInspectionRecords((prev) => [...prev, record])
-                  }
                   onCreateInspectionRecord={addInspectionRecord}
                   onCreateAcceptanceRecord={addAcceptanceTestRecord}
                   onCreateMaterialQualityRecord={addMaterialQualityRecord}

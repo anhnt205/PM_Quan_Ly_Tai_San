@@ -149,6 +149,7 @@ const InspectionRecordDialog = ({
             userName: user.name,
             departmentId: dept.id,
             departmentName: dept.name,
+            position: user.title ?? "",
             order: prev.length + 1,
             signed: false,
           },

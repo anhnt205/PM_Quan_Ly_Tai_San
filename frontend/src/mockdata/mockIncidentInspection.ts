@@ -1,5 +1,8 @@
 export interface IncidentInspectionItem {
   stt: number;
+  id?: string;
+  idTaiSan?: string;
+  unit?: string;
   itemName: string;
   repairLevel: string;
   quantity: number;

@@ -139,6 +139,54 @@ export interface ChiTietVatTuThuHoiData {
   ghiChu?: string;
   
   // Join fields
+  // Join fields
   tenVatTu?: string;
+  donViTinh?: string;
+}
+
+// Kiểm tra sự cố
+export interface IncidentInspectionData {
+  id?: string;
+  idCongTy?: string;
+  idSuCo?: string;
+  soPhieu?: string;
+  ngayKiemTra?: string;
+  viTri?: string;
+  nhanXetKetLuan?: string;
+  bienPhapXuLy?: string;
+  
+  idNguoiLap?: string;
+  tenNguoiLap?: string;
+  nguoiLapXacNhan?: boolean;
+  idGiamDoc?: string;
+  tenGiamDoc?: string;
+  giamDocXacNhan?: boolean;
+  
+  share?: boolean;
+  trangThai?: number;
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+
+  danhSachChiTiet?: IncidentInspectionDetailData[];
+  nguoiKyList?: any[];
+}
+
+export interface IncidentInspectionDetailData {
+  id?: string;
+  idKiemTraSuCo?: string;
+  idTaiSan?: string;
+  idSuCoChiTiet?: string;
+  capBaoDuong?: string;
+  tinhTrang?: string;
+  suaChua?: boolean;
+  thayMoi?: boolean;
+  ghiChu?: string;
+  soLuong?: number;
+  
+  // Enrich
+  tenTaiSan?: string;
+  maTaiSan?: string;
   donViTinh?: string;
 }

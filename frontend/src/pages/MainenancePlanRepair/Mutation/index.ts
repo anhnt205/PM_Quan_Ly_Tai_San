@@ -8,7 +8,12 @@ import {
 } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import { Action, CongTy } from "../../../utils/const";
-import { IncidenData, MaintenanceRepairData, DanhGiaVatTuData } from "../../Maintenance/types";
+import {
+  IncidenData,
+  MaintenanceRepairData,
+  DanhGiaVatTuData,
+  IncidentInspectionData,
+} from "../../Maintenance/types";
 import dayjs from "dayjs";
 import { useSelector } from "react-redux";
 
@@ -1196,7 +1201,9 @@ export const useMaintenanceAcceptanceTestPageQuery = (
   });
 };
 
-export const useMaintenanceAcceptanceByInspectionQuery = (idGiamDinh?: string) => {
+export const useMaintenanceAcceptanceByInspectionQuery = (
+  idGiamDinh?: string,
+) => {
   return useQuery({
     queryKey: ["acceptanceByInspection", idGiamDinh],
     queryFn: async () => {
@@ -1239,9 +1246,8 @@ export const useMaintenanceAcceptanceTestMutation = () => {
 
   const deleteVatTuBatchMutation = useMutation({
     mutationFn: async (ids: string[]) => {
-      return (
-        await api.delete("/nghiemthu-taisan/vattu/batch", { data: ids })
-      ).data;
+      return (await api.delete("/nghiemthu-taisan/vattu/batch", { data: ids }))
+        .data;
     },
   });
 
@@ -1473,7 +1479,7 @@ export const useMaintenanceMaterialAssessmentPageQuery = (
           trangThai: trangThai,
           userid: userid,
         },
-      }); 
+      });
       return res.data.data || res.data;
     },
     placeholderData: (previousData) => previousData,
@@ -1519,7 +1525,8 @@ export const useMaintenanceMaterialAssessmentMutation = () => {
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || "Tạo biên bản đánh giá vật tư thất bại",
+        error.response?.data?.message ||
+          "Tạo biên bản đánh giá vật tư thất bại",
       );
     },
   });
@@ -1544,7 +1551,8 @@ export const useMaintenanceMaterialAssessmentMutation = () => {
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || "Cập nhật biên bản đánh giá vật tư thất bại",
+        error.response?.data?.message ||
+          "Cập nhật biên bản đánh giá vật tư thất bại",
       );
     },
   });
@@ -1580,5 +1588,140 @@ export const useMaintenanceMaterialAssessmentMutation = () => {
     updateMutation,
     deleteMutation,
     cancelMutation,
+  };
+};
+
+// --- KIỂM TRA SỰ CỐ ---
+
+export const useMaintenanceIncidentInspectionPageQuery = (
+  page?: number,
+  pageSize?: number,
+  searchValue?: string,
+  trangThai?: number,
+  idDonViGiao?: string,
+  userid?: string,
+) => {
+  return useQuery({
+    queryKey: [
+      "incidentInspectionPage",
+      page,
+      pageSize,
+      searchValue,
+      trangThai,
+      idDonViGiao,
+      userid,
+    ],
+    queryFn: async () => {
+      const res = await api.get("/kiemtra-suco/page", {
+        params: {
+          page: page,
+          pageSize: pageSize,
+          idCongTy: CongTy.CT001,
+          searchValue: searchValue,
+          trangThai: trangThai,
+          userid: userid,
+        },
+      });
+      return res.data.data || res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};
+
+export const useMaintenanceIncidentInspectionBySuCoQuery = (
+  idSuCo?: string,
+) => {
+  return useQuery({
+    queryKey: ["incidentInspectionBySuCo", idSuCo],
+    queryFn: async () => {
+      const res = await api.get(`/kiemtra-suco/suco/${idSuCo}`);
+      return res.data.data || res.data || [];
+    },
+    enabled: !!idSuCo,
+  });
+};
+
+export const useMaintenanceIncidentInspectionMutation = () => {
+  const queryClient = useQueryClient();
+  const { user } = useSelector((state: any) => state.user);
+
+  const createMutation = useMutation({
+    mutationFn: async (data: IncidentInspectionData) => {
+      return (
+        await api.post("/kiemtra-suco", {
+          ...data,
+          idCongTy: CongTy.CT001,
+          nguoiTao: user?.taiKhoan?.tenDangNhap,
+          ngayTao: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+        })
+      ).data;
+    },
+    onSuccess: async (response, variables) => {
+      const id = response?.id || response?.data?.id;
+      if (id && variables.nguoiKyList && variables.nguoiKyList.length > 0) {
+        await api.put(
+          `/chuky/nguoi-ky/update/${id}`,
+          variables.nguoiKyList.map((item) => ({
+            ...item,
+            idTaiLieu: id,
+          })),
+        );
+      }
+      queryClient.invalidateQueries({ queryKey: ["incidentInspectionPage"] });
+      queryClient.invalidateQueries({ queryKey: ["incidentInspectionBySuCo"] });
+      showSuccessAlert("Tạo biên bản kiểm tra sự cố thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message || "Tạo biên bản kiểm tra sự cố thất bại",
+      );
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: IncidentInspectionData) => {
+      return (
+        await api.put(`/kiemtra-suco/${data.id}`, {
+          ...data,
+          nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
+          ngayCapNhat: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+        })
+      ).data;
+    },
+    onSuccess: async (response, variables) => {
+      const id = variables.id;
+      if (id && variables.nguoiKyList && variables.nguoiKyList.length > 0) {
+        await api.put(`/chuky/nguoi-ky/update/${id}`, variables.nguoiKyList);
+      }
+      queryClient.invalidateQueries({ queryKey: ["incidentInspectionPage"] });
+      queryClient.invalidateQueries({ queryKey: ["incidentInspectionBySuCo"] });
+      showSuccessAlert("Cập nhật biên bản kiểm tra sự cố thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          "Cập nhật biên bản kiểm tra sự cố thất bại",
+      );
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return (await api.delete(`/kiemtra-suco/${id}`)).data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["incidentInspectionPage"] });
+      queryClient.invalidateQueries({ queryKey: ["incidentInspectionBySuCo"] });
+      showSuccessAlert("Xóa biên bản thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(error.response?.data?.message || "Xóa biên bản thất bại");
+    },
+  });
+
+  return {
+    createMutation,
+    updateMutation,
+    deleteMutation,
   };
 };

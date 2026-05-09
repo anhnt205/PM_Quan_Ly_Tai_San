@@ -1,4 +1,3 @@
-
 export const maintenanceLevelColors: Record<string, string> = {
   "": "transparent",
   CST: "#e8f5e9",
@@ -11,13 +10,7 @@ export interface PlanSigner {
   departmentId: string;
   departmentName: string;
   order: number;
-  position?:
-    | "top-left"
-    | "top-center"
-    | "top-right"
-    | "bottom-left"
-    | "bottom-center"
-    | "bottom-right"; // thêm ?
+  position?: string; // thêm ?
   signed: boolean;
   signedAt?: string;
 }

@@ -32,6 +32,7 @@ import {
   useMaintenanceMaterialAssessmentPageQuery,
   useMaintenancePlanningPageQuery,
   useMaintenanceRepairPageQuery,
+  useMaintenanceIncidentInspectionPageQuery,
 } from "../../MainenancePlanRepair/Mutation";
 import {
   generateBienBanKeHoachPdf,
@@ -56,6 +57,7 @@ import {
   MaterialAssessmentAdapter,
   PlanAdapter,
   RepairAdapter,
+  IncidentInspectionAdapter,
 } from "../Adapter";
 import { FilterOption } from "../../../components/common/FilterStatusGroup";
 
@@ -159,6 +161,22 @@ export default function MaintenanceRecordPage() {
     user?.taiKhoan?.tenDangNhap,
   );
 
+  const {
+    data: incidentInspectionPaged = {
+      items: [],
+      totalItems: 0,
+      trangThaiCounts: {},
+    },
+    isLoading: isLoadingIncidentInspection,
+  } = useMaintenanceIncidentInspectionPageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchDebounce,
+    statusFilter ? Number(statusFilter) : undefined,
+    undefined,
+    user?.taiKhoan?.tenDangNhap,
+  );
+
   const tabConfigs = [
     { label: "Kế hoạch", icon: <AssignmentOutlined />, idLabel: "Mã KH" },
     {
@@ -208,7 +226,7 @@ export default function MaintenanceRecordPage() {
     3: [{ field: "idGiamDinh", headerName: "Mã BB giám định" }],
     4: [{ field: "idNghiemThu", headerName: "Mã BB nghiệm thu" }],
     5: [{ field: "planId", headerName: "Mã kế hoạch" }],
-    6: [{ field: "incidentReportId", headerName: "Mã phiếu báo SC" }],
+    6: [{ field: "idSuCo", headerName: "Mã phiếu báo SC" }],
   };
 
   const allRows = [
@@ -224,7 +242,10 @@ export default function MaintenanceRecordPage() {
       items: materialAssessmentPaged.items.map(MaterialAssessmentAdapter),
     },
     { ...incidentPaged, items: incidentPaged.items.map(IncidentAdapter) },
-    [],
+    {
+      ...incidentInspectionPaged,
+      items: incidentInspectionPaged.items.map(IncidentInspectionAdapter),
+    },
   ];
 
   const currentAllData = allRows[activeTab];
@@ -561,7 +582,11 @@ export default function MaintenanceRecordPage() {
     {
       label: "Tất cả",
       value: "",
-      count: currentAllData.totalItems,
+      count:
+        (currentAllData?.trangThaiCounts?.["0"] || 0) +
+        (currentAllData?.trangThaiCounts?.["1"] || 0) +
+        (currentAllData?.trangThaiCounts?.["2"] || 0) +
+        (currentAllData?.trangThaiCounts?.["3"] || 0),
       color: "primary",
     },
     {

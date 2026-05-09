@@ -80,3 +80,17 @@ export const MaterialAssessmentAdapter = (s: any) => ({
   ngayTao: s.ngayTao,
   trangThai: s.trangThai,
 });
+
+export const IncidentInspectionAdapter = (s: any) => ({
+  ...s,
+  id: s.id,
+  idTrinhDuyetGiamDoc: s.idGiamDoc,
+  tenTrinhDuyetGiamDoc: s.tenGiamDoc,
+  trinhDuyetGiamDocXacNhan: s.giamDocXacNhan,
+  idNguoiLapBieu: s.idNguoiLap,
+  tenNguoiLapBieu: s.tenNguoiLap,
+  nguoiLapBieuXacNhan: s.nguoiLapXacNhan,
+  moTa: s.nhanXetKetLuan,
+  ngayTao: s.ngayTao,
+  trangThai: s.trangThai,
+});

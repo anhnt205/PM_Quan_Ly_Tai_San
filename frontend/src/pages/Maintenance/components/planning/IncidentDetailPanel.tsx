@@ -40,52 +40,29 @@ import AcceptanceTestDialog from "../dialog/AcceptanceTestDialog";
 import MaterialDialog from "../dialog/MaterialDialog";
 import IncidentPreview from "../preview/IncidentPreview";
 import IncidentInspectionDialog from "../dialog/Incidentinspectiondialog";
-import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
-import type { IncidenData } from "../../types";
+import {
+  AcceptanceTestRecordData,
+  MaintenancePlanData,
+} from "../../../MainenancePlanRepair/types";
+import type {
+  DanhGiaVatTuData,
+  IncidenData,
+  IncidentInspectionData,
+} from "../../types";
+import { showStatus } from "../../config";
 
 interface Props {
   incident: IncidenData;
   plan: MaintenancePlanData;
-  inspectionRecords: TechnicalInspectionRecord[];
-  acceptanceTestRecords: AcceptanceTestRecord[];
-  materialQualityRecords: MaterialQualityRecord[];
-  incidentInspectionRecords: IncidentInspectionRecord[];
+  inspectionRecords: IncidenData[];
+  acceptanceTestRecords: AcceptanceTestRecordData[];
+  materialQualityRecords: DanhGiaVatTuData[];
+  incidentInspectionRecords: IncidentInspectionData[];
   onClose: () => void;
-  onCreateIncidentInspectionRecord: (record: IncidentInspectionRecord) => void;
   onCreateInspectionRecord: (record: TechnicalInspectionRecord) => void;
   onCreateAcceptanceRecord: (record: AcceptanceTestRecord) => void;
   onCreateMaterialQualityRecord: (record: MaterialQualityRecord) => void;
 }
-
-const StatusChip = ({ status }: { status: any }) => {
-  const map: Record<string, { label: string; color: any }> = {
-    draft: { label: "Bản nháp", color: "default" },
-    "cho-duyet": { label: "Chờ duyệt", color: "warning" },
-    "da-duyet": { label: "Đã duyệt", color: "success" },
-    "tu-choi": { label: "Từ chối", color: "error" },
-    "dang-ky": { label: "Đang ký", color: "info" },
-  };
-  const statusMap: Record<any, string> = {
-    0: "draft",
-    1: "cho-duyet",
-    2: "tu-choi",
-    3: "da-duyet",
-  };
-  const normalizedStatus =
-    typeof status === "number" ? statusMap[status] : status;
-  const cfg = map[normalizedStatus] ?? {
-    label: String(status),
-    color: "default",
-  };
-  return (
-    <Chip
-      label={cfg.label}
-      color={cfg.color}
-      size="small"
-      sx={{ color: "#fff" }}
-    />
-  );
-};
 
 const ActionCell = ({
   onView,
@@ -133,9 +110,8 @@ const IncidentDetailPanel = ({
   inspectionRecords,
   acceptanceTestRecords,
   materialQualityRecords,
-  incidentInspectionRecords,
+  incidentInspectionRecords = [],
   onClose,
-  onCreateIncidentInspectionRecord,
   onCreateInspectionRecord,
   onCreateAcceptanceRecord,
   onCreateMaterialQualityRecord,
@@ -169,8 +145,8 @@ const IncidentDetailPanel = ({
   // Lấy danh sách BB Kiểm tra sự cố thuộc incident này
   const incidentInspections = useMemo(
     () =>
-      incidentInspectionRecords.filter(
-        (r) => r.incidentReportId === incident.id,
+      (incidentInspectionRecords || []).filter(
+        (r: any) => (r.idSuCo || r.incidentReportId) === incident.id,
       ),
     [incident.id, incidentInspectionRecords],
   );
@@ -286,7 +262,7 @@ const IncidentDetailPanel = ({
             <b>Đơn vị báo cáo:</b> {reporterDept.name}
           </Typography>
         )}
-        <StatusChip status={inc.trangThai ?? inc.status ?? "cho-duyet"} />
+        {showStatus(inc.trangThai ?? 0)}
       </Box>
 
       {incident.moTa && (
@@ -410,7 +386,7 @@ const IncidentDetailPanel = ({
                   const incInspections = inspectionRecords.filter(
                     (r) => (r as any).incidentInspectionRecordId === bbktksc.id,
                   );
-                  const isBBExpanded = expandedBBKTKSC.has(bbktksc.id);
+                  const isBBExpanded = expandedBBKTKSC.has(bbktksc.id ?? "");
 
                   return (
                     <React.Fragment key={`bbktksc-${bbktksc.id}`}>
@@ -424,7 +400,7 @@ const IncidentDetailPanel = ({
                                 onClick={() =>
                                   toggle(
                                     expandedBBKTKSC,
-                                    bbktksc.id,
+                                    bbktksc.id ?? "",
                                     setExpandedBBKTKSC,
                                   )
                                 }
@@ -442,7 +418,7 @@ const IncidentDetailPanel = ({
                                 ml: incInspections.length > 0 ? 0 : "28px",
                               }}
                             >
-                              {bbktksc.number}
+                              {bbktksc.soPhieu}
                             </Typography>
                           </Box>
                         </TableCell>
@@ -454,15 +430,13 @@ const IncidentDetailPanel = ({
                             sx={{ color: "#fff" }}
                           />
                         </TableCell>
-                        <TableCell>{bbktksc.inspectionDate}</TableCell>
-                        <TableCell>
-                          <StatusChip status={bbktksc.status} />
-                        </TableCell>
+                        <TableCell>{bbktksc.ngayKiemTra}</TableCell>
+                        <TableCell>{showStatus(0)}</TableCell>
                         <TableCell align="right">
                           <ActionCell
                             onView={() => {}}
                             onAdd={() =>
-                              setIncInspectionParentBBKTKSCId(bbktksc.id)
+                              setIncInspectionParentBBKTKSCId(bbktksc.id ?? "")
                             }
                             addTooltip="Tạo BB Giám định"
                             addColor="success"
@@ -474,7 +448,7 @@ const IncidentDetailPanel = ({
                       {isBBExpanded &&
                         incInspections.map((insp) => {
                           const incAcceptances = acceptanceTestRecords.filter(
-                            (a) => a.inspectionRecordId === insp.id,
+                            (a) => a.idGiamDinh === insp.id,
                           );
                           const isInspExpanded = expandedInspections.has(
                             insp.id,
@@ -517,7 +491,7 @@ const IncidentDetailPanel = ({
                                             : "28px",
                                       }}
                                     >
-                                      {insp.number}
+                                      {insp.soPhieu}
                                     </Typography>
                                   </Box>
                                 </TableCell>
@@ -529,9 +503,9 @@ const IncidentDetailPanel = ({
                                     sx={{ color: "#fff" }}
                                   />
                                 </TableCell>
-                                <TableCell>{insp.inspectionDate}</TableCell>
+                                <TableCell>{insp.ngayPhatHien}</TableCell>
                                 <TableCell>
-                                  <StatusChip status={insp.status} />
+                                  {showStatus(insp.trangThai ?? 0)}
                                 </TableCell>
                                 <TableCell align="right">
                                   <ActionCell
@@ -550,10 +524,10 @@ const IncidentDetailPanel = ({
                                 incAcceptances.map((acc) => {
                                   const incMaterials =
                                     materialQualityRecords.filter(
-                                      (m) => m.acceptanceRecordId === acc.id,
+                                      (m) => m.idNghiemThu === acc.id,
                                     );
                                   const isAccExpanded = expandedAcceptances.has(
-                                    acc.id,
+                                    acc.id ?? "",
                                   );
 
                                   return (
@@ -572,7 +546,7 @@ const IncidentDetailPanel = ({
                                                 onClick={() =>
                                                   toggle(
                                                     expandedAcceptances,
-                                                    acc.id,
+                                                    acc.id ?? "",
                                                     setExpandedAcceptances,
                                                   )
                                                 }
@@ -593,7 +567,7 @@ const IncidentDetailPanel = ({
                                                     : "28px",
                                               }}
                                             >
-                                              {acc.number}
+                                              {acc.soPhieu}
                                             </Typography>
                                           </Box>
                                         </TableCell>
@@ -605,15 +579,19 @@ const IncidentDetailPanel = ({
                                             sx={{ color: "#fff" }}
                                           />
                                         </TableCell>
-                                        <TableCell>{acc.date}</TableCell>
                                         <TableCell>
-                                          <StatusChip status={acc.status} />
+                                          {acc.ngayNghiemThu}
+                                        </TableCell>
+                                        <TableCell>
+                                          {showStatus(acc.trangThai ?? 0)}
                                         </TableCell>
                                         <TableCell align="right">
                                           <ActionCell
                                             onView={() => {}}
                                             onAdd={() =>
-                                              setMaterialParentAccId(acc.id)
+                                              setMaterialParentAccId(
+                                                acc.id ?? "",
+                                              )
                                             }
                                             addTooltip="Tạo BB Vật tư"
                                             addColor="secondary"
@@ -630,7 +608,7 @@ const IncidentDetailPanel = ({
                                           >
                                             <TableCell sx={{ pl: 14 }}>
                                               <Typography variant="body2">
-                                                {mat.number}
+                                                {mat.soPhieu}
                                               </Typography>
                                             </TableCell>
                                             <TableCell>
@@ -644,7 +622,7 @@ const IncidentDetailPanel = ({
                                               {(mat as any).date || "—"}
                                             </TableCell>
                                             <TableCell>
-                                              <StatusChip status={mat.status} />
+                                              {showStatus(mat.trangThai ?? 0)}
                                             </TableCell>
                                             <TableCell align="right">
                                               <ActionCell onView={() => {}} />
@@ -673,10 +651,6 @@ const IncidentDetailPanel = ({
           onClose={() => setIncidentInspectionParentId(null)}
           plan={plan}
           incidentReport={incident}
-          onSubmit={(record) => {
-            onCreateIncidentInspectionRecord(record);
-            setIncidentInspectionParentId(null);
-          }}
         />
       )}
 
@@ -722,10 +696,10 @@ const IncidentDetailPanel = ({
               plan={plan}
               repairRequest={null as any}
               inspectionRecord={parentInsp}
-              onSubmit={(record) => {
-                onCreateAcceptanceRecord(record);
-                setAcceptanceParentInspId(null);
-              }}
+              // onSubmit={(record) => {
+              //   onCreateAcceptanceRecord(record);
+              //   setAcceptanceParentInspId(null);
+              // }}
             />
           ) : null;
         })()}
@@ -742,10 +716,10 @@ const IncidentDetailPanel = ({
               plan={plan}
               repairRequest={null as any}
               acceptanceRecord={parentAcc}
-              onSubmit={(record) => {
-                onCreateMaterialQualityRecord(record);
-                setMaterialParentAccId(null);
-              }}
+              // onSubmit={(record) => {
+              //   onCreateMaterialQualityRecord(record);
+              //   setMaterialParentAccId(null);
+              // }}
             />
           ) : null;
         })()}
