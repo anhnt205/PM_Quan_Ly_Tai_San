@@ -16,85 +16,18 @@ import {
 import { FilterOption } from "../../../components/common/FilterStatusGroup";
 import PageAction from "../../../components/common/PageAction";
 import TableCustom from "../../../components/common/TableCustom";
-import { useChuKySuaChuaQuery } from "../mutation/chukysuachua";
+import { useChuKySuaChuaQuery, useMaintenanceHistoryQuery } from "../mutation/chukysuachua";
 import { useDebounce } from "../../../hooks/useDebounce";
 import { maintenanceLevelColors } from "../../../mockdata/mockPlans";
 import { GridColDef } from "@mui/x-data-grid";
 
-// --- Mock lịch sử bảo dưỡng (giữ lại nếu chưa có API cho tab 2) ---
-const maintenanceHistory = [
-  {
-    id: "TB-001",
-    name: "Quạt gió lò 1",
-    group: "QG",
-    lastDate: "03/04/2026",
-    lastType: "SCN",
-    status: "da-bt",
-  },
-  {
-    id: "TB-002",
-    name: "Máng cào 1",
-    group: "MC",
-    lastDate: "03/04/2026",
-    lastType: "CST",
-    status: "da-bt",
-  },
-  {
-    id: "TB-003",
-    name: "Băng tải B800",
-    group: "BT-B800",
-    lastDate: "15/03/2026",
-    lastType: "SCC",
-    status: "da-bt",
-  },
-  {
-    id: "TB-004",
-    name: "Cảm biến khí",
-    group: "KDT",
-    lastDate: "21/03/2026",
-    lastType: "SCN",
-    status: "da-bt",
-  },
-  {
-    id: "TB-005",
-    name: "Tời điện 1",
-    group: "TD",
-    lastDate: "—",
-    lastType: "—",
-    status: "chua-bt",
-  },
-  {
-    id: "TB-006",
-    name: "Bơm nước 1",
-    group: "BM-Đ",
-    lastDate: "10/02/2026",
-    lastType: "SCN",
-    status: "da-bt",
-  },
-  {
-    id: "TB-007",
-    name: "Máy nén khí",
-    group: "MNK",
-    lastDate: "05/04/2026",
-    lastType: "CST",
-    status: "da-bt",
-  },
-  {
-    id: "TB-008",
-    name: "Tủ nạp ắc quy",
-    group: "TN",
-    lastDate: "—",
-    lastType: "—",
-    status: "chua-bt",
-  },
-];
 
 const historyStatusConfig: Record<
   string,
-  { label: string; color: "success" | "default" }
+  { label: string; color: "success" | "default" | "warning" }
 > = {
-  "da-bt": { label: "Đã BT", color: "success" },
-  "chua-bt": { label: "Chưa BT", color: "default" },
+  "1": { label: "Đã BT", color: "success" },
+  "0": { label: "Đang bảo trì", color: "warning" },
 };
 
 // ── Tab configs — giống pattern MaintenanceRecordPage ────
@@ -157,63 +90,63 @@ export default function MaintenanceCycles() {
     { field: "donViChuKy", headerName: "Đơn vị", width: 90 },
   ];
 
-  // ── Tab 1: Lịch sử bảo dưỡng (Mock) ────────────────────────
-  const countByStatus = (s: string) =>
-    maintenanceHistory.filter((h) => h.status === s).length;
+  // ── Tab 1: Lịch sử bảo dưỡng (API) ────────────────────────
+  const { data: historyPagedData, isLoading: isHistoryLoading } =
+    useMaintenanceHistoryQuery(
+      paginationModel.page,
+      paginationModel.pageSize,
+      searchDebounce,
+      statusFilter,
+    );
 
-  const filteredHistory = maintenanceHistory.filter((h) => {
-    const matchSearch =
-      !searchValue ||
-      h.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-      h.group.toLowerCase().includes(searchValue.toLowerCase());
-    const matchStatus = !statusFilter || h.status === statusFilter;
-    return matchSearch && matchStatus;
-  });
-
-  const paginatedHistory = filteredHistory.slice(
-    paginationModel.page * paginationModel.pageSize,
-    (paginationModel.page + 1) * paginationModel.pageSize,
+  const historyRows = (historyPagedData?.items || []).map(
+    (item: any, idx: number) => ({
+      ...item,
+      id: item.thietBiId, // Dùng thietBiId làm key
+      stt: paginationModel.page * paginationModel.pageSize + idx + 1,
+    }),
   );
 
+  const hCounts = historyPagedData?.trangThaiCounts || {};
   const historyStatusOptions: FilterOption[] = [
     {
       label: "Tất cả",
       value: "",
-      count: maintenanceHistory.length,
+      count: (hCounts["0"] || 0) + (hCounts["1"] || 0),
       color: "primary",
     },
     {
       label: "Đã BT",
-      value: "da-bt",
-      count: countByStatus("da-bt"),
+      value: "1",
+      count: hCounts["1"] || 0,
       color: "success",
     },
     {
-      label: "Chưa BT",
-      value: "chua-bt",
-      count: countByStatus("chua-bt"),
-      color: "default",
+      label: "Đang bảo trì",
+      value: "0",
+      count: hCounts["0"] || 0,
+      color: "warning",
     },
   ];
 
   const historyColumns = [
-    { field: "id", headerName: "Mã TB", width: 110 },
-    { field: "name", headerName: "Tên thiết bị", flex: 1, minWidth: 160 },
+    { field: "thietBiId", headerName: "Mã TB", width: 110 },
+    { field: "thietBi", headerName: "Tên thiết bị", flex: 1, minWidth: 160 },
     {
-      field: "group",
+      field: "nhomTaiSan",
       headerName: "Nhóm",
       width: 110,
       renderCell: (p: any) => (
         <Chip label={p.value} size="small" variant="outlined" />
       ),
     },
-    { field: "lastDate", headerName: "Lần BT gần nhất", width: 140 },
+    { field: "lanBTGanNhat", headerName: "Lần BT gần nhất", width: 140 },
     {
-      field: "lastType",
+      field: "loaiBT",
       headerName: "Loại BT",
-      width: 90,
+      width: 110,
       renderCell: (p: any) =>
-        p.value !== "—" ? (
+        p.value ? (
           <Chip
             label={p.value}
             size="small"
@@ -226,12 +159,12 @@ export default function MaintenanceCycles() {
         ),
     },
     {
-      field: "status",
+      field: "idNghiemThu",
       headerName: "Trạng thái",
       width: 120,
       renderCell: (p: any) => {
-        const cfg =
-          historyStatusConfig[p.value] ?? historyStatusConfig["chua-bt"];
+        const isDone = !!p.value;
+        const cfg = isDone ? historyStatusConfig["1"] : historyStatusConfig["0"];
         return <Chip label={cfg.label} size="small" color={cfg.color} />;
       },
     },
@@ -314,9 +247,10 @@ export default function MaintenanceCycles() {
                 <CardContent sx={{ p: "0 !important" }}>
                   <TableCustom
                     title="Lịch sử bảo dưỡng gần nhất"
-                    rows={paginatedHistory}
+                    rows={historyRows}
                     columns={historyColumns}
-                    total={filteredHistory.length}
+                    total={historyPagedData?.totalItems || 0}
+                    loading={isHistoryLoading}
                     paginationModel={paginationModel}
                     onPaginationModelChange={setPaginationModel}
                     checkboxSelection={false}

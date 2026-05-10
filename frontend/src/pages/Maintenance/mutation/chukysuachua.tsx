@@ -14,6 +14,28 @@ export const useChuKySuaChuaQuery = (page: number, pageSize: number, searchValue
   });
 };
 
+export const useMaintenanceHistoryQuery = (
+  page: number,
+  pageSize: number,
+  searchValue: string,
+  status?: string,
+) => {
+  return useQuery({
+    queryKey: ["maintenanceHistoryPaged", page, pageSize, searchValue, status],
+    queryFn: async () => {
+      const res = await api.get("/quy-trinh/history-paged", {
+        params: {
+          page: page + 1,
+          pageSize,
+          search: searchValue,
+          status: status !== "" ? Number(status) : undefined,
+        },
+      });
+      return res.data.data || res.data;
+    },
+  });
+};
+
 export const useChuKySuaChuaSyncMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({

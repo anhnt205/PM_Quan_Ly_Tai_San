@@ -27,4 +27,9 @@ public class QuyTrinhSuaChuaDTO {
     
     // Tổng Trạng thái phiếu (nếu cần thiết, tuỳ chọn)
     private Integer trangThai;
+    
+    // History specific
+    private String nhomTaiSan;
+    private String lanBTGanNhat;
+    private String loaiBT;
 }

@@ -6,7 +6,9 @@ import com.ecotel.quanlytaisan.model.QuyTrinhSuaChuaDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class QuyTrinhService {
@@ -19,5 +21,26 @@ public class QuyTrinhService {
         List<QuyTrinhSuaChuaDTO> list = quyTrinhDao.getPagedQuyTrinh(page, pageSize, idTaiSan, nam);
 
         return new PageResponse<>(list, total, page, pageSize);
+    }
+
+    public PageResponse<QuyTrinhSuaChuaDTO> getPagedHistory(int page, int pageSize, String search, Integer status) {
+        int total = quyTrinhDao.countHistory(search, status);
+        List<QuyTrinhSuaChuaDTO> list = quyTrinhDao.getPagedHistory(page, pageSize, search, status);
+
+        // Get counts by status
+        List<Map<String, Object>> counts = quyTrinhDao.countHistoryByStatus(search);
+        Map<String, Long> trangThaiCounts = new HashMap<>();
+        trangThaiCounts.put("0", 0L); // Đang bảo trì
+        trangThaiCounts.put("1", 0L); // Đã BT
+
+        for (Map<String, Object> row : counts) {
+            String s = row.get("statusHistory").toString();
+            Long count = (Long) row.get("count");
+            trangThaiCounts.put(s, count);
+        }
+
+        PageResponse<QuyTrinhSuaChuaDTO> response = new PageResponse<>(list, total, page, pageSize);
+        response.setTrangThaiCounts(trangThaiCounts);
+        return response;
     }
 }

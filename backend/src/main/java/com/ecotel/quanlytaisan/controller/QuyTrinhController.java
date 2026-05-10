@@ -30,4 +30,19 @@ public class QuyTrinhController {
                     .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
         }
     }
+
+    @GetMapping("/history-paged")
+    public ResponseEntity<ApiResponse<Object>> getHistoryPaged(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Integer status) {
+        try {
+            PageResponse<QuyTrinhSuaChuaDTO> result = quyTrinhService.getPagedHistory(page, pageSize, search, status);
+            return ResponseEntity.ok(ApiResponse.success("Lấy lịch sử bảo dưỡng thành công", result, (int) result.getTotalItems()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
 }
