@@ -139,7 +139,9 @@ export default function MaintenancePlanRepair() {
     Set<string>
   >(new Set());
   const [showForm, setShowForm] = useState(false);
-  const [incidentInspectionRecords, setIncidentInspectionRecords] = useState<any[]>([]);
+  const [incidentInspectionRecords, setIncidentInspectionRecords] = useState<
+    any[]
+  >([]);
   const searchDebounce = useDebounce(searchValue, 500);
   // kehoach
   const { data: groupedData, isLoading } = useMaintenancePlanningGroupedQuery(
@@ -171,16 +173,14 @@ export default function MaintenancePlanRepair() {
     updateManyMutation: updateManyRepairMutation,
   } = useMaintenanceRepairMutation();
 
-
-  const { data: serverIncInspRecords = [] } = useMaintenanceIncidentInspectionBySuCoQuery(
-    selectedIncident?.id,
-  );
+  const { data: serverIncInspRecords = [] } =
+    useMaintenanceIncidentInspectionBySuCoQuery(selectedIncident?.id);
 
   React.useEffect(() => {
-    if (serverIncInspRecords) {
+    if (serverIncInspRecords.length) {
       setIncidentInspectionRecords(serverIncInspRecords);
     }
-  }, [serverIncInspRecords]);
+  }, [serverIncInspRecords.length]);
 
   const {
     repairRequests,

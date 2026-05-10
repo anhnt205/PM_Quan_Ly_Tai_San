@@ -1775,3 +1775,26 @@ export const useMaintenanceIncidentInspectionMutation = () => {
     deleteMutation,
   };
 };
+
+export const useMaintenanceProcessPagedQuery = (
+  page?: number,
+  pageSize?: number,
+  idTaiSan?: string,
+  nam?: number,
+) => {
+  return useQuery({
+    queryKey: ["maintenanceProcessPaged", page, pageSize, idTaiSan, nam],
+    queryFn: async () => {
+      const res = await api.get("/quy-trinh/paged", {
+        params: {
+          page: page,
+          pageSize: pageSize,
+          idTaiSan: idTaiSan,
+          nam: nam,
+        },
+      });
+      return res.data.data || res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};

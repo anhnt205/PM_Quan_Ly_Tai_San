@@ -189,7 +189,22 @@ export interface IncidentInspectionDetailData {
   soLuong?: number;
   
   // Enrich
-  tenTaiSan?: string;
   maTaiSan?: string;
   donViTinh?: string;
+}
+
+export interface QuyTrinhSuaChuaData {
+  idSuaChuaChiTiet: string;
+  thietBi: string;
+  thietBiId: string;
+  lenhSuaChua: string;
+  idSuaChua: string;
+  trangThaiSuaChua: number;
+  bienBanGiamDinh: string;
+  idGiamDinh: string;
+  trangThaiGiamDinh: number;
+  phieuNghiemThu: string;
+  idNghiemThu: string;
+  trangThaiNghiemThu: number;
+  trangThai: number;
 }
