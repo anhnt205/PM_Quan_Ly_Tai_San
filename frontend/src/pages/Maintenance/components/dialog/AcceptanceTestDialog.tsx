@@ -89,6 +89,7 @@ const AcceptanceTestDialog = ({
         groupLabel: `${String.fromCharCode(73 + idx)}/`,
         groupDevice: entry?.idTaiSan ?? "",
         code: "",
+        idVatTu: "",
         name: "",
         unit: "Cái",
         quantity: 1,
@@ -128,6 +129,7 @@ const AcceptanceTestDialog = ({
       groupLabel: group.groupLabel,
       groupDevice: group.groupDevice,
       code: "",
+      idVatTu: "",
       name: "",
       unit: "",
       quantity: 1,
@@ -256,6 +258,7 @@ const AcceptanceTestDialog = ({
           idChiTietGiamDinh: chiTietMap[idTaiSan] || "",
           danhSachVatTu: items.map((m) => ({
             idChiTietVatTu: m.code || "",
+            idVatTu: m.idVatTu || "",
             soLuong: m.quantity,
             ghiChu: m.note || "",
             idBienBanTaiSan: id,
@@ -503,6 +506,11 @@ const AcceptanceTestDialog = ({
                                           globalIdx,
                                           "code",
                                           value.id,
+                                        );
+                                        updateMaterial(
+                                          globalIdx,
+                                          "idVatTu",
+                                          value.idTaiSan,
                                         );
                                         updateMaterial(
                                           globalIdx,

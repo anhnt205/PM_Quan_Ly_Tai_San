@@ -7,6 +7,7 @@ public class ChiTietVatTuThuHoi {
     private String id;
     private String idDanhGiaVatTu;
     private String idChiTietVatTu;
+    private String idVatTu;
     private Integer soLuong;
     private String tinhTrang;
     private String bienPhapXuLy;

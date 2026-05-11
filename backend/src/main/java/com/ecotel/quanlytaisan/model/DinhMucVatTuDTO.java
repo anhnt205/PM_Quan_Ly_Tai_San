@@ -7,6 +7,7 @@ public class DinhMucVatTuDTO {
     private String id;
     private String idDinhMuc;
     private String idCCDCVT;
+    private String idChiTietVatTu;
     private String tenCCDCVT;
     private String donViTinh;
     private String tenNhom;

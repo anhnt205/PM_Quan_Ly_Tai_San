@@ -117,6 +117,7 @@ const MaterialDialog = ({
           .flatMap((m) => m.danhSachVatTu ?? [])
           ?.map((mi) => ({
             idChiTietVatTu: mi.idChiTietVatTu || "",
+            idVatTu: mi.idVatTu || "",
             tenVatTu: mi.tenVatTu ?? "",
             donViTinh: mi.donViTinh ?? "",
             soLuong: mi.soLuong || 1,
@@ -127,6 +128,7 @@ const MaterialDialog = ({
       : [
           {
             idChiTietVatTu: "",
+            idVatTu: "",
             tenVatTu: "",
             donViTinh: "Cái",
             soLuong: 1,
@@ -150,6 +152,7 @@ const MaterialDialog = ({
       ...prev,
       {
         idChiTietVatTu: "",
+        idVatTu: "",
         tenVatTu: "",
         donViTinh: "Cái",
         soLuong: 1,
@@ -742,6 +745,7 @@ const MaterialDialog = ({
                         noBorder={true}
                         onChange={(value) => {
                           updateItem(idx, "idChiTietVatTu", value.id);
+                          updateItem(idx, "idVatTu", value.idTaiSan);
                           updateItem(idx, "tenVatTu", value.tenTaiSan);
                           updateItem(idx, "donViTinh", value.donViTinh);
                         }}

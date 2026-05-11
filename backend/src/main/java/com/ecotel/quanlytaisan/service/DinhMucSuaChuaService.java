@@ -105,6 +105,7 @@ public class DinhMucSuaChuaService {
             material.setId(itemDto.getId());
             material.setIdDinhMuc(normId);
             material.setIdCCDCVT(itemDto.getIdCCDCVT());
+            material.setIdChiTietVatTu(itemDto.getIdChiTietVatTu());
             material.setSoLuong(itemDto.getSoLuong());
             material.setGhiChu(itemDto.getGhiChu());
             material.setIsActive(true);

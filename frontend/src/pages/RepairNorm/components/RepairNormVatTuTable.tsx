@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { DinhMucVatTu, DinhMucSuaChua } from "../types";
-import { useAllToolQuery } from "../../ToolManager/Mutation";
+import { useAllToolDetailQuery } from "../../ToolManager/Mutation";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
 import { FormikProps } from "formik";
 import TextFieldNumber from "../../../components/TextField/TextFieldNumber";
@@ -28,7 +28,7 @@ const RepairNormVatTuTable: React.FC<RepairNormVatTuTableProps> = ({
   formik,
   readOnly,
 }) => {
-  const { data: allMaterials = [] } = useAllToolQuery();
+  const { data: allMaterials = [] } = useAllToolDetailQuery();
   const vatTuList = formik.values.dinhMucVatTuList || [];
 
   const handleAddRow = () => {
@@ -67,8 +67,9 @@ const RepairNormVatTuTable: React.FC<RepairNormVatTuTableProps> = ({
     const newList = [...vatTuList];
     newList[index] = {
       ...newList[index],
-      idCCDCVT: material?.id || "",
-      tenCCDCVT: material?.ten || "",
+      idChiTietVatTu: material?.id || "",
+      idCCDCVT: material?.idTaiSan || "",
+      tenCCDCVT: material?.tenTaiSan || "",
       donViTinh: material?.donViTinh || "",
       kyHieu: material?.kyHieu || "",
     };
@@ -103,10 +104,10 @@ const RepairNormVatTuTable: React.FC<RepairNormVatTuTableProps> = ({
                   <FieldAutoCompleted
                     title="Tên vật tư"
                     data={allMaterials}
-                    labelkey="ten"
-                    labelOption="id"
+                    labelkey="tenTaiSan"
+                    labelOption="idTaiSan"
                     formik={formik}
-                    field={`dinhMucVatTuList.${index}.idCCDCVT`}
+                    field={`dinhMucVatTuList.${index}.idChiTietVatTu`}
                     disabled={readOnly}
                     onChange={(value) => handleMaterialChange(index, value)}
                     limitOptions={20}

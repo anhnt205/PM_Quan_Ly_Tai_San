@@ -135,6 +135,7 @@ export interface ChiTietVatTuThuHoiData {
   id?: string;
   idDanhGiaVatTu?: string;
   idChiTietVatTu?: string;
+  idVatTu?: string;
   soLuong?: number;
   tinhTrang?: string;
   bienPhapXuLy?: string;

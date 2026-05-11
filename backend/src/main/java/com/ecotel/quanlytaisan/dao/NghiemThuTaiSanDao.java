@@ -47,10 +47,9 @@ public class NghiemThuTaiSanDao {
 
     public List<NghiemThuVatTu> findVatTuByIdBienBanTaiSan(String idBienBanTaiSan) {
         String sql = """
-            SELECT ntvt.*, cv2.Ten AS tenVatTu, cv2.DonVitinh as donViTinh, cv2.Id as idVatTu
+            SELECT ntvt.*, cv2.Ten AS tenVatTu, cv2.DonVitinh as donViTinh
             FROM nghiemthu_vattu ntvt
-                LEFT JOIN ChiTietTaiSan ctvt ON ctvt.Id = ntvt.IdChiTietVatTu
-                LEFT JOIN CCDCVatTu cv2 ON cv2.Id = ctvt.IdTaiSan
+                LEFT JOIN CCDCVatTu cv2 ON cv2.Id = ntvt.IdVatTu
             WHERE ntvt.IdBienBanTaiSan = ?
             """;
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(NghiemThuVatTu.class), idBienBanTaiSan);
@@ -89,12 +88,12 @@ public class NghiemThuTaiSanDao {
 
     public int insertVatTu(NghiemThuVatTu e) {
         if (e.getId() == null) e.setId(generateNextIdVatTu());
-        String sql = "INSERT INTO nghiemthu_vattu (Id, IdBienBanTaiSan, IdChiTietVatTu, SoLuong, GhiChu) VALUES (?, ?, ?, ?, ?)";
-        return jdbcTemplate.update(sql, e.getId(), e.getIdBienBanTaiSan(), e.getIdChiTietVatTu(), e.getSoLuong(), e.getGhiChu());
+        String sql = "INSERT INTO nghiemthu_vattu (Id, IdBienBanTaiSan, IdChiTietVatTu, IdVatTu, SoLuong, GhiChu) VALUES (?, ?, ?, ?, ?, ?)";
+        return jdbcTemplate.update(sql, e.getId(), e.getIdBienBanTaiSan(), e.getIdChiTietVatTu(), e.getIdVatTu(), e.getSoLuong(), e.getGhiChu());
     }
 
     public int[] batchInsertVatTu(List<NghiemThuVatTu> list) {
-        String sql = "INSERT INTO nghiemthu_vattu (Id, IdBienBanTaiSan, IdChiTietVatTu, SoLuong, GhiChu) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO nghiemthu_vattu (Id, IdBienBanTaiSan, IdChiTietVatTu, IdVatTu, SoLuong, GhiChu) VALUES (?, ?, ?, ?, ?, ?)";
         return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
@@ -103,8 +102,9 @@ public class NghiemThuTaiSanDao {
                 ps.setString(1, e.getId());
                 ps.setString(2, e.getIdBienBanTaiSan());
                 ps.setString(3, e.getIdChiTietVatTu());
-                ps.setObject(4, e.getSoLuong());
-                ps.setString(5, e.getGhiChu());
+                ps.setString(4, e.getIdVatTu());
+                ps.setObject(5, e.getSoLuong());
+                ps.setString(6, e.getGhiChu());
             }
             @Override
             public int getBatchSize() { return list.size(); }
@@ -112,8 +112,8 @@ public class NghiemThuTaiSanDao {
     }
 
     public int updateVatTu(NghiemThuVatTu e) {
-        String sql = "UPDATE nghiemthu_vattu SET IdChiTietVatTu = ?, SoLuong = ?, GhiChu = ? WHERE Id = ?";
-        return jdbcTemplate.update(sql, e.getIdChiTietVatTu(), e.getSoLuong(), e.getGhiChu(), e.getId());
+        String sql = "UPDATE nghiemthu_vattu SET IdChiTietVatTu = ?, IdVatTu = ?, SoLuong = ?, GhiChu = ? WHERE Id = ?";
+        return jdbcTemplate.update(sql, e.getIdChiTietVatTu(), e.getIdVatTu(), e.getSoLuong(), e.getGhiChu(), e.getId());
     }
 
     public int deleteByIdBienBan(String idBienBan) {

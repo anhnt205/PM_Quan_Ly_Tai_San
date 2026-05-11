@@ -37,13 +37,13 @@ public class DinhMucVatTuDao {
         if (dmvt.getId() == null || dmvt.getId().isEmpty()) {
             dmvt.setId(UUID.randomUUID().toString());
         }
-        String sql = "INSERT INTO DinhMucVatTu (Id, IdDinhMuc, IdCCDCVT, SoLuong, GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive) VALUES (?, ?, ?,?, ?, ?, ?, ?, ?, ?)";
-        return jdbcTemplate.update(sql, dmvt.getId(), dmvt.getIdDinhMuc(), dmvt.getIdCCDCVT(), dmvt.getSoLuong(), dmvt.getGhiChu(), dmvt.getNgayTao(), dmvt.getNgayCapNhat(), dmvt.getNguoiTao(), dmvt.getNguoiCapNhat(), dmvt.getIsActive());
+        String sql = "INSERT INTO DinhMucVatTu (Id, IdDinhMuc, IdCCDCVT, IdChiTietVatTu, SoLuong, GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        return jdbcTemplate.update(sql, dmvt.getId(), dmvt.getIdDinhMuc(), dmvt.getIdCCDCVT(), dmvt.getIdChiTietVatTu(), dmvt.getSoLuong(), dmvt.getGhiChu(), dmvt.getNgayTao(), dmvt.getNgayCapNhat(), dmvt.getNguoiTao(), dmvt.getNguoiCapNhat(), dmvt.getIsActive());
     }
 
     public int update(DinhMucVatTu dmvt) {
-        String sql = "UPDATE DinhMucVatTu SET IdCCDCVT = ?, SoLuong = ?, GhiChu = ?, NgayCapNhat = ?, NguoiCapNhat = ?, IsActive = ? WHERE Id = ?";
-        return jdbcTemplate.update(sql, dmvt.getIdCCDCVT(), dmvt.getSoLuong(), dmvt.getGhiChu(), dmvt.getNgayCapNhat(), dmvt.getNguoiCapNhat(), dmvt.getIsActive(), dmvt.getId());
+        String sql = "UPDATE DinhMucVatTu SET IdCCDCVT = ?, IdChiTietVatTu = ?, SoLuong = ?, GhiChu = ?, NgayCapNhat = ?, NguoiCapNhat = ?, IsActive = ? WHERE Id = ?";
+        return jdbcTemplate.update(sql, dmvt.getIdCCDCVT(), dmvt.getIdChiTietVatTu(), dmvt.getSoLuong(), dmvt.getGhiChu(), dmvt.getNgayCapNhat(), dmvt.getNguoiCapNhat(), dmvt.getIsActive(), dmvt.getId());
     }
 
     public int delete(String id) {

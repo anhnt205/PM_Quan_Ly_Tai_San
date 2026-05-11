@@ -71,8 +71,7 @@ public class DanhGiaVatTuDao {
         String sql = """
             SELECT ct.*, cv.Ten as tenVatTu, cv.DonVitinh as donViTinh
             FROM danhgia_vattu_chitiet ct
-                LEFT JOIN ChiTietTaiSan ctts ON ctts.Id = ct.IdChiTietVatTu
-                LEFT JOIN CCDCVatTu cv ON cv.Id = ctts.IdTaiSan
+                LEFT JOIN CCDCVatTu cv ON cv.Id = ct.IdVatTu
             WHERE ct.IdDanhGiaVatTu = ?
             """;
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(ChiTietVatTuThuHoi.class), idDanhGiaVatTu);
@@ -134,7 +133,7 @@ public class DanhGiaVatTuDao {
     }
 
     public void insertDetails(List<ChiTietVatTuThuHoi> list, String parentId) {
-        String sql = "INSERT INTO danhgia_vattu_chitiet (Id, IdDanhGiaVatTu, IdChiTietVatTu, SoLuong, TinhTrang, BienPhapXuLy, GhiChu) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO danhgia_vattu_chitiet (Id, IdDanhGiaVatTu, IdChiTietVatTu, IdVatTu, SoLuong, TinhTrang, BienPhapXuLy, GhiChu) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
@@ -142,10 +141,11 @@ public class DanhGiaVatTuDao {
                 ps.setString(1, UUID.randomUUID().toString());
                 ps.setString(2, parentId);
                 ps.setString(3, item.getIdChiTietVatTu());
-                ps.setObject(4, item.getSoLuong());
-                ps.setString(5, item.getTinhTrang());
-                ps.setString(6, item.getBienPhapXuLy());
-                ps.setString(7, item.getGhiChu());
+                ps.setString(4, item.getIdVatTu());
+                ps.setObject(5, item.getSoLuong());
+                ps.setString(6, item.getTinhTrang());
+                ps.setString(7, item.getBienPhapXuLy());
+                ps.setString(8, item.getGhiChu());
             }
             @Override
             public int getBatchSize() { return list.size(); }

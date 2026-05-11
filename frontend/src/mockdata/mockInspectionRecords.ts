@@ -41,6 +41,7 @@ export interface MaterialItem {
   groupLabel: string;
   groupDevice: string;
   code: string;
+  idVatTu?: string;
   name: string;
   unit: string;
   quantity: number;

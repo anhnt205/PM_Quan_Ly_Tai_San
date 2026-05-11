@@ -2,6 +2,7 @@ export interface DinhMucVatTu {
     id: string;
     idDinhMuc: string;
     idCCDCVT: string;
+    idChiTietVatTu?: string;
     tenCCDCVT?: string;
     donViTinh?: string;
     kyHieu?: string;
