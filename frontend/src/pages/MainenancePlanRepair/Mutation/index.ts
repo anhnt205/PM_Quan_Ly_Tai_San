@@ -24,6 +24,7 @@ export const useMaintenancePlanningPageQuery = (
   trangThai?: number,
   idDonViGiao?: string,
   userid?: string,
+  isSign?: boolean,
 ) => {
   return useQuery({
     queryKey: [
@@ -34,6 +35,7 @@ export const useMaintenancePlanningPageQuery = (
       trangThai,
       idDonViGiao,
       userid,
+      isSign,
     ],
     queryFn: async () => {
       const res = await api.get("/kehoach-suachua/paged", {
@@ -44,6 +46,7 @@ export const useMaintenancePlanningPageQuery = (
           search: searchValue,
           trangThai: trangThai,
           userid: userid,
+          isSign: isSign,
         },
       });
       return res.data.data || res.data;
@@ -359,6 +362,7 @@ export const useMaintenanceIncidentPageQuery = (
   trangThai?: number,
   idDonViGiao?: string,
   userid?: string,
+  isSign?: boolean,
 ) => {
   return useQuery({
     queryKey: [
@@ -369,6 +373,7 @@ export const useMaintenanceIncidentPageQuery = (
       trangThai,
       idDonViGiao,
       userid,
+      isSign,
     ],
     queryFn: async () => {
       const res = await api.get("/suco-thietbi/paged", {
@@ -379,6 +384,7 @@ export const useMaintenanceIncidentPageQuery = (
           search: searchValue,
           trangThai: trangThai,
           userid: userid,
+          isSign: isSign,
         },
       });
       return res.data.data || res.data;
@@ -634,6 +640,7 @@ export const useMaintenanceRepairPageQuery = (
   trangThai?: number,
   idDonViGiao?: string,
   userid?: string,
+  isSign?: boolean,
 ) => {
   return useQuery({
     queryKey: [
@@ -644,6 +651,7 @@ export const useMaintenanceRepairPageQuery = (
       trangThai,
       idDonViGiao,
       userid,
+      isSign,
     ],
     queryFn: async () => {
       const res = await api.get("/suachua/paged", {
@@ -654,6 +662,7 @@ export const useMaintenanceRepairPageQuery = (
           search: searchValue,
           trangThai: trangThai,
           userid: userid,
+          isSign: isSign,
         },
       });
       return res.data.data || res.data;
@@ -893,6 +902,7 @@ export const useMaintenanceInspectionPageQuery = (
   trangThai?: number,
   idDonViGiao?: string,
   userid?: string,
+  isSign?: boolean,
 ) => {
   return useQuery({
     queryKey: [
@@ -903,6 +913,7 @@ export const useMaintenanceInspectionPageQuery = (
       trangThai,
       idDonViGiao,
       userid,
+      isSign,
     ],
     queryFn: async () => {
       const res = await api.get("/giamdinh/paged", {
@@ -913,6 +924,7 @@ export const useMaintenanceInspectionPageQuery = (
           search: searchValue,
           trangThai: trangThai,
           userid: userid,
+          isSign: isSign,
         },
       });
       return res.data.data || res.data;
@@ -1208,6 +1220,7 @@ export const useMaintenanceAcceptanceTestPageQuery = (
   trangThai?: number,
   idDonViGiao?: string,
   userid?: string,
+  isSign?: boolean,
 ) => {
   return useQuery({
     queryKey: [
@@ -1218,6 +1231,7 @@ export const useMaintenanceAcceptanceTestPageQuery = (
       trangThai,
       idDonViGiao,
       userid,
+      isSign,
     ],
     queryFn: async () => {
       const res = await api.get("/nghiemthu/paged", {
@@ -1228,6 +1242,7 @@ export const useMaintenanceAcceptanceTestPageQuery = (
           search: searchValue,
           trangThai: trangThai,
           userid: userid,
+          isSign: isSign,
         },
       });
       return res.data.data || res.data;
@@ -1494,6 +1509,7 @@ export const useMaintenanceMaterialAssessmentPageQuery = (
   searchValue?: string,
   trangThai?: number,
   userid?: string,
+  isSign?: boolean,
 ) => {
   return useQuery({
     queryKey: [
@@ -1503,6 +1519,7 @@ export const useMaintenanceMaterialAssessmentPageQuery = (
       searchValue,
       trangThai,
       userid,
+      isSign,
     ],
     queryFn: async () => {
       const res = await api.get("/danhgia-vattu/paged", {
@@ -1513,6 +1530,7 @@ export const useMaintenanceMaterialAssessmentPageQuery = (
           search: searchValue,
           trangThai: trangThai,
           userid: userid,
+          isSign: isSign,
         },
       });
       return res.data.data || res.data;
@@ -1635,6 +1653,7 @@ export const useMaintenanceIncidentInspectionPageQuery = (
   trangThai?: number,
   idDonViGiao?: string,
   userid?: string,
+  isSign?: boolean,
 ) => {
   return useQuery({
     queryKey: [
@@ -1645,6 +1664,7 @@ export const useMaintenanceIncidentInspectionPageQuery = (
       trangThai,
       idDonViGiao,
       userid,
+      isSign,
     ],
     queryFn: async () => {
       const res = await api.get("/kiemtra-suco/page", {
@@ -1655,6 +1675,7 @@ export const useMaintenanceIncidentInspectionPageQuery = (
           searchValue: searchValue,
           trangThai: trangThai,
           userid: userid,
+          isSign: isSign,
         },
       });
       return res.data.data || res.data;

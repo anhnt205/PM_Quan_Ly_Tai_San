@@ -42,7 +42,7 @@ public class SuCoThietBiService {
             String idCongTy, int page, int size,
             String sortBy, String sortDir, String search,
             String idDonViBaoCao, Integer trangThai, Integer mucDo,
-            String userid
+            String userid, Boolean isSign
     ) throws SQLException {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
@@ -52,8 +52,13 @@ public class SuCoThietBiService {
         // Turn-based filter (chỉ hiển thị phiếu đến lượt user ký)
         if (userid != null && !userid.trim().isEmpty() && !"admin".equalsIgnoreCase(userid)) {
             List<SuCoThietBiDTO> filtered = new ArrayList<>();
-            for (SuCoThietBiDTO item : sourceList)
-                if (isUserTurnToSign(item, userid)) filtered.add(item);
+            for (SuCoThietBiDTO item : sourceList) {
+                if (isSign != null && isSign) {
+                    if (isNeedToSign(item, userid)) filtered.add(item);
+                } else {
+                    if (isUserTurnToSign(item, userid)) filtered.add(item);
+                }
+            }
             sourceList = filtered;
         }
 
@@ -159,6 +164,42 @@ public class SuCoThietBiService {
     }
 
     // ==================== Workflow: turn-filter ====================
+
+    public boolean isNeedToSign(SuCoThietBiDTO item, String userId) {
+        if (userId == null || userId.isEmpty()) return false;
+        if (!Boolean.TRUE.equals(item.getShare())) return false;
+        if (item.getTrangThai() == 2 || item.getTrangThai() == 3) return false;
+
+        // Bước 1: Người lập
+        if (item.getIdNguoiLap() != null && !item.getIdNguoiLap().isEmpty()) {
+            if (!Boolean.TRUE.equals(item.getNguoiLapXacNhan()))
+                return userId.equals(item.getIdNguoiLap());
+        }
+
+        // Bước 2: NguoiKy list & Giám đốc
+        boolean lapDone = item.getIdNguoiLap() == null || item.getIdNguoiLap().isEmpty()
+                || Boolean.TRUE.equals(item.getNguoiLapXacNhan());
+        if (lapDone) {
+            List<NguoiKy> kyList = kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId());
+            if (kyList != null && !kyList.isEmpty()) {
+                NguoiKy firstUnsigned = null;
+                boolean allSigned = true;
+                for (NguoiKy nk : kyList) {
+                    if (nk.getTrangThai() != 1) {
+                        allSigned = false;
+                        if (firstUnsigned == null) firstUnsigned = nk;
+                    }
+                }
+                if (firstUnsigned != null) return userId.equals(firstUnsigned.getIdNguoiKy());
+                if (allSigned && !Boolean.TRUE.equals(item.getGiamDocXacNhan()))
+                    return userId.equals(item.getIdGiamDoc());
+            } else {
+                if (!Boolean.TRUE.equals(item.getGiamDocXacNhan()))
+                    return userId.equals(item.getIdGiamDoc());
+            }
+        }
+        return false;
+    }
 
     public boolean isUserTurnToSign(SuCoThietBiDTO item, String userId) {
         if ("admin".equalsIgnoreCase(userId)) return true;

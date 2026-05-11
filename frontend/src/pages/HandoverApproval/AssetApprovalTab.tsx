@@ -66,8 +66,9 @@ export default function AssetApprovalTab() {
       paginationModel.page,
       paginationModel.pageSize,
       searchDebounce,
-      undefined,
+      user?.taiKhoan?.tenDangNhap,
       currentStatus ? Number(currentStatus) : undefined,
+      true
     );
 
   const { data: staffs = [] } = useAllStaffsQuery();

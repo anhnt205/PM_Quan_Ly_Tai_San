@@ -111,6 +111,7 @@ export default function MaintenanceApprovalPage() {
     undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
+    true,
   );
 
   const {
@@ -123,6 +124,7 @@ export default function MaintenanceApprovalPage() {
     undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
+    true,
   );
   const {
     data: repairPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
@@ -134,6 +136,7 @@ export default function MaintenanceApprovalPage() {
     undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
+    true,
   );
 
   const {
@@ -146,6 +149,7 @@ export default function MaintenanceApprovalPage() {
     undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
+    true,
   );
 
   const {
@@ -162,6 +166,7 @@ export default function MaintenanceApprovalPage() {
     undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
+    true,
   );
 
   const {
@@ -177,6 +182,7 @@ export default function MaintenanceApprovalPage() {
     searchDebounce,
     undefined,
     user?.taiKhoan?.tenDangNhap,
+    true,
   );
 
   const {
@@ -193,6 +199,7 @@ export default function MaintenanceApprovalPage() {
     undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
+    true,
   );
 
   const { signMutation } = useMaintenanceMutation(
@@ -1016,6 +1023,7 @@ export default function MaintenanceApprovalPage() {
                 sx={{ fontSize: 11 }}
               />
             )}
+            <Box sx={{ flexGrow: 1 }} />
           </Box>
 
           <SignBatchModal

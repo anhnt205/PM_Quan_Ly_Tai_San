@@ -23,13 +23,19 @@ public class KiemTraSuCoService {
     @Autowired
     private KyTaiLieuDao kyTaiLieuDao;
 
-    public PageResponse<KiemTraSuCoDTO> findAllPaged(int page, int pageSize, String searchValue, String idCongTy, Integer trangThai, String userid) {
+    public PageResponse<KiemTraSuCoDTO> findAllPaged(int page, int pageSize, String searchValue, String idCongTy, Integer trangThai, String userid, Boolean isSign) {
         List<KiemTraSuCoDTO> all = mainDao.findAll(idCongTy);
         
         // Turn-based filter
         if (userid != null && !userid.trim().isEmpty() && !"admin".equalsIgnoreCase(userid)) {
             all = all.stream()
-                    .filter(item -> isUserTurnToSign(item, userid))
+                    .filter(item -> {
+                        if (isSign != null && isSign) {
+                            return isNeedToSign(item, userid);
+                        } else {
+                            return isUserTurnToSign(item, userid);
+                        }
+                    })
                     .collect(Collectors.toList());
         }
 
@@ -134,6 +140,42 @@ public class KiemTraSuCoService {
         detailDao.deleteByIdKiemTraSuCo(id);
         kyTaiLieuDao.delete(id);
         return mainDao.delete(id);
+    }
+
+    public boolean isNeedToSign(KiemTraSuCoDTO item, String userId) {
+        if (userId == null || userId.isEmpty()) return false;
+        if (!Boolean.TRUE.equals(item.getShare())) return false;
+        if (item.getTrangThai() == 2 || item.getTrangThai() == 3) return false;
+
+        // Bước 1: Người lập
+        if (item.getIdNguoiLap() != null && !item.getIdNguoiLap().isEmpty()) {
+            if (!Boolean.TRUE.equals(item.getNguoiLapXacNhan()))
+                return userId.equals(item.getIdNguoiLap());
+        }
+
+        // Bước 2: NguoiKy list & Giám đốc
+        boolean lapDone = item.getIdNguoiLap() == null || item.getIdNguoiLap().isEmpty()
+                || Boolean.TRUE.equals(item.getNguoiLapXacNhan());
+        if (lapDone) {
+            List<NguoiKy> kyList = kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId());
+            if (kyList != null && !kyList.isEmpty()) {
+                NguoiKy firstUnsigned = null;
+                boolean allSigned = true;
+                for (NguoiKy nk : kyList) {
+                    if (nk.getTrangThai() != 1) {
+                        allSigned = false;
+                        if (firstUnsigned == null) firstUnsigned = nk;
+                    }
+                }
+                if (firstUnsigned != null) return userId.equals(firstUnsigned.getIdNguoiKy());
+                if (allSigned && !Boolean.TRUE.equals(item.getGiamDocXacNhan()))
+                    return userId.equals(item.getIdGiamDoc());
+            } else {
+                if (!Boolean.TRUE.equals(item.getGiamDocXacNhan()))
+                    return userId.equals(item.getIdGiamDoc());
+            }
+        }
+        return false;
     }
 
     public boolean isUserTurnToSign(KiemTraSuCoDTO item, String userId) {

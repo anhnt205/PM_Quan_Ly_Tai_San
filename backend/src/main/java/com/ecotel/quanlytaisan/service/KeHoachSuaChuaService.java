@@ -40,7 +40,7 @@ public class KeHoachSuaChuaService {
             String idCongTy, int page, int size,
             String sortBy, String sortDir, String search,
             String loaiKeHoach, String idDonViGiao, String idDonViNhan,
-            Integer trangThai, Integer nam, String userid
+            Integer trangThai, Integer nam, String userid, Boolean isSign
     ) throws SQLException {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
@@ -50,8 +50,13 @@ public class KeHoachSuaChuaService {
         // Turn-based filter (không có quyền ban hành – chỉ filter theo lượt ký)
         if (userid != null && !userid.trim().isEmpty() && !"admin".equalsIgnoreCase(userid)) {
             List<KeHoachSuaChuaDTO> filtered = new ArrayList<>();
-            for (KeHoachSuaChuaDTO item : sourceList)
-                if (isUserTurnToSign(item, userid)) filtered.add(item);
+            for (KeHoachSuaChuaDTO item : sourceList) {
+                if (isSign != null && isSign) {
+                    if (isNeedToSign(item, userid)) filtered.add(item);
+                } else {
+                    if (isUserTurnToSign(item, userid)) filtered.add(item);
+                }
+            }
             sourceList = filtered;
         }
 
@@ -199,6 +204,42 @@ public class KeHoachSuaChuaService {
 
     // ==================== Workflow: turn-filter ====================
     // Luồng: Người lập biểu xác nhận → NguoiKy list → Giám đốc duyệt
+
+    public boolean isNeedToSign(KeHoachSuaChuaDTO item, String userId) {
+        if (userId == null || userId.isEmpty()) return false;
+        if (!Boolean.TRUE.equals(item.getShare())) return false;
+        if (item.getTrangThai() == 2 || item.getTrangThai() == 3) return false;
+
+        // Bước 1: Người lập
+        if (item.getIdNguoiLapBieu() != null && !item.getIdNguoiLapBieu().isEmpty()) {
+            if (!Boolean.TRUE.equals(item.getNguoiLapBieuXacNhan()))
+                return userId.equals(item.getIdNguoiLapBieu());
+        }
+
+        // Bước 2: NguoiKy list & Giám đốc
+        boolean lapDone = item.getIdNguoiLapBieu() == null || item.getIdNguoiLapBieu().isEmpty()
+                || Boolean.TRUE.equals(item.getNguoiLapBieuXacNhan());
+        if (lapDone) {
+            List<NguoiKy> kyList = kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId());
+            if (kyList != null && !kyList.isEmpty()) {
+                NguoiKy firstUnsigned = null;
+                boolean allSigned = true;
+                for (NguoiKy nk : kyList) {
+                    if (nk.getTrangThai() != 1) {
+                        allSigned = false;
+                        if (firstUnsigned == null) firstUnsigned = nk;
+                    }
+                }
+                if (firstUnsigned != null) return userId.equals(firstUnsigned.getIdNguoiKy());
+                if (allSigned && !Boolean.TRUE.equals(item.getIdTrinhDuyetGiamDoc()))
+                    return userId.equals(item.getIdTrinhDuyetGiamDoc());
+            } else {
+                if (!Boolean.TRUE.equals(item.getTrinhDuyetGiamDocXacNhan()))
+                    return userId.equals(item.getIdTrinhDuyetGiamDoc());
+            }
+        }
+        return false;
+    }
 
     public boolean isUserTurnToSign(KeHoachSuaChuaDTO item, String userId) {
         if ("admin".equalsIgnoreCase(userId)) return true;

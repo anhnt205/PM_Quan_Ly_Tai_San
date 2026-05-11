@@ -504,6 +504,7 @@ export const useAssetHandoverPageQuery = (
   searchValue?: string,
   userid?: string,
   status?: number,
+  isSign?: boolean,
 ) => {
   const idCongTy = CongTy.CT001;
 
@@ -515,6 +516,7 @@ export const useAssetHandoverPageQuery = (
       searchValue,
       status,
       userid,
+      isSign,
     ],
     queryFn: async () => {
       const res = await api.get("/bangiaotaisan/paged", {
@@ -525,6 +527,7 @@ export const useAssetHandoverPageQuery = (
           idcongty: idCongTy,
           userid: userid,
           trangThai: status,
+          isSign: isSign,
         },
       });
       return res.data;

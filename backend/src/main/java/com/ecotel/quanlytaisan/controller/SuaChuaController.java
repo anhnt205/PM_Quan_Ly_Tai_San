@@ -28,12 +28,13 @@ public class SuaChuaController {
             @RequestParam(value = "sortDir", defaultValue = "desc") String sortDir,
             @RequestParam(value = "search", required = false) String search,
             @RequestParam(value = "trangThai", required = false) Integer trangThai,
-            @RequestParam(value = "userid", required = false) String userid
+            @RequestParam(value = "userid", required = false) String userid,
+            @RequestParam(value = "isSign", required = false) Boolean isSign
     ) {
         try {
             PageResponse<SuaChuaDTO> response = service.findAllPaged(
                     idCongTy, page, size, sortBy, sortDir, search,
-                    trangThai, userid);
+                    trangThai, userid, isSign);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", response, (int) response.getTotalItems()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

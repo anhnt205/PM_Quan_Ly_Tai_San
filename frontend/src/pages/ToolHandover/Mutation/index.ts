@@ -569,12 +569,13 @@ export const useToolHandoverPageQuery = (
   pageSize?: number,
   searchValue?: string,
   status?: number,
+  isSign?: boolean,
 ) => {
   const idCongTy = CongTy.CT001;
   const { user } = useSelector((state: RootState) => state.user);
 
   return useQuery({
-    queryKey: ["toolHandoverPage", page, pageSize, searchValue, status],
+    queryKey: ["toolHandoverPage", page, pageSize, searchValue, status, isSign],
     queryFn: async () => {
       const res = await api.get("/bangiaoccdcvattu/paged", {
         params: {
@@ -584,6 +585,7 @@ export const useToolHandoverPageQuery = (
           idcongty: idCongTy,
           userid: user?.taiKhoan?.tenDangNhap,
           trangThai: status,
+          isSign,
         },
       });
       return res.data;

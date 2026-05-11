@@ -128,7 +128,7 @@ public class DanhGiaVatTuService {
     public PageResponse<DanhGiaVatTu> findAllPaged(
             String idCongTy, int page, int size,
             String sortBy, String sortDir, String search,
-            Integer trangThai, String userid
+            Integer trangThai, String userid, Boolean isSign
     ) {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
@@ -138,8 +138,13 @@ public class DanhGiaVatTuService {
         // Lọc theo lượt ký (Turn to sign)
         if (userid != null && !userid.trim().isEmpty() && !"admin".equalsIgnoreCase(userid)) {
             List<DanhGiaVatTu> filtered = new ArrayList<>();
-            for (DanhGiaVatTu item : sourceList)
-                if (isUserTurnToSign(item, userid)) filtered.add(item);
+            for (DanhGiaVatTu item : sourceList) {
+                if (isSign != null && isSign) {
+                    if (isNeedToSign(item, userid)) filtered.add(item);
+                } else {
+                    if (isUserTurnToSign(item, userid)) filtered.add(item);
+                }
+            }
             sourceList = filtered;
         }
 
@@ -180,6 +185,42 @@ public class DanhGiaVatTuService {
         PageResponse<DanhGiaVatTu> response = new PageResponse<>(items, total, page, size);
         response.setTrangThaiCounts(trangThaiCounts);
         return response;
+    }
+
+    public boolean isNeedToSign(DanhGiaVatTu item, String userId) {
+        if (userId == null || userId.isEmpty()) return false;
+        if (!Boolean.TRUE.equals(item.getShare())) return false;
+        if (item.getTrangThai() == 2 || item.getTrangThai() == 3) return false;
+
+        // Bước 1: Người lập
+        if (item.getIdNguoiLap() != null && !item.getIdNguoiLap().isEmpty()) {
+            if (!Boolean.TRUE.equals(item.getNguoiLapXacNhan()))
+                return userId.equals(item.getIdNguoiLap());
+        }
+
+        // Bước 2: NguoiKy list & Giám đốc
+        boolean lapDone = item.getIdNguoiLap() == null || item.getIdNguoiLap().isEmpty()
+                || Boolean.TRUE.equals(item.getNguoiLapXacNhan());
+        if (lapDone) {
+            List<NguoiKy> kyList = kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId());
+            if (kyList != null && !kyList.isEmpty()) {
+                NguoiKy firstUnsigned = null;
+                boolean allSigned = true;
+                for (NguoiKy nk : kyList) {
+                    if (nk.getTrangThai() != 1) {
+                        allSigned = false;
+                        if (firstUnsigned == null) firstUnsigned = nk;
+                    }
+                }
+                if (firstUnsigned != null) return userId.equals(firstUnsigned.getIdNguoiKy());
+                if (allSigned && !Boolean.TRUE.equals(item.getGiamDocXacNhan()))
+                    return userId.equals(item.getIdGiamDoc());
+            } else {
+                if (!Boolean.TRUE.equals(item.getGiamDocXacNhan()))
+                    return userId.equals(item.getIdGiamDoc());
+            }
+        }
+        return false;
     }
 
     public boolean isUserTurnToSign(DanhGiaVatTu item, String userId) {

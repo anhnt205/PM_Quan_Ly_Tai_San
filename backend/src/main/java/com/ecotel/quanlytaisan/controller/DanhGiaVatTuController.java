@@ -37,11 +37,12 @@ public class DanhGiaVatTuController {
             @RequestParam(value = "sortDir", defaultValue = "desc") String sortDir,
             @RequestParam(value = "search", required = false) String search,
             @RequestParam(value = "trangThai", required = false) Integer trangThai,
-            @RequestParam(value = "userid", required = false) String userid
+            @RequestParam(value = "userid", required = false) String userid,
+            @RequestParam(value = "isSign", required = false) Boolean isSign
     ) {
         try {
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công",
-                    service.findAllPaged(idCongTy, page, size, sortBy, sortDir, search, trangThai, userid), 0));
+                    service.findAllPaged(idCongTy, page, size, sortBy, sortDir, search, trangThai, userid, isSign), 0));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));

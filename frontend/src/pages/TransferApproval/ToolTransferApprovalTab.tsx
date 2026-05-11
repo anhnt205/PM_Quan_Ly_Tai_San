@@ -53,7 +53,10 @@ export default function ToolTransferApprovalTab({ isBanHanh }: ToolTransferAppro
       debouncedSearch,
       user?.taiKhoan?.tenDangNhap,
       type,
-      status ? Number(status) : undefined
+      status ? Number(status) : undefined,
+      undefined,
+      undefined,
+      true
     );
 
   const { data: allStaffs = [] } = useAllStaffsQuery();

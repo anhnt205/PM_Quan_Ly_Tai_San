@@ -47,15 +47,25 @@ export default function AssetTransferApprovalTab({ isBanHanh }: AssetTransferApp
   const type = subTab + 1; // 1, 2, 3
   const debouncedSearch = useDebounce(searchValue, 600);
 
-  const { data: pageData = { items: [], totalItems: 0, trangThaiCounts: {}, loaiCounts: {} }, isLoading } = 
-    useAssetTransferPageQuery(
-      paginationModel.page,
-      paginationModel.pageSize,
-      debouncedSearch,
-      type,
-      user?.taiKhoan?.tenDangNhap,
-      status ? Number(status) : undefined
-    );
+  const {
+    data: pageData = {
+      items: [],
+      totalItems: 0,
+      trangThaiCounts: {},
+      loaiCounts: {},
+    },
+    isLoading,
+  } = useAssetTransferPageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    debouncedSearch,
+    type,
+    user?.taiKhoan?.tenDangNhap,
+    status ? Number(status) : undefined,
+    undefined,
+    undefined,
+    true,
+  );
 
   const { data: allStaffs = [] } = useAllStaffsQuery();
   const { data: allUnits = [] } = useAllUnitsQuery();

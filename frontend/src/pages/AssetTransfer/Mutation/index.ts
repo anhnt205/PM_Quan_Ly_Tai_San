@@ -622,6 +622,7 @@ export const useAssetTransferPageQuery = (
   trangThai?: number,
   idDonViGiao?: string,
   chuaBanGiaoHet?: boolean,
+  isSign?: boolean,
 ) => {
   const idCongTy = CongTy.CT001;
 
@@ -636,6 +637,7 @@ export const useAssetTransferPageQuery = (
       trangThai,
       idDonViGiao,
       chuaBanGiaoHet,
+      isSign,
     ], // Key để cache dữ liệu
     queryFn: async () => {
       const res = await api.get("/dieudongtaisan/paged", {
@@ -649,6 +651,7 @@ export const useAssetTransferPageQuery = (
           trangThai: trangThai,
           idDonViGiao: idDonViGiao,
           chuaBanGiaoHet: chuaBanGiaoHet,
+          isSign: isSign,
         },
       });
       console.log("Fetched asset transfer page data:", res.data);
