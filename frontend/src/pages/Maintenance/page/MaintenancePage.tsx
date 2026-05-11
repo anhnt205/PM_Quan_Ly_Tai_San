@@ -58,6 +58,8 @@ import {
   useMaintenanceIncidentPageQuery,
   useMaintenanceIncidentInspectionPageQuery,
   useMaintenanceProcessPagedQuery,
+  useMaintenanceMaterialConsumptionQuery,
+  useGetTaiSanByIdQuery,
 } from "../../MainenancePlanRepair/Mutation";
 import { QuyTrinhSuaChuaData } from "../types";
 import {
@@ -479,6 +481,8 @@ export default function MaintenanceStatPage() {
   const { data: processPaged = { items: [], totalItems: 0 } } =
     useMaintenanceProcessPagedQuery(processPage, 10, selectedId, nam);
 
+  const { data: taiSanDetail = {} } = useGetTaiSanByIdQuery(selectedId, nam);
+
   const getStatusIcon = (trangThai?: number) => {
     switch (trangThai) {
       case 3: // Đã duyệt / Hoàn thành
@@ -675,7 +679,7 @@ export default function MaintenanceStatPage() {
     },
     {
       step: 6,
-      title: "PHIẾU VẬT TƯ",
+      title: "ĐÁNH GIÁ VT",
       icon: <InventoryOutlined sx={{ fontSize: 16 }} />,
       color: "#f97316",
       items: materialItems,
@@ -718,13 +722,18 @@ export default function MaintenanceStatPage() {
                 title="Chọn Thiết Bị"
                 data={assets}
                 labelkey="tenTaiSan"
+                labelOption="id"
                 setValue={setSelectedId}
                 value={selectedId}
                 limitOptions={20}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 3 }}>
-              <FieldYear title="Năm" selectedYear={nam} setSelectedYear={setNam} />
+              <FieldYear
+                title="Năm"
+                selectedYear={nam}
+                setSelectedYear={setNam}
+              />
             </Grid>
           </Grid>
         </Paper>
@@ -793,7 +802,7 @@ export default function MaintenanceStatPage() {
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <SummaryCard
                     icon={<InventoryOutlined fontSize="small" />}
-                    title="Phiếu VT"
+                    title="Đánh giá vt"
                     color="#f97316"
                     main={materialPaged.totalItems}
                     mainLabel="Tổng số"
@@ -873,7 +882,7 @@ export default function MaintenanceStatPage() {
                 </Box>
               </Paper>
 
-              {/* Danh Sách Phiếu - Updated with API */}
+              {/* Danh Sách Vật Tư Tiêu Hao - NEW */}
               <Paper elevation={1} sx={{ borderRadius: 2, overflow: "hidden" }}>
                 <Box
                   sx={{
@@ -883,41 +892,36 @@ export default function MaintenanceStatPage() {
                     alignItems: "center",
                     justifyContent: "space-between",
                     borderBottom: `1px solid ${theme.palette.divider}`,
+                    bgcolor: "white",
                   }}
                 >
                   <Typography variant="subtitle2" fontWeight={800}>
-                    DANH SÁCH PHIẾU:{" "}
+                    VẬT TƯ TIÊU HAO:{" "}
                     <span style={{ color: "#2563eb" }}>
                       {findById(assets, selectedId)?.tenTaiSan?.toUpperCase()}
                     </span>
                   </Typography>
-                  <Stack direction="row" spacing={2} alignItems="center">
-                    <Typography variant="caption" color="text.secondary">
-                      Hiển thị {(processPage - 1) * 10 + 1} -{" "}
-                      {Math.min(
-                        processPage * 10,
-                        processPaged?.totalItems || 0,
-                      )}{" "}
-                      / {processPaged?.totalItems || 0}
-                    </Typography>
-                  </Stack>
                 </Box>
 
-                <TableContainer>
-                  <Table size="small">
+                <TableContainer sx={{ maxHeight: 600 }}>
+                  <Table size="small" stickyHeader>
                     <TableHead>
-                      <TableRow sx={{ bgcolor: "#f3f6fb" }}>
+                      <TableRow>
                         {[
                           "STT",
-                          "Thiết Bị",
-                          "Lệnh Sửa Chữa",
-                          "Biên Bản",
-                          "Nghiệm thu",
-                          "Trạng Thái",
+                          "Mã vật tư",
+                          "Tên vật tư",
+                          "Đơn vị tính",
+                          "Số lượng",
                         ].map((h) => (
                           <TableCell
                             key={h}
-                            sx={{ fontWeight: 800, fontSize: "0.78rem", py: 1 }}
+                            sx={{
+                              bgcolor: "#f3f6fb",
+                              fontWeight: 800,
+                              fontSize: "0.78rem",
+                              py: 1.5,
+                            }}
                           >
                             {h}
                           </TableCell>
@@ -925,254 +929,157 @@ export default function MaintenanceStatPage() {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {(processPaged?.items || []).map(
-                        (row: QuyTrinhSuaChuaData, index: number) => (
-                          <TableRow
-                            key={row.idSuaChuaChiTiet}
-                            hover
-                            sx={{ "&:hover": { bgcolor: "#fbfbff" } }}
-                          >
-                            <TableCell>
-                              {(processPage - 1) * 10 + index + 1}
-                            </TableCell>
-                            <TableCell>
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 1,
-                                }}
-                              >
-                                <Typography variant="caption">
-                                  {row.thietBi}
-                                </Typography>
-                                <Chip
-                                  label={row.thietBiId}
-                                  size="small"
-                                  variant="outlined"
-                                  sx={{ height: 18, fontSize: "0.6rem" }}
-                                />
-                              </Box>
-                            </TableCell>
-                            <TableCell
-                              sx={{
-                                fontFamily: "monospace",
-                                fontSize: "0.78rem",
-                                fontWeight: 700,
-                              }}
-                            >
-                              {row.lenhSuaChua || "---"}
-                            </TableCell>
-                            <TableCell>
-                              <Box
-                                sx={{ display: "flex", alignItems: "center" }}
-                              >
-                                {getStatusIcon(row.trangThaiGiamDinh)}
-                                <Typography
-                                  variant="caption"
-                                  sx={{ fontFamily: "monospace" }}
-                                >
-                                  {row.bienBanGiamDinh || "---"}
-                                </Typography>
-                              </Box>
-                            </TableCell>
-                            <TableCell>
-                              <Box
-                                sx={{ display: "flex", alignItems: "center" }}
-                              >
-                                {getStatusIcon(row.trangThaiNghiemThu)}
-                                <Typography
-                                  variant="caption"
-                                  sx={{ fontFamily: "monospace" }}
-                                >
-                                  {row.phieuNghiemThu || "---"}
-                                </Typography>
-                              </Box>
-                            </TableCell>
-                            <TableCell>
-                              <Chip
-                                {...processStatusChipProps(row)}
-                                size="small"
-                                sx={{
-                                  fontWeight: 800,
-                                  height: 20,
-                                  fontSize: "0.65rem",
-                                }}
-                              />
-                            </TableCell>
-                          </TableRow>
-                        ),
-                      )}
-                      {(processPaged?.items || []).length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={8} align="center" sx={{ py: 3 }}>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              Không có dữ liệu quy trình
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
-                      )}
+                      <MaterialConsumptionRows
+                        idTaiSan={selectedId}
+                        nam={nam}
+                      />
                     </TableBody>
                   </Table>
                 </TableContainer>
-
-                <Box sx={{ display: "flex", justifyContent: "center", p: 1.5 }}>
-                  <Pagination
-                    count={Math.ceil((processPaged?.totalItems || 0) / 10)}
-                    page={processPage}
-                    onChange={(_, v) => setProcessPage(v)}
-                    color="primary"
-                    size="small"
-                  />
-                </Box>
               </Paper>
             </Stack>
           </Grid>
 
           {/* Right */}
-          {selectedId && <Grid size={{ xs: 12, md: 4 }}>
-            <Box sx={{ position: "sticky", top: 24 }}>
-              <Paper elevation={1} sx={{ borderRadius: 2, overflow: "hidden" }}>
-                <Box sx={{ bgcolor: "primary.main", px: 3, py: 2 }}>
-                  <Typography
-                    variant="caption"
-                    fontWeight={800}
-                    color="#fff"
-                    sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}
-                  >
-                    Thông Tin Thiết Bị
-                  </Typography>
-                </Box>
-
-                <Box
-                  sx={{
-                    p: 3,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 2,
-                  }}
+          {selectedId && (
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Box sx={{ position: "sticky", top: 24 }}>
+                <Paper
+                  elevation={1}
+                  sx={{ borderRadius: 2, overflow: "hidden" }}
                 >
-                  <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
-                    <Avatar sx={{ bgcolor: "#eef2ff", width: 56, height: 56 }}>
-                      <PrecisionManufacturingOutlined
-                        sx={{ color: "#2563eb", fontSize: 28 }}
-                      />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="subtitle1" fontWeight={800}>
-                        {findById(assets, selectedId)?.tenTaiSan}
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        display="block"
-                      >
-                        Mã: <b>{findById(assets, selectedId)?.ma}</b>
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        display="block"
-                      >
-                        Vị trí:
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  <Divider />
-
-                  <Box>
+                  <Box sx={{ bgcolor: "primary.main", px: 3, py: 2 }}>
                     <Typography
                       variant="caption"
-                      color="text.secondary"
-                      sx={{ fontWeight: 800, textTransform: "uppercase" }}
+                      fontWeight={800}
+                      color="#fff"
+                      sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}
                     >
-                      Tình trạng
+                      Thông Tin Thiết Bị
                     </Typography>
+                  </Box>
+
+                  <Box
+                    sx={{
+                      p: 3,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 2,
+                    }}
+                  >
                     <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        mt: 1,
-                      }}
+                      sx={{ display: "flex", gap: 1.5, alignItems: "center" }}
                     >
-                      {/* <Chip
-                        label={detail.tinhTrang}
-                        size="small"
+                      <Avatar
+                        sx={{ bgcolor: "#eef2ff", width: 56, height: 56 }}
+                      >
+                        <PrecisionManufacturingOutlined
+                          sx={{ color: "#2563eb", fontSize: 28 }}
+                        />
+                      </Avatar>
+                      <Box>
+                        <Typography  fontWeight={800}>
+                          {findById(assets, selectedId)?.tenTaiSan}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          display="block"
+                        >
+                          Mã: <b>{findById(assets, selectedId)?.soThe}</b>
+                        </Typography>
+                      </Box>
+                    </Box>
+
+                    <Divider />
+
+                    <Box>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontWeight: 800, textTransform: "uppercase" }}
+                      >
+                        Tình trạng
+                      </Typography>
+                      <Box
                         sx={{
-                          bgcolor: detail.tinhTrangColor + "22",
-                          color: detail.tinhTrangColor,
-                          fontWeight: 800,
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          mt: 1,
                         }}
-                      />
-                      <Typography variant="caption" color="text.secondary">
+                      >
+                        <Chip
+                          label={(taiSanDetail as any)?.tenHienTrang || "-"}
+                          size="small"
+                          sx={{
+                            bgcolor: "red",
+                            color: "white",
+                            fontWeight: 800,
+                          }}
+                        />
+                        {/* <Typography variant="caption" color="text.secondary">
                         {detail.lanSCTiepTheoDate}
                       </Typography> */}
+                      </Box>
                     </Box>
-                  </Box>
 
-                  <Divider />
+                    <Divider />
 
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ fontWeight: 800, textTransform: "uppercase" }}
-                    >
-                      Tổng giờ chạy
-                    </Typography>
-                    <Typography variant="h6" fontWeight={800}>
-                      {"-"} giờ
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {"-"}
-                    </Typography>
-                  </Box>
+                    <Box>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontWeight: 800, textTransform: "uppercase" }}
+                      >
+                        Tổng giờ chạy
+                      </Typography>
+                      <Typography variant="h6" fontWeight={800}>
+                        {(taiSanDetail as any)?.gioHoatDong || 0} giờ
+                      </Typography>
+                    </Box>
 
-                  <Divider />
+                    <Divider />
 
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      fontWeight={800}
-                      color="text.secondary"
-                      sx={{ textTransform: "uppercase" }}
-                    >
-                      Tiến độ
-                    </Typography>
-                    <Box sx={{ mt: 1 }}>
-                      {/* {tienDo.map((item) => (
+                    <Box>
+                      <Typography
+                        variant="caption"
+                        fontWeight={800}
+                        color="text.secondary"
+                        sx={{ textTransform: "uppercase" }}
+                      >
+                        Tiến độ
+                      </Typography>
+                      <Box sx={{ mt: 1 }}>
+                        {/* {tienDo.map((item) => (
                         <TienDoItem key={item.ma} {...item} />
                       ))} */}
+                      </Box>
+                    </Box>
+
+                    <Divider />
+
+                    <Box>
+                      <Typography
+                        variant="caption"
+                        fontWeight={800}
+                        color="text.secondary"
+                      >
+                        Ghi chú
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mt: 1 }}
+                      >
+                        {/* {detail.ghiChu} */}
+                      </Typography>
                     </Box>
                   </Box>
-
-                  <Divider />
-
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      fontWeight={800}
-                      color="text.secondary"
-                    >
-                      Ghi chú
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mt: 1 }}
-                    >
-                      {/* {detail.ghiChu} */}
-                    </Typography>
-                  </Box>
-                </Box>
-              </Paper>
-            </Box>
-          </Grid>}
+                </Paper>
+              </Box>
+            </Grid>
+          )}
         </Grid>
 
         {/* Modal */}
@@ -1228,3 +1135,56 @@ export default function MaintenanceStatPage() {
     </Box>
   );
 }
+
+const MaterialConsumptionRows = ({
+  idTaiSan,
+  nam,
+}: {
+  idTaiSan: string;
+  nam: number;
+}) => {
+  const { data: materials = [], isLoading } =
+    useMaintenanceMaterialConsumptionQuery(idTaiSan, nam);
+
+  if (isLoading) {
+    return (
+      <TableRow>
+        <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
+          <Typography variant="caption" color="text.secondary">
+            Đang tải...
+          </Typography>
+        </TableCell>
+      </TableRow>
+    );
+  }
+
+  if (materials.length === 0) {
+    return (
+      <TableRow>
+        <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
+          <Typography variant="caption" color="text.secondary">
+            Không có vật tư tiêu hao cho thiết bị này trong năm {nam}
+          </Typography>
+        </TableCell>
+      </TableRow>
+    );
+  }
+
+  return (
+    <>
+      {materials.map((m: any, idx: number) => (
+        <TableRow key={m.ma} hover>
+          <TableCell>{idx + 1}</TableCell>
+          <TableCell sx={{ fontFamily: "monospace", fontWeight: 700 }}>
+            {m.ma}
+          </TableCell>
+          <TableCell>{m.ten}</TableCell>
+          <TableCell>{m.donViTinh}</TableCell>
+          <TableCell sx={{ fontWeight: 800, color: "primary.main" }}>
+            {m.soLuong}
+          </TableCell>
+        </TableRow>
+      ))}
+    </>
+  );
+};

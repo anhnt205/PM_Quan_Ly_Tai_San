@@ -191,9 +191,9 @@ public class TaiSanController {
         }
     }
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable("id") String id) {
+    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable("id") String id, @RequestParam(value = "nam", required = false) Integer nam) {
         try {
-            TaiSanDTO result = taiSanService.getById(id);
+            TaiSanDTO result = taiSanService.getById(id, nam);
             if (result != null) {
                 return ResponseEntity.ok(ApiResponse.success("Lấy thông tin tài sản thành công", result, null));
             }

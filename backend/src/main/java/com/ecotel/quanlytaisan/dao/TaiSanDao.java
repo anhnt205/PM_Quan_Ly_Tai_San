@@ -941,8 +941,26 @@ public class TaiSanDao {
     }
 
     public TaiSanDTO findById(String id) {
-        String sql = SELECT_TAISAN_DTO + " WHERE ts.Id = ?";
-        return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(TaiSanDTO.class), id);
+        return findById(id, null);
+    }
+
+    public TaiSanDTO findById(String id, Integer nam) {
+        String gioHoatDongSubquery = "";
+        Object[] params;
+        if (nam != null) {
+            gioHoatDongSubquery = " (SELECT SUM(ghd.GioHoatDong) FROM giohoatdong ghd WHERE ghd.IdTaiSan = ts.Id AND ghd.Nam = ?) AS gioHoatDong, ";
+            params = new Object[]{nam, id};
+        } else {
+            params = new Object[]{id};
+        }
+
+        String sql = SELECT_TAISAN_DTO.replaceFirst("SELECT", "SELECT " + gioHoatDongSubquery) + " WHERE ts.Id = ?";
+        
+        try {
+            return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(TaiSanDTO.class), params);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public int insert(TaiSan taiSan) {

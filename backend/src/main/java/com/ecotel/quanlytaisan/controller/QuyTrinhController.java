@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/quy-trinh")
 public class QuyTrinhController {
@@ -40,6 +42,19 @@ public class QuyTrinhController {
         try {
             PageResponse<QuyTrinhSuaChuaDTO> result = quyTrinhService.getPagedHistory(page, pageSize, search, status);
             return ResponseEntity.ok(ApiResponse.success("Lấy lịch sử bảo dưỡng thành công", result, (int) result.getTotalItems()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
+    @GetMapping("/material-consumption")
+    public ResponseEntity<ApiResponse<Object>> getMaterialConsumption(
+            @RequestParam String idTaiSan,
+            @RequestParam Integer nam) {
+        try {
+            List<com.ecotel.quanlytaisan.model.VatTuTieuHaoDTO> result = quyTrinhService.getMaterialConsumption(idTaiSan, nam);
+            return ResponseEntity.ok(ApiResponse.success("Lấy vật tư tiêu hao thành công", result, result.size()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));

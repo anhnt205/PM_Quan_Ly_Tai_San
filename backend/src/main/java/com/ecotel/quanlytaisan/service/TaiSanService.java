@@ -233,7 +233,11 @@ public class TaiSanService {
     }
 
     public TaiSanDTO getById(String id) {
-        return taiSanDao.findById(id);
+        return getById(id, null);
+    }
+
+    public TaiSanDTO getById(String id, Integer nam) {
+        return taiSanDao.findById(id, nam);
     }
 
     public int create(TaiSan ts) {

@@ -1798,3 +1798,35 @@ export const useMaintenanceProcessPagedQuery = (
     placeholderData: (previousData) => previousData,
   });
 };
+
+export const useMaintenanceMaterialConsumptionQuery = (
+  idTaiSan?: string,
+  nam?: number,
+) => {
+  return useQuery({
+    queryKey: ["maintenanceMaterialConsumption", idTaiSan, nam],
+    queryFn: async () => {
+      const res = await api.get("/quy-trinh/material-consumption", {
+        params: {
+          idTaiSan: idTaiSan,
+          nam: nam,
+        },
+      });
+      return res.data.data || res.data || [];
+    },
+    enabled: !!idTaiSan && !!nam,
+  });
+};
+
+export const useGetTaiSanByIdQuery = (id: string | undefined, nam?: number) => {
+  return useQuery({
+    queryKey: ["taiSanById", id, nam],
+    queryFn: async () => {
+      const res = await api.get(`/taisan/${id}`, {
+        params: { nam },
+      });
+      return res.data.data || res.data;
+    },
+    enabled: !!id,
+  });
+};

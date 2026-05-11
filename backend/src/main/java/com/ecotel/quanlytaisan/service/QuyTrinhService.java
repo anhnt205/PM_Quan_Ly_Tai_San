@@ -43,4 +43,8 @@ public class QuyTrinhService {
         response.setTrangThaiCounts(trangThaiCounts);
         return response;
     }
+
+    public List<com.ecotel.quanlytaisan.model.VatTuTieuHaoDTO> getMaterialConsumption(String idTaiSan, Integer nam) {
+        return quyTrinhDao.getMaterialConsumption(idTaiSan, nam);
+    }
 }
