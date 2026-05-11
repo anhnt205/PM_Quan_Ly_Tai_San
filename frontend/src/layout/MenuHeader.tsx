@@ -649,6 +649,15 @@ export default function Menuheader() {
             },
           ],
         },
+        {
+          text: "Phê duyệt",
+          path: ROUTES.TRANSFER_APPROVAL,
+          count: assetTransferCount1 + assetTransferCount2 + assetTransferCount3 + toolTransferCount1 + toolTransferCount2 + toolTransferCount3,
+        },
+        {
+          text: "Quản lý biên bản",
+          path: ROUTES.TRANSFER_RECORD,
+        },
       ],
     },
     {
@@ -672,6 +681,15 @@ export default function Menuheader() {
           path: ROUTES.TOOLHANDOVER,
           code: "BANGIAO_CCDC",
           count: toolHandoverCount + transferToolPage.totalItems,
+        },
+        {
+          text: "Phê duyệt",
+          path: ROUTES.HANDOVER_APPROVAL,
+          count: assetHandoverCount + toolHandoverCount + transferAssetPage.totalItems + transferToolPage.totalItems,
+        },
+        {
+          text: "Quản lý biên bản",
+          path: ROUTES.HANDOVER_RECORD,
         },
       ],
     },

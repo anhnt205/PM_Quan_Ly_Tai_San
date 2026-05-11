@@ -31,8 +31,8 @@ const SidebarContent = ({
   handleConfirmSign,
   onCancel,
 }: SidebarContentProps) => {
-  const { data: fileUrlNhay } = useGetFileQuery(employee.chuKyNhay);
-  const { data: fileUrlThuong } = useGetFileQuery(employee.chuKyThuong);
+  const { data: fileUrlNhay } = useGetFileQuery(employee?.chuKyNhay);
+  const { data: fileUrlThuong } = useGetFileQuery(employee?.chuKyThuong);
 
   const SignatureOption = ({
     value,

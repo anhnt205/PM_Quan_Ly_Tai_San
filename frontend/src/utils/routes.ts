@@ -36,4 +36,8 @@ export const ROUTES = {
   MAINTENANCE_CYCLE: "/sua_chua_bao_duong/chu_ky_bao_duong",
   MAINTENANCE_APPROVAL: "/sua_chua_bao_duong/phe_duyet",
   MAINTENANCE_RECORD: "/sua_chua_bao_duong/quan_ly_bien_ban",
+  HANDOVER_APPROVAL: "/ban_giao_thiet_bi/phe_duyet",
+  HANDOVER_RECORD: "/ban_giao_thiet_bi/quan_ly_bien_ban",
+  TRANSFER_APPROVAL: "/dieu_chuyen_thiet_bi/phe_duyet",
+  TRANSFER_RECORD: "/dieu_chuyen_thiet_bi/quan_ly_bien_ban",
 } as const;

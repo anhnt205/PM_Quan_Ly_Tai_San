@@ -45,6 +45,10 @@ import MaintenanceCyclePage from "./pages/Maintenance/page/MaintenanceCycle";
 import MaintenanceApprovalPage from "./pages/Maintenance/page/MaintenanceApproval";
 import MaintenanceRecordPage from "./pages/Maintenance/page/MaintenanceRecord";
 import { CmmsProvider } from "./hooks/CmmsContext";
+import HandoverApproval from "./pages/HandoverApproval/HandoverApproval";
+import HandoverRecord from "./pages/HandoverRecord/HandoverRecord";
+import TransferApproval from "./pages/TransferApproval/TransferApproval";
+import TransferRecord from "./pages/TransferRecord/TransferRecord";
 
 const ProtectedRoute = ({
   allowedRoles,
@@ -117,7 +121,9 @@ function App() {
       ) {
         console.log("Handling socket message in App.tsx:", data);
         queryClient.invalidateQueries({ queryKey: ["maintenanceRepairPage"] });
-        queryClient.invalidateQueries({ queryKey: ["maintenanceRepairResultPage"] });
+        queryClient.invalidateQueries({
+          queryKey: ["maintenanceRepairResultPage"],
+        });
       }
     });
 
@@ -229,6 +235,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path={ROUTES.TOOLHANDOVER}
             element={
@@ -237,6 +244,16 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path={ROUTES.HANDOVER_APPROVAL}
+            element={<HandoverApproval />}
+          />
+          <Route path={ROUTES.HANDOVER_RECORD} element={<HandoverRecord />} />
+          <Route
+            path={ROUTES.TRANSFER_APPROVAL}
+            element={<TransferApproval />}
+          />
+          <Route path={ROUTES.TRANSFER_RECORD} element={<TransferRecord />} />
           <Route
             path={ROUTES.MAINTENANCEPLANREPAIR}
             element={
@@ -249,14 +266,8 @@ function App() {
             path={ROUTES.MAINTENANCEREPAIR}
             element={<MaintenanceRepair />}
           />
-          <Route
-            path={ROUTES.REPAIRLEVEL}
-            element={<RepairLevel />}
-          />
-          <Route
-            path={ROUTES.REPAIRNORM}
-            element={<RepairNorm />}
-          />
+          <Route path={ROUTES.REPAIRLEVEL} element={<RepairLevel />} />
+          <Route path={ROUTES.REPAIRNORM} element={<RepairNorm />} />
           <Route
             path={ROUTES.REPORT}
             element={
@@ -268,8 +279,14 @@ function App() {
           <Route path={ROUTES.HUONGDAN} element={<HuongDanSuDung />} />
           <Route path={ROUTES.ACCOUNT} element={<Account />} />
 
-          <Route path={ROUTES.MAINTENANCE_MANAGER} element={<MaintenanceManagerPage />} />
-          <Route path={ROUTES.MAINTENANCE_CYCLE} element={<MaintenanceCyclePage />} />
+          <Route
+            path={ROUTES.MAINTENANCE_MANAGER}
+            element={<MaintenanceManagerPage />}
+          />
+          <Route
+            path={ROUTES.MAINTENANCE_CYCLE}
+            element={<MaintenanceCyclePage />}
+          />
           <Route
             path={ROUTES.MAINTENANCE_APPROVAL}
             element={
