@@ -135,9 +135,8 @@ public class KeHoachSuaChuaService {
         if (sortBy == null || sortBy.trim().isEmpty()) {
             Map<Integer, Integer> pm = new HashMap<>();
             pm.put(0, 1); pm.put(1, 2); pm.put(3, 3); pm.put(2, 4);
-            return Comparator.<KeHoachSuaChuaDTO>comparingInt(i -> pm.getOrDefault(i.getTrangThai(), 5))
-                    .thenComparing(i -> i.getNgayTao() != null ? i.getNgayTao() : new Date(0),
-                            Comparator.nullsLast(Comparator.reverseOrder()));
+            Comparator<KeHoachSuaChuaDTO> comp = Comparator.comparing(i -> pm.getOrDefault(i.getTrangThai(), 5));
+            return comp.thenComparing(i -> i.getNgayTao() != null ? i.getNgayTao() : "", Comparator.reverseOrder());
         }
         boolean asc = "asc".equalsIgnoreCase(sortDir);
         Comparator<KeHoachSuaChuaDTO> comp;
@@ -152,8 +151,7 @@ public class KeHoachSuaChuaService {
                 comp = Comparator.comparing(i -> i.getTrangThai() != null ? i.getTrangThai() : 0,
                         Comparator.nullsLast(Integer::compareTo)); break;
             case "ngaytao": default:
-                comp = Comparator.comparing(i -> i.getNgayTao() != null ? i.getNgayTao() : new Date(0),
-                        Comparator.nullsLast(Date::compareTo)); break;
+                comp = Comparator.comparing((KeHoachSuaChuaDTO i) -> i.getNgayTao() != null ? i.getNgayTao() : ""); break;
         }
         return asc ? comp : comp.reversed();
     }

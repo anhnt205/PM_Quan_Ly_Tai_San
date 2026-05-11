@@ -184,7 +184,6 @@ const SummaryCard = ({
         }}
       >
         <Typography
-          variant="caption"
           color="text.secondary"
           fontWeight={700}
           sx={{ textTransform: "uppercase", letterSpacing: 0.8 }}
@@ -195,12 +194,10 @@ const SummaryCard = ({
       </Box>
       <Box sx={{ display: "flex", alignItems: "baseline", gap: 2, mt: 1 }}>
         <Box>
-          <Typography variant="h5" fontWeight={800} lineHeight={1}>
+          <Typography fontWeight={600} lineHeight={1}>
             {main}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {mainLabel}
-          </Typography>
+          <Typography color="text.secondary">{mainLabel}</Typography>
         </Box>
         <Box>
           <Typography
@@ -211,9 +208,7 @@ const SummaryCard = ({
           >
             {sub}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {subLabel}
-          </Typography>
+          <Typography color="text.secondary">{subLabel}</Typography>
         </Box>
       </Box>
     </Box>
@@ -260,7 +255,7 @@ const QuyTrinhStep = ({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontWeight: 800,
+          fontWeight: 600,
         }}
       >
         {step}
@@ -697,7 +692,7 @@ export default function MaintenanceStatPage() {
 
   return (
     <Box sx={{ bgcolor: "#f6f8fb", minHeight: "100vh", py: 3, px: 3 }}>
-      <Box sx={{ maxWidth: 1800, mx: "auto" }}>
+      <Box sx={{ maxWidth: 1600, mx: "auto" }}>
         {/* ── Top Filter Bar ── */}
         <Paper
           elevation={1}
@@ -830,7 +825,7 @@ export default function MaintenanceStatPage() {
               >
                 <Typography
                   variant="subtitle2"
-                  fontWeight={800}
+                  fontWeight={600}
                   mb={1}
                   color="text.secondary"
                   sx={{ textTransform: "uppercase", letterSpacing: 1 }}
@@ -854,7 +849,7 @@ export default function MaintenanceStatPage() {
                     <BoltOutlined sx={{ color: "#f97316", fontSize: 18 }} />
                     <Typography
                       variant="caption"
-                      fontWeight={800}
+                      fontWeight={600}
                       color="#c2410c"
                     >
                       LỆNH SỬA CHỮA ĐỘT XUẤT
@@ -895,7 +890,7 @@ export default function MaintenanceStatPage() {
                     bgcolor: "white",
                   }}
                 >
-                  <Typography variant="subtitle2" fontWeight={800}>
+                  <Typography fontWeight={600}>
                     VẬT TƯ TIÊU HAO:{" "}
                     <span style={{ color: "#2563eb" }}>
                       {findById(assets, selectedId)?.tenTaiSan?.toUpperCase()}
@@ -918,7 +913,7 @@ export default function MaintenanceStatPage() {
                             key={h}
                             sx={{
                               bgcolor: "#f3f6fb",
-                              fontWeight: 800,
+                              fontWeight: 600,
                               fontSize: "0.78rem",
                               py: 1.5,
                             }}
@@ -951,7 +946,7 @@ export default function MaintenanceStatPage() {
                   <Box sx={{ bgcolor: "primary.main", px: 3, py: 2 }}>
                     <Typography
                       variant="caption"
-                      fontWeight={800}
+                      fontWeight={600}
                       color="#fff"
                       sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}
                     >
@@ -978,7 +973,7 @@ export default function MaintenanceStatPage() {
                         />
                       </Avatar>
                       <Box>
-                        <Typography  fontWeight={800}>
+                        <Typography fontWeight={600}>
                           {findById(assets, selectedId)?.tenTaiSan}
                         </Typography>
                         <Typography
@@ -997,7 +992,7 @@ export default function MaintenanceStatPage() {
                       <Typography
                         variant="caption"
                         color="text.secondary"
-                        sx={{ fontWeight: 800, textTransform: "uppercase" }}
+                        sx={{ fontWeight: 600, textTransform: "uppercase" }}
                       >
                         Tình trạng
                       </Typography>
@@ -1015,7 +1010,7 @@ export default function MaintenanceStatPage() {
                           sx={{
                             bgcolor: "red",
                             color: "white",
-                            fontWeight: 800,
+                            fontWeight: 600,
                           }}
                         />
                         {/* <Typography variant="caption" color="text.secondary">
@@ -1030,11 +1025,11 @@ export default function MaintenanceStatPage() {
                       <Typography
                         variant="caption"
                         color="text.secondary"
-                        sx={{ fontWeight: 800, textTransform: "uppercase" }}
+                        sx={{ fontWeight: 600, textTransform: "uppercase" }}
                       >
                         Tổng giờ chạy
                       </Typography>
-                      <Typography variant="h6" fontWeight={800}>
+                      <Typography variant="h6" fontWeight={600}>
                         {(taiSanDetail as any)?.gioHoatDong || 0} giờ
                       </Typography>
                     </Box>
@@ -1044,7 +1039,7 @@ export default function MaintenanceStatPage() {
                     <Box>
                       <Typography
                         variant="caption"
-                        fontWeight={800}
+                        fontWeight={600}
                         color="text.secondary"
                         sx={{ textTransform: "uppercase" }}
                       >
@@ -1062,7 +1057,7 @@ export default function MaintenanceStatPage() {
                     <Box>
                       <Typography
                         variant="caption"
-                        fontWeight={800}
+                        fontWeight={600}
                         color="text.secondary"
                       >
                         Ghi chú
@@ -1180,7 +1175,7 @@ const MaterialConsumptionRows = ({
           </TableCell>
           <TableCell>{m.ten}</TableCell>
           <TableCell>{m.donViTinh}</TableCell>
-          <TableCell sx={{ fontWeight: 800, color: "primary.main" }}>
+          <TableCell sx={{ fontWeight: 600, color: "primary.main" }}>
             {m.soLuong}
           </TableCell>
         </TableRow>

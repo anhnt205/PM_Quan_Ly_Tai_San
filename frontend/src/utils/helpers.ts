@@ -113,6 +113,8 @@ export function getAssetTransferCount(
   }
   return assetTransferList.filter((item) => {
     // ===== Filter 1: share hoặc người tạo =====
+    if (item.trangThai === 2) return false;
+
     if (item.share !== true && item.nguoiTao !== userTenDangNhap) {
       return false;
     }
@@ -198,6 +200,8 @@ export const getToolTransferCount = (
   return toolAndMaterialList.filter((item) => {
     // ===== Filter 1: loại =====
     if (item.loai !== type) return false;
+
+    if (item.trangThai === 2) return false;
 
     // ===== Filter 2: share hoặc người tạo =====
     if (item.share !== true && item.nguoiTao !== userTenDangNhap) {
@@ -297,6 +301,8 @@ export const getAssetHandoverCount = (
       return false;
     }
 
+    if (item.trangThai === 2) return false;
+
     const signatureFlow: any[] = [];
 
     if (item.idDaiDienBenGiao) {
@@ -346,6 +352,8 @@ export const getToolHandoverCount = (
     if (item.share !== true && item.nguoiTao !== userTenDangNhap) {
       return false;
     }
+
+    if (item.trangThai === 2) return false;
 
     const signatureFlow: any[] = [];
 

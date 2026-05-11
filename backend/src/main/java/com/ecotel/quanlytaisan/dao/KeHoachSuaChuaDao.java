@@ -9,8 +9,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.PostConstruct;
+import java.time.LocalDateTime;
 import java.time.Year;
-import java.util.Date;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -149,8 +150,9 @@ public class KeHoachSuaChuaDao {
 
     public KeHoachSuaChua insert(KeHoachSuaChua e) {
         e.setId(generateNextId());
-        e.setNgayTao(new Date());
-        e.setNgayCapNhat(e.getNgayTao());
+        String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        e.setNgayTao(now);
+        e.setNgayCapNhat(now);
         String sql = """
             INSERT INTO kehoachsuachua (
                 Id, IdCongTy, SoKeHoach, TenKeHoach, SoQuyetDinh, IdLoaiKeHoach, IdLoaiSuaChua, Nam,
@@ -181,7 +183,7 @@ public class KeHoachSuaChuaDao {
     // ==================== UPDATE ====================
 
     public KeHoachSuaChua update(KeHoachSuaChua e) {
-        e.setNgayCapNhat(new Date());
+        e.setNgayCapNhat(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         String sql = """
             UPDATE kehoachsuachua SET
                 SoKeHoach = ?, TenKeHoach = ?, SoQuyetDinh = ?, IdLoaiKeHoach = ?, IdLoaiSuaChua = ?, Nam = ?,
@@ -280,7 +282,7 @@ public class KeHoachSuaChuaDao {
     public int huyKeHoach(String id) {
         int r = jdbcTemplate.update(
                 "UPDATE kehoachsuachua SET TrangThai = 2, NgayCapNhat = ? WHERE Id = ?",
-                new Date(), id);
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")), id);
         if (r > 0) CompletableFuture.runAsync(this::refreshCache);
         return r;
     }
