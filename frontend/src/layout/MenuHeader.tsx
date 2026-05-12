@@ -325,6 +325,12 @@ export default function Menuheader() {
     toolHandover: toolHandoverCount,
     transferAssetPageItems,
     transferToolPageItems,
+    totalPlan,
+    totalIncident,
+    totalRepair,
+    totalIncidentInspection,
+    totalMaterialAssessment,
+    totalAcceptance,
   } = counts;
 
   const handleConfirmExpiration = async (
@@ -532,6 +538,7 @@ export default function Menuheader() {
       text: "Sửa chữa bảo dưỡng",
       icon: <Engineering fontSize="small" />,
       path: "#",
+      count: totalPlan + totalIncident + totalRepair + totalIncidentInspection + totalMaterialAssessment + totalAcceptance,
       subMenu: [
         {
           text: "Quản lý sửa chữa",
@@ -552,6 +559,7 @@ export default function Menuheader() {
         {
           text: "Phê duyệt",
           path: ROUTES.MAINTENANCE_APPROVAL,
+          count: totalPlan + totalIncident + totalRepair + totalIncidentInspection + totalMaterialAssessment + totalAcceptance,
         },
         {
           text: "Quản lý biên bản",

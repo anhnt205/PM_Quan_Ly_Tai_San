@@ -78,7 +78,7 @@ export default function MaintenanceApprovalPage() {
   const { materialQualityRecords, incidentInspectionRecords } = useCmms();
 
   const signBatch = useSignBatch();
-  const { user } = useSelector((state: RootState) => state.user);
+  const { user } = useSelector((state: any) => state.user);
 
   const [activeTab, setActiveTab] = useState(0);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -247,6 +247,7 @@ export default function MaintenanceApprovalPage() {
                 : activeTab === 6
                   ? "kiemtra-suco"
                   : "",
+    activeTab,
   );
 
   const allRows = [
@@ -367,10 +368,19 @@ export default function MaintenanceApprovalPage() {
   const currentAllRows = allRows[activeTab];
 
   const handleSign = (data: SignaturesData[]) => {
-    signMutation.mutate({
-      SignaturesData: data,
-      asset: selectedRow,
-    });
+    signMutation.mutate(
+      {
+        SignaturesData: data,
+        asset: selectedRow || selectedItem,
+      },
+      {
+        onSuccess: () => {
+          setSelectedItem([]);
+          setSelectedIds([]);
+          setSelectedRow(null);
+        },
+      },
+    );
   };
 
   const buildColumns = (collapsed: boolean) => {

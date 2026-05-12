@@ -48,6 +48,7 @@ import HandoverApproval from "./pages/HandoverApproval/HandoverApproval";
 import HandoverRecord from "./pages/HandoverRecord/HandoverRecord";
 import TransferApproval from "./pages/TransferApproval/TransferApproval";
 import TransferRecord from "./pages/TransferRecord/TransferRecord";
+import { MenuDataProvider } from "./context/MenuDataContext";
 
 const ProtectedRoute = ({
   allowedRoles,
@@ -116,12 +117,54 @@ function App() {
       } else if (
         (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
           user?.taiKhoan?.tenDangNhap === "admin") &&
-        data.type === MessageTypeFunctions.MAINTENANCE
+        data.type === MessageTypeFunctions.REPAIR
       ) {
         console.log("Handling socket message in App.tsx:", data);
-        queryClient.invalidateQueries({ queryKey: ["maintenanceRepairPage"] });
+        queryClient.invalidateQueries({ queryKey: ["repairPage"] });
+      } else if (
+        (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
+          user?.taiKhoan?.tenDangNhap === "admin") &&
+        data.type === MessageTypeFunctions.PLAN
+      ) {
+        console.log("Handling socket message in App.tsx:", data);
         queryClient.invalidateQueries({
-          queryKey: ["maintenanceRepairResultPage"],
+          queryKey: ["maintenancePlanningPage"],
+        });
+      } else if (
+        (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
+          user?.taiKhoan?.tenDangNhap === "admin") &&
+        data.type === MessageTypeFunctions.MATERIAL
+      ) {
+        console.log("Handling socket message in App.tsx:", data);
+        queryClient.invalidateQueries({
+          queryKey: ["materialAssessmentPage"],
+        });
+      } else if (
+        (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
+          user?.taiKhoan?.tenDangNhap === "admin") &&
+        data.type === MessageTypeFunctions.INCIDENT
+      ) {
+        console.log("Handling socket message in App.tsx:", data);
+        queryClient.invalidateQueries({
+          queryKey: ["incidentPage"],
+        });
+      } else if (
+        (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
+          user?.taiKhoan?.tenDangNhap === "admin") &&
+        data.type === MessageTypeFunctions.INCIDENT_INSPECTION
+      ) {
+        console.log("Handling socket message in App.tsx:", data);
+        queryClient.invalidateQueries({
+          queryKey: ["incidentInspectionPage"],
+        });
+      } else if (
+        (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
+          user?.taiKhoan?.tenDangNhap === "admin") &&
+        data.type === MessageTypeFunctions.ACCEPTANCE_TEST
+      ) {
+        console.log("Handling socket message in App.tsx:", data);
+        queryClient.invalidateQueries({
+          queryKey: ["acceptanceTestPage"],
         });
       }
     });
@@ -141,7 +184,15 @@ function App() {
         <Route path={ROUTES.NOT_FOUND} element={<NotFound />} />
         <Route
           path={ROUTES.MAIN}
-          element={user ? <Main /> : <Navigate to={ROUTES.LOGIN} />}
+          element={
+            user ? (
+              <MenuDataProvider>
+                <Main />
+              </MenuDataProvider>
+            ) : (
+              <Navigate to={ROUTES.LOGIN} />
+            )
+          }
         >
           <Route index element={<DashBoard />} />
           <Route

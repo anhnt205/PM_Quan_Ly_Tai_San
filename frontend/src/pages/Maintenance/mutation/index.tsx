@@ -1,9 +1,16 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import api from "../../../config/api.config";
-import { SignaturesData } from "../../MaintenanceRepair/types";
+import { listNguoiKy } from "../config";
+import socketService from "../../../services/socketService";
+import { MessageTypeFunctions } from "../../../utils/const";
+import { SignaturesData } from "../../AssetTransfer/types";
 
-export const useMaintenanceMutation = (key: string, apiUri: string) => {
+export const useMaintenanceMutation = (
+  key: string,
+  apiUri: string,
+  activeTab: number,
+) => {
   const queryClient = useQueryClient();
 
   // ky tai lieu
@@ -26,11 +33,29 @@ export const useMaintenanceMutation = (key: string, apiUri: string) => {
           userId: item.idNguoiKy,
         });
       });
-      //   const list = await listNguoiKy([data.asset]);
-      //   socketService.send({
-      //     type: MessageTypeFunctions.ASSET_TRANSFER,
-      //     recieve: list,
-      //   });
+      console.log("data", data.asset);
+      const list = await listNguoiKy(
+        Array.isArray(data.asset) ? data.asset : [data.asset],
+      );
+      socketService.send({
+        type:
+          activeTab === 0
+            ? MessageTypeFunctions.PLAN
+            : activeTab === 1
+              ? MessageTypeFunctions.REPAIR
+              : activeTab === 2
+                ? MessageTypeFunctions.INSPECTION
+                : activeTab === 3
+                  ? MessageTypeFunctions.ACCEPTANCE_TEST
+                  : activeTab === 4
+                    ? MessageTypeFunctions.MATERIAL
+                    : activeTab === 5
+                      ? MessageTypeFunctions.INCIDENT
+                      : activeTab === 6
+                        ? MessageTypeFunctions.INSPECTION
+                        : "",
+        recieve: list,
+      });
       showSuccessAlert("Ký thành công");
     },
     onError: (error: any) => {
@@ -74,8 +99,28 @@ export const useMaintenanceMutation = (key: string, apiUri: string) => {
       const res = await api.put(`/${apiUri}/batch`, data);
       return res.data;
     },
-    onSuccess: (response, data) => {
+    onSuccess: async (response, data) => {
       queryClient.invalidateQueries({ queryKey: [key] });
+      const list = await listNguoiKy(data);
+      socketService.send({
+        type:
+          activeTab === 0
+            ? MessageTypeFunctions.PLAN
+            : activeTab === 1
+              ? MessageTypeFunctions.REPAIR
+              : activeTab === 2
+                ? MessageTypeFunctions.INSPECTION
+                : activeTab === 3
+                  ? MessageTypeFunctions.ACCEPTANCE_TEST
+                  : activeTab === 4
+                    ? MessageTypeFunctions.MATERIAL
+                    : activeTab === 5
+                      ? MessageTypeFunctions.INCIDENT
+                      : activeTab === 6
+                        ? MessageTypeFunctions.ACCEPTANCE_TEST
+                        : "",
+        recieve: list,
+      });
       console.log("Trình duyệt thành công");
     },
     onError: (error: any) => {

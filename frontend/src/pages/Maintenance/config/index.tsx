@@ -169,8 +169,8 @@ export const handleSendToSigner = async (
 export const listNguoiKy = (selectedItems: any[]) => {
   const allIds = new Set<string>();
   for (var item of selectedItems) {
-    const id1 = item.idNguoiLapBieu;
-    const id2 = item.idTrinhDuyetGiamDoc;
+    const id1 = item?.idNguoiLapBieu || item?.idNguoiLap;
+    const id2 = item?.idTrinhDuyetGiamDoc || item?.idGiamDoc;
 
     if (id1) allIds.add(id1);
     if (id2) allIds.add(id2);
