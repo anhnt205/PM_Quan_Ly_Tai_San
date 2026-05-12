@@ -89,6 +89,45 @@ const getNotSharedAndNotify = (items: any[]): any[] => {
   return notShared;
 };
 
+export const canUserSign = (newSigningType: number, images: any[]) => {
+  // Kiểm tra xem tài liệu đã có chữ ký số (loaiKy = 3, 4, 5) chưa
+  const hasDigitalSignature = images.some(
+    (img) => img.loaiKy === 3 || img.loaiKy === 4 || img.loaiKy === 5,
+  );
+
+  // Nếu tài liệu đã có chữ ký số, chỉ cho phép ký số (loaiKy = 3, 4, 5)
+  if (hasDigitalSignature) {
+    if (newSigningType !== 3 && newSigningType !== 4 && newSigningType !== 5) {
+      return false;
+    }
+  }
+
+  // Chữ ký loại 1 (ký nháy) luôn được phép ký (nếu chưa có chữ ký số)
+  if (newSigningType === 1) {
+    return true;
+  }
+
+  // Lấy tất cả chữ ký mới của user hiện tại trong phiên này
+  const userNewSignatures = images.filter((img) => !img.isLocked);
+  // Nếu chưa có chữ ký mới nào, được phép ký
+  if (userNewSignatures.length === 0) {
+    return true;
+  }
+
+  // Kiểm tra xem đã có chữ ký loại khác 1 chưa
+  const hasNonType1Signature = userNewSignatures.some(
+    (img) => img.loaiKy !== 1,
+  );
+
+  // Nếu đã có chữ ký loại khác 1 (2, 3, 4, 5), không được ký thêm
+  if (hasNonType1Signature) {
+    return false;
+  }
+
+  // Nếu chỉ có chữ ký loại 1, được phép ký thêm
+  return true;
+};
+
 export const handleSendToSigner = async (
   selectedItems: any[],
   onUpdate: (data: any[]) => Promise<any>,

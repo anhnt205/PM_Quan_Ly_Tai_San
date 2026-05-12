@@ -45,6 +45,7 @@ interface Props {
   onClose: () => void;
   plan: MaintenancePlanData;
   incidentReport: IncidenData;
+  selectedDeviceIds: string[];
 }
 
 const IncidentInspectionDialog = ({
@@ -52,9 +53,12 @@ const IncidentInspectionDialog = ({
   onClose,
   plan,
   incidentReport,
+  selectedDeviceIds,
 }: Props) => {
   const [number, setNumber] = useState("");
-  const [inspectionDate, setInspectionDate] = useState(dayjs().format("YYYY-MM-DD"));
+  const [inspectionDate, setInspectionDate] = useState(
+    dayjs().format("YYYY-MM-DD"),
+  );
   const [location, setLocation] = useState("");
   const [findings, setFindings] = useState("");
   const [recommendation, setRecommendation] = useState("");
@@ -63,19 +67,21 @@ const IncidentInspectionDialog = ({
   useEffect(() => {
     if (open && incidentReport?.danhSachTaiSan) {
       setItems(
-        incidentReport.danhSachTaiSan.map((d, index) => ({
-          stt: index + 1,
-          id: d.id,
-          idTaiSan: d.idTaiSan,
-          itemName: d.tenTaiSan || d.idTaiSan,
-          unit: d.donViTinh || "",
-          repairLevel: "",
-          quantity: d.soLuong || 1,
-          condition: d.tinhTrang || "",
-          actionRepair: true,
-          actionReplace: false,
-          note: "",
-        })),
+        incidentReport.danhSachTaiSan
+          .filter((d: any) => selectedDeviceIds.includes(String(d.id ?? "")))
+          .map((d: any, index: number) => ({
+            stt: index + 1,
+            id: d.id,
+            idTaiSan: d.idTaiSan,
+            itemName: d.tenTaiSan || d.idTaiSan,
+            unit: d.donViTinh || "",
+            repairLevel: "",
+            quantity: d.soLuong || 1,
+            condition: d.tinhTrang || "",
+            actionRepair: true,
+            actionReplace: false,
+            note: "",
+          })),
       );
     }
   }, [open, incidentReport]);

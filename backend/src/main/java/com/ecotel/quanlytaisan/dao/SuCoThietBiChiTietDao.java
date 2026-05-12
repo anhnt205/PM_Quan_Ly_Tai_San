@@ -83,7 +83,7 @@ public class SuCoThietBiChiTietDao {
     // ==================== ID ====================
 
     public String generateNextId() {
-        return "SUACHUA_CT_" + UUID.randomUUID().toString();
+        return "SUCO_CT_" + UUID.randomUUID().toString();
     }
 
     // ==================== Insert đơn ====================

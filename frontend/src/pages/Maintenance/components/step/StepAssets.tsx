@@ -29,18 +29,26 @@ import { Action } from "../../../../utils/const";
 interface PlanAsset {
   deviceId: string;
   quantity: number;
-  month1: any;
-  month2: any;
-  month3: any;
-  month4: any;
-  month5: any;
-  month6: any;
-  month7: any;
-  month8: any;
-  month9: any;
-  month10: any;
-  month11: any;
-  month12: any;
+  tenTaiSan?: string;
+  tenNhom?: string;
+  tenDonVi?: string;
+  tenHienTrang?: string;
+  viTri?: string;
+  thuocHeThong?: string;
+  action?: string;
+  id?: string;
+  month1?: any;
+  month2?: any;
+  month3?: any;
+  month4?: any;
+  month5?: any;
+  month6?: any;
+  month7?: any;
+  month8?: any;
+  month9?: any;
+  month10?: any;
+  month11?: any;
+  month12?: any;
 }
 
 interface Props {
@@ -201,7 +209,7 @@ const StepAssets = ({ sourceDeptId, assets, onAssetsChange }: Props) => {
                       noWrap
                       display="block"
                     >
-                      {device?.tenTaiSan || asset.deviceId}
+                      {device?.tenTaiSan || asset.tenTaiSan || asset.deviceId}
                     </Typography>
                     <Box
                       sx={{

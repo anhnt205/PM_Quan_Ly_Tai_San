@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import SharedSignDocumentForm from "../../../../components/SignDocument/SharedSignDocumentForm";
 import api from "../../../../config/api.config";
-import { canUserSign } from "../../../MaintenanceRepair/config";
+import { canUserSign } from "../../config";
 import { SignaturesData } from "../../../../components/SignDocument/types";
 
 interface SignDocumentFormProps {

@@ -197,13 +197,15 @@ export default function MaintenancePlanRepair() {
     addMaterialQualityRecord,
   } = useCmms();
 
-  const handleSaveIncident = async (data: IncidenData) => {
-    await createIncidentMutation.mutateAsync(data, {
-      onSuccess: () => {
-        setShowIncidentDialog(false);
-        setSelectedIds([]);
-      },
-    });
+  const handleSaveIncident = async (selectedIncident: IncidenData) => {
+    if (selectedIncident.id) {
+      console.log(selectedIncident);
+      await updateIncidentMutation.mutateAsync(selectedIncident);
+    } else {
+      await createIncidentMutation.mutateAsync(selectedIncident);
+    }
+    setShowForm(false);
+    setSelectedIncident(null);
   };
 
   const selectedSchedule: Record<string, any> =
@@ -279,6 +281,11 @@ export default function MaintenancePlanRepair() {
   const handleCloseAll = () => {
     setSelectedPlan(null);
     setSelectedIncident(null);
+    setShowForm(false);
+    setShowIncidentDialog(false);
+    setSelectedIncidentIds([]);
+    setSelectedIds([]);
+    setExpandedIncidentPlanIds(new Set());
   };
 
   // ── Selection helpers ─────────────────────────────────────
@@ -1045,6 +1052,15 @@ export default function MaintenancePlanRepair() {
                                                               >
                                                                 Trạng thái
                                                               </TableCell>
+                                                              <TableCell
+                                                                sx={{
+                                                                  fontWeight: 700,
+                                                                  color: "#fff",
+                                                                  fontSize: 12,
+                                                                }}
+                                                              >
+                                                                Thao tác
+                                                              </TableCell>
                                                             </TableRow>
                                                           </TableHead>
                                                           <TableBody>
@@ -1190,6 +1206,35 @@ export default function MaintenancePlanRepair() {
                                                                       {renderStatus(
                                                                         incident.trangThai,
                                                                       )}
+                                                                    </TableCell>
+                                                                    <TableCell>
+                                                                      <IconButton
+                                                                        disabled={
+                                                                          incident.trangThai !==
+                                                                          0
+                                                                        }
+                                                                        onClick={(
+                                                                          e,
+                                                                        ) => {
+                                                                          // handleEdit(plan);
+                                                                          setSelectedIncident(
+                                                                            incident,
+                                                                          );
+                                                                          setShowIncidentDialog(
+                                                                            true,
+                                                                          );
+                                                                          e.stopPropagation();
+                                                                        }}
+                                                                      >
+                                                                        <Edit
+                                                                          color={
+                                                                            incident.trangThai !==
+                                                                            0
+                                                                              ? "#afb6bdff"
+                                                                              : "#1976d2"
+                                                                          }
+                                                                        />
+                                                                      </IconButton>
                                                                     </TableCell>
                                                                   </TableRow>
                                                                 );
@@ -1465,8 +1510,9 @@ export default function MaintenancePlanRepair() {
       />
       <IncidentDialog
         open={showIncidentDialog}
-        onClose={() => setShowIncidentDialog(false)}
+        onClose={handleCloseAll}
         selectedPlans={selectedPlans}
+        initialIncident={selectedIncident}
         onSubmit={handleSaveIncident}
       />
     </>

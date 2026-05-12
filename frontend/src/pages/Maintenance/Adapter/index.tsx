@@ -13,7 +13,7 @@ export const IncidentAdapter = (s: any) => ({
   id: s.id,
   planId: s.idKeHoach,
   idTrinhDuyetGiamDoc: s.idGiamDoc,
-  tenTrinhDuyetGiamDoc: s.tenGiamDoc,
+  tenTrinhDuyetGiamDoc: s.tenGiamDoc,   
   trinhDuyetGiamDocXacNhan: s.giamDocXacNhan,
   idNguoiLapBieu: s.idNguoiLap,
   tenNguoiLapBieu: s.tenNguoiLap,
@@ -93,4 +93,4 @@ export const IncidentInspectionAdapter = (s: any) => ({
   moTa: s.nhanXetKetLuan,
   ngayTao: s.ngayTao,
   trangThai: s.trangThai,
-});
+});

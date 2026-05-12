@@ -163,9 +163,10 @@ public class SuCoThietBiDao {
     // ==================== INSERT ====================
 
     public SuCoThietBi insert(SuCoThietBi e) {
+        String now = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         e.setId(generateNextId());
-        e.setNgayTao(new Date());
-        e.setNgayCapNhat(e.getNgayTao());
+        e.setNgayTao(now);
+        e.setNgayCapNhat(now);
         String sql = """
             INSERT INTO suco_thietbi (
                 Id, IdCongTy, IdKeHoach, SoPhieu,
@@ -196,7 +197,8 @@ public class SuCoThietBiDao {
     // ==================== UPDATE ====================
 
     public SuCoThietBi update(SuCoThietBi e) {
-        e.setNgayCapNhat(new Date());
+        String now = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        e.setNgayCapNhat(now);
         String sql = """
             UPDATE suco_thietbi SET
                 IdKeHoach = ?, SoPhieu = ?,
@@ -291,9 +293,10 @@ public class SuCoThietBiDao {
     }
 
     public int huySuCo(String id) {
+        String now = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         int r = jdbcTemplate.update(
                 "UPDATE suco_thietbi SET TrangThai = 2, NgayCapNhat = ? WHERE Id = ?",
-                new Date(), id);
+                now, id);
         if (r > 0) CompletableFuture.runAsync(this::refreshCache);
         return r;
     }

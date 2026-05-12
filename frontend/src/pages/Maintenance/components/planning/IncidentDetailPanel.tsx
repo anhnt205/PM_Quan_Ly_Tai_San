@@ -41,6 +41,7 @@ import IncidentPreview from "../preview/IncidentPreview";
 import IncidentInspectionDialog from "../dialog/Incidentinspectiondialog";
 import {
   useMaintenanceAcceptanceByInspectionQuery,
+  useMaintenanceIncidentDetailByIncidentQuery,
   useMaintenanceIncidentInspectionBySuCoQuery,
   useMaintenanceInspectionByBienBanQuery,
   useMaintenanceMaterialAssessmentByInspectionQuery,
@@ -123,7 +124,8 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
   const [incidentPreviewId, setIncidentPreviewId] = useState<string | null>(
     null,
   );
-
+  const { data: incidentDevices = [] } =
+    useMaintenanceIncidentDetailByIncidentQuery(incident?.id);
   const { data: incidentInspections = [] } =
     useMaintenanceIncidentInspectionBySuCoQuery(incident?.id);
 
@@ -321,7 +323,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {(incident?.danhSachTaiSan ?? []).map((device, idx) => {
+                {incidentDevices?.map((device: any, idx: number) => {
                   return (
                     <TableRow key={device.id}>
                       {incident.trangThai === 3 && inc.daKiemTraSuCo !== 1 && (
@@ -688,9 +690,13 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
       {incidentInspectionParentId && (
         <IncidentInspectionDialog
           open={true}
-          onClose={() => setIncidentInspectionParentId(null)}
+          onClose={() => {
+            setIncidentInspectionParentId(null);
+            setSelectedDeviceIds([]);
+          }}
           plan={plan}
           incidentReport={incident}
+          selectedDeviceIds={selectedDeviceIds}
         />
       )}
 

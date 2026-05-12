@@ -26,7 +26,6 @@ import AssetHandover from "./pages/AssetHandover/AssetHandover";
 import Report from "./pages/Report/Report";
 import ToolTransfer from "./pages/ToolTransfer/ToolTransfer";
 import ToolHandover from "./pages/ToolHandover/ToolHandover";
-import MaintenanceRepair from "./pages/MaintenanceRepair/MaintenanceRepair";
 import Account from "./pages/Account/Account";
 import NotFound from "./pages/Notfound/Notfound";
 import { useEffect } from "react";
@@ -261,10 +260,6 @@ function App() {
                 <MaintenancePlanRepair />
               </CmmsProvider>
             }
-          />
-          <Route
-            path={ROUTES.MAINTENANCEREPAIR}
-            element={<MaintenanceRepair />}
           />
           <Route path={ROUTES.REPAIRLEVEL} element={<RepairLevel />} />
           <Route path={ROUTES.REPAIRNORM} element={<RepairNorm />} />

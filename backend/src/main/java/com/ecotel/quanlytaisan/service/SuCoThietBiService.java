@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.text.SimpleDateFormat;
 
 /**
  * Service sự cố thiết bị.
@@ -88,17 +89,27 @@ public class SuCoThietBiService {
 
         if (dateFrom != null && !dateFrom.isEmpty()) {
             try {
-                java.util.Date from = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(dateFrom);
+                Date from = new SimpleDateFormat("yyyy-MM-dd").parse(dateFrom);
+                SimpleDateFormat fullDf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 sourceList = sourceList.stream()
-                        .filter(i -> i.getNgayTao() != null && !i.getNgayTao().before(from))
+                        .filter(i -> {
+                            try {
+                                return i.getNgayTao() != null && !fullDf.parse(i.getNgayTao()).before(from);
+                            } catch (Exception e) { return false; }
+                        })
                         .collect(Collectors.toList());
             } catch (Exception ignored) {}
         }
         if (dateTo != null && !dateTo.isEmpty()) {
             try {
-                java.util.Date to = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(dateTo + " 23:59:59");
+                Date to = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(dateTo + " 23:59:59");
+                SimpleDateFormat fullDf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 sourceList = sourceList.stream()
-                        .filter(i -> i.getNgayTao() != null && !i.getNgayTao().after(to))
+                        .filter(i -> {
+                            try {
+                                return i.getNgayTao() != null && !fullDf.parse(i.getNgayTao()).after(to);
+                            } catch (Exception e) { return false; }
+                        })
                         .collect(Collectors.toList());
             } catch (Exception ignored) {}
         }
@@ -322,7 +333,7 @@ public class SuCoThietBiService {
             Map<Integer, Integer> pm = new HashMap<>();
             pm.put(0, 1); pm.put(1, 2); pm.put(3, 3); pm.put(2, 4);
             return Comparator.<SuCoThietBiDTO>comparingInt(i -> pm.getOrDefault(i.getTrangThai(), 5))
-                    .thenComparing(i -> i.getNgayTao() != null ? i.getNgayTao() : new Date(0),
+                    .thenComparing(i -> i.getNgayTao() != null ? i.getNgayTao() : "",
                             Comparator.nullsLast(Comparator.reverseOrder()));
         }
         boolean asc = "asc".equalsIgnoreCase(sortDir);
@@ -341,8 +352,8 @@ public class SuCoThietBiService {
                 comp = Comparator.comparing(i -> i.getNgayPhatHien() != null ? i.getNgayPhatHien() : "",
                         Comparator.nullsLast(String::compareTo)); break;
             case "ngaytao": default:
-                comp = Comparator.comparing(i -> i.getNgayTao() != null ? i.getNgayTao() : new Date(0),
-                        Comparator.nullsLast(Date::compareTo)); break;
+                comp = Comparator.comparing(i -> i.getNgayTao() != null ? i.getNgayTao() : "",
+                        Comparator.nullsLast(String::compareTo)); break;
         }
         return asc ? comp : comp.reversed();
     }

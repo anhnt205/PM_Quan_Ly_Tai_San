@@ -16,6 +16,7 @@ import {
 } from "../../Maintenance/types";
 import dayjs from "dayjs";
 import { useSelector } from "react-redux";
+import { IncidentAdapter } from "../../Maintenance/Adapter";
 
 export const useMaintenancePlanningPageQuery = (
   page?: number,
@@ -200,15 +201,15 @@ export const useMaintenancePlanningMutation = () => {
         deleteTaiSanManyMutation.mutate(deleteTS.map((i: any) => i.id));
     }
 
-    if (variables.nguoiKyList && variables.nguoiKyList.length > 0) {
-      updateSignerMutation.mutate({
+    // if (variables.nguoiKyList && variables.nguoiKyList.length > 0) {
+    updateSignerMutation.mutate({
+      idTaiLieu: planId,
+      data: (variables.nguoiKyList || []).map((item) => ({
+        ...item,
         idTaiLieu: planId,
-        data: variables.nguoiKyList.map((item) => ({
-          ...item,
-          idTaiLieu: planId,
-        })),
-      });
-    }
+      })),
+    });
+    // }
     queryClient.invalidateQueries({ queryKey: ["maintenancePlanningPage"] });
     queryClient.invalidateQueries({
       queryKey: ["maintenancePlanningGrouped"],
@@ -412,6 +413,20 @@ export const useMaintenanceIncidentPageQuery = (
   });
 };
 
+// Hook lấy chi tiết Tài Sản theo Kế Hoạch
+export const useMaintenanceIncidentDetailByIncidentQuery = (
+  idSuCo: string | undefined,
+) => {
+  return useQuery({
+    queryKey: ["incidentDetailByIncident", idSuCo],
+    queryFn: async () => {
+      const res = await api.get(`/suco-thietbi-chitiet/by-suco/${idSuCo}`);
+      return res.data.data || res.data || [];
+    },
+    enabled: !!idSuCo,
+  });
+};
+
 export const useMaintenanceIncidentByPlanQuery = (
   idKeHoach: string | undefined,
 ) => {
@@ -419,7 +434,9 @@ export const useMaintenanceIncidentByPlanQuery = (
     queryKey: ["incidentByPlan", idKeHoach],
     queryFn: async () => {
       const res = await api.get(`/suco-thietbi/by-kehoach/${idKeHoach}`);
-      return res.data.data || res.data || [];
+      return (res.data.data || res.data || []).map((item: any) =>
+        IncidentAdapter(item),
+      );
     },
     enabled: !!idKeHoach,
   });
@@ -505,15 +522,17 @@ export const useMaintenanceIncidenMutation = () => {
     }
     console.log(variables.nguoiKyList);
 
-    if (variables.nguoiKyList && variables.nguoiKyList.length > 0) {
-      updateSignerMutation.mutate({
+    // if (variables.nguoiKyList && variables.nguoiKyList.length > 0) {
+    updateSignerMutation.mutate({
+      idTaiLieu: incidenId,
+      data: (variables.nguoiKyList || []).map((item) => ({
+        ...item,
         idTaiLieu: incidenId,
-        data: variables.nguoiKyList.map((item) => ({
-          ...item,
-          idTaiLieu: incidenId,
-        })),
-      });
-    }
+      })),
+    });
+    // }
+    queryClient.invalidateQueries({ queryKey: ["incidentPage"] });
+    queryClient.invalidateQueries({ queryKey: ["incidentByPlan"] });
   };
 
   // --- API sự cố ---
@@ -530,6 +549,7 @@ export const useMaintenanceIncidenMutation = () => {
     onSuccess: async (response, variables) => {
       handleUpdate(response, variables);
       queryClient.invalidateQueries({ queryKey: ["incidentPage"] });
+      queryClient.invalidateQueries({ queryKey: ["incidentByPlan"] });
       showSuccessAlert("Tạo sự cố thành công");
     },
     onError: (error: any) => {
@@ -1783,6 +1803,9 @@ export const useMaintenanceIncidentInspectionMutation = () => {
         queryClient.invalidateQueries({ queryKey: ["incidentInspectionPage"] });
         queryClient.invalidateQueries({
           queryKey: ["incidentInspectionBySuCo"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["incidentDetailByIncident"],
         });
         showSuccessAlert("Tạo biên bản kiểm tra sự cố thành công");
       } else {

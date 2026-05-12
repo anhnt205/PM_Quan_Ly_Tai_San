@@ -323,8 +323,6 @@ export default function Menuheader() {
     toolTransfer: toolTransferCounts,
     assetHandover: assetHandoverCount,
     toolHandover: toolHandoverCount,
-    maintenanceRepair: maintenanceRepairCount,
-    maintenanceRepairResult: maintenanceRepairResultCount,
     transferAssetPageItems,
     transferToolPageItems,
   } = counts;
@@ -534,7 +532,6 @@ export default function Menuheader() {
       text: "Sửa chữa bảo dưỡng",
       icon: <Engineering fontSize="small" />,
       path: "#",
-      count: maintenanceRepairCount + maintenanceRepairResultCount,
       subMenu: [
         {
           text: "Quản lý sửa chữa",

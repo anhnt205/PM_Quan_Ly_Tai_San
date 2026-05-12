@@ -209,8 +209,9 @@ public class KiemTraSuCoDao {
     }
 
     public int huy(String id) {
-        String sql = "UPDATE kiemtra_suco SET TrangThai = 2 WHERE Id = ?";
-        return jdbcTemplate.update(sql, id);
+        String now = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String sql = "UPDATE kiemtra_suco SET TrangThai = 2, NgayCapNhat = ? WHERE Id = ?";
+        return jdbcTemplate.update(sql, now, id);
     }
 
     public int delete(String id) {

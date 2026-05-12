@@ -24,8 +24,9 @@ import type { PlanSigner } from "../../../../mockdata/mockPlans";
 import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
 import type { IncidenData, IncidenDetailData } from "../../types/index";
 import dayjs from "dayjs";
-import { CongTy } from "../../../../utils/const";
+import { Action, CongTy } from "../../../../utils/const";
 import { generateCode } from "../../../../utils/helpers";
+import { listSigneInfo } from "../../config";
 
 type SimpleDept = { id: string; name: string };
 type SimpleUser = {
@@ -40,9 +41,16 @@ interface Props {
   onClose: () => void;
   selectedPlans: MaintenancePlanData[];
   onSubmit: (rec: IncidenData) => void;
+  initialIncident: IncidenData | null;
 }
 
-const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
+const IncidentDialog = ({
+  open,
+  onClose,
+  selectedPlans,
+  onSubmit,
+  initialIncident,
+}: Props) => {
   const [number, setNumber] = useState("");
   const [detectedAt, setDetectedAt] = useState(
     dayjs().format("YYYY-MM-DD HH:mm:ss"),
@@ -53,6 +61,14 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
   const [description, setDescription] = useState("");
   const [severity, setSeverity] = useState<number>(2); // 0: Nhẹ, 1: Trung bình, 2: Nặng, 3: Nghiêm trọng
   const [subsystem, setSubsystem] = useState("");
+
+  // Signers
+  const [signers, setSigners] = useState<PlanSigner[]>([]);
+  const [addDeptId, setAddDeptId] = useState("");
+  const [addUserId, setAddUserId] = useState("");
+  const [editingSignerId, setEditingSignerId] = useState<string | null>(null);
+  const [editDeptId, setEditDeptId] = useState("");
+  const [editUserId, setEditUserId] = useState("");
 
   const planIds = selectedPlans.map((p) => p.id);
 
@@ -78,52 +94,99 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
       title: String(u?.tenChucVu ?? u?.chucVu ?? u?.title ?? ""),
     }));
 
-  // Reset khi dialog mở hoặc dept thay đổi
+  // Reset và Load dữ liệu ban đầu
   useEffect(() => {
     if (!open) return;
-    if (selectedPlans && selectedPlans.length > 0) {
-      setSelectedDeptId(selectedPlans[0].idDonViGiao || "");
+
+    if (initialIncident) {
+      // --- CHẾ ĐỘ CHỈNH SỬA ---
+      const listInfo = listSigneInfo(initialIncident, apiUsers, apiDepartments);
+      setSigners(
+        (listInfo || []).map((item, idx) => ({
+          ...item,
+          userId: item.idNhanVien,
+          userName: item.hoTen,
+          departmentId: item.idDonVi,
+          departmentName: item.donVi,
+          order: idx + 1,
+          action: Action.UPDATE,
+        })),
+      );
+      setNumber(initialIncident.soPhieu || "");
+      setDetectedAt(initialIncident.ngayPhatHien || dayjs().format("YYYY-MM-DD HH:mm:ss"));
+      setReporter(initialIncident.idDonViBaoCao || "");
+      setSystemName(initialIncident.tenHeThongThietBi || "");
+      setLocation(initialIncident.phanHeViTri || "");
+      setDescription(initialIncident.moTa || "");
+      setSeverity(initialIncident.mucDo ?? 2);
+      setSubsystem(initialIncident.phanHeViTri || "");
+      setSelectedDeptId(initialIncident.idDonViBaoCao || "");
+      
+      const mappedAssets = (initialIncident.danhSachTaiSan || []).map(
+        (a: IncidenDetailData) => ({
+          id: a.id,
+          deviceId: a.idTaiSan,
+          tenTaiSan: a.tenTaiSan,
+          tenNhom: a.tenNhomTaiSan,
+          tenDonVi: a.tenDonViQuanLyKyThuat,
+          tenHienTrang: a.tinhTrang,
+          idDonViQuanLyKyThuat: a.idDonViQuanLyKyThuat,
+          viTri: a.viTri,
+          quantity: a.soLuong,
+          thuocHeThong: a.thuocHeThong,
+          action: Action.UPDATE,
+        }),
+      );
+      setAssets(mappedAssets);
     } else {
+      // --- CHẾ ĐỘ TẠO MỚI ---
+      setNumber("");
+      setDetectedAt(dayjs().format("YYYY-MM-DD HH:mm:ss"));
+      setReporter("");
+      setSystemName("");
+      setLocation("");
+      setDescription("");
+      setSeverity(2);
+      setSubsystem("");
+      setSigners([]);
+      setDeviceEntries([]);
+      
+      if (selectedPlans && selectedPlans.length > 0) {
+        setSelectedDeptId(selectedPlans[0].idDonViGiao || "");
+      } else {
+        setSelectedDeptId("");
+      }
       setAssets([]);
     }
-    setDeviceEntries([]);
-  }, [open, selectedPlans]);
+  }, [open, initialIncident, selectedPlans, apiUsers, apiDepartments]);
 
   // Sync assets → deviceEntries, ưu tiên dữ liệu từ API response
   useEffect(() => {
     setDeviceEntries((prev: IncidenDetailData[]) => {
       return assets.map((a: any) => {
-        const id = a.id ?? a.deviceId ?? "";
-        const existing = prev.find((e: IncidenDetailData) => e.idTaiSan === id);
+        const existing = prev.find(
+          (e: IncidenDetailData) => e.idTaiSan === a.deviceId,
+        );
 
         // Map hienTrang (số) sang text dễ đọc;
 
         return {
-          idTaiSan: id,
+          id: a?.id,
+          idTaiSan: a.deviceId ?? "",
           tenTaiSan: existing?.tenTaiSan ?? a.tenTaiSan ?? "",
           soLuong: existing?.soLuong ?? a.quantity ?? 1,
           // status: ưu tiên giữ lại nếu user đã sửa, fallback API, fallback mock
-          tinhTrang:
-            existing?.idTaiSan === id && existing?.tinhTrang !== undefined
-              ? existing.tinhTrang
-              : (a.tenHienTrang ?? ""),
+          tinhTrang: a.tenHienTrang ?? existing?.tinhTrang ?? "",
           tenNhomTaiSan: a.tenNhom || "",
           thuocHeThong: existing?.thuocHeThong ?? a.thuocHeThong ?? "",
           idDonViQuanLyKyThuat:
             existing?.idDonViQuanLyKyThuat ?? a.idDonViQuanLyKyThuat ?? "",
           viTri: existing?.viTri ?? a.viTri ?? "",
+          action: a.action ?? Action.CREATE,
         };
       });
     });
   }, [assets]);
-
-  // Signers
-  const [signers, setSigners] = useState<PlanSigner[]>([]);
-  const [addDeptId, setAddDeptId] = useState("");
-  const [addUserId, setAddUserId] = useState("");
-  const [editingSignerId, setEditingSignerId] = useState<string | null>(null);
-  const [editDeptId, setEditDeptId] = useState("");
-  const [editUserId, setEditUserId] = useState("");
 
   const handleAddSigner = () => {
     if (!addUserId || !addDeptId) return;
@@ -205,9 +268,9 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
         : [];
 
     const rec: any = {
-      id: `INC-${Date.now()}`,
+      id: initialIncident?.id,
       idCongTy: CongTy.CT001,
-      idKeHoach: selectedPlans[0]?.id || "",
+      idKeHoach: initialIncident?.idKeHoach || selectedPlans[0]?.id || "",
       soPhieu: number,
       idDonViBaoCao: selectedDeptId,
       ngayPhatHien: dayjs(detectedAt).format("YYYY-MM-DD HH:mm:ss"),
@@ -703,7 +766,9 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
               location={location}
               description={description}
               severity={severity}
-              deviceEntries={deviceEntries}
+              deviceEntries={deviceEntries.filter(
+                (item) => item.action !== Action.DELETE,
+              )}
               onDeviceEntriesChange={setDeviceEntries}
               planIds={planIds}
             />
@@ -717,14 +782,25 @@ const IncidentDialog = ({ open, onClose, selectedPlans, onSubmit }: Props) => {
         <Button onClick={onClose} color="inherit">
           Hủy
         </Button>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleSubmit}
-          disabled={isSubmitDisabled}
-        >
-          Tạo Phiếu và Lưu
-        </Button>
+        {initialIncident?.id ? (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSubmit}
+            disabled={isSubmitDisabled}
+          >
+            Cập Nhật
+          </Button>
+        ) : (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSubmit}
+            disabled={isSubmitDisabled}
+          >
+            Tạo Phiếu và Lưu
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   );

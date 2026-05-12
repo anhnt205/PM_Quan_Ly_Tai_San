@@ -1,8 +1,6 @@
 package com.ecotel.quanlytaisan.model;
 
 import lombok.Data;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -93,11 +91,8 @@ public class SuCoThietBiDTO {
 
     // ---------- Audit ----------
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
-    private Date ngayTao;
-
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
-    private Date ngayCapNhat;
+    private String ngayTao;
+    private String ngayCapNhat;
 
     private String nguoiTao;
 
