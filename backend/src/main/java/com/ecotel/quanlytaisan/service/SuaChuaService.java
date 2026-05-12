@@ -231,6 +231,13 @@ public class SuaChuaService {
     }
 
     @Transactional
+    public void batchUpdate(List<SuaChua> entities) {
+        for (SuaChua entity : entities) {
+            update(entity);
+        }
+    }
+
+    @Transactional
     public int updateTrangThai(String id, String userId) {
         SuaChua sc = suaChuaDao.findById(id);
         if (sc == null) return 0;

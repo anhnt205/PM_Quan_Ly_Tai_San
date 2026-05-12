@@ -69,7 +69,26 @@ export const useMaintenanceMutation = (key: string, apiUri: string) => {
     },
   });
 
+  const updateManyMutation = useMutation({
+    mutationFn: async (data: any[]) => {
+      const res = await api.put(`/${apiUri}/batch`, data);
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: [key] });
+      console.log("Trình duyệt thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Trình duyệt thất bại",
+      );
+    },
+  });
+
   return {
     signMutation,
+    updateManyMutation,
   };
 };

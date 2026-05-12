@@ -106,6 +106,17 @@ public class SuaChuaController {
         }
     }
 
+    @PutMapping("/batch")
+    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<SuaChua> entities) {
+        try {
+            service.batchUpdate(entities);
+            return ResponseEntity.ok(ApiResponse.success("Cập nhật danh sách phiếu sửa chữa thành công", null, entities.size()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {

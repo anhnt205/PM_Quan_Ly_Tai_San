@@ -43,6 +43,9 @@ import {
   generateDanhGiaVatTuPdf,
   showStatus,
   listSigneInfo,
+  showShareStatus,
+  isCheckShowShare,
+  handleSendToSigner,
 } from "../config";
 import SignDocumentForm from "../components/signdocument/SignDocumentForm";
 import { useAllDepartmentsQuery } from "../../Department/Mutation";
@@ -60,6 +63,7 @@ import {
   IncidentInspectionAdapter,
 } from "../Adapter";
 import { FilterOption } from "../../../components/common/FilterStatusGroup";
+import { useMaintenanceMutation } from "../mutation";
 
 export default function MaintenanceRecordPage() {
   const [activeTab, setActiveTab] = useState(0);
@@ -70,7 +74,7 @@ export default function MaintenanceRecordPage() {
   });
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const [detailTab, setDetailTab] = useState(0);
-
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const { user } = useSelector((state: RootState) => state.user);
 
   // Filter ngày & trạng thái
@@ -81,6 +85,39 @@ export default function MaintenanceRecordPage() {
   const { data: staffs } = useAllStaffsQuery();
   const { data: departments } = useAllDepartmentsQuery();
   const { data: positions } = useAllPositionsQuery();
+
+  const { updateManyMutation } = useMaintenanceMutation(
+    activeTab === 0
+      ? "maintenancePlanningPage"
+      : activeTab === 1
+        ? "repairPage"
+        : activeTab === 2
+          ? "inspectionPage"
+          : activeTab === 3
+            ? "acceptanceTestPage"
+            : activeTab === 4
+              ? "materialAssessmentPage"
+              : activeTab === 5
+                ? "incidentPage"
+                : activeTab === 6
+                  ? "incidentInspectionPage"
+                  : "",
+    activeTab === 0
+      ? "kehoach-suachua"
+      : activeTab === 1
+        ? "suachua"
+        : activeTab === 2
+          ? "giamdinh"
+          : activeTab === 3
+            ? "nghiemthu"
+            : activeTab === 4
+              ? "danhgia-vattu"
+              : activeTab === 5
+                ? "suco-thietbi"
+                : activeTab === 6
+                  ? "kiemtra-suco"
+                  : "",
+  );
 
   const searchDebounce = useDebounce(searchValue, 500);
   const {
@@ -254,7 +291,11 @@ export default function MaintenanceRecordPage() {
     id: r.id || crypto.randomUUID(),
   }));
 
-  const tabCounts = allRows.map((data) => data?.totalItems || 0);
+  const tabCounts = allRows.map(
+    (data) =>
+      (data?.trangThaiCounts?.["0"] || 0) +
+      (data?.trangThaiCounts?.["1"] || 0),
+  );
 
   const buildColumns = (collapsed: boolean) => {
     const parentCols = (parentColumnConfigs[activeTab] ?? []).map((cfg) => ({
@@ -284,6 +325,16 @@ export default function MaintenanceRecordPage() {
       ...parentCols,
       { field: "moTa", headerName: "Nội dung/Ghi chú", flex: 1, minWidth: 200 },
       { field: "ngayTao", headerName: "Ngày tạo", width: 120 },
+      {
+        field: "share",
+        headerName: "Trình duyệt",
+        width: 160,
+        renderCell: (params: any) =>
+          showShareStatus(
+            params.row?.share ?? false,
+            params.row?.nguoiTao === user?.taiKhoan?.tenDangNhap,
+          ),
+      },
       {
         field: "trangThai",
         headerName: "Trạng thái",
@@ -567,6 +618,16 @@ export default function MaintenanceRecordPage() {
     );
   };
 
+  const handleClose = () => {
+    setSelectedIds([]);
+    setSearchValue("");
+    setSelectedRow(null);
+  };
+
+  const handleSend = (items: any[]) => {
+    handleSendToSigner(items, updateManyMutation.mutateAsync, handleClose);
+  };
+
   const isDetailOpen = !!selectedRow;
 
   const resetFilters = () => {
@@ -769,6 +830,8 @@ export default function MaintenanceRecordPage() {
                   onPaginationModelChange={setPaginationModel}
                   paginationMode="server"
                   checkboxSelection={!isDetailOpen}
+                  selectedIds={selectedIds}
+                  onSelectionChange={setSelectedIds}
                   searchValue={searchValue}
                   setSearchValue={setSearchValue}
                   showDelete={false}
@@ -785,6 +848,8 @@ export default function MaintenanceRecordPage() {
                     setPaginationModel((m) => ({ ...m, page: 0 }));
                   }}
                   canSign={() => false}
+                  isCheckShowShare={isCheckShowShare}
+                  handleSendToSigner={handleSend}
                 />
               </CardContent>
             </Card>

@@ -151,7 +151,7 @@ const RepairRequestDialog = ({
       nguoiLapXacNhan: false,
       idGiamDoc: idTrinhDuyetGiamDoc,
       giamDocXacNhan: false,
-      share: true,
+      share: false,
       trangThai: 0,
       ngayTao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       ngayCapNhat: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),

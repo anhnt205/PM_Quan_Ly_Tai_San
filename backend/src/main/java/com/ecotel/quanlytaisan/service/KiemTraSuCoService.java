@@ -126,6 +126,13 @@ public class KiemTraSuCoService {
     }
 
     @Transactional
+    public void batchUpdate(List<KiemTraSuCo> entities) {
+        for (KiemTraSuCo entity : entities) {
+            update(entity);
+        }
+    }
+
+    @Transactional
     public int updateTrangThai(String id, String userId) {
         return mainDao.updateTrangThai(id, userId);
     }

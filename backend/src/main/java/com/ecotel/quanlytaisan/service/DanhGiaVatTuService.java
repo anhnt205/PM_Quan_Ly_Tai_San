@@ -70,6 +70,13 @@ public class DanhGiaVatTuService {
     }
 
     @Transactional
+    public void batchUpdate(List<DanhGiaVatTu> entities) {
+        for (DanhGiaVatTu entity : entities) {
+            update(entity);
+        }
+    }
+
+    @Transactional
     public int updateTrangThai(String id, String userId) {
         DanhGiaVatTu item = dao.findById(id);
         if (item == null) return 0;

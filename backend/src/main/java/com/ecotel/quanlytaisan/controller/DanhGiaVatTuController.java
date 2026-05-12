@@ -96,6 +96,17 @@ public class DanhGiaVatTuController {
         }
     }
 
+    @PutMapping("/batch")
+    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<DanhGiaVatTu> entities) {
+        try {
+            service.batchUpdate(entities);
+            return ResponseEntity.ok(ApiResponse.success("Cập nhật danh sách thành công", null, entities.size()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
     @PostMapping("/capnhattrangthai")
     public ResponseEntity<ApiResponse<Object>> updateTrangThai(
             @RequestParam("id") String id,

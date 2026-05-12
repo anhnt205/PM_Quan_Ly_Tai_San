@@ -232,7 +232,7 @@ const IncidentInspectionDialog = ({
       idGiamDoc: idTrinhDuyetGiamDoc,
       giamDocXacNhan: false,
       trangThai: 0,
-      share: true,
+      share: false,
       nguoiKyList: intermediateSigners,
       danhSachChiTiet: items.map((item) => {
         return {

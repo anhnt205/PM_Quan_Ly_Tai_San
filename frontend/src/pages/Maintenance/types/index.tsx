@@ -191,6 +191,7 @@ export interface IncidentInspectionDetailData {
   
   // Enrich
   maTaiSan?: string;
+  tenTaiSan?: string;
   donViTinh?: string;
 }
 

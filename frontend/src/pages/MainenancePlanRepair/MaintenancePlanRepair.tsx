@@ -469,7 +469,6 @@ export default function MaintenancePlanRepair() {
                 setSearchValue={setSearchValue}
                 onDelete={() => {}}
                 showDelete={false}
-                isCheckShowShare={isCheckShowShare}
                 extraActions={
                   <>
                     <Button
@@ -482,34 +481,6 @@ export default function MaintenancePlanRepair() {
                     >
                       Tạo phiếu báo sự cố
                     </Button>
-
-                    {isCheckShowShare(selectedPlans) && (
-                      <Button
-                        size="small"
-                        variant="contained"
-                        color="warning"
-                        sx={{ display: isDetailOpen ? "none" : undefined }}
-                        disabled={!canSendPlanToSigner}
-                        onClick={async () => await handleSend(selectedPlans)}
-                      >
-                        Trình duyệt kế hoạch ({selectedPlans.length})
-                      </Button>
-                    )}
-
-                    {isCheckShowShare(selectedIncidents) && (
-                      <Button
-                        size="small"
-                        variant="contained"
-                        color="warning"
-                        sx={{ display: isDetailOpen ? "none" : undefined }}
-                        disabled={!canSendIncidentToSigner}
-                        onClick={async () =>
-                          await handleSendIncident(selectedIncidents)
-                        }
-                      >
-                        Trình duyệt sự cố ({selectedIncidents.length})
-                      </Button>
-                    )}
                   </>
                 }
                 customContent={

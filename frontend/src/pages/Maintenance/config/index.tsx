@@ -8,6 +8,139 @@ import "../../../assets/fonts/times_new_roman_italic-italic";
 import { Chip } from "@mui/material";
 
 import { IncidenData } from "../types";
+import { showConfirmAlert, showErrorAlert, showSuccessAlert } from "../../../components/Alert";
+import { MessageTypeFunctions } from "../../../utils/const";
+import socketService from "../../../services/socketService";
+
+export const showShareStatus = (isShare: boolean, isMyCreated: boolean) => {
+  return (
+    <Chip
+      label={isShare ? (isMyCreated ? "Đã gửi" : "Được gửi") : "Chưa gửi"}
+      sx={{
+        backgroundColor: isShare ? "#4caf50" : "#f30d0d",
+        color: "white",
+        fontWeight: 500,
+        fontSize: "12px",
+        borderRadius: "4px", // BorderRadius.circular(4)
+        height: "auto",
+        padding: "1px 5px", // EdgeInsets.symmetric(horizontal: 5, vertical: 1)
+        mb: "2px", // margin: const EdgeInsets.only(bottom: 2)
+        "& .MuiChip-label": {
+          padding: 0,
+        },
+      }}
+    />
+  );
+};
+
+// kiem tra quyền share
+export const isCheckShowShare = (items: any[]) => {
+  if (items.length === 0) {
+    return false;
+  }
+  const hasSharedItems = items.some((e) => e.share === true);
+
+  if (hasSharedItems) {
+    return false;
+  }
+
+  return items.some((e) => e.share !== true);
+};
+
+//
+
+/**
+ * Lọc danh sách phiếu chưa trình duyệt và hiển thị thông báo nếu có phiếu đã trình duyệt rồi.
+ */
+const getNotSharedAndNotify = (items: any[]): any[] => {
+  if (!items || items.length === 0) {
+    showErrorAlert("Không có phiếu nào để trình duyệt");
+    return [];
+  }
+
+  // Lọc phiếu đã trình duyệt và chưa trình duyệt
+  const alreadyShared = items.filter((e) => e.share === true);
+  const notShared = items.filter((e) => e.share !== true);
+
+  // Trường hợp tất cả đều đã trình duyệt
+  if (notShared.length === 0) {
+    showErrorAlert("Các phiếu này đều đã được trình duyệt");
+    return [];
+  }
+
+  // Thông báo nếu trong danh sách chọn có lẫn phiếu đã trình duyệt
+  if (alreadyShared.length > 0) {
+    const names = alreadyShared
+      .map((e) => (e.tenPhieu?.trim() ? e.tenPhieu : e.id))
+      .filter(Boolean)
+      .join(", ");
+
+    const message = names
+      ? `Các phiếu đã được trình duyệt: ${names}`
+      : "Có phiếu đã được trình duyệt trong danh sách chọn";
+
+    showErrorAlert(message);
+  }
+
+  return notShared;
+};
+
+export const handleSendToSigner = async (
+  selectedItems: any[],
+  onUpdate: (data: any[]) => Promise<any>,
+  onClose: () => void,
+) => {
+  // 1. Kiểm tra rỗng
+  if (!selectedItems || selectedItems.length === 0) {
+    showErrorAlert("Không có phiếu nào để chia sẻ");
+    return;
+  }
+
+  // 2. Hiển thị Dialog xác nhận (tương tự showConfirmDialog trong Flutter)
+  const confirm = await showConfirmAlert(
+    "Bạn có chắc muốn trình duyệt cho người ký?",
+  );
+
+  if (confirm.isConfirmed) {
+    // 3. Lọc danh sách hợp lệ
+    const notSharedItems = getNotSharedAndNotify(selectedItems);
+
+    if (notSharedItems.length > 0) {
+      try {
+        const list = await listNguoiKy(selectedItems);
+        await onUpdate(notSharedItems.map((e) => ({ ...e, share: true })));
+        await socketService.send({
+          type: MessageTypeFunctions.ASSET_TRANSFER,
+          recieve: list,
+        });
+        showSuccessAlert("Trình duyệt phiếu thành công!");
+        onClose();
+      } catch (error) {
+        showErrorAlert("Có lỗi xảy ra khi trình duyệt phiếu.");
+      }
+    }
+  }
+  onClose();
+};
+
+export const listNguoiKy = (selectedItems: any[]) => {
+  const allIds = new Set<string>();
+  for (var item of selectedItems) {
+    const id1 = item.idNguoiLapBieu;
+    const id2 = item.idTrinhDuyetGiamDoc;
+
+    if (id1) allIds.add(id1);
+    if (id2) allIds.add(id2);
+    const signatories = item.nguoiKyList;
+    if (signatories != null) {
+      for (var s of signatories) {
+        const sigId = s.idNguoiKy;
+        if (sigId) allIds.add(sigId);
+      }
+    }
+  }
+  return Array.from(allIds);
+};
 
 const getStatusDetails = (status: number) => {
   switch (status) {

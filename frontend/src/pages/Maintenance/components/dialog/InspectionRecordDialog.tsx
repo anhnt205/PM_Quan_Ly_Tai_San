@@ -224,7 +224,7 @@ const InspectionRecordDialog = ({
       idGiamDoc: idTrinhDuyetGiamDoc,
       giamDocXacNhan: false,
       trangThai: 0,
-      share: true,
+      share: false,
       danhSachChiTiet: entries.map((e) => ({
         idTaiSan: e.deviceId,
         idBienBanChiTiet: e.idBienBanChiTiet,

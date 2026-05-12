@@ -784,6 +784,7 @@ export const useMaintenanceRepairMutation = () => {
     onSuccess: async (response, variables) => {
       handleUpdate(response, variables);
       queryClient.invalidateQueries({ queryKey: ["repairPage"] });
+      queryClient.invalidateQueries({ queryKey: ["maintenancePlanningDetailsByMonth"] });
       showSuccessAlert("Tạo giấy đề nghị sửa chữa thành công");
     },
     onError: (error: any) => {
