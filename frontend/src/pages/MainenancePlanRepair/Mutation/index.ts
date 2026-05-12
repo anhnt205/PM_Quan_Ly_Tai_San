@@ -25,6 +25,8 @@ export const useMaintenancePlanningPageQuery = (
   idDonViGiao?: string,
   userid?: string,
   isSign?: boolean,
+  dateFrom?: string,
+  dateTo?: string,
 ) => {
   return useQuery({
     queryKey: [
@@ -36,6 +38,8 @@ export const useMaintenancePlanningPageQuery = (
       idDonViGiao,
       userid,
       isSign,
+      dateFrom,
+      dateTo,
     ],
     queryFn: async () => {
       const res = await api.get("/kehoach-suachua/paged", {
@@ -47,6 +51,8 @@ export const useMaintenancePlanningPageQuery = (
           trangThai: trangThai,
           userid: userid,
           isSign: isSign,
+          dateFrom: dateFrom,
+          dateTo: dateTo,
         },
       });
       return res.data.data || res.data;
@@ -60,6 +66,8 @@ export const useMaintenancePlanningGroupedQuery = (
   trangThai?: number,
   search?: string,
   userid?: string,
+  dateFrom?: string,
+  dateTo?: string,
 ) => {
   return useQuery({
     queryKey: [
@@ -68,10 +76,12 @@ export const useMaintenancePlanningGroupedQuery = (
       trangThai,
       search,
       userid,
+      dateFrom,
+      dateTo,
     ],
     queryFn: async () => {
       const res = await api.get("/kehoach-suachua/grouped-by-year", {
-        params: { idCongTy, trangThai, search, userid },
+        params: { idCongTy, trangThai, search, userid, dateFrom, dateTo },
       });
       return res.data;
     },
@@ -363,6 +373,8 @@ export const useMaintenanceIncidentPageQuery = (
   idDonViGiao?: string,
   userid?: string,
   isSign?: boolean,
+  dateFrom?: string,
+  dateTo?: string,
 ) => {
   return useQuery({
     queryKey: [
@@ -374,6 +386,8 @@ export const useMaintenanceIncidentPageQuery = (
       idDonViGiao,
       userid,
       isSign,
+      dateFrom,
+      dateTo,
     ],
     queryFn: async () => {
       const res = await api.get("/suco-thietbi/paged", {
@@ -385,6 +399,8 @@ export const useMaintenanceIncidentPageQuery = (
           trangThai: trangThai,
           userid: userid,
           isSign: isSign,
+          dateFrom: dateFrom,
+          dateTo: dateTo,
         },
       });
       return res.data.data || res.data;
@@ -641,6 +657,8 @@ export const useMaintenanceRepairPageQuery = (
   idDonViGiao?: string,
   userid?: string,
   isSign?: boolean,
+  dateFrom?: string,
+  dateTo?: string,
 ) => {
   return useQuery({
     queryKey: [
@@ -652,6 +670,8 @@ export const useMaintenanceRepairPageQuery = (
       idDonViGiao,
       userid,
       isSign,
+      dateFrom,
+      dateTo,
     ],
     queryFn: async () => {
       const res = await api.get("/suachua/paged", {
@@ -663,6 +683,8 @@ export const useMaintenanceRepairPageQuery = (
           trangThai: trangThai,
           userid: userid,
           isSign: isSign,
+          dateFrom: dateFrom,
+          dateTo: dateTo,
         },
       });
       return res.data.data || res.data;
@@ -904,6 +926,8 @@ export const useMaintenanceInspectionPageQuery = (
   idDonViGiao?: string,
   userid?: string,
   isSign?: boolean,
+  dateFrom?: string,
+  dateTo?: string,
 ) => {
   return useQuery({
     queryKey: [
@@ -915,6 +939,8 @@ export const useMaintenanceInspectionPageQuery = (
       idDonViGiao,
       userid,
       isSign,
+      dateFrom,
+      dateTo,
     ],
     queryFn: async () => {
       const res = await api.get("/giamdinh/paged", {
@@ -926,6 +952,8 @@ export const useMaintenanceInspectionPageQuery = (
           trangThai: trangThai,
           userid: userid,
           isSign: isSign,
+          dateFrom: dateFrom,
+          dateTo: dateTo,
         },
       });
       return res.data.data || res.data;
@@ -1222,6 +1250,8 @@ export const useMaintenanceAcceptanceTestPageQuery = (
   idDonViGiao?: string,
   userid?: string,
   isSign?: boolean,
+  dateFrom?: string,
+  dateTo?: string,
 ) => {
   return useQuery({
     queryKey: [
@@ -1233,6 +1263,8 @@ export const useMaintenanceAcceptanceTestPageQuery = (
       idDonViGiao,
       userid,
       isSign,
+      dateFrom,
+      dateTo,
     ],
     queryFn: async () => {
       const res = await api.get("/nghiemthu/paged", {
@@ -1244,6 +1276,8 @@ export const useMaintenanceAcceptanceTestPageQuery = (
           trangThai: trangThai,
           userid: userid,
           isSign: isSign,
+          dateFrom: dateFrom,
+          dateTo: dateTo,
         },
       });
       return res.data.data || res.data;
@@ -1511,6 +1545,8 @@ export const useMaintenanceMaterialAssessmentPageQuery = (
   trangThai?: number,
   userid?: string,
   isSign?: boolean,
+  dateFrom?: string,
+  dateTo?: string,
 ) => {
   return useQuery({
     queryKey: [
@@ -1521,6 +1557,8 @@ export const useMaintenanceMaterialAssessmentPageQuery = (
       trangThai,
       userid,
       isSign,
+      dateFrom,
+      dateTo,
     ],
     queryFn: async () => {
       const res = await api.get("/danhgia-vattu/paged", {
@@ -1532,6 +1570,8 @@ export const useMaintenanceMaterialAssessmentPageQuery = (
           trangThai: trangThai,
           userid: userid,
           isSign: isSign,
+          dateFrom: dateFrom,
+          dateTo: dateTo,
         },
       });
       return res.data.data || res.data;
@@ -1655,6 +1695,8 @@ export const useMaintenanceIncidentInspectionPageQuery = (
   idDonViGiao?: string,
   userid?: string,
   isSign?: boolean,
+  dateFrom?: string,
+  dateTo?: string,
 ) => {
   return useQuery({
     queryKey: [
@@ -1666,6 +1708,8 @@ export const useMaintenanceIncidentInspectionPageQuery = (
       idDonViGiao,
       userid,
       isSign,
+      dateFrom,
+      dateTo,
     ],
     queryFn: async () => {
       const res = await api.get("/kiemtra-suco/page", {
@@ -1677,6 +1721,8 @@ export const useMaintenanceIncidentInspectionPageQuery = (
           trangThai: trangThai,
           userid: userid,
           isSign: isSign,
+          dateFrom: dateFrom,
+          dateTo: dateTo,
         },
       });
       return res.data.data || res.data;

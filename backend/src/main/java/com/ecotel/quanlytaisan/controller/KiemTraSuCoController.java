@@ -27,9 +27,11 @@ public class KiemTraSuCoController {
             @RequestParam(value = "idCongTy", required = false) String idCongTy,
             @RequestParam(value = "trangThai", required = false) Integer trangThai,
             @RequestParam(value = "userid", required = false) String userid,
-            @RequestParam(value = "isSign", required = false) Boolean isSign) {
+            @RequestParam(value = "isSign", required = false) Boolean isSign,
+            @RequestParam(value = "dateFrom", required = false) String dateFrom,
+            @RequestParam(value = "dateTo", required = false) String dateTo) {
         try {
-            PageResponse<KiemTraSuCoDTO> response = service.findAllPaged(page, pageSize, searchValue, idCongTy, trangThai, userid, isSign);
+            PageResponse<KiemTraSuCoDTO> response = service.findAllPaged(page, pageSize, searchValue, idCongTy, trangThai, userid, isSign, dateFrom, dateTo);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", response, (int) response.getTotalItems()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), 0));

@@ -112,6 +112,8 @@ export default function MaintenanceApprovalPage() {
     undefined,
     user?.taiKhoan?.tenDangNhap,
     true,
+    dateFrom,
+    dateTo,
   );
 
   const {
@@ -125,6 +127,8 @@ export default function MaintenanceApprovalPage() {
     undefined,
     user?.taiKhoan?.tenDangNhap,
     true,
+    dateFrom,
+    dateTo,
   );
   const {
     data: repairPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
@@ -137,6 +141,8 @@ export default function MaintenanceApprovalPage() {
     undefined,
     user?.taiKhoan?.tenDangNhap,
     true,
+    dateFrom,
+    dateTo,
   );
 
   const {
@@ -150,6 +156,8 @@ export default function MaintenanceApprovalPage() {
     undefined,
     user?.taiKhoan?.tenDangNhap,
     true,
+    dateFrom,
+    dateTo,
   );
 
   const {
@@ -167,6 +175,8 @@ export default function MaintenanceApprovalPage() {
     undefined,
     user?.taiKhoan?.tenDangNhap,
     true,
+    dateFrom,
+    dateTo,
   );
 
   const {
@@ -183,6 +193,8 @@ export default function MaintenanceApprovalPage() {
     undefined,
     user?.taiKhoan?.tenDangNhap,
     true,
+    dateFrom,
+    dateTo,
   );
 
   const {
@@ -200,6 +212,8 @@ export default function MaintenanceApprovalPage() {
     undefined,
     user?.taiKhoan?.tenDangNhap,
     true,
+    dateFrom,
+    dateTo,
   );
 
   const { signMutation } = useMaintenanceMutation(

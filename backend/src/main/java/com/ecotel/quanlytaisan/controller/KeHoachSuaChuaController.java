@@ -39,12 +39,15 @@ public class KeHoachSuaChuaController {
             @RequestParam(value = "trangThai", required = false) Integer trangThai,
             @RequestParam(value = "nam", required = false) Integer nam,
             @RequestParam(value = "userid", required = false) String userid,
-            @RequestParam(value = "isSign", required = false) Boolean isSign
+            @RequestParam(value = "isSign", required = false) Boolean isSign,
+            @RequestParam(value = "dateFrom", required = false) String dateFrom,
+            @RequestParam(value = "dateTo", required = false) String dateTo
     ) throws SQLException {
         try {
             PageResponse<KeHoachSuaChuaDTO> response = keHoachSuaChuaService.findAllPaged(
                     idCongTy, page, size, sortBy, sortDir, search,
-                    loaiKeHoach, idDonViGiao, idDonViNhan, trangThai, nam, userid, isSign
+                    loaiKeHoach, idDonViGiao, idDonViNhan, trangThai, nam, userid, isSign,
+                    dateFrom, dateTo
             );
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", response, (int) response.getTotalItems()));
         } catch (Exception e) {
@@ -87,10 +90,13 @@ public class KeHoachSuaChuaController {
             @RequestParam(value = "search", required = false) String search,
             @RequestParam(value = "trangThai", required = false) Integer trangThai,
             @RequestParam(value = "nam", required = false) Integer nam,
-            @RequestParam(value = "userid", required = false) String userid
+            @RequestParam(value = "userid", required = false) String userid,
+            @RequestParam(value = "dateFrom", required = false) String dateFrom,
+            @RequestParam(value = "dateTo", required = false) String dateTo
     ) throws SQLException {
         try {
-            Map<Integer, List<KeHoachSuaChuaDTO>> grouped = keHoachSuaChuaService.findAllGroupedByYear(idCongTy, search, trangThai, nam, userid);
+            Map<Integer, List<KeHoachSuaChuaDTO>> grouped = keHoachSuaChuaService.findAllGroupedByYear(
+                idCongTy, search, trangThai, nam, userid, dateFrom, dateTo);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách theo năm thành công", grouped, grouped.size()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

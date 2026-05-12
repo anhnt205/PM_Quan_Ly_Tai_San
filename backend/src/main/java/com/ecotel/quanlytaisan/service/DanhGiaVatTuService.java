@@ -132,11 +132,8 @@ public class DanhGiaVatTuService {
         return dao.delete(id);
     }
 
-    public PageResponse<DanhGiaVatTu> findAllPaged(
-            String idCongTy, int page, int size,
-            String sortBy, String sortDir, String search,
-            Integer trangThai, String userid, Boolean isSign
-    ) {
+    public PageResponse<DanhGiaVatTu> findAllPaged(String idCongTy, int page, int size, String sortBy, String sortDir,
+            String search, Integer trangThai, String userid, Boolean isSign, String dateFrom, String dateTo) {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
 
@@ -147,9 +144,13 @@ public class DanhGiaVatTuService {
             List<DanhGiaVatTu> filtered = new ArrayList<>();
             for (DanhGiaVatTu item : sourceList) {
                 if (isSign != null && isSign) {
-                    if (isNeedToSign(item, userid)) filtered.add(item);
+                    if (isNeedToSign(item, userid)) {
+                        filtered.add(item);
+                    }
                 } else {
-                    if (isUserTurnToSign(item, userid)) filtered.add(item);
+                    if (isUserTurnToSign(item, userid)) {
+                        filtered.add(item);
+                    }
                 }
             }
             sourceList = filtered;
@@ -165,10 +166,24 @@ public class DanhGiaVatTuService {
         }
 
         // Lọc theo trạng thái
-        if (trangThai != null)
+        if (trangThai != null) {
             sourceList = sourceList.stream()
                     .filter(i -> trangThai.equals(i.getTrangThai()))
                     .collect(Collectors.toList());
+        }
+
+        // Lọc theo ngày
+        if (dateFrom != null && !dateFrom.isEmpty()) {
+            sourceList = sourceList.stream()
+                    .filter(i -> i.getNgayTao() != null && i.getNgayTao().compareTo(dateFrom) >= 0)
+                    .collect(Collectors.toList());
+        }
+        if (dateTo != null && !dateTo.isEmpty()) {
+            String dateToEndInclusive = dateTo + " 23:59:59";
+            sourceList = sourceList.stream()
+                    .filter(i -> i.getNgayTao() != null && i.getNgayTao().compareTo(dateToEndInclusive) <= 0)
+                    .collect(Collectors.toList());
+        }
 
         // Tìm kiếm
         if (search != null && !search.trim().isEmpty()) {
@@ -184,10 +199,12 @@ public class DanhGiaVatTuService {
 
         long total = sourceList.size();
         int from = Math.min(page * size, sourceList.size());
-        int to   = Math.min(from + size, sourceList.size());
+        int to = Math.min(from + size, sourceList.size());
         List<DanhGiaVatTu> items = new ArrayList<>(sourceList.subList(from, to));
 
-        for (DanhGiaVatTu item : items) enrichData(item);
+        for (DanhGiaVatTu item : items) {
+            enrichData(item);
+        }
 
         PageResponse<DanhGiaVatTu> response = new PageResponse<>(items, total, page, size);
         response.setTrangThaiCounts(trangThaiCounts);

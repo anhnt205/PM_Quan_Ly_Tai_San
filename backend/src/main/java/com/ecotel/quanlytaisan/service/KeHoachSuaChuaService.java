@@ -40,7 +40,8 @@ public class KeHoachSuaChuaService {
             String idCongTy, int page, int size,
             String sortBy, String sortDir, String search,
             String loaiKeHoach, String idDonViGiao, String idDonViNhan,
-            Integer trangThai, Integer nam, String userid, Boolean isSign
+            Integer trangThai, Integer nam, String userid, Boolean isSign,
+            String dateFrom, String dateTo
     ) throws SQLException {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
@@ -88,6 +89,18 @@ public class KeHoachSuaChuaService {
                     .collect(Collectors.toList());
         }
 
+        if (dateFrom != null && !dateFrom.isEmpty()) {
+            sourceList = sourceList.stream()
+                    .filter(i -> i.getNgayTao() != null && i.getNgayTao().compareTo(dateFrom) >= 0)
+                    .collect(Collectors.toList());
+        }
+        if (dateTo != null && !dateTo.isEmpty()) {
+            String dateToEnd = dateTo + " 23:59:59";
+            sourceList = sourceList.stream()
+                    .filter(i -> i.getNgayTao() != null && i.getNgayTao().compareTo(dateToEnd) <= 0)
+                    .collect(Collectors.toList());
+        }
+
         sourceList.sort(getComparator(sortBy, sortDir));
 
         long total = sourceList.size();
@@ -108,8 +121,9 @@ public class KeHoachSuaChuaService {
     }
 
     public Map<Integer, List<KeHoachSuaChuaDTO>> findAllGroupedByYear(
-            String idCongTy, String search, Integer trangThai, Integer nam, String userid) throws SQLException {
-        List<KeHoachSuaChuaDTO> sourceList = findAll(idCongTy);
+            String idCongTy, String search, Integer trangThai, Integer nam, String userid,
+            String dateFrom, String dateTo) throws SQLException {
+        List<KeHoachSuaChuaDTO> sourceList = keHoachSuaChuaDao.findAll(idCongTy);
 
         if (userid != null && !userid.trim().isEmpty() && !"admin".equalsIgnoreCase(userid)) {
             List<KeHoachSuaChuaDTO> filtered = new ArrayList<>();
@@ -130,9 +144,34 @@ public class KeHoachSuaChuaService {
                     .collect(Collectors.toList());
         }
 
+        if (dateFrom != null && !dateFrom.isEmpty()) {
+            sourceList = sourceList.stream()
+                    .filter(i -> i.getNgayTao() != null && i.getNgayTao().compareTo(dateFrom) >= 0)
+                    .collect(Collectors.toList());
+        }
+        if (dateTo != null && !dateTo.isEmpty()) {
+            String dateToEnd = dateTo + " 23:59:59";
+            sourceList = sourceList.stream()
+                    .filter(i -> i.getNgayTao() != null && i.getNgayTao().compareTo(dateToEnd) <= 0)
+                    .collect(Collectors.toList());
+        }
+
+        sourceList.sort(getComparator(null, "desc"));
+
+        // Enrich
+        for (KeHoachSuaChuaDTO item : sourceList) {
+            item.setChuKyList(kyTaiLieuDao.findById(item.getId()));
+            item.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId()));
+            item.setDanhSachTaiSan(suaChuaChiTietTaiSanDao.findByIdKeHoach(item.getId()));
+        }
+
         return sourceList.stream()
                 .filter(i -> i.getNam() != null)
-                .collect(Collectors.groupingBy(KeHoachSuaChuaDTO::getNam));
+                .collect(Collectors.groupingBy(
+                        KeHoachSuaChuaDTO::getNam,
+                        () -> new TreeMap<>(Comparator.reverseOrder()),
+                        Collectors.toList()
+                ));
     }
 
 

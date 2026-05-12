@@ -55,12 +55,14 @@ public class SuCoThietBiController {
             @RequestParam(value = "trangThai", required = false) Integer trangThai,
             @RequestParam(value = "mucDo", required = false) Integer mucDo,
             @RequestParam(value = "userid", required = false) String userid,
-            @RequestParam(value = "isSign", required = false) Boolean isSign
-    ) throws SQLException {
+            @RequestParam(value = "isSign", required = false) Boolean isSign,
+            @RequestParam(value = "dateFrom", required = false) String dateFrom,
+            @RequestParam(value = "dateTo", required = false) String dateTo
+    ) {
         try {
             PageResponse<SuCoThietBiDTO> response = suCoService.findAllPaged(
                     idCongTy, page, size, sortBy, sortDir, search,
-                    idDonViBaoCao, trangThai, mucDo, userid, isSign);
+                    idDonViBaoCao, trangThai, mucDo, userid, isSign, dateFrom, dateTo);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", response, (int) response.getTotalItems()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

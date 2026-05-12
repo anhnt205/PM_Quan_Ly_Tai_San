@@ -129,6 +129,8 @@ export default function MaintenancePlanRepair() {
   );
 
   const [searchValue, setSearchValue] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [expandedYears, setExpandedYears] = useState<Record<string, boolean>>(
@@ -149,6 +151,8 @@ export default function MaintenancePlanRepair() {
     statusFilter ? Number(statusFilter) : undefined,
     searchDebounce,
     undefined,
+    dateFrom,
+    dateTo,
   );
   const { createMutation, updateMutation, deleteMutation, updateManyMutation } =
     useMaintenancePlanningMutation();
@@ -450,6 +454,75 @@ export default function MaintenancePlanRepair() {
                 flex: 1,
               }}
             >
+              {/* ── Filter thời gian ── */}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
+                  px: 2,
+                  py: 1,
+                  borderBottom: "1px solid",
+                  borderColor: "divider",
+                  bgcolor: "#fafafa",
+                  flexWrap: "wrap",
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ whiteSpace: "nowrap" }}
+                >
+                  Lọc theo ngày:
+                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Từ
+                  </Typography>
+                  <input
+                    type="date"
+                    value={dateFrom}
+                    onChange={(e) => setDateFrom(e.target.value)}
+                    style={{
+                      border: "1px solid #ccc",
+                      borderRadius: 6,
+                      padding: "4px 8px",
+                      fontSize: 13,
+                      color: "inherit",
+                      background: "transparent",
+                    }}
+                  />
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Đến
+                  </Typography>
+                  <input
+                    type="date"
+                    value={dateTo}
+                    onChange={(e) => setDateTo(e.target.value)}
+                    style={{
+                      border: "1px solid #ccc",
+                      borderRadius: 6,
+                      padding: "4px 8px",
+                      fontSize: 13,
+                      color: "inherit",
+                      background: "transparent",
+                    }}
+                  />
+                </Box>
+                {(dateFrom || dateTo) && (
+                  <Chip
+                    label="Xóa bộ lọc"
+                    size="small"
+                    onDelete={() => {
+                      setDateFrom("");
+                      setDateTo("");
+                    }}
+                    sx={{ fontSize: 11 }}
+                  />
+                )}
+              </Box>
               <TableCustom
                 title="Danh sách kế hoạch"
                 rows={isDetailOpen ? allPlans : []}
@@ -496,11 +569,13 @@ export default function MaintenancePlanRepair() {
                         </Typography>
                       ) : (
                         (
-                          Object.entries(groupedData.data) as [
+                          Object.entries(groupedData?.data || {}) as [
                             string,
                             MaintenancePlanData[],
                           ][]
-                        ).map(([year, plans]) => (
+                        )
+                          .sort((a, b) => Number(b[0]) - Number(a[0]))
+                          .map(([year, plans]) => (
                           <Accordion
                             key={year}
                             expanded={!!expandedYears[year]}

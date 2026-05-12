@@ -23,7 +23,7 @@ public class KiemTraSuCoService {
     @Autowired
     private KyTaiLieuDao kyTaiLieuDao;
 
-    public PageResponse<KiemTraSuCoDTO> findAllPaged(int page, int pageSize, String searchValue, String idCongTy, Integer trangThai, String userid, Boolean isSign) {
+    public PageResponse<KiemTraSuCoDTO> findAllPaged(int page, int pageSize, String searchValue, String idCongTy, Integer trangThai, String userid, Boolean isSign, String dateFrom, String dateTo) {
         List<KiemTraSuCoDTO> all = mainDao.findAll(idCongTy);
         
         // Turn-based filter
@@ -54,6 +54,19 @@ public class KiemTraSuCoService {
                     .filter(i -> trangThai.equals(i.getTrangThai()))
                     .collect(Collectors.toList());
         }
+        
+        if (dateFrom != null && !dateFrom.isEmpty()) {
+            all = all.stream()
+                    .filter(i -> i.getNgayTao() != null && i.getNgayTao().compareTo(dateFrom) >= 0)
+                    .collect(Collectors.toList());
+        }
+        if (dateTo != null && !dateTo.isEmpty()) {
+            String dateToEnd = dateTo + " 23:59:59";
+            all = all.stream()
+                    .filter(i -> i.getNgayTao() != null && i.getNgayTao().compareTo(dateToEnd) <= 0)
+                    .collect(Collectors.toList());
+        }
+
         if (searchValue != null && !searchValue.isEmpty()) {
             all = all.stream()
                     .filter(d -> (d.getSoPhieu() != null && d.getSoPhieu().toLowerCase().contains(searchValue.toLowerCase()))

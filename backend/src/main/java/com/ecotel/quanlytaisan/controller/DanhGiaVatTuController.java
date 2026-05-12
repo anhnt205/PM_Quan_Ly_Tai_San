@@ -2,6 +2,7 @@ package com.ecotel.quanlytaisan.controller;
 
 import com.ecotel.quanlytaisan.model.ApiResponse;
 import com.ecotel.quanlytaisan.model.DanhGiaVatTu;
+import com.ecotel.quanlytaisan.model.PageResponse;
 import com.ecotel.quanlytaisan.service.DanhGiaVatTuService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -38,11 +39,15 @@ public class DanhGiaVatTuController {
             @RequestParam(value = "search", required = false) String search,
             @RequestParam(value = "trangThai", required = false) Integer trangThai,
             @RequestParam(value = "userid", required = false) String userid,
-            @RequestParam(value = "isSign", required = false) Boolean isSign
+            @RequestParam(value = "isSign", required = false) Boolean isSign,
+            @RequestParam(value = "dateFrom", required = false) String dateFrom,
+            @RequestParam(value = "dateTo", required = false) String dateTo
     ) {
         try {
-            return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công",
-                    service.findAllPaged(idCongTy, page, size, sortBy, sortDir, search, trangThai, userid, isSign), 0));
+            PageResponse<DanhGiaVatTu> response = service.findAllPaged(
+                    idCongTy, page, size, sortBy, sortDir, search,
+                    trangThai, userid, isSign, dateFrom, dateTo);
+            return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", response, (int) response.getTotalItems()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));

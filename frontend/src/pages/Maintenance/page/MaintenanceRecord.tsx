@@ -130,6 +130,9 @@ export default function MaintenanceRecordPage() {
     statusFilter ? Number(statusFilter) : undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom,
+    dateTo,
   );
 
   const {
@@ -142,6 +145,9 @@ export default function MaintenanceRecordPage() {
     statusFilter ? Number(statusFilter) : undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom,
+    dateTo,
   );
   const {
     data: repairPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
@@ -153,6 +159,9 @@ export default function MaintenanceRecordPage() {
     statusFilter ? Number(statusFilter) : undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom,
+    dateTo,
   );
 
   const {
@@ -165,6 +174,9 @@ export default function MaintenanceRecordPage() {
     statusFilter ? Number(statusFilter) : undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom,
+    dateTo,
   );
 
   const {
@@ -181,6 +193,9 @@ export default function MaintenanceRecordPage() {
     statusFilter ? Number(statusFilter) : undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom,
+    dateTo,
   );
 
   const {
@@ -196,6 +211,9 @@ export default function MaintenanceRecordPage() {
     searchDebounce,
     statusFilter ? Number(statusFilter) : undefined,
     user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom,
+    dateTo,
   );
 
   const {
@@ -212,6 +230,9 @@ export default function MaintenanceRecordPage() {
     statusFilter ? Number(statusFilter) : undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom,
+    dateTo,
   );
 
   const tabConfigs = [
