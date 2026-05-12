@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -179,9 +179,6 @@ const PlanDetailPanel = ({
   plan,
   onClose,
   onCreateRepairRequest,
-  onCreateInspectionRecord,
-  onCreateAcceptanceRecord,
-  onCreateMaterialQualityRecord,
 }: Props) => {
   const [tab, setTab] = useState(0);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
@@ -207,6 +204,16 @@ const PlanDetailPanel = ({
   const [materialParentAccId, setMaterialParentAccId] = useState<string | null>(
     null,
   );
+
+  useEffect(() => {
+    setExpandedRequests(new Set());
+    setExpandedInspections(new Set());
+    setExpandedAcceptances(new Set());
+    setSelectedDeviceIds([]);
+    setInspectionParentReqId(null);
+    setAcceptanceParentInspId(null);
+    setMaterialParentAccId(null);
+  }, [plan?.id]);
 
   const { data: chiTietTaiSanByKeHoach = [] } =
     useMaintenancePlanningDetailsByMonthQuery(plan?.id, selectedMonth + 1);

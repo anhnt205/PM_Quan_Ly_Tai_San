@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -124,6 +124,18 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
   const [incidentPreviewId, setIncidentPreviewId] = useState<string | null>(
     null,
   );
+  useEffect(() => {
+    setExpandedBBKTKSC(new Set());
+    setExpandedInspections(new Set());
+    setExpandedAcceptances(new Set());
+    setSelectedDeviceIds([]);
+    setIncidentInspectionParentId(null);
+    setIncInspectionParentBBKTKSCId(null);
+    setAcceptanceParentInspId(null);
+    setMaterialParentAccId(null);
+    setIncidentPreviewId(null);
+  }, [incident?.id]);
+
   const { data: incidentDevices = [] } =
     useMaintenanceIncidentDetailByIncidentQuery(incident?.id);
   const { data: incidentInspections = [] } =
