@@ -101,6 +101,7 @@ interface Props {
   titleSelectedDate?: string;
   isRowSelectable?: (params: any) => boolean;
   isCompact?: boolean;
+  highlightedId?: string | number;
 }
 
 export default function TableCustom({
@@ -149,6 +150,7 @@ export default function TableCustom({
   isRowSelectable,
   titleSelectedDate = "Chọn thời gian",
   isCompact = false,
+  highlightedId,
 }: Props) {
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.user);
@@ -448,6 +450,10 @@ export default function TableCustom({
             disableRowSelectionOnClick
             showToolbar
             isRowSelectable={isRowSelectable}
+            getRowClassName={(params) => {
+              const rowId = params.row.Id || params.row.id || params.row.soThe;
+              return rowId === highlightedId ? "highlighted-row" : "";
+            }}
             slots={{
               toolbar: () => <CustomToolbar isCompact={isCompact} />,
               filterPanel: CustomFilterPanel,
@@ -462,6 +468,12 @@ export default function TableCustom({
             }}
             sx={{
               fontSize: "14px",
+              "& .highlighted-row": {
+                backgroundColor: "rgba(31, 164, 99, 0.12) !important",
+                "&:hover": {
+                  backgroundColor: "rgba(31, 164, 99, 0.18) !important",
+                },
+              },
               "& .MuiDataGrid-toolbarContainer .MuiButton-root": {
                 color: "#1FA463",
                 fontWeight: 600,

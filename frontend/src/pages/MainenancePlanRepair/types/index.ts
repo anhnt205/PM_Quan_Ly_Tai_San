@@ -24,8 +24,10 @@ export interface MaintenancePlanData {
   tenDonViGiao?: string;
   tenDonViNhan?: string;
   idNguoiLapBieu: string;
+  tenNguoiLapBieu?: string;
   nguoiLapBieuXacNhan: boolean;
   idTrinhDuyetGiamDoc: string;
+  tenTrinhDuyetGiamDoc?: string;
   trinhDuyetGiamDocXacNhan: boolean;
   trangThai: number;
   ngayTao?: string;

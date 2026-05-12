@@ -8,7 +8,11 @@ import "../../../assets/fonts/times_new_roman_italic-italic";
 import { Chip } from "@mui/material";
 
 import { IncidenData } from "../types";
-import { showConfirmAlert, showErrorAlert, showSuccessAlert } from "../../../components/Alert";
+import {
+  showConfirmAlert,
+  showErrorAlert,
+  showSuccessAlert,
+} from "../../../components/Alert";
 import { MessageTypeFunctions } from "../../../utils/const";
 import socketService from "../../../services/socketService";
 
@@ -188,7 +192,7 @@ const getChucVu = (idUser: string, staffs: any[], positions: any[]) => {
 const getDonVi = (idUser: string, staffs: any[], departments: any[]) => {
   const nhanVien = findById(staffs, idUser);
   const donVi = findById(departments, nhanVien?.phongBanId ?? "");
-  return donVi?.tenPhongBan ?? "";
+  return donVi;
 };
 
 export const listSigneInfo = (
@@ -207,7 +211,9 @@ export const listSigneInfo = (
       title: "Người lập",
       hoTen: item.tenNguoiLapBieu ?? "",
       chucVu: getChucVu(item.idNguoiLapBieu ?? "", staffs, positions),
-      donVi: getDonVi(item.idNguoiLapBieu ?? "", staffs, departments),
+      donVi: getDonVi(item.idNguoiLapBieu ?? "", staffs, departments)
+        ?.tenPhongBan,
+      idDonVi: getDonVi(item.idNguoiLapBieu ?? "", staffs, departments)?.id,
       signed: item.nguoiLapBieuXacNhan || false,
     });
   }
@@ -220,7 +226,9 @@ export const listSigneInfo = (
         idNhanVien: sign.idNguoiKy ?? "",
         hoTen: sign.tenNguoiKy ?? "",
         chucVu: getChucVu(sign.idNguoiKy ?? "", staffs, positions),
-        donVi: getDonVi(sign.idNguoiKy ?? "", staffs, departments),
+        donVi: getDonVi(item.idNguoiLapBieu ?? "", staffs, departments)
+          ?.tenPhongBan,
+        idDonVi: getDonVi(item.idNguoiLapBieu ?? "", staffs, departments)?.id,
         signed: sign.trangThai === 0 ? false : true,
       });
     }
@@ -233,7 +241,9 @@ export const listSigneInfo = (
       title: getChucVu(item.idTrinhDuyetGiamDoc ?? "", staffs, positions),
       hoTen: item.tenTrinhDuyetGiamDoc ?? "",
       chucVu: getChucVu(item.idTrinhDuyetGiamDoc ?? "", staffs, positions),
-      donVi: getDonVi(item.idTrinhDuyetGiamDoc ?? "", staffs, departments),
+      donVi: getDonVi(item.idNguoiLapBieu ?? "", staffs, departments)
+        ?.tenPhongBan,
+      idDonVi: getDonVi(item.idNguoiLapBieu ?? "", staffs, departments)?.id,
       signed: item.trinhDuyetGiamDocXacNhan || false,
     });
   }
@@ -620,7 +630,6 @@ export const generateSuaChuaPdf = async (
   doc.text("CÔNG TY THAN UÔNG BÍ - TKV", leftColCenter, 20, {
     align: "center",
   });
-  const creatorDept = getDonVi(repair.idNguoiLapBieu, staffs, departments);
   doc.text(`Đơn vị: ${"................"}`, leftColCenter, 26, {
     align: "center",
   });

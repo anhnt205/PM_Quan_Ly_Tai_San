@@ -24,6 +24,7 @@ import { DeleteOutline, TableViewOutlined } from "@mui/icons-material";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
 import { useAssetByDonViQuery } from "../../../AssetTransfer/Mutation";
 import { useDebounce } from "../../../../hooks/useDebounce";
+import { Action } from "../../../../utils/const";
 
 interface PlanAsset {
   deviceId: string;
@@ -115,15 +116,20 @@ const StepAssets = ({ sourceDeptId, assets, onAssetsChange }: Props) => {
           month10: "",
           month11: "",
           month12: "",
+          action: Action.CREATE,
         },
       ]);
     }
-    // Reset giá trị ô chọn sau khi thêm
+
     setAssetValue(null);
   };
 
   const removeDevice = (id: string) => {
-    onAssetsChange(assets.filter((a) => a.deviceId !== id));
+    onAssetsChange(
+      assets.map((a: any) =>
+        a.id === id ? { ...a, action: Action.DELETE } : a,
+      ),
+    );
   };
 
   return (
@@ -161,98 +167,100 @@ const StepAssets = ({ sourceDeptId, assets, onAssetsChange }: Props) => {
         </Alert>
       ) : (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-          {assets.map((asset: any) => {
-            const device = allDeptDevices.items.find(
-              (d: any) => d.id === asset.deviceId,
-            );
-            return (
-              <Box
-                key={asset.deviceId}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1.5,
-                  p: 1.5,
-                  borderRadius: 2,
-                  border: "1px solid",
-                  borderColor: "divider",
-                  bgcolor: "background.paper",
-                  transition: "all 0.15s",
-                  width: "100%",
-                  minWidth: 0,
-                  "&:hover": {
-                    borderColor: "primary.light",
-                    bgcolor: "grey.50",
-                  },
-                }}
-              >
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography
-                    fontSize={13}
-                    fontWeight={600}
-                    noWrap
-                    display="block"
-                  >
-                    {device?.tenTaiSan || asset.deviceId}
-                  </Typography>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      gap: 0.5,
-                      mt: 0.5,
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    {device?.tenNhom && (
-                      <Chip
-                        label={device.tenNhom}
-                        size="small"
-                        sx={{ fontSize: 10, height: 18 }}
-                      />
-                    )}
-                    {device?.tenLoai && (
-                      <Chip
-                        label={device.tenLoai}
-                        size="small"
-                        color={"default"}
-                        variant="outlined"
-                        sx={{ fontSize: 10, height: 18 }}
-                      />
-                    )}
+          {assets
+            .filter((a: any) => a.action !== Action.DELETE)
+            .map((asset: any) => {
+              const device = allDeptDevices.items.find(
+                (d: any) => d.id === asset.deviceId,
+              );
+              return (
+                <Box
+                  key={asset.deviceId}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.5,
+                    p: 1.5,
+                    borderRadius: 2,
+                    border: "1px solid",
+                    borderColor: "divider",
+                    bgcolor: "background.paper",
+                    transition: "all 0.15s",
+                    width: "100%",
+                    minWidth: 0,
+                    "&:hover": {
+                      borderColor: "primary.light",
+                      bgcolor: "grey.50",
+                    },
+                  }}
+                >
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography
+                      fontSize={13}
+                      fontWeight={600}
+                      noWrap
+                      display="block"
+                    >
+                      {device?.tenTaiSan || asset.deviceId}
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 0.5,
+                        mt: 0.5,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      {device?.tenNhom && (
+                        <Chip
+                          label={device.tenNhom}
+                          size="small"
+                          sx={{ fontSize: 10, height: 18 }}
+                        />
+                      )}
+                      {device?.tenLoai && (
+                        <Chip
+                          label={device.tenLoai}
+                          size="small"
+                          color={"default"}
+                          variant="outlined"
+                          sx={{ fontSize: 10, height: 18 }}
+                        />
+                      )}
+                    </Box>
+                  </Box>
+
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <TextField
+                      type="number"
+                      size="small"
+                      label="SL"
+                      value={asset.quantity}
+                      onChange={(e) => {
+                        const val = Math.max(1, parseInt(e.target.value) || 1);
+                        onAssetsChange(
+                          assets.map((a) =>
+                            a.deviceId === asset.deviceId
+                              ? { ...a, quantity: val }
+                              : a,
+                          ),
+                        );
+                      }}
+                      inputProps={{ min: 1 }}
+                      sx={{ width: 70, "& .MuiInputBase-input": { py: 0.5 } }}
+                    />
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => removeDevice(asset.id)}
+                      sx={{ p: 0.5 }}
+                    >
+                      <DeleteOutline fontSize="small" />
+                    </IconButton>
                   </Box>
                 </Box>
-
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <TextField
-                    type="number"
-                    size="small"
-                    label="SL"
-                    value={asset.quantity}
-                    onChange={(e) => {
-                      const val = Math.max(1, parseInt(e.target.value) || 1);
-                      onAssetsChange(
-                        assets.map((a) =>
-                          a.deviceId === asset.deviceId
-                            ? { ...a, quantity: val }
-                            : a,
-                        ),
-                      );
-                    }}
-                    inputProps={{ min: 1 }}
-                    sx={{ width: 70, "& .MuiInputBase-input": { py: 0.5 } }}
-                  />
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={() => removeDevice(asset.deviceId)}
-                    sx={{ p: 0.5 }}
-                  >
-                    <DeleteOutline fontSize="small" />
-                  </IconButton>
-                </Box>
-              </Box>
-            );
-          })}
+              );
+            })}
         </Box>
       )}
 

@@ -199,7 +199,6 @@ export const useMaintenancePlanningMutation = () => {
       if (deleteTS.length > 0)
         deleteTaiSanManyMutation.mutate(deleteTS.map((i: any) => i.id));
     }
-    console.log(variables.nguoiKyList);
 
     if (variables.nguoiKyList && variables.nguoiKyList.length > 0) {
       updateSignerMutation.mutate({
@@ -210,6 +209,10 @@ export const useMaintenancePlanningMutation = () => {
         })),
       });
     }
+    queryClient.invalidateQueries({ queryKey: ["maintenancePlanningPage"] });
+    queryClient.invalidateQueries({
+      queryKey: ["maintenancePlanningGrouped"],
+    });
   };
 
   // --- API KẾ HOẠCH ---
@@ -806,7 +809,9 @@ export const useMaintenanceRepairMutation = () => {
     onSuccess: async (response, variables) => {
       handleUpdate(response, variables);
       queryClient.invalidateQueries({ queryKey: ["repairPage"] });
-      queryClient.invalidateQueries({ queryKey: ["maintenancePlanningDetailsByMonth"] });
+      queryClient.invalidateQueries({
+        queryKey: ["maintenancePlanningDetailsByMonth"],
+      });
       showSuccessAlert("Tạo giấy đề nghị sửa chữa thành công");
     },
     onError: (error: any) => {
@@ -1107,7 +1112,9 @@ export const useMaintenanceInspectionMutation = () => {
       if (response.success || response.id) {
         handleUpdate(response, variables);
         queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
-        queryClient.invalidateQueries({ queryKey: ["incidentInspectionBySuCo"] });
+        queryClient.invalidateQueries({
+          queryKey: ["incidentInspectionBySuCo"],
+        });
         showSuccessAlert("Tạo biên bản giám định thành công");
       } else {
         showErrorAlert(response.message || "Tạo biên bản giám định thất bại");
@@ -1134,7 +1141,9 @@ export const useMaintenanceInspectionMutation = () => {
       if (response.success || response.id) {
         handleUpdate(response, variables);
         queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
-        queryClient.invalidateQueries({ queryKey: ["incidentInspectionBySuCo"] });
+        queryClient.invalidateQueries({
+          queryKey: ["incidentInspectionBySuCo"],
+        });
         showSuccessAlert("Cập nhật biên bản giám định thành công");
       } else {
         showErrorAlert(
@@ -1745,7 +1754,6 @@ export const useMaintenanceIncidentInspectionBySuCoQuery = (
 };
 
 export const useMaintenanceIncidentInspectionMutation = () => {
-
   const queryClient = useQueryClient();
   const { user } = useSelector((state: any) => state.user);
 
@@ -1773,10 +1781,14 @@ export const useMaintenanceIncidentInspectionMutation = () => {
           );
         }
         queryClient.invalidateQueries({ queryKey: ["incidentInspectionPage"] });
-        queryClient.invalidateQueries({ queryKey: ["incidentInspectionBySuCo"] });
+        queryClient.invalidateQueries({
+          queryKey: ["incidentInspectionBySuCo"],
+        });
         showSuccessAlert("Tạo biên bản kiểm tra sự cố thành công");
       } else {
-        showErrorAlert(response.message || "Tạo biên bản kiểm tra sự cố thất bại");
+        showErrorAlert(
+          response.message || "Tạo biên bản kiểm tra sự cố thất bại",
+        );
       }
     },
     onError: (error: any) => {
@@ -1803,7 +1815,9 @@ export const useMaintenanceIncidentInspectionMutation = () => {
           await api.put(`/chuky/nguoi-ky/update/${id}`, variables.nguoiKyList);
         }
         queryClient.invalidateQueries({ queryKey: ["incidentInspectionPage"] });
-        queryClient.invalidateQueries({ queryKey: ["incidentInspectionBySuCo"] });
+        queryClient.invalidateQueries({
+          queryKey: ["incidentInspectionBySuCo"],
+        });
         showSuccessAlert("Cập nhật biên bản kiểm tra sự cố thành công");
       } else {
         showErrorAlert(
@@ -1826,7 +1840,9 @@ export const useMaintenanceIncidentInspectionMutation = () => {
     onSuccess: (res: any) => {
       if (res.success || res > 0) {
         queryClient.invalidateQueries({ queryKey: ["incidentInspectionPage"] });
-        queryClient.invalidateQueries({ queryKey: ["incidentInspectionBySuCo"] });
+        queryClient.invalidateQueries({
+          queryKey: ["incidentInspectionBySuCo"],
+        });
         showSuccessAlert("Xóa biên bản thành công");
       } else {
         showErrorAlert(res.message || "Xóa biên bản thất bại");

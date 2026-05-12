@@ -21,9 +21,7 @@ import FieldYear from "../../../../components/TextField/FieldYear";
 import CloseIcon from "@mui/icons-material/Close";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import { useFormik } from "formik";
-import type {
-  PlanSigner,
-} from "../../../../mockdata/mockPlans";
+import type { PlanSigner } from "../../../../mockdata/mockPlans";
 import type { AnnualPlan } from "../../../../mockdata/mockWorkflow";
 import StepSchedule from "../step/StepSchedule";
 import StepPreview from "../step/StepPreview";
@@ -34,10 +32,13 @@ import { useDebounce } from "../../../../hooks/useDebounce";
 import { useAssetByDonViQuery } from "../../../AssetTransfer/Mutation";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
 import FieldInput from "../../../../components/TextField/FieldInput";
-import { Action } from "../../../../utils/const";
+import { Action, ActionType } from "../../../../utils/const";
 import { generateCode } from "../../../../utils/helpers";
+import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
+import { listSigneInfo } from "../../config";
 
 interface PlanAsset {
+  id?: string;
   deviceId: string;
   quantity: number;
   month1: string;
@@ -52,13 +53,14 @@ interface PlanAsset {
   month10: string;
   month11: string;
   month12: string;
+  action?: ActionType;
 }
 
 interface Props {
   open: boolean;
   onClose: () => void;
   onSave: (plan: any, isEdit?: boolean) => void;
-  initialData?: any;
+  initialData?: MaintenancePlanData | null;
 }
 
 const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
@@ -69,21 +71,50 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
   const [editDeptId, setEditDeptId] = useState("");
   const [editUserId, setEditUserId] = useState("");
 
+  const { data: departments = [] } = useAllDepartmentsQuery();
+  const { data: users = [] } = useAllStaffsQuery();
+
+  const listInfo = listSigneInfo(initialData, users, departments);
+
   const formik = useFormik({
     initialValues: {
       planCode: initialData?.id || "",
-      planName: initialData?.tenKeHoach || initialData?.description || "",
-      planYear: initialData?.year || new Date().getFullYear(),
-      sourceDeptId: initialData?.sourceDepartmentId || "",
-      executionDeptId: initialData?.executionDepartmentId || "",
+      planName: initialData?.tenKeHoach || "",
+      planYear: initialData?.nam,
+      sourceDeptId: initialData?.idDonViGiao || "",
+      executionDeptId: initialData?.idDonViNhan || "",
       decisionNo: initialData?.soQuyetDinh || "",
-      signers: initialData?.signers || ([] as PlanSigner[]),
-      assets: initialData?.assets || ([] as PlanAsset[]),
+      signers: (listInfo || []).map((item, idx) => ({
+        ...item,
+        userId: item.idNhanVien,
+        userName: item.hoTen,
+        departmentId: item.idDonVi,
+        departmentName: item.donVi,
+        order: idx + 1,
+        action: Action.UPDATE,
+      })),
+      assets: (initialData?.danhSachTaiSan || []).map((item) => ({
+        ...item,
+        deviceId: item.idTaiSan,
+        quantity: item.soLuong ?? 1,
+        month1: item.capSuaChuaThang1 ?? "",
+        month2: item.capSuaChuaThang2 ?? "",
+        month3: item.capSuaChuaThang3 ?? "",
+        month4: item.capSuaChuaThang4 ?? "",
+        month5: item.capSuaChuaThang5 ?? "",
+        month6: item.capSuaChuaThang6 ?? "",
+        month7: item.capSuaChuaThang7 ?? "",
+        month8: item.capSuaChuaThang8 ?? "",
+        month9: item.capSuaChuaThang9 ?? "",
+        month10: item.capSuaChuaThang10 ?? "",
+        month11: item.capSuaChuaThang11 ?? "",
+        month12: item.capSuaChuaThang12 ?? "",
+        action: Action.UPDATE,
+      })),
       idCongTy: initialData?.idCongTy || "CT001",
       idLoaiKeHoach: initialData?.idLoaiKeHoach || "THIET_BI",
       trangThai: initialData?.trangThai || 0,
-      share: initialData?.share ?? true,
-      byStep: initialData?.byStep ?? true,
+      share: initialData?.share ?? false,
     },
     enableReinitialize: true,
     onSubmit: (values) => {
@@ -93,9 +124,6 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
 
   const { data: fullDeptAssets = { items: [], totalItems: 0 } } =
     useAssetByDonViQuery(2, formik.values.sourceDeptId, "");
-
-  const { data: departments = [] } = useAllDepartmentsQuery();
-  const { data: users = [] } = useAllStaffsQuery();
 
   const handleClose = () => {
     formik.resetForm();
@@ -166,71 +194,71 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
     formik.values.planCode.trim() !== "" &&
     formik.values.planName.trim() !== "";
 
-   const handleSave = (status: "draft" | "cho-duyet") => {
-     // 1. Ánh xạ chi tiết tài sản với 12 tháng
-     const danhSachTaiSan = formik.values.assets.map((a: PlanAsset) => ({
-       idTaiSan: a.deviceId,
-       soLuong: a.quantity || 1,
-       capSuaChuaThang1: a.month1,
-       capSuaChuaThang2: a.month2,
-       capSuaChuaThang3: a.month3,
-       capSuaChuaThang4: a.month4,
-       capSuaChuaThang5: a.month5,
-       capSuaChuaThang6: a.month6,
-       capSuaChuaThang7: a.month7,
-       capSuaChuaThang8: a.month8,
-       capSuaChuaThang9: a.month9,
-       capSuaChuaThang10: a.month10,
-       capSuaChuaThang11: a.month11,
-       capSuaChuaThang12: a.month12,
-       isActive: true,
-       action: Action.CREATE,
-     }));
+  const handleSave = (status: "draft" | "cho-duyet") => {
+    // 1. Ánh xạ chi tiết tài sản với 12 tháng
+    const danhSachTaiSan = formik.values.assets.map((a: PlanAsset) => ({
+      id: a.id,
+      idTaiSan: a.deviceId,
+      soLuong: a.quantity || 1,
+      capSuaChuaThang1: a.month1,
+      capSuaChuaThang2: a.month2,
+      capSuaChuaThang3: a.month3,
+      capSuaChuaThang4: a.month4,
+      capSuaChuaThang5: a.month5,
+      capSuaChuaThang6: a.month6,
+      capSuaChuaThang7: a.month7,
+      capSuaChuaThang8: a.month8,
+      capSuaChuaThang9: a.month9,
+      capSuaChuaThang10: a.month10,
+      capSuaChuaThang11: a.month11,
+      capSuaChuaThang12: a.month12,
+      action: a.action,
+    }));
 
-     // 2. Phân tách người ký
-     const signers = formik.values.signers;
-     const idNguoiLapBieu = signers.length > 0 ? signers[0].userId : "";
-     const idTrinhDuyetGiamDoc =
-       signers.length > 1 ? signers[signers.length - 1].userId : "";
+    // 2. Phân tách người ký
+    const signers = formik.values.signers;
+    const idNguoiLapBieu = signers.length > 0 ? signers[0].userId : "";
+    const idTrinhDuyetGiamDoc =
+      signers.length > 1 ? signers[signers.length - 1].userId : "";
 
-     // Người ký trung gian (nếu có)
-     const intermediateSigners =
-       signers.length > 2
-         ? signers.slice(1, -1).map((s: PlanSigner, idx: number) => ({
-             id: `${generateCode("SIG-")}-${idx}`,
-             idNguoiKy: s.userId,
-             tenNguoiKy: s.userName,
-             idPhongBan: s.departmentId,
-             trangThai: 0,
-           }))
-         : [];
+    // Người ký trung gian (nếu có)
+    const intermediateSigners =
+      signers.length > 2
+        ? signers.slice(1, -1).map((s: PlanSigner, idx: number) => ({
+            id: `${generateCode("SIG-")}-${idx}`,
+            idNguoiKy: s.userId,
+            tenNguoiKy: s.userName,
+            idPhongBan: s.departmentId,
+            trangThai: 0,
+          }))
+        : [];
 
-     const newPlanData: any = {
-       // Dùng planCode làm ID nếu có, nếu không thì để null để Backend tự tạo hoặc Frontend tạo GUID
-       id: formik.values.planCode.trim() || undefined,
-       idCongTy: formik.values.idCongTy,
-       soKeHoach: formik.values.planCode,
-       tenKeHoach: formik.values.planName,
-       soQuyetDinh: formik.values.decisionNo,
-       idLoaiKeHoach: formik.values.idLoaiKeHoach,
-       nam: formik.values.planYear,
-       idDonViGiao: formik.values.sourceDeptId,
-       idDonViNhan: formik.values.executionDeptId,
-       idNguoiLapBieu: idNguoiLapBieu,
-       nguoiLapBieuXacNhan: false,
-       idTrinhDuyetGiamDoc: idTrinhDuyetGiamDoc,
-       trinhDuyetGiamDocXacNhan: false,
-       trangThai: 0,
-       share: status === "draft" ? false : true,
-       byStep: formik.values.byStep,
-       ghiChu: `Kế hoạch SCBD - ${departments.find((d: any) => d.id === formik.values.sourceDeptId)?.tenPhongBan || formik.values.sourceDeptId}`,
-       danhSachTaiSan: danhSachTaiSan,
-       nguoiKyList: intermediateSigners,
-     };
+    const newPlanData: any = {
+      // Dùng planCode làm ID nếu có, nếu không thì để null để Backend tự tạo hoặc Frontend tạo GUID
+      id: formik.values.planCode.trim() || undefined,
+      idCongTy: formik.values.idCongTy,
+      soKeHoach: formik.values.planCode,
+      tenKeHoach: formik.values.planName,
+      soQuyetDinh: formik.values.decisionNo,
+      idLoaiKeHoach: formik.values.idLoaiKeHoach,
+      nam: formik.values.planYear,
+      idDonViGiao: formik.values.sourceDeptId,
+      idDonViNhan: formik.values.executionDeptId,
+      idNguoiLapBieu: idNguoiLapBieu,
+      nguoiLapBieuXacNhan: false,
+      idTrinhDuyetGiamDoc: idTrinhDuyetGiamDoc,
+      trinhDuyetGiamDocXacNhan: false,
+      trangThai: 0,
+      share: status === "draft" ? false : true,
+      ghiChu: `Kế hoạch SCBD - ${departments.find((d: any) => d.id === formik.values.sourceDeptId)?.tenPhongBan || formik.values.sourceDeptId}`,
+      danhSachTaiSan: danhSachTaiSan,
+      nguoiKyList: intermediateSigners,
+    };
 
-     onSave(newPlanData, isEdit);
-     handleClose();
-   };
+    onSave(newPlanData, isEdit);
+    handleClose();
+  };
+  console.log(formik.values.assets);
 
   return (
     <Dialog
@@ -716,7 +744,9 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
                   (u: any) =>
                     u.hasAccount &&
                     u.phongBanId === addDeptId &&
-                    !formik.values.signers.some((s: PlanSigner) => s.userId === u.id),
+                    !formik.values.signers.some(
+                      (s: PlanSigner) => s.userId === u.id,
+                    ),
                 )}
                 labelkey="hoTen"
                 value={addUserId}
@@ -747,7 +777,9 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
             <Alert severity="info">Vui lòng chọn thiết bị trước</Alert>
           ) : (
             <StepSchedule
-              assets={formik.values.assets}
+              assets={formik.values.assets.filter(
+                (a: any) => a.action !== Action.DELETE,
+              )}
               onAssetsChange={(assets) =>
                 formik.setFieldValue("assets", assets)
               }
@@ -766,7 +798,9 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
           <StepPreview
             sourceDeptId={formik.values.sourceDeptId}
             executionDeptId={formik.values.executionDeptId}
-            assets={formik.values.assets}
+            assets={formik.values.assets.filter(
+              (a: any) => a.action !== Action.DELETE,
+            )}
             signers={formik.values.signers}
             deptDevices={fullDeptAssets}
             departments={departments}
@@ -781,20 +815,28 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
         <Button onClick={handleClose} color="inherit">
           Hủy
         </Button>
-        <Button
-          variant="outlined"
-          disabled={!canSave}
-          onClick={() => handleSave("draft")}
-        >
-          Lưu nháp
-        </Button>
-        <Button
-          variant="contained"
-          disabled={!canSave}
-          onClick={() => handleSave("cho-duyet")}
-        >
-          Gửi phê duyệt
-        </Button>
+        {isEdit ? (
+          <Button onClick={() => handleSave("draft")} variant="outlined">
+            Cập nhật
+          </Button>
+        ) : (
+          <>
+            <Button
+              variant="outlined"
+              disabled={!canSave}
+              onClick={() => handleSave("draft")}
+            >
+              Lưu nháp
+            </Button>
+            <Button
+              variant="contained"
+              disabled={!canSave}
+              onClick={() => handleSave("cho-duyet")}
+            >
+              Gửi phê duyệt
+            </Button>
+          </>
+        )}
       </DialogActions>
     </Dialog>
   );
