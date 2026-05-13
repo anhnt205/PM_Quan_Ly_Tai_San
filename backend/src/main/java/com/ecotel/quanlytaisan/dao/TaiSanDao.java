@@ -33,6 +33,7 @@ public class TaiSanDao {
                 nv.TenNguonKinhPhi,
                 pb1.TenPhongBan AS tenDonViBanDau,
                 pb2.TenPhongBan AS tenDonViHienThoi,
+                pb3.TenPhongBan AS tenDonViQuanlyKiThuat,
                 dvt.TenDonVi AS tenDonViTinh,
                 ht.TenHTKT AS tenHienTrang,
                 ts.IdDuDan as idDuAn
@@ -45,6 +46,7 @@ public class TaiSanDao {
             LEFT JOIN NguonVon AS nv ON ts.IdNguonVon = nv.Id
             LEFT JOIN PhongBan AS pb1 ON ts.IdDonViBanDau = pb1.Id
             LEFT JOIN PhongBan AS pb2 ON ts.IdDonViHienThoi = pb2.Id
+            LEFT JOIN PhongBan AS pb3 ON ts.IdDonViQuanlyKiThuat = pb3.Id
             LEFT JOIN DonViTinh AS dvt ON ts.DonViTinh = dvt.Id
             LEFT JOIN HienTrangKyThuat AS ht ON ts.HienTrang = ht.Id
             """;
@@ -420,7 +422,6 @@ public class TaiSanDao {
                     ts.NguoiTao,
                     ts.NguoiCapNhat,
                     ts.IsActive,
-                    ts.IsTaiSanCon,
                     ts.IdLoaiTaiSanCon,
                     lts.TenLoai,
                     ts.SoThe,
@@ -429,9 +430,11 @@ public class TaiSanDao {
                     ts.vonKhac,
                     ts.tgKiemDinh,
                     ts.chuKyKiemDinh,
+                    ts.IdDonViQuanlyKiThuat,
                     %s AS trangThaiKiemDinh,
                     pb1.TenPhongBan AS tenDonViBanDau,
                     pb2.TenPhongBan AS tenDonViHienThoi,
+                    pb3.TenPhongBan AS tenDonViQuanlyKiThuat,
                     dvt.TenDonVi AS tenDonViTinh,
                     ht.TenHTKT
                 FROM 
@@ -443,6 +446,7 @@ public class TaiSanDao {
                 LEFT JOIN NguonVon AS nv ON ts.IdNguonVon = nv.Id
                 LEFT JOIN PhongBan AS pb1 ON ts.IdDonViBanDau = pb1.Id
                 LEFT JOIN PhongBan AS pb2 ON ts.IdDonViHienThoi = pb2.Id
+                LEFT JOIN PhongBan AS pb3 ON ts.IdDonViQuanlyKiThuat = pb3.Id
                 LEFT JOIN DonViTinh AS dvt ON ts.DonViTinh = dvt.Id
                 LEFT JOIN HienTrangKyThuat AS ht ON ts.HienTrang = ht.Id
                 %s
@@ -595,10 +599,12 @@ public class TaiSanDao {
                     ts.vonKhac,
                     ts.tgKiemDinh,
                     ts.chuKyKiemDinh,
+                    ts.IdDonViQuanlyKiThuat,
                     %s AS trangThaiKiemDinh,
                     ht.TenHTKT AS tenHienTrang,
                     pb1.TenPhongBan AS tenDonViBanDau,
                     pb2.TenPhongBan AS tenDonViHienThoi,
+                    pb3.TenPhongBan AS tenDonViQuanlyKiThuat,
                     dvt.TenDonVi AS tenDonViTinh
                 FROM 
                     TaiSan AS ts
@@ -609,6 +615,7 @@ public class TaiSanDao {
                 LEFT JOIN NguonVon AS nv ON ts.IdNguonVon = nv.Id
                 LEFT JOIN PhongBan AS pb1 ON ts.IdDonViBanDau = pb1.Id
                 LEFT JOIN PhongBan AS pb2 ON ts.IdDonViHienThoi = pb2.Id
+                LEFT JOIN PhongBan AS pb3 ON ts.IdDonViQuanlyKiThuat = pb3.Id
                 LEFT JOIN DonViTinh AS dvt ON ts.DonViTinh = dvt.Id
                 LEFT JOIN HienTrangKyThuat AS ht ON ts.HienTrang = ht.Id
                 %s
@@ -759,10 +766,12 @@ public class TaiSanDao {
                     ts.vonKhac,
                     ts.tgKiemDinh,
                     ts.chuKyKiemDinh,
+                    ts.IdDonViQuanlyKiThuat,
                     %s AS trangThaiKiemDinh,
                     ht.TenHTKT AS tenHienTrang,
                     pb1.TenPhongBan AS tenDonViBanDau,
                     pb2.TenPhongBan AS tenDonViHienThoi,
+                    pb3.TenPhongBan AS tenDonViQuanlyKiThuat,
                     dvt.TenDonVi AS tenDonViTinh
                 FROM 
                     TaiSan AS ts
@@ -773,6 +782,7 @@ public class TaiSanDao {
                 LEFT JOIN NguonVon AS nv ON ts.IdNguonVon = nv.Id
                 LEFT JOIN PhongBan AS pb1 ON ts.IdDonViBanDau = pb1.Id
                 LEFT JOIN PhongBan AS pb2 ON ts.IdDonViHienThoi = pb2.Id
+                LEFT JOIN PhongBan AS pb3 ON ts.IdDonViQuanlyKiThuat = pb3.Id
                 LEFT JOIN DonViTinh AS dvt ON ts.DonViTinh = dvt.Id
                 LEFT JOIN HienTrangKyThuat AS ht ON ts.HienTrang = ht.Id
                 %s
@@ -903,9 +913,11 @@ public class TaiSanDao {
                         ts.vonKhac,
                         ts.tgKiemDinh,
                         ts.chuKyKiemDinh,
+                        ts.IdDonViQuanlyKiThuat,
                         %s AS trangThaiKiemDinh,
                         pb1.TenPhongBan AS tenDonViBanDau,
                         pb2.TenPhongBan AS tenDonViHienThoi,
+                        pb3.TenPhongBan AS tenDonViQuanlyKiThuat,
                         dvt.TenDonVi AS tenDonViTinh,
                         ht.TenHTKT AS tenHienTrang
                     FROM TaiSan ts
@@ -916,6 +928,7 @@ public class TaiSanDao {
                     LEFT JOIN NguonVon nv ON ts.IdNguonVon = nv.Id
                     LEFT JOIN PhongBan pb1 ON ts.IdDonViBanDau = pb1.Id
                     LEFT JOIN PhongBan pb2 ON ts.IdDonViHienThoi = pb2.Id
+                    LEFT JOIN PhongBan pb3 ON ts.IdDonViQuanlyKiThuat = pb3.Id
                     LEFT JOIN DonViTinh dvt ON ts.DonViTinh = dvt.Id
                     LEFT JOIN HienTrangKyThuat AS ht ON ts.HienTrang = ht.Id
                     %s
@@ -977,9 +990,9 @@ public class TaiSanDao {
             String sql = "INSERT INTO TaiSan (Id, IdLoaiTaiSan, TenTaiSan, NguyenGia, GiaTriKhauHaoBanDau, KyKhauHaoBanDau, " +
                     "GiaTriThanhLy, IdMoHinhTaiSan, PhuongPhapKhauHao, SoKyKhauHao, TaiKhoanTaiSan, TaiKhoanKhauHao, TaiKhoanChiPhi, " +
                     "IdNhomTaiSan, NgayVaoSo, NgaySuDung, IdDuDan, IdNguonVon, KyHieu, SoKyHieu, CongSuat, NuocSanXuat, NamSanXuat, " +
-                    "LyDoTang, HienTrang, SoLuong, DonViTinh, GhiChu, IdDonViBanDau, IdDonViHienThoi, MoTa, IdCongTy, NgayTao, " +
+                    "LyDoTang, HienTrang, SoLuong, DonViTinh, GhiChu, IdDonViBanDau, IdDonViHienThoi, IdDonViQuanlyKiThuat, MoTa, IdCongTy, NgayTao, " +
                     "NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive, IsTaiSanCon, IdLoaiTaiSanCon, SoThe, nvNS, vonVay, vonKhac, tgKiemDinh, chuKyKiemDinh) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?, ?, ?, ?,?,?)";
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?, ?, ?, ?, ?, ?)";
             return jdbcTemplate.update(sql,
                     taiSan.getId(), taiSan.getIdLoaiTaiSan(), taiSan.getTenTaiSan(), taiSan.getNguyenGia(),
                     taiSan.getGiaTriKhauHaoBanDau(), taiSan.getKyKhauHaoBanDau(), taiSan.getGiaTriThanhLy(),
@@ -989,7 +1002,7 @@ public class TaiSanDao {
                     taiSan.getIdNguonVon(), taiSan.getKyHieu(), taiSan.getSoKyHieu(), taiSan.getCongSuat(),
                     taiSan.getNuocSanXuat(), taiSan.getNamSanXuat(), taiSan.getLyDoTang(), taiSan.getHienTrang(),
                     taiSan.getSoLuong(), taiSan.getDonViTinh(), taiSan.getGhiChu(), taiSan.getIdDonViBanDau(),
-                    taiSan.getIdDonViHienThoi(), taiSan.getMoTa(), taiSan.getIdCongTy(), taiSan.getNgayTao(),
+                    taiSan.getIdDonViHienThoi(), taiSan.getIdDonViQuanlyKiThuat(), taiSan.getMoTa(), taiSan.getIdCongTy(), taiSan.getNgayTao(),
                     taiSan.getNgayCapNhat(), taiSan.getNguoiTao(), taiSan.getNguoiCapNhat(), taiSan.getIsActive(),
                     taiSan.getIsTaiSanCon(), taiSan.getIdLoaiTaiSanCon(), taiSan.getSoThe(), taiSan.getNvNS(),
                     taiSan.getVonVay(), taiSan.getVonKhac(), taiSan.getTgKiemDinh(), taiSan.getChuKyKiemDinh());
@@ -1004,7 +1017,7 @@ public class TaiSanDao {
                         TaiKhoanTaiSan=?, TaiKhoanKhauHao=?, TaiKhoanChiPhi=?, IdNhomTaiSan=?,
                         NgayVaoSo=?, NgaySuDung=?, IdDuDan=?, IdNguonVon=?, KyHieu=?, SoKyHieu=?,
                         CongSuat=?, NuocSanXuat=?, NamSanXuat=?, LyDoTang=?, HienTrang=?, SoLuong=?,
-                        DonViTinh=?, GhiChu=?, IdDonViBanDau=?, IdDonViHienThoi=?, MoTa=?, IdCongTy=?,
+                        DonViTinh=?, GhiChu=?, IdDonViBanDau=?, IdDonViHienThoi=?, IdDonViQuanlyKiThuat=?, MoTa=?, IdCongTy=?,
                         NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?, IsActive=?, IsTaiSanCon=?, IdLoaiTaiSanCon=?,
                         SoThe=?, nvNS=?, vonVay=?, vonKhac=?, tgKiemDinh=?, chuKyKiemDinh=?
                     WHERE Id=?
@@ -1018,7 +1031,7 @@ public class TaiSanDao {
                 taiSan.getIdNguonVon(), taiSan.getKyHieu(), taiSan.getSoKyHieu(), taiSan.getCongSuat(),
                 taiSan.getNuocSanXuat(), taiSan.getNamSanXuat(), taiSan.getLyDoTang(), taiSan.getHienTrang(),
                 taiSan.getSoLuong(), taiSan.getDonViTinh(), taiSan.getGhiChu(), taiSan.getIdDonViBanDau(),
-                taiSan.getIdDonViHienThoi(), taiSan.getMoTa(), taiSan.getIdCongTy(), taiSan.getNgayCapNhat(),
+                taiSan.getIdDonViHienThoi(), taiSan.getIdDonViQuanlyKiThuat(), taiSan.getMoTa(), taiSan.getIdCongTy(), taiSan.getNgayCapNhat(),
                 taiSan.getNguoiTao(), taiSan.getNguoiCapNhat(),
                 taiSan.getIsActive() != null ? (taiSan.getIsActive() ? 1 : 0) : 1,
                 taiSan.getIsTaiSanCon(), taiSan.getIdLoaiTaiSanCon(), taiSan.getSoThe(), taiSan.getNvNS(),
@@ -1570,10 +1583,12 @@ public class TaiSanDao {
                     ts.vonKhac,
                     ts.tgKiemDinh,
                     ts.chuKyKiemDinh,
+                    ts.IdDonViQuanlyKiThuat,
                     %s AS trangThaiKiemDinh,
                     ht.TenHTKT AS tenHienTrang,
                     pb1.TenPhongBan AS tenDonViBanDau,
                     pb2.TenPhongBan AS tenDonViHienThoi,
+                    pb3.TenPhongBan AS tenDonViQuanlyKiThuat,
                     dvt.TenDonVi AS tenDonViTinh
                 FROM 
                     TaiSan AS ts
@@ -1584,6 +1599,7 @@ public class TaiSanDao {
                 LEFT JOIN NguonVon AS nv ON ts.IdNguonVon = nv.Id
                 LEFT JOIN PhongBan AS pb1 ON ts.IdDonViBanDau = pb1.Id
                 LEFT JOIN PhongBan AS pb2 ON ts.IdDonViHienThoi = pb2.Id
+                LEFT JOIN PhongBan AS pb3 ON ts.IdDonViQuanlyKiThuat = pb3.Id
                 LEFT JOIN DonViTinh AS dvt ON ts.DonViTinh = dvt.Id
                 LEFT JOIN HienTrangKyThuat AS ht ON ts.HienTrang = ht.Id
                 """ + whereClause + " ORDER BY " + orderColumn + " " + sortDirection + " LIMIT ? OFFSET ? ";

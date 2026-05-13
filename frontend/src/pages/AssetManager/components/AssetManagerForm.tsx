@@ -79,6 +79,7 @@ const defaultAsset = {
   ghiChu: "",
   idDonViBanDau: "K30",
   idDonViHienThoi: "",
+  idDonViQuanlyKiThuat: "",
   moTa: "",
   idCongTy: CongTy.CT001,
   ngayTao: "",
@@ -575,6 +576,16 @@ const AssetRow = ({
                   labelkey="tenPhongBan"
                   formik={formik}
                   field={`assets.${index}.idDonViHienThoi`}
+                  disabled={readOnly}
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <FieldAutoCompleted
+                  title="Đơn vị quản lý kĩ thuật"
+                  data={allDepartments}
+                  labelkey="tenPhongBan"
+                  formik={formik}
+                  field={`assets.${index}.idDonViQuanlyKiThuat`}
                   disabled={readOnly}
                 />
               </Grid>

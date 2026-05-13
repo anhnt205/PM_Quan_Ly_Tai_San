@@ -21,6 +21,7 @@ import {
   useMaintenanceAcceptanceTestPageQuery,
   useMaintenanceIncidentInspectionPageQuery,
   useMaintenanceIncidentPageQuery,
+  useMaintenanceInspectionPageQuery,
   useMaintenanceMaterialAssessmentPageQuery,
   useMaintenancePlanningPageQuery,
   useMaintenanceRepairPageQuery,
@@ -53,6 +54,7 @@ interface MenuDataContextType {
     totalIncidentInspection: number;
     totalMaterialAssessment: number;
     totalAcceptance: number;
+    totalInspection: number;
   };
 }
 
@@ -187,6 +189,16 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
       user?.taiKhoan?.tenDangNhap,
       true,
     );
+  const { data: inspection = { items: [], totalItems: 0 } } =
+    useMaintenanceInspectionPageQuery(
+      0,
+      999999,
+      undefined,
+      undefined,
+      undefined,
+      user?.taiKhoan?.tenDangNhap,
+      true,
+    );
 
   const { data: transferAssetPage = { items: [], totalItems: 0 } } =
     useAssetTransferPageQuery(
@@ -290,6 +302,7 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
       totalIncidentInspection: incidentInspection.totalItems,
       totalMaterialAssessment: materialAssessment.totalItems,
       totalAcceptance: acceptance.totalItems,
+      totalInspection: inspection.totalItems,
     },
   };
 

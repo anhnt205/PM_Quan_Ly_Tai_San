@@ -64,6 +64,7 @@ import {
 } from "../Adapter";
 import { FilterOption } from "../../../components/common/FilterStatusGroup";
 import { useMaintenanceMutation } from "../mutation";
+import { useMenuData } from "../../../hooks/useMenuData";
 
 export default function MaintenanceRecordPage() {
   const [activeTab, setActiveTab] = useState(0);
@@ -85,6 +86,18 @@ export default function MaintenanceRecordPage() {
   const { data: staffs } = useAllStaffsQuery();
   const { data: departments } = useAllDepartmentsQuery();
   const { data: positions } = useAllPositionsQuery();
+
+  const { counts } = useMenuData();
+
+  const pendingCounts = [
+    counts.totalPlan,
+    counts.totalRepair,
+    counts.totalInspection,
+    counts.totalAcceptance,
+    counts.totalMaterialAssessment,
+    counts.totalIncident,
+    counts.totalIncidentInspection,
+  ];
 
   const { updateManyMutation } = useMaintenanceMutation(
     activeTab === 0
@@ -117,6 +130,7 @@ export default function MaintenanceRecordPage() {
                 : activeTab === 6
                   ? "kiemtra-suco"
                   : "",
+    activeTab,
   );
 
   const searchDebounce = useDebounce(searchValue, 500);
@@ -127,12 +141,13 @@ export default function MaintenanceRecordPage() {
     paginationModel.page,
     paginationModel.pageSize,
     searchDebounce,
-    statusFilter ? Number(statusFilter) : undefined,
+    statusFilter !== "" ? Number(statusFilter) : undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
     undefined,
     dateFrom,
     dateTo,
+    activeTab === 0,
   );
 
   const {
@@ -142,12 +157,13 @@ export default function MaintenanceRecordPage() {
     paginationModel.page,
     paginationModel.pageSize,
     searchDebounce,
-    statusFilter ? Number(statusFilter) : undefined,
+    statusFilter !== "" ? Number(statusFilter) : undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
     undefined,
     dateFrom,
     dateTo,
+    activeTab === 5,
   );
   const {
     data: repairPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
@@ -156,12 +172,13 @@ export default function MaintenanceRecordPage() {
     paginationModel.page,
     paginationModel.pageSize,
     searchDebounce,
-    statusFilter ? Number(statusFilter) : undefined,
+    statusFilter !== "" ? Number(statusFilter) : undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
     undefined,
     dateFrom,
     dateTo,
+    activeTab === 1,
   );
 
   const {
@@ -171,12 +188,13 @@ export default function MaintenanceRecordPage() {
     paginationModel.page,
     paginationModel.pageSize,
     searchDebounce,
-    statusFilter ? Number(statusFilter) : undefined,
+    statusFilter !== "" ? Number(statusFilter) : undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
     undefined,
     dateFrom,
     dateTo,
+    activeTab === 2,
   );
 
   const {
@@ -190,12 +208,13 @@ export default function MaintenanceRecordPage() {
     paginationModel.page,
     paginationModel.pageSize,
     searchDebounce,
-    statusFilter ? Number(statusFilter) : undefined,
+    statusFilter !== "" ? Number(statusFilter) : undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
     undefined,
     dateFrom,
     dateTo,
+    activeTab === 3,
   );
 
   const {
@@ -209,11 +228,12 @@ export default function MaintenanceRecordPage() {
     paginationModel.page,
     paginationModel.pageSize,
     searchDebounce,
-    statusFilter ? Number(statusFilter) : undefined,
+    statusFilter !== "" ? Number(statusFilter) : undefined,
     user?.taiKhoan?.tenDangNhap,
     undefined,
     dateFrom,
     dateTo,
+    activeTab === 4,
   );
 
   const {
@@ -227,12 +247,13 @@ export default function MaintenanceRecordPage() {
     paginationModel.page,
     paginationModel.pageSize,
     searchDebounce,
-    statusFilter ? Number(statusFilter) : undefined,
+    statusFilter !== "" ? Number(statusFilter) : undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
     undefined,
     dateFrom,
     dateTo,
+    activeTab === 6,
   );
 
   const tabConfigs = [
@@ -312,11 +333,6 @@ export default function MaintenanceRecordPage() {
     id: r.id || crypto.randomUUID(),
   }));
 
-  const tabCounts = allRows.map(
-    (data) =>
-      (data?.trangThaiCounts?.["0"] || 0) +
-      (data?.trangThaiCounts?.["1"] || 0),
-  );
 
   const buildColumns = (collapsed: boolean) => {
     const parentCols = (parentColumnConfigs[activeTab] ?? []).map((cfg) => ({
@@ -740,7 +756,7 @@ export default function MaintenanceRecordPage() {
                   key={i}
                   iconPosition="top"
                   icon={
-                    <Badge badgeContent={tabCounts[i]} color="primary">
+                    <Badge badgeContent={pendingCounts[i]} color="primary">
                       {t.icon}
                     </Badge>
                   }

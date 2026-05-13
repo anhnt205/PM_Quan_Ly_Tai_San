@@ -28,6 +28,7 @@ export const useMaintenancePlanningPageQuery = (
   isSign?: boolean,
   dateFrom?: string,
   dateTo?: string,
+  enabled = true,
 ) => {
   return useQuery({
     queryKey: [
@@ -59,6 +60,7 @@ export const useMaintenancePlanningPageQuery = (
       return res.data.data || res.data;
     },
     placeholderData: (previousData) => previousData,
+    enabled,
   });
 };
 
@@ -379,6 +381,7 @@ export const useMaintenanceIncidentPageQuery = (
   isSign?: boolean,
   dateFrom?: string,
   dateTo?: string,
+  enabled = true,
 ) => {
   return useQuery({
     queryKey: [
@@ -410,6 +413,7 @@ export const useMaintenanceIncidentPageQuery = (
       return res.data.data || res.data;
     },
     placeholderData: (previousData) => previousData,
+    enabled,
   });
 };
 
@@ -682,6 +686,7 @@ export const useMaintenanceRepairPageQuery = (
   isSign?: boolean,
   dateFrom?: string,
   dateTo?: string,
+  enabled = true,
 ) => {
   return useQuery({
     queryKey: [
@@ -713,6 +718,7 @@ export const useMaintenanceRepairPageQuery = (
       return res.data.data || res.data;
     },
     placeholderData: (previousData) => previousData,
+    enabled,
   });
 };
 export const useMaintenanceRepairByPlanQuery = (idKeHoach?: string) => {
@@ -953,6 +959,7 @@ export const useMaintenanceInspectionPageQuery = (
   isSign?: boolean,
   dateFrom?: string,
   dateTo?: string,
+  enabled = true,
 ) => {
   return useQuery({
     queryKey: [
@@ -984,6 +991,7 @@ export const useMaintenanceInspectionPageQuery = (
       return res.data.data || res.data;
     },
     placeholderData: (previousData) => previousData,
+    enabled,
   });
 };
 export const useMaintenanceInspectionByRepairQuery = (idSuaChua?: string) => {
@@ -1281,6 +1289,7 @@ export const useMaintenanceAcceptanceTestPageQuery = (
   isSign?: boolean,
   dateFrom?: string,
   dateTo?: string,
+  enabled = true,
 ) => {
   return useQuery({
     queryKey: [
@@ -1312,6 +1321,7 @@ export const useMaintenanceAcceptanceTestPageQuery = (
       return res.data.data || res.data;
     },
     placeholderData: (previousData) => previousData,
+    enabled,
   });
 };
 
@@ -1576,6 +1586,7 @@ export const useMaintenanceMaterialAssessmentPageQuery = (
   isSign?: boolean,
   dateFrom?: string,
   dateTo?: string,
+  enabled = true,
 ) => {
   return useQuery({
     queryKey: [
@@ -1606,6 +1617,7 @@ export const useMaintenanceMaterialAssessmentPageQuery = (
       return res.data.data || res.data;
     },
     placeholderData: (previousData) => previousData,
+    enabled,
   });
 };
 
@@ -1726,6 +1738,7 @@ export const useMaintenanceIncidentInspectionPageQuery = (
   isSign?: boolean,
   dateFrom?: string,
   dateTo?: string,
+  enabled = true,
 ) => {
   return useQuery({
     queryKey: [
@@ -1757,6 +1770,7 @@ export const useMaintenanceIncidentInspectionPageQuery = (
       return res.data.data || res.data;
     },
     placeholderData: (previousData) => previousData,
+    enabled,
   });
 };
 

@@ -73,10 +73,9 @@ import { EditIcon } from "lucide-react";
 import { useMaintenanceMutation } from "../mutation";
 import { SignaturesData } from "../../../components/SignDocument/types";
 import { TypeBienBan } from "../../../utils/const";
+import { useMenuData } from "../../../hooks/useMenuData";
 
 export default function MaintenanceApprovalPage() {
-  const { materialQualityRecords, incidentInspectionRecords } = useCmms();
-
   const signBatch = useSignBatch();
   const { user } = useSelector((state: any) => state.user);
 
@@ -100,6 +99,18 @@ export default function MaintenanceApprovalPage() {
   const { data: staffs } = useAllStaffsQuery();
   const { data: departments } = useAllDepartmentsQuery();
 
+  const { counts } = useMenuData();
+
+   const pendingCounts = [
+    counts.totalPlan,
+    counts.totalRepair,
+    counts.totalInspection,
+    counts.totalAcceptance,
+    counts.totalMaterialAssessment,
+    counts.totalIncident,
+    counts.totalIncidentInspection,
+  ];
+ 
   const searchDebounce = useDebounce(searchValue, 500);
   const {
     data: planPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
@@ -114,6 +125,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
+    activeTab === 0,
   );
 
   const {
@@ -129,6 +141,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
+    activeTab === 5,
   );
   const {
     data: repairPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
@@ -143,6 +156,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
+    activeTab === 1,
   );
 
   const {
@@ -158,6 +172,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
+    activeTab === 2,
   );
 
   const {
@@ -177,6 +192,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
+    activeTab === 3,
   );
 
   const {
@@ -195,6 +211,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
+    activeTab === 4,
   );
 
   const {
@@ -214,6 +231,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
+    activeTab === 6,
   );
 
   const { signMutation } = useMaintenanceMutation(
@@ -269,10 +287,6 @@ export default function MaintenanceApprovalPage() {
     },
   ];
 
-  const pendingCounts = allRows.map(
-    (rows: any) =>
-      (rows?.trangThaiCounts?.["0"] || 0) + (rows?.trangThaiCounts?.["1"] || 0),
-  );
 
   const tabConfigs = [
     { label: "Kế hoạch", icon: <AssignmentOutlined />, idLabel: "Mã KH" },

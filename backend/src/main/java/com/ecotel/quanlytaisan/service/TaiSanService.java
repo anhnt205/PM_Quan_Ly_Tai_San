@@ -452,6 +452,7 @@ public class TaiSanService {
             "Mã đơn vị ban đầu",
             "Mã đơn vị hiện thời",
             "Mô tả",
+            "Mã đơn vị quản lý kỹ thuật",
             "Ngày tạo",
             "Ngày cập nhật",
             "Người tạo",
@@ -724,6 +725,11 @@ public class TaiSanService {
             Cell cell36 = row.createCell(colIndex++);
             cell36.setCellValue(item.getNguoiCapNhat() != null ? item.getNguoiCapNhat() : "");
             cell36.setCellStyle(dataStyle);
+
+            // Đơn vị quản lý kỹ thuật
+            Cell cell37 = row.createCell(colIndex++);
+            cell37.setCellValue(item.getIdDonViQuanlyKiThuat() != null ? item.getIdDonViQuanlyKiThuat() : "");
+            cell37.setCellStyle(dataStyle);
         }
 
         // Set column widths (tối ưu hơn auto-size)

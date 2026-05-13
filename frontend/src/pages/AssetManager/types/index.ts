@@ -41,6 +41,8 @@ export interface AssetType {
   tenDonViBanDau?: string;
   idDonViHienThoi: string;
   tenDonViHienThoi?: string;
+  idDonViQuanlyKiThuat?: string;
+  tenDonViQuanlyKiThuat?: string;
   moTa: string;
   idCongTy: string;
   ngayTao: string;

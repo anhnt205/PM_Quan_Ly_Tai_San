@@ -77,4 +77,6 @@ public class TaiSanDTO {
     private List<NguonKinhPhi> nguonKinhPhiList;
     private List<SetNguonKinhPhi>setNguonKinhPhiList;
     private Double gioHoatDong;
+    private String idDonViQuanlyKiThuat;
+    private String tenDonViQuanlyKiThuat;
 }

@@ -9,7 +9,7 @@ import { SignaturesData } from "../../AssetTransfer/types";
 export const useMaintenanceMutation = (
   key: string,
   apiUri: string,
-  activeTab: number,
+  activeTab?: number,
 ) => {
   const queryClient = useQueryClient();
 

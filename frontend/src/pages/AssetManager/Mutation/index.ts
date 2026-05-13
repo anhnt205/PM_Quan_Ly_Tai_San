@@ -535,6 +535,7 @@ export const useAssetManagerMutation = (
                 ghiChu: String(item["Ghi chú"] || ""),
                 idDonViBanDau: String(item["Mã đơn vị ban đầu"] || "K30"),
                 idDonViHienThoi: String(item["Mã đơn vị hiện thời"] || ""),
+                idDonViQuanlyKiThuat: String(item["Mã đơn vị quản lý kỹ thuật"] || ""),
                 moTa: String(item["Mô tả"] || ""),
                 idCongTy: idCongTy,
                 ngayTao: now,
