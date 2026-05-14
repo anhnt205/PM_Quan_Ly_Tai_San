@@ -1,6 +1,7 @@
 // 
 import { combineReducers, configureStore } from '@reduxjs/toolkit'
 import userReducer from './userSlice'
+import tabsReducer from './tabsSlice'
 
 // lưu state vào localstorage, reload k mất user
 import storage from 'redux-persist/lib/storage'
@@ -16,7 +17,8 @@ const persisConfig = {
 
 // gộp các reducer
 const rootReducer = combineReducers({
-    user: userReducer
+    user: userReducer,
+    tabs: tabsReducer
 })
 
 // tự động lưu state, restore khi refersh

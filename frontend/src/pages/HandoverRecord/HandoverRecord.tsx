@@ -27,6 +27,7 @@ export default function HandoverRecord() {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%", bgcolor: "#f8f9fa" }}>
+      <PageAction title="Quản lý biên bản bàn giao" hideActionRow={true} />
       <Box sx={{ 
         px: 3, 
         pt: 1.5,

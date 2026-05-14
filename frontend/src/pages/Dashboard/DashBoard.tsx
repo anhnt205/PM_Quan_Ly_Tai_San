@@ -12,6 +12,7 @@ import TaisanMonthlyCard from "./sections/TaisanMonthlyCard";
 import Top5Panel from "./sections/Top5Panel";
 import NearDepreciationPanel from "./sections/NearDepreciationPanel";
 import { QuickActionButtons } from "./components/QuickActionButtons";
+import PageAction from "../../components/common/PageAction";
 
 export default function DashBoard() {
   const currentYear = new Date().getFullYear();
@@ -145,8 +146,9 @@ const taiSanBarData = taiSanTheoLoai || [];
   );
 
   return (
-    <Box sx={{ bgcolor: "#f5f5f5", minHeight: "100vh", p: 2 }}>
-      <Box sx={{ borderRadius: 2, bgcolor: "rgba(255, 255, 255, 0.5)", p: 2 }}>
+    <Box sx={{ bgcolor: "#f5f5f5", minHeight: "100vh" }}>
+      <PageAction title="Tổng quan" hideActionRow={true} />
+      <Box sx={{ p: 2, borderRadius: 2, bgcolor: "rgba(255, 255, 255, 0.5)", mt: 0 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
           <Box
             sx={{

@@ -54,6 +54,7 @@ export default function HandoverApproval() {
         bgcolor: "#f8f9fa",
       }}
     >
+      <PageAction title="Quản lý biên bản bàn giao" hideActionRow={true} />
       <Box
         sx={{
           px: 3,

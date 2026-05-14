@@ -42,6 +42,7 @@ import { ShowCount } from "../components/common/ShowCount";
 import { ShowCountInSubMenu } from "../components/common/ShowCountInSubMenu";
 import api from "../config/api.config";
 import React from "react";
+import { clearTabs } from "../redux/tabsSlice";
 
 const isMenuActive = (item: any, pathname: string): boolean => {
   if (item.path === pathname) {
@@ -771,6 +772,7 @@ export default function Menuheader() {
             sx={{ py: 2 }}
             onClick={() => {
               handleCloseSettingMenu();
+              dispatch(clearTabs());
               dispatch(logout());
               navigate(ROUTES.LOGIN);
             }}

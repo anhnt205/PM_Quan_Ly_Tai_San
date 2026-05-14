@@ -14,6 +14,7 @@ export default function TransferRecord() {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%", bgcolor: "#f8f9fa" }}>
+      <PageAction title="Biên bản điều chuyển" hideActionRow={true} />
       <Box sx={{ 
         px: 3, 
         pt: 1.5,
@@ -25,7 +26,7 @@ export default function TransferRecord() {
         zIndex: 1
       }}>
         <Box sx={{ fontWeight: "bold", fontSize: "1.25rem", color: "#344767", mb: 1 }}>
-          Sổ điều chuyển
+          Quản lý biên bản
         </Box>
         <Tabs 
           value={mainTab} 

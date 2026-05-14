@@ -77,6 +77,7 @@ import { useAssetByDonViQuery } from "../../AssetTransfer/Mutation";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
 import { findById } from "../../../utils/helpers";
 import { BookXIcon } from "lucide-react";
+import PageAction from "../../../components/common/PageAction";
 
 // ── Helpers ───────────────────────────────────────────────────
 const trangThaiChipProps = (
@@ -691,8 +692,9 @@ export default function MaintenanceStatPage() {
   ];
 
   return (
-    <Box sx={{ bgcolor: "#f6f8fb", minHeight: "100vh", py: 3, px: 3 }}>
-      <Box sx={{ maxWidth: 1600, mx: "auto" }}>
+    <Box sx={{ bgcolor: "#f6f8fb", minHeight: "100vh" }}>
+      <PageAction title="Quản lý sửa chữa" hideActionRow={true} />
+      <Box sx={{mx: "auto", py: 3, px: 3 }}>
         {/* ── Top Filter Bar ── */}
         <Paper
           elevation={1}

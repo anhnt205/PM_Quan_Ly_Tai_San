@@ -99,6 +99,7 @@ export default function TransferApproval() {
         bgcolor: "#f8f9fa",
       }}
     >
+      <PageAction title="Phê duyệt điều chuyển" hideActionRow={true} />
       <Box
         sx={{
           px: 3,
