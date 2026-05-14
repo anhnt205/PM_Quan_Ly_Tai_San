@@ -17,6 +17,7 @@ import { useAllLoaiSCBDQuery } from "../../../MaintenanceRepairType/Mutation";
 interface PlanAsset {
   deviceId: string;
   quantity: number;
+  idDonViBaoTri?: string;
   month1: string;
   month2: string;
   month3: string;
@@ -35,20 +36,25 @@ interface Props {
   assets: PlanAsset[];
   onAssetsChange: (assets: PlanAsset[]) => void;
   deptDevices: any;
+  departments: any[];
 }
 
-const StepSchedule = ({ assets, onAssetsChange, deptDevices }: Props) => {
+const StepSchedule = ({
+  assets,
+  onAssetsChange,
+  deptDevices,
+  departments,
+}: Props) => {
   const selectedDevices = deptDevices.items.filter((d: any) =>
     assets.some((a) => a.deviceId === d.id),
   );
 
   const { data: levels = [] } = useAllLoaiSCBDQuery();
 
-  const handleChange = (deviceId: string, monthIdx: number, level: string) => {
-    const fieldName = `month${monthIdx + 1}` as keyof PlanAsset;
+  const handleChange = (deviceId: string, field: string, value: any) => {
     const updatedAssets = assets.map((a) => {
       if (a.deviceId === deviceId) {
-        return { ...a, [fieldName]: level };
+        return { ...a, [field]: value };
       }
       return a;
     });
@@ -90,6 +96,11 @@ const StepSchedule = ({ assets, onAssetsChange, deptDevices }: Props) => {
                 sx={{ fontWeight: 700, bgcolor: "#f5f5f5", minWidth: 90 }}
               >
                 Loại TS
+              </TableCell>
+              <TableCell
+                sx={{ fontWeight: 700, bgcolor: "#f5f5f5", minWidth: 90 }}
+              >
+                Đơn vị bảo trì
               </TableCell>
               {months.map((m) => (
                 <TableCell
@@ -148,6 +159,24 @@ const StepSchedule = ({ assets, onAssetsChange, deptDevices }: Props) => {
                   <TableCell sx={{ fontSize: "0.75rem" }}>
                     {device.tenLoai}
                   </TableCell>
+                  <TableCell sx={{ fontSize: "0.75rem" }}>
+                    <FieldAutoCompleted
+                      data={departments}
+                      labelkey="id"
+                      title=""
+                      value={asset?.idDonViBaoTri}
+                      noBorder={true}
+                      fontSize="0.75rem"
+                      onChange={(e) =>
+                        handleChange(
+                          device.id,
+                          "idDonViBaoTri",
+                          (e?.id || "") as string,
+                        )
+                      }
+                      limitOptions={10}
+                    />
+                  </TableCell>
                   {row.map((level: string, idx: number) => (
                     <TableCell
                       key={idx}
@@ -162,7 +191,11 @@ const StepSchedule = ({ assets, onAssetsChange, deptDevices }: Props) => {
                         noBorder={true}
                         fontSize="0.75rem"
                         onChange={(e) =>
-                          handleChange(device.id, idx, (e?.id || "") as string)
+                          handleChange(
+                            device.id,
+                            `month${idx + 1}`,
+                            (e?.id || "") as string,
+                          )
                         }
                       />
                     </TableCell>

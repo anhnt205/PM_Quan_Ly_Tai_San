@@ -14,6 +14,7 @@ public class KeHoachSuaChuaChiTietTaiSan {
     private String nguoiTao;
     private String nguoiCapNhat;
     private Boolean isActive;
+    private String idDonViBaoTri;
 
     // Các trường hiển thị thêm (từ join)
     private String tenTaiSan;

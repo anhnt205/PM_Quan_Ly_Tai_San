@@ -92,8 +92,9 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
                 CapSuaChuaThang1, CapSuaChuaThang2, CapSuaChuaThang3,
                 CapSuaChuaThang4, CapSuaChuaThang5, CapSuaChuaThang6,
                 CapSuaChuaThang7, CapSuaChuaThang8, CapSuaChuaThang9,
-                CapSuaChuaThang10, CapSuaChuaThang11, CapSuaChuaThang12
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                CapSuaChuaThang10, CapSuaChuaThang11, CapSuaChuaThang12,
+                IdDonViBaoTri
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         return jdbcTemplate.update(sql,
                 entity.getId(),
@@ -117,7 +118,8 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
                 entity.getCapSuaChuaThang9(),
                 entity.getCapSuaChuaThang10(),
                 entity.getCapSuaChuaThang11(),
-                entity.getCapSuaChuaThang12()
+                entity.getCapSuaChuaThang12(),
+                entity.getIdDonViBaoTri()
         );
     }
 
@@ -129,8 +131,9 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
                 CapSuaChuaThang1, CapSuaChuaThang2, CapSuaChuaThang3,
                 CapSuaChuaThang4, CapSuaChuaThang5, CapSuaChuaThang6,
                 CapSuaChuaThang7, CapSuaChuaThang8, CapSuaChuaThang9,
-                CapSuaChuaThang10, CapSuaChuaThang11, CapSuaChuaThang12
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                CapSuaChuaThang10, CapSuaChuaThang11, CapSuaChuaThang12,
+                IdDonViBaoTri
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
 
         return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
@@ -163,6 +166,7 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
                 ps.setString(20, entity.getCapSuaChuaThang10());
                 ps.setString(21, entity.getCapSuaChuaThang11());
                 ps.setString(22, entity.getCapSuaChuaThang12());
+                ps.setString(23, entity.getIdDonViBaoTri());
             }
 
             @Override
@@ -181,7 +185,8 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
                 CapSuaChuaThang1 = ?, CapSuaChuaThang2 = ?, CapSuaChuaThang3 = ?,
                 CapSuaChuaThang4 = ?, CapSuaChuaThang5 = ?, CapSuaChuaThang6 = ?,
                 CapSuaChuaThang7 = ?, CapSuaChuaThang8 = ?, CapSuaChuaThang9 = ?,
-                CapSuaChuaThang10 = ?, CapSuaChuaThang11 = ?, CapSuaChuaThang12 = ?
+                CapSuaChuaThang10 = ?, CapSuaChuaThang11 = ?, CapSuaChuaThang12 = ?,
+                IdDonViBaoTri = ?
             WHERE Id = ?
             """;
         return jdbcTemplate.update(sql,
@@ -203,6 +208,7 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
                 entity.getCapSuaChuaThang10(),
                 entity.getCapSuaChuaThang11(),
                 entity.getCapSuaChuaThang12(),
+                entity.getIdDonViBaoTri(),
                 entity.getId()
         );
     }
@@ -215,7 +221,8 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
                 CapSuaChuaThang1 = ?, CapSuaChuaThang2 = ?, CapSuaChuaThang3 = ?,
                 CapSuaChuaThang4 = ?, CapSuaChuaThang5 = ?, CapSuaChuaThang6 = ?,
                 CapSuaChuaThang7 = ?, CapSuaChuaThang8 = ?, CapSuaChuaThang9 = ?,
-                CapSuaChuaThang10 = ?, CapSuaChuaThang11 = ?, CapSuaChuaThang12 = ?
+                CapSuaChuaThang10 = ?, CapSuaChuaThang11 = ?, CapSuaChuaThang12 = ?,
+                IdDonViBaoTri = ?
             WHERE Id = ?
             """;
 
@@ -245,7 +252,8 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
                 ps.setString(16, entity.getCapSuaChuaThang10());
                 ps.setString(17, entity.getCapSuaChuaThang11());
                 ps.setString(18, entity.getCapSuaChuaThang12());
-                ps.setString(19, entity.getId());
+                ps.setString(19, entity.getIdDonViBaoTri());
+                ps.setString(20, entity.getId());
             }
 
             @Override

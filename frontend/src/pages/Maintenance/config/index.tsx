@@ -489,7 +489,7 @@ export const generateBienBanKeHoachPdf = async (
       item.idLoaiTaiSan ?? "",
       item.soLuong,
       plan.idDonViGiao,
-      plan.idDonViNhan,
+      item.idDonViBaoTri,
       item.capSuaChuaThang1,
       item.capSuaChuaThang2,
       item.capSuaChuaThang3,

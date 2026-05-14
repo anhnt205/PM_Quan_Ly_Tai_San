@@ -41,6 +41,7 @@ interface PlanAsset {
   id?: string;
   deviceId: string;
   quantity: number;
+  idDonViBaoTri?: string;
   month1: string;
   month2: string;
   month3: string;
@@ -80,7 +81,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
     initialValues: {
       planCode: initialData?.id || "",
       planName: initialData?.tenKeHoach || "",
-      planYear: initialData?.nam,
+      planYear: initialData?.nam || new Date().getFullYear(),
       sourceDeptId: initialData?.idDonViGiao || "",
       executionDeptId: initialData?.idDonViNhan || "",
       decisionNo: initialData?.soQuyetDinh || "",
@@ -97,6 +98,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
         ...item,
         deviceId: item.idTaiSan,
         quantity: item.soLuong ?? 1,
+        idDonViBaoTri: item.idDonViBaoTri,
         month1: item.capSuaChuaThang1 ?? "",
         month2: item.capSuaChuaThang2 ?? "",
         month3: item.capSuaChuaThang3 ?? "",
@@ -187,8 +189,6 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
 
   const canSave =
     !!formik.values.sourceDeptId &&
-    !!formik.values.executionDeptId &&
-    formik.values.sourceDeptId !== formik.values.executionDeptId &&
     formik.values.assets.length > 0 &&
     formik.values.signers.length > 0 &&
     formik.values.planCode.trim() !== "" &&
@@ -200,6 +200,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
       id: a.id,
       idTaiSan: a.deviceId,
       soLuong: a.quantity || 1,
+      idDonViBaoTri: a.idDonViBaoTri,
       capSuaChuaThang1: a.month1,
       capSuaChuaThang2: a.month2,
       capSuaChuaThang3: a.month3,
@@ -350,7 +351,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
                     formik.setFieldValue("assets", []);
                   }}
                 />
-                <FieldAutoCompleted
+                {/* <FieldAutoCompleted
                   title="Đơn vị thực hiện"
                   data={departments.filter(
                     (d: any) => d.id !== formik.values.sourceDeptId,
@@ -358,10 +359,9 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
                   labelkey="tenPhongBan"
                   formik={formik}
                   field="executionDeptId"
-                />
+                /> */}
               </Box>
             </Box>
-
             {/* Chọn thiết bị */}
             <Box
               sx={{
@@ -784,6 +784,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
                 formik.setFieldValue("assets", assets)
               }
               deptDevices={fullDeptAssets}
+              departments={departments}
             />
           )}
         </Box>
