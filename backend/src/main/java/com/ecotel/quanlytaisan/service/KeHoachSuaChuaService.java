@@ -120,9 +120,9 @@ public class KeHoachSuaChuaService {
         return response;
     }
 
-    public Map<Integer, List<KeHoachSuaChuaDTO>> findAllGroupedByYear(
+    public Map<String, Object> findAllGroupedByYear(
             String idCongTy, String search, Integer trangThai, Integer nam, String userid,
-            String dateFrom, String dateTo) throws SQLException {
+            String idDonViGiao, String dateFrom, String dateTo) throws SQLException {
         List<KeHoachSuaChuaDTO> sourceList = keHoachSuaChuaDao.findAll(idCongTy);
 
         if (userid != null && !userid.trim().isEmpty() && !"admin".equalsIgnoreCase(userid)) {
@@ -132,6 +132,17 @@ public class KeHoachSuaChuaService {
             sourceList = filtered;
         }
 
+        // Đếm trạng thái (sau turn-filter, trước các filter còn lại)
+        Map<String, Long> trangThaiCounts = new HashMap<>();
+        for (KeHoachSuaChuaDTO item : sourceList) {
+            if (item.getTrangThai() != null) {
+                String key = item.getTrangThai().toString();
+                trangThaiCounts.put(key, trangThaiCounts.getOrDefault(key, 0L) + 1);
+            }
+        }
+
+        if (idDonViGiao != null && !idDonViGiao.trim().isEmpty())
+            sourceList = sourceList.stream().filter(i -> idDonViGiao.equalsIgnoreCase(i.getIdDonViGiao())).collect(Collectors.toList());
         if (trangThai != null)
             sourceList = sourceList.stream().filter(i -> trangThai.equals(i.getTrangThai())).collect(Collectors.toList());
         if (nam != null)
@@ -165,13 +176,18 @@ public class KeHoachSuaChuaService {
             item.setDanhSachTaiSan(suaChuaChiTietTaiSanDao.findByIdKeHoach(item.getId()));
         }
 
-        return sourceList.stream()
+        Map<Integer, List<KeHoachSuaChuaDTO>> grouped = sourceList.stream()
                 .filter(i -> i.getNam() != null)
                 .collect(Collectors.groupingBy(
                         KeHoachSuaChuaDTO::getNam,
                         () -> new TreeMap<>(Comparator.reverseOrder()),
                         Collectors.toList()
                 ));
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("data", grouped);
+        result.put("trangThaiCounts", trangThaiCounts);
+        return result;
     }
 
 

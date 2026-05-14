@@ -100,6 +100,14 @@ export default function Department() {
       headerAlign: "center",
     },
     {
+      field: "tenPhongCapTren",
+      headerName: "Phòng ban cấp trên",
+      flex: 1,
+      minWidth: 200,
+      align: "center",
+      headerAlign: "center",
+    },
+    {
       field: "soLuongNhanVien",
       headerName: "Số lượng nhân viên",
       width: 200,
@@ -180,6 +188,7 @@ export default function Department() {
         {showForm && (
           <Box py={2}>
             <DepartmentForm
+              allDepartment={allDepartment}
               onCancel={() => {
                 setShowForm(false);
                 setSelectedDepartment(null);

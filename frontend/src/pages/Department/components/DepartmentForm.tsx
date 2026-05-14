@@ -22,14 +22,18 @@ import { DepartmentValidation } from "../validation";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import EditButton from "../../../components/Button/EditButton";
 import { CongTy } from "../../../utils/const";
+import { DepartmentType } from "../types";
+import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
 
 export default function DepartmentForm({
+  allDepartment,
   onEdit,
   onCancel,
   selectedDepartment,
   readOnly,
   onSave,
 }: {
+  allDepartment:DepartmentType[]
   onEdit: () => void;
   onCancel: () => void;
   selectedDepartment?: any;
@@ -42,6 +46,7 @@ export default function DepartmentForm({
       id: "",
       tenPhongBan: "",
       idCongTy: CongTy.CT001,
+      phongCapTren: "",
       isKho: false,
       isLanhDao: false,
       loaiKho: undefined as Number | undefined,
@@ -104,6 +109,17 @@ export default function DepartmentForm({
                 formik={formik}
                 field="tenPhongBan"
                 disabled={readOnly}
+              />
+            </Grid>
+            <Grid size={{ xs: 6, md: 12 }}>
+              <FieldAutoCompleted
+                title="Phòng ban cấp trên"
+                data={allDepartment}
+                labelkey="tenPhongBan"
+                field="phongCapTren"
+                formik={formik}
+                disabled={readOnly}
+                limitOptions={10}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>

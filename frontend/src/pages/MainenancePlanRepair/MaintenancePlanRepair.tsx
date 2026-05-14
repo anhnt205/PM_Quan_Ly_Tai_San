@@ -56,6 +56,7 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { RootState } from "../../redux/store";
 import { IncidenData, IncidentInspectionData } from "../Maintenance/types";
 import { Edit, Eye } from "lucide-react";
+import { useAllDepartmentsQuery } from "../Department/Mutation";
 
 // ── Status config ──────────────────────────────────────────
 const planStatusConfig: Record<
@@ -137,6 +138,7 @@ export default function MaintenancePlanRepair() {
   const [expandedYears, setExpandedYears] = useState<Record<string, boolean>>(
     {},
   );
+  const [selectedDepartment, setSelectedDepartment] = useState("");
   const [selectedIncidentIds, setSelectedIncidentIds] = useState<string[]>([]);
   const [expandedIncidentPlanIds, setExpandedIncidentPlanIds] = useState<
     Set<string>
@@ -145,13 +147,15 @@ export default function MaintenancePlanRepair() {
   const [incidentInspectionRecords, setIncidentInspectionRecords] = useState<
     any[]
   >([]);
+  const { data: allDepartment = [] } = useAllDepartmentsQuery();
   const searchDebounce = useDebounce(searchValue, 500);
   // kehoach
   const { data: groupedData, isLoading } = useMaintenancePlanningGroupedQuery(
     CongTy.CT001,
-    statusFilter ? Number(statusFilter) : undefined,
+    statusFilter !== "" ? Number(statusFilter) : undefined,
     searchDebounce,
     undefined,
+    selectedDepartment,
     dateFrom,
     dateTo,
   );
@@ -216,8 +220,8 @@ export default function MaintenancePlanRepair() {
   );
 
   const allPlans = useMemo(() => {
-    if (!groupedData?.data) return [];
-    return Object.values(groupedData.data).flat() as MaintenancePlanData[];
+    if (!groupedData?.data?.data) return [];
+    return Object.values(groupedData.data.data).flat() as MaintenancePlanData[];
   }, [groupedData]);
 
   // ── Toggle helpers ────────────────────────────────────────
@@ -331,30 +335,36 @@ export default function MaintenancePlanRepair() {
     );
   };
 
+  const serverCounts = groupedData?.data?.trangThaiCounts || {};
+  const totalCount = Object.values(serverCounts).reduce(
+    (a: any, b: any) => a + b,
+    0,
+  ) as number;
+
   const statusOptions: FilterOption[] = [
-    { label: "Tất cả", value: "", count: allPlans.length, color: "primary" },
+    { label: "Tất cả", value: "", count: totalCount, color: "primary" },
     {
       label: "Bản nháp",
       value: 0,
-      count: countByStatus(0),
+      count: serverCounts["0"] || 0,
       color: "default",
     },
     {
       label: "Chờ duyệt",
       value: 1,
-      count: countByStatus(1),
+      count: serverCounts["1"] || 0,
       color: "warning",
     },
     {
       label: "Từ chối",
       value: 2,
-      count: countByStatus(2),
+      count: serverCounts["2"] || 0,
       color: "error",
     },
     {
       label: "Đã duyệt",
       value: 3,
-      count: countByStatus(3),
+      count: serverCounts["3"] || 0,
       color: "success",
     },
   ];
@@ -561,6 +571,10 @@ export default function MaintenancePlanRepair() {
                 setSearchValue={setSearchValue}
                 onDelete={() => {}}
                 showDelete={false}
+                setSelectedDepartment={setSelectedDepartment}
+                departments={allDepartment}
+                selectedDepartment={selectedDepartment}
+                isFilterDepartment={true}
                 extraActions={
                   <>
                     <Button
@@ -587,7 +601,7 @@ export default function MaintenancePlanRepair() {
                         </Typography>
                       ) : (
                         (
-                          Object.entries(groupedData?.data || {}) as [
+                          Object.entries(groupedData?.data?.data || {}) as [
                             string,
                             MaintenancePlanData[],
                           ][]

@@ -91,13 +91,14 @@ public class KeHoachSuaChuaController {
             @RequestParam(value = "trangThai", required = false) Integer trangThai,
             @RequestParam(value = "nam", required = false) Integer nam,
             @RequestParam(value = "userid", required = false) String userid,
+            @RequestParam(value = "idDonViGiao", required = false) String idDonViGiao,
             @RequestParam(value = "dateFrom", required = false) String dateFrom,
             @RequestParam(value = "dateTo", required = false) String dateTo
     ) throws SQLException {
         try {
-            Map<Integer, List<KeHoachSuaChuaDTO>> grouped = keHoachSuaChuaService.findAllGroupedByYear(
-                idCongTy, search, trangThai, nam, userid, dateFrom, dateTo);
-            return ResponseEntity.ok(ApiResponse.success("Lấy danh sách theo năm thành công", grouped, grouped.size()));
+            Map<String, Object> result = keHoachSuaChuaService.findAllGroupedByYear(
+                idCongTy, search, trangThai, nam, userid, idDonViGiao, dateFrom, dateTo);
+            return ResponseEntity.ok(ApiResponse.success("Lấy danh sách theo năm thành công", result, result.size()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));

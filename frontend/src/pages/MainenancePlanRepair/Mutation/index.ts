@@ -69,6 +69,7 @@ export const useMaintenancePlanningGroupedQuery = (
   trangThai?: number,
   search?: string,
   userid?: string,
+  idDonViGiao?: string,
   dateFrom?: string,
   dateTo?: string,
 ) => {
@@ -79,12 +80,13 @@ export const useMaintenancePlanningGroupedQuery = (
       trangThai,
       search,
       userid,
+      idDonViGiao,
       dateFrom,
       dateTo,
     ],
     queryFn: async () => {
       const res = await api.get("/kehoach-suachua/grouped-by-year", {
-        params: { idCongTy, trangThai, search, userid, dateFrom, dateTo },
+        params: { idCongTy, trangThai, search, userid, idDonViGiao, dateFrom, dateTo },
       });
       return res.data;
     },
