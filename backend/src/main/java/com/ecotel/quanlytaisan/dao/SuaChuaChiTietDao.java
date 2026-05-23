@@ -36,7 +36,7 @@ public class SuaChuaChiTietDao {
                 ts.TenTaiSan, 
                 ts.IdNhomTaiSan as nhomTaiSan, 
                 kscctt.SoLuong, ksc.IdDonViGiao as donViQuanLy, 
-                ksc.IdDonViNhan as donViBaoTri,
+                kscctt.IdDonViBaoTri as donViBaoTri,
                 ts.DonViTinh,
                 CASE sc.Thang
                     WHEN 1  THEN kscctt.CapSuaChuaThang1

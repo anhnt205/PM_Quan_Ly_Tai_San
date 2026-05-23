@@ -734,6 +734,17 @@ export const generateSuaChuaPdf = async (
   );
   y += 10;
 
+  // Nội dung sửa chữa
+  doc.setFont("times_new_roman", "normal");
+  doc.setFontSize(12);
+  const noiDungText = `- Nội dung sửa chữa: ${repair.ghiChu || "..."}`;
+  const noiDungLines = doc.splitTextToSize(noiDungText, pageWidth - 40);
+  noiDungLines.forEach((line: string) => {
+    doc.text(line, 20, y);
+    y += 8;
+  });
+  y += 2;
+
   // Table
   const tableData = (repair.danhSachTaiSan || []).map(
     (item: any, idx: number) => {
@@ -781,12 +792,13 @@ export const generateSuaChuaPdf = async (
     bodyStyles: { lineWidth: 0.1, lineColor: 0, textColor: 0 },
     columnStyles: {
       0: { cellWidth: 10, halign: "center" },
-      1: { cellWidth: 20, halign: "center" },
+      1: { cellWidth: 15, halign: "center" },
       3: { cellWidth: 15, halign: "center" },
-      4: { cellWidth: 20, halign: "center" },
+      4: { cellWidth: 15, halign: "center" },
       5: { cellWidth: 10, halign: "center" },
-      6: { cellWidth: 25, halign: "center" },
-      7: { cellWidth: 25, halign: "center" },
+      6: { cellWidth: 15, halign: "center" },
+      7: { cellWidth: 15, halign: "center" },
+      8: { cellWidth: 25, halign: "center" },
     },
   });
 

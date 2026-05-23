@@ -16,44 +16,32 @@ import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
 
 interface Props {
   plan: MaintenancePlanData;
-  deviceIds: string[];
+  assets: any[];
   month: number;
   year: number;
   number: string;
   signers: PlanSigner[];
   sourceDeptId: string;
   execDeptId: string;
+  note: string;
 }
 
 const RepairRequestPreview = ({
   plan,
-  deviceIds,
+  assets,
   month,
   year,
   number,
   signers,
   sourceDeptId,
   execDeptId,
+  note,
 }: Props) => {
   const sourceDept = departments.find((d) => d.id === sourceDeptId);
   const execDept = departments.find((d) => d.id === execDeptId);
 
   const today = new Date();
   const dateStr = `Quảng Ninh, ngày ${today.getDate()} tháng ${today.getMonth() + 1} năm ${today.getFullYear()}`;
-
-  const sortedSigners = [...signers].sort((a, b) => a.order - b.order);
-  const minOrder = Math.min(...signers.map((s) => s.order));
-  const maxOrder = Math.max(...signers.map((s) => s.order));
-
-  const creator = sortedSigners.find((s) => s.order === minOrder); // order nhỏ nhất = Người lập
-  const director = sortedSigners.find((s) => s.order === maxOrder); // order lớn nhất = Phê duyệt
-  const middles = sortedSigners.filter(
-    (s) => s.order !== minOrder && s.order !== maxOrder,
-  ); // trung gian
-
-  const selectedDetail = plan?.danhSachTaiSan?.filter((device: any) =>
-    deviceIds.includes(device?.id ?? ""),
-  );
 
   return (
     <Paper
@@ -151,8 +139,11 @@ const RepairRequestPreview = ({
       <Typography sx={{ fontSize: 12, mb: 0.5, fontFamily: "inherit" }}>
         - Vị trí lắp đặt: {sourceDept?.name || "..."}
       </Typography>
-      <Typography sx={{ fontSize: 12, mb: 2, fontFamily: "inherit" }}>
+      <Typography sx={{ fontSize: 12, mb: 0.5, fontFamily: "inherit" }}>
         - Thời gian hoạt động: tháng {month}/{year}
+      </Typography>
+      <Typography sx={{ fontSize: 12, mb: 2, fontFamily: "inherit" }}>
+        - Nội dung sửa chữa: {note || "..."}
       </Typography>
 
       {/* Device table */}
@@ -201,18 +192,21 @@ const RepairRequestPreview = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {(selectedDetail ?? []).map((device: any, idx: number) => {
-              const level = device[`capSuaChuaThang${month}`] || "";
+            {(assets ?? []).map((device: any, idx: number) => {
               return (
                 <TableRow key={device.idTaiSan}>
                   <TableCell align="center">{idx + 1}</TableCell>
                   <TableCell align="center">{device.idTaiSan}</TableCell>
                   <TableCell>{device.tenTaiSan}</TableCell>
-                  <TableCell align="center">{device.idNhomTaiSan}</TableCell>
-                  <TableCell align="center">{level}</TableCell>
+                  <TableCell align="center">{device.nhomTaiSan}</TableCell>
+                  <TableCell align="center">{device.capSuaChua}</TableCell>
                   <TableCell align="center">{device.soLuong}</TableCell>
-                  <TableCell align="center">{plan.idDonViGiao || ""}</TableCell>
-                  <TableCell align="center">{plan.idDonViNhan || ""}</TableCell>
+                  <TableCell align="center">
+                    {device.donViQuanLy || ""}
+                  </TableCell>
+                  <TableCell align="center">
+                    {device.donViBaoTri || ""}
+                  </TableCell>
                   <TableCell></TableCell>
                 </TableRow>
               );
@@ -223,69 +217,84 @@ const RepairRequestPreview = ({
 
       {/* Signatures */}
       <Box
-        sx={{ display: "flex", justifyContent: "space-between", mt: 4, px: 2 }}
+        sx={{ mt: 4, display: "flex", justifyContent: "space-between", gap: 2 }}
       >
-        {/* Người lập — luôn bên trái */}
-        <Box sx={{ textAlign: "center", minWidth: 140 }}>
-          <Typography
-            sx={{ fontWeight: 700, fontSize: 12, fontFamily: "inherit" }}
-          >
-            Người lập
-          </Typography>
-          <Typography
-            sx={{
-              fontSize: 11,
-              fontStyle: "italic",
-              color: "text.secondary",
-              mt: 4,
-              fontFamily: "inherit",
-            }}
-          >
-            {creator?.userName || ""}
-          </Typography>
-        </Box>
+        {(() => {
+          const sorted = [...(signers || [])].sort(
+            (a, b) => (a.order || 0) - (b.order || 0),
+          );
+          const cols = sorted.map((s, idx) => ({
+            label:
+              idx === 0
+                ? "Người lập"
+                : idx === sorted.length - 1
+                  ? "Phê duyệt"
+                  : (s.departmentName || "").toUpperCase(),
+            signer: s,
+          }));
 
-        {/* Người ký trung gian */}
-        {middles.map((s) => (
-          <Box key={s.userId} sx={{ textAlign: "center", minWidth: 140 }}>
-            <Typography
-              sx={{ fontWeight: 700, fontSize: 12, fontFamily: "inherit" }}
-            >
-              {s.departmentName}
-            </Typography>
-            <Typography
-              sx={{
-                fontSize: 11,
-                fontStyle: "italic",
-                color: "text.secondary",
-                mt: 4,
-                fontFamily: "inherit",
-              }}
-            >
-              {s.userName}
-            </Typography>
-          </Box>
-        ))}
+          if (cols.length === 0) {
+            return (
+              <Box sx={{ flex: 1, textAlign: "center" }}>
+                <Typography variant="caption" color="text.disabled">
+                  Chưa có người duyệt
+                </Typography>
+              </Box>
+            );
+          }
 
-        {/* Phê duyệt — luôn bên phải */}
-        <Box sx={{ textAlign: "center", minWidth: 140 }}>
-          <Typography
-            sx={{ fontWeight: 700, fontSize: 12, fontFamily: "inherit" }}
-          >
-            Phê duyệt
-          </Typography>
-          <Typography
-            sx={{
-              fontSize: 11,
-              fontStyle: "italic",
-              color: "text.secondary",
-              mt: 4,
-              fontFamily: "inherit",
-            }}
-          >
-            {director?.userName || ""}
-          </Typography>
-        </Box>
+          return cols.map((col, idx) => (
+            <Box key={idx} sx={{ flex: 1, textAlign: "center" }}>
+              <Typography
+                variant="caption"
+                fontWeight={700}
+                display="block"
+                sx={{ textTransform: "uppercase", mb: 0.5 }}
+              >
+                {col.label}
+              </Typography>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                display="block"
+                sx={{ fontStyle: "italic", mb: 4 }}
+              >
+                (Ký, ghi rõ họ tên)
+              </Typography>
+              <Box
+                sx={{
+                  borderBottom: "1px solid",
+                  borderColor: "text.primary",
+                  width: "70%",
+                  mx: "auto",
+                  mb: 0.5,
+                }}
+              />
+              {col.signer ? (
+                <>
+                  <Typography
+                    variant="caption"
+                    fontWeight={600}
+                    display="block"
+                  >
+                    {col.signer.userName}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    display="block"
+                  >
+                    {col.signer.departmentName}
+                  </Typography>
+                </>
+              ) : (
+                <Typography variant="caption" color="text.disabled">
+                  Chưa chọn
+                </Typography>
+              )}
+            </Box>
+          ));
+        })()}
       </Box>
     </Paper>
   );

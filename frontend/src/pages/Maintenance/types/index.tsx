@@ -84,7 +84,7 @@ export interface MaintenanceRepairDetailData {
   capSuaChua?: string;
   soLuong?: number;
   donViQuanLy?: string;
-  donVibaoTri?: string;
+  donViBaoTri?: string;
   idKeHoachChiTiet: string;
   ngayTao?: string;
   ngayCapNhat?: string;

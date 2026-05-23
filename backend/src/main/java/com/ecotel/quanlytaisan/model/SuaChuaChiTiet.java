@@ -24,5 +24,5 @@ public class SuaChuaChiTiet {
     private String capSuaChua;
     private int soLuong;
     private String donViQuanLy;
-    private String donVibaoTri;
+    private String donViBaoTri;
 }

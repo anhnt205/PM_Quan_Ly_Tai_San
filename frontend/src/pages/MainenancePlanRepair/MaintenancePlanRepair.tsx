@@ -55,8 +55,9 @@ import { useSelector } from "react-redux";
 import { useDebounce } from "../../hooks/useDebounce";
 import { RootState } from "../../redux/store";
 import { IncidenData, IncidentInspectionData } from "../Maintenance/types";
-import { Edit, Eye } from "lucide-react";
+import { Delete, Edit, Eye, Trash2 } from "lucide-react";
 import { useAllDepartmentsQuery } from "../Department/Mutation";
+import { showConfirmAlert } from "../../components/Alert";
 
 // ── Status config ──────────────────────────────────────────
 const planStatusConfig: Record<
@@ -173,14 +174,6 @@ export default function MaintenancePlanRepair() {
   const { data: incidentReports = [] } = useMaintenanceIncidentByPlanQuery(
     expandedIncidentPlanIds.values().next().value,
   );
-
-  // sua chua
-  const {
-    createMutation: createRepairMutation,
-    updateMutation: updateRepairMutation,
-    deleteMutation: deleteRepairMutation,
-    updateManyMutation: updateManyRepairMutation,
-  } = useMaintenanceRepairMutation();
 
   const { data: serverIncInspRecords = [] } =
     useMaintenanceIncidentInspectionBySuCoQuery(selectedIncident?.id);
@@ -885,7 +878,7 @@ export default function MaintenancePlanRepair() {
                                                 <TableCell>
                                                   {renderStatus(plan.trangThai)}
                                                 </TableCell>
-                                                <TableCell>
+                                                <TableCell sx={{display:"flex", gap:1}}>
                                                   <IconButton
                                                     disabled={
                                                       plan.trangThai !== 0
@@ -902,6 +895,31 @@ export default function MaintenancePlanRepair() {
                                                         plan.trangThai !== 0
                                                           ? "#afb6bdff"
                                                           : "#1976d2"
+                                                      }
+                                                    />
+                                                  </IconButton>
+                                                  <IconButton
+                                                    disabled={
+                                                      plan.trangThai !== 0
+                                                    }
+                                                    onClick={(e) => {
+                                                      showConfirmAlert(
+                                                        "Bạn có chắc chắn muốn xóa kế hoạch này?",
+                                                      ).then((res) => {
+                                                        if (res?.isConfirmed) {
+                                                          deleteMutation.mutate(
+                                                            plan,
+                                                          );
+                                                        }
+                                                      });
+                                                      e.stopPropagation();
+                                                    }}
+                                                  >
+                                                    <Trash2
+                                                      color={
+                                                        plan.trangThai !== 0
+                                                          ? "#afb6bdff"
+                                                          : "red"
                                                       }
                                                     />
                                                   </IconButton>
@@ -1450,7 +1468,6 @@ export default function MaintenancePlanRepair() {
                   acceptanceTestRecords={acceptanceTestRecords}
                   materialQualityRecords={materialQualityRecords}
                   onClose={handleCloseAll}
-                  onCreateRepairRequest={createRepairMutation.mutateAsync}
                   onCreateInspectionRecord={addInspectionRecord}
                   onCreateAcceptanceRecord={addAcceptanceTestRecord}
                   onCreateMaterialQualityRecord={addMaterialQualityRecord}

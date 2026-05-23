@@ -45,8 +45,11 @@ import {
   useMaintenanceMaterialAssessmentByInspectionQuery,
   useMaintenancePlanningDetailsByMonthQuery,
   useMaintenanceRepairByPlanQuery,
+  useMaintenanceRepairMutation,
 } from "../../../MainenancePlanRepair/Mutation";
 import { showStatus } from "../../config";
+import { DeleteIcon, EditIcon, TrashIcon } from "lucide-react";
+import { showConfirmAlert } from "../../../../components/Alert";
 
 interface Props {
   plan: MaintenancePlanData;
@@ -54,7 +57,6 @@ interface Props {
   acceptanceTestRecords: AcceptanceTestRecord[];
   materialQualityRecords: MaterialQualityRecord[];
   onClose: () => void;
-  onCreateRepairRequest: (req: MaintenanceRepairData) => void;
   onCreateInspectionRecord: (record: TechnicalInspectionRecord) => void;
   onCreateAcceptanceRecord: (record: AcceptanceTestRecord) => void;
   onCreateMaterialQualityRecord: (record: MaterialQualityRecord) => void;
@@ -140,6 +142,11 @@ interface ActionCellProps {
   isAdd?: boolean;
   addTooltip?: string;
   addColor?: "primary" | "success" | "warning" | "secondary";
+  onEdit?: () => void;
+  isEdit?: boolean;
+  editTooltip?: string;
+  editColor?: "primary" | "success" | "warning" | "secondary";
+  onDelete?: () => void;
 }
 
 const ActionCell = ({
@@ -147,6 +154,11 @@ const ActionCell = ({
   isAdd = true,
   addTooltip = "Tạo biên bản",
   addColor = "primary",
+  onEdit,
+  isEdit,
+  editTooltip,
+  editColor,
+  onDelete,
 }: ActionCellProps) => (
   <Box
     sx={{
@@ -156,6 +168,22 @@ const ActionCell = ({
       alignItems: "center",
     }}
   >
+    {" "}
+    {onEdit && (
+      <Tooltip title={editTooltip} placement="top">
+        <IconButton
+          size="small"
+          color={editColor}
+          disabled={!isEdit}
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
+        >
+          <EditIcon color="#1976d2" size={16} />
+        </IconButton>
+      </Tooltip>
+    )}
     {onAdd && (
       <Tooltip title={addTooltip} placement="top">
         <IconButton
@@ -171,15 +199,30 @@ const ActionCell = ({
         </IconButton>
       </Tooltip>
     )}
+    {onDelete && (
+      <Tooltip title="Xóa" placement="top">
+        <IconButton
+          size="small"
+          onClick={(e) => {
+            e.stopPropagation();
+            showConfirmAlert("Bạn có chắc chắn muốn xóa không?").then(
+              (isConfirm) => {
+                if (isConfirm) {
+                  onDelete();
+                }
+              },
+            );
+          }}
+        >
+          <TrashIcon color="#ef4444" size={16} />
+        </IconButton>
+      </Tooltip>
+    )}
   </Box>
 );
 
 // ── Component chính ───────────────────────────────────────
-const PlanDetailPanel = ({
-  plan,
-  onClose,
-  onCreateRepairRequest,
-}: Props) => {
+const PlanDetailPanel = ({ plan, onClose }: Props) => {
   const [tab, setTab] = useState(0);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedDeviceIds, setSelectedDeviceIds] = useState<string[]>([]);
@@ -204,6 +247,18 @@ const PlanDetailPanel = ({
   const [materialParentAccId, setMaterialParentAccId] = useState<string | null>(
     null,
   );
+
+  const [selectedReq, setSelectedReq] = useState<MaintenanceRepairData | null>(
+    null,
+  );
+
+  // sua chua
+  const {
+    createMutation: createRepairMutation,
+    updateMutation: updateRepairMutation,
+    deleteMutation: deleteRepairMutation,
+    updateManyMutation: updateManyRepairMutation,
+  } = useMaintenanceRepairMutation();
 
   useEffect(() => {
     setExpandedRequests(new Set());
@@ -543,6 +598,16 @@ const PlanDetailPanel = ({
                               }
                               addTooltip="Tạo BB Giám định"
                               addColor="success"
+                              onEdit={() => {
+                                setSelectedReq(req);
+                                setRepairDialogOpen(true);
+                              }}
+                              onDelete={() =>
+                                deleteRepairMutation.mutateAsync(req)
+                              }
+                              isEdit={req?.trangThai === 0}
+                              editTooltip="Sửa"
+                              editColor="success"
                             />
                           </TableCell>
                         </TableRow>
@@ -825,12 +890,18 @@ const PlanDetailPanel = ({
         open={repairDialogOpen}
         onClose={() => setRepairDialogOpen(false)}
         plan={plan}
+        initialData={selectedReq}
         selectedDeviceIds={selectedDeviceIds}
         selectedMonth={selectedMonth}
         onSubmit={(req) => {
-          onCreateRepairRequest(req);
+          if (selectedReq) {
+            updateRepairMutation.mutateAsync(req);
+          } else {
+            createRepairMutation.mutateAsync(req);
+          }
           setSelectedDeviceIds([]);
           setRepairDialogOpen(false);
+          setSelectedReq(null);
         }}
       />
 

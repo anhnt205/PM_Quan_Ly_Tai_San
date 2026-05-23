@@ -16,7 +16,7 @@ import {
 } from "../../Maintenance/types";
 import dayjs from "dayjs";
 import { useSelector } from "react-redux";
-import { IncidentAdapter } from "../../Maintenance/Adapter";
+import { IncidentAdapter, RepairAdapter } from "../../Maintenance/Adapter";
 
 export const useMaintenancePlanningPageQuery = (
   page?: number,
@@ -86,7 +86,15 @@ export const useMaintenancePlanningGroupedQuery = (
     ],
     queryFn: async () => {
       const res = await api.get("/kehoach-suachua/grouped-by-year", {
-        params: { idCongTy, trangThai, search, userid, idDonViGiao, dateFrom, dateTo },
+        params: {
+          idCongTy,
+          trangThai,
+          search,
+          userid,
+          idDonViGiao,
+          dateFrom,
+          dateTo,
+        },
       });
       return res.data;
     },
@@ -728,7 +736,9 @@ export const useMaintenanceRepairByPlanQuery = (idKeHoach?: string) => {
     queryKey: ["repairByPlan", idKeHoach],
     queryFn: async () => {
       const res = await api.get(`/suachua/kehoach/${idKeHoach}`);
-      return res.data.data || res.data;
+      return (res.data.data || res.data || []).map((item: any) =>
+        RepairAdapter(item),
+      );
     },
     placeholderData: (previousData) => previousData,
   });
@@ -840,6 +850,7 @@ export const useMaintenanceRepairMutation = () => {
       queryClient.invalidateQueries({
         queryKey: ["maintenancePlanningDetailsByMonth"],
       });
+      queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
       showSuccessAlert("Tạo giấy đề nghị sửa chữa thành công");
     },
     onError: (error: any) => {
@@ -862,6 +873,7 @@ export const useMaintenanceRepairMutation = () => {
     onSuccess: async (response, variables) => {
       handleUpdate(response, variables);
       queryClient.invalidateQueries({ queryKey: ["repairPage"] });
+      queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
 
       showSuccessAlert("Cập nhật giấy đề nghị thành công");
     },
@@ -902,7 +914,7 @@ export const useMaintenanceRepairMutation = () => {
       return (await api.delete(`/suachua/${data.id}`)).data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["repairPage"] });
+      queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
       showSuccessAlert("Xóa giấy đề nghị thành công");
     },
     onError: (error: any) => {

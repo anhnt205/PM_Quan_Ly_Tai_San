@@ -1,7 +1,6 @@
 package com.ecotel.quanlytaisan.model;
 
 import lombok.Data;
-import java.util.Date;
 
 @Data
 public class SuaChua {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -28,9 +28,10 @@ import { useAllStaffsQuery } from "../../../Staff/Mutation";
 import { DepartmentType } from "../../../Department/types";
 import { StaffType } from "../../../Staff/types";
 import { generateCode } from "../../../../utils/helpers";
-import { CongTy } from "../../../../utils/const";
+import { Action, CongTy } from "../../../../utils/const";
 import dayjs from "dayjs";
 import { MaintenanceRepairData } from "../../types";
+import { listSigneInfo } from "../../config";
 
 interface Props {
   open: boolean;
@@ -39,6 +40,7 @@ interface Props {
   selectedDeviceIds: string[];
   selectedMonth: number;
   onSubmit: (req: MaintenanceRepairData) => void;
+  initialData?: MaintenanceRepairData | null;
 }
 
 const RepairRequestDialog = ({
@@ -48,13 +50,11 @@ const RepairRequestDialog = ({
   selectedDeviceIds,
   selectedMonth,
   onSubmit,
+  initialData,
 }: Props) => {
   const [number, setNumber] = useState("");
   const [note, setNote] = useState("");
 
-  // const [signers, setSigners] = useState<PlanSigner[]>(() =>
-  //   (plan.signers as PlanSigner[] | undefined)?.map(s => ({ ...s, signed: false, signedAt: undefined })) ?? []
-  // );
   const [signers, setSigners] = useState<PlanSigner[]>([]);
 
   const [addDeptId, setAddDeptId] = useState("");
@@ -62,12 +62,56 @@ const RepairRequestDialog = ({
   const [editingSignerId, setEditingSignerId] = useState<string | null>(null);
   const [editDeptId, setEditDeptId] = useState("");
   const [editUserId, setEditUserId] = useState("");
+  const [assets, setAssets] = useState<any[]>([]);
 
   const sourceDeptId = plan.idDonViGiao || "";
   const execDeptId = plan.idDonViNhan || "";
 
   const { data: apiDepartments = [] } = useAllDepartmentsQuery();
   const { data: apiUsers = [] } = useAllStaffsQuery();
+
+  useEffect(() => {
+    if (!open) return;
+    if (initialData) {
+      const listInfo = listSigneInfo(initialData, apiUsers, apiDepartments);
+      setSigners(
+        (listInfo || []).map((item, idx) => ({
+          ...item,
+          userId: item.idNhanVien,
+          userName: item.hoTen,
+          departmentId: item.idDonVi,
+          departmentName: item.donVi,
+          order: idx + 1,
+          action: Action.UPDATE,
+        })),
+      );
+      setNumber(initialData.soPhieu ?? "");
+      setNote(initialData.ghiChu ?? "");
+      setAssets(initialData.danhSachTaiSan ?? []);
+    } else {
+      setNumber("");
+      setNote("");
+      setSigners([]);
+      setAssets(
+        (plan?.danhSachTaiSan || [])
+          ?.filter((item) => selectedDeviceIds.includes(item.id ?? ""))
+          ?.map((s: any) => {
+            const level = s[`capSuaChuaThang${selectedMonth + 1}`] || "";
+            return {
+              idKeHoachChiTiet: s.id || "",
+              idTaiSan: s.idTaiSan || "",
+              tenTaiSan: s.tenTaiSan || "",
+              nhomTaiSan: s.idNhomTaiSan || "",
+              capSuaChua: level,
+              soLuong: s.soLuong,
+              donViQuanLy: plan.idDonViGiao || "",
+              donViBaoTri: s.idDonViBaoTri || "",
+              action: Action.CREATE,
+            };
+          }),
+      );
+    }
+  }, [open, initialData, apiUsers, apiDepartments, selectedDeviceIds, plan]);
 
   const handleAddSigner = () => {
     if (!addUserId || !addDeptId) return;
@@ -141,10 +185,11 @@ const RepairRequestDialog = ({
           }))
         : [];
     const req: MaintenanceRepairData = {
+      id: initialData?.id || "",
       idCongTy: CongTy.CT001,
       soPhieu: number,
       idKeHoach: plan?.id || "",
-      thang: selectedMonth + 1,
+      thang: initialData?.thang ? initialData?.thang : selectedMonth + 1,
       nam: plan.nam,
       ghiChu: note,
       idNguoiLap: idNguoiLapBieu,
@@ -155,12 +200,7 @@ const RepairRequestDialog = ({
       trangThai: 0,
       ngayTao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       ngayCapNhat: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-      danhSachTaiSan: plan?.danhSachTaiSan
-        ?.filter((item) => selectedDeviceIds.includes(item.id ?? ""))
-        ?.map((s) => ({
-          idKeHoachChiTiet: s.id || "",
-          idTaiSan: s.idTaiSan || "",
-        })),
+      danhSachTaiSan: assets,
       nguoiKyList: intermediateSigners,
     };
     onSubmit(req);
@@ -229,7 +269,7 @@ const RepairRequestDialog = ({
                     &nbsp;—&nbsp;Số thiết bị: <b>{selectedDeviceIds.length}</b>
                   </Typography>
                   <TextField
-                    label="Ghi chú / Nội dung sửa chữa"
+                    label="Nội dung sửa chữa"
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                     multiline
@@ -553,13 +593,16 @@ const RepairRequestDialog = ({
           <Box>
             <RepairRequestPreview
               plan={plan}
-              deviceIds={selectedDeviceIds}
-              month={selectedMonth + 1}
+              assets={assets}
+              month={
+                initialData?.thang ? initialData?.thang : selectedMonth + 1
+              }
               year={plan.nam}
               number={number}
               signers={signers}
               sourceDeptId={sourceDeptId}
               execDeptId={execDeptId}
+              note={note}
             />
           </Box>
         </Box>
