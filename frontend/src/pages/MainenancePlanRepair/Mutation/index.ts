@@ -19,6 +19,7 @@ import { useSelector } from "react-redux";
 import {
   AcceptanceTestAdapter,
   IncidentAdapter,
+  IncidentInspectionAdapter,
   InspectionAdapter,
   MaterialAssessmentAdapter,
   RepairAdapter,
@@ -628,7 +629,10 @@ export const useMaintenanceIncidenMutation = () => {
       return (await api.delete(`/suco-thietbi/${data.id}`)).data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["incidentPage"] });
+      queryClient.invalidateQueries({
+        queryKey: ["maintenancePlanningGrouped"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["incidentByPlan"] });
       showSuccessAlert("Xóa sự cố thành công");
     },
     onError: (error: any) => {
@@ -1033,7 +1037,10 @@ export const useMaintenanceInspectionByBienBanQuery = (idBienBan?: string) => {
     queryKey: ["inspectionByBienBan", idBienBan],
     queryFn: async () => {
       const res = await api.get(`/giamdinh/bienban/${idBienBan}`);
-      return res.data.data || res.data;
+      const data = (res.data.data || res.data || []).map((item: any) =>
+        InspectionAdapter(item),
+      );
+      return data;
     },
     enabled: !!idBienBan,
   });
@@ -1444,6 +1451,7 @@ export const useMaintenanceAcceptanceTestMutation = () => {
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["acceptanceTestPage"] });
     queryClient.invalidateQueries({ queryKey: ["acceptanceTestByGiamDinh"] });
+    queryClient.invalidateQueries({ queryKey: ["inspectionByBienBan"] });
   };
 
   // --- Tài sản trong biên bản ---
@@ -1619,6 +1627,7 @@ export const useMaintenanceAcceptanceTestMutation = () => {
       invalidate();
       queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
       queryClient.invalidateQueries({ queryKey: ["acceptanceByInspection"] });
+      queryClient.invalidateQueries({ queryKey: ["inspectionByBienBan"] });
 
       showSuccessAlert("Tạo biên bản nghiệm thu thành công");
     },
@@ -1642,12 +1651,14 @@ export const useMaintenanceAcceptanceTestMutation = () => {
     onSuccess: async (response, variables) => {
       const nghiemThuId = response?.data?.id || response?.id || variables?.id;
       if (nghiemThuId) handleSubRecords(nghiemThuId, variables);
-      invalidate();
       queryClient.invalidateQueries({
         queryKey: ["inspectionByRepair"],
       });
       queryClient.invalidateQueries({
         queryKey: ["acceptanceByInspection"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["inspectionByBienBan"],
       });
 
       showSuccessAlert("Cập nhật biên bản nghiệm thu thành công");
@@ -1805,7 +1816,9 @@ export const useMaintenanceMaterialAssessmentByInspectionQuery = (
     queryKey: ["materialAssessmentByInspection", idNghiemThu],
     queryFn: async () => {
       const res = await api.get(`/danhgia-vattu/nghiemthu/${idNghiemThu}`);
-      return (res.data.data || res.data ||[]).map((item:any)=>MaterialAssessmentAdapter(item))
+      return (res.data.data || res.data || []).map((item: any) =>
+        MaterialAssessmentAdapter(item),
+      );
     },
     enabled: !!idNghiemThu,
   });
@@ -1969,7 +1982,9 @@ export const useMaintenanceIncidentInspectionBySuCoQuery = (
     queryKey: ["incidentInspectionBySuCo", idSuCo],
     queryFn: async () => {
       const res = await api.get(`/kiemtra-suco/suco/${idSuCo}`);
-      return res.data.data || res.data || [];
+      return (res.data.data || res.data || []).map((item: any) =>
+        IncidentInspectionAdapter(item),
+      );
     },
     enabled: !!idSuCo,
   });

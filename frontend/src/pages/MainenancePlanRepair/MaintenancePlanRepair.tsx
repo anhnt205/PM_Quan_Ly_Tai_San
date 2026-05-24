@@ -1267,6 +1267,41 @@ export default function MaintenancePlanRepair() {
                                                                           }
                                                                         />
                                                                       </IconButton>
+                                                                      <IconButton
+                                                                        disabled={
+                                                                          incident.trangThai !==
+                                                                          0
+                                                                        }
+                                                                        onClick={(
+                                                                          e,
+                                                                        ) => {
+                                                                          showConfirmAlert(
+                                                                            "Bạn có chắc chắn muốn xóa phiếu sự cố này?",
+                                                                          ).then(
+                                                                            (
+                                                                              res,
+                                                                            ) => {
+                                                                              if (
+                                                                                res?.isConfirmed
+                                                                              ) {
+                                                                                deleteIncidentMutation.mutate(
+                                                                                  incident,
+                                                                                );
+                                                                              }
+                                                                            },
+                                                                          );
+                                                                          e.stopPropagation();
+                                                                        }}
+                                                                      >
+                                                                        <Trash2
+                                                                          color={
+                                                                            incident.trangThai !==
+                                                                            0
+                                                                              ? "#afb6bdff"
+                                                                              : "red"
+                                                                          }
+                                                                        />
+                                                                      </IconButton>
                                                                     </TableCell>
                                                                   </TableRow>
                                                                 );

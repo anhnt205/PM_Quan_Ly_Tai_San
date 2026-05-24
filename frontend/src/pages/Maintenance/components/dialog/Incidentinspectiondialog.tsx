@@ -33,6 +33,7 @@ import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
 import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
 import { IncidenData, IncidentInspectionData } from "../../types";
+import { listSigneInfo } from "../../config";
 import { PlanSigner } from "../../../../mockdata/mockPlans";
 import { generateCode } from "../../../../utils/helpers";
 import { CongTy } from "../../../../utils/const";
@@ -46,6 +47,7 @@ interface Props {
   plan: MaintenancePlanData;
   incidentReport: IncidenData;
   selectedDeviceIds: string[];
+  initData?: IncidentInspectionData | null;
 }
 
 const IncidentInspectionDialog = ({
@@ -54,7 +56,13 @@ const IncidentInspectionDialog = ({
   plan,
   incidentReport,
   selectedDeviceIds,
+  initData,
 }: Props) => {
+  const { data: apiDepartments = [] } = useAllDepartmentsQuery();
+  const { data: apiUsers = [] } = useAllStaffsQuery();
+  const { createMutation: createIncInspMutation, updateMutation: updateIncInspMutation } =
+    useMaintenanceIncidentInspectionMutation();
+
   const [number, setNumber] = useState("");
   const [inspectionDate, setInspectionDate] = useState(
     dayjs().format("YYYY-MM-DD"),
@@ -65,26 +73,69 @@ const IncidentInspectionDialog = ({
   const [items, setItems] = useState<IncidentInspectionItem[]>([]);
 
   useEffect(() => {
-    if (open && incidentReport?.danhSachTaiSan) {
-      setItems(
-        incidentReport.danhSachTaiSan
-          .filter((d: any) => selectedDeviceIds.includes(String(d.id ?? "")))
-          .map((d: any, index: number) => ({
+    if (open) {
+      if (initData) {
+        setNumber(initData.soPhieu ?? "");
+        setInspectionDate(initData.ngayKiemTra ?? dayjs().format("YYYY-MM-DD"));
+        setLocation(initData.viTri ?? "");
+        setFindings(initData.nhanXetKetLuan ?? "");
+        setRecommendation(initData.bienPhapXuLy ?? "");
+        
+        const listInfo = listSigneInfo(initData, apiUsers, apiDepartments);
+        setSigners(
+          (listInfo ?? []).map((item: any) => ({
+            userId: item.idNhanVien || item.userId,
+            userName: item.hoTen || item.userName,
+            departmentId: item.idDonVi || item.departmentId,
+            departmentName: item.donVi || item.departmentName,
+            position: item.tenChucVu || item.position || "",
+            order: item.order || 1,
+            signed: item.signed || false,
+          }))
+        );
+
+        setItems(
+          (initData.danhSachChiTiet || []).map((d: any, index: number) => ({
             stt: index + 1,
             id: d.id,
             idTaiSan: d.idTaiSan,
             itemName: d.tenTaiSan || d.idTaiSan,
             unit: d.donViTinh || "",
-            repairLevel: "",
+            repairLevel: d.capBaoDuong || "",
             quantity: d.soLuong || 1,
             condition: d.tinhTrang || "",
-            actionRepair: true,
-            actionReplace: false,
-            note: "",
-          })),
-      );
+            actionRepair: d.suaChua ?? true,
+            actionReplace: d.thayMoi ?? false,
+            note: d.ghiChu || "",
+          }))
+        );
+      } else if (incidentReport?.danhSachTaiSan) {
+        setNumber(`BB-KT-${incidentReport.id || Date.now()}`);
+        setInspectionDate(dayjs().format("YYYY-MM-DD"));
+        setLocation(incidentReport.phanHeViTri || "");
+        setFindings("");
+        setRecommendation("");
+        setSigners([]);
+        setItems(
+          incidentReport.danhSachTaiSan
+            .filter((d: any) => selectedDeviceIds.includes(String(d.id ?? "")))
+            .map((d: any, index: number) => ({
+              stt: index + 1,
+              id: d.id,
+              idTaiSan: d.idTaiSan,
+              itemName: d.tenTaiSan || d.idTaiSan,
+              unit: d.donViTinh || "",
+              repairLevel: "",
+              quantity: d.soLuong || 1,
+              condition: d.tinhTrang || "",
+              actionRepair: true,
+              actionReplace: false,
+              note: "",
+            })),
+        );
+      }
     }
-  }, [open, incidentReport]);
+  }, [open, initData, incidentReport, selectedDeviceIds, apiUsers, apiDepartments]);
   const [signers, setSigners] = useState<PlanSigner[]>([]);
   const [addDeptId, setAddDeptId] = useState("");
   const [addUserId, setAddUserId] = useState("");
@@ -92,10 +143,7 @@ const IncidentInspectionDialog = ({
   const [editDeptId, setEditDeptId] = useState("");
   const [editUserId, setEditUserId] = useState("");
 
-  const { data: apiDepartments = [] } = useAllDepartmentsQuery();
-  const { data: apiUsers = [] } = useAllStaffsQuery();
-  const { createMutation: createIncInspMutation } =
-    useMaintenanceIncidentInspectionMutation();
+
 
   type SimpleDept = { id: string; name: string };
   type SimpleUser = {
@@ -217,7 +265,7 @@ const IncidentInspectionDialog = ({
     const intermediateSigners =
       signers.length > 2
         ? signers.slice(1, -1).map((s: PlanSigner, idx: number) => ({
-            id: `${generateCode("SIG-")}-${idx}`,
+            id: (s as any).id || `${generateCode("SIG-")}-${idx}`,
             idNguoiKy: s.userId,
             tenNguoiKy: s.userName,
             idPhongBan: s.departmentId,
@@ -225,6 +273,7 @@ const IncidentInspectionDialog = ({
           }))
         : [];
     const record: IncidentInspectionData = {
+      ...initData,
       idCongTy: CongTy.CT001,
       idSuCo: incidentReport.id,
       soPhieu: number,
@@ -234,17 +283,18 @@ const IncidentInspectionDialog = ({
       bienPhapXuLy: recommendation,
 
       idNguoiLap: idNguoiLapBieu,
-      nguoiLapXacNhan: false,
+      nguoiLapXacNhan: initData ? initData.nguoiLapXacNhan : false,
       idGiamDoc: idTrinhDuyetGiamDoc,
-      giamDocXacNhan: false,
-      trangThai: 0,
-      share: false,
+      giamDocXacNhan: initData ? initData.giamDocXacNhan : false,
+      trangThai: initData ? initData.trangThai : 0,
+      share: initData ? initData.share : false,
       nguoiKyList: intermediateSigners,
       danhSachChiTiet: items.map((item) => {
         return {
-          idKiemTraSuCo: generateCode("KTS-TEST-"),
+          id: item.id,
+          idKiemTraSuCo: initData ? ((item as any).idKiemTraSuCo || initData.id) : generateCode("KTS-TEST-"),
           idTaiSan: item.idTaiSan,
-          idSuCoChiTiet: item.id,
+          idSuCoChiTiet: (item as any).idSuCoChiTiet || item.id,
           capBaoDuong: item.repairLevel,
           tinhTrang: item.condition,
           suaChua: item.actionRepair,
@@ -254,11 +304,20 @@ const IncidentInspectionDialog = ({
         };
       }),
     };
-    createIncInspMutation.mutate(record, {
-      onSuccess: () => {
-        onClose();
-      },
-    });
+
+    if (initData) {
+      updateIncInspMutation.mutate(record, {
+        onSuccess: () => {
+          onClose();
+        },
+      });
+    } else {
+      createIncInspMutation.mutate(record, {
+        onSuccess: () => {
+          onClose();
+        },
+      });
+    }
   };
 
   return (
@@ -830,7 +889,7 @@ const IncidentInspectionDialog = ({
           onClick={handleSubmit}
           disabled={items.some((item) => !item.itemName)}
         >
-          Tạo biên bản
+          {initData?.id ? "Cập nhật biên bản" : "Tạo biên bản"}
         </Button>
       </DialogActions>
     </Dialog>

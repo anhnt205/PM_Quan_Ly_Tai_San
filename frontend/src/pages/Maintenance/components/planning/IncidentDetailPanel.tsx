@@ -49,6 +49,9 @@ import {
   useMaintenanceInspectionByBienBanQuery,
   useMaintenanceMaterialAssessmentByInspectionQuery,
   useMaintenanceMaterialAssessmentMutation,
+  useMaintenanceIncidentInspectionMutation,
+  useMaintenanceInspectionMutation,
+  useMaintenanceAcceptanceTestMutation,
 } from "../../../MainenancePlanRepair/Mutation";
 import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
 import type { IncidenData, DanhGiaVatTuData } from "../../types";
@@ -148,15 +151,9 @@ const ActionCell = ({
 const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
   const [tab, setTab] = useState(0);
   const [selectedDeviceIds, setSelectedDeviceIds] = useState<string[]>([]);
-  const [expandedBBKTKSC, setExpandedBBKTKSC] = useState<Set<string>>(
-    new Set(),
-  );
-  const [expandedInspections, setExpandedInspections] = useState<Set<string>>(
-    new Set(),
-  );
-  const [expandedAcceptances, setExpandedAcceptances] = useState<Set<string>>(
-    new Set(),
-  );
+  const [expandedBBKTKSC, setExpandedBBKTKSC] = useState<string | null>(null);
+  const [expandedInspections, setExpandedInspections] = useState<string | null>(null);
+  const [expandedAcceptances, setExpandedAcceptances] = useState<string | null>(null);
   const [incidentInspectionParentId, setIncidentInspectionParentId] = useState<
     string | null
   >(null);
@@ -169,6 +166,9 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
     null,
   );
   const [selectedMaterialAssessment, setSelectedMaterialAssessment] = useState<DanhGiaVatTuData | null>(null);
+  const [selectedIncidentInspection, setSelectedIncidentInspection] = useState<any | null>(null);
+  const [selectedIns, setSelectedIns] = useState<any | null>(null);
+  const [selectedAcc, setSelectedAcc] = useState<any | null>(null);
 
   const [incidentPreviewId, setIncidentPreviewId] = useState<string | null>(
     null,
@@ -176,11 +176,17 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
 
   const { deleteMutation: deleteMaterialAssessmentMutation } =
     useMaintenanceMaterialAssessmentMutation();
+  const { deleteMutation: deleteIncidentInspectionMutation } =
+    useMaintenanceIncidentInspectionMutation();
+  const { deleteMutation: deleteInspectionMutation } =
+    useMaintenanceInspectionMutation();
+  const { deleteMutation: deleteAcceptanceMutation } =
+    useMaintenanceAcceptanceTestMutation();
 
   useEffect(() => {
-    setExpandedBBKTKSC(new Set());
-    setExpandedInspections(new Set());
-    setExpandedAcceptances(new Set());
+    setExpandedBBKTKSC(null);
+    setExpandedInspections(null);
+    setExpandedAcceptances(null);
     setSelectedDeviceIds([]);
     setIncidentInspectionParentId(null);
     setIncInspectionParentBBKTKSCId(null);
@@ -188,6 +194,9 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
     setMaterialParentAccId(null);
     setIncidentPreviewId(null);
     setSelectedMaterialAssessment(null);
+    setSelectedIncidentInspection(null);
+    setSelectedIns(null);
+    setSelectedAcc(null);
   }, [incident?.id]);
 
   const { data: incidentDevices = [] } =
@@ -197,17 +206,17 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
 
   const { data: inspectionRecords = [] } =
     useMaintenanceInspectionByBienBanQuery(
-      expandedBBKTKSC.values().next().value,
+      expandedBBKTKSC || "",
     );
 
   const { data: acceptanceTestRecords = [] } =
     useMaintenanceAcceptanceByInspectionQuery(
-      expandedInspections.values().next().value,
+      expandedInspections || "",
     );
 
   const { data: materialQualityRecords = [] } =
     useMaintenanceMaterialAssessmentByInspectionQuery(
-      expandedAcceptances.values().next().value,
+      expandedAcceptances || "",
     );
 
   // Lấy danh sách thiết bị từ deviceEntries
@@ -235,19 +244,6 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
         : availableDevices.map((d: any) => d.id || ""),
     );
 
-  const toggle = (
-    set: Set<string>,
-    id: string,
-    setter: (s: Set<string>) => void,
-  ) => {
-    const newSet = new Set(set);
-    if (newSet.has(id)) {
-      newSet.delete(id);
-    } else {
-      newSet.add(id);
-    }
-    setter(newSet);
-  };
 
   const reporterDept = incident.idDonViBaoCao
     ? departments.find((d) => d.id === incident.idDonViBaoCao)
@@ -464,7 +460,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                   const incInspections = inspectionRecords.filter(
                     (r: any) => r.idBienBan === bbktksc.id,
                   );
-                  const isBBExpanded = expandedBBKTKSC.has(bbktksc.id ?? "");
+                  const isBBExpanded = expandedBBKTKSC === (bbktksc.id ?? "");
 
                   return (
                     <React.Fragment key={`bbktksc-${bbktksc.id}`}>
@@ -476,10 +472,8 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                               <IconButton
                                 size="small"
                                 onClick={() =>
-                                  toggle(
-                                    expandedBBKTKSC,
-                                    bbktksc.id ?? "",
-                                    setExpandedBBKTKSC,
+                                  setExpandedBBKTKSC((prev) =>
+                                    prev === bbktksc.id ? null : (bbktksc.id ?? null),
                                   )
                                 }
                               >
@@ -522,7 +516,6 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                             />
                           ) : (
                             <ActionCell
-                              onView={() => setIncidentPreviewId(bbktksc.id)}
                               onAdd={() =>
                                 setIncInspectionParentBBKTKSCId(
                                   bbktksc.id ?? "",
@@ -534,6 +527,15 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                               }
                               addTooltip="Tạo BB Giám định"
                               addColor="success"
+                              onEdit={() => {
+                                setSelectedIncidentInspection(bbktksc);
+                                setIncidentInspectionParentId(bbktksc.id ?? "");
+                              }}
+                              isEdit={bbktksc.trangThai === 0}
+                              onDelete={() =>
+                                deleteIncidentInspectionMutation.mutateAsync(bbktksc.id ?? "")
+                              }
+                              isDelete={bbktksc.trangThai === 0}
                             />
                           )}
                         </TableCell>
@@ -545,9 +547,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                           const acceptances = acceptanceTestRecords.filter(
                             (a: any) => a.idGiamDinh === insp.id,
                           );
-                          const isInspExpanded = expandedInspections.has(
-                            insp.id,
-                          );
+                          const isInspExpanded = expandedInspections === (insp.id ?? "");
 
                           return (
                             <React.Fragment key={`incinsp-${insp.id}`}>
@@ -564,10 +564,8 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                                       <IconButton
                                         size="small"
                                         onClick={() =>
-                                          toggle(
-                                            expandedInspections,
-                                            insp.id,
-                                            setExpandedInspections,
+                                          setExpandedInspections((prev) =>
+                                            prev === insp.id ? null : (insp.id ?? null),
                                           )
                                         }
                                       >
@@ -606,7 +604,6 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                                 </TableCell>
                                 <TableCell align="right">
                                   <ActionCell
-                                    onView={() => {}}
                                     onAdd={() =>
                                       setAcceptanceParentInspId(insp.id)
                                     }
@@ -616,6 +613,17 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                                     }
                                     addTooltip="Tạo BB Nghiệm thu"
                                     addColor="warning"
+                                    isEdit={insp.trangThai === 0}
+                                    onEdit={() => {
+                                      setIncInspectionParentBBKTKSCId(insp.idBienBan);
+                                      setSelectedIns(insp);
+                                    }}
+                                    editTooltip="Chỉnh sửa BB Giám định"
+                                    editColor="primary"
+                                    isDelete={insp.trangThai === 0}
+                                    onDelete={() =>
+                                      deleteInspectionMutation.mutateAsync(insp.id)
+                                    }
                                   />
                                 </TableCell>
                               </TableRow>
@@ -627,9 +635,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                                     materialQualityRecords.filter(
                                       (m: any) => m.idNghiemThu === acc.id,
                                     );
-                                  const isAccExpanded = expandedAcceptances.has(
-                                    acc.id ?? "",
-                                  );
+                                  const isAccExpanded = expandedAcceptances === (acc.id ?? "");
 
                                   return (
                                     <React.Fragment key={`incacc-${acc.id}`}>
@@ -645,10 +651,8 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                                               <IconButton
                                                 size="small"
                                                 onClick={() =>
-                                                  toggle(
-                                                    expandedAcceptances,
-                                                    acc.id ?? "",
-                                                    setExpandedAcceptances,
+                                                  setExpandedAcceptances((prev) =>
+                                                    prev === acc.id ? null : (acc.id ?? null),
                                                   )
                                                 }
                                               >
@@ -689,7 +693,6 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                                         </TableCell>
                                         <TableCell align="right">
                                           <ActionCell
-                                            onView={() => {}}
                                             onAdd={() =>
                                               setMaterialParentAccId(
                                                 acc.id ?? "",
@@ -701,6 +704,17 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                                             }
                                             addTooltip="Tạo BB Vật tư"
                                             addColor="secondary"
+                                            isEdit={acc.trangThai === 0}
+                                            onEdit={() => {
+                                              setSelectedAcc(acc);
+                                              setAcceptanceParentInspId(acc.idGiamDinh);
+                                            }}
+                                            editTooltip="Chỉnh sửa BB Nghiệm thu"
+                                            editColor="primary"
+                                            isDelete={acc.trangThai === 0}
+                                            onDelete={() =>
+                                              deleteAcceptanceMutation.mutateAsync(acc.id)
+                                            }
                                           />
                                         </TableCell>
                                       </TableRow>
@@ -773,54 +787,63 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
           onClose={() => {
             setIncidentInspectionParentId(null);
             setSelectedDeviceIds([]);
+            setSelectedIncidentInspection(null);
           }}
           plan={plan}
           incidentReport={incident}
           selectedDeviceIds={selectedDeviceIds}
+          initData={selectedIncidentInspection}
         />
       )}
 
-      {incInspectionParentBBKTKSCId &&
+      {(incInspectionParentBBKTKSCId || selectedIns) &&
         (() => {
+          const parentId = selectedIns ? selectedIns.idBienBan : incInspectionParentBBKTKSCId;
           const parentBBKTKSC = incidentInspections.find(
-            (r: any) => r.id === incInspectionParentBBKTKSCId,
+            (r: any) => r.id === parentId,
           );
 
           return parentBBKTKSC ? (
             <InspectionRecordDialog
               open={true}
-              onClose={() => setIncInspectionParentBBKTKSCId(null)}
+              onClose={() => {
+                setIncInspectionParentBBKTKSCId(null);
+                setSelectedIns(null);
+              }}
               plan={plan}
-              repairRequest={null} // ← không có GĐ sửa chữa
-              incidentInspection={parentBBKTKSC} // ← truyền deviceIds từ incident
+              repairRequest={null}
+              incidentInspection={parentBBKTKSC}
+              initData={selectedIns}
             />
           ) : null;
         })()}
 
-      {acceptanceParentInspId &&
+      {(acceptanceParentInspId || selectedAcc) &&
         (() => {
+          const parentId = selectedAcc ? selectedAcc.idGiamDinh : acceptanceParentInspId;
           const parentInsp = inspectionRecords.find(
-            (r: any) => r.id === acceptanceParentInspId,
+            (r: any) => r.id === parentId,
           );
           return parentInsp ? (
             <AcceptanceTestDialog
               open={true}
-              onClose={() => setAcceptanceParentInspId(null)}
+              onClose={() => {
+                setAcceptanceParentInspId(null);
+                setSelectedAcc(null);
+              }}
               plan={plan}
               repairRequest={null as any}
               inspectionRecord={parentInsp}
-              // onSubmit={(record) => {
-              //   onCreateAcceptanceRecord(record);
-              //   setAcceptanceParentInspId(null);
-              // }}
+              initData={selectedAcc}
             />
           ) : null;
         })()}
 
-      {materialParentAccId &&
+      {(materialParentAccId || selectedMaterialAssessment) &&
         (() => {
+          const parentId = selectedMaterialAssessment ? selectedMaterialAssessment.idNghiemThu : materialParentAccId;
           const parentAcc = acceptanceTestRecords.find(
-            (a: any) => a.id === materialParentAccId,
+            (a: any) => a.id === parentId,
           );
           return parentAcc ? (
             <MaterialDialog
