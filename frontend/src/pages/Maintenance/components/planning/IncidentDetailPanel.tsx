@@ -19,12 +19,15 @@ import {
   DialogTitle,
   DialogActions,
   DialogContent,
+  Tooltip,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import { EditIcon, TrashIcon } from "lucide-react";
+import { showConfirmAlert } from "../../../../components/Alert";
 
 import { devices } from "../../../../mockdata/mockDevices";
 import { departments } from "../../../../mockdata/mockDepartments";
@@ -45,9 +48,10 @@ import {
   useMaintenanceIncidentInspectionBySuCoQuery,
   useMaintenanceInspectionByBienBanQuery,
   useMaintenanceMaterialAssessmentByInspectionQuery,
+  useMaintenanceMaterialAssessmentMutation,
 } from "../../../MainenancePlanRepair/Mutation";
 import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
-import type { IncidenData } from "../../types";
+import type { IncidenData, DanhGiaVatTuData } from "../../types";
 import { showStatus } from "../../config";
 
 interface Props {
@@ -62,6 +66,12 @@ const ActionCell = ({
   isAdd = true,
   addTooltip = "Tạo biên bản",
   addColor = "primary",
+  onEdit,
+  isEdit,
+  editTooltip,
+  editColor = "primary",
+  onDelete,
+  isDelete,
 }: any) => (
   <Box
     sx={{
@@ -82,18 +92,55 @@ const ActionCell = ({
         <VisibilityOutlinedIcon sx={{ fontSize: 16 }} />
       </IconButton>
     )}
+    {onEdit && (
+      <Tooltip title={editTooltip} placement="top">
+        <IconButton
+          size="small"
+          color={editColor}
+          disabled={!isEdit}
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
+        >
+          <EditIcon color="#1976d2" size={16} />
+        </IconButton>
+      </Tooltip>
+    )}
     {onAdd && (
-      <IconButton
-        size="small"
-        disabled={!isAdd}
-        color={addColor}
-        onClick={(e) => {
-          e.stopPropagation();
-          onAdd();
-        }}
-      >
-        <AddCircleOutlineIcon sx={{ fontSize: 16 }} />
-      </IconButton>
+      <Tooltip title={addTooltip} placement="top">
+        <IconButton
+          size="small"
+          disabled={!isAdd}
+          color={addColor}
+          onClick={(e) => {
+            e.stopPropagation();
+            onAdd();
+          }}
+        >
+          <AddCircleOutlineIcon sx={{ fontSize: 16 }} />
+        </IconButton>
+      </Tooltip>
+    )}
+    {onDelete && (
+      <Tooltip title="Xóa" placement="top">
+        <IconButton
+          size="small"
+          disabled={!isDelete}
+          onClick={(e) => {
+            e.stopPropagation();
+            showConfirmAlert("Bạn có chắc chắn muốn xóa không?").then(
+              (isConfirm) => {
+                if (isConfirm.isConfirmed) {
+                  onDelete();
+                }
+              },
+            );
+          }}
+        >
+          <TrashIcon color="#ef4444" size={16} />
+        </IconButton>
+      </Tooltip>
     )}
   </Box>
 );
@@ -121,9 +168,15 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
   const [materialParentAccId, setMaterialParentAccId] = useState<string | null>(
     null,
   );
+  const [selectedMaterialAssessment, setSelectedMaterialAssessment] = useState<DanhGiaVatTuData | null>(null);
+
   const [incidentPreviewId, setIncidentPreviewId] = useState<string | null>(
     null,
   );
+
+  const { deleteMutation: deleteMaterialAssessmentMutation } =
+    useMaintenanceMaterialAssessmentMutation();
+
   useEffect(() => {
     setExpandedBBKTKSC(new Set());
     setExpandedInspections(new Set());
@@ -134,6 +187,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
     setAcceptanceParentInspId(null);
     setMaterialParentAccId(null);
     setIncidentPreviewId(null);
+    setSelectedMaterialAssessment(null);
   }, [incident?.id]);
 
   const { data: incidentDevices = [] } =
@@ -678,7 +732,21 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                                                 {showStatus(mat.trangThai ?? 0)}
                                               </TableCell>
                                               <TableCell align="right">
-                                                <ActionCell onView={() => {}} />
+                                                <ActionCell
+                                                  isEdit={mat.trangThai === 0}
+                                                  onEdit={() => {
+                                                    setSelectedMaterialAssessment(mat);
+                                                    setMaterialParentAccId(mat.idNghiemThu || "");
+                                                  }}
+                                                  isDelete={mat.trangThai === 0}
+                                                  onDelete={() =>
+                                                    deleteMaterialAssessmentMutation.mutateAsync(
+                                                      mat.id || "",
+                                                    )
+                                                  }
+                                                  editTooltip="Chỉnh sửa BB Đánh giá Vật tư"
+                                                  editColor="secondary"
+                                                />
                                               </TableCell>
                                             </TableRow>
                                           ),
@@ -757,14 +825,14 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
           return parentAcc ? (
             <MaterialDialog
               open={true}
-              onClose={() => setMaterialParentAccId(null)}
+              onClose={() => {
+                setMaterialParentAccId(null);
+                setSelectedMaterialAssessment(null);
+              }}
               plan={plan}
               repairRequest={null as any}
               acceptanceRecord={parentAcc}
-              // onSubmit={(record) => {
-              //   onCreateMaterialQualityRecord(record);
-              //   setMaterialParentAccId(null);
-              // }}
+              initData={selectedMaterialAssessment}
             />
           ) : null;
         })()}

@@ -51,6 +51,7 @@ import {
   useMaintenanceRepairByPlanQuery,
   useMaintenanceRepairMutation,
   useMaintenanceAcceptanceTestMutation,
+  useMaintenanceMaterialAssessmentMutation,
 } from "../../../MainenancePlanRepair/Mutation";
 import { showStatus } from "../../config";
 import { DeleteIcon, EditIcon, TrashIcon } from "lucide-react";
@@ -254,6 +255,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
   const [materialParentAccId, setMaterialParentAccId] = useState<string | null>(
     null,
   );
+  const [selectedMaterialAssessment, setSelectedMaterialAssessment] = useState<DanhGiaVatTuData | null>(null);
 
   const [selectedReq, setSelectedReq] = useState<MaintenanceRepairData | null>(
     null,
@@ -276,6 +278,8 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
     useMaintenanceInspectionMutation();
   const { deleteMutation: deleteAcceptanceMutation } =
     useMaintenanceAcceptanceTestMutation();
+  const { deleteMutation: deleteMaterialAssessmentMutation } =
+    useMaintenanceMaterialAssessmentMutation();
 
   useEffect(() => {
     setExpandedRequests(null);
@@ -285,6 +289,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
     setInspectionParentReqId(null);
     setAcceptanceParentInspId(null);
     setMaterialParentAccId(null);
+    setSelectedMaterialAssessment(null);
   }, [plan?.id]);
 
   const { data: chiTietTaiSanByKeHoach = [] } =
@@ -904,7 +909,21 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                                       )}
                                                     </TableCell>
                                                     <TableCell align="right">
-                                                      <ActionCell />
+                                                      <ActionCell
+                                                        isEdit={mat.trangThai === 0}
+                                                        onEdit={() => {
+                                                          setSelectedMaterialAssessment(mat);
+                                                          setMaterialParentAccId(mat.idNghiemThu || "");
+                                                        }}
+                                                        isDelete={mat.trangThai === 0}
+                                                        onDelete={() =>
+                                                          deleteMaterialAssessmentMutation.mutateAsync(
+                                                            mat.id || "",
+                                                          )
+                                                        }
+                                                        editTooltip="Chỉnh sửa BB Đánh giá Vật tư"
+                                                        editColor="secondary"
+                                                      />
                                                     </TableCell>
                                                   </TableRow>
                                                 ),
@@ -1025,14 +1044,14 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
           return parentAcc ? (
             <MaterialDialog
               open={true}
-              onClose={() => setMaterialParentAccId(null)}
+              onClose={() => {
+                setMaterialParentAccId(null);
+                setSelectedMaterialAssessment(null);
+              }}
               plan={plan}
               repairRequest={parentReq!}
               acceptanceRecord={parentAcc}
-              // onSubmit={(record) => {
-              //   onCreateMaterialQualityRecord(record);
-              //   setMaterialParentAccId(null);
-              // }}
+              initData={selectedMaterialAssessment}
             />
           ) : null;
         })()}

@@ -20,6 +20,7 @@ import {
   AcceptanceTestAdapter,
   IncidentAdapter,
   InspectionAdapter,
+  MaterialAssessmentAdapter,
   RepairAdapter,
 } from "../../Maintenance/Adapter";
 
@@ -1804,7 +1805,7 @@ export const useMaintenanceMaterialAssessmentByInspectionQuery = (
     queryKey: ["materialAssessmentByInspection", idNghiemThu],
     queryFn: async () => {
       const res = await api.get(`/danhgia-vattu/nghiemthu/${idNghiemThu}`);
-      return res.data.data || res.data;
+      return (res.data.data || res.data ||[]).map((item:any)=>MaterialAssessmentAdapter(item))
     },
     enabled: !!idNghiemThu,
   });
@@ -1832,6 +1833,9 @@ export const useMaintenanceMaterialAssessmentMutation = () => {
       }
       queryClient.invalidateQueries({ queryKey: ["materialAssessmentPage"] });
       queryClient.invalidateQueries({ queryKey: ["acceptanceByInspection"] });
+      queryClient.invalidateQueries({
+        queryKey: ["materialAssessmentByInspection"],
+      });
       showSuccessAlert("Tạo biên bản đánh giá vật tư thành công");
     },
     onError: (error: any) => {
@@ -1858,6 +1862,10 @@ export const useMaintenanceMaterialAssessmentMutation = () => {
         await api.put(`/chuky/nguoi-ky/update/${id}`, variables.nguoiKyList);
       }
       queryClient.invalidateQueries({ queryKey: ["materialAssessmentPage"] });
+      queryClient.invalidateQueries({ queryKey: ["acceptanceByInspection"] });
+      queryClient.invalidateQueries({
+        queryKey: ["materialAssessmentByInspection"],
+      });
       showSuccessAlert("Cập nhật biên bản đánh giá vật tư thành công");
     },
     onError: (error: any) => {
@@ -1874,6 +1882,10 @@ export const useMaintenanceMaterialAssessmentMutation = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["materialAssessmentPage"] });
+      queryClient.invalidateQueries({ queryKey: ["acceptanceByInspection"] });
+      queryClient.invalidateQueries({
+        queryKey: ["materialAssessmentByInspection"],
+      });
       showSuccessAlert("Xóa biên bản thành công");
     },
     onError: (error: any) => {
