@@ -1199,17 +1199,31 @@ export const generateGiamDinhPdf = async (
         styles: { fontStyle: "bold" },
       },
     ]);
-    // Entry row
-    tableData.push([
-      "",
-      item.tenTaiSan || "",
-      item.donViTinh || "",
-      item.soLuong || "",
-      item.tinhTrang || "",
-      item.suaChua ? "X" : "",
-      item.thayMoi ? "X" : "",
-      item.ghiChu || "",
-    ]);
+
+    // Hàng các vật tư chi tiết đi kèm
+    if (!item.danhSachVatTu || item.danhSachVatTu.length === 0) {
+      tableData.push([
+        "",
+        {
+          content: "",
+          colSpan: 7,
+          styles: { fontStyle: "italic" },
+        },
+      ]);
+    } else {
+      item.danhSachVatTu.forEach((vt: any, vtIdx: number) => {
+        tableData.push([
+          `${idx + 1}.${vtIdx + 1}`,
+          vt.tenVatTu || vt.idChiTietVatTu || "",
+          vt.donViTinh || "",
+          vt.soLuong || "",
+          vt.tinhTrang || "",
+          vt.soLuongSuaChua || 0,
+          vt.soLuongThayMoi || 0,
+          vt.ghiChu || "",
+        ]);
+      });
+    }
   });
 
   autoTable(doc, {
@@ -1222,8 +1236,8 @@ export const generateGiamDinhPdf = async (
         "ĐVT",
         "SL",
         "Tình trạng kỹ thuật",
-        "S.chữa",
-        "Thay mới",
+        "SL S.chữa",
+        "SL Thay mới",
         "Ghi chú",
       ],
     ],
@@ -1240,11 +1254,11 @@ export const generateGiamDinhPdf = async (
     },
     bodyStyles: { lineWidth: 0.1, lineColor: 0, textColor: 0 },
     columnStyles: {
-      0: { cellWidth: 10, halign: "center" },
+      0: { cellWidth: 12, halign: "center" },
       2: { cellWidth: 12, halign: "center" },
       3: { cellWidth: 10, halign: "center" },
-      5: { cellWidth: 15, halign: "center" },
-      6: { cellWidth: 15, halign: "center" },
+      5: { cellWidth: 18, halign: "center" },
+      6: { cellWidth: 18, halign: "center" },
     },
   });
 

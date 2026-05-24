@@ -6,12 +6,11 @@ import lombok.Data;
 public class GiamDinhChiTiet {
     private String id;
     private String idGiamDinh;
-    private String tinhTrang;
-    private Boolean suaChua;
-    private Boolean thayMoi;
-    private String ghiChu;
     private String idTaiSan;
     private String idBienBanChiTiet;
+
+    // Danh sách vật tư đi kèm tài sản
+    private java.util.List<GiamDinhVatTu> danhSachVatTu;
 
     // Audit
     private String ngayTao;

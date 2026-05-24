@@ -16,7 +16,11 @@ import {
 } from "../../Maintenance/types";
 import dayjs from "dayjs";
 import { useSelector } from "react-redux";
-import { IncidentAdapter, RepairAdapter } from "../../Maintenance/Adapter";
+import {
+  IncidentAdapter,
+  InspectionAdapter,
+  RepairAdapter,
+} from "../../Maintenance/Adapter";
 
 export const useMaintenancePlanningPageQuery = (
   page?: number,
@@ -1013,7 +1017,10 @@ export const useMaintenanceInspectionByRepairQuery = (idSuaChua?: string) => {
     queryKey: ["inspectionByRepair", idSuaChua],
     queryFn: async () => {
       const res = await api.get(`/giamdinh/bienban/${idSuaChua}`);
-      return res.data.data || res.data;
+      const data = (res.data.data || res.data || []).map((item: any) =>
+        InspectionAdapter(item),
+      );
+      return data;
     },
     enabled: !!idSuaChua,
   });
@@ -1072,6 +1079,20 @@ export const useMaintenanceInspectionMutation = () => {
     },
   });
 
+  // --- API VẬT TƯ THEO TÀI SẢN ---
+  const batchInsertVatTuMutation = useMutation({
+    mutationFn: async (data: any[]) => {
+      return (await api.post("/giamdinh-chitiet/vattu/batch", data)).data;
+    },
+  });
+
+  const deleteVatTuBatchMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      return (await api.delete("/giamdinh-chitiet/vattu/batch", { data: ids }))
+        .data;
+    },
+  });
+
   const handleUpdate = (
     response: InspectionRecordData | any,
     variables: InspectionRecordData,
@@ -1091,16 +1112,74 @@ export const useMaintenanceInspectionMutation = () => {
         (i: any) => i.action === Action.DELETE && i.id,
       );
 
-      if (createItems.length > 0)
+      // 1. Tạo mới tài sản chi tiết
+      if (createItems.length > 0) {
         createChiTietManyMutation.mutate(
           createItems.map((i: any) => ({ ...i, idGiamDinh: giamDinhId })),
         );
-      if (updateItems.length > 0)
+
+        // Thu thập tất cả vật tư của tài sản mới để lưu
+        const newVatTu = createItems.reduce((acc: any[], item: any) => {
+          if (item.danhSachVatTu && item.danhSachVatTu.length > 0) {
+            const mapped = item.danhSachVatTu.map((vt: any) => ({
+              ...vt,
+              idChiTietGiamDinh: item.id,
+            }));
+            return [...acc, ...mapped];
+          }
+          return acc;
+        }, []);
+
+        if (newVatTu.length > 0) {
+          batchInsertVatTuMutation.mutate(newVatTu);
+        }
+      }
+
+      // 2. Cập nhật tài sản chi tiết cũ
+      if (updateItems.length > 0) {
         updateChiTietManyMutation.mutate(
           updateItems.map((i: any) => ({ ...i, idGiamDinh: giamDinhId })),
         );
-      if (deleteItems.length > 0)
+
+        // Xử lý lưu/sửa/xóa danh sách vật tư lồng bên dưới từng tài sản cũ
+        updateItems.forEach((item: any) => {
+          if (item.danhSachVatTu && item.danhSachVatTu.length > 0) {
+            const vtCreate = item.danhSachVatTu.filter(
+              (v: any) => v.action === Action.CREATE || !v.id,
+            );
+            const vtUpdate = item.danhSachVatTu.filter(
+              (v: any) => v.action === Action.UPDATE && v.id,
+            );
+            const vtDelete = item.danhSachVatTu.filter(
+              (v: any) => v.action === Action.DELETE && v.id,
+            );
+
+            if (vtCreate.length > 0) {
+              batchInsertVatTuMutation.mutate(
+                vtCreate.map((v: any) => ({
+                  ...v,
+                  idChiTietGiamDinh: item.id,
+                })),
+              );
+            }
+            if (vtUpdate.length > 0) {
+              vtUpdate.forEach((v: any) => {
+                api
+                  .put(`/giamdinh-chitiet/vattu/${v.id}`, v)
+                  .catch(console.error);
+              });
+            }
+            if (vtDelete.length > 0) {
+              deleteVatTuBatchMutation.mutate(vtDelete.map((v: any) => v.id));
+            }
+          }
+        });
+      }
+
+      // 3. Xóa tài sản chi tiết
+      if (deleteItems.length > 0) {
         deleteChiTietManyMutation.mutate(deleteItems.map((i: any) => i.id));
+      }
     }
 
     if (variables.nguoiKyList && variables.nguoiKyList.length > 0) {
@@ -1206,6 +1285,7 @@ export const useMaintenanceInspectionMutation = () => {
     },
     onSuccess: (res: any) => {
       if (res.success || res.id) {
+        queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
         queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
         showSuccessAlert("Xóa biên bản giám định thành công");
       } else {

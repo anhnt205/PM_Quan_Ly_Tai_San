@@ -1,4 +1,5 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useFormik } from "formik";
 import {
   Dialog,
   DialogTitle,
@@ -15,7 +16,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Checkbox,
   Divider,
   Chip,
   FormControl,
@@ -27,21 +27,28 @@ import {
 } from "@mui/material";
 import EngineeringIcon from "@mui/icons-material/Engineering";
 import CloseIcon from "@mui/icons-material/Close";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
-import type {
-  TechnicalInspectionRecord,
-  DeviceInspectionEntry,
-} from "../../../../mockdata/mockInspectionRecords";
-import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
+import { useSelector } from "react-redux";
+import {
+  MaintenancePlanData,
+  InspectionRecordVatTuData,
+  InspectionRecordData,
+  InspectionRecordDetailData,
+} from "../../../MainenancePlanRepair/types";
 import { IncidentInspectionData, MaintenanceRepairData } from "../../types";
 import { useMaintenanceInspectionMutation } from "../../../MainenancePlanRepair/Mutation";
-import { Action, TypeBienBan } from "../../../../utils/const";
+import { Action, CongTy, TypeBienBan } from "../../../../utils/const";
 import { generateCode } from "../../../../utils/helpers";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
 import { PlanSigner } from "../../../../mockdata/mockPlans";
 import dayjs from "dayjs";
 import FieldDate from "../../../../components/TextField/FieldDate";
+import { useAllToolDetailQuery } from "../../../ToolManager/Mutation";
+import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
+import { listSigneInfo } from "../../config";
 
 type SimpleDept = { id: string; name: string };
 type SimpleUser = {
@@ -57,6 +64,7 @@ interface Props {
   plan: MaintenancePlanData;
   repairRequest: MaintenanceRepairData | null;
   incidentInspection?: IncidentInspectionData;
+  initData?: InspectionRecordData | null;
 }
 
 const InspectionRecordDialog = ({
@@ -65,56 +73,19 @@ const InspectionRecordDialog = ({
   plan,
   repairRequest,
   incidentInspection,
+  initData,
 }: Props) => {
-  const [number, setNumber] = useState(
-    repairRequest ? `BB-GD-${repairRequest.id}` : `BB-GD-SC-${Date.now()}`,
-  );
-  const [inspectionDate, setInspectionDate] = useState(
-    dayjs().format("YYYY-MM-DD"),
-  );
-  const [location, setLocation] = useState("");
-  const [recoveryCount, setRecoveryCount] = useState(0);
-  const [scrapCount, setScrapCount] = useState(0);
-  const [destroyCount, setDestroyCount] = useState(0);
+  const { user } = useSelector((state: any) => state.user);
 
-  const [entries, setEntries] = useState<DeviceInspectionEntry[]>(
-    (
-      repairRequest?.danhSachTaiSan ||
-      incidentInspection?.danhSachChiTiet ||
-      []
-    ).map((item) => {
-      return {
-        idBienBanChiTiet: item?.id ?? "",
-        deviceId: item?.idTaiSan ?? "",
-        deviceName: item?.tenTaiSan ?? "",
-        unit: item?.donViTinh ?? "",
-        quantity: item?.soLuong ?? 0,
-        technicalCondition: "",
-        actionRepair: false,
-        actionReplace: false,
-        note: "",
-      };
-    }),
-  );
-  const [signers, setSigners] = useState<PlanSigner[]>([]);
   const [addDeptId, setAddDeptId] = useState("");
   const [addUserId, setAddUserId] = useState("");
   const [editingSignerId, setEditingSignerId] = useState<string | null>(null);
   const [editDeptId, setEditDeptId] = useState("");
   const [editUserId, setEditUserId] = useState("");
 
-  const updateEntry = (
-    idx: number,
-    field: keyof DeviceInspectionEntry,
-    value: unknown,
-  ) => {
-    setEntries((prev) =>
-      prev.map((e, i) => (i === idx ? { ...e, [field]: value } : e)),
-    );
-  };
-
   const { data: apiDepartments = [] } = useAllDepartmentsQuery();
   const { data: apiUsers = [] } = useAllStaffsQuery();
+  const { data: allToolDetail = [] } = useAllToolDetailQuery();
 
   const departments: SimpleDept[] = (apiDepartments || []).map((d: any) => ({
     id: String(d?.id ?? ""),
@@ -131,42 +102,326 @@ const InspectionRecordDialog = ({
 
   const { createMutation, updateMutation } = useMaintenanceInspectionMutation();
 
+  const formik = useFormik({
+    initialValues: {
+      id: "",
+      idCongTy: CongTy.CT001,
+      idBienBan: incidentInspection?.id || repairRequest?.id || "",
+      loaiBienBan: incidentInspection
+        ? TypeBienBan.SU_CO
+        : TypeBienBan.SUA_CHUA,
+      soPhieu: "",
+      ngayGiamDinh: dayjs().format("YYYY-MM-DD"),
+      viTri: "",
+      soDeLaiPhucHoi: 0,
+      soDeLamPheLieu: 0,
+      soLuongHuy: 0,
+      idNguoiLap: "",
+      nguoiLapXacNhan: false,
+      idGiamDoc: "",
+      giamDocXacNhan: false,
+      share: false,
+      trangThai: 0,
+      danhSachChiTiet: [] as InspectionRecordDetailData[],
+      nguoiKyList: [] as any[],
+    },
+    onSubmit: (values) => {
+      if (hasValidationError()) return;
+      const idNguoiLapBieu =
+        values.nguoiKyList.length > 0 ? values.nguoiKyList[0].userId : "";
+      const idTrinhDuyetGiamDoc =
+        values.nguoiKyList.length > 1
+          ? values.nguoiKyList[values.nguoiKyList.length - 1].userId
+          : "";
+
+      const intermediateSigners =
+        values.nguoiKyList.length > 2
+          ? values.nguoiKyList
+              .slice(1, -1)
+              .map((s: PlanSigner, idx: number) => ({
+                id: `${generateCode("SIG-")}-${idx}`,
+                idNguoiKy: s.userId,
+                tenNguoiKy: s.userName,
+                idPhongBan: s.departmentId,
+                trangThai: 0,
+              }))
+          : [];
+
+      const record: any = {
+        id: values.id,
+        idBienBan: values.idBienBan,
+        loaiBienBan: values.loaiBienBan,
+        idCongTy: values.idCongTy,
+        soPhieu: values.soPhieu,
+        ngayGiamDinh: values.ngayGiamDinh,
+        viTri: values.viTri,
+        soDeLaiPhucHoi: values.soDeLaiPhucHoi,
+        soDeLamPheLieu: values.soDeLamPheLieu,
+        soLuongHuy: values.soLuongHuy,
+        idNguoiLap: idNguoiLapBieu,
+        nguoiLapXacNhan: false,
+        idGiamDoc: idTrinhDuyetGiamDoc,
+        giamDocXacNhan: false,
+        trangThai: 0,
+        share: false,
+        danhSachChiTiet: values.danhSachChiTiet.map((e) => {
+          const actualDetailId = e.id ? e.id : generateCode("GDCT_");
+          return {
+            id: actualDetailId,
+            idTaiSan: e.idTaiSan,
+            idBienBanChiTiet: e.idBienBanChiTiet,
+            danhSachVatTu: (e.danhSachVatTu || []).map((vt) => ({
+              id: vt.id ? vt.id : generateCode("GDVT_"),
+              idChiTietGiamDinh: actualDetailId,
+              idVatTu: vt.idVatTu,
+              idChiTietVatTu: vt.idChiTietVatTu,
+              soLuong: vt.soLuong,
+              tinhTrang: vt.tinhTrang,
+              soLuongSuaChua: vt.soLuongSuaChua,
+              soLuongThayMoi: vt.soLuongThayMoi,
+              ghiChu: vt.ghiChu,
+              action: vt.action || Action.CREATE,
+            })),
+            action: e.action || Action.CREATE,
+          };
+        }),
+        nguoiKyList: intermediateSigners,
+      };
+      if (initData) {
+        updateMutation.mutate(record, {
+          onSuccess: () => {
+            handleClose();
+          },
+        });
+      } else {
+        createMutation.mutate(record, {
+          onSuccess: () => {
+            handleClose();
+          },
+        });
+      }
+    },
+  });
+
+  useEffect(() => {
+    if (open) {
+      if (initData) {
+        const listInfo = listSigneInfo(initData, apiUsers, apiDepartments);
+
+        formik.setValues({
+          id: initData.id ?? "",
+          idCongTy: initData.idCongTy ?? CongTy.CT001,
+          idBienBan: initData.idBienBan ?? "",
+          loaiBienBan: initData.loaiBienBan ?? "",
+          soPhieu: initData.soPhieu ?? "",
+          ngayGiamDinh: initData.ngayGiamDinh ?? "",
+          viTri: initData.viTri ?? "",
+          soDeLaiPhucHoi: initData.soDeLaiPhucHoi ?? 0,
+          soDeLamPheLieu: initData.soDeLamPheLieu ?? 0,
+          soLuongHuy: initData.soLuongHuy ?? 0,
+          idNguoiLap: initData.idNguoiLap ?? "",
+          nguoiLapXacNhan: initData.nguoiLapXacNhan ?? false,
+          idGiamDoc: initData.idGiamDoc ?? "",
+          giamDocXacNhan: initData.giamDocXacNhan ?? false,
+          share: initData.share ?? false,
+          trangThai: initData.trangThai ?? 0,
+          danhSachChiTiet: (initData.danhSachChiTiet ?? []).map((e: any) => ({
+            ...e,
+            danhSachVatTu: (e.danhSachVatTu || []).map((vt: any) => ({
+              ...vt,
+              action: Action.UPDATE,
+            })),
+            action: Action.UPDATE,
+          })) as InspectionRecordDetailData[],
+          nguoiKyList: (listInfo ?? []).map((item: any) => {
+            return {
+              userId: item.idNhanVien,
+              userName: item.hoTen,
+              departmentId: item.idDonVi,
+              departmentName: item.donVi,
+            };
+          }),
+        });
+      } else {
+        formik.setValues({
+          id: "",
+          idCongTy: CongTy.CT001,
+          idBienBan: incidentInspection?.id || repairRequest?.id || "",
+          loaiBienBan: incidentInspection
+            ? TypeBienBan.SU_CO
+            : TypeBienBan.SUA_CHUA,
+          soPhieu: "",
+          ngayGiamDinh: dayjs().format("YYYY-MM-DD"),
+          viTri: "",
+          soDeLaiPhucHoi: 0,
+          soDeLamPheLieu: 0,
+          soLuongHuy: 0,
+          idNguoiLap: "",
+          nguoiLapXacNhan: false,
+          idGiamDoc: "",
+          giamDocXacNhan: false,
+          share: false,
+          trangThai: 0,
+          danhSachChiTiet: (
+            repairRequest?.danhSachTaiSan ||
+            incidentInspection?.danhSachChiTiet ||
+            []
+          ).map((e: any) => ({
+            ...e,
+            id: "",
+            idBienBanChiTiet: e.id,
+          })) as InspectionRecordDetailData[],
+          nguoiKyList: [] as any[],
+        });
+      }
+    }
+  }, [
+    open,
+    initData,
+    repairRequest,
+    incidentInspection,
+    apiDepartments,
+    apiUsers,
+  ]);
+
+  const addMaterialRow = (assetIdx: number) => {
+    const newMaterial: InspectionRecordVatTuData = {
+      id: "GDVT_" + Math.random().toString(36).substr(2, 9),
+      idChiTietGiamDinh: formik.values.danhSachChiTiet[assetIdx].id,
+      idVatTu: "",
+      idChiTietVatTu: "",
+      soLuong: 1,
+      tinhTrang: "",
+      soLuongSuaChua: 0,
+      soLuongThayMoi: 0,
+      ghiChu: "",
+      tenVatTu: "",
+      donViTinh: "",
+      action: Action.CREATE,
+    };
+    const updatedEntries = formik.values.danhSachChiTiet.map((e, idx) => {
+      if (idx === assetIdx) {
+        return {
+          ...e,
+          danhSachVatTu: [...(e.danhSachVatTu || []), newMaterial],
+        };
+      }
+      return e;
+    });
+    formik.setFieldValue("danhSachChiTiet", updatedEntries);
+  };
+
+  const removeMaterialRow = (assetIdx: number, materialId: string) => {
+    const updatedEntries = formik.values.danhSachChiTiet.map((e, idx) => {
+      if (idx === assetIdx) {
+        const updatedVatTu = (e.danhSachVatTu || []).map((m) => {
+          if (m.id === materialId) {
+            return { ...m, action: Action.DELETE };
+          }
+          return m;
+        });
+
+        return {
+          ...e,
+          danhSachVatTu: updatedVatTu,
+        };
+      }
+      return e;
+    });
+    formik.setFieldValue("danhSachChiTiet", updatedEntries);
+  };
+
+  const updateMaterial = (
+    assetIdx: number,
+    materialId: string,
+    fieldOrChanges:
+      | keyof InspectionRecordVatTuData
+      | Partial<InspectionRecordVatTuData>,
+    value?: any,
+  ) => {
+    const updatedEntries = formik.values.danhSachChiTiet.map((e, idx) => {
+      if (idx === assetIdx) {
+        return {
+          ...e,
+          danhSachVatTu: (e.danhSachVatTu || []).map((m) => {
+            if (m.id === materialId) {
+              if (typeof fieldOrChanges === "string") {
+                return { ...m, [fieldOrChanges]: value };
+              } else {
+                return { ...m, ...fieldOrChanges };
+              }
+            }
+            return m;
+          }),
+        };
+      }
+      return e;
+    });
+    formik.setFieldValue("danhSachChiTiet", updatedEntries);
+  };
+
+  const handleQuantityChange = (
+    assetIdx: number,
+    materialId: string,
+    field: "soLuong" | "soLuongSuaChua" | "soLuongThayMoi",
+    value: number,
+  ) => {
+    updateMaterial(assetIdx, materialId, field, value);
+  };
+
+  function hasValidationError() {
+    for (const entry of formik.values.danhSachChiTiet) {
+      if (entry.danhSachVatTu) {
+        for (const vt of entry.danhSachVatTu) {
+          if (vt.action === Action.DELETE) continue;
+          const soLuong = vt.soLuong || 0;
+          const suaChua = vt.soLuongSuaChua || 0;
+          const thayMoi = vt.soLuongThayMoi || 0;
+          if (suaChua + thayMoi > soLuong) {
+            return true;
+          }
+          if (!vt.idChiTietVatTu) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
   const handleAddSigner = () => {
     if (!addDeptId || !addUserId) return;
-    const user = users.find((u: any) => u.id === addUserId);
+    const userItem = users.find((u: any) => u.id === addUserId);
     const dept = departments.find((d: any) => d.id === addDeptId);
-    if (!user || !dept) return;
+    if (!userItem || !dept) return;
     if (
-      signers.some(
-        (s: any) => s.idNguoiKy === user.id && s.idPhongBan === dept.id,
+      formik.values.nguoiKyList.some(
+        (s: any) => s.userId === userItem.id && s.departmentId === dept.id,
       )
     )
       return;
-    setSigners(
-      (prev) =>
-        [
-          ...prev,
-          {
-            userId: user.id,
-            userName: user.name,
-            departmentId: dept.id,
-            departmentName: dept.name,
-            position: user.title ?? "",
-            order: prev.length + 1,
-            signed: false,
-          },
-        ] as any,
-    );
+    const newSigner = {
+      userId: userItem.id,
+      userName: userItem.name,
+      departmentId: dept.id,
+      departmentName: dept.name,
+      position: userItem.title ?? "",
+      order: formik.values.nguoiKyList.length + 1,
+      signed: false,
+    };
+    formik.setFieldValue("nguoiKyList", [
+      ...formik.values.nguoiKyList,
+      newSigner,
+    ]);
     setAddDeptId("");
     setAddUserId("");
   };
 
   const handleRemoveSigner = (userId: string) => {
-    setSigners((prev) =>
-      prev
-        .filter((s) => s.userId !== userId)
-        .map((s, i) => ({ ...s, order: i + 1 })),
-    );
+    const updatedSigners = formik.values.nguoiKyList
+      .filter((s) => s.userId !== userId)
+      .map((s, i) => ({ ...s, order: i + 1 }));
+    formik.setFieldValue("nguoiKyList", updatedSigners);
   };
 
   const handleEdit = (signer: PlanSigner) => {
@@ -176,86 +431,33 @@ const InspectionRecordDialog = ({
   };
 
   const handleSaveEdit = () => {
-    setSigners((prev) =>
-      prev.map((s) =>
-        s.userId === editingSignerId
-          ? {
-              ...s,
-              userId: editUserId,
-              userName: users.find((u) => u.id === editUserId)?.name || "",
-              departmentId: editDeptId,
-              departmentName:
-                departments.find((d) => d.id === editDeptId)?.name || "",
-            }
-          : s,
-      ),
+    const updatedSigners = formik.values.nguoiKyList.map((s) =>
+      s.userId === editingSignerId
+        ? {
+            ...s,
+            userId: editUserId,
+            userName: users.find((u) => u.id === editUserId)?.name || "",
+            departmentId: editDeptId,
+            departmentName:
+              departments.find((d) => d.id === editDeptId)?.name || "",
+          }
+        : s,
     );
+    formik.setFieldValue("nguoiKyList", updatedSigners);
     setEditingSignerId(null);
   };
 
-  const handleSubmit = () => {
-    const idNguoiLapBieu = signers.length > 0 ? signers[0].userId : "";
-    const idTrinhDuyetGiamDoc =
-      signers.length > 1 ? signers[signers.length - 1].userId : "";
-
-    // Người ký trung gian (nếu có)
-    const intermediateSigners =
-      signers.length > 2
-        ? signers.slice(1, -1).map((s: PlanSigner, idx: number) => ({
-            id: `${generateCode("SIG-")}-${idx}`,
-            idNguoiKy: s.userId,
-            tenNguoiKy: s.userName,
-            idPhongBan: s.departmentId,
-            trangThai: 0,
-          }))
-        : [];
-    const record: any = {
-      idBienBan: repairRequest?.id || incidentInspection?.id || "",
-      loaiBienBan: repairRequest ? TypeBienBan.SUA_CHUA : TypeBienBan.SU_CO,
-      idCongTy: plan.idCongTy,
-      soPhieu: number,
-      ngayGiamDinh: inspectionDate,
-      viTri: location,
-      soDeLaiPhucHoi: recoveryCount,
-      soDeLamPheLieu: scrapCount,
-      soLuongHuy: destroyCount,
-      idNguoiLap: idNguoiLapBieu,
-      nguoiLapXacNhan: false,
-      idGiamDoc: idTrinhDuyetGiamDoc,
-      giamDocXacNhan: false,
-      trangThai: 0,
-      share: false,
-      danhSachChiTiet: entries.map((e) => ({
-        idTaiSan: e.deviceId,
-        idBienBanChiTiet: e.idBienBanChiTiet,
-        tinhTrang: e.technicalCondition,
-        suaChua: e.actionRepair,
-        thayMoi: e.actionReplace,
-        ghiChu: e.note,
-        action: Action.CREATE,
-      })),
-      nguoiKyList: intermediateSigners,
-    };
-
-    createMutation.mutate(record, {
-      onSuccess: () => {
-        handleClose();
-      },
-    });
-  };
-
-  const handleClose = () => {
+  function handleClose() {
     setAddDeptId("");
     setAddUserId("");
     onClose();
-  };
+    formik.resetForm();
+  }
 
-  // Label tham chiếu ở header dialog — khác nhau tùy luồng
   const referenceLabel = repairRequest
     ? `${repairRequest.soPhieu || repairRequest.id} — Tháng ${repairRequest.thang}/${repairRequest.nam}`
     : `Kế hoạch: ${plan.id}`;
 
-  console.log("signers", signers);
   return (
     <Dialog
       open={open}
@@ -310,25 +512,29 @@ const InspectionRecordDialog = ({
               }}
             >
               <Typography variant="subtitle1" fontWeight={600} mb={2}>
-                Thông tin
+                Thông tin chung
               </Typography>
               <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 <TextField
                   label="Số biên bản"
-                  value={number}
-                  onChange={(e) => setNumber(e.target.value)}
+                  name="soPhieu"
+                  value={formik.values.soPhieu}
+                  onChange={formik.handleChange}
                   size="small"
                   fullWidth
                 />
                 <FieldDate
                   title="Ngày giám định"
-                  selectedDate={inspectionDate}
-                  setSelectedDate={setInspectionDate}
+                  selectedDate={formik.values.ngayGiamDinh}
+                  setSelectedDate={(val) =>
+                    formik.setFieldValue("ngayGiamDinh", val)
+                  }
                 />
                 <TextField
                   label="Địa điểm (Tại...)"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
+                  name="viTri"
+                  value={formik.values.viTri}
+                  onChange={formik.handleChange}
                   size="small"
                   fullWidth
                   placeholder="vd: Phân xưởng khai thác 1, khu vực A"
@@ -355,24 +561,27 @@ const InspectionRecordDialog = ({
               }}
             >
               <Typography variant="subtitle1" fontWeight={600} mb={2}>
-                Số lượng vật tư
+                Số lượng vật tư thu hồi
               </Typography>
               <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
                 {[
                   {
                     label: "Số để lại phục hồi phục vụ cho sản xuất",
-                    value: recoveryCount,
-                    setter: setRecoveryCount,
+                    value: formik.values.soDeLaiPhucHoi,
+                    setter: (val: number) =>
+                      formik.setFieldValue("soDeLaiPhucHoi", val),
                   },
                   {
                     label: "Số để làm phế liệu (mục)",
-                    value: scrapCount,
-                    setter: setScrapCount,
+                    value: formik.values.soDeLamPheLieu,
+                    setter: (val: number) =>
+                      formik.setFieldValue("soDeLamPheLieu", val),
                   },
                   {
                     label: "Số lượng hủy (mục)",
-                    value: destroyCount,
-                    setter: setDestroyCount,
+                    value: formik.values.soLuongHuy,
+                    setter: (val: number) =>
+                      formik.setFieldValue("soLuongHuy", val),
                   },
                 ].map(({ label, value, setter }) => (
                   <Box
@@ -417,7 +626,7 @@ const InspectionRecordDialog = ({
             >
               Quy trình duyệt
               <Chip
-                label={`${signers.length} người`}
+                label={`${formik.values.nguoiKyList.length} người`}
                 size="small"
                 color="primary"
                 variant="outlined"
@@ -426,7 +635,7 @@ const InspectionRecordDialog = ({
             </Typography>
 
             <Box sx={{ flex: 1, overflowY: "auto", mb: 2 }}>
-              {signers.length > 0 ? (
+              {formik.values.nguoiKyList.length > 0 ? (
                 <Box sx={{ position: "relative", pl: 5 }}>
                   <Box
                     sx={{
@@ -438,8 +647,8 @@ const InspectionRecordDialog = ({
                       bgcolor: "divider",
                     }}
                   />
-                  {signers.map((s, idx) => {
-                    const user = users.find((u) => u.id === s.userId);
+                  {formik.values.nguoiKyList.map((s, idx) => {
+                    const userItem = users.find((u) => u.id === s.userId);
                     const isEditingThis = editingSignerId === s.userId;
                     return (
                       <Box
@@ -449,17 +658,18 @@ const InspectionRecordDialog = ({
                         <Box
                           sx={{
                             position: "absolute",
-                            left: -37,
-                            top: 14,
-                            width: 24,
-                            height: 24,
+                            left: -40,
+                            top: 6,
+                            width: 18,
+                            height: 18,
                             borderRadius: "50%",
-                            bgcolor: "primary.main",
-                            color: "white",
+                            bgcolor: "background.paper",
+                            border: "2px solid",
+                            borderColor: "primary.main",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            fontSize: 11,
+                            fontSize: 10,
                             fontWeight: 600,
                             zIndex: 1,
                             boxShadow: "0 0 0 3px white",
@@ -572,17 +782,17 @@ const InspectionRecordDialog = ({
                                     flexShrink: 0,
                                   }}
                                 >
-                                  {user?.name?.charAt(0) ?? "?"}
+                                  {userItem?.name?.charAt(0) ?? "?"}
                                 </Box>
                                 <Box>
                                   <Typography fontWeight={600} fontSize={13}>
-                                    {user?.name}
+                                    {userItem?.name}
                                   </Typography>
                                   <Typography
                                     variant="caption"
                                     color="text.secondary"
                                   >
-                                    {user?.title}
+                                    {userItem?.title}
                                   </Typography>
                                   <Box sx={{ mt: 0.5 }}>
                                     <Typography
@@ -688,122 +898,232 @@ const InspectionRecordDialog = ({
         </Box>
 
         {/* Tình trạng thiết bị */}
-        <Box sx={{ mt: 3 }}>
-          <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
-            Tình trạng thiết bị
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>
+            Tình trạng chi tiết thiết bị & vật tư linh kiện đưa vào sửa chữa
           </Typography>
           <TableContainer component={Paper} variant="outlined">
             <Table size="small">
               <TableHead>
                 <TableRow sx={{ bgcolor: "#f5f5f5" }}>
-                  <TableCell sx={{ fontWeight: 700 }}>STT</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>
-                    Tên TB / Vật tư
+                  <TableCell sx={{ fontWeight: 700, width: 60 }}>STT</TableCell>
+                  <TableCell sx={{ fontWeight: 700, minWidth: 200 }}>
+                    Tên Thiết bị / Vật tư phụ tùng
                   </TableCell>
                   <TableCell sx={{ fontWeight: 700, width: 60 }}>ĐVT</TableCell>
-                  <TableCell sx={{ fontWeight: 700, width: 55 }}>SL</TableCell>
+                  <TableCell sx={{ fontWeight: 700, width: 70 }}>SL</TableCell>
                   <TableCell sx={{ fontWeight: 700, minWidth: 180 }}>
                     Tình trạng KT
                   </TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 700, width: 70 }}>
-                    S.chữa
+                  <TableCell align="center" sx={{ fontWeight: 700, width: 90 }}>
+                    Sửa chữa
                   </TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 700, width: 80 }}>
+                  <TableCell align="center" sx={{ fontWeight: 700, width: 90 }}>
                     Thay mới
                   </TableCell>
-                  <TableCell sx={{ fontWeight: 700, minWidth: 120 }}>
+                  <TableCell sx={{ fontWeight: 700, minWidth: 150 }}>
                     Ghi chú
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700, width: 60 }} align="center">
+                    Thao tác
                   </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {entries.map((entry, idx) => (
-                  <TableRow key={entry.deviceId}>
-                    <TableCell>{idx + 1}</TableCell>
-                    <TableCell sx={{ fontWeight: 500 }}>
-                      {entry.deviceName}
-                    </TableCell>
-                    <TableCell>
-                      {entry.unit}
-                      {/* <TextField
-                        value={entry.unit}
-                        onChange={(e) =>
-                          updateEntry(idx, "unit", e.target.value)
-                        }
-                        size="small"
-                        variant="standard"
-                        inputProps={{
-                          style: { width: 40, fontSize: "0.8rem" },
-                        }}
-                      /> */}
-                    </TableCell>
-                    <TableCell>
-                      {entry.quantity}
-                      {/* <TextField
-                        type="number"
-                        value={entry.quantity}
-                        onChange={(e) =>
-                          updateEntry(
-                            idx,
-                            "quantity",
-                            parseInt(e.target.value) || 1,
-                          )
-                        }
-                        size="small"
-                        variant="standard"
-                        inputProps={{
-                          min: 1,
-                          style: { width: 36, fontSize: "0.8rem" },
-                        }}
-                      /> */}
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        value={entry.technicalCondition}
-                        onChange={(e) =>
-                          updateEntry(idx, "technicalCondition", e.target.value)
-                        }
-                        size="small"
-                        variant="outlined"
-                        placeholder="Mô tả tình trạng..."
-                        fullWidth
-                        multiline
-                        maxRows={2}
-                        inputProps={{ style: { fontSize: "0.8rem" } }}
-                        error={!entry.technicalCondition}
-                      />
-                    </TableCell>
-                    <TableCell align="center">
-                      <Checkbox
-                        checked={entry.actionRepair}
-                        onChange={(e) =>
-                          updateEntry(idx, "actionRepair", e.target.checked)
-                        }
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell align="center">
-                      <Checkbox
-                        checked={entry.actionReplace}
-                        onChange={(e) =>
-                          updateEntry(idx, "actionReplace", e.target.checked)
-                        }
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        value={entry.note}
-                        onChange={(e) =>
-                          updateEntry(idx, "note", e.target.value)
-                        }
-                        size="small"
-                        variant="standard"
-                        fullWidth
-                        inputProps={{ style: { fontSize: "0.8rem" } }}
-                      />
-                    </TableCell>
-                  </TableRow>
+                {formik.values.danhSachChiTiet.map((entry, assetIdx) => (
+                  <React.Fragment key={entry.idTaiSan}>
+                    {/* Hàng thiết bị chính (cha) */}
+                    <TableRow sx={{ bgcolor: "#fafafa" }}>
+                      <TableCell sx={{ fontWeight: 700 }}>
+                        {assetIdx + 1}
+                      </TableCell>
+                      <TableCell
+                        colSpan={3}
+                        sx={{ fontWeight: 700, color: "primary.main" }}
+                      >
+                        Thiết bị: {entry.tenTaiSan}
+                      </TableCell>
+                      <TableCell colSpan={4}></TableCell>
+                      <TableCell align="center">
+                        <IconButton
+                          size="small"
+                          onClick={() => addMaterialRow(assetIdx)}
+                          color="primary"
+                          title="Thêm vật tư phụ tùng giám định"
+                        >
+                          <AddIcon fontSize="small" />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+
+                    {/* Hàng các vật tư phụ tùng chi tiết (con) */}
+                    {!entry.danhSachVatTu ||
+                    entry.danhSachVatTu.filter((v) => v.action !== Action.DELETE).length === 0 ? (
+                      <TableRow>
+                        <TableCell></TableCell>
+                        <TableCell
+                          colSpan={8}
+                          sx={{
+                            fontStyle: "italic",
+                            color: "text.secondary",
+                            py: 1,
+                          }}
+                        >
+                          Chưa có vật tư/linh kiện phụ tùng nào được chọn để
+                          giám định dưới thiết bị này. Nhấp "+" để thêm.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      entry.danhSachVatTu
+                        .filter((v) => v.action !== Action.DELETE)
+                        .map((vt, vtIdx) => {
+                        const sumQty =
+                          (vt.soLuongSuaChua || 0) + (vt.soLuongThayMoi || 0);
+                        const isQtyError = sumQty > (vt.soLuong || 0);
+
+                        return (
+                          <TableRow key={vt.id}>
+                            <TableCell
+                              align="right"
+                              sx={{ color: "text.secondary", pr: 2 }}
+                            >
+                              {assetIdx + 1}.{vtIdx + 1}
+                            </TableCell>
+                            <TableCell sx={{ width: "220px" }}>
+                              <FieldAutoCompleted
+                                title=""
+                                data={allToolDetail}
+                                labelkey="idTaiSan"
+                                limitOptions={10}
+                                value={vt.idChiTietVatTu}
+                                noBorder={true}
+                                onChange={(value) => {
+                                  if (value) {
+                                    updateMaterial(assetIdx, vt.id!, {
+                                      idChiTietVatTu: value.id,
+                                      idVatTu: value.idTaiSan,
+                                      tenVatTu: value.tenTaiSan,
+                                      donViTinh: value.donViTinh,
+                                    });
+                                  } else {
+                                    updateMaterial(assetIdx, vt.id!, {
+                                      idChiTietVatTu: "",
+                                      idVatTu: "",
+                                      tenVatTu: "",
+                                      donViTinh: "",
+                                    });
+                                  }
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell>{vt.donViTinh || "—"}</TableCell>
+                            <TableCell>
+                              <TextField
+                                type="number"
+                                value={vt.soLuong || 0}
+                                onChange={(e) =>
+                                  handleQuantityChange(
+                                    assetIdx,
+                                    vt.id!,
+                                    "soLuong",
+                                    Math.max(0, parseInt(e.target.value) || 0),
+                                  )
+                                }
+                                size="small"
+                                variant="standard"
+                                inputProps={{ min: 0, style: { width: 45 } }}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <TextField
+                                value={vt.tinhTrang || ""}
+                                onChange={(e) =>
+                                  updateMaterial(
+                                    assetIdx,
+                                    vt.id!,
+                                    "tinhTrang",
+                                    e.target.value,
+                                  )
+                                }
+                                size="small"
+                                placeholder="Tình trạng kỹ thuật..."
+                                fullWidth
+                                variant="outlined"
+                                multiline
+                                maxRows={2}
+                                inputProps={{ style: { fontSize: "0.8rem" } }}
+                                error={!vt.tinhTrang}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <TextField
+                                type="number"
+                                value={vt.soLuongSuaChua || 0}
+                                onChange={(e) =>
+                                  handleQuantityChange(
+                                    assetIdx,
+                                    vt.id!,
+                                    "soLuongSuaChua",
+                                    Math.max(0, parseInt(e.target.value) || 0),
+                                  )
+                                }
+                                size="small"
+                                variant="standard"
+                                error={isQtyError}
+                                inputProps={{ min: 0, style: { width: 55 } }}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <TextField
+                                type="number"
+                                value={vt.soLuongThayMoi || 0}
+                                onChange={(e) =>
+                                  handleQuantityChange(
+                                    assetIdx,
+                                    vt.id!,
+                                    "soLuongThayMoi",
+                                    Math.max(0, parseInt(e.target.value) || 0),
+                                  )
+                                }
+                                size="small"
+                                variant="standard"
+                                error={isQtyError}
+                                inputProps={{ min: 0, style: { width: 55 } }}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <TextField
+                                value={vt.ghiChu || ""}
+                                onChange={(e) =>
+                                  updateMaterial(
+                                    assetIdx,
+                                    vt.id!,
+                                    "ghiChu",
+                                    e.target.value,
+                                  )
+                                }
+                                size="small"
+                                variant="standard"
+                                fullWidth
+                                inputProps={{ style: { fontSize: "0.8rem" } }}
+                              />
+                            </TableCell>
+                            <TableCell align="center">
+                              <IconButton
+                                size="small"
+                                onClick={() =>
+                                  removeMaterialRow(assetIdx, vt.id!)
+                                }
+                                color="error"
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </React.Fragment>
                 ))}
               </TableBody>
             </Table>
@@ -859,9 +1179,9 @@ const InspectionRecordDialog = ({
               display="block"
               sx={{ textAlign: "right", fontStyle: "italic", mb: 2 }}
             >
-              Quảng Ninh, ngày {new Date(inspectionDate).getDate()} tháng{" "}
-              {new Date(inspectionDate).getMonth() + 1} năm{" "}
-              {new Date(inspectionDate).getFullYear()}
+              Quảng Ninh, ngày {new Date(formik.values.ngayGiamDinh).getDate()}{" "}
+              tháng {new Date(formik.values.ngayGiamDinh).getMonth() + 1} năm{" "}
+              {new Date(formik.values.ngayGiamDinh).getFullYear()}
             </Typography>
             <Typography
               variant="subtitle2"
@@ -882,16 +1202,16 @@ const InspectionRecordDialog = ({
               GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ ĐƯA VÀO SỬA CHỮA
             </Typography>
             <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>
-              Hôm nay, ngày {new Date(inspectionDate).getDate()} tháng{" "}
-              {new Date(inspectionDate).getMonth() + 1} năm{" "}
-              {new Date(inspectionDate).getFullYear()}. Tại{" "}
-              {location || "……………………………"}
+              Hôm nay, ngày {new Date(formik.values.ngayGiamDinh).getDate()}{" "}
+              tháng {new Date(formik.values.ngayGiamDinh).getMonth() + 1} năm{" "}
+              {new Date(formik.values.ngayGiamDinh).getFullYear()}. Tại{" "}
+              {formik.values.viTri || "……………………………"}
             </Typography>
             <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>
               Chúng tôi gồm:
             </Typography>
             <Box sx={{ pl: 2, mb: 1 }}>
-              {signers.map((s, i) => (
+              {formik.values.nguoiKyList.map((s, i) => (
                 <Box key={i} sx={{ display: "flex", gap: 3, mb: 0.25 }}>
                   <Typography variant="caption" sx={{ minWidth: 16 }}>
                     {i + 1}.
@@ -931,7 +1251,7 @@ const InspectionRecordDialog = ({
                 <TableHead>
                   <TableRow sx={{ bgcolor: "#f5f5f5" }}>
                     <TableCell
-                      sx={{ fontWeight: 700, width: 40, fontSize: "0.75rem" }}
+                      sx={{ fontWeight: 700, width: 45, fontSize: "0.75rem" }}
                     >
                       STT
                     </TableCell>
@@ -953,26 +1273,26 @@ const InspectionRecordDialog = ({
                     </TableCell>
                     <TableCell
                       align="center"
-                      sx={{ fontWeight: 700, width: 55, fontSize: "0.75rem" }}
+                      sx={{ fontWeight: 700, width: 65, fontSize: "0.75rem" }}
                     >
-                      S.chữa
+                      SL S.chữa
                     </TableCell>
                     <TableCell
                       align="center"
                       sx={{ fontWeight: 700, width: 65, fontSize: "0.75rem" }}
                     >
-                      Thay mới
+                      SL Thay mới
                     </TableCell>
                     <TableCell
-                      sx={{ fontWeight: 700, width: 80, fontSize: "0.75rem" }}
+                      sx={{ fontWeight: 700, width: 90, fontSize: "0.75rem" }}
                     >
                       Ghi chú
                     </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {entries.map((entry, idx) => (
-                    <>
+                  {formik.values.danhSachChiTiet.map((entry, idx) => (
+                    <React.Fragment key={`pv-group-${idx}`}>
                       <TableRow
                         key={`group-${idx}`}
                         sx={{ bgcolor: "#fafafa" }}
@@ -986,46 +1306,73 @@ const InspectionRecordDialog = ({
                           colSpan={7}
                           sx={{ fontSize: "0.75rem", fontWeight: 600 }}
                         >
-                          Thiết bị: {entry.deviceName}
+                          Thiết bị: {entry.tenTaiSan}
                         </TableCell>
                       </TableRow>
-                      <TableRow key={`entry-${idx}`}>
-                        <TableCell sx={{ fontSize: "0.75rem" }}></TableCell>
-                        <TableCell sx={{ fontSize: "0.75rem" }}>
-                          {entry.deviceName}
-                        </TableCell>
-                        <TableCell sx={{ fontSize: "0.75rem" }}>
-                          {entry.unit}
-                        </TableCell>
-                        <TableCell sx={{ fontSize: "0.75rem" }}>
-                          {entry.quantity}
-                        </TableCell>
-                        <TableCell sx={{ fontSize: "0.75rem" }}>
-                          {entry.technicalCondition}
-                        </TableCell>
-                        <TableCell align="center" sx={{ fontSize: "0.75rem" }}>
-                          {entry.actionRepair ? "✓" : ""}
-                        </TableCell>
-                        <TableCell align="center" sx={{ fontSize: "0.75rem" }}>
-                          {entry.actionReplace ? "✓" : ""}
-                        </TableCell>
-                        <TableCell sx={{ fontSize: "0.75rem" }}>
-                          {entry.note}
-                        </TableCell>
-                      </TableRow>
-                    </>
+                      {!entry.danhSachVatTu ||
+                      entry.danhSachVatTu.filter((v) => v.action !== Action.DELETE).length === 0 ? (
+                        <TableRow key={`empty-${idx}`}>
+                          <TableCell></TableCell>
+                          <TableCell
+                            colSpan={7}
+                            sx={{ fontSize: "0.75rem", fontStyle: "italic" }}
+                          >
+                            Chưa có vật tư/linh kiện nào được giám định.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        entry.danhSachVatTu
+                          .filter((v) => v.action !== Action.DELETE)
+                          .map((vt, vtIdx) => (
+                          <TableRow key={`vt-${vt.id || vtIdx}`}>
+                            <TableCell
+                              sx={{ fontSize: "0.75rem", align: "right" }}
+                            >
+                              {idx + 1}.{vtIdx + 1}
+                            </TableCell>
+                            <TableCell sx={{ fontSize: "0.75rem" }}>
+                              {vt.tenVatTu || vt.idChiTietVatTu || "—"}
+                            </TableCell>
+                            <TableCell sx={{ fontSize: "0.75rem" }}>
+                              {vt.donViTinh}
+                            </TableCell>
+                            <TableCell sx={{ fontSize: "0.75rem" }}>
+                              {vt.soLuong}
+                            </TableCell>
+                            <TableCell sx={{ fontSize: "0.75rem" }}>
+                              {vt.tinhTrang}
+                            </TableCell>
+                            <TableCell
+                              align="center"
+                              sx={{ fontSize: "0.75rem" }}
+                            >
+                              {vt.soLuongSuaChua || 0}
+                            </TableCell>
+                            <TableCell
+                              align="center"
+                              sx={{ fontSize: "0.75rem" }}
+                            >
+                              {vt.soLuongThayMoi || 0}
+                            </TableCell>
+                            <TableCell sx={{ fontSize: "0.75rem" }}>
+                              {vt.ghiChu}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </React.Fragment>
                   ))}
                 </TableBody>
               </Table>
             </TableContainer>
             <Typography variant="caption" display="block">
-              Số để lại phục hồi: {recoveryCount || "…………"}.
+              Số để lại phục hồi: {formik.values.soDeLaiPhucHoi || "…………"}.
             </Typography>
             <Typography variant="caption" display="block">
-              Số để làm phế liệu: {scrapCount || "…………"} (mục)
+              Số để làm phế liệu: {formik.values.soDeLamPheLieu || "…………"} (mục)
             </Typography>
             <Typography variant="caption" display="block" sx={{ mb: 1.5 }}>
-              Số lượng hủy: {destroyCount || "…………"} (mục)
+              Số lượng hủy: {formik.values.soLuongHuy || "…………"} (mục)
             </Typography>
             <Typography variant="caption" display="block" sx={{ mb: 2 }}>
               Biên bản được lập xong lúc …… giờ cùng ngày và được các thành phần
@@ -1040,7 +1387,7 @@ const InspectionRecordDialog = ({
               }}
             >
               {(() => {
-                const sorted = [...(signers || [])].sort(
+                const sorted = [...(formik.values.nguoiKyList || [])].sort(
                   (a, b) => (a.order || 0) - (b.order || 0),
                 );
                 const cols = sorted.map((s, idx) => ({
@@ -1125,11 +1472,13 @@ const InspectionRecordDialog = ({
           variant="contained"
           color="primary"
           disabled={
-            signers.length === 0 || repairRequest?.danhSachTaiSan?.length === 0
+            formik.values.nguoiKyList.length === 0 ||
+            repairRequest?.danhSachTaiSan?.length === 0 ||
+            hasValidationError()
           }
-          onClick={handleSubmit}
+          onClick={() => formik.handleSubmit()}
         >
-          Tạo biên bản
+          {initData ? "Cập nhật" : "Tạo biên bản"}
         </Button>
       </DialogActions>
     </Dialog>

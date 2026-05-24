@@ -37,11 +37,15 @@ import RepairRequestDialog from "../dialog/RepairRequestDialog";
 import InspectionRecordDialog from "../dialog/InspectionRecordDialog";
 import AcceptanceTestDialog from "../dialog/AcceptanceTestDialog";
 import MaterialDialog from "../dialog/MaterialDialog";
-import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
+import {
+  InspectionRecordData,
+  MaintenancePlanData,
+} from "../../../MainenancePlanRepair/types";
 import { DanhGiaVatTuData, MaintenanceRepairData } from "../../types";
 import {
   useMaintenanceAcceptanceByInspectionQuery,
   useMaintenanceInspectionByRepairQuery,
+  useMaintenanceInspectionMutation,
   useMaintenanceMaterialAssessmentByInspectionQuery,
   useMaintenancePlanningDetailsByMonthQuery,
   useMaintenanceRepairByPlanQuery,
@@ -147,6 +151,7 @@ interface ActionCellProps {
   editTooltip?: string;
   editColor?: "primary" | "success" | "warning" | "secondary";
   onDelete?: () => void;
+  isDelete?: boolean;
 }
 
 const ActionCell = ({
@@ -159,6 +164,7 @@ const ActionCell = ({
   editTooltip,
   editColor,
   onDelete,
+  isDelete,
 }: ActionCellProps) => (
   <Box
     sx={{
@@ -203,11 +209,12 @@ const ActionCell = ({
       <Tooltip title="Xóa" placement="top">
         <IconButton
           size="small"
+          disabled={!isDelete}
           onClick={(e) => {
             e.stopPropagation();
             showConfirmAlert("Bạn có chắc chắn muốn xóa không?").then(
               (isConfirm) => {
-                if (isConfirm) {
+                if (isConfirm.isConfirmed) {
                   onDelete();
                 }
               },
@@ -227,15 +234,14 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedDeviceIds, setSelectedDeviceIds] = useState<string[]>([]);
   const [repairDialogOpen, setRepairDialogOpen] = useState(false);
+  const [inspectionDialogOpen, setInspectionDialogOpen] = useState(false);
 
-  const [expandedRequests, setExpandedRequests] = useState<Set<string>>(
-    new Set(),
+  const [expandedRequests, setExpandedRequests] = useState<string | null>(null);
+  const [expandedInspections, setExpandedInspections] = useState<string | null>(
+    null,
   );
-  const [expandedInspections, setExpandedInspections] = useState<Set<string>>(
-    new Set(),
-  );
-  const [expandedAcceptances, setExpandedAcceptances] = useState<Set<string>>(
-    new Set(),
+  const [expandedAcceptances, setExpandedAcceptances] = useState<string | null>(
+    null,
   );
 
   const [inspectionParentReqId, setInspectionParentReqId] = useState<
@@ -251,6 +257,9 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
   const [selectedReq, setSelectedReq] = useState<MaintenanceRepairData | null>(
     null,
   );
+  const [selectedIns, setSelectedIns] = useState<InspectionRecordData | null>(
+    null,
+  );
 
   // sua chua
   const {
@@ -259,11 +268,13 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
     deleteMutation: deleteRepairMutation,
     updateManyMutation: updateManyRepairMutation,
   } = useMaintenanceRepairMutation();
+  const { deleteMutation: deleteInspectionMutation } =
+    useMaintenanceInspectionMutation();
 
   useEffect(() => {
-    setExpandedRequests(new Set());
-    setExpandedInspections(new Set());
-    setExpandedAcceptances(new Set());
+    setExpandedRequests(null);
+    setExpandedInspections(null);
+    setExpandedAcceptances(null);
     setSelectedDeviceIds([]);
     setInspectionParentReqId(null);
     setAcceptanceParentInspId(null);
@@ -276,18 +287,14 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
     useMaintenanceRepairByPlanQuery(plan?.id);
 
   const { data: inspectionRecords = [] } =
-    useMaintenanceInspectionByRepairQuery(
-      expandedRequests.values().next().value,
-    );
+    useMaintenanceInspectionByRepairQuery(expandedRequests || "");
 
   const { data: acceptanceTestRecords = [] } =
-    useMaintenanceAcceptanceByInspectionQuery(
-      expandedInspections.values().next().value,
-    );
+    useMaintenanceAcceptanceByInspectionQuery(expandedInspections || "");
 
   const { data: materialQualityRecords = [] } =
     useMaintenanceMaterialAssessmentByInspectionQuery(
-      expandedAcceptances.values().next().value,
+      expandedAcceptances || "",
     );
 
   const availableDevices = (chiTietTaiSanByKeHoach || []).filter(
@@ -307,13 +314,11 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
     );
 
   const toggle = (
-    set: Set<string>,
+    current: string | null,
     id: string,
-    setter: (s: Set<string>) => void,
+    setter: (s: string | null) => void,
   ) => {
-    const next = new Set(set);
-    next.has(id) ? next.delete(id) : next.add(id);
-    setter(next);
+    setter(current === id ? null : id);
   };
 
   return (
@@ -567,7 +572,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                   )
                                 }
                               >
-                                {expandedRequests.has(req.id ?? "") ? (
+                                {expandedRequests === (req.id ?? "") ? (
                                   <KeyboardArrowUpIcon />
                                 ) : (
                                   <KeyboardArrowDownIcon />
@@ -590,9 +595,10 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                           </TableCell>
                           <TableCell align="right">
                             <ActionCell
-                              onAdd={() =>
-                                setInspectionParentReqId(req.id ?? "")
-                              }
+                              onAdd={() => {
+                                setInspectionParentReqId(req.id ?? "");
+                                setInspectionDialogOpen(true);
+                              }}
                               isAdd={
                                 req?.trangThai === 3 && req?.daCoGiamDinh !== 1
                               }
@@ -605,6 +611,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                               onDelete={() =>
                                 deleteRepairMutation.mutateAsync(req)
                               }
+                              isDelete={req?.trangThai === 0}
                               isEdit={req?.trangThai === 0}
                               editTooltip="Sửa"
                               editColor="success"
@@ -613,7 +620,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                         </TableRow>
 
                         {/* Level 2 */}
-                        {expandedRequests.has(req.id ?? "") &&
+                        {expandedRequests === (req.id ?? "") &&
                           inspectionRecords.map(
                             (insp: any, inspIdx: number) => {
                               const acceptances = acceptanceTestRecords.filter(
@@ -663,7 +670,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                             )
                                           }
                                         >
-                                          {expandedInspections.has(insp.id) ? (
+                                          {expandedInspections === insp.id ? (
                                             <KeyboardArrowUpIcon />
                                           ) : (
                                             <KeyboardArrowDownIcon />
@@ -700,6 +707,22 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                         onAdd={() =>
                                           setAcceptanceParentInspId(insp.id)
                                         }
+                                        isDelete={insp?.trangThai === 0}
+                                        onDelete={() =>
+                                          deleteInspectionMutation.mutateAsync(
+                                            insp.id,
+                                          )
+                                        }
+                                        isEdit={insp?.trangThai === 0}
+                                        onEdit={() => {
+                                          setInspectionParentReqId(
+                                            req.id ?? "",
+                                          );
+                                          setInspectionDialogOpen(true);
+                                          setSelectedIns(insp);
+                                        }}
+                                        editTooltip="Chỉnh sửa BB Giám định"
+                                        editColor="primary"
                                         addTooltip="Tạo BB Nghiệm thu"
                                         addColor="warning"
                                       />
@@ -707,7 +730,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                   </TableRow>
 
                                   {/* Level 3 */}
-                                  {expandedInspections.has(insp.id) &&
+                                  {expandedInspections === insp.id &&
                                     acceptanceTestRecords.map(
                                       (acc: any, accIdx: number) => {
                                         const isAccLast =
@@ -754,9 +777,8 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                                       )
                                                     }
                                                   >
-                                                    {expandedAcceptances.has(
-                                                      acc.id,
-                                                    ) ? (
+                                                    {expandedAcceptances ===
+                                                    acc.id ? (
                                                       <KeyboardArrowUpIcon />
                                                     ) : (
                                                       <KeyboardArrowDownIcon />
@@ -808,7 +830,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                             </TableRow>
 
                                             {/* Level 4 */}
-                                            {expandedAcceptances.has(acc.id) &&
+                                            {expandedAcceptances === acc.id &&
                                               materialQualityRecords.map(
                                                 (mat: DanhGiaVatTuData) => (
                                                   <TableRow hover key={mat.id}>
@@ -905,19 +927,20 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
         }}
       />
 
-      {inspectionParentReqId &&
+      {inspectionDialogOpen &&
         (() => {
           const parentReq = maintenanceRepairByPlan.find(
             (r: MaintenanceRepairData) => r.id === inspectionParentReqId,
           );
-          return parentReq ? (
+          return (
             <InspectionRecordDialog
-              open={true}
-              onClose={() => setInspectionParentReqId(null)}
+              open={inspectionDialogOpen}
+              onClose={() => setInspectionDialogOpen(false)}
               plan={plan}
+              initData={selectedIns}
               repairRequest={parentReq}
             />
-          ) : null;
+          );
         })()}
 
       {acceptanceParentInspId &&

@@ -83,20 +83,46 @@ const AcceptanceTestDialog = ({
   const [testResult, setTestResult] = useState("đảm bảo yêu cầu kỹ thuật");
   const [acceptanceContent, setAcceptanceContent] = useState("");
 
-  const [materialItems, setMaterialItems] = useState<MaterialItem[]>(() =>
-    (inspectionRecord?.danhSachChiTiet || []).map(
-      (entry: InspectionRecordDetailData, idx: number) => ({
-        groupLabel: `${String.fromCharCode(73 + idx)}/`,
-        groupDevice: entry?.idTaiSan ?? "",
-        code: "",
-        idVatTu: "",
-        name: "",
-        unit: "Cái",
-        quantity: 1,
-        note: "",
-      }),
-    ),
-  );
+  const [materialItems, setMaterialItems] = useState<MaterialItem[]>(() => {
+    const list: MaterialItem[] = [];
+    (inspectionRecord?.danhSachChiTiet || []).forEach(
+      (entry: InspectionRecordDetailData, idx: number) => {
+        const activeVatTu = (entry.danhSachVatTu || []).filter(
+          (vt: any) => vt.action !== Action.DELETE,
+        );
+        if (activeVatTu.length > 0) {
+          activeVatTu.forEach((vt: any) => {
+            const qty =
+              vt.soLuongThayMoi || vt.soLuongSuaChua
+                ? (vt.soLuongThayMoi || 0) + (vt.soLuongSuaChua || 0)
+                : vt.soLuong || 1;
+            list.push({
+              groupLabel: `${String.fromCharCode(73 + idx)}/`,
+              groupDevice: entry?.idTaiSan ?? "",
+              code: vt.idChiTietVatTu || "",
+              idVatTu: vt.idVatTu || "",
+              name: vt.tenVatTu || "",
+              unit: vt.donViTinh || "Cái",
+              quantity: qty,
+              note: vt.ghiChu || "",
+            });
+          });
+        } else {
+          list.push({
+            groupLabel: `${String.fromCharCode(73 + idx)}/`,
+            groupDevice: entry?.idTaiSan ?? "",
+            code: "",
+            idVatTu: "",
+            name: "",
+            unit: "Cái",
+            quantity: 1,
+            note: "",
+          });
+        }
+      },
+    );
+    return list;
+  });
 
   const { data: apiDepartments = [] } = useAllDepartmentsQuery();
   const { data: apiUsers = [] } = useAllStaffsQuery();
@@ -502,26 +528,33 @@ const AcceptanceTestDialog = ({
                                       value={item.code}
                                       noBorder={true}
                                       onChange={(value) => {
-                                        updateMaterial(
-                                          globalIdx,
-                                          "code",
-                                          value.id,
-                                        );
-                                        updateMaterial(
-                                          globalIdx,
-                                          "idVatTu",
-                                          value.idTaiSan,
-                                        );
-                                        updateMaterial(
-                                          globalIdx,
-                                          "name",
-                                          value.tenTaiSan,
-                                        );
-                                        updateMaterial(
-                                          globalIdx,
-                                          "unit",
-                                          value.donViTinh,
-                                        );
+                                        if (value) {
+                                          updateMaterial(
+                                            globalIdx,
+                                            "code",
+                                            value.id,
+                                          );
+                                          updateMaterial(
+                                            globalIdx,
+                                            "idVatTu",
+                                            value.idTaiSan,
+                                          );
+                                          updateMaterial(
+                                            globalIdx,
+                                            "name",
+                                            value.tenTaiSan,
+                                          );
+                                          updateMaterial(
+                                            globalIdx,
+                                            "unit",
+                                            value.donViTinh,
+                                          );
+                                        } else {
+                                          updateMaterial(globalIdx, "code", "");
+                                          updateMaterial(globalIdx, "idVatTu", "");
+                                          updateMaterial(globalIdx, "name", "");
+                                          updateMaterial(globalIdx, "unit", "");
+                                        }
                                       }}
                                     />
                                   </TableCell>

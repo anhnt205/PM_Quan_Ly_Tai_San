@@ -117,17 +117,38 @@ export interface InspectionRecordData {
 export interface InspectionRecordDetailData {
   id?: string;
   idGiamDinh?: string;
-  tinhTrang?: string;
-  suaChua?: boolean;
-  thayMoi?: boolean;
-  ghiChu?: string;
   idTaiSan?: string;
   idBienBanChiTiet?: string;
-  daCoNghiemThu?: number;
   ngayTao?: string;
   ngayCapNhat?: string;
   nguoiTao?: string;
   nguoiCapNhat?: string;
+
+  // View fields
+  tenTaiSan?: string;
+  donViTinh?: string;
+  soLuong?: string | number;
+
+  // Nested materials
+  danhSachVatTu?: InspectionRecordVatTuData[];
+  action?: ActionType;
+}
+
+export interface InspectionRecordVatTuData {
+  id?: string;
+  idChiTietGiamDinh?: string;
+  idVatTu?: string;
+  idChiTietVatTu?: string;
+  soLuong?: number;
+  tinhTrang?: string;
+  soLuongSuaChua?: number;
+  soLuongThayMoi?: number;
+  ghiChu?: string;
+
+  // View fields
+  tenVatTu?: string;
+  donViTinh?: string;
+  action?: ActionType;
 }
 
 // nghiệm thu
