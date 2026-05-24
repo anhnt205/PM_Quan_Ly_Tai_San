@@ -116,6 +116,23 @@ public class NghiemThuTaiSanDao {
         return jdbcTemplate.update(sql, e.getIdChiTietVatTu(), e.getIdVatTu(), e.getSoLuong(), e.getGhiChu(), e.getId());
     }
 
+    public int[] batchUpdateVatTu(List<NghiemThuVatTu> list) {
+        String sql = "UPDATE nghiemthu_vattu SET IdChiTietVatTu = ?, IdVatTu = ?, SoLuong = ?, GhiChu = ? WHERE Id = ?";
+        return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                NghiemThuVatTu e = list.get(i);
+                ps.setString(1, e.getIdChiTietVatTu());
+                ps.setString(2, e.getIdVatTu());
+                ps.setObject(3, e.getSoLuong());
+                ps.setString(4, e.getGhiChu());
+                ps.setString(5, e.getId());
+            }
+            @Override
+            public int getBatchSize() { return list.size(); }
+        });
+    }
+
     public int deleteByIdBienBan(String idBienBan) {
         // First delete vattu of all taisan in this bienban
         List<NghiemThuTaiSan> taiSanList = findByIdBienBanNoEnrich(idBienBan);

@@ -192,6 +192,7 @@ export interface AcceptanceTestRecordAssetData {
   tenTaiSan?: string;
   donViTinh?: string;
   danhSachVatTu?: AcceptanceTestRecordToolData[];
+  action?: ActionType;
 }
 export interface AcceptanceTestRecordToolData {
   id?: string;
@@ -202,4 +203,5 @@ export interface AcceptanceTestRecordToolData {
   idVatTu?: string;
   tenVatTu?: string;
   donViTinh?: string;
+  action?: ActionType;
 }

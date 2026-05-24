@@ -40,6 +40,10 @@ public class NghiemThuTaiSanService {
         return dao.updateVatTu(e);
     }
 
+    public int[] batchUpdateVatTu(List<NghiemThuVatTu> list) {
+        return dao.batchUpdateVatTu(list);
+    }
+
     public int deleteById(String id) {
         return dao.deleteById(id);
     }

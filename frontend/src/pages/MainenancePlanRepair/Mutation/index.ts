@@ -17,6 +17,7 @@ import {
 import dayjs from "dayjs";
 import { useSelector } from "react-redux";
 import {
+  AcceptanceTestAdapter,
   IncidentAdapter,
   InspectionAdapter,
   RepairAdapter,
@@ -1426,7 +1427,9 @@ export const useMaintenanceAcceptanceByInspectionQuery = (
     queryKey: ["acceptanceByInspection", idGiamDinh],
     queryFn: async () => {
       const res = await api.get(`/nghiemthu/giamdinh/${idGiamDinh}`);
-      return res.data.data || res.data;
+      return (res.data.data || res.data).map((item: any) =>
+        AcceptanceTestAdapter(item),
+      );
     },
     enabled: !!idGiamDinh,
   });
@@ -1469,6 +1472,12 @@ export const useMaintenanceAcceptanceTestMutation = () => {
     },
   });
 
+  const batchUpdateVatTuMutation = useMutation({
+    mutationFn: async (data: any[]) => {
+      return (await api.put("/nghiemthu-taisan/vattu/batch", data)).data;
+    },
+  });
+
   // --- Xử lý sub-records sau khi tạo/cập nhật biên bản ---
   const handleSubRecords = (nghiemThuId: string, variables: any) => {
     // Xử lý danh sách tài sản
@@ -1479,28 +1488,87 @@ export const useMaintenanceAcceptanceTestMutation = () => {
       const deleteTs = variables.danhSachTaiSan.filter(
         (i: any) => i.action === Action.DELETE && i.id,
       );
+      const updateTs = variables.danhSachTaiSan.filter(
+        (i: any) => i.action === Action.UPDATE && i.id,
+      );
 
       if (createTs.length > 0) {
-        batchInsertTaiSanMutation.mutate(
-          createTs.map((i: any) => ({ ...i, idBienBan: nghiemThuId })),
-        );
+        batchInsertTaiSanMutation
+          .mutateAsync(
+            createTs.map((i: any) => ({ ...i, idBienBan: nghiemThuId })),
+          )
+          .then(() => {
+            // Thu thập tất cả vật tư từ các tài sản mới sau khi tài sản đã được tạo thành công
+            const allVatTu = createTs.reduce((acc: any[], ts: any) => {
+              const activeVatTu = (ts.danhSachVatTu || []).filter(
+                (v: any) => v.action !== Action.DELETE,
+              );
+              if (activeVatTu.length > 0) {
+                const mappedVatTu = activeVatTu.map((vt: any) => ({
+                  ...vt,
+                  id: null,
+                  idBienBanTaiSan: ts.id,
+                }));
+                return [...acc, ...mappedVatTu];
+              }
+              return acc;
+            }, []);
 
-        // Thu thập tất cả vật tư từ các tài sản mới
-        const allVatTu = createTs.reduce((acc: any[], ts: any) => {
-          if (ts.danhSachVatTu && ts.danhSachVatTu.length > 0) {
-            const mappedVatTu = ts.danhSachVatTu.map((vt: any) => ({
-              ...vt,
-              idBienBanTaiSan: ts.id,
-            }));
-            return [...acc, ...mappedVatTu];
-          }
-          return acc;
-        }, []);
+            if (allVatTu.length > 0) {
+              batchInsertVatTuMutation.mutate(allVatTu);
+            }
+          })
+          .catch((err) => {
+            console.error("Lỗi khi thêm thiết bị nghiệm thu:", err);
+          });
+      }
 
-        if (allVatTu.length > 0) {
-          batchInsertVatTuMutation.mutate(allVatTu);
+      // Xử lý vật tư cho các tài sản cũ đang được cập nhật
+      if (updateTs.length > 0) {
+        const createVtList: any[] = [];
+        const deleteVtIds: string[] = [];
+        const updateVtList: any[] = [];
+
+        updateTs.forEach((ts: any) => {
+          (ts.danhSachVatTu || []).forEach((vt: any) => {
+            if (
+              (vt.action === Action.CREATE || !vt.id) &&
+              vt.action !== Action.DELETE &&
+              vt.action !== Action.UPDATE
+            ) {
+              createVtList.push({
+                ...vt,
+                id: null,
+                idBienBanTaiSan: ts.id,
+              });
+            } else if (vt.action === Action.DELETE && vt.id) {
+              deleteVtIds.push(vt.id);
+            } else if (vt.action === Action.UPDATE && vt.id) {
+              updateVtList.push({
+                id: vt.id,
+                idBienBanTaiSan: ts.id,
+                idChiTietVatTu: vt.idChiTietVatTu || "",
+                idVatTu: vt.idVatTu || "",
+                tenVatTu: vt.tenVatTu || "",
+                donViTinh: vt.donViTinh || "Cái",
+                soLuong: vt.soLuong,
+                ghiChu: vt.ghiChu || "",
+              });
+            }
+          });
+        });
+
+        if (createVtList.length > 0) {
+          batchInsertVatTuMutation.mutate(createVtList);
+        }
+        if (deleteVtIds.length > 0) {
+          deleteVatTuBatchMutation.mutate(deleteVtIds);
+        }
+        if (updateVtList.length > 0) {
+          batchUpdateVatTuMutation.mutate(updateVtList);
         }
       }
+
       if (deleteTs.length > 0) {
         deleteTs.forEach((ts: any) => deleteTaiSanMutation.mutate(ts.id));
       }
@@ -1549,6 +1617,8 @@ export const useMaintenanceAcceptanceTestMutation = () => {
       if (nghiemThuId) handleSubRecords(nghiemThuId, variables);
       invalidate();
       queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
+      queryClient.invalidateQueries({ queryKey: ["acceptanceByInspection"] });
+
       showSuccessAlert("Tạo biên bản nghiệm thu thành công");
     },
     onError: (error: any) => {
@@ -1575,6 +1645,10 @@ export const useMaintenanceAcceptanceTestMutation = () => {
       queryClient.invalidateQueries({
         queryKey: ["inspectionByRepair"],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["acceptanceByInspection"],
+      });
+
       showSuccessAlert("Cập nhật biên bản nghiệm thu thành công");
     },
     onError: (error: any) => {
@@ -1591,6 +1665,10 @@ export const useMaintenanceAcceptanceTestMutation = () => {
     },
     onSuccess: () => {
       invalidate();
+      queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
+      queryClient.invalidateQueries({
+        queryKey: ["acceptanceByInspection"],
+      });
       showSuccessAlert("Xóa biên bản nghiệm thu thành công");
     },
     onError: (error: any) => {
@@ -1623,6 +1701,10 @@ export const useMaintenanceAcceptanceTestMutation = () => {
     },
     onSuccess: () => {
       invalidate();
+      queryClient.invalidateQueries({
+        queryKey: ["acceptanceByInspection"],
+      });
+
       showSuccessAlert("Hủy biên bản nghiệm thu thành công");
     },
     onError: (error: any) => {

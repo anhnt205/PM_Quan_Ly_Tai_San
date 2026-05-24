@@ -50,6 +50,7 @@ import {
   useMaintenancePlanningDetailsByMonthQuery,
   useMaintenanceRepairByPlanQuery,
   useMaintenanceRepairMutation,
+  useMaintenanceAcceptanceTestMutation,
 } from "../../../MainenancePlanRepair/Mutation";
 import { showStatus } from "../../config";
 import { DeleteIcon, EditIcon, TrashIcon } from "lucide-react";
@@ -261,6 +262,9 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
     null,
   );
 
+  const [selectedAcc, setSelectedAcc] = useState<any | null>(null);
+  const [acceptanceDialogOpen, setAcceptanceDialogOpen] = useState(false);
+
   // sua chua
   const {
     createMutation: createRepairMutation,
@@ -270,6 +274,8 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
   } = useMaintenanceRepairMutation();
   const { deleteMutation: deleteInspectionMutation } =
     useMaintenanceInspectionMutation();
+  const { deleteMutation: deleteAcceptanceMutation } =
+    useMaintenanceAcceptanceTestMutation();
 
   useEffect(() => {
     setExpandedRequests(null);
@@ -704,9 +710,10 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                           insp?.daCoNghiemThu !== 1 &&
                                           insp?.trangThai === 3
                                         }
-                                        onAdd={() =>
-                                          setAcceptanceParentInspId(insp.id)
-                                        }
+                                        onAdd={() => {
+                                          setAcceptanceParentInspId(insp.id);
+                                          setAcceptanceDialogOpen(true);
+                                        }}
                                         isDelete={insp?.trangThai === 0}
                                         onDelete={() =>
                                           deleteInspectionMutation.mutateAsync(
@@ -825,6 +832,19 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                                     acc.trangThai === 3 &&
                                                     acc.daCoDanhGiaVatTu !== 1
                                                   }
+                                                  isEdit={acc.trangThai === 0}
+                                                  onEdit={() => {
+                                                    setSelectedAcc(acc);
+                                                    setAcceptanceDialogOpen(true);
+                                                  }}
+                                                  isDelete={acc.trangThai === 0}
+                                                  onDelete={() =>
+                                                    deleteAcceptanceMutation.mutateAsync(
+                                                      acc.id,
+                                                    )
+                                                  }
+                                                  editTooltip="Chỉnh sửa BB Nghiệm thu"
+                                                  editColor="primary"
                                                 />
                                               </TableCell>
                                             </TableRow>
@@ -943,29 +963,52 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
           );
         })()}
 
-      {acceptanceParentInspId &&
+      {acceptanceDialogOpen &&
         (() => {
-          const parentInsp = inspectionRecords.find(
-            (r: any) => r.id === acceptanceParentInspId,
-          );
-          const parentReq = parentInsp
-            ? maintenanceRepairByPlan.find(
-                (rr: MaintenanceRepairData) => rr.id === parentInsp.idSuaChua,
-              )
-            : null;
-          return parentInsp ? (
-            <AcceptanceTestDialog
-              open={true}
-              onClose={() => setAcceptanceParentInspId(null)}
-              plan={plan}
-              repairRequest={parentReq!}
-              inspectionRecord={parentInsp}
-              // onSubmit={(record) => {
-              //   onCreateAcceptanceRecord(record);
-              //   setAcceptanceParentInspId(null);
-              // }}
-            />
-          ) : null;
+          if (selectedAcc) {
+            const parentInsp = inspectionRecords.find(
+              (r: any) => r.id === selectedAcc.idGiamDinh,
+            );
+            const parentReq = parentInsp
+              ? maintenanceRepairByPlan.find(
+                  (rr: MaintenanceRepairData) => rr.id === parentInsp.idSuaChua,
+                )
+              : null;
+            return (
+              <AcceptanceTestDialog
+                open={true}
+                onClose={() => {
+                  setAcceptanceDialogOpen(false);
+                  setSelectedAcc(null);
+                }}
+                plan={plan}
+                repairRequest={parentReq!}
+                inspectionRecord={parentInsp!}
+                initData={selectedAcc}
+              />
+            );
+          } else {
+            const parentInsp = inspectionRecords.find(
+              (r: any) => r.id === acceptanceParentInspId,
+            );
+            const parentReq = parentInsp
+              ? maintenanceRepairByPlan.find(
+                  (rr: MaintenanceRepairData) => rr.id === parentInsp.idSuaChua,
+                )
+              : null;
+            return parentInsp ? (
+              <AcceptanceTestDialog
+                open={true}
+                onClose={() => {
+                  setAcceptanceDialogOpen(false);
+                  setAcceptanceParentInspId(null);
+                }}
+                plan={plan}
+                repairRequest={parentReq!}
+                inspectionRecord={parentInsp}
+              />
+            ) : null;
+          }
         })()}
 
       {materialParentAccId &&

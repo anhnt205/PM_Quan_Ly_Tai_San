@@ -72,6 +72,17 @@ public class NghiemThuTaiSanController {
         }
     }
 
+    @PutMapping("/vattu/batch")
+    public ResponseEntity<ApiResponse<Object>> batchUpdateVatTu(@RequestBody List<NghiemThuVatTu> list) {
+        try {
+            int[] r = service.batchUpdateVatTu(list);
+            return ResponseEntity.ok(ApiResponse.success("Cập nhật danh sách vật tư thành công", null, r.length));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
     @DeleteMapping("/taisan/{id}")
     public ResponseEntity<ApiResponse<Object>> deleteTaiSan(@PathVariable("id") String id) {
         try {

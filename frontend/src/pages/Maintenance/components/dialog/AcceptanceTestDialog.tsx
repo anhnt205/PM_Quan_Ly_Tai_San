@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -22,18 +22,20 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Alert,
 } from "@mui/material";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
-import type { MaterialItem } from "../../../../mockdata/mockInspectionRecords";
+import { useFormik } from "formik";
 import {
   InspectionRecordData,
   InspectionRecordDetailData,
   MaintenancePlanData,
+  AcceptanceTestRecordData,
+  AcceptanceTestRecordAssetData,
+  AcceptanceTestRecordToolData,
 } from "../../../MainenancePlanRepair/types";
 import { MaintenanceRepairData } from "../../types";
 import { PlanSigner } from "../../../../mockdata/mockPlans";
@@ -47,6 +49,7 @@ import dayjs from "dayjs";
 import { useAllToolDetailQuery } from "../../../ToolManager/Mutation";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
 import { useAllLoaiSCBDQuery } from "../../../MaintenanceRepairType/Mutation";
+import { listSigneInfo } from "../../config";
 
 type SimpleDept = { id: string; name: string };
 type SimpleUser = {
@@ -61,6 +64,7 @@ interface Props {
   plan: MaintenancePlanData;
   repairRequest: MaintenanceRepairData;
   inspectionRecord: InspectionRecordData;
+  initData?: AcceptanceTestRecordData;
 }
 
 const AcceptanceTestDialog = ({
@@ -69,60 +73,11 @@ const AcceptanceTestDialog = ({
   plan,
   repairRequest,
   inspectionRecord,
+  initData,
 }: Props) => {
   const { user } = useSelector((state: any) => state.user);
-  const { createMutation } = useMaintenanceAcceptanceTestMutation();
-  const [number, setNumber] = useState(`BB-NT-${repairRequest?.id ?? ""}`);
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-  const [location, setLocation] = useState("");
-  const [deviceName, setDeviceName] = useState(
-    inspectionRecord.danhSachChiTiet?.map((e) => e.idTaiSan).join(", ") ?? "",
-  );
-  const [registrationNumber, setRegistrationNumber] = useState("");
-  const [repairLevel, setRepairLevel] = useState("");
-  const [testResult, setTestResult] = useState("đảm bảo yêu cầu kỹ thuật");
-  const [acceptanceContent, setAcceptanceContent] = useState("");
-
-  const [materialItems, setMaterialItems] = useState<MaterialItem[]>(() => {
-    const list: MaterialItem[] = [];
-    (inspectionRecord?.danhSachChiTiet || []).forEach(
-      (entry: InspectionRecordDetailData, idx: number) => {
-        const activeVatTu = (entry.danhSachVatTu || []).filter(
-          (vt: any) => vt.action !== Action.DELETE,
-        );
-        if (activeVatTu.length > 0) {
-          activeVatTu.forEach((vt: any) => {
-            const qty =
-              vt.soLuongThayMoi || vt.soLuongSuaChua
-                ? (vt.soLuongThayMoi || 0) + (vt.soLuongSuaChua || 0)
-                : vt.soLuong || 1;
-            list.push({
-              groupLabel: `${String.fromCharCode(73 + idx)}/`,
-              groupDevice: entry?.idTaiSan ?? "",
-              code: vt.idChiTietVatTu || "",
-              idVatTu: vt.idVatTu || "",
-              name: vt.tenVatTu || "",
-              unit: vt.donViTinh || "Cái",
-              quantity: qty,
-              note: vt.ghiChu || "",
-            });
-          });
-        } else {
-          list.push({
-            groupLabel: `${String.fromCharCode(73 + idx)}/`,
-            groupDevice: entry?.idTaiSan ?? "",
-            code: "",
-            idVatTu: "",
-            name: "",
-            unit: "Cái",
-            quantity: 1,
-            note: "",
-          });
-        }
-      },
-    );
-    return list;
-  });
+  const { createMutation, updateMutation } =
+    useMaintenanceAcceptanceTestMutation();
 
   const { data: apiDepartments = [] } = useAllDepartmentsQuery();
   const { data: apiUsers = [] } = useAllStaffsQuery();
@@ -142,79 +97,302 @@ const AcceptanceTestDialog = ({
       title: String(u?.tenChucVu ?? u?.chucVu ?? u?.title ?? ""),
     }));
 
-  const [signers, setSigners] = useState<PlanSigner[]>([]);
   const [addDeptId, setAddDeptId] = useState("");
   const [addUserId, setAddUserId] = useState("");
   const [editingSignerId, setEditingSignerId] = useState<string | null>(null);
   const [editDeptId, setEditDeptId] = useState("");
   const [editUserId, setEditUserId] = useState("");
 
-  const addMaterialRow = (groupIdx: number) => {
-    const group = materialItems[groupIdx];
-    const newItem: MaterialItem = {
-      groupLabel: group.groupLabel,
-      groupDevice: group.groupDevice,
-      code: "",
+  const formik = useFormik({
+    initialValues: {
+      id: "",
+      idCongTy: CongTy.CT001,
+      idGiamDinh: inspectionRecord?.id || "",
+      soPhieu: "",
+      ngayNghiemThu: dayjs().format("YYYY-MM-DD"),
+      viTri: "",
+      tenThietBi: "",
+      soDangKi: "",
+      capSuaChua: "",
+      ketQua: "đảm bảo yêu cầu kỹ thuật",
+      noiDung: "",
+      idNguoiLap: "",
+      nguoiLapXacNhan: false,
+      idGiamDoc: "",
+      giamDocXacNhan: false,
+      share: false,
+      trangThai: 0,
+      danhSachTaiSan: [] as AcceptanceTestRecordAssetData[],
+      nguoiKyList: [] as any[],
+    },
+    onSubmit: (values) => {
+      const idNguoiLapVal =
+        values.nguoiKyList.length > 0 ? values.nguoiKyList[0].userId : "";
+      const idGiamDocVal =
+        values.nguoiKyList.length > 1
+          ? values.nguoiKyList[values.nguoiKyList.length - 1].userId
+          : "";
+      const intermediateSigners =
+        values.nguoiKyList.length > 2
+          ? values.nguoiKyList
+              .slice(1, -1)
+              .map((s: PlanSigner, idx: number) => ({
+                id: `${generateCode("SIG-")}-${idx}`,
+                idNguoiKy: s.userId,
+                tenNguoiKy: s.userName,
+                idPhongBan: s.departmentId,
+                trangThai: 0,
+              }))
+          : [];
+
+      // Map danhSachTaiSan (with nested danhSachVatTu) to payload giống hệt Giám định
+      const mappedDanhSachTaiSan = values.danhSachTaiSan.map((ts) => {
+        const actualTsId = ts.id ? ts.id : generateCode("NTTS-");
+
+        return {
+          id: actualTsId,
+          idBienBan: values.id || "",
+          idTaiSan: ts.idTaiSan,
+          idChiTietGiamDinh: ts.idChiTietGiamDinh,
+          action: ts.action || (ts.id ? Action.UPDATE : Action.CREATE),
+          danhSachVatTu: (ts.danhSachVatTu || []).map((vt) => ({
+            id: vt.id ? vt.id : generateCode("NTVT-"),
+            idBienBanTaiSan: actualTsId,
+            idChiTietVatTu: vt.idChiTietVatTu || "",
+            idVatTu: vt.idVatTu || "",
+            tenVatTu: vt.tenVatTu || "",
+            donViTinh: vt.donViTinh || "Cái",
+            soLuong: vt.soLuong,
+            ghiChu: vt.ghiChu || "",
+            action: vt.action || (vt.id ? Action.UPDATE : Action.CREATE),
+          })),
+        };
+      });
+
+      const payload = {
+        ...values,
+        idNguoiLap: idNguoiLapVal,
+        idGiamDoc: idGiamDocVal,
+        nguoiKyList: intermediateSigners,
+        danhSachTaiSan: mappedDanhSachTaiSan,
+        nguoiTao: user?.taiKhoan?.tenDangNhap,
+        ngayTao: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+      };
+
+      if (initData) {
+        updateMutation.mutate(payload, {
+          onSuccess: () => handleClose(),
+        });
+      } else {
+        createMutation.mutate(payload, {
+          onSuccess: () => handleClose(),
+        });
+      }
+    },
+  });
+
+  useEffect(() => {
+    if (open) {
+      if (initData) {
+        const listInfo = listSigneInfo(initData, apiUsers, apiDepartments);
+        formik.setValues({
+          id: initData.id ?? "",
+          idCongTy: initData.idCongTy ?? CongTy.CT001,
+          idGiamDinh: initData.idGiamDinh ?? "",
+          soPhieu: initData.soPhieu ?? "",
+          ngayNghiemThu: initData.ngayNghiemThu ?? "",
+          viTri: initData.viTri ?? "",
+          tenThietBi: initData.tenThietBi ?? "",
+          soDangKi: initData.soDangKi ?? "",
+          capSuaChua: initData.capSuaChua ?? "",
+          ketQua: initData.ketQua ?? "đảm bảo yêu cầu kỹ thuật",
+          noiDung: initData.noiDung ?? "",
+          idNguoiLap: initData.idNguoiLap ?? "",
+          nguoiLapXacNhan: initData.nguoiLapXacNhan ?? false,
+          idGiamDoc: initData.idGiamDoc ?? "",
+          giamDocXacNhan: initData.giamDocXacNhan ?? false,
+          share: initData.share ?? false,
+          trangThai: initData.trangThai ?? 0,
+          danhSachTaiSan: (initData.danhSachTaiSan || []).map((ts) => ({
+            ...ts,
+            danhSachVatTu: (ts.danhSachVatTu || []).map((vt) => ({
+              ...vt,
+              action: Action.UPDATE,
+            })),
+            action: Action.UPDATE,
+          })) as AcceptanceTestRecordAssetData[],
+          nguoiKyList: (listInfo ?? []).map((item: any) => {
+            return {
+              userId: item.idNhanVien,
+              userName: item.hoTen,
+              departmentId: item.idDonVi,
+              departmentName: item.donVi,
+            };
+          }),
+        });
+      } else {
+        const list: AcceptanceTestRecordAssetData[] = [];
+        (inspectionRecord?.danhSachChiTiet || []).forEach(
+          (entry: InspectionRecordDetailData, idx: number) => {
+            const activeVatTu = (entry.danhSachVatTu || []).filter(
+              (vt: any) => vt.action !== Action.DELETE,
+            );
+            const tsId = `NTTS_${Date.now()}_${idx}`;
+
+            if (activeVatTu.length > 0) {
+              list.push({
+                id: tsId,
+                idTaiSan: entry.idTaiSan || "",
+                idChiTietGiamDinh: entry.id || "",
+                tenTaiSan: entry.tenTaiSan || "",
+                donViTinh: entry.donViTinh || "Cái",
+                danhSachVatTu: activeVatTu.map((vt: any, vtIdx: number) => {
+                  const qty =
+                    vt.soLuongThayMoi || vt.soLuongSuaChua
+                      ? (vt.soLuongThayMoi || 0) + (vt.soLuongSuaChua || 0)
+                      : vt.soLuong || 1;
+                  return {
+                    id: `NTVT_${Date.now()}_${idx}_${vtIdx}`,
+                    idBienBanTaiSan: tsId,
+                    idChiTietVatTu: vt.idChiTietVatTu || "",
+                    idVatTu: vt.idVatTu || "",
+                    tenVatTu: vt.tenVatTu || "",
+                    donViTinh: vt.donViTinh || "Cái",
+                    soLuong: qty,
+                    ghiChu: vt.ghiChu || "",
+                    action: Action.CREATE,
+                  };
+                }),
+              });
+            } else {
+              list.push({
+                id: tsId,
+                idTaiSan: entry.idTaiSan || "",
+                idChiTietGiamDinh: entry.id || "",
+                tenTaiSan: entry.tenTaiSan || "",
+                donViTinh: entry.donViTinh || "Cái",
+                danhSachVatTu: [
+                  {
+                    id: `NTVT_${Date.now()}_${idx}_0`,
+                    idBienBanTaiSan: tsId,
+                    idChiTietVatTu: "",
+                    idVatTu: "",
+                    tenVatTu: "",
+                    donViTinh: "Cái",
+                    soLuong: 1,
+                    ghiChu: "",
+                    action: Action.CREATE,
+                  },
+                ],
+              });
+            }
+          },
+        );
+        formik.setValues({
+          id: "",
+          idCongTy: CongTy.CT001,
+          idGiamDinh: inspectionRecord?.id || "",
+          soPhieu: `BB-NT-${repairRequest?.id ?? ""}`,
+          ngayNghiemThu: dayjs().format("YYYY-MM-DD"),
+          viTri: "",
+          tenThietBi:
+            inspectionRecord.danhSachChiTiet
+              ?.map((e) => e.idTaiSan)
+              .join(", ") ?? "",
+          soDangKi: "",
+          capSuaChua: "",
+          ketQua: "đảm bảo yêu cầu kỹ thuật",
+          noiDung: "",
+          idNguoiLap: "",
+          nguoiLapXacNhan: false,
+          idGiamDoc: "",
+          giamDocXacNhan: false,
+          share: false,
+          trangThai: 0,
+          danhSachTaiSan: list,
+          nguoiKyList: [] as any[],
+        });
+      }
+    }
+  }, [open, initData, apiUsers, apiDepartments]);
+
+  const addMaterialRow = (assetIdx: number) => {
+    const ts = formik.values.danhSachTaiSan[assetIdx];
+    const newItem: AcceptanceTestRecordToolData = {
+      id: `NTVT_${Date.now()}`,
+      idBienBanTaiSan: ts.id || "",
+      idChiTietVatTu: "",
       idVatTu: "",
-      name: "",
-      unit: "",
-      quantity: 1,
-      note: "",
+      tenVatTu: "",
+      donViTinh: "Cái",
+      soLuong: 1,
+      ghiChu: "",
+      action: Action.CREATE,
     };
-    const insertAt =
-      materialItems.lastIndexOf(
-        materialItems
-          .filter((m) => m.groupLabel === group.groupLabel)
-          .slice(-1)[0],
-      ) + 1;
-    setMaterialItems((prev) => [
-      ...prev.slice(0, insertAt),
-      newItem,
-      ...prev.slice(insertAt),
-    ]);
+    const updatedVatTu = [...(ts.danhSachVatTu || []), newItem];
+    formik.setFieldValue(
+      `danhSachTaiSan[${assetIdx}].danhSachVatTu`,
+      updatedVatTu,
+    );
   };
 
-  const removeMaterialRow = (idx: number) => {
-    setMaterialItems((prev) => prev.filter((_, i) => i !== idx));
+  const removeMaterialRow = (assetIdx: number, materialId: string) => {
+    const ts = formik.values.danhSachTaiSan[assetIdx];
+    const updatedVatTu = (ts.danhSachVatTu || []).map((vt) => {
+      if (vt.id === materialId) {
+        return { ...vt, action: Action.DELETE };
+      }
+      return vt;
+    });
+    formik.setFieldValue(
+      `danhSachTaiSan[${assetIdx}].danhSachVatTu`,
+      updatedVatTu,
+    );
   };
 
   const updateMaterial = (
-    idx: number,
-    field: keyof MaterialItem,
-    value: string | number,
+    assetIdx: number,
+    vtId: string,
+    fields: Partial<AcceptanceTestRecordToolData> & { action?: any },
   ) => {
-    setMaterialItems((prev) =>
-      prev.map((m, i) => (i === idx ? { ...m, [field]: value } : m)),
+    const ts = formik.values.danhSachTaiSan[assetIdx];
+    const updatedVatTu = (ts.danhSachVatTu || []).map((vt) =>
+      vt.id === vtId ? { ...vt, ...fields } : vt,
+    );
+    formik.setFieldValue(
+      `danhSachTaiSan[${assetIdx}].danhSachVatTu`,
+      updatedVatTu,
     );
   };
 
   const handleAddSigner = () => {
     if (!addUserId || !addDeptId) return;
-    if (signers.some((s) => s.userId === addUserId)) return;
-    const user = users.find((u) => u.id === addUserId);
+    if (formik.values.nguoiKyList.some((s: any) => s.userId === addUserId))
+      return;
+    const signerUser = users.find((u) => u.id === addUserId);
     const dept = departments.find((d) => d.id === addDeptId);
-    if (!user || !dept) return;
-    setSigners((prev) => [
-      ...prev,
+    if (!signerUser || !dept) return;
+    const updated = [
+      ...formik.values.nguoiKyList,
       {
-        userId: user.id,
-        userName: user.name,
+        userId: signerUser.id,
+        userName: signerUser.name,
         departmentId: dept.id,
         departmentName: dept.name,
-        order: prev.length + 1,
+        order: formik.values.nguoiKyList.length + 1,
         signed: false,
       },
-    ]);
+    ];
+    formik.setFieldValue("nguoiKyList", updated);
     setAddDeptId("");
     setAddUserId("");
   };
 
   const handleRemoveSigner = (userId: string) => {
-    setSigners((prev) =>
-      prev
-        .filter((s) => s.userId !== userId)
-        .map((s, i) => ({ ...s, order: i + 1 })),
-    );
+    const updated = formik.values.nguoiKyList
+      .filter((s: any) => s.userId !== userId)
+      .map((s: any, i: number) => ({ ...s, order: i + 1 }));
+    formik.setFieldValue("nguoiKyList", updated);
   };
 
   const handleEdit = (signer: PlanSigner) => {
@@ -224,102 +402,20 @@ const AcceptanceTestDialog = ({
   };
 
   const handleSaveEdit = () => {
-    setSigners((prev) =>
-      prev.map((s) =>
-        s.userId === editingSignerId
-          ? {
-              ...s,
-              userId: editUserId,
-              userName: users.find((u) => u.id === editUserId)?.name || "",
-              departmentId: editDeptId,
-              departmentName:
-                departments.find((d) => d.id === editDeptId)?.name || "",
-            }
-          : s,
-      ),
+    const updated = formik.values.nguoiKyList.map((s: any) =>
+      s.userId === editingSignerId
+        ? {
+            ...s,
+            userId: editUserId,
+            userName: users.find((u) => u.id === editUserId)?.name || "",
+            departmentId: editDeptId,
+            departmentName:
+              departments.find((d) => d.id === editDeptId)?.name || "",
+          }
+        : s,
     );
+    formik.setFieldValue("nguoiKyList", updated);
     setEditingSignerId(null);
-  };
-  const handleSubmit = () => {
-    const idNguoiLap = signers.length > 0 ? signers[0].userId : "";
-    const idGiamDoc =
-      signers.length > 1 ? signers[signers.length - 1].userId : "";
-
-    // Người ký trung gian
-    const nguoiKyList =
-      signers.length > 2
-        ? signers.slice(1, -1).map((s: PlanSigner, idx: number) => ({
-            id: `${generateCode("SIG-")}-${idx}`,
-            idNguoiKy: s.userId,
-            tenNguoiKy: s.userName,
-            idPhongBan: s.departmentId,
-            trangThai: 0,
-          }))
-        : [];
-
-    // Map materialItems -> danhSachTaiSan với danhSachVatTu
-    // Group theo groupLabel (mỗi group = 1 tài sản)
-    const groupMap = materialItems.reduce<Record<string, MaterialItem[]>>(
-      (acc, item) => {
-        if (!acc[item.groupDevice]) acc[item.groupDevice] = [];
-        acc[item.groupDevice].push(item);
-        return acc;
-      },
-      {},
-    );
-
-    // Tìm idChiTietGiamDinh tương ứng với từng tài sản trong inspectionRecord
-    const chiTietMap: Record<string, string> = {};
-    (inspectionRecord?.danhSachChiTiet || []).forEach((ct: any) => {
-      chiTietMap[ct.idTaiSan] = ct.id;
-    });
-
-    const danhSachTaiSan = Object.entries(groupMap).map(
-      ([idTaiSan, items]) => {
-        const id = generateCode("NTTS-");
-        return {
-          id,
-          idTaiSan,
-          action: Action.CREATE,
-          idChiTietGiamDinh: chiTietMap[idTaiSan] || "",
-          danhSachVatTu: items.map((m) => ({
-            idChiTietVatTu: m.code || "",
-            idVatTu: m.idVatTu || "",
-            soLuong: m.quantity,
-            ghiChu: m.note || "",
-            idBienBanTaiSan: id,
-            action: Action.CREATE,
-          })),
-        };
-      },
-    );
-
-    const payload = {
-      idCongTy: CongTy.CT001,
-      idGiamDinh: inspectionRecord?.id ?? "",
-      soPhieu: number,
-      ngayNghiemThu: dayjs(date).format("YYYY-MM-DD"),
-      viTri: location,
-      tenThietBi: deviceName,
-      soDangKi: registrationNumber,
-      capSuaChua: repairLevel,
-      ketQua: testResult,
-      noiDung: acceptanceContent,
-      idNguoiLap,
-      nguoiLapXacNhan: false,
-      idGiamDoc,
-      giamDocXacNhan: false,
-      share: false,
-      trangThai: 0,
-      nguoiTao: user?.taiKhoan?.tenDangNhap,
-      ngayTao: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-      nguoiKyList,
-      danhSachTaiSan,
-    };
-
-    createMutation.mutate(payload, {
-      onSuccess: () => handleClose(),
-    });
   };
 
   const handleClose = () => {
@@ -327,16 +423,7 @@ const AcceptanceTestDialog = ({
     onClose();
   };
 
-  const groupedMaterials = materialItems.reduce<Record<string, MaterialItem[]>>(
-    (acc, item) => {
-      if (!acc[item.groupLabel]) acc[item.groupLabel] = [];
-      acc[item.groupLabel].push(item);
-      return acc;
-    },
-    {},
-  );
-
-  const d = new Date(date);
+  const d = new Date(formik.values.ngayNghiemThu);
 
   return (
     <Dialog
@@ -392,41 +479,46 @@ const AcceptanceTestDialog = ({
               <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 <TextField
                   label="Số biên bản"
-                  value={number}
-                  onChange={(e) => setNumber(e.target.value)}
+                  name="soPhieu"
+                  value={formik.values.soPhieu}
+                  onChange={formik.handleChange}
                   placeholder={`VD: BB-NT-${repairRequest?.id}`}
                   size="small"
                   fullWidth
                 />
                 <TextField
                   label="Ngày lập"
+                  name="ngayNghiemThu"
                   type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
+                  value={formik.values.ngayNghiemThu}
+                  onChange={formik.handleChange}
                   size="small"
                   fullWidth
                   InputLabelProps={{ shrink: true }}
                 />
                 <TextField
                   label="Địa điểm (Tại...)"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
+                  name="viTri"
+                  value={formik.values.viTri}
+                  onChange={formik.handleChange}
                   size="small"
                   fullWidth
                   placeholder="vd: Phân xưởng khai thác 1, khu vực A"
                 />
                 <TextField
                   label="Tên thiết bị nghiệm thu"
-                  value={deviceName}
-                  onChange={(e) => setDeviceName(e.target.value)}
+                  name="tenThietBi"
+                  value={formik.values.tenThietBi}
+                  onChange={formik.handleChange}
                   size="small"
                   fullWidth
                 />
                 <Box sx={{ display: "flex", gap: 2 }}>
                   <TextField
                     label="Số đăng ký"
-                    value={registrationNumber}
-                    onChange={(e) => setRegistrationNumber(e.target.value)}
+                    name="soDangKi"
+                    value={formik.values.soDangKi}
+                    onChange={formik.handleChange}
                     size="small"
                     sx={{ flex: 1 }}
                   />
@@ -434,22 +526,26 @@ const AcceptanceTestDialog = ({
                     title="Cấp sửa chữa"
                     labelkey="ten"
                     data={allLevel}
-                    value={repairLevel}
-                    onChange={(value) => setRepairLevel(value.id)}
+                    value={formik.values.capSuaChua}
+                    onChange={(value) =>
+                      formik.setFieldValue("capSuaChua", value.id)
+                    }
                     autocompleteSx={{ flex: 1 }}
                   />
                 </Box>
                 <TextField
                   label="Kết quả chạy thử"
-                  value={testResult}
-                  onChange={(e) => setTestResult(e.target.value)}
+                  name="ketQua"
+                  value={formik.values.ketQua}
+                  onChange={formik.handleChange}
                   size="small"
                   fullWidth
                 />
                 <TextField
                   label="Nội dung nghiệm thu"
-                  value={acceptanceContent}
-                  onChange={(e) => setAcceptanceContent(e.target.value)}
+                  name="noiDung"
+                  value={formik.values.noiDung}
+                  onChange={formik.handleChange}
                   size="small"
                   fullWidth
                   multiline
@@ -489,138 +585,134 @@ const AcceptanceTestDialog = ({
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {Object.entries(groupedMaterials).map(
-                      ([groupLabel, items]) => {
-                        const globalGroupIdx =
-                          Object.keys(groupedMaterials).indexOf(groupLabel);
-                        return (
-                          <React.Fragment key={groupLabel}>
-                            <TableRow sx={{ bgcolor: "#fafafa" }}>
-                              <TableCell sx={{ fontWeight: 700 }}>
-                                {groupLabel}
-                              </TableCell>
-                              <TableCell colSpan={5} sx={{ fontWeight: 600 }}>
-                                Thiết bị: {items[0].groupDevice}
-                              </TableCell>
-                              <TableCell align="center">
-                                <IconButton
-                                  size="small"
-                                  onClick={() => addMaterialRow(globalGroupIdx)}
-                                  color="primary"
+                    {formik.values.danhSachTaiSan.map((ts, assetIdx) => {
+                      const activeVatTu = (ts.danhSachVatTu || []).filter(
+                        (v) => v.action !== Action.DELETE,
+                      );
+                      return (
+                        <React.Fragment key={ts.id || assetIdx}>
+                          <TableRow sx={{ bgcolor: "#fafafa" }}>
+                            <TableCell sx={{ fontWeight: 700 }}>
+                              {String.fromCharCode(73 + assetIdx)}/
+                            </TableCell>
+                            <TableCell colSpan={5} sx={{ fontWeight: 600 }}>
+                              Thiết bị: {ts.tenTaiSan || ts.idTaiSan}
+                            </TableCell>
+                            <TableCell align="center">
+                              <IconButton
+                                size="small"
+                                onClick={() => addMaterialRow(assetIdx)}
+                                color="primary"
+                              >
+                                <AddIcon fontSize="small" />
+                              </IconButton>
+                            </TableCell>
+                          </TableRow>
+                          {activeVatTu.length === 0 ? (
+                            <TableRow>
+                              <TableCell />
+                              <TableCell colSpan={6} align="center">
+                                <Typography
+                                  variant="body2"
+                                  color="textSecondary"
+                                  sx={{ py: 1.5 }}
                                 >
-                                  <AddIcon fontSize="small" />
-                                </IconButton>
+                                  Chưa có vật tư/linh kiện phụ tùng nào được
+                                  chọn
+                                </Typography>
                               </TableCell>
                             </TableRow>
-                            {items.map((item, rowIdx) => {
-                              const globalIdx = materialItems.indexOf(item);
-                              return (
-                                <TableRow key={`${groupLabel}-${rowIdx}`}>
-                                  <TableCell sx={{ pl: 2 }}>
-                                    {String(rowIdx + 1).padStart(2, "0")}
-                                  </TableCell>
-                                  <TableCell sx={{ width: "200px" }}>
-                                    <FieldAutoCompleted
-                                      title=""
-                                      data={allToolDetail}
-                                      labelkey="idTaiSan"
-                                      limitOptions={10}
-                                      value={item.code}
-                                      noBorder={true}
-                                      onChange={(value) => {
-                                        if (value) {
-                                          updateMaterial(
-                                            globalIdx,
-                                            "code",
-                                            value.id,
-                                          );
-                                          updateMaterial(
-                                            globalIdx,
-                                            "idVatTu",
-                                            value.idTaiSan,
-                                          );
-                                          updateMaterial(
-                                            globalIdx,
-                                            "name",
-                                            value.tenTaiSan,
-                                          );
-                                          updateMaterial(
-                                            globalIdx,
-                                            "unit",
-                                            value.donViTinh,
-                                          );
-                                        } else {
-                                          updateMaterial(globalIdx, "code", "");
-                                          updateMaterial(globalIdx, "idVatTu", "");
-                                          updateMaterial(globalIdx, "name", "");
-                                          updateMaterial(globalIdx, "unit", "");
-                                        }
-                                      }}
-                                    />
-                                  </TableCell>
-                                  <TableCell
-                                    sx={{
-                                      maxWidth: "150px",
-                                      overflow: "hidden",
-                                      textOverflow: "ellipsis",
-                                      whiteSpace: "nowrap",
+                          ) : (
+                            activeVatTu.map((item, rowIdx) => (
+                              <TableRow key={item.id || rowIdx}>
+                                <TableCell sx={{ pl: 2 }}>
+                                  {String(rowIdx + 1).padStart(2, "0")}
+                                </TableCell>
+                                <TableCell sx={{ width: "200px" }}>
+                                  <FieldAutoCompleted
+                                    title=""
+                                    data={allToolDetail}
+                                    labelkey="idTaiSan"
+                                    limitOptions={10}
+                                    value={item.idChiTietVatTu}
+                                    noBorder={true}
+                                    onChange={(value) => {
+                                      if (value) {
+                                        updateMaterial(assetIdx, item.id!, {
+                                          idChiTietVatTu: value.id,
+                                          idVatTu: value.idTaiSan,
+                                          tenVatTu: value.tenTaiSan,
+                                          donViTinh: value.donViTinh,
+                                        });
+                                      } else {
+                                        updateMaterial(assetIdx, item.id!, {
+                                          idChiTietVatTu: "",
+                                          idVatTu: "",
+                                          tenVatTu: "",
+                                          donViTinh: "",
+                                        });
+                                      }
                                     }}
+                                  />
+                                </TableCell>
+                                <TableCell
+                                  sx={{
+                                    maxWidth: "150px",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  {item.tenVatTu}
+                                </TableCell>
+                                <TableCell>{item.donViTinh}</TableCell>
+                                <TableCell>
+                                  <TextField
+                                    type="number"
+                                    value={item.soLuong}
+                                    size="small"
+                                    variant="standard"
+                                    onChange={(e) =>
+                                      updateMaterial(assetIdx, item.id!, {
+                                        soLuong: parseInt(e.target.value) || 1,
+                                      })
+                                    }
+                                    inputProps={{
+                                      min: 1,
+                                      style: { width: 36 },
+                                    }}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <TextField
+                                    value={item.ghiChu || ""}
+                                    size="small"
+                                    variant="standard"
+                                    fullWidth
+                                    onChange={(e) =>
+                                      updateMaterial(assetIdx, item.id!, {
+                                        ghiChu: e.target.value,
+                                      })
+                                    }
+                                  />
+                                </TableCell>
+                                <TableCell align="center">
+                                  <IconButton
+                                    size="small"
+                                    onClick={() =>
+                                      removeMaterialRow(assetIdx, item.id!)
+                                    }
+                                    color="error"
                                   >
-                                    {item.name}
-                                  </TableCell>
-                                  <TableCell>{item.unit}</TableCell>
-                                  <TableCell>
-                                    <TextField
-                                      type="number"
-                                      value={item.quantity}
-                                      size="small"
-                                      variant="standard"
-                                      onChange={(e) =>
-                                        updateMaterial(
-                                          globalIdx,
-                                          "quantity",
-                                          parseInt(e.target.value) || 1,
-                                        )
-                                      }
-                                      inputProps={{
-                                        min: 1,
-                                        style: { width: 36 },
-                                      }}
-                                    />
-                                  </TableCell>
-                                  <TableCell>
-                                    <TextField
-                                      value={item.note}
-                                      size="small"
-                                      variant="standard"
-                                      fullWidth
-                                      onChange={(e) =>
-                                        updateMaterial(
-                                          globalIdx,
-                                          "note",
-                                          e.target.value,
-                                        )
-                                      }
-                                    />
-                                  </TableCell>
-                                  <TableCell>
-                                    <IconButton
-                                      size="small"
-                                      onClick={() =>
-                                        removeMaterialRow(globalIdx)
-                                      }
-                                      color="error"
-                                    >
-                                      <DeleteIcon fontSize="small" />
-                                    </IconButton>
-                                  </TableCell>
-                                </TableRow>
-                              );
-                            })}
-                          </React.Fragment>
-                        );
-                      },
-                    )}
+                                    <DeleteIcon fontSize="small" />
+                                  </IconButton>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -647,7 +739,7 @@ const AcceptanceTestDialog = ({
             >
               Quy trình duyệt
               <Chip
-                label={`${signers.length} người`}
+                label={`${formik.values.nguoiKyList.length} người`}
                 size="small"
                 color="primary"
                 variant="outlined"
@@ -656,7 +748,7 @@ const AcceptanceTestDialog = ({
             </Typography>
 
             <Box sx={{ flex: 1, overflowY: "auto", mb: 2 }}>
-              {signers.length > 0 ? (
+              {formik.values.nguoiKyList.length > 0 ? (
                 <Box sx={{ position: "relative", pl: 5 }}>
                   <Box
                     sx={{
@@ -668,8 +760,7 @@ const AcceptanceTestDialog = ({
                       bgcolor: "divider",
                     }}
                   />
-                  {signers.map((s, idx) => {
-                    const user = users.find((u) => u.id === s.userId);
+                  {formik.values.nguoiKyList.map((s: any, idx: number) => {
                     const isEditingThis = editingSignerId === s.userId;
                     return (
                       <Box
@@ -802,28 +893,25 @@ const AcceptanceTestDialog = ({
                                     flexShrink: 0,
                                   }}
                                 >
-                                  {user?.name?.charAt(0) ?? "?"}
+                                  {s.userName?.charAt(0) ?? "?"}
                                 </Box>
                                 <Box>
                                   <Typography fontWeight={600} fontSize={13}>
-                                    {user?.name}
+                                    {s.userName}
                                   </Typography>
                                   <Typography
                                     variant="caption"
                                     color="text.secondary"
                                   >
-                                    {user?.title}
+                                    {users.find((u) => u.id === s.userId)
+                                      ?.title || "Người ký"}
                                   </Typography>
                                   <Box sx={{ mt: 0.5 }}>
                                     <Typography
                                       variant="caption"
                                       color="text.secondary"
                                     >
-                                      {
-                                        departments.find(
-                                          (d) => d.id === s.departmentId,
-                                        )?.name
-                                      }
+                                      {s.departmentName}
                                     </Typography>
                                   </Box>
                                 </Box>
@@ -980,13 +1068,13 @@ const AcceptanceTestDialog = ({
 
           <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>
             Hôm nay, ngày {d.getDate()} tháng {d.getMonth() + 1} năm{" "}
-            {d.getFullYear()}. Tại {location || "………………………"}
+            {d.getFullYear()}. Tại {formik.values.viTri || "………………………"}
           </Typography>
           <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>
             Chúng tôi gồm:
           </Typography>
           <Box sx={{ pl: 2, mb: 1.5 }}>
-            {signers.map((s, i) => (
+            {formik.values.nguoiKyList.map((s: any, i: number) => (
               <Box key={i} sx={{ display: "flex", gap: 3, mb: 0.25 }}>
                 <Typography variant="caption" sx={{ minWidth: 16 }}>
                   {i + 1}.
@@ -998,7 +1086,7 @@ const AcceptanceTestDialog = ({
                   {s.userName || "………………………"}
                 </Typography>
                 <Typography variant="caption" sx={{ minWidth: 120 }}>
-                  {s.position}
+                  {users.find((u) => u.id === s.userId)?.title || "Người ký"}
                 </Typography>
                 <Typography variant="caption">{s.departmentName}</Typography>
               </Box>
@@ -1006,7 +1094,8 @@ const AcceptanceTestDialog = ({
           </Box>
 
           <Typography variant="caption" display="block" sx={{ mb: 1.5 }}>
-            Cùng tiến hành nghiệm thu thiết bị: <b>{deviceName}</b>
+            Cùng tiến hành nghiệm thu thiết bị:{" "}
+            <b>{formik.values.tenThietBi}</b>
           </Typography>
 
           <TableContainer component={Paper} variant="outlined" sx={{ mb: 1.5 }}>
@@ -1044,43 +1133,50 @@ const AcceptanceTestDialog = ({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {Object.entries(groupedMaterials).map(([groupLabel, items]) => (
-                  <React.Fragment key={`pv-${groupLabel}`}>
-                    <TableRow sx={{ bgcolor: "#fafafa" }}>
-                      <TableCell sx={{ fontWeight: 700, fontSize: "0.72rem" }}>
-                        {groupLabel}
-                      </TableCell>
-                      <TableCell
-                        colSpan={5}
-                        sx={{ fontWeight: 600, fontSize: "0.72rem" }}
-                      >
-                        Thiết bị: {items[0].groupDevice}
-                      </TableCell>
-                    </TableRow>
-                    {items.map((item, ri) => (
-                      <TableRow key={`${groupLabel}-pv-${ri}`}>
-                        <TableCell sx={{ fontSize: "0.72rem", pl: 2 }}>
-                          {String(ri + 1).padStart(2, "0")}
+                {formik.values.danhSachTaiSan.map((ts, assetIdx) => {
+                  const activeVatTu = (ts.danhSachVatTu || []).filter(
+                    (v) => v.action !== Action.DELETE,
+                  );
+                  return (
+                    <React.Fragment key={`pv-${ts.id || assetIdx}`}>
+                      <TableRow sx={{ bgcolor: "#fafafa" }}>
+                        <TableCell
+                          sx={{ fontWeight: 700, fontSize: "0.72rem" }}
+                        >
+                          {String.fromCharCode(73 + assetIdx)}/
                         </TableCell>
-                        <TableCell sx={{ fontSize: "0.72rem" }}>
-                          {item.code}
-                        </TableCell>
-                        <TableCell sx={{ fontSize: "0.72rem" }}>
-                          {item.name}
-                        </TableCell>
-                        <TableCell sx={{ fontSize: "0.72rem" }}>
-                          {item.unit}
-                        </TableCell>
-                        <TableCell sx={{ fontSize: "0.72rem" }}>
-                          {item.quantity}
-                        </TableCell>
-                        <TableCell sx={{ fontSize: "0.72rem" }}>
-                          {item.note}
+                        <TableCell
+                          colSpan={5}
+                          sx={{ fontWeight: 600, fontSize: "0.72rem" }}
+                        >
+                          Thiết bị: {ts.tenTaiSan || ts.idTaiSan}
                         </TableCell>
                       </TableRow>
-                    ))}
-                  </React.Fragment>
-                ))}
+                      {activeVatTu.map((item, ri) => (
+                        <TableRow key={`pv-vt-${item.id || ri}`}>
+                          <TableCell sx={{ fontSize: "0.72rem", pl: 2 }}>
+                            {String(ri + 1).padStart(2, "0")}
+                          </TableCell>
+                          <TableCell sx={{ fontSize: "0.72rem" }}>
+                            {item.idVatTu}
+                          </TableCell>
+                          <TableCell sx={{ fontSize: "0.72rem" }}>
+                            {item.tenVatTu}
+                          </TableCell>
+                          <TableCell sx={{ fontSize: "0.72rem" }}>
+                            {item.donViTinh}
+                          </TableCell>
+                          <TableCell sx={{ fontSize: "0.72rem" }}>
+                            {item.soLuong}
+                          </TableCell>
+                          <TableCell sx={{ fontSize: "0.72rem" }}>
+                            {item.ghiChu}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </React.Fragment>
+                  );
+                })}
               </TableBody>
             </Table>
           </TableContainer>
@@ -1092,7 +1188,7 @@ const AcceptanceTestDialog = ({
             sx={{ mb: 0.5 }}
           >
             2. Kết quả kiểm tra chạy thử:{" "}
-            <span style={{ fontWeight: 400 }}>{testResult}</span>
+            <span style={{ fontWeight: 400 }}>{formik.values.ketQua}</span>
           </Typography>
           <Typography
             variant="caption"
@@ -1107,7 +1203,8 @@ const AcceptanceTestDialog = ({
             display="block"
             sx={{ mb: 0.5, borderBottom: "1px dotted #999", pb: 0.5 }}
           >
-            {acceptanceContent || "………………………………………………………………………………………………………………"}
+            {formik.values.noiDung ||
+              "………………………………………………………………………………………………………………"}
           </Typography>
           <Typography variant="caption" display="block" sx={{ mb: 2 }}>
             ………………………………………………………………………………………………………………
@@ -1124,10 +1221,10 @@ const AcceptanceTestDialog = ({
             }}
           >
             {(() => {
-              const sorted = [...(signers || [])].sort(
+              const sorted = [...(formik.values.nguoiKyList || [])].sort(
                 (a, b) => (a.order || 0) - (b.order || 0),
               );
-              const cols = sorted.map((s, idx) => ({
+              const cols = sorted.map((s) => ({
                 label: (s.departmentName || "").toUpperCase(),
                 signer: s,
               }));
@@ -1183,7 +1280,8 @@ const AcceptanceTestDialog = ({
                         color="text.secondary"
                         display="block"
                       >
-                        {col.signer.departmentName}
+                        {users.find((u) => u.id === col.signer.userId)?.title ||
+                          "Người ký"}
                       </Typography>
                     </>
                   ) : (
@@ -1207,10 +1305,18 @@ const AcceptanceTestDialog = ({
         <Button
           variant="contained"
           color="success"
-          disabled={signers.length === 0 || createMutation.isPending}
-          onClick={handleSubmit}
+          disabled={
+            formik.values.nguoiKyList.length === 0 ||
+            createMutation.isPending ||
+            updateMutation.isPending
+          }
+          onClick={formik.submitForm}
         >
-          {createMutation.isPending ? "Đang lưu..." : "Tạo biên bản"}
+          {createMutation.isPending || updateMutation.isPending
+            ? "Đang lưu..."
+            : initData
+              ? "Cập nhật"
+              : "Tạo biên bản"}
         </Button>
       </DialogActions>
     </Dialog>
