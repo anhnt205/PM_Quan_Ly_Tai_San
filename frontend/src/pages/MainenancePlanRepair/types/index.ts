@@ -205,3 +205,54 @@ export interface AcceptanceTestRecordToolData {
   donViTinh?: string;
   action?: ActionType;
 }
+
+// giám định phương tiện
+export interface VehicleInspectionRecordData {
+  id?: string;
+  idCongTy?: string;
+  idBienBan?: string;
+  loaiBienBan?: TypeBienBanType;
+  soPhieu?: string;
+  ngayGiamDinh?: string;
+  viTri?: string;
+  tinhTrang?: string;
+  noiDungKhac?: string;
+  idNguoiLap?: string;
+  nguoiLapXacNhan?: boolean;
+  idGiamDoc?: string;
+  giamDocXacNhan?: boolean;
+  share?: boolean;
+  trangThai?: number;
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+
+  // Join fields
+  tenNguoiLap?: string;
+  tenGiamDoc?: string;
+  soPhieuBienBan?: string;
+  daCoNghiemThu?: number;
+
+  danhSachChiTiet?: VehicleInspectionRecordDetailData[];
+  nguoiKyList?: any[];
+  chuKyList?: any[];
+}
+
+export interface VehicleInspectionRecordDetailData {
+  id?: string;
+  idGiamDinhPhuongTien?: string;
+  idVatTu?: string;
+  idChiTietVatTu?: string;
+  soLuong?: number;
+  tinhTrang?: string;
+  soLuongSuaChua?: number;
+  soLuongThayMoi?: number;
+  ghiChu?: string;
+
+  // View fields
+  tenVatTu?: string;
+  donViTinh?: string;
+  action?: ActionType;
+}
+
