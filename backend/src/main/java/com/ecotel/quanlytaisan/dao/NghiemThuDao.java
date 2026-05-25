@@ -38,7 +38,7 @@ public class NghiemThuDao {
                 nvGD.HoTen AS tenGiamDoc,
                 gd.SoPhieu AS soPhieuGiamDinhMayMoc,
                 (SELECT COUNT(*) FROM danhgia_vattu dg WHERE dg.IdNghiemThu = nt.Id) AS daCoDanhGiaVatTu
-            FROM nghiemthu nt
+            FROM nghiemthu_maymoc nt
                 LEFT JOIN giamdinh_maymoc gd ON nt.IdGiamDinhMayMoc = gd.Id
                 LEFT JOIN NhanVien nvLap ON nt.IdNguoiLap = nvLap.Id
                 LEFT JOIN NhanVien nvGD ON nt.IdGiamDoc = nvGD.Id
@@ -62,7 +62,7 @@ public class NghiemThuDao {
     }
 
     public NghiemThu findById(String id) {
-        String sql = "SELECT * FROM nghiemthu WHERE Id = ?";
+        String sql = "SELECT * FROM nghiemthu_maymoc WHERE Id = ?";
         List<NghiemThu> r = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(NghiemThu.class), id);
         return r.isEmpty() ? null : r.get(0);
     }
@@ -81,8 +81,8 @@ public class NghiemThuDao {
 
     public String generateNextId() {
         int currentYear = Year.now().getValue();
-        String seqName = "NGHIEMTHU";
-        String prefix = "NGHIEMTHU-" + currentYear + "-";
+        String seqName = "NGHIEMTHU_MAYMOC";
+        String prefix = "NGHIEMTHU-MM-" + currentYear + "-";
         try {
             var result = jdbcTemplate.queryForMap("SELECT SeqYear, SeqValue FROM Sequence WHERE SeqName = ?", seqName);
             int seqYear = ((Number) result.get("SeqYear")).intValue();
@@ -92,7 +92,7 @@ public class NghiemThuDao {
             }
         } catch (Exception e) {
             Integer maxSeq = jdbcTemplate.queryForObject(
-                    "SELECT COALESCE(MAX(CAST(SUBSTRING(Id, 12) AS UNSIGNED)), 0) FROM nghiemthu WHERE Id LIKE ?",
+                    "SELECT COALESCE(MAX(CAST(SUBSTRING(Id, 16) AS UNSIGNED)), 0) FROM nghiemthu_maymoc WHERE Id LIKE ?",
                     Integer.class, prefix + "%");
             int init = maxSeq == null ? 0 : maxSeq;
             jdbcTemplate.update(
@@ -107,7 +107,7 @@ public class NghiemThuDao {
     public NghiemThu insert(NghiemThu e) {
         e.setId(generateNextId());
         String sql = """
-            INSERT INTO nghiemthu (
+            INSERT INTO nghiemthu_maymoc (
                 Id, IdCongTy, IdGiamDinhMayMoc, SoPhieu, NgayNghiemThu, ViTri,
                 TenThietBi, SoDangKi, CapSuaChua, KetQua, NoiDung,
                 IdNguoiLap, NguoiLapXacNhan, IdGiamDoc, GiamDocXacNhan,
@@ -127,7 +127,7 @@ public class NghiemThuDao {
 
     public NghiemThu update(NghiemThu e) {
         String sql = """
-            UPDATE nghiemthu SET
+            UPDATE nghiemthu_maymoc SET
                 IdGiamDinhMayMoc = ?, SoPhieu = ?, NgayNghiemThu = ?, ViTri = ?,
                 TenThietBi = ?, SoDangKi = ?, CapSuaChua = ?, KetQua = ?, NoiDung = ?,
                 IdNguoiLap = ?, NguoiLapXacNhan = ?, IdGiamDoc = ?, GiamDocXacNhan = ?,
@@ -146,19 +146,19 @@ public class NghiemThuDao {
     }
 
     public int updateTrangThai(String id, Integer trangThai) {
-        int r = jdbcTemplate.update("UPDATE nghiemthu SET TrangThai = ? WHERE Id = ?", trangThai, id);
+        int r = jdbcTemplate.update("UPDATE nghiemthu_maymoc SET TrangThai = ? WHERE Id = ?", trangThai, id);
         if (r > 0) CompletableFuture.runAsync(this::refreshCache);
         return r;
     }
 
     public int delete(String id) {
-        int r = jdbcTemplate.update("DELETE FROM nghiemthu WHERE Id = ?", id);
+        int r = jdbcTemplate.update("DELETE FROM nghiemthu_maymoc WHERE Id = ?", id);
         if (r > 0) CompletableFuture.runAsync(this::refreshCache);
         return r;
     }
 
     public void batchDelete(List<String> ids) {
-        jdbcTemplate.batchUpdate("DELETE FROM nghiemthu WHERE Id = ?", ids, 50, (ps, id) -> ps.setString(1, id));
+        jdbcTemplate.batchUpdate("DELETE FROM nghiemthu_maymoc WHERE Id = ?", ids, 50, (ps, id) -> ps.setString(1, id));
         CompletableFuture.runAsync(this::refreshCache);
     }
 }

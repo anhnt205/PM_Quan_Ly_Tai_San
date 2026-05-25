@@ -1631,7 +1631,7 @@ export const useMaintenanceAcceptanceTestPageQuery = (
       dateTo,
     ],
     queryFn: async () => {
-      const res = await api.get("/nghiemthu/paged", {
+      const res = await api.get("/nghiemthu-maymoc/paged", {
         params: {
           page: page,
           size: pageSize,
@@ -1657,7 +1657,7 @@ export const useMaintenanceAcceptanceByInspectionQuery = (
   return useQuery({
     queryKey: ["acceptanceByInspection", idGiamDinh],
     queryFn: async () => {
-      const res = await api.get(`/nghiemthu/giamdinh-maymoc/${idGiamDinh}`);
+      const res = await api.get(`/nghiemthu-maymoc/giamdinh-maymoc/${idGiamDinh}`);
       return (res.data.data || res.data).map((item: any) =>
         AcceptanceTestAdapter(item),
       );
@@ -1680,7 +1680,7 @@ export const useMaintenanceAcceptanceTestMutation = () => {
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
       return (
-        await api.post("/nghiemthu", {
+        await api.post("/nghiemthu-maymoc", {
           ...data,
           nguoiTao: user?.taiKhoan?.tenDangNhap,
           ngayTao: now,
@@ -1705,7 +1705,7 @@ export const useMaintenanceAcceptanceTestMutation = () => {
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
       return (
-        await api.put(`/nghiemthu/${data.id}`, {
+        await api.put(`/nghiemthu-maymoc/${data.id}`, {
           ...data,
           ngayCapNhat: now,
           nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
@@ -1736,7 +1736,7 @@ export const useMaintenanceAcceptanceTestMutation = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      return (await api.delete(`/nghiemthu/${id}`)).data;
+      return (await api.delete(`/nghiemthu-maymoc/${id}`)).data;
     },
     onSuccess: () => {
       invalidate();
@@ -1756,7 +1756,7 @@ export const useMaintenanceAcceptanceTestMutation = () => {
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, userId }: { id: string; userId: string }) => {
       return (
-        await api.post(`/nghiemthu/capnhattrangthai?id=${id}&userId=${userId}`)
+        await api.post(`/nghiemthu-maymoc/capnhattrangthai?id=${id}&userId=${userId}`)
       ).data;
     },
     onSuccess: () => {
@@ -1772,7 +1772,7 @@ export const useMaintenanceAcceptanceTestMutation = () => {
 
   const cancelMutation = useMutation({
     mutationFn: async (id: string) => {
-      return (await api.post(`/nghiemthu/huy?id=${id}`)).data;
+      return (await api.post(`/nghiemthu-maymoc/huy?id=${id}`)).data;
     },
     onSuccess: () => {
       invalidate();
@@ -1793,7 +1793,7 @@ export const useMaintenanceAcceptanceTestMutation = () => {
     mutationFn: async (data: any[]) => {
       return (
         await api.put(
-          `/nghiemthu/batch`,
+          `/nghiemthu-maymoc/batch`,
           data.map((i) => ({
             ...i,
             ngayCapNhat: now,

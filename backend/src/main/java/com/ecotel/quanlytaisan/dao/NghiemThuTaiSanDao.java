@@ -22,7 +22,7 @@ public class NghiemThuTaiSanDao {
     public List<NghiemThuTaiSan> findByIdBienBan(String idBienBan) {
         String sql = """
             SELECT nts.*, ts.TenTaiSan, ts.DonViTinh
-            FROM nghiemthu_taisan nts
+            FROM nghiemthu_maymoc_taisan nts
                 LEFT JOIN TaiSan ts ON ts.Id = nts.IdTaiSan
             WHERE nts.IdBienBan = ?
             """;
@@ -37,7 +37,7 @@ public class NghiemThuTaiSanDao {
     public NghiemThuTaiSan findById(String id) {
         String sql = """
             SELECT nts.*, ts.TenTaiSan, ts.DonViTinh
-            FROM nghiemthu_taisan nts
+            FROM nghiemthu_maymoc_taisan nts
                 LEFT JOIN TaiSan ts ON ts.Id = nts.IdTaiSan
             WHERE nts.Id = ?
             """;
@@ -48,7 +48,7 @@ public class NghiemThuTaiSanDao {
     public List<NghiemThuVatTu> findVatTuByIdBienBanTaiSan(String idBienBanTaiSan) {
         String sql = """
             SELECT ntvt.*, cv2.Ten AS tenVatTu, cv2.DonVitinh as donViTinh
-            FROM nghiemthu_vattu ntvt
+            FROM nghiemthu_maymoc_vattu ntvt
                 LEFT JOIN CCDCVatTu cv2 ON cv2.Id = ntvt.IdVatTu
             WHERE ntvt.IdBienBanTaiSan = ?
             """;
@@ -65,12 +65,12 @@ public class NghiemThuTaiSanDao {
 
     public int insertTaiSan(NghiemThuTaiSan e) {
         if (e.getId() == null) e.setId(generateNextIdTaiSan());
-        String sql = "INSERT INTO nghiemthu_taisan (Id, IdBienBan, IdTaiSan, IdChiTietGiamDinhMayMoc) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO nghiemthu_maymoc_taisan (Id, IdBienBan, IdTaiSan, IdChiTietGiamDinhMayMoc) VALUES (?, ?, ?, ?)";
         return jdbcTemplate.update(sql, e.getId(), e.getIdBienBan(), e.getIdTaiSan(), e.getIdChiTietGiamDinhMayMoc());
     }
 
     public int[] batchInsertTaiSan(List<NghiemThuTaiSan> list) {
-        String sql = "INSERT INTO nghiemthu_taisan (Id, IdBienBan, IdTaiSan, IdChiTietGiamDinhMayMoc) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO nghiemthu_maymoc_taisan (Id, IdBienBan, IdTaiSan, IdChiTietGiamDinhMayMoc) VALUES (?, ?, ?, ?)";
         return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
@@ -88,12 +88,12 @@ public class NghiemThuTaiSanDao {
 
     public int insertVatTu(NghiemThuVatTu e) {
         if (e.getId() == null) e.setId(generateNextIdVatTu());
-        String sql = "INSERT INTO nghiemthu_vattu (Id, IdBienBanTaiSan, IdChiTietVatTu, IdVatTu, SoLuong, GhiChu) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO nghiemthu_maymoc_vattu (Id, IdBienBanTaiSan, IdChiTietVatTu, IdVatTu, SoLuong, GhiChu) VALUES (?, ?, ?, ?, ?, ?)";
         return jdbcTemplate.update(sql, e.getId(), e.getIdBienBanTaiSan(), e.getIdChiTietVatTu(), e.getIdVatTu(), e.getSoLuong(), e.getGhiChu());
     }
 
     public int[] batchInsertVatTu(List<NghiemThuVatTu> list) {
-        String sql = "INSERT INTO nghiemthu_vattu (Id, IdBienBanTaiSan, IdChiTietVatTu, IdVatTu, SoLuong, GhiChu) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO nghiemthu_maymoc_vattu (Id, IdBienBanTaiSan, IdChiTietVatTu, IdVatTu, SoLuong, GhiChu) VALUES (?, ?, ?, ?, ?, ?)";
         return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
@@ -112,12 +112,12 @@ public class NghiemThuTaiSanDao {
     }
 
     public int updateVatTu(NghiemThuVatTu e) {
-        String sql = "UPDATE nghiemthu_vattu SET IdChiTietVatTu = ?, IdVatTu = ?, SoLuong = ?, GhiChu = ? WHERE Id = ?";
+        String sql = "UPDATE nghiemthu_maymoc_vattu SET IdChiTietVatTu = ?, IdVatTu = ?, SoLuong = ?, GhiChu = ? WHERE Id = ?";
         return jdbcTemplate.update(sql, e.getIdChiTietVatTu(), e.getIdVatTu(), e.getSoLuong(), e.getGhiChu(), e.getId());
     }
 
     public int[] batchUpdateVatTu(List<NghiemThuVatTu> list) {
-        String sql = "UPDATE nghiemthu_vattu SET IdChiTietVatTu = ?, IdVatTu = ?, SoLuong = ?, GhiChu = ? WHERE Id = ?";
+        String sql = "UPDATE nghiemthu_maymoc_vattu SET IdChiTietVatTu = ?, IdVatTu = ?, SoLuong = ?, GhiChu = ? WHERE Id = ?";
         return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
@@ -139,24 +139,24 @@ public class NghiemThuTaiSanDao {
         for (NghiemThuTaiSan ts : taiSanList) {
             deleteVatTuByIdBienBanTaiSan(ts.getId());
         }
-        return jdbcTemplate.update("DELETE FROM nghiemthu_taisan WHERE IdBienBan = ?", idBienBan);
+        return jdbcTemplate.update("DELETE FROM nghiemthu_maymoc_taisan WHERE IdBienBan = ?", idBienBan);
     }
 
     public int deleteById(String id) {
         deleteVatTuByIdBienBanTaiSan(id);
-        return jdbcTemplate.update("DELETE FROM nghiemthu_taisan WHERE Id = ?", id);
+        return jdbcTemplate.update("DELETE FROM nghiemthu_maymoc_taisan WHERE Id = ?", id);
     }
 
     public int deleteVatTuByIdBienBanTaiSan(String idBienBanTaiSan) {
-        return jdbcTemplate.update("DELETE FROM nghiemthu_vattu WHERE IdBienBanTaiSan = ?", idBienBanTaiSan);
+        return jdbcTemplate.update("DELETE FROM nghiemthu_maymoc_vattu WHERE IdBienBanTaiSan = ?", idBienBanTaiSan);
     }
 
     public void batchDeleteVatTu(List<String> ids) {
-        jdbcTemplate.batchUpdate("DELETE FROM nghiemthu_vattu WHERE Id = ?", ids, 50, (ps, id) -> ps.setString(1, id));
+        jdbcTemplate.batchUpdate("DELETE FROM nghiemthu_maymoc_vattu WHERE Id = ?", ids, 50, (ps, id) -> ps.setString(1, id));
     }
 
     private List<NghiemThuTaiSan> findByIdBienBanNoEnrich(String idBienBan) {
-        String sql = "SELECT * FROM nghiemthu_taisan WHERE IdBienBan = ?";
+        String sql = "SELECT * FROM nghiemthu_maymoc_taisan WHERE IdBienBan = ?";
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(NghiemThuTaiSan.class), idBienBan);
     }
 }

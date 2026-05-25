@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/nghiemthu")
+@RequestMapping("/api/nghiemthu-maymoc")
 public class NghiemThuController {
 
     @Autowired
