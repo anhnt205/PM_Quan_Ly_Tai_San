@@ -4,7 +4,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class GiamDinhDTO {
+public class GiamDinhMayMoc {
     private String id;
     private String idCongTy;
     private String idBienBan;
@@ -34,19 +34,6 @@ public class GiamDinhDTO {
     private String nguoiTao;
     private String nguoiCapNhat;
 
-    // Join fields
-    private String tenNguoiLap;
-    private String tenGiamDoc;
-    private String soPhieuBienBan;
-    private Integer daCoNghiemThu;
-
-    // Danh sách chi tiết
-    private List<GiamDinhChiTiet> danhSachChiTiet;
-    
-    // Workflow tracking
-    private List<KyTaiLieu> chuKyList;
-    private List<NguoiKy> nguoiKyList;
-
     public Boolean getNguoiLapXacNhan() {
         return nguoiLapXacNhan != null ? nguoiLapXacNhan : false;
     }
@@ -58,4 +45,7 @@ public class GiamDinhDTO {
     public Boolean getShare() {
         return share != null ? share : false;
     }
+
+    private List<GiamDinhMayMocChiTiet> danhSachChiTiet;
+    private List<NguoiKy> nguoiKyList;
 }

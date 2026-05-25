@@ -65,12 +65,12 @@ public class NghiemThuTaiSanDao {
 
     public int insertTaiSan(NghiemThuTaiSan e) {
         if (e.getId() == null) e.setId(generateNextIdTaiSan());
-        String sql = "INSERT INTO nghiemthu_taisan (Id, IdBienBan, IdTaiSan, IdChiTietGiamDinh) VALUES (?, ?, ?, ?)";
-        return jdbcTemplate.update(sql, e.getId(), e.getIdBienBan(), e.getIdTaiSan(), e.getIdChiTietGiamDinh());
+        String sql = "INSERT INTO nghiemthu_taisan (Id, IdBienBan, IdTaiSan, IdChiTietGiamDinhMayMoc) VALUES (?, ?, ?, ?)";
+        return jdbcTemplate.update(sql, e.getId(), e.getIdBienBan(), e.getIdTaiSan(), e.getIdChiTietGiamDinhMayMoc());
     }
 
     public int[] batchInsertTaiSan(List<NghiemThuTaiSan> list) {
-        String sql = "INSERT INTO nghiemthu_taisan (Id, IdBienBan, IdTaiSan, IdChiTietGiamDinh) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO nghiemthu_taisan (Id, IdBienBan, IdTaiSan, IdChiTietGiamDinhMayMoc) VALUES (?, ?, ?, ?)";
         return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
@@ -79,7 +79,7 @@ public class NghiemThuTaiSanDao {
                 ps.setString(1, e.getId());
                 ps.setString(2, e.getIdBienBan());
                 ps.setString(3, e.getIdTaiSan());
-                ps.setString(4, e.getIdChiTietGiamDinh());
+                ps.setString(4, e.getIdChiTietGiamDinhMayMoc());
             }
             @Override
             public int getBatchSize() { return list.size(); }

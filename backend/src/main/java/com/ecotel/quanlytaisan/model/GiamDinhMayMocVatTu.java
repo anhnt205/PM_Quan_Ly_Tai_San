@@ -3,9 +3,9 @@ package com.ecotel.quanlytaisan.model;
 import lombok.Data;
 
 @Data
-public class GiamDinhVatTu {
+public class GiamDinhMayMocVatTu {
     private String id;
-    private String idChiTietGiamDinh; // FK -> giamdinh_chitiet.Id
+    private String idChiTietGiamDinhMayMoc; // FK -> giamdinh_maymoc_chitiet.Id
     private String idVatTu;
     private String idChiTietVatTu;    // FK -> CCDCVatTu.Id
     private Integer soLuong;

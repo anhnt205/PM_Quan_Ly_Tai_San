@@ -9,7 +9,6 @@ import org.springframework.stereotype.Repository;
 
 import javax.annotation.PostConstruct;
 import java.time.Year;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -52,7 +51,7 @@ public class SuaChuaDao {
                 kh.TenKeHoach AS tenKeHoach,
                 CASE 
                     WHEN EXISTS (
-                        SELECT 1 FROM giamdinh gd
+                        SELECT 1 FROM giamdinh_maymoc gd
                         WHERE gd.IdBienBan = sc.id
                     ) THEN 1 ELSE 0 
                 END as daCoGiamDinh

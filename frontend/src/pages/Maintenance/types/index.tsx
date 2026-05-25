@@ -218,7 +218,7 @@ export interface QuyTrinhSuaChuaData {
   idSuaChua: string;
   trangThaiSuaChua: number;
   bienBanGiamDinh: string;
-  idGiamDinh: string;
+  idGiamDinhMayMoc: string;
   trangThaiGiamDinh: number;
   phieuNghiemThu: string;
   idNghiemThu: string;

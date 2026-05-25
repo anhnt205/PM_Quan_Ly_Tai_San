@@ -343,7 +343,7 @@ export default function MaintenanceApprovalPage() {
         key: TypeBienBan.SU_CO,
       },
     ],
-    3: [{ field: "idGiamDinh", headerName: "Mã BB giám định" }],
+    3: [{ field: "idGiamDinhMayMoc", headerName: "Mã BB giám định" }],
     4: [{ field: "idNghiemThu", headerName: "Mã BB nghiệm thu" }],
     5: [{ field: "planId", headerName: "Mã kế hoạch" }],
     6: [{ field: "idSuCo", headerName: "Mã phiếu báo SC" }],

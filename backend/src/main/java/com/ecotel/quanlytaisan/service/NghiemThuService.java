@@ -37,8 +37,8 @@ public class NghiemThuService {
         return dto;
     }
 
-    public List<NghiemThuDTO> findByIdGiamDinh(String idGiamDinh) {
-        List<NghiemThuDTO> list = nghiemThuDao.findByIdGiamDinh(idGiamDinh);
+    public List<NghiemThuDTO> findByIdGiamDinhMayMoc(String idGiamDinhMayMoc) {
+        List<NghiemThuDTO> list = nghiemThuDao.findByIdGiamDinhMayMoc(idGiamDinhMayMoc);
         for (NghiemThuDTO item : list) {
             enrichData(item);
         }

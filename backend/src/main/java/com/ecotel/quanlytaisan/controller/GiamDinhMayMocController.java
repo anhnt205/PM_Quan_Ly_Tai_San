@@ -1,10 +1,10 @@
 package com.ecotel.quanlytaisan.controller;
 
 import com.ecotel.quanlytaisan.model.ApiResponse;
-import com.ecotel.quanlytaisan.model.GiamDinh;
-import com.ecotel.quanlytaisan.model.GiamDinhDTO;
+import com.ecotel.quanlytaisan.model.GiamDinhMayMoc;
+import com.ecotel.quanlytaisan.model.GiamDinhMayMocDTO;
 import com.ecotel.quanlytaisan.model.PageResponse;
-import com.ecotel.quanlytaisan.service.GiamDinhService;
+import com.ecotel.quanlytaisan.service.GiamDinhMayMocService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,11 +15,11 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/giamdinh")
-public class GiamDinhController {
+@RequestMapping("/api/giamdinh-maymoc")
+public class GiamDinhMayMocController {
 
     @Autowired
-    private GiamDinhService service;
+    private GiamDinhMayMocService service;
 
     @GetMapping("/paged")
     public ResponseEntity<ApiResponse<Object>> getAllPaged(
@@ -36,7 +36,7 @@ public class GiamDinhController {
             @RequestParam(value = "dateTo", required = false) String dateTo
     ) {
         try {
-            PageResponse<GiamDinhDTO> response = service.findAllPaged(
+            PageResponse<GiamDinhMayMocDTO> response = service.findAllPaged(
                     idCongTy, page, size, sortBy, sortDir, search, trangThai, userid, isSign, dateFrom, dateTo);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", response, (int) response.getTotalItems()));
         } catch (Exception e) {
@@ -48,7 +48,7 @@ public class GiamDinhController {
     @GetMapping
     public ResponseEntity<ApiResponse<Object>> getAll(@RequestParam(value = "idcongty", required = false) String idCongTy) {
         try {
-            List<GiamDinhDTO> list = service.findAll(idCongTy);
+            List<GiamDinhMayMocDTO> list = service.findAll(idCongTy);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", list, list.size()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -59,7 +59,7 @@ public class GiamDinhController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> getById(@PathVariable("id") String id) {
         try {
-            GiamDinhDTO dto = service.findByIdDTO(id);
+            GiamDinhMayMocDTO dto = service.findByIdDTO(id);
             if (dto == null) return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.failure("Không tìm thấy biên bản giám định", null));
             return ResponseEntity.ok(ApiResponse.success("Lấy thông tin thành công", dto, 1));
@@ -72,7 +72,7 @@ public class GiamDinhController {
     @GetMapping("/bienban/{idBienBan}")
     public ResponseEntity<ApiResponse<Object>> getByIdBienBan(@PathVariable("idBienBan") String idBienBan) {
         try {
-            List<GiamDinhDTO> list = service.findByIdBienBan(idBienBan);
+            List<GiamDinhMayMocDTO> list = service.findByIdBienBan(idBienBan);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", list, list.size()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -81,9 +81,9 @@ public class GiamDinhController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Object>> create(@RequestBody GiamDinh entity) {
+    public ResponseEntity<ApiResponse<Object>> create(@RequestBody GiamDinhMayMoc entity) {
         try {
-            GiamDinh created = service.insert(entity);
+            GiamDinhMayMoc created = service.insert(entity);
             return ResponseEntity.ok(ApiResponse.success("Tạo biên bản thành công", created, 1));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -92,10 +92,10 @@ public class GiamDinhController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody GiamDinh entity) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody GiamDinhMayMoc entity) {
         try {
             entity.setId(id);
-            GiamDinh updated = service.update(entity);
+            GiamDinhMayMoc updated = service.update(entity);
             return ResponseEntity.ok(ApiResponse.success("Cập nhật thành công", updated, 1));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -128,7 +128,7 @@ public class GiamDinhController {
     }
 
     @PutMapping("/batch")
-    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<GiamDinh> list) {
+    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<GiamDinhMayMoc> list) {
         try {
             service.bulkUpdate(list);
             return ResponseEntity.ok(ApiResponse.success("Cập nhật danh sách thành công", null, list.size()));
@@ -159,13 +159,14 @@ public class GiamDinhController {
                     .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
         }
     }
+
     @GetMapping("/permission-signing/{id}")
     public ResponseEntity<ApiResponse<Object>> getPermissionSigning(
             @PathVariable("id") String id,
             @RequestParam("tenDangNhap") String tenDangNhap
     ) {
         try {
-            GiamDinhDTO item = service.findByIdDTO(id);
+            GiamDinhMayMocDTO item = service.findByIdDTO(id);
             if (item == null) return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.failure("Không tìm thấy biên bản giám định với ID: " + id, null));
 

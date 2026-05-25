@@ -120,7 +120,7 @@ const processStatusChipProps = (row: QuyTrinhSuaChuaData) => {
   }
 
   // 2. Giám định
-  if (row.idGiamDinh) {
+  if (row.idGiamDinhMayMoc) {
     if (row.trangThaiGiamDinh === 3)
       return { label: "Chờ nghiệm thu", color: "warning" as const };
     return { label: "Đang giám định", color: "info" as const };
@@ -604,7 +604,7 @@ export default function MaintenanceStatPage() {
   const inspectionItems = inspectionPaged.items
     .map(InspectionAdapter)
     .map((item: any) => ({
-      ma: item.idGiamDinh || item.id,
+      ma: item.idGiamDinhMayMoc || item.id,
       trang: item.trangThai,
     }));
   const materialItems = materialPaged.items

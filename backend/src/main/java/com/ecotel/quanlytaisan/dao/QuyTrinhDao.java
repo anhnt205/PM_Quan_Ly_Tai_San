@@ -34,9 +34,9 @@ public class QuyTrinhDao {
             FROM suachua_chitiet scct
             LEFT JOIN suachua sc ON scct.IdSuaChua = sc.Id
             LEFT JOIN taisan ts ON scct.IdTaiSan = ts.Id
-            LEFT JOIN giamdinh_chitiet gdct ON gdct.IdBienBanChiTiet = scct.Id
-            LEFT JOIN giamdinh gd ON gdct.IdGiamDinh = gd.Id
-            LEFT JOIN nghiemthu_taisan ntts ON ntts.IdChiTietGiamDinh = gdct.Id
+            LEFT JOIN giamdinh_maymoc_chitiet gdct ON gdct.IdBienBanChiTiet = scct.Id
+            LEFT JOIN giamdinh_maymoc gd ON gdct.IdGiamDinhMayMoc = gd.Id
+            LEFT JOIN nghiemthu_taisan ntts ON ntts.IdChiTietGiamDinhMayMoc = gdct.Id
             LEFT JOIN nghiemthu nt ON ntts.IdBienBan = nt.Id
             WHERE 1=1
         """);
@@ -114,8 +114,8 @@ public class QuyTrinhDao {
             LEFT JOIN suachua sc ON scct.IdSuaChua = sc.Id
             LEFT JOIN taisan ts ON scct.IdTaiSan = ts.Id
             LEFT JOIN kehoachsuachua_chitiet_taisan khct ON scct.IdKeHoachChiTiet = khct.Id
-            LEFT JOIN giamdinh_chitiet gdct ON gdct.IdBienBanChiTiet = scct.Id
-            LEFT JOIN nghiemthu_taisan ntts ON ntts.IdChiTietGiamDinh = gdct.Id
+            LEFT JOIN giamdinh_maymoc_chitiet gdct ON gdct.IdBienBanChiTiet = scct.Id
+            LEFT JOIN nghiemthu_taisan ntts ON ntts.IdChiTietGiamDinhMayMoc = gdct.Id
             LEFT JOIN nghiemthu nt ON ntts.IdBienBan = nt.Id
             WHERE scct.Id = (
                 SELECT s_sub.Id 
@@ -153,8 +153,8 @@ public class QuyTrinhDao {
             SELECT COUNT(*)
             FROM suachua_chitiet scct
             LEFT JOIN taisan ts ON scct.IdTaiSan = ts.Id
-            LEFT JOIN giamdinh_chitiet gdct ON gdct.IdBienBanChiTiet = scct.Id
-            LEFT JOIN nghiemthu_taisan ntts ON ntts.IdChiTietGiamDinh = gdct.Id
+            LEFT JOIN giamdinh_maymoc_chitiet gdct ON gdct.IdBienBanChiTiet = scct.Id
+            LEFT JOIN nghiemthu_taisan ntts ON ntts.IdChiTietGiamDinhMayMoc = gdct.Id
             LEFT JOIN nghiemthu nt ON ntts.IdBienBan = nt.Id
             WHERE scct.Id = (
                 SELECT s_sub.Id 
@@ -189,8 +189,8 @@ public class QuyTrinhDao {
             SELECT (CASE WHEN nt.Id IS NOT NULL THEN 1 ELSE 0 END) as statusHistory, COUNT(*) as count
             FROM suachua_chitiet scct
             LEFT JOIN taisan ts ON scct.IdTaiSan = ts.Id
-            LEFT JOIN giamdinh_chitiet gdct ON gdct.IdBienBanChiTiet = scct.Id
-            LEFT JOIN nghiemthu_taisan ntts ON ntts.IdChiTietGiamDinh = gdct.Id
+            LEFT JOIN giamdinh_maymoc_chitiet gdct ON gdct.IdBienBanChiTiet = scct.Id
+            LEFT JOIN nghiemthu_taisan ntts ON ntts.IdChiTietGiamDinhMayMoc = gdct.Id
             LEFT JOIN nghiemthu nt ON ntts.IdBienBan = nt.Id
             WHERE scct.Id = (
                 SELECT s_sub.Id 
@@ -225,7 +225,7 @@ public class QuyTrinhDao {
                 SUM(ntvt.SoLuong) AS soLuong
             FROM nghiemthu_vattu ntvt
             JOIN nghiemthu_taisan ntts ON ntvt.IdBienBanTaiSan = ntts.Id
-            JOIN giamdinh_chitiet gdct ON ntts.IdChiTietGiamDinh = gdct.Id
+            JOIN giamdinh_maymoc_chitiet gdct ON ntts.IdChiTietGiamDinhMayMoc = gdct.Id
             JOIN nghiemthu nt ON ntts.IdBienBan = nt.Id
             LEFT JOIN suachua_chitiet scct ON gdct.IdBienBanChiTiet = scct.Id
             LEFT JOIN suachua sc ON scct.IdSuaChua = sc.Id

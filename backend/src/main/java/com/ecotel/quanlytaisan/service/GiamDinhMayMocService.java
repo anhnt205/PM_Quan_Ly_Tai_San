@@ -1,10 +1,10 @@
 package com.ecotel.quanlytaisan.service;
 
-import com.ecotel.quanlytaisan.dao.GiamDinhDao;
-import com.ecotel.quanlytaisan.dao.GiamDinhChiTietDao;
+import com.ecotel.quanlytaisan.dao.GiamDinhMayMocDao;
+import com.ecotel.quanlytaisan.dao.GiamDinhMayMocChiTietDao;
 import com.ecotel.quanlytaisan.dao.KyTaiLieuDao;
-import com.ecotel.quanlytaisan.model.GiamDinh;
-import com.ecotel.quanlytaisan.model.GiamDinhDTO;
+import com.ecotel.quanlytaisan.model.GiamDinhMayMoc;
+import com.ecotel.quanlytaisan.model.GiamDinhMayMocDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,62 +15,62 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class GiamDinhService {
+public class GiamDinhMayMocService {
 
     @Autowired
-    private GiamDinhDao giamDinhDao;
+    private GiamDinhMayMocDao giamDinhMayMocDao;
 
     @Autowired
-    private GiamDinhChiTietDao giamDinhChiTietDao;
+    private GiamDinhMayMocChiTietDao giamDinhMayMocChiTietDao;
 
     @Autowired
     private KyTaiLieuDao kyTaiLieuDao;
 
-    public List<GiamDinhDTO> findAll(String idCongTy) {
-        List<GiamDinhDTO> list = giamDinhDao.findAll(idCongTy);
-        for (GiamDinhDTO item : list) {
+    public List<GiamDinhMayMocDTO> findAll(String idCongTy) {
+        List<GiamDinhMayMocDTO> list = giamDinhMayMocDao.findAll(idCongTy);
+        for (GiamDinhMayMocDTO item : list) {
             enrichData(item);
         }
         return list;
     }
 
-    public GiamDinhDTO findByIdDTO(String id) {
-        GiamDinhDTO dto = giamDinhDao.findByIdDTO(id);
+    public GiamDinhMayMocDTO findByIdDTO(String id) {
+        GiamDinhMayMocDTO dto = giamDinhMayMocDao.findByIdDTO(id);
         if (dto != null) {
             enrichData(dto);
         }
         return dto;
     }
 
-    public List<GiamDinhDTO> findByIdBienBan(String idBienBan) {
-        List<GiamDinhDTO> list = giamDinhDao.findAll(null).stream()
+    public List<GiamDinhMayMocDTO> findByIdBienBan(String idBienBan) {
+        List<GiamDinhMayMocDTO> list = giamDinhMayMocDao.findAll(null).stream()
                 .filter(d -> idBienBan != null && idBienBan.equalsIgnoreCase(d.getIdBienBan()))
                 .collect(Collectors.toList());
-        for (GiamDinhDTO item : list) {
+        for (GiamDinhMayMocDTO item : list) {
             enrichData(item);
         }
         return list;
     }
 
-    private void enrichData(GiamDinhDTO item) {
+    private void enrichData(GiamDinhMayMocDTO item) {
         item.setChuKyList(kyTaiLieuDao.findById(item.getId()));
         item.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId()));
-        item.setDanhSachChiTiet(giamDinhChiTietDao.findByIdGiamDinh(item.getId()));
+        item.setDanhSachChiTiet(giamDinhMayMocChiTietDao.findByIdGiamDinh(item.getId()));
     }
 
     @Transactional
-    public GiamDinh insert(GiamDinh entity) {
-        return giamDinhDao.insert(entity);
+    public GiamDinhMayMoc insert(GiamDinhMayMoc entity) {
+        return giamDinhMayMocDao.insert(entity);
     }
 
     @Transactional
-    public GiamDinh update(GiamDinh entity) {
-        return giamDinhDao.update(entity);
+    public GiamDinhMayMoc update(GiamDinhMayMoc entity) {
+        return giamDinhMayMocDao.update(entity);
     }
 
     @Transactional
     public int updateTrangThai(String id, String userId) {
-        GiamDinh gd = giamDinhDao.findById(id);
+        GiamDinhMayMoc gd = giamDinhMayMocDao.findById(id);
         if (gd == null) return 0;
 
         int trangThai = gd.getTrangThai() != null ? gd.getTrangThai() : 0;
@@ -109,7 +109,7 @@ public class GiamDinhService {
         }
 
         gd.setTrangThai(trangThai);
-        GiamDinh result = giamDinhDao.update(gd);
+        GiamDinhMayMoc result = giamDinhMayMocDao.update(gd);
 
         return result != null ? result.getTrangThai() : 0;
     }
@@ -135,23 +135,23 @@ public class GiamDinhService {
 
     @Transactional
     public int huyGiamDinh(String id) {
-        return giamDinhDao.updateTrangThai(id, 2); // 2 = Hủy
+        return giamDinhMayMocDao.updateTrangThai(id, 2); // 2 = Hủy
     }
 
     @Transactional
-    public void bulkUpdate(List<GiamDinh> list) {
-        for (GiamDinh e : list) {
-            giamDinhDao.update(e);
+    public void bulkUpdate(List<GiamDinhMayMoc> list) {
+        for (GiamDinhMayMoc e : list) {
+            giamDinhMayMocDao.update(e);
         }
     }
 
     @Transactional
     public int delete(String id) {
-        giamDinhChiTietDao.deleteByIdGiamDinh(id);
-        return giamDinhDao.delete(id);
+        giamDinhMayMocChiTietDao.deleteByIdGiamDinh(id);
+        return giamDinhMayMocDao.delete(id);
     }
 
-    public PageResponse<GiamDinhDTO> findAllPaged(
+    public PageResponse<GiamDinhMayMocDTO> findAllPaged(
             String idCongTy, int page, int size,
             String sortBy, String sortDir, String search,
             Integer trangThai, String userid, Boolean isSign,
@@ -160,12 +160,12 @@ public class GiamDinhService {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
 
-        List<GiamDinhDTO> sourceList = giamDinhDao.findAll(idCongTy);
+        List<GiamDinhMayMocDTO> sourceList = giamDinhMayMocDao.findAll(idCongTy);
 
         // Turn-based filter
         if (userid != null && !userid.trim().isEmpty() && !"admin".equalsIgnoreCase(userid)) {
-            List<GiamDinhDTO> filtered = new ArrayList<>();
-            for (GiamDinhDTO item : sourceList) {
+            List<GiamDinhMayMocDTO> filtered = new ArrayList<>();
+            for (GiamDinhMayMocDTO item : sourceList) {
                 if (isSign != null && isSign) {
                     if (isNeedToSign(item, userid)) filtered.add(item);
                 } else {
@@ -177,7 +177,7 @@ public class GiamDinhService {
 
         // Count statuses
         Map<String, Long> trangThaiCounts = new HashMap<>();
-        for (GiamDinhDTO item : sourceList) {
+        for (GiamDinhMayMocDTO item : sourceList) {
             if (item.getTrangThai() != null) {
                 String key = item.getTrangThai().toString();
                 trangThaiCounts.put(key, trangThaiCounts.getOrDefault(key, 0L) + 1);
@@ -215,19 +215,19 @@ public class GiamDinhService {
         long total = sourceList.size();
         int from = Math.min(page * size, sourceList.size());
         int to   = Math.min(from + size, sourceList.size());
-        List<GiamDinhDTO> items = new ArrayList<>(sourceList.subList(from, to));
+        List<GiamDinhMayMocDTO> items = new ArrayList<>(sourceList.subList(from, to));
 
         // Enrich
-        for (GiamDinhDTO item : items) {
+        for (GiamDinhMayMocDTO item : items) {
             enrichData(item);
         }
 
-        PageResponse<GiamDinhDTO> response = new PageResponse<>(items, total, page, size);
+        PageResponse<GiamDinhMayMocDTO> response = new PageResponse<>(items, total, page, size);
         response.setTrangThaiCounts(trangThaiCounts);
         return response;
     }
 
-    public boolean isNeedToSign(GiamDinhDTO item, String userId) {
+    public boolean isNeedToSign(GiamDinhMayMocDTO item, String userId) {
         if (userId == null || userId.isEmpty()) return false;
         if (!Boolean.TRUE.equals(item.getShare())) return false;
         if (item.getTrangThai() == 2 || item.getTrangThai() == 3) return false;
@@ -263,7 +263,7 @@ public class GiamDinhService {
         return false;
     }
 
-    public boolean isUserTurnToSign(GiamDinhDTO item, String userId) {
+    public boolean isUserTurnToSign(GiamDinhMayMocDTO item, String userId) {
         if ("admin".equalsIgnoreCase(userId)) return true;
         if (userId != null && userId.equals(item.getNguoiTao())) return true;
         if (!Boolean.TRUE.equals(item.getShare())) return false;
@@ -306,7 +306,7 @@ public class GiamDinhService {
         return false;
     }
 
-    public int getPermissionSigning(GiamDinhDTO item, String tenDangNhap) {
+    public int getPermissionSigning(GiamDinhMayMocDTO item, String tenDangNhap) {
         List<Map<String, Object>> flow = new ArrayList<>();
 
         if (item.getIdNguoiLap() != null && !item.getIdNguoiLap().isEmpty()) {
@@ -356,16 +356,16 @@ public class GiamDinhService {
         return prevNotSigned ? 1 : 0;
     }
 
-    private Comparator<GiamDinhDTO> getComparator(String sortBy, String sortDir) {
+    private Comparator<GiamDinhMayMocDTO> getComparator(String sortBy, String sortDir) {
         if (sortBy == null || sortBy.trim().isEmpty()) {
             Map<Integer, Integer> pm = new HashMap<>();
             pm.put(0, 1); pm.put(1, 2); pm.put(3, 3); pm.put(2, 4);
-            return Comparator.<GiamDinhDTO>comparingInt(i -> pm.getOrDefault(i.getTrangThai(), 5))
+            return Comparator.<GiamDinhMayMocDTO>comparingInt(i -> pm.getOrDefault(i.getTrangThai(), 5))
                     .thenComparing(i -> i.getNgayTao() != null ? i.getNgayTao() : "",
                             Comparator.nullsLast(Comparator.reverseOrder()));
         }
         boolean asc = "asc".equalsIgnoreCase(sortDir);
-        Comparator<GiamDinhDTO> comp;
+        Comparator<GiamDinhMayMocDTO> comp;
         switch (sortBy.trim().toLowerCase()) {
             case "sophieu":
                 comp = Comparator.comparing(i -> i.getSoPhieu() != null ? i.getSoPhieu() : "",

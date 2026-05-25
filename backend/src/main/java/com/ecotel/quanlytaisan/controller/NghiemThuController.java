@@ -66,10 +66,10 @@ public class NghiemThuController {
         }
     }
 
-    @GetMapping("/giamdinh/{idGiamDinh}")
-    public ResponseEntity<ApiResponse<Object>> getByIdGiamDinh(@PathVariable("idGiamDinh") String idGiamDinh) {
+    @GetMapping("/giamdinh-maymoc/{idGiamDinhMayMoc}")
+    public ResponseEntity<ApiResponse<Object>> getByIdGiamDinhMayMoc(@PathVariable("idGiamDinhMayMoc") String idGiamDinhMayMoc) {
         try {
-            List<NghiemThuDTO> list = service.findByIdGiamDinh(idGiamDinh);
+            List<NghiemThuDTO> list = service.findByIdGiamDinhMayMoc(idGiamDinhMayMoc);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", list, list.size()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

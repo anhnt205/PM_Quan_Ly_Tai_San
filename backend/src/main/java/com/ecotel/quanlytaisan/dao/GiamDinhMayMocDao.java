@@ -1,7 +1,7 @@
 package com.ecotel.quanlytaisan.dao;
 
-import com.ecotel.quanlytaisan.model.GiamDinh;
-import com.ecotel.quanlytaisan.model.GiamDinhDTO;
+import com.ecotel.quanlytaisan.model.GiamDinhMayMoc;
+import com.ecotel.quanlytaisan.model.GiamDinhMayMocDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -14,12 +14,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Repository
-public class GiamDinhDao {
+public class GiamDinhMayMocDao {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    private static List<GiamDinhDTO> cache = new java.util.ArrayList<>();
+    private static List<GiamDinhMayMocDTO> cache = new java.util.ArrayList<>();
 
     @PostConstruct
     public void init() {
@@ -36,8 +36,8 @@ public class GiamDinhDao {
                 nvLap.HoTen AS tenNguoiLap,
                 nvGD.HoTen AS tenGiamDoc,
                 COALESCE(sc.SoPhieu, ktsc.SoPhieu) AS soPhieuBienBan,
-                (SELECT COUNT(*) FROM nghiemthu nt WHERE nt.IdGiamDinh = gd.Id) AS daCoNghiemThu
-            FROM giamdinh gd
+                (SELECT COUNT(*) FROM nghiemthu nt WHERE nt.IdGiamDinhMayMoc = gd.Id) AS daCoNghiemThu
+            FROM giamdinh_maymoc gd
                 LEFT JOIN suachua sc ON gd.IdBienBan = sc.Id AND gd.LoaiBienBan = 'sua_chua'
                 LEFT JOIN kiemtra_suco ktsc ON gd.IdBienBan = ktsc.Id AND gd.LoaiBienBan = 'su_co'
                 LEFT JOIN NhanVien nvLap ON gd.IdNguoiLap = nvLap.Id
@@ -47,13 +47,13 @@ public class GiamDinhDao {
 
     private void refreshCache() {
         try {
-            cache = jdbcTemplate.query(buildSelectSql(), new BeanPropertyRowMapper<>(GiamDinhDTO.class));
+            cache = jdbcTemplate.query(buildSelectSql(), new BeanPropertyRowMapper<>(GiamDinhMayMocDTO.class));
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public List<GiamDinhDTO> findAll(String idCongTy) {
+    public List<GiamDinhMayMocDTO> findAll(String idCongTy) {
         refreshCache();
         if (idCongTy == null) return new java.util.ArrayList<>(cache);
         return cache.stream()
@@ -61,16 +61,16 @@ public class GiamDinhDao {
                 .collect(Collectors.toList());
     }
 
-    public GiamDinh findById(String id) {
-        String sql = "SELECT * FROM giamdinh WHERE Id = ?";
-        List<GiamDinh> r = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(GiamDinh.class), id);
+    public GiamDinhMayMoc findById(String id) {
+        String sql = "SELECT * FROM giamdinh_maymoc WHERE Id = ?";
+        List<GiamDinhMayMoc> r = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(GiamDinhMayMoc.class), id);
         return r.isEmpty() ? null : r.get(0);
     }
 
-    public GiamDinhDTO findByIdDTO(String id) {
+    public GiamDinhMayMocDTO findByIdDTO(String id) {
         String sql = buildSelectSql() + " WHERE gd.Id = ?";
         try {
-            return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(GiamDinhDTO.class), id);
+            return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(GiamDinhMayMocDTO.class), id);
         } catch (Exception e) { return null; }
     }
 
@@ -87,7 +87,7 @@ public class GiamDinhDao {
             }
         } catch (Exception e) {
             Integer maxSeq = jdbcTemplate.queryForObject(
-                    "SELECT COALESCE(MAX(CAST(SUBSTRING(Id, 9) AS UNSIGNED)), 0) FROM giamdinh WHERE Id LIKE ?",
+                    "SELECT COALESCE(MAX(CAST(SUBSTRING(Id, 9) AS UNSIGNED)), 0) FROM giamdinh_maymoc WHERE Id LIKE ?",
                     Integer.class, prefix + "%");
             int init = maxSeq == null ? 0 : maxSeq;
             jdbcTemplate.update(
@@ -99,10 +99,10 @@ public class GiamDinhDao {
         return prefix + String.format("%04d", next);
     }
 
-    public GiamDinh insert(GiamDinh e) {
+    public GiamDinhMayMoc insert(GiamDinhMayMoc e) {
         e.setId(generateNextId());
         String sql = """
-            INSERT INTO giamdinh (
+            INSERT INTO giamdinh_maymoc (
                 Id, IdCongTy, IdBienBan, LoaiBienBan, SoPhieu, NgayGiamDinh, ViTri,
                 SoDeLaiPhucHoi, SoDeLamPheLieu, SoLuongHuy,
                 IdNguoiLap, NguoiLapXacNhan, IdGiamDoc, GiamDocXacNhan,
@@ -120,9 +120,9 @@ public class GiamDinhDao {
         return null;
     }
 
-    public GiamDinh update(GiamDinh e) {
+    public GiamDinhMayMoc update(GiamDinhMayMoc e) {
         String sql = """
-            UPDATE giamdinh SET
+            UPDATE giamdinh_maymoc SET
                 IdBienBan = ?, LoaiBienBan = ?, SoPhieu = ?, NgayGiamDinh = ?, ViTri = ?,
                 SoDeLaiPhucHoi = ?, SoDeLamPheLieu = ?, SoLuongHuy = ?,
                 IdNguoiLap = ?, NguoiLapXacNhan = ?, IdGiamDoc = ?, GiamDocXacNhan = ?,
@@ -141,19 +141,19 @@ public class GiamDinhDao {
     }
 
     public int updateTrangThai(String id, Integer trangThai) {
-        int r = jdbcTemplate.update("UPDATE giamdinh SET TrangThai = ? WHERE Id = ?", trangThai, id);
+        int r = jdbcTemplate.update("UPDATE giamdinh_maymoc SET TrangThai = ? WHERE Id = ?", trangThai, id);
         if (r > 0) CompletableFuture.runAsync(this::refreshCache);
         return r;
     }
 
     public int delete(String id) {
-        int r = jdbcTemplate.update("DELETE FROM giamdinh WHERE Id = ?", id);
+        int r = jdbcTemplate.update("DELETE FROM giamdinh_maymoc WHERE Id = ?", id);
         if (r > 0) CompletableFuture.runAsync(this::refreshCache);
         return r;
     }
 
     public void batchDelete(List<String> ids) {
-        jdbcTemplate.batchUpdate("DELETE FROM giamdinh WHERE Id = ?", ids, 50, (ps, id) -> ps.setString(1, id));
+        jdbcTemplate.batchUpdate("DELETE FROM giamdinh_maymoc WHERE Id = ?", ids, 50, (ps, id) -> ps.setString(1, id));
         CompletableFuture.runAsync(this::refreshCache);
     }
 }

@@ -107,7 +107,7 @@ const AcceptanceTestDialog = ({
     initialValues: {
       id: "",
       idCongTy: CongTy.CT001,
-      idGiamDinh: inspectionRecord?.id || "",
+      idGiamDinhMayMoc: inspectionRecord?.id || "",
       soPhieu: "",
       ngayNghiemThu: dayjs().format("YYYY-MM-DD"),
       viTri: "",
@@ -153,7 +153,7 @@ const AcceptanceTestDialog = ({
           id: actualTsId,
           idBienBan: values.id || "",
           idTaiSan: ts.idTaiSan,
-          idChiTietGiamDinh: ts.idChiTietGiamDinh,
+          idChiTietGiamDinhMayMoc: ts.idChiTietGiamDinhMayMoc,
           danhSachVatTu: (ts.danhSachVatTu || []).map((vt) => ({
             id: vt.id ? vt.id : generateCode("NTVT-"),
             idBienBanTaiSan: actualTsId,
@@ -196,7 +196,7 @@ const AcceptanceTestDialog = ({
         formik.setValues({
           id: initData.id ?? "",
           idCongTy: initData.idCongTy ?? CongTy.CT001,
-          idGiamDinh: initData.idGiamDinh ?? "",
+          idGiamDinhMayMoc: initData.idGiamDinhMayMoc ?? "",
           soPhieu: initData.soPhieu ?? "",
           ngayNghiemThu: initData.ngayNghiemThu ?? "",
           viTri: initData.viTri ?? "",
@@ -237,7 +237,7 @@ const AcceptanceTestDialog = ({
               list.push({
                 id: tsId,
                 idTaiSan: entry.idTaiSan || "",
-                idChiTietGiamDinh: entry.id || "",
+                idChiTietGiamDinhMayMoc: entry.id || "",
                 tenTaiSan: entry.tenTaiSan || "",
                 donViTinh: entry.donViTinh || "Cái",
                 danhSachVatTu: activeVatTu.map((vt: any, vtIdx: number) => {
@@ -261,7 +261,7 @@ const AcceptanceTestDialog = ({
               list.push({
                 id: tsId,
                 idTaiSan: entry.idTaiSan || "",
-                idChiTietGiamDinh: entry.id || "",
+                idChiTietGiamDinhMayMoc: entry.id || "",
                 tenTaiSan: entry.tenTaiSan || "",
                 donViTinh: entry.donViTinh || "Cái",
                 danhSachVatTu: [
@@ -283,7 +283,7 @@ const AcceptanceTestDialog = ({
         formik.setValues({
           id: "",
           idCongTy: CongTy.CT001,
-          idGiamDinh: inspectionRecord?.id || "",
+          idGiamDinhMayMoc: inspectionRecord?.id || "",
           soPhieu: `BB-NT-${repairRequest?.id ?? ""}`,
           ngayNghiemThu: dayjs().format("YYYY-MM-DD"),
           viTri: "",

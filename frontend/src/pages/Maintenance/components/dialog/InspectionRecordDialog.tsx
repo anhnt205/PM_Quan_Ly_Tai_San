@@ -172,7 +172,7 @@ const InspectionRecordDialog = ({
             idBienBanChiTiet: e.idBienBanChiTiet,
             danhSachVatTu: (e.danhSachVatTu || []).map((vt) => ({
               id: vt.id ? vt.id : generateCode("GDVT_"),
-              idChiTietGiamDinh: actualDetailId,
+              idChiTietGiamDinhMayMoc: actualDetailId,
               idVatTu: vt.idVatTu,
               idChiTietVatTu: vt.idChiTietVatTu,
               soLuong: vt.soLuong,
@@ -287,7 +287,7 @@ const InspectionRecordDialog = ({
   const addMaterialRow = (assetIdx: number) => {
     const newMaterial: InspectionRecordVatTuData = {
       id: "GDVT_" + Math.random().toString(36).substr(2, 9),
-      idChiTietGiamDinh: formik.values.danhSachChiTiet[assetIdx].id,
+      idChiTietGiamDinhMayMoc: formik.values.danhSachChiTiet[assetIdx].id,
       idVatTu: "",
       idChiTietVatTu: "",
       soLuong: 1,

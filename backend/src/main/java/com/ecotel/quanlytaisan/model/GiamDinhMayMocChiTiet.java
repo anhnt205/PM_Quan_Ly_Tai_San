@@ -1,16 +1,17 @@
 package com.ecotel.quanlytaisan.model;
 
 import lombok.Data;
+import java.util.List;
 
 @Data
-public class GiamDinhChiTiet {
+public class GiamDinhMayMocChiTiet {
     private String id;
-    private String idGiamDinh;
+    private String idGiamDinhMayMoc;
     private String idTaiSan;
     private String idBienBanChiTiet;
 
     // Danh sách vật tư đi kèm tài sản
-    private java.util.List<GiamDinhVatTu> danhSachVatTu;
+    private List<GiamDinhMayMocVatTu> danhSachVatTu;
 
     // Audit
     private String ngayTao;

@@ -235,7 +235,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
   const availableDevices = (incident?.danhSachTaiSan || []).filter(
-    (d: any) => d?.daCoLenhSuaChua !== 1,
+    (d: any) => d?.daKiemTraSuCo !== 1,
   );
   const handleSelectAll = () =>
     setSelectedDeviceIds(
@@ -545,7 +545,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                       {isBBExpanded &&
                         inspectionRecords.map((insp: any) => {
                           const acceptances = acceptanceTestRecords.filter(
-                            (a: any) => a.idGiamDinh === insp.id,
+                            (a: any) => a.idGiamDinhMayMoc === insp.id,
                           );
                           const isInspExpanded = expandedInspections === (insp.id ?? "");
 
@@ -707,7 +707,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                                             isEdit={acc.trangThai === 0}
                                             onEdit={() => {
                                               setSelectedAcc(acc);
-                                              setAcceptanceParentInspId(acc.idGiamDinh);
+                                              setAcceptanceParentInspId(acc.idGiamDinhMayMoc);
                                             }}
                                             editTooltip="Chỉnh sửa BB Nghiệm thu"
                                             editColor="primary"
@@ -820,7 +820,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
 
       {(acceptanceParentInspId || selectedAcc) &&
         (() => {
-          const parentId = selectedAcc ? selectedAcc.idGiamDinh : acceptanceParentInspId;
+          const parentId = selectedAcc ? selectedAcc.idGiamDinhMayMoc : acceptanceParentInspId;
           const parentInsp = inspectionRecords.find(
             (r: any) => r.id === parentId,
           );

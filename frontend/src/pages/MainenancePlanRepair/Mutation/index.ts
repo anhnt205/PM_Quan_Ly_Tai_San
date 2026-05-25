@@ -999,7 +999,7 @@ export const useMaintenanceInspectionPageQuery = (
       dateTo,
     ],
     queryFn: async () => {
-      const res = await api.get("/giamdinh/paged", {
+      const res = await api.get("/giamdinh-maymoc/paged", {
         params: {
           page: page,
           size: pageSize,
@@ -1022,7 +1022,7 @@ export const useMaintenanceInspectionByRepairQuery = (idSuaChua?: string) => {
   return useQuery({
     queryKey: ["inspectionByRepair", idSuaChua],
     queryFn: async () => {
-      const res = await api.get(`/giamdinh/bienban/${idSuaChua}`);
+      const res = await api.get(`/giamdinh-maymoc/bienban/${idSuaChua}`);
       const data = (res.data.data || res.data || []).map((item: any) =>
         InspectionAdapter(item),
       );
@@ -1036,7 +1036,7 @@ export const useMaintenanceInspectionByBienBanQuery = (idBienBan?: string) => {
   return useQuery({
     queryKey: ["inspectionByBienBan", idBienBan],
     queryFn: async () => {
-      const res = await api.get(`/giamdinh/bienban/${idBienBan}`);
+      const res = await api.get(`/giamdinh-maymoc/bienban/${idBienBan}`);
       const data = (res.data.data || res.data || []).map((item: any) =>
         InspectionAdapter(item),
       );
@@ -1056,7 +1056,7 @@ export const useMaintenanceInspectionMutation = () => {
     mutationFn: async (data: any[]) => {
       return (
         await api.post(
-          "/giamdinh-chitiet/batch",
+          "/giamdinh-maymoc-chitiet/batch",
           data.map((i: any) => ({
             ...i,
             nguoiTao: user?.taiKhoan?.tenDangNhap,
@@ -1071,7 +1071,7 @@ export const useMaintenanceInspectionMutation = () => {
     mutationFn: async (data: any[]) => {
       return (
         await api.put(
-          `/giamdinh-chitiet/batch`,
+          `/giamdinh-maymoc-chitiet/batch`,
           data.map((i: any) => ({
             ...i,
             ngayCapNhat: now,
@@ -1084,20 +1084,20 @@ export const useMaintenanceInspectionMutation = () => {
 
   const deleteChiTietManyMutation = useMutation({
     mutationFn: async (ids: string[]) => {
-      return (await api.delete(`/giamdinh-chitiet/batch`, { data: ids })).data;
+      return (await api.delete(`/giamdinh-maymoc-chitiet/batch`, { data: ids })).data;
     },
   });
 
   // --- API VẬT TƯ THEO TÀI SẢN ---
   const batchInsertVatTuMutation = useMutation({
     mutationFn: async (data: any[]) => {
-      return (await api.post("/giamdinh-chitiet/vattu/batch", data)).data;
+      return (await api.post("/giamdinh-maymoc-chitiet/vattu/batch", data)).data;
     },
   });
 
   const deleteVatTuBatchMutation = useMutation({
     mutationFn: async (ids: string[]) => {
-      return (await api.delete("/giamdinh-chitiet/vattu/batch", { data: ids }))
+      return (await api.delete("/giamdinh-maymoc-chitiet/vattu/batch", { data: ids }))
         .data;
     },
   });
@@ -1124,7 +1124,7 @@ export const useMaintenanceInspectionMutation = () => {
       // 1. Tạo mới tài sản chi tiết
       if (createItems.length > 0) {
         createChiTietManyMutation.mutate(
-          createItems.map((i: any) => ({ ...i, idGiamDinh: giamDinhId })),
+          createItems.map((i: any) => ({ ...i, idGiamDinhMayMoc: giamDinhId })),
         );
 
         // Thu thập tất cả vật tư của tài sản mới để lưu
@@ -1132,7 +1132,7 @@ export const useMaintenanceInspectionMutation = () => {
           if (item.danhSachVatTu && item.danhSachVatTu.length > 0) {
             const mapped = item.danhSachVatTu.map((vt: any) => ({
               ...vt,
-              idChiTietGiamDinh: item.id,
+              idChiTietGiamDinhMayMoc: item.id,
             }));
             return [...acc, ...mapped];
           }
@@ -1147,7 +1147,7 @@ export const useMaintenanceInspectionMutation = () => {
       // 2. Cập nhật tài sản chi tiết cũ
       if (updateItems.length > 0) {
         updateChiTietManyMutation.mutate(
-          updateItems.map((i: any) => ({ ...i, idGiamDinh: giamDinhId })),
+          updateItems.map((i: any) => ({ ...i, idGiamDinhMayMoc: giamDinhId })),
         );
 
         // Xử lý lưu/sửa/xóa danh sách vật tư lồng bên dưới từng tài sản cũ
@@ -1167,14 +1167,14 @@ export const useMaintenanceInspectionMutation = () => {
               batchInsertVatTuMutation.mutate(
                 vtCreate.map((v: any) => ({
                   ...v,
-                  idChiTietGiamDinh: item.id,
+                  idChiTietGiamDinhMayMoc: item.id,
                 })),
               );
             }
             if (vtUpdate.length > 0) {
               vtUpdate.forEach((v: any) => {
                 api
-                  .put(`/giamdinh-chitiet/vattu/${v.id}`, v)
+                  .put(`/giamdinh-maymoc-chitiet/vattu/${v.id}`, v)
                   .catch(console.error);
               });
             }
@@ -1231,7 +1231,7 @@ export const useMaintenanceInspectionMutation = () => {
   const createMutation = useMutation({
     mutationFn: async (data: InspectionRecordData) => {
       return (
-        await api.post("/giamdinh", {
+        await api.post("/giamdinh-maymoc", {
           ...data,
           nguoiTao: user?.taiKhoan?.tenDangNhap,
           ngayTao: now,
@@ -1260,7 +1260,7 @@ export const useMaintenanceInspectionMutation = () => {
   const updateMutation = useMutation({
     mutationFn: async (data: InspectionRecordData) => {
       return (
-        await api.put(`/giamdinh/${data.id}`, {
+        await api.put(`/giamdinh-maymoc/${data.id}`, {
           ...data,
           ngayCapNhat: now,
           nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
@@ -1290,7 +1290,7 @@ export const useMaintenanceInspectionMutation = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      return (await api.delete(`/giamdinh/${id}`)).data;
+      return (await api.delete(`/giamdinh-maymoc/${id}`)).data;
     },
     onSuccess: (res: any) => {
       if (res.success || res.id) {
@@ -1311,7 +1311,7 @@ export const useMaintenanceInspectionMutation = () => {
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, userId }: { id: string; userId: string }) => {
       return (
-        await api.post(`/giamdinh/capnhattrangthai?id=${id}&userId=${userId}`)
+        await api.post(`/giamdinh-maymoc/capnhattrangthai?id=${id}&userId=${userId}`)
       ).data;
     },
     onSuccess: (res: any) => {
@@ -1331,7 +1331,7 @@ export const useMaintenanceInspectionMutation = () => {
 
   const cancelMutation = useMutation({
     mutationFn: async (id: string) => {
-      return (await api.post(`/giamdinh/huy?id=${id}`)).data;
+      return (await api.post(`/giamdinh-maymoc/huy?id=${id}`)).data;
     },
     onSuccess: (res: any) => {
       if (res.success || res.id || res > 0) {
@@ -1350,7 +1350,7 @@ export const useMaintenanceInspectionMutation = () => {
     mutationFn: async (data: InspectionRecordData[]) => {
       return (
         await api.put(
-          `/giamdinh/batch`,
+          `/giamdinh-maymoc/batch`,
           data.map((i) => ({
             ...i,
             ngayCapNhat: now,
@@ -1434,7 +1434,7 @@ export const useMaintenanceAcceptanceByInspectionQuery = (
   return useQuery({
     queryKey: ["acceptanceByInspection", idGiamDinh],
     queryFn: async () => {
-      const res = await api.get(`/nghiemthu/giamdinh/${idGiamDinh}`);
+      const res = await api.get(`/nghiemthu/giamdinh-maymoc/${idGiamDinh}`);
       return (res.data.data || res.data).map((item: any) =>
         AcceptanceTestAdapter(item),
       );

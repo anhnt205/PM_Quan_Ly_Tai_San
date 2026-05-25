@@ -1,9 +1,10 @@
 package com.ecotel.quanlytaisan.model;
 
 import lombok.Data;
+import java.util.List;
 
 @Data
-public class GiamDinh {
+public class GiamDinhMayMocDTO {
     private String id;
     private String idCongTy;
     private String idBienBan;
@@ -33,6 +34,19 @@ public class GiamDinh {
     private String nguoiTao;
     private String nguoiCapNhat;
 
+    // Join fields
+    private String tenNguoiLap;
+    private String tenGiamDoc;
+    private String soPhieuBienBan;
+    private Integer daCoNghiemThu;
+
+    // Danh sách chi tiết
+    private List<GiamDinhMayMocChiTiet> danhSachChiTiet;
+    
+    // Workflow tracking
+    private List<KyTaiLieu> chuKyList;
+    private List<NguoiKy> nguoiKyList;
+
     public Boolean getNguoiLapXacNhan() {
         return nguoiLapXacNhan != null ? nguoiLapXacNhan : false;
     }
@@ -44,7 +58,4 @@ public class GiamDinh {
     public Boolean getShare() {
         return share != null ? share : false;
     }
-
-    private java.util.List<GiamDinhChiTiet> danhSachChiTiet;
-    private java.util.List<NguoiKy> nguoiKyList;
 }

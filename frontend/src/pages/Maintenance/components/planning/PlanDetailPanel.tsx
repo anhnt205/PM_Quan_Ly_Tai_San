@@ -986,7 +986,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
         (() => {
           if (selectedAcc) {
             const parentInsp = inspectionRecords.find(
-              (r: any) => r.id === selectedAcc.idGiamDinh,
+              (r: any) => r.id === selectedAcc.idGiamDinhMayMoc,
             );
             const parentReq = parentInsp
               ? maintenanceRepairByPlan.find(

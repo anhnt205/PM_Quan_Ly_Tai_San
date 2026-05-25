@@ -7,7 +7,7 @@ import java.util.List;
 public class NghiemThu {
     private String id;
     private String idCongTy;
-    private String idGiamDinh;
+    private String idGiamDinhMayMoc;
     private String soPhieu;
     private String ngayNghiemThu;
     private String viTri;

@@ -302,7 +302,7 @@ export default function MaintenanceRecordPage() {
       { field: "idSuaChua", headerName: "Mã lệnh SC" },
       { field: "incidentInspectionId", headerName: "Mã BB kiểm tra SC" },
     ],
-    3: [{ field: "idGiamDinh", headerName: "Mã BB giám định" }],
+    3: [{ field: "idGiamDinhMayMoc", headerName: "Mã BB giám định" }],
     4: [{ field: "idNghiemThu", headerName: "Mã BB nghiệm thu" }],
     5: [{ field: "planId", headerName: "Mã kế hoạch" }],
     6: [{ field: "idSuCo", headerName: "Mã phiếu báo SC" }],

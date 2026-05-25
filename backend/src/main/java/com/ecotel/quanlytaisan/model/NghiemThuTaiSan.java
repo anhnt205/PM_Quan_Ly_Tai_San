@@ -8,7 +8,7 @@ public class NghiemThuTaiSan {
     private String id;
     private String idBienBan;   // FK -> nghiemthu.Id
     private String idTaiSan;    // FK -> taisan.Id
-    private String idChiTietGiamDinh; // FK -> giamdinh_chitiet.Id
+    private String idChiTietGiamDinhMayMoc; // FK -> giamdinh_maymoc_chitiet.Id
 
     // View fields
     private String tenTaiSan;

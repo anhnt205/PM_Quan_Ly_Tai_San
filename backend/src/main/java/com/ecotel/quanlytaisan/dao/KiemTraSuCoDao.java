@@ -32,7 +32,7 @@ public class KiemTraSuCoDao {
                 nvLap.HoTen AS tenNguoiLap, nvGD.HoTen AS tenGiamDoc,
                 CASE 
                     WHEN EXISTS (
-                        SELECT 1 FROM giamdinh gd
+                        SELECT 1 FROM giamdinh_maymoc gd
                         WHERE gd.IdBienBan = kt.Id AND gd.LoaiBienBan = 'su_co'
                     ) THEN 1 ELSE 0 
                 END as daCoGiamDinh

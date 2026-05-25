@@ -1,9 +1,9 @@
 package com.ecotel.quanlytaisan.controller;
 
 import com.ecotel.quanlytaisan.model.ApiResponse;
-import com.ecotel.quanlytaisan.model.GiamDinhChiTiet;
-import com.ecotel.quanlytaisan.model.GiamDinhVatTu;
-import com.ecotel.quanlytaisan.service.GiamDinhChiTietService;
+import com.ecotel.quanlytaisan.model.GiamDinhMayMocChiTiet;
+import com.ecotel.quanlytaisan.model.GiamDinhMayMocVatTu;
+import com.ecotel.quanlytaisan.service.GiamDinhMayMocChiTietService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,16 +12,16 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/giamdinh-chitiet")
-public class GiamDinhChiTietController {
+@RequestMapping("/api/giamdinh-maymoc-chitiet")
+public class GiamDinhMayMocChiTietController {
 
     @Autowired
-    private GiamDinhChiTietService service;
+    private GiamDinhMayMocChiTietService service;
 
-    @GetMapping("/giamdinh/{idGiamDinh}")
-    public ResponseEntity<ApiResponse<Object>> getByGiamDinh(@PathVariable("idGiamDinh") String idGiamDinh) {
+    @GetMapping("/giamdinh/{idGiamDinhMayMoc}")
+    public ResponseEntity<ApiResponse<Object>> getByGiamDinh(@PathVariable("idGiamDinhMayMoc") String idGiamDinhMayMoc) {
         try {
-            List<GiamDinhChiTiet> list = service.findByIdGiamDinh(idGiamDinh);
+            List<GiamDinhMayMocChiTiet> list = service.findByIdGiamDinh(idGiamDinhMayMoc);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", list, list.size()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -30,7 +30,7 @@ public class GiamDinhChiTietController {
     }
 
     @PostMapping("/batch")
-    public ResponseEntity<ApiResponse<Object>> batchInsert(@RequestBody List<GiamDinhChiTiet> list) {
+    public ResponseEntity<ApiResponse<Object>> batchInsert(@RequestBody List<GiamDinhMayMocChiTiet> list) {
         try {
             int[] r = service.batchInsert(list);
             return ResponseEntity.ok(ApiResponse.success("Tạo danh sách thành công", null, r.length));
@@ -41,7 +41,7 @@ public class GiamDinhChiTietController {
     }
 
     @PutMapping("/batch")
-    public ResponseEntity<ApiResponse<Object>> batchUpdate(@RequestBody List<GiamDinhChiTiet> list) {
+    public ResponseEntity<ApiResponse<Object>> batchUpdate(@RequestBody List<GiamDinhMayMocChiTiet> list) {
         try {
             int[] r = service.batchUpdate(list);
             return ResponseEntity.ok(ApiResponse.success("Cập nhật danh sách thành công", null, r.length));
@@ -62,12 +62,12 @@ public class GiamDinhChiTietController {
         }
     }
 
-    // --- ENDPOINTS CHO VẬT TƯ CHI TIẾT (giamdinh_vattu) ---
+    // --- ENDPOINTS CHO VẬT TƯ CHI TIẾT (giamdinh_maymoc_vattu) ---
 
-    @GetMapping("/vattu/{idChiTietGiamDinh}")
-    public ResponseEntity<ApiResponse<Object>> getVatTuByChiTietGiamDinh(@PathVariable("idChiTietGiamDinh") String idChiTietGiamDinh) {
+    @GetMapping("/vattu/{idChiTietGiamDinhMayMoc}")
+    public ResponseEntity<ApiResponse<Object>> getVatTuByChiTietGiamDinh(@PathVariable("idChiTietGiamDinhMayMoc") String idChiTietGiamDinhMayMoc) {
         try {
-            List<GiamDinhVatTu> list = service.findVatTuByIdChiTietGiamDinh(idChiTietGiamDinh);
+            List<GiamDinhMayMocVatTu> list = service.findVatTuByIdChiTietGiamDinh(idChiTietGiamDinhMayMoc);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách vật tư thành công", list, list.size()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -76,7 +76,7 @@ public class GiamDinhChiTietController {
     }
 
     @PostMapping("/vattu/batch")
-    public ResponseEntity<ApiResponse<Object>> batchInsertVatTu(@RequestBody List<GiamDinhVatTu> list) {
+    public ResponseEntity<ApiResponse<Object>> batchInsertVatTu(@RequestBody List<GiamDinhMayMocVatTu> list) {
         try {
             int[] r = service.batchInsertVatTu(list);
             return ResponseEntity.ok(ApiResponse.success("Tạo danh sách vật tư thành công", null, r.length));
@@ -87,7 +87,7 @@ public class GiamDinhChiTietController {
     }
 
     @PutMapping("/vattu/{id}")
-    public ResponseEntity<ApiResponse<Object>> updateVatTu(@PathVariable("id") String id, @RequestBody GiamDinhVatTu entity) {
+    public ResponseEntity<ApiResponse<Object>> updateVatTu(@PathVariable("id") String id, @RequestBody GiamDinhMayMocVatTu entity) {
         try {
             entity.setId(id);
             int r = service.updateVatTu(entity);
