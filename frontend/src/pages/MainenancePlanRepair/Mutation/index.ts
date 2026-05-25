@@ -1454,163 +1454,6 @@ export const useMaintenanceAcceptanceTestMutation = () => {
     queryClient.invalidateQueries({ queryKey: ["inspectionByBienBan"] });
   };
 
-  // --- Tài sản trong biên bản ---
-  const batchInsertTaiSanMutation = useMutation({
-    mutationFn: async (data: any[]) => {
-      return (await api.post("/nghiemthu-taisan/taisan/batch", data)).data;
-    },
-  });
-
-  const deleteTaiSanMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return (await api.delete(`/nghiemthu-taisan/taisan/${id}`)).data;
-    },
-  });
-
-  // --- Vật tư trong từng tài sản ---
-  const batchInsertVatTuMutation = useMutation({
-    mutationFn: async (data: any[]) => {
-      return (await api.post("/nghiemthu-taisan/vattu/batch", data)).data;
-    },
-  });
-
-  const deleteVatTuBatchMutation = useMutation({
-    mutationFn: async (ids: string[]) => {
-      return (await api.delete("/nghiemthu-taisan/vattu/batch", { data: ids }))
-        .data;
-    },
-  });
-
-  const batchUpdateVatTuMutation = useMutation({
-    mutationFn: async (data: any[]) => {
-      return (await api.put("/nghiemthu-taisan/vattu/batch", data)).data;
-    },
-  });
-
-  // --- Xử lý sub-records sau khi tạo/cập nhật biên bản ---
-  const handleSubRecords = (nghiemThuId: string, variables: any) => {
-    // Xử lý danh sách tài sản
-    if (variables.danhSachTaiSan && variables.danhSachTaiSan.length > 0) {
-      const createTs = variables.danhSachTaiSan.filter(
-        (i: any) => i.action === Action.CREATE || !i.id,
-      );
-      const deleteTs = variables.danhSachTaiSan.filter(
-        (i: any) => i.action === Action.DELETE && i.id,
-      );
-      const updateTs = variables.danhSachTaiSan.filter(
-        (i: any) => i.action === Action.UPDATE && i.id,
-      );
-
-      if (createTs.length > 0) {
-        batchInsertTaiSanMutation
-          .mutateAsync(
-            createTs.map((i: any) => ({ ...i, idBienBan: nghiemThuId })),
-          )
-          .then(() => {
-            // Thu thập tất cả vật tư từ các tài sản mới sau khi tài sản đã được tạo thành công
-            const allVatTu = createTs.reduce((acc: any[], ts: any) => {
-              const activeVatTu = (ts.danhSachVatTu || []).filter(
-                (v: any) => v.action !== Action.DELETE,
-              );
-              if (activeVatTu.length > 0) {
-                const mappedVatTu = activeVatTu.map((vt: any) => ({
-                  ...vt,
-                  id: null,
-                  idBienBanTaiSan: ts.id,
-                }));
-                return [...acc, ...mappedVatTu];
-              }
-              return acc;
-            }, []);
-
-            if (allVatTu.length > 0) {
-              batchInsertVatTuMutation.mutate(allVatTu);
-            }
-          })
-          .catch((err) => {
-            console.error("Lỗi khi thêm thiết bị nghiệm thu:", err);
-          });
-      }
-
-      // Xử lý vật tư cho các tài sản cũ đang được cập nhật
-      if (updateTs.length > 0) {
-        const createVtList: any[] = [];
-        const deleteVtIds: string[] = [];
-        const updateVtList: any[] = [];
-
-        updateTs.forEach((ts: any) => {
-          (ts.danhSachVatTu || []).forEach((vt: any) => {
-            if (
-              (vt.action === Action.CREATE || !vt.id) &&
-              vt.action !== Action.DELETE &&
-              vt.action !== Action.UPDATE
-            ) {
-              createVtList.push({
-                ...vt,
-                id: null,
-                idBienBanTaiSan: ts.id,
-              });
-            } else if (vt.action === Action.DELETE && vt.id) {
-              deleteVtIds.push(vt.id);
-            } else if (vt.action === Action.UPDATE && vt.id) {
-              updateVtList.push({
-                id: vt.id,
-                idBienBanTaiSan: ts.id,
-                idChiTietVatTu: vt.idChiTietVatTu || "",
-                idVatTu: vt.idVatTu || "",
-                tenVatTu: vt.tenVatTu || "",
-                donViTinh: vt.donViTinh || "Cái",
-                soLuong: vt.soLuong,
-                ghiChu: vt.ghiChu || "",
-              });
-            }
-          });
-        });
-
-        if (createVtList.length > 0) {
-          batchInsertVatTuMutation.mutate(createVtList);
-        }
-        if (deleteVtIds.length > 0) {
-          deleteVatTuBatchMutation.mutate(deleteVtIds);
-        }
-        if (updateVtList.length > 0) {
-          batchUpdateVatTuMutation.mutate(updateVtList);
-        }
-      }
-
-      if (deleteTs.length > 0) {
-        deleteTs.forEach((ts: any) => deleteTaiSanMutation.mutate(ts.id));
-      }
-    }
-
-    // Xử lý người ký
-    if (variables.nguoiKyList && variables.nguoiKyList.length > 0) {
-      updateSignerMutation.mutate({
-        idTaiLieu: nghiemThuId,
-        data: variables.nguoiKyList.map((item: any) => ({
-          ...item,
-          idTaiLieu: nghiemThuId,
-        })),
-      });
-    }
-  };
-
-  const updateSignerMutation = useMutation({
-    mutationFn: async ({
-      idTaiLieu,
-      data,
-    }: {
-      idTaiLieu: string;
-      data: any[];
-    }) => {
-      const res = await api.put(`/chuky/nguoi-ky/update/${idTaiLieu}`, data);
-      return res.data;
-    },
-    onSuccess: () => {
-      invalidate();
-    },
-  });
-
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
       return (
@@ -1621,9 +1464,7 @@ export const useMaintenanceAcceptanceTestMutation = () => {
         })
       ).data;
     },
-    onSuccess: async (response, variables) => {
-      const nghiemThuId = response?.data?.id || response?.id;
-      if (nghiemThuId) handleSubRecords(nghiemThuId, variables);
+    onSuccess: async () => {
       invalidate();
       queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
       queryClient.invalidateQueries({ queryKey: ["acceptanceByInspection"] });
@@ -1648,9 +1489,8 @@ export const useMaintenanceAcceptanceTestMutation = () => {
         })
       ).data;
     },
-    onSuccess: async (response, variables) => {
-      const nghiemThuId = response?.data?.id || response?.id || variables?.id;
-      if (nghiemThuId) handleSubRecords(nghiemThuId, variables);
+    onSuccess: async () => {
+      invalidate();
       queryClient.invalidateQueries({
         queryKey: ["inspectionByRepair"],
       });
@@ -1757,9 +1597,6 @@ export const useMaintenanceAcceptanceTestMutation = () => {
     updateStatusMutation,
     cancelMutation,
     updateManyMutation,
-    batchInsertTaiSanMutation,
-    batchInsertVatTuMutation,
-    deleteVatTuBatchMutation,
   };
 };
 

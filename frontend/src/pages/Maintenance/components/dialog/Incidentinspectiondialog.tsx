@@ -16,30 +16,38 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Checkbox,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Paper,
   Chip,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Alert,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import type { IncidentInspectionItem } from "../../../../mockdata/mockIncidentInspection";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import IncidentInspectionPreview from "../preview/IncidentInspectionPreview";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
 import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
-import { IncidenData, IncidentInspectionData } from "../../types";
+import {
+  IncidenData,
+  IncidentInspectionData,
+  IncidentInspectionDetailData,
+  IncidentInspectionVatTuData,
+} from "../../types";
 import { listSigneInfo } from "../../config";
 import { PlanSigner } from "../../../../mockdata/mockPlans";
 import { generateCode } from "../../../../utils/helpers";
 import { CongTy } from "../../../../utils/const";
 import { useMaintenanceIncidentInspectionMutation } from "../../../MainenancePlanRepair/Mutation";
 import FieldDate from "../../../../components/TextField/FieldDate";
+import { useAllToolDetailQuery } from "../../../ToolManager/Mutation";
+import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
 import dayjs from "dayjs";
+import React from "react";
 
 interface Props {
   open: boolean;
@@ -60,8 +68,11 @@ const IncidentInspectionDialog = ({
 }: Props) => {
   const { data: apiDepartments = [] } = useAllDepartmentsQuery();
   const { data: apiUsers = [] } = useAllStaffsQuery();
-  const { createMutation: createIncInspMutation, updateMutation: updateIncInspMutation } =
-    useMaintenanceIncidentInspectionMutation();
+  const { data: allToolDetail = [] } = useAllToolDetailQuery();
+  const {
+    createMutation: createIncInspMutation,
+    updateMutation: updateIncInspMutation,
+  } = useMaintenanceIncidentInspectionMutation();
 
   const [number, setNumber] = useState("");
   const [inspectionDate, setInspectionDate] = useState(
@@ -70,7 +81,17 @@ const IncidentInspectionDialog = ({
   const [location, setLocation] = useState("");
   const [findings, setFindings] = useState("");
   const [recommendation, setRecommendation] = useState("");
-  const [items, setItems] = useState<IncidentInspectionItem[]>([]);
+
+  const [danhSachChiTiet, setDanhSachChiTiet] = useState<
+    IncidentInspectionDetailData[]
+  >([]);
+  const [signers, setSigners] = useState<PlanSigner[]>([]);
+
+  const [addDeptId, setAddDeptId] = useState("");
+  const [addUserId, setAddUserId] = useState("");
+  const [editingSignerId, setEditingSignerId] = useState<string | null>(null);
+  const [editDeptId, setEditDeptId] = useState("");
+  const [editUserId, setEditUserId] = useState("");
 
   useEffect(() => {
     if (open) {
@@ -80,7 +101,7 @@ const IncidentInspectionDialog = ({
         setLocation(initData.viTri ?? "");
         setFindings(initData.nhanXetKetLuan ?? "");
         setRecommendation(initData.bienPhapXuLy ?? "");
-        
+
         const listInfo = listSigneInfo(initData, apiUsers, apiDepartments);
         setSigners(
           (listInfo ?? []).map((item: any) => ({
@@ -91,23 +112,16 @@ const IncidentInspectionDialog = ({
             position: item.tenChucVu || item.position || "",
             order: item.order || 1,
             signed: item.signed || false,
-          }))
+          })),
         );
 
-        setItems(
-          (initData.danhSachChiTiet || []).map((d: any, index: number) => ({
-            stt: index + 1,
-            id: d.id,
-            idTaiSan: d.idTaiSan,
-            itemName: d.tenTaiSan || d.idTaiSan,
-            unit: d.donViTinh || "",
-            repairLevel: d.capBaoDuong || "",
-            quantity: d.soLuong || 1,
-            condition: d.tinhTrang || "",
-            actionRepair: d.suaChua ?? true,
-            actionReplace: d.thayMoi ?? false,
-            note: d.ghiChu || "",
-          }))
+        setDanhSachChiTiet(
+          (initData.danhSachChiTiet || []).map((d: any) => ({
+            ...d,
+            danhSachVatTu: (d.danhSachVatTu || []).map((vt: any) => ({
+              ...vt,
+            })),
+          })),
         );
       } else if (incidentReport?.danhSachTaiSan) {
         setNumber(`BB-KT-${incidentReport.id || Date.now()}`);
@@ -116,34 +130,28 @@ const IncidentInspectionDialog = ({
         setFindings("");
         setRecommendation("");
         setSigners([]);
-        setItems(
+        setDanhSachChiTiet(
           incidentReport.danhSachTaiSan
             .filter((d: any) => selectedDeviceIds.includes(String(d.id ?? "")))
-            .map((d: any, index: number) => ({
-              stt: index + 1,
-              id: d.id,
+            .map((d: any) => ({
+              id: "",
               idTaiSan: d.idTaiSan,
-              itemName: d.tenTaiSan || d.idTaiSan,
-              unit: d.donViTinh || "",
-              repairLevel: "",
-              quantity: d.soLuong || 1,
-              condition: d.tinhTrang || "",
-              actionRepair: true,
-              actionReplace: false,
-              note: "",
+              idSuCoChiTiet: d.id,
+              tenTaiSan: d.tenTaiSan || d.idTaiSan,
+              donViTinh: d.donViTinh || "",
+              danhSachVatTu: [],
             })),
         );
       }
     }
-  }, [open, initData, incidentReport, selectedDeviceIds, apiUsers, apiDepartments]);
-  const [signers, setSigners] = useState<PlanSigner[]>([]);
-  const [addDeptId, setAddDeptId] = useState("");
-  const [addUserId, setAddUserId] = useState("");
-  const [editingSignerId, setEditingSignerId] = useState<string | null>(null);
-  const [editDeptId, setEditDeptId] = useState("");
-  const [editUserId, setEditUserId] = useState("");
-
-
+  }, [
+    open,
+    initData,
+    incidentReport,
+    selectedDeviceIds,
+    apiUsers,
+    apiDepartments,
+  ]);
 
   type SimpleDept = { id: string; name: string };
   type SimpleUser = {
@@ -167,38 +175,89 @@ const IncidentInspectionDialog = ({
       title: String(u?.tenChucVu ?? u?.chucVu ?? u?.title ?? ""),
     }));
 
-  const handleAddItem = () => {
-    setItems([
-      ...items,
-      {
-        stt: items.length + 1,
-        itemName: "",
-        repairLevel: "",
-        quantity: 1,
-        condition: "",
-        actionRepair: false,
-        actionReplace: false,
-        note: "",
-      },
-    ]);
+  const addMaterialRow = (assetIdx: number) => {
+    const newMaterial: IncidentInspectionVatTuData = {
+      id: "KSVT_" + Math.random().toString(36).substr(2, 9),
+      idChiTietKiemTraSuCo: danhSachChiTiet[assetIdx].id,
+      idVatTu: "",
+      idChiTietVatTu: "",
+      soLuong: 1,
+      tinhTrang: "",
+      soLuongSuaChua: 0,
+      soLuongThayMoi: 0,
+      ghiChu: "",
+      tenVatTu: "",
+      donViTinh: "",
+    };
+
+    setDanhSachChiTiet((prev) => {
+      const copy = [...prev];
+      const detail = { ...copy[assetIdx] };
+      detail.danhSachVatTu = [...(detail.danhSachVatTu || []), newMaterial];
+      copy[assetIdx] = detail;
+      return copy;
+    });
   };
 
-  const handleRemoveItem = (idx: number) => {
-    setItems(
-      items
-        .filter((_, i) => i !== idx)
-        .map((item, i) => ({ ...item, stt: i + 1 })),
-    );
-  };
-
-  const handleItemChange = (
-    idx: number,
-    field: keyof IncidentInspectionItem,
-    value: any,
+  const updateMaterial = (
+    assetIdx: number,
+    materialId: string,
+    updatedFields: Partial<IncidentInspectionVatTuData> | string,
+    value?: any,
   ) => {
-    const updated = [...items];
-    updated[idx] = { ...updated[idx], [field]: value };
-    setItems(updated);
+    setDanhSachChiTiet((prev) => {
+      const copy = [...prev];
+      const detail = { ...copy[assetIdx] };
+      detail.danhSachVatTu = (detail.danhSachVatTu || []).map((vt) => {
+        if (vt.id === materialId) {
+          if (typeof updatedFields === "string") {
+            return { ...vt, [updatedFields]: value };
+          } else {
+            return { ...vt, ...updatedFields };
+          }
+        }
+        return vt;
+      });
+      copy[assetIdx] = detail;
+      return copy;
+    });
+  };
+
+  const removeMaterialRow = (assetIdx: number, materialId: string) => {
+    setDanhSachChiTiet((prev) => {
+      const copy = [...prev];
+      const detail = { ...copy[assetIdx] };
+      detail.danhSachVatTu = (detail.danhSachVatTu || [])
+        .map((vt) => {
+          if (vt.id === materialId) {
+            return null;
+          }
+          return vt;
+        })
+        .filter(Boolean) as IncidentInspectionVatTuData[];
+      copy[assetIdx] = detail;
+      return copy;
+    });
+  };
+
+  const handleQuantityChange = (
+    assetIdx: number,
+    materialId: string,
+    field: "soLuong" | "soLuongSuaChua" | "soLuongThayMoi",
+    value: number,
+  ) => {
+    setDanhSachChiTiet((prev) => {
+      const copy = [...prev];
+      const detail = { ...copy[assetIdx] };
+      detail.danhSachVatTu = (detail.danhSachVatTu || []).map((vt) => {
+        if (vt.id === materialId) {
+          return { ...vt, [field]: value };
+        }
+        return vt;
+      });
+      copy[assetIdx] = detail;
+      return copy;
+    });
   };
 
   const handleAddSigner = () => {
@@ -261,7 +320,6 @@ const IncidentInspectionDialog = ({
     const idTrinhDuyetGiamDoc =
       signers.length > 1 ? signers[signers.length - 1].userId : "";
 
-    // Người ký trung gian (nếu có)
     const intermediateSigners =
       signers.length > 2
         ? signers.slice(1, -1).map((s: PlanSigner, idx: number) => ({
@@ -272,6 +330,7 @@ const IncidentInspectionDialog = ({
             trangThai: 0,
           }))
         : [];
+
     const record: IncidentInspectionData = {
       ...initData,
       idCongTy: CongTy.CT001,
@@ -289,18 +348,23 @@ const IncidentInspectionDialog = ({
       trangThai: initData ? initData.trangThai : 0,
       share: initData ? initData.share : false,
       nguoiKyList: intermediateSigners,
-      danhSachChiTiet: items.map((item) => {
+      danhSachChiTiet: danhSachChiTiet.map((entry) => {
+        const actualDetailId = entry.id ? entry.id : generateCode("KSCT_");
         return {
-          id: item.id,
-          idKiemTraSuCo: initData ? ((item as any).idKiemTraSuCo || initData.id) : generateCode("KTS-TEST-"),
-          idTaiSan: item.idTaiSan,
-          idSuCoChiTiet: (item as any).idSuCoChiTiet || item.id,
-          capBaoDuong: item.repairLevel,
-          tinhTrang: item.condition,
-          suaChua: item.actionRepair,
-          thayMoi: item.actionReplace,
-          ghiChu: item.note,
-          soLuong: item.quantity,
+          id: actualDetailId,
+          idTaiSan: entry.idTaiSan,
+          idSuCoChiTiet: entry.idSuCoChiTiet,
+          danhSachVatTu: (entry.danhSachVatTu || []).map((vt) => ({
+            id: vt.id ? vt.id : generateCode("KSVT_"),
+            idChiTietKiemTraSuCo: actualDetailId,
+            idVatTu: vt.idVatTu,
+            idChiTietVatTu: vt.idChiTietVatTu,
+            soLuong: vt.soLuong,
+            tinhTrang: vt.tinhTrang,
+            soLuongSuaChua: vt.soLuongSuaChua,
+            soLuongThayMoi: vt.soLuongThayMoi,
+            ghiChu: vt.ghiChu,
+          })),
         };
       }),
     };
@@ -347,7 +411,7 @@ const IncidentInspectionDialog = ({
 
       <DialogContent sx={{ p: 3, overflow: "auto" }}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-          {/* ──── Top section: 2-column layout ──── */}
+          {/* Top section: 2-column layout */}
           <Box
             sx={{
               display: "grid",
@@ -698,6 +762,7 @@ const IncidentInspectionDialog = ({
 
                 <Button
                   variant="contained"
+                  startIcon={<PersonAddIcon />}
                   onClick={handleAddSigner}
                   disabled={!addUserId}
                 >
@@ -707,7 +772,7 @@ const IncidentInspectionDialog = ({
             </Box>
           </Box>
 
-          {/* ──── Danh sách kiểm tra (full width) ──── */}
+          {/* Tình trạng thiết bị & vật tư phụ tùng đưa vào kiểm tra */}
           <Box
             sx={{
               border: "1px solid",
@@ -716,150 +781,263 @@ const IncidentInspectionDialog = ({
               p: 2.5,
             }}
           >
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mb: 2,
-              }}
-            >
-              <Typography variant="subtitle1" fontWeight={600}>
-                Danh sách kiểm tra sự cố
-              </Typography>
-              {/* <Button
-                size="small"
-                startIcon={<AddIcon />}
-                onClick={handleAddItem}
-              >
-                Thêm dòng
-              </Button> */}
-            </Box>
+            <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1.5 }}>
+              Tình trạng chi tiết thiết bị & vật tư linh kiện kiểm tra sự cố
+            </Typography>
             <TableContainer component={Paper} variant="outlined">
               <Table size="small">
                 <TableHead>
-                  <TableRow sx={{ bgcolor: "action.hover" }}>
-                    <TableCell sx={{ fontWeight: 700 }} align="center">
+                  <TableRow sx={{ bgcolor: "#f5f5f5" }}>
+                    <TableCell sx={{ fontWeight: 700, width: 60 }}>
                       STT
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>
-                      Tên vật tư, thiết bị
+                    <TableCell sx={{ fontWeight: 700, minWidth: 200 }}>
+                      Tên Thiết bị / Vật tư phụ tùng
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>ĐVT</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }} align="center">
+                    <TableCell sx={{ fontWeight: 700, width: 60 }}>
+                      ĐVT
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 700, width: 70 }}>
                       SL
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>
-                      Tình trạng thiết bị
+                    <TableCell sx={{ fontWeight: 700, minWidth: 180 }}>
+                      Tình trạng KT
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 700 }} align="center">
-                      SC
+                    <TableCell
+                      align="center"
+                      sx={{ fontWeight: 700, width: 90 }}
+                    >
+                      Sửa chữa
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 700 }} align="center">
+                    <TableCell
+                      align="center"
+                      sx={{ fontWeight: 700, width: 90 }}
+                    >
                       Thay mới
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Ghi chú</TableCell>
-                    {/* <TableCell align="center">Xóa</TableCell> */}
+                    <TableCell sx={{ fontWeight: 700, minWidth: 150 }}>
+                      Ghi chú
+                    </TableCell>
+                    <TableCell
+                      sx={{ fontWeight: 700, width: 60 }}
+                      align="center"
+                    >
+                      Thao tác
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {items.map((item, idx) => (
-                    <TableRow key={idx}>
-                      <TableCell align="center">{item.stt}</TableCell>
-                      <TableCell>
-                        <TextField
-                          value={item.itemName}
-                          onChange={(e) =>
-                            handleItemChange(idx, "itemName", e.target.value)
-                          }
-                          size="small"
-                          fullWidth
-                          variant="standard"
-                        />
-                      </TableCell>
-                      <TableCell>{item.unit}</TableCell>
-                      <TableCell align="center">
-                        <TextField
-                          type="number"
-                          value={item.quantity}
-                          onChange={(e) =>
-                            handleItemChange(
-                              idx,
-                              "quantity",
-                              parseInt(e.target.value || "1"),
-                            )
-                          }
-                          size="small"
-                          inputProps={{ min: 1 }}
-                          variant="standard"
-                          sx={{ width: "60px" }}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <TextField
-                          value={item.condition}
-                          onChange={(e) =>
-                            handleItemChange(idx, "condition", e.target.value)
-                          }
-                          size="small"
-                          fullWidth
-                          variant="standard"
-                          placeholder="Mô tả tình trạng"
-                        />
-                      </TableCell>
-                      <TableCell align="center">
-                        <Checkbox
-                          checked={item.actionRepair}
-                          onChange={(e) =>
-                            handleItemChange(
-                              idx,
-                              "actionRepair",
-                              e.target.checked,
-                            )
-                          }
-                        />
-                      </TableCell>
-                      <TableCell align="center">
-                        <Checkbox
-                          checked={item.actionReplace}
-                          onChange={(e) =>
-                            handleItemChange(
-                              idx,
-                              "actionReplace",
-                              e.target.checked,
-                            )
-                          }
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <TextField
-                          value={item.note}
-                          onChange={(e) =>
-                            handleItemChange(idx, "note", e.target.value)
-                          }
-                          size="small"
-                          fullWidth
-                          variant="standard"
-                        />
-                      </TableCell>
-                      {/* <TableCell align="center">
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => handleRemoveItem(idx)}
-                          disabled={items.length === 1}
+                  {danhSachChiTiet.map((entry, assetIdx) => (
+                    <React.Fragment key={entry.idTaiSan || assetIdx}>
+                      {/* Hàng thiết bị chính (cha) */}
+                      <TableRow sx={{ bgcolor: "#fafafa" }}>
+                        <TableCell sx={{ fontWeight: 700 }}>
+                          {assetIdx + 1}
+                        </TableCell>
+                        <TableCell
+                          colSpan={3}
+                          sx={{ fontWeight: 700, color: "primary.main" }}
                         >
-                          <DeleteIcon sx={{ fontSize: 16 }} />
-                        </IconButton>
-                      </TableCell> */}
-                    </TableRow>
+                          Thiết bị: {entry.tenTaiSan}
+                        </TableCell>
+                        <TableCell colSpan={4}></TableCell>
+                        <TableCell align="center">
+                          <IconButton
+                            size="small"
+                            onClick={() => addMaterialRow(assetIdx)}
+                            color="primary"
+                            title="Thêm vật tư phụ tùng kiểm tra"
+                          >
+                            <AddIcon fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+
+                      {/* Hàng các vật tư phụ tùng chi tiết (con) */}
+                      {!entry.danhSachVatTu ||
+                      entry.danhSachVatTu.length === 0 ? (
+                        <TableRow>
+                          <TableCell></TableCell>
+                          <TableCell
+                            colSpan={8}
+                            sx={{
+                              fontStyle: "italic",
+                              color: "text.secondary",
+                              py: 1,
+                            }}
+                          >
+                            Chưa có vật tư/linh kiện phụ tùng nào được chọn dưới
+                            thiết bị này. Nhấp "+" để thêm.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        entry.danhSachVatTu.map((vt, vtIdx) => {
+                          const sumQty =
+                            (vt.soLuongSuaChua || 0) + (vt.soLuongThayMoi || 0);
+                          const isQtyError = sumQty > (vt.soLuong || 0);
+
+                          return (
+                            <TableRow key={vt.id || vtIdx}>
+                              <TableCell
+                                align="right"
+                                sx={{ color: "text.secondary", pr: 2 }}
+                              >
+                                {assetIdx + 1}.{vtIdx + 1}
+                              </TableCell>
+                              <TableCell sx={{ width: "220px" }}>
+                                <FieldAutoCompleted
+                                  title=""
+                                  data={allToolDetail}
+                                  labelkey="idTaiSan"
+                                  limitOptions={10}
+                                  value={vt.idChiTietVatTu}
+                                  noBorder={true}
+                                  onChange={(value) => {
+                                    if (value) {
+                                      updateMaterial(assetIdx, vt.id!, {
+                                        idChiTietVatTu: value.id,
+                                        idVatTu: value.idTaiSan,
+                                        tenVatTu: value.tenTaiSan,
+                                        donViTinh: value.donViTinh,
+                                      });
+                                    } else {
+                                      updateMaterial(assetIdx, vt.id!, {
+                                        idChiTietVatTu: "",
+                                        idVatTu: "",
+                                        tenVatTu: "",
+                                        donViTinh: "",
+                                      });
+                                    }
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell>{vt.donViTinh || "—"}</TableCell>
+                              <TableCell>
+                                <TextField
+                                  type="number"
+                                  value={vt.soLuong || 0}
+                                  onChange={(e) =>
+                                    handleQuantityChange(
+                                      assetIdx,
+                                      vt.id!,
+                                      "soLuong",
+                                      Math.max(
+                                        0,
+                                        parseInt(e.target.value) || 0,
+                                      ),
+                                    )
+                                  }
+                                  size="small"
+                                  variant="standard"
+                                  inputProps={{ min: 0, style: { width: 45 } }}
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <TextField
+                                  value={vt.tinhTrang || ""}
+                                  onChange={(e) =>
+                                    updateMaterial(
+                                      assetIdx,
+                                      vt.id!,
+                                      "tinhTrang",
+                                      e.target.value,
+                                    )
+                                  }
+                                  size="small"
+                                  placeholder="Tình trạng kỹ thuật..."
+                                  fullWidth
+                                  variant="outlined"
+                                  multiline
+                                  maxRows={2}
+                                  inputProps={{ style: { fontSize: "0.8rem" } }}
+                                  error={!vt.tinhTrang}
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <TextField
+                                  type="number"
+                                  value={vt.soLuongSuaChua || 0}
+                                  onChange={(e) =>
+                                    handleQuantityChange(
+                                      assetIdx,
+                                      vt.id!,
+                                      "soLuongSuaChua",
+                                      Math.max(
+                                        0,
+                                        parseInt(e.target.value) || 0,
+                                      ),
+                                    )
+                                  }
+                                  size="small"
+                                  variant="standard"
+                                  error={isQtyError}
+                                  inputProps={{ min: 0, style: { width: 55 } }}
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <TextField
+                                  type="number"
+                                  value={vt.soLuongThayMoi || 0}
+                                  onChange={(e) =>
+                                    handleQuantityChange(
+                                      assetIdx,
+                                      vt.id!,
+                                      "soLuongThayMoi",
+                                      Math.max(
+                                        0,
+                                        parseInt(e.target.value) || 0,
+                                      ),
+                                    )
+                                  }
+                                  size="small"
+                                  variant="standard"
+                                  error={isQtyError}
+                                  inputProps={{ min: 0, style: { width: 55 } }}
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <TextField
+                                  value={vt.ghiChu || ""}
+                                  onChange={(e) =>
+                                    updateMaterial(
+                                      assetIdx,
+                                      vt.id!,
+                                      "ghiChu",
+                                      e.target.value,
+                                    )
+                                  }
+                                  size="small"
+                                  placeholder="Ghi chú..."
+                                  fullWidth
+                                  variant="outlined"
+                                  multiline
+                                  maxRows={2}
+                                  inputProps={{ style: { fontSize: "0.8rem" } }}
+                                />
+                              </TableCell>
+                              <TableCell align="center">
+                                <IconButton
+                                  size="small"
+                                  color="error"
+                                  onClick={() =>
+                                    removeMaterialRow(assetIdx, vt.id!)
+                                  }
+                                >
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      )}
+                    </React.Fragment>
                   ))}
                 </TableBody>
               </Table>
             </TableContainer>
           </Box>
 
-          {/* ──── Preview (full width) ──── */}
+          {/* Preview section */}
           <Box>
             <Typography variant="subtitle2" fontWeight={600} mb={1.5}>
               Xem trước biên bản
@@ -870,7 +1048,7 @@ const IncidentInspectionDialog = ({
               location={location}
               findings={findings}
               recommendation={recommendation}
-              items={items}
+              danhSachChiTiet={danhSachChiTiet}
               signers={signers}
             />
           </Box>
@@ -887,7 +1065,9 @@ const IncidentInspectionDialog = ({
           variant="contained"
           color="primary"
           onClick={handleSubmit}
-          disabled={items.some((item) => !item.itemName)}
+          disabled={danhSachChiTiet.some((entry) =>
+            (entry.danhSachVatTu || []).some((vt) => !vt.idChiTietVatTu),
+          )}
         >
           {initData?.id ? "Cập nhật biên bản" : "Tạo biên bản"}
         </Button>

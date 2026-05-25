@@ -48,14 +48,10 @@ public class GiamDinhChiTietDao {
 
     public List<GiamDinhChiTiet> findByIdGiamDinh(String idGiamDinh) {
         String sql = """
-                SELECT gdct.* ,ts.TenTaiSan,ts.DonViTinh,
-                       COALESCE(khscct.SoLuong, ktscct.SoLuong) as SoLuong
-                         FROM giamdinh_chitiet gdct
-                         LEFT JOIN suachua_chitiet scct ON scct.Id = gdct.IdBienBanChiTiet
-                         LEFT JOIN kiemtra_suco_chitiet ktscct ON ktscct.Id = gdct.IdBienBanChiTiet
-                         INNER JOIN taisan ts ON ts.Id = gdct.IdTaiSan
-                         LEFT JOIN kehoachsuachua_chitiet_taisan khscct ON khscct.Id = scct.IdKeHoachChiTiet
-                         WHERE gdct.IdGiamDinh = ?""" ;
+                SELECT gdct.* ,ts.TenTaiSan,ts.DonViTinh                        
+                FROM giamdinh_chitiet gdct
+                INNER JOIN taisan ts ON ts.Id = gdct.IdTaiSan
+                WHERE gdct.IdGiamDinh = ?""" ;
 
         List<GiamDinhChiTiet> list = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(GiamDinhChiTiet.class), idGiamDinh);
         for (GiamDinhChiTiet item : list) {

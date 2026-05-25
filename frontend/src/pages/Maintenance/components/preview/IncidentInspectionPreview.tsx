@@ -1,3 +1,4 @@
+import React from "react";
 import {
   Box,
   Typography,
@@ -11,10 +12,7 @@ import {
   Divider,
 } from "@mui/material";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
-import type {
-  IncidentInspectionRecord,
-  IncidentInspectionSigner,
-} from "../../../../mockdata/mockIncidentInspection";
+import type { IncidentInspectionDetailData } from "../../types";
 import { PlanSigner } from "../../../../mockdata/mockPlans";
 
 interface Props {
@@ -23,17 +21,7 @@ interface Props {
   location?: string;
   findings?: string;
   recommendation?: string;
-  items?: Array<{
-    stt: number;
-    itemName: string;
-    repairLevel: string;
-    unit?: string;
-    quantity: number;
-    condition: string;
-    actionRepair: boolean;
-    actionReplace: boolean;
-    note: string;
-  }>;
+  danhSachChiTiet?: IncidentInspectionDetailData[];
   signers?: PlanSigner[];
 }
 
@@ -43,7 +31,7 @@ const IncidentInspectionPreview = ({
   location,
   findings,
   recommendation,
-  items = [],
+  danhSachChiTiet = [],
   signers = [],
 }: Props) => {
   const { data: apiDepartments = [] } = useAllDepartmentsQuery();
@@ -124,7 +112,7 @@ const IncidentInspectionPreview = ({
           fontFamily: "inherit",
         }}
       >
-        BIÊN BAN
+        BIÊN BẢN
       </Typography>
       <Typography
         sx={{
@@ -144,11 +132,10 @@ const IncidentInspectionPreview = ({
       {/* Chủ tịch, Hôm nay, Chứng tỏ gồm */}
       <Box sx={{ mb: 2, fontSize: 12 }}>
         <Typography sx={{ fontFamily: "inherit", mb: 1 }}>
-          Hôm nay, ngày ....... tháng ........ năm ........... Tại
-          .....................................................................
+          Hôm nay, ngày ....... tháng ........ năm ........... Tại {location || "....................................................................."}
         </Typography>
         <Typography sx={{ fontFamily: "inherit", fontWeight: 600, mb: 1 }}>
-          Chứng tỏ gồm:
+          Chúng tôi gồm:
         </Typography>
         <Box sx={{ pl: 2, mb: 1 }}>
           {signers.map((s, i) => (
@@ -176,16 +163,13 @@ const IncidentInspectionPreview = ({
       {/* Main content */}
       <Box sx={{ mb: 2, fontSize: 12 }}>
         <Typography sx={{ fontFamily: "inherit", mb: 1 }}>
-          Đã tiến hành kiểm tra tình trạng kỹ thuật thiết bị bị:
-          .............................................................................
+          Đã tiến hành kiểm tra tình trạng kỹ thuật thiết bị: .............................................................................
         </Typography>
         <Typography sx={{ fontFamily: "inherit", mb: 1 }}>
-          Số dãng ký:
-          ..............................................................................
+          Số đăng ký: ..............................................................................
         </Typography>
         <Typography sx={{ fontFamily: "inherit", mb: 1 }}>
-          Sau khi xay ra sự cố vào lúc ....... giờ ....... ngày ....... tháng
-          ....... năm ..........
+          Sau khi xảy ra sự cố vào lúc ....... giờ ....... ngày ....... tháng ....... năm ..........
         </Typography>
       </Box>
 
@@ -200,39 +184,42 @@ const IncidentInspectionPreview = ({
         </Typography>
 
         <Typography sx={{ fontFamily: "inherit", fontWeight: 600, mb: 1 }}>
-          2. Điều kiện văn hành:
-          ...............................................................................
+          2. Điều kiện vận hành: ...............................................................................
         </Typography>
         <Typography sx={{ fontFamily: "inherit", ml: 2, mb: 2 }}>
           ..........................................................................
         </Typography>
 
         <Typography sx={{ fontFamily: "inherit", fontWeight: 600, mb: 1 }}>
-          3. Nội dung sửa chữa/ bảo dưỡng gần nhất:
-          ........................................................
+          3. Nội dung sửa chữa/ bảo dưỡng gần nhất: ........................................................
         </Typography>
         <Typography sx={{ fontFamily: "inherit", ml: 2, mb: 2 }}>
           ..........................................................................
         </Typography>
 
         <Typography sx={{ fontFamily: "inherit", fontWeight: 600, mb: 1 }}>
-          4. Tính trạng thiết bị:
-          ...............................................................................
+          4. Tình trạng thiết bị: ...............................................................................
         </Typography>
         <Typography sx={{ fontFamily: "inherit", ml: 2, mb: 2 }}>
           ..........................................................................
         </Typography>
 
         <Typography sx={{ fontFamily: "inherit", fontWeight: 600, mb: 1 }}>
-          5. Sơ bộ xác định nguyên nhân:
-          ...............................................................
+          5. Sơ bộ xác định nguyên nhân: ...............................................................
         </Typography>
         <Typography sx={{ fontFamily: "inherit", ml: 2, mb: 2 }}>
           ..........................................................................
         </Typography>
 
         <Typography sx={{ fontFamily: "inherit", fontWeight: 600, mb: 1 }}>
-          6. Nội dung cần sửa chữa khác phục: (theo bảng kê chỉ tiết định kèm)
+          6. Nội dung đề nghị đề xuất biện pháp xử lý:
+        </Typography>
+        <Typography sx={{ fontFamily: "inherit", ml: 2, mb: 2 }}>
+          {recommendation || "......................................................................."}
+        </Typography>
+
+        <Typography sx={{ fontFamily: "inherit", fontWeight: 600, mb: 1 }}>
+          7. Nội dung cần sửa chữa khắc phục: (theo bảng kê chi tiết đính kèm)
         </Typography>
       </Box>
 
@@ -251,26 +238,26 @@ const IncidentInspectionPreview = ({
           }}
         >
           <TableHead>
-            <TableRow>
-              <TableCell align="center" sx={{ fontWeight: 700 }}>
+            <TableRow sx={{ bgcolor: "#f5f5f5" }}>
+              <TableCell align="center" sx={{ fontWeight: 700, width: 50 }}>
                 TT
               </TableCell>
               <TableCell sx={{ fontWeight: 700 }}>
                 Tên vật tư, thiết bị
               </TableCell>
-              <TableCell align="center" sx={{ fontWeight: 700 }}>
-                DVT
+              <TableCell align="center" sx={{ fontWeight: 700, width: 50 }}>
+                ĐVT
               </TableCell>
-              <TableCell align="center" sx={{ fontWeight: 700 }}>
+              <TableCell align="center" sx={{ fontWeight: 700, width: 50 }}>
                 SL
               </TableCell>
               <TableCell sx={{ fontWeight: 700 }}>
-                Tính trạng kỹ thuật
+                Tình trạng kỹ thuật
               </TableCell>
-              <TableCell align="center" sx={{ fontWeight: 700 }}>
-                SC
+              <TableCell align="center" sx={{ fontWeight: 700, width: 60 }}>
+                Sửa chữa
               </TableCell>
-              <TableCell align="center" sx={{ fontWeight: 700 }}>
+              <TableCell align="center" sx={{ fontWeight: 700, width: 60 }}>
                 Thay mới
               </TableCell>
               <TableCell align="center" sx={{ fontWeight: 700 }}>
@@ -279,30 +266,56 @@ const IncidentInspectionPreview = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {items.length > 0 ? (
-              items.map((item) => (
-                <TableRow key={item.stt}>
-                  <TableCell align="center">{item.stt}</TableCell>
-                  <TableCell>{item.itemName}</TableCell>
-                  <TableCell align="center">
-                    {item.unit || "—"}
-                  </TableCell>
-                  <TableCell align="center">{item.quantity}</TableCell>
-                  <TableCell>{item.condition}</TableCell>
-                  <TableCell align="center">
-                    {item.actionRepair ? "✓" : "—"}
-                  </TableCell>
-                  <TableCell align="center">
-                    {item.actionReplace ? "✓" : "—"}
-                  </TableCell>
-                  <TableCell>{item.note}</TableCell>
-                </TableRow>
+            {danhSachChiTiet.length > 0 ? (
+              danhSachChiTiet.map((entry, assetIdx) => (
+                <React.Fragment key={entry.idTaiSan || assetIdx}>
+                  {/* Hàng thiết bị cha */}
+                  <TableRow sx={{ bgcolor: "#fafafa" }}>
+                    <TableCell align="center" sx={{ fontWeight: 700 }}>
+                      {assetIdx + 1}
+                    </TableCell>
+                    <TableCell colSpan={7} sx={{ fontWeight: 700, color: "primary.main" }}>
+                      Thiết bị: {entry.tenTaiSan}
+                    </TableCell>
+                  </TableRow>
+
+                  {/* Các vật tư con */}
+                  {!entry.danhSachVatTu || entry.danhSachVatTu.length === 0 ? (
+                    <TableRow>
+                      <TableCell></TableCell>
+                      <TableCell colSpan={7} sx={{ fontStyle: "italic", color: "text.secondary" }}>
+                        Chưa có vật tư/phụ tùng nào được kiểm tra.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    entry.danhSachVatTu.map((vt, vtIdx) => (
+                      <TableRow key={vt.id || vtIdx}>
+                        <TableCell align="right" sx={{ color: "text.secondary", pr: 2 }}>
+                          {assetIdx + 1}.{vtIdx + 1}
+                        </TableCell>
+                        <TableCell sx={{ pl: 3 }}>
+                          {vt.tenVatTu || vt.idVatTu || "—"}
+                        </TableCell>
+                        <TableCell align="center">{vt.donViTinh || "—"}</TableCell>
+                        <TableCell align="center">{vt.soLuong || 0}</TableCell>
+                        <TableCell>{vt.tinhTrang || "—"}</TableCell>
+                        <TableCell align="center">
+                          {(vt.soLuongSuaChua || 0) > 0 ? vt.soLuongSuaChua : "—"}
+                        </TableCell>
+                        <TableCell align="center">
+                          {(vt.soLuongThayMoi || 0) > 0 ? vt.soLuongThayMoi : "—"}
+                        </TableCell>
+                        <TableCell>{vt.ghiChu || "—"}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </React.Fragment>
               ))
             ) : (
               <TableRow>
                 <TableCell colSpan={8} align="center" sx={{ py: 2 }}>
                   <Typography variant="caption" color="text.secondary">
-                    Chưa có dữ liệu
+                    Chưa có dữ liệu kiểm tra
                   </Typography>
                 </TableCell>
               </TableRow>

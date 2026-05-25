@@ -44,7 +44,7 @@ import { useAllStaffsQuery } from "../../../Staff/Mutation";
 import { generateCode } from "../../../../utils/helpers";
 import { useMaintenanceAcceptanceTestMutation } from "../../../MainenancePlanRepair/Mutation";
 import { useSelector } from "react-redux";
-import { CongTy, Action } from "../../../../utils/const";
+import { CongTy } from "../../../../utils/const";
 import dayjs from "dayjs";
 import { useAllToolDetailQuery } from "../../../ToolManager/Mutation";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
@@ -154,7 +154,6 @@ const AcceptanceTestDialog = ({
           idBienBan: values.id || "",
           idTaiSan: ts.idTaiSan,
           idChiTietGiamDinh: ts.idChiTietGiamDinh,
-          action: ts.action || (ts.id ? Action.UPDATE : Action.CREATE),
           danhSachVatTu: (ts.danhSachVatTu || []).map((vt) => ({
             id: vt.id ? vt.id : generateCode("NTVT-"),
             idBienBanTaiSan: actualTsId,
@@ -164,7 +163,6 @@ const AcceptanceTestDialog = ({
             donViTinh: vt.donViTinh || "Cái",
             soLuong: vt.soLuong,
             ghiChu: vt.ghiChu || "",
-            action: vt.action || (vt.id ? Action.UPDATE : Action.CREATE),
           })),
         };
       });
@@ -217,9 +215,7 @@ const AcceptanceTestDialog = ({
             ...ts,
             danhSachVatTu: (ts.danhSachVatTu || []).map((vt) => ({
               ...vt,
-              action: Action.UPDATE,
             })),
-            action: Action.UPDATE,
           })) as AcceptanceTestRecordAssetData[],
           nguoiKyList: (listInfo ?? []).map((item: any) => {
             return {
@@ -234,9 +230,7 @@ const AcceptanceTestDialog = ({
         const list: AcceptanceTestRecordAssetData[] = [];
         (inspectionRecord?.danhSachChiTiet || []).forEach(
           (entry: InspectionRecordDetailData, idx: number) => {
-            const activeVatTu = (entry.danhSachVatTu || []).filter(
-              (vt: any) => vt.action !== Action.DELETE,
-            );
+            const activeVatTu = entry.danhSachVatTu || [];
             const tsId = `NTTS_${Date.now()}_${idx}`;
 
             if (activeVatTu.length > 0) {
@@ -260,7 +254,6 @@ const AcceptanceTestDialog = ({
                     donViTinh: vt.donViTinh || "Cái",
                     soLuong: qty,
                     ghiChu: vt.ghiChu || "",
-                    action: Action.CREATE,
                   };
                 }),
               });
@@ -281,7 +274,6 @@ const AcceptanceTestDialog = ({
                     donViTinh: "Cái",
                     soLuong: 1,
                     ghiChu: "",
-                    action: Action.CREATE,
                   },
                 ],
               });
@@ -327,7 +319,6 @@ const AcceptanceTestDialog = ({
       donViTinh: "Cái",
       soLuong: 1,
       ghiChu: "",
-      action: Action.CREATE,
     };
     const updatedVatTu = [...(ts.danhSachVatTu || []), newItem];
     formik.setFieldValue(
@@ -338,12 +329,9 @@ const AcceptanceTestDialog = ({
 
   const removeMaterialRow = (assetIdx: number, materialId: string) => {
     const ts = formik.values.danhSachTaiSan[assetIdx];
-    const updatedVatTu = (ts.danhSachVatTu || []).map((vt) => {
-      if (vt.id === materialId) {
-        return { ...vt, action: Action.DELETE };
-      }
-      return vt;
-    });
+    const updatedVatTu = (ts.danhSachVatTu || []).filter(
+      (vt) => vt.id !== materialId,
+    );
     formik.setFieldValue(
       `danhSachTaiSan[${assetIdx}].danhSachVatTu`,
       updatedVatTu,
@@ -353,7 +341,7 @@ const AcceptanceTestDialog = ({
   const updateMaterial = (
     assetIdx: number,
     vtId: string,
-    fields: Partial<AcceptanceTestRecordToolData> & { action?: any },
+    fields: Partial<AcceptanceTestRecordToolData>,
   ) => {
     const ts = formik.values.danhSachTaiSan[assetIdx];
     const updatedVatTu = (ts.danhSachVatTu || []).map((vt) =>
@@ -586,9 +574,7 @@ const AcceptanceTestDialog = ({
                   </TableHead>
                   <TableBody>
                     {formik.values.danhSachTaiSan.map((ts, assetIdx) => {
-                      const activeVatTu = (ts.danhSachVatTu || []).filter(
-                        (v) => v.action !== Action.DELETE,
-                      );
+                      const activeVatTu = ts.danhSachVatTu || [];
                       return (
                         <React.Fragment key={ts.id || assetIdx}>
                           <TableRow sx={{ bgcolor: "#fafafa" }}>
@@ -1134,9 +1120,7 @@ const AcceptanceTestDialog = ({
               </TableHead>
               <TableBody>
                 {formik.values.danhSachTaiSan.map((ts, assetIdx) => {
-                  const activeVatTu = (ts.danhSachVatTu || []).filter(
-                    (v) => v.action !== Action.DELETE,
-                  );
+                  const activeVatTu = ts.danhSachVatTu || [];
                   return (
                     <React.Fragment key={`pv-${ts.id || assetIdx}`}>
                       <TableRow sx={{ bgcolor: "#fafafa" }}>

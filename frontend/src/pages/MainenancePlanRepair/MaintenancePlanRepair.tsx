@@ -930,7 +930,7 @@ export default function MaintenancePlanRepair() {
                                               {(plan?.soLuongSuCo ?? 0) > 0 && (
                                                 <TableRow>
                                                   <TableCell
-                                                    colSpan={11}
+                                                    colSpan={13}
                                                     sx={{ p: 0, border: 0 }}
                                                   >
                                                     <Collapse

@@ -53,12 +53,59 @@ public class NghiemThuService {
 
     @Transactional
     public NghiemThu insert(NghiemThu entity) {
-        return nghiemThuDao.insert(entity);
+        NghiemThu saved = nghiemThuDao.insert(entity);
+        if (saved != null) {
+            if (entity.getDanhSachTaiSan() != null && !entity.getDanhSachTaiSan().isEmpty()) {
+                for (NghiemThuTaiSan ts : entity.getDanhSachTaiSan()) {
+                    ts.setIdBienBan(saved.getId());
+                    ts.setId(nghiemThuTaiSanDao.generateNextIdTaiSan());
+                    nghiemThuTaiSanDao.insertTaiSan(ts);
+                    if (ts.getDanhSachVatTu() != null && !ts.getDanhSachVatTu().isEmpty()) {
+                        for (NghiemThuVatTu vt : ts.getDanhSachVatTu()) {
+                            vt.setIdBienBanTaiSan(ts.getId());
+                            vt.setId(nghiemThuTaiSanDao.generateNextIdVatTu());
+                        }
+                        nghiemThuTaiSanDao.batchInsertVatTu(ts.getDanhSachVatTu());
+                    }
+                }
+            }
+            if (entity.getNguoiKyList() != null && !entity.getNguoiKyList().isEmpty()) {
+                entity.getNguoiKyList().forEach(nk -> nk.setIdTaiLieu(saved.getId()));
+                kyTaiLieuDao.updateNguoiKy(saved.getId(), entity.getNguoiKyList());
+            }
+        }
+        return saved;
     }
 
     @Transactional
     public NghiemThu update(NghiemThu entity) {
-        return nghiemThuDao.update(entity);
+        NghiemThu updated = nghiemThuDao.update(entity);
+        if (updated != null) {
+            // Delete old details recursively
+            nghiemThuTaiSanDao.deleteByIdBienBan(entity.getId());
+            
+            // Insert new ones recursively
+            if (entity.getDanhSachTaiSan() != null && !entity.getDanhSachTaiSan().isEmpty()) {
+                for (NghiemThuTaiSan ts : entity.getDanhSachTaiSan()) {
+                    ts.setIdBienBan(entity.getId());
+                    ts.setId(nghiemThuTaiSanDao.generateNextIdTaiSan());
+                    nghiemThuTaiSanDao.insertTaiSan(ts);
+                    if (ts.getDanhSachVatTu() != null && !ts.getDanhSachVatTu().isEmpty()) {
+                        for (NghiemThuVatTu vt : ts.getDanhSachVatTu()) {
+                            vt.setIdBienBanTaiSan(ts.getId());
+                            vt.setId(nghiemThuTaiSanDao.generateNextIdVatTu());
+                        }
+                        nghiemThuTaiSanDao.batchInsertVatTu(ts.getDanhSachVatTu());
+                    }
+                }
+            }
+            // Update signers
+            if (entity.getNguoiKyList() != null) {
+                entity.getNguoiKyList().forEach(nk -> nk.setIdTaiLieu(entity.getId()));
+                kyTaiLieuDao.updateNguoiKy(entity.getId(), entity.getNguoiKyList());
+            }
+        }
+        return updated;
     }
 
     @Transactional
@@ -120,6 +167,7 @@ public class NghiemThuService {
     @Transactional
     public int delete(String id) {
         nghiemThuTaiSanDao.deleteByIdBienBan(id);
+        kyTaiLieuDao.delete(id);
         return nghiemThuDao.delete(id);
     }
 

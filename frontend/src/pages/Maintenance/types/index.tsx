@@ -177,22 +177,37 @@ export interface IncidentInspectionData {
   nguoiKyList?: any[];
 }
 
+export interface IncidentInspectionVatTuData {
+  id?: string;
+  idChiTietKiemTraSuCo?: string;
+  idVatTu?: string;
+  idChiTietVatTu?: string;
+  soLuong?: number;
+  tinhTrang?: string;
+  soLuongSuaChua?: number;
+  soLuongThayMoi?: number;
+  ghiChu?: string;
+
+  // View fields
+  tenVatTu?: string;
+  donViTinh?: string;
+
+  action?: any;
+}
+
 export interface IncidentInspectionDetailData {
   id?: string;
   idKiemTraSuCo?: string;
   idTaiSan?: string;
   idSuCoChiTiet?: string;
-  capBaoDuong?: string;
-  tinhTrang?: string;
-  suaChua?: boolean;
-  thayMoi?: boolean;
-  ghiChu?: string;
-  soLuong?: number;
   
   // Enrich
   maTaiSan?: string;
   tenTaiSan?: string;
   donViTinh?: string;
+
+  danhSachVatTu?: IncidentInspectionVatTuData[];
+  action?: any;
 }
 
 export interface QuyTrinhSuaChuaData {
