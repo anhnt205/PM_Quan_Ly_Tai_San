@@ -36,7 +36,7 @@ public class GiamDinhPhuongTienDao {
                 nvLap.HoTen AS tenNguoiLap,
                 nvGD.HoTen AS tenGiamDoc,
                 COALESCE(sc.SoPhieu, ktsc.SoPhieu) AS soPhieuBienBan,
-                (SELECT COUNT(*) FROM nghiemthu nt WHERE nt.IdGiamDinhMayMoc = gd.Id) AS daCoNghiemThu
+                (SELECT COUNT(*) FROM nghiemthu_phuongtien nt WHERE nt.IdGiamDinhPhuongTien = gd.Id) AS daCoNghiemThu
             FROM giamdinh_phuongtien gd
                 LEFT JOIN suachua sc ON gd.IdBienBan = sc.Id AND gd.LoaiBienBan = 'sua_chua'
                 LEFT JOIN kiemtra_suco ktsc ON gd.IdBienBan = ktsc.Id AND gd.LoaiBienBan = 'su_co'
