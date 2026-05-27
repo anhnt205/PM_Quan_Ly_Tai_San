@@ -19,6 +19,7 @@ export interface MaintenancePlanData {
   idLoaiKeHoach: string;
   idLoaiSuaChua: string;
   nam: number;
+  nhomTaiSan?: string;
   idDonViGiao: string;
   idDonViNhan: string;
   tenDonViGiao?: string;

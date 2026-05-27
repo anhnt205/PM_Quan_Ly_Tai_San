@@ -46,6 +46,7 @@ public class KeHoachSuaChuaDao {
                 kh.IdLoaiSuaChua,
                 lsc.Ten            AS tenLoaiSuaChua,
                 kh.Nam,
+                kh.NhomTaiSan,
 
                 kh.IdDonViGiao,
                 pbGiao.TenPhongBan AS tenDonViGiao,
@@ -161,8 +162,8 @@ public class KeHoachSuaChuaDao {
                 IdTrinhDuyetGiamDoc, TrinhDuyetGiamDocXacNhan,
                 TrangThai, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat,
                 GhiChu, DuongDanFile, TenFile, NgayKy, DuongDanTaiLieuBangKe,
-                Share, ByStep
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                Share, ByStep, NhomTaiSan
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         int r = jdbcTemplate.update(sql,
                 e.getId(), e.getIdCongTy(), e.getSoKeHoach(), e.getTenKeHoach(), e.getSoQuyetDinh(),
@@ -174,7 +175,7 @@ public class KeHoachSuaChuaDao {
                 e.getNgayTao(), e.getNgayCapNhat(), e.getNguoiTao(), e.getNguoiCapNhat(),
                 e.getGhiChu(), e.getDuongDanFile(), e.getTenFile(), e.getNgayKy(),
                 e.getDuongDanTaiLieuBangKe(),
-                e.getShare(), e.getByStep()
+                e.getShare(), e.getByStep(), e.getNhomTaiSan()
         );
         if (r > 0) { CompletableFuture.runAsync(this::refreshCache); return findById(e.getId()); }
         return null;
@@ -192,7 +193,7 @@ public class KeHoachSuaChuaDao {
                 IdTrinhDuyetGiamDoc = ?, TrinhDuyetGiamDocXacNhan = ?,
                 TrangThai = ?, NgayCapNhat = ?, NguoiCapNhat = ?,
                 GhiChu = ?, DuongDanFile = ?, TenFile = ?, NgayKy = ?, DuongDanTaiLieuBangKe = ?,
-                Share = ?, ByStep = ?
+                Share = ?, ByStep = ?, NhomTaiSan = ?
             WHERE Id = ?
             """;
         int r = jdbcTemplate.update(sql,
@@ -204,7 +205,7 @@ public class KeHoachSuaChuaDao {
                 e.getTrangThai(), e.getNgayCapNhat(), e.getNguoiCapNhat(),
                 e.getGhiChu(), e.getDuongDanFile(), e.getTenFile(),
                 e.getNgayKy(), e.getDuongDanTaiLieuBangKe(),
-                e.getShare(), e.getByStep(),
+                e.getShare(), e.getByStep(), e.getNhomTaiSan(),
                 e.getId()
         );
         if (r > 0) { CompletableFuture.runAsync(this::refreshCache); return findById(e.getId()); }

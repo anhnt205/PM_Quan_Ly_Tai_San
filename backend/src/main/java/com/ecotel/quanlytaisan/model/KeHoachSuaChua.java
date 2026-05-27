@@ -10,6 +10,7 @@ import lombok.Data;
 public class KeHoachSuaChua {
     private String id;
     private String idCongTy;
+    private String nhomTaiSan;
 
     // Thông tin cơ bản
     private String soKeHoach;

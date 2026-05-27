@@ -41,13 +41,14 @@ public class KeHoachSuaChuaController {
             @RequestParam(value = "userid", required = false) String userid,
             @RequestParam(value = "isSign", required = false) Boolean isSign,
             @RequestParam(value = "dateFrom", required = false) String dateFrom,
-            @RequestParam(value = "dateTo", required = false) String dateTo
+            @RequestParam(value = "dateTo", required = false) String dateTo,
+            @RequestParam(value = "nhomTaiSan", required = false) String nhomTaiSan
     ) throws SQLException {
         try {
             PageResponse<KeHoachSuaChuaDTO> response = keHoachSuaChuaService.findAllPaged(
                     idCongTy, page, size, sortBy, sortDir, search,
                     loaiKeHoach, idDonViGiao, idDonViNhan, trangThai, nam, userid, isSign,
-                    dateFrom, dateTo
+                    dateFrom, dateTo, nhomTaiSan
             );
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", response, (int) response.getTotalItems()));
         } catch (Exception e) {
@@ -93,11 +94,12 @@ public class KeHoachSuaChuaController {
             @RequestParam(value = "userid", required = false) String userid,
             @RequestParam(value = "idDonViGiao", required = false) String idDonViGiao,
             @RequestParam(value = "dateFrom", required = false) String dateFrom,
-            @RequestParam(value = "dateTo", required = false) String dateTo
+            @RequestParam(value = "dateTo", required = false) String dateTo,
+            @RequestParam(value = "nhomTaiSan", required = false) String nhomTaiSan
     ) throws SQLException {
         try {
             Map<String, Object> result = keHoachSuaChuaService.findAllGroupedByYear(
-                idCongTy, search, trangThai, nam, userid, idDonViGiao, dateFrom, dateTo);
+                idCongTy, search, trangThai, nam, userid, idDonViGiao, dateFrom, dateTo, nhomTaiSan);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách theo năm thành công", result, result.size()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

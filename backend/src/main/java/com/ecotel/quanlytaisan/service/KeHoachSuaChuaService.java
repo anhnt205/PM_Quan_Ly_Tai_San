@@ -41,7 +41,7 @@ public class KeHoachSuaChuaService {
             String sortBy, String sortDir, String search,
             String loaiKeHoach, String idDonViGiao, String idDonViNhan,
             Integer trangThai, Integer nam, String userid, Boolean isSign,
-            String dateFrom, String dateTo
+            String dateFrom, String dateTo, String nhomTaiSan
     ) throws SQLException {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
@@ -61,24 +61,15 @@ public class KeHoachSuaChuaService {
             sourceList = filtered;
         }
 
-        // Đếm trạng thái (sau turn-filter, trước các filter còn lại)
-        Map<String, Long> trangThaiCounts = new HashMap<>();
-        for (KeHoachSuaChuaDTO item : sourceList) {
-            if (item.getTrangThai() != null) {
-                String key = item.getTrangThai().toString();
-                trangThaiCounts.put(key, trangThaiCounts.getOrDefault(key, 0L) + 1);
-            }
-        }
-
         // Filters
+        if (nhomTaiSan != null && !nhomTaiSan.trim().isEmpty())
+            sourceList = sourceList.stream().filter(i -> nhomTaiSan.equalsIgnoreCase(i.getNhomTaiSan())).collect(Collectors.toList());
         if (loaiKeHoach != null && !loaiKeHoach.trim().isEmpty())
             sourceList = sourceList.stream().filter(i -> loaiKeHoach.equals(i.getIdLoaiKeHoach())).collect(Collectors.toList());
         if (idDonViGiao != null && !idDonViGiao.trim().isEmpty())
             sourceList = sourceList.stream().filter(i -> idDonViGiao.equalsIgnoreCase(i.getIdDonViGiao())).collect(Collectors.toList());
         if (idDonViNhan != null && !idDonViNhan.trim().isEmpty())
             sourceList = sourceList.stream().filter(i -> idDonViNhan.equalsIgnoreCase(i.getIdDonViNhan())).collect(Collectors.toList());
-        if (trangThai != null)
-            sourceList = sourceList.stream().filter(i -> trangThai.equals(i.getTrangThai())).collect(Collectors.toList());
         if (nam != null)
             sourceList = sourceList.stream().filter(i -> nam.equals(i.getNam())).collect(Collectors.toList());
         if (search != null && !search.trim().isEmpty()) {
@@ -100,6 +91,19 @@ public class KeHoachSuaChuaService {
                     .filter(i -> i.getNgayTao() != null && i.getNgayTao().compareTo(dateToEnd) <= 0)
                     .collect(Collectors.toList());
         }
+
+        // Đếm trạng thái (sau các bộ lọc khác, trước bộ lọc trạng thái)
+        Map<String, Long> trangThaiCounts = new HashMap<>();
+        for (KeHoachSuaChuaDTO item : sourceList) {
+            if (item.getTrangThai() != null) {
+                String key = item.getTrangThai().toString();
+                trangThaiCounts.put(key, trangThaiCounts.getOrDefault(key, 0L) + 1);
+            }
+        }
+
+        // Áp dụng bộ lọc trạng thái
+        if (trangThai != null)
+            sourceList = sourceList.stream().filter(i -> trangThai.equals(i.getTrangThai())).collect(Collectors.toList());
 
         sourceList.sort(getComparator(sortBy, sortDir));
 
@@ -122,7 +126,7 @@ public class KeHoachSuaChuaService {
 
     public Map<String, Object> findAllGroupedByYear(
             String idCongTy, String search, Integer trangThai, Integer nam, String userid,
-            String idDonViGiao, String dateFrom, String dateTo) throws SQLException {
+            String idDonViGiao, String dateFrom, String dateTo, String nhomTaiSan) throws SQLException {
         List<KeHoachSuaChuaDTO> sourceList = keHoachSuaChuaDao.findAll(idCongTy);
 
         if (userid != null && !userid.trim().isEmpty() && !"admin".equalsIgnoreCase(userid)) {
@@ -132,19 +136,11 @@ public class KeHoachSuaChuaService {
             sourceList = filtered;
         }
 
-        // Đếm trạng thái (sau turn-filter, trước các filter còn lại)
-        Map<String, Long> trangThaiCounts = new HashMap<>();
-        for (KeHoachSuaChuaDTO item : sourceList) {
-            if (item.getTrangThai() != null) {
-                String key = item.getTrangThai().toString();
-                trangThaiCounts.put(key, trangThaiCounts.getOrDefault(key, 0L) + 1);
-            }
-        }
-
+        // Filters
+        if (nhomTaiSan != null && !nhomTaiSan.trim().isEmpty())
+            sourceList = sourceList.stream().filter(i -> nhomTaiSan.equalsIgnoreCase(i.getNhomTaiSan())).collect(Collectors.toList());
         if (idDonViGiao != null && !idDonViGiao.trim().isEmpty())
             sourceList = sourceList.stream().filter(i -> idDonViGiao.equalsIgnoreCase(i.getIdDonViGiao())).collect(Collectors.toList());
-        if (trangThai != null)
-            sourceList = sourceList.stream().filter(i -> trangThai.equals(i.getTrangThai())).collect(Collectors.toList());
         if (nam != null)
             sourceList = sourceList.stream().filter(i -> nam.equals(i.getNam())).collect(Collectors.toList());
         if (search != null && !search.trim().isEmpty()) {
@@ -166,6 +162,19 @@ public class KeHoachSuaChuaService {
                     .filter(i -> i.getNgayTao() != null && i.getNgayTao().compareTo(dateToEnd) <= 0)
                     .collect(Collectors.toList());
         }
+
+        // Đếm trạng thái (sau các bộ lọc khác, trước bộ lọc trạng thái)
+        Map<String, Long> trangThaiCounts = new HashMap<>();
+        for (KeHoachSuaChuaDTO item : sourceList) {
+            if (item.getTrangThai() != null) {
+                String key = item.getTrangThai().toString();
+                trangThaiCounts.put(key, trangThaiCounts.getOrDefault(key, 0L) + 1);
+            }
+        }
+
+        // Áp dụng bộ lọc trạng thái
+        if (trangThai != null)
+            sourceList = sourceList.stream().filter(i -> trangThai.equals(i.getTrangThai())).collect(Collectors.toList());
 
         sourceList.sort(getComparator(null, "desc"));
 

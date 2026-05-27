@@ -135,6 +135,7 @@ export default function MaintenancePlanRepair() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [nhomTaiSanFilter, setNhomTaiSanFilter] = useState("MAY_MOC");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [expandedYears, setExpandedYears] = useState<Record<string, boolean>>(
     {},
@@ -159,6 +160,7 @@ export default function MaintenancePlanRepair() {
     selectedDepartment,
     dateFrom,
     dateTo,
+    nhomTaiSanFilter,
   );
   const { createMutation, updateMutation, deleteMutation, updateManyMutation } =
     useMaintenancePlanningMutation();
@@ -533,13 +535,36 @@ export default function MaintenancePlanRepair() {
                     }}
                   />
                 </Box>
-                {(dateFrom || dateTo) && (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Nhóm tài sản
+                  </Typography>
+                  <select
+                    value={nhomTaiSanFilter}
+                    onChange={(e) => setNhomTaiSanFilter(e.target.value)}
+                    style={{
+                      border: "1px solid #ccc",
+                      borderRadius: 6,
+                      padding: "4px 8px",
+                      fontSize: 13,
+                      color: "inherit",
+                      background: "transparent",
+                      outline: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <option value="MAY_MOC">Máy móc</option>
+                    <option value="PHUONG_TIEN">Phương tiện</option>
+                  </select>
+                </Box>
+                {(dateFrom || dateTo || nhomTaiSanFilter) && (
                   <Chip
                     label="Xóa bộ lọc"
                     size="small"
                     onDelete={() => {
                       setDateFrom("");
                       setDateTo("");
+                      setNhomTaiSanFilter("");
                     }}
                     sx={{ fontSize: 11 }}
                   />

@@ -82,6 +82,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
       planCode: initialData?.id || "",
       planName: initialData?.tenKeHoach || "",
       planYear: initialData?.nam || new Date().getFullYear(),
+      nhomTaiSan: initialData?.nhomTaiSan || "MAY_MOC",
       sourceDeptId: initialData?.idDonViGiao || "",
       executionDeptId: initialData?.idDonViNhan || "",
       decisionNo: initialData?.soQuyetDinh || "",
@@ -194,7 +195,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
     formik.values.planCode.trim() !== "" &&
     formik.values.planName.trim() !== "";
 
-  const handleSave = (status: "draft" | "cho-duyet") => {
+  const handleSave = () => {
     // 1. Ánh xạ chi tiết tài sản với 12 tháng
     const danhSachTaiSan = formik.values.assets.map((a: PlanAsset) => ({
       id: a.id,
@@ -238,6 +239,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
       // Dùng planCode làm ID nếu có, nếu không thì để null để Backend tự tạo hoặc Frontend tạo GUID
       id: formik.values.planCode.trim() || undefined,
       idCongTy: formik.values.idCongTy,
+      nhomTaiSan: formik.values.nhomTaiSan,
       soKeHoach: formik.values.planCode,
       tenKeHoach: formik.values.planName,
       soQuyetDinh: formik.values.decisionNo,
@@ -250,7 +252,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
       idTrinhDuyetGiamDoc: idTrinhDuyetGiamDoc,
       trinhDuyetGiamDocXacNhan: false,
       trangThai: 0,
-      share: status === "draft" ? false : true,
+      share: false,
       ghiChu: `Kế hoạch SCBD - ${departments.find((d: any) => d.id === formik.values.sourceDeptId)?.tenPhongBan || formik.values.sourceDeptId}`,
       danhSachTaiSan: danhSachTaiSan,
       nguoiKyList: intermediateSigners,
@@ -314,8 +316,9 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
               <Box
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: "0.7fr 1fr 0.5fr",
+                  gridTemplateColumns: "0.7fr 1.2fr 0.5fr 0.8fr",
                   gap: 2,
+                  alignItems: "end",
                 }}
               >
                 <FieldInput title="Mã phiếu" formik={formik} field="planCode" />
@@ -325,6 +328,16 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
                   field="planName"
                 />
                 <FieldYear title="Năm" formik={formik} field="planYear" />
+                <FieldAutoCompleted
+                  title="Nhóm tài sản"
+                  data={[
+                    { value: "MAY_MOC", text: "Máy móc" },
+                    { value: "PHUONG_TIEN", text: "Phương tiện" },
+                  ]}
+                  labelkey="text"
+                  formik={formik}
+                  field="nhomTaiSan"
+                />
               </Box>
             </Box>
 
@@ -817,22 +830,15 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
           Hủy
         </Button>
         {isEdit ? (
-          <Button onClick={() => handleSave("draft")} variant="outlined">
+          <Button onClick={() => handleSave()} variant="outlined">
             Cập nhật
           </Button>
         ) : (
           <>
             <Button
-              variant="outlined"
-              disabled={!canSave}
-              onClick={() => handleSave("draft")}
-            >
-              Lưu nháp
-            </Button>
-            <Button
               variant="contained"
               disabled={!canSave}
-              onClick={() => handleSave("cho-duyet")}
+              onClick={() => handleSave()}
             >
               Gửi phê duyệt
             </Button>
