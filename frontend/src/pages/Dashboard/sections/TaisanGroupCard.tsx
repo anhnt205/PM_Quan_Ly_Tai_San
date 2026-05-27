@@ -1,115 +1,338 @@
 import React from "react";
 import { Paper, Typography, Box } from "@mui/material";
 import { Inventory, AttachMoney } from "@mui/icons-material";
+
 import PieChart, { COLORS } from "../components/PieChart";
-import {
-  useAllAssetGroupQuery,
-  useTypeAssetMutation,
-} from "../../TypeAsset/Mutation";
+
+import { useAllAssetGroupQuery } from "../../TypeAsset/Mutation";
+
 import { formattedPrice } from "../../../utils/helpers";
 
-export default function TaisanGroupCard({ taiSanPieData, statistics }: any) {
-  // If `taiSanPieData` not provided, fallback to assetGroups from typeAsset hook
+// ─── Types ────────────────────────────────────────────────────────────────
+
+interface PieItem {
+  ten: string;
+  soLuong: number;
+  phanTram?: number;
+  color: string;
+}
+
+interface Statistics {
+  tongTaiSan?: number;
+  tongNguyenGia?: number;
+}
+
+interface AssetGroup {
+  ten?: string;
+  tenNhom?: string;
+  soLuongTaiSan?: number;
+  soLuong?: number;
+}
+
+interface TaisanGroupCardProps {
+  taiSanPieData?: PieItem[];
+  statistics?: Statistics;
+}
+
+// ─── Component ────────────────────────────────────────────────────────────
+
+export default function TaisanGroupCard({
+  taiSanPieData,
+  statistics,
+}: TaisanGroupCardProps) {
   const { data: assetGroups = [] } = useAllAssetGroupQuery();
 
-  // Prefer prop data; otherwise build from assetGroups
-  let pieData = taiSanPieData || [];
-  if (!pieData || (Array.isArray(pieData) && pieData.length === 0)) {
-    const mapped = (assetGroups || []).map((item: any, idx: number) => ({
-      ten: item.ten || item.tenNhom || "",
-      soLuong: item.soLuongTaiSan ?? item.soLuong ?? 0,
-      color: COLORS[idx % COLORS.length],
-    }));
+  // ─── Fallback data from API ────────────────────────────────────────────
 
-    const total =
-      mapped.reduce((s: number, it: any) => s + (it.soLuong || 0), 0) || 1;
-    pieData = mapped.map((it: any) => ({
-      ...it,
-      phanTram: (it.soLuong / total) * 100,
+  let pieData: PieItem[] = taiSanPieData || [];
+
+  if (!pieData.length) {
+    const mapped: PieItem[] = (assetGroups as AssetGroup[]).map(
+      (item, idx) => ({
+        ten: item.ten || item.tenNhom || "",
+        soLuong: item.soLuongTaiSan ?? item.soLuong ?? 0,
+        color: COLORS[idx % COLORS.length],
+      }),
+    );
+
+    const total = mapped.reduce((sum, item) => sum + item.soLuong, 0) || 1;
+
+    pieData = mapped.map((item) => ({
+      ...item,
+      phanTram: (item.soLuong / total) * 100,
     }));
   }
 
+  // ─── Empty state ───────────────────────────────────────────────────────
+
   const allEmptyGroup =
-    !pieData ||
-    pieData.length === 0 ||
+    !pieData.length ||
     pieData.every(
-      (it: any) =>
-        !it.ten ||
-        String(it.ten).trim() === "" ||
-        String(it.ten).trim() === "Chưa xác định",
+      (item) =>
+        !item.ten ||
+        item.ten.trim() === "" ||
+        item.ten.trim() === "Chưa xác định",
     );
 
-  const displayData = allEmptyGroup
-    ? [{ ten: "", soLuong: 1, phanTram: 100, color: COLORS[0] }]
+  const displayData: PieItem[] = allEmptyGroup
+    ? [
+        {
+          ten: "",
+          soLuong: 1,
+          phanTram: 100,
+          color: COLORS[0],
+        },
+      ]
     : pieData;
+
+  // ─── Render ────────────────────────────────────────────────────────────
 
   return (
     <Paper
       elevation={0}
       sx={{
-        p: 2,
-        borderRadius: 2,
+        p: 0,
+        borderRadius: 3,
         height: "100%",
-        minHeight: 350,
-        bgcolor: "#f0faf5",
+        minHeight: 420,
+        bgcolor: "rgba(255,255,255,0.72)",
+        backdropFilter: "blur(12px)",
+        border: "1px solid rgba(13,158,109,0.12)",
+        overflow: "hidden",
+        transition: "all 0.3s ease",
+
+        "&:hover": {
+          boxShadow:
+            "0 10px 32px rgba(4,180,110,0.13), 0 2px 16px rgba(0,0,0,0.06)",
+          // transform: "translateY(-2px)",
+        },
       }}
     >
-      <Typography
-        variant="subtitle1"
-        sx={{ color: "#04b46e", fontWeight: 600, mb: 2 }}
-      >
-        Phân bố tài sản theo nhóm (%)
-      </Typography>
+      <Box
+        sx={{
+          height: 3,
+          background: "#04b46e",
+        }}
+      />
 
-      <Box sx={{ display: "flex", gap: 2, alignItems: "flex-start" }}>
-        <Box sx={{ flexShrink: 0 }}>
-          <PieChart data={displayData} size={120} />
-        </Box>
-        <Box sx={{ flex: 1, maxHeight: 180, overflowY: "auto" }}>
-          {displayData.map((item: any, index: number) => (
-            <Box
-              key={index}
-              sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}
+      <Box
+        sx={{
+          p: 2.5,
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+        }}
+      >
+        {/* ─── Content ─────────────────────────────────────────────── */}
+        <Box>
+          {/* Header */}
+          <Box
+            sx={{
+              borderLeft: "4px solid #0d9e6d",
+              pl: 1.5,
+              mb: 2,
+            }}
+          >
+            <Typography
+              variant="subtitle1"
+              sx={{
+                color: "#0d9e6d",
+                fontWeight: 700,
+              }}
             >
+              Phân bố tài sản theo nhóm (%)
+            </Typography>
+          </Box>
+
+          {/* Pie Chart */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              mb: 2,
+            }}
+          >
+            <PieChart
+              data={displayData.map((item) => ({
+                ...item,
+                phanTram: item.phanTram ?? 0,
+              }))}
+              size={250}
+            />
+          </Box>
+
+          {/* Legend */}
+          <Box
+            sx={{
+              maxHeight: 120,
+              overflowY: "auto",
+              px: 0.5,
+            }}
+          >
+            {displayData.map((item, index) => (
               <Box
+                key={index}
                 sx={{
-                  width: 12,
-                  height: 12,
-                  bgcolor: item.color,
-                  borderRadius: 0.5,
-                  flexShrink: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 1,
+                  mb: 1,
                 }}
-              />
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    minWidth: 0,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 8,
+                      height: 8,
+                      bgcolor: item.color,
+                      borderRadius: "50%",
+                      flexShrink: 0,
+                    }}
+                  />
+
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "#475569",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {item.ten}
+                  </Typography>
+                </Box>
+
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "#64748b",
+                    fontWeight: 600,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {formattedPrice(item.soLuong)} ({item.phanTram?.toFixed(1)}%)
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+
+        {/* ─── Footer Stats ───────────────────────────────────────── */}
+        <Box
+          sx={{
+            mt: 2,
+            display: "flex",
+            gap: 1.5,
+          }}
+        >
+          {/* Total Assets */}
+          <Box
+            sx={{
+              flex: 1,
+              p: 1.2,
+              borderRadius: 2,
+              background:
+                "linear-gradient(135deg, rgba(13,158,109,0.05) 0%, rgba(13,158,109,0.12) 100%)",
+              border: "1px solid rgba(13,158,109,0.08)",
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            <Inventory
+              sx={{
+                fontSize: 18,
+                color: "#0d9e6d",
+              }}
+            />
+
+            <Box>
               <Typography
                 variant="caption"
-                sx={{ color: item.color, fontWeight: 500 }}
+                sx={{
+                  color: "text.secondary",
+                  display: "block",
+                  fontSize: "0.7rem",
+                  textTransform: "uppercase",
+                  fontWeight: 700,
+                  lineHeight: 1.1,
+                }}
               >
-                {item.ten}
+                Tổng tài sản
               </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {formattedPrice(item.soLuong)} ({item.phanTram?.toFixed(1)}%)
+
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "#1e293b",
+                  fontWeight: 700,
+                  fontSize: "0.85rem",
+                  mt: 0.2,
+                }}
+              >
+                {(statistics?.tongTaiSan || 0).toLocaleString()}
               </Typography>
             </Box>
-          ))}
-        </Box>
-      </Box>
+          </Box>
 
-      <Box sx={{ mt: 2, pt: 2, borderTop: "1px solid #e0e0e0" }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
-          <Inventory sx={{ fontSize: 16, color: "#666" }} />
-          <Typography variant="body2">
-            Tổng tài sản:{" "}
-            <strong>{(statistics?.tongTaiSan || 0).toLocaleString()}</strong>
-          </Typography>
-        </Box>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <AttachMoney sx={{ fontSize: 16, color: "#666" }} />
-          <Typography variant="body2">
-            Tổng nguyên giá:{" "}
-            <strong>
-              {(statistics?.tongNguyenGia || 0).toLocaleString()} đ
-            </strong>
-          </Typography>
+          {/* Total Price */}
+          <Box
+            sx={{
+              flex: 1.2,
+              p: 1.2,
+              borderRadius: 2,
+              background:
+                "linear-gradient(135deg, rgba(26,115,232,0.05) 0%, rgba(26,115,232,0.12) 100%)",
+              border: "1px solid rgba(26,115,232,0.08)",
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            <AttachMoney
+              sx={{
+                fontSize: 20,
+                color: "#1a73e8",
+              }}
+            />
+
+            <Box>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  display: "block",
+                  fontSize: "0.7rem",
+                  textTransform: "uppercase",
+                  fontWeight: 700,
+                  lineHeight: 1.1,
+                }}
+              >
+                Tổng nguyên giá
+              </Typography>
+
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "#1e293b",
+                  fontWeight: 700,
+                  fontSize: "0.85rem",
+                  mt: 0.2,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {(statistics?.tongNguyenGia || 0).toLocaleString()} đ
+              </Typography>
+            </Box>
+          </Box>
         </Box>
       </Box>
     </Paper>

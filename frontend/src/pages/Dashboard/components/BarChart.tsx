@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Tooltip } from "@mui/material";
 import { formattedPrice } from "../../../utils/helpers";
 
 interface BarChartItem {
@@ -14,6 +14,12 @@ interface Props {
   height?: number;
   barColor?: string;
 }
+
+// Helper: create a gradient from a solid color
+const getBarBackground = (color: string): string => {
+  if (color.startsWith("linear-gradient")) return color;
+  return `linear-gradient(180deg, ${color} 0%, ${color}dd 60%, ${color}99 100%)`;
+};
 
 export default function BarChart({
   data,
@@ -78,7 +84,7 @@ export default function BarChart({
           <Typography
             key={index}
             variant="caption"
-            sx={{ color: "#9e9e9e", fontSize: "11px" }}
+            sx={{ color: "#94a3b8", fontSize: "11px", fontWeight: 500 }}
           >
             {val}
           </Typography>
@@ -106,7 +112,7 @@ export default function BarChart({
               bottom: (val / actualMax) * chartHeight,
               left: 0,
               right: 0,
-              borderTop: "1px solid #e0e0e0",
+              borderTop: "1px dashed #e5e7eb",
             }}
           />
         ))}
@@ -114,6 +120,7 @@ export default function BarChart({
         {/* Bars */}
         {data.map((item, index) => {
           const barHeight = (item.value / actualMax) * chartHeight;
+          const bgColor = item.color || barColor;
           return (
             <Box
               key={index}
@@ -128,19 +135,71 @@ export default function BarChart({
             >
               <Typography
                 variant="caption"
-                sx={{ mb: 0.5, fontWeight: 500, fontSize: "11px" }}
+                sx={{ mb: 0.5, fontWeight: 700, fontSize: "14px" }}
               >
                 {formattedPrice(item.value)}
               </Typography>
-              <Box
-                sx={{
-                  width: "100%",
-                  maxWidth: 50,
-                  height: Math.max(barHeight, 2),
-                  bgcolor: item.color || barColor,
-                  transition: "height 0.3s ease",
+              <Tooltip
+                arrow
+                placement="top"
+                title={
+                  <Box sx={{ p: 0.5 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontWeight: 700,
+                        fontSize: "0.85rem",
+                        color: "#fff",
+                      }}
+                    >
+                      {formattedPrice(item.value)}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: "rgba(255,255,255,0.7)", fontSize: "0.75rem" }}
+                    >
+                      {item.label}
+                    </Typography>
+                  </Box>
+                }
+                componentsProps={{
+                  tooltip: {
+                    sx: {
+                      bgcolor: "rgba(15, 23, 42, 0.9)",
+                      backdropFilter: "blur(12px)",
+                      borderRadius: "10px",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      px: 1.5,
+                      py: 1,
+                      boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+                    },
+                  },
+                  arrow: {
+                    sx: {
+                      color: "rgba(15, 23, 42, 0.9)",
+                    },
+                  },
                 }}
-              />
+              >
+                <Box
+                  sx={{
+                    width: "100%",
+                    maxWidth: 70,
+                    minWidth: 12,
+                    height: Math.max(barHeight, 4),
+                    background: getBarBackground(bgColor),
+                    borderRadius: "8px 8px 0 0",
+                    cursor: "pointer",
+                    transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                    transformOrigin: "bottom",
+                    "&:hover": {
+                      filter: "brightness(1.08)",
+                      transform: "scaleX(1.05) scaleY(1.02)",
+                      boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+                    },
+                  }}
+                />
+              </Tooltip>
             </Box>
           );
         })}
@@ -165,8 +224,9 @@ export default function BarChart({
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
-                color: "#9e9e9e",
+                color: "#94a3b8",
                 fontSize: "11px",
+                fontWeight: 500,
               }}
             >
               {item.label}
