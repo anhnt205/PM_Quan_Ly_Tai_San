@@ -5,16 +5,25 @@ import {
   Menu,
   MenuItem,
   Typography,
+  Button,
 } from "@mui/material";
 import { useRef, useState, useEffect } from "react";
-import NewButton from "../Button/NewButton";
-import { Download, Settings, Sync, Upload, Close } from "@mui/icons-material";
+import {
+  Download,
+  Sync,
+  Upload,
+  Close,
+  SettingsOutlined,
+  KeyboardArrowDown,
+  Add,
+} from "@mui/icons-material";
 import CustomProgress from "../loading/CustomProgress";
 import ImportSignatureModal from "./ImportSignatureModal";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { addTab, removeTab, setActiveTab } from "../../redux/tabsSlice";
 import { useLocation, useNavigate } from "react-router-dom";
+import React from "react";
 
 interface Props {
   loading?: boolean;
@@ -37,9 +46,9 @@ export default function PageAction({
   onImport,
   onSyncDb,
   showExcel = false,
-  showImportSignature=false,
+  showImportSignature = false,
   onImportSignature,
-  hideActionRow = false
+  hideActionRow = false,
 }: Props) {
   const dispatch = useDispatch();
   const location = useLocation();
@@ -66,11 +75,11 @@ export default function PageAction({
     // If we removed the active tab, navigate to the new active tab
     const currentPath = location.pathname + location.search;
     if (path === currentPath) {
-      const remainingTabs = tabs.filter(t => t.path !== path);
+      const remainingTabs = tabs.filter((t) => t.path !== path);
       if (remainingTabs.length > 0) {
         navigate(remainingTabs[remainingTabs.length - 1].path);
       } else {
-        navigate('/'); // Or some default route
+        navigate("/"); // Or some default route
       }
     }
   };
@@ -110,21 +119,22 @@ export default function PageAction({
         top: 60,
         zIndex: 99,
         bgcolor: "background.paper",
-        borderBottom: "1px solid",
+        // borderBottom: "1px solid",
         borderColor: "divider",
       }}
     >
       {/* Hàng 1: Thanh Tab Bar */}
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 1, 
-          overflowX: 'auto', 
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          overflowX: "auto",
           px: 1,
           py: 0.5,
-          borderBottom: '1px solid',
-          borderColor: 'grey.400',
+          borderBottom: "1px solid",
+          borderColor: "grey.200",
+          bgcolor: "#f8fafc",
           "&::-webkit-scrollbar": {
             height: "4px",
           },
@@ -141,34 +151,36 @@ export default function PageAction({
         }}
       >
         {tabs.map((tab) => {
-          const isActive = tab.path === (location.pathname + location.search);
+          const isActive = tab.path === location.pathname + location.search;
           return (
             <Box
               key={tab.path}
               onClick={() => handleTabClick(tab.path)}
               sx={{
-                display: 'flex',
-                alignItems: 'center',
+                display: "flex",
+                alignItems: "center",
                 gap: 1,
                 px: 1.5,
                 py: 1,
-                borderRadius: '8px',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                bgcolor: isActive ? '#e3f2fd' : 'transparent',
-                color: isActive ? '#1565c0' : '#64748b',
-                border: isActive ? '1px solid #bbdefb' : '1px solid transparent',
-                '&:hover': {
-                  bgcolor: isActive ? '#e3f2fd' : '#f1f5f9',
-                  color: isActive ? '#1565c0' : '#334155',
+                borderRadius: "8px",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                bgcolor: isActive ? "#e3f2fd" : "transparent",
+                color: isActive ? "#1565c0" : "#64748b",
+                border: isActive
+                  ? "1px solid #bbdefb"
+                  : "1px solid transparent",
+                "&:hover": {
+                  bgcolor: isActive ? "#e3f2fd" : "#f1f5f9",
+                  color: isActive ? "#1565c0" : "#334155",
                 },
               }}
             >
-              <Typography 
-                variant="body2" 
-                sx={{ 
-                  fontSize: '14px'
+              <Typography
+                variant="body2"
+                sx={{
+                  fontSize: "14px",
                 }}
               >
                 {tab.title}
@@ -182,14 +194,14 @@ export default function PageAction({
                 sx={{
                   p: 0.1,
                   ml: 0.5,
-                  color: isActive ? '#1565c0' : '#94a3b8',
-                  '&:hover': { 
-                    color: '#ef4444',
-                    bgcolor: 'rgba(239, 68, 68, 0.1)'
+                  color: isActive ? "#1565c0" : "#94a3b8",
+                  "&:hover": {
+                    color: "#ef4444",
+                    bgcolor: "rgba(239, 68, 68, 0.1)",
                   },
                 }}
               >
-                <Close sx={{ fontSize: 14 }} />
+                <Close sx={{ fontSize: 13 }} />
               </IconButton>
             </Box>
           );
@@ -202,41 +214,123 @@ export default function PageAction({
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: 2,
-            p: 1,
+            justifyContent: "space-between",
+            mt: 4,
+            p: 1.5,
+            px: 3,
+            bgcolor: "rgba(255, 255, 255, 0.7)",
+            backdropFilter: "blur(12px)",
           }}
         >
-          {onNewClick && <NewButton onClick={onNewClick} />}
-          
-          {/* Có thể hiển thị tiêu đề trang hiện tại ở đây nếu muốn */}
-          <Typography sx={{ fontWeight: 600, color: "text.primary", }}>
-            {title}
-          </Typography>
+          {/* Tiêu đề trang nằm bên trái */}
+          <Box
+            sx={{
+              borderLeft: "4px solid #14a760",
+              pl: 1.5,
+              py: 0.5,
+            }}
+          >
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 750,
+                color: "#1e293b",
+                letterSpacing: "-0.01em",
+                lineHeight: 1.2,
+              }}
+            >
+              {title}
+            </Typography>
+          </Box>
 
-          {/* <Box sx={{ flexGrow: 1 }} /> */}
+          {/* Các nút hành động nằm bên phải */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+            {showExcel && (
+              <>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={handleOpenElExcel}
+                  startIcon={<SettingsOutlined />}
+                  endIcon={<KeyboardArrowDown />}
+                  sx={{
+                    borderRadius: "10px",
+                    borderColor: "rgba(20, 167, 96, 0.3)",
+                    color: "#14a760",
+                    fontWeight: 600,
+                    textTransform: "none",
+                    fontSize: "0.85rem",
+                    px: 2,
+                    py: 0.75,
+                    boxShadow: "0 2px 4px rgba(20, 167, 96, 0.02)",
+                    transition: "all 0.2s ease-in-out",
+                    "&:hover": {
+                      borderColor: "#14a760",
+                      bgcolor: "rgba(20, 167, 96, 0.05)",
+                      boxShadow: "0 4px 8px rgba(20, 167, 96, 0.08)",
+                    },
+                  }}
+                >
+                  Tiện ích
+                </Button>
+                {/* Input file Excel */}
+                <input
+                  type="file"
+                  hidden
+                  ref={fileInputRef}
+                  accept=".xlsx, .xls"
+                  onChange={handleFileChange}
+                />
+              </>
+            )}
 
-          {showExcel && (
-            <IconButton onClick={handleOpenElExcel} size="small">
-              <Settings color="success" />
-            </IconButton>
-          )}
-
-          {/* Input file Excel */}
-          <input
-            type="file"
-            hidden
-            ref={fileInputRef}
-            accept=".xlsx, .xls"
-            onChange={handleFileChange}
-          />
+            {onNewClick && (
+              <Button
+                variant="contained"
+                size="small"
+                onClick={onNewClick}
+                startIcon={<Add />}
+                sx={{
+                  borderRadius: "10px",
+                  bgcolor: "#14a760",
+                  color: "#fff",
+                  fontWeight: 700,
+                  textTransform: "none",
+                  fontSize: "0.85rem",
+                  px: 2.5,
+                  py: 0.8,
+                  boxShadow: "0 4px 12px rgba(20, 167, 96, 0.2)",
+                  transition: "all 0.2s ease-in-out",
+                  "&:hover": {
+                    bgcolor: "#118f51",
+                    boxShadow: "0 6px 16px rgba(20, 167, 96, 0.3)",
+                  },
+                }}
+              >
+                Thêm mới
+              </Button>
+            )}
+          </Box>
 
           <Menu
             open={Boolean(anchorElExcel)}
             onClose={handleCloseMenu}
             anchorEl={anchorElExcel}
+            slotProps={{
+              paper: {
+                sx: {
+                  padding: "4px",
+                  borderRadius: "12px",
+                  boxShadow: "0px 10px 25px rgba(0,0,0,0.1)",
+                },
+              },
+            }}
           >
             {onImport && (
-              <MenuItem onClick={handleImportClick}>
+              <MenuItem
+                onClick={handleImportClick}
+                sx={{ borderRadius: "8px", mx: 0.5, my: 0.25 }}
+              >
                 <ListItemIcon>
                   <Download fontSize="small" color="primary" />
                 </ListItemIcon>
@@ -245,7 +339,10 @@ export default function PageAction({
             )}
 
             {onSyncDb && (
-              <MenuItem onClick={handleSyncDbClick}>
+              <MenuItem
+                onClick={handleSyncDbClick}
+                sx={{ borderRadius: "8px", mx: 0.5, my: 0.25 }}
+              >
                 <ListItemIcon>
                   <Sync fontSize="small" color="primary" />
                 </ListItemIcon>
@@ -261,6 +358,7 @@ export default function PageAction({
                   handleCloseMenu();
                   setOpenSignatureModal(true);
                 }}
+                sx={{ borderRadius: "8px", mx: 0.5, my: 0.25 }}
               >
                 <ListItemIcon>
                   <Upload fontSize="small" color="success" />
@@ -275,6 +373,7 @@ export default function PageAction({
                   handleCloseMenu();
                   onExport();
                 }}
+                sx={{ borderRadius: "8px", mx: 0.5, my: 0.25 }}
               >
                 <ListItemIcon>
                   <Upload fontSize="small" color="secondary" />

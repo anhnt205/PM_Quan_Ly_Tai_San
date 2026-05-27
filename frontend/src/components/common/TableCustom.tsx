@@ -50,8 +50,7 @@ const CustomFilterPanel = (props: any) => {
 };
 
 const CustomToolbar = ({ isCompact }: { isCompact: boolean }) => {
-  if (isCompact) return null; // 🔥 Ẩn luôn khi thu nhỏ
-
+  if (isCompact) return null;
   return <GridToolbar />;
 };
 
@@ -102,6 +101,7 @@ interface Props {
   isRowSelectable?: (params: any) => boolean;
   isCompact?: boolean;
   highlightedId?: string | number;
+  showToolbar?: boolean;
 }
 
 export default function TableCustom({
@@ -109,6 +109,7 @@ export default function TableCustom({
   title,
   columns,
   rows,
+  showToolbar = true,
   total,
   paginationModel,
   onPaginationModelChange,
@@ -211,19 +212,19 @@ export default function TableCustom({
         alignItems={"center"}
         justifyContent={"space-between"}
         p={1}
-        sx={{ background: "#f5efefff" }}
+        sx={{ background: "#FCCD2A" }}
       >
         <Box display="flex" alignItems="center" gap={1}>
           <TableChart
             sx={{
               fontSize: 20,
-              color: "#737373ff",
+              color: "#fff",
             }}
           />
           <Typography
             sx={{
               fontWeight: 500,
-              color: "#737373ff",
+              color: "#fff",
               fontSize: "14px",
             }}
           >
@@ -250,12 +251,31 @@ export default function TableCustom({
             value={searchValue}
             onChange={(e) => setSearchValue?.(e.target.value)}
             InputProps={{
-              startAdornment: <Search />,
-              endAdornment: (
-                <IconButton onClick={() => setSearchValue?.("")}>
-                  <Close />
+              startAdornment: <Search sx={{ color: "#1FA463", mr: 0.5 }} />,
+              endAdornment: searchValue ? (
+                <IconButton onClick={() => setSearchValue?.("")} size="small">
+                  <Close fontSize="small" />
                 </IconButton>
-              ),
+              ) : null,
+            }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "10px",
+                "& fieldset": {
+                  borderColor: "#1FA463",
+                },
+                "&:hover fieldset": {
+                  borderColor: "#1FA463",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "#1FA463",
+                },
+              },
+              "& .MuiInputLabel-root": {
+                "&.Mui-focused": {
+                  color: "#1FA463",
+                },
+              },
             }}
           />
         </Grid>
@@ -411,6 +431,8 @@ export default function TableCustom({
             onRowClick={onRowClick}
             columns={columns}
             rows={rows}
+            showCellVerticalBorder={true}
+            showToolbar={showToolbar && !isCompact}
             rowCount={total}
             paginationMode={paginationMode}
             paginationModel={paginationModel}
@@ -448,22 +470,26 @@ export default function TableCustom({
               handleAssetTransfer?.(selectedRows[0]?.idDonViGiao);
             }}
             disableRowSelectionOnClick
-            showToolbar
             isRowSelectable={isRowSelectable}
             getRowClassName={(params) => {
               const rowId = params.row.Id || params.row.id || params.row.soThe;
               return rowId === highlightedId ? "highlighted-row" : "";
             }}
             slots={{
-              toolbar: () => <CustomToolbar isCompact={isCompact} />,
+              // toolbar: () => <CustomToolbar isCompact={isCompact} />,
               filterPanel: CustomFilterPanel,
             }}
             localeText={viVN.components.MuiDataGrid.defaultProps.localeText}
             slotProps={{
+              loadingOverlay: {
+                variant: "linear-progress",
+                noRowsVariant: "skeleton",
+              },
               filterPanel: { disableAddFilterButton: false },
               toolbar: {
-                csvOptions: { disableToolbarButton: true },
-                printOptions: { disableToolbarButton: true },
+                color: "#1FA463",
+                csvOptions: { disableToolbarButton: false },
+                printOptions: { disableToolbarButton: false },
               },
             }}
             sx={{
@@ -487,6 +513,9 @@ export default function TableCustom({
               "& .MuiDataGrid-columnHeaderTitle": {
                 color: "#fff",
                 fontWeight: 700,
+              },
+              "& .MuiDataGrid-toolbarContainer .MuiButtonBase-root": {
+                color: "#ff5722 !important",
               },
               "& .MuiDataGrid-columnHeader .MuiDataGrid-sortButton": {
                 background: "#1FA463",

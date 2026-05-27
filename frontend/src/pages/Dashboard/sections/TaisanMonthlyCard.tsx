@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   Paper,
   Typography,
@@ -6,10 +6,113 @@ import {
   FormControl,
   Select,
   MenuItem,
-  Tooltip,
 } from "@mui/material";
 import { TrendingUp } from "@mui/icons-material";
+import {
+  BarChart as RechartsChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  LabelList,
+} from "recharts";
 import { formattedPrice } from "../../../utils/helpers";
+
+export interface TaiSanMonthlyItem {
+  thang: number;
+  soLuong: number;
+  nam?: number;
+}
+
+export interface TaisanMonthlyCardProps {
+  taiSanMonthlyData: TaiSanMonthlyItem[];
+  maxTaiSan: number;
+  yearTaiSan: number;
+  setYearTaiSan: (year: number) => void;
+  years: number[];
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    payload: TaiSanMonthlyItem;
+  }>;
+}
+
+function CustomTooltip({
+  active,
+  payload,
+  data,
+}: CustomTooltipProps & { data: TaiSanMonthlyItem[] }) {
+  if (active && payload && payload.length) {
+    const item = payload[0].payload;
+    const index = data.findIndex((d) => d.thang === item.thang);
+    const prevItem = index > 0 ? data[index - 1] : null;
+    const pctChange =
+      prevItem && prevItem.soLuong > 0
+        ? ((item.soLuong - prevItem.soLuong) / prevItem.soLuong) * 100
+        : null;
+
+    const isIncrease = pctChange !== null && pctChange >= 0;
+    const pctColor = isIncrease ? "#10b981" : "#ef4444";
+    const changeSign = isIncrease ? "+" : "";
+    const pctChangeText =
+      pctChange !== null
+        ? `${changeSign}${pctChange.toFixed(1)}% so với tháng trước`
+        : "Tháng đầu tiên";
+
+    return (
+      <Box
+        sx={{
+          bgcolor: "rgba(15, 23, 42, 0.9)",
+          backdropFilter: "blur(12px)",
+          borderRadius: "10px",
+          border: "1px solid rgba(255, 255, 255, 0.15)",
+          px: 1.5,
+          py: 1,
+          boxShadow: "0 10px 25px rgba(0, 0, 0, 0.25)",
+        }}
+      >
+        <Typography
+          variant="body2"
+          sx={{
+            fontWeight: 700,
+            fontSize: "0.85rem",
+            color: "#fff",
+            lineHeight: 1.2,
+          }}
+        >
+          Tháng {item.thang}
+        </Typography>
+        <Typography
+          variant="body1"
+          sx={{
+            fontWeight: 800,
+            color: "#60a5fa",
+            fontSize: "1.1rem",
+            mt: 0.5,
+          }}
+        >
+          {formattedPrice(item.soLuong)} tài sản
+        </Typography>
+        <Typography
+          variant="caption"
+          sx={{
+            color: pctColor,
+            fontWeight: 600,
+            display: "block",
+            mt: 0.5,
+          }}
+        >
+          {pctChangeText}
+        </Typography>
+      </Box>
+    );
+  }
+  return null;
+}
 
 export default function TaisanMonthlyCard({
   taiSanMonthlyData,
@@ -17,62 +120,81 @@ export default function TaisanMonthlyCard({
   yearTaiSan,
   setYearTaiSan,
   years,
-}: any) {
-  const getMonthName = (month: number) => `Tháng ${month}`;
+}: TaisanMonthlyCardProps) {
+  const computedMax = useMemo(() => {
+    const maxVal = maxTaiSan || 1;
+    return Math.ceil(maxVal * 1.15);
+  }, [maxTaiSan]);
 
   return (
     <Paper
       elevation={0}
       sx={{
         p: 0,
-        borderRadius: 3,
+        borderRadius: "16px",
         height: "100%",
         minHeight: 420,
-        bgcolor: "rgba(255,255,255,0.72)",
-        backdropFilter: "blur(12px)",
-        border: "1px solid rgba(13,158,109,0.12)",
+        bgcolor: "rgba(255, 255, 255, 0.82)",
+        backdropFilter: "blur(16px)",
+        border: "1px solid rgba(4, 180, 110, 0.1)",
+        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.05)",
         overflow: "hidden",
-        transition: "box-shadow 0.3s ease, transform 0.2s ease",
+        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         "&:hover": {
           boxShadow:
-            "0 10px 32px rgba(4,180,110,0.13), 0 2px 16px rgba(0,0,0,0.06)",
-          // transform: "translateY(-2px)",
+            "0 12px 36px rgba(4, 180, 110, 0.12), 0 4px 20px rgba(0, 0, 0, 0.04)",
         },
       }}
     >
       <Box
         sx={{
-          height: 3,
-          background: "#04b46e",
+          height: 4,
+          background: "linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%)",
         }}
       />
 
-      <Box sx={{ p: 2 }}>
+      <Box sx={{ p: 2.5 }}>
+        {/* Header */}
         <Box
           sx={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            mb: 2,
+            mb: 3,
           }}
         >
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
-              gap: 1,
-              borderLeft: "4px solid #0d9e6d",
+              gap: 1.2,
+              borderLeft: "4px solid #3b82f6",
               pl: 1.5,
             }}
           >
-            <TrendingUp sx={{ color: "#0d9e6d" }} />
-            <Typography
-              variant="subtitle1"
-              sx={{ color: "#0d9e6d", fontWeight: 600 }}
-            >
-              Tài sản tăng mới theo tháng
-            </Typography>
+            <TrendingUp sx={{ color: "#3b82f6", fontSize: 20 }} />
+            <Box>
+              <Typography
+                variant="subtitle1"
+                sx={{
+                  color: "#1e293b",
+                  fontWeight: 800,
+                  fontSize: "0.95rem",
+                  letterSpacing: "-0.01em",
+                  lineHeight: 1.3,
+                }}
+              >
+                Tài sản tăng mới theo tháng
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{ color: "#94a3b8", fontWeight: 500, fontSize: "0.72rem" }}
+              >
+                Theo dõi biến động hàng tháng
+              </Typography>
+            </Box>
           </Box>
+
           <FormControl size="small" sx={{ minWidth: 84 }}>
             <Select
               value={yearTaiSan}
@@ -81,19 +203,19 @@ export default function TaisanMonthlyCard({
                 borderRadius: "10px",
                 fontSize: "0.85rem",
                 fontWeight: 600,
-                bgcolor: "rgba(4,180,110,0.04)",
+                bgcolor: "rgba(59, 130, 246, 0.04)",
                 "& .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "rgba(4,180,110,0.15)",
+                  borderColor: "rgba(59, 130, 246, 0.15)",
                 },
                 "&:hover .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "rgba(4,180,110,0.3)",
+                  borderColor: "rgba(59, 130, 246, 0.3)",
                 },
                 "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "#04b46e",
+                  borderColor: "#3b82f6",
                 },
               }}
             >
-              {years.map((y: number) => (
+              {years.map((y) => (
                 <MenuItem key={y} value={y}>
                   {y}
                 </MenuItem>
@@ -102,137 +224,70 @@ export default function TaisanMonthlyCard({
           </FormControl>
         </Box>
 
-        <Box sx={{ height: 320, position: "relative" }}>
-          <Box
-            sx={{
-              position: "absolute",
-              left: 0,
-              top: 0,
-              bottom: 30,
-              width: 40,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              alignItems: "flex-end",
-              pr: 1,
-            }}
-          >
-            {[
-              maxTaiSan,
-              Math.round(maxTaiSan * 0.75),
-              Math.round(maxTaiSan * 0.5),
-              Math.round(maxTaiSan * 0.25),
-              0,
-            ].map((val: any, index: number) => (
-              <Typography key={index} variant="caption" color="text.secondary">
-                {val}
-              </Typography>
-            ))}
-          </Box>
-
-          <Box
-            sx={{
-              ml: 5,
-              height: 280,
-              display: "flex",
-              alignItems: "flex-end",
-              justifyContent: "space-around",
-              borderBottom: "1px solid #e2e8f0",
-            }}
-          >
-            {(taiSanMonthlyData || []).map((item: any, index: number) => {
-              const barHeight = (item.soLuong / maxTaiSan) * 240;
-              const prevItem = index > 0 ? taiSanMonthlyData[index - 1] : null;
-              const pctChange =
-                prevItem && prevItem.soLuong > 0
-                  ? ((item.soLuong - prevItem.soLuong) / prevItem.soLuong) * 100
-                  : null;
-              const pctChangeText =
-                pctChange !== null
-                  ? `${pctChange >= 0 ? "+" : ""}${pctChange.toFixed(1)}% so với tháng trước`
-                  : "Tháng đầu tiên";
-
-              return (
-                <Box
-                  key={index}
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    flex: 1,
-                    mx: 0.5,
-                  }}
+        {/* Biểu đồ */}
+        <Box sx={{ height: 320, width: "100%" }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <RechartsChart
+              data={taiSanMonthlyData}
+              margin={{ top: 25, right: 10, left: -20, bottom: 5 }}
+            >
+              <defs>
+                <linearGradient
+                  id="monthlyBlueGradient"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
                 >
-                  <Typography
-                    variant="caption"
-                    sx={{ fontWeight: 700, mb: 0.5, color: "#475569" }}
-                  >
-                    {formattedPrice(item.soLuong)}
-                  </Typography>
-                  <Tooltip
-                    arrow
-                    placement="top"
-                    title={
-                      <Box sx={{ p: 0.5 }}>
-                        <Typography
-                          variant="body2"
-                          sx={{ fontWeight: 700, fontSize: "0.8rem" }}
-                        >
-                          {formattedPrice(item.soLuong)} Tài sản
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          sx={{ color: "rgba(255,255,255,0.85)" }}
-                        >
-                          {pctChangeText}
-                        </Typography>
-                      </Box>
-                    }
-                  >
-                    <Box
-                      sx={{
-                        width: "80%",
-                        maxWidth: 36,
-                        minWidth: 16,
-                        height: Math.max(barHeight, 4),
-                        background:
-                          "linear-gradient(180deg, #1a73e8 0%, #60a5fa 100%)",
-                        borderRadius: "6px 6px 0 0",
-                        cursor: "pointer",
-                        transition: "all 0.2s ease-in-out",
-                        transformOrigin: "bottom",
-                        "&:hover": {
-                          filter: "brightness(1.05)",
-                          transform: "scaleX(1.08)",
-                          boxShadow: "0 4px 12px rgba(26, 115, 232, 0.2)",
-                        },
-                      }}
-                    />
-                  </Tooltip>
-                </Box>
-              );
-            })}
-          </Box>
+                  <stop offset="0%" stopColor="#3b82f6" stopOpacity={1} />
+                  <stop offset="100%" stopColor="#1d4ed8" stopOpacity={0.8} />
+                </linearGradient>
+              </defs>
 
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-around",
-              ml: 5,
-              mt: 1,
-            }}
-          >
-            {(taiSanMonthlyData || []).map((item: any, index: number) => (
-              <Typography
-                key={index}
-                variant="caption"
-                color="text.secondary"
-                sx={{ flex: 1, textAlign: "center" }}
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="rgba(226, 232, 240, 0.6)"
+              />
+
+              <XAxis
+                dataKey="thang"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: "#94a3b8", fontSize: 11, fontWeight: 500 }}
+                tickFormatter={(val: number) => `Tháng ${val}`}
+                dy={8}
+              />
+
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: "#94a3b8", fontSize: 11, fontWeight: 500 }}
+                domain={[0, computedMax]}
+                allowDecimals={false}
+              />
+
+              <RechartsTooltip
+                content={<CustomTooltip data={taiSanMonthlyData} />}
+                cursor={{ fill: "rgba(226, 232, 240, 0.4)", radius: 6 }}
+              />
+
+              <Bar
+                dataKey="soLuong"
+                fill="url(#monthlyBlueGradient)"
+                radius={[6, 6, 0, 0]}
+                maxBarSize={45}
+                animationDuration={800}
               >
-                {getMonthName(item.thang)}
-              </Typography>
-            ))}
-          </Box>
+                <LabelList
+                  dataKey="soLuong"
+                  position="top"
+                  formatter={(val: number) => formattedPrice(val)}
+                  style={{ fill: "#64748b", fontSize: "11px", fontWeight: 700 }}
+                />
+              </Bar>
+            </RechartsChart>
+          </ResponsiveContainer>
         </Box>
       </Box>
     </Paper>
