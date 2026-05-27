@@ -129,10 +129,15 @@ public class BienPhapPhuongTienService {
         List<BienPhapPhuongTienDTO> source = bienPhapDao.findAll(idCongTy);
 
         if (userid != null && !userid.isBlank() && !"admin".equalsIgnoreCase(userid)) {
-            String u = userid;
-            source = source.stream()
-                    .filter(i -> isUserVisible(i, u))
-                    .collect(Collectors.toList());
+            List<BienPhapPhuongTienDTO> filtered = new ArrayList<>();
+            for (BienPhapPhuongTienDTO item : source) {
+                if (isSign != null && isSign) {
+                    if (isNeedToSign(item, userid)) filtered.add(item);
+                } else {
+                    if (isUserTurnToSign(item, userid)) filtered.add(item);
+                }
+            }
+            source = filtered;
         }
 
         Map<String, Long> trangThaiCounts = source.stream()
@@ -168,10 +173,83 @@ public class BienPhapPhuongTienService {
         return resp;
     }
 
-    private boolean isUserVisible(BienPhapPhuongTienDTO i, String userId) {
-        if (userId.equals(i.getNguoiTao())) return true;
-        if (!Boolean.TRUE.equals(i.getShare())) return false;
-        return userId.equals(i.getIdNguoiLap()) || userId.equals(i.getIdGiamDoc());
+    public boolean isNeedToSign(BienPhapPhuongTienDTO item, String userId) {
+        if (userId == null || userId.isEmpty()) return false;
+        if (!Boolean.TRUE.equals(item.getShare())) return false;
+        if (item.getTrangThai() == 2 || item.getTrangThai() == 3) return false;
+
+        // Bước 1: Người lập
+        if (item.getIdNguoiLap() != null && !item.getIdNguoiLap().isEmpty()) {
+            if (!Boolean.TRUE.equals(item.getNguoiLapXacNhan()))
+                return userId.equals(item.getIdNguoiLap());
+        }
+
+        // Bước 2: NguoiKy list & Giám đốc
+        boolean lapDone = item.getIdNguoiLap() == null || item.getIdNguoiLap().isEmpty()
+                || Boolean.TRUE.equals(item.getNguoiLapXacNhan());
+        if (lapDone) {
+            List<NguoiKy> kyList = kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId());
+            if (kyList != null && !kyList.isEmpty()) {
+                NguoiKy firstUnsigned = null;
+                boolean allSigned = true;
+                for (NguoiKy nk : kyList) {
+                    if (nk.getTrangThai() != 1) {
+                        allSigned = false;
+                        if (firstUnsigned == null) firstUnsigned = nk;
+                    }
+                }
+                if (firstUnsigned != null) return userId.equals(firstUnsigned.getIdNguoiKy());
+                if (allSigned && !Boolean.TRUE.equals(item.getGiamDocXacNhan()))
+                    return userId.equals(item.getIdGiamDoc());
+            } else {
+                if (!Boolean.TRUE.equals(item.getGiamDocXacNhan()))
+                    return userId.equals(item.getIdGiamDoc());
+            }
+        }
+        return false;
+    }
+
+    public boolean isUserTurnToSign(BienPhapPhuongTienDTO item, String userId) {
+        if ("admin".equalsIgnoreCase(userId)) return true;
+        if (userId != null && userId.equals(item.getNguoiTao())) return true;
+        if (!Boolean.TRUE.equals(item.getShare())) return false;
+
+        // Bước 1: Người lập
+        if (item.getIdNguoiLap() != null && !item.getIdNguoiLap().isEmpty()) {
+            if (!Boolean.TRUE.equals(item.getNguoiLapXacNhan()))
+                return userId != null && userId.equals(item.getIdNguoiLap());
+            if (userId != null && userId.equals(item.getIdNguoiLap())) return true;
+        }
+
+        // Bước 2: NguoiKy list & Giám đốc
+        boolean lapDone = item.getIdNguoiLap() == null || item.getIdNguoiLap().isEmpty()
+                || Boolean.TRUE.equals(item.getNguoiLapXacNhan());
+        if (lapDone) {
+            List<NguoiKy> kyList = kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId());
+            if (kyList != null && !kyList.isEmpty()) {
+                NguoiKy firstUnsigned = null;
+                boolean allSigned = true, userSigned = false, userInList = false;
+                for (NguoiKy nk : kyList) {
+                    if (nk.getTrangThai() != 1) { allSigned = false; if (firstUnsigned == null) firstUnsigned = nk; }
+                    if (userId != null && userId.equals(nk.getIdNguoiKy())) {
+                        userInList = true;
+                        if (nk.getTrangThai() == 1) userSigned = true;
+                    }
+                }
+                if (userSigned) return true;
+                if (firstUnsigned != null && userInList && userId != null && userId.equals(firstUnsigned.getIdNguoiKy())) return true;
+                if (allSigned && !Boolean.TRUE.equals(item.getGiamDocXacNhan()))
+                    return userId != null && userId.equals(item.getIdGiamDoc());
+            } else {
+                if (!Boolean.TRUE.equals(item.getGiamDocXacNhan()))
+                    return userId != null && userId.equals(item.getIdGiamDoc());
+            }
+        }
+        if (Boolean.TRUE.equals(item.getGiamDocXacNhan())
+                && userId != null && userId.equals(item.getIdGiamDoc()))
+            return true;
+
+        return false;
     }
 
     private Comparator<BienPhapPhuongTienDTO> getComparator(String sortBy, String sortDir) {

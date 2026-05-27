@@ -71,6 +71,16 @@ public class BienPhapMayMocController {
                     .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
         }
     }
+    @GetMapping("/giamdinh-maymoc/{idGiamDinhMayMoc}")
+    public ResponseEntity<ApiResponse<Object>> getByIdGiamDinhMayMoc(@PathVariable("idGiamDinhMayMoc") String idGiamDinhMayMoc) {
+        try {
+            List<BienPhapMayMocDTO> list = service.findByIdGiamDinhMayMoc(idGiamDinhMayMoc);
+            return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", list, list.size()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
 
     // ─── POST create ─────────────────────────────────────────────────────────
     @PostMapping

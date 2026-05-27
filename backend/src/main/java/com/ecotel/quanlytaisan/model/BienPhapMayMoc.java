@@ -19,6 +19,8 @@ public class BienPhapMayMoc {
     private String thoiGianKetThuc;   // Thời gian kết thúc
     private Integer thoiGianNgay;     // Thời gian (số ngày)
     private String ghiChu;            // Ghi chú
+    private String tenFile;           // Tên file đính kèm
+    private String duongDanFile;      // Đường dẫn file đính kèm
 
     // Luồng ký
     private String  idNguoiLap;

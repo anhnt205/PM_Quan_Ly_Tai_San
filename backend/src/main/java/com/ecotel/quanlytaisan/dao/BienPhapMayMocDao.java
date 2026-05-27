@@ -34,14 +34,15 @@ public class BienPhapMayMocDao {
                 bp.SoPhieu, bp.SoDeNghi,
                 bp.DonViSuaChua, bp.DonViPhoiHop, bp.HinhThuc,
                 bp.ThoiGianBatDau, bp.ThoiGianKetThuc, bp.ThoiGianNgay,
-                bp.GhiChu,
+                bp.GhiChu, bp.TenFile, bp.DuongDanFile,
                 bp.IdNguoiLap, bp.NguoiLapXacNhan,
                 bp.IdGiamDoc,  bp.GiamDocXacNhan,
                 bp.Share, bp.TrangThai,
                 bp.NgayTao, bp.NgayCapNhat, bp.NguoiTao, bp.NguoiCapNhat,
                 nvLap.HoTen AS tenNguoiLap,
                 nvGD.HoTen  AS tenGiamDoc,
-                gd.SoPhieu  AS soPhieuGiamDinhMayMoc
+                gd.SoPhieu  AS soPhieuGiamDinhMayMoc,
+                (SELECT COUNT(*) FROM nghiemthu_maymoc nt WHERE nt.IdBienPhapMayMoc = bp.Id) AS daCoNghiemThu
             FROM bienphap_maymoc bp
                 LEFT JOIN NhanVien nvLap        ON nvLap.Id = bp.IdNguoiLap
                 LEFT JOIN NhanVien nvGD         ON nvGD.Id  = bp.IdGiamDoc
@@ -63,6 +64,13 @@ public class BienPhapMayMocDao {
         if (idCongTy == null) return new ArrayList<>(cache);
         return cache.stream()
                 .filter(d -> idCongTy.equalsIgnoreCase(d.getIdCongTy()))
+                .collect(Collectors.toList());
+    }
+    public List<BienPhapMayMocDTO> findByIdGiamDinhMayMoc(String idGiamDinhMayMoc) {
+        refreshCache();
+        if (idGiamDinhMayMoc == null) return new ArrayList<>();
+        return cache.stream()
+                .filter(d -> idGiamDinhMayMoc.equalsIgnoreCase(d.getIdGiamDinhMayMoc()))
                 .collect(Collectors.toList());
     }
 
@@ -125,18 +133,18 @@ public class BienPhapMayMocDao {
                 SoPhieu, SoDeNghi,
                 DonViSuaChua, DonViPhoiHop, HinhThuc,
                 ThoiGianBatDau, ThoiGianKetThuc, ThoiGianNgay,
-                GhiChu,
+                GhiChu, TenFile, DuongDanFile,
                 IdNguoiLap, NguoiLapXacNhan, IdGiamDoc, GiamDocXacNhan,
                 Share, TrangThai,
                 NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         int r = jdbcTemplate.update(sql,
                 e.getId(), e.getIdCongTy(), e.getIdGiamDinhMayMoc(),
                 e.getSoPhieu(), e.getSoDeNghi(),
                 e.getDonViSuaChua(), e.getDonViPhoiHop(), e.getHinhThuc(),
                 e.getThoiGianBatDau(), e.getThoiGianKetThuc(), e.getThoiGianNgay(),
-                e.getGhiChu(),
+                e.getGhiChu(), e.getTenFile(), e.getDuongDanFile(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(),
                 e.getIdGiamDoc(),  e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai() != null ? e.getTrangThai() : 0,
@@ -153,7 +161,7 @@ public class BienPhapMayMocDao {
                 SoPhieu = ?, SoDeNghi = ?,
                 DonViSuaChua = ?, DonViPhoiHop = ?, HinhThuc = ?,
                 ThoiGianBatDau = ?, ThoiGianKetThuc = ?, ThoiGianNgay = ?,
-                GhiChu = ?,
+                GhiChu = ?, TenFile = ?, DuongDanFile = ?,
                 IdNguoiLap = ?, NguoiLapXacNhan = ?,
                 IdGiamDoc = ?,  GiamDocXacNhan = ?,
                 Share = ?, TrangThai = ?,
@@ -165,7 +173,7 @@ public class BienPhapMayMocDao {
                 e.getSoPhieu(), e.getSoDeNghi(),
                 e.getDonViSuaChua(), e.getDonViPhoiHop(), e.getHinhThuc(),
                 e.getThoiGianBatDau(), e.getThoiGianKetThuc(), e.getThoiGianNgay(),
-                e.getGhiChu(),
+                e.getGhiChu(), e.getTenFile(), e.getDuongDanFile(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(),
                 e.getIdGiamDoc(),  e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai(),

@@ -3,6 +3,7 @@ package com.ecotel.quanlytaisan.service;
 import com.ecotel.quanlytaisan.dao.NghiemThuDao;
 import com.ecotel.quanlytaisan.dao.NghiemThuTaiSanDao;
 import com.ecotel.quanlytaisan.dao.KyTaiLieuDao;
+import com.ecotel.quanlytaisan.dao.BienPhapMayMocDao;
 import com.ecotel.quanlytaisan.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,9 @@ public class NghiemThuService {
     @Autowired
     private KyTaiLieuDao kyTaiLieuDao;
 
+    @Autowired
+    private BienPhapMayMocDao bienPhapDao;
+
     public List<NghiemThuDTO> findAll(String idCongTy) {
         List<NghiemThuDTO> list = nghiemThuDao.findAll(idCongTy);
         for (NghiemThuDTO item : list) {
@@ -37,8 +41,8 @@ public class NghiemThuService {
         return dto;
     }
 
-    public List<NghiemThuDTO> findByIdGiamDinhMayMoc(String idGiamDinhMayMoc) {
-        List<NghiemThuDTO> list = nghiemThuDao.findByIdGiamDinhMayMoc(idGiamDinhMayMoc);
+    public List<NghiemThuDTO> findByIdBienPhapMayMoc(String idBienPhapMayMoc) {
+        List<NghiemThuDTO> list = nghiemThuDao.findByIdBienPhapMayMoc(idBienPhapMayMoc);
         for (NghiemThuDTO item : list) {
             enrichData(item);
         }
@@ -73,6 +77,7 @@ public class NghiemThuService {
                 entity.getNguoiKyList().forEach(nk -> nk.setIdTaiLieu(saved.getId()));
                 kyTaiLieuDao.updateNguoiKy(saved.getId(), entity.getNguoiKyList());
             }
+            bienPhapDao.refreshCache();
         }
         return saved;
     }
@@ -104,6 +109,7 @@ public class NghiemThuService {
                 entity.getNguoiKyList().forEach(nk -> nk.setIdTaiLieu(entity.getId()));
                 kyTaiLieuDao.updateNguoiKy(entity.getId(), entity.getNguoiKyList());
             }
+            bienPhapDao.refreshCache();
         }
         return updated;
     }
@@ -168,7 +174,11 @@ public class NghiemThuService {
     public int delete(String id) {
         nghiemThuTaiSanDao.deleteByIdBienBan(id);
         kyTaiLieuDao.delete(id);
-        return nghiemThuDao.delete(id);
+        int r = nghiemThuDao.delete(id);
+        if (r > 0) {
+            bienPhapDao.refreshCache();
+        }
+        return r;
     }
 
     public PageResponse<NghiemThuDTO> findAllPaged(

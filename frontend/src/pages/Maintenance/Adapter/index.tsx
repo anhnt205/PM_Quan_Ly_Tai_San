@@ -57,6 +57,7 @@ export const InspectionAdapter = (s: any) => ({
 export const AcceptanceTestAdapter = (s: any) => ({
   ...s,
   id: s.id,
+  idBienPhapMayMoc: s.idBienPhapMayMoc,
   idTrinhDuyetGiamDoc: s.idGiamDoc,
   tenTrinhDuyetGiamDoc: s.tenGiamDoc,
   trinhDuyetGiamDocXacNhan: s.giamDocXacNhan,
@@ -93,4 +94,18 @@ export const IncidentInspectionAdapter = (s: any) => ({
   moTa: s.nhanXetKetLuan,
   ngayTao: s.ngayTao,
   trangThai: s.trangThai,
+});
+
+export const BienPhapMayMocAdapter = (s: any) => ({
+  ...s,
+  id: s.id,
+  idTrinhDuyetGiamDoc: s.idGiamDoc,
+  tenTrinhDuyetGiamDoc: s.tenGiamDoc,
+  trinhDuyetGiamDocXacNhan: s.giamDocXacNhan,
+  idNguoiLapBieu: s.idNguoiLap,
+  tenNguoiLapBieu: s.tenNguoiLap,
+  nguoiLapBieuXacNhan: s.nguoiLapXacNhan,
+  ngayTao: s.ngayTao,
+  trangThai: s.trangThai,
+  daCoNghiemThu: s.daCoNghiemThu,
 });

@@ -29,17 +29,17 @@ public class NghiemThuDao {
     private String buildSelectSql() {
         return """
             SELECT
-                nt.Id, nt.IdCongTy, nt.IdGiamDinhMayMoc, nt.SoPhieu, nt.NgayNghiemThu,
+                nt.Id, nt.IdCongTy, nt.IdBienPhapMayMoc, nt.SoPhieu, nt.NgayNghiemThu,
                 nt.ViTri, nt.TenThietBi, nt.SoDangKi, nt.CapSuaChua,
                 nt.KetQua, nt.NoiDung,
                 nt.IdNguoiLap, nt.NguoiLapXacNhan, nt.IdGiamDoc, nt.GiamDocXacNhan,
                 nt.Share, nt.TrangThai, nt.NgayTao, nt.NgayCapNhat, nt.NguoiTao, nt.NguoiCapNhat,
                 nvLap.HoTen AS tenNguoiLap,
                 nvGD.HoTen AS tenGiamDoc,
-                gd.SoPhieu AS soPhieuGiamDinhMayMoc,
+                bp.SoPhieu AS soPhieuBienPhapMayMoc,
                 (SELECT COUNT(*) FROM danhgia_vattu dg WHERE dg.IdNghiemThu = nt.Id) AS daCoDanhGiaVatTu
             FROM nghiemthu_maymoc nt
-                LEFT JOIN giamdinh_maymoc gd ON nt.IdGiamDinhMayMoc = gd.Id
+                LEFT JOIN bienphap_maymoc bp ON nt.IdBienPhapMayMoc = bp.Id
                 LEFT JOIN NhanVien nvLap ON nt.IdNguoiLap = nvLap.Id
                 LEFT JOIN NhanVien nvGD ON nt.IdGiamDoc = nvGD.Id
             """;
@@ -74,9 +74,9 @@ public class NghiemThuDao {
         } catch (Exception e) { return null; }
     }
 
-    public List<NghiemThuDTO> findByIdGiamDinhMayMoc(String idGiamDinhMayMoc) {
-        String sql = buildSelectSql() + " WHERE nt.IdGiamDinhMayMoc = ?";
-        return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(NghiemThuDTO.class), idGiamDinhMayMoc);
+    public List<NghiemThuDTO> findByIdBienPhapMayMoc(String idBienPhapMayMoc) {
+        String sql = buildSelectSql() + " WHERE nt.IdBienPhapMayMoc = ?";
+        return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(NghiemThuDTO.class), idBienPhapMayMoc);
     }
 
     public String generateNextId() {
@@ -108,14 +108,14 @@ public class NghiemThuDao {
         e.setId(generateNextId());
         String sql = """
             INSERT INTO nghiemthu_maymoc (
-                Id, IdCongTy, IdGiamDinhMayMoc, SoPhieu, NgayNghiemThu, ViTri,
+                Id, IdCongTy, IdBienPhapMayMoc, SoPhieu, NgayNghiemThu, ViTri,
                 TenThietBi, SoDangKi, CapSuaChua, KetQua, NoiDung,
                 IdNguoiLap, NguoiLapXacNhan, IdGiamDoc, GiamDocXacNhan,
                 Share, TrangThai, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         int r = jdbcTemplate.update(sql,
-                e.getId(), e.getIdCongTy(), e.getIdGiamDinhMayMoc(), e.getSoPhieu(), e.getNgayNghiemThu(), e.getViTri(),
+                e.getId(), e.getIdCongTy(), e.getIdBienPhapMayMoc(), e.getSoPhieu(), e.getNgayNghiemThu(), e.getViTri(),
                 e.getTenThietBi(), e.getSoDangKi(), e.getCapSuaChua(), e.getKetQua(), e.getNoiDung(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai() != null ? e.getTrangThai() : 0,
@@ -128,14 +128,14 @@ public class NghiemThuDao {
     public NghiemThu update(NghiemThu e) {
         String sql = """
             UPDATE nghiemthu_maymoc SET
-                IdGiamDinhMayMoc = ?, SoPhieu = ?, NgayNghiemThu = ?, ViTri = ?,
+                IdBienPhapMayMoc = ?, SoPhieu = ?, NgayNghiemThu = ?, ViTri = ?,
                 TenThietBi = ?, SoDangKi = ?, CapSuaChua = ?, KetQua = ?, NoiDung = ?,
                 IdNguoiLap = ?, NguoiLapXacNhan = ?, IdGiamDoc = ?, GiamDocXacNhan = ?,
                 Share = ?, TrangThai = ?, NgayCapNhat = ?, NguoiCapNhat = ?
             WHERE Id = ?
             """;
         int r = jdbcTemplate.update(sql,
-                e.getIdGiamDinhMayMoc(), e.getSoPhieu(), e.getNgayNghiemThu(), e.getViTri(),
+                e.getIdBienPhapMayMoc(), e.getSoPhieu(), e.getNgayNghiemThu(), e.getViTri(),
                 e.getTenThietBi(), e.getSoDangKi(), e.getCapSuaChua(), e.getKetQua(), e.getNoiDung(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai(), e.getNgayCapNhat(), e.getNguoiCapNhat(),

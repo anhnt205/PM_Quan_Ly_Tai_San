@@ -1020,19 +1020,6 @@ export const useMaintenanceInspectionPageQuery = (
     enabled,
   });
 };
-export const useMaintenanceInspectionByRepairQuery = (idSuaChua?: string) => {
-  return useQuery({
-    queryKey: ["inspectionByRepair", idSuaChua],
-    queryFn: async () => {
-      const res = await api.get(`/giamdinh-maymoc/bienban/${idSuaChua}`);
-      const data = (res.data.data || res.data || []).map((item: any) =>
-        InspectionAdapter(item),
-      );
-      return data;
-    },
-    enabled: !!idSuaChua,
-  });
-};
 
 export const useMaintenanceInspectionByBienBanQuery = (idBienBan?: string) => {
   return useQuery({
@@ -1603,7 +1590,7 @@ export const useMaintenanceVehicleInspectionMutation = () => {
   };
 };
 
-// --- nghiệm thu ---
+// --- nghiệm thu máy móc ---
 
 export const useMaintenanceAcceptanceTestPageQuery = (
   page?: number,
@@ -1619,7 +1606,7 @@ export const useMaintenanceAcceptanceTestPageQuery = (
 ) => {
   return useQuery({
     queryKey: [
-      "acceptanceTestPage",
+      "nghiemThuMayMocPage",
       page,
       pageSize,
       searchValue,
@@ -1651,18 +1638,18 @@ export const useMaintenanceAcceptanceTestPageQuery = (
   });
 };
 
-export const useMaintenanceAcceptanceByInspectionQuery = (
-  idGiamDinh?: string,
+export const useMaintenanceAcceptanceByBienPhapQuery = (
+  idBienPhap?: string,
 ) => {
   return useQuery({
-    queryKey: ["acceptanceByInspection", idGiamDinh],
+    queryKey: ["nghiemThuMayMocByBienPhap", idBienPhap],
     queryFn: async () => {
-      const res = await api.get(`/nghiemthu-maymoc/giamdinh-maymoc/${idGiamDinh}`);
+      const res = await api.get(`/nghiemthu-maymoc/bienphap-maymoc/${idBienPhap}`);
       return (res.data.data || res.data).map((item: any) =>
         AcceptanceTestAdapter(item),
       );
     },
-    enabled: !!idGiamDinh,
+    enabled: !!idBienPhap,
   });
 };
 
@@ -1672,9 +1659,11 @@ export const useMaintenanceAcceptanceTestMutation = () => {
   const { user } = useSelector((state: any) => state.user);
 
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ["acceptanceTestPage"] });
-    queryClient.invalidateQueries({ queryKey: ["acceptanceTestByGiamDinh"] });
-    queryClient.invalidateQueries({ queryKey: ["inspectionByBienBan"] });
+    queryClient.invalidateQueries({ queryKey: ["nghiemThuMayMocPage"] });
+    queryClient.invalidateQueries({ queryKey: ["nghiemThuMayMocByBienPhap"] });
+    queryClient.invalidateQueries({
+      queryKey: ["bienPhapMayMocByGiamDinh"],
+    });
   };
 
   const createMutation = useMutation({
@@ -1689,9 +1678,6 @@ export const useMaintenanceAcceptanceTestMutation = () => {
     },
     onSuccess: async () => {
       invalidate();
-      queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
-      queryClient.invalidateQueries({ queryKey: ["acceptanceByInspection"] });
-      queryClient.invalidateQueries({ queryKey: ["inspectionByBienBan"] });
 
       showSuccessAlert("Tạo biên bản nghiệm thu thành công");
     },
@@ -1714,16 +1700,6 @@ export const useMaintenanceAcceptanceTestMutation = () => {
     },
     onSuccess: async () => {
       invalidate();
-      queryClient.invalidateQueries({
-        queryKey: ["inspectionByRepair"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["acceptanceByInspection"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["inspectionByBienBan"],
-      });
-
       showSuccessAlert("Cập nhật biên bản nghiệm thu thành công");
     },
     onError: (error: any) => {
@@ -1740,10 +1716,6 @@ export const useMaintenanceAcceptanceTestMutation = () => {
     },
     onSuccess: () => {
       invalidate();
-      queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
-      queryClient.invalidateQueries({
-        queryKey: ["acceptanceByInspection"],
-      });
       showSuccessAlert("Xóa biên bản nghiệm thu thành công");
     },
     onError: (error: any) => {
@@ -1776,10 +1748,6 @@ export const useMaintenanceAcceptanceTestMutation = () => {
     },
     onSuccess: () => {
       invalidate();
-      queryClient.invalidateQueries({
-        queryKey: ["acceptanceByInspection"],
-      });
-
       showSuccessAlert("Hủy biên bản nghiệm thu thành công");
     },
     onError: (error: any) => {
@@ -1904,8 +1872,9 @@ export const useMaintenanceMaterialAssessmentMutation = () => {
       if (id && variables.nguoiKyList && variables.nguoiKyList.length > 0) {
         await api.put(`/chuky/nguoi-ky/update/${id}`, variables.nguoiKyList);
       }
-      queryClient.invalidateQueries({ queryKey: ["materialAssessmentPage"] });
-      queryClient.invalidateQueries({ queryKey: ["acceptanceByInspection"] });
+      queryClient.invalidateQueries({
+        queryKey: ["nghiemThuMayMocByBienPhap"],
+      });
       queryClient.invalidateQueries({
         queryKey: ["materialAssessmentByInspection"],
       });
@@ -1935,7 +1904,9 @@ export const useMaintenanceMaterialAssessmentMutation = () => {
         await api.put(`/chuky/nguoi-ky/update/${id}`, variables.nguoiKyList);
       }
       queryClient.invalidateQueries({ queryKey: ["materialAssessmentPage"] });
-      queryClient.invalidateQueries({ queryKey: ["acceptanceByInspection"] });
+      queryClient.invalidateQueries({
+        queryKey: ["nghiemThuMayMocByBienPhap"],
+      });
       queryClient.invalidateQueries({
         queryKey: ["materialAssessmentByInspection"],
       });
@@ -1955,7 +1926,7 @@ export const useMaintenanceMaterialAssessmentMutation = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["materialAssessmentPage"] });
-      queryClient.invalidateQueries({ queryKey: ["acceptanceByInspection"] });
+      queryClient.invalidateQueries({ queryKey: ["nghiemThuMayMocByBienPhap"] });
       queryClient.invalidateQueries({
         queryKey: ["materialAssessmentByInspection"],
       });
@@ -2214,3 +2185,92 @@ export const useGetTaiSanByIdQuery = (id: string | undefined, nam?: number) => {
     enabled: !!id,
   });
 };
+
+export const useMaintenanceBienPhapMayMocPageQuery = (
+  page?: number,
+  pageSize?: number,
+  searchValue?: string,
+  trangThai?: number,
+  userid?: string,
+  isSign?: boolean,
+  dateFrom?: string,
+  dateTo?: string,
+  enabled = true,
+) => {
+  return useQuery({
+    queryKey: [
+      "bienPhapMayMocPage",
+      page,
+      pageSize,
+      searchValue,
+      trangThai,
+      userid,
+      isSign,
+      dateFrom,
+      dateTo,
+    ],
+    queryFn: async () => {
+      const res = await api.get("/bienphap-maymoc/paged", {
+        params: {
+          page: page,
+          size: pageSize,
+          idCongTy: CongTy.CT001,
+          search: searchValue,
+          trangThai: trangThai,
+          userid: userid,
+          isSign: isSign,
+          dateFrom: dateFrom,
+          dateTo: dateTo,
+        },
+      });
+      return res.data.data || res.data;
+    },
+    placeholderData: (previousData) => previousData,
+    enabled,
+  });
+};
+
+export const useMaintenanceBienPhapPhuongTienPageQuery = (
+  page?: number,
+  pageSize?: number,
+  searchValue?: string,
+  trangThai?: number,
+  userid?: string,
+  isSign?: boolean,
+  dateFrom?: string,
+  dateTo?: string,
+  enabled = true,
+) => {
+  return useQuery({
+    queryKey: [
+      "bienPhapPhuongTienPage",
+      page,
+      pageSize,
+      searchValue,
+      trangThai,
+      userid,
+      isSign,
+      dateFrom,
+      dateTo,
+    ],
+    queryFn: async () => {
+      const res = await api.get("/bienphap-phuongtien/paged", {
+        params: {
+          page: page,
+          size: pageSize,
+          idCongTy: CongTy.CT001,
+          search: searchValue,
+          trangThai: trangThai,
+          userid: userid,
+          isSign: isSign,
+          dateFrom: dateFrom,
+          dateTo: dateTo,
+        },
+      });
+      return res.data.data || res.data;
+    },
+    placeholderData: (previousData) => previousData,
+    enabled,
+  });
+};
+

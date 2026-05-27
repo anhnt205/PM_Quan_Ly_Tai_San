@@ -15,6 +15,7 @@ import {
 } from "../../../components/Alert";
 import { MessageTypeFunctions } from "../../../utils/const";
 import socketService from "../../../services/socketService";
+import { FileDownloadOutlined } from "@mui/icons-material";
 
 export const showShareStatus = (isShare: boolean, isMyCreated: boolean) => {
   return (
@@ -31,6 +32,41 @@ export const showShareStatus = (isShare: boolean, isMyCreated: boolean) => {
         mb: "2px", // margin: const EdgeInsets.only(bottom: 2)
         "& .MuiChip-label": {
           padding: 0,
+        },
+      }}
+    />
+  );
+};
+
+export const showDownloadFile = (fileName: string, onDownload: () => void) => {
+  return (
+    <Chip
+      icon={
+        <FileDownloadOutlined style={{ fontSize: "14px", color: "#388e3c" }} />
+      }
+      label={fileName || "File"}
+      onClick={(e) => {
+        e.stopPropagation();
+        onDownload();
+      }}
+      variant="outlined"
+      sx={{
+        backgroundColor: "#f1f8e9", // Tương đương Colors.green.shade50
+        color: "#388e3c", // Tương đương Colors.green.shade700
+        borderColor: "#c8e6c9", // Tương đương Colors.green.shade200
+        borderRadius: "6px", // BorderRadius.circular(6)
+        height: "24px", // Chiều cao compact cho bảng
+        fontSize: "11px",
+        fontWeight: 500,
+        cursor: "pointer",
+        maxWidth: "100%",
+        "& .MuiChip-label": {
+          px: 1, // Padding horizontal cho text
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        },
+        "&:hover": {
+          backgroundColor: "#e8f5e9", // Hiệu ứng hover nhẹ
         },
       }}
     />
@@ -1991,6 +2027,199 @@ export const generateKiemTraSuCoPdf = async (
   y += 15;
 
   // Signatures
+  const marginX = 25;
+  const printableWidth = pageWidth - 2 * marginX;
+  const maxPerRow = 3;
+  const rowGap = 60;
+  const coordinates: Record<string, { xRatio: number; yRatio: number }> = {};
+  const baseWidthPx = 120;
+  const displayWidth = 800;
+
+  listSigneInfos.forEach((s, index) => {
+    const rowIndex = Math.floor(index / maxPerRow);
+    const colIndex = index % maxPerRow;
+    const itemsInRow = Math.min(
+      maxPerRow,
+      listSigneInfos.length - rowIndex * maxPerRow,
+    );
+
+    // Nếu row mới tràn trang thì thêm page
+    if (rowIndex > 0 && y + rowIndex * rowGap > pageHeight - 20) {
+      doc.addPage();
+      y = 20;
+    }
+
+    let x;
+    if (itemsInRow === 1) x = pageWidth / 2;
+    else {
+      const gapSize = printableWidth / (itemsInRow - 1);
+      x = marginX + colIndex * gapSize;
+    }
+
+    const yPos = y + rowIndex * rowGap;
+    const sigWidthMm = (baseWidthPx / displayWidth) * pageWidth;
+
+    coordinates[s.idNhanVien] = {
+      xRatio: Math.max(0, Math.min((x - sigWidthMm / 2) / pageWidth, 1)),
+      yRatio: Math.max(0, Math.min((yPos + 10) / pageHeight, 1)),
+    };
+
+    doc.setFont("times_new_roman", "bold");
+    doc.setFontSize(10);
+    doc.text(s.title || s.donVi || "", x, yPos, { align: "center" });
+    doc.setFont("times_new_roman_italic", "italic");
+    doc.text("(Ký, ghi rõ họ tên)", x, yPos + 5, { align: "center" });
+    doc.setFont("times_new_roman", "bold");
+    doc.text(s.hoTen || "", x, yPos + 35, { align: "center" });
+  });
+
+  return {
+    pdf: new Uint8Array(doc.output("arraybuffer")),
+    coordinates,
+  };
+};
+
+export const generateBienPhapMayMocPdf = async (
+  item: any,
+  staffs: any[],
+  departments: any[],
+  positions: any[],
+): Promise<{
+  pdf: Uint8Array;
+  coordinates: Record<string, { xRatio: number; yRatio: number }>;
+}> => {
+  const listSigneInfos: any[] = listSigneInfo(
+    item,
+    staffs,
+    departments,
+    positions,
+  );
+  const doc = new jsPDF("p", "mm", "a4");
+
+  doc.setFont("times_new_roman", "bold");
+  doc.setFontSize(11);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const leftColCenter = pageWidth / 4;
+  const rightColCenter = (pageWidth * 3) / 4;
+
+  // Header Left
+  doc.setFont("times_new_roman", "normal");
+  doc.text("TẬP ĐOÀN CÔNG NGHIỆP", leftColCenter, 20, { align: "center" });
+  doc.text("THAN – KHOÁNG SẢN VIỆT NAM", leftColCenter, 25, {
+    align: "center",
+  });
+  doc.setFont("times_new_roman", "bold");
+  doc.text("CÔNG TY THAN UÔNG BÍ - TKV", leftColCenter, 30, {
+    align: "center",
+  });
+  doc.line(leftColCenter - 25, 31, leftColCenter + 25, 31);
+
+  // Header Right
+  doc.text("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", rightColCenter, 20, {
+    align: "center",
+  });
+  doc.text("Độc lập - Tự do - Hạnh phúc", rightColCenter, 26, {
+    align: "center",
+  });
+  doc.line(rightColCenter - 25, 27, rightColCenter + 25, 27);
+
+  // Date
+  doc.setFont("times_new_roman_italic", "italic");
+  doc.setFontSize(11);
+  const today = new Date(item.ngayTao || new Date());
+  const dateStr = `Quảng Ninh, ngày ${today.getDate()} tháng ${today.getMonth() + 1} năm ${today.getFullYear()}`;
+  doc.text(dateStr, pageWidth - 20, 35, { align: "right" });
+
+  // Title
+  doc.setFont("times_new_roman", "bold");
+  doc.setFontSize(14);
+  doc.text("BIỆN PHÁP SỬA CHỮA MÁY MÓC THIẾT BỊ", pageWidth / 2, 48, {
+    align: "center",
+  });
+
+  let y = 62;
+
+  // Date formatter helper
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return "—";
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    } catch {
+      return dateStr;
+    }
+  };
+
+  // Table Data mapping the provided columns
+  const tableHead = [
+    [
+      "Số Lệnh/BP\nsửa chữa",
+      "Số đề nghị",
+      "Đơn vị\nSC",
+      "Đơn vị\nphối hợp",
+      "Hình\nthức",
+      "Thời gian\nbắt đầu",
+      "Thời gian\nkết thúc",
+      "Thời gian\n(ngày)",
+      "Ghi chú",
+    ],
+  ];
+
+  const tableBody = [
+    [
+      item.soPhieu || "—",
+      item.soDeNghi || "—",
+      item.donViSuaChua || "—",
+      item.donViPhoiHop || "—",
+      item.hinhThuc || "—",
+      formatDate(item.thoiGianBatDau),
+      formatDate(item.thoiGianKetThuc),
+      item.thoiGianNgay != null ? String(item.thoiGianNgay) : "—",
+      item.ghiChu || "—",
+    ],
+  ];
+
+  autoTable(doc, {
+    startY: y,
+    margin: { left: 12, right: 12 },
+    head: tableHead,
+    body: tableBody,
+    theme: "grid",
+    styles: {
+      font: "times_new_roman",
+      fontSize: 9,
+      halign: "center",
+      valign: "middle",
+    },
+    headStyles: {
+      fillColor: false,
+      textColor: 0,
+      lineWidth: 0.1,
+      lineColor: 0,
+      fontStyle: "bold",
+    },
+    bodyStyles: { lineWidth: 0.1, lineColor: 0, textColor: [180, 0, 0] }, // Red as in the provided image
+    columnStyles: {
+      0: { cellWidth: 22 },
+      1: { cellWidth: 22 },
+      2: { cellWidth: 18 },
+      3: { cellWidth: 18 },
+      4: { cellWidth: 16 },
+      5: { cellWidth: 22 },
+      6: { cellWidth: 22 },
+      7: { cellWidth: 16 },
+      8: { halign: "left" },
+    },
+  });
+
+  y = (doc as any).lastAutoTable.finalY + 20;
+
+  // Signatures block
   const marginX = 25;
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;

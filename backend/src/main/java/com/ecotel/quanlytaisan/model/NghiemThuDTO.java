@@ -7,7 +7,7 @@ import java.util.List;
 public class NghiemThuDTO {
     private String id;
     private String idCongTy;
-    private String idGiamDinhMayMoc;
+    private String idBienPhapMayMoc;
     private String soPhieu;
     private String ngayNghiemThu;
     private String viTri;
@@ -38,7 +38,7 @@ public class NghiemThuDTO {
     // Join fields
     private String tenNguoiLap;
     private String tenGiamDoc;
-    private String soPhieuGiamDinhMayMoc;
+    private String soPhieuBienPhapMayMoc;
     private Integer daCoDanhGiaVatTu;
 
     // Relations

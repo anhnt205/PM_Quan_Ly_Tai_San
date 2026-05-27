@@ -19,6 +19,8 @@ public class BienPhapMayMocDTO {
     private String thoiGianKetThuc;
     private Integer thoiGianNgay;
     private String ghiChu;
+    private String tenFile;
+    private String duongDanFile;
 
     // Luồng ký
     private String  idNguoiLap;
@@ -38,6 +40,7 @@ public class BienPhapMayMocDTO {
     private String tenNguoiLap;
     private String tenGiamDoc;
     private String soPhieuGiamDinhMayMoc; // Số phiếu giám định máy móc liên quan
+    private Integer daCoNghiemThu;
 
     // Relations
     private List<KyTaiLieu> chuKyList;

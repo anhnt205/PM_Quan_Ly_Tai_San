@@ -225,3 +225,45 @@ export interface QuyTrinhSuaChuaData {
   trangThaiNghiemThu: number;
   trangThai: number;
 }
+
+// Biện pháp sửa chữa máy móc
+export interface BienPhapMayMocData {
+  id?: string;
+  idCongTy?: string;
+  idGiamDinhMayMoc?: string;       // FK -> giamdinh_maymoc
+
+  soPhieu?: string;                 // Số phiếu
+  soDeNghi?: string;                // Số đề nghị
+  donViSuaChua?: string;            // Đơn vị sửa chữa
+  donViPhoiHop?: string;            // Đơn vị phối hợp
+  hinhThuc?: string;                // Hình thức sửa chữa
+  thoiGianBatDau?: string;          // Thời gian bắt đầu
+  thoiGianKetThuc?: string;         // Thời gian kết thúc
+  thoiGianNgay?: number;            // Số ngày
+  ghiChu?: string;                  // Ghi chú
+
+  // File đính kèm
+  tenFile?: string;
+  duongDanFile?: string;
+
+  // Luồng ký
+  idNguoiLap?: string;
+  tenNguoiLap?: string;
+  nguoiLapXacNhan?: boolean;
+  idGiamDoc?: string;
+  tenGiamDoc?: string;
+  giamDocXacNhan?: boolean;
+  share?: boolean;
+  trangThai?: number;               // 0:nháp 1:đang duyệt 2:hủy 3:hoàn thành
+
+  // Audit
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+
+  // Join
+  soPhieuGiamDinhMayMoc?: string;
+  nguoiKyList?: any[];
+  chuKyList?: any[];
+}

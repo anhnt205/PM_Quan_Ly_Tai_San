@@ -38,7 +38,7 @@ public class GiamDinhMayMocDTO {
     private String tenNguoiLap;
     private String tenGiamDoc;
     private String soPhieuBienBan;
-    private Integer daCoNghiemThu;
+    private Integer daCoBienPhap;
 
     // Danh sách chi tiết
     private List<GiamDinhMayMocChiTiet> danhSachChiTiet;

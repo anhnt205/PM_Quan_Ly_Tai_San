@@ -65,6 +65,7 @@ interface Props {
   repairRequest: MaintenanceRepairData;
   inspectionRecord: InspectionRecordData;
   initData?: AcceptanceTestRecordData;
+  bienPhapId?: string;
 }
 
 const AcceptanceTestDialog = ({
@@ -74,6 +75,7 @@ const AcceptanceTestDialog = ({
   repairRequest,
   inspectionRecord,
   initData,
+  bienPhapId,
 }: Props) => {
   const { user } = useSelector((state: any) => state.user);
   const { createMutation, updateMutation } =
@@ -107,7 +109,7 @@ const AcceptanceTestDialog = ({
     initialValues: {
       id: "",
       idCongTy: CongTy.CT001,
-      idGiamDinhMayMoc: inspectionRecord?.id || "",
+      idBienPhapMayMoc: bienPhapId || inspectionRecord?.id || "",
       soPhieu: "",
       ngayNghiemThu: dayjs().format("YYYY-MM-DD"),
       viTri: "",
@@ -196,7 +198,7 @@ const AcceptanceTestDialog = ({
         formik.setValues({
           id: initData.id ?? "",
           idCongTy: initData.idCongTy ?? CongTy.CT001,
-          idGiamDinhMayMoc: initData.idGiamDinhMayMoc ?? "",
+          idBienPhapMayMoc: initData.idBienPhapMayMoc ?? "",
           soPhieu: initData.soPhieu ?? "",
           ngayNghiemThu: initData.ngayNghiemThu ?? "",
           viTri: initData.viTri ?? "",
@@ -283,7 +285,7 @@ const AcceptanceTestDialog = ({
         formik.setValues({
           id: "",
           idCongTy: CongTy.CT001,
-          idGiamDinhMayMoc: inspectionRecord?.id || "",
+          idBienPhapMayMoc: bienPhapId || inspectionRecord?.id || "",
           soPhieu: `BB-NT-${repairRequest?.id ?? ""}`,
           ngayNghiemThu: dayjs().format("YYYY-MM-DD"),
           viTri: "",

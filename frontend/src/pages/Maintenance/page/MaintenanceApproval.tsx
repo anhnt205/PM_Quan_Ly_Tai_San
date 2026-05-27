@@ -37,6 +37,8 @@ import {
   useMaintenancePlanningPageQuery,
   useMaintenanceRepairPageQuery,
   useMaintenanceIncidentInspectionPageQuery,
+  useMaintenanceBienPhapMayMocPageQuery,
+  useMaintenanceBienPhapPhuongTienPageQuery,
 } from "../../MainenancePlanRepair/Mutation";
 import { useDebounce } from "../../../hooks/useDebounce";
 import {
@@ -47,9 +49,9 @@ import {
   PlanAdapter,
   RepairAdapter,
   IncidentInspectionAdapter,
+  BienPhapMayMocAdapter,
 } from "../Adapter";
 import { useSelector } from "react-redux";
-import { RootState } from "../../../redux/store";
 import { useAllPositionsQuery } from "../../Position/Mutation";
 import { useAllStaffsQuery } from "../../Staff/Mutation";
 import { useAllDepartmentsQuery } from "../../Department/Mutation";
@@ -62,10 +64,12 @@ import {
   generateNghiemThuPdf,
   generateDanhGiaVatTuPdf,
   generateKiemTraSuCoPdf,
+  generateBienPhapMayMocPdf,
   getPermissionSigning,
   ShowPermissionSigning,
   canSign,
   showStatus,
+  showDownloadFile,
 } from "../config";
 
 import SignDocumentForm from "../components/signdocument/SignDocumentForm";
@@ -74,6 +78,7 @@ import { useMaintenanceMutation } from "../mutation";
 import { SignaturesData } from "../../../components/SignDocument/types";
 import { TypeBienBan } from "../../../utils/const";
 import { useMenuData } from "../../../hooks/useMenuData";
+import S3Service from "../../../services/S3Service";
 
 export default function MaintenanceApprovalPage() {
   const signBatch = useSignBatch();
@@ -94,6 +99,9 @@ export default function MaintenanceApprovalPage() {
   const [selectedItem, setSelectedItem] = useState<any[]>([]);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isSigning, setIsSigning] = useState(false);
+  const [bienPhapType, setBienPhapType] = useState<"may_moc" | "phuong_tien">(
+    "may_moc",
+  );
 
   const { data: positions } = useAllPositionsQuery();
   const { data: staffs } = useAllStaffsQuery();
@@ -101,16 +109,17 @@ export default function MaintenanceApprovalPage() {
 
   const { counts } = useMenuData();
 
-   const pendingCounts = [
+  const pendingCounts = [
     counts.totalPlan,
     counts.totalRepair,
     counts.totalInspection,
+    (counts as any).totalBienPhap || 0,
     counts.totalAcceptance,
     counts.totalMaterialAssessment,
     counts.totalIncident,
     counts.totalIncidentInspection,
   ];
- 
+
   const searchDebounce = useDebounce(searchValue, 500);
   const {
     data: planPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
@@ -128,21 +137,6 @@ export default function MaintenanceApprovalPage() {
     activeTab === 0,
   );
 
-  const {
-    data: incidentPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
-    isLoading: isLoadingIncident,
-  } = useMaintenanceIncidentPageQuery(
-    paginationModel.page,
-    paginationModel.pageSize,
-    searchDebounce,
-    undefined,
-    undefined,
-    user?.taiKhoan?.tenDangNhap,
-    true,
-    dateFrom,
-    dateTo,
-    activeTab === 5,
-  );
   const {
     data: repairPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
     isLoading: isLoadingRepair,
@@ -176,12 +170,53 @@ export default function MaintenanceApprovalPage() {
   );
 
   const {
-    data: acceptanceTestPaged = {
+    data: bienPhapMayMocPaged = {
       items: [],
       totalItems: 0,
       trangThaiCounts: {},
     },
-    isLoading: isLoadingAcceptanceTest,
+    isLoading: isLoadingBienPhapMayMoc,
+  } = useMaintenanceBienPhapMayMocPageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchDebounce,
+    undefined,
+    user?.taiKhoan?.tenDangNhap,
+    true,
+    dateFrom,
+    dateTo,
+    activeTab === 3 && bienPhapType === "may_moc",
+  );
+
+  const {
+    data: bienPhapPhuongTienPaged = {
+      items: [],
+      totalItems: 0,
+      trangThaiCounts: {},
+    },
+    isLoading: isLoadingBienPhapPhuongTien,
+  } = useMaintenanceBienPhapPhuongTienPageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchDebounce,
+    undefined,
+    user?.taiKhoan?.tenDangNhap,
+    true,
+    dateFrom,
+    dateTo,
+    activeTab === 3 && bienPhapType === "phuong_tien",
+  );
+
+  const bienPhapPaged =
+    bienPhapType === "may_moc" ? bienPhapMayMocPaged : bienPhapPhuongTienPaged;
+
+  const {
+    data: nghiemThuMayMocPaged = {
+      items: [],
+      totalItems: 0,
+      trangThaiCounts: {},
+    },
+    isLoading: isLoadingNghiemThuMayMoc,
   } = useMaintenanceAcceptanceTestPageQuery(
     paginationModel.page,
     paginationModel.pageSize,
@@ -192,8 +227,13 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
-    activeTab === 3,
+    activeTab === 4 && bienPhapType === "may_moc",
   );
+
+  const acceptanceTestPaged =
+    bienPhapType === "may_moc"
+      ? nghiemThuMayMocPaged
+      : { items: [], totalItems: 0, trangThaiCounts: {} };
 
   const {
     data: materialAssessmentPaged = {
@@ -211,7 +251,23 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
-    activeTab === 4,
+    activeTab === 5,
+  );
+
+  const {
+    data: incidentPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
+    isLoading: isLoadingIncident,
+  } = useMaintenanceIncidentPageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchDebounce,
+    undefined,
+    undefined,
+    user?.taiKhoan?.tenDangNhap,
+    true,
+    dateFrom,
+    dateTo,
+    activeTab === 6,
   );
 
   const {
@@ -231,7 +287,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
-    activeTab === 6,
+    activeTab === 7,
   );
 
   const { signMutation } = useMaintenanceMutation(
@@ -242,14 +298,20 @@ export default function MaintenanceApprovalPage() {
         : activeTab === 2
           ? "inspectionPage"
           : activeTab === 3
-            ? "acceptanceTestPage"
+            ? bienPhapType === "may_moc"
+              ? "bienPhapMayMocPage"
+              : "bienPhapPhuongTienPage"
             : activeTab === 4
-              ? "materialAssessmentPage"
+              ? bienPhapType === "may_moc"
+                ? "nghiemThuMayMocPage"
+                : "nghiemThuPhuongTienPage"
               : activeTab === 5
-                ? "incidentPage"
+                ? "materialAssessmentPage"
                 : activeTab === 6
-                  ? "incidentInspectionPage"
-                  : "",
+                  ? "incidentPage"
+                  : activeTab === 7
+                    ? "incidentInspectionPage"
+                    : "",
     activeTab === 0
       ? "kehoach-suachua"
       : activeTab === 1
@@ -257,14 +319,20 @@ export default function MaintenanceApprovalPage() {
         : activeTab === 2
           ? "giamdinh"
           : activeTab === 3
-            ? "nghiemthu"
+            ? bienPhapType === "may_moc"
+              ? "bienphap-maymoc"
+              : "bienphap-phuongtien"
             : activeTab === 4
-              ? "danhgia-vattu"
+              ? bienPhapType === "may_moc"
+                ? "nghiemthu-maymoc"
+                : "nghiemthu-phuongtien"
               : activeTab === 5
-                ? "suco-thietbi"
+                ? "danhgia-vattu"
                 : activeTab === 6
-                  ? "kiemtra-suco"
-                  : "",
+                  ? "suco-thietbi"
+                  : activeTab === 7
+                    ? "kiemtra-suco"
+                    : "",
     activeTab,
   );
 
@@ -273,20 +341,27 @@ export default function MaintenanceApprovalPage() {
     { ...repairPaged, items: repairPaged.items.map(RepairAdapter) },
     { ...inspectionPaged, items: inspectionPaged.items.map(InspectionAdapter) },
     {
+      ...bienPhapPaged,
+      items: (bienPhapPaged.items || []).map(BienPhapMayMocAdapter),
+    },
+    {
       ...acceptanceTestPaged,
-      items: acceptanceTestPaged.items.map(AcceptanceTestAdapter),
+      items: (acceptanceTestPaged.items || []).map(AcceptanceTestAdapter),
     },
     {
       ...materialAssessmentPaged,
-      items: materialAssessmentPaged.items.map(MaterialAssessmentAdapter),
+      items: (materialAssessmentPaged.items || []).map(
+        MaterialAssessmentAdapter,
+      ),
     },
     { ...incidentPaged, items: incidentPaged.items.map(IncidentAdapter) },
     {
       ...incidentInspectionPaged,
-      items: incidentInspectionPaged.items.map(IncidentInspectionAdapter),
+      items: (incidentInspectionPaged.items || []).map(
+        IncidentInspectionAdapter,
+      ),
     },
   ];
-
 
   const tabConfigs = [
     { label: "Kế hoạch", icon: <AssignmentOutlined />, idLabel: "Mã KH" },
@@ -300,6 +375,12 @@ export default function MaintenanceApprovalPage() {
       label: "BB Giám định",
       icon: <FactCheckOutlined />,
       idLabel: "Số BB giám định",
+      field: "soPhieu",
+    },
+    {
+      label: "Biện pháp sửa chữa",
+      icon: <BuildOutlined />,
+      idLabel: "Số biện pháp",
       field: "soPhieu",
     },
     {
@@ -344,9 +425,10 @@ export default function MaintenanceApprovalPage() {
       },
     ],
     3: [{ field: "idGiamDinhMayMoc", headerName: "Mã BB giám định" }],
-    4: [{ field: "idNghiemThu", headerName: "Mã BB nghiệm thu" }],
-    5: [{ field: "planId", headerName: "Mã kế hoạch" }],
-    6: [{ field: "idSuCo", headerName: "Mã phiếu báo SC" }],
+    4: [{ field: "idBienPhapMayMoc", headerName: "Mã biện pháp" }],
+    5: [{ field: "idNghiemThu", headerName: "Mã BB nghiệm thu" }],
+    6: [{ field: "planId", headerName: "Mã kế hoạch" }],
+    7: [{ field: "idSuCo", headerName: "Mã phiếu báo SC" }],
   };
 
   const isInDateRange = (row: any) => {
@@ -435,7 +517,7 @@ export default function MaintenanceApprovalPage() {
       ];
     }
 
-    return [
+    const columns: any[] = [
       {
         field: tabConfigs[activeTab].field || "id",
         headerName: tabConfigs[activeTab].idLabel,
@@ -443,6 +525,24 @@ export default function MaintenanceApprovalPage() {
       },
       ...parentCols,
       { field: "moTa", headerName: "Mô tả", flex: 1, minWidth: 200 },
+    ];
+
+    if (activeTab === 3) {
+      columns.push({
+        field: "duongDanFile",
+        headerName: "Tài liệu",
+        width: 180,
+        renderCell: (params: any) => {
+          return showDownloadFile(
+            params.value,
+            () => S3Service.download(params.row.duongDanFile),
+            // handleDownloadFile(params.value),
+          );
+        },
+      });
+    }
+
+    columns.push(
       { field: "ngayTao", headerName: "Ngày tạo", width: 120 },
       {
         field: "trangThaiKy",
@@ -477,7 +577,9 @@ export default function MaintenanceApprovalPage() {
           </IconButton>
         ),
       },
-    ];
+    );
+
+    return columns;
   };
 
   const renderPreview = () => {
@@ -568,11 +670,37 @@ export default function MaintenanceApprovalPage() {
             showSignerSidebar={false}
             showHeader={false}
             generatePdf={() =>
-              generateNghiemThuPdf(selectedRow, staffs, departments, positions)
+              generateBienPhapMayMocPdf(
+                selectedRow,
+                staffs,
+                departments,
+                positions,
+              )
             }
           />
         );
       case 4:
+        return (
+          <SignDocumentForm
+            selectedIds={[selectedRow.id]}
+            onCancel={() => {
+              setSelectedRow(null);
+              setIsDetailOpen(false);
+            }}
+            onSign={() => {}}
+            plan={selectedRow}
+            staffs={staffs || []}
+            departments={departments || []}
+            positions={positions || []}
+            fullscreen={false}
+            showSignerSidebar={false}
+            showHeader={false}
+            generatePdf={() =>
+              generateNghiemThuPdf(selectedRow, staffs, departments, positions)
+            }
+          />
+        );
+      case 5:
         return (
           <SignDocumentForm
             selectedIds={[selectedRow.id]}
@@ -598,7 +726,7 @@ export default function MaintenanceApprovalPage() {
             }
           />
         );
-      case 5:
+      case 6:
         return (
           <SignDocumentForm
             selectedIds={[selectedRow.id]}
@@ -619,7 +747,7 @@ export default function MaintenanceApprovalPage() {
             }
           />
         );
-      case 6:
+      case 7:
         return (
           <SignDocumentForm
             selectedIds={[selectedRow.id]}
@@ -861,11 +989,35 @@ export default function MaintenanceApprovalPage() {
           fullscreen={true}
           showSignerSidebar={true}
           generatePdf={() =>
-            generateNghiemThuPdf(selectedRow, staffs, departments, positions)
+            generateBienPhapMayMocPdf(
+              selectedRow,
+              staffs,
+              departments,
+              positions,
+            )
           }
         />
       )}
       {selectedRow && isSigning && activeTab === 4 && (
+        <SignDocumentForm
+          selectedIds={[selectedRow?.id]}
+          onCancel={() => {
+            setIsSigning(false);
+            setSelectedRow(null);
+          }}
+          onSign={handleSign}
+          plan={selectedRow}
+          staffs={staffs || []}
+          departments={departments || []}
+          positions={positions || []}
+          fullscreen={true}
+          showSignerSidebar={true}
+          generatePdf={() =>
+            generateNghiemThuPdf(selectedRow, staffs, departments, positions)
+          }
+        />
+      )}
+      {selectedRow && isSigning && activeTab === 5 && (
         <SignDocumentForm
           selectedIds={[selectedRow?.id]}
           onCancel={() => {
@@ -885,7 +1037,7 @@ export default function MaintenanceApprovalPage() {
         />
       )}
 
-      {selectedRow && isSigning && activeTab === 5 && (
+      {selectedRow && isSigning && activeTab === 6 && (
         <SignDocumentForm
           selectedIds={[selectedRow?.id]}
           onCancel={() => {
@@ -905,7 +1057,7 @@ export default function MaintenanceApprovalPage() {
         />
       )}
 
-      {selectedRow && isSigning && activeTab === 6 && (
+      {selectedRow && isSigning && activeTab === 7 && (
         <SignDocumentForm
           selectedIds={[selectedRow?.id]}
           onCancel={() => {
@@ -1061,7 +1213,103 @@ export default function MaintenanceApprovalPage() {
                 sx={{ fontSize: 11 }}
               />
             )}
-            <Box sx={{ flexGrow: 1 }} />
+
+            {(activeTab === 3 || activeTab === 4) && (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                  ml: "auto",
+                  pl: 2,
+                  borderLeft: { xs: "none", md: "1px solid" },
+                  borderColor: "divider",
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  fontWeight={500}
+                >
+                  Loại tài sản:
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    bgcolor: "grey.100",
+                    p: 0.5,
+                    borderRadius: 2.5,
+                  }}
+                >
+                  <Box
+                    onClick={() => {
+                      setBienPhapType("may_moc");
+                      setPaginationModel((m) => ({ ...m, page: 0 }));
+                    }}
+                    sx={{
+                      px: 2,
+                      py: 0.5,
+                      borderRadius: 2,
+                      cursor: "pointer",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      bgcolor:
+                        bienPhapType === "may_moc" ? "#fff" : "transparent",
+                      color:
+                        bienPhapType === "may_moc"
+                          ? "primary.main"
+                          : "text.secondary",
+                      boxShadow:
+                        bienPhapType === "may_moc"
+                          ? "0px 1px 3px rgba(0,0,0,0.1)"
+                          : "none",
+                      transition: "all 0.2s",
+                      "&:hover": {
+                        color:
+                          bienPhapType === "may_moc"
+                            ? "primary.main"
+                            : "text.primary",
+                      },
+                    }}
+                  >
+                    Máy móc
+                  </Box>
+                  <Box
+                    onClick={() => {
+                      setBienPhapType("phuong_tien");
+                      setPaginationModel((m) => ({ ...m, page: 0 }));
+                    }}
+                    sx={{
+                      px: 2,
+                      py: 0.5,
+                      borderRadius: 2,
+                      cursor: "pointer",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      bgcolor:
+                        bienPhapType === "phuong_tien" ? "#fff" : "transparent",
+                      color:
+                        bienPhapType === "phuong_tien"
+                          ? "primary.main"
+                          : "text.secondary",
+                      boxShadow:
+                        bienPhapType === "phuong_tien"
+                          ? "0px 1px 3px rgba(0,0,0,0.1)"
+                          : "none",
+                      transition: "all 0.2s",
+                      "&:hover": {
+                        color:
+                          bienPhapType === "phuong_tien"
+                            ? "primary.main"
+                            : "text.primary",
+                      },
+                    }}
+                  >
+                    Phương tiện
+                  </Box>
+                </Box>
+              </Box>
+            )}
           </Box>
 
           <SignBatchModal
@@ -1083,12 +1331,14 @@ export default function MaintenanceApprovalPage() {
                   : activeTab === 2
                     ? generateGiamDinhPdf
                     : activeTab === 3
-                      ? generateNghiemThuPdf
+                      ? generateGiamDinhPdf
                       : activeTab === 4
-                        ? generateDanhGiaVatTuPdf
+                        ? generateNghiemThuPdf
                         : activeTab === 5
-                          ? generatePhieuSuCoPdf
-                          : generateKiemTraSuCoPdf
+                          ? generateDanhGiaVatTuPdf
+                          : activeTab === 6
+                            ? generatePhieuSuCoPdf
+                            : generateKiemTraSuCoPdf
             }
             staffs={staffs || []}
             departments={departments || []}

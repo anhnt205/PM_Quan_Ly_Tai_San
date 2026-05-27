@@ -104,7 +104,6 @@ export default function StaffForm({
       }
     },
   });
-  console.log("formik.errors", formik.values);
   useEffect(() => {
     if (selectedStaff) {
       formik.setValues({

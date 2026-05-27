@@ -33,6 +33,8 @@ import {
   useMaintenancePlanningPageQuery,
   useMaintenanceRepairPageQuery,
   useMaintenanceIncidentInspectionPageQuery,
+  useMaintenanceBienPhapMayMocPageQuery,
+  useMaintenanceBienPhapPhuongTienPageQuery,
 } from "../../MainenancePlanRepair/Mutation";
 import {
   generateBienBanKeHoachPdf,
@@ -41,11 +43,14 @@ import {
   generateGiamDinhPdf,
   generateNghiemThuPdf,
   generateDanhGiaVatTuPdf,
+  generateKiemTraSuCoPdf,
+  generateBienPhapMayMocPdf,
   showStatus,
   listSigneInfo,
   showShareStatus,
   isCheckShowShare,
   handleSendToSigner,
+  showDownloadFile,
 } from "../config";
 import SignDocumentForm from "../components/signdocument/SignDocumentForm";
 import { useAllDepartmentsQuery } from "../../Department/Mutation";
@@ -61,10 +66,12 @@ import {
   PlanAdapter,
   RepairAdapter,
   IncidentInspectionAdapter,
+  BienPhapMayMocAdapter,
 } from "../Adapter";
 import { FilterOption } from "../../../components/common/FilterStatusGroup";
 import { useMaintenanceMutation } from "../mutation";
 import { useMenuData } from "../../../hooks/useMenuData";
+import S3Service from "../../../services/S3Service";
 
 export default function MaintenanceRecordPage() {
   const [activeTab, setActiveTab] = useState(0);
@@ -82,6 +89,9 @@ export default function MaintenanceRecordPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [bienPhapType, setBienPhapType] = useState<"may_moc" | "phuong_tien">(
+    "may_moc",
+  );
 
   const { data: staffs } = useAllStaffsQuery();
   const { data: departments } = useAllDepartmentsQuery();
@@ -93,6 +103,7 @@ export default function MaintenanceRecordPage() {
     counts.totalPlan,
     counts.totalRepair,
     counts.totalInspection,
+    (counts as any).totalBienPhap || 0,
     counts.totalAcceptance,
     counts.totalMaterialAssessment,
     counts.totalIncident,
@@ -107,14 +118,20 @@ export default function MaintenanceRecordPage() {
         : activeTab === 2
           ? "inspectionPage"
           : activeTab === 3
-            ? "acceptanceTestPage"
+            ? bienPhapType === "may_moc"
+              ? "bienPhapMayMocPage"
+              : "bienPhapPhuongTienPage"
             : activeTab === 4
-              ? "materialAssessmentPage"
+              ? bienPhapType === "may_moc"
+                ? "nghiemThuMayMocPage"
+                : "nghiemThuPhuongTienPage"
               : activeTab === 5
-                ? "incidentPage"
+                ? "materialAssessmentPage"
                 : activeTab === 6
-                  ? "incidentInspectionPage"
-                  : "",
+                  ? "incidentPage"
+                  : activeTab === 7
+                    ? "incidentInspectionPage"
+                    : "",
     activeTab === 0
       ? "kehoach-suachua"
       : activeTab === 1
@@ -122,14 +139,20 @@ export default function MaintenanceRecordPage() {
         : activeTab === 2
           ? "giamdinh"
           : activeTab === 3
-            ? "nghiemthu"
+            ? bienPhapType === "may_moc"
+              ? "bienphap-maymoc"
+              : "bienphap-phuongtien"
             : activeTab === 4
-              ? "danhgia-vattu"
+              ? bienPhapType === "may_moc"
+                ? "nghiemthu-maymoc"
+                : "nghiemthu-phuongtien"
               : activeTab === 5
-                ? "suco-thietbi"
+                ? "danhgia-vattu"
                 : activeTab === 6
-                  ? "kiemtra-suco"
-                  : "",
+                  ? "suco-thietbi"
+                  : activeTab === 7
+                    ? "kiemtra-suco"
+                    : "",
     activeTab,
   );
 
@@ -150,21 +173,6 @@ export default function MaintenanceRecordPage() {
     activeTab === 0,
   );
 
-  const {
-    data: incidentPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
-    isLoading: isLoadingIncident,
-  } = useMaintenanceIncidentPageQuery(
-    paginationModel.page,
-    paginationModel.pageSize,
-    searchDebounce,
-    statusFilter !== "" ? Number(statusFilter) : undefined,
-    undefined,
-    user?.taiKhoan?.tenDangNhap,
-    undefined,
-    dateFrom,
-    dateTo,
-    activeTab === 5,
-  );
   const {
     data: repairPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
     isLoading: isLoadingRepair,
@@ -198,12 +206,53 @@ export default function MaintenanceRecordPage() {
   );
 
   const {
-    data: acceptanceTestPaged = {
+    data: bienPhapMayMocPaged = {
       items: [],
       totalItems: 0,
       trangThaiCounts: {},
     },
-    isLoading: isLoadingAcceptanceTest,
+    isLoading: isLoadingBienPhapMayMoc,
+  } = useMaintenanceBienPhapMayMocPageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchDebounce,
+    statusFilter !== "" ? Number(statusFilter) : undefined,
+    user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom,
+    dateTo,
+    activeTab === 3 && bienPhapType === "may_moc",
+  );
+
+  const {
+    data: bienPhapPhuongTienPaged = {
+      items: [],
+      totalItems: 0,
+      trangThaiCounts: {},
+    },
+    isLoading: isLoadingBienPhapPhuongTien,
+  } = useMaintenanceBienPhapPhuongTienPageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchDebounce,
+    statusFilter !== "" ? Number(statusFilter) : undefined,
+    user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom,
+    dateTo,
+    activeTab === 3 && bienPhapType === "phuong_tien",
+  );
+
+  const bienPhapPaged =
+    bienPhapType === "may_moc" ? bienPhapMayMocPaged : bienPhapPhuongTienPaged;
+
+  const {
+    data: nghiemThuMayMocPaged = {
+      items: [],
+      totalItems: 0,
+      trangThaiCounts: {},
+    },
+    isLoading: isLoadingNghiemThuMayMoc,
   } = useMaintenanceAcceptanceTestPageQuery(
     paginationModel.page,
     paginationModel.pageSize,
@@ -214,8 +263,13 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
-    activeTab === 3,
+    activeTab === 4 && bienPhapType === "may_moc",
   );
+
+  const acceptanceTestPaged =
+    bienPhapType === "may_moc"
+      ? nghiemThuMayMocPaged
+      : { items: [], totalItems: 0, trangThaiCounts: {} };
 
   const {
     data: materialAssessmentPaged = {
@@ -233,7 +287,23 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
-    activeTab === 4,
+    activeTab === 5,
+  );
+
+  const {
+    data: incidentPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
+    isLoading: isLoadingIncident,
+  } = useMaintenanceIncidentPageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchDebounce,
+    statusFilter !== "" ? Number(statusFilter) : undefined,
+    undefined,
+    user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom,
+    dateTo,
+    activeTab === 6,
   );
 
   const {
@@ -253,7 +323,7 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
-    activeTab === 6,
+    activeTab === 7,
   );
 
   const tabConfigs = [
@@ -268,6 +338,12 @@ export default function MaintenanceRecordPage() {
       label: "BB Giám định",
       icon: <FactCheckOutlined />,
       idLabel: "Số BB giám định",
+      field: "soPhieu",
+    },
+    {
+      label: "Biện pháp sửa chữa",
+      icon: <BuildOutlined />,
+      idLabel: "Số biện pháp",
       field: "soPhieu",
     },
     {
@@ -303,9 +379,10 @@ export default function MaintenanceRecordPage() {
       { field: "incidentInspectionId", headerName: "Mã BB kiểm tra SC" },
     ],
     3: [{ field: "idGiamDinhMayMoc", headerName: "Mã BB giám định" }],
-    4: [{ field: "idNghiemThu", headerName: "Mã BB nghiệm thu" }],
-    5: [{ field: "planId", headerName: "Mã kế hoạch" }],
-    6: [{ field: "idSuCo", headerName: "Mã phiếu báo SC" }],
+    4: [{ field: "idBienPhapMayMoc", headerName: "Mã biện pháp" }],
+    5: [{ field: "idNghiemThu", headerName: "Mã BB nghiệm thu" }],
+    6: [{ field: "planId", headerName: "Mã kế hoạch" }],
+    7: [{ field: "idSuCo", headerName: "Mã phiếu báo SC" }],
   };
 
   const allRows = [
@@ -313,17 +390,25 @@ export default function MaintenanceRecordPage() {
     { ...repairPaged, items: repairPaged.items.map(RepairAdapter) },
     { ...inspectionPaged, items: inspectionPaged.items.map(InspectionAdapter) },
     {
+      ...bienPhapPaged,
+      items: (bienPhapPaged.items || []).map(BienPhapMayMocAdapter),
+    },
+    {
       ...acceptanceTestPaged,
-      items: acceptanceTestPaged.items.map(AcceptanceTestAdapter),
+      items: (acceptanceTestPaged.items || []).map(AcceptanceTestAdapter),
     },
     {
       ...materialAssessmentPaged,
-      items: materialAssessmentPaged.items.map(MaterialAssessmentAdapter),
+      items: (materialAssessmentPaged.items || []).map(
+        MaterialAssessmentAdapter,
+      ),
     },
     { ...incidentPaged, items: incidentPaged.items.map(IncidentAdapter) },
     {
       ...incidentInspectionPaged,
-      items: incidentInspectionPaged.items.map(IncidentInspectionAdapter),
+      items: (incidentInspectionPaged.items || []).map(
+        IncidentInspectionAdapter,
+      ),
     },
   ];
 
@@ -332,7 +417,6 @@ export default function MaintenanceRecordPage() {
     ...r,
     id: r.id || crypto.randomUUID(),
   }));
-
 
   const buildColumns = (collapsed: boolean) => {
     const parentCols = (parentColumnConfigs[activeTab] ?? []).map((cfg) => ({
@@ -357,10 +441,28 @@ export default function MaintenanceRecordPage() {
       ];
     }
 
-    return [
+    const columns: any[] = [
       { field: "id", headerName: tabConfigs[activeTab].idLabel, width: 160 },
       ...parentCols,
       { field: "moTa", headerName: "Nội dung/Ghi chú", flex: 1, minWidth: 200 },
+    ];
+
+    if (activeTab === 3) {
+      columns.push({
+        field: "tenFile",
+        headerName: "Tài liệu",
+        width: 180,
+        renderCell: (params: any) => {
+          return showDownloadFile(
+            params.value,
+            () => S3Service.download(params.row.duongDanFile),
+            // handleDownloadFile(params.value),
+          );
+        },
+      });
+    }
+
+    columns.push(
       { field: "ngayTao", headerName: "Ngày tạo", width: 120 },
       {
         field: "share",
@@ -378,7 +480,9 @@ export default function MaintenanceRecordPage() {
         width: 140,
         renderCell: (params: any) => showStatus(params.row.trangThai),
       },
-    ];
+    );
+
+    return columns;
   };
 
   const renderPreview = () => {
@@ -458,7 +562,7 @@ export default function MaintenanceRecordPage() {
             showSignerSidebar={false}
             showHeader={true}
             generatePdf={() =>
-              generateNghiemThuPdf(
+              generateBienPhapMayMocPdf(
                 selectedRow,
                 staffs || [],
                 departments || [],
@@ -475,7 +579,7 @@ export default function MaintenanceRecordPage() {
             showSignerSidebar={false}
             showHeader={true}
             generatePdf={() =>
-              generateDanhGiaVatTuPdf(
+              generateNghiemThuPdf(
                 selectedRow,
                 staffs || [],
                 departments || [],
@@ -492,7 +596,7 @@ export default function MaintenanceRecordPage() {
             showSignerSidebar={false}
             showHeader={true}
             generatePdf={() =>
-              generatePhieuSuCoPdf(
+              generateDanhGiaVatTuPdf(
                 selectedRow,
                 staffs || [],
                 departments || [],
@@ -509,7 +613,24 @@ export default function MaintenanceRecordPage() {
             showSignerSidebar={false}
             showHeader={true}
             generatePdf={() =>
-              generateGiamDinhPdf(
+              generatePhieuSuCoPdf(
+                selectedRow,
+                staffs || [],
+                departments || [],
+                positions || [],
+              )
+            }
+          />
+        );
+      case 7:
+        return (
+          <SignDocumentForm
+            {...commonProps}
+            fullscreen={false}
+            showSignerSidebar={false}
+            showHeader={true}
+            generatePdf={() =>
+              generateKiemTraSuCoPdf(
                 selectedRow,
                 staffs || [],
                 departments || [],
@@ -840,6 +961,103 @@ export default function MaintenanceRecordPage() {
                 }}
                 sx={{ fontSize: 11 }}
               />
+            )}
+
+            {(activeTab === 3 || activeTab === 4) && (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                  ml: "auto",
+                  pl: 2,
+                  borderLeft: { xs: "none", md: "1px solid" },
+                  borderColor: "divider",
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  fontWeight={500}
+                >
+                  Loại tài sản:
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    bgcolor: "grey.100",
+                    p: 0.5,
+                    borderRadius: 2.5,
+                  }}
+                >
+                  <Box
+                    onClick={() => {
+                      setBienPhapType("may_moc");
+                      setPaginationModel((m) => ({ ...m, page: 0 }));
+                    }}
+                    sx={{
+                      px: 2,
+                      py: 0.5,
+                      borderRadius: 2,
+                      cursor: "pointer",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      bgcolor:
+                        bienPhapType === "may_moc" ? "#fff" : "transparent",
+                      color:
+                        bienPhapType === "may_moc"
+                          ? "primary.main"
+                          : "text.secondary",
+                      boxShadow:
+                        bienPhapType === "may_moc"
+                          ? "0px 1px 3px rgba(0,0,0,0.1)"
+                          : "none",
+                      transition: "all 0.2s",
+                      "&:hover": {
+                        color:
+                          bienPhapType === "may_moc"
+                            ? "primary.main"
+                            : "text.primary",
+                      },
+                    }}
+                  >
+                    Máy móc
+                  </Box>
+                  <Box
+                    onClick={() => {
+                      setBienPhapType("phuong_tien");
+                      setPaginationModel((m) => ({ ...m, page: 0 }));
+                    }}
+                    sx={{
+                      px: 2,
+                      py: 0.5,
+                      borderRadius: 2,
+                      cursor: "pointer",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      bgcolor:
+                        bienPhapType === "phuong_tien" ? "#fff" : "transparent",
+                      color:
+                        bienPhapType === "phuong_tien"
+                          ? "primary.main"
+                          : "text.secondary",
+                      boxShadow:
+                        bienPhapType === "phuong_tien"
+                          ? "0px 1px 3px rgba(0,0,0,0.1)"
+                          : "none",
+                      transition: "all 0.2s",
+                      "&:hover": {
+                        color:
+                          bienPhapType === "phuong_tien"
+                            ? "primary.main"
+                            : "text.primary",
+                      },
+                    }}
+                  >
+                    Phương tiện
+                  </Box>
+                </Box>
+              </Box>
             )}
           </Box>
 
