@@ -12,6 +12,8 @@ import Position from "./pages/Position/Position";
 import TypeAsset from "./pages/TypeAsset/TypeAsset";
 import ModelAsset from "./pages/ModelAsset/ModelAsset";
 import AssetGroup from "./pages/AssetGroup/AssetGroup";
+import AssetProfile from "./pages/AssetProfile/AssetProfile";
+import AssetProfileGroup from "./pages/AssetProfileGroup/AssetProfileGroup";
 import ToolGroup from "./pages/ToolGroup/ToolGroup";
 import AssetManager from "./pages/AssetManager/AssetManager";
 import AssetTransfer from "./pages/AssetTransfer/AssetTransfer";
@@ -229,6 +231,11 @@ function App() {
             }
           />
           <Route path={ROUTES.ASSETGROUP} element={<AssetGroup />} />
+          <Route path={ROUTES.ASSETPROFILE} element={<AssetProfile />} />
+          <Route
+            path={ROUTES.ASSETPROFILEGROUP}
+            element={<AssetProfileGroup />}
+          />
           <Route path={ROUTES.MODELASSET} element={<ModelAsset />} />
           <Route path={ROUTES.TYPEASSET} element={<TypeAsset />} />
           <Route path={ROUTES.TOOLGROUP} element={<ToolGroup />} />
