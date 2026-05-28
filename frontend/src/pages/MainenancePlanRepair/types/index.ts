@@ -218,6 +218,9 @@ export interface VehicleInspectionRecordData {
   viTri?: string;
   tinhTrang?: string;
   noiDungKhac?: string;
+  idTaiSan?: string;
+  capBaoDuong?: string;
+  donViSuaChua?: string;
   idNguoiLap?: string;
   nguoiLapXacNhan?: boolean;
   idGiamDoc?: string;
@@ -233,6 +236,7 @@ export interface VehicleInspectionRecordData {
   tenNguoiLap?: string;
   tenGiamDoc?: string;
   soPhieuBienBan?: string;
+  tenTaiSan?: string;
   daCoNghiemThu?: number;
 
   danhSachChiTiet?: VehicleInspectionRecordDetailData[];

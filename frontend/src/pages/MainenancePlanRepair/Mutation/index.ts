@@ -38,6 +38,7 @@ export const useMaintenancePlanningPageQuery = (
   dateFrom?: string,
   dateTo?: string,
   enabled = true,
+  nhomTaiSan?: string,
 ) => {
   return useQuery({
     queryKey: [
@@ -51,6 +52,7 @@ export const useMaintenancePlanningPageQuery = (
       isSign,
       dateFrom,
       dateTo,
+      nhomTaiSan,
     ],
     queryFn: async () => {
       const res = await api.get("/kehoach-suachua/paged", {
@@ -64,6 +66,7 @@ export const useMaintenancePlanningPageQuery = (
           isSign: isSign,
           dateFrom: dateFrom,
           dateTo: dateTo,
+          nhomTaiSan: nhomTaiSan,
         },
       });
       return res.data.data || res.data;
@@ -148,7 +151,7 @@ export const useChiTietTaiSanByKeHoachQuery = (
 
 export const useMaintenancePlanningMutation = () => {
   const queryClient = useQueryClient();
-  const now = dayjs(new Date()).format("YYYY-MM-DD");
+  const now = dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss");
   const { user } = useSelector((state: any) => state.user);
 
   // --- API TÀI SẢN ---
@@ -470,7 +473,7 @@ export const useMaintenanceIncidentByPlanQuery = (
 
 export const useMaintenanceIncidenMutation = () => {
   const queryClient = useQueryClient();
-  const now = dayjs(new Date()).format("YYYY-MM-DD");
+  const now = dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss");
   const { user } = useSelector((state: any) => state.user);
 
   // --- API TÀI SẢN ---
@@ -760,7 +763,7 @@ export const useMaintenanceRepairByPlanQuery = (idKeHoach?: string) => {
 };
 export const useMaintenanceRepairMutation = () => {
   const queryClient = useQueryClient();
-  const now = dayjs(new Date()).format("YYYY-MM-DD");
+  const now = dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss");
   const { user } = useSelector((state: any) => state.user);
 
   // --- API CHI TIẾT ---
@@ -1024,7 +1027,10 @@ export const useMaintenanceInspectionPageQuery = (
   });
 };
 
-export const useMaintenanceInspectionByBienBanQuery = (idBienBan?: string) => {
+export const useMaintenanceInspectionByBienBanQuery = (
+  idBienBan?: string,
+  enabled: boolean = true,
+) => {
   return useQuery({
     queryKey: ["inspectionByBienBan", idBienBan],
     queryFn: async () => {
@@ -1034,13 +1040,13 @@ export const useMaintenanceInspectionByBienBanQuery = (idBienBan?: string) => {
       );
       return data;
     },
-    enabled: !!idBienBan,
+    enabled: !!idBienBan && enabled,
   });
 };
 
 export const useMaintenanceInspectionMutation = () => {
   const queryClient = useQueryClient();
-  const now = dayjs(new Date()).format("YYYY-MM-DD");
+  const now = dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss");
   const { user } = useSelector((state: any) => state.user);
 
   // --- API CHI TIẾT ---
@@ -1076,21 +1082,24 @@ export const useMaintenanceInspectionMutation = () => {
 
   const deleteChiTietManyMutation = useMutation({
     mutationFn: async (ids: string[]) => {
-      return (await api.delete(`/giamdinh-maymoc-chitiet/batch`, { data: ids })).data;
+      return (await api.delete(`/giamdinh-maymoc-chitiet/batch`, { data: ids }))
+        .data;
     },
   });
 
   // --- API VẬT TƯ THEO TÀI SẢN ---
   const batchInsertVatTuMutation = useMutation({
     mutationFn: async (data: any[]) => {
-      return (await api.post("/giamdinh-maymoc-chitiet/vattu/batch", data)).data;
+      return (await api.post("/giamdinh-maymoc-chitiet/vattu/batch", data))
+        .data;
     },
   });
 
   const deleteVatTuBatchMutation = useMutation({
     mutationFn: async (ids: string[]) => {
-      return (await api.delete("/giamdinh-maymoc-chitiet/vattu/batch", { data: ids }))
-        .data;
+      return (
+        await api.delete("/giamdinh-maymoc-chitiet/vattu/batch", { data: ids })
+      ).data;
     },
   });
 
@@ -1303,7 +1312,9 @@ export const useMaintenanceInspectionMutation = () => {
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, userId }: { id: string; userId: string }) => {
       return (
-        await api.post(`/giamdinh-maymoc/capnhattrangthai?id=${id}&userId=${userId}`)
+        await api.post(
+          `/giamdinh-maymoc/capnhattrangthai?id=${id}&userId=${userId}`,
+        )
       ).data;
     },
     onSuccess: (res: any) => {
@@ -1420,20 +1431,25 @@ export const useMaintenanceVehicleInspectionPageQuery = (
   });
 };
 
-export const useMaintenanceVehicleInspectionByBienBanQuery = (idBienBan?: string) => {
+export const useMaintenanceVehicleInspectionByBienBanQuery = (
+  idBienBan?: string,
+  enabled = true,
+) => {
   return useQuery({
     queryKey: ["vehicleInspectionByBienBan", idBienBan],
     queryFn: async () => {
       const res = await api.get(`/giamdinh-phuongtien/bienban/${idBienBan}`);
-      return res.data.data || res.data || [];
+      return (res.data.data || res.data || []).map(
+        (item: any) => InspectionAdapter(item),
+      );
     },
-    enabled: !!idBienBan,
+    enabled: !!idBienBan && enabled,
   });
 };
 
 export const useMaintenanceVehicleInspectionMutation = () => {
   const queryClient = useQueryClient();
-  const now = dayjs(new Date()).format("YYYY-MM-DD");
+  const now = dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss");
   const { user } = useSelector((state: any) => state.user);
 
   const updateSignerMutation = useMutation({
@@ -1475,15 +1491,20 @@ export const useMaintenanceVehicleInspectionMutation = () => {
           });
         }
         queryClient.invalidateQueries({ queryKey: ["vehicleInspectionPage"] });
-        queryClient.invalidateQueries({ queryKey: ["vehicleInspectionByBienBan"] });
+        queryClient.invalidateQueries({
+          queryKey: ["vehicleInspectionByBienBan"],
+        });
         showSuccessAlert("Tạo biên bản giám định phương tiện thành công");
       } else {
-        showErrorAlert(response.message || "Tạo biên bản giám định phương tiện thất bại");
+        showErrorAlert(
+          response.message || "Tạo biên bản giám định phương tiện thất bại",
+        );
       }
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || "Tạo biên bản giám định phương tiện thất bại",
+        error.response?.data?.message ||
+          "Tạo biên bản giám định phương tiện thất bại",
       );
     },
   });
@@ -1511,17 +1532,21 @@ export const useMaintenanceVehicleInspectionMutation = () => {
           });
         }
         queryClient.invalidateQueries({ queryKey: ["vehicleInspectionPage"] });
-        queryClient.invalidateQueries({ queryKey: ["vehicleInspectionByBienBan"] });
+        queryClient.invalidateQueries({
+          queryKey: ["vehicleInspectionByBienBan"],
+        });
         showSuccessAlert("Cập nhật biên bản giám định phương tiện thành công");
       } else {
         showErrorAlert(
-          response.message || "Cập nhật biên bản giám định phương tiện thất bại",
+          response.message ||
+            "Cập nhật biên bản giám định phương tiện thất bại",
         );
       }
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || "Cập nhật biên bản giám định phương tiện thất bại",
+        error.response?.data?.message ||
+          "Cập nhật biên bản giám định phương tiện thất bại",
       );
     },
   });
@@ -1533,15 +1558,20 @@ export const useMaintenanceVehicleInspectionMutation = () => {
     onSuccess: (res: any) => {
       if (res.success || res.id || res > 0) {
         queryClient.invalidateQueries({ queryKey: ["vehicleInspectionPage"] });
-        queryClient.invalidateQueries({ queryKey: ["vehicleInspectionByBienBan"] });
+        queryClient.invalidateQueries({
+          queryKey: ["vehicleInspectionByBienBan"],
+        });
         showSuccessAlert("Xóa biên bản giám định phương tiện thành công");
       } else {
-        showErrorAlert(res.message || "Xóa biên bản giám định phương tiện thất bại");
+        showErrorAlert(
+          res.message || "Xóa biên bản giám định phương tiện thất bại",
+        );
       }
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || "Xóa biên bản giám định phương tiện thất bại",
+        error.response?.data?.message ||
+          "Xóa biên bản giám định phương tiện thất bại",
       );
     },
   });
@@ -1549,7 +1579,9 @@ export const useMaintenanceVehicleInspectionMutation = () => {
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, userId }: { id: string; userId: string }) => {
       return (
-        await api.post(`/giamdinh-phuongtien/capnhattrangthai?id=${id}&userId=${userId}`)
+        await api.post(
+          `/giamdinh-phuongtien/capnhattrangthai?id=${id}&userId=${userId}`,
+        )
       ).data;
     },
     onSuccess: (res: any) => {
@@ -1647,7 +1679,9 @@ export const useMaintenanceAcceptanceByBienPhapQuery = (
   return useQuery({
     queryKey: ["nghiemThuMayMocByBienPhap", idBienPhap],
     queryFn: async () => {
-      const res = await api.get(`/nghiemthu-maymoc/bienphap-maymoc/${idBienPhap}`);
+      const res = await api.get(
+        `/nghiemthu-maymoc/bienphap-maymoc/${idBienPhap}`,
+      );
       return (res.data.data || res.data).map((item: any) =>
         AcceptanceTestAdapter(item),
       );
@@ -1658,7 +1692,7 @@ export const useMaintenanceAcceptanceByBienPhapQuery = (
 
 export const useMaintenanceAcceptanceTestMutation = () => {
   const queryClient = useQueryClient();
-  const now = dayjs(new Date()).format("YYYY-MM-DD");
+  const now = dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss");
   const { user } = useSelector((state: any) => state.user);
 
   const invalidate = () => {
@@ -1731,7 +1765,9 @@ export const useMaintenanceAcceptanceTestMutation = () => {
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, userId }: { id: string; userId: string }) => {
       return (
-        await api.post(`/nghiemthu-maymoc/capnhattrangthai?id=${id}&userId=${userId}`)
+        await api.post(
+          `/nghiemthu-maymoc/capnhattrangthai?id=${id}&userId=${userId}`,
+        )
       ).data;
     },
     onSuccess: () => {
@@ -1856,7 +1892,7 @@ export const useMaintenanceMaterialAssessmentByInspectionQuery = (
 };
 export const useMaintenanceMaterialAssessmentMutation = () => {
   const queryClient = useQueryClient();
-  const now = dayjs(new Date()).format("YYYY-MM-DD");
+  const now = dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss");
   const { user } = useSelector((state: any) => state.user);
 
   const createMutation = useMutation({
@@ -1929,7 +1965,9 @@ export const useMaintenanceMaterialAssessmentMutation = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["materialAssessmentPage"] });
-      queryClient.invalidateQueries({ queryKey: ["nghiemThuMayMocByBienPhap"] });
+      queryClient.invalidateQueries({
+        queryKey: ["nghiemThuMayMocByBienPhap"],
+      });
       queryClient.invalidateQueries({
         queryKey: ["materialAssessmentByInspection"],
       });
@@ -2276,4 +2314,3 @@ export const useMaintenanceBienPhapPhuongTienPageQuery = (
     enabled,
   });
 };
-

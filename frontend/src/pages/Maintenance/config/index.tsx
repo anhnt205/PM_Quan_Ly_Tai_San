@@ -1368,6 +1368,234 @@ export const generateGiamDinhPdf = async (
   };
 };
 
+export const generateGiamDinhPhuongTienPdf = async (
+  inspection: any,
+  staffs: any[],
+  departments: any[],
+  positions: any[],
+): Promise<{
+  pdf: Uint8Array;
+  coordinates: Record<string, { xRatio: number; yRatio: number }>;
+}> => {
+  const listSigneInfos: any[] = listSigneInfo(
+    inspection,
+    staffs,
+    departments,
+    positions,
+  );
+  const doc = new jsPDF("p", "mm", "a4");
+
+  doc.setFont("times_new_roman", "bold");
+  doc.setFontSize(11);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const leftColCenter = pageWidth / 4;
+  const rightColCenter = (pageWidth * 3) / 4;
+
+  // Header Left
+  doc.text("TẬP ĐOÀN CÔNG NGHIỆP", leftColCenter, 20, { align: "center" });
+  doc.text("THAN – KHOÁNG SẢN VIỆT NAM", leftColCenter, 26, {
+    align: "center",
+  });
+  doc.text("CÔNG TY THAN UÔNG BÍ - TKV", leftColCenter, 32, {
+    align: "center",
+  });
+  doc.line(leftColCenter - 15, 33, leftColCenter + 15, 33);
+
+  // Header Right
+  doc.text("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", rightColCenter, 20, {
+    align: "center",
+  });
+  doc.text("Độc lập - Tự do - Hạnh phúc", rightColCenter, 26, {
+    align: "center",
+  });
+  doc.line(rightColCenter - 15, 27, rightColCenter + 15, 27);
+
+  // Date
+  doc.setFont("times_new_roman_italic", "italic");
+  doc.setFontSize(10);
+  const today = new Date(inspection.ngayGiamDinh || new Date());
+  const dateStr = `Quảng Ninh, ngày ${today.getDate()} tháng ${today.getMonth() + 1} năm ${today.getFullYear()}`;
+  doc.text(dateStr, pageWidth - 20, 40, { align: "right" });
+
+  // Title
+  doc.setFont("times_new_roman", "bold");
+  doc.setFontSize(14);
+  doc.text("BIÊN BẢN GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ", pageWidth / 2, 50, { align: "center" });
+  doc.text(
+    "VÀO SỬA CHỮA",
+    pageWidth / 2,
+    58,
+    { align: "center" },
+  );
+
+  doc.setFont("times_new_roman", "normal");
+  doc.setFontSize(11);
+  let y = 70;
+
+  const d = new Date(inspection.ngayGiamDinh || new Date());
+  doc.text(
+    `Hôm nay, ngày ${d.getDate()} tháng ${d.getMonth() + 1} năm ${d.getFullYear()}. Tại ${inspection.viTri || "……………………………"}`,
+    20,
+    y,
+  );
+  y += 8;
+  doc.setFont("times_new_roman", "bold");
+  doc.text("Chúng tôi gồm:", 20, y);
+  y += 8;
+
+  const groupSignersByDept = (signerList: any[]) => {
+    const groups: { deptName: string; members: any[] }[] = [];
+    signerList.forEach((s) => {
+      const deptName = s.donVi || "Bộ phận khác";
+      let group = groups.find((g) => g.deptName === deptName);
+      if (!group) {
+        group = { deptName, members: [] };
+        groups.push(group);
+      }
+      group.members.push(s);
+    });
+    return groups;
+  };
+
+  const groups = groupSignersByDept(listSigneInfos);
+  groups.forEach((group) => {
+    doc.setFont("times_new_roman", "bold");
+    doc.text(`* ${group.deptName}:`, 22, y);
+    y += 7;
+
+    group.members.forEach((member, mIdx) => {
+      doc.text(`${mIdx + 1}.`, 27, y);
+      doc.setFont("times_new_roman", "bold");
+      doc.text(`Ông: ${member.hoTen || "………………………"}`, 32, y);
+      doc.setFont("times_new_roman", "normal");
+      doc.text(`Chức vụ: ${member.chucVu || "—"}`, 95, y);
+      y += 7;
+    });
+  });
+
+  y += 1;
+  const canCuText = `Cùng thực hiện giải thể kiểm tra tình trạng kỹ thuật thiết bị: ${inspection.tenTaiSan || ".............."} trước khi vào sửa chữa bảo dưỡng cấp ${inspection.capBaoDuong || "............"} và bàn giao cho phân xưởng ${inspection.donViSuaChua || "............."} sửa chữa với tình trạng kỹ thuật và nội dung sửa chữa sau:`;
+  const canCuLines = doc.splitTextToSize(canCuText, pageWidth - 40);
+  canCuLines.forEach((line: string) => {
+    doc.text(line, 20, y);
+    y += 7;
+  });
+
+  y += 1;
+
+  // Table
+  const tableData: any[] = (inspection.danhSachChiTiet || []).map((vt: any, vtIdx: number) => [
+    `${vtIdx + 1}`,
+    vt.tenVatTu || vt.idChiTietVatTu || "",
+    vt.donViTinh || "",
+    vt.soLuong || 0,
+    vt.tinhTrang || "",
+    vt.soLuongThayMoi || 0,
+    vt.soLuongSuaChua || 0,
+    vt.ghiChu || "",
+  ]);
+
+  autoTable(doc, {
+    startY: y,
+    margin: { left: 15, right: 15 },
+    head: [
+      [
+        "STT",
+        "Tên chi tiết",
+        "ĐVT",
+        "SL",
+        "Tình trạng kỹ thuật",
+        "Thay mới",
+        "Sửa chữa",
+        "Ghi chú",
+      ],
+    ],
+    body: tableData,
+    theme: "grid",
+    styles: { font: "times_new_roman", fontSize: 9 },
+    headStyles: {
+      fillColor: false,
+      textColor: 0,
+      lineWidth: 0.1,
+      lineColor: 0,
+      fontStyle: "bold",
+      halign: "center",
+    },
+    bodyStyles: { lineWidth: 0.1, lineColor: 0, textColor: 0 },
+    columnStyles: {
+      0: { cellWidth: 12, halign: "center" },
+      2: { cellWidth: 12, halign: "center" },
+      3: { cellWidth: 10, halign: "center" },
+      5: { cellWidth: 18, halign: "center" },
+      6: { cellWidth: 18, halign: "center" },
+    },
+  });
+
+  y = (doc as any).lastAutoTable.finalY + 10;
+  
+  const noiDungKhacText = `Các nội dung cần thống nhất khác: ${inspection.noiDungKhac || "................."}`;
+  const noiDungKhacLines = doc.splitTextToSize(noiDungKhacText, pageWidth - 40);
+  noiDungKhacLines.forEach((line: string) => {
+    doc.text(line, 20, y);
+    y += 7;
+  });
+
+  y += 3;
+  doc.text(
+    "Biên bản lập xong hồi: .... giờ ....cùng ngày, đã được mọi người nhất trí thông qua./.",
+    20,
+    y,
+  );
+  y += 15;
+
+  // Signatures
+  const marginX = 25;
+  const printableWidth = pageWidth - 2 * marginX;
+  const maxPerRow = 3;
+  const rowGap = 60;
+  const coordinates: Record<string, { xRatio: number; yRatio: number }> = {};
+  const baseWidthPx = 120;
+  const displayWidth = 800;
+
+  listSigneInfos.forEach((s, index) => {
+    const rowIndex = Math.floor(index / maxPerRow);
+    const colIndex = index % maxPerRow;
+    const itemsInRow = Math.min(
+      maxPerRow,
+      listSigneInfos.length - rowIndex * maxPerRow,
+    );
+
+    let x;
+    if (itemsInRow === 1) x = pageWidth / 2;
+    else {
+      const gapSize = printableWidth / (itemsInRow - 1);
+      x = marginX + colIndex * gapSize;
+    }
+
+    const yPos = y + rowIndex * rowGap;
+    const sigWidthMm = (baseWidthPx / displayWidth) * pageWidth;
+
+    coordinates[s.idNhanVien] = {
+      xRatio: Math.max(0, Math.min((x - sigWidthMm / 2) / pageWidth, 1)),
+      yRatio: Math.max(0, Math.min((yPos + 10) / pageHeight, 1)),
+    };
+
+    doc.setFont("times_new_roman", "bold");
+    doc.setFontSize(10);
+    doc.text(s.title || s.donVi || "", x, yPos, { align: "center" });
+    doc.setFont("times_new_roman_italic", "italic");
+    doc.text("(Ký, ghi rõ họ tên)", x, yPos + 5, { align: "center" });
+    doc.setFont("times_new_roman", "bold");
+    doc.text(s.hoTen || "", x, yPos + 35, { align: "center" });
+  });
+
+  return {
+    pdf: new Uint8Array(doc.output("arraybuffer")),
+    coordinates,
+  };
+};
+
 export const generateNghiemThuPdf = async (
   item: any,
   staffs: any[],
@@ -1960,21 +2188,49 @@ export const generateKiemTraSuCoPdf = async (
   y += 8;
 
   // Table
-  const tableData = (item.danhSachChiTiet || item.items || []).map(
-    (detail: any, idx: number) => {
-      const tenTaiSan =
-        detail.tenTaiSan || detail.itemName || detail.idTaiSan || "";
-      const dvt = detail.donViTinh || detail.unit || "";
-      const sl = detail.soLuong || detail.quantity || 1;
-      const tTrang = detail.tinhTrang || detail.condition || "";
-      const sc = detail.suaChua || detail.actionRepair ? "X" : "";
-      const tm = detail.thayMoi || detail.actionReplace ? "X" : "";
-      const note = detail.ghiChu || detail.note || "";
+  const tableData: any[] = [];
+  (item.danhSachChiTiet || []).forEach((danhSachChiTiet: any, idx: number) => {
+    // Group row (I/, II/, ...)
+    tableData.push([
+      {
+        content: `${String.fromCharCode(73 + idx)}/`,
+        styles: { fontStyle: "bold" },
+      },
+      {
+        content: `Thiết bị: ${danhSachChiTiet.tenTaiSan || ""}`,
+        colSpan: 7,
+        styles: { fontStyle: "bold" },
+      },
+    ]);
 
-      return [idx + 1, tenTaiSan, dvt, sl, tTrang, sc, tm, note];
-    },
-  );
-
+    // Hàng các vật tư chi tiết đi kèm
+    if (
+      !danhSachChiTiet.danhSachVatTu ||
+      danhSachChiTiet.danhSachVatTu.length === 0
+    ) {
+      tableData.push([
+        "",
+        {
+          content: "",
+          colSpan: 7,
+          styles: { fontStyle: "italic" },
+        },
+      ]);
+    } else {
+      danhSachChiTiet.danhSachVatTu.forEach((vt: any, vtIdx: number) => {
+        tableData.push([
+          `${idx + 1}.${vtIdx + 1}`,
+          vt.tenVatTu || vt.idChiTietVatTu || "",
+          vt.donViTinh || "",
+          vt.soLuong || "",
+          vt.tinhTrang || "",
+          vt.soLuongSuaChua || 0,
+          vt.soLuongThayMoi || 0,
+          vt.ghiChu || "",
+        ]);
+      });
+    }
+  });
   autoTable(doc, {
     startY: y,
     margin: { left: 15, right: 15 },

@@ -62,11 +62,16 @@ public class GiamDinhPhuongTienService {
     @Transactional
     public GiamDinhPhuongTien insert(GiamDinhPhuongTien entity) {
         GiamDinhPhuongTien parent = giamDinhPhuongTienDao.insert(entity);
-        if (parent != null && entity.getDanhSachChiTiet() != null && !entity.getDanhSachChiTiet().isEmpty()) {
-            for (GiamDinhPhuongTienChiTiet ct : entity.getDanhSachChiTiet()) {
-                ct.setIdGiamDinhPhuongTien(parent.getId());
+        if (parent != null) {
+            if (entity.getDanhSachChiTiet() != null && !entity.getDanhSachChiTiet().isEmpty()) {
+                for (GiamDinhPhuongTienChiTiet ct : entity.getDanhSachChiTiet()) {
+                    ct.setIdGiamDinhPhuongTien(parent.getId());
+                }
+                giamDinhPhuongTienChiTietDao.batchInsert(entity.getDanhSachChiTiet());
             }
-            giamDinhPhuongTienChiTietDao.batchInsert(entity.getDanhSachChiTiet());
+            if (entity.getNguoiKyList() != null) {
+                kyTaiLieuDao.updateNguoiKy(parent.getId(), entity.getNguoiKyList());
+            }
         }
         return parent;
     }
@@ -81,6 +86,9 @@ public class GiamDinhPhuongTienService {
                     ct.setIdGiamDinhPhuongTien(parent.getId());
                 }
                 giamDinhPhuongTienChiTietDao.batchInsert(entity.getDanhSachChiTiet());
+            }
+            if (entity.getNguoiKyList() != null) {
+                kyTaiLieuDao.updateNguoiKy(parent.getId(), entity.getNguoiKyList());
             }
         }
         return parent;
@@ -165,6 +173,7 @@ public class GiamDinhPhuongTienService {
     @Transactional
     public int delete(String id) {
         giamDinhPhuongTienChiTietDao.deleteByIdGiamDinh(id);
+        kyTaiLieuDao.delete(id);
         return giamDinhPhuongTienDao.delete(id);
     }
 

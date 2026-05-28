@@ -14,6 +14,9 @@ public class GiamDinhPhuongTien {
     private String viTri;
     private String tinhTrang;
     private String noiDungKhac;
+    private String idTaiSan;
+    private String capBaoDuong;
+    private String donViSuaChua;
     
     // Người lập phiếu
     private String idNguoiLap;

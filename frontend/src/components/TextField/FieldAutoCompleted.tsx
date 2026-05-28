@@ -156,7 +156,19 @@ export default function FieldAutoCompleted({
           sx={{
             "& .MuiOutlinedInput-root": {
               "& fieldset": {
-                border: noBorder ? "none" : undefined, // ❌ bỏ viền nếu noBorder=true
+                border: noBorder ? "none" : undefined,
+                borderBottom: noBorder
+                  ? "1px solid rgba(0, 0, 0, 0.23)"
+                  : undefined,
+                borderRadius: noBorder ? 0 : undefined,
+              },
+              "&:hover fieldset": {
+                borderBottom: noBorder
+                  ? "1px solid rgba(0, 0, 0, 0.87)"
+                  : undefined,
+              },
+              "&.Mui-focused fieldset": {
+                borderBottom: noBorder ? "2px solid #1976d2" : undefined,
               },
             },
             "& .MuiInputBase-input": {

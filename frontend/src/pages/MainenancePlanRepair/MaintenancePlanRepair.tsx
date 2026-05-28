@@ -557,14 +557,13 @@ export default function MaintenancePlanRepair() {
                     <option value="PHUONG_TIEN">Phương tiện</option>
                   </select>
                 </Box>
-                {(dateFrom || dateTo || nhomTaiSanFilter) && (
+                {(dateFrom || dateTo) && (
                   <Chip
                     label="Xóa bộ lọc"
                     size="small"
                     onDelete={() => {
                       setDateFrom("");
                       setDateTo("");
-                      setNhomTaiSanFilter("");
                     }}
                     sx={{ fontSize: 11 }}
                   />

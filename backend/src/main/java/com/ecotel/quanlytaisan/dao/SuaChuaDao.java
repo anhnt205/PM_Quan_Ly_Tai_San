@@ -53,6 +53,9 @@ public class SuaChuaDao {
                     WHEN EXISTS (
                         SELECT 1 FROM giamdinh_maymoc gd
                         WHERE gd.IdBienBan = sc.id
+                    ) OR EXISTS (
+                        SELECT 1 FROM giamdinh_phuongtien gd
+                        WHERE gd.IdBienBan = sc.id
                     ) THEN 1 ELSE 0 
                 END as daCoGiamDinh
             FROM suachua sc

@@ -1,0 +1,28 @@
+name: CI Check
+
+on:
+  pull_request:
+    branches:
+      - feature/suachua_baoduong # ← chạy khi có PR target vào feature/suachua_baoduong
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20.x"
+
+      - name: Install backend dependencies
+        run: npm install
+
+      - name: Build frontend
+        run: |
+          echo "VITE_BASE_API=${{ secrets.VITE_BASE_API }}" > ./frontend/.env
+          echo "VITE_SOCKET_API=${{ secrets.VITE_SOCKET_API }}" >> ./frontend/.env
+          cd frontend && npm install && npm run build

@@ -14,6 +14,9 @@ public class GiamDinhPhuongTienDTO {
     private String viTri;
     private String TinhTrang;
     private String NoiDungKhac;
+    private String idTaiSan;
+    private String capBaoDuong;
+    private String donViSuaChua;
     
     // Người lập phiếu
     private String idNguoiLap;
@@ -36,6 +39,7 @@ public class GiamDinhPhuongTienDTO {
     // Join fields
     private String tenNguoiLap;
     private String tenGiamDoc;
+    private String tenTaiSan;
     private String soPhieuBienBan;
     private Integer daCoNghiemThu;
 

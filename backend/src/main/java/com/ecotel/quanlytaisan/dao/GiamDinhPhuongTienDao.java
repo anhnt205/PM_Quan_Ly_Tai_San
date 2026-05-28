@@ -30,18 +30,20 @@ public class GiamDinhPhuongTienDao {
         return """
             SELECT
                 gd.Id, gd.IdCongTy, gd.IdBienBan, gd.LoaiBienBan, gd.SoPhieu, gd.NgayGiamDinh, gd.ViTri,
-                gd.TinhTrang, gd.NoiDungKhac,
+                gd.TinhTrang, gd.NoiDungKhac, gd.IdTaiSan, gd.CapBaoDuong, gd.DonViSuaChua,
                 gd.IdNguoiLap, gd.NguoiLapXacNhan, gd.IdGiamDoc, gd.GiamDocXacNhan,
                 gd.Share, gd.TrangThai, gd.NgayTao, gd.NgayCapNhat, gd.NguoiTao, gd.NguoiCapNhat,
                 nvLap.HoTen AS tenNguoiLap,
                 nvGD.HoTen AS tenGiamDoc,
                 COALESCE(sc.SoPhieu, ktsc.SoPhieu) AS soPhieuBienBan,
-                (SELECT COUNT(*) FROM nghiemthu_phuongtien nt WHERE nt.IdGiamDinhPhuongTien = gd.Id) AS daCoNghiemThu
+                (SELECT COUNT(*) FROM nghiemthu_phuongtien nt WHERE nt.IdGiamDinhPhuongTien = gd.Id) AS daCoNghiemThu,
+                ts.TenTaiSan AS tenTaiSan
             FROM giamdinh_phuongtien gd
                 LEFT JOIN suachua sc ON gd.IdBienBan = sc.Id AND gd.LoaiBienBan = 'sua_chua'
                 LEFT JOIN kiemtra_suco ktsc ON gd.IdBienBan = ktsc.Id AND gd.LoaiBienBan = 'su_co'
                 LEFT JOIN NhanVien nvLap ON gd.IdNguoiLap = nvLap.Id
                 LEFT JOIN NhanVien nvGD ON gd.IdGiamDoc = nvGD.Id
+                LEFT JOIN TaiSan ts ON gd.IdTaiSan = ts.Id
             """;
     }
 
@@ -104,14 +106,14 @@ public class GiamDinhPhuongTienDao {
         String sql = """
             INSERT INTO giamdinh_phuongtien (
                 Id, IdCongTy, IdBienBan, LoaiBienBan, SoPhieu, NgayGiamDinh, ViTri,
-                TinhTrang, NoiDungKhac,
+                TinhTrang, NoiDungKhac, IdTaiSan, CapBaoDuong, DonViSuaChua,
                 IdNguoiLap, NguoiLapXacNhan, IdGiamDoc, GiamDocXacNhan,
                 Share, TrangThai, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         int r = jdbcTemplate.update(sql,
                 e.getId(), e.getIdCongTy(), e.getIdBienBan(), e.getLoaiBienBan(), e.getSoPhieu(), e.getNgayGiamDinh(), e.getViTri(),
-                e.getTinhTrang(), e.getNoiDungKhac(),
+                e.getTinhTrang(), e.getNoiDungKhac(), e.getIdTaiSan(), e.getCapBaoDuong(), e.getDonViSuaChua(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai() != null ? e.getTrangThai() : 0, 
                 e.getNgayTao(), e.getNgayCapNhat(), e.getNguoiTao(), e.getNguoiCapNhat()
@@ -124,14 +126,14 @@ public class GiamDinhPhuongTienDao {
         String sql = """
             UPDATE giamdinh_phuongtien SET
                 IdBienBan = ?, LoaiBienBan = ?, SoPhieu = ?, NgayGiamDinh = ?, ViTri = ?,
-                TinhTrang = ?, NoiDungKhac = ?,
+                TinhTrang = ?, NoiDungKhac = ?, IdTaiSan = ?, CapBaoDuong = ?, DonViSuaChua = ?,
                 IdNguoiLap = ?, NguoiLapXacNhan = ?, IdGiamDoc = ?, GiamDocXacNhan = ?,
                 Share = ?, TrangThai = ?, NgayCapNhat = ?, NguoiCapNhat = ?
             WHERE Id = ?
             """;
         int r = jdbcTemplate.update(sql,
                 e.getIdBienBan(), e.getLoaiBienBan(), e.getSoPhieu(), e.getNgayGiamDinh(), e.getViTri(),
-                e.getTinhTrang(), e.getNoiDungKhac(),
+                e.getTinhTrang(), e.getNoiDungKhac(), e.getIdTaiSan(), e.getCapBaoDuong(), e.getDonViSuaChua(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai(), e.getNgayCapNhat(), e.getNguoiCapNhat(),
                 e.getId()

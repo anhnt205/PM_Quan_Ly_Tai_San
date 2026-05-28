@@ -35,6 +35,7 @@ import type {
 
 import RepairRequestDialog from "../dialog/RepairRequestDialog";
 import InspectionRecordDialog from "../dialog/InspectionRecordDialog";
+import InspectionRecordVehicleDialog from "../dialog/InspectionRecordVehicleDialog";
 import AcceptanceTestDialog from "../dialog/AcceptanceTestDialog";
 import MaterialDialog from "../dialog/MaterialDialog";
 import BienPhapMayMocDialog from "../dialog/BienPhapMayMocDialog";
@@ -53,6 +54,7 @@ import {
   useMaintenanceAcceptanceTestMutation,
   useMaintenanceMaterialAssessmentMutation,
   useMaintenanceInspectionByBienBanQuery,
+  useMaintenanceVehicleInspectionByBienBanQuery,
 } from "../../../MainenancePlanRepair/Mutation";
 import {
   useBienPhapMayMocByGiamDinhQuery,
@@ -315,8 +317,23 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
   const { data: maintenanceRepairByPlan = [] } =
     useMaintenanceRepairByPlanQuery(plan?.id);
 
-  const { data: inspectionRecords = [] } =
-    useMaintenanceInspectionByBienBanQuery(expandedRequests || "");
+  // Giám định máy móc theo yêu cầu đang expand
+  const { data: inspectionMachineRecords = [] } =
+    useMaintenanceInspectionByBienBanQuery(
+      expandedRequests || "",
+      plan?.nhomTaiSan === "MAY_MOC",
+    );
+
+  // Giám định phương tiện theo yêu cầu đang expand
+  const { data: inspectionVehicleRecords = [] } =
+    useMaintenanceVehicleInspectionByBienBanQuery(
+      expandedRequests || "",
+      plan?.nhomTaiSan === "PHUONG_TIEN",
+    );
+  const inspectionRecords =
+    plan?.nhomTaiSan === "MAY_MOC"
+      ? inspectionMachineRecords
+      : inspectionVehicleRecords;
 
   // Biện pháp theo giám định đang expand
   const { data: bienPhapRecords = [] } = useBienPhapMayMocByGiamDinhQuery(
@@ -336,10 +353,15 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
     (d: any) => d?.daCoLenhSuaChua !== 1,
   );
 
-  const handleToggle = (id: string) =>
-    setSelectedDeviceIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
+  const handleToggle = (id: string) => {
+    const isVehicle = plan?.nhomTaiSan === "PHUONG_TIEN";
+    setSelectedDeviceIds((prev) => {
+      if (isVehicle) {
+        return prev.includes(id) ? [] : [id];
+      }
+      return prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+    });
+  };
 
   const handleSelectAll = () =>
     setSelectedDeviceIds(
@@ -448,17 +470,19 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                 <TableRow>
                   {plan.trangThai === 3 && (
                     <TableCell padding="checkbox">
-                      <Checkbox
-                        indeterminate={
-                          selectedDeviceIds.length > 0 &&
-                          selectedDeviceIds.length < availableDevices.length
-                        }
-                        checked={
-                          availableDevices.length > 0 &&
-                          selectedDeviceIds.length === availableDevices.length
-                        }
-                        onChange={handleSelectAll}
-                      />
+                      {plan?.nhomTaiSan !== "PHUONG_TIEN" && (
+                        <Checkbox
+                          indeterminate={
+                            selectedDeviceIds.length > 0 &&
+                            selectedDeviceIds.length < availableDevices.length
+                          }
+                          checked={
+                            availableDevices.length > 0 &&
+                            selectedDeviceIds.length === availableDevices.length
+                          }
+                          onChange={handleSelectAll}
+                        />
+                      )}
                     </TableCell>
                   )}
                   <TableCell sx={{ fontWeight: 700 }}>STT</TableCell>
@@ -1173,6 +1197,17 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
           const parentReq = maintenanceRepairByPlan.find(
             (r: MaintenanceRepairData) => r.id === inspectionParentReqId,
           );
+          if (plan?.nhomTaiSan === "PHUONG_TIEN") {
+            return (
+              <InspectionRecordVehicleDialog
+                open={inspectionDialogOpen}
+                onClose={() => setInspectionDialogOpen(false)}
+                plan={plan}
+                initData={selectedIns as any}
+                repairRequest={parentReq}
+              />
+            );
+          }
           return (
             <InspectionRecordDialog
               open={inspectionDialogOpen}
@@ -1214,9 +1249,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
               (r: any) => r.id === selectedAcc.idBienPhapMayMoc,
             );
             const parentInsp = bp
-              ? inspectionRecords.find(
-                  (r: any) => r.id === bp.idGiamDinhMayMoc,
-                )
+              ? inspectionRecords.find((r: any) => r.id === bp.idGiamDinhMayMoc)
               : null;
             const parentReq = parentInsp
               ? maintenanceRepairByPlan.find(
@@ -1243,9 +1276,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
               (r: any) => r.id === acceptanceParentBienPhapId,
             );
             const parentInsp = bp
-              ? inspectionRecords.find(
-                  (r: any) => r.id === bp.idGiamDinhMayMoc,
-                )
+              ? inspectionRecords.find((r: any) => r.id === bp.idGiamDinhMayMoc)
               : null;
             const parentReq = parentInsp
               ? maintenanceRepairByPlan.find(

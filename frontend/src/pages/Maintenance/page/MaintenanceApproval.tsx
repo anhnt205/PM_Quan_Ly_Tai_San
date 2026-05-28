@@ -39,6 +39,7 @@ import {
   useMaintenanceIncidentInspectionPageQuery,
   useMaintenanceBienPhapMayMocPageQuery,
   useMaintenanceBienPhapPhuongTienPageQuery,
+  useMaintenanceVehicleInspectionPageQuery,
 } from "../../MainenancePlanRepair/Mutation";
 import { useDebounce } from "../../../hooks/useDebounce";
 import {
@@ -61,6 +62,7 @@ import {
   generatePhieuSuCoPdf,
   generateSuaChuaPdf,
   generateGiamDinhPdf,
+  generateGiamDinhPhuongTienPdf,
   generateNghiemThuPdf,
   generateDanhGiaVatTuPdf,
   generateKiemTraSuCoPdf,
@@ -96,6 +98,7 @@ export default function MaintenanceApprovalPage() {
   const [detailTab, setDetailTab] = useState(0);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [nhomTaiSanFilter, setNhomTaiSanFilter] = useState("MAY_MOC");
   const [selectedItem, setSelectedItem] = useState<any[]>([]);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isSigning, setIsSigning] = useState(false);
@@ -135,6 +138,7 @@ export default function MaintenanceApprovalPage() {
     dateFrom,
     dateTo,
     activeTab === 0,
+    nhomTaiSanFilter,
   );
 
   const {
@@ -154,7 +158,7 @@ export default function MaintenanceApprovalPage() {
   );
 
   const {
-    data: inspectionPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
+    data: giamDinhMayMoc = { items: [], totalItems: 0, trangThaiCounts: {} },
     isLoading: isLoadingInspection,
   } = useMaintenanceInspectionPageQuery(
     paginationModel.page,
@@ -166,8 +170,30 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
-    activeTab === 2,
+    activeTab === 2 && bienPhapType === "may_moc",
   );
+
+  const {
+    data: giamDinhPhuongTien = {
+      items: [],
+      totalItems: 0,
+      trangThaiCounts: {},
+    },
+    isLoading: isLoadingGiamDinh,
+  } = useMaintenanceVehicleInspectionPageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchDebounce,
+    undefined,
+    undefined,
+    user?.taiKhoan?.tenDangNhap,
+    true,
+    dateFrom,
+    dateTo,
+    activeTab === 2 && bienPhapType === "phuong_tien",
+  );
+  const inspectionPaged =
+    bienPhapType === "may_moc" ? giamDinhMayMoc : giamDinhPhuongTien;
 
   const {
     data: bienPhapMayMocPaged = {
@@ -296,7 +322,9 @@ export default function MaintenanceApprovalPage() {
       : activeTab === 1
         ? "repairPage"
         : activeTab === 2
-          ? "inspectionPage"
+          ? bienPhapType === "may_moc"
+            ? "inspectionPage"
+            : "vehicleInspectionPage"
           : activeTab === 3
             ? bienPhapType === "may_moc"
               ? "bienPhapMayMocPage"
@@ -317,7 +345,9 @@ export default function MaintenanceApprovalPage() {
       : activeTab === 1
         ? "suachua"
         : activeTab === 2
-          ? "giamdinh"
+          ? bienPhapType === "may_moc"
+            ? "giamdinh-maymoc"
+            : "giamdinh-phuongtien"
           : activeTab === 3
             ? bienPhapType === "may_moc"
               ? "bienphap-maymoc"
@@ -649,7 +679,9 @@ export default function MaintenanceApprovalPage() {
             showSignerSidebar={false}
             showHeader={false}
             generatePdf={() =>
-              generateGiamDinhPdf(selectedRow, staffs, departments, positions)
+              bienPhapType === "may_moc"
+                ? generateGiamDinhPdf(selectedRow, staffs, departments, positions)
+                : generateGiamDinhPhuongTienPdf(selectedRow, staffs, departments, positions)
             }
           />
         );
@@ -970,7 +1002,9 @@ export default function MaintenanceApprovalPage() {
           fullscreen={true}
           showSignerSidebar={true}
           generatePdf={() =>
-            generateGiamDinhPdf(selectedRow, staffs, departments, positions)
+            bienPhapType === "may_moc"
+              ? generateGiamDinhPdf(selectedRow, staffs, departments, positions)
+              : generateGiamDinhPhuongTienPdf(selectedRow, staffs, departments, positions)
           }
         />
       )}
@@ -1202,6 +1236,33 @@ export default function MaintenanceApprovalPage() {
                 }}
               />
             </Box>
+            {activeTab === 0 && (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Nhóm tài sản
+                </Typography>
+                <select
+                  value={nhomTaiSanFilter}
+                  onChange={(e) => {
+                    setNhomTaiSanFilter(e.target.value);
+                    setPaginationModel((m) => ({ ...m, page: 0 }));
+                  }}
+                  style={{
+                    border: "1px solid #ccc",
+                    borderRadius: 6,
+                    padding: "4px 8px",
+                    fontSize: 13,
+                    color: "inherit",
+                    background: "transparent",
+                    outline: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  <option value="MAY_MOC">Máy móc</option>
+                  <option value="PHUONG_TIEN">Phương tiện</option>
+                </select>
+              </Box>
+            )}
             {(dateFrom || dateTo) && (
               <Chip
                 label="Xóa bộ lọc"
@@ -1214,7 +1275,7 @@ export default function MaintenanceApprovalPage() {
               />
             )}
 
-            {(activeTab === 3 || activeTab === 4) && (
+            {(activeTab === 2 || activeTab === 3 || activeTab === 4) && (
               <Box
                 sx={{
                   display: "flex",
@@ -1329,7 +1390,9 @@ export default function MaintenanceApprovalPage() {
                 : activeTab === 1
                   ? generateSuaChuaPdf
                   : activeTab === 2
-                    ? generateGiamDinhPdf
+                    ? bienPhapType === "may_moc"
+                      ? generateGiamDinhPdf
+                      : generateGiamDinhPhuongTienPdf
                     : activeTab === 3
                       ? generateGiamDinhPdf
                       : activeTab === 4

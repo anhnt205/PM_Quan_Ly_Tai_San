@@ -261,7 +261,6 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
     onSave(newPlanData, isEdit);
     handleClose();
   };
-  console.log(formik.values.assets);
 
   return (
     <Dialog
@@ -331,8 +330,8 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
                 <FieldAutoCompleted
                   title="Nhóm tài sản"
                   data={[
-                    { value: "MAY_MOC", text: "Máy móc" },
-                    { value: "PHUONG_TIEN", text: "Phương tiện" },
+                    { id: "MAY_MOC", text: "Máy móc" },
+                    { id: "PHUONG_TIEN", text: "Phương tiện" },
                   ]}
                   labelkey="text"
                   formik={formik}

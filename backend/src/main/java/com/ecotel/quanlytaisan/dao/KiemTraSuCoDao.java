@@ -34,6 +34,9 @@ public class KiemTraSuCoDao {
                     WHEN EXISTS (
                         SELECT 1 FROM giamdinh_maymoc gd
                         WHERE gd.IdBienBan = kt.Id AND gd.LoaiBienBan = 'su_co'
+                    ) OR EXISTS (
+                        SELECT 1 FROM giamdinh_phuongtien gd
+                        WHERE gd.IdBienBan = kt.Id AND gd.LoaiBienBan = 'su_co'
                     ) THEN 1 ELSE 0 
                 END as daCoGiamDinh
             FROM kiemtra_suco kt

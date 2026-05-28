@@ -1,5 +1,7 @@
 import { TextField } from "@mui/material";
 import { getIn } from "formik";
+import { useEffect, useState } from "react";
+import { useDebounce } from "../../hooks/useDebounce";
 
 interface Props {
   title?: string;
@@ -14,6 +16,7 @@ interface Props {
   onClick?: (e: any) => void;
   multiline?: boolean;
   rows?: number;
+  noBorder?: boolean;
 }
 export default function FieldInput({
   title,
@@ -28,10 +31,27 @@ export default function FieldInput({
   onClick,
   multiline = false,
   rows = 1,
+  noBorder = false,
 }: Props) {
   const currentValue = formik && field ? getIn(formik.values, field) : "";
   const touched = formik && field ? getIn(formik.touched, field) : false;
   const error = formik && field ? getIn(formik.errors, field) : "";
+
+  // Local state để input mượt, debounce để set vào formik
+  const [localValue, setLocalValue] = useState(currentValue);
+  const debouncedValue = useDebounce(localValue, 300);
+
+  // Khi debouncedValue thay đổi mới set vào formik
+  useEffect(() => {
+    if (field && debouncedValue !== getIn(formik.values, field)) {
+      formik.setFieldValue(field, debouncedValue);
+    }
+  }, [debouncedValue]);
+
+  // Đồng bộ localValue khi giá trị trong formik thay đổi từ bên ngoài
+  useEffect(() => {
+    setLocalValue(currentValue);
+  }, [currentValue]);
   return (
     <TextField
       onClick={(e) => {
@@ -44,15 +64,11 @@ export default function FieldInput({
       type={type}
       size="small"
       label={title}
-      value={currentValue}
+      value={localValue}
       multiline={multiline}
       rows={rows}
       onChange={(e) => {
-        if (field) {
-          formik.setFieldError(field, undefined);
-          formik.setFieldTouched(field, true, false);
-          formik.setFieldValue(field, e.target.value);
-        }
+        setLocalValue(e.target.value);
         if (onChange) {
           onChange(e.target.value);
         }
@@ -62,6 +78,25 @@ export default function FieldInput({
       InputProps={InputProps}
       InputLabelProps={InputLabelProps}
       slotProps={slotProps}
+      sx={{
+        "& .MuiOutlinedInput-root": {
+          "& fieldset": {
+            border: noBorder ? "none" : undefined,
+            borderBottom: noBorder
+              ? "1px solid rgba(0, 0, 0, 0.23)"
+              : undefined,
+            borderRadius: noBorder ? 0 : undefined,
+          },
+          "&:hover fieldset": {
+            borderBottom: noBorder
+              ? "1px solid rgba(0, 0, 0, 0.87)"
+              : undefined,
+          },
+          "&.Mui-focused fieldset": {
+            borderBottom: noBorder ? "2px solid #1976d2" : undefined,
+          },
+        },
+      }}
     />
   );
 }

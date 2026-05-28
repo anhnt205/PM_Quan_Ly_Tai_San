@@ -35,12 +35,14 @@ import {
   useMaintenanceIncidentInspectionPageQuery,
   useMaintenanceBienPhapMayMocPageQuery,
   useMaintenanceBienPhapPhuongTienPageQuery,
+  useMaintenanceVehicleInspectionPageQuery,
 } from "../../MainenancePlanRepair/Mutation";
 import {
   generateBienBanKeHoachPdf,
   generatePhieuSuCoPdf,
   generateSuaChuaPdf,
   generateGiamDinhPdf,
+  generateGiamDinhPhuongTienPdf,
   generateNghiemThuPdf,
   generateDanhGiaVatTuPdf,
   generateKiemTraSuCoPdf,
@@ -89,6 +91,7 @@ export default function MaintenanceRecordPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [nhomTaiSanFilter, setNhomTaiSanFilter] = useState("MAY_MOC");
   const [bienPhapType, setBienPhapType] = useState<"may_moc" | "phuong_tien">(
     "may_moc",
   );
@@ -116,7 +119,9 @@ export default function MaintenanceRecordPage() {
       : activeTab === 1
         ? "repairPage"
         : activeTab === 2
-          ? "inspectionPage"
+          ? bienPhapType === "may_moc"
+            ? "inspectionPage"
+            : "vehicleInspectionPage"
           : activeTab === 3
             ? bienPhapType === "may_moc"
               ? "bienPhapMayMocPage"
@@ -137,7 +142,9 @@ export default function MaintenanceRecordPage() {
       : activeTab === 1
         ? "suachua"
         : activeTab === 2
-          ? "giamdinh"
+          ? bienPhapType === "may_moc"
+            ? "giamdinh-maymoc"
+            : "giamdinh-phuongtien"
           : activeTab === 3
             ? bienPhapType === "may_moc"
               ? "bienphap-maymoc"
@@ -171,6 +178,7 @@ export default function MaintenanceRecordPage() {
     dateFrom,
     dateTo,
     activeTab === 0,
+    nhomTaiSanFilter,
   );
 
   const {
@@ -190,7 +198,7 @@ export default function MaintenanceRecordPage() {
   );
 
   const {
-    data: inspectionPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
+    data: giamDinhMayMoc = { items: [], totalItems: 0, trangThaiCounts: {} },
     isLoading: isLoadingInspection,
   } = useMaintenanceInspectionPageQuery(
     paginationModel.page,
@@ -202,8 +210,30 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
-    activeTab === 2,
+    activeTab === 2 && bienPhapType === "may_moc",
   );
+
+  const {
+    data: giamDinhPhuongTien = {
+      items: [],
+      totalItems: 0,
+      trangThaiCounts: {},
+    },
+    isLoading: isLoadingGiamDinh,
+  } = useMaintenanceVehicleInspectionPageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchDebounce,
+    statusFilter !== "" ? Number(statusFilter) : undefined,
+    undefined,
+    user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom,
+    dateTo,
+    activeTab === 2 && bienPhapType === "phuong_tien",
+  );
+  const inspectionPaged =
+    bienPhapType === "may_moc" ? giamDinhMayMoc : giamDinhPhuongTien;
 
   const {
     data: bienPhapMayMocPaged = {
@@ -545,12 +575,19 @@ export default function MaintenanceRecordPage() {
             showSignerSidebar={false}
             showHeader={true}
             generatePdf={() =>
-              generateGiamDinhPdf(
-                selectedRow,
-                staffs || [],
-                departments || [],
-                positions || [],
-              )
+              bienPhapType === "may_moc"
+                ? generateGiamDinhPdf(
+                    selectedRow,
+                    staffs || [],
+                    departments || [],
+                    positions || [],
+                  )
+                : generateGiamDinhPhuongTienPdf(
+                    selectedRow,
+                    staffs || [],
+                    departments || [],
+                    positions || [],
+                  )
             }
           />
         );
@@ -950,6 +987,33 @@ export default function MaintenanceRecordPage() {
                 }}
               />
             </Box>
+            {activeTab === 0 && (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Nhóm tài sản
+                </Typography>
+                <select
+                  value={nhomTaiSanFilter}
+                  onChange={(e) => {
+                    setNhomTaiSanFilter(e.target.value);
+                    setPaginationModel((m) => ({ ...m, page: 0 }));
+                  }}
+                  style={{
+                    border: "1px solid #ccc",
+                    borderRadius: 6,
+                    padding: "4px 8px",
+                    fontSize: 13,
+                    color: "inherit",
+                    background: "transparent",
+                    outline: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  <option value="MAY_MOC">Máy móc</option>
+                  <option value="PHUONG_TIEN">Phương tiện</option>
+                </select>
+              </Box>
+            )}
             {(dateFrom || dateTo) && (
               <Chip
                 label="Xóa bộ lọc ngày"
@@ -963,7 +1027,7 @@ export default function MaintenanceRecordPage() {
               />
             )}
 
-            {(activeTab === 3 || activeTab === 4) && (
+            {(activeTab === 2 || activeTab === 3 || activeTab === 4) && (
               <Box
                 sx={{
                   display: "flex",
