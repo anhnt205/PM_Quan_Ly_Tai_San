@@ -31,20 +31,21 @@ public class BienPhapPhuongTienDao {
         return """
             SELECT
                 bp.Id, bp.IdCongTy, bp.SoBienBan, bp.IdTaiSan,
-                bp.MucDich, bp.TinhTrangHienTai, bp.NoiDungThucHien,
-                bp.TienDoTuNgay, bp.TienDoDenNgay, bp.BienPhapAnToan, bp.IdKiemTraSuCo,
+                bp.MucDich, bp.YeuCau, bp.TinhTrangHienTai, bp.NoiDungThucHien,
+                bp.TienDoTuNgay, bp.TienDoDenNgay, bp.BienPhapAnToan, bp.IdGiamDinhPhuongTien,
+                bp.DonViQuanLy,
                 bp.IdNguoiLap, bp.NguoiLapXacNhan, bp.IdGiamDoc, bp.GiamDocXacNhan,
                 bp.Share, bp.TrangThai,
                 bp.NgayTao, bp.NgayCapNhat, bp.NguoiTao, bp.NguoiCapNhat,
                 nvLap.HoTen  AS tenNguoiLap,
                 nvGD.HoTen   AS tenGiamDoc,
                 ts.TenTaiSan AS tenTaiSan,
-                ktsc.SoPhieu AS soPhieuSuCo
+                gdpt.SoPhieu AS soPhieuSuCo
             FROM bienphap_phuongtien bp
                 LEFT JOIN NhanVien nvLap   ON nvLap.Id  = bp.IdNguoiLap
                 LEFT JOIN NhanVien nvGD    ON nvGD.Id   = bp.IdGiamDoc
                 LEFT JOIN taisan   ts      ON ts.Id     = bp.IdTaiSan
-                LEFT JOIN kiemtra_suco ktsc ON ktsc.Id  = bp.IdKiemTraSuCo
+                LEFT JOIN giamdinh_phuongtien gdpt ON gdpt.Id  = bp.IdGiamDinhPhuongTien
             """;
     }
 
@@ -83,9 +84,9 @@ public class BienPhapPhuongTienDao {
                 .collect(Collectors.toList());
     }
 
-    public List<BienPhapPhuongTienDTO> findByIdKiemTraSuCo(String idKiemTraSuCo) {
+    public List<BienPhapPhuongTienDTO> findByIdGiamDinhPhuongTien(String idGiamDinhPhuongTien) {
         return findAll(null).stream()
-                .filter(d -> idKiemTraSuCo != null && idKiemTraSuCo.equalsIgnoreCase(d.getIdKiemTraSuCo()))
+                .filter(d -> idGiamDinhPhuongTien != null && idGiamDinhPhuongTien.equalsIgnoreCase(d.getIdGiamDinhPhuongTien()))
                 .collect(Collectors.toList());
     }
 
@@ -123,16 +124,18 @@ public class BienPhapPhuongTienDao {
         String sql = """
             INSERT INTO bienphap_phuongtien (
                 Id, IdCongTy, SoBienBan, IdTaiSan,
-                MucDich, TinhTrangHienTai, NoiDungThucHien,
-                TienDoTuNgay, TienDoDenNgay, BienPhapAnToan, IdKiemTraSuCo,
+                MucDich, YeuCau, TinhTrangHienTai, NoiDungThucHien,
+                TienDoTuNgay, TienDoDenNgay, BienPhapAnToan, IdGiamDinhPhuongTien,
+                DonViQuanLy,
                 IdNguoiLap, NguoiLapXacNhan, IdGiamDoc, GiamDocXacNhan,
                 Share, TrangThai, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         int r = jdbcTemplate.update(sql,
                 e.getId(), e.getIdCongTy(), e.getSoBienBan(), e.getIdTaiSan(),
-                e.getMucDich(), e.getTinhTrangHienTai(), e.getNoiDungThucHien(),
-                e.getTienDoTuNgay(), e.getTienDoDenNgay(), e.getBienPhapAnToan(), e.getIdKiemTraSuCo(),
+                e.getMucDich(), e.getYeuCau(), e.getTinhTrangHienTai(), e.getNoiDungThucHien(),
+                e.getTienDoTuNgay(), e.getTienDoDenNgay(), e.getBienPhapAnToan(), e.getIdGiamDinhPhuongTien(),
+                e.getDonViQuanLy(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai() != null ? e.getTrangThai() : 0,
                 e.getNgayTao(), e.getNgayCapNhat(), e.getNguoiTao(), e.getNguoiCapNhat()
@@ -145,16 +148,18 @@ public class BienPhapPhuongTienDao {
         String sql = """
             UPDATE bienphap_phuongtien SET
                 SoBienBan = ?, IdTaiSan = ?,
-                MucDich = ?, TinhTrangHienTai = ?, NoiDungThucHien = ?,
-                TienDoTuNgay = ?, TienDoDenNgay = ?, BienPhapAnToan = ?, IdKiemTraSuCo = ?,
+                MucDich = ?, YeuCau = ?, TinhTrangHienTai = ?, NoiDungThucHien = ?,
+                TienDoTuNgay = ?, TienDoDenNgay = ?, BienPhapAnToan = ?, IdGiamDinhPhuongTien = ?,
+                DonViQuanLy = ?,
                 IdNguoiLap = ?, NguoiLapXacNhan = ?, IdGiamDoc = ?, GiamDocXacNhan = ?,
                 Share = ?, TrangThai = ?, NgayCapNhat = ?, NguoiCapNhat = ?
             WHERE Id = ?
             """;
         int r = jdbcTemplate.update(sql,
                 e.getSoBienBan(), e.getIdTaiSan(),
-                e.getMucDich(), e.getTinhTrangHienTai(), e.getNoiDungThucHien(),
-                e.getTienDoTuNgay(), e.getTienDoDenNgay(), e.getBienPhapAnToan(), e.getIdKiemTraSuCo(),
+                e.getMucDich(), e.getYeuCau(), e.getTinhTrangHienTai(), e.getNoiDungThucHien(),
+                e.getTienDoTuNgay(), e.getTienDoDenNgay(), e.getBienPhapAnToan(), e.getIdGiamDinhPhuongTien(),
+                e.getDonViQuanLy(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai(), e.getNgayCapNhat(), e.getNguoiCapNhat(),
                 e.getId()

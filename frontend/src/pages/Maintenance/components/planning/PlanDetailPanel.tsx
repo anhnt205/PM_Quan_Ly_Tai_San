@@ -39,6 +39,7 @@ import InspectionRecordVehicleDialog from "../dialog/InspectionRecordVehicleDial
 import AcceptanceTestDialog from "../dialog/AcceptanceTestDialog";
 import MaterialDialog from "../dialog/MaterialDialog";
 import BienPhapMayMocDialog from "../dialog/BienPhapMayMocDialog";
+import BienPhapPhuongTienDialog from "../dialog/BienPhapPhuongTienDialog";
 import {
   InspectionRecordData,
   MaintenancePlanData,
@@ -60,6 +61,10 @@ import {
   useBienPhapMayMocByGiamDinhQuery,
   useBienPhapMayMocMutation,
 } from "../../mutation/bienPhapMayMoc";
+import {
+  useBienPhapPhuongTienByGiamDinhQuery,
+  useBienPhapPhuongTienMutation,
+} from "../../mutation/bienPhapPhuongTien";
 import { showStatus } from "../../config";
 import { DeleteIcon, EditIcon, TrashIcon } from "lucide-react";
 import { showConfirmAlert } from "../../../../components/Alert";
@@ -291,8 +296,10 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
   } = useMaintenanceRepairMutation();
   const { deleteMutation: deleteInspectionMutation } =
     useMaintenanceInspectionMutation();
-  const { deleteMutation: deleteBienPhapMutation } =
+  const { deleteMutation: deleteBienPhapMayMocMutation } =
     useBienPhapMayMocMutation();
+  const { deleteMutation: deleteBienPhapPhuongTienMutation } =
+    useBienPhapPhuongTienMutation();
   const { deleteMutation: deleteAcceptanceMutation } =
     useMaintenanceAcceptanceTestMutation();
   const { deleteMutation: deleteMaterialAssessmentMutation } =
@@ -336,9 +343,16 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
       : inspectionVehicleRecords;
 
   // Biện pháp theo giám định đang expand
-  const { data: bienPhapRecords = [] } = useBienPhapMayMocByGiamDinhQuery(
-    expandedInspections || "",
+  const { data: bienPhapMayMocRecords = [] } = useBienPhapMayMocByGiamDinhQuery(
+    plan?.nhomTaiSan === "MAY_MOC" ? (expandedInspections || "") : "",
   );
+  const { data: bienPhapPhuongTienRecords = [] } = useBienPhapPhuongTienByGiamDinhQuery(
+    plan?.nhomTaiSan === "PHUONG_TIEN" ? (expandedInspections || "") : "",
+  );
+  const bienPhapRecords =
+    plan?.nhomTaiSan === "MAY_MOC"
+      ? bienPhapMayMocRecords
+      : bienPhapPhuongTienRecords;
 
   // Nghiệm thu theo biện pháp đang expand
   const { data: acceptanceTestRecords = [] } =
@@ -901,17 +915,18 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                                 onEdit={() => {
                                                   setSelectedBienPhap(bp);
                                                   setBienPhapParentInspId(
-                                                    bp.idGiamDinhMayMoc,
+                                                     bp.idGiamDinhMayMoc || bp.idGiamDinhPhuongTien || bp.idKiemTraSuCo,
                                                   );
                                                 }}
                                                 editTooltip="Chỉnh sửa Biện pháp"
                                                 editColor="primary"
                                                 isDelete={bp.trangThai === 0}
-                                                onDelete={() =>
-                                                  deleteBienPhapMutation.mutateAsync(
-                                                    bp.id,
-                                                  )
-                                                }
+                                                onDelete={() => {
+                                                  const deleteFn = plan?.nhomTaiSan === "MAY_MOC"
+                                                    ? deleteBienPhapMayMocMutation
+                                                    : deleteBienPhapPhuongTienMutation;
+                                                  deleteFn.mutateAsync(bp.id);
+                                                }}
                                               />
                                             </TableCell>
                                           </TableRow>
@@ -1219,15 +1234,29 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
           );
         })()}
 
-      {/* BienPhapMayMocDialog */}
+      {/* BienPhapMayMocDialog / BienPhapPhuongTienDialog */}
       {(bienPhapParentInspId || selectedBienPhap) &&
         (() => {
           const parentId = selectedBienPhap
-            ? selectedBienPhap.idGiamDinhMayMoc
+            ? (selectedBienPhap.idGiamDinhMayMoc || selectedBienPhap.idGiamDinhPhuongTien || selectedBienPhap.idKiemTraSuCo)
             : bienPhapParentInspId;
           const parentInsp = inspectionRecords.find(
             (r: any) => r.id === parentId,
           );
+          if (plan?.nhomTaiSan === "PHUONG_TIEN") {
+            return (
+              <BienPhapPhuongTienDialog
+                open={true}
+                onClose={() => {
+                  setBienPhapParentInspId(null);
+                  setSelectedBienPhap(null);
+                }}
+                idGiamDinhPhuongTien={parentId ?? ""}
+                soPhieuGiamDinh={parentInsp?.soPhieu}
+                initData={selectedBienPhap}
+              />
+            );
+          }
           return (
             <BienPhapMayMocDialog
               open={true}

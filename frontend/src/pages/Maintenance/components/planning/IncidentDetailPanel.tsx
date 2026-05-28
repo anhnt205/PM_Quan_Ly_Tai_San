@@ -43,11 +43,14 @@ import MaterialDialog from "../dialog/MaterialDialog";
 import IncidentPreview from "../preview/IncidentPreview";
 import IncidentInspectionDialog from "../dialog/Incidentinspectiondialog";
 import BienPhapMayMocDialog from "../dialog/BienPhapMayMocDialog";
+import BienPhapPhuongTienDialog from "../dialog/BienPhapPhuongTienDialog";
+import InspectionRecordVehicleDialog from "../dialog/InspectionRecordVehicleDialog";
 import {
   useMaintenanceAcceptanceByBienPhapQuery,
   useMaintenanceIncidentDetailByIncidentQuery,
   useMaintenanceIncidentInspectionBySuCoQuery,
   useMaintenanceInspectionByBienBanQuery,
+  useMaintenanceVehicleInspectionByBienBanQuery,
   useMaintenanceMaterialAssessmentByInspectionQuery,
   useMaintenanceMaterialAssessmentMutation,
   useMaintenanceIncidentInspectionMutation,
@@ -58,6 +61,10 @@ import {
   useBienPhapMayMocByGiamDinhQuery,
   useBienPhapMayMocMutation,
 } from "../../mutation/bienPhapMayMoc";
+import {
+  useBienPhapPhuongTienByGiamDinhQuery,
+  useBienPhapPhuongTienMutation,
+} from "../../mutation/bienPhapPhuongTien";
 import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
 import type { IncidenData, DanhGiaVatTuData } from "../../types";
 import { showStatus } from "../../config";
@@ -199,8 +206,10 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
     useMaintenanceIncidentInspectionMutation();
   const { deleteMutation: deleteInspectionMutation } =
     useMaintenanceInspectionMutation();
-  const { deleteMutation: deleteBienPhapMutation } =
+  const { deleteMutation: deleteBienPhapMayMocMutation } =
     useBienPhapMayMocMutation();
+  const { deleteMutation: deleteBienPhapPhuongTienMutation } =
+    useBienPhapPhuongTienMutation();
   const { deleteMutation: deleteAcceptanceMutation } =
     useMaintenanceAcceptanceTestMutation();
 
@@ -228,13 +237,32 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
   const { data: incidentInspections = [] } =
     useMaintenanceIncidentInspectionBySuCoQuery(incident?.id);
 
-  const { data: inspectionRecords = [] } =
-    useMaintenanceInspectionByBienBanQuery(expandedBBKTKSC || "");
+  const { data: inspectionMachineRecords = [] } =
+    useMaintenanceInspectionByBienBanQuery(
+      expandedBBKTKSC || "",
+      plan?.nhomTaiSan === "MAY_MOC",
+    );
+  const { data: inspectionVehicleRecords = [] } =
+    useMaintenanceVehicleInspectionByBienBanQuery(
+      expandedBBKTKSC || "",
+      plan?.nhomTaiSan === "PHUONG_TIEN",
+    );
+  const inspectionRecords =
+    plan?.nhomTaiSan === "MAY_MOC"
+      ? inspectionMachineRecords
+      : inspectionVehicleRecords;
 
   // Biện pháp theo giám định đang expand
-  const { data: bienPhapRecords = [] } = useBienPhapMayMocByGiamDinhQuery(
-    expandedInspections || "",
+  const { data: bienPhapMayMocRecords = [] } = useBienPhapMayMocByGiamDinhQuery(
+    plan?.nhomTaiSan === "MAY_MOC" ? (expandedInspections || "") : "",
   );
+  const { data: bienPhapPhuongTienRecords = [] } = useBienPhapPhuongTienByGiamDinhQuery(
+    plan?.nhomTaiSan === "PHUONG_TIEN" ? (expandedInspections || "") : "",
+  );
+  const bienPhapRecords =
+    plan?.nhomTaiSan === "MAY_MOC"
+      ? bienPhapMayMocRecords
+      : bienPhapPhuongTienRecords;
 
   // Nghiệm thu theo biện pháp đang expand
   const { data: acceptanceTestRecords = [] } =
@@ -754,14 +782,14 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                                             onEdit={() => {
                                               setSelectedBienPhap(bp);
                                               setBienPhapParentInspId(
-                                                bp.idGiamDinhMayMoc,
+                                                bp.idGiamDinhMayMoc || bp.idGiamDinhPhuongTien || bp.idKiemTraSuCo,
                                               );
                                             }}
                                             editTooltip="Chỉnh sửa Biện pháp"
                                             editColor="primary"
                                             isDelete={bp.trangThai === 0}
                                             onDelete={() =>
-                                              deleteBienPhapMutation.mutateAsync(
+                                              (plan?.nhomTaiSan === "MAY_MOC" ? deleteBienPhapMayMocMutation : deleteBienPhapPhuongTienMutation).mutateAsync(
                                                 bp.id,
                                               )
                                             }
@@ -989,7 +1017,25 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
             (r: any) => r.id === parentId,
           );
 
-          return parentBBKTKSC ? (
+          if (!parentBBKTKSC) return null;
+
+          if (plan?.nhomTaiSan === "PHUONG_TIEN") {
+            return (
+              <InspectionRecordVehicleDialog
+                open={true}
+                onClose={() => {
+                  setIncInspectionParentBBKTKSCId(null);
+                  setSelectedIns(null);
+                }}
+                plan={plan}
+                repairRequest={null}
+                incidentInspection={parentBBKTKSC}
+                initData={selectedIns}
+              />
+            );
+          }
+
+          return (
             <InspectionRecordDialog
               open={true}
               onClose={() => {
@@ -1001,18 +1047,32 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
               incidentInspection={parentBBKTKSC}
               initData={selectedIns}
             />
-          ) : null;
+          );
         })()}
 
-      {/* BienPhapMayMocDialog */}
+      {/* BienPhapMayMocDialog / BienPhapPhuongTienDialog */}
       {(bienPhapParentInspId || selectedBienPhap) &&
         (() => {
           const parentId = selectedBienPhap
-            ? selectedBienPhap.idGiamDinhMayMoc
+            ? (selectedBienPhap.idGiamDinhMayMoc || selectedBienPhap.idGiamDinhPhuongTien || selectedBienPhap.idKiemTraSuCo)
             : bienPhapParentInspId;
           const parentInsp = inspectionRecords.find(
             (r: any) => r.id === parentId,
           );
+          if (plan?.nhomTaiSan === "PHUONG_TIEN") {
+            return (
+              <BienPhapPhuongTienDialog
+                open={true}
+                onClose={() => {
+                  setBienPhapParentInspId(null);
+                  setSelectedBienPhap(null);
+                }}
+                idGiamDinhPhuongTien={parentId ?? ""}
+                soPhieuGiamDinh={parentInsp?.soPhieu}
+                initData={selectedBienPhap}
+              />
+            );
+          }
           return (
             <BienPhapMayMocDialog
               open={true}

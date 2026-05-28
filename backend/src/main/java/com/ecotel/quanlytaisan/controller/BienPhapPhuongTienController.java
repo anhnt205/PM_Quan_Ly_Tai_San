@@ -84,12 +84,12 @@ public class BienPhapPhuongTienController {
         }
     }
 
-    // ─── GET theo IdKiemTraSuCo ───────────────────────────────────────────────
+    // ─── GET theo IdGiamDinhPhuongTien ───────────────────────────────────────────────
 
-    @GetMapping("/suco/{idKiemTraSuCo}")
-    public ResponseEntity<ApiResponse<Object>> getByIdKiemTraSuCo(@PathVariable String idKiemTraSuCo) {
+    @GetMapping("/giamdinh-phuongtien/{idGiamDinhPhuongTien}")
+    public ResponseEntity<ApiResponse<Object>> getByIdGiamDinhPhuongTien(@PathVariable String idGiamDinhPhuongTien) {
         try {
-            List<BienPhapPhuongTienDTO> list = service.findByIdKiemTraSuCo(idKiemTraSuCo);
+            List<BienPhapPhuongTienDTO> list = service.findByIdGiamDinhPhuongTien(idGiamDinhPhuongTien);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", list, list.size()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -170,6 +170,17 @@ public class BienPhapPhuongTienController {
         try {
             ids.forEach(service::delete);
             return ResponseEntity.ok(ApiResponse.success("Xóa danh sách thành công", null, ids.size()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
+    @PutMapping("/batch")
+    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<BienPhapPhuongTien> list) {
+        try {
+            service.bulkUpdate(list);
+            return ResponseEntity.ok(ApiResponse.success("Cập nhật danh sách thành công", null, list.size()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));

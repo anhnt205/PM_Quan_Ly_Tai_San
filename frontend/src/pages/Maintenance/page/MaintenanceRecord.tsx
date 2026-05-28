@@ -47,6 +47,7 @@ import {
   generateDanhGiaVatTuPdf,
   generateKiemTraSuCoPdf,
   generateBienPhapMayMocPdf,
+  generateBienPhapPhuongTienPdf,
   showStatus,
   listSigneInfo,
   showShareStatus,
@@ -69,11 +70,13 @@ import {
   RepairAdapter,
   IncidentInspectionAdapter,
   BienPhapMayMocAdapter,
+  BienPhapPhuongTienAdapter,
 } from "../Adapter";
 import { FilterOption } from "../../../components/common/FilterStatusGroup";
 import { useMaintenanceMutation } from "../mutation";
 import { useMenuData } from "../../../hooks/useMenuData";
 import S3Service from "../../../services/S3Service";
+import { TypeBienBan } from "../../../utils/const";
 
 export default function MaintenanceRecordPage() {
   const [activeTab, setActiveTab] = useState(0);
@@ -401,15 +404,23 @@ export default function MaintenanceRecordPage() {
 
   const parentColumnConfigs: Record<
     number,
-    { field: string; headerName: string }[]
+    { field: string; headerName: string; key?: string }[]
   > = {
     1: [{ field: "planId", headerName: "Mã kế hoạch" }],
     2: [
-      { field: "idSuaChua", headerName: "Mã lệnh SC" },
-      { field: "incidentInspectionId", headerName: "Mã BB kiểm tra SC" },
+      {
+        field: "idBienBanSuaChua",
+        headerName: "Mã lệnh SC",
+        key: TypeBienBan.SUA_CHUA,
+      },
+      {
+        field: "idBienBanKiemTra",
+        headerName: "Mã BB kiểm tra SC",
+        key: TypeBienBan.SU_CO,
+      },
     ],
-    3: [{ field: "idGiamDinhMayMoc", headerName: "Mã BB giám định" }],
-    4: [{ field: "idBienPhapMayMoc", headerName: "Mã biện pháp" }],
+    3: [{ field: "idGiamDinh", headerName: "Mã BB giám định" }],
+    4: [{ field: "soPhieu", headerName: "Mã biện pháp" }],
     5: [{ field: "idNghiemThu", headerName: "Mã BB nghiệm thu" }],
     6: [{ field: "planId", headerName: "Mã kế hoạch" }],
     7: [{ field: "idSuCo", headerName: "Mã phiếu báo SC" }],
@@ -421,7 +432,11 @@ export default function MaintenanceRecordPage() {
     { ...inspectionPaged, items: inspectionPaged.items.map(InspectionAdapter) },
     {
       ...bienPhapPaged,
-      items: (bienPhapPaged.items || []).map(BienPhapMayMocAdapter),
+      items: (bienPhapPaged.items || []).map(
+        bienPhapType === "may_moc"
+          ? BienPhapMayMocAdapter
+          : BienPhapPhuongTienAdapter,
+      ),
     },
     {
       ...acceptanceTestPaged,
@@ -453,6 +468,21 @@ export default function MaintenanceRecordPage() {
       field: cfg.field,
       headerName: cfg.headerName,
       width: 160,
+      renderCell: (params: any) => {
+        // Tab giám định: hiển thị dữ liệu vào đúng cột loại biên bản
+        if (activeTab === 2) {
+          const loai = params.row.loaiBienBan; // 'sua_chua' | 'su_co'
+          if (loai === cfg.key) {
+            return <span>{params.row.idBienBan || "—"}</span>;
+          }
+          return <span style={{ color: "#bbb" }}>—</span>;
+        }
+        return (
+          <span style={{ color: params.value ? "inherit" : "#bbb" }}>
+            {params.value || "—"}
+          </span>
+        );
+      },
     }));
 
     if (collapsed) {
@@ -477,7 +507,7 @@ export default function MaintenanceRecordPage() {
       { field: "moTa", headerName: "Nội dung/Ghi chú", flex: 1, minWidth: 200 },
     ];
 
-    if (activeTab === 3) {
+    if (activeTab === 3 && bienPhapType === "may_moc") {
       columns.push({
         field: "tenFile",
         headerName: "Tài liệu",
@@ -599,12 +629,19 @@ export default function MaintenanceRecordPage() {
             showSignerSidebar={false}
             showHeader={true}
             generatePdf={() =>
-              generateBienPhapMayMocPdf(
-                selectedRow,
-                staffs || [],
-                departments || [],
-                positions || [],
-              )
+              bienPhapType === "may_moc"
+                ? generateBienPhapMayMocPdf(
+                    selectedRow,
+                    staffs || [],
+                    departments || [],
+                    positions || [],
+                  )
+                : generateBienPhapPhuongTienPdf(
+                    selectedRow,
+                    staffs || [],
+                    departments || [],
+                    positions || [],
+                  )
             }
           />
         );

@@ -2527,3 +2527,311 @@ export const generateBienPhapMayMocPdf = async (
     coordinates,
   };
 };
+
+export const generateBienPhapPhuongTienPdf = async (
+  item: any,
+  staffs: any[],
+  departments: any[],
+  positions: any[],
+): Promise<{
+  pdf: Uint8Array;
+  coordinates: Record<string, { xRatio: number; yRatio: number }>;
+}> => {
+  const listSigneInfos: any[] = listSigneInfo(
+    item,
+    staffs,
+    departments,
+    positions,
+  );
+  const doc = new jsPDF("p", "mm", "a4");
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const leftColCenter = 55;
+  const rightColCenter = 155;
+
+  // Header Left
+  doc.setFont("times_new_roman", "normal");
+  doc.setFontSize(9.5);
+  doc.text("TẬP ĐOÀN CÔNG NGHIỆP", leftColCenter, 20, { align: "center" });
+  doc.text("THAN – KHOÁNG SẢN VIỆT NAM", leftColCenter, 25, { align: "center" });
+  doc.setFont("times_new_roman", "bold");
+  doc.setFontSize(10);
+  doc.text("CÔNG TY THAN UÔNG BÍ – TKV", leftColCenter, 30, { align: "center" });
+  
+  // Underline for Company name
+  doc.setLineWidth(0.3);
+  doc.line(leftColCenter - 20, 31.5, leftColCenter + 20, 31.5);
+  
+  doc.setFont("times_new_roman", "normal");
+  doc.setFontSize(10);
+  doc.text(`Số: ${item.soBienBan || "401"} /BP- CV`, leftColCenter, 37, { align: "center" });
+
+  // Header Right
+  doc.setFont("times_new_roman", "bold");
+  doc.setFontSize(10);
+  doc.text("CỘNG HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM", rightColCenter, 20, { align: "center" });
+  doc.setFontSize(11);
+  doc.text("Độc lập – Tự do – Hạnh phúc", rightColCenter, 25, { align: "center" });
+  
+  // Underline for national motto
+  doc.setLineWidth(0.3);
+  doc.line(rightColCenter - 15, 26.5, rightColCenter + 15, 26.5);
+
+  // Date
+  doc.setFont("times_new_roman_italic", "italic");
+  doc.setFontSize(10);
+  const today = new Date(item.ngayTao || new Date());
+  const dateStr = `Quảng Ninh, ngày ${today.getDate()} tháng ${String(today.getMonth() + 1).padStart(2, "0")} năm ${today.getFullYear()}`;
+  doc.text(dateStr, rightColCenter + 15, 33, { align: "center" });
+
+  // Title
+  doc.setFont("times_new_roman", "bold");
+  doc.setFontSize(13);
+  doc.text("BIỆN PHÁP SỬA CHỮA THIẾT BỊ", pageWidth / 2, 47, { align: "center" });
+  
+  doc.setFont("times_new_roman_italic", "italic");
+  doc.setFontSize(11);
+  doc.text(
+    `V/v sửa chữa thiết bị ô tô xe máy – ${item.tenTaiSan || "Xe ô tô DONGFENG biển số 14C-12876"}`,
+    pageWidth / 2,
+    52,
+    { align: "center" }
+  );
+  doc.setFont("times_new_roman_italic", "italic");
+  doc.text(
+    `Phân xưởng ${item.donViQuanLy || "........"} quản lý`,
+    pageWidth / 2,
+    57,
+    { align: "center" },
+  );
+
+  let y = 67;
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return "—";
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const renderBulletList = (text: string, x: number, maxWidth: number) => {
+    if (!text) return;
+    const items = text.split("\n").map((i) => i.trim()).filter(Boolean);
+    items.forEach((itemText) => {
+      const formattedItem = itemText.startsWith("-") ? itemText : `- ${itemText}`;
+      const lines = doc.splitTextToSize(formattedItem, maxWidth);
+      lines.forEach((line: string, idx: number) => {
+        if (y > pageHeight - 20) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.setFont("times_new_roman", "normal");
+        doc.setFontSize(11);
+        const currentX = idx === 0 ? x : x + 3;
+        doc.text(line, currentX, y);
+        y += 6;
+      });
+    });
+  };
+
+  // I. MỤC ĐÍCH VÀ YÊU CẦU
+  doc.setFont("times_new_roman", "bold");
+  doc.setFontSize(11);
+  doc.text("I. MỤC ĐÍCH VÀ YÊU CẦU", 15, y);
+  y += 6;
+
+  doc.setFont("times_new_roman", "bold");
+  doc.text("1. Mục đích:", 15, y);
+  y += 6;
+  renderBulletList(item.mucDich || "Sửa chữa bảo dưỡng xe ô tô để huy động phục vụ sản xuất.", 15, 180);
+
+  doc.setFont("times_new_roman", "bold");
+  doc.text("2. Yêu cầu:", 15, y);
+  y += 6;
+  renderBulletList(item.yeuCau || "Thiết bị được sửa chữa lắp đặt phải đúng KTCB, trong quá trình lắp đặt phải có cán bộ chỉ huy trực tiếp tại hiện trường đảm bảo an toàn cho con người và thiết bị.", 15, 180);
+
+  // II. TÌNH TRẠNG HIỆN TẠI
+  if (y > pageHeight - 25) {
+    doc.addPage();
+    y = 20;
+  }
+  doc.setFont("times_new_roman", "bold");
+  doc.text("II. TÌNH TRẠNG HIỆN TẠI", 15, y);
+  y += 6;
+  renderBulletList(item.tinhTrangHienTai || "Đến kỳ bảo dưỡng.\nThiết bị hoạt động không ổn định.", 15, 180);
+
+  // III. BIỆN PHÁP SỬA CHỮA
+  if (y > pageHeight - 25) {
+    doc.addPage();
+    y = 20;
+  }
+  doc.setFont("times_new_roman", "bold");
+  doc.text("III. BIỆN PHÁP SỬA CHỮA", 15, y);
+  y += 6;
+
+  doc.setFont("times_new_roman", "bold");
+  doc.text("1. Nội dung thực hiện:", 15, y);
+  y += 6;
+  renderBulletList(item.noiDungThucHien || "Vệ sinh công nghiệp thiết bị trước khi sửa chữa.\nTiến hành tháo lắp, kiểm tra và bảo dưỡng theo quy trình.\nVận hành chạy thử sau khi sửa chữa xong.", 15, 180);
+
+  if (y > pageHeight - 25) {
+    doc.addPage();
+    y = 20;
+  }
+  doc.setFont("times_new_roman", "bold");
+  doc.text("2. Chi phí vật tư:", 15, y);
+  y += 6;
+
+  // Table of Materials
+  const tableHead = [
+    [
+      "STT",
+      "Tên vật tư, thiết bị",
+      "ĐVT",
+      "Số lượng cấp",
+      "Thu hồi",
+      "Ghi chú",
+    ],
+  ];
+
+  const tableBody = (item.danhSachChiTiet || []).map((vt: any, idx: number) => {
+    const slCap = vt.soLuongCap != null ? String(vt.soLuongCap) : (vt.soLuong != null ? String(vt.soLuong) : "—");
+    const slThuHoi = vt.soLuongThuHoi != null ? String(vt.soLuongThuHoi) : "—";
+    return [
+      idx + 1,
+      vt.tenVatTu || vt.idChiTietVatTu || "",
+      vt.donViTinh || "",
+      slCap,
+      slThuHoi,
+      vt.ghiChu || "",
+    ];
+  });
+
+  if (tableBody.length === 0) {
+    tableBody.push(["—", "Không có vật tư thiết bị thay thế", "—", "—", "—", "—"]);
+  }
+
+  autoTable(doc, {
+    startY: y,
+    margin: { left: 15, right: 15 },
+    head: tableHead,
+    body: tableBody,
+    theme: "grid",
+    styles: {
+      font: "times_new_roman",
+      fontSize: 9.5,
+      halign: "center",
+      valign: "middle",
+      textColor: 0,
+    },
+    headStyles: {
+      fillColor: false,
+      textColor: 0,
+      lineWidth: 0.15,
+      lineColor: 0,
+      fontStyle: "bold",
+    },
+    bodyStyles: { lineWidth: 0.15, lineColor: 0 },
+    columnStyles: {
+      0: { cellWidth: 12 },
+      1: { halign: "left", cellWidth: 85 },
+      2: { cellWidth: 15 },
+      3: { cellWidth: 23 },
+      4: { cellWidth: 23 },
+      5: { halign: "left" },
+    },
+  });
+
+  y = (doc as any).lastAutoTable.finalY + 8;
+
+  // 3. Tiến độ thực hiện
+  if (y > pageHeight - 20) {
+    doc.addPage();
+    y = 20;
+  }
+  doc.setFont("times_new_roman", "bold");
+  doc.text("3.Tiến độ thực hiện: ", 15, y);
+  const progText = `Từ ngày ${formatDate(item.tienDoTuNgay)} đến ngày ${formatDate(item.tienDoDenNgay)}.`;
+  doc.setFont("times_new_roman", "normal");
+  doc.text(progText, 52, y);
+  y += 8;
+
+  // IV. BIỆN PHÁP AN TOÀN
+  if (y > pageHeight - 25) {
+    doc.addPage();
+    y = 20;
+  }
+  doc.setFont("times_new_roman", "bold");
+  doc.text("IV. BIỆN PHÁP AN TOÀN", 15, y);
+  y += 6;
+  renderBulletList(item.bienPhapAnToan || "Thợ sửa chữa trang bị đầy đủ bảo hộ lao động theo quy định ATBHLĐ.\nChỉ những người được phổ biến biện pháp, phân công nhiệm vụ mới được tham gia công việc.", 15, 180);
+
+  if (y > pageHeight - 20) {
+    doc.addPage();
+    y = 20;
+  }
+  doc.setFont("times_new_roman_italic", "italic");
+  doc.setFontSize(10.5);
+  doc.text("- Trong quá trình thực hiện phải tuân thủ các quy định, quy trình của nhà nước, Công ty đã ban hành đảm bảo kỹ thuật, an toàn ./. ", 15, y, { maxWidth: 180 });
+  y += 18;
+
+  y = y + 15;
+
+  // Signatures block
+  const marginX = 25;
+  const printableWidth = pageWidth - 2 * marginX;
+  const maxPerRow = 3;
+  const rowGap = 60;
+  const coordinates: Record<string, { xRatio: number; yRatio: number }> = {};
+  const baseWidthPx = 120;
+  const displayWidth = 800;
+
+  listSigneInfos.forEach((s, index) => {
+    const rowIndex = Math.floor(index / maxPerRow);
+    const colIndex = index % maxPerRow;
+    const itemsInRow = Math.min(
+      maxPerRow,
+      listSigneInfos.length - rowIndex * maxPerRow,
+    );
+
+    if (rowIndex > 0 && y + rowIndex * rowGap > pageHeight - 20) {
+      doc.addPage();
+      y = 20;
+    }
+
+    let x;
+    if (itemsInRow === 1) x = pageWidth / 2;
+    else {
+      const gapSize = printableWidth / (itemsInRow - 1);
+      x = marginX + colIndex * gapSize;
+    }
+
+    const yPos = y + rowIndex * rowGap;
+    const sigWidthMm = (baseWidthPx / displayWidth) * pageWidth;
+
+    coordinates[s.idNhanVien] = {
+      xRatio: Math.max(0, Math.min((x - sigWidthMm / 2) / pageWidth, 1)),
+      yRatio: Math.max(0, Math.min((yPos + 10) / pageHeight, 1)),
+    };
+
+    doc.setFont("times_new_roman", "bold");
+    doc.setFontSize(10);
+    doc.text(s.title || s.donVi || "", x, yPos, { align: "center" });
+    doc.setFont("times_new_roman_italic", "italic");
+    doc.text("(Ký, ghi rõ họ tên)", x, yPos + 5, { align: "center" });
+    doc.setFont("times_new_roman", "bold");
+    doc.text(s.hoTen || "", x, yPos + 35, { align: "center" });
+  });
+
+  return {
+    pdf: new Uint8Array(doc.output("arraybuffer")),
+    coordinates,
+  };
+};

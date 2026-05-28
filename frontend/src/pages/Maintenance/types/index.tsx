@@ -267,3 +267,59 @@ export interface BienPhapMayMocData {
   nguoiKyList?: any[];
   chuKyList?: any[];
 }
+
+export interface BienPhapPhuongTienData {
+  id?: string;
+  idCongTy?: string;
+  soBienBan?: string;
+  idTaiSan?: string;
+  mucDich?: string;
+  yeuCau?: string;
+  tinhTrangHienTai?: string;
+  noiDungThucHien?: string;
+  tienDoTuNgay?: string;
+  tienDoDenNgay?: string;
+  bienPhapAnToan?: string;
+  idGiamDinhPhuongTien?: string;
+  donViQuanLy?: string;
+
+  // Luồng ký / Trạng thái
+  idNguoiLap?: string;
+  nguoiLapXacNhan?: boolean;
+  idGiamDoc?: string;
+  giamDocXacNhan?: boolean;
+  share?: boolean;
+  trangThai?: number;
+
+  // Audit
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+
+  // Join fields
+  tenNguoiLap?: string;
+  tenGiamDoc?: string;
+  tenTaiSan?: string;
+  soPhieuSuCo?: string;
+  daCoNghiemThu?: number;
+
+  danhSachChiTiet?: BienPhapPhuongTienChiTietData[];
+  nguoiKyList?: any[];
+  chuKyList?: any[];
+}
+
+export interface BienPhapPhuongTienChiTietData {
+  id?: string;
+  idBienPhap?: string;
+  idVatTu?: string;
+  idChiTietVatTu?: string;
+  soLuongCap?: number;
+  soLuongThuHoi?: number;
+  ghiChu?: string;
+
+  // Join fields từ CCDCVatTu
+  tenVatTu?: string;
+  donViTinh?: string;
+  action?: ActionType;
+}

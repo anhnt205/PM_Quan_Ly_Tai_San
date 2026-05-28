@@ -51,6 +51,7 @@ import {
   RepairAdapter,
   IncidentInspectionAdapter,
   BienPhapMayMocAdapter,
+  BienPhapPhuongTienAdapter,
 } from "../Adapter";
 import { useSelector } from "react-redux";
 import { useAllPositionsQuery } from "../../Position/Mutation";
@@ -67,6 +68,7 @@ import {
   generateDanhGiaVatTuPdf,
   generateKiemTraSuCoPdf,
   generateBienPhapMayMocPdf,
+  generateBienPhapPhuongTienPdf,
   getPermissionSigning,
   ShowPermissionSigning,
   canSign,
@@ -372,7 +374,11 @@ export default function MaintenanceApprovalPage() {
     { ...inspectionPaged, items: inspectionPaged.items.map(InspectionAdapter) },
     {
       ...bienPhapPaged,
-      items: (bienPhapPaged.items || []).map(BienPhapMayMocAdapter),
+      items: (bienPhapPaged.items || []).map(
+        bienPhapType === "may_moc"
+          ? BienPhapMayMocAdapter
+          : BienPhapPhuongTienAdapter,
+      ),
     },
     {
       ...acceptanceTestPaged,
@@ -454,8 +460,8 @@ export default function MaintenanceApprovalPage() {
         key: TypeBienBan.SU_CO,
       },
     ],
-    3: [{ field: "idGiamDinhMayMoc", headerName: "Mã BB giám định" }],
-    4: [{ field: "idBienPhapMayMoc", headerName: "Mã biện pháp" }],
+    3: [{ field: "idGiamDinh", headerName: "Mã BB giám định" }],
+    4: [{ field: "soPhieu", headerName: "Mã biện pháp" }],
     5: [{ field: "idNghiemThu", headerName: "Mã BB nghiệm thu" }],
     6: [{ field: "planId", headerName: "Mã kế hoạch" }],
     7: [{ field: "idSuCo", headerName: "Mã phiếu báo SC" }],
@@ -680,8 +686,18 @@ export default function MaintenanceApprovalPage() {
             showHeader={false}
             generatePdf={() =>
               bienPhapType === "may_moc"
-                ? generateGiamDinhPdf(selectedRow, staffs, departments, positions)
-                : generateGiamDinhPhuongTienPdf(selectedRow, staffs, departments, positions)
+                ? generateGiamDinhPdf(
+                    selectedRow,
+                    staffs,
+                    departments,
+                    positions,
+                  )
+                : generateGiamDinhPhuongTienPdf(
+                    selectedRow,
+                    staffs,
+                    departments,
+                    positions,
+                  )
             }
           />
         );
@@ -702,12 +718,19 @@ export default function MaintenanceApprovalPage() {
             showSignerSidebar={false}
             showHeader={false}
             generatePdf={() =>
-              generateBienPhapMayMocPdf(
-                selectedRow,
-                staffs,
-                departments,
-                positions,
-              )
+              bienPhapType === "may_moc"
+                ? generateBienPhapMayMocPdf(
+                    selectedRow,
+                    staffs || [],
+                    departments || [],
+                    positions || [],
+                  )
+                : generateBienPhapPhuongTienPdf(
+                    selectedRow,
+                    staffs || [],
+                    departments || [],
+                    positions || [],
+                  )
             }
           />
         );
@@ -1004,7 +1027,12 @@ export default function MaintenanceApprovalPage() {
           generatePdf={() =>
             bienPhapType === "may_moc"
               ? generateGiamDinhPdf(selectedRow, staffs, departments, positions)
-              : generateGiamDinhPhuongTienPdf(selectedRow, staffs, departments, positions)
+              : generateGiamDinhPhuongTienPdf(
+                  selectedRow,
+                  staffs,
+                  departments,
+                  positions,
+                )
           }
         />
       )}
@@ -1023,12 +1051,19 @@ export default function MaintenanceApprovalPage() {
           fullscreen={true}
           showSignerSidebar={true}
           generatePdf={() =>
-            generateBienPhapMayMocPdf(
-              selectedRow,
-              staffs,
-              departments,
-              positions,
-            )
+            bienPhapType === "may_moc"
+              ? generateBienPhapMayMocPdf(
+                  selectedRow,
+                  staffs || [],
+                  departments || [],
+                  positions || [],
+                )
+              : generateBienPhapPhuongTienPdf(
+                  selectedRow,
+                  staffs || [],
+                  departments || [],
+                  positions || [],
+                )
           }
         />
       )}
@@ -1394,7 +1429,9 @@ export default function MaintenanceApprovalPage() {
                       ? generateGiamDinhPdf
                       : generateGiamDinhPhuongTienPdf
                     : activeTab === 3
-                      ? generateGiamDinhPdf
+                      ? bienPhapType === "may_moc"
+                        ? generateBienPhapMayMocPdf
+                        : generateBienPhapPhuongTienPdf
                       : activeTab === 4
                         ? generateNghiemThuPdf
                         : activeTab === 5

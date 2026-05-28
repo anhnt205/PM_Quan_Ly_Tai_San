@@ -10,12 +10,14 @@ public class BienPhapPhuongTien {
     private String soBienBan;
     private String idTaiSan;
     private String mucDich;
+    private String yeuCau;
     private String tinhTrangHienTai;
     private String noiDungThucHien;
     private String tienDoTuNgay;
     private String tienDoDenNgay;
     private String bienPhapAnToan;
-    private String idKiemTraSuCo;
+    private String idGiamDinhPhuongTien;
+    private String donViQuanLy;
 
     // Luồng ký
     private String  idNguoiLap;

@@ -38,8 +38,8 @@ public class BienPhapPhuongTienService {
         return list;
     }
 
-    public List<BienPhapPhuongTienDTO> findByIdKiemTraSuCo(String idKiemTraSuCo) {
-        List<BienPhapPhuongTienDTO> list = bienPhapDao.findByIdKiemTraSuCo(idKiemTraSuCo);
+    public List<BienPhapPhuongTienDTO> findByIdGiamDinhPhuongTien(String idGiamDinhPhuongTien) {
+        List<BienPhapPhuongTienDTO> list = bienPhapDao.findByIdGiamDinhPhuongTien(idGiamDinhPhuongTien);
         list.forEach(this::enrich);
         return list;
     }
@@ -108,6 +108,11 @@ public class BienPhapPhuongTienService {
 
     @Transactional
     public int huy(String id) { return bienPhapDao.updateTrangThai(id, 2); }
+
+    @Transactional
+    public void bulkUpdate(List<BienPhapPhuongTien> list) {
+        list.forEach(bienPhapDao::update);
+    }
 
     @Transactional
     public int delete(String id) {

@@ -413,28 +413,25 @@ const InspectionRecordVehicleDialog = ({
     <Dialog open={open} onClose={handleClose} maxWidth="xl" fullWidth>
       <DialogTitle
         sx={{
-          m: 0,
-          p: 2,
           display: "flex",
-          alignItems: "center",
           justifyContent: "space-between",
-          borderBottom: "1px solid",
-          borderColor: "divider",
+          alignItems: "center",
+          pb: 1.5,
+          bgcolor: "primary.main",
+          color: "white",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <DirectionsCarIcon color="primary" />
-          <Typography variant="h6" fontWeight={700}>
-            {initData
-              ? "CẬP NHẬT BIÊN BẢN GIÁM ĐỊNH PHƯƠNG TIỆN"
-              : "TẠO BIÊN BẢN GIÁM ĐỊNH PHƯƠNG TIỆN"}
-          </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <DirectionsCarIcon />
+          <Box>
+            <Typography variant="h6" fontWeight={700}>
+              {initData
+                ? "CẬP NHẬT BIÊN BẢN GIÁM ĐỊNH PHƯƠNG TIỆN"
+                : "TẠO BIÊN BẢN GIÁM ĐỊNH PHƯƠNG TIỆN"}
+            </Typography>
+          </Box>
         </Box>
-        <IconButton
-          onClick={handleClose}
-          size="small"
-          sx={{ color: "text.secondary" }}
-        >
+        <IconButton size="small" onClick={handleClose} sx={{ color: "white" }}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
@@ -627,6 +624,7 @@ const InspectionRecordVehicleDialog = ({
                                 <Box sx={{ display: "flex", gap: 1 }}>
                                   <Button
                                     variant="contained"
+                                    color="primary"
                                     size="small"
                                     onClick={handleSaveEdit}
                                   >
@@ -634,6 +632,7 @@ const InspectionRecordVehicleDialog = ({
                                   </Button>
                                   <Button
                                     size="small"
+                                    color="inherit"
                                     onClick={() => setEditingSignerId(null)}
                                   >
                                     Hủy
@@ -699,6 +698,7 @@ const InspectionRecordVehicleDialog = ({
                                 <Box sx={{ display: "flex", gap: 0.5 }}>
                                   <Button
                                     size="small"
+                                    color="primary"
                                     variant="outlined"
                                     onClick={() => handleEdit(s)}
                                   >
@@ -774,6 +774,7 @@ const InspectionRecordVehicleDialog = ({
                 </FormControl>
                 <Button
                   variant="contained"
+                  color="primary"
                   startIcon={<PersonAddIcon />}
                   onClick={handleAddSigner}
                   disabled={!addUserId}
@@ -800,7 +801,8 @@ const InspectionRecordVehicleDialog = ({
               DANH SÁCH CHI TIẾT VẬT TƯ
             </Typography>
             <Button
-              variant="contained"
+              variant="outlined"
+              color="primary"
               size="small"
               startIcon={<AddIcon />}
               onClick={addMaterialRow}
