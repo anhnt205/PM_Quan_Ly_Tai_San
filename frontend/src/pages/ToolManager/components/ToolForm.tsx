@@ -36,6 +36,7 @@ import dayjs from "dayjs";
 import { ToolValidation } from "../validation";
 import TextFieldNumber from "../../../components/TextField/TextFieldNumber";
 import { CongTy } from "../../../utils/const";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 export default function ToolForm({
   onEdit,
@@ -47,6 +48,8 @@ export default function ToolForm({
   toolTypes,
   allUnits,
   toolGroups,
+  initialFormData,
+  onFormChange,
 }: {
   onEdit: () => void;
   onCancel: () => void;
@@ -57,35 +60,39 @@ export default function ToolForm({
   toolTypes: any[];
   allUnits: any[];
   toolGroups: any[];
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
 }) {
   const [expanded, setExpanded] = useState(true);
   const { user } = useSelector((state: RootState) => state.user);
   const formik = useFormik({
     initialValues: {
-      id: "",
-      idDonVi: "",
-      ten: "",
-      ngayNhap: dayjs(new Date()).format("YYYY-MM-DDTHH:mm:ss"),
-      donViTinh: "",
-      soLuong: 0,
-      idNhomCCDC: "",
-      giaTri: 0,
-      soKyHieu: "",
-      kyHieu: "",
-      congSuat: "",
-      nuocSanXuat: "",
-      namSanXuat: 0,
-      ghiChu: "",
-      idCongTy: CongTy.CT001,
-      ngayTao: "",
-      ngayCapNhat: "",
-      nguoiTao: "",
-      nguoiCapNhat: user?.username || "",
-      isActive: true,
-      idLoaiCCDCCon: "",
-      hienTrang: 0,
-      chiTietTaiSanList: [],
-      chiTietDonViSoHuuList: [],
+      id: initialFormData?.id ?? "",
+      idDonVi: initialFormData?.idDonVi ?? "",
+      ten: initialFormData?.ten ?? "",
+      ngayNhap:
+        initialFormData?.ngayNhap ??
+        dayjs(new Date()).format("YYYY-MM-DDTHH:mm:ss"),
+      donViTinh: initialFormData?.donViTinh ?? "",
+      soLuong: initialFormData?.soLuong ?? 0,
+      idNhomCCDC: initialFormData?.idNhomCCDC ?? "",
+      giaTri: initialFormData?.giaTri ?? 0,
+      soKyHieu: initialFormData?.soKyHieu ?? "",
+      kyHieu: initialFormData?.kyHieu ?? "",
+      congSuat: initialFormData?.congSuat ?? "",
+      nuocSanXuat: initialFormData?.nuocSanXuat ?? "",
+      namSanXuat: initialFormData?.namSanXuat ?? 0,
+      ghiChu: initialFormData?.ghiChu ?? "",
+      idCongTy: initialFormData?.idCongTy ?? CongTy.CT001,
+      ngayTao: initialFormData?.ngayTao ?? "",
+      ngayCapNhat: initialFormData?.ngayCapNhat ?? "",
+      nguoiTao: initialFormData?.nguoiTao ?? "",
+      nguoiCapNhat: initialFormData?.nguoiCapNhat ?? user?.username ?? "",
+      isActive: initialFormData?.isActive ?? true,
+      idLoaiCCDCCon: initialFormData?.idLoaiCCDCCon ?? "",
+      hienTrang: initialFormData?.hienTrang ?? 0,
+      chiTietTaiSanList: initialFormData?.chiTietTaiSanList ?? [],
+      chiTietDonViSoHuuList: initialFormData?.chiTietDonViSoHuuList ?? [],
     },
     validationSchema: ToolValidation,
     onSubmit(values) {
@@ -110,6 +117,13 @@ export default function ToolForm({
     },
   });
 
+  const debouncedValues = useDebounce(formik.values, 1500);
+  useEffect(() => {
+    if (!selectedTool) {
+      onFormChange?.(debouncedValues);
+    }
+  }, [debouncedValues]);
+
   useEffect(() => {
     if (selectedTool) {
       formik.setValues({
@@ -130,8 +144,6 @@ export default function ToolForm({
           },
         ),
       });
-    } else {
-      formik.resetForm();
     }
   }, [selectedTool]);
 

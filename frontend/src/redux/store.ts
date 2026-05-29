@@ -8,11 +8,13 @@ import storage from 'redux-persist/lib/storage'
 import persistReducer from 'redux-persist/es/persistReducer'
 import persistStore from 'redux-persist/es/persistStore'
 import { FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist'
+import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux'
 
 const persisConfig = {
     key: 'root', // key trong localstorage
     version: 1,
-    storage
+    storage,
+    blacklist: ['tabs'],
 }
 
 // gộp các reducer
@@ -39,3 +41,6 @@ export const persistor = persistStore(store)
 
 export type RootState = ReturnType<typeof store.getState>
 export type AppDispatch = typeof store.dispatch
+
+export const useAppDispatch = () => useDispatch<AppDispatch>();
+export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;

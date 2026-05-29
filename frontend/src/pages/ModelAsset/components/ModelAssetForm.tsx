@@ -26,6 +26,7 @@ import ViewBtn from "../../../components/Button/ViewBtn";
 import { ModelAssetValidation } from "../validation/Validation";
 import EditButton from "../../../components/Button/EditButton";
 import { CongTy } from "../../../utils/const";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 export default function ModelAssetForm({
   onEdit,
@@ -33,31 +34,40 @@ export default function ModelAssetForm({
   selectedModelAsset,
   readOnly,
   onSave,
+  initialFormData,
+  onFormChange,
 }: {
   onEdit: () => void;
   onCancel: () => void;
   selectedModelAsset?: any;
   readOnly: boolean;
   onSave: (values: any) => void;
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
 }) {
   const [expanded, setExpanded] = useState(true);
   const formik = useFormik({
     initialValues: {
-      id: "",
-      tenMoHinh: "",
-      phuongPhapKhauHao: "",
-      kyKhauHao: "",
-      loaiKyKhauHao: "",
-      taiKhoanTaiSan: "",
-      taiKhoanKhauHao: "",
-      taiKhoanChiPhi: "",
-      idCongTy: CongTy.CT001,
+      id: initialFormData?.id ?? "",
+      tenMoHinh: initialFormData?.tenMoHinh ?? "",
+      phuongPhapKhauHao: initialFormData?.phuongPhapKhauHao ?? "",
+      kyKhauHao: initialFormData?.kyKhauHao ?? "",
+      loaiKyKhauHao: initialFormData?.loaiKyKhauHao ?? "",
+      taiKhoanTaiSan: initialFormData?.taiKhoanTaiSan ?? "",
+      taiKhoanKhauHao: initialFormData?.taiKhoanKhauHao ?? "",
+      taiKhoanChiPhi: initialFormData?.taiKhoanChiPhi ?? "",
+      idCongTy: initialFormData?.idCongTy ?? CongTy.CT001,
     },
     validationSchema: ModelAssetValidation,
     onSubmit(values) {
       onSave(values);
     },
   });
+
+  const debouncedValues = useDebounce(formik.values, 800);
+  useEffect(() => {
+    onFormChange?.(debouncedValues);
+  }, [debouncedValues]);
 
   const phuongPhapOptions = [
     { value: 1, label: "Đường thẳng" },
@@ -68,8 +78,6 @@ export default function ModelAssetForm({
     if (selectedModelAsset) {
       formik.setValues(selectedModelAsset);
       formik.setErrors({});
-    } else {
-      formik.resetForm();
     }
   }, [selectedModelAsset, readOnly]);
 

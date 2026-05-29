@@ -22,12 +22,29 @@ import { showConfirmAlert } from "../../components/Alert";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
+import { useTabForm } from "../../redux/useTabForm";
+
+interface CapitalSourceTabState {
+  showForm: boolean;
+  selectedCapitalSource: any | null;
+  readOnly: boolean;
+  isCopy: boolean;
+  draftForm?: Record<string, any>;
+}
 
 export default function CapitalSource() {
-  const [showForm, setShowForm] = useState(false);
-  const [selectedCapitalSource, setSelectedCapitalSource] = useState<any>(null);
-  const [readOnly, setReadOnly] = useState(false);
-  const [isCopy, setIsCopy] = useState(false);
+  const { formData, setField } =
+    useTabForm<CapitalSourceTabState>("/nguon_von");
+  const showForm = formData.showForm ?? false;
+  const selectedCapitalSource = formData.selectedCapitalSource ?? null;
+  const readOnly = formData.readOnly ?? false;
+  const isCopy = formData.isCopy ?? false;
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setSelectedCapitalSource = (v: any) =>
+    setField({ selectedCapitalSource: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+  const setIsCopy = (v: boolean) => setField({ isCopy: v });
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
@@ -77,6 +94,7 @@ export default function CapitalSource() {
     setShowForm(false);
     setSelectedCapitalSource(null);
     setIsCopy(false);
+    setField({ draftForm: undefined });
   };
 
   const columns: GridColDef[] = [
@@ -224,11 +242,14 @@ export default function CapitalSource() {
                 setShowForm(false);
                 setSelectedCapitalSource(null);
                 setReadOnly(false);
+                setField({ draftForm: undefined });
               }}
               selectedCapitalSource={selectedCapitalSource}
               readOnly={readOnly}
               onEdit={handleEdit}
               onSave={handleSave}
+              onFormChange={(values) => setField({ draftForm: values })}
+              initialFormData={formData.draftForm}
             />
           </Box>
         )}

@@ -22,12 +22,26 @@ import { showConfirmAlert } from "../../components/Alert";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
+import { useTabForm } from "../../redux/useTabForm";
+
+interface ProjectTabState {
+  showForm: boolean;
+  selectedProject: any | null;
+  readOnly: boolean;
+  isCopy: boolean;
+  draftForm?: Record<string, any>;
+}
 
 export default function Project() {
-  const [showForm, setShowForm] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<any>(null);
-  const [readOnly, setReadOnly] = useState(false);
-  const [isCopy, setIsCopy] = useState(false);
+  const { formData, setField } = useTabForm<ProjectTabState>("/du_an");
+  const showForm = formData.showForm ?? false;
+  const selectedProject = formData.selectedProject ?? null;
+  const readOnly = formData.readOnly ?? false;
+  const isCopy = formData.isCopy ?? false;
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setSelectedProject = (v: any) => setField({ selectedProject: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+  const setIsCopy = (v: boolean) => setField({ isCopy: v });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
@@ -76,6 +90,7 @@ export default function Project() {
     setShowForm(false);
     setSelectedProject(null);
     setIsCopy(false);
+    setField({ draftForm: undefined });
   };
 
   const handleEdit = () => {
@@ -205,11 +220,14 @@ export default function Project() {
                 setShowForm(false);
                 setSelectedProject(null);
                 setReadOnly(false);
+                setField({ draftForm: undefined });
               }}
               onEdit={handleEdit}
               selectedProject={selectedProject}
               readOnly={readOnly}
               onSave={handleSave}
+              onFormChange={(values) => setField({ draftForm: values })}
+              initialFormData={formData.draftForm}
             />
           </Box>
         )}

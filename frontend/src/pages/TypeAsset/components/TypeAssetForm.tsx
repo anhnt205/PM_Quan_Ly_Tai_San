@@ -22,6 +22,7 @@ import { TypeAssetValidation } from "../validation/Validation";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
 import EditButton from "../../../components/Button/EditButton";
 import { useAllAssetGroupQuery, useTypeAssetMutation } from "../Mutation";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 export default function TypeAssetForm({
   onEdit,
@@ -29,20 +30,24 @@ export default function TypeAssetForm({
   selectedTypeAsset,
   readOnly,
   onSave,
+  initialFormData,
+  onFormChange,
 }: {
   onEdit: () => void;
   onCancel: () => void;
   selectedTypeAsset?: any;
   readOnly: boolean;
   onSave: (values: any) => void;
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
 }) {
   const [expanded, setExpanded] = useState(true);
   const { data: assetGroups = [] } = useAllAssetGroupQuery();
   const formik = useFormik({
     initialValues: {
-      id: "",
-      tenLoai: "",
-      idLoaiTs: "",
+      id: initialFormData?.id ?? "",
+      tenLoai: initialFormData?.tenLoai ?? "",
+      idLoaiTs: initialFormData?.idLoaiTs ?? "",
     },
     validationSchema: TypeAssetValidation,
     onSubmit(values) {
@@ -50,12 +55,15 @@ export default function TypeAssetForm({
     },
   });
 
+  const debouncedValues = useDebounce(formik.values, 800);
+  useEffect(() => {
+    onFormChange?.(debouncedValues);
+  }, [debouncedValues]);
+
   useEffect(() => {
     if (selectedTypeAsset) {
       formik.setValues(selectedTypeAsset);
       formik.setErrors({});
-    } else {
-      formik.resetForm();
     }
   }, [selectedTypeAsset, readOnly]);
 

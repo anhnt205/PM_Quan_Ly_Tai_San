@@ -23,15 +23,31 @@ import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
+import { useTabForm } from "../../redux/useTabForm";
+
+interface ReasonIncreaseTabState {
+  showForm: boolean;
+  selectedReasonIncrease: any | null;
+  readOnly: boolean;
+  isCopy: boolean;
+  draftForm?: Record<string, any>;
+}
 
 export default function ReasonIncrease() {
-  const [showForm, setShowForm] = useState(false);
-  const [selectedReasonIncrease, setSelectedReasonIncrease] =
-    useState<any>(null);
-  const [readOnly, setReadOnly] = useState(false);
+  const { formData, setField } =
+    useTabForm<ReasonIncreaseTabState>("/ly_do_tang");
+  const showForm = formData.showForm ?? false;
+  const selectedReasonIncrease = formData.selectedReasonIncrease ?? null;
+  const readOnly = formData.readOnly ?? false;
+  const isCopy = formData.isCopy ?? false;
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setSelectedReasonIncrease = (v: any) =>
+    setField({ selectedReasonIncrease: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+  const setIsCopy = (v: boolean) => setField({ isCopy: v });
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
-  const [isCopy, setIsCopy] = useState(false);
   const { user } = useSelector((state: RootState) => state.user);
 
   const [importErrors, setImportErrors] = useState<string[]>([]);
@@ -95,6 +111,7 @@ export default function ReasonIncrease() {
     setShowForm(false);
     setSelectedReasonIncrease(null);
     setIsCopy(false);
+    setField({ draftForm: undefined });
   };
 
   const handleEdit = () => {
@@ -218,11 +235,14 @@ export default function ReasonIncrease() {
                 setShowForm(false);
                 setSelectedReasonIncrease(null);
                 setReadOnly(false);
+                setField({ draftForm: undefined });
               }}
               onEdit={handleEdit}
               selectedReasonIncrease={selectedReasonIncrease}
               readOnly={readOnly}
               onSave={handleSave}
+              onFormChange={(values) => setField({ draftForm: values })}
+              initialFormData={formData.draftForm}
             />
           </Box>
         )}

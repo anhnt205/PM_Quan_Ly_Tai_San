@@ -22,6 +22,7 @@ import ViewBtn from "../../../components/Button/ViewBtn";
 import { PositionValidation } from "../validation/Validation";
 import EditButton from "../../../components/Button/EditButton";
 import { CongTy } from "../../../utils/const";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 export default function PositionForm({
   onEdit,
@@ -29,33 +30,38 @@ export default function PositionForm({
   selectedPosition,
   readOnly,
   onSave,
+  initialFormData,
+  onFormChange,
 }: {
   onEdit: () => void;
   onCancel: () => void;
   selectedPosition?: any;
   readOnly: boolean;
   onSave: (values: any) => void;
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
 }) {
   const [expanded, setExpanded] = useState(true);
+
   const formik = useFormik({
     initialValues: {
-      id: "",
-      tenChucVu: "",
-      quanLyNhanVien: false,
-      quanLyPhongBan: false,
-      quanLyDuAn: false,
-      quanLyNguonVon: false,
-      quanLyMoHinhTaiSan: false,
-      quanLyNhomTaiSan: false,
-      quanLyTaiSan: false,
-      quanLyCCDCVatTu: false,
-      dieuDongTaiSan: false,
-      dieuDongCCDCVatTu: false,
-      banGiaoTaiSan: false,
-      banGiaoCCDCVatTu: false,
-      baoCao: false,
-      banHanhQuyetDinh: false,
-      idCongTy: CongTy.CT001,
+      id: initialFormData?.id ?? "",
+      tenChucVu: initialFormData?.tenChucVu ?? "",
+      quanLyNhanVien: initialFormData?.quanLyNhanVien ?? false,
+      quanLyPhongBan: initialFormData?.quanLyPhongBan ?? false,
+      quanLyDuAn: initialFormData?.quanLyDuAn ?? false,
+      quanLyNguonVon: initialFormData?.quanLyNguonVon ?? false,
+      quanLyMoHinhTaiSan: initialFormData?.quanLyMoHinhTaiSan ?? false,
+      quanLyNhomTaiSan: initialFormData?.quanLyNhomTaiSan ?? false,
+      quanLyTaiSan: initialFormData?.quanLyTaiSan ?? false,
+      quanLyCCDCVatTu: initialFormData?.quanLyCCDCVatTu ?? false,
+      dieuDongTaiSan: initialFormData?.dieuDongTaiSan ?? false,
+      dieuDongCCDCVatTu: initialFormData?.dieuDongCCDCVatTu ?? false,
+      banGiaoTaiSan: initialFormData?.banGiaoTaiSan ?? false,
+      banGiaoCCDCVatTu: initialFormData?.banGiaoCCDCVatTu ?? false,
+      baoCao: initialFormData?.baoCao ?? false,
+      banHanhQuyetDinh: initialFormData?.banHanhQuyetDinh ?? false,
+      idCongTy: initialFormData?.idCongTy ?? CongTy.CT001,
     },
     validationSchema: PositionValidation,
     onSubmit(values) {
@@ -63,12 +69,15 @@ export default function PositionForm({
     },
   });
 
+  const debouncedValues = useDebounce(formik.values, 800);
+  useEffect(() => {
+    onFormChange?.(debouncedValues);
+  }, [debouncedValues]);
+
   useEffect(() => {
     if (selectedPosition) {
       formik.setValues(selectedPosition);
       formik.setErrors({}); // Clear errors when selectedPosition changes
-    } else {
-      formik.resetForm();
     }
   }, [selectedPosition, readOnly]); // Add readOnly to dependencies
 

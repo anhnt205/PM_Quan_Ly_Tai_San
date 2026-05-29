@@ -21,6 +21,7 @@ import ViewBtn from "../../../components/Button/ViewBtn";
 
 import EditButton from "../../../components/Button/EditButton";
 import { UnitValidation } from "../validation/Validation";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 export default function UnitForm({
   onEdit,
@@ -28,19 +29,23 @@ export default function UnitForm({
   selectedUnit,
   readOnly,
   onSave,
+  initialFormData,
+  onFormChange,
 }: {
   onEdit: () => void;
   onCancel: () => void;
   selectedUnit?: any;
   readOnly: boolean;
   onSave: (values: any) => void;
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
 }) {
   const [expanded, setExpanded] = useState(true);
   const formik = useFormik({
     initialValues: {
-      id: "",
-      tenDonVi: "",
-      note: "",
+      id: initialFormData?.id ?? "",
+      tenDonVi: initialFormData?.tenDonVi ?? "",
+      note: initialFormData?.note ?? "",
     },
     validationSchema: UnitValidation,
     onSubmit(values) {
@@ -48,12 +53,15 @@ export default function UnitForm({
     },
   });
 
+  const debouncedValues = useDebounce(formik.values, 800);
+  useEffect(() => {
+    onFormChange?.(debouncedValues);
+  }, [debouncedValues]);
+
   useEffect(() => {
     if (selectedUnit) {
       formik.setValues(selectedUnit);
       formik.setErrors({}); // Clear errors when selectedUnit changes
-    } else {
-      formik.resetForm();
     }
   }, [selectedUnit, readOnly]); // Add readOnly to dependencies
 

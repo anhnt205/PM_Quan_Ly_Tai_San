@@ -22,12 +22,28 @@ import { showConfirmAlert } from "../../components/Alert";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
+import { useTabForm } from "../../redux/useTabForm";
+
+interface DepartmentTabState {
+  showForm: boolean;
+  selectedDepartment: any | null;
+  readOnly: boolean;
+  isCopy: boolean;
+  draftForm?: Record<string, any>;
+}
 
 export default function Department() {
-  const [showForm, setShowForm] = useState(false);
-  const [selectedDepartment, setSelectedDepartment] = useState<any>(null);
-  const [readOnly, setReadOnly] = useState(false);
-  const [isCopy, setIsCopy] = useState(false);
+  const { formData, setField } = useTabForm<DepartmentTabState>("/phong_ban");
+  const showForm = formData.showForm ?? false;
+  const isCopy = formData.isCopy ?? false;
+  const selectedDepartment = formData.selectedDepartment ?? null;
+  const readOnly = formData.readOnly ?? false;
+
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setIsCopy = (v: boolean) => setField({ isCopy: v });
+  const setSelectedDepartment = (v: any) => setField({ selectedDepartment: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
@@ -77,6 +93,7 @@ export default function Department() {
     setShowForm(false);
     setSelectedDepartment(null);
     setIsCopy(false);
+    setField({ draftForm: undefined })
   };
 
   const handleEdit = () => {
@@ -193,11 +210,14 @@ export default function Department() {
                 setShowForm(false);
                 setSelectedDepartment(null);
                 setReadOnly(false);
+                setField({ draftForm: undefined })
               }}
               onEdit={handleEdit}
               selectedDepartment={selectedDepartment}
               readOnly={readOnly}
               onSave={handleSave}
+              onFormChange={(values) => setField({ draftForm: values })}
+              initialFormData={formData.draftForm}
             />
           </Box>
         )}

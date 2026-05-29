@@ -60,6 +60,7 @@ import { generateBienBanPdf } from "../config";
 import S3Service from "../../../services/S3Service";
 import { useSelector } from "react-redux";
 import { CongTy } from "../../../utils/const";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 const UnderlinedInputWrapper = styled(Box)({
   width: "100%",
@@ -123,6 +124,8 @@ export default function AssetHandoverForm({
   staffs = [],
   departments = [],
   positions = [],
+  initialFormData,
+  onFormChange,
 }: {
   onEdit: () => void;
   onCancel: () => void;
@@ -135,6 +138,8 @@ export default function AssetHandoverForm({
   staffs?: any[];
   departments?: any[];
   positions?: any[];
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
 }) {
   const { user } = useSelector((state: any) => state.user);
   const currentStatus =
@@ -163,41 +168,47 @@ export default function AssetHandoverForm({
 
   const formik = useFormik<AssetHandoverFormValues>({
     initialValues: {
-      id: "",
-      soQuyetDinh: "",
-      banGiaoTaiSan: "",
-      quyetDinhDieuDongSo: "",
-      lenhDieuDong: "",
-      idDonViGiao: "",
-      idDonViNhan: "",
-      ngayBanGiao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-      ngayQuyetDinh: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-      ngayTaoChungTu: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-      diaDiemQuyetDinh: "",
-      idGiamDoc: "",
-      idCongTy: CongTy.CT001,
-      idLanhDao: "",
-      idDaiDiendonviBanHanhQD: "",
-      daXacNhan: false,
-      idDaiDienBenGiao: "",
-      daiDienBenGiaoXacNhan: false,
-      idDaiDienBenNhan: "",
-      daiDienBenNhanXacNhan: false,
-      trangThai: 0,
-      note: "",
-      ngayTao: "",
-      ngayCapNhat: "",
-      nguoiTao: "",
-      nguoiCapNhat: "",
-      isActive: true,
-      share: false,
-      duongDanFile: "",
-      tenFile: "",
-      byStep: true,
-      giamDocKy: false,
-      taiLieuBangKe: "",
-      nguoiKyList: [] as any[],
-      chiTietBanGiaoTaiSan: [
+      id: initialFormData?.id ?? "",
+      soQuyetDinh: initialFormData?.soQuyetDinh ?? "",
+      banGiaoTaiSan: initialFormData?.banGiaoTaiSan ?? "",
+      quyetDinhDieuDongSo: initialFormData?.quyetDinhDieuDongSo ?? "",
+      lenhDieuDong: initialFormData?.lenhDieuDong ?? "",
+      idDonViGiao: initialFormData?.idDonViGiao ?? "",
+      idDonViNhan: initialFormData?.idDonViNhan ?? "",
+      ngayBanGiao:
+        initialFormData?.ngayBanGiao ??
+        dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      ngayQuyetDinh:
+        initialFormData?.ngayQuyetDinh ??
+        dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      ngayTaoChungTu:
+        initialFormData?.ngayTaoChungTu ??
+        dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      diaDiemQuyetDinh: initialFormData?.diaDiemQuyetDinh ?? "",
+      idGiamDoc: initialFormData?.idGiamDoc ?? "",
+      idCongTy: initialFormData?.idCongTy ?? CongTy.CT001,
+      idLanhDao: initialFormData?.idLanhDao ?? "",
+      idDaiDiendonviBanHanhQD: initialFormData?.idDaiDiendonviBanHanhQD ?? "",
+      daXacNhan: initialFormData?.daXacNhan ?? false,
+      idDaiDienBenGiao: initialFormData?.idDaiDienBenGiao ?? "",
+      daiDienBenGiaoXacNhan: initialFormData?.daiDienBenGiaoXacNhan ?? false,
+      idDaiDienBenNhan: initialFormData?.idDaiDienBenNhan ?? "",
+      daiDienBenNhanXacNhan: initialFormData?.daiDienBenNhanXacNhan ?? false,
+      trangThai: initialFormData?.trangThai ?? 0,
+      note: initialFormData?.note ?? "",
+      ngayTao: initialFormData?.ngayTao ?? "",
+      ngayCapNhat: initialFormData?.ngayCapNhat ?? "",
+      nguoiTao: initialFormData?.nguoiTao ?? "",
+      nguoiCapNhat: initialFormData?.nguoiCapNhat ?? "",
+      isActive: initialFormData?.isActive ?? true,
+      share: initialFormData?.share ?? false,
+      duongDanFile: initialFormData?.duongDanFile ?? "",
+      tenFile: initialFormData?.tenFile ?? "",
+      byStep: initialFormData?.byStep ?? true,
+      giamDocKy: initialFormData?.giamDocKy ?? false,
+      taiLieuBangKe: initialFormData?.taiLieuBangKe ?? "",
+      nguoiKyList: initialFormData?.nguoiKyList ?? [],
+      chiTietBanGiaoTaiSan: initialFormData?.chiTietBanGiaoTaiSan ?? [
         {
           id: "",
           idBanGiaoTaiSan: "",
@@ -213,8 +224,8 @@ export default function AssetHandoverForm({
           moTa: "",
         },
       ],
-      initialChiTiet: [] as any[],
-      isNew: true,
+      initialChiTiet: initialFormData?.initialChiTiet ?? [],
+      isNew: initialFormData?.isNew ?? true,
     },
     validationSchema: assetHandoverValidationSchema,
     onSubmit: async (values) => {
@@ -311,6 +322,14 @@ export default function AssetHandoverForm({
     },
   });
 
+  const debouncedValues = useDebounce(formik.values, 1000);
+
+  useEffect(() => {
+    if (!selectedAssetHandover) {
+      onFormChange?.(debouncedValues);
+    }
+  }, [debouncedValues]);
+
   useEffect(() => {
     if (selectedAssetHandover) {
       formik.setValues({
@@ -325,8 +344,6 @@ export default function AssetHandoverForm({
       });
       setDocument(selectedAssetHandover.duongDanFile);
       getListAsset(selectedAssetHandover.lenhDieuDong);
-    } else {
-      formik.resetForm();
     }
   }, [selectedAssetHandover]);
 

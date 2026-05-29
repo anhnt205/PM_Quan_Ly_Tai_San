@@ -22,12 +22,29 @@ import { useLoaiSCBDMutation, useloaiscbdPageQuery } from "./Mutation";
 import { useLocation, useNavigate } from "react-router-dom";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
+import { useTabForm } from "../../redux/useTabForm";
+
+interface MaintenanceRepairTypeTabState {
+  showForm: boolean;
+  selectedRepairType: any | null;
+  readOnly: boolean;
+  isCopy: boolean;
+  draftForm?: Record<string, any>;
+}
 
 export default function MaintenanceRepairType() {
-  const [showForm, setShowForm] = useState(false);
-  const [selectedRepairType, setSelectedRepairType] = useState<any>(null);
-  const [readOnly, setReadOnly] = useState(false);
-  const [isCopy, setIsCopy] = useState(false);
+  const { formData, setField } = useTabForm<MaintenanceRepairTypeTabState>(
+    "/loai_sua_chua_bao_duong",
+  );
+  const showForm = formData.showForm ?? false;
+  const selectedRepairType = formData.selectedRepairType ?? null;
+  const readOnly = formData.readOnly ?? false;
+  const isCopy = formData.isCopy ?? false;
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setSelectedRepairType = (v: any) => setField({ selectedRepairType: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+  const setIsCopy = (v: boolean) => setField({ isCopy: v });
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
@@ -63,7 +80,7 @@ export default function MaintenanceRepairType() {
       setShowForm(true);
       setSelectedRepairType(null);
       setReadOnly(false);
-
+      setField({ draftForm: undefined });
       navigate(location.pathname + location.search, { replace: true });
     }
   }, [location, navigate]);
@@ -88,6 +105,7 @@ export default function MaintenanceRepairType() {
 
     setShowForm(false);
     setSelectedRepairType(null);
+    setField({ draftForm: undefined });
   };
 
   const handleEdit = () => {
@@ -192,11 +210,14 @@ export default function MaintenanceRepairType() {
                 setShowForm(false);
                 setSelectedRepairType(null);
                 setReadOnly(false);
+                setField({ draftForm: undefined });
               }}
               onEdit={handleEdit}
               selectedRepairType={selectedRepairType}
               readOnly={readOnly}
               onSave={handleSave}
+              onFormChange={(values) => setField({ draftForm: values })}
+              initialFormData={formData.draftForm}
             />
           </Box>
         )}

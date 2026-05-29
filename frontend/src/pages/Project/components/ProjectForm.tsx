@@ -21,6 +21,7 @@ import { ProjectValidation } from "../validation/Validation";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import EditButton from "../../../components/Button/EditButton";
 import { CongTy } from "../../../utils/const";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 export default function ProjectForm({
   onEdit,
@@ -28,22 +29,26 @@ export default function ProjectForm({
   selectedProject,
   readOnly,
   onSave,
+  initialFormData,
+  onFormChange,
 }: {
   onEdit: () => void;
   onCancel: () => void;
   selectedProject?: any;
   readOnly: boolean;
   onSave: (values: any) => void;
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
 }) {
   const [expanded, setExpanded] = useState(true);
   const formik = useFormik({
     initialValues: {
-      id: "",
-      tenDuAn: "",
-      ghiChu: "",
-      idCongTy: CongTy.CT001,
-      hieuLuc: true,
-      isActive: true,
+      id: initialFormData?.id ?? "",
+      tenDuAn: initialFormData?.tenDuAn ?? "",
+      ghiChu: initialFormData?.ghiChu ?? "",
+      idCongTy: initialFormData?.idCongTy ?? CongTy.CT001,
+      hieuLuc: initialFormData?.hieuLuc ?? true,
+      isActive: initialFormData?.isActive ?? true,
     },
     validationSchema: ProjectValidation,
     onSubmit(values) {
@@ -51,12 +56,15 @@ export default function ProjectForm({
     },
   });
 
+  const debouncedValues = useDebounce(formik.values, 800);
+  useEffect(() => {
+    onFormChange?.(debouncedValues);
+  }, [debouncedValues]);
+
   useEffect(() => {
     if (selectedProject) {
       formik.setValues(selectedProject);
       formik.setErrors({}); // Clear errors when selectedProject changes
-    } else {
-      formik.resetForm();
     }
   }, [selectedProject, readOnly]); // Add readOnly to dependencies
 

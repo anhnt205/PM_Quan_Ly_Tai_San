@@ -2,14 +2,27 @@ import React, { useState } from "react";
 import { Box, IconButton } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import PageAction from "../../components/common/PageAction";
-import { useDinhMucSuaChuaPageQuery, useDinhMucSuaChuaMutation } from "./Mutation";
+import {
+  useDinhMucSuaChuaPageQuery,
+  useDinhMucSuaChuaMutation,
+} from "./Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
 import RepairNormForm from "./components/RepairNormForm";
-import RepairNormTableCustom, { ColumnConfig } from "./components/RepairNormTableCustom";
+import RepairNormTableCustom, {
+  ColumnConfig,
+} from "./components/RepairNormTableCustom";
 import { DinhMucSuaChua } from "./types";
 import { showConfirmAlert } from "../../components/Alert";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
+import { useTabForm } from "../../redux/useTabForm";
+
+interface RepairNormTabState {
+  showForm: boolean;
+  editData: any | null;
+  readOnly: boolean;
+  draftForm?: Record<string, any>;
+}
 
 export default function RepairNorm() {
   const { user } = useSelector((state: RootState) => state.user);
@@ -24,13 +37,20 @@ export default function RepairNorm() {
   const { data: pageData, isLoading } = useDinhMucSuaChuaPageQuery(
     paginationModel.page,
     paginationModel.pageSize,
-    searchDebounce
+    searchDebounce,
   );
-  const { createMutation, updateMutation, deleteMutation } = useDinhMucSuaChuaMutation();
+  const { createMutation, updateMutation, deleteMutation } =
+    useDinhMucSuaChuaMutation();
 
-  const [showForm, setShowForm] = useState(false);
-  const [editData, setEditData] = useState<DinhMucSuaChua | null>(null);
-  const [readOnly, setReadOnly] = useState(false);
+  const { formData, setField } =
+    useTabForm<RepairNormTabState>("/dinh_muc_sua_chua");
+  const showForm = formData.showForm ?? false;
+  const editData = formData.editData ?? null;
+  const readOnly = formData.readOnly ?? false;
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setEditData = (v: any) => setField({ editData: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const handleEdit = (row: DinhMucSuaChua) => {
@@ -50,24 +70,29 @@ export default function RepairNorm() {
     setShowForm(false);
     setEditData(null);
     setReadOnly(false);
+    setField({ draftForm: undefined });
   };
 
   const handleDelete = async (id: string) => {
-    const confirm = await showConfirmAlert("Bạn có chắc chắn muốn xóa định mức này?");
+    const confirm = await showConfirmAlert(
+      "Bạn có chắc chắn muốn xóa định mức này?",
+    );
     if (confirm.isConfirmed) {
       deleteMutation.mutate(id);
     }
   };
 
   const handleDeleteMany = async (ids: string[]) => {
-      const confirm = await showConfirmAlert(`Xác nhận xóa ${ids.length} bản ghi?`);
-      if (confirm.isConfirmed) {
-          // Hiện tại mutation chỉ có delete single, gọi loop hoặc cập nhật mutation
-          for (const id of ids) {
-              await deleteMutation.mutateAsync(id);
-          }
-          setSelectedIds([]);
+    const confirm = await showConfirmAlert(
+      `Xác nhận xóa ${ids.length} bản ghi?`,
+    );
+    if (confirm.isConfirmed) {
+      // Hiện tại mutation chỉ có delete single, gọi loop hoặc cập nhật mutation
+      for (const id of ids) {
+        await deleteMutation.mutateAsync(id);
       }
+      setSelectedIds([]);
+    }
   };
 
   const [columns, setColumns] = useState<ColumnConfig[]>([
@@ -87,11 +112,24 @@ export default function RepairNorm() {
       width: 120,
       align: "center",
       render: (_, row) => (
-        <Box display="flex" gap={1} justifyContent="center" onClick={(e) => e.stopPropagation()}>
-          <IconButton color="primary" onClick={() => handleEdit(row)} size="small">
+        <Box
+          display="flex"
+          gap={1}
+          justifyContent="center"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <IconButton
+            color="primary"
+            onClick={() => handleEdit(row)}
+            size="small"
+          >
             <EditIcon fontSize="small" />
           </IconButton>
-          <IconButton color="error" onClick={() => handleDelete(row.id)} size="small">
+          <IconButton
+            color="error"
+            onClick={() => handleDelete(row.id)}
+            size="small"
+          >
             <DeleteIcon fontSize="small" />
           </IconButton>
         </Box>
@@ -104,6 +142,7 @@ export default function RepairNorm() {
       <PageAction
         title="Định mức sửa chữa"
         onNewClick={() => {
+          setField({ draftForm: undefined });
           setEditData(null);
           setReadOnly(false);
           setShowForm(true);
@@ -116,6 +155,7 @@ export default function RepairNorm() {
             <RepairNormForm
               key={editData ? editData.id : "new-norm"}
               onCancel={() => {
+                setField({ draftForm: undefined });
                 setShowForm(false);
                 setEditData(null);
                 setReadOnly(false);
@@ -124,6 +164,8 @@ export default function RepairNorm() {
               onSave={handleSave}
               editData={editData}
               readOnly={readOnly}
+              onFormChange={(values) => setField({ draftForm: values })} 
+              initialFormData={formData.draftForm}
             />
           </Box>
         )}

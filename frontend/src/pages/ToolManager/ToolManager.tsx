@@ -19,13 +19,31 @@ import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 import SelectDbDialog from "../../components/common/SelectDbDialog";
 import ToolOwnershipModal from "./components/ToolOwnershipModal";
+import { useTabForm } from "../../redux/useTabForm";
+
+interface ToolManagerTabState {
+  showForm: boolean;
+  showSidebar: boolean;
+  selectedTool: any | null;
+  readOnly: boolean;
+  isCopy: boolean;
+  draftForm?: Record<string, any>;
+}
 
 export default function ToolManager() {
-  const [showForm, setShowForm] = useState(false);
-  const [selectedTool, setSelectedTool] = useState<any>(null);
-  const [readOnly, setReadOnly] = useState(false);
-  const [isCopy, setIsCopy] = useState(false);
-  const [showSidebar, setShowSidebar] = useState(false);
+  const { formData, setField } =
+    useTabForm<ToolManagerTabState>("/quan_ly_ccdc");
+  const showForm = formData.showForm ?? false;
+  const selectedTool = formData.selectedTool ?? null;
+  const readOnly = formData.readOnly ?? false;
+  const isCopy = formData.isCopy ?? false;
+  const showSidebar = formData.showSidebar ?? false;
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setSelectedTool = (v: any) => setField({ selectedTool: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+  const setIsCopy = (v: boolean) => setField({ isCopy: v });
+  const setShowSidebar = (v: boolean) => setField({ showSidebar: v });
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [openHistory, setOpenHistory] = useState(false);
@@ -49,10 +67,10 @@ export default function ToolManager() {
 
   useEffect(() => {
     if (location.state?.autoCreate) {
+      setField({ draftForm: undefined });
       setShowForm(true);
       setSelectedTool(null);
       setReadOnly(false);
-
       navigate(location.pathname, { replace: true });
     }
   }, [location, navigate]);
@@ -125,6 +143,7 @@ export default function ToolManager() {
           setShowForm(false);
           setSelectedTool(null);
           setIsCopy(false);
+          setField({ draftForm: undefined });
         },
       });
     } else {
@@ -133,6 +152,7 @@ export default function ToolManager() {
           setShowForm(false);
           setSelectedTool(null);
           setIsCopy(false);
+          setField({ draftForm: undefined });
         },
       });
     }
@@ -171,6 +191,7 @@ export default function ToolManager() {
       <PageAction
         title="Quản lý CCDC - Vật tư"
         onNewClick={() => {
+          setField({ draftForm: undefined });
           setShowForm(true);
           setSelectedTool(null);
           setReadOnly(false);
@@ -191,6 +212,7 @@ export default function ToolManager() {
           <ToolForm
             key={`${selectedTool?.id}-${readOnly}`}
             onCancel={() => {
+              setField({ draftForm: undefined });
               setShowForm(false);
               setReadOnly(true);
               setIsCopy(false);
@@ -203,6 +225,8 @@ export default function ToolManager() {
             toolTypes={toolTypes}
             allUnits={allUnits}
             toolGroups={toolGroups}
+            onFormChange={(values) => setField({ draftForm: values })}
+            initialFormData={formData.draftForm}
           />
         )}
 

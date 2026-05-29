@@ -22,12 +22,27 @@ import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useDebounce } from "../../hooks/useDebounce";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
+import { useTabForm } from "../../redux/useTabForm";
+
+interface ToolGroupTabState {
+  showForm: boolean;
+  selectedToolGroup: any | null;
+  readOnly: boolean;
+  isCopy: boolean;
+  draftForm?: Record<string, any>;
+}
 
 export default function ToolGroup() {
-  const [showForm, setShowForm] = useState(false);
-  const [selectedToolGroup, setSelectedToolGroup] = useState<any>(null);
-  const [readOnly, setReadOnly] = useState(false);
-  const [isCopy, setIsCopy] = useState(false);
+  const { formData, setField } = useTabForm<ToolGroupTabState>('/nhom_ccdc');
+const showForm = formData.showForm ?? false;
+const selectedToolGroup = formData.selectedToolGroup ?? null;
+const readOnly = formData.readOnly ?? false;
+const isCopy = formData.isCopy ?? false;
+const setShowForm = (v: boolean) => setField({ showForm: v });
+const setSelectedToolGroup = (v: any) => setField({ selectedToolGroup: v });
+const setReadOnly = (v: boolean) => setField({ readOnly: v });
+const setIsCopy = (v: boolean) => setField({ isCopy: v });
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
@@ -91,6 +106,7 @@ export default function ToolGroup() {
     setShowForm(false);
     setSelectedToolGroup(null);
     setIsCopy(false);
+    setField({ draftForm: undefined });
   };
 
   const handleEdit = () => {
@@ -224,11 +240,14 @@ export default function ToolGroup() {
                 setShowForm(false);
                 setSelectedToolGroup(null);
                 setReadOnly(false);
+                setField({ draftForm: undefined });
               }}
               onEdit={handleEdit}
               selectedToolGroup={selectedToolGroup}
               readOnly={readOnly}
               onSave={handleSave}
+              onFormChange={(values) => setField({ draftForm: values })}
+initialFormData={formData.draftForm}
             />
           </Box>
         )}
