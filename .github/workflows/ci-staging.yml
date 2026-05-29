@@ -20,7 +20,7 @@ jobs:
           distribution: "temurin"
 
       - name: Build backend (Maven)
-        run: mvn clean package -DskipTests
+        run: cd backend && mvn clean package -DskipTests
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
