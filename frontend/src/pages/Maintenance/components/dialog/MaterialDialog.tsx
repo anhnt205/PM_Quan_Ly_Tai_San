@@ -50,6 +50,7 @@ import { useAllToolDetailQuery } from "../../../ToolManager/Mutation";
 import { useAllLoaiSCBDQuery } from "../../../MaintenanceRepairType/Mutation";
 import { CongTy, Action } from "../../../../utils/const";
 import { listSigneInfo } from "../../config";
+import FieldInput from "../../../../components/TextField/FieldInput";
 
 export const BIEN_PHAP_XU_LY = {
   PHUC_HOI: "Phục hồi",
@@ -273,7 +274,7 @@ const MaterialDialog = ({
           ngayDanhGia: dayjs().format("YYYY-MM-DD"),
           viTri: acceptanceRecord.viTri || "",
           capSuaChua: acceptanceRecord.capSuaChua || "",
-          tenThietBi: acceptanceRecord.tenThietBi || "",
+          tenThietBi: acceptanceRecord.tenThietBi || acceptanceRecord?.idTaiSan || "",
           kieu: "",
           soDangKi: acceptanceRecord.soDangKi || "",
           idDonViQuanLy: plan.tenDonViGiao || "",
@@ -516,14 +517,10 @@ const MaterialDialog = ({
               Thông tin
             </Typography>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <TextField
-                label="Số biên bản"
-                name="soPhieu"
-                value={formik.values.soPhieu}
-                onChange={formik.handleChange}
-                placeholder={`VD: BB-DG-${repairRequest?.id}`}
-                size="small"
-                fullWidth
+              <FieldInput
+                title="Số biên bản"
+                formik={formik}
+                field="soBienBan"
               />
               <FieldDate
                 title="Ngày lập biên bản"

@@ -3,7 +3,7 @@ name: CI Check
 on:
   pull_request:
     branches:
-      - feature/suachua_baoduong # ← chạy khi có PR target vào feature/suachua_baoduong
+      - feature/suachua_baoduong
 
 jobs:
   build-and-test:
@@ -13,13 +13,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Build backend (Maven)
+        run: mvn clean package -DskipTests
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: "20.x"
-
-      - name: Install backend dependencies
-        run: npm install
 
       - name: Build frontend
         run: |

@@ -37,6 +37,8 @@ public class NghiemThuPhuongTienDTO {
     private String nguoiTao;
     private String nguoiCapNhat;
 
+    private Integer daCoDanhGiaVatTu; // 1 nếu đã có, 0 nếu chưa
+
     // Join fields
     private String tenNguoiLap;
     private String tenGiamDoc;
