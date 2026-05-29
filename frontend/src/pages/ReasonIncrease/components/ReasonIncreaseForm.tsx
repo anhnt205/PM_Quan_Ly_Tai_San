@@ -23,6 +23,7 @@ import { useFormik } from "formik";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import EditButton from "../../../components/Button/EditButton";
 import { ReasonIncreaseValidation } from "../validation/Validation";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 export default function ReasonIncreaseForm({
   onEdit,
@@ -30,19 +31,23 @@ export default function ReasonIncreaseForm({
   selectedReasonIncrease,
   readOnly,
   onSave,
+  initialFormData,
+  onFormChange,
 }: {
   onEdit: () => void;
   onCancel: () => void;
   selectedReasonIncrease?: any;
   readOnly: boolean;
   onSave: (values: any) => void;
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
 }) {
   const [expanded, setExpanded] = useState(true);
   const formik = useFormik({
     initialValues: {
-      id: "",
-      ten: "",
-      tangGiam: 0,
+      id: initialFormData?.id ?? "",
+      ten: initialFormData?.ten ?? "",
+      tangGiam: initialFormData?.tangGiam ?? 0,
     },
     validationSchema: ReasonIncreaseValidation,
     onSubmit(values) {
@@ -50,12 +55,15 @@ export default function ReasonIncreaseForm({
     },
   });
 
+  const debouncedValues = useDebounce(formik.values, 800);
+  useEffect(() => {
+    onFormChange?.(debouncedValues);
+  }, [debouncedValues]);
+
   useEffect(() => {
     if (selectedReasonIncrease) {
       formik.setValues(selectedReasonIncrease);
       formik.setErrors({}); // Clear errors when selectedReasonIncrease changes
-    } else {
-      formik.resetForm();
     }
   }, [selectedReasonIncrease, readOnly]); // Add readOnly to dependencies
 

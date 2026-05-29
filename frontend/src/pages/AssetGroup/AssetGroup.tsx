@@ -22,12 +22,28 @@ import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useDebounce } from "../../hooks/useDebounce";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
+import { useTabForm } from "../../redux/useTabForm";
+
+interface AssetGroupTabState {
+  showForm: boolean;
+  selectedAssetGroup: any | null;
+  readOnly: boolean;
+  isCopy: boolean;
+  draftForm?: Record<string, any>;
+}
 
 export default function AssetGroup() {
-  const [showForm, setShowForm] = useState(false);
-  const [selectedAssetGroup, setSelectedAssetGroup] = useState<any>(null);
-  const [readOnly, setReadOnly] = useState(false);
-  const [isCopy, setIsCopy] = useState(false);
+  const { formData, setField } =
+    useTabForm<AssetGroupTabState>("/nhom_tai_san");
+  const showForm = formData.showForm ?? false;
+  const selectedAssetGroup = formData.selectedAssetGroup ?? null;
+  const readOnly = formData.readOnly ?? false;
+  const isCopy = formData.isCopy ?? false;
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setSelectedAssetGroup = (v: any) => setField({ selectedAssetGroup: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+  const setIsCopy = (v: boolean) => setField({ isCopy: v });
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
@@ -91,6 +107,7 @@ export default function AssetGroup() {
     setShowForm(false);
     setSelectedAssetGroup(null);
     setIsCopy(false);
+    setField({ draftForm: undefined })
   };
 
   const handleEdit = () => {
@@ -224,11 +241,14 @@ export default function AssetGroup() {
                 setShowForm(false);
                 setSelectedAssetGroup(null);
                 setReadOnly(false);
+                setField({ draftForm: undefined });
               }}
               onEdit={handleEdit}
               selectedAssetGroup={selectedAssetGroup}
               readOnly={readOnly}
               onSave={handleSave}
+              onFormChange={(values) => setField({ draftForm: values })}
+              initialFormData={formData.draftForm}
             />
           </Box>
         )}

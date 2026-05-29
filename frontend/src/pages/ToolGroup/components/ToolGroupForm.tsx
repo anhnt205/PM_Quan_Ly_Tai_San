@@ -26,6 +26,7 @@ import ViewBtn from "../../../components/Button/ViewBtn";
 import { ToolGroupValidation } from "../validation/Validation";
 import EditButton from "../../../components/Button/EditButton";
 import { CongTy } from "../../../utils/const";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 export default function ToolGroupForm({
   onEdit,
@@ -33,19 +34,23 @@ export default function ToolGroupForm({
   selectedToolGroup,
   readOnly,
   onSave,
+  initialFormData,
+  onFormChange
 }: {
   onEdit: () => void;
   onCancel: () => void;
   selectedToolGroup?: any;
   readOnly: boolean;
   onSave: (values: any) => void;
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
 }) {
   const [expanded, setExpanded] = useState(true);
   const formik = useFormik({
     initialValues: {
-      id: "",
-      ten: "",
-      idCongTy: CongTy.CT001,
+      id: initialFormData?.id ?? "",
+      ten: initialFormData?.ten ?? "",
+      idCongTy: initialFormData?.idCongTy ?? CongTy.CT001,
     },
     validationSchema: ToolGroupValidation,
     onSubmit(values) {
@@ -53,12 +58,15 @@ export default function ToolGroupForm({
     },
   });
 
+  const debouncedValues = useDebounce(formik.values, 800);
+  useEffect(() => {
+    onFormChange?.(debouncedValues);
+  }, [debouncedValues]);
+
   useEffect(() => {
     if (selectedToolGroup) {
       formik.setValues(selectedToolGroup);
       formik.setErrors({}); // Clear errors when selectedToolGroup changes
-    } else {
-      formik.resetForm();
     }
   }, [selectedToolGroup, readOnly]);
 

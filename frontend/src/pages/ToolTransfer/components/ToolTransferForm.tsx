@@ -49,6 +49,7 @@ import S3Service from "../../../services/S3Service";
 import { mergeBangKeWithOriginalPdf } from "../../AssetTransfer/config";
 import { CongTy } from "../../../utils/const";
 import ExcelAssetUploader from "../../../components/common/ExcelAssetUploader";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 const CustomTableCell = styled(TableCell)(({ theme }) => ({
   borderBottom: "1px solid rgba(224, 224, 224, 1)",
@@ -73,6 +74,8 @@ interface ToolTransferFormProps {
   isSignedForm?: boolean;
   departments: any[];
   allUnits: any[];
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
 }
 
 export default function ToolTransferForm({
@@ -87,6 +90,8 @@ export default function ToolTransferForm({
   isSignedForm = false,
   departments,
   allUnits,
+  initialFormData,
+  onFormChange,
 }: ToolTransferFormProps) {
   const { user } = useSelector((state: RootState) => state.user);
   const [expanded, setExpanded] = useState(true);
@@ -101,52 +106,60 @@ export default function ToolTransferForm({
   const currentStatus = selectedTool?.trangThai ?? 0; // 0: Nháp, 1: Duyệt, 2: Hủy, 3: Hoàn thành
   const formik = useFormik({
     initialValues: {
-      id: "",
-      soQuyetDinh: "",
-      tenPhieu: "",
-      idDonViGiao: type === 1 ? "K30" : "",
-      idDonViNhan: type === 3 ? "kth" : "",
-      idNguoiKyNhay: "",
-      trangThaiKyNhay: false,
-      nguoiLapPhieuKyNhay: false,
-      idDonViDeNghi: user?.taiKhoan?.phongBanId || "",
-      tgGnTuNgay: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-      tgGnDenNgay: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-      idTrinhDuyetCapPhong: "",
-      trinhDuyetCapPhongXacNhan: false,
-      idTrinhDuyetGiamDoc: "",
-      trinhDuyetGiamDocXacNhan: false,
-      diaDiemGiaoNhan: "",
-      idPhongBanXemPhieu: "",
-      noiNhan: "",
-      trangThai: 0,
-      idCongTy: CongTy.CT001,
-      loai: type,
-      trichYeu: "",
-      tenFile: "",
-      duongDanFile: "",
-      taiLieuCuoi: "",
-      nguoiKyList: [],
-      chiTietDieuDongCCDCVatTuDTOS: [
-        {
-          idCustom: "",
-          idCCDCVatTu: "",
-          soChungTu: "",
-          idChiTietCCDCVatTu: "",
-          donViTinh: "",
-          soLuong: 0,
-          soLuongXuat: 0,
-          ghiChu: "",
-          hienTrang: "",
-          moTa: "",
-          isActive: true,
-          soLuongDaBanGiao: 0,
-          soKyHieu: "",
-          kyHieu: "",
-          namSanXuat: "",
-        },
-      ],
-      initialChiTiet: [],
+      id: initialFormData?.id ?? "",
+      soQuyetDinh: initialFormData?.soQuyetDinh ?? "",
+      tenPhieu: initialFormData?.tenPhieu ?? "",
+      idDonViGiao: initialFormData?.idDonViGiao ?? (type === 1 ? "K30" : ""),
+      idDonViNhan: initialFormData?.idDonViNhan ?? (type === 3 ? "kth" : ""),
+      idNguoiKyNhay: initialFormData?.idNguoiKyNhay ?? "",
+      trangThaiKyNhay: initialFormData?.trangThaiKyNhay ?? false,
+      nguoiLapPhieuKyNhay: initialFormData?.nguoiLapPhieuKyNhay ?? false,
+      idDonViDeNghi:
+        initialFormData?.idDonViDeNghi ?? user?.taiKhoan?.phongBanId ?? "",
+      tgGnTuNgay:
+        initialFormData?.tgGnTuNgay ??
+        dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      tgGnDenNgay:
+        initialFormData?.tgGnDenNgay ??
+        dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      idTrinhDuyetCapPhong: initialFormData?.idTrinhDuyetCapPhong ?? "",
+      trinhDuyetCapPhongXacNhan:
+        initialFormData?.trinhDuyetCapPhongXacNhan ?? false,
+      idTrinhDuyetGiamDoc: initialFormData?.idTrinhDuyetGiamDoc ?? "",
+      trinhDuyetGiamDocXacNhan:
+        initialFormData?.trinhDuyetGiamDocXacNhan ?? false,
+      diaDiemGiaoNhan: initialFormData?.diaDiemGiaoNhan ?? "",
+      idPhongBanXemPhieu: initialFormData?.idPhongBanXemPhieu ?? "",
+      noiNhan: initialFormData?.noiNhan ?? "",
+      trangThai: initialFormData?.trangThai ?? 0,
+      idCongTy: initialFormData?.idCongTy ?? CongTy.CT001,
+      loai: initialFormData?.loai ?? type,
+      trichYeu: initialFormData?.trichYeu ?? "",
+      tenFile: initialFormData?.tenFile ?? "",
+      duongDanFile: initialFormData?.duongDanFile ?? "",
+      taiLieuCuoi: initialFormData?.taiLieuCuoi ?? "",
+      nguoiKyList: initialFormData?.nguoiKyList ?? [],
+      chiTietDieuDongCCDCVatTuDTOS:
+        initialFormData?.chiTietDieuDongCCDCVatTuDTOS ?? [
+          {
+            idCustom: "",
+            idCCDCVatTu: "",
+            soChungTu: "",
+            idChiTietCCDCVatTu: "",
+            donViTinh: "",
+            soLuong: 0,
+            soLuongXuat: 0,
+            ghiChu: "",
+            hienTrang: "",
+            moTa: "",
+            isActive: true,
+            soLuongDaBanGiao: 0,
+            soKyHieu: "",
+            kyHieu: "",
+            namSanXuat: "",
+          },
+        ],
+      initialChiTiet: initialFormData?.initialChiTiet ?? [],
     },
     validationSchema: toolTransferValidationSchema,
     onSubmit: async (values) => {
@@ -207,6 +220,13 @@ export default function ToolTransferForm({
     },
   });
 
+  const debouncedValues = useDebounce(formik.values, 1500);
+  useEffect(() => {
+    if (!selectedTool) {
+      onFormChange?.(debouncedValues);
+    }
+  }, [debouncedValues]);
+
   useEffect(() => {
     if (selectedTool) {
       formik.setValues({
@@ -228,8 +248,6 @@ export default function ToolTransferForm({
           ? selectedTool.duongDanFile
           : selectedTool.taiLieuCuoi,
       );
-    } else {
-      formik.resetForm();
     }
   }, [selectedTool]);
 

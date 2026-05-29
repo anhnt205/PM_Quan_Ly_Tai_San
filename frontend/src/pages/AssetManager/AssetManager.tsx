@@ -57,14 +57,37 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { useConfig } from "../../hooks/useContext";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
+import { useTabForm } from "../../redux/useTabForm";
+
+interface AssetManagerTabState {
+  showForm: boolean;
+  showSidebar: boolean;
+  selectedAssets: any[];
+  readOnly: boolean;
+  isCopy: boolean;
+  tab: number;
+  status: string;
+  draftForm?: Record<string, any>;
+}
 
 export default function AssetManager() {
-  const [tab, setTab] = React.useState(0);
-  const [showForm, setShowForm] = useState(false);
-  const [selectedAssets, setSelectedAssets] = useState<any[]>([]);
-  const [showSidebar, setShowSidebar] = useState(false);
-  const [readOnly, setReadOnly] = useState(true);
-  const [isCopy, setIsCopy] = useState(false);
+  const { formData, setField } =
+    useTabForm<AssetManagerTabState>("/quan_ly_tai_san");
+  const tab = formData.tab ?? 0;
+  const showForm = formData.showForm ?? false;
+  const selectedAssets = formData.selectedAssets ?? [];
+  const showSidebar = formData.showSidebar ?? false;
+  const readOnly = formData.readOnly ?? true;
+  const isCopy = formData.isCopy ?? false;
+  const status = formData.status ?? "";
+  const setTab = (v: number) => setField({ tab: v });
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setSelectedAssets = (v: any[]) => setField({ selectedAssets: v });
+  const setShowSidebar = (v: boolean) => setField({ showSidebar: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+  const setIsCopy = (v: boolean) => setField({ isCopy: v });
+  const setStatus = (v: string) => setField({ status: v });
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
@@ -73,7 +96,6 @@ export default function AssetManager() {
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.user);
   const { config } = useConfig();
-  const [status, setStatus] = useState("");
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
@@ -155,10 +177,10 @@ export default function AssetManager() {
 
   useEffect(() => {
     if (location.state?.autoCreate) {
+      setField({ draftForm: undefined });
       setShowForm(true);
       setSelectedAssets([]);
       setReadOnly(false);
-
       navigate(location.pathname, { replace: true });
     }
   }, [location, navigate]);
@@ -202,6 +224,7 @@ export default function AssetManager() {
     setShowForm(false);
     setReadOnly(true);
     setIsCopy(false);
+    setField({ draftForm: undefined });
   };
 
   const columns: GridColDef[] = [
@@ -472,6 +495,7 @@ export default function AssetManager() {
       <PageAction
         title="Quản lý tài sản"
         onNewClick={() => {
+          setField({ draftForm: undefined });
           setShowForm(true);
           setSelectedAssets([]);
           setReadOnly(false);
@@ -489,6 +513,7 @@ export default function AssetManager() {
                 setShowForm(false);
                 setSelectedAssets([]);
                 setReadOnly(true);
+                setField({ draftForm: undefined });
               }}
               selectedAssets={selectedAssets}
               readOnly={readOnly}
@@ -501,6 +526,8 @@ export default function AssetManager() {
               allUnits={allUnits}
               allReasonIncreases={allReasonIncreases}
               allRepairTypes={allRepairTypes}
+              onFormChange={(values) => setField({ draftForm: values })}
+              initialFormData={formData.draftForm}
             />
           </Box>
         )}

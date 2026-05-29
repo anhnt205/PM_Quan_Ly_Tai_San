@@ -37,6 +37,7 @@ import {
   useDepartmentMutation,
 } from "../../Department/Mutation";
 import { CongTy } from "../../../utils/const";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 export default function StaffForm({
   onEdit,
@@ -45,6 +46,8 @@ export default function StaffForm({
   readOnly,
   onSave,
   onUpload,
+  onFormChange,
+  initialFormData,
 }: {
   onEdit: () => void;
   onCancel: () => void;
@@ -52,6 +55,8 @@ export default function StaffForm({
   readOnly: boolean;
   onSave: (values: any) => void;
   onUpload: (file: File) => void;
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
 }) {
   const [showPin, setShowPin] = useState(false);
   const [expanded, setExpanded] = useState(true);
@@ -60,23 +65,23 @@ export default function StaffForm({
 
   const formik = useFormik({
     initialValues: {
-      id: "",
-      hoTen: "",
-      diDong: "",
-      emailCongViec: "",
-      kyNhay: false,
-      kyThuong: false,
-      kySo: false,
-      chuKyNhay: "",
-      chuKyThuong: "",
-      agreementUUId: "",
-      pin: "",
-      boPhan: "",
-      chucVu: "",
-      laQuanLy: true,
-      idCongTy: CongTy.CT001,
-      isActive: true,
-      savePin: false,
+      id: initialFormData?.id ?? "",
+      hoTen: initialFormData?.hoTen ?? "",
+      diDong: initialFormData?.diDong ?? "",
+      emailCongViec: initialFormData?.emailCongViec ?? "",
+      kyNhay: initialFormData?.kyNhay ?? false,
+      kyThuong: initialFormData?.kyThuong ?? false,
+      kySo: initialFormData?.kySo ?? false,
+      chuKyNhay: initialFormData?.chuKyNhay ?? "",
+      chuKyThuong: initialFormData?.chuKyThuong ?? "",
+      agreementUUId: initialFormData?.agreementUUId ?? "",
+      pin: initialFormData?.pin ?? "",
+      boPhan: initialFormData?.boPhan ?? "",
+      chucVu: initialFormData?.chucVu ?? "",
+      laQuanLy: initialFormData?.laQuanLy ?? true,
+      idCongTy: initialFormData?.idCongTy ?? CongTy.CT001,
+      isActive: initialFormData?.isActive ?? true,
+      savePin: initialFormData?.savePin ?? false,
       // tempFileKyNhay: null as File | null,
       // tempFileKyThuong: null as File | null,
     },
@@ -104,6 +109,7 @@ export default function StaffForm({
       }
     },
   });
+  console.log("formik.errors", formik.values);
   useEffect(() => {
     if (selectedStaff) {
       formik.setValues({
@@ -112,8 +118,6 @@ export default function StaffForm({
         chucVu: selectedStaff?.chucVuId,
       });
       formik.setErrors({}); // Clear errors when selectedStaff changes
-    } else {
-      formik.resetForm();
     }
   }, [selectedStaff, readOnly]); // Add readOnly to dependencies
 

@@ -19,12 +19,29 @@ import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
+import { useTabForm } from "../../redux/useTabForm";
+
+interface StaffTabState {
+  showForm: boolean;
+  isCopy: boolean;
+  selectedStaff: any | null;
+  readOnly: boolean;
+  draftForm?: Record<string, any>;
+}
 
 export default function Staff() {
-  const [showForm, setShowForm] = useState(false);
-  const [isCopy, setIsCopy] = useState(false);
-  const [selectedStaff, setSelectedStaff] = useState<any>(null);
-  const [readOnly, setReadOnly] = useState(false);
+  const { formData, setField } = useTabForm<StaffTabState>("/nhan_vien");
+  const showForm = formData.showForm ?? false;
+  const isCopy = formData.isCopy ?? false;
+  const selectedStaff = formData.selectedStaff ?? null;
+  const readOnly = formData.readOnly ?? false;
+
+  // Setter helper cho gọn
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setIsCopy = (v: boolean) => setField({ isCopy: v });
+  const setSelectedStaff = (v: any) => setField({ selectedStaff: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
@@ -76,6 +93,7 @@ export default function Staff() {
     setShowForm(false);
     setSelectedStaff(null);
     setIsCopy(false);
+    setField({ draftForm: undefined });
   };
 
   const handleEdit = () => {
@@ -284,12 +302,15 @@ export default function Staff() {
                 setSelectedStaff(null);
                 setReadOnly(false);
                 setIsCopy(false);
+                setField({ draftForm: undefined });
               }}
               onEdit={handleEdit}
               selectedStaff={selectedStaff}
               readOnly={readOnly}
               onSave={handleSave}
               onUpload={uploadMutation.mutate}
+              onFormChange={(values) => setField({ draftForm: values })}
+              initialFormData={formData.draftForm}
             />
           </Box>
         )}

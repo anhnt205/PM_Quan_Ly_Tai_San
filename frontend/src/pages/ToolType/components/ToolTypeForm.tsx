@@ -25,6 +25,7 @@ import {
   useAllToolGroupQuery,
   useToolGroupMutation,
 } from "../../ToolGroup/Mutation";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 export default function ToolTypeForm({
   onEdit,
@@ -32,20 +33,24 @@ export default function ToolTypeForm({
   selectedToolType,
   readOnly,
   onSave,
+  initialFormData,
+  onFormChange,
 }: {
   onEdit: () => void;
   onCancel: () => void;
   selectedToolType?: any;
   readOnly: boolean;
   onSave: (values: any) => void;
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
 }) {
   const [expanded, setExpanded] = useState(true);
   const { data: allToolGroup = [] } = useAllToolGroupQuery();
   const formik = useFormik({
     initialValues: {
-      id: "",
-      tenLoai: "",
-      idLoaiCCDC: "",
+      id: initialFormData?.id ?? "",
+      tenLoai: initialFormData?.tenLoai ?? "",
+      idLoaiCCDC: initialFormData?.idLoaiCCDC ?? "",
     },
     validationSchema: ToolTypeValidation,
     onSubmit(values) {
@@ -53,12 +58,15 @@ export default function ToolTypeForm({
     },
   });
 
+  const debouncedValues = useDebounce(formik.values, 800);
+  useEffect(() => {
+    onFormChange?.(debouncedValues);
+  }, [debouncedValues]);
+
   useEffect(() => {
     if (selectedToolType) {
       formik.setValues(selectedToolType);
       formik.setErrors({});
-    } else {
-      formik.resetForm();
     }
   }, [selectedToolType, readOnly]);
 

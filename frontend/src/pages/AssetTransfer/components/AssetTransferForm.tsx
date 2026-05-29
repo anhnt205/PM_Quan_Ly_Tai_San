@@ -46,6 +46,7 @@ import S3Service from "../../../services/S3Service";
 import { assetTransferValidationSchema } from "../validation";
 import { CongTy } from "../../../utils/const";
 import ExcelAssetUploader from "../../../components/common/ExcelAssetUploader";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 const CustomTableCell = styled(TableCell)(({ theme }) => ({
   borderBottom: "1px solid rgba(224, 224, 224, 1)",
@@ -72,6 +73,8 @@ export default function AssetTransferForm({
   staffs,
   allUnits,
   allCurrentStatus,
+  initialFormData,
+  onFormChange,
 }: {
   onEdit: () => void;
   onClose: () => void;
@@ -86,6 +89,8 @@ export default function AssetTransferForm({
   staffs: any[];
   allUnits: any[];
   allCurrentStatus: any[];
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
 }) {
   const [expanded, setExpanded] = useState(true);
   const [isPreview, setIsPreview] = useState(false);
@@ -97,43 +102,34 @@ export default function AssetTransferForm({
 
   const formik = useFormik({
     initialValues: {
-      id: "",
-      soQuyetDinh: "",
-      tenPhieu: "",
-      idDonViGiao: type === 1 ? "K30" : "",
-      idDonViNhan: type === 3 ? "kth" : "",
-      idNguoiKyNhay: "",
-      trangThaiKyNhay: false,
-      nguoiLapPhieuKyNhay: false,
-      idDonViDeNghi: user?.taiKhoan?.phongBanId || "",
-      tgGnTuNgay: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-      tgGnDenNgay: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-      idTrinhDuyetCapPhong: "",
-      trinhDuyetCapPhongXacNhan: false,
-      idTrinhDuyetGiamDoc: "",
-      trinhDuyetGiamDocXacNhan: false,
-      diaDiemGiaoNhan: "",
-      idPhongBanXemPhieu: "",
-      noiNhan: "",
-      trangThai: 0,
-      idCongTy: CongTy.CT001,
-      ngayTao: "",
-      ngayCapNhat: "",
-      nguoiTao: "",
-      nguoiCapNhat: "",
-      coHieuLuc: 1,
-      loai: type,
-      share: false,
-      trichYeu: "",
-      duongDanFile: "",
-      tenFile: "",
-      ngayKy: "",
-      daBanGiao: false,
-      byStep: false,
-      coPhieuBanGiao: false,
-      taiLieuCuoi: "",
-      nguoiKyList: [],
-      chiTietDieuDongTaiSanDTOS: [
+      id: initialFormData?.id ?? "",
+      soQuyetDinh: initialFormData?.soQuyetDinh ?? "",
+      tenPhieu: initialFormData?.tenPhieu ?? "",
+      idDonViGiao: initialFormData?.idDonViGiao ?? (type === 1 ? "K30" : ""),
+      idDonViNhan: initialFormData?.idDonViNhan ?? (type === 3 ? "kth" : ""),
+      idNguoiKyNhay: initialFormData?.idNguoiKyNhay ?? "",
+      trangThaiKyNhay: initialFormData?.trangThaiKyNhay ?? false,
+      nguoiLapPhieuKyNhay: initialFormData?.nguoiLapPhieuKyNhay ?? false,
+      idDonViDeNghi:
+        initialFormData?.idDonViDeNghi ?? user?.taiKhoan?.phongBanId ?? "",
+      tgGnTuNgay:
+        initialFormData?.tgGnTuNgay ??
+        dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      tgGnDenNgay:
+        initialFormData?.tgGnDenNgay ??
+        dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      idTrinhDuyetCapPhong: initialFormData?.idTrinhDuyetCapPhong ?? "",
+      trinhDuyetCapPhongXacNhan:
+        initialFormData?.trinhDuyetCapPhongXacNhan ?? false,
+      idTrinhDuyetGiamDoc: initialFormData?.idTrinhDuyetGiamDoc ?? "",
+      trinhDuyetGiamDocXacNhan:
+        initialFormData?.trinhDuyetGiamDocXacNhan ?? false,
+      trichYeu: initialFormData?.trichYeu ?? "",
+      duongDanFile: initialFormData?.duongDanFile ?? "",
+      tenFile: initialFormData?.tenFile ?? "",
+      taiLieuCuoi: initialFormData?.taiLieuCuoi ?? "",
+      nguoiKyList: initialFormData?.nguoiKyList ?? [],
+      chiTietDieuDongTaiSanDTOS: initialFormData?.chiTietDieuDongTaiSanDTOS ?? [
         {
           id: "",
           idDieuDongTaiSan: "",
@@ -215,6 +211,14 @@ export default function AssetTransferForm({
       });
     },
   });
+
+  const debouncedValues = useDebounce(formik.values, 1500);
+  useEffect(() => {
+    if (!selectedTransfer) {
+      onFormChange?.(debouncedValues);
+    }
+  }, [debouncedValues]);
+
   useEffect(() => {
     if (selectedTransfer) {
       formik.setValues({
@@ -229,7 +233,7 @@ export default function AssetTransferForm({
           ? selectedTransfer.duongDanFile
           : selectedTransfer.taiLieuCuoi,
       );
-    } else formik.resetForm();
+    }
   }, [selectedTransfer]);
 
   const isCapPhat = type === 1;

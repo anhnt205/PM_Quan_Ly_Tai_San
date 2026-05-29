@@ -1,4 +1,4 @@
-import { SyntheticEvent, useEffect, useState } from "react";
+import { SyntheticEvent, useEffect, useRef, useState } from "react";
 import {
   Badge,
   Box,
@@ -59,29 +59,61 @@ import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
 import S3Service from "../../services/S3Service";
 import api from "../../config/api.config";
 import { getAssetHandoverCount } from "../../utils/helpers";
+import { useTabForm } from "../../redux/useTabForm";
+
+interface AssetHandoverTabState {
+  showForm: boolean;
+  selectedRow: any | null;
+  showSidebar: boolean;
+  readOnly: boolean;
+  activeTab: number;
+  tabValue: number;
+  sidebarMode: "document" | "signer" | null;
+  currentStatus: string;
+  currentType: string;
+  showSignDocument: boolean;
+  isFullPageSign: boolean;
+  selectedDocument: any | null;
+  draftForm?: Record<string, any>;
+}
 
 export default function AssetHandover() {
-  const [showForm, setShowForm] = useState(false);
-  const [selectedRow, setSelectedRow] = useState<any>(null);
+  const { formData, setField } =
+    useTabForm<AssetHandoverTabState>("/ban_giao_tai_san");
+  const showForm = formData.showForm ?? false;
+  const selectedRow = formData.selectedRow ?? null;
+  const readOnly = formData.readOnly ?? false;
+  const activeTab = formData.activeTab ?? 0;
+  const currentStatus = formData.currentStatus ?? "";
+  const currentType = formData.currentType ?? "";
+  const showSidebar = formData.showSidebar ?? false;
+  const tabValue = formData.tabValue ?? 0;
+  const sidebarMode = formData.sidebarMode ?? null;
+  const isFullPageSign = formData.isFullPageSign ?? false;
+  const showSignDocument = formData.showSignDocument ?? false;
+  const selectedDocument = formData.selectedDocument ?? null;
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setSelectedRow = (v: any) => setField({ selectedRow: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+  const setActiveTab = (v: number) => setField({ activeTab: v });
+  const setCurrentStatus = (v: string) => setField({ currentStatus: v });
+  const setCurrentType = (v: string) => setField({ currentType: v });
+  const setShowSidebar = (v: boolean) => setField({ showSidebar: v });
+  const setTabValue = (v: number) => setField({ tabValue: v });
+  const setSidebarMode = (v: any) => setField({ sidebarMode: v });
+  const setIsFullPageSign = (v: boolean) => setField({ isFullPageSign: v });
+  const setShowSignDocument = (v: boolean) => setField({ showSignDocument: v });
+  const setSelectedDocument = (v: any) => setField({ selectedDocument: v });
+
+  // Giữ nguyên các state này — không cần persist
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
     pageSize: 10,
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
-  const [showSignDocument, setShowSignDocument] = useState(false);
   const [showSignerSidebar, setShowSignerSidebar] = useState(true);
-  const [readOnly, setReadOnly] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
   const handleEdit = () => setReadOnly(false);
-  const [currentStatus, setCurrentStatus] = useState("");
-  const [currentType, setCurrentType] = useState("");
-  const [showSidebar, setShowSidebar] = useState(false);
-  const [tabValue, setTabValue] = useState(0);
-  const [sidebarMode, setSidebarMode] = useState<"document" | "signer" | null>(
-    null,
-  );
-  const [isFullPageSign, setIsFullPageSign] = useState(false);
 
   const { user } = useSelector((state: any) => state.user);
   const {
@@ -134,12 +166,18 @@ export default function AssetHandover() {
   const { data: positions = [] } = useAllPositionsQuery();
   const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
   const { assetTransferDetailAllMutation } = useAssetTranferMutation();
+  const isFirstActiveTabMount = useRef(true);
 
   useEffect(() => {
+    if (isFirstActiveTabMount.current) {
+      isFirstActiveTabMount.current = false;
+      return;
+    }
     setSelectedIds([]);
     setSelectedRow(null);
     setShowForm(false);
     setShowSidebar(false);
+    setField({ draftForm: undefined });
   }, [activeTab]);
 
   const handleTabChange = (_event: SyntheticEvent, newValue: number) => {
@@ -278,6 +316,7 @@ export default function AssetHandover() {
     setShowForm(false);
     setShowSidebar(false);
     setReadOnly(false);
+    setField({ draftForm: undefined });
   };
 
   const handleSign = (
@@ -439,7 +478,6 @@ export default function AssetHandover() {
     },
   ];
 
-  const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
   const [assetTransfer, setAssetTransfer] = useState<any | null>(null);
 
   const columnsTransfer: GridColDef<AssetTransferData>[] = [
@@ -646,6 +684,7 @@ export default function AssetHandover() {
           <PageAction
             title={"Biên bản bàn giao tài sản"}
             onNewClick={() => {
+              setField({ draftForm: undefined });
               setSelectedRow(null);
               setReadOnly(false);
               setShowForm(true);
@@ -671,6 +710,8 @@ export default function AssetHandover() {
                   staffs={(staffs || []).filter(
                     (staff: any) => staff.hasAccount,
                   )}
+                  onFormChange={(values) => setField({ draftForm: values })} // 👈 thêm
+                  initialFormData={formData.draftForm}
                 />
               </Box>
             )}

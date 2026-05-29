@@ -24,6 +24,7 @@ import RepairNormVatTuTable from "./RepairNormVatTuTable";
 import { DinhMucSuaChua, DinhMucVatTu } from "../types";
 import { RepairNormValidation } from "../validation";
 import { useAllLoaiSCBDQuery } from "../../MaintenanceRepairType/Mutation";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 export default function RepairNormForm({
   onEdit,
@@ -31,29 +32,40 @@ export default function RepairNormForm({
   editData,
   readOnly,
   onSave,
+  initialFormData,
+  onFormChange,
 }: {
   onEdit: () => void;
   onCancel: () => void;
   editData?: DinhMucSuaChua | null;
   readOnly: boolean;
   onSave: (values: DinhMucSuaChua) => void;
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
 }) {
   const [expanded, setExpanded] = useState(true);
   const { data: allRepairTypes = [] } = useAllLoaiSCBDQuery();
 
   const formik = useFormik<DinhMucSuaChua>({
     initialValues: {
-      id: "",
-      idLoaiSuaChua: "",
-      ghiChu: "",
-      isActive: true,
-      dinhMucVatTuList: [],
+      id: initialFormData?.id ?? "",
+      idLoaiSuaChua: initialFormData?.idLoaiSuaChua ?? "",
+      ghiChu: initialFormData?.ghiChu ?? "",
+      isActive: initialFormData?.isActive ?? true,
+      dinhMucVatTuList: initialFormData?.dinhMucVatTuList ?? [],
     },
     validationSchema: RepairNormValidation,
     onSubmit(values) {
       onSave(values);
     },
   });
+
+  const debouncedValues = useDebounce(formik.values, 800);
+  useEffect(() => {
+    if (!editData) {
+      onFormChange?.(debouncedValues);
+    }
+  }, [debouncedValues]);
 
   useEffect(() => {
     if (editData) {
@@ -62,8 +74,6 @@ export default function RepairNormForm({
         dinhMucVatTuList: editData.dinhMucVatTuList || [],
       });
       formik.setErrors({});
-    } else {
-      formik.resetForm();
     }
   }, [editData, readOnly]);
 
@@ -104,7 +114,6 @@ export default function RepairNormForm({
             <Typography>Thông tin định mức sửa chữa</Typography>
           </Box>
           <Grid container spacing={2}>
-
             <Grid size={{ xs: 12 }}>
               <FieldAutoCompleted
                 title="Loại sửa chữa *"
@@ -127,13 +136,13 @@ export default function RepairNormForm({
             </Grid>
             <Grid size={{ xs: 12 }}>
               <Box sx={{ mt: 1 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ fontWeight: "bold", mb: 1 }}
+                >
                   Danh sách định mức vật tư
                 </Typography>
-                <RepairNormVatTuTable
-                  formik={formik}
-                  readOnly={readOnly}
-                />
+                <RepairNormVatTuTable formik={formik} readOnly={readOnly} />
               </Box>
             </Grid>
           </Grid>

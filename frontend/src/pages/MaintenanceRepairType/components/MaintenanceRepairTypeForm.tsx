@@ -20,6 +20,7 @@ import { useFormik } from "formik";
 import { MaintenanceRepairTypeValidation } from "../validation";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import EditButton from "../../../components/Button/EditButton";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 export default function MaintenanceRepairTypeForm({
   onEdit,
@@ -27,19 +28,23 @@ export default function MaintenanceRepairTypeForm({
   selectedRepairType,
   readOnly,
   onSave,
+  initialFormData,
+  onFormChange,
 }: {
   onEdit: () => void;
   onCancel: () => void;
   selectedRepairType?: any;
   readOnly: boolean;
   onSave: (values: any) => void;
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
 }) {
   const [expanded, setExpanded] = useState(true);
   const formik = useFormik({
     initialValues: {
-      id: "",
-      ten: "",
-      ghiChu: "",
+      id: initialFormData?.id ?? "",
+      ten: initialFormData?.ten ?? "",
+      ghiChu: initialFormData?.ghiChu ?? "",
     },
     validationSchema: MaintenanceRepairTypeValidation,
     onSubmit(values) {
@@ -47,12 +52,15 @@ export default function MaintenanceRepairTypeForm({
     },
   });
 
+  const debouncedValues = useDebounce(formik.values, 800);
+  useEffect(() => {
+    onFormChange?.(debouncedValues);
+  }, [debouncedValues]);
+
   useEffect(() => {
     if (selectedRepairType) {
       formik.setValues(selectedRepairType);
       formik.setErrors({}); // Clear errors when selectedRepairType changes
-    } else {
-      formik.resetForm();
     }
   }, [selectedRepairType, readOnly]); // Add readOnly to dependencies
 

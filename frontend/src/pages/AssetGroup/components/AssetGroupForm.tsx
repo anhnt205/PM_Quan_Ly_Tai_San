@@ -21,6 +21,7 @@ import ViewBtn from "../../../components/Button/ViewBtn";
 import { AssetGroupValidation } from "../validation/Validation";
 import EditButton from "../../../components/Button/EditButton";
 import { CongTy } from "../../../utils/const";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 export default function AssetGroupForm({
   onEdit,
@@ -28,19 +29,23 @@ export default function AssetGroupForm({
   selectedAssetGroup,
   readOnly,
   onSave,
+  initialFormData,
+  onFormChange,
 }: {
   onEdit: () => void;
   onCancel: () => void;
   selectedAssetGroup?: any;
   readOnly: boolean;
   onSave: (values: any) => void;
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
 }) {
   const [expanded, setExpanded] = useState(true);
   const formik = useFormik({
     initialValues: {
-      id: "",
-      tenNhom: "",
-      idCongTy: CongTy.CT001,
+      id: initialFormData?.id ?? "",
+      tenNhom: initialFormData?.tenNhom ?? "",
+      idCongTy: initialFormData?.idCongTy ?? CongTy.CT001,
     },
     validationSchema: AssetGroupValidation,
     onSubmit(values) {
@@ -48,12 +53,15 @@ export default function AssetGroupForm({
     },
   });
 
+  const debouncedValues = useDebounce(formik.values, 800);
+  useEffect(() => {
+    onFormChange?.(debouncedValues);
+  }, [debouncedValues]);
+
   useEffect(() => {
     if (selectedAssetGroup) {
       formik.setValues(selectedAssetGroup);
       formik.setErrors({}); // Clear errors when selectedAssetGroup changes
-    } else {
-      formik.resetForm();
     }
   }, [selectedAssetGroup, readOnly]);
 

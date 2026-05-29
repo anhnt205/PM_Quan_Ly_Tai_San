@@ -22,12 +22,29 @@ import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useDebounce } from "../../hooks/useDebounce";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
+import { useTabForm } from "../../redux/useTabForm";
+
+interface CurrentStatusTabState {
+  showForm: boolean;
+  selectedCurrentStatus: any | null;
+  readOnly: boolean;
+  isCopy: boolean;
+  draftForm?: Record<string, any>;
+}
 
 export default function CurrentStatus() {
-  const [showForm, setShowForm] = useState(false);
-  const [selectedCurrentStatus, setSelectedCurrentStatus] = useState<any>(null);
-  const [readOnly, setReadOnly] = useState(false);
-  const [isCopy, setIsCopy] = useState(false);
+  const { formData, setField } =
+    useTabForm<CurrentStatusTabState>("/hien_trang");
+  const showForm = formData.showForm ?? false;
+  const selectedCurrentStatus = formData.selectedCurrentStatus ?? null;
+  const readOnly = formData.readOnly ?? false;
+  const isCopy = formData.isCopy ?? false;
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setSelectedCurrentStatus = (v: any) =>
+    setField({ selectedCurrentStatus: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+  const setIsCopy = (v: boolean) => setField({ isCopy: v });
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
@@ -90,6 +107,7 @@ export default function CurrentStatus() {
     setShowForm(false);
     setSelectedCurrentStatus(null);
     setIsCopy(false);
+    setField({ draftForm: undefined });
   };
 
   const handleEdit = () => {
@@ -197,11 +215,14 @@ export default function CurrentStatus() {
                 setShowForm(false);
                 setSelectedCurrentStatus(null);
                 setReadOnly(false);
+                setField({ draftForm: undefined });
               }}
               onEdit={handleEdit}
               selectedCurrentStatus={selectedCurrentStatus}
               readOnly={readOnly}
               onSave={handleSave}
+              onFormChange={(values) => setField({ draftForm: values })}
+              initialFormData={formData.draftForm}
             />
           </Box>
         )}

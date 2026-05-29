@@ -45,6 +45,7 @@ import FieldDateTime from "../../../components/TextField/FieldDateTime";
 import FieldYearMonth from "../../../components/TextField/FieldYearMonth";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
 import React from "react";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 const defaultAsset = {
   id: "",
@@ -932,6 +933,8 @@ export default function AssetManagerForm({
   allUnits,
   allReasonIncreases,
   allRepairTypes,
+  initialFormData,
+  onFormChange,
 }: {
   onEdit: () => void;
   onCancel: () => void;
@@ -945,6 +948,8 @@ export default function AssetManagerForm({
   allUnits: any[];
   allReasonIncreases: any[];
   allRepairTypes: any[];
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
 }) {
   const { data: countries = [] } = useCountriesQuery();
   const { data: allProjects = [] } = useAllProjectsQuery();
@@ -954,12 +959,21 @@ export default function AssetManagerForm({
       assets:
         selectedAssets && selectedAssets.length > 0
           ? selectedAssets.map((a) => ({ ...a, isNew: a.isNew ?? false }))
-          : [{ ...defaultAsset, isNew: true }],
+          : initialFormData?.assets
+            ? initialFormData.assets
+            : [{ ...defaultAsset, isNew: true }],
     },
     onSubmit(values) {
       onSave(values.assets);
     },
   });
+
+  const debouncedAssets = useDebounce(formik.values.assets, 1500);
+  useEffect(() => {
+    if (!selectedAssets || selectedAssets.length === 0) {
+      onFormChange?.({ assets: debouncedAssets });
+    }
+  }, [debouncedAssets]);
 
   useEffect(() => {
     if (selectedAssets && selectedAssets.length > 0) {
@@ -967,8 +981,6 @@ export default function AssetManagerForm({
         "assets",
         selectedAssets.map((a) => ({ ...a, isNew: a.isNew ?? false })),
       );
-    } else {
-      formik.setFieldValue("assets", [{ ...defaultAsset, isNew: true }]);
     }
   }, [selectedAssets]);
 

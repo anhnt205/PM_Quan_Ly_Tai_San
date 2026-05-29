@@ -24,6 +24,7 @@ import EditButton from "../../../components/Button/EditButton";
 import { CongTy } from "../../../utils/const";
 import { DepartmentType } from "../types";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 export default function DepartmentForm({
   allDepartment,
@@ -32,30 +33,39 @@ export default function DepartmentForm({
   selectedDepartment,
   readOnly,
   onSave,
+  initialFormData,
+  onFormChange,
 }: {
-  allDepartment:DepartmentType[]
+  allDepartment: DepartmentType[];
   onEdit: () => void;
   onCancel: () => void;
   selectedDepartment?: any;
   readOnly: boolean;
   onSave: (values: any) => void;
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
 }) {
   const [expanded, setExpanded] = useState(true);
   const formik = useFormik({
     initialValues: {
-      id: "",
-      tenPhongBan: "",
-      idCongTy: CongTy.CT001,
-      phongCapTren: "",
-      isKho: false,
-      isLanhDao: false,
-      loaiKho: undefined as Number | undefined,
+      id: initialFormData?.id ?? "",
+      tenPhongBan: initialFormData?.tenPhongBan ?? "",
+      idCongTy: initialFormData?.idCongTy ?? CongTy.CT001,
+      phongCapTren: initialFormData?.phongCapTren ?? "",
+      isKho: initialFormData?.isKho ?? false,
+      isLanhDao: initialFormData?.isLanhDao ?? false,
+      loaiKho: initialFormData?.loaiKho ?? (undefined as Number | undefined),
     },
     validationSchema: DepartmentValidation,
     onSubmit(values) {
       onSave(values);
     },
   });
+
+  const debouncedValues = useDebounce(formik.values, 800);
+  useEffect(() => {
+    onFormChange?.(debouncedValues);
+  }, [debouncedValues]);
 
   useEffect(() => {
     if (selectedDepartment) {

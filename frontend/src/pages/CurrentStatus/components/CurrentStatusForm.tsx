@@ -20,6 +20,7 @@ import { useFormik } from "formik";
 import ViewBtn from "../../../components/Button/ViewBtn";
 import EditButton from "../../../components/Button/EditButton";
 import { CurrentStatusValidation } from "../validation/Validation";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 export default function CurrentStatusForm({
   onEdit,
@@ -27,19 +28,23 @@ export default function CurrentStatusForm({
   selectedCurrentStatus,
   readOnly,
   onSave,
+  initialFormData,
+  onFormChange,
 }: {
   onEdit: () => void;
   onCancel: () => void;
   selectedCurrentStatus?: any;
   readOnly: boolean;
   onSave: (values: any) => void;
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
 }) {
   const [expanded, setExpanded] = useState(true);
   const formik = useFormik({
     initialValues: {
-      id: "",
-      tenHTKT: "",
-      isActive: true,
+      id: initialFormData?.id ?? "",
+      tenHTKT: initialFormData?.tenHTKT ?? "",
+      isActive: initialFormData?.isActive ?? true,
     },
     validationSchema: CurrentStatusValidation,
     onSubmit(values) {
@@ -47,12 +52,15 @@ export default function CurrentStatusForm({
     },
   });
 
+  const debouncedValues = useDebounce(formik.values, 800);
+  useEffect(() => {
+    onFormChange?.(debouncedValues);
+  }, [debouncedValues]);
+
   useEffect(() => {
     if (selectedCurrentStatus) {
       formik.setValues(selectedCurrentStatus);
       formik.setErrors({});
-    } else {
-      formik.resetForm();
     }
   }, [selectedCurrentStatus, readOnly]);
 

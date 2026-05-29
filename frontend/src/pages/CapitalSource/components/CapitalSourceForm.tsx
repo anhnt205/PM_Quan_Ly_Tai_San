@@ -21,6 +21,7 @@ import ViewBtn from "../../../components/Button/ViewBtn";
 import { CapitalSourceValidation } from "../validation/Validation";
 import EditButton from "../../../components/Button/EditButton";
 import { CongTy } from "../../../utils/const";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 export default function CapitalSourceForm({
   onEdit,
@@ -28,22 +29,26 @@ export default function CapitalSourceForm({
   selectedCapitalSource,
   readOnly,
   onSave,
+  initialFormData,
+  onFormChange,
 }: {
   onEdit: () => void;
   onCancel: () => void;
   selectedCapitalSource?: any;
   readOnly?: boolean;
   onSave: (values: any) => void;
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
 }) {
   const [expanded, setExpanded] = useState(true);
   const formik = useFormik({
     initialValues: {
-      id: "",
-      tenNguonKinhPhi: "",
-      idCongTy: CongTy.CT001,
-      ghiChu: "",
-      hieuLuc: true,
-      isActive: true,
+      id: initialFormData?.id ?? "",
+      tenNguonKinhPhi: initialFormData?.tenNguonKinhPhi ?? "",
+      idCongTy: initialFormData?.idCongTy ?? CongTy.CT001,
+      ghiChu: initialFormData?.ghiChu ?? "",
+      hieuLuc: initialFormData?.hieuLuc ?? true,
+      isActive: initialFormData?.isActive ?? true,
     },
     validationSchema: CapitalSourceValidation,
     onSubmit(values) {
@@ -51,11 +56,14 @@ export default function CapitalSourceForm({
     },
   });
 
+  const debouncedValues = useDebounce(formik.values, 800);
+  useEffect(() => {
+    onFormChange?.(debouncedValues);
+  }, [debouncedValues]);
+
   useEffect(() => {
     if (selectedCapitalSource) {
       formik.setValues(selectedCapitalSource);
-    } else {
-      formik.resetForm();
     }
   }, [selectedCapitalSource]);
 
