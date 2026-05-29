@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useFormik } from "formik";
 import {
   Dialog,
@@ -8,7 +8,6 @@ import {
   Button,
   Box,
   Typography,
-  TextField,
   Table,
   TableBody,
   TableCell,
@@ -18,10 +17,6 @@ import {
   Paper,
   Divider,
   Chip,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Alert,
   IconButton,
 } from "@mui/material";
@@ -29,7 +24,6 @@ import EngineeringIcon from "@mui/icons-material/Engineering";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import { useSelector } from "react-redux";
 import {
   MaintenancePlanData,
@@ -49,6 +43,8 @@ import FieldDate from "../../../../components/TextField/FieldDate";
 import { useAllToolDetailQuery } from "../../../ToolManager/Mutation";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
 import { listSigneInfo } from "../../config";
+import FieldInput from "../../../../components/TextField/FieldInput";
+import SignerWorkflowSection from "./SignerWorkflowSection";
 
 type SimpleDept = { id: string; name: string };
 type SimpleUser = {
@@ -76,12 +72,6 @@ const InspectionRecordDialog = ({
   initData,
 }: Props) => {
   const { user } = useSelector((state: any) => state.user);
-
-  const [addDeptId, setAddDeptId] = useState("");
-  const [addUserId, setAddUserId] = useState("");
-  const [editingSignerId, setEditingSignerId] = useState<string | null>(null);
-  const [editDeptId, setEditDeptId] = useState("");
-  const [editUserId, setEditUserId] = useState("");
 
   const { data: apiDepartments = [] } = useAllDepartmentsQuery();
   const { data: apiUsers = [] } = useAllStaffsQuery();
@@ -360,15 +350,6 @@ const InspectionRecordDialog = ({
     formik.setFieldValue("danhSachChiTiet", updatedEntries);
   };
 
-  const handleQuantityChange = (
-    assetIdx: number,
-    materialId: string,
-    field: "soLuong" | "soLuongSuaChua" | "soLuongThayMoi",
-    value: number,
-  ) => {
-    updateMaterial(assetIdx, materialId, field, value);
-  };
-
   function hasValidationError() {
     for (const entry of formik.values.danhSachChiTiet) {
       if (entry.danhSachVatTu) {
@@ -389,67 +370,7 @@ const InspectionRecordDialog = ({
     return false;
   }
 
-  const handleAddSigner = () => {
-    if (!addDeptId || !addUserId) return;
-    const userItem = users.find((u: any) => u.id === addUserId);
-    const dept = departments.find((d: any) => d.id === addDeptId);
-    if (!userItem || !dept) return;
-    if (
-      formik.values.nguoiKyList.some(
-        (s: any) => s.userId === userItem.id && s.departmentId === dept.id,
-      )
-    )
-      return;
-    const newSigner = {
-      userId: userItem.id,
-      userName: userItem.name,
-      departmentId: dept.id,
-      departmentName: dept.name,
-      position: userItem.title ?? "",
-      order: formik.values.nguoiKyList.length + 1,
-      signed: false,
-    };
-    formik.setFieldValue("nguoiKyList", [
-      ...formik.values.nguoiKyList,
-      newSigner,
-    ]);
-    setAddDeptId("");
-    setAddUserId("");
-  };
-
-  const handleRemoveSigner = (userId: string) => {
-    const updatedSigners = formik.values.nguoiKyList
-      .filter((s) => s.userId !== userId)
-      .map((s, i) => ({ ...s, order: i + 1 }));
-    formik.setFieldValue("nguoiKyList", updatedSigners);
-  };
-
-  const handleEdit = (signer: PlanSigner) => {
-    setEditingSignerId(signer.userId);
-    setEditDeptId(signer.departmentId);
-    setEditUserId(signer.userId);
-  };
-
-  const handleSaveEdit = () => {
-    const updatedSigners = formik.values.nguoiKyList.map((s) =>
-      s.userId === editingSignerId
-        ? {
-            ...s,
-            userId: editUserId,
-            userName: users.find((u) => u.id === editUserId)?.name || "",
-            departmentId: editDeptId,
-            departmentName:
-              departments.find((d) => d.id === editDeptId)?.name || "",
-          }
-        : s,
-    );
-    formik.setFieldValue("nguoiKyList", updatedSigners);
-    setEditingSignerId(null);
-  };
-
   function handleClose() {
-    setAddDeptId("");
-    setAddUserId("");
     onClose();
     formik.resetForm();
   }
@@ -515,13 +436,10 @@ const InspectionRecordDialog = ({
                 Thông tin chung
               </Typography>
               <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <TextField
-                  label="Số biên bản"
-                  name="soPhieu"
-                  value={formik.values.soPhieu}
-                  onChange={formik.handleChange}
-                  size="small"
-                  fullWidth
+                <FieldInput
+                  title="Số biên bản"
+                  field="soPhieu"
+                  formik={formik}
                 />
                 <FieldDate
                   title="Ngày giám định"
@@ -530,14 +448,10 @@ const InspectionRecordDialog = ({
                     formik.setFieldValue("ngayGiamDinh", val)
                   }
                 />
-                <TextField
-                  label="Địa điểm (Tại...)"
-                  name="viTri"
-                  value={formik.values.viTri}
-                  onChange={formik.handleChange}
-                  size="small"
-                  fullWidth
-                  placeholder="vd: Phân xưởng khai thác 1, khu vực A"
+                <FieldInput
+                  title="Địa điểm (Tại...)"
+                  field="viTri"
+                  formik={formik}
                 />
                 {repairRequest ? (
                   <Typography variant="body2" color="text.secondary">
@@ -560,340 +474,35 @@ const InspectionRecordDialog = ({
                 p: 2.5,
               }}
             >
-              <Typography variant="subtitle1" fontWeight={600} mb={2}>
-                Số lượng vật tư thu hồi
-              </Typography>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+              <Box sx={{ display: "flex", gap: 1.5 }}>
                 {[
                   {
                     label: "Số để lại phục hồi phục vụ cho sản xuất",
-                    value: formik.values.soDeLaiPhucHoi,
-                    setter: (val: number) =>
-                      formik.setFieldValue("soDeLaiPhucHoi", val),
+                    field: "soDeLaiPhucHoi",
                   },
                   {
                     label: "Số để làm phế liệu (mục)",
-                    value: formik.values.soDeLamPheLieu,
-                    setter: (val: number) =>
-                      formik.setFieldValue("soDeLamPheLieu", val),
+                    field: "soDeLamPheLieu",
                   },
                   {
                     label: "Số lượng hủy (mục)",
-                    value: formik.values.soLuongHuy,
-                    setter: (val: number) =>
-                      formik.setFieldValue("soLuongHuy", val),
+                    field: "soLuongHuy",
                   },
-                ].map(({ label, value, setter }) => (
-                  <Box
-                    key={label}
-                    sx={{ display: "flex", alignItems: "center", gap: 2 }}
-                  >
-                    <Typography variant="body2" sx={{ flex: 1 }}>
-                      {label}:
-                    </Typography>
-                    <TextField
-                      type="number"
-                      value={value}
-                      onChange={(e) =>
-                        setter(Math.max(0, parseInt(e.target.value) || 0))
-                      }
-                      size="small"
-                      inputProps={{ min: 0, style: { width: 120 } }}
-                    />
-                  </Box>
+                ].map(({ label, field }) => (
+                  <FieldInput
+                    title={label}
+                    field={field}
+                    formik={formik}
+                    type="number"
+                  />
                 ))}
               </Box>
             </Box>
           </Box>
 
           {/* Right: Quy trình duyệt */}
-          <Box
-            sx={{
-              border: "1px solid",
-              borderColor: "divider",
-              borderRadius: 3,
-              p: 2.5,
-              display: "flex",
-              flexDirection: "column",
-              height: "100%",
-            }}
-          >
-            <Typography
-              variant="subtitle1"
-              fontWeight={600}
-              mb={2}
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            >
-              Quy trình duyệt
-              <Chip
-                label={`${formik.values.nguoiKyList.length} người`}
-                size="small"
-                color="primary"
-                variant="outlined"
-                sx={{ fontWeight: 400 }}
-              />
-            </Typography>
-
-            <Box sx={{ flex: 1, overflowY: "auto", mb: 2 }}>
-              {formik.values.nguoiKyList.length > 0 ? (
-                <Box sx={{ position: "relative", pl: 5 }}>
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      left: 16,
-                      top: 8,
-                      bottom: 8,
-                      width: "1px",
-                      bgcolor: "divider",
-                    }}
-                  />
-                  {formik.values.nguoiKyList.map((s, idx) => {
-                    const userItem = users.find((u) => u.id === s.userId);
-                    const isEditingThis = editingSignerId === s.userId;
-                    return (
-                      <Box
-                        key={s.userId}
-                        sx={{ position: "relative", mb: 1.5 }}
-                      >
-                        <Box
-                          sx={{
-                            position: "absolute",
-                            left: -40,
-                            top: 6,
-                            width: 18,
-                            height: 18,
-                            borderRadius: "50%",
-                            bgcolor: "background.paper",
-                            border: "2px solid",
-                            borderColor: "primary.main",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: 10,
-                            fontWeight: 600,
-                            zIndex: 1,
-                            boxShadow: "0 0 0 3px white",
-                          }}
-                        >
-                          {idx + 1}
-                        </Box>
-
-                        <Box
-                          sx={{
-                            border: "1px solid",
-                            borderColor: isEditingThis
-                              ? "primary.main"
-                              : "divider",
-                            borderRadius: 2,
-                            p: 1.5,
-                            bgcolor: isEditingThis
-                              ? "primary.50"
-                              : "background.paper",
-                          }}
-                        >
-                          {isEditingThis ? (
-                            <Box
-                              sx={{
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: 1.5,
-                              }}
-                            >
-                              <FormControl size="small" fullWidth>
-                                <InputLabel>Đơn vị</InputLabel>
-                                <Select
-                                  value={editDeptId}
-                                  label="Đơn vị"
-                                  onChange={(e) => {
-                                    setEditDeptId(e.target.value);
-                                    setEditUserId("");
-                                  }}
-                                >
-                                  {departments.map((d) => (
-                                    <MenuItem key={d.id} value={d.id}>
-                                      {d.name}
-                                    </MenuItem>
-                                  ))}
-                                </Select>
-                              </FormControl>
-                              <FormControl size="small" fullWidth>
-                                <InputLabel>Người duyệt</InputLabel>
-                                <Select
-                                  value={editUserId}
-                                  label="Người duyệt"
-                                  onChange={(e) =>
-                                    setEditUserId(e.target.value)
-                                  }
-                                >
-                                  {users
-                                    .filter(
-                                      (u) => u.departmentId === editDeptId,
-                                    )
-                                    .map((u) => (
-                                      <MenuItem key={u.id} value={u.id}>
-                                        {u.name}
-                                      </MenuItem>
-                                    ))}
-                                </Select>
-                              </FormControl>
-                              <Box sx={{ display: "flex", gap: 1 }}>
-                                <Button
-                                  variant="contained"
-                                  size="small"
-                                  onClick={handleSaveEdit}
-                                >
-                                  Lưu
-                                </Button>
-                                <Button
-                                  size="small"
-                                  onClick={() => setEditingSignerId(null)}
-                                >
-                                  Hủy
-                                </Button>
-                              </Box>
-                            </Box>
-                          ) : (
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                              }}
-                            >
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 1.5,
-                                }}
-                              >
-                                <Box
-                                  sx={{
-                                    width: 36,
-                                    height: 36,
-                                    borderRadius: "50%",
-                                    bgcolor: "primary.main",
-                                    color: "white",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    fontWeight: 600,
-                                    fontSize: 13,
-                                    flexShrink: 0,
-                                  }}
-                                >
-                                  {userItem?.name?.charAt(0) ?? "?"}
-                                </Box>
-                                <Box>
-                                  <Typography fontWeight={600} fontSize={13}>
-                                    {userItem?.name}
-                                  </Typography>
-                                  <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                  >
-                                    {userItem?.title}
-                                  </Typography>
-                                  <Box sx={{ mt: 0.5 }}>
-                                    <Typography
-                                      variant="caption"
-                                      color="text.secondary"
-                                    >
-                                      {
-                                        departments.find(
-                                          (d) => d.id === s.departmentId,
-                                        )?.name
-                                      }
-                                    </Typography>
-                                  </Box>
-                                </Box>
-                              </Box>
-                              <Box sx={{ display: "flex", gap: 0.5 }}>
-                                <Button
-                                  size="small"
-                                  variant="outlined"
-                                  onClick={() => handleEdit(s)}
-                                >
-                                  Sửa
-                                </Button>
-                                <Button
-                                  size="small"
-                                  color="error"
-                                  variant="outlined"
-                                  onClick={() => handleRemoveSigner(s.userId)}
-                                >
-                                  Xóa
-                                </Button>
-                              </Box>
-                            </Box>
-                          )}
-                        </Box>
-                      </Box>
-                    );
-                  })}
-                </Box>
-              ) : (
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  Chưa có người duyệt
-                </Alert>
-              )}
-            </Box>
-
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 1.5,
-                p: 2,
-                bgcolor: "grey.50",
-                borderRadius: 2,
-                border: "1px dashed",
-                borderColor: "divider",
-              }}
-            >
-              <FormControl size="small" fullWidth>
-                <InputLabel>Phòng ban</InputLabel>
-                <Select
-                  value={addDeptId}
-                  label="Phòng ban"
-                  onChange={(e) => {
-                    setAddDeptId(e.target.value);
-                    setAddUserId("");
-                  }}
-                >
-                  {departments.map((d) => (
-                    <MenuItem key={d.id} value={d.id}>
-                      {d.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl size="small" fullWidth disabled={!addDeptId}>
-                <InputLabel>Người duyệt</InputLabel>
-                <Select
-                  value={addUserId}
-                  label="Người duyệt"
-                  onChange={(e) => setAddUserId(e.target.value)}
-                >
-                  {users
-                    .filter((u) => u.departmentId === addDeptId)
-                    .map((u) => (
-                      <MenuItem key={u.id} value={u.id}>
-                        {u.name} – {u.title}
-                      </MenuItem>
-                    ))}
-                </Select>
-              </FormControl>
-              <Button
-                variant="contained"
-                startIcon={<PersonAddIcon />}
-                onClick={handleAddSigner}
-                disabled={!addUserId}
-                fullWidth
-              >
-                Thêm người duyệt
-              </Button>
-            </Box>
+          <Box>
+            <SignerWorkflowSection formik={formik} />
           </Box>
         </Box>
 
@@ -911,14 +520,14 @@ const InspectionRecordDialog = ({
                     Tên Thiết bị / Vật tư phụ tùng
                   </TableCell>
                   <TableCell sx={{ fontWeight: 700, width: 60 }}>ĐVT</TableCell>
-                  <TableCell sx={{ fontWeight: 700, width: 70 }}>SL</TableCell>
+                  <TableCell sx={{ fontWeight: 700, width: 100 }}>SL</TableCell>
                   <TableCell sx={{ fontWeight: 700, minWidth: 180 }}>
                     Tình trạng KT
                   </TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 700, width: 90 }}>
+                  <TableCell align="center" sx={{ fontWeight: 700, width: 100 }}>
                     Sửa chữa
                   </TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 700, width: 90 }}>
+                  <TableCell align="center" sx={{ fontWeight: 700, width: 100 }}>
                     Thay mới
                   </TableCell>
                   <TableCell sx={{ fontWeight: 700, minWidth: 150 }}>
@@ -938,12 +547,11 @@ const InspectionRecordDialog = ({
                         {assetIdx + 1}
                       </TableCell>
                       <TableCell
-                        colSpan={3}
+                        colSpan={7}
                         sx={{ fontWeight: 700, color: "primary.main" }}
                       >
                         Thiết bị: {entry.tenTaiSan}
                       </TableCell>
-                      <TableCell colSpan={4}></TableCell>
                       <TableCell align="center">
                         <IconButton
                           size="small"
@@ -958,7 +566,9 @@ const InspectionRecordDialog = ({
 
                     {/* Hàng các vật tư phụ tùng chi tiết (con) */}
                     {!entry.danhSachVatTu ||
-                    entry.danhSachVatTu.filter((v) => v.action !== Action.DELETE).length === 0 ? (
+                    entry.danhSachVatTu.filter(
+                      (v) => v.action !== Action.DELETE,
+                    ).length === 0 ? (
                       <TableRow>
                         <TableCell></TableCell>
                         <TableCell
@@ -976,12 +586,7 @@ const InspectionRecordDialog = ({
                     ) : (
                       entry.danhSachVatTu
                         .filter((v) => v.action !== Action.DELETE)
-                        .map((vt, vtIdx) => {
-                        const sumQty =
-                          (vt.soLuongSuaChua || 0) + (vt.soLuongThayMoi || 0);
-                        const isQtyError = sumQty > (vt.soLuong || 0);
-
-                        return (
+                        .map((vt, vtIdx) => (
                           <TableRow key={vt.id}>
                             <TableCell
                               align="right"
@@ -1018,94 +623,44 @@ const InspectionRecordDialog = ({
                             </TableCell>
                             <TableCell>{vt.donViTinh || "—"}</TableCell>
                             <TableCell>
-                              <TextField
+                              <FieldInput
+                                title=""
+                                field={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.soLuong`}
+                                formik={formik}
                                 type="number"
-                                value={vt.soLuong || 0}
-                                onChange={(e) =>
-                                  handleQuantityChange(
-                                    assetIdx,
-                                    vt.id!,
-                                    "soLuong",
-                                    Math.max(0, parseInt(e.target.value) || 0),
-                                  )
-                                }
-                                size="small"
-                                variant="standard"
-                                inputProps={{ min: 0, style: { width: 45 } }}
+                                noBorder={true}
                               />
                             </TableCell>
                             <TableCell>
-                              <TextField
-                                value={vt.tinhTrang || ""}
-                                onChange={(e) =>
-                                  updateMaterial(
-                                    assetIdx,
-                                    vt.id!,
-                                    "tinhTrang",
-                                    e.target.value,
-                                  )
-                                }
-                                size="small"
-                                placeholder="Tình trạng kỹ thuật..."
-                                fullWidth
-                                variant="outlined"
-                                multiline
-                                maxRows={2}
-                                inputProps={{ style: { fontSize: "0.8rem" } }}
-                                error={!vt.tinhTrang}
+                              <FieldInput
+                                title=""
+                                field={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.tinhTrang`}
+                                formik={formik}
+                                noBorder={true}
                               />
                             </TableCell>
                             <TableCell>
-                              <TextField
+                              <FieldInput
                                 type="number"
-                                value={vt.soLuongSuaChua || 0}
-                                onChange={(e) =>
-                                  handleQuantityChange(
-                                    assetIdx,
-                                    vt.id!,
-                                    "soLuongSuaChua",
-                                    Math.max(0, parseInt(e.target.value) || 0),
-                                  )
-                                }
-                                size="small"
-                                variant="standard"
-                                error={isQtyError}
-                                inputProps={{ min: 0, style: { width: 55 } }}
+                                field={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.soLuongSuaChua`}
+                                formik={formik}
+                                noBorder={true}
                               />
                             </TableCell>
                             <TableCell>
-                              <TextField
+                              <FieldInput
                                 type="number"
-                                value={vt.soLuongThayMoi || 0}
-                                onChange={(e) =>
-                                  handleQuantityChange(
-                                    assetIdx,
-                                    vt.id!,
-                                    "soLuongThayMoi",
-                                    Math.max(0, parseInt(e.target.value) || 0),
-                                  )
-                                }
-                                size="small"
-                                variant="standard"
-                                error={isQtyError}
-                                inputProps={{ min: 0, style: { width: 55 } }}
+                                field={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.soLuongThayMoi`}
+                                formik={formik}
+                                noBorder={true}
                               />
                             </TableCell>
                             <TableCell>
-                              <TextField
-                                value={vt.ghiChu || ""}
-                                onChange={(e) =>
-                                  updateMaterial(
-                                    assetIdx,
-                                    vt.id!,
-                                    "ghiChu",
-                                    e.target.value,
-                                  )
-                                }
-                                size="small"
-                                variant="standard"
-                                fullWidth
-                                inputProps={{ style: { fontSize: "0.8rem" } }}
+                              <FieldInput
+                                title=""
+                                field={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.ghiChu`}
+                                formik={formik}
+                                noBorder={true}
                               />
                             </TableCell>
                             <TableCell align="center">
@@ -1120,8 +675,7 @@ const InspectionRecordDialog = ({
                               </IconButton>
                             </TableCell>
                           </TableRow>
-                        );
-                      })
+                        ))
                     )}
                   </React.Fragment>
                 ))}
@@ -1211,7 +765,7 @@ const InspectionRecordDialog = ({
               Chúng tôi gồm:
             </Typography>
             <Box sx={{ pl: 2, mb: 1 }}>
-              {formik.values.nguoiKyList.map((s, i) => (
+              {formik.values.nguoiKyList.map((s: any, i: number) => (
                 <Box key={i} sx={{ display: "flex", gap: 3, mb: 0.25 }}>
                   <Typography variant="caption" sx={{ minWidth: 16 }}>
                     {i + 1}.
@@ -1223,7 +777,7 @@ const InspectionRecordDialog = ({
                     {s.userName || "………………………"}
                   </Typography>
                   <Typography variant="caption" sx={{ minWidth: 120 }}>
-                    {s.position}
+                    {users.find((u) => u.id === s.userId)?.title || "Người ký"}
                   </Typography>
                   <Typography variant="caption">{s.departmentName}</Typography>
                 </Box>
@@ -1310,7 +864,9 @@ const InspectionRecordDialog = ({
                         </TableCell>
                       </TableRow>
                       {!entry.danhSachVatTu ||
-                      entry.danhSachVatTu.filter((v) => v.action !== Action.DELETE).length === 0 ? (
+                      entry.danhSachVatTu.filter(
+                        (v) => v.action !== Action.DELETE,
+                      ).length === 0 ? (
                         <TableRow key={`empty-${idx}`}>
                           <TableCell></TableCell>
                           <TableCell
@@ -1324,41 +880,41 @@ const InspectionRecordDialog = ({
                         entry.danhSachVatTu
                           .filter((v) => v.action !== Action.DELETE)
                           .map((vt, vtIdx) => (
-                          <TableRow key={`vt-${vt.id || vtIdx}`}>
-                            <TableCell
-                              sx={{ fontSize: "0.75rem", align: "right" }}
-                            >
-                              {idx + 1}.{vtIdx + 1}
-                            </TableCell>
-                            <TableCell sx={{ fontSize: "0.75rem" }}>
-                              {vt.tenVatTu || vt.idChiTietVatTu || "—"}
-                            </TableCell>
-                            <TableCell sx={{ fontSize: "0.75rem" }}>
-                              {vt.donViTinh}
-                            </TableCell>
-                            <TableCell sx={{ fontSize: "0.75rem" }}>
-                              {vt.soLuong}
-                            </TableCell>
-                            <TableCell sx={{ fontSize: "0.75rem" }}>
-                              {vt.tinhTrang}
-                            </TableCell>
-                            <TableCell
-                              align="center"
-                              sx={{ fontSize: "0.75rem" }}
-                            >
-                              {vt.soLuongSuaChua || 0}
-                            </TableCell>
-                            <TableCell
-                              align="center"
-                              sx={{ fontSize: "0.75rem" }}
-                            >
-                              {vt.soLuongThayMoi || 0}
-                            </TableCell>
-                            <TableCell sx={{ fontSize: "0.75rem" }}>
-                              {vt.ghiChu}
-                            </TableCell>
-                          </TableRow>
-                        ))
+                            <TableRow key={`vt-${vt.id || vtIdx}`}>
+                              <TableCell
+                                sx={{ fontSize: "0.75rem", align: "right" }}
+                              >
+                                {idx + 1}.{vtIdx + 1}
+                              </TableCell>
+                              <TableCell sx={{ fontSize: "0.75rem" }}>
+                                {vt.tenVatTu || vt.idChiTietVatTu || "—"}
+                              </TableCell>
+                              <TableCell sx={{ fontSize: "0.75rem" }}>
+                                {vt.donViTinh}
+                              </TableCell>
+                              <TableCell sx={{ fontSize: "0.75rem" }}>
+                                {vt.soLuong}
+                              </TableCell>
+                              <TableCell sx={{ fontSize: "0.75rem" }}>
+                                {vt.tinhTrang}
+                              </TableCell>
+                              <TableCell
+                                align="center"
+                                sx={{ fontSize: "0.75rem" }}
+                              >
+                                {vt.soLuongSuaChua || 0}
+                              </TableCell>
+                              <TableCell
+                                align="center"
+                                sx={{ fontSize: "0.75rem" }}
+                              >
+                                {vt.soLuongThayMoi || 0}
+                              </TableCell>
+                              <TableCell sx={{ fontSize: "0.75rem" }}>
+                                {vt.ghiChu}
+                              </TableCell>
+                            </TableRow>
+                          ))
                       )}
                     </React.Fragment>
                   ))}
@@ -1390,7 +946,7 @@ const InspectionRecordDialog = ({
                 const sorted = [...(formik.values.nguoiKyList || [])].sort(
                   (a, b) => (a.order || 0) - (b.order || 0),
                 );
-                const cols = sorted.map((s, idx) => ({
+                const cols = sorted.map((s) => ({
                   label: (s.departmentName || "").toUpperCase(),
                   signer: s,
                 }));
@@ -1446,7 +1002,8 @@ const InspectionRecordDialog = ({
                           color="text.secondary"
                           display="block"
                         >
-                          {col.signer.departmentName}
+                          {users.find((u) => u.id === col.signer.userId)
+                            ?.title || "Người ký"}
                         </Typography>
                       </>
                     ) : (

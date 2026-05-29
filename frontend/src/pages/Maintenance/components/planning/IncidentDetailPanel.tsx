@@ -59,6 +59,7 @@ import {
   useMaintenanceAcceptanceTestMutation,
   useMaintenanceAcceptanceTestVehicleMutation,
   useMaintenanceAcceptanceVehicleByBienPhapQuery,
+  useMaintenanceVehicleInspectionMutation,
 } from "../../../MainenancePlanRepair/Mutation";
 import {
   useBienPhapMayMocByGiamDinhQuery,
@@ -209,6 +210,8 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
     useMaintenanceIncidentInspectionMutation();
   const { deleteMutation: deleteInspectionMutation } =
     useMaintenanceInspectionMutation();
+  const { deleteMutation: deleteInspectionVehicleMutation } =
+    useMaintenanceVehicleInspectionMutation();
   const { deleteMutation: deleteBienPhapMayMocMutation } =
     useBienPhapMayMocMutation();
   const { deleteMutation: deleteBienPhapPhuongTienMutation } =
@@ -259,11 +262,12 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
 
   // Biện pháp theo giám định đang expand
   const { data: bienPhapMayMocRecords = [] } = useBienPhapMayMocByGiamDinhQuery(
-    plan?.nhomTaiSan === "MAY_MOC" ? (expandedInspections || "") : "",
+    plan?.nhomTaiSan === "MAY_MOC" ? expandedInspections || "" : "",
   );
-  const { data: bienPhapPhuongTienRecords = [] } = useBienPhapPhuongTienByGiamDinhQuery(
-    plan?.nhomTaiSan === "PHUONG_TIEN" ? (expandedInspections || "") : "",
-  );
+  const { data: bienPhapPhuongTienRecords = [] } =
+    useBienPhapPhuongTienByGiamDinhQuery(
+      plan?.nhomTaiSan === "PHUONG_TIEN" ? expandedInspections || "" : "",
+    );
   const bienPhapRecords =
     plan?.nhomTaiSan === "MAY_MOC"
       ? bienPhapMayMocRecords
@@ -272,6 +276,15 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
   // Nghiệm thu theo biện pháp đang expand
   const { data: acceptanceTestRecords = [] } =
     useMaintenanceAcceptanceByBienPhapQuery(expandedBienPhap || "");
+
+  // Nghiệm thu phương tiện theo biện pháp đang expand
+  const { data: acceptanceTestVehicleRecords = [] } =
+    useMaintenanceAcceptanceVehicleByBienPhapQuery(expandedBienPhap || "");
+
+  const acceptanceRecords =
+    plan?.nhomTaiSan === "MAY_MOC"
+      ? acceptanceTestRecords
+      : acceptanceTestVehicleRecords;
 
   const { data: materialQualityRecords = [] } =
     useMaintenanceMaterialAssessmentByInspectionQuery(
@@ -289,10 +302,15 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
     [deviceIds],
   );
 
-  const handleToggle = (id: string) =>
-    setSelectedDeviceIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
+  const handleToggle = (id: string) => {
+    const isVehicle = plan?.nhomTaiSan === "PHUONG_TIEN";
+    setSelectedDeviceIds((prev) => {
+      if (isVehicle) {
+        return prev.includes(id) ? [] : [id];
+      }
+      return prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+    });
+  };
   const availableDevices = (incident?.danhSachTaiSan || []).filter(
     (d: any) => d?.daKiemTraSuCo !== 1,
   );
@@ -420,17 +438,20 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                 <TableRow>
                   {incident.trangThai === 3 && (
                     <TableCell padding="checkbox">
-                      <Checkbox
-                        indeterminate={
-                          selectedDeviceIds.length > 0 &&
-                          selectedDeviceIds.length < devicesInIncident.length
-                        }
-                        checked={
-                          devicesInIncident.length > 0 &&
-                          selectedDeviceIds.length === devicesInIncident.length
-                        }
-                        onChange={handleSelectAll}
-                      />
+                      {plan?.nhomTaiSan !== "PHUONG_TIEN" && (
+                        <Checkbox
+                          indeterminate={
+                            selectedDeviceIds.length > 0 &&
+                            selectedDeviceIds.length < devicesInIncident.length
+                          }
+                          checked={
+                            devicesInIncident.length > 0 &&
+                            selectedDeviceIds.length ===
+                              devicesInIncident.length
+                          }
+                          onChange={handleSelectAll}
+                        />
+                      )}
                     </TableCell>
                   )}
                   <TableCell sx={{ fontWeight: 700 }}>STT</TableCell>
@@ -606,7 +627,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                       {/* Depth 2: BB Giám định */}
                       {isBBExpanded &&
                         inspectionRecords.map((insp: any) => {
-                          const acceptances = acceptanceTestRecords.filter(
+                          const acceptances = acceptanceRecords.filter(
                             (a: any) => a.idGiamDinhMayMoc === insp.id,
                           );
                           const isInspExpanded =
@@ -689,11 +710,13 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                                     editTooltip="Chỉnh sửa BB Giám định"
                                     editColor="primary"
                                     isDelete={insp.trangThai === 0}
-                                    onDelete={() =>
-                                      deleteInspectionMutation.mutateAsync(
-                                        insp.id,
-                                      )
-                                    }
+                                    onDelete={() => {
+                                      const deleteFn =
+                                        plan?.nhomTaiSan === "MAY_MOC"
+                                          ? deleteInspectionMutation
+                                          : deleteInspectionVehicleMutation;
+                                      deleteFn.mutateAsync(insp.id);
+                                    }}
                                   />
                                 </TableCell>
                               </TableRow>
@@ -704,7 +727,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                                   const isBPExpanded =
                                     expandedBienPhap === (bp.id ?? "");
                                   const bpAcceptances =
-                                    acceptanceTestRecords.filter(
+                                    acceptanceRecords.filter(
                                       (a: any) => a.idBienPhapMayMoc === bp.id,
                                     );
 
@@ -787,16 +810,19 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                                             onEdit={() => {
                                               setSelectedBienPhap(bp);
                                               setBienPhapParentInspId(
-                                                bp.idGiamDinhMayMoc || bp.idGiamDinhPhuongTien || bp.idKiemTraSuCo,
+                                                bp.idGiamDinhMayMoc ||
+                                                  bp.idGiamDinhPhuongTien ||
+                                                  bp.idKiemTraSuCo,
                                               );
                                             }}
                                             editTooltip="Chỉnh sửa Biện pháp"
                                             editColor="primary"
                                             isDelete={bp.trangThai === 0}
                                             onDelete={() =>
-                                              (plan?.nhomTaiSan === "MAY_MOC" ? deleteBienPhapMayMocMutation : deleteBienPhapPhuongTienMutation).mutateAsync(
-                                                bp.id,
-                                              )
+                                              (plan?.nhomTaiSan === "MAY_MOC"
+                                                ? deleteBienPhapMayMocMutation
+                                                : deleteBienPhapPhuongTienMutation
+                                              ).mutateAsync(bp.id)
                                             }
                                           />
                                         </TableCell>
@@ -804,7 +830,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
 
                                       {/* Depth 4: BB Nghiệm thu */}
                                       {isBPExpanded &&
-                                        acceptanceTestRecords.map(
+                                        acceptanceRecords.map(
                                           (acc: any) => {
                                             const materials =
                                               materialQualityRecords.filter(
@@ -872,7 +898,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                                                     />
                                                   </TableCell>
                                                   <TableCell>
-                                                    {acc.ngayNghiemThu}
+                                                    {acc.ngayTao}
                                                   </TableCell>
                                                   <TableCell>
                                                     {showStatus(
@@ -908,9 +934,11 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                                                         acc.trangThai === 0
                                                       }
                                                       onDelete={() =>
-                                                        deleteAcceptanceMutation.mutateAsync(
-                                                          acc.id,
-                                                        )
+                                                        (plan?.nhomTaiSan ===
+                                                        "MAY_MOC"
+                                                          ? deleteAcceptanceMutation
+                                                          : deleteAcceptanceVehicleMutation
+                                                        ).mutateAsync(acc.id)
                                                       }
                                                     />
                                                   </TableCell>
@@ -1059,7 +1087,9 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
       {(bienPhapParentInspId || selectedBienPhap) &&
         (() => {
           const parentId = selectedBienPhap
-            ? (selectedBienPhap.idGiamDinhMayMoc || selectedBienPhap.idGiamDinhPhuongTien || selectedBienPhap.idKiemTraSuCo)
+            ? selectedBienPhap.idGiamDinhMayMoc ||
+              selectedBienPhap.idGiamDinhPhuongTien ||
+              selectedBienPhap.idKiemTraSuCo
             : bienPhapParentInspId;
           const parentInsp = inspectionRecords.find(
             (r: any) => r.id === parentId,
@@ -1096,7 +1126,12 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
         (() => {
           if (plan?.nhomTaiSan === "PHUONG_TIEN") {
             const bp = bienPhapRecords.find(
-              (r: any) => r.id === (selectedAcc ? (selectedAcc.idBienPhapPhuongTien || selectedAcc.idGiamDinhPhuongTien) : acceptanceParentBienPhapId),
+              (r: any) =>
+                r.id ===
+                (selectedAcc
+                  ? selectedAcc.idBienPhapPhuongTien ||
+                    selectedAcc.idGiamDinhPhuongTien
+                  : acceptanceParentBienPhapId),
             );
             return (
               <NghiemThuPhuongTienDialog
@@ -1105,10 +1140,17 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                   setAcceptanceParentBienPhapId(null);
                   setSelectedAcc(null);
                 }}
-                idBienPhapPhuongTien={selectedAcc ? (selectedAcc.idBienPhapPhuongTien || selectedAcc.idGiamDinhPhuongTien || "") : (acceptanceParentBienPhapId ?? "")}
+                idBienPhapPhuongTien={
+                  selectedAcc
+                    ? selectedAcc.idBienPhapPhuongTien ||
+                      selectedAcc.idGiamDinhPhuongTien ||
+                      ""
+                    : (acceptanceParentBienPhapId ?? "")
+                }
                 idTaiSan={bp?.idTaiSan}
                 tenTaiSan={bp?.tenTaiSan}
                 soBienBanBienPhap={bp?.soPhieu || bp?.soBienBan}
+                bienPhap={bp}
                 initData={selectedAcc}
               />
             );
@@ -1141,7 +1183,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
           const parentId = selectedMaterialAssessment
             ? selectedMaterialAssessment.idNghiemThu
             : materialParentAccId;
-          const parentAcc = acceptanceTestRecords.find(
+          const parentAcc = acceptanceRecords.find(
             (a: any) => a.id === parentId,
           );
           return parentAcc ? (

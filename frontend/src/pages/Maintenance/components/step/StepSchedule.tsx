@@ -98,7 +98,7 @@ const StepSchedule = ({
                 Loại TS
               </TableCell>
               <TableCell
-                sx={{ fontWeight: 700, bgcolor: "#f5f5f5", minWidth: 90 }}
+                sx={{ fontWeight: 700, bgcolor: "#f5f5f5", minWidth: 120 }}
               >
                 Đơn vị bảo trì
               </TableCell>

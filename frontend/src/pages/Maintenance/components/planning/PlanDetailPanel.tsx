@@ -59,6 +59,7 @@ import {
   useMaintenanceMaterialAssessmentMutation,
   useMaintenanceInspectionByBienBanQuery,
   useMaintenanceVehicleInspectionByBienBanQuery,
+  useMaintenanceVehicleInspectionMutation,
 } from "../../../MainenancePlanRepair/Mutation";
 import {
   useBienPhapMayMocByGiamDinhQuery,
@@ -299,6 +300,8 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
   } = useMaintenanceRepairMutation();
   const { deleteMutation: deleteInspectionMutation } =
     useMaintenanceInspectionMutation();
+  const { deleteMutation: deleteInspectionVehicleMutation } =
+    useMaintenanceVehicleInspectionMutation();
   const { deleteMutation: deleteBienPhapMayMocMutation } =
     useBienPhapMayMocMutation();
   const { deleteMutation: deleteBienPhapPhuongTienMutation } =
@@ -799,11 +802,13 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                           setBienPhapParentInspId(insp.id);
                                         }}
                                         isDelete={insp?.trangThai === 0}
-                                        onDelete={() =>
-                                          deleteInspectionMutation.mutateAsync(
-                                            insp.id,
-                                          )
-                                        }
+                                        onDelete={() => {
+                                          const deleteFn =
+                                            plan?.nhomTaiSan === "MAY_MOC"
+                                              ? deleteInspectionMutation
+                                              : deleteInspectionVehicleMutation;
+                                          deleteFn.mutateAsync(insp.id);
+                                        }}
                                         isEdit={insp?.trangThai === 0}
                                         onEdit={() => {
                                           setInspectionParentReqId(

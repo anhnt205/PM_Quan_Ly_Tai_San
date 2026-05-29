@@ -1439,8 +1439,8 @@ export const useMaintenanceVehicleInspectionByBienBanQuery = (
     queryKey: ["vehicleInspectionByBienBan", idBienBan],
     queryFn: async () => {
       const res = await api.get(`/giamdinh-phuongtien/bienban/${idBienBan}`);
-      return (res.data.data || res.data || []).map(
-        (item: any) => InspectionAdapter(item),
+      return (res.data.data || res.data || []).map((item: any) =>
+        InspectionAdapter(item),
       );
     },
     enabled: !!idBienBan && enabled,
@@ -1492,6 +1492,9 @@ export const useMaintenanceVehicleInspectionMutation = () => {
         }
         queryClient.invalidateQueries({ queryKey: ["vehicleInspectionPage"] });
         queryClient.invalidateQueries({
+          queryKey: ["incidentInspectionBySuCo"],
+        });
+        queryClient.invalidateQueries({
           queryKey: ["vehicleInspectionByBienBan"],
         });
         showSuccessAlert("Tạo biên bản giám định phương tiện thành công");
@@ -1533,6 +1536,9 @@ export const useMaintenanceVehicleInspectionMutation = () => {
         }
         queryClient.invalidateQueries({ queryKey: ["vehicleInspectionPage"] });
         queryClient.invalidateQueries({
+          queryKey: ["incidentInspectionBySuCo"],
+        });
+        queryClient.invalidateQueries({
           queryKey: ["vehicleInspectionByBienBan"],
         });
         showSuccessAlert("Cập nhật biên bản giám định phương tiện thành công");
@@ -1558,6 +1564,9 @@ export const useMaintenanceVehicleInspectionMutation = () => {
     onSuccess: (res: any) => {
       if (res.success || res.id || res > 0) {
         queryClient.invalidateQueries({ queryKey: ["vehicleInspectionPage"] });
+        queryClient.invalidateQueries({
+          queryKey: ["incidentInspectionBySuCo"],
+        });
         queryClient.invalidateQueries({
           queryKey: ["vehicleInspectionByBienBan"],
         });
@@ -1902,7 +1911,9 @@ export const useMaintenanceAcceptanceTestVehicleMutation = () => {
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["nghiemThuPhuongTienPage"] });
-    queryClient.invalidateQueries({ queryKey: ["nghiemThuPhuongTienByBienPhap"] });
+    queryClient.invalidateQueries({
+      queryKey: ["nghiemThuPhuongTienByBienPhap"],
+    });
     queryClient.invalidateQueries({
       queryKey: ["bienPhapPhuongTienByGiamDinh"],
     });
@@ -1924,7 +1935,8 @@ export const useMaintenanceAcceptanceTestVehicleMutation = () => {
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || "Tạo biên bản nghiệm thu phương tiện thất bại",
+        error.response?.data?.message ||
+          "Tạo biên bản nghiệm thu phương tiện thất bại",
       );
     },
   });
@@ -1961,7 +1973,8 @@ export const useMaintenanceAcceptanceTestVehicleMutation = () => {
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || "Xóa biên bản nghiệm thu phương tiện thất bại",
+        error.response?.data?.message ||
+          "Xóa biên bản nghiệm thu phương tiện thất bại",
       );
     },
   });
@@ -1995,7 +2008,8 @@ export const useMaintenanceAcceptanceTestVehicleMutation = () => {
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || "Hủy biên bản nghiệm thu phương tiện thất bại",
+        error.response?.data?.message ||
+          "Hủy biên bản nghiệm thu phương tiện thất bại",
       );
     },
   });
@@ -2119,6 +2133,10 @@ export const useMaintenanceMaterialAssessmentMutation = () => {
         queryKey: ["nghiemThuMayMocByBienPhap"],
       });
       queryClient.invalidateQueries({
+        queryKey: ["nghiemThuPhuongTienByBienPhap"],
+      });
+
+      queryClient.invalidateQueries({
         queryKey: ["materialAssessmentByInspection"],
       });
       showSuccessAlert("Tạo biên bản đánh giá vật tư thành công");
@@ -2151,6 +2169,9 @@ export const useMaintenanceMaterialAssessmentMutation = () => {
         queryKey: ["nghiemThuMayMocByBienPhap"],
       });
       queryClient.invalidateQueries({
+        queryKey: ["nghiemThuPhuongTienByBienPhap"],
+      });
+      queryClient.invalidateQueries({
         queryKey: ["materialAssessmentByInspection"],
       });
       showSuccessAlert("Cập nhật biên bản đánh giá vật tư thành công");
@@ -2171,6 +2192,9 @@ export const useMaintenanceMaterialAssessmentMutation = () => {
       queryClient.invalidateQueries({ queryKey: ["materialAssessmentPage"] });
       queryClient.invalidateQueries({
         queryKey: ["nghiemThuMayMocByBienPhap"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["nghiemThuPhuongTienByBienPhap"],
       });
       queryClient.invalidateQueries({
         queryKey: ["materialAssessmentByInspection"],

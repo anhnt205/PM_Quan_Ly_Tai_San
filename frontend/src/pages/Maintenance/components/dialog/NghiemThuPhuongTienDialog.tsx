@@ -8,13 +8,8 @@ import {
   Button,
   Box,
   Typography,
-  Chip,
   IconButton,
   Divider,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Table,
   TableBody,
   TableCell,
@@ -27,7 +22,6 @@ import BuildIcon from "@mui/icons-material/Build";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import DescriptionIcon from "@mui/icons-material/Description";
 import { useSelector } from "react-redux";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
@@ -48,6 +42,7 @@ import api from "../../../../config/api.config";
 import FieldInput from "../../../../components/TextField/FieldInput";
 import TextFieldNumber from "../../../../components/TextField/TextFieldNumber";
 import { BienPhapPhuongTienData } from "../../../MainenancePlanRepair/types";
+import SignerWorkflowSection from "./SignerWorkflowSection";
 
 type SimpleDept = { id: string; name: string };
 type SimpleUser = {
@@ -85,25 +80,6 @@ const NghiemThuPhuongTienDialog = ({
 
   const { createMutation, updateMutation } =
     useMaintenanceAcceptanceTestVehicleMutation();
-
-  const departments: SimpleDept[] = (apiDepartments || []).map((d: any) => ({
-    id: String(d?.id ?? ""),
-    name: String(d?.tenPhongBan ?? d?.name ?? ""),
-  }));
-  const users: SimpleUser[] = (apiUsers || [])
-    .filter((u: any) => u.hasAccount)
-    .map((u: any) => ({
-      id: String(u?.id ?? ""),
-      name: String(u?.hoTen ?? u?.name ?? ""),
-      departmentId: String(u?.phongBanId ?? u?.departmentId ?? ""),
-      title: String(u?.tenChucVu ?? u?.chucVu ?? u?.title ?? ""),
-    }));
-
-  const [addDeptId, setAddDeptId] = useState("");
-  const [addUserId, setAddUserId] = useState("");
-  const [editingSignerId, setEditingSignerId] = useState<string | null>(null);
-  const [editDeptId, setEditDeptId] = useState("");
-  const [editUserId, setEditUserId] = useState("");
 
   const initialValues: NghiemThuPhuongTienData & { nguoiKyList: any[] } = {
     id: "",
@@ -194,7 +170,7 @@ const NghiemThuPhuongTienDialog = ({
               phanTramConLai: 0,
               bienPhapXuLy: "",
               ghiChu: "",
-              donViTinh:item.donViTinh
+              donViTinh: item.donViTinh,
             };
           },
         ),
@@ -203,62 +179,9 @@ const NghiemThuPhuongTienDialog = ({
   }, [open, initData, bienPhap, apiUsers, apiDepartments]);
 
   function handleClose() {
-    setAddDeptId("");
-    setAddUserId("");
-    setEditingSignerId(null);
     formik.resetForm();
     onClose();
   }
-
-  const handleAddSigner = () => {
-    if (!addDeptId || !addUserId) return;
-    const u = users.find((x) => x.id === addUserId);
-    const d = departments.find((x) => x.id === addDeptId);
-    if (!u || !d) return;
-    if (formik.values.nguoiKyList.some((s: any) => s.userId === u.id)) return;
-    formik.setFieldValue("nguoiKyList", [
-      ...formik.values.nguoiKyList,
-      {
-        userId: u.id,
-        userName: u.name,
-        departmentId: d.id,
-        departmentName: d.name,
-        position: u.title ?? "",
-        order: formik.values.nguoiKyList.length + 1,
-        signed: false,
-      },
-    ]);
-    setAddDeptId("");
-    setAddUserId("");
-  };
-
-  const handleRemoveSigner = (userId: string) => {
-    formik.setFieldValue(
-      "nguoiKyList",
-      formik.values.nguoiKyList
-        .filter((s: any) => s.userId !== userId)
-        .map((s: any, i: number) => ({ ...s, order: i + 1 })),
-    );
-  };
-
-  const handleSaveEdit = () => {
-    formik.setFieldValue(
-      "nguoiKyList",
-      formik.values.nguoiKyList.map((s: any) =>
-        s.userId === editingSignerId
-          ? {
-              ...s,
-              userId: editUserId,
-              userName: users.find((u) => u.id === editUserId)?.name ?? "",
-              departmentId: editDeptId,
-              departmentName:
-                departments.find((d) => d.id === editDeptId)?.name ?? "",
-            }
-          : s,
-      ),
-    );
-    setEditingSignerId(null);
-  };
 
   const handleAddMaterial = () => {
     formik.setFieldValue("danhSachChiTiet", [
@@ -416,315 +339,8 @@ const NghiemThuPhuongTienDialog = ({
           </Box>
 
           {/* ── RIGHT COLUMN: Approval Workflow ── */}
-          <Box
-            sx={{
-              bgcolor: "white",
-              border: "1px solid",
-              borderColor: "grey.200",
-              borderRadius: 3,
-              p: 2.5,
-              display: "flex",
-              flexDirection: "column",
-              height: "100%",
-              boxShadow: "0px 2px 8px rgba(0,0,0,0.04)",
-            }}
-          >
-            <Typography
-              variant="subtitle1"
-              fontWeight={700}
-              color="primary.main"
-              mb={2}
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            >
-              Quy trình duyệt ký
-              <Chip
-                label={`${formik.values.nguoiKyList.length} người`}
-                size="small"
-                color="primary"
-                variant="outlined"
-                sx={{ fontWeight: 600 }}
-              />
-            </Typography>
-
-            {/* Signers List */}
-            <Box sx={{ flex: 1, overflowY: "auto", mb: 2, pr: 0.5 }}>
-              {formik.values.nguoiKyList.length > 0 ? (
-                <Box sx={{ position: "relative", pl: 4 }}>
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      left: 14,
-                      top: 10,
-                      bottom: 10,
-                      width: "1px",
-                      bgcolor: "grey.200",
-                    }}
-                  />
-                  {formik.values.nguoiKyList.map((s: any, idx: number) => {
-                    const userItem = users.find((u) => u.id === s.userId);
-                    const isEditingThis = editingSignerId === s.userId;
-                    return (
-                      <Box key={s.userId} sx={{ position: "relative", mb: 2 }}>
-                        {/* Bullet number */}
-                        <Box
-                          sx={{
-                            position: "absolute",
-                            left: -33,
-                            top: 10,
-                            width: 20,
-                            height: 20,
-                            borderRadius: "50%",
-                            bgcolor: "primary.main",
-                            color: "white",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: 10,
-                            fontWeight: 700,
-                            zIndex: 1,
-                            boxShadow: "0 0 0 3px white",
-                          }}
-                        >
-                          {idx + 1}
-                        </Box>
-                        <Box
-                          sx={{
-                            border: "1px solid",
-                            borderRadius: 2,
-                            p: 1.5,
-                            borderColor: isEditingThis
-                              ? "primary.main"
-                              : "grey.200",
-                            bgcolor: isEditingThis ? "primary.50" : "white",
-                            transition: "all 0.2s ease",
-                            "&:hover": {
-                              borderColor: "primary.light",
-                            },
-                          }}
-                        >
-                          {isEditingThis ? (
-                            <Box
-                              sx={{
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: 1.5,
-                              }}
-                            >
-                              <FormControl size="small" fullWidth>
-                                <InputLabel>Đơn vị</InputLabel>
-                                <Select
-                                  value={editDeptId}
-                                  label="Đơn vị"
-                                  onChange={(e) => {
-                                    setEditDeptId(e.target.value);
-                                    setEditUserId("");
-                                  }}
-                                >
-                                  {departments.map((d) => (
-                                    <MenuItem key={d.id} value={d.id}>
-                                      {d.name}
-                                    </MenuItem>
-                                  ))}
-                                </Select>
-                              </FormControl>
-                              <FormControl size="small" fullWidth>
-                                <InputLabel>Người duyệt</InputLabel>
-                                <Select
-                                  value={editUserId}
-                                  label="Người duyệt"
-                                  onChange={(e) =>
-                                    setEditUserId(e.target.value)
-                                  }
-                                >
-                                  {users
-                                    .filter(
-                                      (u) => u.departmentId === editDeptId,
-                                    )
-                                    .map((u) => (
-                                      <MenuItem key={u.id} value={u.id}>
-                                        {u.name}
-                                      </MenuItem>
-                                    ))}
-                                </Select>
-                              </FormControl>
-                              <Box sx={{ display: "flex", gap: 1 }}>
-                                <Button
-                                  variant="contained"
-                                  color="primary"
-                                  size="small"
-                                  onClick={handleSaveEdit}
-                                >
-                                  Lưu
-                                </Button>
-                                <Button
-                                  size="small"
-                                  color="inherit"
-                                  onClick={() => setEditingSignerId(null)}
-                                >
-                                  Hủy
-                                </Button>
-                              </Box>
-                            </Box>
-                          ) : (
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                              }}
-                            >
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 1.5,
-                                }}
-                              >
-                                <Box
-                                  sx={{
-                                    width: 32,
-                                    height: 32,
-                                    borderRadius: "50%",
-                                    bgcolor: "primary.light",
-                                    color: "primary.contrastText",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    fontWeight: 700,
-                                    fontSize: 12,
-                                    flexShrink: 0,
-                                  }}
-                                >
-                                  {userItem?.name?.charAt(0) ?? "?"}
-                                </Box>
-                                <Box>
-                                  <Typography fontWeight={700} fontSize={13}>
-                                    {userItem?.name}
-                                  </Typography>
-                                  <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                    display="block"
-                                  >
-                                    {userItem?.title || "Chuyên viên"}
-                                  </Typography>
-                                  <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                  >
-                                    {s.departmentName}
-                                  </Typography>
-                                </Box>
-                              </Box>
-                              <Box sx={{ display: "flex", gap: 0.5 }}>
-                                <Button
-                                  size="small"
-                                  color="primary"
-                                  onClick={() => {
-                                    setEditingSignerId(s.userId);
-                                    setEditDeptId(s.departmentId);
-                                    setEditUserId(s.userId);
-                                  }}
-                                  sx={{ minWidth: "auto", px: 1 }}
-                                >
-                                  Sửa
-                                </Button>
-                                <Button
-                                  size="small"
-                                  color="error"
-                                  onClick={() => handleRemoveSigner(s.userId)}
-                                  sx={{ minWidth: "auto", px: 1 }}
-                                >
-                                  Xóa
-                                </Button>
-                              </Box>
-                            </Box>
-                          )}
-                        </Box>
-                      </Box>
-                    );
-                  })}
-                </Box>
-              ) : (
-                <Box
-                  sx={{
-                    textAlign: "center",
-                    py: 5,
-                    color: "text.disabled",
-                    border: "1px dashed",
-                    borderColor: "grey.300",
-                    borderRadius: 2,
-                  }}
-                >
-                  <DescriptionIcon sx={{ fontSize: 32, mb: 1, opacity: 0.5 }} />
-                  <Typography variant="body2">
-                    Chưa có người trong quy trình duyệt
-                  </Typography>
-                  <Typography variant="caption">
-                    Thêm người ký bên dưới
-                  </Typography>
-                </Box>
-              )}
-            </Box>
-
-            <Divider sx={{ mb: 2 }} />
-
-            {/* Add Signer Form */}
-            <Typography
-              variant="caption"
-              fontWeight={700}
-              color="text.secondary"
-              mb={1}
-              display="block"
-            >
-              Thêm người duyệt ký
-            </Typography>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-              <FormControl size="small" fullWidth>
-                <InputLabel>Đơn vị</InputLabel>
-                <Select
-                  value={addDeptId}
-                  label="Đơn vị"
-                  onChange={(e) => {
-                    setAddDeptId(e.target.value);
-                    setAddUserId("");
-                  }}
-                >
-                  {departments.map((d) => (
-                    <MenuItem key={d.id} value={d.id}>
-                      {d.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl size="small" fullWidth disabled={!addDeptId}>
-                <InputLabel>Người ký</InputLabel>
-                <Select
-                  value={addUserId}
-                  label="Người ký"
-                  onChange={(e) => setAddUserId(e.target.value)}
-                >
-                  {users
-                    .filter((u) => u.departmentId === addDeptId)
-                    .map((u) => (
-                      <MenuItem key={u.id} value={u.id}>
-                        {u.name}
-                      </MenuItem>
-                    ))}
-                </Select>
-              </FormControl>
-              <Button
-                variant="contained"
-                size="small"
-                color="primary"
-                fullWidth
-                disabled={!addDeptId || !addUserId}
-                onClick={handleAddSigner}
-                sx={{ py: 0.8 }}
-              >
-                Thêm người duyệt
-              </Button>
-            </Box>
+          <Box>
+            <SignerWorkflowSection formik={formik} />
           </Box>
         </Box>
         {/* Materials/Parts Table Card */}

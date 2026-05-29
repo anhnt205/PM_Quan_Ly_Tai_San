@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -7,7 +7,6 @@ import {
   Button,
   Box,
   Typography,
-  TextField,
   Table,
   TableBody,
   TableCell,
@@ -15,19 +14,13 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Chip,
   IconButton,
   Divider,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
 } from "@mui/material";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import { useFormik } from "formik";
 import {
   InspectionRecordData,
@@ -50,6 +43,9 @@ import { useAllToolDetailQuery } from "../../../ToolManager/Mutation";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
 import { useAllLoaiSCBDQuery } from "../../../MaintenanceRepairType/Mutation";
 import { listSigneInfo } from "../../config";
+import FieldInput from "../../../../components/TextField/FieldInput";
+import FieldDate from "../../../../components/TextField/FieldDate";
+import SignerWorkflowSection from "./SignerWorkflowSection";
 
 type SimpleDept = { id: string; name: string };
 type SimpleUser = {
@@ -86,10 +82,6 @@ const AcceptanceTestDialog = ({
   const { data: allToolDetail = [] } = useAllToolDetailQuery();
   const { data: allLevel = [] } = useAllLoaiSCBDQuery();
 
-  const departments: SimpleDept[] = (apiDepartments || []).map((d: any) => ({
-    id: String(d?.id ?? ""),
-    name: String(d?.tenPhongBan ?? d?.name ?? ""),
-  }));
   const users: SimpleUser[] = (apiUsers || [])
     .filter((u: any) => u.hasAccount)
     .map((u: any) => ({
@@ -98,12 +90,6 @@ const AcceptanceTestDialog = ({
       departmentId: String(u?.phongBanId ?? u?.departmentId ?? ""),
       title: String(u?.tenChucVu ?? u?.chucVu ?? u?.title ?? ""),
     }));
-
-  const [addDeptId, setAddDeptId] = useState("");
-  const [addUserId, setAddUserId] = useState("");
-  const [editingSignerId, setEditingSignerId] = useState<string | null>(null);
-  const [editDeptId, setEditDeptId] = useState("");
-  const [editUserId, setEditUserId] = useState("");
 
   const formik = useFormik({
     initialValues: {
@@ -147,7 +133,6 @@ const AcceptanceTestDialog = ({
               }))
           : [];
 
-      // Map danhSachTaiSan (with nested danhSachVatTu) to payload giống hệt Giám định
       const mappedDanhSachTaiSan = values.danhSachTaiSan.map((ts) => {
         const actualTsId = ts.id ? ts.id : generateCode("NTTS-");
 
@@ -355,61 +340,7 @@ const AcceptanceTestDialog = ({
     );
   };
 
-  const handleAddSigner = () => {
-    if (!addUserId || !addDeptId) return;
-    if (formik.values.nguoiKyList.some((s: any) => s.userId === addUserId))
-      return;
-    const signerUser = users.find((u) => u.id === addUserId);
-    const dept = departments.find((d) => d.id === addDeptId);
-    if (!signerUser || !dept) return;
-    const updated = [
-      ...formik.values.nguoiKyList,
-      {
-        userId: signerUser.id,
-        userName: signerUser.name,
-        departmentId: dept.id,
-        departmentName: dept.name,
-        order: formik.values.nguoiKyList.length + 1,
-        signed: false,
-      },
-    ];
-    formik.setFieldValue("nguoiKyList", updated);
-    setAddDeptId("");
-    setAddUserId("");
-  };
-
-  const handleRemoveSigner = (userId: string) => {
-    const updated = formik.values.nguoiKyList
-      .filter((s: any) => s.userId !== userId)
-      .map((s: any, i: number) => ({ ...s, order: i + 1 }));
-    formik.setFieldValue("nguoiKyList", updated);
-  };
-
-  const handleEdit = (signer: PlanSigner) => {
-    setEditingSignerId(signer.userId);
-    setEditDeptId(signer.departmentId);
-    setEditUserId(signer.userId);
-  };
-
-  const handleSaveEdit = () => {
-    const updated = formik.values.nguoiKyList.map((s: any) =>
-      s.userId === editingSignerId
-        ? {
-            ...s,
-            userId: editUserId,
-            userName: users.find((u) => u.id === editUserId)?.name || "",
-            departmentId: editDeptId,
-            departmentName:
-              departments.find((d) => d.id === editDeptId)?.name || "",
-          }
-        : s,
-    );
-    formik.setFieldValue("nguoiKyList", updated);
-    setEditingSignerId(null);
-  };
-
   const handleClose = () => {
-    setEditingSignerId(null);
     onClose();
   };
 
@@ -467,50 +398,27 @@ const AcceptanceTestDialog = ({
                 Thông tin
               </Typography>
               <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <TextField
-                  label="Số biên bản"
-                  name="soPhieu"
-                  value={formik.values.soPhieu}
-                  onChange={formik.handleChange}
-                  placeholder={`VD: BB-NT-${repairRequest?.id}`}
-                  size="small"
-                  fullWidth
+                <FieldInput title="Số phiếu" field="soPhieu" formik={formik} />
+                <FieldDate
+                  title="Ngày lập"
+                  field="ngayNghiemThu"
+                  formik={formik}
                 />
-                <TextField
-                  label="Ngày lập"
-                  name="ngayNghiemThu"
-                  type="date"
-                  value={formik.values.ngayNghiemThu}
-                  onChange={formik.handleChange}
-                  size="small"
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
+                <FieldInput
+                  title="Địa điểm (Tại...)"
+                  field="viTri"
+                  formik={formik}
                 />
-                <TextField
-                  label="Địa điểm (Tại...)"
-                  name="viTri"
-                  value={formik.values.viTri}
-                  onChange={formik.handleChange}
-                  size="small"
-                  fullWidth
-                  placeholder="vd: Phân xưởng khai thác 1, khu vực A"
-                />
-                <TextField
-                  label="Tên thiết bị nghiệm thu"
-                  name="tenThietBi"
-                  value={formik.values.tenThietBi}
-                  onChange={formik.handleChange}
-                  size="small"
-                  fullWidth
+                <FieldInput
+                  title="Tên thiết bị nghiệm thu"
+                  field="tenThietBi"
+                  formik={formik}
                 />
                 <Box sx={{ display: "flex", gap: 2 }}>
-                  <TextField
-                    label="Số đăng ký"
-                    name="soDangKi"
-                    value={formik.values.soDangKi}
-                    onChange={formik.handleChange}
-                    size="small"
-                    sx={{ flex: 1 }}
+                  <FieldInput
+                    title="Số đăng ký"
+                    field="soDangKi"
+                    formik={formik}
                   />
                   <FieldAutoCompleted
                     title="Cấp sửa chữa"
@@ -520,477 +428,171 @@ const AcceptanceTestDialog = ({
                     onChange={(value) =>
                       formik.setFieldValue("capSuaChua", value.id)
                     }
-                    autocompleteSx={{ flex: 1 }}
                   />
                 </Box>
-                <TextField
-                  label="Kết quả chạy thử"
-                  name="ketQua"
-                  value={formik.values.ketQua}
-                  onChange={formik.handleChange}
-                  size="small"
-                  fullWidth
+                <FieldInput
+                  title="Kết quả chạy thử"
+                  field="ketQua"
+                  formik={formik}
                 />
-                <TextField
-                  label="Nội dung nghiệm thu"
-                  name="noiDung"
-                  value={formik.values.noiDung}
-                  onChange={formik.handleChange}
-                  size="small"
-                  fullWidth
+                <FieldInput
+                  title="Nội dung nghiệm thu"
+                  field="noiDung"
+                  formik={formik}
                   multiline
                   rows={3}
                 />
               </Box>
             </Box>
+          </Box>
 
-            {/* Vật tư / Thiết bị */}
-            <Box>
-              <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
-                Vật tư / Thiết bị
-              </Typography>
-              <TableContainer component={Paper} variant="outlined">
-                <Table size="small">
-                  <TableHead>
-                    <TableRow sx={{ bgcolor: "#f5f5f5" }}>
-                      <TableCell sx={{ fontWeight: 700, width: 40 }}>
-                        STT
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 700, width: 80 }}>
-                        Mã VT
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 700 }}>
-                        Tên vật tư, thiết bị
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 700, width: 55 }}>
-                        ĐVT
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 700, width: 50 }}>
-                        SL
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 700, width: 90 }}>
-                        Ghi chú
-                      </TableCell>
-                      <TableCell sx={{ width: 36 }} />
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {formik.values.danhSachTaiSan.map((ts, assetIdx) => {
-                      const activeVatTu = ts.danhSachVatTu || [];
-                      return (
-                        <React.Fragment key={ts.id || assetIdx}>
-                          <TableRow sx={{ bgcolor: "#fafafa" }}>
-                            <TableCell sx={{ fontWeight: 700 }}>
-                              {String.fromCharCode(73 + assetIdx)}/
+          {/* Col 2: Quy trình duyệt */}
+          <Box>
+            <SignerWorkflowSection formik={formik} />
+          </Box>
+        </Box>
+
+        {/* Vật tư / Thiết bị */}
+        <Box>
+          <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+            Vật tư / Thiết bị
+          </Typography>
+          <TableContainer component={Paper} variant="outlined">
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ bgcolor: "#f5f5f5" }}>
+                  <TableCell sx={{ fontWeight: 700, width: 40 }}>STT</TableCell>
+                  <TableCell sx={{ fontWeight: 700, width: 80 }}>
+                    Mã VT
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    Tên vật tư, thiết bị
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700, width: 100 }}>
+                    ĐVT
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700, width: 100 }}>SL</TableCell>
+                  <TableCell sx={{ fontWeight: 700, width: 150 }}>
+                    Ghi chú
+                  </TableCell>
+                  <TableCell sx={{ width: 36 }} />
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {formik.values.danhSachTaiSan.map((ts, assetIdx) => {
+                  const activeVatTu = ts.danhSachVatTu || [];
+                  return (
+                    <React.Fragment key={ts.id || assetIdx}>
+                      <TableRow sx={{ bgcolor: "#fafafa" }}>
+                        <TableCell sx={{ fontWeight: 700 }}>
+                          {String.fromCharCode(73 + assetIdx)}/
+                        </TableCell>
+                        <TableCell colSpan={5} sx={{ fontWeight: 600 }}>
+                          Thiết bị: {ts.tenTaiSan || ts.idTaiSan}
+                        </TableCell>
+                        <TableCell align="center">
+                          <IconButton
+                            size="small"
+                            onClick={() => addMaterialRow(assetIdx)}
+                            color="primary"
+                          >
+                            <AddIcon fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                      {activeVatTu.length === 0 ? (
+                        <TableRow>
+                          <TableCell />
+                          <TableCell colSpan={6} align="center">
+                            <Typography
+                              variant="body2"
+                              color="textSecondary"
+                              sx={{ py: 1.5 }}
+                            >
+                              Chưa có vật tư/linh kiện phụ tùng nào được chọn
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        activeVatTu.map((item, rowIdx) => (
+                          <TableRow key={item.id || rowIdx}>
+                            <TableCell sx={{ pl: 2 }}>
+                              {String(rowIdx + 1).padStart(2, "0")}
                             </TableCell>
-                            <TableCell colSpan={5} sx={{ fontWeight: 600 }}>
-                              Thiết bị: {ts.tenTaiSan || ts.idTaiSan}
+                            <TableCell sx={{ width: "200px" }}>
+                              <FieldAutoCompleted
+                                title=""
+                                data={allToolDetail}
+                                labelkey="idTaiSan"
+                                limitOptions={10}
+                                value={item.idChiTietVatTu}
+                                noBorder={true}
+                                onChange={(value) => {
+                                  if (value) {
+                                    updateMaterial(assetIdx, item.id!, {
+                                      idChiTietVatTu: value.id,
+                                      idVatTu: value.idTaiSan,
+                                      tenVatTu: value.tenTaiSan,
+                                      donViTinh: value.donViTinh,
+                                    });
+                                  } else {
+                                    updateMaterial(assetIdx, item.id!, {
+                                      idChiTietVatTu: "",
+                                      idVatTu: "",
+                                      tenVatTu: "",
+                                      donViTinh: "",
+                                    });
+                                  }
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell
+                              sx={{
+                                maxWidth: "150px",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {item.tenVatTu}
+                            </TableCell>
+                            <TableCell>{item.donViTinh}</TableCell>
+                            <TableCell>
+                              <FieldInput
+                                title=""
+                                field={`danhSachTaiSan.${assetIdx}.danhSachVatTu.${rowIdx}.soLuong`}
+                                formik={formik}
+                                noBorder={true}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <FieldInput
+                                title=""
+                                field={`danhSachTaiSan.${assetIdx}.danhSachVatTu.${rowIdx}.ghiChu`}
+                                formik={formik}
+                                noBorder={true}
+                              />
                             </TableCell>
                             <TableCell align="center">
                               <IconButton
                                 size="small"
-                                onClick={() => addMaterialRow(assetIdx)}
-                                color="primary"
+                                onClick={() =>
+                                  removeMaterialRow(assetIdx, item.id!)
+                                }
+                                color="error"
                               >
-                                <AddIcon fontSize="small" />
+                                <DeleteIcon fontSize="small" />
                               </IconButton>
                             </TableCell>
                           </TableRow>
-                          {activeVatTu.length === 0 ? (
-                            <TableRow>
-                              <TableCell />
-                              <TableCell colSpan={6} align="center">
-                                <Typography
-                                  variant="body2"
-                                  color="textSecondary"
-                                  sx={{ py: 1.5 }}
-                                >
-                                  Chưa có vật tư/linh kiện phụ tùng nào được
-                                  chọn
-                                </Typography>
-                              </TableCell>
-                            </TableRow>
-                          ) : (
-                            activeVatTu.map((item, rowIdx) => (
-                              <TableRow key={item.id || rowIdx}>
-                                <TableCell sx={{ pl: 2 }}>
-                                  {String(rowIdx + 1).padStart(2, "0")}
-                                </TableCell>
-                                <TableCell sx={{ width: "200px" }}>
-                                  <FieldAutoCompleted
-                                    title=""
-                                    data={allToolDetail}
-                                    labelkey="idTaiSan"
-                                    limitOptions={10}
-                                    value={item.idChiTietVatTu}
-                                    noBorder={true}
-                                    onChange={(value) => {
-                                      if (value) {
-                                        updateMaterial(assetIdx, item.id!, {
-                                          idChiTietVatTu: value.id,
-                                          idVatTu: value.idTaiSan,
-                                          tenVatTu: value.tenTaiSan,
-                                          donViTinh: value.donViTinh,
-                                        });
-                                      } else {
-                                        updateMaterial(assetIdx, item.id!, {
-                                          idChiTietVatTu: "",
-                                          idVatTu: "",
-                                          tenVatTu: "",
-                                          donViTinh: "",
-                                        });
-                                      }
-                                    }}
-                                  />
-                                </TableCell>
-                                <TableCell
-                                  sx={{
-                                    maxWidth: "150px",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                  }}
-                                >
-                                  {item.tenVatTu}
-                                </TableCell>
-                                <TableCell>{item.donViTinh}</TableCell>
-                                <TableCell>
-                                  <TextField
-                                    type="number"
-                                    value={item.soLuong}
-                                    size="small"
-                                    variant="standard"
-                                    onChange={(e) =>
-                                      updateMaterial(assetIdx, item.id!, {
-                                        soLuong: parseInt(e.target.value) || 1,
-                                      })
-                                    }
-                                    inputProps={{
-                                      min: 1,
-                                      style: { width: 36 },
-                                    }}
-                                  />
-                                </TableCell>
-                                <TableCell>
-                                  <TextField
-                                    value={item.ghiChu || ""}
-                                    size="small"
-                                    variant="standard"
-                                    fullWidth
-                                    onChange={(e) =>
-                                      updateMaterial(assetIdx, item.id!, {
-                                        ghiChu: e.target.value,
-                                      })
-                                    }
-                                  />
-                                </TableCell>
-                                <TableCell align="center">
-                                  <IconButton
-                                    size="small"
-                                    onClick={() =>
-                                      removeMaterialRow(assetIdx, item.id!)
-                                    }
-                                    color="error"
-                                  >
-                                    <DeleteIcon fontSize="small" />
-                                  </IconButton>
-                                </TableCell>
-                              </TableRow>
-                            ))
-                          )}
-                        </React.Fragment>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Box>
-          </Box>
-
-          {/* Col 2: Quy trình duyệt */}
-          <Box
-            sx={{
-              border: "1px solid",
-              borderColor: "divider",
-              borderRadius: 3,
-              p: 2.5,
-              display: "flex",
-              flexDirection: "column",
-              height: "100%",
-            }}
-          >
-            <Typography
-              variant="subtitle1"
-              fontWeight={600}
-              mb={2}
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            >
-              Quy trình duyệt
-              <Chip
-                label={`${formik.values.nguoiKyList.length} người`}
-                size="small"
-                color="primary"
-                variant="outlined"
-                sx={{ fontWeight: 400 }}
-              />
-            </Typography>
-
-            <Box sx={{ flex: 1, overflowY: "auto", mb: 2 }}>
-              {formik.values.nguoiKyList.length > 0 ? (
-                <Box sx={{ position: "relative", pl: 5 }}>
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      left: 16,
-                      top: 8,
-                      bottom: 8,
-                      width: "1px",
-                      bgcolor: "divider",
-                    }}
-                  />
-                  {formik.values.nguoiKyList.map((s: any, idx: number) => {
-                    const isEditingThis = editingSignerId === s.userId;
-                    return (
-                      <Box
-                        key={s.userId}
-                        sx={{ position: "relative", mb: 1.5 }}
-                      >
-                        <Box
-                          sx={{
-                            position: "absolute",
-                            left: -37,
-                            top: 14,
-                            width: 24,
-                            height: 24,
-                            borderRadius: "50%",
-                            bgcolor: "primary.main",
-                            color: "white",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: 11,
-                            fontWeight: 600,
-                            zIndex: 1,
-                            boxShadow: "0 0 0 3px white",
-                          }}
-                        >
-                          {idx + 1}
-                        </Box>
-
-                        <Box
-                          sx={{
-                            border: "1px solid",
-                            borderColor: isEditingThis
-                              ? "primary.main"
-                              : "divider",
-                            borderRadius: 2,
-                            p: 1.5,
-                            bgcolor: isEditingThis
-                              ? "primary.50"
-                              : "background.paper",
-                          }}
-                        >
-                          {isEditingThis ? (
-                            <Box
-                              sx={{
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: 1.5,
-                              }}
-                            >
-                              <FormControl size="small" fullWidth>
-                                <InputLabel>Đơn vị</InputLabel>
-                                <Select
-                                  value={editDeptId}
-                                  label="Đơn vị"
-                                  onChange={(e) => {
-                                    setEditDeptId(e.target.value);
-                                    setEditUserId("");
-                                  }}
-                                >
-                                  {departments.map((d) => (
-                                    <MenuItem key={d.id} value={d.id}>
-                                      {d.name}
-                                    </MenuItem>
-                                  ))}
-                                </Select>
-                              </FormControl>
-                              <FormControl size="small" fullWidth>
-                                <InputLabel>Người duyệt</InputLabel>
-                                <Select
-                                  value={editUserId}
-                                  label="Người duyệt"
-                                  onChange={(e) =>
-                                    setEditUserId(e.target.value)
-                                  }
-                                >
-                                  {users
-                                    .filter(
-                                      (u) => u.departmentId === editDeptId,
-                                    )
-                                    .map((u) => (
-                                      <MenuItem key={u.id} value={u.id}>
-                                        {u.name}
-                                      </MenuItem>
-                                    ))}
-                                </Select>
-                              </FormControl>
-                              <Box sx={{ display: "flex", gap: 1 }}>
-                                <Button
-                                  variant="contained"
-                                  size="small"
-                                  onClick={handleSaveEdit}
-                                >
-                                  Lưu
-                                </Button>
-                                <Button
-                                  size="small"
-                                  onClick={() => setEditingSignerId(null)}
-                                >
-                                  Hủy
-                                </Button>
-                              </Box>
-                            </Box>
-                          ) : (
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                              }}
-                            >
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 1.5,
-                                }}
-                              >
-                                <Box
-                                  sx={{
-                                    width: 36,
-                                    height: 36,
-                                    borderRadius: "50%",
-                                    bgcolor: "primary.main",
-                                    color: "white",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    fontWeight: 600,
-                                    fontSize: 13,
-                                    flexShrink: 0,
-                                  }}
-                                >
-                                  {s.userName?.charAt(0) ?? "?"}
-                                </Box>
-                                <Box>
-                                  <Typography fontWeight={600} fontSize={13}>
-                                    {s.userName}
-                                  </Typography>
-                                  <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                  >
-                                    {users.find((u) => u.id === s.userId)
-                                      ?.title || "Người ký"}
-                                  </Typography>
-                                  <Box sx={{ mt: 0.5 }}>
-                                    <Typography
-                                      variant="caption"
-                                      color="text.secondary"
-                                    >
-                                      {s.departmentName}
-                                    </Typography>
-                                  </Box>
-                                </Box>
-                              </Box>
-                              <Box sx={{ display: "flex", gap: 0.5 }}>
-                                <Button
-                                  size="small"
-                                  variant="outlined"
-                                  onClick={() => handleEdit(s)}
-                                >
-                                  Sửa
-                                </Button>
-                                <Button
-                                  size="small"
-                                  color="error"
-                                  variant="outlined"
-                                  onClick={() => handleRemoveSigner(s.userId)}
-                                >
-                                  Xóa
-                                </Button>
-                              </Box>
-                            </Box>
-                          )}
-                        </Box>
-                      </Box>
-                    );
-                  })}
-                </Box>
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  Chưa có người duyệt
-                </Typography>
-              )}
-            </Box>
-
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 1.5,
-                p: 2,
-                bgcolor: "grey.50",
-                borderRadius: 2,
-                border: "1px dashed",
-                borderColor: "divider",
-              }}
-            >
-              <FormControl size="small" fullWidth>
-                <InputLabel>Phòng ban</InputLabel>
-                <Select
-                  value={addDeptId}
-                  label="Phòng ban"
-                  onChange={(e) => {
-                    setAddDeptId(e.target.value);
-                    setAddUserId("");
-                  }}
-                >
-                  {departments.map((d) => (
-                    <MenuItem key={d.id} value={d.id}>
-                      {d.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl size="small" fullWidth disabled={!addDeptId}>
-                <InputLabel>Người duyệt</InputLabel>
-                <Select
-                  value={addUserId}
-                  label="Người duyệt"
-                  onChange={(e) => setAddUserId(e.target.value)}
-                >
-                  {users
-                    .filter((u) => u.departmentId === addDeptId)
-                    .map((u) => (
-                      <MenuItem key={u.id} value={u.id}>
-                        {u.name} – {u.title}
-                      </MenuItem>
-                    ))}
-                </Select>
-              </FormControl>
-              <Button
-                variant="contained"
-                startIcon={<PersonAddIcon />}
-                onClick={handleAddSigner}
-                disabled={!addUserId}
-                fullWidth
-              >
-                Thêm người duyệt
-              </Button>
-            </Box>
-          </Box>
+                        ))
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </Box>
 
         {/* Full-width Preview */}
@@ -1109,12 +711,12 @@ const AcceptanceTestDialog = ({
                     ĐVT
                   </TableCell>
                   <TableCell
-                    sx={{ fontWeight: 700, width: 40, fontSize: "0.72rem" }}
+                    sx={{ fontWeight: 700, width: 100, fontSize: "0.72rem" }}
                   >
                     SL
                   </TableCell>
                   <TableCell
-                    sx={{ fontWeight: 700, width: 75, fontSize: "0.72rem" }}
+                    sx={{ fontWeight: 700, width: 150, fontSize: "0.72rem" }}
                   >
                     Ghi chú
                   </TableCell>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -7,7 +7,6 @@ import {
   Button,
   Box,
   Typography,
-  TextField,
   Table,
   TableBody,
   TableCell,
@@ -18,22 +17,14 @@ import {
   Chip,
   IconButton,
   Divider,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
 } from "@mui/material";
 import RecyclingIcon from "@mui/icons-material/Recycling";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
 import { useFormik } from "formik";
-import { useSelector } from "react-redux";
 import dayjs from "dayjs";
-import {
-  AcceptanceTestRecordData,
-  MaintenancePlanData,
-} from "../../../MainenancePlanRepair/types";
+import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
 import {
   MaintenanceRepairData,
   DanhGiaVatTuData,
@@ -51,20 +42,14 @@ import { useAllLoaiSCBDQuery } from "../../../MaintenanceRepairType/Mutation";
 import { CongTy, Action } from "../../../../utils/const";
 import { listSigneInfo } from "../../config";
 import FieldInput from "../../../../components/TextField/FieldInput";
+import TextFieldNumber from "../../../../components/TextField/TextFieldNumber";
+import SignerWorkflowSection from "./SignerWorkflowSection";
 
 export const BIEN_PHAP_XU_LY = {
   PHUC_HOI: "Phục hồi",
   PHE_LIEU: "Phế liệu",
   HUY: "Hủy",
 } as const;
-
-type SimpleDept = { id: string; name: string };
-type SimpleUser = {
-  id: string;
-  name: string;
-  departmentId?: string;
-  title?: string;
-};
 
 interface Props {
   open: boolean;
@@ -89,21 +74,6 @@ const MaterialDialog = ({
   const { data: allLevel = [] } = useAllLoaiSCBDQuery();
   const { createMutation, updateMutation } =
     useMaintenanceMaterialAssessmentMutation();
-
-  const { user } = useSelector((state: any) => state.user);
-
-  const departments: SimpleDept[] = (apiDepartments || []).map((d: any) => ({
-    id: String(d?.id ?? ""),
-    name: String(d?.tenPhongBan ?? d?.name ?? ""),
-  }));
-  const users: SimpleUser[] = (apiUsers || [])
-    .filter((u: any) => u.hasAccount)
-    .map((u: any) => ({
-      id: String(u?.id ?? ""),
-      name: String(u?.hoTen ?? u?.name ?? ""),
-      departmentId: String(u?.phongBanId ?? u?.departmentId ?? ""),
-      title: String(u?.tenChucVu ?? u?.chucVu ?? u?.title ?? ""),
-    }));
 
   const formik = useFormik({
     initialValues: {
@@ -203,69 +173,77 @@ const MaterialDialog = ({
     if (open) {
       if (initData) {
         const listInfo = listSigneInfo(initData, apiUsers, apiDepartments);
+        const signersList = (listInfo || []).map((item, idx) => ({
+          ...item,
+          userId: item.idNhanVien,
+          userName: item.hoTen,
+          departmentId: item.idDonVi,
+          departmentName: item.donVi,
+          order: idx + 1,
+          action: Action.UPDATE,
+        }));
+
         formik.setValues({
-          id: initData.id ?? "",
-          idCongTy: initData.idCongTy ?? CongTy.CT001,
-          soPhieu: initData.soPhieu ?? `BB-DG-`,
-          ngayDanhGia: initData.ngayDanhGia ?? dayjs().format("YYYY-MM-DD"),
-          viTri: initData.viTri ?? "",
-          capSuaChua: initData.capSuaChua ?? "",
-          tenThietBi: initData.tenThietBi ?? "",
-          kieu: initData.kieu ?? "",
-          soDangKi: initData.soDangKi ?? "",
-          idDonViQuanLy: initData.idDonViQuanLy ?? "",
-          idNghiemThu: initData.idNghiemThu ?? "",
-          soLuongPhucHoi: initData.soLuongPhucHoi ?? 0,
-          soLuongPheLieu: initData.soLuongPheLieu ?? 0,
-          soLuongHuy: initData.soLuongHuy ?? 0,
-          idNguoiLap: initData.idNguoiLap ?? "",
-          nguoiLapXacNhan: initData.nguoiLapXacNhan ?? false,
-          idGiamDoc: initData.idGiamDoc ?? "",
-          giamDocXacNhan: initData.giamDocXacNhan ?? false,
-          share: initData.share ?? false,
-          trangThai: initData.trangThai ?? 0,
-          danhSachChiTiet: (initData.danhSachChiTiet || []).map((vt) => ({
+          id: initData.id || "",
+          idCongTy: initData.idCongTy || CongTy.CT001,
+          soPhieu: initData.soPhieu || "",
+          ngayDanhGia: initData.ngayDanhGia || dayjs().format("YYYY-MM-DD"),
+          viTri: initData.viTri || "",
+          capSuaChua: initData.capSuaChua || "",
+          tenThietBi: initData.tenThietBi || "",
+          kieu: initData.kieu || "",
+          soDangKi: initData.soDangKi || "",
+          idDonViQuanLy: initData.idDonViQuanLy || "",
+          idNghiemThu: initData.idNghiemThu || "",
+          soLuongPhucHoi: initData.soLuongPhucHoi || 0,
+          soLuongPheLieu: initData.soLuongPheLieu || 0,
+          soLuongHuy: initData.soLuongHuy || 0,
+          idNguoiLap: initData.idNguoiLap || "",
+          nguoiLapXacNhan: initData.nguoiLapXacNhan || false,
+          idGiamDoc: initData.idGiamDoc || "",
+          giamDocXacNhan: initData.giamDocXacNhan || false,
+          share: initData.share || false,
+          trangThai: initData.trangThai || 0,
+          danhSachChiTiet: (initData.danhSachChiTiet || []).map((vt: any) => ({
             ...vt,
             action: Action.UPDATE,
-          })) as ChiTietVatTuThuHoiData[],
-          nguoiKyList: (listInfo ?? []).map((item: any) => ({
-            userId: item.idNhanVien,
-            userName: item.hoTen,
-            departmentId: item.idDonVi,
-            departmentName: item.donVi,
           })),
+          nguoiKyList: signersList,
         });
       } else {
         const list: ChiTietVatTuThuHoiData[] = [];
-        acceptanceRecord.danhSachTaiSan
-          ? (acceptanceRecord.danhSachTaiSan || []).forEach((ts: any) => {
-              (ts.danhSachVatTu || []).forEach((vt: any) => {
-                if (vt.action !== Action.DELETE) {
-                  list.push({
-                    idChiTietVatTu: vt.idChiTietVatTu || "",
-                    idVatTu: vt.idVatTu || "",
-                    tenVatTu: vt.tenVatTu || "",
-                    donViTinh: vt.donViTinh || "Cái",
-                    soLuong: vt.soLuong || 1,
-                    tinhTrang: "",
-                    bienPhapXuLy: "",
-                    ghiChu: "",
-                  });
-                }
-              });
-            })
-          : acceptanceRecord.danhSachChiTiet.forEach((vt: any) => {
-              list.push({
-                idChiTietVatTu: vt.idChiTietVatTu || "",
-                idVatTu: vt.idVatTu || "",
-                tenVatTu: vt.tenVatTu || "",
-                donViTinh: vt.donViTinh || "Cái",
-                soLuong: vt.soLuongThayThe || 1,
-                tinhTrang: "",
-                bienPhapXuLy: "",
-                ghiChu: "",
+        console.log("acceptanceRecord:", acceptanceRecord);
+        if ((acceptanceRecord?.danhSachTaiSan || []).length > 0) {
+          (acceptanceRecord?.danhSachTaiSan || [])
+            .filter((t: any) => t.danhSachVatTu && t.danhSachVatTu.length > 0)
+            .forEach((t: any) => {
+              (t.danhSachVatTu || []).forEach((vt: any) => {
+                list.push({
+                  idChiTietVatTu: vt.idChiTietVatTu || "",
+                  idVatTu: vt.idVatTu || "",
+                  tenVatTu: vt.tenVatTu || "",
+                  donViTinh: vt.donViTinh || "Cái",
+                  soLuong: vt.soLuong || 1,
+                  tinhTrang: "",
+                  bienPhapXuLy: "",
+                  ghiChu: "",
+                });
               });
             });
+        } else if ((acceptanceRecord?.danhSachChiTiet || []).length > 0) {
+          (acceptanceRecord?.danhSachChiTiet || []).forEach((vt: any) => {
+            list.push({
+              idChiTietVatTu: vt.idChiTietVatTu || "",
+              idVatTu: vt.idVatTu || "",
+              tenVatTu: vt.tenVatTu || "",
+              donViTinh: vt.donViTinh || "Cái",
+              soLuong: vt.soLuongThayThe || vt.soLuong || 1,
+              tinhTrang: "",
+              bienPhapXuLy: "",
+              ghiChu: "",
+            });
+          });
+        }
 
         formik.setValues({
           id: "",
@@ -274,7 +252,8 @@ const MaterialDialog = ({
           ngayDanhGia: dayjs().format("YYYY-MM-DD"),
           viTri: acceptanceRecord.viTri || "",
           capSuaChua: acceptanceRecord.capSuaChua || "",
-          tenThietBi: acceptanceRecord.tenThietBi || acceptanceRecord?.idTaiSan || "",
+          tenThietBi:
+            acceptanceRecord.tenThietBi || acceptanceRecord?.idTaiSan || "",
           kieu: "",
           soDangKi: acceptanceRecord.soDangKi || "",
           idDonViQuanLy: plan.tenDonViGiao || "",
@@ -317,7 +296,6 @@ const MaterialDialog = ({
     repairRequest,
   ]);
 
-  // Automatically calculate quantities based on selected treatment action (bienPhapXuLy)
   const listItems = formik.values.danhSachChiTiet;
   useEffect(() => {
     let phucHoi = 0;
@@ -349,13 +327,6 @@ const MaterialDialog = ({
     formik.values.soLuongPheLieu,
     formik.values.soLuongHuy,
   ]);
-
-  // Signers local states
-  const [addDeptId, setAddDeptId] = useState("");
-  const [addUserId, setAddUserId] = useState("");
-  const [editingSignerId, setEditingSignerId] = useState<string | null>(null);
-  const [editDeptId, setEditDeptId] = useState("");
-  const [editUserId, setEditUserId] = useState("");
 
   const addItem = () => {
     const newItem = {
@@ -398,68 +369,7 @@ const MaterialDialog = ({
     formik.setFieldValue("danhSachChiTiet", updatedList);
   };
 
-  const updateItem = (
-    idx: number,
-    field: keyof ChiTietVatTuThuHoiData,
-    value: string | number,
-  ) => {
-    updateItemFields(idx, { [field]: value });
-  };
-
-  const handleAddSigner = () => {
-    if (!addUserId || !addDeptId) return;
-    if (formik.values.nguoiKyList.some((s) => s.userId === addUserId)) return;
-    const user = users.find((u) => u.id === addUserId);
-    const dept = departments.find((d) => d.id === addDeptId);
-    if (!user || !dept) return;
-    const updated = [
-      ...formik.values.nguoiKyList,
-      {
-        userId: user.id,
-        userName: user.name,
-        departmentId: dept.id,
-        departmentName: dept.name,
-        order: formik.values.nguoiKyList.length + 1,
-        signed: false,
-      },
-    ];
-    formik.setFieldValue("nguoiKyList", updated);
-    setAddDeptId("");
-    setAddUserId("");
-  };
-
-  const handleRemoveSigner = (userId: string) => {
-    const updated = formik.values.nguoiKyList
-      .filter((s: any) => s.userId !== userId)
-      .map((s: any, i: number) => ({ ...s, order: i + 1 }));
-    formik.setFieldValue("nguoiKyList", updated);
-  };
-
-  const handleEditSigner = (signer: any) => {
-    setEditingSignerId(signer.userId);
-    setEditDeptId(signer.departmentId);
-    setEditUserId(signer.userId);
-  };
-
-  const handleSaveEditSigner = () => {
-    const updated = formik.values.nguoiKyList.map((s: any) =>
-      s.userId === editingSignerId
-        ? {
-            ...s,
-            userId: editUserId,
-            userName: users.find((u) => u.id === editUserId)?.name || "",
-            departmentId: editDeptId,
-            departmentName:
-              departments.find((d) => d.id === editDeptId)?.name || "",
-          }
-        : s,
-    );
-    formik.setFieldValue("nguoiKyList", updated);
-    setEditingSignerId(null);
-  };
-
   const handleClose = () => {
-    setEditingSignerId(null);
     onClose();
   };
 
@@ -529,14 +439,10 @@ const MaterialDialog = ({
                   formik.setFieldValue("ngayDanhGia", date)
                 }
               />
-              <TextField
-                label="Địa điểm (Tại...)"
-                name="viTri"
-                value={formik.values.viTri}
-                onChange={formik.handleChange}
-                size="small"
-                fullWidth
-                placeholder="vd: Phân xưởng khai thác 1, khu vực A"
+              <FieldInput
+                title="Địa điểm (Tại...)"
+                formik={formik}
+                field="viTri"
               />
               <FieldAutoCompleted
                 title="Cấp sửa chữa"
@@ -548,30 +454,17 @@ const MaterialDialog = ({
                 }
                 autocompleteSx={{ flex: 1 }}
               />
-              <TextField
-                label="Của thiết bị"
-                name="tenThietBi"
-                value={formik.values.tenThietBi}
-                onChange={formik.handleChange}
-                size="small"
-                fullWidth
+              <FieldInput
+                title="Của thiết bị"
+                formik={formik}
+                field="tenThietBi"
               />
               <Box sx={{ display: "flex", gap: 2 }}>
-                <TextField
-                  label="Kiểu"
-                  name="kieu"
-                  value={formik.values.kieu}
-                  onChange={formik.handleChange}
-                  size="small"
-                  sx={{ flex: 1 }}
-                />
-                <TextField
-                  label="Số (đăng ký)"
-                  name="soDangKi"
-                  value={formik.values.soDangKi}
-                  onChange={formik.handleChange}
-                  size="small"
-                  sx={{ flex: 1 }}
+                <FieldInput title="Kiểu" formik={formik} field="kieu" />
+                <FieldInput
+                  title="Số (đăng ký)"
+                  formik={formik}
+                  field="soDangKi"
                 />
               </Box>
               <FieldAutoCompleted
@@ -585,298 +478,8 @@ const MaterialDialog = ({
           </Box>
 
           {/* Col 2: Quy trình duyệt */}
-          <Box
-            sx={{
-              border: "1px solid",
-              borderColor: "divider",
-              borderRadius: 3,
-              p: 2.5,
-              display: "flex",
-              flexDirection: "column",
-              height: "100%",
-            }}
-          >
-            <Typography
-              variant="subtitle1"
-              fontWeight={600}
-              mb={2}
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            >
-              Quy trình duyệt
-              <Chip
-                label={`${formik.values.nguoiKyList.length} người`}
-                size="small"
-                color="primary"
-                variant="outlined"
-                sx={{ fontWeight: 400 }}
-              />
-            </Typography>
-
-            <Box sx={{ flex: 1, overflowY: "auto", mb: 2 }}>
-              {formik.values.nguoiKyList.length > 0 ? (
-                <Box sx={{ position: "relative", pl: 5 }}>
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      left: 16,
-                      top: 8,
-                      bottom: 8,
-                      width: "1px",
-                      bgcolor: "divider",
-                    }}
-                  />
-                  {formik.values.nguoiKyList.map((s, idx) => {
-                    const user = users.find((u) => u.id === s.userId);
-                    const isEditingThis = editingSignerId === s.userId;
-                    return (
-                      <Box
-                        key={s.userId}
-                        sx={{ position: "relative", mb: 1.5 }}
-                      >
-                        <Box
-                          sx={{
-                            position: "absolute",
-                            left: -37,
-                            top: 14,
-                            width: 24,
-                            height: 24,
-                            borderRadius: "50%",
-                            bgcolor: "primary.main",
-                            color: "white",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: 11,
-                            fontWeight: 600,
-                            zIndex: 1,
-                            boxShadow: "0 0 0 3px white",
-                          }}
-                        >
-                          {idx + 1}
-                        </Box>
-
-                        <Box
-                          sx={{
-                            border: "1px solid",
-                            borderColor: isEditingThis
-                              ? "primary.main"
-                              : "divider",
-                            borderRadius: 2,
-                            p: 1.5,
-                            bgcolor: isEditingThis
-                              ? "primary.50"
-                              : "background.paper",
-                          }}
-                        >
-                          {isEditingThis ? (
-                            <Box
-                              sx={{
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: 1.5,
-                              }}
-                            >
-                              <FormControl size="small" fullWidth>
-                                <InputLabel>Đơn vị</InputLabel>
-                                <Select
-                                  value={editDeptId}
-                                  label="Đơn vị"
-                                  onChange={(e) => {
-                                    setEditDeptId(e.target.value);
-                                    setEditUserId("");
-                                  }}
-                                >
-                                  {departments.map((d) => (
-                                    <MenuItem key={d.id} value={d.id}>
-                                      {d.name}
-                                    </MenuItem>
-                                  ))}
-                                </Select>
-                              </FormControl>
-                              <FormControl size="small" fullWidth>
-                                <InputLabel>Người duyệt</InputLabel>
-                                <Select
-                                  value={editUserId}
-                                  label="Người duyệt"
-                                  onChange={(e) =>
-                                    setEditUserId(e.target.value)
-                                  }
-                                >
-                                  {users
-                                    .filter(
-                                      (u) => u.departmentId === editDeptId,
-                                    )
-                                    .map((u) => (
-                                      <MenuItem key={u.id} value={u.id}>
-                                        {u.name}
-                                      </MenuItem>
-                                    ))}
-                                </Select>
-                              </FormControl>
-                              <Box sx={{ display: "flex", gap: 1 }}>
-                                <Button
-                                  variant="contained"
-                                  size="small"
-                                  onClick={handleSaveEditSigner}
-                                >
-                                  Lưu
-                                </Button>
-                                <Button
-                                  size="small"
-                                  onClick={() => setEditingSignerId(null)}
-                                >
-                                  Hủy
-                                </Button>
-                              </Box>
-                            </Box>
-                          ) : (
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                              }}
-                            >
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 1.5,
-                                }}
-                              >
-                                <Box
-                                  sx={{
-                                    width: 36,
-                                    height: 36,
-                                    borderRadius: "50%",
-                                    bgcolor: "primary.main",
-                                    color: "white",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    fontWeight: 600,
-                                    fontSize: 13,
-                                    flexShrink: 0,
-                                  }}
-                                >
-                                  {user?.name?.charAt(0) ?? "?"}
-                                </Box>
-                                <Box>
-                                  <Typography fontWeight={600} fontSize={13}>
-                                    {user?.name}
-                                  </Typography>
-                                  <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                  >
-                                    {user?.title}
-                                  </Typography>
-                                  <Box sx={{ mt: 0.5 }}>
-                                    <Typography
-                                      variant="caption"
-                                      color="text.secondary"
-                                    >
-                                      {
-                                        departments.find(
-                                          (d) => d.id === s.departmentId,
-                                        )?.name
-                                      }
-                                    </Typography>
-                                  </Box>
-                                </Box>
-                              </Box>
-                              <Box sx={{ display: "flex", gap: 0.5 }}>
-                                <Button
-                                  size="small"
-                                  variant="outlined"
-                                  onClick={() => handleEditSigner(s)}
-                                >
-                                  Sửa
-                                </Button>
-                                <Button
-                                  size="small"
-                                  color="error"
-                                  variant="outlined"
-                                  onClick={() => handleRemoveSigner(s.userId)}
-                                >
-                                  Xóa
-                                </Button>
-                              </Box>
-                            </Box>
-                          )}
-                        </Box>
-                      </Box>
-                    );
-                  })}
-                </Box>
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  Chưa có người duyệt
-                </Typography>
-              )}
-            </Box>
-
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 1.5,
-                p: 2,
-                bgcolor: "grey.50",
-                borderRadius: 2,
-                border: "1px dashed",
-                borderColor: "divider",
-              }}
-            >
-              <FormControl size="small" fullWidth>
-                <InputLabel>Đơn vị</InputLabel>
-                <Select
-                  value={addDeptId}
-                  label="Đơn vị"
-                  onChange={(e) => {
-                    setAddDeptId(e.target.value);
-                    setAddUserId("");
-                  }}
-                >
-                  {departments.map((d) => (
-                    <MenuItem key={d.id} value={d.id}>
-                      {d.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControl size="small" fullWidth disabled={!addDeptId}>
-                <InputLabel>Người duyệt</InputLabel>
-                <Select
-                  value={addUserId}
-                  label="Người duyệt"
-                  onChange={(e) => setAddUserId(e.target.value)}
-                >
-                  {users
-                    .filter((u) => u.departmentId === addDeptId)
-                    .map((u) => (
-                      <MenuItem
-                        key={u.id}
-                        value={u.id}
-                        disabled={formik.values.nguoiKyList.some(
-                          (s) => s.userId === u.id,
-                        )}
-                      >
-                        {u.name} – {u.title}
-                      </MenuItem>
-                    ))}
-                </Select>
-              </FormControl>
-
-              <Button
-                variant="contained"
-                onClick={handleAddSigner}
-                disabled={!addUserId}
-              >
-                Thêm người duyệt
-              </Button>
-            </Box>
+          <Box>
+            <SignerWorkflowSection formik={formik} />
           </Box>
         </Box>
 
@@ -919,12 +522,12 @@ const MaterialDialog = ({
                     Tên vật tư, thiết bị
                   </TableCell>
                   <TableCell sx={{ fontWeight: 700, width: 55 }}>ĐVT</TableCell>
-                  <TableCell sx={{ fontWeight: 700, width: 50 }}>SL</TableCell>
+                  <TableCell sx={{ fontWeight: 700, width: 100 }}>SL</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Tình trạng</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>
                     Biện pháp xử lý
                   </TableCell>
-                  <TableCell sx={{ fontWeight: 700, width: 80 }}>
+                  <TableCell sx={{ fontWeight: 700, width: 150 }}>
                     Ghi chú
                   </TableCell>
                   <TableCell sx={{ width: 36 }} />
@@ -956,70 +559,47 @@ const MaterialDialog = ({
                       </TableCell>
                       <TableCell>{item.donViTinh}</TableCell>
                       <TableCell>
-                        <TextField
-                          value={item.soLuong}
-                          size="small"
-                          variant="standard"
-                          onChange={(e) =>
-                            updateItem(
-                              originalIdx,
-                              "soLuong",
-                              parseInt(e.target.value) || 0,
-                            )
-                          }
-                          inputProps={{ style: { width: 36 } }}
+                        <TextFieldNumber
+                          formik={formik}
+                          field={`danhSachChiTiet.${originalIdx}.soLuong`}
+                          noBorder={true}
                         />
                       </TableCell>
                       <TableCell>
-                        <TextField
-                          value={item.tinhTrang}
-                          size="small"
-                          variant="standard"
-                          fullWidth
-                          onChange={(e) =>
-                            updateItem(originalIdx, "tinhTrang", e.target.value)
-                          }
-                          placeholder="Mô tả tình trạng..."
+                        <FieldInput
+                          formik={formik}
+                          field={`danhSachChiTiet.${originalIdx}.tinhTrang`}
+                          noBorder={true}
                         />
                       </TableCell>
                       <TableCell>
-                        <Select
-                          value={item.bienPhapXuLy || ""}
-                          size="small"
-                          variant="standard"
-                          fullWidth
-                          displayEmpty
-                          onChange={(e) =>
-                            updateItem(
-                              originalIdx,
-                              "bienPhapXuLy",
-                              e.target.value as string,
-                            )
-                          }
-                        >
-                          <MenuItem value="">
-                            <span style={{ color: "#aaa" }}>-- Chọn --</span>
-                          </MenuItem>
-                          <MenuItem value={BIEN_PHAP_XU_LY.PHUC_HOI}>
-                            {BIEN_PHAP_XU_LY.PHUC_HOI}
-                          </MenuItem>
-                          <MenuItem value={BIEN_PHAP_XU_LY.PHE_LIEU}>
-                            {BIEN_PHAP_XU_LY.PHE_LIEU}
-                          </MenuItem>
-                          <MenuItem value={BIEN_PHAP_XU_LY.HUY}>
-                            {BIEN_PHAP_XU_LY.HUY}
-                          </MenuItem>
-                        </Select>
+                        <FieldAutoCompleted
+                          title=""
+                          data={[
+                            {
+                              id: BIEN_PHAP_XU_LY.HUY,
+                              name: BIEN_PHAP_XU_LY.HUY,
+                            },
+                            {
+                              id: BIEN_PHAP_XU_LY.PHE_LIEU,
+                              name: BIEN_PHAP_XU_LY.PHE_LIEU,
+                            },
+                            {
+                              id: BIEN_PHAP_XU_LY.PHUC_HOI,
+                              name: BIEN_PHAP_XU_LY.PHUC_HOI,
+                            },
+                          ]}
+                          formik={formik}
+                          field={`danhSachChiTiet.${originalIdx}.bienPhapXuLy`}
+                          labelkey="name"
+                          noBorder={true}
+                        />
                       </TableCell>
                       <TableCell>
-                        <TextField
-                          value={item.ghiChu}
-                          size="small"
-                          variant="standard"
-                          fullWidth
-                          onChange={(e) =>
-                            updateItem(originalIdx, "ghiChu", e.target.value)
-                          }
+                        <FieldInput
+                          formik={formik}
+                          field={`danhSachChiTiet.${originalIdx}.ghiChu`}
+                          noBorder={true}
                         />
                       </TableCell>
                       <TableCell>
@@ -1039,43 +619,28 @@ const MaterialDialog = ({
 
           {/* Số lượng phân loại */}
           <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-            <TextField
-              label="Số để lại phục hồi"
+            <FieldInput
+              title="Số để lại phục hồi"
               type="number"
-              size="small"
-              value={formik.values.soLuongPhucHoi}
-              onChange={(e) =>
-                formik.setFieldValue(
-                  "soLuongPhucHoi",
-                  Math.max(0, parseInt(e.target.value) || 0),
-                )
-              }
+              formik={formik}
+              field="soLuongPhucHoi"
+              noBorder={true}
               sx={{ width: 200 }}
             />
-            <TextField
-              label="Số phế liệu"
+            <FieldInput
+              title="Số phế liệu"
               type="number"
-              size="small"
-              value={formik.values.soLuongPheLieu}
-              onChange={(e) =>
-                formik.setFieldValue(
-                  "soLuongPheLieu",
-                  Math.max(0, parseInt(e.target.value) || 0),
-                )
-              }
+              formik={formik}
+              field="soLuongPheLieu"
+              noBorder={true}
               sx={{ width: 200 }}
             />
-            <TextField
-              label="Số hủy"
+            <FieldInput
+              title="Số hủy"
               type="number"
-              size="small"
-              value={formik.values.soLuongHuy}
-              onChange={(e) =>
-                formik.setFieldValue(
-                  "soLuongHuy",
-                  Math.max(0, parseInt(e.target.value) || 0),
-                )
-              }
+              formik={formik}
+              field="soLuongHuy"
+              noBorder={true}
               sx={{ width: 200 }}
             />
           </Box>

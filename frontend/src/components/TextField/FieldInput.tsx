@@ -17,6 +17,7 @@ interface Props {
   multiline?: boolean;
   rows?: number;
   noBorder?: boolean;
+  sx?: any;
 }
 export default function FieldInput({
   title,
@@ -32,6 +33,7 @@ export default function FieldInput({
   multiline = false,
   rows = 1,
   noBorder = false,
+  sx
 }: Props) {
   const currentValue = formik && field ? getIn(formik.values, field) : "";
   const touched = formik && field ? getIn(formik.touched, field) : false;
@@ -79,6 +81,7 @@ export default function FieldInput({
       InputLabelProps={InputLabelProps}
       slotProps={slotProps}
       sx={{
+        ...sx,
         "& .MuiOutlinedInput-root": {
           "& fieldset": {
             border: noBorder ? "none" : undefined,

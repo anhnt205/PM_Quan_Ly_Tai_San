@@ -8,7 +8,6 @@ import {
   Button,
   Box,
   Typography,
-  TextField,
   Table,
   TableBody,
   TableCell,
@@ -18,19 +17,13 @@ import {
   Paper,
   Divider,
   Chip,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   IconButton,
   Grid,
-  Alert,
 } from "@mui/material";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import { useSelector } from "react-redux";
 import {
   MaintenancePlanData,
@@ -50,6 +43,7 @@ import { useAllToolDetailQuery } from "../../../ToolManager/Mutation";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
 import { listSigneInfo } from "../../config";
 import FieldInput from "../../../../components/TextField/FieldInput";
+import SignerWorkflowSection from "./SignerWorkflowSection";
 
 type SimpleDept = { id: string; name: string };
 type SimpleUser = {
@@ -77,12 +71,6 @@ const InspectionRecordVehicleDialog = ({
   initData,
 }: Props) => {
   const { user } = useSelector((state: any) => state.user);
-
-  const [addDeptId, setAddDeptId] = useState("");
-  const [addUserId, setAddUserId] = useState("");
-  const [editingSignerId, setEditingSignerId] = useState<string | null>(null);
-  const [editDeptId, setEditDeptId] = useState("");
-  const [editUserId, setEditUserId] = useState("");
 
   const { data: apiDepartments = [] } = useAllDepartmentsQuery();
   const { data: apiUsers = [] } = useAllStaffsQuery();
@@ -258,7 +246,7 @@ const InspectionRecordVehicleDialog = ({
           ngayGiamDinh: dayjs().format("YYYY-MM-DD"),
           viTri: "",
           capBaoDuong: "",
-          donViSuaChua: repairRequest?.ghiChu || "",
+          donViSuaChua:  "",
           noiDungKhac: "",
           idTaiSan: parentAsset?.idTaiSan || "",
           tenTaiSan: parentAsset?.tenTaiSan || "",
@@ -346,64 +334,6 @@ const InspectionRecordVehicleDialog = ({
     return false;
   }
 
-  const handleAddSigner = () => {
-    if (!addDeptId || !addUserId) return;
-    const userItem = users.find((u: any) => u.id === addUserId);
-    const dept = departments.find((d: any) => d.id === addDeptId);
-    if (!userItem || !dept) return;
-    if (
-      formik.values.nguoiKyList.some(
-        (s: any) => s.userId === userItem.id && s.departmentId === dept.id,
-      )
-    )
-      return;
-    const newSigner = {
-      userId: userItem.id,
-      userName: userItem.name,
-      departmentId: dept.id,
-      departmentName: dept.name,
-      position: userItem.title ?? "",
-      order: formik.values.nguoiKyList.length + 1,
-      signed: false,
-    };
-    formik.setFieldValue("nguoiKyList", [
-      ...formik.values.nguoiKyList,
-      newSigner,
-    ]);
-    setAddDeptId("");
-    setAddUserId("");
-  };
-
-  const handleRemoveSigner = (userId: string) => {
-    const updatedSigners = formik.values.nguoiKyList
-      .filter((s) => s.userId !== userId)
-      .map((s, i) => ({ ...s, order: i + 1 }));
-    formik.setFieldValue("nguoiKyList", updatedSigners);
-  };
-
-  const handleEdit = (signer: PlanSigner) => {
-    setEditingSignerId(signer.userId);
-    setEditDeptId(signer.departmentId);
-    setEditUserId(signer.userId);
-  };
-
-  const handleSaveEdit = () => {
-    const updatedSigners = formik.values.nguoiKyList.map((s) =>
-      s.userId === editingSignerId
-        ? {
-            ...s,
-            userId: editUserId,
-            userName: users.find((u) => u.id === editUserId)?.name || "",
-            departmentId: editDeptId,
-            departmentName:
-              departments.find((d) => d.id === editDeptId)?.name || "",
-          }
-        : s,
-    );
-    formik.setFieldValue("nguoiKyList", updatedSigners);
-    setEditingSignerId(null);
-  };
-
   function handleClose() {
     formik.resetForm();
     onClose();
@@ -441,7 +371,7 @@ const InspectionRecordVehicleDialog = ({
           {/* Nửa bên phải: Thông tin giám định */}
           <Grid size={{ xs: 12, md: 8 }}>
 
-            <Grid container spacing={2} sx={{ mb: 3 }}>
+            <Grid container spacing={2} sx={{ my: 3 }}>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <FieldInput title="Số phiếu" formik={formik} field="soPhieu" />
               </Grid>
@@ -492,298 +422,7 @@ const InspectionRecordVehicleDialog = ({
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
             {/* Right: Quy trình duyệt */}
-            <Box
-              sx={{
-                border: "1px solid",
-                borderColor: "divider",
-                borderRadius: 3,
-                p: 2.5,
-                display: "flex",
-                flexDirection: "column",
-                height: "100%",
-              }}
-            >
-              <Typography
-                variant="subtitle1"
-                fontWeight={600}
-                mb={2}
-                sx={{ display: "flex", alignItems: "center", gap: 1 }}
-              >
-                Quy trình duyệt
-                <Chip
-                  label={`${formik.values.nguoiKyList.length} người`}
-                  size="small"
-                  color="primary"
-                  variant="outlined"
-                  sx={{ fontWeight: 400 }}
-                />
-              </Typography>
-
-              <Box sx={{ flex: 1, overflowY: "auto", mb: 2 }}>
-                {formik.values.nguoiKyList.length > 0 ? (
-                  <Box sx={{ position: "relative", pl: 5 }}>
-                    <Box
-                      sx={{
-                        position: "absolute",
-                        left: 16,
-                        top: 8,
-                        bottom: 8,
-                        width: "1px",
-                        bgcolor: "divider",
-                      }}
-                    />
-                    {formik.values.nguoiKyList.map((s, idx) => {
-                      const userItem = users.find((u) => u.id === s.userId);
-                      const isEditingThis = editingSignerId === s.userId;
-                      return (
-                        <Box
-                          key={s.userId}
-                          sx={{ position: "relative", mb: 1.5 }}
-                        >
-                          <Box
-                            sx={{
-                              position: "absolute",
-                              left: -40,
-                              top: 6,
-                              width: 18,
-                              height: 18,
-                              borderRadius: "50%",
-                              bgcolor: "background.paper",
-                              border: "2px solid",
-                              borderColor: "primary.main",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: 10,
-                              fontWeight: 600,
-                              zIndex: 1,
-                              boxShadow: "0 0 0 3px white",
-                            }}
-                          >
-                            {idx + 1}
-                          </Box>
-
-                          <Box
-                            sx={{
-                              border: "1px solid",
-                              borderColor: isEditingThis
-                                ? "primary.main"
-                                : "divider",
-                              borderRadius: 2,
-                              p: 1.5,
-                              bgcolor: isEditingThis
-                                ? "primary.50"
-                                : "background.paper",
-                            }}
-                          >
-                            {isEditingThis ? (
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  gap: 1.5,
-                                }}
-                              >
-                                <FormControl size="small" fullWidth>
-                                  <InputLabel>Đơn vị</InputLabel>
-                                  <Select
-                                    value={editDeptId}
-                                    label="Đơn vị"
-                                    onChange={(e) => {
-                                      setEditDeptId(e.target.value);
-                                      setEditUserId("");
-                                    }}
-                                  >
-                                    {departments.map((d) => (
-                                      <MenuItem key={d.id} value={d.id}>
-                                        {d.name}
-                                      </MenuItem>
-                                    ))}
-                                  </Select>
-                                </FormControl>
-                                <FormControl size="small" fullWidth>
-                                  <InputLabel>Người duyệt</InputLabel>
-                                  <Select
-                                    value={editUserId}
-                                    label="Người duyệt"
-                                    onChange={(e) =>
-                                      setEditUserId(e.target.value)
-                                    }
-                                  >
-                                    {users
-                                      .filter(
-                                        (u) => u.departmentId === editDeptId,
-                                      )
-                                      .map((u) => (
-                                        <MenuItem key={u.id} value={u.id}>
-                                          {u.name}
-                                        </MenuItem>
-                                      ))}
-                                  </Select>
-                                </FormControl>
-                                <Box sx={{ display: "flex", gap: 1 }}>
-                                  <Button
-                                    variant="contained"
-                                    color="primary"
-                                    size="small"
-                                    onClick={handleSaveEdit}
-                                  >
-                                    Lưu
-                                  </Button>
-                                  <Button
-                                    size="small"
-                                    color="inherit"
-                                    onClick={() => setEditingSignerId(null)}
-                                  >
-                                    Hủy
-                                  </Button>
-                                </Box>
-                              </Box>
-                            ) : (
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "space-between",
-                                }}
-                              >
-                                <Box
-                                  sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 1.5,
-                                  }}
-                                >
-                                  <Box
-                                    sx={{
-                                      width: 36,
-                                      height: 36,
-                                      borderRadius: "50%",
-                                      bgcolor: "primary.main",
-                                      color: "white",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                      fontWeight: 600,
-                                      fontSize: 13,
-                                      flexShrink: 0,
-                                    }}
-                                  >
-                                    {userItem?.name?.charAt(0) ?? "?"}
-                                  </Box>
-                                  <Box>
-                                    <Typography fontWeight={600} fontSize={13}>
-                                      {userItem?.name}
-                                    </Typography>
-                                    <Typography
-                                      variant="caption"
-                                      color="text.secondary"
-                                    >
-                                      {userItem?.title}
-                                    </Typography>
-                                    <Box sx={{ mt: 0.5 }}>
-                                      <Typography
-                                        variant="caption"
-                                        color="text.secondary"
-                                      >
-                                        {
-                                          departments.find(
-                                            (d) => d.id === s.departmentId,
-                                          )?.name
-                                        }
-                                      </Typography>
-                                    </Box>
-                                  </Box>
-                                </Box>
-                                <Box sx={{ display: "flex", gap: 0.5 }}>
-                                  <Button
-                                    size="small"
-                                    color="primary"
-                                    variant="outlined"
-                                    onClick={() => handleEdit(s)}
-                                  >
-                                    Sửa
-                                  </Button>
-                                  <Button
-                                    size="small"
-                                    color="error"
-                                    variant="outlined"
-                                    onClick={() => handleRemoveSigner(s.userId)}
-                                  >
-                                    Xóa
-                                  </Button>
-                                </Box>
-                              </Box>
-                            )}
-                          </Box>
-                        </Box>
-                      );
-                    })}
-                  </Box>
-                ) : (
-                  <Alert severity="info" sx={{ mb: 2 }}>
-                    Chưa có người duyệt
-                  </Alert>
-                )}
-              </Box>
-
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 1.5,
-                  p: 2,
-                  bgcolor: "grey.50",
-                  borderRadius: 2,
-                  border: "1px dashed",
-                  borderColor: "divider",
-                }}
-              >
-                <FormControl size="small" fullWidth>
-                  <InputLabel>Phòng ban</InputLabel>
-                  <Select
-                    value={addDeptId}
-                    label="Phòng ban"
-                    onChange={(e) => {
-                      setAddDeptId(e.target.value);
-                      setAddUserId("");
-                    }}
-                  >
-                    {departments.map((d) => (
-                      <MenuItem key={d.id} value={d.id}>
-                        {d.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl size="small" fullWidth disabled={!addDeptId}>
-                  <InputLabel>Người duyệt</InputLabel>
-                  <Select
-                    value={addUserId}
-                    label="Người duyệt"
-                    onChange={(e) => setAddUserId(e.target.value)}
-                  >
-                    {users
-                      .filter((u) => u.departmentId === addDeptId)
-                      .map((u) => (
-                        <MenuItem key={u.id} value={u.id}>
-                          {u.name} – {u.title}
-                        </MenuItem>
-                      ))}
-                  </Select>
-                </FormControl>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<PersonAddIcon />}
-                  onClick={handleAddSigner}
-                  disabled={!addUserId}
-                  fullWidth
-                >
-                  Thêm người duyệt
-                </Button>
-              </Box>
-            </Box>
+            <SignerWorkflowSection formik={formik} />
           </Grid>
         </Grid>
 
@@ -800,15 +439,6 @@ const InspectionRecordVehicleDialog = ({
             <Typography variant="subtitle2" fontWeight={700}>
               DANH SÁCH CHI TIẾT VẬT TƯ
             </Typography>
-            <Button
-              variant="outlined"
-              color="primary"
-              size="small"
-              startIcon={<AddIcon />}
-              onClick={addMaterialRow}
-            >
-              Thêm dòng vật tư
-            </Button>
           </Box>
 
           <TableContainer
@@ -828,16 +458,16 @@ const InspectionRecordVehicleDialog = ({
                   <TableCell width={100} sx={{ fontWeight: 700 }}>
                     ĐVT
                   </TableCell>
-                  <TableCell width={90} sx={{ fontWeight: 700 }}>
+                  <TableCell width={100} sx={{ fontWeight: 700 }}>
                     Số lượng
                   </TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>
                     Tình trạng kỹ thuật
                   </TableCell>
-                  <TableCell width={90} sx={{ fontWeight: 700 }} align="center">
+                  <TableCell width={100} sx={{ fontWeight: 700 }} align="center">
                     Thay mới
                   </TableCell>
-                  <TableCell width={90} sx={{ fontWeight: 700 }} align="center">
+                  <TableCell width={100} sx={{ fontWeight: 700 }} align="center">
                     Sửa chữa
                   </TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Ghi chú</TableCell>
@@ -845,7 +475,11 @@ const InspectionRecordVehicleDialog = ({
                     width={60}
                     align="center"
                     sx={{ fontWeight: 700 }}
-                  ></TableCell>
+                  >
+                    <IconButton size="small" color="primary" onClick={addMaterialRow}>
+                      <AddIcon />
+                    </IconButton>
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -909,98 +543,41 @@ const InspectionRecordVehicleDialog = ({
                           />
                         </TableCell>
                         <TableCell>
-                          <TextField
-                            size="small"
+                          <FieldInput
                             type="number"
-                            variant="standard"
-                            value={vt.soLuong || 0}
-                            onChange={(e) => {
-                              const val = Math.max(
-                                0,
-                                parseInt(e.target.value) || 0,
-                              );
-                              updateMaterialField(vt.id!, "soLuong", val);
-                            }}
-                            inputProps={{
-                              style: { fontSize: "0.85rem" },
-                              min: 0,
-                            }}
+                            field={`danhSachChiTiet.${origIdx}.soLuong`}
+                            formik={formik}
+                            noBorder={true}
                           />
                         </TableCell>
                         <TableCell>
                           <FieldInput
-                            title=""
                             formik={formik}
                             field={`danhSachChiTiet.${origIdx}.tinhTrang`}
                             noBorder={true}
                           />
                         </TableCell>
                         <TableCell>
-                          <TextField
-                            size="small"
+                          <FieldInput
                             type="number"
-                            variant="standard"
-                            value={vt.soLuongThayMoi || 0}
-                            onChange={(e) => {
-                              const val = Math.max(
-                                0,
-                                parseInt(e.target.value) || 0,
-                              );
-                              updateMaterialField(
-                                vt.id!,
-                                "soLuongThayMoi",
-                                val,
-                              );
-                            }}
-                            inputProps={{
-                              style: {
-                                fontSize: "0.85rem",
-                                textAlign: "center",
-                              },
-                              min: 0,
-                            }}
+                            field={`danhSachChiTiet.${origIdx}.soLuongThayMoi`}
+                            formik={formik}
+                            noBorder={true}
                           />
                         </TableCell>
                         <TableCell>
-                          <TextField
-                            size="small"
+                          <FieldInput
                             type="number"
-                            variant="standard"
-                            value={vt.soLuongSuaChua || 0}
-                            onChange={(e) => {
-                              const val = Math.max(
-                                0,
-                                parseInt(e.target.value) || 0,
-                              );
-                              updateMaterialField(
-                                vt.id!,
-                                "soLuongSuaChua",
-                                val,
-                              );
-                            }}
-                            inputProps={{
-                              style: {
-                                fontSize: "0.85rem",
-                                textAlign: "center",
-                              },
-                              min: 0,
-                            }}
+                            field={`danhSachChiTiet.${origIdx}.soLuongSuaChua`}
+                            formik={formik}
+                            noBorder={true}
                           />
                         </TableCell>
                         <TableCell>
-                          <TextField
-                            size="small"
-                            variant="standard"
-                            fullWidth
-                            value={vt.ghiChu || ""}
-                            onChange={(e) =>
-                              updateMaterialField(
-                                vt.id!,
-                                "ghiChu",
-                                e.target.value,
-                              )
-                            }
-                            inputProps={{ style: { fontSize: "0.85rem" } }}
+                          <FieldInput
+                            formik={formik}
+                            field={`danhSachChiTiet.${origIdx}.ghiChu`}
+                            noBorder={true}
                           />
                         </TableCell>
                         <TableCell align="center">
@@ -1024,7 +601,7 @@ const InspectionRecordVehicleDialog = ({
                       align="center"
                       sx={{ py: 4, color: "text.secondary" }}
                     >
-                      Chưa có dòng vật tư nào. Nhấp "Thêm dòng vật tư" để bắt
+                      Chưa có dòng vật tư nào. Nhấp "+" để bắt
                       đầu.
                     </TableCell>
                   </TableRow>

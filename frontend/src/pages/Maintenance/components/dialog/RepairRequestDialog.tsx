@@ -1,38 +1,30 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Button,
-  TextField,
   Box,
   Typography,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Divider,
-  Chip,
-  Alert,
   IconButton,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
 
 import type { PlanSigner } from "../../../../mockdata/mockPlans";
 import RepairRequestPreview from "../preview/RepairRequestPreview";
 import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
-import { DepartmentType } from "../../../Department/types";
-import { StaffType } from "../../../Staff/types";
 import { generateCode } from "../../../../utils/helpers";
 import { Action, CongTy } from "../../../../utils/const";
 import dayjs from "dayjs";
 import { MaintenanceRepairData } from "../../types";
 import { listSigneInfo } from "../../config";
 import FieldInput from "../../../../components/TextField/FieldInput";
+import { useFormik } from "formik";
+import SignerWorkflowSection from "./SignerWorkflowSection";
 
 interface Props {
   open: boolean;
@@ -53,167 +45,150 @@ const RepairRequestDialog = ({
   onSubmit,
   initialData,
 }: Props) => {
-  const [number, setNumber] = useState("");
-  const [note, setNote] = useState("");
-
-  const [signers, setSigners] = useState<PlanSigner[]>([]);
-
-  const [addDeptId, setAddDeptId] = useState("");
-  const [addUserId, setAddUserId] = useState("");
-  const [editingSignerId, setEditingSignerId] = useState<string | null>(null);
-  const [editDeptId, setEditDeptId] = useState("");
-  const [editUserId, setEditUserId] = useState("");
-  const [assets, setAssets] = useState<any[]>([]);
-
   const sourceDeptId = plan.idDonViGiao || "";
   const execDeptId = plan.idDonViNhan || "";
 
   const { data: apiDepartments = [] } = useAllDepartmentsQuery();
   const { data: apiUsers = [] } = useAllStaffsQuery();
 
-  useEffect(() => {
-    if (!open) return;
-    if (initialData) {
-      const listInfo = listSigneInfo(initialData, apiUsers, apiDepartments);
-      setSigners(
-        (listInfo || []).map((item, idx) => ({
-          ...item,
-          userId: item.idNhanVien,
-          userName: item.hoTen,
-          departmentId: item.idDonVi,
-          departmentName: item.donVi,
-          order: idx + 1,
-          action: Action.UPDATE,
-        })),
-      );
-      setNumber(initialData.soPhieu ?? "");
-      setNote(initialData.ghiChu ?? "");
-      setAssets(initialData.danhSachTaiSan ?? []);
-    } else {
-      setNumber("");
-      setNote("");
-      setSigners([]);
-      setAssets(
-        (plan?.danhSachTaiSan || [])
-          ?.filter((item) => selectedDeviceIds.includes(item.id ?? ""))
-          ?.map((s: any) => {
-            const level = s[`capSuaChuaThang${selectedMonth + 1}`] || "";
-            return {
-              idKeHoachChiTiet: s.id || "",
-              idTaiSan: s.idTaiSan || "",
-              tenTaiSan: s.tenTaiSan || "",
-              nhomTaiSan: s.idNhomTaiSan || "",
-              capSuaChua: level,
-              soLuong: s.soLuong,
-              donViQuanLy: plan.idDonViGiao || "",
-              donViBaoTri: s.idDonViBaoTri || "",
-              action: Action.CREATE,
-            };
-          }),
-      );
-    }
-  }, [open, initialData, apiUsers, apiDepartments, selectedDeviceIds, plan]);
-
-  const handleAddSigner = () => {
-    if (!addUserId || !addDeptId) return;
-    if (signers.some((s) => s.userId === addUserId)) return;
-    const user = apiUsers.find((u: any) => u.id === addUserId);
-    const dept = apiDepartments.find((d: any) => d.id === addDeptId);
-    if (!user || !dept) return;
-    setSigners((prev) => [
-      ...prev,
-      {
-        userId: user.id,
-        userName: user.hoTen,
-        departmentId: dept.id,
-        departmentName: dept.tenPhongBan,
-        order: prev.length + 1,
-        signed: false,
-      },
-    ]);
-    setAddDeptId("");
-    setAddUserId("");
-  };
-
-  const handleRemoveSigner = (userId: string) => {
-    setSigners((prev) =>
-      prev
-        .filter((s) => s.userId !== userId)
-        .map((s, i) => ({ ...s, order: i + 1 })),
-    );
-  };
-
-  const handleEdit = (signer: PlanSigner) => {
-    setEditingSignerId(signer.userId);
-    setEditDeptId(signer.departmentId);
-    setEditUserId(signer.userId);
-  };
-
-  const handleSaveEdit = () => {
-    setSigners((prev) =>
-      prev.map((s) =>
-        s.userId === editingSignerId
-          ? {
-              ...s,
-              userId: editUserId,
-              userName:
-                apiUsers.find((u: any) => u.id === editUserId)?.hoTen || "",
-              departmentId: editDeptId,
-              departmentName:
-                apiDepartments.find((d: any) => d.id === editDeptId)
-                  ?.tenPhongBan || "",
-            }
-          : s,
-      ),
-    );
-    setEditingSignerId(null);
-  };
-
-  const handleSubmit = () => {
-    const idNguoiLapBieu = signers.length > 0 ? signers[0].userId : "";
-    const idTrinhDuyetGiamDoc =
-      signers.length > 1 ? signers[signers.length - 1].userId : "";
-
-    // Người ký trung gian (nếu có)
-    const intermediateSigners =
-      signers.length > 2
-        ? signers.slice(1, -1).map((s: PlanSigner, idx: number) => ({
-            id: `${generateCode("SIG-")}-${idx}`,
-            idNguoiKy: s.userId,
-            tenNguoiKy: s.userName,
-            idPhongBan: s.departmentId,
-            trangThai: 0,
-          }))
-        : [];
-    const req: MaintenanceRepairData = {
-      id: initialData?.id || "",
+  const formik = useFormik({
+    initialValues: {
+      id: "",
       idCongTy: CongTy.CT001,
-      soPhieu: number,
+      soPhieu: "",
       idKeHoach: plan?.id || "",
-      thang: initialData?.thang ? initialData?.thang : selectedMonth + 1,
-      nam: plan.nam,
-      ghiChu: note,
-      idNguoiLap: idNguoiLapBieu,
+      thang: selectedMonth + 1,
+      nam: plan?.nam || 2026,
+      ghiChu: "",
+      idNguoiLap: "",
       nguoiLapXacNhan: false,
-      idGiamDoc: idTrinhDuyetGiamDoc,
+      idGiamDoc: "",
       giamDocXacNhan: false,
       share: false,
       trangThai: 0,
       ngayTao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       ngayCapNhat: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-      danhSachTaiSan: assets,
-      nguoiKyList: intermediateSigners,
-    };
-    onSubmit(req);
-    setNumber("");
-    setNote("");
-    setSigners([]);
+      danhSachTaiSan: [] as any[],
+      nguoiKyList: [] as any[],
+    },
+    onSubmit: (values) => {
+      const idNguoiLapBieu =
+        values.nguoiKyList.length > 0 ? values.nguoiKyList[0].userId : "";
+      const idTrinhDuyetGiamDoc =
+        values.nguoiKyList.length > 1
+          ? values.nguoiKyList[values.nguoiKyList.length - 1].userId
+          : "";
+
+      const intermediateSigners =
+        values.nguoiKyList.length > 2
+          ? values.nguoiKyList
+              .slice(1, -1)
+              .map((s: PlanSigner, idx: number) => ({
+                id: `${generateCode("SIG-")}-${idx}`,
+                idNguoiKy: s.userId,
+                tenNguoiKy: s.userName,
+                idPhongBan: s.departmentId,
+                trangThai: 0,
+              }))
+          : [];
+
+      const req: MaintenanceRepairData = {
+        ...values,
+        idNguoiLap: idNguoiLapBieu,
+        idGiamDoc: idTrinhDuyetGiamDoc,
+        nguoiKyList: intermediateSigners,
+        ngayTao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+        ngayCapNhat: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      };
+      onSubmit(req);
+      formik.resetForm();
+      onClose();
+    },
+  });
+
+  useEffect(() => {
+    if (!open) return;
+    if (initialData) {
+      const listInfo = listSigneInfo(initialData, apiUsers, apiDepartments);
+      const signersList = (listInfo || []).map((item, idx) => ({
+        ...item,
+        userId: item.idNhanVien,
+        userName: item.hoTen,
+        departmentId: item.idDonVi,
+        departmentName: item.donVi,
+        order: idx + 1,
+        action: Action.UPDATE,
+      }));
+
+      formik.setValues({
+        id: initialData.id || "",
+        idCongTy: initialData.idCongTy || CongTy.CT001,
+        soPhieu: initialData.soPhieu ?? "",
+        idKeHoach: initialData.idKeHoach ?? plan?.id ?? "",
+        thang: initialData.thang ?? selectedMonth + 1,
+        nam: plan?.nam ?? 2026,
+        ghiChu: initialData.ghiChu ?? "",
+        idNguoiLap: initialData.idNguoiLap ?? "",
+        nguoiLapXacNhan: initialData.nguoiLapXacNhan ?? false,
+        idGiamDoc: initialData.idGiamDoc ?? "",
+        giamDocXacNhan: initialData.giamDocXacNhan ?? false,
+        share: initialData.share ?? false,
+        trangThai: initialData.trangThai ?? 0,
+        ngayTao:
+          initialData.ngayTao || dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+        ngayCapNhat: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+        danhSachTaiSan: initialData.danhSachTaiSan ?? [],
+        nguoiKyList: signersList,
+      });
+    } else {
+      const assetsList = (plan?.danhSachTaiSan || [])
+        ?.filter((item) => selectedDeviceIds.includes(item.id ?? ""))
+        ?.map((s: any) => {
+          const level = s[`capSuaChuaThang${selectedMonth + 1}`] || "";
+          return {
+            idKeHoachChiTiet: s.id || "",
+            idTaiSan: s.idTaiSan || "",
+            tenTaiSan: s.tenTaiSan || "",
+            nhomTaiSan: s.idNhomTaiSan || "",
+            capSuaChua: level,
+            soLuong: s.soLuong,
+            donViQuanLy: plan.idDonViGiao || "",
+            donViBaoTri: s.idDonViBaoTri || "",
+            action: Action.CREATE,
+          };
+        });
+
+      formik.setValues({
+        id: "",
+        idCongTy: CongTy.CT001,
+        soPhieu: "",
+        idKeHoach: plan?.id || "",
+        thang: selectedMonth + 1,
+        nam: plan?.nam || 2026,
+        ghiChu: "",
+        idNguoiLap: "",
+        nguoiLapXacNhan: false,
+        idGiamDoc: "",
+        giamDocXacNhan: false,
+        share: false,
+        trangThai: 0,
+        ngayTao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+        ngayCapNhat: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+        danhSachTaiSan: assetsList,
+        nguoiKyList: [] as any[],
+      });
+    }
+  }, [open, initialData, apiUsers, apiDepartments, selectedDeviceIds, plan]);
+
+  const handleClose = () => {
+    formik.resetForm();
+    onClose();
   };
 
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       maxWidth="lg"
       fullWidth
       PaperProps={{ sx: { height: "90vh" } }}
@@ -229,7 +204,7 @@ const RepairRequestDialog = ({
         <Typography variant="h6" fontWeight={600}>
           Tạo Giấy đề nghị sửa chữa
         </Typography>
-        <IconButton size="small" onClick={onClose}>
+        <IconButton size="small" onClick={handleClose}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
@@ -256,337 +231,30 @@ const RepairRequestDialog = ({
                   Thông tin
                 </Typography>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                  <TextField
-                    label="Số giấy đề nghị"
-                    value={number}
-                    onChange={(e) => setNumber(e.target.value)}
-                    placeholder={`VD: ${sourceDeptId}-001`}
-                    size="small"
-                    fullWidth
+                  <FieldInput
+                    title="Số giấy đề nghị"
+                    field="soPhieu"
+                    formik={formik}
                   />
                   <Typography variant="body2" color="text.secondary">
                     Căn cứ Kế hoạch SCBD tháng <b>{selectedMonth + 1}</b> năm{" "}
                     <b>{plan.nam}</b>
                     &nbsp;—&nbsp;Số thiết bị: <b>{selectedDeviceIds.length}</b>
                   </Typography>
-                  <TextField
-                    label="Nội dung sửa chữa"
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
+                  <FieldInput
+                    title="Nội dung sửa chữa"
+                    field="ghiChu"
+                    formik={formik}
                     multiline
                     rows={3}
-                    size="small"
-                    fullWidth
                   />
                 </Box>
               </Box>
             </Box>
 
-            {/* ── Cột phải: Quy trình duyệt (CHUYỂN SANG) ── */}
-            <Box
-              sx={{
-                border: "1px solid",
-                borderColor: "divider",
-                borderRadius: 3,
-                p: 2.5,
-                display: "flex",
-                flexDirection: "column",
-                height: "100%",
-              }}
-            >
-              <Typography
-                variant="subtitle1"
-                fontWeight={600}
-                mb={2}
-                sx={{ display: "flex", alignItems: "center", gap: 1 }}
-              >
-                Quy trình duyệt
-                <Chip
-                  label={`${signers.length} người`}
-                  size="small"
-                  color="primary"
-                  variant="outlined"
-                  sx={{ fontWeight: 400 }}
-                />
-              </Typography>
-
-              {/* giữ nguyên toàn bộ nội dung bên trong */}
-              <Box sx={{ flex: 1, overflowY: "auto", mb: 2 }}>
-                {signers.length > 0 ? (
-                  <Box sx={{ position: "relative", pl: 5 }}>
-                    <Box
-                      sx={{
-                        position: "absolute",
-                        left: 16,
-                        top: 8,
-                        bottom: 8,
-                        width: "1px",
-                        bgcolor: "divider",
-                      }}
-                    />
-                    {signers.map((s, idx) => {
-                      const user = apiUsers.find((u: any) => u.id === s.userId);
-                      const isEditingThis = editingSignerId === s.userId;
-                      return (
-                        <Box
-                          key={s.userId}
-                          sx={{ position: "relative", mb: 1.5 }}
-                        >
-                          <Box
-                            sx={{
-                              position: "absolute",
-                              left: -37,
-                              top: 14,
-                              width: 24,
-                              height: 24,
-                              borderRadius: "50%",
-                              bgcolor: "primary.main",
-                              color: "white",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: 11,
-                              fontWeight: 600,
-                              zIndex: 1,
-                              boxShadow: "0 0 0 3px white",
-                            }}
-                          >
-                            {idx + 1}
-                          </Box>
-
-                          <Box
-                            sx={{
-                              border: "1px solid",
-                              borderColor: isEditingThis
-                                ? "primary.main"
-                                : "divider",
-                              borderRadius: 2,
-                              p: 1.5,
-                              bgcolor: isEditingThis
-                                ? "primary.50"
-                                : "background.paper",
-                              transition: "all 0.2s",
-                              "&:hover": !isEditingThis
-                                ? { boxShadow: 1, borderColor: "grey.300" }
-                                : {},
-                            }}
-                          >
-                            {isEditingThis ? (
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  gap: 1.5,
-                                }}
-                              >
-                                <FormControl size="small" fullWidth>
-                                  <InputLabel>Phòng ban</InputLabel>
-                                  <Select
-                                    value={editDeptId}
-                                    label="Phòng ban"
-                                    onChange={(e) => {
-                                      setEditDeptId(e.target.value);
-                                      setEditUserId("");
-                                    }}
-                                  >
-                                    {apiDepartments.map((d: any) => (
-                                      <MenuItem key={d.id} value={d.id}>
-                                        {d.tenPhongBan}
-                                      </MenuItem>
-                                    ))}
-                                  </Select>
-                                </FormControl>
-                                <FormControl size="small" fullWidth>
-                                  <InputLabel>Người duyệt</InputLabel>
-                                  <Select
-                                    value={editUserId}
-                                    label="Người duyệt"
-                                    onChange={(e) =>
-                                      setEditUserId(e.target.value)
-                                    }
-                                  >
-                                    {apiUsers
-                                      .filter(
-                                        (u: any) =>
-                                          u.phongBanId === editDeptId &&
-                                          u.hasAccount,
-                                      )
-                                      .map((u: any) => (
-                                        <MenuItem key={u.id} value={u.id}>
-                                          {u.hoTen}
-                                        </MenuItem>
-                                      ))}
-                                  </Select>
-                                </FormControl>
-                                <Box sx={{ display: "flex", gap: 1 }}>
-                                  <Button
-                                    variant="contained"
-                                    size="small"
-                                    onClick={handleSaveEdit}
-                                  >
-                                    Lưu
-                                  </Button>
-                                  <Button
-                                    size="small"
-                                    onClick={() => setEditingSignerId(null)}
-                                  >
-                                    Hủy
-                                  </Button>
-                                </Box>
-                              </Box>
-                            ) : (
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "space-between",
-                                }}
-                              >
-                                <Box
-                                  sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 1.5,
-                                  }}
-                                >
-                                  <Box
-                                    sx={{
-                                      width: 36,
-                                      height: 36,
-                                      borderRadius: "50%",
-                                      bgcolor: "primary.main",
-                                      color: "white",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                      fontWeight: 600,
-                                      fontSize: 13,
-                                      flexShrink: 0,
-                                    }}
-                                  >
-                                    {user?.hoTen?.charAt(0) ?? "?"}
-                                  </Box>
-                                  <Box>
-                                    <Typography fontWeight={600} fontSize={13}>
-                                      {user?.hoTen}
-                                    </Typography>
-                                    <Typography
-                                      variant="caption"
-                                      color="text.secondary"
-                                    >
-                                      {user?.tenChucVu}
-                                    </Typography>
-                                    <Box sx={{ mt: 0.5 }}>
-                                      <Chip
-                                        label={user.tenPhongBan}
-                                        size="small"
-                                        sx={{
-                                          fontSize: 10,
-                                          height: 18,
-                                          bgcolor: "grey.100",
-                                        }}
-                                      />
-                                    </Box>
-                                  </Box>
-                                </Box>
-                                <Box sx={{ display: "flex", gap: 0.5 }}>
-                                  <Button
-                                    size="small"
-                                    variant="outlined"
-                                    onClick={() => handleEdit(s)}
-                                  >
-                                    Sửa
-                                  </Button>
-                                  <Button
-                                    size="small"
-                                    color="error"
-                                    variant="outlined"
-                                    onClick={() => handleRemoveSigner(s.userId)}
-                                  >
-                                    Xóa
-                                  </Button>
-                                </Box>
-                              </Box>
-                            )}
-                          </Box>
-                        </Box>
-                      );
-                    })}
-                  </Box>
-                ) : (
-                  <Alert severity="info" sx={{ mb: 2 }}>
-                    Chưa có người duyệt
-                  </Alert>
-                )}
-              </Box>
-
-              {/* Form thêm giữ nguyên */}
-              {/* Form thêm người duyệt */}
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 1.5,
-                  p: 2,
-                  bgcolor: "grey.50",
-                  borderRadius: 2,
-                  border: "1px dashed",
-                  borderColor: "divider",
-                }}
-              >
-                <FormControl size="small" fullWidth>
-                  <InputLabel>Phòng ban</InputLabel>
-                  <Select
-                    value={addDeptId}
-                    label="Đơn vị"
-                    onChange={(e) => {
-                      setAddDeptId(e.target.value);
-                      setAddUserId("");
-                    }}
-                  >
-                    {apiDepartments.map((d: DepartmentType) => (
-                      <MenuItem key={d.id} value={d.id}>
-                        {d.tenPhongBan}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                <FormControl size="small" fullWidth disabled={!addDeptId}>
-                  <InputLabel>Người duyệt</InputLabel>
-                  <Select
-                    value={addUserId}
-                    label="Người duyệt"
-                    onChange={(e) => setAddUserId(e.target.value)}
-                  >
-                    {apiUsers
-                      .filter(
-                        (u: StaffType) =>
-                          u.hasAccount && u.phongBanId === addDeptId,
-                      )
-                      .map((u: StaffType) => (
-                        <MenuItem
-                          key={u.id}
-                          value={u.id}
-                          disabled={signers.some((s) => s.userId === u.id)}
-                        >
-                          {u.hoTen}
-                        </MenuItem>
-                      ))}
-                  </Select>
-                </FormControl>
-
-                <Button
-                  variant="contained"
-                  startIcon={<PersonAddIcon />}
-                  onClick={handleAddSigner}
-                  disabled={!addUserId}
-                  fullWidth
-                >
-                  Thêm người duyệt
-                </Button>
-              </Box>
-              {/* (copy nguyên block add signer của bạn xuống đây) */}
+            {/* ── Cột phải: Quy trình duyệt ── */}
+            <Box>
+              <SignerWorkflowSection formik={formik} />
             </Box>
           </Box>
 
@@ -594,16 +262,16 @@ const RepairRequestDialog = ({
           <Box>
             <RepairRequestPreview
               plan={plan}
-              assets={assets}
+              assets={formik.values.danhSachTaiSan}
               month={
                 initialData?.thang ? initialData?.thang : selectedMonth + 1
               }
               year={plan.nam}
-              number={number}
-              signers={signers}
+              number={formik.values.soPhieu}
+              signers={formik.values.nguoiKyList}
               sourceDeptId={sourceDeptId}
               execDeptId={execDeptId}
-              note={note}
+              note={formik.values.ghiChu}
             />
           </Box>
         </Box>
@@ -612,14 +280,14 @@ const RepairRequestDialog = ({
       <Divider />
 
       <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-        <Button onClick={onClose} color="inherit">
+        <Button onClick={handleClose} color="inherit">
           Hủy
         </Button>
         <Button
           variant="contained"
           color="primary"
-          disabled={signers.length === 0}
-          onClick={handleSubmit}
+          disabled={formik.values.nguoiKyList.length === 0}
+          onClick={() => formik.handleSubmit()}
         >
           Tạo &amp; Gửi duyệt
         </Button>
