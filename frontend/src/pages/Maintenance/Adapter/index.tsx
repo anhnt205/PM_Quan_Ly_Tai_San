@@ -126,3 +126,19 @@ export const BienPhapPhuongTienAdapter = (s: any) => ({
   trangThai: s.trangThai,
   daCoNghiemThu: s.daCoNghiemThu,
 });
+
+export const NghiemThuPhuongTienAdapter = (s: any) => ({
+  ...s,
+  id: s.id,
+  idBienPhapPhuongTien: s.idBienPhapPhuongTien,
+  idTaiSan: s.idTaiSan,
+  idTrinhDuyetGiamDoc: s.idGiamDoc,
+  tenTrinhDuyetGiamDoc: s.tenGiamDoc,
+  trinhDuyetGiamDocXacNhan: s.giamDocXacNhan,
+  idNguoiLapBieu: s.idNguoiLap,
+  tenNguoiLapBieu: s.tenNguoiLap,
+  nguoiLapBieuXacNhan: s.nguoiLapXacNhan,
+  moTa: s.noiDung,
+  ngayTao: s.ngayTao,
+  trangThai: s.trangThai,
+});

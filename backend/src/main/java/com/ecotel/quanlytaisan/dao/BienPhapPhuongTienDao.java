@@ -40,7 +40,8 @@ public class BienPhapPhuongTienDao {
                 nvLap.HoTen  AS tenNguoiLap,
                 nvGD.HoTen   AS tenGiamDoc,
                 ts.TenTaiSan AS tenTaiSan,
-                gdpt.SoPhieu AS soPhieuSuCo
+                gdpt.SoPhieu AS soPhieuSuCo,
+                (SELECT COUNT(*) FROM nghiemthu_phuongtien nt WHERE nt.IdBienPhapPhuongTien = bp.Id) AS daCoNghiemThu
             FROM bienphap_phuongtien bp
                 LEFT JOIN NhanVien nvLap   ON nvLap.Id  = bp.IdNguoiLap
                 LEFT JOIN NhanVien nvGD    ON nvGD.Id   = bp.IdGiamDoc

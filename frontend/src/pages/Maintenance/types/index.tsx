@@ -323,3 +323,59 @@ export interface BienPhapPhuongTienChiTietData {
   donViTinh?: string;
   action?: ActionType;
 }
+
+export interface NghiemThuPhuongTienData {
+  id?: string;
+  idCongTy?: string;
+  idBienPhapPhuongTien?: string;
+  idTaiSan?: string;
+
+  // Thông tin chính
+  soPhieu?: string;
+  noiDung?: string;
+  tinhTrang?: string;
+  congViecPhatSinh?: string;
+  chiPhiNhanCong?: number;
+  ketLuan?: string;
+
+  // Luồng ký / Trạng thái
+  idNguoiLap?: string;
+  nguoiLapXacNhan?: boolean;
+  idGiamDoc?: string;
+  giamDocXacNhan?: boolean;
+  share?: boolean;
+  trangThai?: number;
+
+  // Audit
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+
+  // Join fields
+  tenNguoiLap?: string;
+  tenGiamDoc?: string;
+  tenTaiSan?: string;
+  soPhieuBienPhapPhuongTien?: string;
+
+  danhSachChiTiet?: NghiemThuPhuongTienChiTietData[];
+  nguoiKyList?: any[];
+  chuKyList?: any[];
+}
+
+export interface NghiemThuPhuongTienChiTietData {
+  id?: string;
+  idNghiemThuPhuongTien?: string;
+  idChiTietVatTu?: string;
+  idVatTu?: string;
+
+  soLuongThayThe?: number;
+  soLuongThuHoi?: number;
+  phanTramConLai?: number;
+  bienPhapXuLy?: string;
+  ghiChu?: string;
+
+  // View fields
+  tenVatTu?: string;
+  donViTinh?: string;
+}

@@ -27,6 +27,7 @@ import TableCustom from "../../../components/common/TableCustom";
 import { useDebounce } from "../../../hooks/useDebounce";
 import {
   useMaintenanceAcceptanceTestPageQuery,
+  useMaintenanceAcceptanceTestVehiclePageQuery,
   useMaintenanceIncidentPageQuery,
   useMaintenanceInspectionPageQuery,
   useMaintenanceMaterialAssessmentPageQuery,
@@ -44,6 +45,7 @@ import {
   generateGiamDinhPdf,
   generateGiamDinhPhuongTienPdf,
   generateNghiemThuPdf,
+  generateNghiemThuPhuongTienPdf,
   generateDanhGiaVatTuPdf,
   generateKiemTraSuCoPdf,
   generateBienPhapMayMocPdf,
@@ -63,6 +65,7 @@ import { RootState } from "../../../redux/store";
 import { useSelector } from "react-redux";
 import {
   AcceptanceTestAdapter,
+  NghiemThuPhuongTienAdapter,
   IncidentAdapter,
   InspectionAdapter,
   MaterialAssessmentAdapter,
@@ -299,10 +302,30 @@ export default function MaintenanceRecordPage() {
     activeTab === 4 && bienPhapType === "may_moc",
   );
 
+  const {
+    data: nghiemThuPhuongTienPaged = {
+      items: [],
+      totalItems: 0,
+      trangThaiCounts: {},
+    },
+    isLoading: isLoadingNghiemThuPhuongTien,
+  } = useMaintenanceAcceptanceTestVehiclePageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchDebounce,
+    statusFilter !== "" ? Number(statusFilter) : undefined,
+    undefined,
+    user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom,
+    dateTo,
+    activeTab === 4 && bienPhapType !== "may_moc",
+  );
+
   const acceptanceTestPaged =
     bienPhapType === "may_moc"
       ? nghiemThuMayMocPaged
-      : { items: [], totalItems: 0, trangThaiCounts: {} };
+      : nghiemThuPhuongTienPaged;
 
   const {
     data: materialAssessmentPaged = {
@@ -440,7 +463,11 @@ export default function MaintenanceRecordPage() {
     },
     {
       ...acceptanceTestPaged,
-      items: (acceptanceTestPaged.items || []).map(AcceptanceTestAdapter),
+      items: (acceptanceTestPaged.items || []).map(
+        bienPhapType === "may_moc"
+          ? AcceptanceTestAdapter
+          : NghiemThuPhuongTienAdapter,
+      ),
     },
     {
       ...materialAssessmentPaged,
@@ -653,12 +680,19 @@ export default function MaintenanceRecordPage() {
             showSignerSidebar={false}
             showHeader={true}
             generatePdf={() =>
-              generateNghiemThuPdf(
-                selectedRow,
-                staffs || [],
-                departments || [],
-                positions || [],
-              )
+              bienPhapType === "may_moc"
+                ? generateNghiemThuPdf(
+                    selectedRow,
+                    staffs || [],
+                    departments || [],
+                    positions || [],
+                  )
+                : generateNghiemThuPhuongTienPdf(
+                    selectedRow,
+                    staffs || [],
+                    departments || [],
+                    positions || [],
+                  )
             }
           />
         );

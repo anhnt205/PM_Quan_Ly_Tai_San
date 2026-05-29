@@ -29,7 +29,7 @@ public class NghiemThuPhuongTienDao {
     private String buildSelectSql() {
         return """
             SELECT
-                nt.Id, nt.IdCongTy, nt.IdGiamDinhPhuongTien,
+                nt.Id, nt.IdCongTy, nt.IdBienPhapPhuongTien, nt.IdTaiSan,
                 nt.SoPhieu, nt.NoiDung, nt.TinhTrang, nt.CongViecPhatSinh,
                 nt.ChiPhiNhanCong, nt.KetLuan,
                 nt.IdNguoiLap, nt.NguoiLapXacNhan,
@@ -38,9 +38,11 @@ public class NghiemThuPhuongTienDao {
                 nt.NgayTao, nt.NgayCapNhat, nt.NguoiTao, nt.NguoiCapNhat,
                 nvLap.HoTen AS tenNguoiLap,
                 nvGD.HoTen  AS tenGiamDoc,
-                gd.SoPhieu  AS soPhieuGiamDinhPhuongTien
+                bp.SoBienBan  AS soPhieuBienPhapPhuongTien,
+                ts.TenTaiSan AS tenTaiSan
             FROM nghiemthu_phuongtien nt
-                LEFT JOIN giamdinh_phuongtien gd ON nt.IdGiamDinhPhuongTien = gd.Id
+                LEFT JOIN bienphap_phuongtien bp ON nt.IdBienPhapPhuongTien = bp.Id
+                LEFT JOIN TaiSan ts ON nt.IdTaiSan = ts.Id
                 LEFT JOIN NhanVien nvLap ON nt.IdNguoiLap = nvLap.Id
                 LEFT JOIN NhanVien nvGD  ON nt.IdGiamDoc  = nvGD.Id
             """;
@@ -78,10 +80,10 @@ public class NghiemThuPhuongTienDao {
         } catch (Exception e) { return null; }
     }
 
-    public List<NghiemThuPhuongTienDTO> findByIdGiamDinhPhuongTien(String idGiamDinhPhuongTien) {
-        String sql = buildSelectSql() + " WHERE nt.IdGiamDinhPhuongTien = ?";
+    public List<NghiemThuPhuongTienDTO> findByIdBienPhapPhuongTien(String idBienPhapPhuongTien) {
+        String sql = buildSelectSql() + " WHERE nt.IdBienPhapPhuongTien = ?";
         return jdbcTemplate.query(sql,
-                new BeanPropertyRowMapper<>(NghiemThuPhuongTienDTO.class), idGiamDinhPhuongTien);
+                new BeanPropertyRowMapper<>(NghiemThuPhuongTienDTO.class), idBienPhapPhuongTien);
     }
 
     public String generateNextId() {
@@ -120,14 +122,14 @@ public class NghiemThuPhuongTienDao {
         e.setId(generateNextId());
         String sql = """
             INSERT INTO nghiemthu_phuongtien (
-                Id, IdCongTy, IdGiamDinhPhuongTien, SoPhieu,
+                Id, IdCongTy, IdBienPhapPhuongTien, IdTaiSan, SoPhieu,
                 NoiDung, TinhTrang, CongViecPhatSinh, ChiPhiNhanCong, KetLuan,
                 IdNguoiLap, NguoiLapXacNhan, IdGiamDoc, GiamDocXacNhan,
                 Share, TrangThai, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         int r = jdbcTemplate.update(sql,
-                e.getId(), e.getIdCongTy(), e.getIdGiamDinhPhuongTien(), e.getSoPhieu(),
+                e.getId(), e.getIdCongTy(), e.getIdBienPhapPhuongTien(), e.getIdTaiSan(), e.getSoPhieu(),
                 e.getNoiDung(), e.getTinhTrang(), e.getCongViecPhatSinh(), e.getChiPhiNhanCong(), e.getKetLuan(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai() != null ? e.getTrangThai() : 0,
@@ -140,7 +142,7 @@ public class NghiemThuPhuongTienDao {
     public NghiemThuPhuongTien update(NghiemThuPhuongTien e) {
         String sql = """
             UPDATE nghiemthu_phuongtien SET
-                IdGiamDinhPhuongTien = ?, SoPhieu = ?,
+                IdBienPhapPhuongTien = ?, IdTaiSan = ?, SoPhieu = ?,
                 NoiDung = ?, TinhTrang = ?, CongViecPhatSinh = ?,
                 ChiPhiNhanCong = ?, KetLuan = ?,
                 IdNguoiLap = ?, NguoiLapXacNhan = ?,
@@ -150,7 +152,7 @@ public class NghiemThuPhuongTienDao {
             WHERE Id = ?
             """;
         int r = jdbcTemplate.update(sql,
-                e.getIdGiamDinhPhuongTien(), e.getSoPhieu(),
+                e.getIdBienPhapPhuongTien(), e.getIdTaiSan(), e.getSoPhieu(),
                 e.getNoiDung(), e.getTinhTrang(), e.getCongViecPhatSinh(),
                 e.getChiPhiNhanCong(), e.getKetLuan(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(),

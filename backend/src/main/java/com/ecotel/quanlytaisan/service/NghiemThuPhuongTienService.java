@@ -37,8 +37,8 @@ public class NghiemThuPhuongTienService {
         return dto;
     }
 
-    public List<NghiemThuPhuongTienDTO> findByIdGiamDinhPhuongTien(String idGiamDinhPhuongTien) {
-        List<NghiemThuPhuongTienDTO> list = nghiemThuPhuongTienDao.findByIdGiamDinhPhuongTien(idGiamDinhPhuongTien);
+    public List<NghiemThuPhuongTienDTO> findByIdBienPhapPhuongTien(String idBienPhapPhuongTien) {
+        List<NghiemThuPhuongTienDTO> list = nghiemThuPhuongTienDao.findByIdBienPhapPhuongTien(idBienPhapPhuongTien);
         for (NghiemThuPhuongTienDTO item : list) enrichData(item);
         return list;
     }

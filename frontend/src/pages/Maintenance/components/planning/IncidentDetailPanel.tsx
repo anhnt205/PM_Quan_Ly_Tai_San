@@ -44,6 +44,7 @@ import IncidentPreview from "../preview/IncidentPreview";
 import IncidentInspectionDialog from "../dialog/Incidentinspectiondialog";
 import BienPhapMayMocDialog from "../dialog/BienPhapMayMocDialog";
 import BienPhapPhuongTienDialog from "../dialog/BienPhapPhuongTienDialog";
+import NghiemThuPhuongTienDialog from "../dialog/NghiemThuPhuongTienDialog";
 import InspectionRecordVehicleDialog from "../dialog/InspectionRecordVehicleDialog";
 import {
   useMaintenanceAcceptanceByBienPhapQuery,
@@ -56,6 +57,8 @@ import {
   useMaintenanceIncidentInspectionMutation,
   useMaintenanceInspectionMutation,
   useMaintenanceAcceptanceTestMutation,
+  useMaintenanceAcceptanceTestVehicleMutation,
+  useMaintenanceAcceptanceVehicleByBienPhapQuery,
 } from "../../../MainenancePlanRepair/Mutation";
 import {
   useBienPhapMayMocByGiamDinhQuery,
@@ -212,6 +215,8 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
     useBienPhapPhuongTienMutation();
   const { deleteMutation: deleteAcceptanceMutation } =
     useMaintenanceAcceptanceTestMutation();
+  const { deleteMutation: deleteAcceptanceVehicleMutation } =
+    useMaintenanceAcceptanceTestVehicleMutation();
 
   useEffect(() => {
     setExpandedBBKTKSC(null);
@@ -1089,6 +1094,25 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
 
       {(acceptanceParentBienPhapId || selectedAcc) &&
         (() => {
+          if (plan?.nhomTaiSan === "PHUONG_TIEN") {
+            const bp = bienPhapRecords.find(
+              (r: any) => r.id === (selectedAcc ? (selectedAcc.idBienPhapPhuongTien || selectedAcc.idGiamDinhPhuongTien) : acceptanceParentBienPhapId),
+            );
+            return (
+              <NghiemThuPhuongTienDialog
+                open={true}
+                onClose={() => {
+                  setAcceptanceParentBienPhapId(null);
+                  setSelectedAcc(null);
+                }}
+                idBienPhapPhuongTien={selectedAcc ? (selectedAcc.idBienPhapPhuongTien || selectedAcc.idGiamDinhPhuongTien || "") : (acceptanceParentBienPhapId ?? "")}
+                idTaiSan={bp?.idTaiSan}
+                tenTaiSan={bp?.tenTaiSan}
+                soBienBanBienPhap={bp?.soPhieu || bp?.soBienBan}
+                initData={selectedAcc}
+              />
+            );
+          }
           const targetBpId = selectedAcc
             ? selectedAcc.idBienPhapMayMoc
             : acceptanceParentBienPhapId;

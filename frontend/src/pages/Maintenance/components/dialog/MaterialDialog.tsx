@@ -70,7 +70,7 @@ interface Props {
   onClose: () => void;
   plan: MaintenancePlanData;
   repairRequest: MaintenanceRepairData;
-  acceptanceRecord: AcceptanceTestRecordData;
+  acceptanceRecord: any;
   initData?: DanhGiaVatTuData | null;
 }
 
@@ -236,22 +236,35 @@ const MaterialDialog = ({
         });
       } else {
         const list: ChiTietVatTuThuHoiData[] = [];
-        (acceptanceRecord.danhSachTaiSan || []).forEach((ts) => {
-          (ts.danhSachVatTu || []).forEach((vt) => {
-            if (vt.action !== Action.DELETE) {
+        acceptanceRecord.danhSachTaiSan
+          ? (acceptanceRecord.danhSachTaiSan || []).forEach((ts: any) => {
+              (ts.danhSachVatTu || []).forEach((vt: any) => {
+                if (vt.action !== Action.DELETE) {
+                  list.push({
+                    idChiTietVatTu: vt.idChiTietVatTu || "",
+                    idVatTu: vt.idVatTu || "",
+                    tenVatTu: vt.tenVatTu || "",
+                    donViTinh: vt.donViTinh || "Cái",
+                    soLuong: vt.soLuong || 1,
+                    tinhTrang: "",
+                    bienPhapXuLy: "",
+                    ghiChu: "",
+                  });
+                }
+              });
+            })
+          : acceptanceRecord.danhSachChiTiet.forEach((vt: any) => {
               list.push({
                 idChiTietVatTu: vt.idChiTietVatTu || "",
                 idVatTu: vt.idVatTu || "",
                 tenVatTu: vt.tenVatTu || "",
                 donViTinh: vt.donViTinh || "Cái",
-                soLuong: vt.soLuong || 1,
+                soLuong: vt.soLuongThayThe || 1,
                 tinhTrang: "",
                 bienPhapXuLy: "",
                 ghiChu: "",
               });
-            }
-          });
-        });
+            });
 
         formik.setValues({
           id: "",
@@ -935,13 +948,13 @@ const MaterialDialog = ({
                           value={item.idChiTietVatTu}
                           noBorder={true}
                           onChange={(value) => {
-                             updateItemFields(originalIdx, {
-                               idChiTietVatTu: value?.id ?? "",
-                               idVatTu: value?.idTaiSan ?? "",
-                               tenVatTu: value?.tenTaiSan ?? "",
-                               donViTinh: value?.donViTinh ?? "Cái",
-                             });
-                           }}
+                            updateItemFields(originalIdx, {
+                              idChiTietVatTu: value?.id ?? "",
+                              idVatTu: value?.idTaiSan ?? "",
+                              tenVatTu: value?.tenTaiSan ?? "",
+                              donViTinh: value?.donViTinh ?? "Cái",
+                            });
+                          }}
                         />
                       </TableCell>
                       <TableCell>{item.donViTinh}</TableCell>

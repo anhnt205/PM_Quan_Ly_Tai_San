@@ -31,6 +31,7 @@ import { useSignBatch } from "../../../hooks/useSignBatch";
 import { SignBatchModal } from "../../../components/SignDocument/Signbatchmodal";
 import {
   useMaintenanceAcceptanceTestPageQuery,
+  useMaintenanceAcceptanceTestVehiclePageQuery,
   useMaintenanceIncidentPageQuery,
   useMaintenanceInspectionPageQuery,
   useMaintenanceMaterialAssessmentPageQuery,
@@ -44,6 +45,7 @@ import {
 import { useDebounce } from "../../../hooks/useDebounce";
 import {
   AcceptanceTestAdapter,
+  NghiemThuPhuongTienAdapter,
   IncidentAdapter,
   InspectionAdapter,
   MaterialAssessmentAdapter,
@@ -65,6 +67,7 @@ import {
   generateGiamDinhPdf,
   generateGiamDinhPhuongTienPdf,
   generateNghiemThuPdf,
+  generateNghiemThuPhuongTienPdf,
   generateDanhGiaVatTuPdf,
   generateKiemTraSuCoPdf,
   generateBienPhapMayMocPdf,
@@ -258,10 +261,30 @@ export default function MaintenanceApprovalPage() {
     activeTab === 4 && bienPhapType === "may_moc",
   );
 
+  const {
+    data: nghiemThuPhuongTienPaged = {
+      items: [],
+      totalItems: 0,
+      trangThaiCounts: {},
+    },
+    isLoading: isLoadingNghiemThuPhuongTien,
+  } = useMaintenanceAcceptanceTestVehiclePageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchDebounce,
+    undefined,
+    undefined,
+    user?.taiKhoan?.tenDangNhap,
+    true,
+    dateFrom,
+    dateTo,
+    activeTab === 4 && bienPhapType !== "may_moc",
+  );
+
   const acceptanceTestPaged =
     bienPhapType === "may_moc"
       ? nghiemThuMayMocPaged
-      : { items: [], totalItems: 0, trangThaiCounts: {} };
+      : nghiemThuPhuongTienPaged;
 
   const {
     data: materialAssessmentPaged = {
@@ -382,7 +405,11 @@ export default function MaintenanceApprovalPage() {
     },
     {
       ...acceptanceTestPaged,
-      items: (acceptanceTestPaged.items || []).map(AcceptanceTestAdapter),
+      items: (acceptanceTestPaged.items || []).map(
+        bienPhapType === "may_moc"
+          ? AcceptanceTestAdapter
+          : NghiemThuPhuongTienAdapter,
+      ),
     },
     {
       ...materialAssessmentPaged,
@@ -751,7 +778,9 @@ export default function MaintenanceApprovalPage() {
             showSignerSidebar={false}
             showHeader={false}
             generatePdf={() =>
-              generateNghiemThuPdf(selectedRow, staffs, departments, positions)
+              bienPhapType === "may_moc"
+                ? generateNghiemThuPdf(selectedRow, staffs, departments, positions)
+                : generateNghiemThuPhuongTienPdf(selectedRow, staffs, departments, positions)
             }
           />
         );
@@ -1082,7 +1111,9 @@ export default function MaintenanceApprovalPage() {
           fullscreen={true}
           showSignerSidebar={true}
           generatePdf={() =>
-            generateNghiemThuPdf(selectedRow, staffs, departments, positions)
+            bienPhapType === "may_moc"
+              ? generateNghiemThuPdf(selectedRow, staffs, departments, positions)
+              : generateNghiemThuPhuongTienPdf(selectedRow, staffs, departments, positions)
           }
         />
       )}
@@ -1433,7 +1464,9 @@ export default function MaintenanceApprovalPage() {
                         ? generateBienPhapMayMocPdf
                         : generateBienPhapPhuongTienPdf
                       : activeTab === 4
-                        ? generateNghiemThuPdf
+                        ? bienPhapType === "may_moc"
+                          ? generateNghiemThuPdf
+                          : generateNghiemThuPhuongTienPdf
                         : activeTab === 5
                           ? generateDanhGiaVatTuPdf
                           : activeTab === 6

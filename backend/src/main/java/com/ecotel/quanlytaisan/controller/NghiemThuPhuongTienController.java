@@ -72,12 +72,12 @@ public class NghiemThuPhuongTienController {
         }
     }
 
-    // ─── GET by GiamDinhPhuongTien ────────────────────────────────────────────
-    @GetMapping("/giamdinh-phuongtien/{idGiamDinhPhuongTien}")
-    public ResponseEntity<ApiResponse<Object>> getByIdGiamDinhPhuongTien(
-            @PathVariable("idGiamDinhPhuongTien") String idGiamDinhPhuongTien) {
+    // ─── GET by BienPhapPhuongTien ────────────────────────────────────────────
+    @GetMapping("/bienphap-phuongtien/{idBienPhapPhuongTien}")
+    public ResponseEntity<ApiResponse<Object>> getByIdBienPhapPhuongTien(
+            @PathVariable("idBienPhapPhuongTien") String idBienPhapPhuongTien) {
         try {
-            List<NghiemThuPhuongTienDTO> list = service.findByIdGiamDinhPhuongTien(idGiamDinhPhuongTien);
+            List<NghiemThuPhuongTienDTO> list = service.findByIdBienPhapPhuongTien(idBienPhapPhuongTien);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", list, list.size()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

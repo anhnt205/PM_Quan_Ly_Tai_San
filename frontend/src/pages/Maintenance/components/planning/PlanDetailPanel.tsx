@@ -40,6 +40,7 @@ import AcceptanceTestDialog from "../dialog/AcceptanceTestDialog";
 import MaterialDialog from "../dialog/MaterialDialog";
 import BienPhapMayMocDialog from "../dialog/BienPhapMayMocDialog";
 import BienPhapPhuongTienDialog from "../dialog/BienPhapPhuongTienDialog";
+import NghiemThuPhuongTienDialog from "../dialog/NghiemThuPhuongTienDialog";
 import {
   InspectionRecordData,
   MaintenancePlanData,
@@ -53,6 +54,8 @@ import {
   useMaintenanceRepairByPlanQuery,
   useMaintenanceRepairMutation,
   useMaintenanceAcceptanceTestMutation,
+  useMaintenanceAcceptanceTestVehicleMutation,
+  useMaintenanceAcceptanceVehicleByBienPhapQuery,
   useMaintenanceMaterialAssessmentMutation,
   useMaintenanceInspectionByBienBanQuery,
   useMaintenanceVehicleInspectionByBienBanQuery,
@@ -302,6 +305,8 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
     useBienPhapPhuongTienMutation();
   const { deleteMutation: deleteAcceptanceMutation } =
     useMaintenanceAcceptanceTestMutation();
+  const { deleteMutation: deleteAcceptanceVehicleMutation } =
+    useMaintenanceAcceptanceTestVehicleMutation();
   const { deleteMutation: deleteMaterialAssessmentMutation } =
     useMaintenanceMaterialAssessmentMutation();
 
@@ -344,11 +349,12 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
 
   // Biện pháp theo giám định đang expand
   const { data: bienPhapMayMocRecords = [] } = useBienPhapMayMocByGiamDinhQuery(
-    plan?.nhomTaiSan === "MAY_MOC" ? (expandedInspections || "") : "",
+    plan?.nhomTaiSan === "MAY_MOC" ? expandedInspections || "" : "",
   );
-  const { data: bienPhapPhuongTienRecords = [] } = useBienPhapPhuongTienByGiamDinhQuery(
-    plan?.nhomTaiSan === "PHUONG_TIEN" ? (expandedInspections || "") : "",
-  );
+  const { data: bienPhapPhuongTienRecords = [] } =
+    useBienPhapPhuongTienByGiamDinhQuery(
+      plan?.nhomTaiSan === "PHUONG_TIEN" ? expandedInspections || "" : "",
+    );
   const bienPhapRecords =
     plan?.nhomTaiSan === "MAY_MOC"
       ? bienPhapMayMocRecords
@@ -357,6 +363,15 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
   // Nghiệm thu theo biện pháp đang expand
   const { data: acceptanceTestRecords = [] } =
     useMaintenanceAcceptanceByBienPhapQuery(expandedBienPhap || "");
+
+  // Nghiệm thu phương tiện theo biện pháp đang expand
+  const { data: acceptanceTestVehicleRecords = [] } =
+    useMaintenanceAcceptanceVehicleByBienPhapQuery(expandedBienPhap || "");
+
+  const acceptanceRecords =
+    plan?.nhomTaiSan === "MAY_MOC"
+      ? acceptanceTestRecords
+      : acceptanceTestVehicleRecords;
 
   const { data: materialQualityRecords = [] } =
     useMaintenanceMaterialAssessmentByInspectionQuery(
@@ -696,7 +711,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                         {expandedRequests === (req.id ?? "") &&
                           inspectionRecords.map(
                             (insp: any, inspIdx: number) => {
-                              const acceptances = acceptanceTestRecords.filter(
+                              const acceptances = acceptanceRecords.filter(
                                 (a: any) => a.inspectionRecordId === insp.id,
                               );
                               const isInspLast =
@@ -811,7 +826,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                       const isBPExpanded =
                                         expandedBienPhap === (bp.id ?? "");
                                       const bpAcceptances =
-                                        acceptanceTestRecords.filter(
+                                        acceptanceRecords.filter(
                                           (a: any) =>
                                             a.idBienPhapMayMoc === bp.id,
                                         );
@@ -843,8 +858,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                                   isLast={false}
                                                 />
                                               </Box>
-                                              {(bp.daCoNghiemThu === 1 ||
-                                                bpAcceptances.length > 0) && (
+                                              {bp.daCoNghiemThu === 1 && (
                                                 <IconButton
                                                   size="small"
                                                   sx={{
@@ -869,8 +883,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                                 variant="body2"
                                                 sx={{
                                                   ml:
-                                                    bp.daCoNghiemThu === 1 ||
-                                                    bpAcceptances.length > 0
+                                                    bp.daCoNghiemThu === 1
                                                       ? `${CONNECTOR_WIDTH * 3 + 8}px`
                                                       : `${CONNECTOR_WIDTH * 3 + 36}px`,
                                                 }}
@@ -915,16 +928,20 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                                 onEdit={() => {
                                                   setSelectedBienPhap(bp);
                                                   setBienPhapParentInspId(
-                                                     bp.idGiamDinhMayMoc || bp.idGiamDinhPhuongTien || bp.idKiemTraSuCo,
+                                                    bp.idGiamDinhMayMoc ||
+                                                      bp.idGiamDinhPhuongTien ||
+                                                      bp.idKiemTraSuCo,
                                                   );
                                                 }}
                                                 editTooltip="Chỉnh sửa Biện pháp"
                                                 editColor="primary"
                                                 isDelete={bp.trangThai === 0}
                                                 onDelete={() => {
-                                                  const deleteFn = plan?.nhomTaiSan === "MAY_MOC"
-                                                    ? deleteBienPhapMayMocMutation
-                                                    : deleteBienPhapPhuongTienMutation;
+                                                  const deleteFn =
+                                                    plan?.nhomTaiSan ===
+                                                    "MAY_MOC"
+                                                      ? deleteBienPhapMayMocMutation
+                                                      : deleteBienPhapPhuongTienMutation;
                                                   deleteFn.mutateAsync(bp.id);
                                                 }}
                                               />
@@ -933,7 +950,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
 
                                           {/* Depth 4: BB Nghiệm thu */}
                                           {isBPExpanded &&
-                                            acceptanceTestRecords.map(
+                                            acceptanceRecords.map(
                                               (acc: any, accIdx: number) => {
                                                 const isAccLast =
                                                   accIdx ===
@@ -1013,7 +1030,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                                         />
                                                       </TableCell>
                                                       <TableCell>
-                                                        {acc.ngayNghiemThu}
+                                                        {acc.ngayTao}
                                                       </TableCell>
                                                       <TableCell>
                                                         {showStatus(
@@ -1022,11 +1039,11 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                                       </TableCell>
                                                       <TableCell align="right">
                                                         <ActionCell
-                                                          onAdd={() =>
+                                                          onAdd={() => {
                                                             setMaterialParentAccId(
                                                               acc.id,
-                                                            )
-                                                          }
+                                                            );
+                                                          }}
                                                           addTooltip={
                                                             acc.daCoDanhGiaVatTu ===
                                                             1
@@ -1046,7 +1063,8 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                                           onEdit={() => {
                                                             setSelectedAcc(acc);
                                                             setAcceptanceParentBienPhapId(
-                                                              acc.idBienPhapMayMoc,
+                                                              acc.idBienPhapMayMoc ||
+                                                                acc.idBienPhapPhuongTien,
                                                             );
                                                             setAcceptanceDialogOpen(
                                                               true,
@@ -1055,11 +1073,16 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                                           isDelete={
                                                             acc.trangThai === 0
                                                           }
-                                                          onDelete={() =>
-                                                            deleteAcceptanceMutation.mutateAsync(
+                                                          onDelete={() => {
+                                                            const deleteFn =
+                                                              plan?.nhomTaiSan ===
+                                                              "MAY_MOC"
+                                                                ? deleteAcceptanceMutation
+                                                                : deleteAcceptanceVehicleMutation;
+                                                            deleteFn.mutateAsync(
                                                               acc.id,
-                                                            )
-                                                          }
+                                                            );
+                                                          }}
                                                           editTooltip="Chỉnh sửa BB Nghiệm thu"
                                                           editColor="primary"
                                                         />
@@ -1238,7 +1261,9 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
       {(bienPhapParentInspId || selectedBienPhap) &&
         (() => {
           const parentId = selectedBienPhap
-            ? (selectedBienPhap.idGiamDinhMayMoc || selectedBienPhap.idGiamDinhPhuongTien || selectedBienPhap.idKiemTraSuCo)
+            ? selectedBienPhap.idGiamDinhMayMoc ||
+              selectedBienPhap.idGiamDinhPhuongTien ||
+              selectedBienPhap.idKiemTraSuCo
             : bienPhapParentInspId;
           const parentInsp = inspectionRecords.find(
             (r: any) => r.id === parentId,
@@ -1273,6 +1298,38 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
 
       {acceptanceDialogOpen &&
         (() => {
+          if (plan?.nhomTaiSan === "PHUONG_TIEN") {
+            const bp = bienPhapRecords.find(
+              (r: any) =>
+                r.id ===
+                (selectedAcc
+                  ? selectedAcc.idBienPhapPhuongTien ||
+                    selectedAcc.idGiamDinhPhuongTien
+                  : acceptanceParentBienPhapId),
+            );
+            return (
+              <NghiemThuPhuongTienDialog
+                open={true}
+                onClose={() => {
+                  setAcceptanceDialogOpen(false);
+                  setAcceptanceParentBienPhapId(null);
+                  setSelectedAcc(null);
+                }}
+                idBienPhapPhuongTien={
+                  selectedAcc
+                    ? selectedAcc.idBienPhapPhuongTien ||
+                      selectedAcc.idGiamDinhPhuongTien ||
+                      ""
+                    : (acceptanceParentBienPhapId ?? "")
+                }
+                idTaiSan={bp?.idTaiSan}
+                tenTaiSan={bp?.tenTaiSan}
+                soBienBanBienPhap={bp?.soPhieu || bp?.soBienBan}
+                bienPhap={bp}
+                initData={selectedAcc}
+              />
+            );
+          }
           if (selectedAcc) {
             const bp = bienPhapRecords.find(
               (r: any) => r.id === selectedAcc.idBienPhapMayMoc,
@@ -1330,7 +1387,8 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
 
       {materialParentAccId &&
         (() => {
-          const parentAcc = acceptanceTestRecords.find(
+          console.log(materialParentAccId);
+          const parentAcc = acceptanceRecords.find(
             (a: any) => a.id === materialParentAccId,
           );
           const parentReq = parentAcc

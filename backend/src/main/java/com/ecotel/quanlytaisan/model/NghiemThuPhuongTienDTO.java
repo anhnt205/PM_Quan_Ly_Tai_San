@@ -8,7 +8,8 @@ import java.util.List;
 public class NghiemThuPhuongTienDTO {
     private String id;
     private String idCongTy;
-    private String idGiamDinhPhuongTien;
+    private String idBienPhapPhuongTien;
+    private String idTaiSan;
 
     // Thông tin chính
     private String soPhieu;
@@ -39,7 +40,8 @@ public class NghiemThuPhuongTienDTO {
     // Join fields
     private String tenNguoiLap;
     private String tenGiamDoc;
-    private String soPhieuGiamDinhPhuongTien; // Số phiếu giám định PT liên quan
+    private String soPhieuBienPhapPhuongTien; // Số phiếu biện pháp PT liên quan
+    private String tenTaiSan;
 
     // Relations
     private List<NghiemThuPhuongTienChiTiet> danhSachChiTiet;
