@@ -29,13 +29,12 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { useNavigate } from "react-router-dom";
 
 import { useCmms } from "../../hooks/CmmsContext";
-import IncidentDialog from "../Maintenance/components/dialog/IncidentDialog";
+import IncidentDialog from "./components/dialog/IncidentDialog";
 
-import CreatePlanDialog from "../Maintenance/components/planning/CreatePlan";
-import PlanDetailPanel from "../Maintenance/components/planning/PlanDetailPanel";
-import IncidentDetailPanel from "../Maintenance/components/planning/IncidentDetailPanel";
+import CreatePlanDialog from "./components/dialog/PlanDialog";
+import PlanDetailPanel from "./components/planning/PlanDetailPanel";
+import IncidentDetailPanel from "./components/planning/IncidentDetailPanel";
 import { calculatePlanMaterials } from "../../mockdata/mockNorms";
-import { initialIncidentInspectionRecords } from "../../mockdata/mockIncidentInspection";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
@@ -47,70 +46,26 @@ import {
   useMaintenanceRepairMutation,
   useMaintenanceIncidentInspectionMutation,
   useMaintenanceIncidentInspectionBySuCoQuery,
-} from "./Mutation";
-import { CongTy } from "../../utils/const";
+} from "./mutation";
+import { AssetGroup, CongTy } from "../../utils/const";
 import { MaintenancePlanData } from "./types";
-import { handleSendToSigner, isCheckShowShare } from "./config";
-import { useSelector } from "react-redux";
+import {
+  handleSendToSigner,
+  showServerity,
+  showShareStatus,
+  showStatus,
+} from "./config";
 import { useDebounce } from "../../hooks/useDebounce";
-import { RootState } from "../../redux/store";
-import { IncidenData, IncidentInspectionData } from "../Maintenance/types";
-import { Delete, Edit, Eye, Trash2 } from "lucide-react";
+import { IncidenData } from "./types";
+import { Edit, Eye, Trash2 } from "lucide-react";
 import { useAllDepartmentsQuery } from "../Department/Mutation";
 import { showConfirmAlert } from "../../components/Alert";
-
-// ── Status config ──────────────────────────────────────────
-const planStatusConfig: Record<
-  string,
-  {
-    label: string;
-    color: "default" | "warning" | "success" | "error";
-  }
-> = {
-  0: { label: "Bản nháp", color: "default" },
-  1: { label: "Chờ duyệt", color: "warning" },
-  2: { label: "Từ chối", color: "error" },
-  3: { label: "Đã duyệt", color: "success" },
-};
-
-const renderStatus = (status: number) => {
-  const cfg = planStatusConfig[status] ?? planStatusConfig[0];
-  return <Chip label={cfg.label} color={cfg.color} size="small" />;
-};
-
-// ── Severity color helper ─────────────────────────────────
-const severityColor: Record<string, string> = {
-  0: "#4caf50",
-  1: "#ff9800",
-  2: "#f44336",
-  3: "#9c27b0",
-};
-
-const severityLabels: Record<any, string> = {
-  0: "Nhẹ",
-  1: "Trung bình",
-  2: "Nặng",
-  3: "Nghiêm trọng",
-};
-
-const signStatusConfig: Record<
-  number,
-  {
-    label: string;
-    color: "default" | "success";
-  }
-> = {
-  0: { label: "Chưa gửi", color: "default" },
-  1: { label: "Đã gửi", color: "success" },
-};
-
-const renderShareStatus = (status: number) => {
-  const cfg = signStatusConfig[status] ?? signStatusConfig[0];
-  return <Chip label={cfg.label} color={cfg.color} size="small" />;
-};
+import { useSelector } from "react-redux";
+import Filter from "./components/Filter";
 
 export default function MaintenancePlanRepair() {
   const navigate = useNavigate();
+  const { user } = useSelector((state: any) => state.user);
 
   /**
    * Navigation state machine:
@@ -135,7 +90,7 @@ export default function MaintenancePlanRepair() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [nhomTaiSanFilter, setNhomTaiSanFilter] = useState("MAY_MOC");
+  const [nhomTaiSanFilter, setNhomTaiSanFilter] = useState(AssetGroup.MAYMOC);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [expandedYears, setExpandedYears] = useState<Record<string, boolean>>(
     {},
@@ -187,7 +142,6 @@ export default function MaintenancePlanRepair() {
   }, [serverIncInspRecords.length]);
 
   const {
-    repairRequests,
     inspectionRecords,
     acceptanceTestRecords,
     materialQualityRecords,
@@ -309,16 +263,6 @@ export default function MaintenancePlanRepair() {
 
   const [showIncidentDialog, setShowIncidentDialog] = useState(false);
 
-  const countByStatus = (s: number) =>
-    allPlans.filter((p) => p.trangThai === s).length;
-
-  const handleSend = (items: any[]) => {
-    handleSendToSigner(items, updateManyMutation.mutateAsync, () => {
-      handleCloseAll();
-      setSelectedIds([]);
-    });
-  };
-
   const handleSendIncident = (items: any[]) => {
     handleSendToSigner(
       items.map((i) => ({ ...i, soKeHoach: i.soPhieu })), // Map soPhieu to soKeHoach for handleSendToSigner
@@ -404,14 +348,18 @@ export default function MaintenancePlanRepair() {
       headerName: "Trình duyệt",
       width: 130,
       editable: false,
-      renderCell: (params: any) => renderShareStatus(params.value),
+      renderCell: (params: any) =>
+        showShareStatus(
+          params.value ?? false,
+          params.row?.nguoiTao === user?.taiKhoan?.tenDangNhap,
+        ),
     },
     {
       field: "status",
       headerName: "Trạng thái",
       width: 130,
       editable: false,
-      renderCell: (params: any) => renderStatus(params.value),
+      renderCell: (params: any) => showStatus(params.value),
     },
     {
       field: "action",
@@ -433,7 +381,7 @@ export default function MaintenancePlanRepair() {
       headerName: "Trạng thái",
       width: 120,
       editable: false,
-      renderCell: (params: any) => renderStatus(params.value),
+      renderCell: (params: any) => showStatus(params.value),
     },
   ];
 
@@ -479,96 +427,14 @@ export default function MaintenancePlanRepair() {
               }}
             >
               {/* ── Filter thời gian ── */}
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 2,
-                  px: 2,
-                  py: 1,
-                  borderBottom: "1px solid",
-                  borderColor: "divider",
-                  bgcolor: "#fafafa",
-                  flexWrap: "wrap",
-                }}
-              >
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ whiteSpace: "nowrap" }}
-                >
-                  Lọc theo ngày:
-                </Typography>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Từ
-                  </Typography>
-                  <input
-                    type="date"
-                    value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
-                    style={{
-                      border: "1px solid #ccc",
-                      borderRadius: 6,
-                      padding: "4px 8px",
-                      fontSize: 13,
-                      color: "inherit",
-                      background: "transparent",
-                    }}
-                  />
-                </Box>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Đến
-                  </Typography>
-                  <input
-                    type="date"
-                    value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
-                    style={{
-                      border: "1px solid #ccc",
-                      borderRadius: 6,
-                      padding: "4px 8px",
-                      fontSize: 13,
-                      color: "inherit",
-                      background: "transparent",
-                    }}
-                  />
-                </Box>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Nhóm tài sản
-                  </Typography>
-                  <select
-                    value={nhomTaiSanFilter}
-                    onChange={(e) => setNhomTaiSanFilter(e.target.value)}
-                    style={{
-                      border: "1px solid #ccc",
-                      borderRadius: 6,
-                      padding: "4px 8px",
-                      fontSize: 13,
-                      color: "inherit",
-                      background: "transparent",
-                      outline: "none",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <option value="MAY_MOC">Máy móc</option>
-                    <option value="PHUONG_TIEN">Phương tiện</option>
-                  </select>
-                </Box>
-                {(dateFrom || dateTo) && (
-                  <Chip
-                    label="Xóa bộ lọc"
-                    size="small"
-                    onDelete={() => {
-                      setDateFrom("");
-                      setDateTo("");
-                    }}
-                    sx={{ fontSize: 11 }}
-                  />
-                )}
-              </Box>
+              <Filter
+                dateFrom={dateFrom}
+                setDateFrom={setDateFrom}
+                dateTo={dateTo}
+                setDateTo={setDateTo}
+                nhomTaiSanFilter={nhomTaiSanFilter}
+                setNhomTaiSanFilter={setNhomTaiSanFilter}
+              />
               <TableCustom
                 title="Danh sách kế hoạch"
                 rows={isDetailOpen ? allPlans : []}
@@ -895,14 +761,22 @@ export default function MaintenancePlanRepair() {
                                                   )}
                                                 </TableCell>
                                                 <TableCell>
-                                                  {renderShareStatus(
-                                                    plan.share ? 1 : 0,
+                                                  {showShareStatus(
+                                                    plan.share ?? false,
+                                                    plan.ngayTao ===
+                                                      user?.taiKhoan
+                                                        ?.tenDangNhap,
                                                   )}
                                                 </TableCell>
                                                 <TableCell>
-                                                  {renderStatus(plan.trangThai)}
+                                                  {showStatus(plan.trangThai)}
                                                 </TableCell>
-                                                <TableCell sx={{display:"flex", gap:1}}>
+                                                <TableCell
+                                                  sx={{
+                                                    display: "flex",
+                                                    gap: 1,
+                                                  }}
+                                                >
                                                   <IconButton
                                                     disabled={
                                                       plan.trangThai !== 0
@@ -1226,40 +1100,24 @@ export default function MaintenancePlanRepair() {
                                                                     <TableCell>
                                                                       {incident.mucDo !==
                                                                         undefined ||
-                                                                      incident.severity ? (
-                                                                        <Chip
-                                                                          label={
-                                                                            severityLabels[
-                                                                              incident.mucDo ??
-                                                                                incident.severity
-                                                                            ]
-                                                                          }
-                                                                          size="small"
-                                                                          sx={{
-                                                                            bgcolor:
-                                                                              severityColor[
-                                                                                incident.mucDo ??
-                                                                                  incident.severity
-                                                                              ] ||
-                                                                              "#bdbdbd",
-                                                                            color:
-                                                                              "#fff",
-                                                                            fontSize: 11,
-                                                                          }}
-                                                                        />
-                                                                      ) : (
-                                                                        "—"
+                                                                      incident.severity
+                                                                        ? showServerity(
+                                                                            incident.mucDo,
+                                                                          )
+                                                                        : "—"}
+                                                                    </TableCell>
+                                                                    <TableCell>
+                                                                      {showShareStatus(
+                                                                        incident.share ??
+                                                                          false,
+                                                                        incident.ngayTao ===
+                                                                          user
+                                                                            ?.taiKhoan
+                                                                            ?.tenDangNhap,
                                                                       )}
                                                                     </TableCell>
                                                                     <TableCell>
-                                                                      {renderShareStatus(
-                                                                        incident.share
-                                                                          ? 1
-                                                                          : 0,
-                                                                      )}
-                                                                    </TableCell>
-                                                                    <TableCell>
-                                                                      {renderStatus(
+                                                                      {showStatus(
                                                                         incident.trangThai,
                                                                       )}
                                                                     </TableCell>
@@ -1486,7 +1344,7 @@ export default function MaintenancePlanRepair() {
                                     </Box>
                                   </TableCell>
                                   <TableCell>
-                                    {renderStatus(incident.trangThai)}
+                                    {showStatus(incident.trangThai)}
                                   </TableCell>
                                 </TableRow>
                               );

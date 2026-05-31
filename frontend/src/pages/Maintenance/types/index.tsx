@@ -1,4 +1,4 @@
-import { ActionType } from "../../../utils/const";
+import { ActionType, TypeBienBanType } from "../../../utils/const";
 
 // sự cố
 export interface IncidenData {
@@ -107,7 +107,7 @@ export interface DanhGiaVatTuData {
   idDonViQuanLy?: string;
   tenDonViQuanLy?: string;
   idNghiemThu?: string;
-  
+
   soLuongPhucHoi?: number;
   soLuongPheLieu?: number;
   soLuongHuy?: number;
@@ -119,14 +119,14 @@ export interface DanhGiaVatTuData {
   idGiamDoc?: string;
   tenGiamDoc?: string;
   giamDocXacNhan?: boolean;
-  
+
   share?: boolean;
   trangThai?: number;
   ngayTao?: string;
   ngayCapNhat?: string;
   nguoiTao?: string;
   nguoiCapNhat?: string;
-  
+
   danhSachChiTiet?: ChiTietVatTuThuHoiData[];
   nguoiKyList?: any[];
 }
@@ -140,7 +140,7 @@ export interface ChiTietVatTuThuHoiData {
   tinhTrang?: string;
   bienPhapXuLy?: string;
   ghiChu?: string;
-  
+
   // Join fields
   // Join fields
   tenVatTu?: string;
@@ -157,14 +157,14 @@ export interface IncidentInspectionData {
   viTri?: string;
   nhanXetKetLuan?: string;
   bienPhapXuLy?: string;
-  
+
   idNguoiLap?: string;
   tenNguoiLap?: string;
   nguoiLapXacNhan?: boolean;
   idGiamDoc?: string;
   tenGiamDoc?: string;
   giamDocXacNhan?: boolean;
-  
+
   share?: boolean;
   trangThai?: number;
   daCoGiamDinh?: number;
@@ -200,7 +200,7 @@ export interface IncidentInspectionDetailData {
   idKiemTraSuCo?: string;
   idTaiSan?: string;
   idSuCoChiTiet?: string;
-  
+
   // Enrich
   maTaiSan?: string;
   tenTaiSan?: string;
@@ -210,6 +210,7 @@ export interface IncidentInspectionDetailData {
   action?: any;
 }
 
+// quy trình sửa chữa
 export interface QuyTrinhSuaChuaData {
   idSuaChuaChiTiet: string;
   thietBi: string;
@@ -230,17 +231,17 @@ export interface QuyTrinhSuaChuaData {
 export interface BienPhapMayMocData {
   id?: string;
   idCongTy?: string;
-  idGiamDinhMayMoc?: string;       // FK -> giamdinh_maymoc
+  idGiamDinhMayMoc?: string; // FK -> giamdinh_maymoc
 
-  soPhieu?: string;                 // Số phiếu
-  soDeNghi?: string;                // Số đề nghị
-  donViSuaChua?: string;            // Đơn vị sửa chữa
-  donViPhoiHop?: string;            // Đơn vị phối hợp
-  hinhThuc?: string;                // Hình thức sửa chữa
-  thoiGianBatDau?: string;          // Thời gian bắt đầu
-  thoiGianKetThuc?: string;         // Thời gian kết thúc
-  thoiGianNgay?: number;            // Số ngày
-  ghiChu?: string;                  // Ghi chú
+  soPhieu?: string; // Số phiếu
+  soDeNghi?: string; // Số đề nghị
+  donViSuaChua?: string; // Đơn vị sửa chữa
+  donViPhoiHop?: string; // Đơn vị phối hợp
+  hinhThuc?: string; // Hình thức sửa chữa
+  thoiGianBatDau?: string; // Thời gian bắt đầu
+  thoiGianKetThuc?: string; // Thời gian kết thúc
+  thoiGianNgay?: number; // Số ngày
+  ghiChu?: string; // Ghi chú
 
   // File đính kèm
   tenFile?: string;
@@ -254,7 +255,7 @@ export interface BienPhapMayMocData {
   tenGiamDoc?: string;
   giamDocXacNhan?: boolean;
   share?: boolean;
-  trangThai?: number;               // 0:nháp 1:đang duyệt 2:hủy 3:hoàn thành
+  trangThai?: number; // 0:nháp 1:đang duyệt 2:hủy 3:hoàn thành
 
   // Audit
   ngayTao?: string;
@@ -324,6 +325,7 @@ export interface BienPhapPhuongTienChiTietData {
   action?: ActionType;
 }
 
+// nghiệm thu phương tiện
 export interface NghiemThuPhuongTienData {
   id?: string;
   idCongTy?: string;
@@ -378,4 +380,321 @@ export interface NghiemThuPhuongTienChiTietData {
   // View fields
   tenVatTu?: string;
   donViTinh?: string;
+}
+
+export interface PlanSigner {
+  id: string;
+  idTaiLieu: string;
+  idNguoiKy: string;
+  tenNguoiKy: string;
+  idPhongBan: string;
+  trangThai: number;
+}
+
+// kế hoạch
+export interface MaintenancePlanData {
+  id: string;
+  idCongTy: string;
+  soKeHoach: string;
+  tenKeHoach: string;
+  soQuyetDinh?: string;
+  idLoaiKeHoach: string;
+  idLoaiSuaChua: string;
+  nam: number;
+  nhomTaiSan?: string;
+  idDonViGiao: string;
+  idDonViNhan: string;
+  tenDonViGiao?: string;
+  tenDonViNhan?: string;
+  idNguoiLapBieu: string;
+  tenNguoiLapBieu?: string;
+  nguoiLapBieuXacNhan: boolean;
+  idTrinhDuyetGiamDoc: string;
+  tenTrinhDuyetGiamDoc?: string;
+  trinhDuyetGiamDocXacNhan: boolean;
+  trangThai: number;
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+  ghiChu?: string;
+  duongDanFile?: string;
+  tenFile?: string;
+  ngayKy?: string;
+  duongDanTaiLieuBangKe?: string;
+  share: boolean;
+  byStep: boolean;
+  danhSachTaiSan?: MaintenancePlanAssetItem[];
+  nguoiKyList?: any[];
+  soLuongSuCo?: number;
+}
+
+export interface MaintenancePlanAssetItem {
+  id?: string;
+  idKeHoachSuaChua: string;
+  idTaiSan: string;
+  idNhomTaiSan?: string;
+  idLoaiTaiSan?: string;
+  idDonViBaoTri?: string;
+  soLuong?: number;
+  tenTaiSan?: string;
+  tenNhom?: string;
+  donViTinh?: string;
+  ghiChu?: string;
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  isActive?: boolean;
+  capSuaChuaThang1?: string;
+  capSuaChuaThang2?: string;
+  capSuaChuaThang3?: string;
+  capSuaChuaThang4?: string;
+  capSuaChuaThang5?: string;
+  capSuaChuaThang6?: string;
+  capSuaChuaThang7?: string;
+  capSuaChuaThang8?: string;
+  capSuaChuaThang9?: string;
+  capSuaChuaThang10?: string;
+  capSuaChuaThang11?: string;
+  capSuaChuaThang12?: string;
+
+  capSuaChua?: string;
+  daCoLenhSuaChua?: boolean;
+
+  action?: ActionType;
+}
+
+//giám định
+export interface InspectionRecordData {
+  id?: string;
+  idCongTy?: string;
+  idBienBan?: string;
+  loaiBienBan?: TypeBienBanType;
+  soPhieu?: string;
+  ngayGiamDinh?: string;
+  viTri?: string;
+  soDeLaiPhucHoi?: number;
+  soDeLamPheLieu?: number;
+  soLuongHuy?: number;
+  idNguoiLap?: string;
+  nguoiLapXacNhan?: boolean;
+  idGiamDoc?: string;
+  giamDocXacNhan?: boolean;
+  share?: boolean;
+  trangThai?: number;
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+
+  // Join fields
+  tenNguoiLap?: string;
+  tenGiamDoc?: string;
+  soPhieuSuaChua?: string;
+  daCoBienPhap?: number;
+
+  danhSachChiTiet?: InspectionRecordDetailData[];
+  nguoiKyList?: any[];
+  chuKyList?: any[];
+}
+
+export interface InspectionRecordDetailData {
+  id?: string;
+  idGiamDinhMayMoc?: string;
+  idTaiSan?: string;
+  idBienBanChiTiet?: string;
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+
+  // View fields
+  tenTaiSan?: string;
+  donViTinh?: string;
+  soLuong?: string | number;
+
+  // Nested materials
+  danhSachVatTu?: InspectionRecordVatTuData[];
+  action?: ActionType;
+}
+
+export interface InspectionRecordVatTuData {
+  id?: string;
+  idChiTietGiamDinhMayMoc?: string;
+  idVatTu?: string;
+  idChiTietVatTu?: string;
+  soLuong?: number;
+  tinhTrang?: string;
+  soLuongSuaChua?: number;
+  soLuongThayMoi?: number;
+  ghiChu?: string;
+
+  // View fields
+  tenVatTu?: string;
+  donViTinh?: string;
+  action?: ActionType;
+}
+
+// nghiệm thu
+
+export interface AcceptanceTestRecordData {
+  id?: string;
+  idCongTy?: string;
+  idBienPhapMayMoc?: string;
+  soPhieu?: string;
+  ngayNghiemThu?: string;
+  viTri?: string;
+  tenThietBi?: string;
+  soDangKi?: string;
+  capSuaChua?: string;
+  ketQua?: string;
+  noiDung?: string;
+  idNguoiLap?: string;
+  nguoiLapXacNhan?: boolean;
+  idGiamDoc?: string;
+  giamDocXacNhan?: boolean;
+  share?: boolean;
+  trangThai?: number;
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+  tenNguoiLap?: string;
+  tenGiamDoc?: string;
+  soPhieuBienPhapMayMoc?: string;
+  daCoDanhGiaVatTu?: number;
+  danhSachTaiSan?: AcceptanceTestRecordAssetData[];
+  chuKyList?: any[];
+  nguoiKyList?: any[];
+}
+
+export interface AcceptanceTestRecordAssetData {
+  id?: string;
+  idBienBan?: string;
+  idTaiSan?: string;
+  idChiTietGiamDinhMayMoc?: string;
+  tenTaiSan?: string;
+  donViTinh?: string;
+  danhSachVatTu?: AcceptanceTestRecordToolData[];
+  action?: ActionType;
+}
+export interface AcceptanceTestRecordToolData {
+  id?: string;
+  idBienBanTaiSan?: string;
+  idChiTietVatTu?: string;
+  soLuong?: number;
+  ghiChu?: string;
+  idVatTu?: string;
+  tenVatTu?: string;
+  donViTinh?: string;
+  action?: ActionType;
+}
+
+// giám định phương tiện
+export interface VehicleInspectionRecordData {
+  id?: string;
+  idCongTy?: string;
+  idBienBan?: string;
+  loaiBienBan?: TypeBienBanType;
+  soPhieu?: string;
+  ngayGiamDinh?: string;
+  viTri?: string;
+  tinhTrang?: string;
+  noiDungKhac?: string;
+  idTaiSan?: string;
+  capBaoDuong?: string;
+  donViSuaChua?: string;
+  idNguoiLap?: string;
+  nguoiLapXacNhan?: boolean;
+  idGiamDoc?: string;
+  giamDocXacNhan?: boolean;
+  share?: boolean;
+  trangThai?: number;
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+
+  // Join fields
+  tenNguoiLap?: string;
+  tenGiamDoc?: string;
+  soPhieuBienBan?: string;
+  tenTaiSan?: string;
+  daCoNghiemThu?: number;
+
+  danhSachChiTiet?: VehicleInspectionRecordDetailData[];
+  nguoiKyList?: any[];
+  chuKyList?: any[];
+}
+
+export interface VehicleInspectionRecordDetailData {
+  id?: string;
+  idGiamDinhPhuongTien?: string;
+  idVatTu?: string;
+  idChiTietVatTu?: string;
+  soLuong?: number;
+  tinhTrang?: string;
+  soLuongSuaChua?: number;
+  soLuongThayMoi?: number;
+  ghiChu?: string;
+
+  // View fields
+  tenVatTu?: string;
+  donViTinh?: string;
+  action?: ActionType;
+}
+
+// biện pháp phương tiện
+export interface BienPhapPhuongTienData {
+  id?: string;
+  idCongTy?: string;
+  soBienBan?: string;
+  idTaiSan?: string;
+  mucDich?: string;
+  yeuCau?: string;
+  tinhTrangHienTai?: string;
+  noiDungThucHien?: string;
+  tienDoTuNgay?: string;
+  tienDoDenNgay?: string;
+  bienPhapAnToan?: string;
+  idGiamDinhPhuongTien?: string;
+
+  // Luồng ký / Trạng thái
+  idNguoiLap?: string;
+  nguoiLapXacNhan?: boolean;
+  idGiamDoc?: string;
+  giamDocXacNhan?: boolean;
+  share?: boolean;
+  trangThai?: number;
+
+  // Audit
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+
+  // Join fields
+  tenNguoiLap?: string;
+  tenGiamDoc?: string;
+  tenTaiSan?: string;
+  soPhieuSuCo?: string;
+  daCoNghiemThu?: number;
+
+  danhSachChiTiet?: BienPhapPhuongTienChiTietData[];
+  nguoiKyList?: any[];
+  chuKyList?: any[];
+}
+
+export interface BienPhapPhuongTienChiTietData {
+  id?: string;
+  idBienPhap?: string;
+  idVatTu?: string;
+  idChiTietVatTu?: string;
+  soLuongCap?: number;
+  soLuongThuHoi?: number;
+  ghiChu?: string;
+
+  // Join fields từ CCDCVatTu
+  tenVatTu?: string;
+  donViTinh?: string;
+  action?: ActionType;
 }

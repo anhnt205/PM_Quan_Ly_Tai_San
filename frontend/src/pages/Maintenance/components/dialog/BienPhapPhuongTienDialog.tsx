@@ -41,15 +41,7 @@ import { useAllToolDetailQuery } from "../../../ToolManager/Mutation";
 import api from "../../../../config/api.config";
 import FieldInput from "../../../../components/TextField/FieldInput";
 import FieldDate from "../../../../components/TextField/FieldDate";
-import SignerWorkflowSection from "./SignerWorkflowSection";
-
-type SimpleDept = { id: string; name: string };
-type SimpleUser = {
-  id: string;
-  name: string;
-  departmentId?: string;
-  title?: string;
-};
+import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 
 interface Props {
   open: boolean;
@@ -73,19 +65,6 @@ const BienPhapPhuongTienDialog = ({
   const { createMutation, updateMutation } = useBienPhapPhuongTienMutation();
 
   const [parentInspection, setParentInspection] = useState<any>(null);
-
-  const departments: SimpleDept[] = (apiDepartments || []).map((d: any) => ({
-    id: String(d?.id ?? ""),
-    name: String(d?.tenPhongBan ?? d?.name ?? ""),
-  }));
-  const users: SimpleUser[] = (apiUsers || [])
-    .filter((u: any) => u.hasAccount)
-    .map((u: any) => ({
-      id: String(u?.id ?? ""),
-      name: String(u?.hoTen ?? u?.name ?? ""),
-      departmentId: String(u?.phongBanId ?? u?.departmentId ?? ""),
-      title: String(u?.tenChucVu ?? u?.chucVu ?? u?.title ?? ""),
-    }));
 
   const initialValues: BienPhapPhuongTienData & { nguoiKyList: any[] } = {
     id: "",

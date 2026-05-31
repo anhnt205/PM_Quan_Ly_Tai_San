@@ -11,8 +11,6 @@ export const MessageTypeFunctions = {
   INSPECTION: "INSPECTION",
   MATERIAL: "MATERIAL",
   ACCEPTANCE_TEST: "ACCEPTANCE_TEST",
-  
-
 };
 export const MessageTypeActions = {
   CREATE: "CREATE",
@@ -54,3 +52,15 @@ export const TypeBienBan = {
   SU_CO: "su_co",
 };
 export type TypeBienBanType = (typeof TypeBienBan)[keyof typeof TypeBienBan];
+
+export const AssetGroup = {
+  MAYMOC: "MAY_MOC",
+  PHUONGTIEN: "PHUONG_TIEN",
+};
+export type AssetGroupType = (typeof AssetGroup)[keyof typeof AssetGroup];
+
+export const BIEN_PHAP_XU_LY = {
+  PHUC_HOI: "Phục hồi",
+  PHE_LIEU: "Phế liệu",
+  HUY: "Hủy",
+} as const;

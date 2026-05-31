@@ -24,7 +24,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import IncidentInspectionPreview from "../preview/IncidentInspectionPreview";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
-import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
+import { MaintenancePlanData } from "../../types";
 import {
   IncidenData,
   IncidentInspectionData,
@@ -35,7 +35,7 @@ import { listSigneInfo } from "../../config";
 import { PlanSigner } from "../../../../mockdata/mockPlans";
 import { generateCode } from "../../../../utils/helpers";
 import { CongTy } from "../../../../utils/const";
-import { useMaintenanceIncidentInspectionMutation } from "../../../MainenancePlanRepair/Mutation";
+import { useMaintenanceIncidentInspectionMutation } from "../../mutation";
 import FieldDate from "../../../../components/TextField/FieldDate";
 import { useAllToolDetailQuery } from "../../../ToolManager/Mutation";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
@@ -43,7 +43,7 @@ import FieldInput from "../../../../components/TextField/FieldInput";
 import dayjs from "dayjs";
 import React from "react";
 import { useFormik } from "formik";
-import SignerWorkflowSection from "./SignerWorkflowSection";
+import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 
 interface Props {
   open: boolean;

@@ -22,11 +22,11 @@ import { useAllStaffsQuery } from "../../../Staff/Mutation";
 import { useAssetByDonViQuery } from "../../../AssetTransfer/Mutation";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
 import FieldInput from "../../../../components/TextField/FieldInput";
-import { Action, ActionType } from "../../../../utils/const";
+import { Action, ActionType, AssetGroup } from "../../../../utils/const";
 import { generateCode } from "../../../../utils/helpers";
-import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
+import { MaintenancePlanData } from "../../types";
 import { listSigneInfo } from "../../config";
-import SignerWorkflowSection from "../dialog/SignerWorkflowSection";
+import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 
 interface PlanAsset {
   id?: string;
@@ -68,7 +68,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
       planCode: initialData?.id || "",
       planName: initialData?.tenKeHoach || "",
       planYear: initialData?.nam || new Date().getFullYear(),
-      nhomTaiSan: initialData?.nhomTaiSan || "MAY_MOC",
+      nhomTaiSan: initialData?.nhomTaiSan || AssetGroup.MAYMOC,
       sourceDeptId: initialData?.idDonViGiao || "",
       executionDeptId: initialData?.idDonViNhan || "",
       decisionNo: initialData?.soQuyetDinh || "",
@@ -261,8 +261,8 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
                 <FieldAutoCompleted
                   title="Nhóm tài sản"
                   data={[
-                    { id: "MAY_MOC", text: "Máy móc" },
-                    { id: "PHUONG_TIEN", text: "Phương tiện" },
+                    { id: AssetGroup.MAYMOC, text: "Máy móc" },
+                    { id: AssetGroup.PHUONGTIEN, text: "Phương tiện" },
                   ]}
                   labelkey="text"
                   formik={formik}

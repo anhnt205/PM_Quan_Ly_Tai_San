@@ -45,10 +45,9 @@ import {
   SearchOutlined,
   HourglassEmpty,
 } from "@mui/icons-material";
-import { donViList } from "../../../mockdata/specialMockOnly";
 
 import { useSelector } from "react-redux";
-import { RootState } from "../../../redux/store";
+import { RootState } from "../../redux/store";
 import {
   useMaintenancePlanningPageQuery,
   useMaintenanceRepairPageQuery,
@@ -60,8 +59,8 @@ import {
   useMaintenanceProcessPagedQuery,
   useMaintenanceMaterialConsumptionQuery,
   useGetTaiSanByIdQuery,
-} from "../../MainenancePlanRepair/Mutation";
-import { QuyTrinhSuaChuaData } from "../types";
+} from "./mutation";
+import { QuyTrinhSuaChuaData } from "./types";
 import {
   PlanAdapter,
   RepairAdapter,
@@ -70,71 +69,14 @@ import {
   AcceptanceTestAdapter,
   IncidentAdapter,
   IncidentInspectionAdapter,
-} from "../Adapter";
-import FieldYear from "../../../components/TextField/FieldYear";
-import { useAllDepartmentsQuery } from "../../Department/Mutation";
-import { useAssetByDonViQuery } from "../../AssetTransfer/Mutation";
-import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
-import { findById } from "../../../utils/helpers";
-import { BookXIcon } from "lucide-react";
-import PageAction from "../../../components/common/PageAction";
-
-// ── Helpers ───────────────────────────────────────────────────
-const trangThaiChipProps = (
-  trang: string | number,
-): {
-  label: string;
-  color: "success" | "warning" | "info" | "error" | "default";
-} => {
-  if (trang === 0 || trang === "0")
-    return { label: "Bản nháp", color: "default" };
-  if (trang === 1 || trang === "1")
-    return { label: "Chờ duyệt", color: "warning" };
-  if (trang === 2 || trang === "2") return { label: "Từ chối", color: "error" };
-  if (trang === 3 || trang === "3")
-    return { label: "Đã duyệt", color: "success" };
-
-  switch (trang) {
-    case "da-duyet":
-      return { label: "Đã duyệt", color: "success" };
-    case "cho-duyet":
-      return { label: "Chờ duyệt", color: "warning" };
-    case "cho-ky":
-      return { label: "Chờ ký", color: "info" };
-    case "dot-xuat":
-      return { label: "Đột xuất", color: "error" };
-    default:
-      return { label: String(trang), color: "default" };
-  }
-};
-
-const processStatusChipProps = (row: QuyTrinhSuaChuaData) => {
-  // Logic: Lệnh SC -> Giám định -> Nghiệm thu
-  // 1. Nghiệm thu
-  if (row.idNghiemThu) {
-    if (row.trangThaiNghiemThu === 3)
-      return { label: "Hoàn thành", color: "success" as const };
-    if (row.trangThaiNghiemThu === 1)
-      return { label: "Đợi nghiệm thu", color: "warning" as const };
-    return { label: "Đang nghiệm thu", color: "info" as const };
-  }
-
-  // 2. Giám định
-  if (row.idGiamDinhMayMoc) {
-    if (row.trangThaiGiamDinh === 3)
-      return { label: "Chờ nghiệm thu", color: "warning" as const };
-    return { label: "Đang giám định", color: "info" as const };
-  }
-
-  // 3. Lệnh sửa chữa
-  if (row.idSuaChua) {
-    if (row.trangThaiSuaChua === 3)
-      return { label: "Chờ giám định", color: "warning" as const };
-    return trangThaiChipProps(row.trangThaiSuaChua);
-  }
-
-  return { label: "Chưa bắt đầu", color: "default" as const };
-};
+} from "./Adapter";
+import FieldYear from "../../components/TextField/FieldYear";
+import { useAllDepartmentsQuery } from "../Department/Mutation";
+import { useAssetByDonViQuery } from "../AssetTransfer/Mutation";
+import FieldAutoCompleted from "../../components/TextField/FieldAutoCompleted";
+import { findById } from "../../utils/helpers";
+import PageAction from "../../components/common/PageAction";
+import { showStatus } from "./config";
 
 // ── Summary Card ──────────────────────────────────────────────
 const SummaryCard = ({
@@ -229,7 +171,7 @@ const QuyTrinhStep = ({
   title: string;
   icon: React.ReactNode;
   color: string;
-  items: { ma: string; trang: string }[];
+  items: { ma: string; trang: number }[];
   onXemTatCa: () => void;
 }) => (
   <Paper
@@ -269,8 +211,7 @@ const QuyTrinhStep = ({
       </Box>
     </Box>
     <Stack spacing={0.5}>
-      {items.slice(0, 3).map((item) => {
-        const cfg = trangThaiChipProps(item.trang);
+      {items.slice(0, 1).map((item) => {
         return (
           <Box
             key={item.ma}
@@ -290,12 +231,7 @@ const QuyTrinhStep = ({
             >
               {item.ma}
             </Typography>
-            <Chip
-              label={cfg.label}
-              color={cfg.color}
-              size="small"
-              sx={{ fontSize: "0.65rem", height: 20 }}
-            />
+            {showStatus(item.trang)}
           </Box>
         );
       })}
@@ -318,50 +254,6 @@ const QuyTrinhStep = ({
   </Paper>
 );
 
-// ── Tien Do Item ──────────────────────────────────────────────
-const TienDoItem = ({
-  label,
-  ma,
-  trang,
-}: {
-  label: string;
-  ma: string;
-  trang: "done" | "pending" | "wait";
-}) => {
-  const iconProps = {
-    done: {
-      icon: <CheckCircle sx={{ fontSize: 16, color: "#22c55e" }} />,
-      color: "#22c55e",
-    },
-    pending: {
-      icon: <PendingOutlined sx={{ fontSize: 16, color: "#f59e0b" }} />,
-      color: "#f59e0b",
-    },
-    wait: {
-      icon: <RadioButtonUnchecked sx={{ fontSize: 16, color: "#94a3b8" }} />,
-      color: "#94a3b8",
-    },
-  }[trang];
-
-  return (
-    <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1, py: 0.5 }}>
-      <Box sx={{ mt: 0.2 }}>{iconProps.icon}</Box>
-      <Box>
-        <Typography variant="caption" fontWeight={600} display="block">
-          {label}
-        </Typography>
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          sx={{ fontSize: "0.7rem" }}
-        >
-          {ma}
-        </Typography>
-      </Box>
-    </Box>
-  );
-};
-
 // ── Modal Xem Tất Cả ──────────────────────────────────────────
 const ModalXemTatCa = ({
   open,
@@ -375,7 +267,7 @@ const ModalXemTatCa = ({
   open: boolean;
   onClose: () => void;
   title: string;
-  items: { ma: string; trang: string | number }[];
+  items: { ma: string; trang: number }[];
   page: number;
   totalPages: number;
   onPageChange: (p: number) => void;
@@ -405,16 +297,13 @@ const ModalXemTatCa = ({
           </TableHead>
           <TableBody>
             {items.map((item, i) => {
-              const cfg = trangThaiChipProps(item.trang);
               return (
                 <TableRow key={item.ma} hover>
                   <TableCell>{i + 1}</TableCell>
                   <TableCell sx={{ fontFamily: "monospace", fontWeight: 600 }}>
                     {item.ma}
                   </TableCell>
-                  <TableCell>
-                    <Chip label={cfg.label} color={cfg.color} size="small" />
-                  </TableCell>
+                  <TableCell>{showStatus(item.trang)}</TableCell>
                 </TableRow>
               );
             })}
@@ -694,7 +583,7 @@ export default function MaintenanceStatPage() {
   return (
     <Box sx={{ bgcolor: "#f6f8fb", minHeight: "100vh" }}>
       <PageAction title="Quản lý sửa chữa" hideActionRow={true} />
-      <Box sx={{mx: "auto", py: 3, px: 3 }}>
+      <Box sx={{ mx: "auto", py: 3, px: 3 }}>
         {/* ── Top Filter Bar ── */}
         <Paper
           elevation={1}

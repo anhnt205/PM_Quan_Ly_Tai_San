@@ -20,7 +20,7 @@ import StepAssets from "../step/StepAssets";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
 import type { PlanSigner } from "../../../../mockdata/mockPlans";
-import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
+import { MaintenancePlanData } from "../../types";
 import type { IncidenData, IncidenDetailData } from "../../types/index";
 import dayjs from "dayjs";
 import { Action, CongTy } from "../../../../utils/const";
@@ -30,15 +30,7 @@ import { useFormik } from "formik";
 import FieldInput from "../../../../components/TextField/FieldInput";
 import FieldDateTime from "../../../../components/TextField/FieldDateTime";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
-import SignerWorkflowSection from "./SignerWorkflowSection";
-
-type SimpleDept = { id: string; name: string };
-type SimpleUser = {
-  id: string;
-  name: string;
-  departmentId?: string;
-  title?: string;
-};
+import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 
 interface Props {
   open: boolean;
@@ -60,19 +52,6 @@ const IncidentDialog = ({
 
   const { data: apiDepartments = [] } = useAllDepartmentsQuery();
   const { data: apiUsers = [] } = useAllStaffsQuery();
-
-  const departments: SimpleDept[] = (apiDepartments || []).map((d: any) => ({
-    id: String(d?.id ?? ""),
-    name: String(d?.tenPhongBan ?? d?.name ?? ""),
-  }));
-  const users: SimpleUser[] = (apiUsers || [])
-    .filter((u: any) => u.hasAccount)
-    .map((u: any) => ({
-      id: String(u?.id ?? ""),
-      name: String(u?.hoTen ?? u?.name ?? ""),
-      departmentId: String(u?.phongBanId ?? u?.departmentId ?? ""),
-      title: String(u?.tenChucVu ?? u?.chucVu ?? u?.title ?? ""),
-    }));
 
   const formik = useFormik({
     initialValues: {
@@ -314,25 +293,16 @@ const IncidentDialog = ({
                     formik={formik}
                   />
 
-                  <FormControl size="small" required fullWidth>
-                    <InputLabel required>Đơn vị báo cáo</InputLabel>
-                    <Select
-                      name="idDonViBaoCao"
-                      value={formik.values.idDonViBaoCao}
-                      label="Đơn vị báo cáo *"
-                      onChange={(e) => {
-                        formik.setFieldValue("idDonViBaoCao", e.target.value);
-                        setAssets([]);
-                      }}
-                    >
-                      <MenuItem value="">— Chọn đơn vị —</MenuItem>
-                      {departments.map((d) => (
-                        <MenuItem key={d.id} value={d.id}>
-                          {d.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  <FieldAutoCompleted
+                    title="Đơn vị báo cáo"
+                    data={apiDepartments}
+                    labelkey="tenPhongBan"
+                    field="idDonViBaoCao"
+                    formik={formik}
+                    onChange={() => {
+                      setAssets([]);
+                    }}
+                  />
 
                   {/* Ngày giờ phát hiện */}
                   <FieldDateTime

@@ -28,15 +28,7 @@ import S3Service from "../../../../services/S3Service";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
 import FieldDate from "../../../../components/TextField/FieldDate";
 import FieldInput from "../../../../components/TextField/FieldInput";
-import SignerWorkflowSection from "./SignerWorkflowSection";
-
-type SimpleDept = { id: string; name: string };
-type SimpleUser = {
-  id: string;
-  name: string;
-  departmentId?: string;
-  title?: string;
-};
+import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 
 interface Props {
   open: boolean;

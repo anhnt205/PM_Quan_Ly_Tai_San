@@ -22,13 +22,13 @@ import {
   WarningOutlined,
   SearchOutlined,
 } from "@mui/icons-material";
-import PageAction from "../../../components/common/PageAction";
-import TableCustom from "../../../components/common/TableCustom";
-import { useCmms } from "../../../hooks/CmmsContext";
-import MaterialQualityPreview from "../components/preview/MaterialQualityPreview";
-import IncidentInspectionPreview from "../components/preview/IncidentInspectionPreview";
-import { useSignBatch } from "../../../hooks/useSignBatch";
-import { SignBatchModal } from "../../../components/SignDocument/Signbatchmodal";
+import PageAction from "../../components/common/PageAction";
+import TableCustom from "../../components/common/TableCustom";
+import { useCmms } from "../../hooks/CmmsContext";
+import MaterialQualityPreview from "./components/preview/MaterialQualityPreview";
+import IncidentInspectionPreview from "./components/preview/IncidentInspectionPreview";
+import { useSignBatch } from "../../hooks/useSignBatch";
+import { SignBatchModal } from "../../components/SignDocument/Signbatchmodal";
 import {
   useMaintenanceAcceptanceTestPageQuery,
   useMaintenanceAcceptanceTestVehiclePageQuery,
@@ -41,8 +41,8 @@ import {
   useMaintenanceBienPhapMayMocPageQuery,
   useMaintenanceBienPhapPhuongTienPageQuery,
   useMaintenanceVehicleInspectionPageQuery,
-} from "../../MainenancePlanRepair/Mutation";
-import { useDebounce } from "../../../hooks/useDebounce";
+} from "./mutation";
+import { useDebounce } from "../../hooks/useDebounce";
 import {
   AcceptanceTestAdapter,
   NghiemThuPhuongTienAdapter,
@@ -54,11 +54,11 @@ import {
   IncidentInspectionAdapter,
   BienPhapMayMocAdapter,
   BienPhapPhuongTienAdapter,
-} from "../Adapter";
+} from "./Adapter";
 import { useSelector } from "react-redux";
-import { useAllPositionsQuery } from "../../Position/Mutation";
-import { useAllStaffsQuery } from "../../Staff/Mutation";
-import { useAllDepartmentsQuery } from "../../Department/Mutation";
+import { useAllPositionsQuery } from "../Position/Mutation";
+import { useAllStaffsQuery } from "../Staff/Mutation";
+import { useAllDepartmentsQuery } from "../Department/Mutation";
 import {
   listSigneInfo,
   generateBienBanKeHoachPdf,
@@ -77,15 +77,16 @@ import {
   canSign,
   showStatus,
   showDownloadFile,
-} from "../config";
+} from "./config";
 
-import SignDocumentForm from "../components/signdocument/SignDocumentForm";
+import SignDocumentForm from "./components/signdocument/SignDocumentForm";
 import { EditIcon } from "lucide-react";
-import { useMaintenanceMutation } from "../mutation";
-import { SignaturesData } from "../../../components/SignDocument/types";
-import { TypeBienBan } from "../../../utils/const";
-import { useMenuData } from "../../../hooks/useMenuData";
-import S3Service from "../../../services/S3Service";
+import { useMaintenanceMutation } from "./mutation";
+import { SignaturesData } from "../../components/SignDocument/types";
+import { AssetGroup, AssetGroupType, TypeBienBan } from "../../utils/const";
+import { useMenuData } from "../../hooks/useMenuData";
+import S3Service from "../../services/S3Service";
+import Filter from "./components/Filter";
 
 export default function MaintenanceApprovalPage() {
   const signBatch = useSignBatch();
@@ -103,12 +104,11 @@ export default function MaintenanceApprovalPage() {
   const [detailTab, setDetailTab] = useState(0);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-  const [nhomTaiSanFilter, setNhomTaiSanFilter] = useState("MAY_MOC");
   const [selectedItem, setSelectedItem] = useState<any[]>([]);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isSigning, setIsSigning] = useState(false);
-  const [bienPhapType, setBienPhapType] = useState<"may_moc" | "phuong_tien">(
-    "may_moc",
+  const [bienPhapType, setBienPhapType] = useState<AssetGroupType>(
+    AssetGroup.MAYMOC,
   );
 
   const { data: positions } = useAllPositionsQuery();
@@ -143,7 +143,7 @@ export default function MaintenanceApprovalPage() {
     dateFrom,
     dateTo,
     activeTab === 0,
-    nhomTaiSanFilter,
+    bienPhapType,
   );
 
   const {
@@ -175,7 +175,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
-    activeTab === 2 && bienPhapType === "may_moc",
+    activeTab === 2 && bienPhapType === AssetGroup.MAYMOC,
   );
 
   const {
@@ -195,10 +195,10 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
-    activeTab === 2 && bienPhapType === "phuong_tien",
+    activeTab === 2 && bienPhapType === AssetGroup.PHUONGTIEN,
   );
   const inspectionPaged =
-    bienPhapType === "may_moc" ? giamDinhMayMoc : giamDinhPhuongTien;
+    bienPhapType === AssetGroup.MAYMOC ? giamDinhMayMoc : giamDinhPhuongTien;
 
   const {
     data: bienPhapMayMocPaged = {
@@ -216,7 +216,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
-    activeTab === 3 && bienPhapType === "may_moc",
+    activeTab === 3 && bienPhapType === AssetGroup.MAYMOC,
   );
 
   const {
@@ -235,11 +235,13 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
-    activeTab === 3 && bienPhapType === "phuong_tien",
+    activeTab === 3 && bienPhapType === AssetGroup.PHUONGTIEN,
   );
 
   const bienPhapPaged =
-    bienPhapType === "may_moc" ? bienPhapMayMocPaged : bienPhapPhuongTienPaged;
+    bienPhapType === AssetGroup.MAYMOC
+      ? bienPhapMayMocPaged
+      : bienPhapPhuongTienPaged;
 
   const {
     data: nghiemThuMayMocPaged = {
@@ -258,7 +260,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
-    activeTab === 4 && bienPhapType === "may_moc",
+    activeTab === 4 && bienPhapType === AssetGroup.MAYMOC,
   );
 
   const {
@@ -278,11 +280,11 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
-    activeTab === 4 && bienPhapType !== "may_moc",
+    activeTab === 4 && bienPhapType !== AssetGroup.MAYMOC,
   );
 
   const acceptanceTestPaged =
-    bienPhapType === "may_moc"
+    bienPhapType === AssetGroup.MAYMOC
       ? nghiemThuMayMocPaged
       : nghiemThuPhuongTienPaged;
 
@@ -347,15 +349,15 @@ export default function MaintenanceApprovalPage() {
       : activeTab === 1
         ? "repairPage"
         : activeTab === 2
-          ? bienPhapType === "may_moc"
+          ? bienPhapType === AssetGroup.MAYMOC
             ? "inspectionPage"
             : "vehicleInspectionPage"
           : activeTab === 3
-            ? bienPhapType === "may_moc"
+            ? bienPhapType === AssetGroup.MAYMOC
               ? "bienPhapMayMocPage"
               : "bienPhapPhuongTienPage"
             : activeTab === 4
-              ? bienPhapType === "may_moc"
+              ? bienPhapType === AssetGroup.MAYMOC
                 ? "nghiemThuMayMocPage"
                 : "nghiemThuPhuongTienPage"
               : activeTab === 5
@@ -370,15 +372,15 @@ export default function MaintenanceApprovalPage() {
       : activeTab === 1
         ? "suachua"
         : activeTab === 2
-          ? bienPhapType === "may_moc"
+          ? bienPhapType === AssetGroup.MAYMOC
             ? "giamdinh-maymoc"
             : "giamdinh-phuongtien"
           : activeTab === 3
-            ? bienPhapType === "may_moc"
+            ? bienPhapType === AssetGroup.MAYMOC
               ? "bienphap-maymoc"
               : "bienphap-phuongtien"
             : activeTab === 4
-              ? bienPhapType === "may_moc"
+              ? bienPhapType === AssetGroup.MAYMOC
                 ? "nghiemthu-maymoc"
                 : "nghiemthu-phuongtien"
               : activeTab === 5
@@ -398,7 +400,7 @@ export default function MaintenanceApprovalPage() {
     {
       ...bienPhapPaged,
       items: (bienPhapPaged.items || []).map(
-        bienPhapType === "may_moc"
+        bienPhapType === AssetGroup.MAYMOC
           ? BienPhapMayMocAdapter
           : BienPhapPhuongTienAdapter,
       ),
@@ -406,7 +408,7 @@ export default function MaintenanceApprovalPage() {
     {
       ...acceptanceTestPaged,
       items: (acceptanceTestPaged.items || []).map(
-        bienPhapType === "may_moc"
+        bienPhapType === AssetGroup.MAYMOC
           ? AcceptanceTestAdapter
           : NghiemThuPhuongTienAdapter,
       ),
@@ -712,7 +714,7 @@ export default function MaintenanceApprovalPage() {
             showSignerSidebar={false}
             showHeader={false}
             generatePdf={() =>
-              bienPhapType === "may_moc"
+              bienPhapType === AssetGroup.MAYMOC
                 ? generateGiamDinhPdf(
                     selectedRow,
                     staffs,
@@ -745,7 +747,7 @@ export default function MaintenanceApprovalPage() {
             showSignerSidebar={false}
             showHeader={false}
             generatePdf={() =>
-              bienPhapType === "may_moc"
+              bienPhapType === AssetGroup.MAYMOC
                 ? generateBienPhapMayMocPdf(
                     selectedRow,
                     staffs || [],
@@ -778,9 +780,19 @@ export default function MaintenanceApprovalPage() {
             showSignerSidebar={false}
             showHeader={false}
             generatePdf={() =>
-              bienPhapType === "may_moc"
-                ? generateNghiemThuPdf(selectedRow, staffs, departments, positions)
-                : generateNghiemThuPhuongTienPdf(selectedRow, staffs, departments, positions)
+              bienPhapType === AssetGroup.MAYMOC
+                ? generateNghiemThuPdf(
+                    selectedRow,
+                    staffs,
+                    departments,
+                    positions,
+                  )
+                : generateNghiemThuPhuongTienPdf(
+                    selectedRow,
+                    staffs,
+                    departments,
+                    positions,
+                  )
             }
           />
         );
@@ -1054,7 +1066,7 @@ export default function MaintenanceApprovalPage() {
           fullscreen={true}
           showSignerSidebar={true}
           generatePdf={() =>
-            bienPhapType === "may_moc"
+            bienPhapType === AssetGroup.MAYMOC
               ? generateGiamDinhPdf(selectedRow, staffs, departments, positions)
               : generateGiamDinhPhuongTienPdf(
                   selectedRow,
@@ -1080,7 +1092,7 @@ export default function MaintenanceApprovalPage() {
           fullscreen={true}
           showSignerSidebar={true}
           generatePdf={() =>
-            bienPhapType === "may_moc"
+            bienPhapType === AssetGroup.MAYMOC
               ? generateBienPhapMayMocPdf(
                   selectedRow,
                   staffs || [],
@@ -1111,9 +1123,19 @@ export default function MaintenanceApprovalPage() {
           fullscreen={true}
           showSignerSidebar={true}
           generatePdf={() =>
-            bienPhapType === "may_moc"
-              ? generateNghiemThuPdf(selectedRow, staffs, departments, positions)
-              : generateNghiemThuPhuongTienPdf(selectedRow, staffs, departments, positions)
+            bienPhapType === AssetGroup.MAYMOC
+              ? generateNghiemThuPdf(
+                  selectedRow,
+                  staffs,
+                  departments,
+                  positions,
+                )
+              : generateNghiemThuPhuongTienPdf(
+                  selectedRow,
+                  staffs,
+                  departments,
+                  positions,
+                )
           }
         />
       )}
@@ -1241,203 +1263,28 @@ export default function MaintenanceApprovalPage() {
           </Box>
 
           {/* ── Filter thời gian ── */}
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 2,
-              px: 2,
-              py: 1.5,
-              borderBottom: "1px solid",
-              borderColor: "divider",
-              bgcolor: "#fafafa",
-            }}
-          >
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ whiteSpace: "nowrap" }}
-            >
-              Lọc theo ngày:
-            </Typography>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Typography variant="caption" color="text.secondary">
-                Từ
-              </Typography>
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => {
-                  setDateFrom(e.target.value);
-                  setPaginationModel((m) => ({ ...m, page: 0 }));
-                }}
-                style={{
-                  border: "1px solid #ccc",
-                  borderRadius: 6,
-                  padding: "4px 8px",
-                  fontSize: 13,
-                  color: "inherit",
-                  background: "transparent",
-                }}
-              />
-            </Box>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Typography variant="caption" color="text.secondary">
-                Đến
-              </Typography>
-              <input
-                type="date"
-                value={dateTo}
-                onChange={(e) => {
-                  setDateTo(e.target.value);
-                  setPaginationModel((m) => ({ ...m, page: 0 }));
-                }}
-                style={{
-                  border: "1px solid #ccc",
-                  borderRadius: 6,
-                  padding: "4px 8px",
-                  fontSize: 13,
-                  color: "inherit",
-                  background: "transparent",
-                }}
-              />
-            </Box>
-            {activeTab === 0 && (
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Typography variant="caption" color="text.secondary">
-                  Nhóm tài sản
-                </Typography>
-                <select
-                  value={nhomTaiSanFilter}
-                  onChange={(e) => {
-                    setNhomTaiSanFilter(e.target.value);
-                    setPaginationModel((m) => ({ ...m, page: 0 }));
-                  }}
-                  style={{
-                    border: "1px solid #ccc",
-                    borderRadius: 6,
-                    padding: "4px 8px",
-                    fontSize: 13,
-                    color: "inherit",
-                    background: "transparent",
-                    outline: "none",
-                    cursor: "pointer",
-                  }}
-                >
-                  <option value="MAY_MOC">Máy móc</option>
-                  <option value="PHUONG_TIEN">Phương tiện</option>
-                </select>
-              </Box>
-            )}
-            {(dateFrom || dateTo) && (
-              <Chip
-                label="Xóa bộ lọc"
-                size="small"
-                onDelete={() => {
-                  setDateFrom("");
-                  setDateTo("");
-                }}
-                sx={{ fontSize: 11 }}
-              />
-            )}
-
-            {(activeTab === 2 || activeTab === 3 || activeTab === 4) && (
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1.5,
-                  ml: "auto",
-                  pl: 2,
-                  borderLeft: { xs: "none", md: "1px solid" },
-                  borderColor: "divider",
-                }}
-              >
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  fontWeight={500}
-                >
-                  Loại tài sản:
-                </Typography>
-                <Box
-                  sx={{
-                    display: "flex",
-                    bgcolor: "grey.100",
-                    p: 0.5,
-                    borderRadius: 2.5,
-                  }}
-                >
-                  <Box
-                    onClick={() => {
-                      setBienPhapType("may_moc");
-                      setPaginationModel((m) => ({ ...m, page: 0 }));
-                    }}
-                    sx={{
-                      px: 2,
-                      py: 0.5,
-                      borderRadius: 2,
-                      cursor: "pointer",
-                      fontSize: 12,
-                      fontWeight: 600,
-                      bgcolor:
-                        bienPhapType === "may_moc" ? "#fff" : "transparent",
-                      color:
-                        bienPhapType === "may_moc"
-                          ? "primary.main"
-                          : "text.secondary",
-                      boxShadow:
-                        bienPhapType === "may_moc"
-                          ? "0px 1px 3px rgba(0,0,0,0.1)"
-                          : "none",
-                      transition: "all 0.2s",
-                      "&:hover": {
-                        color:
-                          bienPhapType === "may_moc"
-                            ? "primary.main"
-                            : "text.primary",
-                      },
-                    }}
-                  >
-                    Máy móc
-                  </Box>
-                  <Box
-                    onClick={() => {
-                      setBienPhapType("phuong_tien");
-                      setPaginationModel((m) => ({ ...m, page: 0 }));
-                    }}
-                    sx={{
-                      px: 2,
-                      py: 0.5,
-                      borderRadius: 2,
-                      cursor: "pointer",
-                      fontSize: 12,
-                      fontWeight: 600,
-                      bgcolor:
-                        bienPhapType === "phuong_tien" ? "#fff" : "transparent",
-                      color:
-                        bienPhapType === "phuong_tien"
-                          ? "primary.main"
-                          : "text.secondary",
-                      boxShadow:
-                        bienPhapType === "phuong_tien"
-                          ? "0px 1px 3px rgba(0,0,0,0.1)"
-                          : "none",
-                      transition: "all 0.2s",
-                      "&:hover": {
-                        color:
-                          bienPhapType === "phuong_tien"
-                            ? "primary.main"
-                            : "text.primary",
-                      },
-                    }}
-                  >
-                    Phương tiện
-                  </Box>
-                </Box>
-              </Box>
-            )}
-          </Box>
+          <Filter
+            dateFrom={dateFrom}
+            setDateFrom={setDateFrom}
+            dateTo={dateTo}
+            setDateTo={setDateTo}
+            nhomTaiSanFilter={
+              activeTab === 0 ||
+              activeTab === 2 ||
+              activeTab === 3 ||
+              activeTab === 4
+                ? bienPhapType
+                : undefined
+            }
+            setNhomTaiSanFilter={
+              activeTab === 0 ||
+              activeTab === 2 ||
+              activeTab === 3 ||
+              activeTab === 4
+                ? setBienPhapType
+                : undefined
+            }
+          />
 
           <SignBatchModal
             open={signBatch.isOpen}
@@ -1456,15 +1303,15 @@ export default function MaintenanceApprovalPage() {
                 : activeTab === 1
                   ? generateSuaChuaPdf
                   : activeTab === 2
-                    ? bienPhapType === "may_moc"
+                    ? bienPhapType === AssetGroup.MAYMOC
                       ? generateGiamDinhPdf
                       : generateGiamDinhPhuongTienPdf
                     : activeTab === 3
-                      ? bienPhapType === "may_moc"
+                      ? bienPhapType === AssetGroup.MAYMOC
                         ? generateBienPhapMayMocPdf
                         : generateBienPhapPhuongTienPdf
                       : activeTab === 4
-                        ? bienPhapType === "may_moc"
+                        ? bienPhapType === AssetGroup.MAYMOC
                           ? generateNghiemThuPdf
                           : generateNghiemThuPhuongTienPdf
                         : activeTab === 5

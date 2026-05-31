@@ -4,8 +4,6 @@ import {
   Card,
   CardContent,
   Chip,
-  IconButton,
-  TableContainer,
   Tabs,
   Tab,
 } from "@mui/material";
@@ -13,12 +11,12 @@ import {
   LoopOutlined, // icon cho "Chu kỳ theo nhóm"
   HistoryOutlined, // icon cho "Lịch sử bảo dưỡng"
 } from "@mui/icons-material";
-import { FilterOption } from "../../../components/common/FilterStatusGroup";
-import PageAction from "../../../components/common/PageAction";
-import TableCustom from "../../../components/common/TableCustom";
-import { useChuKySuaChuaQuery, useMaintenanceHistoryQuery } from "../mutation/chukysuachua";
-import { useDebounce } from "../../../hooks/useDebounce";
-import { maintenanceLevelColors } from "../../../mockdata/mockPlans";
+import { FilterOption } from "../../components/common/FilterStatusGroup";
+import PageAction from "../../components/common/PageAction";
+import TableCustom from "../../components/common/TableCustom";
+import { useChuKySuaChuaQuery, useMaintenanceHistoryQuery } from "./mutation/chukysuachua";
+import { useDebounce } from "../../hooks/useDebounce";
+import { maintenanceLevelColors } from "../../mockdata/mockPlans";
 import { GridColDef } from "@mui/x-data-grid";
 
 

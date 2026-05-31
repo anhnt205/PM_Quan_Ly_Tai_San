@@ -25,7 +25,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { useSelector } from "react-redux";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
-import { useMaintenanceAcceptanceTestVehicleMutation } from "../../../MainenancePlanRepair/Mutation";
+import { useMaintenanceAcceptanceTestVehicleMutation } from "../../mutation";
 import {
   NghiemThuPhuongTienData,
   NghiemThuPhuongTienChiTietData,
@@ -38,19 +38,10 @@ import { listSigneInfo } from "../../config";
 import dayjs from "dayjs";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
 import { useAllToolDetailQuery } from "../../../ToolManager/Mutation";
-import api from "../../../../config/api.config";
 import FieldInput from "../../../../components/TextField/FieldInput";
 import TextFieldNumber from "../../../../components/TextField/TextFieldNumber";
-import { BienPhapPhuongTienData } from "../../../MainenancePlanRepair/types";
-import SignerWorkflowSection from "./SignerWorkflowSection";
-
-type SimpleDept = { id: string; name: string };
-type SimpleUser = {
-  id: string;
-  name: string;
-  departmentId?: string;
-  title?: string;
-};
+import { BienPhapPhuongTienData } from "../../types";
+import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 
 interface Props {
   open: boolean;

@@ -14,7 +14,7 @@ import CloseIcon from "@mui/icons-material/Close";
 
 import type { PlanSigner } from "../../../../mockdata/mockPlans";
 import RepairRequestPreview from "../preview/RepairRequestPreview";
-import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
+import { MaintenancePlanData } from "../../types";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
 import { generateCode } from "../../../../utils/helpers";
@@ -24,7 +24,7 @@ import { MaintenanceRepairData } from "../../types";
 import { listSigneInfo } from "../../config";
 import FieldInput from "../../../../components/TextField/FieldInput";
 import { useFormik } from "formik";
-import SignerWorkflowSection from "./SignerWorkflowSection";
+import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 
 interface Props {
   open: boolean;
@@ -135,7 +135,8 @@ const RepairRequestDialog = ({
         share: initialData.share ?? false,
         trangThai: initialData.trangThai ?? 0,
         ngayTao:
-          initialData.ngayTao || dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+          initialData.ngayTao ||
+          dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
         ngayCapNhat: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
         danhSachTaiSan: initialData.danhSachTaiSan ?? [],
         nguoiKyList: signersList,

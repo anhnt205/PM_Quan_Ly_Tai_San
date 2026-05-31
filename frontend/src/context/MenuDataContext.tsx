@@ -25,7 +25,7 @@ import {
   useMaintenanceMaterialAssessmentPageQuery,
   useMaintenancePlanningPageQuery,
   useMaintenanceRepairPageQuery,
-} from "../pages/MainenancePlanRepair/Mutation";
+} from "../pages/Maintenance/mutation";
 
 interface MenuDataContextType {
   config: any;

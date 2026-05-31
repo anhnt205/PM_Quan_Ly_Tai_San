@@ -186,7 +186,9 @@ export default function SignerWorkflowSection({
                       borderColor: isEditingThis ? "primary.main" : "divider",
                       borderRadius: 2,
                       p: 1.5,
-                      bgcolor: isEditingThis ? "primary.50" : "background.paper",
+                      bgcolor: isEditingThis
+                        ? "primary.50"
+                        : "background.paper",
                       transition: "all 0.2s",
                       "&:hover": !isEditingThis
                         ? { boxShadow: 1, borderColor: "grey.300" }

@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 import { findById, formatted, loadImage } from "../../../utils/helpers";
-import { MaintenancePlanData } from "../../MainenancePlanRepair/types";
+import { MaintenancePlanData } from "..//types";
 import autoTable from "jspdf-autotable";
 import "../../../assets/fonts/times_new_roman-normal";
 import "../../../assets/fonts/times_new_roman-bold";
@@ -238,6 +238,45 @@ const getStatusDetails = (status: number) => {
 
 export const showStatus = (status: number) => {
   const { label, color } = getStatusDetails(status);
+
+  return (
+    <Chip
+      label={label}
+      sx={{
+        backgroundColor: color,
+        color: "white",
+        fontWeight: 500,
+        fontSize: "12px",
+        borderRadius: "4px", // BorderRadius.circular(4)
+        height: "auto",
+        padding: "1px 5px", // EdgeInsets.symmetric(horizontal: 5, vertical: 1)
+        mb: "2px", // margin: const EdgeInsets.only(bottom: 2)
+        "& .MuiChip-label": {
+          padding: 0,
+        },
+      }}
+    />
+  );
+};
+// ── Severity color helper ─────────────────────────────────
+
+const getSeverityDetails = (status: number) => {
+  switch (status) {
+    case 0:
+      return { label: "Nhẹ", color: "#4caf50" }; // Đỏ
+    case 1:
+      return { label: "Trung bình", color: "#ff9800" }; // Cam
+    case 2:
+      return { label: "Nặng", color: "#f44336" }; // Xanh lá
+    case 3:
+      return { label: "Nghiêm trọng", color: "#9c27b0" }; // Xanh lá
+    default:
+      return { label: "Nhẹ", color: "#4caf50" }; // Xám
+  }
+};
+
+export const showServerity = (status: number) => {
+  const { label, color } = getSeverityDetails(status);
 
   return (
     <Chip

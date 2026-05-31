@@ -41,10 +41,7 @@ import MaterialDialog from "../dialog/MaterialDialog";
 import BienPhapMayMocDialog from "../dialog/BienPhapMayMocDialog";
 import BienPhapPhuongTienDialog from "../dialog/BienPhapPhuongTienDialog";
 import NghiemThuPhuongTienDialog from "../dialog/NghiemThuPhuongTienDialog";
-import {
-  InspectionRecordData,
-  MaintenancePlanData,
-} from "../../../MainenancePlanRepair/types";
+import { InspectionRecordData, MaintenancePlanData } from "../../types";
 import { DanhGiaVatTuData, MaintenanceRepairData } from "../../types";
 import {
   useMaintenanceAcceptanceByBienPhapQuery,
@@ -60,7 +57,7 @@ import {
   useMaintenanceInspectionByBienBanQuery,
   useMaintenanceVehicleInspectionByBienBanQuery,
   useMaintenanceVehicleInspectionMutation,
-} from "../../../MainenancePlanRepair/Mutation";
+} from "../../mutation";
 import {
   useBienPhapMayMocByGiamDinhQuery,
   useBienPhapMayMocMutation,
@@ -72,6 +69,7 @@ import {
 import { showStatus } from "../../config";
 import { DeleteIcon, EditIcon, TrashIcon } from "lucide-react";
 import { showConfirmAlert } from "../../../../components/Alert";
+import { AssetGroup } from "../../../../utils/const";
 
 interface Props {
   plan: MaintenancePlanData;
@@ -336,30 +334,32 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
   const { data: inspectionMachineRecords = [] } =
     useMaintenanceInspectionByBienBanQuery(
       expandedRequests || "",
-      plan?.nhomTaiSan === "MAY_MOC",
+      plan?.nhomTaiSan === AssetGroup.MAYMOC,
     );
 
   // Giám định phương tiện theo yêu cầu đang expand
   const { data: inspectionVehicleRecords = [] } =
     useMaintenanceVehicleInspectionByBienBanQuery(
       expandedRequests || "",
-      plan?.nhomTaiSan === "PHUONG_TIEN",
+      plan?.nhomTaiSan === AssetGroup.PHUONGTIEN,
     );
   const inspectionRecords =
-    plan?.nhomTaiSan === "MAY_MOC"
+    plan?.nhomTaiSan === AssetGroup.MAYMOC
       ? inspectionMachineRecords
       : inspectionVehicleRecords;
 
   // Biện pháp theo giám định đang expand
   const { data: bienPhapMayMocRecords = [] } = useBienPhapMayMocByGiamDinhQuery(
-    plan?.nhomTaiSan === "MAY_MOC" ? expandedInspections || "" : "",
+    plan?.nhomTaiSan === AssetGroup.MAYMOC ? expandedInspections || "" : "",
   );
   const { data: bienPhapPhuongTienRecords = [] } =
     useBienPhapPhuongTienByGiamDinhQuery(
-      plan?.nhomTaiSan === "PHUONG_TIEN" ? expandedInspections || "" : "",
+      plan?.nhomTaiSan === AssetGroup.PHUONGTIEN
+        ? expandedInspections || ""
+        : "",
     );
   const bienPhapRecords =
-    plan?.nhomTaiSan === "MAY_MOC"
+    plan?.nhomTaiSan === AssetGroup.MAYMOC
       ? bienPhapMayMocRecords
       : bienPhapPhuongTienRecords;
 
@@ -372,7 +372,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
     useMaintenanceAcceptanceVehicleByBienPhapQuery(expandedBienPhap || "");
 
   const acceptanceRecords =
-    plan?.nhomTaiSan === "MAY_MOC"
+    plan?.nhomTaiSan === AssetGroup.MAYMOC
       ? acceptanceTestRecords
       : acceptanceTestVehicleRecords;
 
@@ -386,7 +386,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
   );
 
   const handleToggle = (id: string) => {
-    const isVehicle = plan?.nhomTaiSan === "PHUONG_TIEN";
+    const isVehicle = plan?.nhomTaiSan === AssetGroup.PHUONGTIEN;
     setSelectedDeviceIds((prev) => {
       if (isVehicle) {
         return prev.includes(id) ? [] : [id];
@@ -502,7 +502,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                 <TableRow>
                   {plan.trangThai === 3 && (
                     <TableCell padding="checkbox">
-                      {plan?.nhomTaiSan !== "PHUONG_TIEN" && (
+                      {plan?.nhomTaiSan !== AssetGroup.PHUONGTIEN && (
                         <Checkbox
                           indeterminate={
                             selectedDeviceIds.length > 0 &&
@@ -804,7 +804,8 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                         isDelete={insp?.trangThai === 0}
                                         onDelete={() => {
                                           const deleteFn =
-                                            plan?.nhomTaiSan === "MAY_MOC"
+                                            plan?.nhomTaiSan ===
+                                            AssetGroup.MAYMOC
                                               ? deleteInspectionMutation
                                               : deleteInspectionVehicleMutation;
                                           deleteFn.mutateAsync(insp.id);
@@ -944,7 +945,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                                 onDelete={() => {
                                                   const deleteFn =
                                                     plan?.nhomTaiSan ===
-                                                    "MAY_MOC"
+                                                    AssetGroup.MAYMOC
                                                       ? deleteBienPhapMayMocMutation
                                                       : deleteBienPhapPhuongTienMutation;
                                                   deleteFn.mutateAsync(bp.id);
@@ -1081,7 +1082,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                                           onDelete={() => {
                                                             const deleteFn =
                                                               plan?.nhomTaiSan ===
-                                                              "MAY_MOC"
+                                                              AssetGroup.MAYMOC
                                                                 ? deleteAcceptanceMutation
                                                                 : deleteAcceptanceVehicleMutation;
                                                             deleteFn.mutateAsync(
@@ -1240,7 +1241,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
           const parentReq = maintenanceRepairByPlan.find(
             (r: MaintenanceRepairData) => r.id === inspectionParentReqId,
           );
-          if (plan?.nhomTaiSan === "PHUONG_TIEN") {
+          if (plan?.nhomTaiSan === AssetGroup.PHUONGTIEN) {
             return (
               <InspectionRecordVehicleDialog
                 open={inspectionDialogOpen}
@@ -1273,7 +1274,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
           const parentInsp = inspectionRecords.find(
             (r: any) => r.id === parentId,
           );
-          if (plan?.nhomTaiSan === "PHUONG_TIEN") {
+          if (plan?.nhomTaiSan === AssetGroup.PHUONGTIEN) {
             return (
               <BienPhapPhuongTienDialog
                 open={true}
@@ -1303,7 +1304,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
 
       {acceptanceDialogOpen &&
         (() => {
-          if (plan?.nhomTaiSan === "PHUONG_TIEN") {
+          if (plan?.nhomTaiSan === AssetGroup.PHUONGTIEN) {
             const bp = bienPhapRecords.find(
               (r: any) =>
                 r.id ===
