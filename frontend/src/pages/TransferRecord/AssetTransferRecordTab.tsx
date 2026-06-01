@@ -134,7 +134,7 @@ export default function AssetTransferRecordTab() {
     {
       field: "tenFile",
       headerName: "Tài liệu duyệt",
-      width: 180,
+      width: 200,
       headerAlign: "center",
       align: "center",
       renderCell: (params) => {
@@ -154,14 +154,14 @@ export default function AssetTransferRecordTab() {
     {
       field: "tenDonViNhan",
       headerName: "Đơn vị nhận",
-      width: 180,
+      width: 200,
       headerAlign: "center",
       align: "center",
     },
     {
       field: "TrangThaiKy",
       headerName: "Trạng thái ký",
-      width: 140,
+      width: 160,
       headerAlign: "center",
       align: "center",
       renderCell: (params) =>
@@ -172,7 +172,7 @@ export default function AssetTransferRecordTab() {
     {
       field: "TrangThaiBanGiao",
       headerName: "Trạng thái bàn giao",
-      width: 140,
+      width: 200,
       headerAlign: "center",
       align: "center",
       renderCell: (params) =>
@@ -181,7 +181,7 @@ export default function AssetTransferRecordTab() {
     {
       field: "share",
       headerName: "Trình duyệt",
-      width: 140,
+      width: 180,
       headerAlign: "center",
       align: "center",
       renderCell: (params) =>

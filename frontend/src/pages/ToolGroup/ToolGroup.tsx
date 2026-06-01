@@ -285,6 +285,8 @@ export default function ToolGroup() {
           setSearchValue={setSearchValue}
           onDeleteAll={deleteAllMutation.mutate}
           showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
+          onImportExcel={handleImport}
+          onExportExcel={() => exportMutation.mutate(allToolGroup)}
         />
       </Box>
     </Box>

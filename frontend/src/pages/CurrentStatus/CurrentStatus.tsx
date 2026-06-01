@@ -262,6 +262,8 @@ export default function CurrentStatus() {
           setSearchValue={setSearchValue}
           onDeleteAll={deleteAllMutation.mutate}
           showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
+          onImportExcel={handleImport}
+          onExportExcel={() => exportMutation.mutate(allCurrentStatus)}
         />
       </Box>
     </Box>

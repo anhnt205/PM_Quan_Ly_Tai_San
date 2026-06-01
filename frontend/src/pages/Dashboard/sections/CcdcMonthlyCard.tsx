@@ -35,8 +35,7 @@ export default function CcdcMonthlyCard({
         transition:
           "box-shadow 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s cubic-bezier(.4,0,.2,1)",
         "&:hover": {
-          boxShadow:
-            "0 8px 32px rgba(4,180,110,0.13), 0 2px 16px rgba(0,0,0,0.06)",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06)",
           // transform: "translateY(-2px)",
         },
       }}
@@ -45,9 +44,7 @@ export default function CcdcMonthlyCard({
       <Box
         sx={{
           height: 3,
-          background:
-            "linear-gradient(90deg, #04b46e 0%, #36d399 40%, #f59e0b 70%, #3b82f6 100%)",
-          borderRadius: "16px 16px 0 0",
+          background: "#04b46e",
         }}
       />
 

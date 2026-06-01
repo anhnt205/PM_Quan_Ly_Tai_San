@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
+import * as XLSX from "xlsx";
+import dayjs from "dayjs";
 import {
   BarChart,
   Close,
@@ -25,7 +27,15 @@ import {
   GridFilterPanel,
   GridColumnVisibilityModel,
   GridFeatureMode,
+  ColumnsPanelTrigger,
+  FilterPanelTrigger,
+  ExportPrint,
+  ToolbarButton,
+  Toolbar,
 } from "@mui/x-data-grid";
+import FullscreenIcon from "@mui/icons-material/Fullscreen";
+import FullscreenExitIcon from "@mui/icons-material/FullscreenExit";
+import Tooltip from "@mui/material/Tooltip";
 import { viVN } from "@mui/x-data-grid/locales";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../utils/routes";
@@ -37,7 +47,13 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import DecisionButton from "../Button/DecisionButton";
 import { usePositionMutation } from "../../pages/Position/Mutation";
-
+import { PrinterIcon } from "lucide-react";
+import ViewColumnIcon from "@mui/icons-material/ViewColumn";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import PrintIcon from "@mui/icons-material/Print";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import { useRef } from "react";
 const CustomFilterPanel = (props: any) => {
   return (
     <GridFilterPanel
@@ -49,9 +65,162 @@ const CustomFilterPanel = (props: any) => {
   );
 };
 
-const CustomToolbar = ({ isCompact }: { isCompact: boolean }) => {
+const CustomToolbar = ({
+  isCompact,
+  isFullscreen,
+  onToggleFullscreen,
+  onImportExcel,
+  onExportExcel,
+  onExportSelectedExcel,
+  hasSelection,
+}: {
+  isCompact: boolean;
+  isFullscreen: boolean;
+  onToggleFullscreen: () => void;
+  onImportExcel?: (file: File) => void;
+  onExportExcel?: () => void;
+  onExportSelectedExcel?: () => void;
+  hasSelection?: boolean;
+}) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   if (isCompact) return null;
-  return <GridToolbar />;
+  return (
+    <Toolbar>
+      <ColumnsPanelTrigger
+        render={
+          <ToolbarButton
+            render={
+              <Button
+                startIcon={<ViewColumnIcon sx={{ color: "#1FA463" }} />}
+                sx={{ color: "#1FA463" }}
+              >
+                Columns
+              </Button>
+            }
+          />
+        }
+      />
+      <FilterPanelTrigger
+        render={
+          <ToolbarButton
+            render={
+              <Button
+                startIcon={<FilterListIcon sx={{ color: "#1FA463" }} />}
+                sx={{ color: "#1FA463" }}
+              >
+                Filter
+              </Button>
+            }
+          />
+        }
+      />
+      <ExportPrint
+        render={
+          <ToolbarButton
+            render={
+              <Button
+                startIcon={<PrintIcon sx={{ color: "#1FA463" }} />}
+                sx={{ color: "#1FA463" }}
+              >
+                Print
+              </Button>
+            }
+          />
+        }
+      />
+
+      {/* Nút Import Excel */}
+      {onImportExcel && (
+        <>
+          <input
+            type="file"
+            hidden
+            ref={fileInputRef}
+            accept=".xlsx,.xls"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                onImportExcel(file);
+                e.target.value = "";
+              }
+            }}
+          />
+          <ToolbarButton
+            render={
+              <Button
+                startIcon={<UploadFileIcon sx={{ color: "#059669" }} />}
+                sx={{ color: "#059669" }}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                Import Excel
+              </Button>
+            }
+          />
+        </>
+      )}
+
+      {/* Nút Xuất Excel */}
+      {onExportExcel && (
+        <ToolbarButton
+          render={
+            <Button
+              startIcon={<FileDownloadIcon sx={{ color: "#059669" }} />}
+              sx={{ color: "#059669" }}
+              onClick={onExportExcel}
+            >
+              Xuất Excel
+            </Button>
+          }
+        />
+      )}
+
+      {/* Nút Xuất Excel các hàng đã chọn */}
+      {onExportSelectedExcel && hasSelection && (
+        <ToolbarButton
+          render={
+            <Button
+              startIcon={<FileDownloadIcon sx={{ color: "#059669" }} />}
+              sx={{
+                color: "#059669",
+                fontWeight: 700,
+                border: "1px solid #059669",
+                borderRadius: "6px",
+                px: 1.5,
+                "&:hover": { backgroundColor: "rgba(5,150,105,0.08)" },
+              }}
+              onClick={onExportSelectedExcel}
+            >
+              Xuất đã chọn
+            </Button>
+          }
+        />
+      )}
+
+      {/* Đẩy nút fullscreen sang phải */}
+      <Box sx={{ flex: 1 }} />
+
+      <Tooltip
+        title={isFullscreen ? "Thu nhỏ (Esc)" : "Phóng to toàn màn hình"}
+      >
+        <ToolbarButton
+          render={
+            <Button
+              aria-label={isFullscreen ? "exit fullscreen" : "fullscreen"}
+              onClick={onToggleFullscreen}
+              sx={{ color: "#1FA463", minWidth: "auto" }}
+            >
+              {isFullscreen ? (
+                <FullscreenExitIcon fontSize="small" />
+              ) : (
+                <FullscreenIcon fontSize="small" />
+              )}
+            </Button>
+          }
+        />
+      </Tooltip>
+    </Toolbar>
+  );
 };
 
 interface Props {
@@ -102,6 +271,10 @@ interface Props {
   isCompact?: boolean;
   highlightedId?: string | number;
   showToolbar?: boolean;
+  onImportExcel?: (file: File) => void;
+  onExportExcel?: () => void;
+  onExportSelectedExcel?: (selectedRows: any[]) => void;
+  exportSelectedFileName?: string;
 }
 
 export default function TableCustom({
@@ -152,6 +325,10 @@ export default function TableCustom({
   titleSelectedDate = "Chọn thời gian",
   isCompact = false,
   highlightedId,
+  onImportExcel,
+  onExportExcel,
+  onExportSelectedExcel,
+  exportSelectedFileName,
 }: Props) {
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.user);
@@ -161,7 +338,8 @@ export default function TableCustom({
 
   const [isPermissionBanHanh, setIsPermissionBanHanh] = useState(false);
   const { getByIdMutation } = usePositionMutation();
-
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const toggleFullscreen = () => setIsFullscreen((prev) => !prev);
   useEffect(() => {
     const checkPermission = async () => {
       if (user?.taiKhoan?.chucVuId) {
@@ -191,7 +369,13 @@ export default function TableCustom({
       }
     }
   }, [tableId]);
-
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isFullscreen) setIsFullscreen(false);
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isFullscreen]);
   // Hàm xử lý khi người dùng thay đổi trạng thái ẩn/hiện cột
   const handleColumnVisibilityChange = (
     newModel: GridColumnVisibilityModel,
@@ -206,339 +390,395 @@ export default function TableCustom({
   };
 
   return (
-    <Paper sx={{ my: 2, width: "100%" }}>
-      <Box
-        display={"flex"}
-        alignItems={"center"}
-        justifyContent={"space-between"}
-        p={1}
-        sx={{ background: "#FCCD2A" }}
+    <Box
+      sx={
+        isFullscreen
+          ? {
+              position: "fixed",
+              inset: 0,
+              width: "100vw",
+              height: "100vh",
+              zIndex: 9999,
+              bgcolor: "background.paper",
+              overflow: "auto",
+              display: "flex",
+              flexDirection: "column",
+            }
+          : {}
+      }
+    >
+      <Paper
+        sx={{
+          my: isFullscreen ? 0 : 2,
+          width: "100%",
+          flex: isFullscreen ? 1 : undefined,
+          display: "flex",
+          flexDirection: "column",
+        }}
       >
-        <Box display="flex" alignItems="center" gap={1}>
-          <TableChart
-            sx={{
-              fontSize: 20,
-              color: "#fff",
-            }}
-          />
-          <Typography
-            sx={{
-              fontWeight: 500,
-              color: "#fff",
-              fontSize: "14px",
-            }}
-          >
-            {title} ({total})
-          </Typography>
-        </Box>
-
-        {/* Cụm Checkbox trạng thái hiển thị dựa trên biến boolean */}
-        {showStatusFilter && !isCompact && (
-          <FilterStatusGroup
-            options={statusOptions}
-            selectedValue={statusValue}
-            onChange={(val) => onStatusChange?.(val)}
-          />
-        )}
-      </Box>
-
-      <Grid container spacing={2} p={2}>
-        <Grid size={{ xs: 12, sm: isCompact ? 12 : 4 }}>
-          <TextField
-            label={titleSearch}
-            fullWidth
-            size="small"
-            value={searchValue}
-            onChange={(e) => setSearchValue?.(e.target.value)}
-            InputProps={{
-              startAdornment: <Search sx={{ color: "#1FA463", mr: 0.5 }} />,
-              endAdornment: searchValue ? (
-                <IconButton onClick={() => setSearchValue?.("")} size="small">
-                  <Close fontSize="small" />
-                </IconButton>
-              ) : null,
-            }}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "10px",
-                "& fieldset": {
-                  borderColor: "#1FA463",
-                },
-                "&:hover fieldset": {
-                  borderColor: "#1FA463",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "#1FA463",
-                },
-              },
-              "& .MuiInputLabel-root": {
-                "&.Mui-focused": {
-                  color: "#1FA463",
-                },
-              },
-            }}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: isCompact ? 12 : 3 }}>
-          {isFilterDepartment && !isCompact && (
-            <Autocomplete
-              options={departments || []}
-              value={
-                departments?.find((d) => d.id === selectedDepartment) || null
-              }
-              getOptionLabel={(option) => option.tenPhongBan || ""}
-              onChange={(e, newValue) => {
-                setSelectedDepartment?.(newValue ? newValue.id : null);
+        <Box
+          display={"flex"}
+          alignItems={"center"}
+          justifyContent={"space-between"}
+          p={1}
+          sx={{ background: "#f5efefff" }}
+        >
+          <Box display="flex" alignItems="center" gap={1}>
+            <TableChart
+              sx={{
+                fontSize: 20,
+                color: "#737373ff",
               }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  fullWidth
-                  label="Tìm kiếm theo phòng ban..."
-                  size="small"
-                />
-              )}
+            />
+            <Typography
+              sx={{
+                fontWeight: 500,
+                color: "#737373ff",
+                fontSize: "14px",
+              }}
+            >
+              {title} ({total})
+            </Typography>
+          </Box>
+
+          {/* Cụm Checkbox trạng thái hiển thị dựa trên biến boolean */}
+          {showStatusFilter && !isCompact && (
+            <FilterStatusGroup
+              options={statusOptions}
+              selectedValue={statusValue}
+              onChange={(val) => onStatusChange?.(val)}
             />
           )}
-        </Grid>
-        {isFilterDate && !isCompact && (
-          <Grid size={{ xs: 12, sm: 2 }}>
-            <FieldDate
-              selectedDate={selectedDate}
-              setSelectedDate={setSelectedDate}
-              title={titleSelectedDate}
+        </Box>
+
+        <Grid container spacing={2} p={2}>
+          <Grid size={{ xs: 12, sm: isCompact ? 12 : 4 }}>
+            <TextField
+              label={titleSearch}
+              fullWidth
+              size="small"
+              value={searchValue}
+              onChange={(e) => setSearchValue?.(e.target.value)}
+              InputProps={{
+                startAdornment: <Search sx={{ color: "#1FA463", mr: 0.5 }} />,
+                endAdornment: searchValue ? (
+                  <IconButton onClick={() => setSearchValue?.("")} size="small">
+                    <Close fontSize="small" />
+                  </IconButton>
+                ) : null,
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "10px",
+                  "& fieldset": {
+                    borderColor: "#1FA463",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#1FA463",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#1FA463",
+                  },
+                },
+                "& .MuiInputLabel-root": {
+                  "&.Mui-focused": {
+                    color: "#1FA463",
+                  },
+                },
+              }}
             />
           </Grid>
-        )}
-        <Grid size={{ xs: 12, sm: isCompact ? 12 : 5 }}>
-          <Box
-            display={"flex"}
-            justifyContent={isCompact ? "flex-start" : "flex-end"}
-            gap={1}
-            flexWrap="wrap"
-          >
-            {/* <Button variant="outlined" size="small" startIcon={<Settings />}>
+          <Grid size={{ xs: 12, sm: isCompact ? 12 : 3 }}>
+            {isFilterDepartment && !isCompact && (
+              <Autocomplete
+                options={departments || []}
+                value={
+                  departments?.find((d) => d.id === selectedDepartment) || null
+                }
+                getOptionLabel={(option) => option.tenPhongBan || ""}
+                onChange={(e, newValue) => {
+                  setSelectedDepartment?.(newValue ? newValue.id : null);
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    fullWidth
+                    label="Tìm kiếm theo phòng ban..."
+                    size="small"
+                  />
+                )}
+              />
+            )}
+          </Grid>
+          {isFilterDate && !isCompact && (
+            <Grid size={{ xs: 12, sm: 2 }}>
+              <FieldDate
+                selectedDate={selectedDate}
+                setSelectedDate={setSelectedDate}
+                title={titleSelectedDate}
+              />
+            </Grid>
+          )}
+          <Grid size={{ xs: 12, sm: isCompact ? 12 : 5 }}>
+            <Box
+              display={"flex"}
+              justifyContent={isCompact ? "flex-start" : "flex-end"}
+              gap={1}
+              flexWrap="wrap"
+            >
+              {/* <Button variant="outlined" size="small" startIcon={<Settings />}>
               Cấu hình cột
             </Button> */}
-            {selectedItem && canSign?.(selectedItem, user) && (
-              <Button
-                size="small"
-                variant="contained"
-                color="primary"
-                startIcon={<Edit />}
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  handleSignDocument?.(selectedItem[0], user, () =>
-                    onSign?.(
-                      selectedItem[0]?.taiLieuCuoi ||
-                        selectedItem[0]?.taiLieuBangKe,
-                      selectedItem[0],
-                    ),
-                  );
-                }}
-              >
-                Ký biên bản ({selectedItem.length})
-              </Button>
-            )}
-            {selectedItem.length > 0 &&
-              isPermissionBanHanh &&
-              isDecision?.(selectedItem) && (
-                <DecisionButton
-                  data={selectedItem}
-                  handleDecision={handleDecision}
-                  onClose={() => {
-                    setSelectedItem([]);
-                    onSelectionChange?.([]);
+              {selectedItem && canSign?.(selectedItem, user) && (
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="primary"
+                  startIcon={<Edit />}
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    handleSignDocument?.(selectedItem[0], user, () =>
+                      onSign?.(
+                        selectedItem[0]?.taiLieuCuoi ||
+                          selectedItem[0]?.taiLieuBangKe,
+                        selectedItem[0],
+                      ),
+                    );
                   }}
-                />
+                >
+                  Ký biên bản ({selectedItem.length})
+                </Button>
               )}
-            {selectedItem && isCheckShowShare?.(selectedItem) && (
-              <Button
-                size="small"
-                variant="contained"
-                color="warning"
-                sx={{ color: "#fff" }}
-                startIcon={<Mail />}
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  await handleSendToSigner?.(selectedItem);
-                  setSelectedItem([]);
-                }}
-              >
-                Trình duyệt người ký ({selectedItem.length})
-              </Button>
-            )}
-            {showDeleteAll && (
-              <Button
-                size="small"
-                variant="contained"
-                color="error"
-                startIcon={<Delete />}
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  const confirm = await showConfirmAlert(
-                    `Xác nhận xóa tất cả bản ghi?. bạn không thể hoàn tác!.`,
-                  );
-                  if (confirm.isConfirmed) {
-                    onDeleteAll?.();
-                    onSelectionChange?.([]);
-                  }
-                }}
-              >
-                Xóa tất cả
-              </Button>
-            )}
-            {selectedIds.length > 0 && showDelete && (
-              <Button
-                size="small"
-                variant="contained"
-                color="error"
-                startIcon={<Delete />}
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  const confirm = await showConfirmAlert(
-                    `Xác nhận xóa ${selectedIds.length} bản ghi?`,
-                  );
-                  if (confirm.isConfirmed) {
-                    onDelete?.(selectedIds);
-                    onSelectionChange?.([]);
-                  }
-                }}
-              >
-                {selectedIds.length} Xóa đã chọn
-              </Button>
-            )}
-            {isDepreciation && (
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<BarChart />}
-                onClick={() => navigate(ROUTES.ASSETDEPRECIATION)}
-              >
-                Khấu hao tài sản
-              </Button>
-            )}
-            {extraActions}
-          </Box>
+              {selectedItem.length > 0 &&
+                isPermissionBanHanh &&
+                isDecision?.(selectedItem) && (
+                  <DecisionButton
+                    data={selectedItem}
+                    handleDecision={handleDecision}
+                    onClose={() => {
+                      setSelectedItem([]);
+                      onSelectionChange?.([]);
+                    }}
+                  />
+                )}
+              {selectedItem && isCheckShowShare?.(selectedItem) && (
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="warning"
+                  sx={{ color: "#fff" }}
+                  startIcon={<Mail />}
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    await handleSendToSigner?.(selectedItem);
+                    setSelectedItem([]);
+                  }}
+                >
+                  Trình duyệt người ký ({selectedItem.length})
+                </Button>
+              )}
+              {showDeleteAll && (
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="error"
+                  startIcon={<Delete />}
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const confirm = await showConfirmAlert(
+                      `Xác nhận xóa tất cả bản ghi?. bạn không thể hoàn tác!.`,
+                    );
+                    if (confirm.isConfirmed) {
+                      onDeleteAll?.();
+                      onSelectionChange?.([]);
+                    }
+                  }}
+                >
+                  Xóa tất cả
+                </Button>
+              )}
+              {selectedIds.length > 0 && showDelete && (
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="error"
+                  startIcon={<Delete />}
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const confirm = await showConfirmAlert(
+                      `Xác nhận xóa ${selectedIds.length} bản ghi?`,
+                    );
+                    if (confirm.isConfirmed) {
+                      onDelete?.(selectedIds);
+                      onSelectionChange?.([]);
+                    }
+                  }}
+                >
+                  {selectedIds.length} Xóa đã chọn
+                </Button>
+              )}
+              {isDepreciation && (
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<BarChart />}
+                  onClick={() => navigate(ROUTES.ASSETDEPRECIATION)}
+                >
+                  Khấu hao tài sản
+                </Button>
+              )}
+              {extraActions}
+            </Box>
+          </Grid>
         </Grid>
-      </Grid>
-      <Box sx={{ width: "100%", overflow: "hidden" }}>
-        {customContent ? (
-          customContent
-        ) : (
-          <DataGrid
-            getRowId={(row) => row.Id || row.id || row.soThe}
-            onRowClick={onRowClick}
-            columns={columns}
-            rows={rows}
-            showCellVerticalBorder={true}
-            showToolbar={showToolbar && !isCompact}
-            rowCount={total}
-            paginationMode={paginationMode}
-            paginationModel={paginationModel}
-            onPaginationModelChange={onPaginationModelChange}
-            pageSizeOptions={[10, 20, 50]}
-            loading={loading}
-            checkboxSelection={checkboxSelection}
-            columnVisibilityModel={columnVisibilityModel}
-            onColumnVisibilityModelChange={handleColumnVisibilityChange}
-            rowSelectionModel={
-              selectedIds && selectedIds.length > 0
-                ? { type: "include" as const, ids: new Set(selectedIds) }
-                : { type: "include" as const, ids: new Set() }
-            }
-            onRowSelectionModelChange={(newSelection: any) => {
-              let result: string[] = [];
-              if (newSelection?.type === "exclude") {
-                const excludedIds = Array.from(newSelection.ids as Set<string>);
-                result = rows
-                  .map((row) => row.Id || row.id || row.soThe)
-                  .filter((id) => !excludedIds.includes(id as string));
-              } else if (newSelection?.type === "include") {
-                if (newSelection.ids && newSelection.ids.size > 0) {
-                  result = Array.from(newSelection.ids as Set<string>);
-                }
-              } else if (Array.isArray(newSelection)) {
-                result = newSelection;
+        <Box sx={{ width: "100%", overflow: "hidden" }}>
+          {customContent ? (
+            customContent
+          ) : (
+            <DataGrid
+              getRowId={(row) => row.Id || row.id || row.soThe}
+              onRowClick={onRowClick}
+              columns={columns}
+              rows={rows}
+              showCellVerticalBorder={true}
+              showToolbar={showToolbar && !isCompact}
+              rowCount={total}
+              paginationMode={paginationMode}
+              paginationModel={paginationModel}
+              onPaginationModelChange={onPaginationModelChange}
+              pageSizeOptions={[10, 20, 50]}
+              loading={loading}
+              checkboxSelection={checkboxSelection}
+              columnVisibilityModel={columnVisibilityModel}
+              onColumnVisibilityModelChange={handleColumnVisibilityChange}
+              rowSelectionModel={
+                selectedIds && selectedIds.length > 0
+                  ? { type: "include" as const, ids: new Set(selectedIds) }
+                  : { type: "include" as const, ids: new Set() }
               }
-              onSelectionChange?.(result);
-              const selectedRows = rows.filter((row) => {
-                const rowId = row.Id || row.id || row.soThe;
-                return result.includes(rowId);
-              });
-              setSelectedItem(selectedRows);
-              handleAssetTransfer?.(selectedRows[0]?.idDonViGiao);
-            }}
-            disableRowSelectionOnClick
-            isRowSelectable={isRowSelectable}
-            getRowClassName={(params) => {
-              const rowId = params.row.Id || params.row.id || params.row.soThe;
-              return rowId === highlightedId ? "highlighted-row" : "";
-            }}
-            slots={{
-              // toolbar: () => <CustomToolbar isCompact={isCompact} />,
-              filterPanel: CustomFilterPanel,
-            }}
-            localeText={viVN.components.MuiDataGrid.defaultProps.localeText}
-            slotProps={{
-              loadingOverlay: {
-                variant: "linear-progress",
-                noRowsVariant: "skeleton",
-              },
-              filterPanel: { disableAddFilterButton: false },
-              toolbar: {
-                color: "#1FA463",
-                csvOptions: { disableToolbarButton: false },
-                printOptions: { disableToolbarButton: false },
-              },
-            }}
-            sx={{
-              fontSize: "14px",
-              "& .highlighted-row": {
-                backgroundColor: "rgba(31, 164, 99, 0.12) !important",
-                "&:hover": {
-                  backgroundColor: "rgba(31, 164, 99, 0.18) !important",
+              onRowSelectionModelChange={(newSelection: any) => {
+                let result: string[] = [];
+                if (newSelection?.type === "exclude") {
+                  const excludedIds = Array.from(
+                    newSelection.ids as Set<string>,
+                  );
+                  result = rows
+                    .map((row) => row.Id || row.id || row.soThe)
+                    .filter((id) => !excludedIds.includes(id as string));
+                } else if (newSelection?.type === "include") {
+                  if (newSelection.ids && newSelection.ids.size > 0) {
+                    result = Array.from(newSelection.ids as Set<string>);
+                  }
+                } else if (Array.isArray(newSelection)) {
+                  result = newSelection;
+                }
+                onSelectionChange?.(result);
+                const selectedRows = rows.filter((row) => {
+                  const rowId = row.Id || row.id || row.soThe;
+                  return result.includes(rowId);
+                });
+                setSelectedItem(selectedRows);
+                handleAssetTransfer?.(selectedRows[0]?.idDonViGiao);
+              }}
+              disableRowSelectionOnClick
+              isRowSelectable={isRowSelectable}
+              getRowClassName={(params) => {
+                const rowId =
+                  params.row.Id || params.row.id || params.row.soThe;
+                return rowId === highlightedId ? "highlighted-row" : "";
+              }}
+              slots={{
+                toolbar: () => (
+                  <CustomToolbar
+                    isCompact={isCompact}
+                    isFullscreen={isFullscreen}
+                    onToggleFullscreen={toggleFullscreen}
+                    onImportExcel={onImportExcel}
+                    onExportExcel={onExportExcel}
+                    hasSelection={selectedItem.length > 0}
+                    onExportSelectedExcel={
+                      onExportSelectedExcel
+                        ? () => {
+                            onExportSelectedExcel(selectedItem);
+                          }
+                        : selectedItem.length > 0
+                          ? () => {
+                              // Export mặc định dùng XLSX nếu không có handler tuỳ chỉnh
+                              const wb = XLSX.utils.book_new();
+                              const ws = XLSX.utils.json_to_sheet(selectedItem);
+                              XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+                              XLSX.writeFile(
+                                wb,
+                                `${exportSelectedFileName ?? "Danh_sach_da_chon"}_${dayjs().format("YYYYMMDD")}.xlsx`,
+                              );
+                            }
+                          : undefined
+                    }
+                  />
+                ),
+                filterPanel: CustomFilterPanel,
+              }}
+              localeText={viVN.components.MuiDataGrid.defaultProps.localeText}
+              slotProps={{
+                loadingOverlay: {
+                  variant: "linear-progress",
+                  noRowsVariant: "skeleton",
                 },
-              },
-              "& .MuiDataGrid-toolbarContainer .MuiButton-root": {
-                color: "#1FA463",
-                fontWeight: 600,
-                "&:hover": {
-                  backgroundColor: "rgba(31, 164, 99, 0.04)",
+                filterPanel: { disableAddFilterButton: false },
+                toolbar: {
+                  color: "#1FA463",
+                  csvOptions: { disableToolbarButton: false },
+                  printOptions: { disableToolbarButton: false },
+                } as any,
+              }}
+              sx={{
+                fontSize: "14px",
+                "& .highlighted-row": {
+                  backgroundColor: "rgba(31, 164, 99, 0.12) !important",
+                  "&:hover": {
+                    backgroundColor: "rgba(31, 164, 99, 0.18) !important",
+                  },
                 },
-              },
-              "& .MuiDataGrid-columnHeader": {
-                backgroundColor: "#1FA463",
-              },
-              "& .MuiDataGrid-columnHeaderTitle": {
-                color: "#fff",
-                fontWeight: 700,
-              },
-              "& .MuiDataGrid-toolbarContainer .MuiButtonBase-root": {
-                color: "#ff5722 !important",
-              },
-              "& .MuiDataGrid-columnHeader .MuiDataGrid-sortButton": {
-                background: "#1FA463",
-                color: "black",
-              },
-              "& .MuiDataGrid-iconButtonContainer": {
-                visibility: "visible",
-              },
-              "& .MuiDataGrid-sortIcon": {
-                opacity: 1,
-                color: "#fff",
-              },
-              "& .MuiDataGrid-menuIcon": {
-                opacity: 1,
-                color: "#fff",
-              },
-              "& .MuiDataGrid-columnHeaderCheckbox .MuiCheckbox-root": {
-                color: "#fff",
-              },
-            }}
-          />
-        )}
-      </Box>
-    </Paper>
+                "& .MuiDataGrid-toolbarContainer .MuiButton-root": {
+                  color: "#1FA463",
+                  fontWeight: 600,
+                  "&:hover": {
+                    backgroundColor: "rgba(31, 164, 99, 0.04)",
+                  },
+                },
+                "& .MuiDataGrid-columnHeader": {
+                  backgroundColor: "#1FA463",
+                },
+                "& .MuiDataGrid-columnHeaderTitle": {
+                  color: "#fff",
+                  fontWeight: 700,
+                },
+                "& .MuiDataGrid-toolbarContainer .MuiButtonBase-root": {
+                  color: "#ff5722 !important",
+                },
+                "& .MuiDataGrid-columnHeader .MuiDataGrid-sortButton": {
+                  background: "#1FA463",
+                  color: "black",
+                },
+                "& .MuiDataGrid-iconButtonContainer": {
+                  visibility: "visible",
+                },
+                "& .MuiDataGrid-sortIcon": {
+                  opacity: 1,
+                  color: "#fff",
+                },
+                "& .MuiDataGrid-menuIcon": {
+                  opacity: 1,
+                  color: "#fff",
+                },
+                "& .MuiDataGrid-columnHeaderCheckbox .MuiCheckbox-root": {
+                  color: "#fff",
+                },
+              }}
+            />
+          )}
+        </Box>
+      </Paper>
+    </Box>
   );
 }

@@ -102,8 +102,7 @@ export default function TaisanGroupCard({
         transition: "all 0.3s ease",
 
         "&:hover": {
-          boxShadow:
-            "0 10px 32px rgba(4,180,110,0.13), 0 2px 16px rgba(0,0,0,0.06)",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06)",
           // transform: "translateY(-2px)",
         },
       }}

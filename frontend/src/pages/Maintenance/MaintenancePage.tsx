@@ -206,20 +206,20 @@ const SummaryCard = ({
       borderRadius: "16px",
       p: 2.5,
       flex: 1,
-      minWidth: 180,
+      minWidth: 170,
       display: "flex",
       flexDirection: "column",
       gap: 2,
       bgcolor: "background.paper",
       border: "1px solid",
       borderColor: "grey.100",
-      boxShadow: "0 4px 20px 0 rgba(0, 0, 0, 0.02)",
-      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+      boxShadow: "0 2px 8px 0 rgba(0, 0, 0, 0.06)",
+      transition: "all 0.18s ease",
       position: "relative",
       overflow: "hidden",
       "&:hover": {
-        transform: "translateY(-6px)",
-        boxShadow: "0 12px 28px 0 rgba(0, 0, 0, 0.06)",
+        transform: "translateY(-1px)",
+        boxShadow: "0 3px 12px 0 rgba(0, 0, 0, 0.06)",
         borderColor: `${color}40`,
         "& .card-icon-container": {
           bgcolor: color,
@@ -370,7 +370,7 @@ const QuyTrinhStep = ({
     elevation={0}
     sx={{
       borderRadius: "16px",
-      p: 2.5,
+      p: 2,
       flex: 1,
       minWidth: 220,
       bgcolor: "background.paper",
@@ -379,7 +379,7 @@ const QuyTrinhStep = ({
       boxShadow: "0 4px 20px 0 rgba(0, 0, 0, 0.02)",
       display: "flex",
       flexDirection: "column",
-      gap: 2,
+      gap: 1,
       minHeight: 210,
       transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
       "&:hover": {
@@ -1096,85 +1096,89 @@ export default function MaintenanceStatPage() {
           <Grid size={{ xs: 12, md: selectedId ? 8 : 12 }}>
             <Stack spacing={4}>
               {/* Summary */}
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <SummaryCard
-                    icon={<BuildOutlined sx={{ fontSize: 20 }} />}
-                    title="Kế Hoạch"
-                    color="#3b82f6"
-                    main={planPaged.totalItems}
-                    mainLabel="Tổng số kế hoạch"
-                    sub={planPaged.trangThaiCounts["1"] || 0}
-                    subLabel="Chờ duyệt"
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <SummaryCard
-                    icon={<WarningOutlined sx={{ fontSize: 20 }} />}
-                    title="Sự Cố"
-                    color="#ef4444"
-                    main={incidentPaged.totalItems}
-                    mainLabel="Tổng số sự cố"
-                    sub={incidentPaged.trangThaiCounts["1"] || 0}
-                    subLabel="Chờ duyệt"
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <SummaryCard
-                    icon={<DescriptionOutlined sx={{ fontSize: 20 }} />}
-                    title="Lệnh SC"
-                    color="#f59e0b"
-                    main={repairPaged.totalItems}
-                    mainLabel="Tổng lệnh sửa chữa"
-                    sub={repairPaged.trangThaiCounts["1"] || 0}
-                    subLabel="Chờ duyệt"
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <SummaryCard
-                    icon={<FactCheckOutlined sx={{ fontSize: 20 }} />}
-                    title="Giám Định"
-                    color="#10b981"
-                    main={inspectionPaged.totalItems}
-                    mainLabel="Tổng bản giám định"
-                    sub={inspectionPaged.trangThaiCounts["1"] || 0}
-                    subLabel="Chờ duyệt"
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <SummaryCard
-                    icon={<SearchOutlined sx={{ fontSize: 20 }} />}
-                    title="BB Sự Cố"
-                    color="#8b5cf6"
-                    main={incidentInspectionPaged.totalItems}
-                    mainLabel="Tổng BB sự cố"
-                    sub={incidentInspectionPaged.trangThaiCounts["1"] || 0}
-                    subLabel="Chờ duyệt"
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <SummaryCard
-                    icon={<InventoryOutlined sx={{ fontSize: 20 }} />}
-                    title="Đánh giá VT"
-                    color="#f97316"
-                    main={materialPaged.totalItems}
-                    mainLabel="Tổng bản đánh giá"
-                    sub={materialPaged.trangThaiCounts["1"] || 0}
-                    subLabel="Chờ duyệt"
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <SummaryCard
-                    icon={<AssignmentTurnedInOutlined sx={{ fontSize: 20 }} />}
-                    title="Nghiệm Thu"
-                    color="#06b6d4"
-                    main={acceptancePaged.totalItems}
-                    mainLabel="Tổng bản nghiệm thu"
-                    sub={acceptancePaged.trangThaiCounts["1"] || 0}
-                    subLabel="Chờ duyệt"
-                  />
-                </Grid>
-              </Grid>
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 2,
+                  overflowX: "auto",
+                  pb: 1.5,
+                  width: "100%",
+                  "&::-webkit-scrollbar": {
+                    height: "6px",
+                  },
+                  "&::-webkit-scrollbar-thumb": {
+                    bgcolor: "grey.300",
+                    borderRadius: "4px",
+                  },
+                  "&::-webkit-scrollbar-track": {
+                    bgcolor: "transparent",
+                  },
+                }}
+              >
+                <SummaryCard
+                  icon={<BuildOutlined sx={{ fontSize: 20 }} />}
+                  title="Kế Hoạch"
+                  color="#3b82f6"
+                  main={planPaged.totalItems}
+                  mainLabel="Tổng số kế hoạch"
+                  sub={planPaged.trangThaiCounts["1"] || 0}
+                  subLabel="Chờ duyệt"
+                />
+                <SummaryCard
+                  icon={<WarningOutlined sx={{ fontSize: 20 }} />}
+                  title="Sự Cố"
+                  color="#ef4444"
+                  main={incidentPaged.totalItems}
+                  mainLabel="Tổng số sự cố"
+                  sub={incidentPaged.trangThaiCounts["1"] || 0}
+                  subLabel="Chờ duyệt"
+                />
+                <SummaryCard
+                  icon={<DescriptionOutlined sx={{ fontSize: 20 }} />}
+                  title="Lệnh SC"
+                  color="#f59e0b"
+                  main={repairPaged.totalItems}
+                  mainLabel="Tổng lệnh sửa chữa"
+                  sub={repairPaged.trangThaiCounts["1"] || 0}
+                  subLabel="Chờ duyệt"
+                />
+                <SummaryCard
+                  icon={<FactCheckOutlined sx={{ fontSize: 20 }} />}
+                  title="Giám Định"
+                  color="#10b981"
+                  main={inspectionPaged.totalItems}
+                  mainLabel="Tổng bản giám định"
+                  sub={inspectionPaged.trangThaiCounts["1"] || 0}
+                  subLabel="Chờ duyệt"
+                />
+                <SummaryCard
+                  icon={<SearchOutlined sx={{ fontSize: 20 }} />}
+                  title="BB Sự Cố"
+                  color="#8b5cf6"
+                  main={incidentInspectionPaged.totalItems}
+                  mainLabel="Tổng BB sự cố"
+                  sub={incidentInspectionPaged.trangThaiCounts["1"] || 0}
+                  subLabel="Chờ duyệt"
+                />
+                <SummaryCard
+                  icon={<InventoryOutlined sx={{ fontSize: 20 }} />}
+                  title="Đánh giá VT"
+                  color="#f97316"
+                  main={materialPaged.totalItems}
+                  mainLabel="Tổng bản đánh giá"
+                  sub={materialPaged.trangThaiCounts["1"] || 0}
+                  subLabel="Chờ duyệt"
+                />
+                <SummaryCard
+                  icon={<AssignmentTurnedInOutlined sx={{ fontSize: 20 }} />}
+                  title="Nghiệm Thu"
+                  color="#06b6d4"
+                  main={acceptancePaged.totalItems}
+                  mainLabel="Tổng bản nghiệm thu"
+                  sub={acceptancePaged.trangThaiCounts["1"] || 0}
+                  subLabel="Chờ duyệt"
+                />
+              </Box>
 
               {/* Quy Trinh */}
               <Box>
@@ -1212,9 +1216,8 @@ export default function MaintenanceStatPage() {
                       {i < quyTrinhSteps.length - 1 && (
                         <Box
                           sx={{
-                            color: "grey.300",
+                            color: "grey.500",
                             display: { xs: "none", lg: "block" },
-                            mx: 0.5,
                           }}
                         >
                           <ChevronRight sx={{ fontSize: 24 }} />
@@ -1224,78 +1227,6 @@ export default function MaintenanceStatPage() {
                   ))}
                 </Box>
               </Box>
-
-              {/* Danh Sách Vật Tư Tiêu Hao */}
-              <Paper
-                elevation={0}
-                sx={{
-                  borderRadius: "16px",
-                  overflow: "hidden",
-                  border: "1px solid",
-                  borderColor: "grey.100",
-                  boxShadow: "0 4px 20px 0 rgba(0, 0, 0, 0.02)",
-                }}
-              >
-                <Box
-                  sx={{
-                    px: 3,
-                    py: 2.5,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1.5,
-                    borderBottom: `1px solid ${theme.palette.divider}`,
-                    bgcolor: "grey.50",
-                  }}
-                >
-                  <InventoryOutlined
-                    sx={{ color: "primary.main", fontSize: 20 }}
-                  />
-                  <Typography fontWeight={700} color="grey.800">
-                    VẬT TƯ TIÊU HAO:{" "}
-                    <span style={{ color: "#04b46eff" }}>
-                      {findById(assets, selectedId)?.tenTaiSan?.toUpperCase() ||
-                        "TẤT CẢ THIẾT BỊ"}
-                    </span>
-                  </Typography>
-                </Box>
-
-                <TableContainer sx={{ maxHeight: 600 }}>
-                  <Table size="medium" stickyHeader>
-                    <TableHead>
-                      <TableRow>
-                        {[
-                          "STT",
-                          "Mã vật tư",
-                          "Tên vật tư",
-                          "Đơn vị tính",
-                          "Số lượng tiêu hao",
-                        ].map((h) => (
-                          <TableCell
-                            key={h}
-                            sx={{
-                              bgcolor: "#fff",
-                              fontWeight: 700,
-                              fontSize: "0.78rem",
-                              color: "grey.600",
-                              py: 2,
-                              borderBottom: "2px solid",
-                              borderColor: "grey.100",
-                            }}
-                          >
-                            {h}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      <MaterialConsumptionRows
-                        idTaiSan={selectedId}
-                        nam={nam}
-                      />
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Paper>
             </Stack>
           </Grid>
 
@@ -1599,6 +1530,80 @@ export default function MaintenanceStatPage() {
               </Box>
             </Grid>
           )}
+
+          {/* Danh Sách Vật Tư Tiêu Hao */}
+          <Grid size={{ xs: 12 }}>
+            <Paper
+              elevation={0}
+              sx={{
+                borderRadius: "16px",
+                overflow: "hidden",
+                border: "1px solid",
+                borderColor: "grey.100",
+                boxShadow: "0 4px 20px 0 rgba(0, 0, 0, 0.02)",
+              }}
+            >
+              <Box
+                sx={{
+                  px: 3,
+                  py: 2.5,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                  borderBottom: `1px solid ${theme.palette.divider}`,
+                  bgcolor: "grey.50",
+                }}
+              >
+                <InventoryOutlined
+                  sx={{ color: "primary.main", fontSize: 20 }}
+                />
+                <Typography fontWeight={700} color="grey.800">
+                  VẬT TƯ TIÊU HAO:{" "}
+                  <span style={{ color: "#04b46eff" }}>
+                    {findById(assets, selectedId)?.tenTaiSan?.toUpperCase() ||
+                      "TẤT CẢ THIẾT BỊ"}
+                  </span>
+                </Typography>
+              </Box>
+
+              <TableContainer sx={{ maxHeight: 600 }}>
+                <Table size="medium" stickyHeader>
+                  <TableHead>
+                    <TableRow>
+                      {[
+                        "STT",
+                        "Mã vật tư",
+                        "Tên vật tư",
+                        "Đơn vị tính",
+                        "Số lượng tiêu hao",
+                      ].map((h) => (
+                        <TableCell
+                          key={h}
+                          sx={{
+                            bgcolor: "#fff",
+                            fontWeight: 700,
+                            fontSize: "0.78rem",
+                            color: "grey.600",
+                            py: 2,
+                            borderBottom: "2px solid",
+                            borderColor: "grey.100",
+                          }}
+                        >
+                          {h}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    <MaterialConsumptionRows
+                      idTaiSan={selectedId}
+                      nam={nam}
+                    />
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          </Grid>
         </Grid>
       </Box>
       <ModalXemTatCa

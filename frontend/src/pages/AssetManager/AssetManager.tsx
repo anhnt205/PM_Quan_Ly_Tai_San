@@ -693,6 +693,8 @@ export default function AssetManager() {
                   setStatus(value);
                 }}
                 statusValue={status}
+                onImportExcel={(file) => importAssetMutation.mutate(file)}
+                onExportExcel={() => exportAssetMutation.mutate()}
               />
             </Grid>
             {showSidebar && (

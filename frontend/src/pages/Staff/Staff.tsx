@@ -305,12 +305,22 @@ export default function Staff() {
             </Box>
           </DialogContent>
         </Dialog>
-
         <Dialog
           open={showForm}
-          onClose={handleMinimize} // click ra ngoài = minimize
+          onClose={() => {
+            setShowForm(false);
+            setSelectedStaff(null);
+            setReadOnly(false);
+            setIsCopy(false);
+          }}
           maxWidth="md"
           fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: "16px",
+              border: "2px solid #1FA463",
+            },
+          }}
         >
           <DialogContent sx={{ p: 0 }}>
             <StaffForm
@@ -353,6 +363,8 @@ export default function Staff() {
           titleSearch="Tìm kiếm theo tên nhân viên, mã nhân viên, ..."
           onDeleteAll={deleteAllMutation.mutate}
           showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
+          onImportExcel={handleImport}
+          onExportExcel={() => exportMutation.mutate()}
         />
       </Box>
       <ImportErrorDialog

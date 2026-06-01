@@ -4,6 +4,11 @@ import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import AssignmentReturnIcon from "@mui/icons-material/AssignmentReturn";
 import BuildCircleOutlinedIcon from "@mui/icons-material/BuildCircleOutlined";
 import AccountBalanceOutlinedIcon from "@mui/icons-material/AccountBalanceOutlined";
+import HandymanIcon from "@mui/icons-material/Handyman";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import FactCheckIcon from "@mui/icons-material/FactCheck";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import EngineeringIcon from "@mui/icons-material/Engineering";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../../utils/routes";
 import { Box, Typography } from "@mui/material";
@@ -70,24 +75,54 @@ export const QuickActionButtons = () => {
       icon: <BuildCircleOutlinedIcon sx={{ fontSize: 16 }} />,
       actions: [
         {
-          label: "Thêm CCDC-VT",
+          label: "Thêm CCDC",
           icon: <InventoryIcon sx={{ fontSize: 20 }} />,
           path: ROUTES.TOOLMANAGER,
         },
         {
-          label: "Cấp phát CCDC-VT",
+          label: "Cấp phát CCDC",
           icon: <LocalShippingIcon sx={{ fontSize: 20 }} />,
           path: `${ROUTES.TOOLTRANSFER}?type=1`,
         },
         {
-          label: "Điều chuyển CCDC-VT",
+          label: "Điều chuyển CCDC",
           icon: <SwapHorizIcon sx={{ fontSize: 20 }} />,
           path: `${ROUTES.TOOLTRANSFER}?type=2`,
         },
         {
-          label: "Thu hồi CCDC-VT",
+          label: "Thu hồi CCDC",
           icon: <AssignmentReturnIcon sx={{ fontSize: 20 }} />,
           path: `${ROUTES.TOOLTRANSFER}?type=3`,
+        },
+      ],
+    },
+    {
+      label: "Sửa chữa bảo dưỡng",
+      color: "#f97316",
+      bgColor: "#ffedd5",
+      hoverBorder: "rgba(249, 115, 22, 0.4)",
+      hoverShadow: "rgba(249, 115, 22, 0.12)",
+      icon: <EngineeringIcon sx={{ fontSize: 16 }} />,
+      actions: [
+        {
+          label: "Quản lý sửa chữa",
+          icon: <HandymanIcon sx={{ fontSize: 20 }} />,
+          path: ROUTES.MAINTENANCE_MANAGER,
+        },
+        {
+          label: "Kế hoạch sửa chữa",
+          icon: <CalendarMonthIcon sx={{ fontSize: 20 }} />,
+          path: ROUTES.MAINTENANCEPLANREPAIR,
+        },
+        {
+          label: "Phê duyệt",
+          icon: <FactCheckIcon sx={{ fontSize: 20 }} />,
+          path: ROUTES.MAINTENANCE_APPROVAL,
+        },
+        {
+          label: "Quản lý biên bản",
+          icon: <AssignmentIcon sx={{ fontSize: 20 }} />,
+          path: ROUTES.MAINTENANCE_RECORD,
         },
       ],
     },
@@ -95,20 +130,44 @@ export const QuickActionButtons = () => {
 
   return (
     <Box sx={{ mb: 1 }}>
-      {/* Section title */}
-      <Typography
-        variant="body2"
+      {/* Section title styled like SectionHeader */}
+      <Box
         sx={{
-          fontWeight: 700,
-          color: "#94a3b8",
-          textTransform: "uppercase",
-          letterSpacing: "0.8px",
-          fontSize: "0.7rem",
-          mb: 2,
+          display: "flex",
+          alignItems: "center",
+          gap: 1.5,
+          mt: 1,
+          mb: 3,
         }}
       >
-        Thao tác nhanh
-      </Typography>
+        <Box
+          sx={{
+            width: 4,
+            height: 22,
+            borderRadius: "4px",
+            bgcolor: "#3b82f6",
+            flexShrink: 0,
+          }}
+        />
+        <Typography
+          sx={{
+            fontWeight: 700,
+            fontSize: "18px",
+            color: "#1e293b",
+            lineHeight: 1,
+          }}
+        >
+          Thao tác nhanh
+        </Typography>
+        <Box
+          sx={{
+            flex: 1,
+            height: "1px",
+            ml: 1,
+            background: `linear-gradient(90deg, #3b82f633 0%, transparent 100%)`,
+          }}
+        />
+      </Box>
 
       <Box sx={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: 2.5 }}>
         {categories.map((cat, catIdx) => (
@@ -148,8 +207,21 @@ export const QuickActionButtons = () => {
             <Box
               sx={{
                 display: "flex",
-                flexWrap: "wrap",
+                flexWrap: "nowrap",
                 gap: "10px",
+                overflowX: "auto",
+                pb: 1,
+                width: "100%",
+                "&::-webkit-scrollbar": {
+                  height: "4px",
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  bgcolor: "rgba(0,0,0,0.1)",
+                  borderRadius: "2px",
+                },
+                "&::-webkit-scrollbar-track": {
+                  bgcolor: "transparent",
+                },
               }}
             >
               {cat.actions.map((action, idx) => (
@@ -181,7 +253,8 @@ export const QuickActionButtons = () => {
                     outline: "none",
                     transition: "all 0.2s ease",
                     boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
-                    minWidth: "100px",
+                    minWidth: "80px",
+                    flex: 1,
 
                     "& .qa-icon-circle": {
                       display: "flex",
@@ -220,15 +293,16 @@ export const QuickActionButtons = () => {
                 >
                   <span className="qa-icon-circle">{action.icon}</span>
                   <Typography
-                    variant="caption"
-                    sx={{
-                      fontWeight: 600,
-                      fontSize: "0.78rem",
-                      lineHeight: 1.2,
-                      color: "#334155",
-                      textAlign: "center",
-                      whiteSpace: "nowrap",
-                    }}
+                      variant="caption"
+                      sx={{
+                        fontWeight: 600,
+                        fontSize: { xs: "0.65rem", sm: "0.72rem", md: "0.78rem" },
+                        lineHeight: 1.2,
+                        color: "#334155",
+                        textAlign: "center",
+                        whiteSpace: { xs: "normal", sm: "nowrap" },
+                        wordBreak: "break-word",
+                      }}
                   >
                     {action.label}
                   </Typography>

@@ -9,13 +9,11 @@ import {
 } from "@mui/material";
 import { useRef, useState, useEffect } from "react";
 import {
-  Download,
   Sync,
-  Upload,
   Close,
-  SettingsOutlined,
   KeyboardArrowDown,
   Add,
+  DriveFileRenameOutline,
 } from "@mui/icons-material";
 import CustomProgress from "../loading/CustomProgress";
 import ImportSignatureModal from "./ImportSignatureModal";
@@ -29,9 +27,12 @@ interface Props {
   loading?: boolean;
   title: string;
   onNewClick?: () => void;
+  /** @deprecated Chuyển xuống dùng onImportExcel trong TableCustom */
   onExport?: () => void;
+  /** @deprecated Chuyển xuống dùng onImportExcel trong TableCustom */
   onImport?: (file: File) => void;
   onSyncDb?: () => void;
+  /** @deprecated Không còn dùng để kiểm soát dropdown */
   showExcel?: boolean;
   showImportSignature?: boolean;
   onImportSignature?: (files: File[]) => void;
@@ -55,10 +56,12 @@ export default function PageAction({
   const navigate = useNavigate();
   const { tabs } = useSelector((state: RootState) => state.tabs);
 
-  const [anchorElExcel, setAnchorElExcel] = useState<null | HTMLElement>(null);
   const [openSignatureModal, setOpenSignatureModal] = useState(false);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Chỉ hiển thị dropdown "Tiện ích" khi còn chức năng lẻ (Đồng bộ CSDL)
+  const hasDropdownItems = !!onSyncDb;
+
+  const [anchorElExtra, setAnchorElExtra] = useState<null | HTMLElement>(null);
 
   useEffect(() => {
     if (title) {
@@ -72,42 +75,20 @@ export default function PageAction({
 
   const handleRemoveTab = (path: string) => {
     dispatch(removeTab(path));
-    // If we removed the active tab, navigate to the new active tab
     const currentPath = location.pathname + location.search;
     if (path === currentPath) {
       const remainingTabs = tabs.filter((t) => t.path !== path);
       if (remainingTabs.length > 0) {
         navigate(remainingTabs[remainingTabs.length - 1].path);
       } else {
-        navigate("/"); // Or some default route
+        navigate("/");
       }
     }
   };
 
-  const handleOpenElExcel = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorElExcel(event.currentTarget);
-  };
-
-  const handleCloseMenu = () => {
-    setAnchorElExcel(null);
-  };
-
-  const handleImportClick = () => {
-    handleCloseMenu();
-    fileInputRef.current?.click();
-  };
-
   const handleSyncDbClick = () => {
-    handleCloseMenu();
+    setAnchorElExtra(null);
     if (onSyncDb) onSyncDb();
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file && onImport) {
-      onImport(file);
-      event.target.value = "";
-    }
   };
 
   return (
@@ -119,7 +100,6 @@ export default function PageAction({
         top: 60,
         zIndex: 99,
         bgcolor: "background.paper",
-        // borderBottom: "1px solid",
         borderColor: "divider",
       }}
     >
@@ -208,7 +188,7 @@ export default function PageAction({
         })}
       </Box>
 
-      {/* Hàng 2: Các nút hành động (Thêm mới, Excel, Sync...) */}
+      {/* Hàng 2: Các nút hành động */}
       {!hideActionRow && (
         <Box
           sx={{
@@ -245,13 +225,40 @@ export default function PageAction({
 
           {/* Các nút hành động nằm bên phải */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-            {showExcel && (
+            {/* Nút Import chữ ký - render trực tiếp (không qua dropdown) */}
+            {showImportSignature && (
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => setOpenSignatureModal(true)}
+                startIcon={<DriveFileRenameOutline />}
+                sx={{
+                  borderRadius: "10px",
+                  borderColor: "rgba(59, 130, 246, 0.3)",
+                  color: "#3b82f6",
+                  fontWeight: 600,
+                  textTransform: "none",
+                  fontSize: "0.85rem",
+                  px: 2,
+                  py: 0.75,
+                  transition: "all 0.2s ease-in-out",
+                  "&:hover": {
+                    borderColor: "#3b82f6",
+                    bgcolor: "rgba(59, 130, 246, 0.05)",
+                  },
+                }}
+              >
+                Import chữ ký
+              </Button>
+            )}
+
+            {/* Dropdown "Tiện ích" - chỉ hiện khi có chức năng lẻ (Đồng bộ CSDL) */}
+            {hasDropdownItems && (
               <>
                 <Button
                   variant="outlined"
                   size="small"
-                  onClick={handleOpenElExcel}
-                  startIcon={<SettingsOutlined />}
+                  onClick={(e) => setAnchorElExtra(e.currentTarget)}
                   endIcon={<KeyboardArrowDown />}
                   sx={{
                     borderRadius: "10px",
@@ -262,25 +269,43 @@ export default function PageAction({
                     fontSize: "0.85rem",
                     px: 2,
                     py: 0.75,
-                    boxShadow: "0 2px 4px rgba(20, 167, 96, 0.02)",
                     transition: "all 0.2s ease-in-out",
                     "&:hover": {
                       borderColor: "#14a760",
                       bgcolor: "rgba(20, 167, 96, 0.05)",
-                      boxShadow: "0 4px 8px rgba(20, 167, 96, 0.08)",
                     },
                   }}
                 >
                   Tiện ích
                 </Button>
-                {/* Input file Excel */}
-                <input
-                  type="file"
-                  hidden
-                  ref={fileInputRef}
-                  accept=".xlsx, .xls"
-                  onChange={handleFileChange}
-                />
+                <Menu
+                  open={Boolean(anchorElExtra)}
+                  onClose={() => setAnchorElExtra(null)}
+                  anchorEl={anchorElExtra}
+                  slotProps={{
+                    paper: {
+                      sx: {
+                        padding: "4px",
+                        borderRadius: "12px",
+                        boxShadow: "0px 10px 25px rgba(0,0,0,0.1)",
+                      },
+                    },
+                  }}
+                >
+                  {onSyncDb && (
+                    <MenuItem
+                      onClick={handleSyncDbClick}
+                      sx={{ borderRadius: "8px", mx: 0.5, my: 0.25 }}
+                    >
+                      <ListItemIcon>
+                        <Sync fontSize="small" color="primary" />
+                      </ListItemIcon>
+                      <Typography variant="body2">
+                        Đồng bộ CSDL Server (Config)
+                      </Typography>
+                    </MenuItem>
+                  )}
+                </Menu>
               </>
             )}
 
@@ -311,77 +336,6 @@ export default function PageAction({
               </Button>
             )}
           </Box>
-
-          <Menu
-            open={Boolean(anchorElExcel)}
-            onClose={handleCloseMenu}
-            anchorEl={anchorElExcel}
-            slotProps={{
-              paper: {
-                sx: {
-                  padding: "4px",
-                  borderRadius: "12px",
-                  boxShadow: "0px 10px 25px rgba(0,0,0,0.1)",
-                },
-              },
-            }}
-          >
-            {onImport && (
-              <MenuItem
-                onClick={handleImportClick}
-                sx={{ borderRadius: "8px", mx: 0.5, my: 0.25 }}
-              >
-                <ListItemIcon>
-                  <Download fontSize="small" color="primary" />
-                </ListItemIcon>
-                <Typography variant="body2">Import từ Excel</Typography>
-              </MenuItem>
-            )}
-
-            {onSyncDb && (
-              <MenuItem
-                onClick={handleSyncDbClick}
-                sx={{ borderRadius: "8px", mx: 0.5, my: 0.25 }}
-              >
-                <ListItemIcon>
-                  <Sync fontSize="small" color="primary" />
-                </ListItemIcon>
-                <Typography variant="body2">
-                  Đồng bộ CSDL Server (Config)
-                </Typography>
-              </MenuItem>
-            )}
-
-            {showImportSignature && (
-              <MenuItem
-                onClick={() => {
-                  handleCloseMenu();
-                  setOpenSignatureModal(true);
-                }}
-                sx={{ borderRadius: "8px", mx: 0.5, my: 0.25 }}
-              >
-                <ListItemIcon>
-                  <Upload fontSize="small" color="success" />
-                </ListItemIcon>
-                <Typography variant="body2">Import chữ ký</Typography>
-              </MenuItem>
-            )}
-
-            {onExport && (
-              <MenuItem
-                onClick={() => {
-                  handleCloseMenu();
-                  onExport();
-                }}
-                sx={{ borderRadius: "8px", mx: 0.5, my: 0.25 }}
-              >
-                <ListItemIcon>
-                  <Upload fontSize="small" color="secondary" />
-                </ListItemIcon>
-                <Typography variant="body2">Xuất toàn bộ Excel</Typography>
-              </MenuItem>
-            )}
-          </Menu>
         </Box>
       )}
 

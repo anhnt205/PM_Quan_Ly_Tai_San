@@ -9,9 +9,6 @@ import {
   VisibilityOff,
 } from "@mui/icons-material";
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Box,
   Checkbox,
   Grid,
@@ -29,16 +26,9 @@ import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted
 import { useFormik } from "formik";
 import { StaffValidation } from "../validation/Validation";
 import UploadButton from "../../../components/Button/UploadButton";
-import ViewBtn from "../../../components/Button/ViewBtn";
 import EditButton from "../../../components/Button/EditButton";
-import {
-  useAllPositionsQuery,
-  usePositionMutation,
-} from "../../Position/Mutation";
-import {
-  useAllDepartmentsQuery,
-  useDepartmentMutation,
-} from "../../Department/Mutation";
+import { useAllPositionsQuery } from "../../Position/Mutation";
+import { useAllDepartmentsQuery } from "../../Department/Mutation";
 import { CongTy } from "../../../utils/const";
 import { useDebounce } from "../../../hooks/useDebounce";
 
@@ -64,7 +54,6 @@ export default function StaffForm({
   initialFormData?: Record<string, any>;
 }) {
   const [showPin, setShowPin] = useState(false);
-  const [expanded, setExpanded] = useState(true);
   const { data: allPositions } = useAllPositionsQuery();
   const { data: allDepartments = [] } = useAllDepartmentsQuery();
 

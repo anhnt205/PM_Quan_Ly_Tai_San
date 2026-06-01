@@ -160,7 +160,7 @@ export default function ToolTransferRecordTab() {
     {
       field: "trangThaiKy",
       headerName: "Trạng thái ký",
-      width: 140,
+      width: 160,
       headerAlign: "center",
       align: "center",
       renderCell: (params) =>
@@ -171,7 +171,7 @@ export default function ToolTransferRecordTab() {
     {
       field: "trangThaiPhieuDieuDong",
       headerName: "Trạng thái bàn giao",
-      width: 140,
+      width: 200,
       headerAlign: "center",
       align: "center",
       renderCell: (params) =>
@@ -180,7 +180,7 @@ export default function ToolTransferRecordTab() {
     {
       field: "share",
       headerName: "Trình duyệt",
-      width: 140,
+      width: 220,
       headerAlign: "center",
       align: "center",
       renderCell: (params) =>

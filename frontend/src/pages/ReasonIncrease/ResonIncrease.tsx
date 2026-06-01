@@ -281,6 +281,8 @@ export default function ReasonIncrease() {
           setSearchValue={setSearchValue}
           onDeleteAll={deleteAllMutation.mutate}
           showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
+          onImportExcel={handleImport}
+          onExportExcel={() => exportMutation.mutate(allReasonIncreases)}
         />
       </Box>
     </Box>

@@ -22,14 +22,13 @@ export default function CcdcGroupCard({
         justifyContent: "space-between",
         bgcolor: "rgba(255,255,255,0.82)",
         backdropFilter: "blur(16px)",
-        border: "3px solid rgba(4,180,110,0.10)",
+        border: "1px solid rgba(4,180,110,0.10)",
         boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
         overflow: "hidden",
         transition:
           "box-shadow 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s cubic-bezier(.4,0,.2,1)",
         "&:hover": {
-          boxShadow:
-            "0 10px 32px rgba(4,180,110,0.13), 0 2px 16px rgba(0,0,0,0.06)",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06)"
           // transform: "translateY(-2px)",
         },
       }}
@@ -216,7 +215,7 @@ export default function CcdcGroupCard({
               <Typography
                 variant="body2"
                 sx={{
-                  color: "#1e293b",
+                  color: "##04b46e",
                   fontWeight: 800,
                   fontSize: "0.9rem",
                   mt: 0.2,
@@ -260,7 +259,7 @@ export default function CcdcGroupCard({
               <Typography
                 variant="body2"
                 sx={{
-                  color: "#1e293b",
+                  color: "#035aea",
                   fontWeight: 800,
                   fontSize: "0.9rem",
                   mt: 0.2,

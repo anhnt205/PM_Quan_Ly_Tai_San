@@ -44,8 +44,7 @@ export default function TaisanTypeCard({
         overflow: "hidden",
         transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         "&:hover": {
-          boxShadow:
-            "0 12px 36px rgba(4, 180, 110, 0.12), 0 4px 20px rgba(0, 0, 0, 0.04)",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06)",
         },
       }}
     >

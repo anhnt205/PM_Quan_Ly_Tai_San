@@ -11,6 +11,7 @@ import {
   IconButton,
   Tabs,
   Tab,
+  ButtonBase,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import {
@@ -81,7 +82,15 @@ import { useMenuData } from "../../hooks/useMenuData";
 import S3Service from "../../services/S3Service";
 import { AssetGroup, AssetGroupType, TypeBienBan } from "../../utils/const";
 import Filter from "./components/Filter";
-
+import {
+  ClipboardList,
+  Wrench,
+  FileSearch,
+  ClipboardCheck,
+  Boxes,
+  AlertTriangle,
+  FileWarning,
+} from "lucide-react";
 export default function MaintenanceRecordPage() {
   const [activeTab, setActiveTab] = useState(0);
   const [searchValue, setSearchValue] = useState("");
@@ -415,13 +424,13 @@ export default function MaintenanceRecordPage() {
       idLabel: "Số BB đánh giá",
     },
     {
-      label: "Phiếu báo SỰ CỐ",
+      label: "Phiếu báo sự cố",
       icon: <WarningOutlined />,
       idLabel: "Số phiếu",
       field: "soPhieu",
     },
     {
-      label: "BB Kiểm tra SỰ CỐ",
+      label: "BB Kiểm tra sự cố",
       icon: <SearchOutlined />,
       idLabel: "Số BB kiểm tra",
     },
@@ -960,41 +969,188 @@ export default function MaintenanceRecordPage() {
           {/* ── Tab bar ── */}
           <Box
             sx={{
-              borderBottom: 1,
-              borderColor: "divider",
-              bgcolor: "#fff",
-              display: "flex",
-              justifyContent: "flex-end",
+              width: "100%",
               overflowX: "auto",
+              display: "flex",
+              gap: 2,
+              p: 2.5,
+              bgcolor: "#f8fafc",
+              borderBottom: "1px solid",
+              borderColor: "divider",
+              "&::-webkit-scrollbar": {
+                height: "6px",
+              },
+              "&::-webkit-scrollbar-thumb": {
+                bgcolor: "grey.300",
+                borderRadius: "4px",
+              },
+              "&::-webkit-scrollbar-track": {
+                bgcolor: "transparent",
+              },
             }}
           >
-            <Tabs
-              value={activeTab}
-              onChange={(_, v) => {
-                setActiveTab(v);
-                resetFilters();
-              }}
-              sx={{
-                "& .MuiTab-root": {
-                  textTransform: "none",
-                  fontWeight: "bold",
-                  minHeight: 64,
-                },
-              }}
-            >
-              {tabConfigs.map((t, i) => (
-                <Tab
-                  key={i}
-                  iconPosition="top"
-                  icon={
-                    <Badge badgeContent={pendingCounts[i]} color="primary">
-                      {t.icon}
-                    </Badge>
-                  }
-                  label={t.label}
-                />
-              ))}
-            </Tabs>
+            {[
+              {
+                label: "Kế hoạch",
+                subLabel: "Kế hoạch bảo trì",
+                icon: ClipboardList,
+              },
+              {
+                label: "Lệnh sửa chữa",
+                subLabel: "Lệnh xử lý kỹ thuật",
+                icon: Wrench,
+              },
+              {
+                label: "BB Giám định",
+                subLabel: "Giám định máy móc",
+                icon: FileSearch,
+              },
+              {
+                label: "BB Nghiệm thu",
+                subLabel: "Nghiệm thu hoàn thành",
+                icon: ClipboardCheck,
+              },
+              {
+                label: "BB Đánh giá VT",
+                subLabel: "Đánh giá vật tư tiêu hao",
+                icon: Boxes,
+              },
+              {
+                label: "Phiếu báo sự cố",
+                subLabel: "Báo cáo sự cố thiết bị",
+                icon: AlertTriangle,
+              },
+              {
+                label: "BB Kiểm tra sự cố",
+                subLabel: "Kiểm tra hiện trạng SC",
+                icon: FileWarning,
+              },
+            ].map((tab, idx) => {
+              const IconComponent = tab.icon;
+              const count = pendingCounts[idx] || 0;
+              const isActive = activeTab === idx;
+
+              return (
+                <ButtonBase
+                  key={idx}
+                  onClick={() => {
+                    setActiveTab(idx);
+                    resetFilters();
+                  }}
+                  focusRipple
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-start",
+                    justifyContent: "space-between",
+                    minWidth: 175,
+                    flex: "1 0 175px",
+                    height: 110,
+                    p: 2,
+                    borderRadius: "14px",
+                    textAlign: "left",
+                    position: "relative",
+                    overflow: "hidden",
+                    transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                    border: "1px solid",
+                    borderColor: isActive
+                      ? "transparent"
+                      : "rgba(148, 163, 184, 0.25)",
+                    background: isActive
+                      ? "linear-gradient(135deg, #04b46e 0%, #028a54 100%)"
+                      : "#ffffff",
+                    color: isActive ? "#ffffff" : "#334155",
+                    boxShadow: isActive
+                      ? "0 10px 20px -5px rgba(4, 180, 110, 0.35)"
+                      : "0 2px 4px rgba(148, 163, 184, 0.05)",
+                    "&:hover": {
+                      transform: "translateY(-4px)",
+                      borderColor: isActive ? "transparent" : "#04b46e",
+                      boxShadow: isActive
+                        ? "0 12px 24px -5px rgba(4, 180, 110, 0.45)"
+                        : "0 6px 16px rgba(4, 180, 110, 0.08)",
+                      bgcolor: isActive ? undefined : "rgba(4, 180, 110, 0.02)",
+                    },
+                  }}
+                >
+                  {/* Top Row: Icon + Count */}
+                  <Box
+                    sx={{
+                      width: "100%",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mb: 1.5,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 36,
+                        height: 36,
+                        borderRadius: "10px",
+                        bgcolor: isActive
+                          ? "rgba(255, 255, 255, 0.18)"
+                          : "rgba(4, 180, 110, 0.08)",
+                        color: isActive ? "#ffffff" : "#04b46e",
+                        transition: "all 0.25s ease",
+                      }}
+                    >
+                      <IconComponent size={20} />
+                    </Box>
+
+                    {count > 0 && (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          minWidth: 22,
+                          height: 22,
+                          borderRadius: "11px",
+                          bgcolor: isActive
+                            ? "rgba(255,255,255,0.25)"
+                            : "#04b46e",
+                          color: "#fff",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          px: 0.75,
+                        }}
+                      >
+                        {count}
+                      </Box>
+                    )}
+                  </Box>
+
+                  {/* Bottom: Labels */}
+                  <Box sx={{ width: "100%" }}>
+                    <Typography
+                      sx={{
+                        fontSize: 13,
+                        fontWeight: 700,
+                        lineHeight: 1.3,
+                        color: "inherit",
+                        mb: 0.25,
+                      }}
+                    >
+                      {tab.label}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontSize: 11,
+                        lineHeight: 1.3,
+                        color: isActive ? "rgba(255,255,255,0.75)" : "#94a3b8",
+                        fontWeight: 400,
+                      }}
+                    >
+                      {tab.subLabel}
+                    </Typography>
+                  </Box>
+                </ButtonBase>
+              );
+            })}
           </Box>
 
           {/* ── Filter thời gian ── */}

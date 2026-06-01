@@ -288,6 +288,8 @@ export default function CapitalSource() {
           setSearchValue={setSearchValue}
           onDeleteAll={deleteAllMutation.mutate}
           showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
+          onImportExcel={(file) => importExcelMutation.mutate(file)}
+          onExportExcel={() => exportMutation.mutate(allCapitalSources)}
         />
       </Box>
     </Box>
