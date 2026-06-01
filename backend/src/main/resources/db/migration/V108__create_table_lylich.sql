@@ -28,5 +28,3 @@ DROP TABLE IF EXISTS `lylich`;
      CONSTRAINT `FK6hx27fid8idcrahw9exfe3bpo` FOREIGN KEY (`nhomtaisan_id`) REFERENCES `nhomtaisan` (`id`),
      CONSTRAINT `FKs23vr2iqtc6fupvos7endpyxi` FOREIGN KEY (`lylich_id`) REFERENCES `lylich` (`id`)
    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-  ALTER table `role` ADD COLUMN `CreatedAt` date DEFAULT NULL;

@@ -22,8 +22,5 @@ public class Role {
     private String description;
     @Column(name = "IsActive")
     private Boolean isActive;
-    @CreationTimestamp
-    @Column(name = "CreatedAt")
-    private LocalDate createdAt;
 
 }
