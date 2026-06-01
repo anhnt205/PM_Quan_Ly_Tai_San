@@ -27,12 +27,24 @@ public class ChucVuService {
         return chucVuDAO.insert(cv);
     }
 
+    public int batchCreate(List<ChucVu> list) {
+        return chucVuDAO.batchCreate(list);
+    }
+
     public int update(ChucVu cv) {
         return chucVuDAO.update(cv);
     }
 
+    public int batchUpdate(List<ChucVu> list) {
+        return chucVuDAO.batchUpdate(list);
+    }
+
     public int delete(String id) {
         return chucVuDAO.delete(id);
+    }
+
+    public int batchDelete(List<String> ids) {
+        return chucVuDAO.batchDelete(ids);
     }
 
     public List<ChucVu> findAll(String idCongTy) {

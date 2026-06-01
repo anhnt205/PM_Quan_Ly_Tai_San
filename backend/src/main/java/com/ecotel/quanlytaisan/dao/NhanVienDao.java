@@ -356,12 +356,282 @@ public class NhanVienDao {
         );
     }
 
+    public int batchUpdate(List<NhanVien> list) {
+        String sql = """
+                UPDATE NhanVien SET
+                    HoTen = ?,
+                    DiDong = ?,
+                    EmailCongViec = ?,
+                    KyNhay = ?,
+                    KyThuong = ?,
+                    KySo = ?,
+                    ChuKyNhay = ?,
+                    ChuKyThuong = ?,
+                    AgreementUUId = ?,
+                    PIN = ?,
+                    BoPhan = ?,
+                    ChucVu = ?,
+                    NguoiQuanLy = ?,
+                    LaQuanLy = ?,
+                    Avatar = ?,
+                    IdCongTy = ?,
+                    DiaChiLamViec = ?,
+                    HinhThucLamViec = ?,
+                    GioLamViec = ?,
+                    MuiGio = ?,
+                    NguoiTao = ?,
+                    NguoiCapNhat = ?,
+                    IsActive = ?,
+                    NgayTao = ?,
+                    NgayCapNhat = ?,
+                    SavePin=?
+                WHERE Id = ?
+                """;
+        int[] result = jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                NhanVien nv = list.get(i);
+                ps.setString(1, nv.getHoTen());
+                ps.setString(2, nv.getDiDong());
+                ps.setString(3, nv.getEmailCongViec());
+                
+                if (nv.getKyNhay() != null) ps.setBoolean(4, nv.getKyNhay());
+                else ps.setNull(4, java.sql.Types.BOOLEAN);
+                
+                if (nv.getKyThuong() != null) ps.setBoolean(5, nv.getKyThuong());
+                else ps.setNull(5, java.sql.Types.BOOLEAN);
+                
+                if (nv.getKySo() != null) ps.setBoolean(6, nv.getKySo());
+                else ps.setNull(6, java.sql.Types.BOOLEAN);
+                
+                ps.setString(7, nv.getChuKyNhay());
+                ps.setString(8, nv.getChuKyThuong());
+                ps.setString(9, nv.getAgreementUUId());
+                ps.setString(10, nv.getPin());
+                ps.setString(11, nv.getBoPhan());
+                ps.setString(12, nv.getChucVu());
+                ps.setString(13, nv.getNguoiQuanLy());
+                
+                if (nv.getLaQuanLy() != null) ps.setBoolean(14, nv.getLaQuanLy());
+                else ps.setNull(14, java.sql.Types.BOOLEAN);
+                
+                ps.setString(15, nv.getAvatar());
+                ps.setString(16, nv.getIdCongTy());
+                ps.setString(17, nv.getDiaChiLamViec());
+                ps.setString(18, nv.getHinhThucLamViec());
+                ps.setString(19, nv.getGioLamViec());
+                ps.setString(20, nv.getMuiGio());
+                ps.setString(21, nv.getNguoiTao());
+                ps.setString(22, nv.getNguoiCapNhat());
+                
+                if (nv.getIsActive() != null) ps.setBoolean(23, nv.getIsActive());
+                else ps.setNull(23, java.sql.Types.BOOLEAN);
+                
+                ps.setString(24, nv.getNgayTao());
+                ps.setString(25, nv.getNgayCapNhat());
+                
+                if (nv.getSavePin() != null) ps.setBoolean(26, nv.getSavePin());
+                else ps.setNull(26, java.sql.Types.BOOLEAN);
+                
+                ps.setString(27, nv.getId());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return list.size();
+            }
+        });
+
+        int total = 0;
+        for (int r : result) {
+            if (r > 0 || r == java.sql.Statement.SUCCESS_NO_INFO) {
+                total += (r == java.sql.Statement.SUCCESS_NO_INFO) ? 1 : r;
+            }
+        }
+        return total;
+    }
+
+    public int batchInsert(List<NhanVien> list) {
+        String sql = """
+                INSERT INTO NhanVien
+                (Id, HoTen, DiDong, EmailCongViec, KyNhay, KyThuong, KySo,
+                 ChuKyNhay, ChuKyThuong, AgreementUUId, PIN, BoPhan, ChucVu,
+                 NguoiQuanLy, LaQuanLy, Avatar, IdCongTy, DiaChiLamViec,
+                 HinhThucLamViec, GioLamViec, MuiGio, NguoiTao, NguoiCapNhat,
+                 IsActive, NgayTao, NgayCapNhat,SavePin)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                """;
+        int[] result = jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                NhanVien nv = list.get(i);
+                ps.setString(1, nv.getId());
+                ps.setString(2, nv.getHoTen());
+                ps.setString(3, nv.getDiDong());
+                ps.setString(4, nv.getEmailCongViec());
+                
+                if (nv.getKyNhay() != null) ps.setBoolean(5, nv.getKyNhay());
+                else ps.setNull(5, java.sql.Types.BOOLEAN);
+                
+                if (nv.getKyThuong() != null) ps.setBoolean(6, nv.getKyThuong());
+                else ps.setNull(6, java.sql.Types.BOOLEAN);
+                
+                if (nv.getKySo() != null) ps.setBoolean(7, nv.getKySo());
+                else ps.setNull(7, java.sql.Types.BOOLEAN);
+                
+                ps.setString(8, nv.getChuKyNhay());
+                ps.setString(9, nv.getChuKyThuong());
+                ps.setString(10, nv.getAgreementUUId());
+                ps.setString(11, nv.getPin());
+                ps.setString(12, nv.getBoPhan());
+                ps.setString(13, nv.getChucVu());
+                ps.setString(14, nv.getNguoiQuanLy());
+                
+                if (nv.getLaQuanLy() != null) ps.setBoolean(15, nv.getLaQuanLy());
+                else ps.setNull(15, java.sql.Types.BOOLEAN);
+                
+                ps.setString(16, nv.getAvatar());
+                ps.setString(17, nv.getIdCongTy());
+                ps.setString(18, nv.getDiaChiLamViec());
+                ps.setString(19, nv.getHinhThucLamViec());
+                ps.setString(20, nv.getGioLamViec());
+                ps.setString(21, nv.getMuiGio());
+                ps.setString(22, nv.getNguoiTao());
+                ps.setString(23, nv.getNguoiCapNhat());
+                
+                if (nv.getIsActive() != null) ps.setBoolean(24, nv.getIsActive());
+                else ps.setNull(24, java.sql.Types.BOOLEAN);
+                
+                ps.setString(25, nv.getNgayTao());
+                ps.setString(26, nv.getNgayCapNhat());
+                
+                if (nv.getSavePin() != null) ps.setBoolean(27, nv.getSavePin());
+                else ps.setNull(27, java.sql.Types.BOOLEAN);
+            }
+
+            @Override
+            public int getBatchSize() {
+                return list.size();
+            }
+        });
+
+        int total = 0;
+        for (int r : result) {
+            if (r > 0 || r == java.sql.Statement.SUCCESS_NO_INFO) {
+                total += (r == java.sql.Statement.SUCCESS_NO_INFO) ? 1 : r;
+            }
+        }
+        return total;
+    }
+
+    public int batchCreate(List<NhanVien> list) {
+        if (list == null || list.isEmpty()) {
+            return 0;
+        }
+
+        List<String> ids = new java.util.ArrayList<>();
+        for (NhanVien nv : list) {
+            if (nv.getId() != null && !nv.getId().trim().isEmpty()) {
+                ids.add(nv.getId());
+            }
+        }
+
+        if (ids.isEmpty()) {
+            return 0;
+        }
+
+        StringBuilder inBuilder = new StringBuilder();
+        for (int i = 0; i < ids.size(); i++) {
+            inBuilder.append("?");
+            if (i < ids.size() - 1) {
+                inBuilder.append(",");
+            }
+        }
+
+        String checkSql = "SELECT Id FROM NhanVien WHERE Id IN (" + inBuilder.toString() + ")";
+        List<String> existingIds = jdbcTemplate.query(
+                checkSql,
+                (rs, rowNum) -> rs.getString("Id"),
+                ids.toArray()
+        );
+
+        List<NhanVien> toInsert = new java.util.ArrayList<>();
+        List<NhanVien> toUpdate = new java.util.ArrayList<>();
+
+        java.util.Set<String> existingSet = new java.util.HashSet<>(existingIds);
+        for (NhanVien nv : list) {
+            if (nv.getId() == null || nv.getId().trim().isEmpty()) {
+                continue;
+            }
+            if (existingSet.contains(nv.getId())) {
+                toUpdate.add(nv);
+            } else {
+                toInsert.add(nv);
+            }
+        }
+
+        int total = 0;
+        if (!toInsert.isEmpty()) {
+            total += batchInsert(toInsert);
+        }
+        if (!toUpdate.isEmpty()) {
+            total += batchUpdate(toUpdate);
+        }
+
+        return total;
+    }
+
     public int delete(String id) {
         String sql = "DELETE FROM NhanVien WHERE Id=?";
         int result = 0;
         result += jdbcTemplate.update(sql, id);
         sql = "delete from TaiKhoan where TenDangNhap =?";
         return result + jdbcTemplate.update(sql, id);
+    }
+
+    public int batchDelete(List<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return 0;
+        }
+
+        String sqlNhanVien = "DELETE FROM NhanVien WHERE Id=?";
+        int[] resultNhanVien = jdbcTemplate.batchUpdate(sqlNhanVien, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                ps.setString(1, ids.get(i));
+            }
+
+            @Override
+            public int getBatchSize() {
+                return ids.size();
+            }
+        });
+
+        String sqlTaiKhoan = "DELETE FROM TaiKhoan WHERE TenDangNhap=?";
+        int[] resultTaiKhoan = jdbcTemplate.batchUpdate(sqlTaiKhoan, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                ps.setString(1, ids.get(i));
+            }
+
+            @Override
+            public int getBatchSize() {
+                return ids.size();
+            }
+        });
+
+        int total = 0;
+        for (int r : resultNhanVien) {
+            if (r > 0 || r == java.sql.Statement.SUCCESS_NO_INFO) {
+                total += (r == java.sql.Statement.SUCCESS_NO_INFO) ? 1 : r;
+            }
+        }
+        for (int r : resultTaiKhoan) {
+            if (r > 0 || r == java.sql.Statement.SUCCESS_NO_INFO) {
+                total += (r == java.sql.Statement.SUCCESS_NO_INFO) ? 1 : r;
+            }
+        }
+        return total;
 
     }
 

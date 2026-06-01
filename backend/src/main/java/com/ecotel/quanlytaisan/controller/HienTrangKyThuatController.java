@@ -66,16 +66,28 @@ public class HienTrangKyThuatController {
     @PostMapping("/batch")
     public ResponseEntity<ApiResponse<Object>> createBatch(@RequestBody List<HienTrangKyThuat> list) {
         try {
-            int total = 0;
-            for (HienTrangKyThuat item : list) {
-                total += hienTrangKyThuatService.create(item);
-            }
+            int total = hienTrangKyThuatService.batchCreate(list);
             if (total > 0) {
                 return ResponseEntity.status(HttpStatus.CREATED)
                         .body(ApiResponse.success("Tạo danh sách hiện trạng kỹ thuật thành công", null, total));
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.failure("Tạo danh sách hiện trạng kỹ thuật thất bại", total));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
+    @PutMapping("/batch")
+    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<HienTrangKyThuat> list) {
+        try {
+            int total = hienTrangKyThuatService.batchUpdate(list);
+            if (total > 0) {
+                return ResponseEntity.ok(ApiResponse.success("Cập nhật danh sách hiện trạng kỹ thuật thành công", null, total));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.failure("Cập nhật danh sách hiện trạng kỹ thuật thất bại", total));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
@@ -131,10 +143,7 @@ public class HienTrangKyThuatController {
     @DeleteMapping("/batch")
     public ResponseEntity<ApiResponse<Object>> deleteBatch(@RequestBody List<Integer> ids) {
         try {
-            int total = 0;
-            for (Integer id : ids) {
-                total += hienTrangKyThuatService.delete(id);
-            }
+            int total = hienTrangKyThuatService.batchDelete(ids);
             if (total > 0) {
                 return ResponseEntity.ok(ApiResponse.success("Xóa danh sách hiện trạng kỹ thuật thành công", null, total));
             }

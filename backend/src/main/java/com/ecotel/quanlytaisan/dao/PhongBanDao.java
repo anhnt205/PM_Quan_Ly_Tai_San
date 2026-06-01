@@ -283,9 +283,196 @@ public class PhongBanDao {
         return jdbcTemplate.update(sql, pb.getIdNhomDonvi(), pb.getTenPhongBan(), pb.getIdQuanLy(), pb.getIdCongTy(), pb.getPhongCapTren(), pb.getMauSac(), pb.getNgayTao(), pb.getNgayCapNhat(), pb.getNguoiTao(), pb.getNguoiCapNhat(), pb.getIsActive(), pb.getIsKho(), pb.getIsLanhDao(), pb.getLoaiKho(), pb.getId());
     }
 
+    public int batchUpdate(List<PhongBan> list) {
+        String sql = "UPDATE PhongBan SET IdNhomDonvi=?, TenPhongBan=?, IdQuanLy=?, IdCongTy=?, PhongCapTren=?, MauSac=?, NgayTao=?, NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?, IsActive=?, IsKho=?, IsLanhDao=?, LoaiKho=? WHERE Id=?";
+        int[] result = jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                PhongBan pb = list.get(i);
+                ps.setString(1, pb.getIdNhomDonvi());
+                ps.setString(2, pb.getTenPhongBan());
+                ps.setString(3, pb.getIdQuanLy());
+                ps.setString(4, pb.getIdCongTy());
+                ps.setString(5, pb.getPhongCapTren());
+                ps.setString(6, pb.getMauSac());
+                ps.setString(7, pb.getNgayTao());
+                ps.setString(8, pb.getNgayCapNhat());
+                ps.setString(9, pb.getNguoiTao());
+                ps.setString(10, pb.getNguoiCapNhat());
+                ps.setBoolean(11, pb.getIsActive() != null ? pb.getIsActive() : false);
+                
+                if (pb.getIsKho() != null) {
+                    ps.setBoolean(12, pb.getIsKho());
+                } else {
+                    ps.setNull(12, java.sql.Types.BOOLEAN);
+                }
+                
+                if (pb.getIsLanhDao() != null) {
+                    ps.setBoolean(13, pb.getIsLanhDao());
+                } else {
+                    ps.setNull(13, java.sql.Types.BOOLEAN);
+                }
+                
+                if (pb.getLoaiKho() != null) {
+                    ps.setInt(14, pb.getLoaiKho());
+                } else {
+                    ps.setNull(14, java.sql.Types.INTEGER);
+                }
+                
+                ps.setString(15, pb.getId());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return list.size();
+            }
+        });
+        
+        int total = 0;
+        for (int r : result) {
+            if (r > 0 || r == java.sql.Statement.SUCCESS_NO_INFO) {
+                total += (r == java.sql.Statement.SUCCESS_NO_INFO) ? 1 : r;
+            }
+        }
+        return total;
+    }
+
+    public int batchInsert(List<PhongBan> list) {
+        String sql = "INSERT INTO PhongBan (Id, IdNhomDonvi, TenPhongBan, IdQuanLy, IdCongTy, PhongCapTren, MauSac, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive, IsKho, IsLanhDao, LoaiKho) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        int[] result = jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                PhongBan pb = list.get(i);
+                ps.setString(1, pb.getId());
+                ps.setString(2, pb.getIdNhomDonvi());
+                ps.setString(3, pb.getTenPhongBan());
+                ps.setString(4, pb.getIdQuanLy());
+                ps.setString(5, pb.getIdCongTy());
+                ps.setString(6, pb.getPhongCapTren());
+                ps.setString(7, pb.getMauSac());
+                ps.setString(8, pb.getNgayTao());
+                ps.setString(9, pb.getNgayCapNhat());
+                ps.setString(10, pb.getNguoiTao());
+                ps.setString(11, pb.getNguoiCapNhat());
+                ps.setBoolean(12, pb.getIsActive() != null ? pb.getIsActive() : false);
+                
+                if (pb.getIsKho() != null) {
+                    ps.setBoolean(13, pb.getIsKho());
+                } else {
+                    ps.setNull(13, java.sql.Types.BOOLEAN);
+                }
+                
+                if (pb.getIsLanhDao() != null) {
+                    ps.setBoolean(14, pb.getIsLanhDao());
+                } else {
+                    ps.setNull(14, java.sql.Types.BOOLEAN);
+                }
+                
+                if (pb.getLoaiKho() != null) {
+                    ps.setInt(15, pb.getLoaiKho());
+                } else {
+                    ps.setNull(15, java.sql.Types.INTEGER);
+                }
+            }
+
+            @Override
+            public int getBatchSize() {
+                return list.size();
+            }
+        });
+        
+        int total = 0;
+        for (int r : result) {
+            if (r > 0 || r == java.sql.Statement.SUCCESS_NO_INFO) {
+                total += (r == java.sql.Statement.SUCCESS_NO_INFO) ? 1 : r;
+            }
+        }
+        return total;
+    }
+
+    public int batchCreate(List<PhongBan> list) {
+        if (list == null || list.isEmpty()) {
+            return 0;
+        }
+        
+        List<String> ids = new java.util.ArrayList<>();
+        for (PhongBan pb : list) {
+            if (pb.getId() != null && !pb.getId().trim().isEmpty()) {
+                ids.add(pb.getId());
+            }
+        }
+        
+        if (ids.isEmpty()) {
+            return 0;
+        }
+        
+        StringBuilder inBuilder = new StringBuilder();
+        for (int i = 0; i < ids.size(); i++) {
+            inBuilder.append("?");
+            if (i < ids.size() - 1) {
+                inBuilder.append(",");
+            }
+        }
+        
+        String checkSql = "SELECT Id FROM PhongBan WHERE Id IN (" + inBuilder.toString() + ")";
+        List<String> existingIds = jdbcTemplate.query(
+            checkSql, 
+            (rs, rowNum) -> rs.getString("Id"), 
+            ids.toArray()
+        );
+        
+        List<PhongBan> toInsert = new java.util.ArrayList<>();
+        List<PhongBan> toUpdate = new java.util.ArrayList<>();
+        
+        java.util.Set<String> existingSet = new java.util.HashSet<>(existingIds);
+        for (PhongBan pb : list) {
+            if (pb.getId() == null || pb.getId().trim().isEmpty()) {
+                continue;
+            }
+            if (existingSet.contains(pb.getId())) {
+                toUpdate.add(pb);
+            } else {
+                toInsert.add(pb);
+            }
+        }
+        
+        int total = 0;
+        if (!toInsert.isEmpty()) {
+            total += batchInsert(toInsert);
+        }
+        if (!toUpdate.isEmpty()) {
+            total += batchUpdate(toUpdate);
+        }
+        
+        return total;
+    }
+
     public int delete(String id) {
         String sql = "DELETE FROM PhongBan WHERE Id=?";
         return jdbcTemplate.update(sql, id);
+    }
+
+    public int batchDelete(List<String> ids) {
+        String sql = "DELETE FROM PhongBan WHERE Id=?";
+        int[] result = jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                ps.setString(1, ids.get(i));
+            }
+
+            @Override
+            public int getBatchSize() {
+                return ids.size();
+            }
+        });
+
+        int total = 0;
+        for (int r : result) {
+            if (r > 0 || r == java.sql.Statement.SUCCESS_NO_INFO) {
+                total += (r == java.sql.Statement.SUCCESS_NO_INFO) ? 1 : r;
+            }
+        }
+        return total;
     }
 
 

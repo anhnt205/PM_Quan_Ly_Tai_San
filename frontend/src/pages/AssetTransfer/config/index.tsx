@@ -307,7 +307,7 @@ export const canSign = (items: any[], userInfo: any): boolean => {
     return false;
   }
   const item = items[0];
-  if(item.trangThai === 2) return false;
+  if (item.trangThai === 2) return false;
   const signatureFlow = buildSignatureFlow(item);
 
   // Tìm vị trí của người dùng hiện tại trong luồng ký
@@ -362,6 +362,7 @@ export const handleSignDocument = async (
       label: `Người phê duyệt: ${item.tenTrinhDuyetGiamDoc}`,
     },
   ].filter((step) => step.id && step.id.trim() !== "");
+  console.log("signatureFlow", signatureFlow);
 
   // 2. Kiểm tra trạng thái hoàn thành/hủy
   if (item.trangThai === 3 || item.trangThai === 2) {

@@ -57,12 +57,24 @@ public class PhongBanService {
         return phongBanDao.insert(pb);
     }
 
+    public int batchCreate(List<PhongBan> list) {
+        return phongBanDao.batchCreate(list);
+    }
+
     public int update(PhongBan pb) {
         return phongBanDao.update(pb);
     }
 
+    public int batchUpdate(List<PhongBan> list) {
+        return phongBanDao.batchUpdate(list);
+    }
+
     public int delete(String id) {
         return phongBanDao.delete(id);
+    }
+
+    public int batchDelete(List<String> ids) {
+        return phongBanDao.batchDelete(ids);
     }
     public List<PhongBan> readCsv(MultipartFile file) throws IOException {
         List<PhongBan> list = new ArrayList<>();

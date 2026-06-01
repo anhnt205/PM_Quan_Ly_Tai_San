@@ -1046,6 +1046,258 @@ public class TaiSanDao {
         return jdbcTemplate.update(sql, isTaiSanCon ? 1 : 0, id);
     }
 
+    public int batchInsert(List<TaiSan> list) {
+        String sql = "INSERT INTO TaiSan (Id, IdLoaiTaiSan, TenTaiSan, NguyenGia, GiaTriKhauHaoBanDau, KyKhauHaoBanDau, " +
+                "GiaTriThanhLy, IdMoHinhTaiSan, PhuongPhapKhauHao, SoKyKhauHao, TaiKhoanTaiSan, TaiKhoanKhauHao, TaiKhoanChiPhi, " +
+                "IdNhomTaiSan, NgayVaoSo, NgaySuDung, IdDuDan, IdNguonVon, KyHieu, SoKyHieu, CongSuat, NuocSanXuat, NamSanXuat, " +
+                "LyDoTang, HienTrang, SoLuong, DonViTinh, GhiChu, IdDonViBanDau, IdDonViHienThoi, IdDonViQuanlyKiThuat, MoTa, IdCongTy, NgayTao, " +
+                "NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive, IsTaiSanCon, IdLoaiTaiSanCon, SoThe, nvNS, vonVay, vonKhac, tgKiemDinh, chuKyKiemDinh) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        int[] result = jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                TaiSan ts = list.get(i);
+                ps.setString(1, ts.getId());
+                ps.setString(2, ts.getIdLoaiTaiSan());
+                ps.setString(3, ts.getTenTaiSan());
+                
+                // Double
+                if (ts.getNguyenGia() != null) ps.setDouble(4, ts.getNguyenGia()); else ps.setNull(4, java.sql.Types.DOUBLE);
+                if (ts.getGiaTriKhauHaoBanDau() != null) ps.setDouble(5, ts.getGiaTriKhauHaoBanDau()); else ps.setNull(5, java.sql.Types.DOUBLE);
+                
+                // Integer
+                if (ts.getKyKhauHaoBanDau() != null) ps.setInt(6, ts.getKyKhauHaoBanDau()); else ps.setNull(6, java.sql.Types.INTEGER);
+                
+                // Double
+                if (ts.getGiaTriThanhLy() != null) ps.setDouble(7, ts.getGiaTriThanhLy()); else ps.setNull(7, java.sql.Types.DOUBLE);
+                
+                ps.setString(8, ts.getIdMoHinhTaiSan());
+                
+                // Integer
+                if (ts.getPhuongPhapKhauHao() != null) ps.setInt(9, ts.getPhuongPhapKhauHao()); else ps.setNull(9, java.sql.Types.INTEGER);
+                
+                // Integer
+                if (ts.getSoKyKhauHao() != null) ps.setInt(10, ts.getSoKyKhauHao()); else ps.setNull(10, java.sql.Types.INTEGER);
+                
+                // Integer
+                if (ts.getTaiKhoanTaiSan() != null) ps.setInt(11, ts.getTaiKhoanTaiSan()); else ps.setNull(11, java.sql.Types.INTEGER);
+                if (ts.getTaiKhoanKhauHao() != null) ps.setInt(12, ts.getTaiKhoanKhauHao()); else ps.setNull(12, java.sql.Types.INTEGER);
+                if (ts.getTaiKhoanChiPhi() != null) ps.setInt(13, ts.getTaiKhoanChiPhi()); else ps.setNull(13, java.sql.Types.INTEGER);
+                
+                ps.setString(14, ts.getIdNhomTaiSan());
+                ps.setString(15, ts.getNgayVaoSo());
+                ps.setString(16, ts.getNgaySuDung());
+                ps.setString(17, ts.getIdDuDan());
+                ps.setString(18, ts.getIdNguonVon());
+                ps.setString(19, ts.getKyHieu());
+                ps.setString(20, ts.getSoKyHieu());
+                ps.setString(21, ts.getCongSuat());
+                ps.setString(22, ts.getNuocSanXuat());
+                
+                // Integer
+                if (ts.getNamSanXuat() != null) ps.setInt(23, ts.getNamSanXuat()); else ps.setNull(23, java.sql.Types.INTEGER);
+                
+                ps.setString(24, ts.getLyDoTang());
+                
+                // Integer
+                if (ts.getHienTrang() != null) ps.setInt(25, ts.getHienTrang()); else ps.setNull(25, java.sql.Types.INTEGER);
+                if (ts.getSoLuong() != null) ps.setInt(26, ts.getSoLuong()); else ps.setNull(26, java.sql.Types.INTEGER);
+                
+                ps.setString(27, ts.getDonViTinh());
+                ps.setString(28, ts.getGhiChu());
+                ps.setString(29, ts.getIdDonViBanDau());
+                ps.setString(30, ts.getIdDonViHienThoi());
+                ps.setString(31, ts.getIdDonViQuanlyKiThuat());
+                ps.setString(32, ts.getMoTa());
+                ps.setString(33, ts.getIdCongTy());
+                ps.setString(34, ts.getNgayTao());
+                ps.setString(35, ts.getNgayCapNhat());
+                ps.setString(36, ts.getNguoiTao());
+                ps.setString(37, ts.getNguoiCapNhat());
+                
+                // Boolean handling
+                ps.setBoolean(38, ts.getIsActive() != null ? ts.getIsActive() : true);
+                ps.setBoolean(39, ts.getIsTaiSanCon() != null ? ts.getIsTaiSanCon() : false);
+                
+                ps.setString(40, ts.getIdLoaiTaiSanCon());
+                ps.setString(41, ts.getSoThe());
+                
+                // Double
+                if (ts.getNvNS() != null) ps.setDouble(42, ts.getNvNS()); else ps.setNull(42, java.sql.Types.DOUBLE);
+                if (ts.getVonVay() != null) ps.setDouble(43, ts.getVonVay()); else ps.setNull(43, java.sql.Types.DOUBLE);
+                if (ts.getVonKhac() != null) ps.setDouble(44, ts.getVonKhac()); else ps.setNull(44, java.sql.Types.DOUBLE);
+                
+                ps.setString(45, ts.getTgKiemDinh());
+                
+                // Integer
+                if (ts.getChuKyKiemDinh() != null) ps.setInt(46, ts.getChuKyKiemDinh()); else ps.setNull(46, java.sql.Types.INTEGER);
+            }
+
+            @Override
+            public int getBatchSize() {
+                return list.size();
+            }
+        });
+        return result.length;
+    }
+
+    public int batchUpdate(List<TaiSan> list) {
+        String sql = """
+                    UPDATE TaiSan SET
+                        IdLoaiTaiSan=?, TenTaiSan=?, NguyenGia=?, GiaTriKhauHaoBanDau=?, KyKhauHaoBanDau=?,
+                        GiaTriThanhLy=?, IdMoHinhTaiSan=?, PhuongPhapKhauHao=?, SoKyKhauHao=?,
+                        TaiKhoanTaiSan=?, TaiKhoanKhauHao=?, TaiKhoanChiPhi=?, IdNhomTaiSan=?,
+                        NgayVaoSo=?, NgaySuDung=?, IdDuDan=?, IdNguonVon=?, KyHieu=?, SoKyHieu=?,
+                        CongSuat=?, NuocSanXuat=?, NamSanXuat=?, LyDoTang=?, HienTrang=?, SoLuong=?,
+                        DonViTinh=?, GhiChu=?, IdDonViBanDau=?, IdDonViHienThoi=?, IdDonViQuanlyKiThuat=?, MoTa=?, IdCongTy=?,
+                        NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?, IsActive=?, IsTaiSanCon=?, IdLoaiTaiSanCon=?,
+                        SoThe=?, nvNS=?, vonVay=?, vonKhac=?, tgKiemDinh=?, chuKyKiemDinh=?
+                    WHERE Id=?
+                """;
+        int[] result = jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                TaiSan ts = list.get(i);
+                ps.setString(1, ts.getIdLoaiTaiSan());
+                ps.setString(2, ts.getTenTaiSan());
+                
+                // Double
+                if (ts.getNguyenGia() != null) ps.setDouble(3, ts.getNguyenGia()); else ps.setNull(3, java.sql.Types.DOUBLE);
+                if (ts.getGiaTriKhauHaoBanDau() != null) ps.setDouble(4, ts.getGiaTriKhauHaoBanDau()); else ps.setNull(4, java.sql.Types.DOUBLE);
+                
+                // Integer
+                if (ts.getKyKhauHaoBanDau() != null) ps.setInt(5, ts.getKyKhauHaoBanDau()); else ps.setNull(5, java.sql.Types.INTEGER);
+                
+                // Double
+                if (ts.getGiaTriThanhLy() != null) ps.setDouble(6, ts.getGiaTriThanhLy()); else ps.setNull(6, java.sql.Types.DOUBLE);
+                
+                ps.setString(7, ts.getIdMoHinhTaiSan());
+                
+                // Integer
+                if (ts.getPhuongPhapKhauHao() != null) ps.setInt(8, ts.getPhuongPhapKhauHao()); else ps.setNull(8, java.sql.Types.INTEGER);
+                
+                // Integer
+                if (ts.getSoKyKhauHao() != null) ps.setInt(9, ts.getSoKyKhauHao()); else ps.setNull(9, java.sql.Types.INTEGER);
+                
+                // Integer
+                if (ts.getTaiKhoanTaiSan() != null) ps.setInt(10, ts.getTaiKhoanTaiSan()); else ps.setNull(10, java.sql.Types.INTEGER);
+                if (ts.getTaiKhoanKhauHao() != null) ps.setInt(11, ts.getTaiKhoanKhauHao()); else ps.setNull(11, java.sql.Types.INTEGER);
+                if (ts.getTaiKhoanChiPhi() != null) ps.setInt(12, ts.getTaiKhoanChiPhi()); else ps.setNull(12, java.sql.Types.INTEGER);
+                
+                ps.setString(13, ts.getIdNhomTaiSan());
+                ps.setString(14, ts.getNgayVaoSo());
+                ps.setString(15, ts.getNgaySuDung());
+                ps.setString(16, ts.getIdDuDan());
+                ps.setString(17, ts.getIdNguonVon());
+                ps.setString(18, ts.getKyHieu());
+                ps.setString(19, ts.getSoKyHieu());
+                ps.setString(20, ts.getCongSuat());
+                ps.setString(21, ts.getNuocSanXuat());
+                
+                // Integer
+                if (ts.getNamSanXuat() != null) ps.setInt(22, ts.getNamSanXuat()); else ps.setNull(22, java.sql.Types.INTEGER);
+                
+                ps.setString(23, ts.getLyDoTang());
+                
+                // Integer
+                if (ts.getHienTrang() != null) ps.setInt(24, ts.getHienTrang()); else ps.setNull(24, java.sql.Types.INTEGER);
+                if (ts.getSoLuong() != null) ps.setInt(25, ts.getSoLuong()); else ps.setNull(25, java.sql.Types.INTEGER);
+                
+                ps.setString(26, ts.getDonViTinh());
+                ps.setString(27, ts.getGhiChu());
+                ps.setString(28, ts.getIdDonViBanDau());
+                ps.setString(29, ts.getIdDonViHienThoi());
+                ps.setString(30, ts.getIdDonViQuanlyKiThuat());
+                ps.setString(31, ts.getMoTa());
+                ps.setString(32, ts.getIdCongTy());
+                ps.setString(33, ts.getNgayCapNhat());
+                ps.setString(34, ts.getNguoiTao());
+                ps.setString(35, ts.getNguoiCapNhat());
+                
+                // Boolean handling
+                ps.setBoolean(36, ts.getIsActive() != null ? ts.getIsActive() : true);
+                ps.setBoolean(37, ts.getIsTaiSanCon() != null ? ts.getIsTaiSanCon() : false);
+                
+                ps.setString(38, ts.getIdLoaiTaiSanCon());
+                ps.setString(39, ts.getSoThe());
+                
+                // Double
+                if (ts.getNvNS() != null) ps.setDouble(40, ts.getNvNS()); else ps.setNull(40, java.sql.Types.DOUBLE);
+                if (ts.getVonVay() != null) ps.setDouble(41, ts.getVonVay()); else ps.setNull(41, java.sql.Types.DOUBLE);
+                if (ts.getVonKhac() != null) ps.setDouble(42, ts.getVonKhac()); else ps.setNull(42, java.sql.Types.DOUBLE);
+                
+                ps.setString(43, ts.getTgKiemDinh());
+                
+                // Integer
+                if (ts.getChuKyKiemDinh() != null) ps.setInt(44, ts.getChuKyKiemDinh()); else ps.setNull(44, java.sql.Types.INTEGER);
+                
+                ps.setString(45, ts.getId());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return list.size();
+            }
+        });
+        return result.length;
+    }
+
+    public List<TaiSan> batchCreate(List<TaiSan> list) {
+        if (list == null || list.isEmpty()) {
+            return new java.util.ArrayList<>();
+        }
+
+        List<String> ids = new java.util.ArrayList<>();
+        for (TaiSan ts : list) {
+            if (ts.getId() != null && !ts.getId().trim().isEmpty()) {
+                ids.add(ts.getId());
+            }
+        }
+
+        if (ids.isEmpty()) {
+            return new java.util.ArrayList<>();
+        }
+
+        StringBuilder inBuilder = new StringBuilder();
+        for (int i = 0; i < ids.size(); i++) {
+            inBuilder.append("?");
+            if (i < ids.size() - 1) {
+                inBuilder.append(",");
+            }
+        }
+
+        String checkSql = "SELECT Id FROM TaiSan WHERE Id IN (" + inBuilder.toString() + ")";
+        List<String> existingIds = jdbcTemplate.query(
+                checkSql,
+                (rs, rowNum) -> rs.getString("Id"),
+                ids.toArray()
+        );
+
+        List<TaiSan> toInsert = new java.util.ArrayList<>();
+        List<TaiSan> toUpdate = new java.util.ArrayList<>();
+
+        java.util.Set<String> existingSet = new java.util.HashSet<>(existingIds);
+        for (TaiSan ts : list) {
+            if (ts.getId() == null || ts.getId().trim().isEmpty()) {
+                continue;
+            }
+            if (existingSet.contains(ts.getId())) {
+                toUpdate.add(ts);
+            } else {
+                toInsert.add(ts);
+            }
+        }
+
+        if (!toInsert.isEmpty()) {
+            batchInsert(toInsert);
+        }
+        if (!toUpdate.isEmpty()) {
+            batchUpdate(toUpdate);
+        }
+
+        return toInsert;
+    }
+
     public int updateDonViSoHuu(String id, String idDonViHienThoi) {
         String sql = "UPDATE TaiSan SET IdDonViHienThoi=? WHERE Id=?";
         return jdbcTemplate.update(sql, idDonViHienThoi, id);
@@ -1054,6 +1306,33 @@ public class TaiSanDao {
     public int delete(String id) {
         String sql = "DELETE FROM TaiSan WHERE Id=?";
         return jdbcTemplate.update(sql, id);
+    }
+
+    public int batchDelete(List<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return 0;
+        }
+
+        String sql = "DELETE FROM TaiSan WHERE Id=?";
+        int[] result = jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                ps.setString(1, ids.get(i));
+            }
+
+            @Override
+            public int getBatchSize() {
+                return ids.size();
+            }
+        });
+
+        int total = 0;
+        for (int r : result) {
+            if (r > 0 || r == java.sql.Statement.SUCCESS_NO_INFO) {
+                total += (r == java.sql.Statement.SUCCESS_NO_INFO) ? 1 : r;
+            }
+        }
+        return total;
     }
 
     public int deleteAllTaiSanCon() {
@@ -1083,6 +1362,15 @@ public class TaiSanDao {
     public int deleteTaiSanConByTaiSan(String idTaiSan) {
         String sql = "DELETE FROM TaiSanCon WHERE IdTaiSanCha = ?";
         return jdbcTemplate.update(sql, idTaiSan);
+    }
+
+    public int batchDeleteTaiSanConByTaiSan(List<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return 0;
+        }
+        String placeholders = String.join(",", java.util.Collections.nCopies(ids.size(), "?"));
+        String sql = "DELETE FROM TaiSanCon WHERE IdTaiSanCha IN (" + placeholders + ")";
+        return jdbcTemplate.update(sql, ids.toArray());
     }
 
     public List<TaiSanCon> getAll() {

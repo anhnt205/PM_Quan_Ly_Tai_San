@@ -50,12 +50,24 @@ public class LoaiTaiSanService {
         return loaiTaiSanDao.insert(lts);
     }
 
+    public int batchCreate(List<LoaiTaiSan> list) {
+        return loaiTaiSanDao.batchCreate(list);
+    }
+
     public int update(LoaiTaiSan lts) {
         return loaiTaiSanDao.update(lts);
     }
 
+    public int batchUpdate(List<LoaiTaiSan> list) {
+        return loaiTaiSanDao.batchUpdate(list);
+    }
+
     public int delete(String id) {
         return loaiTaiSanDao.delete(id);
+    }
+
+    public int batchDelete(List<String> ids) {
+        return loaiTaiSanDao.batchDelete(ids);
     }
     public List<LoaiTaiSan> readCsv(MultipartFile file) throws IOException {
         List<LoaiTaiSan> list = new ArrayList<>();

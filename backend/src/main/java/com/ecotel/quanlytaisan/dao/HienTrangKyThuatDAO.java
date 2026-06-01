@@ -81,9 +81,161 @@ public class HienTrangKyThuatDAO {
             htkt.getId());
     }
 
+    public int batchUpdate(List<HienTrangKyThuat> list) {
+        String sql = "UPDATE HienTrangKyThuat SET TenHTKT=?, MoTa=?, NgayCapNhat=?, NguoiCapNhat=?, IsActive=? WHERE Id=?";
+        int[] result = jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                HienTrangKyThuat htkt = list.get(i);
+                ps.setString(1, htkt.getTenHTKT());
+                ps.setString(2, htkt.getMoTa());
+                ps.setString(3, htkt.getNgayCapNhat());
+                ps.setString(4, htkt.getNguoiCapNhat());
+                ps.setBoolean(5, htkt.getIsActive() != null ? htkt.getIsActive() : true);
+                if (htkt.getId() != null) {
+                    ps.setInt(6, htkt.getId());
+                } else {
+                    ps.setNull(6, java.sql.Types.INTEGER);
+                }
+            }
+
+            @Override
+            public int getBatchSize() {
+                return list.size();
+            }
+        });
+
+        int total = 0;
+        for (int r : result) {
+            if (r > 0 || r == java.sql.Statement.SUCCESS_NO_INFO) {
+                total += (r == java.sql.Statement.SUCCESS_NO_INFO) ? 1 : r;
+            }
+        }
+        return total;
+    }
+
+    public int batchInsert(List<HienTrangKyThuat> list) {
+        String sql = "INSERT INTO HienTrangKyThuat (Id, TenHTKT, MoTa, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        int[] result = jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                HienTrangKyThuat htkt = list.get(i);
+                if (htkt.getId() != null) {
+                    ps.setInt(1, htkt.getId());
+                } else {
+                    ps.setNull(1, java.sql.Types.INTEGER);
+                }
+                ps.setString(2, htkt.getTenHTKT());
+                ps.setString(3, htkt.getMoTa());
+                ps.setString(4, htkt.getNgayTao());
+                ps.setString(5, htkt.getNgayCapNhat());
+                ps.setString(6, htkt.getNguoiTao());
+                ps.setString(7, htkt.getNguoiCapNhat());
+                ps.setBoolean(8, htkt.getIsActive() != null ? htkt.getIsActive() : true);
+            }
+
+            @Override
+            public int getBatchSize() {
+                return list.size();
+            }
+        });
+
+        int total = 0;
+        for (int r : result) {
+            if (r > 0 || r == java.sql.Statement.SUCCESS_NO_INFO) {
+                total += (r == java.sql.Statement.SUCCESS_NO_INFO) ? 1 : r;
+            }
+        }
+        return total;
+    }
+
+    public int batchCreate(List<HienTrangKyThuat> list) {
+        if (list == null || list.isEmpty()) {
+            return 0;
+        }
+
+        List<Integer> ids = new java.util.ArrayList<>();
+        for (HienTrangKyThuat htkt : list) {
+            if (htkt.getId() != null) {
+                ids.add(htkt.getId());
+            }
+        }
+
+        if (ids.isEmpty()) {
+            return 0;
+        }
+
+        StringBuilder inBuilder = new StringBuilder();
+        for (int i = 0; i < ids.size(); i++) {
+            inBuilder.append("?");
+            if (i < ids.size() - 1) {
+                inBuilder.append(",");
+            }
+        }
+
+        String checkSql = "SELECT Id FROM HienTrangKyThuat WHERE Id IN (" + inBuilder.toString() + ")";
+        List<Integer> existingIds = jdbcTemplate.query(
+                checkSql,
+                (rs, rowNum) -> rs.getInt("Id"),
+                ids.toArray()
+        );
+
+        List<HienTrangKyThuat> toInsert = new java.util.ArrayList<>();
+        List<HienTrangKyThuat> toUpdate = new java.util.ArrayList<>();
+
+        java.util.Set<Integer> existingSet = new java.util.HashSet<>(existingIds);
+        for (HienTrangKyThuat htkt : list) {
+            if (htkt.getId() == null) {
+                continue;
+            }
+            if (existingSet.contains(htkt.getId())) {
+                toUpdate.add(htkt);
+            } else {
+                toInsert.add(htkt);
+            }
+        }
+
+        int total = 0;
+        if (!toInsert.isEmpty()) {
+            total += batchInsert(toInsert);
+        }
+        if (!toUpdate.isEmpty()) {
+            total += batchUpdate(toUpdate);
+        }
+
+        return total;
+    }
+
     public int delete(Integer id) {
         String sql = "DELETE FROM HienTrangKyThuat WHERE Id=?";
         return jdbcTemplate.update(sql, id);
+    }
+
+    public int batchDelete(List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return 0;
+        }
+
+        String sql = "DELETE FROM HienTrangKyThuat WHERE Id=?";
+        int[] result = jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                ps.setInt(1, ids.get(i));
+            }
+
+            @Override
+            public int getBatchSize() {
+                return ids.size();
+            }
+        });
+
+        int total = 0;
+        for (int r : result) {
+            if (r > 0 || r == java.sql.Statement.SUCCESS_NO_INFO) {
+                total += (r == java.sql.Statement.SUCCESS_NO_INFO) ? 1 : r;
+            }
+        }
+        return total;
     }
 
     public int softDelete(Integer id) {

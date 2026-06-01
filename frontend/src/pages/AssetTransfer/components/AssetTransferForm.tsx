@@ -128,6 +128,7 @@ export default function AssetTransferForm({
       duongDanFile: initialFormData?.duongDanFile ?? "",
       tenFile: initialFormData?.tenFile ?? "",
       taiLieuCuoi: initialFormData?.taiLieuCuoi ?? "",
+      loai: initialFormData?.loai ?? type,
       nguoiKyList: initialFormData?.nguoiKyList ?? [],
       chiTietDieuDongTaiSanDTOS: initialFormData?.chiTietDieuDongTaiSanDTOS ?? [
         {
@@ -156,17 +157,19 @@ export default function AssetTransferForm({
         .filter(
           (item: any) => item.idTaiSan !== "" || item.idTaiSan !== undefined,
         )
-        .map((item, index) => ({
+        .map((item: any, index: number) => ({
           ...item,
           id: `${generateCode("CTDD-")}-${index}`,
           idDieuDongTaiSan: values.id,
         }));
-      const nguoiKyList = values.nguoiKyList.map((item: any, index) => ({
-        ...item,
-        id: `${generateCode("NK-")}-${index}`,
-        idTaiLieu: values.id,
-        idPhongBan: values.idDonViDeNghi,
-      }));
+      const nguoiKyList = values.nguoiKyList.map(
+        (item: any, index: number) => ({
+          ...item,
+          id: `${generateCode("NK-")}-${index}`,
+          idTaiLieu: values.id,
+          idPhongBan: values.idDonViDeNghi,
+        }),
+      );
       const bangKeBytes = await generateBangKePdf(
         values.chiTietDieuDongTaiSanDTOS,
         allUnits,
@@ -521,7 +524,7 @@ export default function AssetTransferForm({
                     </Button>
                   </Grid>
 
-                  {formik.values.nguoiKyList.map((row, index) => (
+                  {formik.values.nguoiKyList.map((row: any, index: number) => (
                     <Grid size={12}>
                       <Box display="flex">
                         <FieldAutoCompleted
@@ -599,12 +602,12 @@ export default function AssetTransferForm({
                   onUploadSuccess={(matchedWrapperAssets) => {
                     const existingIds =
                       formik.values.chiTietDieuDongTaiSanDTOS.map(
-                        (i) => i.idTaiSan,
+                        (i: any) => i.idTaiSan,
                       );
                     const newItems = matchedWrapperAssets
                       .map((wrapper) => wrapper.originalData)
                       .filter(
-                        (item) =>
+                        (item: any) =>
                           !existingIds.includes(item.id || item.idTaiSan),
                       )
                       .map((item) => ({
@@ -669,7 +672,7 @@ export default function AssetTransferForm({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {formik.values.chiTietDieuDongTaiSanDTOS.map((row, index) => (
+                  {formik.values.chiTietDieuDongTaiSanDTOS.map((row: any, index: number) => (
                     <TableRow key={index}>
                       <CustomTableCell>
                         <FieldAutoCompleted

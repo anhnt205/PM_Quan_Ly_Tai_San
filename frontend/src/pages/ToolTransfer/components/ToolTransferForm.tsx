@@ -166,11 +166,11 @@ export default function ToolTransferForm({
       // Logic map ID tương tự nhưng dùng prefix của Tool
       const chiTietDieuDongCCDCVatTuDTOS = values.chiTietDieuDongCCDCVatTuDTOS
         .filter((i: any) => i.idCCDCVatTu !== "" && i.idCCDCVatTu !== undefined)
-        .map((item: any, index) => ({
+        .map((item: any, index: number) => ({
           ...item,
           id: `${generateCode("CTBG-")}-${index}`,
         }));
-      const nguoiKyList = values.nguoiKyList.map((item: any, index) => ({
+      const nguoiKyList = values.nguoiKyList.map((item: any, index: number) => ({
         ...item,
         id: `${generateCode("NK-")}-${index}`,
         idTaiLieu: values.id,
@@ -545,7 +545,7 @@ export default function ToolTransferForm({
                       Thêm người ký
                     </Button>
                   </Grid>
-                  {formik.values.nguoiKyList.map((row, index) => (
+                  {formik.values.nguoiKyList.map((row: any, index: number) => (
                     <Grid size={12}>
                       <Box display="flex">
                         <FieldAutoCompleted
@@ -623,7 +623,7 @@ export default function ToolTransferForm({
                   onUploadSuccess={(matchedWrapperAssets) => {
                     const existingIds =
                       formik.values.chiTietDieuDongCCDCVatTuDTOS.map(
-                        (i) => i.idCustom,
+                        (i:any) => i.idCustom,
                       );
                     const newItems = matchedWrapperAssets
                       .map((wrapper) => wrapper.originalData)
@@ -698,7 +698,7 @@ export default function ToolTransferForm({
                 </TableHead>
                 <TableBody>
                   {(formik.values.chiTietDieuDongCCDCVatTuDTOS || []).map(
-                    (row: any, index) => (
+                    (row: any, index: number) => (
                       <TableRow key={index}>
                         <CustomTableCell>
                           <FieldAutoCompleted

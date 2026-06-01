@@ -48,12 +48,24 @@ public class NguonVonService {
         return nguonVonDao.insert(nv);
     }
 
+    public int batchCreate(List<NguonVon> list) {
+        return nguonVonDao.batchCreate(list);
+    }
+
     public int update(NguonVon nv) {
         return nguonVonDao.update(nv);
     }
 
+    public int batchUpdate(List<NguonVon> list) {
+        return nguonVonDao.batchUpdate(list);
+    }
+
     public int delete(String id) {
         return nguonVonDao.delete(id);
+    }
+
+    public int batchDelete(List<String> ids) {
+        return nguonVonDao.batchDelete(ids);
     }
     public List<NguonVon> readCsv(MultipartFile file) throws IOException {
         List<NguonVon> list = new ArrayList<>();

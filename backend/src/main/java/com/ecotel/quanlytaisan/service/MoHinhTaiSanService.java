@@ -52,12 +52,24 @@ public class MoHinhTaiSanService {
         return moHinhTaiSanDao.insert(mhts);
     }
 
+    public int batchCreate(List<MoHinhTaiSan> list) {
+        return moHinhTaiSanDao.batchCreate(list);
+    }
+
     public int update(MoHinhTaiSan mhts) {
         return moHinhTaiSanDao.update(mhts);
     }
 
+    public int batchUpdate(List<MoHinhTaiSan> list) {
+        return moHinhTaiSanDao.batchUpdate(list);
+    }
+
     public int delete(String id) {
         return moHinhTaiSanDao.delete(id);
+    }
+
+    public int batchDelete(List<String> ids) {
+        return moHinhTaiSanDao.batchDelete(ids);
     }
     public List<MoHinhTaiSan> readCsv(MultipartFile file) throws IOException {
         List<MoHinhTaiSan> list = new ArrayList<>();

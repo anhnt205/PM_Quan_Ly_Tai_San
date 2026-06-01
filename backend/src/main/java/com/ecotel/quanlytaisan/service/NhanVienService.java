@@ -64,12 +64,24 @@ public class NhanVienService {
         return nhanVienDao.insert(nv);
     }
 
+    public int batchCreate(List<NhanVien> list) {
+        return nhanVienDao.batchCreate(list);
+    }
+
     public int update(NhanVien nv) {
         return nhanVienDao.update(nv);
     }
 
+    public int batchUpdate(List<NhanVien> list) {
+        return nhanVienDao.batchUpdate(list);
+    }
+
     public int delete(String id) {
         return nhanVienDao.delete(id);
+    }
+
+    public int batchDelete(List<String> ids) {
+        return nhanVienDao.batchDelete(ids);
     }
 
 

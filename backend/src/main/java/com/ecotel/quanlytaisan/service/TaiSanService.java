@@ -248,6 +248,29 @@ public class TaiSanService {
         return result;
     }
 
+    public int batchCreate(List<TaiSan> list) {
+        if (list == null || list.isEmpty()) {
+            return 0;
+        }
+
+        List<TaiSan> newlyInserted = taiSanDao.batchCreate(list);
+
+        if (!newlyInserted.isEmpty()) {
+            List<LichSuDieuChuyenTaiSanDTO> histories = new ArrayList<>();
+            for (TaiSan ts : newlyInserted) {
+                LichSuDieuChuyenTaiSanDTO history = new LichSuDieuChuyenTaiSanDTO();
+                history.setIdTaiSan(ts.getId());
+                history.setIdDonViGiao(ts.getIdDonViBanDau());
+                history.setIdDonViNhan(ts.getIdDonViBanDau());
+                history.setThoiGianBanGiao(ts.getNgayTao() != null ? ts.getNgayTao() : java.time.LocalDateTime.now().toString());
+                histories.add(history);
+            }
+            lichSuDieuChuyenTaiSanDao.createBatch(histories);
+        }
+
+        return list.size();
+    }
+
     private void createInitialHistory(TaiSan ts) {
         LichSuDieuChuyenTaiSanDTO history = new LichSuDieuChuyenTaiSanDTO();
         history.setIdTaiSan(ts.getId());
@@ -265,6 +288,14 @@ public class TaiSanService {
     public int update(TaiSan ts) {
         return taiSanDao.update(ts);
     }
+
+    public int batchUpdate(List<TaiSan> list) {
+        if (list == null || list.isEmpty()) {
+            return 0;
+        }
+        return taiSanDao.batchUpdate(list);
+    }
+
     public int updateTaiSanConTaiSan(Map<String, Object> map) {
         return taiSanDao.updateTaiSanConTaiSan(map);
     }
@@ -272,6 +303,14 @@ public class TaiSanService {
     public int delete(String id) {
         taiSanDao.deleteTaiSanConByTaiSan(id);
         return taiSanDao.delete(id);
+    }
+
+    public int batchDelete(List<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return 0;
+        }
+        taiSanDao.batchDeleteTaiSanConByTaiSan(ids);
+        return taiSanDao.batchDelete(ids);
     }
 
     public int deleteAll() {

@@ -85,18 +85,25 @@ public class PhongBanController {
         }
     }
 
+    @PutMapping("/batch")
+    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<PhongBan> list) {
+        try {
+            int total = phongBanService.batchUpdate(list);
+            if (total > 0) {
+                return ResponseEntity.ok(ApiResponse.success("Cập nhật danh sách phòng ban thành công", null, total));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.failure("Cập nhật danh sách phòng ban thất bại", total));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
     @PostMapping("/batch")
     public ResponseEntity<ApiResponse<Object>> createBatch(@RequestBody List<PhongBan> list) {
         try {
-            int total = 0;
-            for (PhongBan item : list) {
-                int result = phongBanService.create(item);
-                if (result > 0) {
-                    total += result;
-                    // Gửi thông báo socket cho từng phòng ban được tạo
-                    notificationService.notifyPhongBanCreated(item.getIdCongTy(), item.getId(), "System");
-                }
-            }
+            int total = phongBanService.batchCreate(list);
             if (total > 0) {
                 return ResponseEntity.status(HttpStatus.CREATED)
                         .body(ApiResponse.success("Tạo danh sách phòng ban thành công", null, total));
@@ -133,19 +140,7 @@ public class PhongBanController {
     @DeleteMapping("/batch")
     public ResponseEntity<ApiResponse<Object>> deleteBatch(@RequestBody List<String> ids) {
         try {
-            int total = 0;
-            for (String id : ids) {
-                // Lấy thông tin phòng ban trước khi xóa để có thông tin công ty
-                PhongBanDTO phongBan = phongBanService.getById(id);
-                int result = phongBanService.delete(id);
-                if (result > 0) {
-                    total += result;
-                    // Gửi thông báo socket cho từng phòng ban bị xóa
-                    if (phongBan != null) {
-                        notificationService.notifyPhongBanDeleted(phongBan.getIdCongTy(), id, "System");
-                    }
-                }
-            }
+            int total = phongBanService.batchDelete(ids);
             if (total > 0) {
                 return ResponseEntity.ok(ApiResponse.success("Xóa danh sách phòng ban thành công", null, total));
             }

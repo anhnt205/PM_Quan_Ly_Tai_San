@@ -48,12 +48,24 @@ public class NhomTaiSanService {
         return nhomTaiSanDao.insert(nts);
     }
 
+    public int batchCreate(List<NhomTaiSan> list) {
+        return nhomTaiSanDao.batchCreate(list);
+    }
+
     public int update(NhomTaiSan nts) {
         return nhomTaiSanDao.update(nts);
     }
 
+    public int batchUpdate(List<NhomTaiSan> list) {
+        return nhomTaiSanDao.batchUpdate(list);
+    }
+
     public int delete(String id) {
         return nhomTaiSanDao.delete(id);
+    }
+
+    public int batchDelete(List<String> ids) {
+        return nhomTaiSanDao.batchDelete(ids);
     }
 
     public List<NhomTaiSan> readCsv(MultipartFile file) throws IOException {

@@ -308,7 +308,7 @@ export default function TableCustom({
                 startIcon={<Edit />}
                 onClick={async (e) => {
                   e.stopPropagation();
-                  handleSignDocument?.(selectedItem, user, () =>
+                  handleSignDocument?.(selectedItem[0], user, () =>
                     onSign?.(
                       selectedItem[0]?.taiLieuCuoi ||
                         selectedItem[0]?.taiLieuBangKe,

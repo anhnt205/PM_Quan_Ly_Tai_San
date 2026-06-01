@@ -100,18 +100,25 @@ public class NhanVienController {
         }
     }
 
+    @PutMapping("/batch")
+    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<NhanVien> list) {
+        try {
+            int total = nhanVienService.batchUpdate(list);
+            if (total > 0) {
+                return ResponseEntity.ok(ApiResponse.success("Cập nhật danh sách nhân viên thành công", null, total));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.failure("Cập nhật danh sách nhân viên thất bại", total));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
     @PostMapping("/batch")
     public ResponseEntity<ApiResponse<Object>> createBatch(@RequestBody List<NhanVien> list) {
         try {
-            int total = 0;
-            for (NhanVien item : list) {
-                int result = nhanVienService.create(item);
-                if (result > 0) {
-                    total += result;
-                    // Gửi thông báo socket cho từng nhân viên được tạo
-                    notificationService.notifyNhanVienCreated(item.getIdCongTy(), item.getId(), "System");
-                }
-            }
+            int total = nhanVienService.batchCreate(list);
             if (total > 0) {
                 return ResponseEntity.status(HttpStatus.CREATED)
                         .body(ApiResponse.success("Tạo danh sách nhân viên thành công", null, total));
@@ -148,19 +155,7 @@ public class NhanVienController {
     @DeleteMapping("/batch")
     public ResponseEntity<ApiResponse<Object>> deleteBatch(@RequestBody List<String> ids) {
         try {
-            int total = 0;
-            for (String id : ids) {
-                // Lấy thông tin nhân viên trước khi xóa để có thông tin công ty
-                NhanVienDTO nhanVien = nhanVienService.getById(id);
-                int result = nhanVienService.delete(id);
-                if (result > 0) {
-                    total += result;
-                    // Gửi thông báo socket cho từng nhân viên bị xóa
-                    if (nhanVien != null) {
-                        notificationService.notifyNhanVienDeleted(nhanVien.getIdCongTy(), id, "System");
-                    }
-                }
-            }
+            int total = nhanVienService.batchDelete(ids);
             if (total > 0) {
                 return ResponseEntity.ok(ApiResponse.success("Xóa danh sách nhân viên thành công", null, total));
             }
