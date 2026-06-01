@@ -414,9 +414,11 @@ export default function Menuheader() {
           subMenu: [
             { text: "Quản lý dự án", path: ROUTES.PROJECT, code: "DUAN" },
             { text: "Quản lý nguồn vốn", path: ROUTES.CAPITALSOURCE },
+            { text: "Lý do tăng", path: ROUTES.REASONINCREASE },
+            { text: "Lý lịch tài sản", path: ROUTES.ASSETPROFILE },
+            { text: "Lý lịch Nhóm tài sản", path: ROUTES.ASSETPROFILEGROUP },
             { text: "Loại sửa chữa", path: ROUTES.MAINTENANCEREPAIRTYPE },
             { text: "Đơn vị tính", path: ROUTES.UNIT },
-            { text: "Lý do tăng", path: ROUTES.REASONINCREASE },
             { text: "Hiện trạng", path: ROUTES.CURRENTSTATUS },
           ],
         },
@@ -539,7 +541,13 @@ export default function Menuheader() {
       text: "Sửa chữa bảo dưỡng",
       icon: <Engineering fontSize="small" />,
       path: "#",
-      count: totalPlan + totalIncident + totalRepair + totalIncidentInspection + totalMaterialAssessment + totalAcceptance,
+      count:
+        totalPlan +
+        totalIncident +
+        totalRepair +
+        totalIncidentInspection +
+        totalMaterialAssessment +
+        totalAcceptance,
       subMenu: [
         {
           text: "Quản lý sửa chữa",
@@ -560,7 +568,13 @@ export default function Menuheader() {
         {
           text: "Phê duyệt",
           path: ROUTES.MAINTENANCE_APPROVAL,
-          count: totalPlan + totalIncident + totalRepair + totalIncidentInspection + totalMaterialAssessment + totalAcceptance,
+          count:
+            totalPlan +
+            totalIncident +
+            totalRepair +
+            totalIncidentInspection +
+            totalMaterialAssessment +
+            totalAcceptance,
         },
         {
           text: "Quản lý biên bản",
