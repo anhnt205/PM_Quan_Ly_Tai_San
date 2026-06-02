@@ -75,9 +75,9 @@ const SignDocumentActionBar = ({
             textTransform: "none",
             fontWeight: 600,
             px: 2,
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            background: "#04b46e",
             "&:hover": {
-              background: "linear-gradient(135deg, #5568d3 0%, #6941a0 100%)",
+              background: "linear-gradient(135deg, #038d56 0%, #016b41 100%)",
             },
           }}
         >

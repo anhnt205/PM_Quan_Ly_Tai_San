@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
+import * as XLSX from "xlsx";
+import dayjs from "dayjs";
 import {
   Box,
   Button,
@@ -24,6 +26,7 @@ import {
   ExpandMore,
   ExpandLess,
   TableChart,
+  FileDownload as FileDownloadIcon,
 } from "@mui/icons-material";
 import { ColumnConfig } from "../columnConfig";
 import ColumnConfigMenu from "./ColumnConfig";
@@ -55,6 +58,7 @@ interface Props {
   toolGroups?: any[];
   selectedToolGroup?: string;
   onSelectedToolGroupChange?: (id: string) => void;
+  onExportExcel?: () => void;
 }
 
 export default function ToolTableCustom({
@@ -82,6 +86,7 @@ export default function ToolTableCustom({
   toolGroups = [],
   selectedToolGroup,
   onSelectedToolGroupChange,
+  onExportExcel,
 }: Props) {
   const [expandedRows, setExpandedRows] = useState<Set<string | number>>(
     new Set(),
@@ -211,6 +216,73 @@ export default function ToolTableCustom({
     [columns],
   );
 
+  const handleExportSelectedExcel = () => {
+    const selectedRows = rows.filter((row) =>
+      selectedIds.includes(String(row.id)),
+    );
+    if (selectedRows.length === 0) return;
+
+    const dataToExport = selectedRows.map((row) => {
+      const item: Record<string, any> = {};
+      visibleColumns.forEach((col) => {
+        const rawValue = row[col.key];
+        let displayValue = rawValue;
+        if (col.key === "giaTri") {
+          displayValue = rawValue || 0;
+        } else if (col.key === "soLuong") {
+          displayValue = rawValue || 0;
+        } else if (col.key === "trangThai") {
+          displayValue =
+            rawValue === true ||
+            rawValue === "Active" ||
+            rawValue === "Hoạt động"
+              ? "Hoạt động"
+              : "Không hoạt động";
+        } else if (col.key === "chiTietDonViSoHuuList") {
+          return;
+        } else if (typeof rawValue === "object" && rawValue !== null) {
+          displayValue =
+            rawValue.ten || rawValue.name || JSON.stringify(rawValue);
+        } else {
+          displayValue = rawValue ?? "-";
+        }
+        item[col.label] = displayValue;
+      });
+      const details = row.chiTietDonViSoHuuList || [];
+      item["Số chứng từ sở hữu"] = details
+        .map((d: any) => d.soChungTu || "-")
+        .join("\n");
+      item["Đơn vị sở hữu"] = details
+        .map((d: any) => {
+          return (
+            findById(allDepartments, d.idDonViSoHuu)?.tenPhongBan ||
+            d.idDonViSoHuu ||
+            "-"
+          );
+        })
+        .join("\n");
+      item["Số lượng sở hữu"] = details
+        .map((d: any) => d.soLuong || 0)
+        .join("\n");
+      item["Số lượng đã bàn giao"] = details
+        .map((d: any) => d.soLuongDaBanGiao || 0)
+        .join("\n");
+      item["Ngày vào sổ sở hữu"] = details
+        .map((d: any) => d.ngayTao || "-")
+        .join("\n");
+
+      return item;
+    });
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    XLSX.utils.book_append_sheet(wb, ws, "CCDC Da Chon");
+    XLSX.writeFile(
+      wb,
+      `Danh_sach_CCDC_da_chon_${dayjs().format("YYYYMMDD")}.xlsx`,
+    );
+  };
+
   // Compute a reasonable minWidth for the table so it can overflow horizontally
   const tableMinWidth = useMemo(() => {
     const colsWidth = visibleColumns.reduce(
@@ -282,7 +354,7 @@ export default function ToolTableCustom({
         <TableRow
           key={`detail-${row.id}`}
           sx={{
-            backgroundColor: "#fff9e6",
+            backgroundColor: "#f4fbf7",
             "& td": { borderBottom: "none" },
           }}
         >
@@ -291,7 +363,6 @@ export default function ToolTableCustom({
             sx={{
               padding: 0,
               border: "none",
-              // Removed position: "relative" here to fix positioning context and misalignment
             }}
           >
             <Box
@@ -301,8 +372,8 @@ export default function ToolTableCustom({
                 width: `${containerWidth}px`,
                 maxWidth: `${containerWidth}px`,
                 boxSizing: "border-box",
-                p: 0, // Moved padding out to prevent content shrinkage
-                bgcolor: "#fff9e6",
+                p: 0,
+                bgcolor: "#f4fbf7",
                 zIndex: 1,
                 margin: 0,
                 marginLeft: 0,
@@ -316,7 +387,7 @@ export default function ToolTableCustom({
                     fontWeight: 700,
                     mb: 2,
                     fontSize: "14px",
-                    color: "#333",
+                    color: "#115230",
                   }}
                 >
                   Chi tiết đơn vị sở hữu
@@ -327,25 +398,24 @@ export default function ToolTableCustom({
                   size="small"
                   sx={{
                     backgroundColor: "#ffffff",
-                    border: "1px solid #e0e0e0",
+                    border: "1px solid #cce5d3",
                     width: "100%",
                     tableLayout: "fixed",
-                    boxSizing: "border-box", // Added to include border in width calculation
+                    boxSizing: "border-box",
                   }}
                 >
                   <TableHead>
                     <TableRow
                       sx={{
-                        backgroundColor: "#fff3cd",
+                        backgroundColor: "#d8eedf",
                         "& .MuiTableCell-head": {
-                          color: "#856404",
+                          color: "#13633b",
                           fontWeight: 700,
                           padding: "10px",
-                          border: "1px solid #e0e0e0",
+                          border: "1px solid #cce5d3",
                         },
                       }}
                     >
-                      {/* <TableCell>Ký hiệu</TableCell> */}
                       <TableCell>Số chứng từ</TableCell>
                       <TableCell>Đơn vị sở hữu</TableCell>
                       <TableCell>Số lượng đang sở hữu</TableCell>
@@ -356,39 +426,36 @@ export default function ToolTableCustom({
                   <TableBody>
                     {loading ? (
                       <TableRow>
-                        <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
-                          <CircularProgress size={24} color="warning" />
+                        <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
+                          <CircularProgress size={24} color="success" />
                         </TableCell>
                       </TableRow>
                     ) : detailsToShow.length > 0 ? (
                       detailsToShow.map((detail: any) => (
                         <TableRow key={`detail-item-${detail.soKyHieu}`}>
-                          {/* <TableCell sx={{ border: "1px solid #e0e0e0" }}>
-                            {detail.soKyHieu || "-"}
-                          </TableCell> */}
-                          <TableCell sx={{ border: "1px solid #e0e0e0" }}>
+                          <TableCell sx={{ border: "1px solid #e2ece5" }}>
                             {detail.soChungTu || "-"}
                           </TableCell>
-                          <TableCell sx={{ border: "1px solid #e0e0e0" }}>
+                          <TableCell sx={{ border: "1px solid #e2ece5" }}>
                             {findById(allDepartments, detail.idDonViSoHuu)
                               ?.tenPhongBan ||
                               detail.idDonViSoHuu ||
                               "-"}
                           </TableCell>
-                          <TableCell sx={{ border: "1px solid #e0e0e0" }}>
+                          <TableCell sx={{ border: "1px solid #e2ece5" }}>
                             {detail.soLuong || 0}
                           </TableCell>
-                          <TableCell sx={{ border: "1px solid #e0e0e0" }}>
+                          <TableCell sx={{ border: "1px solid #e2ece5" }}>
                             {detail.soLuongDaBanGiao || 0}
                           </TableCell>
-                          <TableCell sx={{ border: "1px solid #e0e0e0" }}>
+                          <TableCell sx={{ border: "1px solid #e2ece5" }}>
                             {detail.ngayTao || "-"}
                           </TableCell>
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={3} align="center" sx={{ py: 2 }}>
+                        <TableCell colSpan={5} align="center" sx={{ py: 2 }}>
                           Không có dữ liệu chi tiết
                         </TableCell>
                       </TableRow>
@@ -572,25 +639,80 @@ export default function ToolTableCustom({
         alignItems="center"
         gap={2}
         mb={1}
+        px={2}
       >
         <ColumnConfigMenu
           columns={columns.filter((col) => col.isShow)}
           onChange={handleColumnsChange}
         />
-        <Button
-          variant="outlined"
-          color="success"
-          size="small"
-          startIcon={<TableChart />}
-          onClick={onViewOwnership}
-          sx={{
-            borderRadius: "8px",
-            textTransform: "none",
-            fontWeight: 600,
-          }}
-        >
-          Danh sách nhập vật tư
-        </Button>
+        <Box display="flex" alignItems="center" gap={1.5}>
+          {onExportExcel && (
+            <Button
+              variant="outlined"
+              color="success"
+              size="small"
+              startIcon={<FileDownloadIcon />}
+              onClick={onExportExcel}
+              sx={{
+                borderRadius: "8px",
+                textTransform: "none",
+                fontWeight: 600,
+                borderColor: "#1FA463",
+                color: "#1FA463",
+                "&:hover": {
+                  borderColor: "#177e4b",
+                  bgcolor: "rgba(31, 164, 99, 0.04)",
+                },
+              }}
+            >
+              Xuất Excel
+            </Button>
+          )}
+
+          {selectedIds.length > 0 && (
+            <Button
+              variant="outlined"
+              color="success"
+              size="small"
+              startIcon={<FileDownloadIcon />}
+              onClick={handleExportSelectedExcel}
+              sx={{
+                borderColor: "#1FA463",
+                color: "#1FA463",
+                borderRadius: "8px",
+                textTransform: "none",
+                fontWeight: 600,
+                "&:hover": {
+                  borderColor: "#177e4b",
+                  bgcolor: "rgba(31, 164, 99, 0.04)",
+                },
+              }}
+            >
+              Xuất đã chọn ({selectedIds.length})
+            </Button>
+          )}
+
+          <Button
+            variant="outlined"
+            color="success"
+            size="small"
+            startIcon={<TableChart />}
+            onClick={onViewOwnership}
+            sx={{
+              borderRadius: "8px",
+              textTransform: "none",
+              fontWeight: 600,
+              borderColor: "#1FA463",
+              color: "#1FA463",
+              "&:hover": {
+                borderColor: "#177e4b",
+                bgcolor: "rgba(31, 164, 99, 0.04)",
+              },
+            }}
+          >
+            Danh sách nhập vật tư
+          </Button>
+        </Box>
       </Box>
       {/* Table */}
       <Box

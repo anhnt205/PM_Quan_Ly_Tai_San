@@ -288,6 +288,8 @@ export default function AssetGroup() {
           setSearchValue={setSearchValue}
           onDeleteAll={deleteAllMutation.mutate}
           showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
+          onImportExcel={handleImport}
+          onExportExcel={() => exportMutation.mutate(allAssetGroup)}
         />
       </Box>
     </Box>

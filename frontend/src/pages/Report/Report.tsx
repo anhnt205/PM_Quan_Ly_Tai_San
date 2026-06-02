@@ -89,7 +89,7 @@ export default function Report() {
           flexDirection: { xs: "column", md: "row" },
           alignItems: "flex-start", // Giúp Sidebar không bị kéo dài bằng nội dung nếu nội dung quá dài
           gap: 3, // Khoảng cách giữa Sidebar và Phần nội dung
-          maxWidth: "1440px",
+          maxWidth: "100%",
           mx: "auto", // Căn giữa nội dung nếu màn hình quá to
         }}
       >

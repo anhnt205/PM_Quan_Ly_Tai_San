@@ -266,6 +266,8 @@ export default function TypeAsset() {
           setSearchValue={setSearchValue}
           onDeleteAll={deleteAllMutation.mutate}
           showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
+          onImportExcel={handleImport}
+          onExportExcel={() => exportMutation.mutate(allTypeAssets)}
         />
       </Box>
     </Box>

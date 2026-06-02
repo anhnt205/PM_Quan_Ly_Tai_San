@@ -80,8 +80,8 @@ const StatusCountBadge = ({ count }: { count: number }) => (
       borderRadius: "50%",
       fontSize: 12,
       ml: 1,
-      bgcolor: "#e0e0e0",
-      color: "#333",
+        bgcolor: "#e0e0e0",
+        color: "#333",
       fontWeight: "bold",
       display: "inline-flex", // inline-flex để căn chỉnh cùng dòng văn bản
       alignItems: "center",
@@ -130,7 +130,7 @@ const FilterItem = ({
         component="div" // QUAN TRỌNG: Đổi p thành div để chứa Badge (nếu badge là thẻ div)
         sx={{
           fontSize: "14px",
-          color: "text.primary",
+            color: "text.primary",
           fontWeight: 500,
           display: "flex",
           alignItems: "center",

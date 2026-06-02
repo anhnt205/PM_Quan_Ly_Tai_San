@@ -22,7 +22,7 @@ export default function MonthlyChart({
   year,
   onYearChange,
   icon,
-  color = "#2196F3",
+  color = "#C0EBA6",
 }: Props) {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);

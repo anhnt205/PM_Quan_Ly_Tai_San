@@ -213,7 +213,7 @@ export default function AssetTransferApprovalTab({ isBanHanh }: AssetTransferApp
     {
       field: "TrangThaiKy",
       headerName: "Trạng thái ký",
-      width: 140,
+      width: 160,
       headerAlign: "center",
       align: "center",
       renderCell: (params) =>
@@ -224,7 +224,7 @@ export default function AssetTransferApprovalTab({ isBanHanh }: AssetTransferApp
     {
       field: "TrangThaiBanGiao",
       headerName: "Trạng thái bàn giao",
-      width: 140,
+      width: 200,
       headerAlign: "center",
       align: "center",
       renderCell: (params) =>
@@ -233,7 +233,7 @@ export default function AssetTransferApprovalTab({ isBanHanh }: AssetTransferApp
     {
       field: "share",
       headerName: "Trình duyệt",
-      width: 140,
+      width: 220,
       headerAlign: "center",
       align: "center",
       renderCell: (params) =>

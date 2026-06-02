@@ -11,6 +11,7 @@ import {
   IconButton,
   Tabs,
   Tab,
+  ButtonBase,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import {
@@ -80,7 +81,16 @@ import {
 } from "./config";
 
 import SignDocumentForm from "./components/signdocument/SignDocumentForm";
-import { EditIcon } from "lucide-react";
+import {
+  AlertTriangle,
+  Boxes,
+  ClipboardCheck,
+  ClipboardList,
+  EditIcon,
+  FileSearch,
+  FileWarning,
+  Wrench,
+} from "lucide-react";
 import { useMaintenanceMutation } from "./mutation";
 import { SignaturesData } from "../../components/SignDocument/types";
 import { AssetGroup, AssetGroupType, TypeBienBan } from "../../utils/const";
@@ -459,13 +469,13 @@ export default function MaintenanceApprovalPage() {
       idLabel: "Số BB đánh giá",
     },
     {
-      label: "Phiếu báo SỰ CỐ",
+      label: "Phiếu báo sự cố",
       icon: <WarningOutlined />,
       idLabel: "Số phiếu",
       field: "soPhieu",
     },
     {
-      label: "BB Kiểm tra SỰ CỐ",
+      label: "BB Kiểm tra sự cố",
       icon: <SearchOutlined />,
       idLabel: "Số BB kiểm tra",
       field: "soPhieu",
@@ -1219,47 +1229,205 @@ export default function MaintenanceApprovalPage() {
           {/* Tab bar */}
           <Box
             sx={{
-              borderBottom: 1,
-              borderColor: "divider",
-              bgcolor: "#fff",
-              display: "flex",
-              justifyContent: "flex-end",
+              width: "100%",
               overflowX: "auto",
+              display: "flex",
+              gap: 2,
+              p: 2.5,
+              bgcolor: "#f8fafc",
+              borderBottom: "1px solid",
+              borderColor: "divider",
+              "&::-webkit-scrollbar": {
+                height: "6px",
+              },
+              "&::-webkit-scrollbar-thumb": {
+                bgcolor: "grey.300",
+                borderRadius: "4px",
+              },
+              "&::-webkit-scrollbar-track": {
+                bgcolor: "transparent",
+              },
             }}
           >
-            <Tabs
-              value={activeTab}
-              onChange={(_, v) => {
-                setActiveTab(v);
-                setSelectedIds([]);
-                setSearchValue("");
-                setDateFrom("");
-                setDateTo("");
-                setSelectedRow(null);
-                setSelectedItem([]);
-                setIsDetailOpen(false);
-              }}
-              sx={{
-                "& .MuiTab-root": {
-                  textTransform: "none",
-                  fontWeight: "bold",
-                  minHeight: 64,
-                },
-              }}
-            >
-              {tabConfigs.map((t, i) => (
-                <Tab
-                  key={i}
-                  iconPosition="top"
-                  icon={
-                    <Badge badgeContent={pendingCounts[i]} color="error">
-                      {t.icon}
-                    </Badge>
-                  }
-                  label={t.label}
-                />
-              ))}
-            </Tabs>
+            {[
+              {
+                label: "Kế hoạch",
+                subLabel: "Kế hoạch bảo trì",
+                icon: ClipboardList,
+              },
+              {
+                label: "Lệnh sửa chữa",
+                subLabel: "Lệnh xử lý kỹ thuật",
+                icon: Wrench,
+              },
+              {
+                label: "BB Giám định",
+                subLabel: "Giám định máy móc",
+                icon: FileSearch,
+              },
+              {
+                label: "Biện pháp sửa chữa",
+                subLabel: "Biện pháp xử lý thiết bị",
+                icon: Wrench,
+              },
+              {
+                label: "BB Nghiệm thu",
+                subLabel: "Nghiệm thu hoàn thành",
+                icon: ClipboardCheck,
+              },
+              {
+                label: "BB Đánh giá VT",
+                subLabel: "Đánh giá vật tư tiêu hao",
+                icon: Boxes,
+              },
+              {
+                label: "Phiếu báo sự cố",
+                subLabel: "Báo cáo sự cố thiết bị",
+                icon: AlertTriangle,
+              },
+              {
+                label: "BB Kiểm tra sự cố",
+                subLabel: "Kiểm tra hiện trạng SC",
+                icon: FileWarning,
+              },
+            ].map((tab, idx) => {
+              const IconComponent = tab.icon;
+              const count = pendingCounts[idx] || 0;
+              const isActive = activeTab === idx;
+
+              return (
+                <ButtonBase
+                  key={idx}
+                  onClick={() => {
+                    setActiveTab(idx);
+                    setSelectedIds([]);
+                    setSearchValue("");
+                    setDateFrom("");
+                    setDateTo("");
+                    setSelectedRow(null);
+                    setSelectedItem([]);
+                    setIsDetailOpen(false);
+                  }}
+                  focusRipple
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-start",
+                    justifyContent: "space-between",
+                    minWidth: 175,
+                    flex: "1 0 175px",
+                    height: 110,
+                    p: 2,
+                    borderRadius: "14px",
+                    textAlign: "left",
+                    position: "relative",
+                    overflow: "hidden",
+                    transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                    border: "1px solid",
+                    borderColor: isActive
+                      ? "transparent"
+                      : "rgba(148, 163, 184, 0.25)",
+                    background: isActive
+                      ? "linear-gradient(135deg, #04b46e 0%, #028a54 100%)"
+                      : "#ffffff",
+                    color: isActive ? "#ffffff" : "#334155",
+                    boxShadow: isActive
+                      ? "0 10px 20px -5px rgba(4, 180, 110, 0.35)"
+                      : "0 2px 4px rgba(148, 163, 184, 0.05)",
+                    "&:hover": {
+                      transform: "translateY(-4px)",
+                      borderColor: isActive ? "transparent" : "#04b46e",
+                      boxShadow: isActive
+                        ? "0 12px 24px -5px rgba(4, 180, 110, 0.45)"
+                        : "0 6px 16px rgba(4, 180, 110, 0.08)",
+                      bgcolor: isActive ? undefined : "rgba(4, 180, 110, 0.02)",
+                    },
+                  }}
+                >
+                  {/* Top Row: Icon + Count */}
+                  <Box
+                    sx={{
+                      width: "100%",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mb: 1.5,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 36,
+                        height: 36,
+                        borderRadius: "10px",
+                        bgcolor: isActive
+                          ? "rgba(255, 255, 255, 0.18)"
+                          : "rgba(4, 180, 110, 0.08)",
+                        color: isActive ? "#ffffff" : "#04b46e",
+                        transition: "all 0.25s ease",
+                      }}
+                    >
+                      <IconComponent size={20} />
+                    </Box>
+
+                    {count > 0 && (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          minWidth: 20,
+                          height: 20,
+                          px: 0.8,
+                          borderRadius: "10px",
+                          fontSize: "0.75rem",
+                          fontWeight: 700,
+                          color: isActive ? "#04b46e" : "#ffffff",
+                          background: isActive
+                            ? "#ffffff"
+                            : "linear-gradient(135deg, #ef4444 0%, #f43f5e 100%)",
+                          boxShadow: isActive
+                            ? "none"
+                            : "0 4px 8px rgba(239, 68, 68, 0.35)",
+                        }}
+                      >
+                        {count}
+                      </Box>
+                    )}
+                  </Box>
+
+                  {/* Bottom Section: Text Labels */}
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      fontWeight={700}
+                      sx={{
+                        fontSize: "0.85rem",
+                        lineHeight: 1.2,
+                        mb: 0.2,
+                      }}
+                    >
+                      {tab.label}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontSize: "0.7rem",
+                        opacity: isActive ? 0.85 : 0.6,
+                        display: "-webkit-box",
+                        WebkitLineClamp: 1,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {tab.subLabel}
+                    </Typography>
+                  </Box>
+                </ButtonBase>
+              );
+            })}
           </Box>
 
           {/* ── Filter thời gian ── */}
