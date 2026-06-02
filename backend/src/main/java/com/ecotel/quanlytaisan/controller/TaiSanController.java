@@ -191,9 +191,9 @@ public class TaiSanController {
         }
     }
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable("id") String id) {
+    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable("id") String id, @RequestParam(value = "nam", required = false) Integer nam) {
         try {
-            TaiSanDTO result = taiSanService.getById(id);
+            TaiSanDTO result = taiSanService.getById(id, nam);
             if (result != null) {
                 return ResponseEntity.ok(ApiResponse.success("Lấy thông tin tài sản thành công", result, null));
             }
@@ -219,19 +219,31 @@ public class TaiSanController {
     @PostMapping("/batch")
     public ResponseEntity<ApiResponse<Object>> createBatch(@RequestBody List<TaiSan> list) {
         try {
-            int total = 0;
-            for (TaiSan item : list) {
-                int result = taiSanService.create(item);
-                if (result > 0) {
-                    total += result;
-                    // Gửi thông báo socket cho từng tài sản được tạo
+            int total = taiSanService.batchCreate(list);
+            if (total > 0) {
+                // Send socket notifications
+                for (TaiSan item : list) {
                     notificationService.notifyTaiSanCreated(item.getIdCongTy(), item.getId(), "System");
                 }
-            }
-            if (total > 0) {
                 return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Tạo danh sách tài sản thành công", null, total));
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.failure("Tạo danh sách tài sản thất bại", total));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+    @PutMapping("/batch")
+    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<TaiSan> list) {
+        try {
+            int total = taiSanService.batchUpdate(list);
+            if (total > 0) {
+                // Send socket notifications
+                for (TaiSan item : list) {
+                    notificationService.notifyTaiSanUpdated(item.getIdCongTy(), item.getId(), "System");
+                }
+                return ResponseEntity.ok(ApiResponse.success("Cập nhật danh sách tài sản thành công", null, total));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.failure("Cập nhật danh sách tài sản thất bại", total));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
         }
@@ -287,20 +299,18 @@ public class TaiSanController {
     @DeleteMapping("/batch")
     public ResponseEntity<ApiResponse<Object>> deleteBatch(@RequestBody List<String> ids) {
         try {
-            int total = 0;
+            List<TaiSanDTO> list = new ArrayList<>();
             for (String id : ids) {
-                // Lấy thông tin tài sản trước khi xóa để có thông tin công ty
                 TaiSanDTO taiSan = taiSanService.getById(id);
-                int result = taiSanService.delete(id);
-                if (result > 0) {
-                    total += result;
-                    // Gửi thông báo socket cho từng tài sản bị xóa
-                    if (taiSan != null) {
-                        notificationService.notifyTaiSanDeleted(taiSan.getIdCongTy(), id, "System");
-                    }
+                if (taiSan != null) {
+                    list.add(taiSan);
                 }
             }
+            int total = taiSanService.batchDelete(ids);
             if (total > 0) {
+                for (TaiSanDTO item : list) {
+                    notificationService.notifyTaiSanDeleted(item.getIdCongTy(), item.getId(), "System");
+                }
                 return ResponseEntity.ok(ApiResponse.success("Xóa danh sách tài sản thành công", null, total));
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.failure("Xóa danh sách tài sản thất bại", total));

@@ -8,6 +8,8 @@ interface Props {
   field?: string;
   disabled?: boolean;
   onChange?: (value: any) => void;
+  noBorder?: boolean;
+  sx?: any;
 }
 export default function TextFieldNumber({
   title,
@@ -15,6 +17,8 @@ export default function TextFieldNumber({
   field,
   disabled = false,
   onChange,
+  noBorder = false,
+  sx,
 }: Props) {
   const currentValue = formik && field ? getIn(formik.values, field) : "";
   const touched = formik && field ? getIn(formik.touched, field) : false;
@@ -41,6 +45,26 @@ export default function TextFieldNumber({
       error={Boolean(touched && error)}
       helperText={touched && error}
       variant="outlined"
+      sx={{
+        ...sx,
+        "& .MuiOutlinedInput-root": {
+          "& fieldset": {
+            border: noBorder ? "none" : undefined,
+            borderBottom: noBorder
+              ? "1px solid rgba(0, 0, 0, 0.23)"
+              : undefined,
+            borderRadius: noBorder ? 0 : undefined,
+          },
+          "&:hover fieldset": {
+            borderBottom: noBorder
+              ? "1px solid rgba(0, 0, 0, 0.87)"
+              : undefined,
+          },
+          "&.Mui-focused fieldset": {
+            borderBottom: noBorder ? "2px solid #1976d2" : undefined,
+          },
+        },
+      }}
     />
   );
 }

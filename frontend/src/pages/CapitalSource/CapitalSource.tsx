@@ -22,12 +22,31 @@ import { showConfirmAlert } from "../../components/Alert";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
+import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
+
+interface CapitalSourceTabState {
+  showForm: boolean;
+  selectedCapitalSource: any | null;
+  readOnly: boolean;
+  isCopy: boolean;
+  draftForm?: Record<string, any>;
+}
 
 export default function CapitalSource() {
-  const [showForm, setShowForm] = useState(false);
-  const [selectedCapitalSource, setSelectedCapitalSource] = useState<any>(null);
-  const [readOnly, setReadOnly] = useState(false);
-  const [isCopy, setIsCopy] = useState(false);
+  const { formData, setField } =
+    useTabForm<CapitalSourceTabState>("/nguon_von");
+  const showForm = formData.showForm ?? false;
+  const selectedCapitalSource = formData.selectedCapitalSource ?? null;
+  const readOnly = formData.readOnly ?? false;
+  const isCopy = formData.isCopy ?? false;
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setSelectedCapitalSource = (v: any) =>
+    setField({ selectedCapitalSource: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+  const setIsCopy = (v: boolean) => setField({ isCopy: v });
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
@@ -36,6 +55,9 @@ export default function CapitalSource() {
     pageSize: 10,
     page: 0,
   });
+
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
 
   const {
     createMutation,
@@ -77,6 +99,7 @@ export default function CapitalSource() {
     setShowForm(false);
     setSelectedCapitalSource(null);
     setIsCopy(false);
+    setField({ draftForm: undefined });
   };
 
   const columns: GridColDef[] = [
@@ -188,6 +211,10 @@ export default function CapitalSource() {
       <PageAction
         title="Quản lý nguồn vốn"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
           setShowForm(true);
           setSelectedCapitalSource(null);
           setReadOnly(false);
@@ -217,21 +244,33 @@ export default function CapitalSource() {
             </Box>
           </DialogContent>
         </Dialog>
-        {showForm && (
-          <Box py={2}>
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogContent sx={{ p: 0 }}>
             <CapitalSourceForm
               onCancel={() => {
                 setShowForm(false);
                 setSelectedCapitalSource(null);
                 setReadOnly(false);
+                setIsCopy(false);
+                setField({ draftForm: undefined });
               }}
+              onMinimize={handleMinimize}
+              onEdit={handleEdit}
               selectedCapitalSource={selectedCapitalSource}
               readOnly={readOnly}
-              onEdit={handleEdit}
               onSave={handleSave}
+              onFormChange={(values) => setField({ draftForm: values })}
+              initialFormData={formData.draftForm}
             />
-          </Box>
-        )}
+          </DialogContent>
+        </Dialog>
+
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
         <TableCustom
           tableId="capitalSource"
           title="Quản lý nguồn vốn"
@@ -249,6 +288,8 @@ export default function CapitalSource() {
           setSearchValue={setSearchValue}
           onDeleteAll={deleteAllMutation.mutate}
           showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
+          onImportExcel={(file) => importExcelMutation.mutate(file)}
+          onExportExcel={() => exportMutation.mutate(allCapitalSources)}
         />
       </Box>
     </Box>

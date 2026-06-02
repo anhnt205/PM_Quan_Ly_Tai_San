@@ -39,6 +39,7 @@ public class TaiSanDTO {
     private Integer namSanXuat;
     private String lyDoTang;
     private Integer hienTrang;
+    private String tenHienTrang;
     private Integer soLuong;
     private String donViTinh;
     private String tenDonViTinh;
@@ -57,7 +58,11 @@ public class TaiSanDTO {
     private List<ChiTietTaiSan> chiTietTaiSanList;
     private List<TaiSanCon> taiSanConList;
     private List<TaiSanFile> fileDinhKemList;
+    private List<ChuKySuaChua> chuKySuaChuaList;
+
     private String idLoaiTaiSanCon;
+    private String tenLoai;
+
     private String soThe;
     private Double nvNS;
     private Double vonVay;
@@ -71,4 +76,7 @@ public class TaiSanDTO {
     private String tenDonViHienThoi;
     private List<NguonKinhPhi> nguonKinhPhiList;
     private List<SetNguonKinhPhi>setNguonKinhPhiList;
+    private Double gioHoatDong;
+    private String idDonViQuanlyKiThuat;
+    private String tenDonViQuanlyKiThuat;
 }

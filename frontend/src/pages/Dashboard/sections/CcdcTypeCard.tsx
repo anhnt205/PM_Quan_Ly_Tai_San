@@ -60,7 +60,7 @@ export default function CcdcTypeCard({
       </Box>
 
       <Box sx={{ height: 200 }}>
-        <BarChart data={ccdcBarData} height={200} barColor="#FF9800" />
+        <BarChart data={ccdcBarData} height={200} barColor="#18af52ff" />
       </Box>
     </Paper>
   );

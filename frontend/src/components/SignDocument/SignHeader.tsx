@@ -31,15 +31,15 @@ export const SignHeader = ({
           width: 40,
           height: 40,
           borderRadius: "10px",
-          bgcolor: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          bgcolor: "#f3f4f6",
+          border: "1px solid #e5e7eb",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           flexShrink: 0,
         }}
       >
-        <Description sx={{ color: "white", fontSize: 22 }} />
+        <Description sx={{ color: "#4b5563", fontSize: 22 }} />
       </Box>
 
       <Box sx={{ minWidth: 0 }}>
@@ -76,28 +76,33 @@ export const SignHeader = ({
 
     {/* Right Section */}
     <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", flexShrink: 0 }}>
-      <Button
-        variant="contained"
-        size="medium"
-        onClick={handleExportPDF}
-        startIcon={<PictureAsPdf sx={{ fontSize: 18 }} />}
-        sx={{
-          textTransform: "none",
-          fontSize: "0.875rem",
-          fontWeight: 600,
-          px: 2.5,
-          py: 1,
-          borderRadius: "8px",
-          background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-          boxShadow: "0 2px 8px rgba(16, 185, 129, 0.3)",
-          "&:hover": {
-            background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
-            boxShadow: "0 4px 12px rgba(16, 185, 129, 0.4)",
-          },
-        }}
-      >
-        Xuất PDF
-      </Button>
+        <Button
+            variant="outlined"
+            size="medium"
+            onClick={handleExportPDF}
+            startIcon={<PictureAsPdf sx={{ fontSize: 18, color: "#e00c0c" }} />}
+            sx={{
+                textTransform: "none",
+                fontSize: "0.875rem",
+                fontWeight: 500,
+                px: 2.5,
+                py: 1,
+                borderRadius: "8px",
+                color: "#e00c0c",
+                borderColor: "#e00c0c",
+                bgcolor: "white",
+                "&:hover": {
+                    borderColor: "#b00000",
+                    bgcolor: "#fff0f0",
+                    color: "#b00000",
+                    "& .MuiButton-startIcon svg": {
+                        color: "#b00000",
+                    },
+                },
+            }}
+        >
+            Xuất PDF
+        </Button>
 
       <IconButton
         onClick={onCancel}

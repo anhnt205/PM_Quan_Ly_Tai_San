@@ -1,12 +1,16 @@
-import { SyntheticEvent, useEffect, useState } from "react";
+import { SyntheticEvent, useEffect, useRef, useState } from "react";
 import {
   Badge,
   Box,
+  Dialog,
+  DialogContent,
   Grid,
   IconButton,
   Tab,
   Tabs,
   Tooltip,
+  ButtonBase,
+  Typography,
 } from "@mui/material";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 
@@ -20,7 +24,7 @@ import {
   useAssetHandoverMutation,
   useAssetHandoverPageQuery,
 } from "./Mutation";
-import { Eye, Trash2, ListPlus, Edit } from "lucide-react";
+import { Eye, Trash2, ListPlus, Edit, FileText, Truck } from "lucide-react";
 import { VisibilityOff } from "@mui/icons-material";
 import { ClassOutlined, TableChart } from "@mui/icons-material";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
@@ -59,29 +63,67 @@ import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
 import S3Service from "../../services/S3Service";
 import api from "../../config/api.config";
 import { getAssetHandoverCount } from "../../utils/helpers";
+import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
+
+interface AssetHandoverTabState {
+  showForm: boolean;
+  selectedRow: any | null;
+  showSidebar: boolean;
+  readOnly: boolean;
+  activeTab: number;
+  tabValue: number;
+  sidebarMode: "document" | "signer" | null;
+  currentStatus: string;
+  currentType: string;
+  showSignDocument: boolean;
+  isFullPageSign: boolean;
+  selectedDocument: any | null;
+  draftForm?: Record<string, any>;
+}
 
 export default function AssetHandover() {
-  const [showForm, setShowForm] = useState(false);
-  const [selectedRow, setSelectedRow] = useState<any>(null);
+  const { formData, setField } =
+    useTabForm<AssetHandoverTabState>("/ban_giao_tai_san");
+  const showForm = formData.showForm ?? false;
+  const selectedRow = formData.selectedRow ?? null;
+  const readOnly = formData.readOnly ?? false;
+  const activeTab = formData.activeTab ?? 0;
+  const currentStatus = formData.currentStatus ?? "";
+  const currentType = formData.currentType ?? "";
+  const showSidebar = formData.showSidebar ?? false;
+  const tabValue = formData.tabValue ?? 0;
+  const sidebarMode = formData.sidebarMode ?? null;
+  const isFullPageSign = formData.isFullPageSign ?? false;
+  const showSignDocument = formData.showSignDocument ?? false;
+  const selectedDocument = formData.selectedDocument ?? null;
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setSelectedRow = (v: any) => setField({ selectedRow: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+  const setActiveTab = (v: number) => setField({ activeTab: v });
+  const setCurrentStatus = (v: string) => setField({ currentStatus: v });
+  const setCurrentType = (v: string) => setField({ currentType: v });
+  const setShowSidebar = (v: boolean) => setField({ showSidebar: v });
+  const setTabValue = (v: number) => setField({ tabValue: v });
+  const setSidebarMode = (v: any) => setField({ sidebarMode: v });
+  const setIsFullPageSign = (v: boolean) => setField({ isFullPageSign: v });
+  const setShowSignDocument = (v: boolean) => setField({ showSignDocument: v });
+  const setSelectedDocument = (v: any) => setField({ selectedDocument: v });
+
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
     pageSize: 10,
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
-  const [showSignDocument, setShowSignDocument] = useState(false);
   const [showSignerSidebar, setShowSignerSidebar] = useState(true);
-  const [readOnly, setReadOnly] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
   const handleEdit = () => setReadOnly(false);
-  const [currentStatus, setCurrentStatus] = useState("");
-  const [currentType, setCurrentType] = useState("");
-  const [showSidebar, setShowSidebar] = useState(false);
-  const [tabValue, setTabValue] = useState(0);
-  const [sidebarMode, setSidebarMode] = useState<"document" | "signer" | null>(
-    null,
-  );
-  const [isFullPageSign, setIsFullPageSign] = useState(false);
+
+  const [isClosing, setIsClosing] = useState(false);
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized =
+    !showForm && !isClosing && hasDraftData(formData.draftForm);
 
   const { user } = useSelector((state: any) => state.user);
   const {
@@ -134,12 +176,18 @@ export default function AssetHandover() {
   const { data: positions = [] } = useAllPositionsQuery();
   const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
   const { assetTransferDetailAllMutation } = useAssetTranferMutation();
+  const isFirstActiveTabMount = useRef(true);
 
   useEffect(() => {
+    if (isFirstActiveTabMount.current) {
+      isFirstActiveTabMount.current = false;
+      return;
+    }
     setSelectedIds([]);
     setSelectedRow(null);
     setShowForm(false);
     setShowSidebar(false);
+    setField({ draftForm: undefined });
   }, [activeTab]);
 
   const handleTabChange = (_event: SyntheticEvent, newValue: number) => {
@@ -271,6 +319,7 @@ export default function AssetHandover() {
   };
 
   const handleClose = () => {
+    setIsClosing(true);
     setSelectedIds([]);
     setSearchValue("");
     setShowSignDocument(false);
@@ -278,6 +327,8 @@ export default function AssetHandover() {
     setShowForm(false);
     setShowSidebar(false);
     setReadOnly(false);
+    setField({ draftForm: undefined });
+    setTimeout(() => setIsClosing(false), 100);
   };
 
   const handleSign = (
@@ -439,7 +490,6 @@ export default function AssetHandover() {
     },
   ];
 
-  const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
   const [assetTransfer, setAssetTransfer] = useState<any | null>(null);
 
   const columnsTransfer: GridColDef<AssetTransferData>[] = [
@@ -646,6 +696,11 @@ export default function AssetHandover() {
           <PageAction
             title={"Biên bản bàn giao tài sản"}
             onNewClick={() => {
+              if (isMinimized) {
+                setShowForm(true);
+                return;
+              }
+              setField({ draftForm: undefined });
               setSelectedRow(null);
               setReadOnly(false);
               setShowForm(true);
@@ -654,11 +709,17 @@ export default function AssetHandover() {
           />
 
           <Box sx={{ p: 2 }}>
-            {showForm && (
-              <Box sx={{ mb: 2 }}>
+            <Dialog
+              open={showForm}
+              onClose={handleMinimize}
+              maxWidth="lg"
+              fullWidth
+            >
+              <DialogContent sx={{ p: 0, overflow: "auto" }}>
                 <AssetHandoverForm
                   key={selectedRow?.id || "form-key"}
                   onClose={handleClose}
+                  onMinimize={handleMinimize}
                   onSave={handleSave}
                   onCancel={handleCancel}
                   onEdit={handleEdit}
@@ -671,9 +732,13 @@ export default function AssetHandover() {
                   staffs={(staffs || []).filter(
                     (staff: any) => staff.hasAccount,
                   )}
+                  onFormChange={(values) => setField({ draftForm: values })}
+                  initialFormData={formData.draftForm}
                 />
-              </Box>
-            )}
+              </DialogContent>
+            </Dialog>
+
+            {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
 
             {/* Bước 1: Cấu trúc lại Grid để Tabs luôn chiếm 100% chiều ngang */}
             <Grid
@@ -688,46 +753,131 @@ export default function AssetHandover() {
               <Grid size={{ xs: 12 }}>
                 <Box
                   sx={{
-                    borderBottom: 1,
-                    borderColor: "divider",
-                    bgcolor: "#fff",
+                    width: "100%",
+                    overflowX: "auto",
                     display: "flex",
-                    justifyContent: "flex-end",
+                    gap: 2,
+                    p: 2,
+                    bgcolor: "#f8fafc",
+                    borderBottom: "1px solid",
+                    borderColor: "divider",
+                    "&::-webkit-scrollbar": {
+                      height: "6px",
+                    },
+                    "&::-webkit-scrollbar-thumb": {
+                      bgcolor: "grey.300",
+                      borderRadius: "4px",
+                    },
+                    "&::-webkit-scrollbar-track": {
+                      bgcolor: "transparent",
+                    },
                   }}
                 >
-                  <Tabs
-                    value={activeTab}
-                    onChange={handleTabChange}
-                    sx={{
-                      "& .MuiTab-root": {
-                        textTransform: "none",
-                        fontWeight: "bold",
-                        minHeight: "64px",
-                      },
-                    }}
-                  >
-                    <Tab
-                      icon={
-                        <Badge badgeContent={assetHandoverCount} color="error">
-                          <ClassOutlined />
-                        </Badge>
-                      }
-                      label="Biên bản bàn giao"
-                      iconPosition="top"
-                    />
-                    <Tab
-                      icon={
-                        <Badge
-                          badgeContent={transferPage.totalItems}
-                          color="error"
+                  {[
+                    {
+                      label: "Biên bản bàn giao",
+                      subLabel: "Bàn giao tài sản",
+                      icon: FileText,
+                    },
+                    {
+                      label: "Quyết định điều động",
+                      subLabel: "Điều động thiết bị",
+                      icon: Truck,
+                    },
+                  ].map((t, idx) => {
+                    const IconComponent = t.icon;
+                    const isActive = activeTab === idx;
+
+                    return (
+                      <ButtonBase
+                        key={idx}
+                        onClick={() => {
+                          setActiveTab(idx);
+                          handleClose();
+                        }}
+                        focusRipple
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "flex-start",
+                          justifyContent: "space-between",
+                          minWidth: 175,
+                          flex: "1 0 175px",
+                          height: 110,
+                          p: 2,
+                          borderRadius: "14px",
+                          textAlign: "left",
+                          position: "relative",
+                          overflow: "hidden",
+                          transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                          border: "1px solid",
+                          borderColor: isActive
+                            ? "transparent"
+                            : "rgba(148, 163, 184, 0.25)",
+                          background: isActive
+                            ? "linear-gradient(135deg, #04b46e 0%, #028a54 100%)"
+                            : "#ffffff",
+                          color: isActive ? "#ffffff" : "#334155",
+                          boxShadow: isActive
+                            ? "0 10px 20px -5px rgba(4, 180, 110, 0.35)"
+                            : "0 2px 4px rgba(148, 163, 184, 0.05)",
+                          "&:hover": {
+                            transform: "translateY(-4px)",
+                            borderColor: isActive ? "transparent" : "#04b46e",
+                            boxShadow: isActive
+                              ? "0 12px 24px -5px rgba(4, 180, 110, 0.45)"
+                              : "0 6px 16px rgba(4, 180, 110, 0.08)",
+                            bgcolor: isActive ? undefined : "rgba(4, 180, 110, 0.02)",
+                          },
+                        }}
+                      >
+                        {/* Top Row: Icon */}
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: 36,
+                            height: 36,
+                            borderRadius: "10px",
+                            bgcolor: isActive
+                              ? "rgba(255, 255, 255, 0.18)"
+                              : "rgba(4, 180, 110, 0.08)",
+                            color: isActive ? "#ffffff" : "#04b46e",
+                            transition: "all 0.25s ease",
+                            mb: 1.5,
+                          }}
                         >
-                          <TableChart />
-                        </Badge>
-                      }
-                      label="Quyết định điều động"
-                      iconPosition="top"
-                    />
-                  </Tabs>
+                          <IconComponent size={20} />
+                        </Box>
+
+                        {/* Bottom: Labels */}
+                        <Box sx={{ width: "100%" }}>
+                          <Typography
+                            sx={{
+                              fontSize: 13,
+                              fontWeight: 700,
+                              lineHeight: 1.3,
+                              color: "inherit",
+                              mb: 0.25,
+                            }}
+                          >
+                            {t.label}
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontSize: 11,
+                              lineHeight: 1.3,
+                              color: isActive ? "rgba(255,255,255,0.75)" : "#94a3b8",
+                              fontWeight: 400,
+                            }}
+                          >
+                            {t.subLabel}
+                          </Typography>
+                        </Box>
+                      </ButtonBase>
+                    );
+                  })}
                 </Box>
               </Grid>
               {/* HÀNG 2: BẢNG VÀ SIDEBAR */}

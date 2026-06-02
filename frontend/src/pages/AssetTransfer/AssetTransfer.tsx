@@ -1,5 +1,14 @@
-import { useEffect, useState } from "react";
-import { Box, Grid, IconButton, Tooltip, Tabs, Tab } from "@mui/material";
+import { useEffect, useRef, useState } from "react";
+import {
+  Box,
+  Grid,
+  IconButton,
+  Tooltip,
+  Tabs,
+  Tab,
+  DialogContent,
+  Dialog,
+} from "@mui/material";
 import {
   Visibility as VisibilityIcon,
   VisibilityOff,
@@ -40,40 +49,77 @@ import { useAllDepartmentsQuery } from "../Department/Mutation";
 import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
 import { useAllUnitsQuery } from "../Unit/Mutation";
 import S3Service from "../../services/S3Service";
+import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
+
+interface AssetTransferTabState {
+  showForm: boolean;
+  selectedRow: any | null;
+  showSidebar: boolean;
+  readOnly: boolean;
+  tabValue: number;
+  sidebarMode: "document" | "signer" | null;
+  status: string;
+  showSignDocument: boolean;
+  isFullPageSign: boolean;
+  selectedDocument: any | null;
+  draftForm?: Record<string, any>;
+  prevType: string | null;
+}
 
 export default function AssetTransfer() {
   const { user } = useSelector((state: any) => state.user);
-  const [showForm, setShowForm] = useState(false);
-  const [selectedRow, setSelectedRow] = useState<AssetTransferData | null>(
-    null,
+  const [searchParams] = useSearchParams();
+  const type = searchParams.get("type");
+
+  const { formData, setField } = useTabForm<AssetTransferTabState>(
+    `/dieu_dong_tai_san?type=${type ?? "1"}`,
   );
-  const [showSidebar, setShowSidebar] = useState(false);
+
+  // Đọc từ Redux
+  const showForm = formData.showForm ?? false;
+  const selectedRow = formData.selectedRow ?? null;
+  const showSidebar = formData.showSidebar ?? false;
+  const readOnly = formData.readOnly ?? false;
+  const tabValue = formData.tabValue ?? 0;
+  const sidebarMode = formData.sidebarMode ?? null;
+  const status = formData.status ?? "";
+  const showSignDocument = formData.showSignDocument ?? false;
+  const isFullPageSign = formData.isFullPageSign ?? false;
+  const selectedDocument = formData.selectedDocument ?? null;
+  const prevType = formData.prevType ?? null;
+
+  // Setter helpers
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setSelectedRow = (v: any) => setField({ selectedRow: v });
+  const setShowSidebar = (v: boolean) => setField({ showSidebar: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+  const setTabValue = (v: number) => setField({ tabValue: v });
+  const setSidebarMode = (v: any) => setField({ sidebarMode: v });
+  const setStatus = (v: string) => setField({ status: v });
+  const setShowSignDocument = (v: boolean) => setField({ showSignDocument: v });
+  const setIsFullPageSign = (v: boolean) => setField({ isFullPageSign: v });
+  const setSelectedDocument = (v: any) => setField({ selectedDocument: v });
+
+  // Local state (không cần persist)
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [searchValue, setSearchValue] = useState("");
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
     pageSize: 10,
   });
+  const [assetTransferDetail, setAssetTransferDetail] = useState<any[]>([]);
+  const [assetHandover, setAssetHandover] = useState<AssetHandoverData[]>([]);
+  const [showSignerSidebar, setShowSignerSidebar] = useState(true);
+
+  const isClosingRef = useRef(false);
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized =
+    !showForm && !isClosingRef.current && hasDraftData(formData.draftForm);
 
   const location = useLocation();
   const navigate = useNavigate();
-
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
-  const [searchValue, setSearchValue] = useState("");
-  const [showSignDocument, setShowSignDocument] = useState(false);
-  const [showSignerSidebar, setShowSignerSidebar] = useState(true);
-  const [showBienBanDialog, setShowBienBanDialog] = useState(false);
-  const [readOnly, setReadOnly] = useState(false);
-  const [assetHandover, setAssetHandover] = useState<AssetHandoverData[]>([]);
-  const [sidebarMode, setSidebarMode] = useState<"signer" | "document" | null>(
-    null,
-  );
-  const [isFullPageSign, setIsFullPageSign] = useState(false);
-  const [tabValue, setTabValue] = useState(0);
-
-  const [searchParams] = useSearchParams();
-  const type = searchParams.get("type");
-  const [assetTransferDetail, setAssetTransferDetail] = useState<any[]>([]);
-  const [status, setStatus] = useState("");
   const {
     createMutation,
     updateMutation,
@@ -149,6 +195,8 @@ export default function AssetTransfer() {
   ];
 
   useEffect(() => {
+    if (prevType === type) return;
+
     setSelectedIds([]);
     setSelectedDocument(null);
     setSearchValue("");
@@ -160,10 +208,12 @@ export default function AssetTransfer() {
     setSidebarMode(null);
     setIsFullPageSign(false);
     setTabValue(0);
+    setField({ draftForm: undefined, prevType: type });
   }, [type]);
 
   useEffect(() => {
     if (location.state?.autoCreate) {
+      setField({ draftForm: undefined });
       setShowForm(true);
       setSelectedRow(null);
       setReadOnly(false);
@@ -206,18 +256,23 @@ export default function AssetTransfer() {
     setReadOnly(false);
   };
   const handleClose = () => {
+    isClosingRef.current = true;
+    setShowForm(false);
+    setField({ draftForm: undefined });
     setSelectedIds([]);
     setSelectedDocument(null);
     setSearchValue("");
     setShowSignDocument(false);
     setSelectedRow(null);
-    setShowForm(false);
     setShowSidebar(false);
     setReadOnly(false);
     setAssetHandover([]);
     setSidebarMode(null);
     setIsFullPageSign(false);
     setTabValue(0);
+    setTimeout(() => {
+      isClosingRef.current = false;
+    }, 300);
   };
 
   const handleSend = (items: any[]) => {
@@ -255,20 +310,11 @@ export default function AssetTransfer() {
   const handleDecision = (data: any[]) => {
     decisionMutation.mutate(data, {
       onSuccess: () => {
-        // Chủ động cập nhật lại state của selectedRow ngay khi ban hành thành công
-        setSelectedRow((prev: any) => {
-          if (!prev) return prev;
-
-          // Kiểm tra xem row đang được chọn (đang mở Sidebar) có nằm trong danh sách vừa ban hành không
-          const isJustIssued = data.some((item) => item.id === prev.id);
-
-          if (isJustIssued) {
-            // Nếu có, trả về một object mới và ghi đè trangThai thành 4 (Đã ban hành)
-            return { ...prev, trangThai: 4 };
-          }
-
-          return prev;
-        });
+        if (!selectedRow) return;
+        const isJustIssued = data.some((item) => item.id === selectedRow.id);
+        if (isJustIssued) {
+          setField({ selectedRow: { ...selectedRow, trangThai: 4 } });
+        }
       },
     });
   };
@@ -447,9 +493,12 @@ export default function AssetTransfer() {
                 color="primary"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setSelectedRow(rowData);
-                  setShowForm(true);
-                  setReadOnly(true);
+                  setField({
+                    selectedRow: rowData,
+                    showForm: true,
+                    readOnly: true,
+                    showSidebar: false,
+                  });
                 }}
                 sx={{
                   padding: "4px",
@@ -553,16 +602,31 @@ export default function AssetTransfer() {
           <PageAction
             title={title}
             onNewClick={() => {
+              if (isMinimized) {
+                setShowForm(true);
+                return;
+              }
+              setField({ draftForm: undefined });
               handleClose();
               setShowForm(true);
             }}
           />
           <Box sx={{ p: 2 }}>
-            {showForm && (
-              <Box sx={{ mb: 2 }}>
+            <Dialog
+              open={showForm}
+              onClose={handleMinimize}
+              maxWidth="lg"
+              fullWidth
+            >
+              <DialogContent sx={{ p: 0, overflow: "auto" }}>
                 <AssetTransferForm
-                  key={showForm ? "new-form" : `edit-${selectedRow?.id}`}
+                  key={
+                    showForm
+                      ? `new-form-type-${type}`
+                      : `edit-${selectedRow?.id}`
+                  }
                   onClose={handleClose}
+                  onMinimize={handleMinimize}
                   readOnly={readOnly}
                   type={Number(type)}
                   onEdit={handleEdit}
@@ -577,8 +641,14 @@ export default function AssetTransfer() {
                   )}
                   allUnits={allUnits}
                   allCurrentStatus={allCurrentStatus}
+                  onFormChange={(values) => setField({ draftForm: values })}
+                  initialFormData={formData.draftForm}
                 />
-              </Box>
+              </DialogContent>
+            </Dialog>
+
+            {isMinimized && (
+              <DraftIndicator onClick={() => setShowForm(true)} />
             )}
 
             <Grid

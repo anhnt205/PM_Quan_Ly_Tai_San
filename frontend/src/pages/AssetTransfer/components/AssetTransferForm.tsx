@@ -1,7 +1,4 @@
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Box,
   Button,
   Checkbox,
@@ -17,15 +14,14 @@ import {
   styled,
 } from "@mui/material";
 import { useFormik } from "formik";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import ViewBtn from "../../../components/Button/ViewBtn";
+import { useEffect, useState } from "react";
 import {
   Add,
-  ArrowDropDown,
-  ArrowDropUp,
   Delete,
   Cancel,
-  Visibility, // Icon xem trước
+  Visibility,
+  Remove,
+  Close, 
 } from "@mui/icons-material";
 import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
@@ -44,8 +40,8 @@ import { useSelector } from "react-redux";
 import { generateBangKePdf, mergeBangKeWithOriginalPdf } from "../config";
 import S3Service from "../../../services/S3Service";
 import { assetTransferValidationSchema } from "../validation";
-import { CongTy } from "../../../utils/const";
 import ExcelAssetUploader from "../../../components/common/ExcelAssetUploader";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 const CustomTableCell = styled(TableCell)(({ theme }) => ({
   borderBottom: "1px solid rgba(224, 224, 224, 1)",
@@ -72,6 +68,9 @@ export default function AssetTransferForm({
   staffs,
   allUnits,
   allCurrentStatus,
+  initialFormData,
+  onFormChange,
+  onMinimize,
 }: {
   onEdit: () => void;
   onClose: () => void;
@@ -86,6 +85,9 @@ export default function AssetTransferForm({
   staffs: any[];
   allUnits: any[];
   allCurrentStatus: any[];
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
+  onMinimize: () => void;
 }) {
   const [expanded, setExpanded] = useState(true);
   const [isPreview, setIsPreview] = useState(false);
@@ -97,43 +99,35 @@ export default function AssetTransferForm({
 
   const formik = useFormik({
     initialValues: {
-      id: "",
-      soQuyetDinh: "",
-      tenPhieu: "",
-      idDonViGiao: type === 1 ? "K30" : "",
-      idDonViNhan: type === 3 ? "kth" : "",
-      idNguoiKyNhay: "",
-      trangThaiKyNhay: false,
-      nguoiLapPhieuKyNhay: false,
-      idDonViDeNghi: user?.taiKhoan?.phongBanId || "",
-      tgGnTuNgay: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-      tgGnDenNgay: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-      idTrinhDuyetCapPhong: "",
-      trinhDuyetCapPhongXacNhan: false,
-      idTrinhDuyetGiamDoc: "",
-      trinhDuyetGiamDocXacNhan: false,
-      diaDiemGiaoNhan: "",
-      idPhongBanXemPhieu: "",
-      noiNhan: "",
-      trangThai: 0,
-      idCongTy: CongTy.CT001,
-      ngayTao: "",
-      ngayCapNhat: "",
-      nguoiTao: "",
-      nguoiCapNhat: "",
-      coHieuLuc: 1,
-      loai: type,
-      share: false,
-      trichYeu: "",
-      duongDanFile: "",
-      tenFile: "",
-      ngayKy: "",
-      daBanGiao: false,
-      byStep: false,
-      coPhieuBanGiao: false,
-      taiLieuCuoi: "",
-      nguoiKyList: [],
-      chiTietDieuDongTaiSanDTOS: [
+      id: initialFormData?.id ?? "",
+      soQuyetDinh: initialFormData?.soQuyetDinh ?? "",
+      tenPhieu: initialFormData?.tenPhieu ?? "",
+      idDonViGiao: initialFormData?.idDonViGiao ?? (type === 1 ? "K30" : ""),
+      idDonViNhan: initialFormData?.idDonViNhan ?? (type === 3 ? "kth" : ""),
+      idNguoiKyNhay: initialFormData?.idNguoiKyNhay ?? "",
+      trangThaiKyNhay: initialFormData?.trangThaiKyNhay ?? false,
+      nguoiLapPhieuKyNhay: initialFormData?.nguoiLapPhieuKyNhay ?? false,
+      idDonViDeNghi:
+        initialFormData?.idDonViDeNghi ?? user?.taiKhoan?.phongBanId ?? "",
+      tgGnTuNgay:
+        initialFormData?.tgGnTuNgay ??
+        dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      tgGnDenNgay:
+        initialFormData?.tgGnDenNgay ??
+        dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      idTrinhDuyetCapPhong: initialFormData?.idTrinhDuyetCapPhong ?? "",
+      trinhDuyetCapPhongXacNhan:
+        initialFormData?.trinhDuyetCapPhongXacNhan ?? false,
+      idTrinhDuyetGiamDoc: initialFormData?.idTrinhDuyetGiamDoc ?? "",
+      trinhDuyetGiamDocXacNhan:
+        initialFormData?.trinhDuyetGiamDocXacNhan ?? false,
+      trichYeu: initialFormData?.trichYeu ?? "",
+      duongDanFile: initialFormData?.duongDanFile ?? "",
+      tenFile: initialFormData?.tenFile ?? "",
+      taiLieuCuoi: initialFormData?.taiLieuCuoi ?? "",
+      loai: initialFormData?.loai ?? type,
+      nguoiKyList: initialFormData?.nguoiKyList ?? [],
+      chiTietDieuDongTaiSanDTOS: initialFormData?.chiTietDieuDongTaiSanDTOS ?? [
         {
           id: "",
           idDieuDongTaiSan: "",
@@ -160,17 +154,19 @@ export default function AssetTransferForm({
         .filter(
           (item: any) => item.idTaiSan !== "" || item.idTaiSan !== undefined,
         )
-        .map((item, index) => ({
+        .map((item: any, index: number) => ({
           ...item,
           id: `${generateCode("CTDD-")}-${index}`,
           idDieuDongTaiSan: values.id,
         }));
-      const nguoiKyList = values.nguoiKyList.map((item: any, index) => ({
-        ...item,
-        id: `${generateCode("NK-")}-${index}`,
-        idTaiLieu: values.id,
-        idPhongBan: values.idDonViDeNghi,
-      }));
+      const nguoiKyList = values.nguoiKyList.map(
+        (item: any, index: number) => ({
+          ...item,
+          id: `${generateCode("NK-")}-${index}`,
+          idTaiLieu: values.id,
+          idPhongBan: values.idDonViDeNghi,
+        }),
+      );
       const bangKeBytes = await generateBangKePdf(
         values.chiTietDieuDongTaiSanDTOS,
         allUnits,
@@ -215,6 +211,14 @@ export default function AssetTransferForm({
       });
     },
   });
+
+  const debouncedValues = useDebounce(formik.values, 800);
+  useEffect(() => {
+    if (!selectedTransfer) {
+      onFormChange?.(debouncedValues);
+    }
+  }, [debouncedValues]);
+
   useEffect(() => {
     if (selectedTransfer) {
       formik.setValues({
@@ -229,7 +233,7 @@ export default function AssetTransferForm({
           ? selectedTransfer.duongDanFile
           : selectedTransfer.taiLieuCuoi,
       );
-    } else formik.resetForm();
+    }
   }, [selectedTransfer]);
 
   const isCapPhat = type === 1;
@@ -246,11 +250,6 @@ export default function AssetTransferForm({
 
   useEffect(() => {
     if (formik.values.idDonViDeNghi && departments && staffs) {
-      console.log(
-        "donvidenghi",
-        staffs.filter((i) => i.phongBanId === formik.values.idDonViDeNghi),
-      );
-      console.log("staffs", staffs);
       setNVThamMuu(
         staffs.filter((i) => i.phongBanId === formik.values.idDonViDeNghi),
       );
@@ -291,53 +290,41 @@ export default function AssetTransferForm({
           isEdit={[0].includes(selectedTransfer?.trangThai ?? 0) ? true : false}
         />
       )}
-      <Accordion
-        sx={{
-          background: "#f6f8f4ff",
-          boxShadow: "none",
-          margin: "0 !important",
-          "&:before": { display: "none" },
-          "&.Mui-expanded": { margin: "0 !important" },
-        }}
-        expanded={expanded}
-      >
-        <AccordionSummary
-          expandIcon={<ViewBtn expanded={expanded} setExpanded={setExpanded} />}
-          sx={{
-            "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
-              transform: "none",
-            },
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            {expanded ? <ArrowDropUp /> : <ArrowDropDown />}
-            <Typography>Chi tiết {label}</Typography>
-          </Box>
-        </AccordionSummary>
 
-        <AccordionDetails
+      <Box
+        sx={{
+          bgcolor: "#ffffff",
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+        }}
+      >
+        {/* Header sticky */}
+        <Box
           sx={{
-            pt: 0,
-            pb: 2,
-            display: "flex",
-            flexDirection: "column",
+            p: 2,
+            bgcolor: "#ffffff",
+            borderBottom: "1px solid",
+            borderColor: "divider",
+            position: "sticky",
+            top: 0,
+            zIndex: 11,
           }}
         >
-          {/* THANH CÔNG CỤ: NÚT HÀNH ĐỘNG VÀ STEPPER */}
           <Box
             display="flex"
-            justifyContent="space-between"
             alignItems="center"
-            mb={2}
+            justifyContent="space-between"
           >
-            <Box>
-              {[0].includes(currentStatus) && (
-                <Box display="flex" gap={2}>
-                  {!readOnly && <SaveBtn onSave={formik.submitForm} />}
-                  {!readOnly && <CancelBtn onClick={onClose} />}
-                  {readOnly && <EditButton onClick={onEdit} />}
-                </Box>
-              )}
+            {/* Bên trái: Tiêu đề */}
+            <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
+              Chi tiết {label}
+            </Typography>
+
+            {/* Bên phải: Stepper + Các nút */}
+            <Box display="flex" alignItems="center" gap={1}>
+              <CustomStepper activeStep={currentStatus} />
+
               {![0, 2, 3, 4].includes(currentStatus) && (
                 <Button
                   size="small"
@@ -348,456 +335,462 @@ export default function AssetTransferForm({
                   Hủy phiếu {label}
                 </Button>
               )}
+
+              <IconButton size="small" onClick={onMinimize} title="Ẩn tạm">
+                <Remove fontSize="small" />
+              </IconButton>
+              <IconButton size="small" onClick={onClose} title="Đóng">
+                <Close fontSize="small" />
+              </IconButton>
             </Box>
-            {/* Tích hợp Component CustomStepper của bạn */}
-            <CustomStepper activeStep={currentStatus} />
           </Box>
+        </Box>
 
-          <Paper
-            sx={{
-              p: 3,
-              borderRadius: "8px",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
-            }}
-          >
-            {/* --- PHẦN 1: THÔNG TIN CHUNG (Sử dụng Grid size MUI v7) --- */}
-            <Grid container spacing={4}>
-              {/* CỘT TRÁI */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Grid container spacing={2}>
-                  {selectedTransfer && (
-                    <Grid size={12}>
-                      <FieldInput
-                        title="Số chứng từ *"
-                        formik={formik}
-                        field="id"
-                        disabled={true}
-                      />
-                    </Grid>
-                  )}
+        <Paper
+          sx={{
+            p: 3,
+            borderRadius: "8px",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+          }}
+        >
+          {/* --- PHẦN 1: THÔNG TIN CHUNG (Sử dụng Grid size MUI v7) --- */}
+          <Grid container spacing={4}>
+            {/* CỘT TRÁI */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Grid container spacing={2}>
+                {selectedTransfer && (
                   <Grid size={12}>
                     <FieldInput
-                      title="Tên phiếu *"
+                      title="Số chứng từ *"
                       formik={formik}
-                      field="tenPhieu"
-                      disabled={readOnly}
+                      field="id"
+                      disabled={true}
                     />
                   </Grid>
-                  <Grid size={12}>
-                    <FieldInput
-                      title="Trích yếu *"
-                      formik={formik}
-                      field="trichYeu"
-                      disabled={readOnly}
-                    />
-                  </Grid>
-                  <Grid size={12}>
-                    <FieldAutoCompleted
-                      title="Đơn vị giao *"
-                      labelkey="tenPhongBan"
-                      data={dvGiao}
-                      formik={formik}
-                      field="idDonViGiao"
-                      disabled={readOnly}
-                    />
-                  </Grid>
-                  <Grid size={12}>
-                    <FieldAutoCompleted
-                      title="Đơn vị nhận *"
-                      labelkey="tenPhongBan"
-                      data={dvNhan}
-                      formik={formik}
-                      field="idDonViNhan"
-                      disabled={readOnly}
-                    />
-                  </Grid>
-                  <Grid size={12}>
-                    <FieldDateTime
-                      title="TGCN từ Ngày"
-                      formik={formik}
-                      field="tgGnTuNgay"
-                      disabled={readOnly}
-                    />
-                  </Grid>
-                  <Grid size={12}>
-                    <FieldDateTime
-                      title="TGCN đến Ngày"
-                      formik={formik}
-                      field="tgGnDenNgay"
-                      disabled={readOnly}
-                    />
-                  </Grid>
+                )}
+                <Grid size={12}>
+                  <FieldInput
+                    title="Tên phiếu *"
+                    formik={formik}
+                    field="tenPhieu"
+                    disabled={readOnly}
+                  />
                 </Grid>
-              </Grid>
-
-              {/* CỘT PHẢI */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Grid container spacing={2}>
-                  <Grid size={12}>
-                    <FieldAutoCompleted
-                      title="Đơn vị đề nghị *"
-                      labelkey="tenPhongBan"
-                      data={departments.filter((i) => !i.isKho)}
-                      formik={formik}
-                      field="idDonViDeNghi"
-                      disabled={readOnly}
-                    />
-                  </Grid>
-                  <Grid size={12}>
-                    <FieldAutoCompleted
-                      title="Người lập biểu *"
-                      labelkey="hoTen"
-                      data={nvThamMuu}
-                      formik={formik}
-                      field="idNguoiKyNhay"
-                      disabled={readOnly}
-                    />
-                  </Grid>
-                  <Grid size={12}>
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="space-between"
-                    >
-                      <Typography fontSize={14} color="text.secondary">
-                        Người lập phiếu ký nháy :
-                      </Typography>
-                      <Checkbox
-                        checked={formik.values.nguoiLapPhieuKyNhay}
-                        onChange={(e) =>
-                          formik.setFieldValue(
-                            "nguoiLapPhieuKyNhay",
-                            e.target.checked,
-                          )
-                        }
-                        disabled={readOnly}
-                        color="primary"
-                      />
-                    </Box>
-                  </Grid>
-                  <Grid size={12}>
-                    <FieldAutoCompleted
-                      title="Người duyệt *"
-                      labelkey="hoTen"
-                      data={nvThamMuu}
-                      formik={formik}
-                      field="idTrinhDuyetCapPhong"
-                      disabled={readOnly}
-                    />
-                  </Grid>
-                  <Grid size={12} sx={{ mt: 1 }}>
-                    <Button
-                      variant="contained"
-                      color="inherit"
-                      size="small"
-                      startIcon={<Add />}
-                      disabled={readOnly}
-                      sx={{
-                        bgcolor: "#e0e0e0",
-                        color: "#000",
-                        textTransform: "none",
-                        boxShadow: "none",
-                      }}
-                      onClick={() => {
-                        const newNguoiKy = [
-                          ...formik.values.nguoiKyList,
-                          {
-                            id: "",
-                            idTaiLieu: "",
-                            idNguoiKy: "",
-                            tenNguoiKy: "",
-                            idPhongBan: "",
-                            trangThai: 0,
-                          },
-                        ];
-                        formik.setFieldValue("nguoiKyList", newNguoiKy);
-                      }}
-                    >
-                      Thêm người ký
-                    </Button>
-                  </Grid>
-
-                  {formik.values.nguoiKyList.map((row, index) => (
-                    <Grid size={12}>
-                      <Box display="flex">
-                        <FieldAutoCompleted
-                          title={`Người đại diện ${index + 1}`}
-                          labelkey="hoTen"
-                          data={nvThamMuu}
-                          formik={formik}
-                          field={`nguoiKyList[${index}].idNguoiKy`}
-                          onChange={(value) => {
-                            formik.setFieldValue(
-                              `nguoiKyList[${index}].tenNguoiKy`,
-                              value?.hoTen,
-                            );
-                          }}
-                          disabled={readOnly}
-                        />
-                        <IconButton
-                          onClick={() => {
-                            const newNguoiKy = [...formik.values.nguoiKyList];
-                            newNguoiKy.splice(index, 1);
-                            formik.setFieldValue("nguoiKyList", newNguoiKy);
-                          }}
-                        >
-                          <Delete sx={{ color: "red" }} />
-                        </IconButton>
-                      </Box>
-                    </Grid>
-                  ))}
-                  <Grid size={12}>
-                    <FieldAutoCompleted
-                      title="Người phê duyệt *"
-                      labelkey="hoTen"
-                      data={nvPGD}
-                      formik={formik}
-                      field={`idTrinhDuyetGiamDoc`}
-                      disabled={readOnly}
-                    />
-                  </Grid>
+                <Grid size={12}>
+                  <FieldInput
+                    title="Trích yếu *"
+                    formik={formik}
+                    field="trichYeu"
+                    disabled={readOnly}
+                  />
+                </Grid>
+                <Grid size={12}>
+                  <FieldAutoCompleted
+                    title="Đơn vị giao *"
+                    labelkey="tenPhongBan"
+                    data={dvGiao}
+                    formik={formik}
+                    field="idDonViGiao"
+                    disabled={readOnly}
+                  />
+                </Grid>
+                <Grid size={12}>
+                  <FieldAutoCompleted
+                    title="Đơn vị nhận *"
+                    labelkey="tenPhongBan"
+                    data={dvNhan}
+                    formik={formik}
+                    field="idDonViNhan"
+                    disabled={readOnly}
+                  />
+                </Grid>
+                <Grid size={12}>
+                  <FieldDateTime
+                    title="TGCN từ Ngày"
+                    formik={formik}
+                    field="tgGnTuNgay"
+                    disabled={readOnly}
+                  />
+                </Grid>
+                <Grid size={12}>
+                  <FieldDateTime
+                    title="TGCN đến Ngày"
+                    formik={formik}
+                    field="tgGnDenNgay"
+                    disabled={readOnly}
+                  />
                 </Grid>
               </Grid>
             </Grid>
 
-            {/* --- PHẦN 2: TÀI LIỆU QUYẾT ĐỊNH --- */}
-            <Box mt={4} mb={4}>
-              <Typography variant="subtitle1" fontWeight={600} mb={1}>
-                Tài liệu Quyết định
-              </Typography>
+            {/* CỘT PHẢI */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Grid container spacing={2}>
+                <Grid size={12}>
+                  <FieldAutoCompleted
+                    title="Đơn vị đề nghị *"
+                    labelkey="tenPhongBan"
+                    data={departments.filter((i) => !i.isKho)}
+                    formik={formik}
+                    field="idDonViDeNghi"
+                    disabled={readOnly}
+                  />
+                </Grid>
+                <Grid size={12}>
+                  <FieldAutoCompleted
+                    title="Người lập biểu *"
+                    labelkey="hoTen"
+                    data={nvThamMuu}
+                    formik={formik}
+                    field="idNguoiKyNhay"
+                    disabled={readOnly}
+                  />
+                </Grid>
+                <Grid size={12}>
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="space-between"
+                  >
+                    <Typography fontSize={14} color="text.secondary">
+                      Người lập phiếu ký nháy :
+                    </Typography>
+                    <Checkbox
+                      checked={formik.values.nguoiLapPhieuKyNhay}
+                      onChange={(e) =>
+                        formik.setFieldValue(
+                          "nguoiLapPhieuKyNhay",
+                          e.target.checked,
+                        )
+                      }
+                      disabled={readOnly}
+                      color="primary"
+                    />
+                  </Box>
+                </Grid>
+                <Grid size={12}>
+                  <FieldAutoCompleted
+                    title="Người duyệt *"
+                    labelkey="hoTen"
+                    data={nvThamMuu}
+                    formik={formik}
+                    field="idTrinhDuyetCapPhong"
+                    disabled={readOnly}
+                  />
+                </Grid>
+                <Grid size={12} sx={{ mt: 1 }}>
+                  <Button
+                    variant="contained"
+                    color="inherit"
+                    size="small"
+                    startIcon={<Add />}
+                    disabled={readOnly}
+                    sx={{
+                      bgcolor: "#e0e0e0",
+                      color: "#000",
+                      textTransform: "none",
+                      boxShadow: "none",
+                    }}
+                    onClick={() => {
+                      const newNguoiKy = [
+                        ...formik.values.nguoiKyList,
+                        {
+                          id: "",
+                          idTaiLieu: "",
+                          idNguoiKy: "",
+                          tenNguoiKy: "",
+                          idPhongBan: "",
+                          trangThai: 0,
+                        },
+                      ];
+                      formik.setFieldValue("nguoiKyList", newNguoiKy);
+                    }}
+                  >
+                    Thêm người ký
+                  </Button>
+                </Grid>
 
-              <FileAttachmentInput
-                formik={formik}
-                fileName="tenFile"
-                filePath="duongDanFile"
-                setDocument={setDocument}
-                disabled={readOnly}
+                {formik.values.nguoiKyList.map((row, index) => (
+                  <Grid size={12}>
+                    <Box display="flex">
+                      <FieldAutoCompleted
+                        title={`Người đại diện ${index + 1}`}
+                        labelkey="hoTen"
+                        data={nvThamMuu}
+                        formik={formik}
+                        field={`nguoiKyList[${index}].idNguoiKy`}
+                        onChange={(value) => {
+                          formik.setFieldValue(
+                            `nguoiKyList[${index}].tenNguoiKy`,
+                            value?.hoTen,
+                          );
+                        }}
+                        disabled={readOnly}
+                      />
+                      <IconButton
+                        onClick={() => {
+                          const newNguoiKy = [...formik.values.nguoiKyList];
+                          newNguoiKy.splice(index, 1);
+                          formik.setFieldValue("nguoiKyList", newNguoiKy);
+                        }}
+                      >
+                        <Delete sx={{ color: "red" }} />
+                      </IconButton>
+                    </Box>
+                  </Grid>
+                ))}
+                <Grid size={12}>
+                  <FieldAutoCompleted
+                    title="Người phê duyệt *"
+                    labelkey="hoTen"
+                    data={nvPGD}
+                    formik={formik}
+                    field={`idTrinhDuyetGiamDoc`}
+                    disabled={readOnly}
+                  />
+                </Grid>
+              </Grid>
+            </Grid>
+          </Grid>
+
+          {/* --- PHẦN 2: TÀI LIỆU QUYẾT ĐỊNH --- */}
+          <Box mt={4} mb={4}>
+            <Typography variant="subtitle1" fontWeight={600} mb={1}>
+              Tài liệu Quyết định
+            </Typography>
+
+            <FileAttachmentInput
+              formik={formik}
+              fileName="tenFile"
+              filePath="duongDanFile"
+              setDocument={setDocument}
+              disabled={readOnly}
+            />
+          </Box>
+
+          {/* --- PHẦN 3: CHI TIẾT TÀI SẢN --- */}
+          <Box>
+            <Box display={"flex"} justifyContent={"space-between"}>
+              <Typography variant="subtitle1" fontWeight={600} mb={2}>
+                Chi tiết tài sản điều chuyển:
+              </Typography>
+              <ExcelAssetUploader
+                readOnly={readOnly}
+                availableAssets={[
+                  ...allAssetsByDonVi.items,
+                  ...((selectedTransfer?.chiTietDieuDongTaiSanDTOS as any[]) ||
+                    []),
+                ].map((item: any) => ({
+                  id: item.id || item.idTaiSan || "",
+                  name: item.tenTaiSan || item.ten || "",
+                  originalData: item,
+                }))}
+                onUploadSuccess={(matchedWrapperAssets) => {
+                  const existingIds =
+                    formik.values.chiTietDieuDongTaiSanDTOS.map(
+                      (i) => i.idTaiSan,
+                    );
+                  const newItems = matchedWrapperAssets
+                    .map((wrapper) => wrapper.originalData)
+                    .filter(
+                      (item) => !existingIds.includes(item.id || item.idTaiSan),
+                    )
+                    .map((item) => ({
+                      id: "",
+                      idDieuDongTaiSan: "",
+                      tenTaiSan: item.tenTaiSan || item.ten || "",
+                      idTaiSan: item.id || item.idTaiSan,
+                      soLuong: 1,
+                      ghiChu: "",
+                      ngayTao: "",
+                      ngayCapNhat: "",
+                      nguoiTao: "",
+                      nguoiCapNhat: "",
+                      isActive: true,
+                      hienTrang: item.hienTrang || "Đang sử dụng",
+                      moTa: item.moTa || "",
+                      donViTinh: item.donViTinh || "",
+                      daBanGiao: false,
+                    }));
+
+                  if (newItems.length > 0) {
+                    formik.setFieldValue("chiTietDieuDongTaiSanDTOS", [
+                      ...formik.values.chiTietDieuDongTaiSanDTOS,
+                      ...newItems,
+                    ]);
+                  } else {
+                    alert(
+                      "Không tìm thấy tài sản hợp lệ mới nào từ file. Hoặc tất cả tài sản đã có trong danh sách.",
+                    );
+                  }
+                }}
               />
             </Box>
-
-            {/* --- PHẦN 3: CHI TIẾT TÀI SẢN --- */}
-            <Box>
-              <Box display={"flex"} justifyContent={"space-between"}>
-                <Typography variant="subtitle1" fontWeight={600} mb={2}>
-                  Chi tiết tài sản điều chuyển:
-                </Typography>
-                <ExcelAssetUploader
-                  readOnly={readOnly}
-                  availableAssets={[
-                    ...allAssetsByDonVi.items,
-                    ...((selectedTransfer?.chiTietDieuDongTaiSanDTOS as any[]) ||
-                      []),
-                  ].map((item: any) => ({
-                    id: item.id || item.idTaiSan || "",
-                    name: item.tenTaiSan || item.ten || "",
-                    originalData: item,
-                  }))}
-                  onUploadSuccess={(matchedWrapperAssets) => {
-                    const existingIds =
-                      formik.values.chiTietDieuDongTaiSanDTOS.map(
-                        (i) => i.idTaiSan,
-                      );
-                    const newItems = matchedWrapperAssets
-                      .map((wrapper) => wrapper.originalData)
-                      .filter(
-                        (item) =>
-                          !existingIds.includes(item.id || item.idTaiSan),
-                      )
-                      .map((item) => ({
-                        id: "",
-                        idDieuDongTaiSan: "",
-                        tenTaiSan: item.tenTaiSan || item.ten || "",
-                        idTaiSan: item.id || item.idTaiSan,
-                        soLuong: 1,
-                        ghiChu: "",
-                        ngayTao: "",
-                        ngayCapNhat: "",
-                        nguoiTao: "",
-                        nguoiCapNhat: "",
-                        isActive: true,
-                        hienTrang: item.hienTrang || "Đang sử dụng",
-                        moTa: item.moTa || "",
-                        donViTinh: item.donViTinh || "",
-                        daBanGiao: false,
-                      }));
-
-                    if (newItems.length > 0) {
-                      formik.setFieldValue("chiTietDieuDongTaiSanDTOS", [
-                        ...formik.values.chiTietDieuDongTaiSanDTOS,
-                        ...newItems,
-                      ]);
-                    } else {
-                      alert(
-                        "Không tìm thấy tài sản hợp lệ mới nào từ file. Hoặc tất cả tài sản đã có trong danh sách.",
-                      );
-                    }
-                  }}
-                />
-              </Box>
-              <Table
-                size="small"
-                sx={{
-                  "& .MuiTableCell-root": {
-                    borderBottom: "1px solid #e0e0e0",
-                  },
-                }}
-              >
-                <TableHead>
-                  <TableRow>
-                    <CustomTableHeadCell width="25%">
-                      Tài sản
-                    </CustomTableHeadCell>
-                    <CustomTableHeadCell width="15%">
-                      Đơn vị tính
-                    </CustomTableHeadCell>
-                    <CustomTableHeadCell width="15%">
-                      Số lượng
-                    </CustomTableHeadCell>
-                    <CustomTableHeadCell width="20%">
-                      Tình trạng kỹ thuật
-                    </CustomTableHeadCell>
-                    <CustomTableHeadCell width="20%">
-                      Ghi chú
-                    </CustomTableHeadCell>
+            <Table
+              size="small"
+              sx={{
+                "& .MuiTableCell-root": {
+                  borderBottom: "1px solid #e0e0e0",
+                },
+              }}
+            >
+              <TableHead>
+                <TableRow>
+                  <CustomTableHeadCell width="25%">Tài sản</CustomTableHeadCell>
+                  <CustomTableHeadCell width="15%">
+                    Đơn vị tính
+                  </CustomTableHeadCell>
+                  <CustomTableHeadCell width="15%">
+                    Số lượng
+                  </CustomTableHeadCell>
+                  <CustomTableHeadCell width="20%">
+                    Tình trạng kỹ thuật
+                  </CustomTableHeadCell>
+                  <CustomTableHeadCell width="20%">Ghi chú</CustomTableHeadCell>
+                  {!readOnly && (
+                    <CustomTableHeadCell width="5%"></CustomTableHeadCell>
+                  )}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {formik.values.chiTietDieuDongTaiSanDTOS.map((row, index) => (
+                  <TableRow key={index}>
+                    <CustomTableCell>
+                      <FieldAutoCompleted
+                        title=""
+                        labelkey="tenTaiSan"
+                        labelOption="id"
+                        data={[
+                          ...allAssetsByDonVi.items,
+                          ...(
+                            selectedTransfer?.chiTietDieuDongTaiSanDTOS || []
+                          ).map((i: any) => ({
+                            ...i,
+                            id: i.idTaiSan,
+                          })),
+                        ]}
+                        formik={formik}
+                        field={`chiTietDieuDongTaiSanDTOS.${index}.idTaiSan`}
+                        onChange={(value) => {
+                          formik.setFieldValue(
+                            `chiTietDieuDongTaiSanDTOS.${index}.donViTinh`,
+                            value?.donViTinh,
+                          );
+                          formik.setFieldValue(
+                            `chiTietDieuDongTaiSanDTOS.${index}.tenTaiSan`,
+                            value?.tenTaiSan,
+                          );
+                          formik.setFieldValue(
+                            `chiTietDieuDongTaiSanDTOS.${index}.soLuong`,
+                            value?.soLuong,
+                          );
+                          formik.setFieldValue(
+                            `chiTietDieuDongTaiSanDTOS.${index}.hienTrang`,
+                            value?.hienTrang,
+                          );
+                          formik.setFieldValue(
+                            `chiTietDieuDongTaiSanDTOS.${index}.moTa`,
+                            value?.moTa,
+                          );
+                          formik.setFieldValue(
+                            `chiTietDieuDongTaiSanDTOS.${index}.ghiChu`,
+                            value?.ghiChu,
+                          );
+                        }}
+                        disabled={readOnly}
+                      />
+                    </CustomTableCell>
+                    <CustomTableCell>
+                      <FieldAutoCompleted
+                        title=""
+                        labelkey="tenDonVi"
+                        data={allUnits}
+                        formik={formik}
+                        field={`chiTietDieuDongTaiSanDTOS.${index}.donViTinh`}
+                        disabled={readOnly}
+                      />
+                    </CustomTableCell>
+                    <CustomTableCell>
+                      <FieldInput
+                        title=""
+                        type="number"
+                        formik={formik}
+                        field={`chiTietDieuDongTaiSanDTOS.${index}.soLuong`}
+                        disabled={readOnly}
+                      />
+                    </CustomTableCell>
+                    <CustomTableCell>
+                      <FieldAutoCompleted
+                        title=""
+                        labelkey="tenHTKT"
+                        data={allCurrentStatus}
+                        formik={formik}
+                        field={`chiTietDieuDongTaiSanDTOS.${index}.hienTrang`}
+                        disabled={readOnly}
+                      />
+                    </CustomTableCell>
+                    <CustomTableCell>
+                      <FieldInput
+                        title=""
+                        formik={formik}
+                        field={`chiTietDieuDongTaiSanDTOS.${index}.ghiChu`}
+                        disabled={readOnly}
+                      />
+                    </CustomTableCell>
                     {!readOnly && (
-                      <CustomTableHeadCell width="5%"></CustomTableHeadCell>
-                    )}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {formik.values.chiTietDieuDongTaiSanDTOS.map((row, index) => (
-                    <TableRow key={index}>
-                      <CustomTableCell>
-                        <FieldAutoCompleted
-                          title=""
-                          labelkey="tenTaiSan"
-                          labelOption="id"
-                          data={[
-                            ...allAssetsByDonVi.items,
-                            ...(
-                              selectedTransfer?.chiTietDieuDongTaiSanDTOS || []
-                            ).map((i: any) => ({
-                              ...i,
-                              id: i.idTaiSan,
-                            })),
-                          ]}
-                          formik={formik}
-                          field={`chiTietDieuDongTaiSanDTOS.${index}.idTaiSan`}
-                          onChange={(value) => {
+                      <CustomTableCell align="center">
+                        <IconButton
+                          color="error"
+                          size="small"
+                          onClick={() => {
+                            const newAssets = [
+                              ...formik.values.chiTietDieuDongTaiSanDTOS,
+                            ];
+                            newAssets.splice(index, 1);
                             formik.setFieldValue(
-                              `chiTietDieuDongTaiSanDTOS.${index}.donViTinh`,
-                              value?.donViTinh,
-                            );
-                            formik.setFieldValue(
-                              `chiTietDieuDongTaiSanDTOS.${index}.tenTaiSan`,
-                              value?.tenTaiSan,
-                            );
-                            formik.setFieldValue(
-                              `chiTietDieuDongTaiSanDTOS.${index}.soLuong`,
-                              value?.soLuong,
-                            );
-                            formik.setFieldValue(
-                              `chiTietDieuDongTaiSanDTOS.${index}.hienTrang`,
-                              value?.hienTrang,
-                            );
-                            formik.setFieldValue(
-                              `chiTietDieuDongTaiSanDTOS.${index}.moTa`,
-                              value?.moTa,
-                            );
-                            formik.setFieldValue(
-                              `chiTietDieuDongTaiSanDTOS.${index}.ghiChu`,
-                              value?.ghiChu,
+                              "chiTietDieuDongTaiSanDTOS",
+                              newAssets,
                             );
                           }}
-                          disabled={readOnly}
-                        />
+                        >
+                          <Delete fontSize="small" />
+                        </IconButton>
                       </CustomTableCell>
-                      <CustomTableCell>
-                        <FieldAutoCompleted
-                          title=""
-                          labelkey="tenDonVi"
-                          data={allUnits}
-                          formik={formik}
-                          field={`chiTietDieuDongTaiSanDTOS.${index}.donViTinh`}
-                          disabled={readOnly}
-                        />
-                      </CustomTableCell>
-                      <CustomTableCell>
-                        <FieldInput
-                          title=""
-                          type="number"
-                          formik={formik}
-                          field={`chiTietDieuDongTaiSanDTOS.${index}.soLuong`}
-                          disabled={readOnly}
-                        />
-                      </CustomTableCell>
-                      <CustomTableCell>
-                        <FieldAutoCompleted
-                          title=""
-                          labelkey="tenHTKT"
-                          data={allCurrentStatus}
-                          formik={formik}
-                          field={`chiTietDieuDongTaiSanDTOS.${index}.hienTrang`}
-                          disabled={readOnly}
-                        />
-                      </CustomTableCell>
-                      <CustomTableCell>
-                        <FieldInput
-                          title=""
-                          formik={formik}
-                          field={`chiTietDieuDongTaiSanDTOS.${index}.ghiChu`}
-                          disabled={readOnly}
-                        />
-                      </CustomTableCell>
-                      {!readOnly && (
-                        <CustomTableCell align="center">
-                          <IconButton
-                            color="error"
-                            size="small"
-                            onClick={() => {
-                              const newAssets = [
-                                ...formik.values.chiTietDieuDongTaiSanDTOS,
-                              ];
-                              newAssets.splice(index, 1);
-                              formik.setFieldValue(
-                                "chiTietDieuDongTaiSanDTOS",
-                                newAssets,
-                              );
-                            }}
-                          >
-                            <Delete fontSize="small" />
-                          </IconButton>
-                        </CustomTableCell>
-                      )}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              {!readOnly && (
-                <Box mt={2} display="flex" gap={2} alignItems="center">
-                  <Button
-                    startIcon={<Add />}
-                    variant="text"
-                    onClick={() => {
-                      formik.setFieldValue("chiTietDieuDongTaiSanDTOS", [
-                        ...formik.values.chiTietDieuDongTaiSanDTOS,
-                        {
-                          assetId: "",
-                          uom: "",
-                          quantity: 1,
-                          status: "Đang sử dụng",
-                          note: "",
-                        },
-                      ]);
-                    }}
-                    sx={{ textTransform: "none" }}
-                  >
-                    Thêm một dòng
-                  </Button>
-                </Box>
-              )}
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            {!readOnly && (
+              <Box mt={2} display="flex" gap={2} alignItems="center">
+                <Button
+                  startIcon={<Add />}
+                  variant="text"
+                  onClick={() => {
+                    formik.setFieldValue("chiTietDieuDongTaiSanDTOS", [
+                      ...formik.values.chiTietDieuDongTaiSanDTOS,
+                      {
+                        assetId: "",
+                        uom: "",
+                        quantity: 1,
+                        status: "Đang sử dụng",
+                        note: "",
+                      },
+                    ]);
+                  }}
+                  sx={{ textTransform: "none" }}
+                >
+                  Thêm một dòng
+                </Button>
+              </Box>
+            )}
+            <Box
+              mt={2}
+              display="flex"
+              alignItems="center"
+              justifyContent="space-between"
+            >
               <Box
-                mt={2}
                 display="flex"
                 alignItems="center"
                 gap={0.5}
@@ -807,10 +800,18 @@ export default function AssetTransferForm({
                 <Typography variant="body2">Xem trước tài liệu</Typography>
                 <Visibility fontSize="small" />
               </Box>
+
+              {[0].includes(currentStatus) && (
+                <Box display="flex" gap={2}>
+                  {!readOnly && <SaveBtn onSave={formik.submitForm} />}
+                  {!readOnly && <CancelBtn onClick={onClose} />}
+                  {readOnly && <EditButton onClick={onEdit} />}
+                </Box>
+              )}
             </Box>
-          </Paper>
-        </AccordionDetails>
-      </Accordion>
+          </Box>
+        </Paper>
+      </Box>
     </>
   );
 }

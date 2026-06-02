@@ -50,12 +50,24 @@ public class DuAnService {
         return duAnDao.insert(da);
     }
 
+    public int batchCreate(List<DuAn> list) {
+        return duAnDao.batchCreate(list);
+    }
+
     public int update(DuAn da) {
         return duAnDao.update(da);
     }
 
+    public int batchUpdate(List<DuAn> list) {
+        return duAnDao.batchUpdate(list);
+    }
+
     public int delete(String id) {
         return duAnDao.delete(id);
+    }
+
+    public int batchDelete(List<String> ids) {
+        return duAnDao.batchDelete(ids);
     }
 
     public List<DuAn> readCsv(MultipartFile file) throws IOException {

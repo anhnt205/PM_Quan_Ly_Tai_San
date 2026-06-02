@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box, Dialog, DialogContent } from "@mui/material";
 import { useEffect, useState } from "react";
 import PageAction from "../../components/common/PageAction";
 import { GridRowParams } from "@mui/x-data-grid";
@@ -19,13 +19,33 @@ import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 import SelectDbDialog from "../../components/common/SelectDbDialog";
 import ToolOwnershipModal from "./components/ToolOwnershipModal";
+import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
+
+interface ToolManagerTabState {
+  showForm: boolean;
+  showSidebar: boolean;
+  selectedTool: any | null;
+  readOnly: boolean;
+  isCopy: boolean;
+  draftForm?: Record<string, any>;
+}
 
 export default function ToolManager() {
-  const [showForm, setShowForm] = useState(false);
-  const [selectedTool, setSelectedTool] = useState<any>(null);
-  const [readOnly, setReadOnly] = useState(false);
-  const [isCopy, setIsCopy] = useState(false);
-  const [showSidebar, setShowSidebar] = useState(false);
+  const { formData, setField } =
+    useTabForm<ToolManagerTabState>("/quan_ly_ccdc");
+  const showForm = formData.showForm ?? false;
+  const selectedTool = formData.selectedTool ?? null;
+  const readOnly = formData.readOnly ?? false;
+  const isCopy = formData.isCopy ?? false;
+  const showSidebar = formData.showSidebar ?? false;
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setSelectedTool = (v: any) => setField({ selectedTool: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+  const setIsCopy = (v: boolean) => setField({ isCopy: v });
+  const setShowSidebar = (v: boolean) => setField({ showSidebar: v });
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [openHistory, setOpenHistory] = useState(false);
@@ -44,15 +64,18 @@ export default function ToolManager() {
     page: 0,
   });
 
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
+
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (location.state?.autoCreate) {
+      setField({ draftForm: undefined });
       setShowForm(true);
       setSelectedTool(null);
       setReadOnly(false);
-
       navigate(location.pathname, { replace: true });
     }
   }, [location, navigate]);
@@ -125,6 +148,7 @@ export default function ToolManager() {
           setShowForm(false);
           setSelectedTool(null);
           setIsCopy(false);
+          setField({ draftForm: undefined });
         },
       });
     } else {
@@ -133,6 +157,7 @@ export default function ToolManager() {
           setShowForm(false);
           setSelectedTool(null);
           setIsCopy(false);
+          setField({ draftForm: undefined });
         },
       });
     }
@@ -171,6 +196,11 @@ export default function ToolManager() {
       <PageAction
         title="Quản lý CCDC - Vật tư"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
+          setField({ draftForm: undefined });
           setShowForm(true);
           setSelectedTool(null);
           setReadOnly(false);
@@ -187,24 +217,45 @@ export default function ToolManager() {
         showExcel={true}
       />
       <Box p={2}>
-        {showForm && (
-          <ToolForm
-            key={`${selectedTool?.id}-${readOnly}`}
-            onCancel={() => {
-              setShowForm(false);
-              setReadOnly(true);
-              setIsCopy(false);
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize}
+          maxWidth="lg"
+          fullWidth
+          PaperProps={{ sx: { height: "90vh" } }}
+        >
+          <DialogContent
+            sx={{
+              p: 0,
+              overflow: "auto",
+              display: "flex",
+              flexDirection: "column",
             }}
-            selectedTool={selectedTool}
-            readOnly={readOnly}
-            onEdit={handleEdit}
-            onSave={handleSave}
-            departments={allDepartments}
-            toolTypes={toolTypes}
-            allUnits={allUnits}
-            toolGroups={toolGroups}
-          />
-        )}
+          >
+            <ToolForm
+              key={`${selectedTool?.id}-${readOnly}`}
+              onCancel={() => {
+                setField({ draftForm: undefined });
+                setShowForm(false);
+                setReadOnly(true);
+                setIsCopy(false);
+              }}
+              onMinimize={handleMinimize}
+              selectedTool={selectedTool}
+              readOnly={readOnly}
+              onEdit={handleEdit}
+              onSave={handleSave}
+              departments={allDepartments}
+              toolTypes={toolTypes}
+              allUnits={allUnits}
+              toolGroups={toolGroups}
+              onFormChange={(values) => setField({ draftForm: values })}
+              initialFormData={formData.draftForm}
+            />
+          </DialogContent>
+        </Dialog>
+
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
 
         <Box
           sx={{
@@ -261,6 +312,7 @@ export default function ToolManager() {
               onDeleteAll={deleteAllMutation.mutate}
               showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
               onViewOwnership={() => setOpenOwnership(true)}
+              onExportExcel={() => exportExcelMutation.mutate()}
             />
           </Box>
 

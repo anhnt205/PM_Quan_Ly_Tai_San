@@ -60,6 +60,13 @@ export const useAssetManagerMutation = (
       ) {
         createFileMutation.mutate(payload?.fileDinhKemList);
       }
+      if (
+        payload?.chuKySuaChuaList &&
+        (payload?.chuKySuaChuaList || []).length > 0
+      ) {
+        api.post("/chukysuachua/sync", payload.chuKySuaChuaList.map((i: any) => ({...i, idTaiSan: payload.id})))
+           .catch(e => console.log(e));
+      }
       queryClient.invalidateQueries({ queryKey: ["assetsPage"], exact: false });
       showSuccessAlert("Tạo tài sản thành công");
     },
@@ -121,6 +128,15 @@ export const useAssetManagerMutation = (
           listFileDeleted.map((i) => i.id as number),
         );
       }
+
+      if (
+        payload?.chuKySuaChuaList &&
+        (payload?.chuKySuaChuaList || []).length > 0
+      ) {
+        api.post("/chukysuachua/sync", payload.chuKySuaChuaList.map((i: any) => ({...i, idTaiSan: payload.id})))
+           .catch(e => console.log(e));
+      }
+
       queryClient.invalidateQueries({ queryKey: ["assetsPage"], exact: false });
       showSuccessAlert("Sửa tài sản thành công");
     },
@@ -519,6 +535,7 @@ export const useAssetManagerMutation = (
                 ghiChu: String(item["Ghi chú"] || ""),
                 idDonViBanDau: String(item["Mã đơn vị ban đầu"] || "K30"),
                 idDonViHienThoi: String(item["Mã đơn vị hiện thời"] || ""),
+                idDonViQuanlyKiThuat: String(item["Mã đơn vị quản lý kỹ thuật"] || ""),
                 moTa: String(item["Mô tả"] || ""),
                 idCongTy: idCongTy,
                 ngayTao: now,
@@ -924,5 +941,43 @@ export const useHistoryAssethandoverQuery = (
     },
     placeholderData: (placeholderData) => placeholderData,
     enabled: !!idTaiSan,
+  });
+};
+
+export const useChuKySuaChuaMutation = () => {
+  const queryClient = useQueryClient();
+
+  const syncMutation = useMutation({
+    mutationFn: async (data: any[]) => {
+      const res = await api.post(`/chukysuachua/sync`, data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["chuKySuaChua"] });
+      // Thong bao se duoc hien thi ow component cha neu can
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Đồng bộ chu kỳ sửa chữa thất bại",
+      );
+    },
+  });
+
+  return {
+    syncMutation,
+  };
+};
+
+export const useChuKySuaChuaQuery = (idTaiSan?: string) => {
+  return useQuery({
+    queryKey: ["chuKySuaChua", idTaiSan],
+    queryFn: async () => {
+      const res = await api.get(`/chukysuachua/${idTaiSan}`);
+      return res.data.data || res.data || [];
+    },
+    enabled: !!idTaiSan,
+    placeholderData: (previousData) => previousData,
   });
 };

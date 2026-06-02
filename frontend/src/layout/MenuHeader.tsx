@@ -37,31 +37,12 @@ import { logout } from "../redux/userSlice";
 import { ROUTES } from "../utils/routes";
 import ExpirationSettingDialog from "../components/common/ExpirationSettingDialog";
 import MssqlConfigDialog from "../components/common/MssqlConfigDialog";
-import { useAssetTransferPageQuery } from "../pages/AssetTransfer/Mutation";
-import {
-  getAssetHandoverCount,
-  getAssetTransferCount,
-  getToolHandoverCount,
-  getToolTransferCount,
-  getMaintenanceRepairCount,
-  findById,
-} from "../utils/helpers";
+import { useMenuData } from "../hooks/useMenuData";
 import { ShowCount } from "../components/common/ShowCount";
 import { ShowCountInSubMenu } from "../components/common/ShowCountInSubMenu";
-import { useToolTransferPageQuery } from "../pages/ToolTransfer/Mutation";
-import { useToolHandoverPageQuery } from "../pages/ToolHandover/Mutation";
-import { useAssetHandoverPageQuery } from "../pages/AssetHandover/Mutation";
-import {
-  useMaintenanceRepairPageQuery,
-  useMaintenanceRepairResultPageQuery,
-} from "../pages/MaintenanceRepair/Mutation";
 import api from "../config/api.config";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React from "react";
-import { useAllDepartmentsQuery } from "../pages/Department/Mutation";
-import { useAllPositionsQuery } from "../pages/Position/Mutation";
-import { showErrorAlert } from "../components/Alert";
-import { useConfig } from "../hooks/useContext";
+import { clearTabs } from "../redux/tabsSlice";
 
 const isMenuActive = (item: any, pathname: string): boolean => {
   if (item.path === pathname) {
@@ -297,8 +278,6 @@ export default function Menuheader() {
     if (!code) return true; // menu không yêu cầu quyền
     return permissions.includes(code);
   };
-  const queryClient = useQueryClient();
-
   const [anchorElSetting, setAnchorElSetting] = useState<null | HTMLElement>(
     null,
   );
@@ -338,69 +317,40 @@ export default function Menuheader() {
     setOpenSnackbar(true);
   };
 
-  const { data: chucVu = [] } = useAllPositionsQuery();
-  const { config, setConfig } = useConfig();
+  const { config, updateConfig, isUpdatingConfig, counts } = useMenuData();
 
-  // 1. Lấy dữ liệu cấu hình (Gọi endpoint chung /config)
-  const { data: configResponse } = useQuery({
-    queryKey: ["expirationConfig", user?.taiKhoan?.tenDangNhap],
-    queryFn: async () => {
-      const res = await api.get(`/config/${user?.taiKhoan?.tenDangNhap}`); // Không truyền ID lên URL nữa
-      setConfig(res.data);
-      return res.data;
-    },
-    enabled: !!user?.taiKhoan?.tenDangNhap,
-  });
-
-  // 2. Mutation để lưu dữ liệu (Tương đương ConfigReponsitory bên Flutter)
-  const updateConfigMutation = useMutation({
-    mutationFn: async (newConfig: {
-      thoiHanTaiLieu: number;
-      ngayBaoHetHan: number;
-      ngayBaoDangKiem: number;
-    }) =>
-      await api.post("/config", {
-        idAccount: user?.taiKhoan?.tenDangNhap,
-        thoiHanTaiLieu: newConfig.thoiHanTaiLieu,
-        ngayBaoHetHan: newConfig.ngayBaoHetHan,
-        ngayBaoDangKiem: newConfig.ngayBaoDangKiem,
-      }),
-    onSuccess: (response, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ["expirationConfig", user?.taiKhoan?.tenDangNhap],
-      });
-      setConfig({
-        idAccount: user?.taiKhoan?.tenDangNhap,
-        thoiHanTaiLieu: variables.thoiHanTaiLieu,
-        ngayBaoHetHan: variables.ngayBaoHetHan,
-        ngayBaoDangKiem: variables.ngayBaoDangKiem,
-      });
-      setOpenSnackbar(true);
-      handleCloseExpirationDialog();
-    },
-    onError: (error: any) => {
-      showErrorAlert(
-        `Lỗi cấu hình: ${error.response.data.message || error.response.data}`,
-      );
-    },
-  });
+  const {
+    assetTransfer: assetTransferCounts,
+    toolTransfer: toolTransferCounts,
+    assetHandover: assetHandoverCount,
+    toolHandover: toolHandoverCount,
+    transferAssetPageItems,
+    transferToolPageItems,
+    totalPlan,
+    totalIncident,
+    totalRepair,
+    totalIncidentInspection,
+    totalMaterialAssessment,
+    totalAcceptance,
+  } = counts;
 
   const handleConfirmExpiration = async (
     expirationDays: number,
     warningDays: number,
     registrationWarningDays: number,
   ) => {
-    // Kiểm tra nếu có thay đổi mới gọi API (giống logic Flutter)
     if (
       config?.thoiHanTaiLieu !== expirationDays ||
       config?.ngayBaoHetHan !== warningDays ||
       config?.ngayBaoDangKiem !== registrationWarningDays
     ) {
-      updateConfigMutation.mutate({
+      updateConfig({
         thoiHanTaiLieu: expirationDays,
         ngayBaoHetHan: warningDays,
         ngayBaoDangKiem: registrationWarningDays,
       });
+      setOpenSnackbar(true);
+      handleCloseExpirationDialog();
     } else {
       handleCloseExpirationDialog();
     }
@@ -409,111 +359,6 @@ export default function Menuheader() {
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
   };
-
-  const { data: assetTransfer = { items: [] } } = useAssetTransferPageQuery(
-    0,
-    999999,
-  );
-  const { data: toolTransfer = { items: [] } } = useToolTransferPageQuery(
-    0,
-    999999,
-  );
-  const { data: toolHandover = { items: [] } } = useToolHandoverPageQuery(
-    0,
-    999999,
-  );
-  const { data: assetHandover = { items: [] } } = useAssetHandoverPageQuery(
-    0,
-    999999,
-  );
-
-  const { data: transferAssetPage = { items: [], totalItems: 0 } } =
-    useAssetTransferPageQuery(
-      0,
-      999999,
-      "",
-      undefined,
-      undefined,
-      4,
-      user.taiKhoan?.phongBanId,
-      true,
-    );
-  const {
-    data: transferToolPage = { items: [], totalItems: 0, loaiCounts: {} },
-  } = useToolTransferPageQuery(
-    0,
-    999999,
-    "",
-    undefined,
-    undefined,
-    4,
-    true,
-    user.taiKhoan?.phongBanId,
-  );
-  const { data: maintenanceRepair = { items: [] } } =
-    useMaintenanceRepairPageQuery(0, 999999);
-  const { data: maintenanceRepairResult = { items: [] } } =
-    useMaintenanceRepairResultPageQuery(0, 999999);
-
-  const isBanHanh =
-    findById(chucVu, user?.taiKhoan?.chucVuId)?.banHanhQuyetDinh ||
-    (false as boolean);
-
-  const assetTransferCount1 = getAssetTransferCount(
-    1,
-    user?.taiKhoan?.tenDangNhap,
-    assetTransfer.items,
-    isBanHanh,
-  );
-  const assetTransferCount2 = getAssetTransferCount(
-    2,
-    user?.taiKhoan?.tenDangNhap,
-    assetTransfer.items,
-    isBanHanh,
-  );
-  const assetTransferCount3 = getAssetTransferCount(
-    3,
-    user?.taiKhoan?.tenDangNhap,
-    assetTransfer.items,
-    isBanHanh,
-  );
-
-  const toolTransferCount1 = getToolTransferCount(
-    1,
-    user?.taiKhoan?.tenDangNhap,
-    toolTransfer.items,
-    isBanHanh,
-  );
-  const toolTransferCount2 = getToolTransferCount(
-    2,
-    user?.taiKhoan?.tenDangNhap,
-    toolTransfer.items,
-    isBanHanh,
-  );
-  const toolTransferCount3 = getToolTransferCount(
-    3,
-    user?.taiKhoan?.tenDangNhap,
-    toolTransfer.items,
-    isBanHanh,
-  );
-
-  const assetHandoverCount = getAssetHandoverCount(
-    user?.taiKhoan?.tenDangNhap,
-    assetHandover.items,
-  );
-  const toolHandoverCount = getToolHandoverCount(
-    user?.taiKhoan?.tenDangNhap,
-    toolHandover.items,
-  );
-
-  const maintenanceRepairCount = getMaintenanceRepairCount(
-    user?.taiKhoan?.tenDangNhap,
-    maintenanceRepair.items,
-  );
-  const maintenanceRepairResultCount = getMaintenanceRepairCount(
-    user?.taiKhoan?.tenDangNhap,
-    maintenanceRepairResult.items,
-  );
 
   const filterMenuItemsRecursive = (items: any[]): any[] => {
     return items
@@ -569,8 +414,11 @@ export default function Menuheader() {
           subMenu: [
             { text: "Quản lý dự án", path: ROUTES.PROJECT, code: "DUAN" },
             { text: "Quản lý nguồn vốn", path: ROUTES.CAPITALSOURCE },
-            { text: "Đơn vị tính", path: ROUTES.UNIT },
             { text: "Lý do tăng", path: ROUTES.REASONINCREASE },
+            { text: "Lý lịch tài sản", path: ROUTES.ASSETPROFILE },
+            { text: "Lý lịch Nhóm tài sản", path: ROUTES.ASSETPROFILEGROUP },
+            { text: "Loại sửa chữa", path: ROUTES.MAINTENANCEREPAIRTYPE },
+            { text: "Đơn vị tính", path: ROUTES.UNIT },
             { text: "Hiện trạng", path: ROUTES.CURRENTSTATUS },
           ],
         },
@@ -593,35 +441,28 @@ export default function Menuheader() {
       text: "Điều chuyển thiết bị",
       icon: <LocalShipping fontSize="small" />,
       path: "#",
-      count:
-        assetTransferCount1 +
-        assetTransferCount2 +
-        assetTransferCount3 +
-        toolTransferCount1 +
-        toolTransferCount2 +
-        toolTransferCount3,
+      count: assetTransferCounts.total + toolTransferCounts.total,
       subMenu: [
         {
           text: "Điều chuyển tài sản",
           path: "#",
           code: "DIEUDONG_TAISAN",
-          count:
-            assetTransferCount1 + assetTransferCount2 + assetTransferCount3,
+          count: assetTransferCounts.total,
           subMenu: [
             {
               text: "Cấp phát tài sản",
               path: `${ROUTES.ASSETTRANSFER}?type=1`,
-              count: assetTransferCount1,
+              count: assetTransferCounts.c1,
             },
             {
               text: "Điều chuyển tài sản",
               path: `${ROUTES.ASSETTRANSFER}?type=2`,
-              count: assetTransferCount2,
+              count: assetTransferCounts.c2,
             },
             {
               text: "Thu hồi tài sản",
               path: `${ROUTES.ASSETTRANSFER}?type=3`,
-              count: assetTransferCount3,
+              count: assetTransferCounts.c3,
             },
           ],
         },
@@ -629,24 +470,33 @@ export default function Menuheader() {
           text: "Điều chuyển CCDC - vật tư",
           path: "#",
           code: "DIEUDONG_CCDC",
-          count: toolTransferCount1 + toolTransferCount2 + toolTransferCount3,
+          count: toolTransferCounts.total,
           subMenu: [
             {
               text: "Cấp phát CCDC - vật tư",
               path: `${ROUTES.TOOLTRANSFER}?type=1`,
-              count: toolTransferCount1,
+              count: toolTransferCounts.c1,
             },
             {
               text: "Điều chuyển CCDC - vật tư",
               path: `${ROUTES.TOOLTRANSFER}?type=2`,
-              count: toolTransferCount2,
+              count: toolTransferCounts.c2,
             },
             {
               text: "Thu hồi CCDC - vật tư",
               path: `${ROUTES.TOOLTRANSFER}?type=3`,
-              count: toolTransferCount3,
+              count: toolTransferCounts.c3,
             },
           ],
+        },
+        {
+          text: "Phê duyệt",
+          path: ROUTES.TRANSFER_APPROVAL,
+          count: assetTransferCounts.total + toolTransferCounts.total,
+        },
+        {
+          text: "Quản lý biên bản",
+          path: ROUTES.TRANSFER_RECORD,
         },
       ],
     },
@@ -657,20 +507,78 @@ export default function Menuheader() {
       count:
         assetHandoverCount +
         toolHandoverCount +
-        transferAssetPage.totalItems +
-        transferToolPage.totalItems,
+        transferAssetPageItems +
+        transferToolPageItems,
       subMenu: [
         {
           text: "Bàn giao tài sản",
           path: "/ban_giao_tai_san",
           code: "BANGIAO_TAISAN",
-          count: assetHandoverCount + transferAssetPage.totalItems,
+          count: assetHandoverCount + transferAssetPageItems,
         },
         {
           text: "Bàn giao CCDC-Vật tư",
           path: ROUTES.TOOLHANDOVER,
           code: "BANGIAO_CCDC",
-          count: toolHandoverCount + transferToolPage.totalItems,
+          count: toolHandoverCount + transferToolPageItems,
+        },
+        {
+          text: "Phê duyệt",
+          path: ROUTES.HANDOVER_APPROVAL,
+          count:
+            assetHandoverCount +
+            toolHandoverCount +
+            transferAssetPageItems +
+            transferToolPageItems,
+        },
+        {
+          text: "Quản lý biên bản",
+          path: ROUTES.HANDOVER_RECORD,
+        },
+      ],
+    },
+    {
+      text: "Sửa chữa bảo dưỡng",
+      icon: <Engineering fontSize="small" />,
+      path: "#",
+      count:
+        totalPlan +
+        totalIncident +
+        totalRepair +
+        totalIncidentInspection +
+        totalMaterialAssessment +
+        totalAcceptance,
+      subMenu: [
+        {
+          text: "Quản lý sửa chữa",
+          path: ROUTES.MAINTENANCE_MANAGER,
+        },
+        {
+          text: "Chu kỳ bảo dưỡng",
+          path: ROUTES.MAINTENANCE_CYCLE,
+        },
+        {
+          text: "Định mức",
+          path: ROUTES.REPAIRNORM,
+        },
+        {
+          text: "Kế hoạch sửa chữa",
+          path: ROUTES.MAINTENANCEPLANREPAIR,
+        },
+        {
+          text: "Phê duyệt",
+          path: ROUTES.MAINTENANCE_APPROVAL,
+          count:
+            totalPlan +
+            totalIncident +
+            totalRepair +
+            totalIncidentInspection +
+            totalMaterialAssessment +
+            totalAcceptance,
+        },
+        {
+          text: "Quản lý biên bản",
+          path: ROUTES.MAINTENANCE_RECORD,
         },
       ],
     },
@@ -689,7 +597,6 @@ export default function Menuheader() {
 
   const menuItems = filterMenuItemsRecursive(menuItemsRaw);
 
-  // Hàm kiểm tra xem có thể cuộn hay không
   const checkScroll = () => {
     if (menuScrollRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = menuScrollRef.current;
@@ -698,7 +605,6 @@ export default function Menuheader() {
     }
   };
 
-  // Hàm cuộn menu sang phải
   const handleScrollRight = () => {
     if (menuScrollRef.current) {
       menuScrollRef.current.scrollBy({
@@ -709,7 +615,6 @@ export default function Menuheader() {
     }
   };
 
-  // Hàm cuộn menu sang trái
   const handleScrollLeft = () => {
     if (menuScrollRef.current) {
       menuScrollRef.current.scrollBy({
@@ -720,7 +625,6 @@ export default function Menuheader() {
     }
   };
 
-  // Kiểm tra cuộn khi component mount hoặc khi menuItems thay đổi
   React.useEffect(() => {
     checkScroll();
     const ref = menuScrollRef.current;
@@ -746,7 +650,6 @@ export default function Menuheader() {
           "linear-gradient(to right,rgb(0, 158, 96, 1) 0%,rgb(2, 110, 66, 1) 100%)",
       }}
     >
-      {/* Nút cuộn trái */}
       {canScrollLeft && (
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <IconButton
@@ -769,13 +672,13 @@ export default function Menuheader() {
         sx={{
           flexGrow: 1,
           display: "flex",
-          gap: 0.5, // Giảm khoảng cách giữa các nút
+          gap: 0.5,
           overflowX: "auto",
           whiteSpace: "nowrap",
-          scrollbarWidth: "none", // Ẩn trên Firefox
-          msOverflowStyle: "none", // Ẩn trên IE/Edge cũ
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
           "&::-webkit-scrollbar": {
-            display: "none", // Ẩn trên Chrome/Safari
+            display: "none",
           },
         }}
       >
@@ -784,7 +687,6 @@ export default function Menuheader() {
         ))}
       </Box>
 
-      {/* Nút cuộn phải */}
       {canScrollRight && (
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <IconButton
@@ -811,8 +713,8 @@ export default function Menuheader() {
             sx={{
               color: "white",
               fontSize: 12,
-              maxWidth: "150px", // Hoặc độ rộng bạn muốn (ví dụ: 100%, 200px)
-              display: "block", // Đảm bảo nó nhận thuộc tính width/maxWidth
+              maxWidth: "150px",
+              display: "block",
               overflow: "hidden",
               textOverflow: "ellipsis",
             }}
@@ -837,7 +739,7 @@ export default function Menuheader() {
           slotProps={{
             paper: {
               sx: {
-                padding: "8px", // Padding cho khung bao ngoài menu
+                padding: "8px",
                 borderRadius: "12px",
                 boxShadow: "0px 5px 15px rgba(0,0,0,0.1)",
               },
@@ -884,6 +786,7 @@ export default function Menuheader() {
             sx={{ py: 2 }}
             onClick={() => {
               handleCloseSettingMenu();
+              dispatch(clearTabs());
               dispatch(logout());
               navigate(ROUTES.LOGIN);
             }}
@@ -896,23 +799,20 @@ export default function Menuheader() {
         </Menu>
       </Box>
 
-      {/* Dialog Thiết lập thời gian hết hạn */}
       <ExpirationSettingDialog
         open={openExpirationDialog}
         onClose={handleCloseExpirationDialog}
         onConfirm={handleConfirmExpiration}
         initialConfig={config || undefined}
-        loading={updateConfigMutation.isPending}
+        loading={isUpdatingConfig}
       />
 
-      {/* Dialog Mssql config */}
       <MssqlConfigDialog
         open={openMssqlDialog}
         onClose={handleCloseMssqlDialog}
         onSave={handleSaveMssqlConfig}
       />
 
-      {/* Snackbar thông báo thành công */}
       <Snackbar
         open={openSnackbar}
         autoHideDuration={3000}

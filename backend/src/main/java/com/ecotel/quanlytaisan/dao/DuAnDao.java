@@ -157,9 +157,159 @@ public class DuAnDao {
         return jdbcTemplate.update(sql, da.getTenDuAn(), da.getGhiChu(), da.getHieuLuc(), da.getIdCongTy(), da.getNgayTao(), da.getNgayCapNhat(), da.getNguoiTao(), da.getNguoiCapNhat(), da.getIsActive(), da.getId());
     }
 
+    public int batchUpdate(List<DuAn> list) {
+        String sql = "UPDATE DuAn SET TenDuAn=?, GhiChu=?, HieuLuc=?, IdCongTy=?, NgayTao=?, NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?, IsActive=? WHERE Id=?";
+        int[] result = jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                DuAn da = list.get(i);
+                ps.setString(1, da.getTenDuAn());
+                ps.setString(2, da.getGhiChu());
+                ps.setBoolean(3, da.getHieuLuc() != null ? da.getHieuLuc() : false);
+                ps.setString(4, da.getIdCongTy());
+                ps.setString(5, da.getNgayTao());
+                ps.setString(6, da.getNgayCapNhat());
+                ps.setString(7, da.getNguoiTao());
+                ps.setString(8, da.getNguoiCapNhat());
+                ps.setBoolean(9, da.getIsActive() != null ? da.getIsActive() : false);
+                ps.setString(10, da.getId());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return list.size();
+            }
+        });
+
+        int total = 0;
+        for (int r : result) {
+            if (r > 0 || r == java.sql.Statement.SUCCESS_NO_INFO) {
+                total += (r == java.sql.Statement.SUCCESS_NO_INFO) ? 1 : r;
+            }
+        }
+        return total;
+    }
+
+    public int batchInsert(List<DuAn> list) {
+        String sql = "INSERT INTO DuAn (Id, TenDuAn, GhiChu, HieuLuc, IdCongTy, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        int[] result = jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                DuAn da = list.get(i);
+                ps.setString(1, da.getId());
+                ps.setString(2, da.getTenDuAn());
+                ps.setString(3, da.getGhiChu());
+                ps.setBoolean(4, da.getHieuLuc() != null ? da.getHieuLuc() : false);
+                ps.setString(5, da.getIdCongTy());
+                ps.setString(6, da.getNgayTao());
+                ps.setString(7, da.getNgayCapNhat());
+                ps.setString(8, da.getNguoiTao());
+                ps.setString(9, da.getNguoiCapNhat());
+                ps.setBoolean(10, da.getIsActive() != null ? da.getIsActive() : false);
+            }
+
+            @Override
+            public int getBatchSize() {
+                return list.size();
+            }
+        });
+
+        int total = 0;
+        for (int r : result) {
+            if (r > 0 || r == java.sql.Statement.SUCCESS_NO_INFO) {
+                total += (r == java.sql.Statement.SUCCESS_NO_INFO) ? 1 : r;
+            }
+        }
+        return total;
+    }
+
+    public int batchCreate(List<DuAn> list) {
+        if (list == null || list.isEmpty()) {
+            return 0;
+        }
+
+        List<String> ids = new java.util.ArrayList<>();
+        for (DuAn da : list) {
+            if (da.getId() != null && !da.getId().trim().isEmpty()) {
+                ids.add(da.getId());
+            }
+        }
+
+        if (ids.isEmpty()) {
+            return 0;
+        }
+
+        StringBuilder inBuilder = new StringBuilder();
+        for (int i = 0; i < ids.size(); i++) {
+            inBuilder.append("?");
+            if (i < ids.size() - 1) {
+                inBuilder.append(",");
+            }
+        }
+
+        String checkSql = "SELECT Id FROM DuAn WHERE Id IN (" + inBuilder.toString() + ")";
+        List<String> existingIds = jdbcTemplate.query(
+                checkSql,
+                (rs, rowNum) -> rs.getString("Id"),
+                ids.toArray()
+        );
+
+        List<DuAn> toInsert = new java.util.ArrayList<>();
+        List<DuAn> toUpdate = new java.util.ArrayList<>();
+
+        java.util.Set<String> existingSet = new java.util.HashSet<>(existingIds);
+        for (DuAn da : list) {
+            if (da.getId() == null || da.getId().trim().isEmpty()) {
+                continue;
+            }
+            if (existingSet.contains(da.getId())) {
+                toUpdate.add(da);
+            } else {
+                toInsert.add(da);
+            }
+        }
+
+        int total = 0;
+        if (!toInsert.isEmpty()) {
+            total += batchInsert(toInsert);
+        }
+        if (!toUpdate.isEmpty()) {
+            total += batchUpdate(toUpdate);
+        }
+
+        return total;
+    }
+
     public int delete(String id) {
         String sql = "DELETE FROM DuAn WHERE Id=?";
         return jdbcTemplate.update(sql, id);
+    }
+
+    public int batchDelete(List<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return 0;
+        }
+
+        String sql = "DELETE FROM DuAn WHERE Id=?";
+        int[] result = jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                ps.setString(1, ids.get(i));
+            }
+
+            @Override
+            public int getBatchSize() {
+                return ids.size();
+            }
+        });
+
+        int total = 0;
+        for (int r : result) {
+            if (r > 0 || r == java.sql.Statement.SUCCESS_NO_INFO) {
+                total += (r == java.sql.Statement.SUCCESS_NO_INFO) ? 1 : r;
+            }
+        }
+        return total;
     }
 
 

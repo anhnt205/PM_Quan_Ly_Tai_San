@@ -80,7 +80,7 @@ public class BanGiaoCCDCVatTuService {
         return dao.findAll(idCongTy);
     }
 
-    public PageResponse<BanGiaoCCDCVatTuDTO> findAllPaged(String idCongTy, int page, int size, String sortBy, String sortDir, String search, String userid, Integer trangThai, String idDonViGiao) throws SQLException {
+    public PageResponse<BanGiaoCCDCVatTuDTO> findAllPaged(String idCongTy, int page, int size, String sortBy, String sortDir, String search, String userid, Integer trangThai, String idDonViGiao, Boolean isSign) throws SQLException {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
 
@@ -90,13 +90,19 @@ public class BanGiaoCCDCVatTuService {
         // Filter theo lượt ký - chỉ lấy những item mà đến lượt user ký
         // Ngoại lệ: admin lấy hết, NguoiTao cũng lấy không phân biệt thứ tự
         if (userid != null && !userid.trim().isEmpty()) {
-            List<BanGiaoCCDCVatTuDTO> turnFiltered = new ArrayList<>();
+            List<BanGiaoCCDCVatTuDTO> filtered = new ArrayList<>();
             for (BanGiaoCCDCVatTuDTO item : sourceList) {
-                if (isUserTurnToSign(item, userid)) {
-                    turnFiltered.add(item);
+                if (isSign != null && isSign) {
+                    if (isNeedToSign(item, userid)) {
+                        filtered.add(item);
+                    }
+                } else {
+                    if (isUserTurnToSign(item, userid)) {
+                        filtered.add(item);
+                    }
                 }
             }
-            sourceList = turnFiltered;
+            sourceList = filtered;
         }
 
         // Filter by idDonViGiao if provided
@@ -295,6 +301,42 @@ public class BanGiaoCCDCVatTuService {
      * - userId = "admin" → lấy hết
      * - userId = NguoiTao → lấy không phân biệt thứ tự
      */
+    public boolean isNeedToSign(BanGiaoCCDCVatTuDTO item, String userId) {
+        if (userId == null || userId.isEmpty()) return false;
+        if (!Boolean.TRUE.equals(item.getShare())) return false;
+        if (item.getTrangThai() == 2 || item.getTrangThai() == 3) return false;
+
+        // Bước 1: Đại diện bên giao
+        if (!Boolean.TRUE.equals(item.getDaiDienBenGiaoXacNhan())) {
+            return userId.equals(item.getIdDaiDienBenGiao());
+        }
+
+        // Bước 2: Đại diện bên nhận
+        if (!Boolean.TRUE.equals(item.getDaiDienBenNhanXacNhan())) {
+            return userId.equals(item.getIdDaiDienBenNhan());
+        }
+
+        // Bước 3: NguoiKy list & Giám đốc
+        List<NguoiKy> kyList = kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId());
+        if (kyList != null && !kyList.isEmpty()) {
+            NguoiKy firstUnsigned = null;
+            boolean allSigned = true;
+            for (NguoiKy nk : kyList) {
+                if (nk.getTrangThai() != 1) {
+                    allSigned = false;
+                    if (firstUnsigned == null) firstUnsigned = nk;
+                }
+            }
+            if (firstUnsigned != null) return userId.equals(firstUnsigned.getIdNguoiKy());
+            if (allSigned && !Boolean.TRUE.equals(item.getGiamDocKy()))
+                return userId.equals(item.getIdGiamDoc());
+        } else {
+            if (!Boolean.TRUE.equals(item.getGiamDocKy()))
+                return userId.equals(item.getIdGiamDoc());
+        }
+        return false;
+    }
+
     public boolean isUserTurnToSign(BanGiaoCCDCVatTuDTO item, String userId) {
         // Admin lấy hết
         if ("admin".equalsIgnoreCase(userId)) {

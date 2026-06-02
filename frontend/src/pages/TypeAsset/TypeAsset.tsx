@@ -23,12 +23,29 @@ import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
+import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
+
+interface TypeAssetTabState {
+  showForm: boolean;
+  selectedTypeAsset: any | null;
+  readOnly: boolean;
+  isCopy: boolean;
+  draftForm?: Record<string, any>;
+}
 
 export default function TypeAsset() {
-  const [showForm, setShowForm] = useState(false);
-  const [selectedTypeAsset, setSelectedTypeAsset] = useState<any>(null);
-  const [readOnly, setReadOnly] = useState(false);
-  const [isCopy, setIsCopy] = useState(false);
+  const { formData, setField } = useTabForm<TypeAssetTabState>("/loai_tai_san");
+  const showForm = formData.showForm ?? false;
+  const selectedTypeAsset = formData.selectedTypeAsset ?? null;
+  const readOnly = formData.readOnly ?? false;
+  const isCopy = formData.isCopy ?? false;
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setSelectedTypeAsset = (v: any) => setField({ selectedTypeAsset: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+  const setIsCopy = (v: boolean) => setField({ isCopy: v });
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [importErrors, setImportErrors] = useState<string[]>([]);
@@ -39,6 +56,9 @@ export default function TypeAsset() {
     pageSize: 10,
     page: 0,
   });
+
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
 
   const {
     createMutation,
@@ -91,6 +111,7 @@ export default function TypeAsset() {
     setShowForm(false);
     setSelectedTypeAsset(null);
     setIsCopy(false);
+    setField({ draftForm: undefined });
   };
 
   const handleEdit = () => {
@@ -161,6 +182,10 @@ export default function TypeAsset() {
       <PageAction
         title="Quản lý loại tài sản"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
           setShowForm(true);
           setSelectedTypeAsset(null);
           setReadOnly(false);
@@ -196,21 +221,34 @@ export default function TypeAsset() {
             </Box>
           </DialogContent>
         </Dialog>
-        {showForm && (
-          <Box py={2}>
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogContent sx={{ p: 0 }}>
             <TypeAssetForm
               onCancel={() => {
                 setShowForm(false);
                 setSelectedTypeAsset(null);
                 setReadOnly(false);
+                setIsCopy(false);
+                setField({ draftForm: undefined });
               }}
+              onMinimize={handleMinimize}
               onEdit={handleEdit}
               selectedTypeAsset={selectedTypeAsset}
               readOnly={readOnly}
               onSave={handleSave}
+              onFormChange={(values) => setField({ draftForm: values })}
+              initialFormData={formData.draftForm}
             />
-          </Box>
-        )}
+          </DialogContent>
+        </Dialog>
+
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
+
         <TableCustom
           tableId="typeAssset"
           title="Quản lý loại tài sản"
@@ -228,6 +266,8 @@ export default function TypeAsset() {
           setSearchValue={setSearchValue}
           onDeleteAll={deleteAllMutation.mutate}
           showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
+          onImportExcel={handleImport}
+          onExportExcel={() => exportMutation.mutate(allTypeAssets)}
         />
       </Box>
     </Box>

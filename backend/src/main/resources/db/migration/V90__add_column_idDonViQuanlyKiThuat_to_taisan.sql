@@ -1,0 +1,1 @@
+ALTER TABLE TaiSan ADD COLUMN IdDonViQuanlyKiThuat VARCHAR(50);

@@ -14,7 +14,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/lydotang")
-@CrossOrigin(origins = "*")
 public class LyDoTangController {
 
     @Autowired

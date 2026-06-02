@@ -1,7 +1,9 @@
-import { SyntheticEvent, useEffect, useState } from "react";
+import { SyntheticEvent, useEffect, useRef, useState } from "react";
 import {
   Badge,
   Box,
+  Dialog,
+  DialogContent,
   Grid,
   IconButton,
   Tab,
@@ -54,32 +56,74 @@ import { useAllUnitsQuery } from "../Unit/Mutation";
 import { useAllPositionsQuery } from "../Position/Mutation";
 import S3Service from "../../services/S3Service";
 import { getToolHandoverCount } from "../../utils/helpers";
+import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
+
+interface ToolHandoverTabState {
+  showForm: boolean;
+  selectedRow: any | null;
+  showSidebar: boolean;
+  readOnly: boolean;
+  activeTab: number;
+  tabValue: number;
+  sidebarMode: "document" | "signer" | null;
+  currentStatus: string;
+  currentType: string;
+  showSignDocument: boolean;
+  isFullPageSign: boolean;
+  selectedDocument: any | null;
+  draftForm?: Record<string, any>;
+}
 
 export default function ToolHandover() {
-  const [showForm, setShowForm] = useState(false);
-  const [selectedRow, setSelectedRow] = useState<any>(null);
+  const { formData, setField } =
+    useTabForm<ToolHandoverTabState>("/ban_giao_ccdc");
+  const showForm = formData.showForm ?? false;
+  const selectedRow = formData.selectedRow ?? null;
+  const readOnly = formData.readOnly ?? false;
+  const activeTab = formData.activeTab ?? 0;
+  const currentStatus = formData.currentStatus ?? "";
+  const currentType = formData.currentType ?? "";
+  const showSidebar = formData.showSidebar ?? false;
+  const tabValue = formData.tabValue ?? 0;
+  const sidebarMode = formData.sidebarMode ?? null;
+  const isFullPageSign = formData.isFullPageSign ?? false;
+  const showSignDocument = formData.showSignDocument ?? false;
+  const selectedDocument = formData.selectedDocument ?? null;
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setSelectedRow = (v: any) => setField({ selectedRow: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+  const setActiveTab = (v: number) => setField({ activeTab: v });
+  const setCurrentStatus = (v: string) => setField({ currentStatus: v });
+  const setCurrentType = (v: string) => setField({ currentType: v });
+  const setShowSidebar = (v: boolean) => setField({ showSidebar: v });
+  const setTabValue = (v: number) => setField({ tabValue: v });
+  const setSidebarMode = (v: any) => setField({ sidebarMode: v });
+  const setIsFullPageSign = (v: boolean) => setField({ isFullPageSign: v });
+  const setShowSignDocument = (v: boolean) => setField({ showSignDocument: v });
+  const setSelectedDocument = (v: any) => setField({ selectedDocument: v });
+
+  // Giữ nguyên
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
     pageSize: 10,
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
+  const [selectedDocument_local, setSelectedDocument_local] = useState<
+    any | null
+  >(null);
   const [searchValue, setSearchValue] = useState("");
-  const [showSignDocument, setShowSignDocument] = useState(false);
-  const [readOnly, setReadOnly] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
+  const handleEdit = () => setReadOnly(false);
+  const { user } = useSelector((state: RootState) => state.user);
+  const isFirstMount = useRef(true);
   const [searchParams] = useSearchParams();
   const type = searchParams.get("type");
-  const handleEdit = () => setReadOnly(false);
-  const [currentStatus, setCurrentStatus] = useState("");
-  const [currentType, setCurrentType] = useState("");
-  const [showSidebar, setShowSidebar] = useState(false);
-  const [tabValue, setTabValue] = useState(0);
-  const [sidebarMode, setSidebarMode] = useState<"document" | "signer" | null>(
-    null,
-  );
-  const [isFullPageSign, setIsFullPageSign] = useState(false);
-  const { user } = useSelector((state: RootState) => state.user);
+
+  const [isClosing, setIsClosing] = useState(false);
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized =
+    !showForm && !isClosing && hasDraftData(formData.draftForm);
 
   const {
     createMutation,
@@ -92,6 +136,10 @@ export default function ToolHandover() {
   } = useToolHandoverMutation();
 
   useEffect(() => {
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
     setSelectedIds([]);
     setSelectedRow(null);
     setShowForm(false);
@@ -269,6 +317,7 @@ export default function ToolHandover() {
   };
 
   const handleClose = () => {
+    setIsClosing(true);
     setSelectedIds([]);
     setSearchValue("");
     setShowSignDocument(false);
@@ -276,6 +325,8 @@ export default function ToolHandover() {
     setShowForm(false);
     setShowSidebar(false);
     setReadOnly(false);
+    setField({ draftForm: undefined });
+    setTimeout(() => setIsClosing(false), 100);
   };
 
   const handleSign = (
@@ -630,6 +681,11 @@ export default function ToolHandover() {
           <PageAction
             title={"Biên bản bàn giao ccdc - vật tư"}
             onNewClick={() => {
+              if (isMinimized) {
+                setShowForm(true);
+                return;
+              }
+              setField({ draftForm: undefined });
               setSelectedRow(null);
               setReadOnly(false);
               setShowForm(true);
@@ -638,11 +694,17 @@ export default function ToolHandover() {
           />
 
           <Box sx={{ p: 2 }}>
-            {showForm && (
-              <Box sx={{ mb: 2 }}>
+            <Dialog
+              open={showForm}
+              onClose={handleMinimize}
+              maxWidth="lg"
+              fullWidth
+            >
+              <DialogContent sx={{ p: 0, overflow: "auto" }}>
                 <ToolHandoverForm
                   key={selectedRow?.id || "form-key"}
                   onClose={handleClose}
+                  onMinimize={handleMinimize}
                   onSave={handleSave}
                   onCancel={handleCancel}
                   onEdit={handleEdit}
@@ -653,8 +715,14 @@ export default function ToolHandover() {
                   positions={positions}
                   allUnits={allUnits}
                   staffs={staffs.filter((s: any) => s.hasAccount)}
+                  onFormChange={(values) => setField({ draftForm: values })}
+                  initialFormData={formData.draftForm}
                 />
-              </Box>
+              </DialogContent>
+            </Dialog>
+
+            {isMinimized && (
+              <DraftIndicator onClick={() => setShowForm(true)} />
             )}
 
             <Grid container spacing={2}>

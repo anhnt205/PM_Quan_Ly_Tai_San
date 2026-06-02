@@ -72,16 +72,28 @@ public class DuAnController {
     @PostMapping("/batch")
     public ResponseEntity<ApiResponse<Object>> createBatch(@RequestBody List<DuAn> list) {
         try {
-            int total = 0;
-            for (DuAn item : list) {
-                total += duAnService.create(item);
-            }
+            int total = duAnService.batchCreate(list);
             if (total > 0) {
                 return ResponseEntity.status(HttpStatus.CREATED)
                         .body(ApiResponse.success("Tạo danh sách dự án thành công", null, total));
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.failure("Tạo danh sách dự án thất bại", total));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
+    @PutMapping("/batch")
+    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<DuAn> list) {
+        try {
+            int total = duAnService.batchUpdate(list);
+            if (total > 0) {
+                return ResponseEntity.ok(ApiResponse.success("Cập nhật danh sách dự án thành công", null, total));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.failure("Cập nhật danh sách dự án thất bại", total));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
@@ -122,10 +134,7 @@ public class DuAnController {
     @DeleteMapping("/batch")
     public ResponseEntity<ApiResponse<Object>> deleteBatch(@RequestBody List<String> ids) {
         try {
-            int total = 0;
-            for (String id : ids) {
-                total += duAnService.delete(id);
-            }
+            int total = duAnService.batchDelete(ids);
             if (total > 0) {
                 return ResponseEntity.ok(ApiResponse.success("Xóa danh sách dự án thành công", null, total));
             }

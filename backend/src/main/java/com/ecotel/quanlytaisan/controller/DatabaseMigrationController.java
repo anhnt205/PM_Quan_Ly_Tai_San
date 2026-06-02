@@ -8,7 +8,6 @@ import com.ecotel.quanlytaisan.service.DatabaseMigrationService;
 
 @RestController
 @RequestMapping("/api/migration")
-@CrossOrigin("*") // Cho phép Frontend gọi API
 public class DatabaseMigrationController {
 
     @Autowired

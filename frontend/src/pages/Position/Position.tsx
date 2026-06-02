@@ -22,12 +22,29 @@ import {
 import { useDebounce } from "../../hooks/useDebounce";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
+import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
+
+interface PositionTabState {
+  showForm: boolean;
+  selectedPosition: any | null;
+  readOnly: boolean;
+  isCopy: boolean;
+  draftForm?: Record<string, any>;
+}
 
 export default function Position() {
-  const [showForm, setShowForm] = useState(false);
-  const [selectedPosition, setSelectedPosition] = useState<any>(null);
-  const [readOnly, setReadOnly] = useState(false);
-  const [isCopy, setIsCopy] = useState(false);
+  const { formData, setField } = useTabForm<PositionTabState>("/chuc_vu");
+  const showForm = formData.showForm ?? false;
+  const selectedPosition = formData.selectedPosition ?? null;
+  const readOnly = formData.readOnly ?? false;
+  const isCopy = formData.isCopy ?? false;
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setSelectedPosition = (v: any) => setField({ selectedPosition: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+  const setIsCopy = (v: boolean) => setField({ isCopy: v });
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
@@ -76,11 +93,16 @@ export default function Position() {
     setShowForm(false);
     setSelectedPosition(null);
     setIsCopy(false);
+    setField({ draftForm: undefined });
   };
 
   const handleEdit = () => {
     setReadOnly(false);
   };
+
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
+  const handleMinimize = () => setShowForm(false);
+
   const columns: GridColDef[] = [
     {
       field: "id",
@@ -251,6 +273,10 @@ export default function Position() {
       <PageAction
         title="Quản lý chức vụ"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
           setShowForm(true);
           setSelectedPosition(null);
           setReadOnly(false);
@@ -280,21 +306,32 @@ export default function Position() {
             </Box>
           </DialogContent>
         </Dialog>
-        {showForm && (
-          <Box py={2}>
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{ sx: { borderRadius: "12px" } }}
+        >
+          <DialogContent sx={{ p: 0 }}>
             <PositionForm
               onCancel={() => {
                 setShowForm(false);
                 setSelectedPosition(null);
                 setReadOnly(false);
+                setField({ draftForm: undefined });
               }}
+              onMinimize={handleMinimize}
               onEdit={handleEdit}
               selectedPosition={selectedPosition}
               readOnly={readOnly}
               onSave={handleSave}
+              onFormChange={(values) => setField({ draftForm: values })}
+              initialFormData={formData.draftForm}
             />
-          </Box>
-        )}
+          </DialogContent>
+        </Dialog>
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
         <TableCustom
           tableId="position"
           title="Quản lý chức vụ"
@@ -312,6 +349,8 @@ export default function Position() {
           setSearchValue={setSearchValue}
           onDeleteAll={deleteAllMutation.mutate}
           showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
+          onImportExcel={(file) => importExcelMutation.mutate(file)}
+          onExportExcel={() => exportMutation.mutate(allPositions)}
         />
       </Box>
     </Box>

@@ -1,4 +1,4 @@
-import { ContentCopy, Delete } from "@mui/icons-material";
+import { ContentCopy, Delete, EditNote } from "@mui/icons-material";
 import {
   Box,
   Chip,
@@ -19,12 +19,31 @@ import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
+import { useTabForm } from "../../redux/useTabForm";
+import DraftIndicator from "../../components/common/DraftIndicator";
+import { hasDraftData } from "../../utils/draftUtils";
+
+interface StaffTabState {
+  showForm: boolean;
+  isCopy: boolean;
+  selectedStaff: any | null;
+  readOnly: boolean;
+  draftForm?: Record<string, any>;
+}
 
 export default function Staff() {
-  const [showForm, setShowForm] = useState(false);
-  const [isCopy, setIsCopy] = useState(false);
-  const [selectedStaff, setSelectedStaff] = useState<any>(null);
-  const [readOnly, setReadOnly] = useState(false);
+  const { formData, setField } = useTabForm<StaffTabState>("/nhan_vien");
+  const showForm = formData.showForm ?? false;
+  const isCopy = formData.isCopy ?? false;
+  const selectedStaff = formData.selectedStaff ?? null;
+  const readOnly = formData.readOnly ?? false;
+
+  // Setter helper cho gọn
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setIsCopy = (v: boolean) => setField({ isCopy: v });
+  const setSelectedStaff = (v: any) => setField({ selectedStaff: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
@@ -76,6 +95,7 @@ export default function Staff() {
     setShowForm(false);
     setSelectedStaff(null);
     setIsCopy(false);
+    setField({ draftForm: undefined });
   };
 
   const handleEdit = () => {
@@ -98,6 +118,12 @@ export default function Staff() {
         }
       },
     });
+  };
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
+
+  const handleMinimize = () => {
+    setShowForm(false);
+    // Không xóa draftForm, không reset selectedStaff
   };
 
   const columns: GridColDef[] = [
@@ -236,12 +262,15 @@ export default function Staff() {
       ),
     },
   ];
-
   return (
     <Box sx={{ width: "100%" }}>
       <PageAction
         title="Quản lý nhân viên"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
           setShowForm(true);
           setSelectedStaff(null);
           setReadOnly(false);
@@ -276,23 +305,46 @@ export default function Staff() {
             </Box>
           </DialogContent>
         </Dialog>
-        {showForm && (
-          <Box py={2}>
+        <Dialog
+          open={showForm}
+          onClose={() => {
+            setShowForm(false);
+            setSelectedStaff(null);
+            setReadOnly(false);
+            setIsCopy(false);
+          }}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: "16px",
+              border: "2px solid #1FA463",
+            },
+          }}
+        >
+          <DialogContent sx={{ p: 0 }}>
             <StaffForm
               onCancel={() => {
                 setShowForm(false);
                 setSelectedStaff(null);
                 setReadOnly(false);
                 setIsCopy(false);
+                setField({ draftForm: undefined });
               }}
+              onMinimize={handleMinimize}
               onEdit={handleEdit}
               selectedStaff={selectedStaff}
               readOnly={readOnly}
               onSave={handleSave}
               onUpload={uploadMutation.mutate}
+              onFormChange={(values) => setField({ draftForm: values })}
+              initialFormData={formData.draftForm}
             />
-          </Box>
-        )}
+          </DialogContent>
+        </Dialog>
+
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
+
         <TableCustom
           tableId="staff"
           title="Quản lý nhân viên"
@@ -311,6 +363,8 @@ export default function Staff() {
           titleSearch="Tìm kiếm theo tên nhân viên, mã nhân viên, ..."
           onDeleteAll={deleteAllMutation.mutate}
           showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
+          onImportExcel={handleImport}
+          onExportExcel={() => exportMutation.mutate()}
         />
       </Box>
       <ImportErrorDialog

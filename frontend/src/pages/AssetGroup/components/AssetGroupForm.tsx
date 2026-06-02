@@ -2,6 +2,8 @@ import {
   InfoOutlineRounded,
   ArrowDropUp,
   ArrowDropDown,
+  Remove,
+  Close,
 } from "@mui/icons-material";
 import {
   Accordion,
@@ -9,6 +11,7 @@ import {
   AccordionSummary,
   Box,
   Grid,
+  IconButton,
   Paper,
   Typography,
 } from "@mui/material";
@@ -21,6 +24,7 @@ import ViewBtn from "../../../components/Button/ViewBtn";
 import { AssetGroupValidation } from "../validation/Validation";
 import EditButton from "../../../components/Button/EditButton";
 import { CongTy } from "../../../utils/const";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 export default function AssetGroupForm({
   onEdit,
@@ -28,19 +32,25 @@ export default function AssetGroupForm({
   selectedAssetGroup,
   readOnly,
   onSave,
+  initialFormData,
+  onFormChange,
+  onMinimize,
 }: {
   onEdit: () => void;
   onCancel: () => void;
   selectedAssetGroup?: any;
   readOnly: boolean;
   onSave: (values: any) => void;
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
+  onMinimize: () => void;
 }) {
   const [expanded, setExpanded] = useState(true);
   const formik = useFormik({
     initialValues: {
-      id: "",
-      tenNhom: "",
-      idCongTy: CongTy.CT001,
+      id: initialFormData?.id ?? "",
+      tenNhom: initialFormData?.tenNhom ?? "",
+      idCongTy: initialFormData?.idCongTy ?? CongTy.CT001,
     },
     validationSchema: AssetGroupValidation,
     onSubmit(values) {
@@ -48,63 +58,96 @@ export default function AssetGroupForm({
     },
   });
 
+  const debouncedValues = useDebounce(formik.values, 800);
+  useEffect(() => {
+    onFormChange?.(debouncedValues);
+  }, [debouncedValues]);
+
   useEffect(() => {
     if (selectedAssetGroup) {
       formik.setValues(selectedAssetGroup);
       formik.setErrors({}); // Clear errors when selectedAssetGroup changes
-    } else {
-      formik.resetForm();
     }
   }, [selectedAssetGroup, readOnly]);
 
   return (
-    <Accordion sx={{ background: "#f6f8f4ff" }} expanded={expanded}>
-      <AccordionSummary
-        expandIcon={<ViewBtn expanded={expanded} setExpanded={setExpanded} />}
-        aria-controls="panel1-content"
-        id="panel1-header"
+    <Box
+      sx={{
+        bgcolor: "#ffffff",
+        p: 4,
+        display: "flex",
+        flexDirection: "column",
+        gap: 3,
+      }}
+    >
+      {/* Header */}
+      <Box
         sx={{
-          "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
-            transform: "none", // Ngăn không cho xoay
-          },
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          pb: 2,
+          borderBottom: "1px solid #f1f5f9",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          {expanded ? <ArrowDropUp /> : <ArrowDropDown />}
-          <Typography>Chi tiết nhóm tài sản</Typography>
+        <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
+          Chi tiết nhóm tài sản
+        </Typography>
+        <Box display="flex" gap={0.5}>
+          <IconButton size="small" onClick={onMinimize} title="Ẩn tạm">
+            <Remove fontSize="small" />
+          </IconButton>
+          <IconButton size="small" onClick={onCancel} title="Đóng">
+            <Close fontSize="small" />
+          </IconButton>
         </Box>
-      </AccordionSummary>
-      <AccordionDetails>
-        <Box display="flex" gap={2}>
-          {!readOnly && <SaveBtn onSave={formik.submitForm} />}
-          {!readOnly && <CancelBtn onClick={onCancel} />}
-          {readOnly && <EditButton onClick={onEdit} />}
+      </Box>
+
+      {/* Thông tin */}
+      <Paper sx={{ p: 2, borderRadius: "12px" }}>
+        <Box display="flex" alignItems="center" gap={2} mb={2}>
+          <InfoOutlineRounded sx={{ color: "#1FA463" }} />
+          <Typography sx={{ fontWeight: 600, color: "#1FA463" }}>
+            Thông tin nhóm tài sản
+          </Typography>
         </Box>
-        <Paper sx={{ mt: 2, p: 2, borderRadius: "12px" }}>
-          <Box display={"flex"} alignItems={"center"} gap={2}>
-            <InfoOutlineRounded color="primary" />
-            <Typography>Thông tin nhóm tài sản</Typography>
-          </Box>
-          <Grid container spacing={2} sx={{ mt: 2 }}>
-            <Grid size={{ xs: 12 }}>
-              <FieldInput
-                title="Mã nhóm tài sản *"
-                formik={formik}
-                field="id"
-                disabled={Boolean(selectedAssetGroup?.id)}
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <FieldInput
-                title="Tên nhóm tài sản *"
-                formik={formik}
-                field="tenNhom"
-                disabled={readOnly}
-              />
-            </Grid>
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 6 }}>
+            <FieldInput
+              title="Mã nhóm tài sản *"
+              formik={formik}
+              field="id"
+              disabled={Boolean(selectedAssetGroup?.id)}
+            />
           </Grid>
-        </Paper>
-      </AccordionDetails>
-    </Accordion>
+          <Grid size={{ xs: 6 }}>
+            <FieldInput
+              title="Tên nhóm tài sản *"
+              formik={formik}
+              field="tenNhom"
+              disabled={readOnly}
+            />
+          </Grid>
+        </Grid>
+      </Paper>
+
+      {/* Footer */}
+      <Box
+        display="flex"
+        justifyContent="flex-end"
+        gap={2}
+        pt={2.5}
+        sx={{ borderTop: "1px solid #f1f5f9" }}
+      >
+        {readOnly ? (
+          <EditButton onClick={onEdit} />
+        ) : (
+          <>
+            <CancelBtn onClick={onCancel} />
+            <SaveBtn onSave={formik.submitForm} />
+          </>
+        )}
+      </Box>
+    </Box>
   );
 }

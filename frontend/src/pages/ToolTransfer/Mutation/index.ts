@@ -613,8 +613,8 @@ export const useToolTransferPageQuery = (
   trangThai?: number,
   chuaBanGiaoHet?: boolean,
   idDonViGiao?: string,
+  isSign?: boolean,
 ) => {
-  const { user } = useSelector((state: RootState) => state.user);
   const idCongTy = CongTy.CT001;
   return useQuery({
     queryKey: [
@@ -627,6 +627,7 @@ export const useToolTransferPageQuery = (
       chuaBanGiaoHet,
       userid,
       idDonViGiao,
+      isSign,
     ], // Key để cache dữ liệu
     queryFn: async () => {
       const res = await api.get("/dieudongccdcvattu/paged", {
@@ -640,6 +641,7 @@ export const useToolTransferPageQuery = (
           trangThai: trangThai,
           chuaBanGiaoHet,
           idDonViGiao,
+          isSign: isSign,
         },
       });
       return res.data;

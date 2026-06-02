@@ -2,8 +2,10 @@ import {
   Add,
   ArrowDropDown,
   ArrowDropUp,
+  Close,
   Delete,
   InfoOutlineRounded,
+  Remove,
 } from "@mui/icons-material";
 import {
   Accordion,
@@ -36,6 +38,7 @@ import dayjs from "dayjs";
 import { ToolValidation } from "../validation";
 import TextFieldNumber from "../../../components/TextField/TextFieldNumber";
 import { CongTy } from "../../../utils/const";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 export default function ToolForm({
   onEdit,
@@ -47,6 +50,9 @@ export default function ToolForm({
   toolTypes,
   allUnits,
   toolGroups,
+  initialFormData,
+  onFormChange,
+  onMinimize,
 }: {
   onEdit: () => void;
   onCancel: () => void;
@@ -57,35 +63,40 @@ export default function ToolForm({
   toolTypes: any[];
   allUnits: any[];
   toolGroups: any[];
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
+  onMinimize: () => void;
 }) {
   const [expanded, setExpanded] = useState(true);
   const { user } = useSelector((state: RootState) => state.user);
   const formik = useFormik({
     initialValues: {
-      id: "",
-      idDonVi: "",
-      ten: "",
-      ngayNhap: dayjs(new Date()).format("YYYY-MM-DDTHH:mm:ss"),
-      donViTinh: "",
-      soLuong: 0,
-      idNhomCCDC: "",
-      giaTri: 0,
-      soKyHieu: "",
-      kyHieu: "",
-      congSuat: "",
-      nuocSanXuat: "",
-      namSanXuat: 0,
-      ghiChu: "",
-      idCongTy: CongTy.CT001,
-      ngayTao: "",
-      ngayCapNhat: "",
-      nguoiTao: "",
-      nguoiCapNhat: user?.username || "",
-      isActive: true,
-      idLoaiCCDCCon: "",
-      hienTrang: 0,
-      chiTietTaiSanList: [],
-      chiTietDonViSoHuuList: [],
+      id: initialFormData?.id ?? "",
+      idDonVi: initialFormData?.idDonVi ?? "",
+      ten: initialFormData?.ten ?? "",
+      ngayNhap:
+        initialFormData?.ngayNhap ??
+        dayjs(new Date()).format("YYYY-MM-DDTHH:mm:ss"),
+      donViTinh: initialFormData?.donViTinh ?? "",
+      soLuong: initialFormData?.soLuong ?? 0,
+      idNhomCCDC: initialFormData?.idNhomCCDC ?? "",
+      giaTri: initialFormData?.giaTri ?? 0,
+      soKyHieu: initialFormData?.soKyHieu ?? "",
+      kyHieu: initialFormData?.kyHieu ?? "",
+      congSuat: initialFormData?.congSuat ?? "",
+      nuocSanXuat: initialFormData?.nuocSanXuat ?? "",
+      namSanXuat: initialFormData?.namSanXuat ?? 0,
+      ghiChu: initialFormData?.ghiChu ?? "",
+      idCongTy: initialFormData?.idCongTy ?? CongTy.CT001,
+      ngayTao: initialFormData?.ngayTao ?? "",
+      ngayCapNhat: initialFormData?.ngayCapNhat ?? "",
+      nguoiTao: initialFormData?.nguoiTao ?? "",
+      nguoiCapNhat: initialFormData?.nguoiCapNhat ?? user?.username ?? "",
+      isActive: initialFormData?.isActive ?? true,
+      idLoaiCCDCCon: initialFormData?.idLoaiCCDCCon ?? "",
+      hienTrang: initialFormData?.hienTrang ?? 0,
+      chiTietTaiSanList: initialFormData?.chiTietTaiSanList ?? [],
+      chiTietDonViSoHuuList: initialFormData?.chiTietDonViSoHuuList ?? [],
     },
     validationSchema: ToolValidation,
     onSubmit(values) {
@@ -110,6 +121,13 @@ export default function ToolForm({
     },
   });
 
+  const debouncedValues = useDebounce(formik.values, 1500);
+  useEffect(() => {
+    if (!selectedTool) {
+      onFormChange?.(debouncedValues);
+    }
+  }, [debouncedValues]);
+
   useEffect(() => {
     if (selectedTool) {
       formik.setValues({
@@ -130,8 +148,6 @@ export default function ToolForm({
           },
         ),
       });
-    } else {
-      formik.resetForm();
     }
   }, [selectedTool]);
 
@@ -164,77 +180,62 @@ export default function ToolForm({
   };
 
   return (
-    <Accordion
+    <Box
       sx={{
-        background: "#f6f8f4ff",
-        overflow: expanded ? "visible" : "hidden",
-        "& .MuiCollapse-root": {
-          overflow: expanded ? "visible !important" : "hidden",
-        },
+        bgcolor: "#ffffff",
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
       }}
-      expanded={expanded}
     >
-      <AccordionSummary
-        expandIcon={<ViewBtn expanded={expanded} setExpanded={setExpanded} />}
-        aria-controls="panel1-content"
-        id="panel1-header"
+      {/* Header sticky */}
+      <Box
         sx={{
+          p: 2,
+          bgcolor: "#f6f8f4ff",
+          borderBottom: "1px solid",
+          borderColor: "divider",
           position: "sticky",
-          top: 112,
+          top: 0,
           zIndex: 11,
-          background: "#f6f8f4ff",
-          minHeight: "56px",
-          "&.Mui-expanded": {
-            minHeight: "56px",
-            margin: 0,
-          },
-          "& .MuiAccordionSummary-content.Mui-expanded": {
-            margin: "12px 0",
-          },
-          "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
-            transform: "none",
-          },
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          {expanded ? <ArrowDropUp /> : <ArrowDropDown />}
-          <Typography>Chi tiết CCDC - Vật tư</Typography>
+        {/* Title + Minimize/Close */}
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          mb={1}
+        >
+          <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
+            Chi tiết CCDC - Vật tư
+          </Typography>
+          <Box display="flex" gap={0.5}>
+            <IconButton size="small" onClick={onMinimize} title="Ẩn tạm">
+              <Remove fontSize="small" />
+            </IconButton>
+            <IconButton size="small" onClick={onCancel} title="Đóng">
+              <Close fontSize="small" />
+            </IconButton>
+          </Box>
         </Box>
-      </AccordionSummary>
 
-      <AccordionDetails sx={{ pt: 0 }}>
+        {/* Actions + Status bar */}
         <Box
           sx={{
-            position: "sticky",
-            top: 168,
-            zIndex: 10,
-            background: "#f6f8f4ff",
-            pb: 2,
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             gap: 2,
-            mb: 2,
           }}
         >
           <Box display="flex" gap={2}>
-            {!readOnly && (
-              <SaveBtn
-                onSave={() => {
-                  formik.submitForm();
-                }}
-              />
-            )}
+            {!readOnly && <SaveBtn onSave={() => formik.submitForm()} />}
             {readOnly && <EditButton onClick={onEdit} />}
-            <CancelBtn
-              onClick={() => {
-                onCancel(); 
-              }}
-            />
+            <CancelBtn onClick={onCancel} />
           </Box>
+
+          {/* Status bar Nháp/Khóa — giữ nguyên */}
           <Box
             sx={{
               display: "flex",
@@ -248,7 +249,6 @@ export default function ToolForm({
               transition: "all 0.3s ease",
             }}
           >
-            {/* Các nút Nháp / Khóa giữ nguyên */}
             <Box
               sx={{
                 display: "flex",
@@ -297,6 +297,10 @@ export default function ToolForm({
             </Box>
           </Box>
         </Box>
+      </Box>
+
+      {/* Body */}
+      <Box sx={{ flex: 1, overflow: "auto", p: 2 }}>
         <Paper elevation={0} sx={{ mt: 2, p: 2, borderRadius: "12px" }}>
           <Box display={"flex"} alignItems={"center"} gap={2}>
             <InfoOutlineRounded color="primary" />
@@ -331,16 +335,6 @@ export default function ToolForm({
                     disabled={readOnly}
                   />
                 </Grid>
-                {/* <Grid size={{ xs: 12 }}>
-                  <FieldAutoCompleted
-                    title="Đơn vị nhập"
-                    data={departments}
-                    labelkey="tenPhongBan"
-                    field="idDonVi"
-                    formik={formik}
-                    disabled={readOnly}
-                  />
-                </Grid> */}
                 <Grid size={{ xs: 12 }}>
                   <FieldDateTime
                     title="Ngày nhập"
@@ -408,14 +402,13 @@ export default function ToolForm({
               </Grid>
             </Grid>
           </Grid>
+
           <Typography fontSize={14} py={2}>
             Chi tiết CCDC Vật tư:
           </Typography>
           <Table size="medium">
             <TableHead>
               <TableRow>
-                {/* <TableCell>STT</TableCell> */}
-                {/* <TableCell>Ký hiệu</TableCell> */}
                 <TableCell>Số lượng</TableCell>
                 <TableCell>Công suất</TableCell>
                 <TableCell>Nước sản xuất</TableCell>
@@ -432,30 +425,7 @@ export default function ToolForm({
                 .filter((row: any) => !row.isDeleted)
                 .map((row: any) => (
                   <TableRow key={row.originalIndex}>
-
-                    {/* Số ký hiệu */}
-                    {/* <TableCell>
-                      <FieldInput
-                        formik={formik}
-                        field={`chiTietTaiSanList.${row.originalIndex}.soKyHieu`}
-                        disabled={readOnly}
-                        onChange={(e) =>
-                          handleFieldChange(e, row.originalIndex)
-                        }
-                      />
-                    </TableCell> */}
-
-                    {/* Số lượng */}
                     <TableCell>
-                      {/* <FieldInput
-                        formik={formik}
-                        field={`chiTietTaiSanList.${row.originalIndex}.soLuong`}
-                        type="number"
-                        disabled={readOnly}
-                        onChange={(e) =>
-                          handleFieldChange(e, row.originalIndex)
-                        }
-                      /> */}
                       <TextFieldNumber
                         title=""
                         formik={formik}
@@ -466,8 +436,6 @@ export default function ToolForm({
                         }
                       />
                     </TableCell>
-
-                    {/* Công suất */}
                     <TableCell>
                       <FieldInput
                         formik={formik}
@@ -478,8 +446,6 @@ export default function ToolForm({
                         }
                       />
                     </TableCell>
-
-                    {/* Nước sản xuất */}
                     <TableCell>
                       <FieldInput
                         formik={formik}
@@ -490,8 +456,6 @@ export default function ToolForm({
                         }
                       />
                     </TableCell>
-
-                    {/* Năm sản xuất */}
                     <TableCell>
                       <FieldInput
                         formik={formik}
@@ -503,67 +467,12 @@ export default function ToolForm({
                         }
                       />
                     </TableCell>
-
-                    {/* Nút Xóa */}
-                    {/* <TableCell>
-                      <IconButton
-                        color="error"
-                        onClick={() => {
-                          const currentRow = formik.values.chiTietTaiSanList[
-                            row.originalIndex
-                          ] as any;
-                          if (currentRow.isInserted) {
-                            // Nếu là dòng vừa nhấn "Thêm" thì xóa hẳn khỏi danh sách
-                            const newList = [
-                              ...formik.values.chiTietTaiSanList,
-                            ];
-                            newList.splice(row.originalIndex, 1);
-                            formik.setFieldValue("chiTietTaiSanList", newList);
-                          } else {
-                            // Nếu là dòng cũ từ DB thì đánh dấu xóa để Mutation gọi API Delete
-                            formik.setFieldValue(
-                              `chiTietTaiSanList.${row.originalIndex}.isDeleted`,
-                              true,
-                            );
-                          }
-                        }}
-                        disabled={readOnly}
-                      >
-                        <Delete />
-                      </IconButton>
-                    </TableCell> */}
                   </TableRow>
                 ))}
             </TableBody>
-            {/* {!readOnly && (
-              <Button
-                startIcon={<Add />}
-                onClick={() => {
-                  formik.setFieldValue("chiTietTaiSanList", [
-                    ...formik.values.chiTietTaiSanList,
-                    {
-                      stt: formik.values.chiTietTaiSanList.length + 1,
-                      id: "",
-                      idTaiSan: "",
-                      ngayVaoSo: "",
-                      ngaySuDung: "",
-                      soKyHieu: "",
-                      congSuat: "",
-                      nuocSanXuat: "",
-                      namSanXuat: 0,
-                      soLuong: 0,
-                      isInserted: true,
-                    },
-                  ]);
-                }}
-                variant="text"
-              >
-                Thêm một dòng
-              </Button>
-            )} */}
           </Table>
         </Paper>
-      </AccordionDetails>
-    </Accordion>
+      </Box>
+    </Box>
   );
 }

@@ -22,12 +22,31 @@ import { useLoaiSCBDMutation, useloaiscbdPageQuery } from "./Mutation";
 import { useLocation, useNavigate } from "react-router-dom";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
+import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
+
+interface MaintenanceRepairTypeTabState {
+  showForm: boolean;
+  selectedRepairType: any | null;
+  readOnly: boolean;
+  isCopy: boolean;
+  draftForm?: Record<string, any>;
+}
 
 export default function MaintenanceRepairType() {
-  const [showForm, setShowForm] = useState(false);
-  const [selectedRepairType, setSelectedRepairType] = useState<any>(null);
-  const [readOnly, setReadOnly] = useState(false);
-  const [isCopy, setIsCopy] = useState(false);
+  const { formData, setField } = useTabForm<MaintenanceRepairTypeTabState>(
+    "/loai_sua_chua_bao_duong",
+  );
+  const showForm = formData.showForm ?? false;
+  const selectedRepairType = formData.selectedRepairType ?? null;
+  const readOnly = formData.readOnly ?? false;
+  const isCopy = formData.isCopy ?? false;
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setSelectedRepairType = (v: any) => setField({ selectedRepairType: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+  const setIsCopy = (v: boolean) => setField({ isCopy: v });
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
@@ -38,6 +57,9 @@ export default function MaintenanceRepairType() {
     pageSize: 10,
     page: 0,
   });
+
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
 
   const {
     createMutation,
@@ -63,7 +85,7 @@ export default function MaintenanceRepairType() {
       setShowForm(true);
       setSelectedRepairType(null);
       setReadOnly(false);
-
+      setField({ draftForm: undefined });
       navigate(location.pathname + location.search, { replace: true });
     }
   }, [location, navigate]);
@@ -88,6 +110,7 @@ export default function MaintenanceRepairType() {
 
     setShowForm(false);
     setSelectedRepairType(null);
+    setField({ draftForm: undefined });
   };
 
   const handleEdit = () => {
@@ -105,6 +128,14 @@ export default function MaintenanceRepairType() {
     {
       field: "ten",
       headerName: "Tên loại sửa chữa",
+      flex: 1,
+      minWidth: 200,
+      align: "center",
+      headerAlign: "center",
+    },
+    {
+      field: "ghiChu",
+      headerName: "Ghi chú",
       flex: 1,
       minWidth: 200,
       align: "center",
@@ -151,6 +182,10 @@ export default function MaintenanceRepairType() {
       <PageAction
         title="Quản lý loại sửa chữa"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
           setShowForm(true);
           setSelectedRepairType(null);
           setReadOnly(false);
@@ -177,21 +212,33 @@ export default function MaintenanceRepairType() {
             </Box>
           </DialogContent>
         </Dialog>
-        {showForm && (
-          <Box py={2}>
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogContent sx={{ p: 0 }}>
             <MaintenanceRepairTypeForm
               onCancel={() => {
                 setShowForm(false);
                 setSelectedRepairType(null);
                 setReadOnly(false);
+                setIsCopy(false);
+                setField({ draftForm: undefined });
               }}
+              onMinimize={handleMinimize}
               onEdit={handleEdit}
               selectedRepairType={selectedRepairType}
               readOnly={readOnly}
               onSave={handleSave}
+              onFormChange={(values) => setField({ draftForm: values })}
+              initialFormData={formData.draftForm}
             />
-          </Box>
-        )}
+          </DialogContent>
+        </Dialog>
+
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
         <TableCustom
           title="Quản lý loại sửa chữa"
           columns={columns}

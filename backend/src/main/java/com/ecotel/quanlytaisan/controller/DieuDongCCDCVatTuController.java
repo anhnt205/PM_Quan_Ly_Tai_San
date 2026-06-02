@@ -44,8 +44,9 @@ public class DieuDongCCDCVatTuController {
             @RequestParam(value = "userid", required = false) String userid,
             @RequestParam(value = "trangThai", required = false) Integer trangThai,
             @RequestParam(value = "idDonViGiao", required = false) String idDonViGiao,
-            @RequestParam(value = "chuaBanGiaoHet", required = false) Boolean chuaBanGiaoHet) throws SQLException {
-        return service.findAllPaged(idcongty, page, size, sortBy, sortDir, search, loai, userid, trangThai, idDonViGiao, chuaBanGiaoHet);
+            @RequestParam(value = "chuaBanGiaoHet", required = false) Boolean chuaBanGiaoHet,
+            @RequestParam(value = "isSign", required = false) Boolean isSign) throws SQLException {
+        return service.findAllPaged(idcongty, page, size, sortBy, sortDir, search, loai, userid, trangThai, idDonViGiao, chuaBanGiaoHet, isSign);
     }
 
     @GetMapping("/getbyuserid/{userid}")

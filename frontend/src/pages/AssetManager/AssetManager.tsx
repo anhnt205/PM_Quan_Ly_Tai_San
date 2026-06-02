@@ -23,6 +23,7 @@ import {
   Tooltip,
   Typography,
   Grid,
+  ButtonBase,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import PageAction from "../../components/common/PageAction";
@@ -42,10 +43,11 @@ import {
 } from "../TypeAsset/Mutation";
 import { useAllUnitsQuery } from "../Unit/Mutation";
 import { useAllReasonIncreaseQuery } from "../ReasonIncrease/Mutation";
+import { useAllLoaiSCBDQuery } from "../MaintenanceRepairType/Mutation";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useAllModelAssetQuery } from "../ModelAsset/Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
-import { BookOpenCheckIcon, Eye, HistoryIcon } from "lucide-react";
+import { BookOpenCheckIcon, Eye, HistoryIcon, Archive, UserCheck, Building2 } from "lucide-react";
 import AssetHistoryModal from "./components/AssetHistoryModal";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ShowStatus } from "./config";
@@ -56,14 +58,39 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { useConfig } from "../../hooks/useContext";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
+import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
+
+interface AssetManagerTabState {
+  showForm: boolean;
+  showSidebar: boolean;
+  selectedAssets: any[];
+  readOnly: boolean;
+  isCopy: boolean;
+  tab: number;
+  status: string;
+  draftForm?: Record<string, any>;
+}
 
 export default function AssetManager() {
-  const [tab, setTab] = React.useState(0);
-  const [showForm, setShowForm] = useState(false);
-  const [selectedAssets, setSelectedAssets] = useState<any[]>([]);
-  const [showSidebar, setShowSidebar] = useState(false);
-  const [readOnly, setReadOnly] = useState(true);
-  const [isCopy, setIsCopy] = useState(false);
+  const { formData, setField } =
+    useTabForm<AssetManagerTabState>("/quan_ly_tai_san");
+  const tab = formData.tab ?? 0;
+  const showForm = formData.showForm ?? false;
+  const selectedAssets = formData.selectedAssets ?? [];
+  const showSidebar = formData.showSidebar ?? false;
+  const readOnly = formData.readOnly ?? true;
+  const isCopy = formData.isCopy ?? false;
+  const status = formData.status ?? "";
+  const setTab = (v: number) => setField({ tab: v });
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setSelectedAssets = (v: any[]) => setField({ selectedAssets: v });
+  const setShowSidebar = (v: boolean) => setField({ showSidebar: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+  const setIsCopy = (v: boolean) => setField({ isCopy: v });
+  const setStatus = (v: string) => setField({ status: v });
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
@@ -72,12 +99,14 @@ export default function AssetManager() {
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.user);
   const { config } = useConfig();
-  const [status, setStatus] = useState("");
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
     page: 0,
   });
+
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
 
   const {
     createMutation,
@@ -108,6 +137,7 @@ export default function AssetManager() {
     undefined,
     status,
   );
+
   const statusOptions: FilterOption[] = [
     {
       label: "Tất cả",
@@ -145,6 +175,7 @@ export default function AssetManager() {
   const { data: allUnits = [] } = useAllUnitsQuery();
   const { data: allModelAsset = [] } = useAllModelAssetQuery();
   const { data: allReasonIncreases = [] } = useAllReasonIncreaseQuery();
+  const { data: allRepairTypes = [] } = useAllLoaiSCBDQuery();
 
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [openErrorModal, setOpenErrorModal] = useState(false);
@@ -153,10 +184,10 @@ export default function AssetManager() {
 
   useEffect(() => {
     if (location.state?.autoCreate) {
+      setField({ draftForm: undefined });
       setShowForm(true);
       setSelectedAssets([]);
       setReadOnly(false);
-
       navigate(location.pathname, { replace: true });
     }
   }, [location, navigate]);
@@ -200,6 +231,7 @@ export default function AssetManager() {
     setShowForm(false);
     setReadOnly(true);
     setIsCopy(false);
+    setField({ draftForm: undefined });
   };
 
   const columns: GridColDef[] = [
@@ -470,6 +502,11 @@ export default function AssetManager() {
       <PageAction
         title="Quản lý tài sản"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
+          setField({ draftForm: undefined });
           setShowForm(true);
           setSelectedAssets([]);
           setReadOnly(false);
@@ -480,14 +517,30 @@ export default function AssetManager() {
         showExcel={true}
       />
       <Box p={2}>
-        {showForm && (
-          <Box py={2}>
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize}
+          maxWidth="xl"
+          fullWidth
+          PaperProps={{ sx: { height: "90vh" } }}
+        >
+          <DialogContent
+            sx={{
+              p: 0,
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
             <AssetManagerForm
               onCancel={() => {
                 setShowForm(false);
                 setSelectedAssets([]);
                 setReadOnly(true);
+                setIsCopy(false); // ← thêm
+                setField({ draftForm: undefined });
               }}
+              onMinimize={handleMinimize} // ← thêm
               selectedAssets={selectedAssets}
               readOnly={readOnly}
               onEdit={handleEdit}
@@ -498,9 +551,15 @@ export default function AssetManager() {
               allDepartments={allDepartments}
               allUnits={allUnits}
               allReasonIncreases={allReasonIncreases}
+              allRepairTypes={allRepairTypes}
+              onFormChange={(values) => setField({ draftForm: values })}
+              initialFormData={formData.draftForm}
             />
-          </Box>
-        )}
+          </DialogContent>
+        </Dialog>
+
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
+
         <Paper sx={{ bgcolor: "#04b46eff", p: 2, mt: 2, width: "100%" }}>
           <Typography fontWeight={600} color="white">
             Quản lý tài sản
@@ -541,29 +600,6 @@ export default function AssetManager() {
           </Box>
         </Paper>
         <Box>
-          <Box
-            display={"flex"}
-            justifyContent={"flex-end"}
-            bgcolor={"#f5efefff"}
-          >
-            <Tabs value={tab} onChange={(e, newValue) => setTab(newValue)}>
-              <Tab
-                label="Kho thu hồi"
-                icon={<Inventory2 fontSize="small" />}
-                sx={{ fontSize: 12 }}
-              />
-              <Tab
-                label="Tài sản đã bàn giao"
-                icon={<Inventory2 fontSize="small" />}
-                sx={{ fontSize: 12 }}
-              />
-              <Tab
-                label="Kho công ty"
-                icon={<Inventory2 fontSize="small" />}
-                sx={{ fontSize: 12 }}
-              />
-            </Tabs>
-          </Box>
           <Grid
             container
             sx={{
@@ -571,8 +607,139 @@ export default function AssetManager() {
               borderRadius: "8px",
               overflow: "hidden",
               alignItems: "stretch",
+              mt: 2,
             }}
           >
+            <Grid size={{ xs: 12 }} sx={{ borderBottom: "1px solid #e0e0e0" }}>
+              <Box
+                sx={{
+                  width: "100%",
+                  overflowX: "auto",
+                  display: "flex",
+                  gap: 2,
+                  p: 2,
+                  bgcolor: "#f8fafc",
+                  "&::-webkit-scrollbar": {
+                    height: "6px",
+                  },
+                  "&::-webkit-scrollbar-thumb": {
+                    bgcolor: "grey.300",
+                    borderRadius: "4px",
+                  },
+                  "&::-webkit-scrollbar-track": {
+                    bgcolor: "transparent",
+                  },
+                }}
+              >
+                {[
+                  {
+                    label: "Kho thu hồi",
+                    subLabel: "Tài sản thu hồi",
+                    icon: Archive,
+                  },
+                  {
+                    label: "Tài sản đã bàn giao",
+                    subLabel: "Tài sản bàn giao",
+                    icon: UserCheck,
+                  },
+                  {
+                    label: "Kho công ty",
+                    subLabel: "Tài sản công ty",
+                    icon: Building2,
+                  },
+                ].map((t, idx) => {
+                  const IconComponent = t.icon;
+                  const isActive = tab === idx;
+
+                  return (
+                    <ButtonBase
+                      key={idx}
+                      onClick={() => setTab(idx)}
+                      focusRipple
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-start",
+                        justifyContent: "space-between",
+                        minWidth: 175,
+                        flex: "1 0 175px",
+                        height: 110,
+                        p: 2,
+                        borderRadius: "14px",
+                        textAlign: "left",
+                        position: "relative",
+                        overflow: "hidden",
+                        transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                        border: "1px solid",
+                        borderColor: isActive
+                          ? "transparent"
+                          : "rgba(148, 163, 184, 0.25)",
+                        background: isActive
+                          ? "linear-gradient(135deg, #04b46e 0%, #028a54 100%)"
+                          : "#ffffff",
+                        color: isActive ? "#ffffff" : "#334155",
+                        boxShadow: isActive
+                          ? "0 10px 20px -5px rgba(4, 180, 110, 0.35)"
+                          : "0 2px 4px rgba(148, 163, 184, 0.05)",
+                        "&:hover": {
+                          transform: "translateY(-4px)",
+                          borderColor: isActive ? "transparent" : "#04b46e",
+                          boxShadow: isActive
+                            ? "0 12px 24px -5px rgba(4, 180, 110, 0.45)"
+                            : "0 6px 16px rgba(4, 180, 110, 0.08)",
+                          bgcolor: isActive ? undefined : "rgba(4, 180, 110, 0.02)",
+                        },
+                      }}
+                    >
+                      {/* Top Row: Icon */}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: 36,
+                          height: 36,
+                          borderRadius: "10px",
+                          bgcolor: isActive
+                            ? "rgba(255, 255, 255, 0.18)"
+                            : "rgba(4, 180, 110, 0.08)",
+                          color: isActive ? "#ffffff" : "#04b46e",
+                          transition: "all 0.25s ease",
+                          mb: 1.5,
+                        }}
+                      >
+                        <IconComponent size={20} />
+                      </Box>
+
+                      {/* Bottom: Labels */}
+                      <Box sx={{ width: "100%" }}>
+                        <Typography
+                          sx={{
+                            fontSize: 13,
+                            fontWeight: 700,
+                            lineHeight: 1.3,
+                            color: "inherit",
+                            mb: 0.25,
+                          }}
+                        >
+                          {t.label}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: 11,
+                            lineHeight: 1.3,
+                            color: isActive ? "rgba(255,255,255,0.75)" : "#94a3b8",
+                            fontWeight: 400,
+                          }}
+                        >
+                          {t.subLabel}
+                        </Typography>
+                      </Box>
+                    </ButtonBase>
+                  );
+                })}
+              </Box>
+            </Grid>
             <Grid
               size={{ xs: showSidebar ? 6 : 12 }}
               sx={{
@@ -636,6 +803,8 @@ export default function AssetManager() {
                   setStatus(value);
                 }}
                 statusValue={status}
+                onImportExcel={(file) => importAssetMutation.mutate(file)}
+                onExportExcel={() => exportAssetMutation.mutate()}
               />
             </Grid>
             {showSidebar && (

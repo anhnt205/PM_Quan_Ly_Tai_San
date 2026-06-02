@@ -4,7 +4,9 @@ import com.ecotel.quanlytaisan.dao.NhomTaiSanDao;
 import com.ecotel.quanlytaisan.model.NhomTaiSan;
 import com.ecotel.quanlytaisan.model.PageResponse;
 import com.ecotel.quanlytaisan.model.TaiSan;
+import com.ecotel.quanlytaisan.repository.NhomTaiSanRepository;
 import com.opencsv.CSVReader;
+import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -22,9 +24,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class NhomTaiSanService {
-    @Autowired
-    private NhomTaiSanDao nhomTaiSanDao;
+    private final NhomTaiSanDao nhomTaiSanDao;
+    private final NhomTaiSanRepository nhomTaiSanRepository;
 
     public List<NhomTaiSan> getAll(String idCongTy) {
         return nhomTaiSanDao.findAll(idCongTy);
@@ -45,12 +48,24 @@ public class NhomTaiSanService {
         return nhomTaiSanDao.insert(nts);
     }
 
+    public int batchCreate(List<NhomTaiSan> list) {
+        return nhomTaiSanDao.batchCreate(list);
+    }
+
     public int update(NhomTaiSan nts) {
         return nhomTaiSanDao.update(nts);
     }
 
+    public int batchUpdate(List<NhomTaiSan> list) {
+        return nhomTaiSanDao.batchUpdate(list);
+    }
+
     public int delete(String id) {
         return nhomTaiSanDao.delete(id);
+    }
+
+    public int batchDelete(List<String> ids) {
+        return nhomTaiSanDao.batchDelete(ids);
     }
 
     public List<NhomTaiSan> readCsv(MultipartFile file) throws IOException {
@@ -96,6 +111,4 @@ public class NhomTaiSanService {
     public void deleteAll() {
         nhomTaiSanDao.deleteAll();
     }
-
-
 }

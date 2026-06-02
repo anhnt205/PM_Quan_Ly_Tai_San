@@ -1,50 +1,82 @@
 package com.ecotel.quanlytaisan.model;
 
 import lombok.Data;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import java.util.Date;
 import java.util.List;
 
+/**
+ * DTO kế hoạch sửa chữa với join fields.
+ * TrangThai: 0=Nháp | 1=Chờ duyệt | 2=Đã hủy | 3=Đã duyệt/Hoàn thành
+ */
 @Data
 public class KeHoachSuaChuaDTO {
     private String id;
     private String idCongTy;
+    private String nhomTaiSan;
+
+    // Thông tin cơ bản
+    private String soKeHoach;
     private String tenKeHoach;
+    private String soQuyetDinh;
     private String idLoaiKeHoach;
     private String tenLoaiKeHoach;
     private String idLoaiSuaChua;
     private String tenLoaiSuaChua;
+    private Integer nam;
 
-    // Đơn vị thực hiện
+    // Đơn vị giao
     private String idDonViGiao;
     private String tenDonViGiao;
 
-    private String idDonViThucHien;
-    private String tenDonViThucHien;
+    // Đơn vị nhận
+    private String idDonViNhan;
+    private String tenDonViNhan;
 
-    // Người phụ trách
-    private String idNguoiPhuTrach;
-    private String tenNguoiPhuTrach;
+    // Người lập biểu
+    private String idNguoiLapBieu;
+    private String tenNguoiLapBieu;
+    private Boolean nguoiLapBieuXacNhan;
 
-    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Ho_Chi_Minh")
-    private Date ngayBatDau;
+    // Trình duyệt giám đốc
+    private String idTrinhDuyetGiamDoc;
+    private String tenTrinhDuyetGiamDoc;
+    private Boolean trinhDuyetGiamDocXacNhan;
 
-    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Ho_Chi_Minh")
-    private Date ngayKetThuc;
+    // Thông tin chung
+    private Integer trangThai;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
-    private Date ngayTao;
+    private String ngayTao;
+    private String ngayCapNhat;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Ho_Chi_Minh")
-    private Date ngayCapNhat;
+    private String nguoiTao;
+    private String tenNguoiTao;
+    private String nguoiCapNhat;
 
+    // File đính kèm chính
     private String ghiChu;
-    private String trangThai;
+    private String duongDanFile;
+    private String tenFile;
+    private String ngayKy;
 
-    // Danh sách công việc (nếu cần)
-    private List<KeHoachCongViecSuaChuaDTO> congViecs;
+    // Tài liệu bảng kê (file riêng)
+    private String duongDanTaiLieuBangKe;
 
-    // --- THAY THẾ: Xóa chiTiets, thêm hai danh sách mới ---
-    private List<KeHoachSuaChuaChiTietTaiSan> danhSachTaiSan;   // chi tiết tài sản sửa chữa
-    private List<KeHoachSuaChuaVatTuTieuHao> danhSachVatTu;     // vật tư tiêu hao
+    // Workflow flags
+    private Boolean share;
+    private Boolean byStep;
+
+    // Danh sách chữ ký
+    private List<KyTaiLieu> chuKyList;
+    private List<NguoiKy> nguoiKyList;
+
+    // Danh sách chi tiết tài sản
+    private List<KeHoachSuaChuaChiTietTaiSan> danhSachTaiSan;
+
+    private Integer soLuongSuCo;
+
+    // Null-safe getters
+    public Integer getTrangThai()                { return trangThai != null ? trangThai : 0; }
+    public Boolean getNguoiLapBieuXacNhan()      { return nguoiLapBieuXacNhan != null ? nguoiLapBieuXacNhan : false; }
+    public Boolean getTrinhDuyetGiamDocXacNhan() { return trinhDuyetGiamDocXacNhan != null ? trinhDuyetGiamDocXacNhan : false; }
+    public Boolean getShare()                    { return share != null ? share : false; }
+    public Boolean getByStep()                   { return byStep != null ? byStep : false; }
 }

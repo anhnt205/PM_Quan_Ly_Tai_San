@@ -34,8 +34,8 @@ public class BanGiaoTaiSanController {
     }
 
     @GetMapping("/paged")
-    public PageResponse<BanGiaoTaiSanDTO> getAllPaged(@RequestParam("idcongty") String idcongty, @RequestParam(value = "page", defaultValue = "0") int page, @RequestParam(value = "size", defaultValue = "20") int size, @RequestParam(value = "sortBy", required = false) String sortBy, @RequestParam(value = "sortDir", required = false) String sortDir, @RequestParam(value = "search", required = false) String search, @RequestParam(value = "userid", required = false) String userid, @RequestParam(value = "trangThai", required = false) Integer trangThai, @RequestParam(value = "idDonViGiao", required = false) String idDonViGiao) throws SQLException {
-        return service.findAllPaged(idcongty, page, size, sortBy, sortDir, search, userid, trangThai, idDonViGiao);
+    public PageResponse<BanGiaoTaiSanDTO> getAllPaged(@RequestParam("idcongty") String idcongty, @RequestParam(value = "page", defaultValue = "0") int page, @RequestParam(value = "size", defaultValue = "20") int size, @RequestParam(value = "sortBy", required = false) String sortBy, @RequestParam(value = "sortDir", required = false) String sortDir, @RequestParam(value = "search", required = false) String search, @RequestParam(value = "userid", required = false) String userid, @RequestParam(value = "trangThai", required = false) Integer trangThai, @RequestParam(value = "idDonViGiao", required = false) String idDonViGiao, @RequestParam(value = "isSign", required = false) Boolean isSign) throws SQLException {
+        return service.findAllPaged(idcongty, page, size, sortBy, sortDir, search, userid, trangThai, idDonViGiao, isSign);
     }
 
     @PutMapping("/updatestatus")

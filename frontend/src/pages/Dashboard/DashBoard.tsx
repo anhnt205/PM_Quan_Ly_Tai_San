@@ -1,17 +1,59 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Box, Typography, Grid } from "@mui/material";
 import { Dashboard as DashboardIcon } from "@mui/icons-material";
+import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import { useDashboardMutation } from "./Mutation";
 import { COLORS } from "./components/PieChart";
+import SummaryCards from "./components/SummaryCards";
 import CcdcGroupCard from "./sections/CcdcGroupCard";
-import CcdcTypeCard from "./sections/CcdcTypeCard";
 import CcdcMonthlyCard from "./sections/CcdcMonthlyCard";
 import TaisanGroupCard from "./sections/TaisanGroupCard";
 import TaisanTypeCard from "./sections/TaisanTypeCard";
 import TaisanMonthlyCard from "./sections/TaisanMonthlyCard";
-import Top5Panel from "./sections/Top5Panel";
 import NearDepreciationPanel from "./sections/NearDepreciationPanel";
 import { QuickActionButtons } from "./components/QuickActionButtons";
+import PageAction from "../../components/common/PageAction";
+
+/* ── Section header helper ─────────────────────────── */
+const SectionHeader = ({ label, color }: { label: string; color: string }) => (
+  <Box
+    sx={{
+      display: "flex",
+      alignItems: "center",
+      gap: 1.5,
+      mt: 4,
+      mb: 2,
+    }}
+  >
+    <Box
+      sx={{
+        width: 4,
+        height: 22,
+        borderRadius: "4px",
+        bgcolor: color,
+        flexShrink: 0,
+      }}
+    />
+    <Typography
+      sx={{
+        fontWeight: 700,
+        fontSize: "18px",
+        color: "#1e293b",
+        lineHeight: 1,
+      }}
+    >
+      {label}
+    </Typography>
+    <Box
+      sx={{
+        flex: 1,
+        height: "1px",
+        ml: 1,
+        background: `linear-gradient(90deg, ${color}33 0%, transparent 100%)`,
+      }}
+    />
+  </Box>
+);
 
 export default function DashBoard() {
   const currentYear = new Date().getFullYear();
@@ -48,8 +90,8 @@ export default function DashBoard() {
     yearCCDC,
   );
 
-  console.log("API taiSanTheoLoai:", taiSanTheoLoai);
-  console.log("API ccdcTheoLoai:", ccdcTheoLoai);
+  // console.log("API taiSanTheoLoai:", taiSanTheoLoai);
+  // console.log("API ccdcTheoLoai:", ccdcTheoLoai);
 
   // Tự động chọn nhóm CCDC đầu tiên nếu chưa chọn
   useEffect(() => {
@@ -115,7 +157,7 @@ export default function DashBoard() {
   const ccdcBarData =
     ccdcTheoLoai && ccdcTheoLoai.length > 0 ? ccdcTheoLoai : [];
 
-const taiSanBarData = taiSanTheoLoai || [];
+  const taiSanBarData = taiSanTheoLoai || [];
 
   // Dữ liệu tháng CCDC
   const rawCcdcMonthly =
@@ -145,36 +187,97 @@ const taiSanBarData = taiSanTheoLoai || [];
   );
 
   return (
-    <Box sx={{ bgcolor: "#f5f5f5", minHeight: "100vh", p: 2 }}>
-      <Box sx={{ borderRadius: 2, bgcolor: "rgba(255, 255, 255, 0.5)", p: 2 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+    <>
+      <PageAction title="Tổng quan" hideActionRow={true} />
+
+      {/* ── Premium Page Header ─────────────────────── */}
+      <Box
+        sx={{
+          mx: 2,
+          my: 3,
+          px: 3.5,
+          py: 3,
+          borderRadius: "16px",
+          background:
+            "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0f9ff 100%)",
+          border: "1px solid rgba(4, 180, 110, 0.1)",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            position: "relative",
+            zIndex: 1,
+          }}
+        >
           <Box
             sx={{
-              bgcolor: "#e8f5e9",
-              borderRadius: 1,
-              p: 1,
+              bgcolor: "rgba(4, 180, 110, 0.12)",
+              borderRadius: "14px",
+              p: 1.3,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              boxShadow: "0 4px 14px rgba(4, 180, 110, 0.1)",
             }}
           >
-            <DashboardIcon sx={{ color: "#04b46e", fontSize: 24 }} />
+            <DashboardOutlinedIcon sx={{ color: "#04b46e", fontSize: 28 }} />
           </Box>
           <Box>
-            <Typography variant="h5" sx={{ fontWeight: 600, color: "#04b46e" }}>
-              Tổng quan thống kê
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 800,
+                color: "#1e293b",
+                letterSpacing: "-0.5px",
+                lineHeight: 1.2,
+              }}
+            >
+              Tổng quan
             </Typography>
-            <Typography variant="body2" sx={{ color: "#04b46e" }}>
-              Thống kê tổng quan về tài sản và thiết bị
+            <Typography
+              variant="body2"
+              sx={{ color: "#64748b", fontWeight: 500, mt: 0.3 }}
+            >
+              Thống kê tổng quan về tài sản và công cụ dụng cụ vật tư
             </Typography>
           </Box>
         </Box>
+      </Box>
 
+      {/* ── Main Dashboard Container ────────────────── */}
+      <Box
+        sx={{
+          p: 3,
+          borderRadius: "16px",
+          bgcolor: "rgba(255, 255, 255, 0.45)",
+          backdropFilter: "blur(20px)",
+          border: "1px solid rgba(255, 255, 255, 0.6)",
+          mx: 2,
+          mb: 3,
+        }}
+      >
+        {/* Summary Cards */}
+        <SummaryCards
+          tongTaiSan={statistics?.tongTaiSan || 0}
+          tongNguyenGia={statistics?.tongNguyenGia || 0}
+          tongCCDC={tongCCDC || 0}
+          tongGiaTriCCDC={tongGiaTriCCDC || 0}
+          isLoading={isLoading}
+        />
+
+        {/* Quick Actions */}
         <QuickActionButtons />
 
-        <Grid container spacing={2}>
-          {/* CCDC Cards */}
-          <Grid size={{ xs: 3 }}>
+        {/* ── CCDC Section ────────────────────────────── */}
+        <SectionHeader label="Công cụ dụng cụ" color="#3b82f6" />
+
+        <Grid container spacing={3}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <CcdcGroupCard
               ccdcPieData={ccdcPieData}
               hideCcdcLegend={hideCcdcLegend}
@@ -182,15 +285,7 @@ const taiSanBarData = taiSanTheoLoai || [];
               tongGiaTriCCDC={tongGiaTriCCDC}
             />
           </Grid>
-          <Grid size={{ xs: 4.5 }}>
-            <CcdcTypeCard
-              selectedNhomCCDC={selectedNhomCCDC}
-              setSelectedNhomCCDC={setSelectedNhomCCDC}
-              uniqueNhomCCDC={uniqueNhomCCDC}
-              ccdcBarData={ccdcBarData}
-            />
-          </Grid>
-          <Grid size={{ xs: 4.5 }}>
+          <Grid size={{ xs: 12, md: 8 }}>
             <CcdcMonthlyCard
               ccdcMonthlyData={ccdcMonthlyData}
               maxCCDC={maxCCDC}
@@ -199,23 +294,27 @@ const taiSanBarData = taiSanTheoLoai || [];
               years={years}
             />
           </Grid>
+        </Grid>
 
-          {/* Tài sản Cards */}
-          <Grid size={{ xs: 3 }}>
+        {/* ── Tài sản Section ─────────────────────────── */}
+        <SectionHeader label="Tài sản" color="#04b46e" />
+
+        <Grid container spacing={3}>
+          <Grid size={{ xs: 12, md: 3 }}>
             <TaisanGroupCard
               taiSanPieData={taiSanPieData}
               statistics={statistics}
             />
           </Grid>
-          <Grid size={{ xs: 4.5 }}>
+          <Grid size={{ xs: 12, md: 4.5 }}>
             <TaisanTypeCard
-              taiSanBarData={taiSanBarData}            // Đã chuẩn hóa
+              taiSanBarData={taiSanBarData}
               selectedNhomTaiSan={selectedNhomTaiSan}
               setSelectedNhomTaiSan={setSelectedNhomTaiSan}
-              uniqueNhomTaiSan={nhomTaiSanList}        // Danh sách nhóm
+              uniqueNhomTaiSan={nhomTaiSanList}
             />
           </Grid>
-          <Grid size={{ xs: 4.5 }}>
+          <Grid size={{ xs: 12, md: 4.5 }}>
             <TaisanMonthlyCard
               taiSanMonthlyData={taiSanMonthlyData}
               maxTaiSan={maxTaiSan}
@@ -226,17 +325,13 @@ const taiSanBarData = taiSanTheoLoai || [];
           </Grid>
         </Grid>
 
-        <Box sx={{ mt: 3 }}>
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 6 }}>
-              <Top5Panel />
-            </Grid>
-            <Grid size={{ xs: 6 }}>
-              <NearDepreciationPanel />
-            </Grid>
-          </Grid>
+        {/* ── Depreciation Section ────────────────────── */}
+        <SectionHeader label="Sắp hết khấu hao" color="#f59e0b" />
+
+        <Box>
+          <NearDepreciationPanel />
         </Box>
       </Box>
-    </Box>
+    </>
   );
 }

@@ -7,6 +7,7 @@ import com.ecotel.quanlytaisan.dao.ChiTietBanGiaoTaiSanDao;
 import com.ecotel.quanlytaisan.dao.LichSuDieuChuyenTaiSanDao;
 import com.ecotel.quanlytaisan.dao.PhongBanDao;
 import com.ecotel.quanlytaisan.model.*;
+import com.ecotel.quanlytaisan.dao.ChuKySuaChuaDao;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,8 @@ public class TaiSanService {
     private TaiSanDao taiSanDao;
     @Autowired
     private ChiTietTaiSanDao chiTietTaiSanDao;
+    @Autowired
+    private ChuKySuaChuaDao chuKySuaChuaDao;
      @Autowired
     private TaiSanFileDao taiSanFileDao;
     @Autowired
@@ -207,30 +210,10 @@ public class TaiSanService {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
 
-        List<TaiSanDTO> all = taiSanDao.findAll(idCongTy);
-        List<TaiSanDTO> filtered = new ArrayList<>();
-        String q = (search != null && !search.trim().isEmpty()) ? search.toLowerCase() : null;
-
-        for (TaiSanDTO item : all) {
-            if (!idDonViHienThoi.equals(item.getIdDonViHienThoi())) {
-                continue;
-            }
-            if (idNhomTaiSan != null && !idNhomTaiSan.trim().isEmpty()
-                    && !idNhomTaiSan.equals(item.getIdNhomTaiSan())) {
-                continue;
-            }
-            if (q != null && !matchesTaiSanSearch(item, q)) {
-                continue;
-            }
-            filtered.add(item);
-        }
-
-        sortTaiSanList(filtered, sortBy, sortDir);
-
         // Pagination
-        long total = taiSanDao.countByDonViHienThoi(idCongTy, idDonViHienThoi, idNhomTaiSan, soNgayThongBaoKiemDinh, trangThaiKiemDinh);
+        long total = taiSanDao.countByDonViHienThoi(idCongTy, idDonViHienThoi, search, idNhomTaiSan, soNgayThongBaoKiemDinh, trangThaiKiemDinh);
         int offset = page * size;
-        List<TaiSanDTO> items = taiSanDao.findByDonViHienThoiPaged(idCongTy, idDonViHienThoi, offset, size, sortBy, sortDir, idNhomTaiSan, soNgayThongBaoKiemDinh, trangThaiKiemDinh);
+        List<TaiSanDTO> items = taiSanDao.findByDonViHienThoiPaged(idCongTy, idDonViHienThoi, offset, size, sortBy, sortDir, idNhomTaiSan, search, soNgayThongBaoKiemDinh, trangThaiKiemDinh);
 
         enrichTaiSanDTOList(items);
 
@@ -250,7 +233,11 @@ public class TaiSanService {
     }
 
     public TaiSanDTO getById(String id) {
-        return taiSanDao.findById(id);
+        return getById(id, null);
+    }
+
+    public TaiSanDTO getById(String id, Integer nam) {
+        return taiSanDao.findById(id, nam);
     }
 
     public int create(TaiSan ts) {
@@ -259,6 +246,29 @@ public class TaiSanService {
             createInitialHistory(ts);
         }
         return result;
+    }
+
+    public int batchCreate(List<TaiSan> list) {
+        if (list == null || list.isEmpty()) {
+            return 0;
+        }
+
+        List<TaiSan> newlyInserted = taiSanDao.batchCreate(list);
+
+        if (!newlyInserted.isEmpty()) {
+            List<LichSuDieuChuyenTaiSanDTO> histories = new ArrayList<>();
+            for (TaiSan ts : newlyInserted) {
+                LichSuDieuChuyenTaiSanDTO history = new LichSuDieuChuyenTaiSanDTO();
+                history.setIdTaiSan(ts.getId());
+                history.setIdDonViGiao(ts.getIdDonViBanDau());
+                history.setIdDonViNhan(ts.getIdDonViBanDau());
+                history.setThoiGianBanGiao(ts.getNgayTao() != null ? ts.getNgayTao() : java.time.LocalDateTime.now().toString());
+                histories.add(history);
+            }
+            lichSuDieuChuyenTaiSanDao.createBatch(histories);
+        }
+
+        return list.size();
     }
 
     private void createInitialHistory(TaiSan ts) {
@@ -278,6 +288,14 @@ public class TaiSanService {
     public int update(TaiSan ts) {
         return taiSanDao.update(ts);
     }
+
+    public int batchUpdate(List<TaiSan> list) {
+        if (list == null || list.isEmpty()) {
+            return 0;
+        }
+        return taiSanDao.batchUpdate(list);
+    }
+
     public int updateTaiSanConTaiSan(Map<String, Object> map) {
         return taiSanDao.updateTaiSanConTaiSan(map);
     }
@@ -285,6 +303,14 @@ public class TaiSanService {
     public int delete(String id) {
         taiSanDao.deleteTaiSanConByTaiSan(id);
         return taiSanDao.delete(id);
+    }
+
+    public int batchDelete(List<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return 0;
+        }
+        taiSanDao.batchDeleteTaiSanConByTaiSan(ids);
+        return taiSanDao.batchDelete(ids);
     }
 
     public int deleteAll() {
@@ -465,6 +491,7 @@ public class TaiSanService {
             "Mã đơn vị ban đầu",
             "Mã đơn vị hiện thời",
             "Mô tả",
+            "Mã đơn vị quản lý kỹ thuật",
             "Ngày tạo",
             "Ngày cập nhật",
             "Người tạo",
@@ -737,6 +764,11 @@ public class TaiSanService {
             Cell cell36 = row.createCell(colIndex++);
             cell36.setCellValue(item.getNguoiCapNhat() != null ? item.getNguoiCapNhat() : "");
             cell36.setCellStyle(dataStyle);
+
+            // Đơn vị quản lý kỹ thuật
+            Cell cell37 = row.createCell(colIndex++);
+            cell37.setCellValue(item.getIdDonViQuanlyKiThuat() != null ? item.getIdDonViQuanlyKiThuat() : "");
+            cell37.setCellStyle(dataStyle);
         }
 
         // Set column widths (tối ưu hơn auto-size)
@@ -912,17 +944,22 @@ public class TaiSanService {
             taiSanFileDao.findAllByTaiSanIds(ids)
         );
         System.out.println("5");
+        CompletableFuture<List<ChuKySuaChua>> chuKySuaChuaFuture = CompletableFuture.supplyAsync(() ->
+            chuKySuaChuaDao.findAllByTaiSanIds(ids)
+        );
 
 
         // Wait for all to complete and get results
         List<ChiTietTaiSan> allChiTiet;
         List<TaiSanCon> allTaiSanCon;
         List<TaiSanFile> allTaiSanFile;
+        List<ChuKySuaChua> allChuKySuaChua;
         try {
-            CompletableFuture.allOf(chiTietFuture, taiSanConFuture, taiSanFileFuture).join();
+            CompletableFuture.allOf(chiTietFuture, taiSanConFuture, taiSanFileFuture, chuKySuaChuaFuture).join();
             allChiTiet = chiTietFuture.get();
             allTaiSanCon = taiSanConFuture.get();
             allTaiSanFile = taiSanFileFuture.get();
+            allChuKySuaChua = chuKySuaChuaFuture.get();
         } catch (Exception e) {
             e.printStackTrace();
             return;
@@ -936,12 +973,15 @@ public class TaiSanService {
                 .collect(Collectors.groupingBy(TaiSanCon::getIdTaiSanCha));
         Map<String, List<TaiSanFile>> taiSanFileMap = allTaiSanFile.stream()
                 .collect(Collectors.groupingBy(TaiSanFile::getIdTaiSan));
+        Map<String, List<ChuKySuaChua>> chuKySuaChuaMap = allChuKySuaChua.stream()
+                .collect(Collectors.groupingBy(ChuKySuaChua::getIdTaiSan));
 
         // Assign back to DTOs
         for (TaiSanDTO dto : taiSanDTOList) {
             dto.setChiTietTaiSanList(chiTietMap.getOrDefault(dto.getId(), new ArrayList<>()));
             dto.setTaiSanConList(taiSanConMap.getOrDefault(dto.getId(), new ArrayList<>()));
             dto.setFileDinhKemList(taiSanFileMap.getOrDefault(dto.getId(), new ArrayList<>()));
+            dto.setChuKySuaChuaList(chuKySuaChuaMap.getOrDefault(dto.getId(), new ArrayList<>()));
         }
     }
 

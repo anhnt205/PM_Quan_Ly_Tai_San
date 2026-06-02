@@ -49,12 +49,24 @@ public class DonViTinhService {
         return donViTinhDAO.insert(dvt);
     }
 
+    public int batchCreate(List<DonViTinh> list) {
+        return donViTinhDAO.batchCreate(list);
+    }
+
     public int update(DonViTinh dvt) {
         return donViTinhDAO.update(dvt);
     }
 
+    public int batchUpdate(List<DonViTinh> list) {
+        return donViTinhDAO.batchUpdate(list);
+    }
+
     public int delete(String id) {
         return donViTinhDAO.delete(id);
+    }
+
+    public int batchDelete(List<String> ids) {
+        return donViTinhDAO.batchDelete(ids);
     }
 
     public List<DonViTinh> readCsv(MultipartFile file) throws IOException {

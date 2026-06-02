@@ -1,18 +1,79 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Box, Typography } from "@mui/material";
+import {
+  BarChart as RechartsChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+  LabelList,
+} from "recharts";
 import { formattedPrice } from "../../../utils/helpers";
 
-interface BarChartItem {
+export interface BarChartItem {
   label: string;
   value: number;
   color?: string;
 }
 
-interface Props {
+export interface BarChartProps {
   data: BarChartItem[];
   maxValue?: number;
   height?: number;
   barColor?: string;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    payload: BarChartItem;
+  }>;
+}
+
+function CustomTooltip({ active, payload }: CustomTooltipProps) {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <Box
+        sx={{
+          bgcolor: "rgba(15, 23, 42, 0.9)",
+          backdropFilter: "blur(12px)",
+          borderRadius: "10px",
+          border: "1px solid rgba(255, 255, 255, 0.15)",
+          px: 1.5,
+          py: 1,
+          boxShadow: "0 10px 25px rgba(0, 0, 0, 0.25)",
+        }}
+      >
+        <Typography
+          variant="body2"
+          sx={{
+            fontWeight: 700,
+            fontSize: "0.85rem",
+            color: "#fff",
+            lineHeight: 1.2,
+          }}
+        >
+          {formattedPrice(data.value)}
+        </Typography>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "rgba(255, 255, 255, 0.7)",
+            fontSize: "0.75rem",
+            display: "block",
+            mt: 0.5,
+          }}
+        >
+          {data.label}
+        </Typography>
+      </Box>
+    );
+  }
+  return null;
 }
 
 export default function BarChart({
@@ -20,23 +81,42 @@ export default function BarChart({
   maxValue,
   height = 200,
   barColor = "#FF9800",
-}: Props) {
-  const max = maxValue || Math.max(...data.map((item) => item.value), 1);
-  const chartHeight = height - 40; // Leave space for labels
+}: BarChartProps) {
+  const computedMax = useMemo(() => {
+    if (maxValue !== undefined) return maxValue;
+    const maxVal = Math.max(...data.map((item) => item.value), 1);
+    return Math.ceil(maxVal * 1.15);
+  }, [data, maxValue]);
 
-  // Generate nice Y-axis values
-  const generateYAxisValues = (maxVal: number) => {
-    if (maxVal <= 2) {
-      return [2, 1.5, 1, 0.5, 0];
-    } else if (maxVal <= 5) {
-      return [5, 4, 3, 2, 1, 0];
-    } else {
-      const step = Math.ceil(maxVal / 4);
-      return [step * 4, step * 3, step * 2, step, 0];
+  const getGradientId = (color: string) => {
+    const lower = color.toLowerCase();
+    if (
+      lower.includes("f59e0b") ||
+      lower.includes("d97706") ||
+      lower.includes("orange") ||
+      lower.includes("amber")
+    ) {
+      return "barOrangeGradient";
     }
+    if (
+      lower.includes("3b82f6") ||
+      lower.includes("1d4ed8") ||
+      lower.includes("1a73e8") ||
+      lower.includes("blue")
+    ) {
+      return "barBlueGradient";
+    }
+    if (
+      lower.includes("10b981") ||
+      lower.includes("04b46e") ||
+      lower.includes("0d9e6d") ||
+      lower.includes("green")
+    ) {
+      return "barGreenGradient";
+    }
+    return "";
   };
 
-  // Nếu không có dữ liệu, hiển thị thông báo
   if (data.length === 0) {
     return (
       <Box
@@ -54,126 +134,75 @@ export default function BarChart({
     );
   }
 
-  const yAxisValues = generateYAxisValues(max);
-  const actualMax = yAxisValues[0];
-
   return (
-    <Box sx={{ height, position: "relative", px: 1 }}>
-      {/* Y-axis labels */}
-      <Box
-        sx={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          bottom: 40,
-          width: 25,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          alignItems: "flex-end",
-          pr: 0.5,
-        }}
-      >
-        {yAxisValues.map((val, index) => (
-          <Typography
-            key={index}
-            variant="caption"
-            sx={{ color: "#9e9e9e", fontSize: "11px" }}
-          >
-            {val}
-          </Typography>
-        ))}
-      </Box>
+    <Box sx={{ width: "100%", height, pr: 1 }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <RechartsChart
+          data={data}
+          margin={{ top: 25, right: 10, left: -20, bottom: 5 }}
+        >
+          <defs>
+            <linearGradient id="barOrangeGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#f59e0b" stopOpacity={1} />
+              <stop offset="100%" stopColor="#d97706" stopOpacity={0.8} />
+            </linearGradient>
+            <linearGradient id="barBlueGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity={1} />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity={0.8} />
+            </linearGradient>
+            <linearGradient id="barGreenGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#10b981" stopOpacity={1} />
+              <stop offset="100%" stopColor="#047857" stopOpacity={0.8} />
+            </linearGradient>
+          </defs>
 
-      {/* Chart area */}
-      <Box
-        sx={{
-          ml: 3.5,
-          height: chartHeight,
-          display: "flex",
-          alignItems: "flex-end",
-          justifyContent: "space-around",
-          gap: 2,
-          position: "relative",
-        }}
-      >
-        {/* Grid lines */}
-        {yAxisValues.map((val, index) => (
-          <Box
-            key={index}
-            sx={{
-              position: "absolute",
-              bottom: (val / actualMax) * chartHeight,
-              left: 0,
-              right: 0,
-              borderTop: "1px solid #e0e0e0",
-            }}
+          <CartesianGrid
+            strokeDasharray="3 3"
+            vertical={false}
+            stroke="rgba(226, 232, 240, 0.6)"
           />
-        ))}
 
-        {/* Bars */}
-        {data.map((item, index) => {
-          const barHeight = (item.value / actualMax) * chartHeight;
-          return (
-            <Box
-              key={index}
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                flex: 1,
-                maxWidth: 80,
-                zIndex: 1,
-              }}
-            >
-              <Typography
-                variant="caption"
-                sx={{ mb: 0.5, fontWeight: 500, fontSize: "11px" }}
-              >
-                {formattedPrice(item.value)}
-              </Typography>
-              <Box
-                sx={{
-                  width: "100%",
-                  maxWidth: 50,
-                  height: Math.max(barHeight, 2),
-                  bgcolor: item.color || barColor,
-                  transition: "height 0.3s ease",
-                }}
-              />
-            </Box>
-          );
-        })}
-      </Box>
+          <XAxis
+            dataKey="label"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: "#94a3b8", fontSize: 11, fontWeight: 500 }}
+            dy={8}
+          />
 
-      {/* X-axis labels */}
-      <Box
-        sx={{
-          ml: 3.5,
-          display: "flex",
-          justifyContent: "space-around",
-          gap: 2,
-          mt: 1,
-        }}
-      >
-        {data.map((item, index) => (
-          <Box key={index} sx={{ flex: 1, maxWidth: 80, textAlign: "center" }}>
-            <Typography
-              variant="caption"
-              sx={{
-                display: "block",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                color: "#9e9e9e",
-                fontSize: "11px",
-              }}
-            >
-              {item.label}
-            </Typography>
-          </Box>
-        ))}
-      </Box>
+          <YAxis
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: "#94a3b8", fontSize: 11, fontWeight: 500 }}
+            domain={[0, computedMax]}
+            allowDecimals={false}
+          />
+
+          <Tooltip
+            content={<CustomTooltip />}
+            cursor={{ fill: "rgba(226, 232, 240, 0.4)", radius: 6 }}
+          />
+
+          <Bar
+            dataKey="value"
+            radius={[6, 6, 0, 0]}
+            maxBarSize={60}
+            animationDuration={800}
+          >
+            {data.map((item, index) => {
+              const gradId = getGradientId(item.color || barColor);
+              const fill = gradId ? `url(#${gradId})` : item.color || barColor;
+              return <Cell key={`cell-${index}`} fill={fill} />;
+            })}
+            <LabelList
+              dataKey="value"
+              position="top"
+              formatter={(val: number) => formattedPrice(val)}
+              style={{ fill: "#64748b", fontSize: "11px", fontWeight: 700 }}
+            />
+          </Bar>
+        </RechartsChart>
+      </ResponsiveContainer>
     </Box>
   );
 }

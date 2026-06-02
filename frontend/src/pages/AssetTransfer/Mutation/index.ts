@@ -622,6 +622,7 @@ export const useAssetTransferPageQuery = (
   trangThai?: number,
   idDonViGiao?: string,
   chuaBanGiaoHet?: boolean,
+  isSign?: boolean,
 ) => {
   const idCongTy = CongTy.CT001;
 
@@ -636,6 +637,7 @@ export const useAssetTransferPageQuery = (
       trangThai,
       idDonViGiao,
       chuaBanGiaoHet,
+      isSign,
     ], // Key để cache dữ liệu
     queryFn: async () => {
       const res = await api.get("/dieudongtaisan/paged", {
@@ -649,6 +651,7 @@ export const useAssetTransferPageQuery = (
           trangThai: trangThai,
           idDonViGiao: idDonViGiao,
           chuaBanGiaoHet: chuaBanGiaoHet,
+          isSign: isSign,
         },
       });
       console.log("Fetched asset transfer page data:", res.data);
@@ -659,9 +662,15 @@ export const useAssetTransferPageQuery = (
 };
 // danh sach tai san
 
-export const useAssetByDonViQuery = (loai?: number, idDonViGiao?: string) => {
+export const useAssetByDonViQuery = (
+  loai?: number,
+  idDonViGiao?: string,
+  search?: string,
+  page: number = 0,
+  pageSize: number = 99999,
+) => {
   return useQuery({
-    queryKey: ["allAssetsByDonVi", loai, idDonViGiao], // Key để cache dữ liệu
+    queryKey: ["allAssetsByDonVi", loai, idDonViGiao, search, page, pageSize], // Key để cache dữ liệu
     queryFn: async () => {
       const res = await api.get(
         loai === 1
@@ -670,8 +679,9 @@ export const useAssetByDonViQuery = (loai?: number, idDonViGiao?: string) => {
         {
           params: {
             idcongty: CongTy.CT001,
-            page: 0,
-            size: 9999,
+            page: page,
+            size: pageSize,
+            search: search,
             ...(loai === 1
               ? {
                   iddonvibandau: idDonViGiao,

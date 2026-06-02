@@ -51,7 +51,7 @@ public class DieuDongCCDCVatTuService {
 
     public PageResponse<DieuDongCCDCVatTuDTO> findAllPaged(String idCongTy, int page, int size, String sortBy,
                                                            String sortDir, String search, Integer loai, String userid, Integer trangThai, String idDonViGiao,
-                                                           Boolean chuaBanGiaoHet) throws SQLException {
+                                                           Boolean chuaBanGiaoHet, Boolean isSign) throws SQLException {
         if (page < 0)
             page = 0;
         if (size <= 0)
@@ -67,11 +67,11 @@ public class DieuDongCCDCVatTuService {
         // Filter theo lượt ký - chỉ lấy những item mà đến lượt user ký
         // Ngoại lệ: admin lấy hết, NguoiTao cũng lấy không phân biệt thứ tự
         if (userid != null && !userid.trim().isEmpty()) {
-            // 1. Admin luôn lấy hết
+            // 1. Admin always skips turn filter and does NOT get status restriction for general view
             if ("admin".equalsIgnoreCase(userid)) {
                 skipTurnFilter = true;
             } else {
-                // 2. Kiểm tra quyền ban hành quyết định
+                // 2. Check BanHanhQuyetDinh permission
                 try {
                     NhanVien nv = nhanVienService.findEntityById(userid);
                     if (nv != null && nv.getChucVu() != null) {
@@ -82,12 +82,20 @@ public class DieuDongCCDCVatTuService {
                         }
                     }
                 } catch (Exception e) {
-                    // Log lỗi nếu cần, nhưng không làm gián đoạn – coi như không có quyền đặc biệt
+                    // ignore
                 }
             }
 
-            // Nếu không được bỏ qua, mới áp dụng lọc theo lượt ký
-            if (!skipTurnFilter) {
+            // Apply filters
+            if (isSign != null && isSign) {
+                List<DieuDongCCDCVatTuDTO> signFiltered = new ArrayList<>();
+                for (DieuDongCCDCVatTuDTO item : sourceList) {
+                    if (isNeedToSign(item, userid)) {
+                        signFiltered.add(item);
+                    }
+                }
+                sourceList = signFiltered;
+            } else if (!skipTurnFilter) {
                 List<DieuDongCCDCVatTuDTO> turnFiltered = new ArrayList<>();
                 for (DieuDongCCDCVatTuDTO item : sourceList) {
                     if (isUserTurnToSign(item, userid)) {
@@ -374,7 +382,58 @@ public class DieuDongCCDCVatTuService {
      * - userId = "admin" → lấy hết
      * - userId = NguoiTao → lấy không phân biệt thứ tự
      */
+
+    /**
+     * Lọc theo lượt ký - chỉ lấy những item mà user CẦN phải ký
+     */
+    public boolean isNeedToSign(DieuDongCCDCVatTuDTO item, String userId) {
+        if (userId == null || userId.isEmpty()) return false;
+        if (!Boolean.TRUE.equals(item.getShare())) return false;
+        if (item.getTrangThai() == 2 || item.getTrangThai() == 3) return false;
+
+        // Bước 1: Người lập phiếu ký nháy
+        if (Boolean.TRUE.equals(item.getNguoiLapPhieuKyNhay())) {
+            if (!Boolean.TRUE.equals(item.getTrangThaiKyNhay()))
+                return userId.equals(item.getIdNguoiKyNhay());
+        }
+
+        // Bước 2: Người trình duyệt cấp phòng
+        boolean kyNhayDone = !Boolean.TRUE.equals(item.getNguoiLapPhieuKyNhay())
+                || Boolean.TRUE.equals(item.getTrangThaiKyNhay());
+        if (kyNhayDone && !Boolean.TRUE.equals(item.getTrinhDuyetCapPhongXacNhan())) {
+            return userId.equals(item.getIdTrinhDuyetCapPhong());
+        }
+
+        // Bước 3: NguoiKy list & Giám đốc
+        if (Boolean.TRUE.equals(item.getTrinhDuyetCapPhongXacNhan())) {
+            List<NguoiKy> kyList = kyTaiLieuService.getAllNguoiKyByIdTaiLieu(item.getId());
+            if (kyList != null && !kyList.isEmpty()) {
+                NguoiKy firstUnsigned = null;
+                boolean allSigned = true;
+                for (NguoiKy nk : kyList) {
+                    if (nk.getTrangThai() != 1) {
+                        allSigned = false;
+                        if (firstUnsigned == null) firstUnsigned = nk;
+                    }
+                }
+                if (firstUnsigned != null) return userId.equals(firstUnsigned.getIdNguoiKy());
+                if (allSigned && !Boolean.TRUE.equals(item.getTrinhDuyetGiamDocXacNhan()))
+                    return userId.equals(item.getIdTrinhDuyetGiamDoc());
+            } else {
+                if (!Boolean.TRUE.equals(item.getTrinhDuyetGiamDocXacNhan()))
+                    return userId.equals(item.getIdTrinhDuyetGiamDoc());
+            }
+        }
+        return false;
+    }
+
     public boolean isUserTurnToSign(DieuDongCCDCVatTuDTO item, String userId) {
+        // Nếu đã hủy hoặc hoàn thành thì không hiển thị trong lượt ký (trừ admin/người tạo)
+        if (item.getTrangThai() == 2 || item.getTrangThai() == 3) {
+            if (!"admin".equalsIgnoreCase(userId) && (userId == null || !userId.equals(item.getNguoiTao())))
+                return false;
+        }
+
         // Admin lấy hết
         if ("admin".equalsIgnoreCase(userId)) {
             return true;

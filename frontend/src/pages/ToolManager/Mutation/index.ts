@@ -767,3 +767,14 @@ export const useToolOwnershipPageQuery = (
     placeholderData: (previousData) => previousData,
   });
 };
+
+export const useAllToolDetailQuery = () => {
+  return useQuery({
+    queryKey: ["allToolDetails"],
+    queryFn: async () => {
+      const res = await api.get("/chitiettaisan");
+      return res.data.data || res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};

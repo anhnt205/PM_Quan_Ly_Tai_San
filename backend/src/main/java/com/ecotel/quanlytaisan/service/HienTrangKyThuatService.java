@@ -40,12 +40,24 @@ public class HienTrangKyThuatService {
         return hienTrangKyThuatDAO.insert(htkt);
     }
 
+    public int batchCreate(List<HienTrangKyThuat> list) {
+        return hienTrangKyThuatDAO.batchCreate(list);
+    }
+
     public int update(HienTrangKyThuat htkt) {
         return hienTrangKyThuatDAO.update(htkt);
     }
 
+    public int batchUpdate(List<HienTrangKyThuat> list) {
+        return hienTrangKyThuatDAO.batchUpdate(list);
+    }
+
     public int delete(Integer id) {
         return hienTrangKyThuatDAO.delete(id);
+    }
+
+    public int batchDelete(List<Integer> ids) {
+        return hienTrangKyThuatDAO.batchDelete(ids);
     }
 
     public int softDelete(Integer id) {

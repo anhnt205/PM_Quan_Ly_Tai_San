@@ -1,3 +1,4 @@
+import { ContentCopy, Delete } from "@mui/icons-material";
 import {
   Box,
   Chip,
@@ -7,27 +8,42 @@ import {
   IconButton,
   Typography,
 } from "@mui/material";
+import { GridColDef, GridRowParams } from "@mui/x-data-grid";
+import { useState } from "react";
+import { useSelector } from "react-redux";
+import { showConfirmAlert } from "../../components/Alert";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
-import { GridColDef, GridRowParams } from "@mui/x-data-grid";
+import { useDebounce } from "../../hooks/useDebounce";
+import { RootState } from "../../redux/store";
+import { useTabForm } from "../../redux/useTabForm";
 import ProjectForm from "./components/ProjectForm";
-import { ContentCopy, Delete } from "@mui/icons-material";
-import { useState } from "react";
 import {
   useAllProjectsQuery,
   useProjectMutation,
   useProjectsPageQuery,
 } from "./Mutation";
-import { showConfirmAlert } from "../../components/Alert";
-import { useDebounce } from "../../hooks/useDebounce";
-import { useSelector } from "react-redux";
-import { RootState } from "../../redux/store";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
+
+interface ProjectTabState {
+  showForm: boolean;
+  selectedProject: any | null;
+  readOnly: boolean;
+  isCopy: boolean;
+  draftForm?: Record<string, any>;
+}
 
 export default function Project() {
-  const [showForm, setShowForm] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<any>(null);
-  const [readOnly, setReadOnly] = useState(false);
-  const [isCopy, setIsCopy] = useState(false);
+  const { formData, setField } = useTabForm<ProjectTabState>("/du_an");
+  const showForm = formData.showForm ?? false;
+  const selectedProject = formData.selectedProject ?? null;
+  const readOnly = formData.readOnly ?? false;
+  const isCopy = formData.isCopy ?? false;
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setSelectedProject = (v: any) => setField({ selectedProject: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+  const setIsCopy = (v: boolean) => setField({ isCopy: v });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
@@ -36,6 +52,9 @@ export default function Project() {
     pageSize: 10,
     page: 0,
   });
+
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
 
   const {
     createMutation,
@@ -76,6 +95,7 @@ export default function Project() {
     setShowForm(false);
     setSelectedProject(null);
     setIsCopy(false);
+    setField({ draftForm: undefined });
   };
 
   const handleEdit = () => {
@@ -169,6 +189,10 @@ export default function Project() {
       <PageAction
         title="Quản lý dự án"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
           setShowForm(true);
           setSelectedProject(null);
           setReadOnly(false);
@@ -198,21 +222,35 @@ export default function Project() {
             </Box>
           </DialogContent>
         </Dialog>
-        {showForm && (
-          <Box py={2}>
+
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogContent sx={{ p: 0 }}>
             <ProjectForm
               onCancel={() => {
                 setShowForm(false);
                 setSelectedProject(null);
                 setReadOnly(false);
+                setIsCopy(false);
+                setField({ draftForm: undefined });
               }}
+              onMinimize={handleMinimize}
               onEdit={handleEdit}
               selectedProject={selectedProject}
               readOnly={readOnly}
               onSave={handleSave}
+              onFormChange={(values) => setField({ draftForm: values })}
+              initialFormData={formData.draftForm}
             />
-          </Box>
-        )}
+          </DialogContent>
+        </Dialog>
+
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
+
         <TableCustom
           tableId="project"
           title="Quản lý dự án"
@@ -230,6 +268,8 @@ export default function Project() {
           setSearchValue={setSearchValue}
           onDeleteAll={deleteAllMutation.mutate}
           showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
+          onImportExcel={(file) => importExcelMutation.mutate(file)}
+          onExportExcel={() => exportMutation.mutate(allProjects)}
         />
       </Box>
     </Box>

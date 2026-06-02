@@ -1,5 +1,14 @@
-import { useEffect, useState } from "react";
-import { Box, Grid, IconButton, Tooltip, Tabs, Tab } from "@mui/material";
+import { useEffect, useRef, useState } from "react";
+import {
+  Box,
+  Grid,
+  IconButton,
+  Tooltip,
+  Tabs,
+  Tab,
+  Dialog,
+  DialogContent,
+} from "@mui/material";
 import { VisibilityOff } from "@mui/icons-material";
 
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
@@ -39,38 +48,70 @@ import { useAllDepartmentsQuery } from "../Department/Mutation";
 import { useAllUnitsQuery } from "../Unit/Mutation";
 import S3Service from "../../services/S3Service";
 import BienBanTabContent from "./components/BienBanTabContent";
+import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
+
+interface ToolTransferTabState {
+  showForm: boolean;
+  selectedRow: any | null;
+  showSidebar: boolean;
+  readOnly: boolean;
+  tabValue: number;
+  sidebarMode: "document" | "signer" | null;
+  status: string;
+  showSignDocument: boolean;
+  isFullPageSign: boolean;
+  selectedDocument: any | null;
+  draftForm?: Record<string, any>;
+  prevType: string | null;
+}
 
 export default function ToolTransfer() {
   const { user } = useSelector((state: any) => state.user);
   const [searchParams] = useSearchParams();
   const type = searchParams.get("type");
+  const { formData, setField } = useTabForm<ToolTransferTabState>(
+    `/dieu_dong_ccdc?type=${type ?? "1"}`,
+  );
+  const showForm = formData.showForm ?? false;
+  const selectedRow = formData.selectedRow ?? null;
+  const showSidebar = formData.showSidebar ?? false;
+  const readOnly = formData.readOnly ?? false;
+  const tabValue = formData.tabValue ?? 0;
+  const sidebarMode = formData.sidebarMode ?? null;
+  const status = formData.status ?? "";
+  const showSignDocument = formData.showSignDocument ?? false;
+  const isFullPageSign = formData.isFullPageSign ?? false;
+  const selectedDocument = formData.selectedDocument ?? null;
+  const prevType = formData.prevType ?? null;
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setSelectedRow = (v: any) => setField({ selectedRow: v });
+  const setShowSidebar = (v: boolean) => setField({ showSidebar: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+  const setTabValue = (v: number) => setField({ tabValue: v });
+  const setSidebarMode = (v: any) => setField({ sidebarMode: v });
+  const setStatus = (v: string) => setField({ status: v });
+  const setShowSignDocument = (v: boolean) => setField({ showSignDocument: v });
+  const setIsFullPageSign = (v: boolean) => setField({ isFullPageSign: v });
+  const setSelectedDocument = (v: any) => setField({ selectedDocument: v });
 
-  const [showForm, setShowForm] = useState(false);
-  const [selectedRow, setSelectedRow] = useState<ToolTransferData | null>(null);
-  const [showSidebar, setShowSidebar] = useState(false);
-  const [readOnly, setReadOnly] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
     pageSize: 10,
   });
 
-  const location = useLocation();
-  const navigate = useNavigate();
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-
-  const [showSignDocument, setShowSignDocument] = useState(false);
-  const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
   const [showSignerSidebar, setShowSignerSidebar] = useState(true);
   const [showBienBanDialog, setShowBienBanDialog] = useState(false);
   const [toolTransferDetail, setToolTransferDetail] = useState<any[]>([]);
-  const [status, setStatus] = useState("");
-  const [tabValue, setTabValue] = useState(0);
-  const [sidebarMode, setSidebarMode] = useState<"document" | "signer" | null>(
-    null,
-  );
-  const [isFullPageSign, setIsFullPageSign] = useState(false);
   const [toolHandover, setToolHandover] = useState<any[]>([]);
   const {
     handleDownloadFile,
@@ -150,8 +191,9 @@ export default function ToolTransfer() {
       value: "4",
     },
   ];
-
   useEffect(() => {
+    if (prevType === type) return;
+
     setSelectedIds([]);
     setSelectedDocument(null);
     setSearchValue("");
@@ -160,10 +202,12 @@ export default function ToolTransfer() {
     setShowForm(false);
     setShowSidebar(false);
     setReadOnly(false);
+    setField({ draftForm: undefined, prevType: type });
   }, [type]);
 
   useEffect(() => {
     if (location.state?.autoCreate) {
+      setField({ draftForm: undefined });
       setSelectedRow(null);
       setShowSidebar(false);
       setShowForm(true);
@@ -188,6 +232,7 @@ export default function ToolTransfer() {
     setReadOnly(false);
     setSelectedIds([]);
     setShowSignDocument(false);
+    setField({ draftForm: undefined });
   };
   const handleSend = (items: any[]) => {
     handleSendToSigner(items, updateManyMutation.mutateAsync, handleClose);
@@ -512,6 +557,11 @@ export default function ToolTransfer() {
           <PageAction
             title={title}
             onNewClick={() => {
+              if (isMinimized) {
+                setShowForm(true);
+                return;
+              }
+              setField({ draftForm: undefined });
               setSelectedRow(null);
               setShowSidebar(false);
               setShowForm(true);
@@ -519,11 +569,21 @@ export default function ToolTransfer() {
             }}
           />
           <Box sx={{ p: 2 }}>
-            {showForm && (
-              <Box sx={{ mb: 2 }}>
+            <Dialog
+              open={showForm}
+              onClose={handleMinimize}
+              maxWidth="lg"
+              fullWidth
+            >
+              <DialogContent sx={{ p: 0, overflow: "auto" }}>
                 <ToolTransferForm
-                  key={selectedRow ? `edit-${selectedRow.id}` : "new-form"}
+                  key={
+                    selectedRow
+                      ? `edit-${selectedRow.id}`
+                      : `new-form-type-${type}`
+                  }
                   onClose={handleClose}
+                  onMinimize={handleMinimize}
                   onSave={handleSave}
                   onEdit={handleEdit}
                   onCancel={async () => {
@@ -541,8 +601,13 @@ export default function ToolTransfer() {
                   allUnits={allUnits}
                   label={label}
                   type={Number(type)}
+                  onFormChange={(values) => setField({ draftForm: values })}
+                  initialFormData={formData.draftForm}
                 />
-              </Box>
+              </DialogContent>
+            </Dialog>
+            {isMinimized && (
+              <DraftIndicator onClick={() => setShowForm(true)} />
             )}
             <Grid
               container

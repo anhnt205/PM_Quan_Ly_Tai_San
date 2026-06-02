@@ -1,22 +1,57 @@
 package com.ecotel.quanlytaisan.model;
 
 
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
+
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
+@Entity
+@Builder
+@Table(name = "nhomtaisan")
+@Access(AccessType.FIELD)
+@NoArgsConstructor
+@AllArgsConstructor
 public class NhomTaiSan {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
+    @Column(name = "TenNhom")
     private String tenNhom;
+
+    @Column(name = "HieuLuc")
     private Boolean hieuLuc;
+
+    @Column(name = "IdCongTy")
     private String idCongTy;
+
+    @Column(name = "NgayTao")
     private String ngayTao;
+
+    @Column(name = "NgayCapNhat")
     private String ngayCapNhat;
+
+    @Column(name = "NguoiTao")
     private String nguoiTao;
+
+    @Column(name = "NguoiCapNhat")
     private String nguoiCapNhat;
+
+    @Column(name = "IsActive")
     private Boolean isActive;
+
+    @Column(name = "SoLuongTaiSan")
     private Integer soLuongTaiSan;
+    @OneToMany(mappedBy = "nhomTaiSan")
+    private List<LyLichNhomTaiSan> lyLiches = new ArrayList<>();
     public static NhomTaiSan mapToNhomTaiSan(String[] row) {
         NhomTaiSan nts = new NhomTaiSan();
         nts.setId(row[0]);

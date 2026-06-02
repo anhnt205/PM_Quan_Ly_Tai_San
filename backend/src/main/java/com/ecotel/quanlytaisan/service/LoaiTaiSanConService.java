@@ -34,11 +34,23 @@ public class LoaiTaiSanConService {
         return loaiTaiSanConDao.insert(ltsc);
     }
 
+    public int batchCreate(List<LoaiTaiSanCon> list) {
+        return loaiTaiSanConDao.batchCreate(list);
+    }
+
     public int update(LoaiTaiSanCon ltsc) {
         return loaiTaiSanConDao.update(ltsc);
     }
 
+    public int batchUpdate(List<LoaiTaiSanCon> list) {
+        return loaiTaiSanConDao.batchUpdate(list);
+    }
+
     public int delete(String id) {
         return loaiTaiSanConDao.delete(id);
+    }
+
+    public int batchDelete(List<String> ids) {
+        return loaiTaiSanConDao.batchDelete(ids);
     }
 }

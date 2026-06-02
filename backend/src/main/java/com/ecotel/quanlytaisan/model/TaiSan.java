@@ -37,6 +37,7 @@ public class TaiSan {
     private String ghiChu;
     private String idDonViBanDau;
     private String idDonViHienThoi;
+    private String idDonViQuanlyKiThuat;
     private String moTa;
     private String idCongTy;
     private String ngayTao;
@@ -100,6 +101,9 @@ public class TaiSan {
         ts.setNvNS(parseFloat(line[i++]));
         ts.setVonVay(parseFloat(line[i++]));
         ts.setVonKhac(parseFloat(line[i++]));
+        if (line.length > i) {
+            ts.setIdDonViQuanlyKiThuat(line[i++]);
+        }
 
         return ts;
     }
@@ -152,7 +156,7 @@ public class TaiSan {
         ts.setNvNS(getCellFloat(row.getCell(i++)));
         ts.setVonVay(getCellFloat(row.getCell(i++)));
         ts.setVonKhac(getCellFloat(row.getCell(i++)));
-        
+        ts.setIdDonViQuanlyKiThuat(getCellString(row.getCell(i++)));
 
         return ts;
     }

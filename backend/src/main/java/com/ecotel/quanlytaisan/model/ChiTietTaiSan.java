@@ -17,6 +17,8 @@ public class ChiTietTaiSan {
     private String nuocSanXuat;
     private Integer namSanXuat;
     private  int soLuong;
+    private String tenTaiSan;
+    private String donViTinh;
     public static ChiTietTaiSan mapToChiTietTaiSan(String[] row) {
         ChiTietTaiSan ts = new ChiTietTaiSan();
         ts.setId(row[0]);

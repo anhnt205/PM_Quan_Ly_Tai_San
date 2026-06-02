@@ -25,12 +25,27 @@ public class ChiTietTaiSanDao {
         ts.setNuocSanXuat(rs.getString("NuocSanXuat"));
         ts.setNamSanXuat(rs.getInt("NamSanXuat"));
         ts.setSoLuong(rs.getInt("SoLuong"));
+        try {
+            ts.setTenTaiSan(rs.getString("TenTaiSan"));
+            ts.setDonViTinh(rs.getString("DonViTinh"));
+        } catch (Exception ignored) {}
         return ts;
     };
 
     public List<ChiTietTaiSan> findAll(String idTaiSan) {
-        String sql = "SELECT * FROM ChiTietTaiSan where IdTaiSan=?";
-        return jdbcTemplate.query(sql, rowMapper, idTaiSan);
+        StringBuilder sql = new StringBuilder(
+                "SELECT ct.*, c.Ten as TenTaiSan, c.DonViTinh " +
+                "FROM ChiTietTaiSan ct " +
+                "JOIN CCDCVatTu c ON ct.IdTaiSan = c.Id " +
+                "WHERE 1=1 "
+        );
+        
+        if (idTaiSan != null && !idTaiSan.trim().isEmpty()) {
+            sql.append(" AND ct.IdTaiSan = ? ");
+            return jdbcTemplate.query(sql.toString(), rowMapper, idTaiSan);
+        }
+        
+        return jdbcTemplate.query(sql.toString(), rowMapper);
     }
 
     public List<ChiTietTaiSan> findAllByTaiSanIds(List<String> taiSanIds) {
@@ -38,7 +53,11 @@ public class ChiTietTaiSanDao {
             return java.util.Collections.emptyList();
         }
         String inSql = String.join(",", java.util.Collections.nCopies(taiSanIds.size(), "?"));
-        String sql = String.format("SELECT * FROM ChiTietTaiSan WHERE IdTaiSan IN (%s)", inSql);
+        String sql = String.format(
+                "SELECT ct.*, c.Ten as TenTaiSan, c.DonViTinh " +
+                "FROM ChiTietTaiSan ct " +
+                "JOIN CCDCVatTu c ON ct.IdTaiSan = c.Id " +
+                "WHERE ct.IdTaiSan IN (%s)", inSql);
         return jdbcTemplate.query(sql, rowMapper, taiSanIds.toArray());
     }
 

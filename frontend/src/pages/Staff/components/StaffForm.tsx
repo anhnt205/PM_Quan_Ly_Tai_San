@@ -1,14 +1,14 @@
 import {
   ArrowDropDown,
   ArrowDropUp,
+  Close,
   InfoOutlineRounded,
+  Remove,
+  Security,
   Visibility,
   VisibilityOff,
 } from "@mui/icons-material";
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Box,
   Checkbox,
   Grid,
@@ -26,17 +26,11 @@ import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted
 import { useFormik } from "formik";
 import { StaffValidation } from "../validation/Validation";
 import UploadButton from "../../../components/Button/UploadButton";
-import ViewBtn from "../../../components/Button/ViewBtn";
 import EditButton from "../../../components/Button/EditButton";
-import {
-  useAllPositionsQuery,
-  usePositionMutation,
-} from "../../Position/Mutation";
-import {
-  useAllDepartmentsQuery,
-  useDepartmentMutation,
-} from "../../Department/Mutation";
+import { useAllPositionsQuery } from "../../Position/Mutation";
+import { useAllDepartmentsQuery } from "../../Department/Mutation";
 import { CongTy } from "../../../utils/const";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 export default function StaffForm({
   onEdit,
@@ -45,66 +39,56 @@ export default function StaffForm({
   readOnly,
   onSave,
   onUpload,
+  onFormChange,
+  initialFormData,
+  onMinimize,
 }: {
   onEdit: () => void;
   onCancel: () => void;
+  onMinimize: () => void;
   selectedStaff?: any;
   readOnly: boolean;
   onSave: (values: any) => void;
   onUpload: (file: File) => void;
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
 }) {
   const [showPin, setShowPin] = useState(false);
-  const [expanded, setExpanded] = useState(true);
   const { data: allPositions } = useAllPositionsQuery();
   const { data: allDepartments = [] } = useAllDepartmentsQuery();
 
   const formik = useFormik({
     initialValues: {
-      id: "",
-      hoTen: "",
-      diDong: "",
-      emailCongViec: "",
-      kyNhay: false,
-      kyThuong: false,
-      kySo: false,
-      chuKyNhay: "",
-      chuKyThuong: "",
-      agreementUUId: "",
-      pin: "",
-      boPhan: "",
-      chucVu: "",
-      laQuanLy: true,
-      idCongTy: CongTy.CT001,
-      isActive: true,
-      savePin: false,
+      id: initialFormData?.id ?? "",
+      hoTen: initialFormData?.hoTen ?? "",
+      diDong: initialFormData?.diDong ?? "",
+      emailCongViec: initialFormData?.emailCongViec ?? "",
+      kyNhay: initialFormData?.kyNhay ?? false,
+      kyThuong: initialFormData?.kyThuong ?? false,
+      kySo: initialFormData?.kySo ?? false,
+      chuKyNhay: initialFormData?.chuKyNhay ?? "",
+      chuKyThuong: initialFormData?.chuKyThuong ?? "",
+      agreementUUId: initialFormData?.agreementUUId ?? "",
+      pin: initialFormData?.pin ?? "",
+      boPhan: initialFormData?.boPhan ?? "",
+      chucVu: initialFormData?.chucVu ?? "",
+      laQuanLy: initialFormData?.laQuanLy ?? true,
+      idCongTy: initialFormData?.idCongTy ?? CongTy.CT001,
+      isActive: initialFormData?.isActive ?? true,
+      savePin: initialFormData?.savePin ?? false,
       // tempFileKyNhay: null as File | null,
       // tempFileKyThuong: null as File | null,
     },
     validationSchema: StaffValidation,
     onSubmit: async (values) => {
       try {
-        // 1. Kiểm tra và Upload Chữ ký nháy (nếu có file mới)
-        // if (values.tempFileKyNhay) {
-        //   await onUpload(values.tempFileKyNhay);
-        // }
-
-        // // 2. Kiểm tra và Upload Chữ ký thường (nếu có file mới)
-        // if (values.tempFileKyThuong) {
-        //   await onUpload(values.tempFileKyThuong);
-        // }
-
-        // 3. Chuẩn bị dữ liệu để Save (Loại bỏ 2 trường temp file thừa)
-        // const { tempFileKyNhay, tempFileKyThuong, ...dataToSave } = values;
-
-        // 4. Gọi hàm Save cuối cùng
         onSave(values);
       } catch (error) {
         console.error("Lỗi khi upload file:", error);
-        // Có thể show alert lỗi ở đây nếu cần
       }
     },
   });
-  console.log("formik.errors", formik.values);
+
   useEffect(() => {
     if (selectedStaff) {
       formik.setValues({
@@ -113,10 +97,12 @@ export default function StaffForm({
         chucVu: selectedStaff?.chucVuId,
       });
       formik.setErrors({}); // Clear errors when selectedStaff changes
-    } else {
-      formik.resetForm();
     }
   }, [selectedStaff, readOnly]); // Add readOnly to dependencies
+
+  useEffect(() => {
+    onFormChange?.(formik.values);
+  }, [formik.values]);
 
   // Hàm xử lý chung cho input file
   const handleFileSelect = (
@@ -137,159 +123,259 @@ export default function StaffForm({
   };
 
   return (
-    <Accordion sx={{ background: "#f6f8f4ff" }} expanded={expanded}>
-      <AccordionSummary
-        expandIcon={<ViewBtn expanded={expanded} setExpanded={setExpanded} />}
-        aria-controls="panel1-content"
-        id="panel1-header"
-        sx={{
-          "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
-            transform: "none", // Ngăn không cho xoay
+    <Box
+      sx={{
+        bgcolor: "#ffffff",
+        p: 4,
+        display: "flex",
+        flexDirection: "column",
+        gap: 3,
+        "& .MuiOutlinedInput-root": {
+          borderRadius: "8px",
+          transition: "all 0.2s",
+          "& fieldset": { borderColor: "#e2e8f0" },
+          "&:hover fieldset": { borderColor: "#1FA463" },
+          "&.Mui-focused fieldset": {
+            borderColor: "#1FA463",
+            borderWidth: "1.5px",
           },
+        },
+        "& .MuiInputLabel-root": {
+          color: "#64748b",
+          "&.Mui-focused": { color: "#1FA463" },
+        },
+      }}
+    >
+      {/* Header */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          pb: 2,
+          borderBottom: "1px solid #f1f5f9",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          {expanded ? <ArrowDropUp /> : <ArrowDropDown />}
-          <Typography>Chi tiết nhân viên</Typography>
+        <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
+          Chi tiết nhân viên
+        </Typography>
+        <Box display="flex" gap={0.5}>
+          <IconButton size="small" onClick={onMinimize} title="Ẩn tạm">
+            <Remove fontSize="small" />
+          </IconButton>
+          <IconButton size="small" onClick={onCancel} title="Đóng">
+            <Close fontSize="small" />
+          </IconButton>
         </Box>
-      </AccordionSummary>
-      <AccordionDetails>
-        <Box display="flex" gap={2}>
-          {!readOnly && <SaveBtn onSave={formik.submitForm} />}
-          {!readOnly && <CancelBtn onClick={onCancel} />}
-          {readOnly && <EditButton onClick={onEdit} />}
+      </Box>
+
+      {/* Phần 1: Thông tin nhân viên */}
+      <Box>
+        <Box display="flex" alignItems="center" gap={1.2} mb={2.5}>
+          <InfoOutlineRounded sx={{ color: "#1FA463", fontSize: "20px" }} />
+          <Typography
+            sx={{ fontWeight: 600, fontSize: "16px", color: "#1FA463" }}
+          >
+            Thông tin nhân viên
+          </Typography>
         </Box>
-        <Paper sx={{ mt: 2, p: 2, borderRadius: "12px" }}>
-          <Box display={"flex"} alignItems={"center"} gap={2}>
-            <InfoOutlineRounded color="primary" />
-            <Typography>Thông tin nhân viên</Typography>
+        <Grid container spacing={3.5}>
+          <Grid size={{ xs: 6 }}>
+            <FieldInput
+              title="Mã nhân viên *"
+              formik={formik}
+              field="id"
+              disabled={Boolean(selectedStaff?.id)}
+            />
+          </Grid>
+          <Grid size={{ xs: 6 }}>
+            <FieldInput
+              title="Tên nhân viên *"
+              formik={formik}
+              field="hoTen"
+              disabled={readOnly}
+            />
+          </Grid>
+          <Grid size={{ xs: 6 }}>
+            <FieldInput
+              title="Email *"
+              formik={formik}
+              field="emailCongViec"
+              disabled={readOnly}
+            />
+          </Grid>
+          <Grid size={{ xs: 6 }}>
+            <FieldInput
+              title="Số điện thoại *"
+              formik={formik}
+              field="diDong"
+              disabled={readOnly}
+            />
+          </Grid>
+          <Grid size={{ xs: 6 }}>
+            <FieldAutoCompleted
+              title="Chức vụ *"
+              data={allPositions}
+              labelkey="tenChucVu"
+              formik={formik}
+              field="chucVu"
+              disabled={readOnly}
+            />
+          </Grid>
+          <Grid size={{ xs: 6 }}>
+            <FieldAutoCompleted
+              title="Phòng ban/Bộ phận *"
+              data={allDepartments}
+              labelkey="tenPhongBan"
+              formik={formik}
+              field="boPhan"
+              disabled={readOnly}
+            />
+          </Grid>
+        </Grid>
+      </Box>
+
+      {/* Phần 2: Quyền ký duyệt */}
+      <Box sx={{ mt: 1.5 }}>
+        <Box display="flex" alignItems="center" gap={1.2} mb={2}>
+          <Security sx={{ color: "#1FA463", fontSize: "20px" }} />
+          <Typography
+            sx={{ fontWeight: 600, fontSize: "16px", color: "#1FA463" }}
+          >
+            Quyền ký duyệt
+          </Typography>
+        </Box>
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 3,
+            borderRadius: "12px",
+            bgcolor: "#fcfdfe",
+            borderColor: "#e2e8f0",
+            display: "flex",
+            flexDirection: "column",
+            gap: 2.5,
+          }}
+        >
+          {/* Ký nháy */}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 1.5,
+              pb: formik.values.kyNhay ? 2 : 0,
+              borderBottom: formik.values.kyNhay
+                ? "1px dashed #e2e8f0"
+                : "none",
+            }}
+          >
+            <Box display="flex" alignItems="center">
+              <Checkbox
+                name="kyNhay"
+                checked={formik.values.kyNhay}
+                onChange={!readOnly ? formik.handleChange : undefined}
+                disabled={readOnly}
+                sx={{
+                  color: "#e2e8f0",
+                  p: 0,
+                  mr: 1.5,
+                  "&.Mui-checked": { color: "#1FA463" },
+                }}
+              />
+              <Typography sx={{ fontWeight: 500, color: "#334155" }}>
+                Ký nháy
+              </Typography>
+            </Box>
+            {formik.values.kyNhay && (
+              <Box sx={{ pl: 4, width: "100%" }}>
+                <UploadButton
+                  label="Nhấn để chọn file chữ ký (.png, .jpg...)"
+                  disabled={readOnly}
+                  name="chuKyNhay"
+                  onChange={(file: string) =>
+                    handleFileSelect(file, "chuKyNhay", "tempFileKyNhay")
+                  }
+                  nameFile={formik.values.chuKyNhay}
+                />
+              </Box>
+            )}
           </Box>
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 6 }}>
-              <Grid container spacing={2} sx={{ mt: 2 }}>
-                <Grid size={{ xs: 12 }}>
-                  <FieldInput
-                    title="Mã nhân viên *"
-                    formik={formik}
-                    field="id"
-                    disabled={Boolean(selectedStaff?.id)}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <FieldInput
-                    title="Tên nhân viên *"
-                    formik={formik}
-                    field="hoTen"
-                    disabled={readOnly}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <FieldInput
-                    title="Email *"
-                    formik={formik}
-                    field="emailCongViec"
-                    disabled={readOnly}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <FieldInput
-                    title="Số điện thoại *"
-                    formik={formik}
-                    field="diDong"
-                    disabled={readOnly}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <FieldAutoCompleted
-                    title="Chức vụ *"
-                    data={allPositions}
-                    labelkey="tenChucVu"
-                    formik={formik}
-                    field="chucVu"
-                    disabled={readOnly}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <FieldAutoCompleted
-                    title="Phòng ban/Bộ phận *"
-                    data={allDepartments}
-                    labelkey="tenPhongBan"
-                    formik={formik}
-                    field="boPhan"
-                    disabled={readOnly}
-                  />
-                </Grid>
-              </Grid>
-            </Grid>
-            <Grid size={{ xs: 6 }}>
-              <Box display="flex" flexDirection="column" gap={2.5}>
-                {/* Dòng 1: Ký nháy */}
-                <Box display="flex" alignItems="center">
-                  <Box width={100}>
-                    <Typography>Ký nháy:</Typography>
-                  </Box>
-                  <Checkbox
-                    name="kyNhay"
-                    checked={formik.values.kyNhay}
-                    onChange={!readOnly ? formik.handleChange : undefined}
-                    disabled={readOnly}
-                  />
-                  {formik.values.kyNhay && (
-                    <Box flex={1} ml={1}>
-                      <UploadButton
-                        label="Nhấn để chọn file chữ ký (.png, .jpg...)"
-                        disabled={readOnly}
-                        name="chuKyNhay"
-                        onChange={(file: string) =>
-                          handleFileSelect(file, "chuKyNhay", "tempFileKyNhay")
-                        }
-                        nameFile={formik.values.chuKyNhay}
-                      />
-                    </Box>
-                  )}
-                </Box>
 
-                {/* Dòng 2: Ký thường */}
-                <Box display="flex" alignItems="center">
-                  <Box width={100}>
-                    <Typography>Ký thường:</Typography>
-                  </Box>
-                  <Checkbox
-                    name="kyThuong"
-                    checked={formik.values.kyThuong}
-                    onChange={!readOnly ? formik.handleChange : undefined}
-                    disabled={readOnly}
-                  />
-                  {formik.values.kyThuong && (
-                    <Box flex={1} ml={1}>
-                      <UploadButton
-                        label="Nhấn để chọn file chữ ký (.png, .jpg...)"
-                        disabled={readOnly}
-                        name="chuKyThuong"
-                        onChange={(e: any) =>
-                          handleFileSelect(e, "chuKyThuong", "tempFileKyThuong")
-                        }
-                        nameFile={formik.values.chuKyThuong}
-                      />
-                    </Box>
-                  )}
-                </Box>
+          {/* Ký thường */}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 1.5,
+              pb: formik.values.kyThuong ? 2 : 0,
+              borderBottom: formik.values.kyThuong
+                ? "1px dashed #e2e8f0"
+                : "none",
+            }}
+          >
+            <Box display="flex" alignItems="center">
+              <Checkbox
+                name="kyThuong"
+                checked={formik.values.kyThuong}
+                onChange={!readOnly ? formik.handleChange : undefined}
+                disabled={readOnly}
+                sx={{
+                  color: "#e2e8f0",
+                  p: 0,
+                  mr: 1.5,
+                  "&.Mui-checked": { color: "#1FA463" },
+                }}
+              />
+              <Typography sx={{ fontWeight: 500, color: "#334155" }}>
+                Ký thường
+              </Typography>
+            </Box>
+            {formik.values.kyThuong && (
+              <Box sx={{ pl: 4, width: "100%" }}>
+                <UploadButton
+                  label="Nhấn để chọn file chữ ký (.png, .jpg...)"
+                  disabled={readOnly}
+                  name="chuKyThuong"
+                  onChange={(e: any) =>
+                    handleFileSelect(e, "chuKyThuong", "tempFileKyThuong")
+                  }
+                  nameFile={formik.values.chuKyThuong}
+                />
+              </Box>
+            )}
+          </Box>
 
-                {/* Dòng 3: Ký số */}
-                <Box display="flex" alignItems="center">
-                  <Box width={100}>
-                    <Typography>Ký số:</Typography>
-                  </Box>
-                  <Checkbox
-                    name="kySo"
-                    checked={formik.values.kySo}
-                    onChange={!readOnly ? formik.handleChange : undefined}
-                    disabled={readOnly}
-                  />
-                </Box>
-                {formik.values.kySo && (
-                  <Box display="flex" flexDirection={"column"} gap={1}>
-                    {/* Dòng 4: Agreement UUID */}
+          {/* Ký số */}
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+            <Box display="flex" alignItems="center">
+              <Checkbox
+                name="kySo"
+                checked={formik.values.kySo}
+                onChange={!readOnly ? formik.handleChange : undefined}
+                disabled={readOnly}
+                sx={{
+                  color: "#e2e8f0",
+                  p: 0,
+                  mr: 1.5,
+                  "&.Mui-checked": { color: "#1FA463" },
+                }}
+              />
+              <Typography sx={{ fontWeight: 500, color: "#334155" }}>
+                Ký số
+              </Typography>
+            </Box>
+            {formik.values.kySo && (
+              <Box
+                sx={{
+                  pl: 4,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2.5,
+                  mt: 1,
+                }}
+              >
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 6 }}>
                     <TextField
                       fullWidth
                       size="small"
@@ -303,7 +389,8 @@ export default function StaffForm({
                       }}
                       disabled={readOnly}
                     />
-                    {/* Dòng 5: PIN */}
+                  </Grid>
+                  <Grid size={{ xs: 6 }}>
                     <TextField
                       fullWidth
                       size="small"
@@ -329,36 +416,56 @@ export default function StaffForm({
                       }}
                       disabled={readOnly}
                     />
-                    {/* Dòng 6: Lưu mã PIN */}
-                    <Box display="flex" alignItems="center" gap={2}>
-                      <Typography>Lưu mã PIN :</Typography>
-                      <Checkbox
-                        name="savePin"
-                        checked={formik.values.savePin || false}
-                        onChange={
-                          !readOnly
-                            ? (e) => {
-                                formik.setFieldValue(
-                                  "savePin",
-                                  e.target.checked,
-                                );
-                              }
-                            : undefined
-                        }
-                        disabled={readOnly}
-                        sx={{
-                          "& .MuiSvgIcon-root": { fontSize: 28 },
-                          color: "#aaa",
-                        }}
-                      />
-                    </Box>
-                  </Box>
-                )}
+                  </Grid>
+                </Grid>
+                <Box display="flex" alignItems="center" gap={1.2}>
+                  <Checkbox
+                    name="savePin"
+                    checked={formik.values.savePin || false}
+                    onChange={
+                      !readOnly
+                        ? (e) =>
+                            formik.setFieldValue("savePin", e.target.checked)
+                        : undefined
+                    }
+                    disabled={readOnly}
+                    sx={{
+                      color: "#e2e8f0",
+                      p: 0,
+                      "&.Mui-checked": { color: "#1FA463" },
+                    }}
+                  />
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "#64748b", fontWeight: 500 }}
+                  >
+                    Lưu mã PIN
+                  </Typography>
+                </Box>
               </Box>
-            </Grid>
-          </Grid>
+            )}
+          </Box>
         </Paper>
-      </AccordionDetails>
-    </Accordion>
+      </Box>
+
+      {/* Footer actions */}
+      <Box
+        display="flex"
+        justifyContent="flex-end"
+        gap={2}
+        mt={1}
+        pt={2.5}
+        sx={{ borderTop: "1px solid #f1f5f9" }}
+      >
+        {readOnly ? (
+          <EditButton onClick={onEdit} />
+        ) : (
+          <>
+            <CancelBtn onClick={onCancel} />
+            <SaveBtn onSave={formik.submitForm} />
+          </>
+        )}
+      </Box>
+    </Box>
   );
 }

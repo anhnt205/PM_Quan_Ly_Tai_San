@@ -65,12 +65,24 @@ public class LoaiCCDCConService {
         return loaiCCDCConDao.insert(lccdc);
     }
 
+    public int batchCreate(List<LoaiCCDCCon> list) {
+        return loaiCCDCConDao.batchCreate(list);
+    }
+
     public int update(LoaiCCDCCon lccdc) {
         return loaiCCDCConDao.update(lccdc);
     }
 
+    public int batchUpdate(List<LoaiCCDCCon> list) {
+        return loaiCCDCConDao.batchUpdate(list);
+    }
+
     public int delete(String id) {
         return loaiCCDCConDao.delete(id);
+    }
+
+    public int batchDelete(List<String> ids) {
+        return loaiCCDCConDao.batchDelete(ids);
     }
 
 

@@ -26,6 +26,8 @@ import {
   Delete,
   Cancel,
   Visibility,
+  Remove,
+  Close,
 } from "@mui/icons-material";
 import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
@@ -49,6 +51,7 @@ import S3Service from "../../../services/S3Service";
 import { mergeBangKeWithOriginalPdf } from "../../AssetTransfer/config";
 import { CongTy } from "../../../utils/const";
 import ExcelAssetUploader from "../../../components/common/ExcelAssetUploader";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 const CustomTableCell = styled(TableCell)(({ theme }) => ({
   borderBottom: "1px solid rgba(224, 224, 224, 1)",
@@ -73,6 +76,9 @@ interface ToolTransferFormProps {
   isSignedForm?: boolean;
   departments: any[];
   allUnits: any[];
+  onFormChange?: (values: any) => void;
+  initialFormData?: Record<string, any>;
+  onMinimize: () => void;
 }
 
 export default function ToolTransferForm({
@@ -87,6 +93,9 @@ export default function ToolTransferForm({
   isSignedForm = false,
   departments,
   allUnits,
+  initialFormData,
+  onFormChange,
+  onMinimize,
 }: ToolTransferFormProps) {
   const { user } = useSelector((state: RootState) => state.user);
   const [expanded, setExpanded] = useState(true);
@@ -101,63 +110,71 @@ export default function ToolTransferForm({
   const currentStatus = selectedTool?.trangThai ?? 0; // 0: Nháp, 1: Duyệt, 2: Hủy, 3: Hoàn thành
   const formik = useFormik({
     initialValues: {
-      id: "",
-      soQuyetDinh: "",
-      tenPhieu: "",
-      idDonViGiao: type === 1 ? "K30" : "",
-      idDonViNhan: type === 3 ? "kth" : "",
-      idNguoiKyNhay: "",
-      trangThaiKyNhay: false,
-      nguoiLapPhieuKyNhay: false,
-      idDonViDeNghi: user?.taiKhoan?.phongBanId || "",
-      tgGnTuNgay: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-      tgGnDenNgay: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-      idTrinhDuyetCapPhong: "",
-      trinhDuyetCapPhongXacNhan: false,
-      idTrinhDuyetGiamDoc: "",
-      trinhDuyetGiamDocXacNhan: false,
-      diaDiemGiaoNhan: "",
-      idPhongBanXemPhieu: "",
-      noiNhan: "",
-      trangThai: 0,
-      idCongTy: CongTy.CT001,
-      loai: type,
-      trichYeu: "",
-      tenFile: "",
-      duongDanFile: "",
-      taiLieuCuoi: "",
-      nguoiKyList: [],
-      chiTietDieuDongCCDCVatTuDTOS: [
-        {
-          idCustom: "",
-          idCCDCVatTu: "",
-          soChungTu: "",
-          idChiTietCCDCVatTu: "",
-          donViTinh: "",
-          soLuong: 0,
-          soLuongXuat: 0,
-          ghiChu: "",
-          hienTrang: "",
-          moTa: "",
-          isActive: true,
-          soLuongDaBanGiao: 0,
-          soKyHieu: "",
-          kyHieu: "",
-          namSanXuat: "",
-        },
-      ],
-      initialChiTiet: [],
+      id: initialFormData?.id ?? "",
+      soQuyetDinh: initialFormData?.soQuyetDinh ?? "",
+      tenPhieu: initialFormData?.tenPhieu ?? "",
+      idDonViGiao: initialFormData?.idDonViGiao ?? (type === 1 ? "K30" : ""),
+      idDonViNhan: initialFormData?.idDonViNhan ?? (type === 3 ? "kth" : ""),
+      idNguoiKyNhay: initialFormData?.idNguoiKyNhay ?? "",
+      trangThaiKyNhay: initialFormData?.trangThaiKyNhay ?? false,
+      nguoiLapPhieuKyNhay: initialFormData?.nguoiLapPhieuKyNhay ?? false,
+      idDonViDeNghi:
+        initialFormData?.idDonViDeNghi ?? user?.taiKhoan?.phongBanId ?? "",
+      tgGnTuNgay:
+        initialFormData?.tgGnTuNgay ??
+        dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      tgGnDenNgay:
+        initialFormData?.tgGnDenNgay ??
+        dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      idTrinhDuyetCapPhong: initialFormData?.idTrinhDuyetCapPhong ?? "",
+      trinhDuyetCapPhongXacNhan:
+        initialFormData?.trinhDuyetCapPhongXacNhan ?? false,
+      idTrinhDuyetGiamDoc: initialFormData?.idTrinhDuyetGiamDoc ?? "",
+      trinhDuyetGiamDocXacNhan:
+        initialFormData?.trinhDuyetGiamDocXacNhan ?? false,
+      diaDiemGiaoNhan: initialFormData?.diaDiemGiaoNhan ?? "",
+      idPhongBanXemPhieu: initialFormData?.idPhongBanXemPhieu ?? "",
+      noiNhan: initialFormData?.noiNhan ?? "",
+      trangThai: initialFormData?.trangThai ?? 0,
+      idCongTy: initialFormData?.idCongTy ?? CongTy.CT001,
+      loai: initialFormData?.loai ?? type,
+      trichYeu: initialFormData?.trichYeu ?? "",
+      tenFile: initialFormData?.tenFile ?? "",
+      duongDanFile: initialFormData?.duongDanFile ?? "",
+      taiLieuCuoi: initialFormData?.taiLieuCuoi ?? "",
+      nguoiKyList: initialFormData?.nguoiKyList ?? [],
+      chiTietDieuDongCCDCVatTuDTOS:
+        initialFormData?.chiTietDieuDongCCDCVatTuDTOS ?? [
+          {
+            idCustom: "",
+            idCCDCVatTu: "",
+            soChungTu: "",
+            idChiTietCCDCVatTu: "",
+            donViTinh: "",
+            soLuong: 0,
+            soLuongXuat: 0,
+            ghiChu: "",
+            hienTrang: "",
+            moTa: "",
+            isActive: true,
+            soLuongDaBanGiao: 0,
+            soKyHieu: "",
+            kyHieu: "",
+            namSanXuat: "",
+          },
+        ],
+      initialChiTiet: initialFormData?.initialChiTiet ?? [],
     },
     validationSchema: toolTransferValidationSchema,
     onSubmit: async (values) => {
       // Logic map ID tương tự nhưng dùng prefix của Tool
       const chiTietDieuDongCCDCVatTuDTOS = values.chiTietDieuDongCCDCVatTuDTOS
         .filter((i: any) => i.idCCDCVatTu !== "" && i.idCCDCVatTu !== undefined)
-        .map((item: any, index) => ({
+        .map((item: any, index: number) => ({
           ...item,
           id: `${generateCode("CTBG-")}-${index}`,
         }));
-      const nguoiKyList = values.nguoiKyList.map((item: any, index) => ({
+      const nguoiKyList = values.nguoiKyList.map((item: any, index: number) => ({
         ...item,
         id: `${generateCode("NK-")}-${index}`,
         idTaiLieu: values.id,
@@ -207,6 +224,13 @@ export default function ToolTransferForm({
     },
   });
 
+  const debouncedValues = useDebounce(formik.values, 800);
+  useEffect(() => {
+    if (!selectedTool) {
+      onFormChange?.(debouncedValues);
+    }
+  }, [debouncedValues]);
+
   useEffect(() => {
     if (selectedTool) {
       formik.setValues({
@@ -228,8 +252,6 @@ export default function ToolTransferForm({
           ? selectedTool.duongDanFile
           : selectedTool.taiLieuCuoi,
       );
-    } else {
-      formik.resetForm();
     }
   }, [selectedTool]);
 
@@ -300,55 +322,40 @@ export default function ToolTransferForm({
           isEdit={[0].includes(selectedTool?.trangThai ?? 0) ? true : false}
         />
       )}
-      <Accordion
-        expanded={expanded}
+      <Box
         sx={{
-          background: "#f6f8f4ff",
-          boxShadow: "none",
-          margin: "0 !important",
-          "&:before": { display: "none" },
-          "&.Mui-expanded": { margin: "0 !important" },
+          bgcolor: "#ffffff",
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
         }}
       >
-        <AccordionSummary
-          component="div"
-          expandIcon={<ViewBtn expanded={expanded} setExpanded={setExpanded} />}
+        {/* Header sticky */}
+        <Box
           sx={{
-            cursor: "default",
-            "& .MuiAccordionSummary-content": { cursor: "pointer" },
-            "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
-              transform: "none",
-            },
+            p: 2,
+            bgcolor: "#ffffff",
+            borderBottom: "1px solid",
+            borderColor: "divider",
+            position: "sticky",
+            top: 0,
+            zIndex: 11,
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            {expanded ? <ArrowDropUp /> : <ArrowDropDown />}
-            <Typography>Chi tiết {label}</Typography>
-          </Box>
-        </AccordionSummary>
-        <AccordionDetails
-          sx={{
-            pt: 0,
-            pb: 2,
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          {/* THANH CÔNG CỤ: NÚT HÀNH ĐỘNG VÀ STEPPER */}
           <Box
             display="flex"
-            justifyContent="space-between"
             alignItems="center"
-            mb={2}
+            justifyContent="space-between"
           >
-            <Box>
-              {[0].includes(currentStatus) && (
-                <Box display="flex" gap={2}>
-                  {!readOnly && <SaveBtn onSave={formik.submitForm} />}
-                  {!readOnly && <CancelBtn onClick={onClose} />}
-                  {readOnly && <EditButton onClick={onEdit} />}
-                </Box>
-              )}
+            {/* Bên trái: Tiêu đề */}
+            <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
+              Chi tiết {label}
+            </Typography>
+
+            {/* Bên phải: Stepper + Các nút */}
+            <Box display="flex" alignItems="center" gap={1}>
+              <CustomStepper activeStep={currentStatus} />
+
               {![0, 2, 3, 4].includes(currentStatus) && (
                 <Button
                   size="small"
@@ -359,11 +366,19 @@ export default function ToolTransferForm({
                   Hủy phiếu {label}
                 </Button>
               )}
-            </Box>
-            {/* Tích hợp Component CustomStepper của bạn */}
-            <CustomStepper activeStep={currentStatus} />
-          </Box>
 
+              <IconButton size="small" onClick={onMinimize} title="Ẩn tạm">
+                <Remove fontSize="small" />
+              </IconButton>
+              <IconButton size="small" onClick={onClose} title="Đóng">
+                <Close fontSize="small" />
+              </IconButton>
+            </Box>
+          </Box>
+        </Box>
+
+        {/* Body — giữ nguyên toàn bộ Paper bên trong */}
+        <Box sx={{ flex: 1, overflow: "auto", p: 2 }}>
           <Paper
             sx={{
               p: 3,
@@ -527,7 +542,7 @@ export default function ToolTransferForm({
                       Thêm người ký
                     </Button>
                   </Grid>
-                  {formik.values.nguoiKyList.map((row, index) => (
+                  {formik.values.nguoiKyList.map((row: any, index: number) => (
                     <Grid size={12}>
                       <Box display="flex">
                         <FieldAutoCompleted
@@ -605,7 +620,7 @@ export default function ToolTransferForm({
                   onUploadSuccess={(matchedWrapperAssets) => {
                     const existingIds =
                       formik.values.chiTietDieuDongCCDCVatTuDTOS.map(
-                        (i) => i.idCustom,
+                        (i:any) => i.idCustom,
                       );
                     const newItems = matchedWrapperAssets
                       .map((wrapper) => wrapper.originalData)
@@ -680,7 +695,7 @@ export default function ToolTransferForm({
                 </TableHead>
                 <TableBody>
                   {(formik.values.chiTietDieuDongCCDCVatTuDTOS || []).map(
-                    (row: any, index) => (
+                    (row: any, index: number) => (
                       <TableRow key={index}>
                         <CustomTableCell>
                           <FieldAutoCompleted
@@ -848,17 +863,31 @@ export default function ToolTransferForm({
                 mt={2}
                 display="flex"
                 alignItems="center"
-                gap={0.5}
-                sx={{ cursor: "pointer", color: "#1976d2" }}
-                onClick={() => setIsPreview(true)}
+                justifyContent="space-between"
               >
-                <Typography variant="body2">Xem trước tài liệu</Typography>
-                <Visibility fontSize="small" />
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  gap={0.5}
+                  sx={{ cursor: "pointer", color: "#1976d2" }}
+                  onClick={() => setIsPreview(true)}
+                >
+                  <Typography variant="body2">Xem trước tài liệu</Typography>
+                  <Visibility fontSize="small" />
+                </Box>
+
+                {[0].includes(currentStatus) && (
+                  <Box display="flex" gap={2}>
+                    {!readOnly && <SaveBtn onSave={formik.submitForm} />}
+                    {!readOnly && <CancelBtn onClick={onClose} />}
+                    {readOnly && <EditButton onClick={onEdit} />}
+                  </Box>
+                )}
               </Box>
             </Box>
           </Paper>
-        </AccordionDetails>
-      </Accordion>
+        </Box>
+      </Box>
     </>
   );
 }

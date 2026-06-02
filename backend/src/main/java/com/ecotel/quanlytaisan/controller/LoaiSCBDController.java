@@ -14,7 +14,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/loaiscbd")
-@CrossOrigin(origins = "*")
 public class LoaiSCBDController {
 
     @Autowired

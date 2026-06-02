@@ -13,6 +13,7 @@ export default function FieldDate({
   setSelectedDate,
   field,
   disabled = false,
+  onChange,
 }: {
   title: string;
   formik?: any;
@@ -20,6 +21,7 @@ export default function FieldDate({
   setSelectedDate?: React.Dispatch<React.SetStateAction<string>>;
   field?: string;
   disabled?: boolean;
+  onChange?: (newValue: any) => void;
 }) {
   const value = formik && field ? getIn(formik.values, field) : selectedDate;
 
@@ -42,9 +44,10 @@ export default function FieldDate({
         openTo="day"
         value={dayjsValue}
         disabled={disabled}
-        onChange={(val) =>
-          setValue(val ? dayjs(val).format("YYYY-MM-DD") : "")
-        }
+        onChange={(val) => {
+          setValue(val ? dayjs(val).format("YYYY-MM-DD") : "");
+          onChange?.(val ? dayjs(val).format("YYYY-MM-DD") : "");
+        }}
         slotProps={{
           textField: {
             fullWidth: true,

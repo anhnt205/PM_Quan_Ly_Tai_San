@@ -18,12 +18,30 @@ import { useDebounce } from "../../hooks/useDebounce";
 import ModelAssetForm from "./components/ModelAssetForm";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
+import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
+
+interface ModelAssetTabState {
+  showForm: boolean;
+  selectedModelAsset: any | null;
+  readOnly: boolean;
+  isCopy: boolean;
+  draftForm?: Record<string, any>;
+}
 
 export default function ModelAsset() {
-  const [showForm, setShowForm] = useState(false);
-  const [selectedModelAsset, setSelectedModelAsset] = useState<any>(null);
-  const [readOnly, setReadOnly] = useState(false);
-  const [isCopy, setIsCopy] = useState(false);
+  const { formData, setField } =
+    useTabForm<ModelAssetTabState>("/mo_hinh_tai_san");
+  const showForm = formData.showForm ?? false;
+  const selectedModelAsset = formData.selectedModelAsset ?? null;
+  const readOnly = formData.readOnly ?? false;
+  const isCopy = formData.isCopy ?? false;
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setSelectedModelAsset = (v: any) => setField({ selectedModelAsset: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+  const setIsCopy = (v: boolean) => setField({ isCopy: v });
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
@@ -35,6 +53,8 @@ export default function ModelAsset() {
     pageSize: 10,
     page: 0,
   });
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
 
   const {
     createMutation,
@@ -86,15 +106,11 @@ export default function ModelAsset() {
     setShowForm(false);
     setSelectedModelAsset(null);
     setIsCopy(false);
+    setField({ draftForm: undefined });
   };
 
   const handleEdit = () => {
     setReadOnly(false);
-  };
-
-  const handleCancel = () => {
-    setShowForm(false);
-    setSelectedModelAsset(null);
   };
 
   const columns: GridColDef[] = [
@@ -230,6 +246,10 @@ export default function ModelAsset() {
       <PageAction
         title="Quản lý mô hình tài sản"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
           setShowForm(true);
           setSelectedModelAsset(null);
           setReadOnly(false);
@@ -266,17 +286,34 @@ export default function ModelAsset() {
       </Dialog>
 
       <Box p={2}>
-        {showForm && (
-          <Box py={2}>
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogContent sx={{ p: 0 }}>
             <ModelAssetForm
               onEdit={handleEdit}
-              onCancel={handleCancel}
+              onCancel={() => {
+                setShowForm(false);
+                setSelectedModelAsset(null);
+                setReadOnly(false);
+                setIsCopy(false);
+                setField({ draftForm: undefined });
+              }}
+              onMinimize={handleMinimize}
               selectedModelAsset={selectedModelAsset}
               readOnly={readOnly}
               onSave={handleSave}
+              onFormChange={(values) => setField({ draftForm: values })}
+              initialFormData={formData.draftForm}
             />
-          </Box>
-        )}
+          </DialogContent>
+        </Dialog>
+
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
+
         <TableCustom
           tableId="modelAsset"
           title="Quản lý mô hình tài sản"
@@ -294,6 +331,8 @@ export default function ModelAsset() {
           setSearchValue={setSearchValue}
           onDeleteAll={deleteAllMutation.mutate}
           showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
+          onImportExcel={handleImport}
+          onExportExcel={() => exportMutation.mutate()}
         />
       </Box>
     </Box>

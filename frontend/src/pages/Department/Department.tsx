@@ -22,12 +22,30 @@ import { showConfirmAlert } from "../../components/Alert";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
+import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
+
+interface DepartmentTabState {
+  showForm: boolean;
+  selectedDepartment: any | null;
+  readOnly: boolean;
+  isCopy: boolean;
+  draftForm?: Record<string, any>;
+}
 
 export default function Department() {
-  const [showForm, setShowForm] = useState(false);
-  const [selectedDepartment, setSelectedDepartment] = useState<any>(null);
-  const [readOnly, setReadOnly] = useState(false);
-  const [isCopy, setIsCopy] = useState(false);
+  const { formData, setField } = useTabForm<DepartmentTabState>("/phong_ban");
+  const showForm = formData.showForm ?? false;
+  const isCopy = formData.isCopy ?? false;
+  const selectedDepartment = formData.selectedDepartment ?? null;
+  const readOnly = formData.readOnly ?? false;
+
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setIsCopy = (v: boolean) => setField({ isCopy: v });
+  const setSelectedDepartment = (v: any) => setField({ selectedDepartment: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
@@ -77,7 +95,11 @@ export default function Department() {
     setShowForm(false);
     setSelectedDepartment(null);
     setIsCopy(false);
+    setField({ draftForm: undefined });
   };
+
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
+  const handleMinimize = () => setShowForm(false);
 
   const handleEdit = () => {
     setReadOnly(false);
@@ -94,6 +116,14 @@ export default function Department() {
     {
       field: "tenPhongBan",
       headerName: "Tên phòng/ban",
+      flex: 1,
+      minWidth: 200,
+      align: "center",
+      headerAlign: "center",
+    },
+    {
+      field: "tenPhongCapTren",
+      headerName: "Phòng ban cấp trên",
       flex: 1,
       minWidth: 200,
       align: "center",
@@ -148,6 +178,10 @@ export default function Department() {
       <PageAction
         title="Quản lý phòng ban"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
           setShowForm(true);
           setSelectedDepartment(null);
           setReadOnly(false);
@@ -177,21 +211,34 @@ export default function Department() {
             </Box>
           </DialogContent>
         </Dialog>
-        {showForm && (
-          <Box py={2}>
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogContent sx={{ p: 0 }}>
             <DepartmentForm
+              allDepartment={allDepartment}
               onCancel={() => {
                 setShowForm(false);
                 setSelectedDepartment(null);
                 setReadOnly(false);
+                setField({ draftForm: undefined });
               }}
+              onMinimize={handleMinimize}
               onEdit={handleEdit}
               selectedDepartment={selectedDepartment}
               readOnly={readOnly}
               onSave={handleSave}
+              onFormChange={(values) => setField({ draftForm: values })}
+              initialFormData={formData.draftForm}
             />
-          </Box>
-        )}
+          </DialogContent>
+        </Dialog>
+
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
+        
         <TableCustom
           tableId="department"
           title="Quản lý phòng ban"
@@ -209,6 +256,8 @@ export default function Department() {
           setSearchValue={setSearchValue}
           onDeleteAll={deleteAllMutation.mutate}
           showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
+          onImportExcel={(file) => importExcelMutation.mutate(file)}
+          onExportExcel={() => exportMutation.mutate(allDepartment)}
         />
       </Box>
     </Box>

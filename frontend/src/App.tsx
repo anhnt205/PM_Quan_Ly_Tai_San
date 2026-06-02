@@ -12,6 +12,8 @@ import Position from "./pages/Position/Position";
 import TypeAsset from "./pages/TypeAsset/TypeAsset";
 import ModelAsset from "./pages/ModelAsset/ModelAsset";
 import AssetGroup from "./pages/AssetGroup/AssetGroup";
+import AssetProfile from "./pages/AssetProfile/AssetProfile";
+import AssetProfileGroup from "./pages/AssetProfileGroup/AssetProfileGroup";
 import ToolGroup from "./pages/ToolGroup/ToolGroup";
 import AssetManager from "./pages/AssetManager/AssetManager";
 import AssetTransfer from "./pages/AssetTransfer/AssetTransfer";
@@ -26,7 +28,6 @@ import AssetHandover from "./pages/AssetHandover/AssetHandover";
 import Report from "./pages/Report/Report";
 import ToolTransfer from "./pages/ToolTransfer/ToolTransfer";
 import ToolHandover from "./pages/ToolHandover/ToolHandover";
-import MaintenanceRepair from "./pages/MaintenanceRepair/MaintenanceRepair";
 import Account from "./pages/Account/Account";
 import NotFound from "./pages/Notfound/Notfound";
 import { useEffect } from "react";
@@ -34,9 +35,22 @@ import socketService, { SocketMessage } from "./services/socketService";
 import { RootState } from "./redux/store";
 import { useQueryClient } from "@tanstack/react-query";
 import { MessageTypeFunctions } from "./utils/const";
-import MaintenancePlanRepair from "./pages/MainenancePlanRepair/MaintenancePlanRepair";
+import MaintenancePlanRepair from "./pages/Maintenance/MaintenancePlanRepair";
 import PlanType from "./pages/PlanType/PlanType";
 import HuongDanSuDung from "./pages/HuongDanSuDung/HuongDanSuDung";
+import RepairLevel from "./pages/RepairLevel/RepairLevel";
+
+import RepairNorm from "./pages/RepairNorm/RepairNorm";
+import MaintenanceManagerPage from "./pages/Maintenance/MaintenancePage";
+import MaintenanceCyclePage from "./pages/Maintenance/MaintenanceCycle";
+import MaintenanceApprovalPage from "./pages/Maintenance/MaintenanceApproval";
+import MaintenanceRecordPage from "./pages/Maintenance/MaintenanceRecord";
+import { CmmsProvider } from "./hooks/CmmsContext";
+import HandoverApproval from "./pages/HandoverApproval/HandoverApproval";
+import HandoverRecord from "./pages/HandoverRecord/HandoverRecord";
+import TransferApproval from "./pages/TransferApproval/TransferApproval";
+import TransferRecord from "./pages/TransferRecord/TransferRecord";
+import { MenuDataProvider } from "./context/MenuDataContext";
 
 const ProtectedRoute = ({
   allowedRoles,
@@ -105,11 +119,55 @@ function App() {
       } else if (
         (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
           user?.taiKhoan?.tenDangNhap === "admin") &&
-        data.type === MessageTypeFunctions.MAINTENANCE
+        data.type === MessageTypeFunctions.REPAIR
       ) {
         console.log("Handling socket message in App.tsx:", data);
-        queryClient.invalidateQueries({ queryKey: ["maintenanceRepairPage"] });
-        queryClient.invalidateQueries({ queryKey: ["maintenanceRepairResultPage"] });
+        queryClient.invalidateQueries({ queryKey: ["repairPage"] });
+      } else if (
+        (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
+          user?.taiKhoan?.tenDangNhap === "admin") &&
+        data.type === MessageTypeFunctions.PLAN
+      ) {
+        console.log("Handling socket message in App.tsx:", data);
+        queryClient.invalidateQueries({
+          queryKey: ["maintenancePlanningPage"],
+        });
+      } else if (
+        (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
+          user?.taiKhoan?.tenDangNhap === "admin") &&
+        data.type === MessageTypeFunctions.MATERIAL
+      ) {
+        console.log("Handling socket message in App.tsx:", data);
+        queryClient.invalidateQueries({
+          queryKey: ["materialAssessmentPage"],
+        });
+      } else if (
+        (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
+          user?.taiKhoan?.tenDangNhap === "admin") &&
+        data.type === MessageTypeFunctions.INCIDENT
+      ) {
+        console.log("Handling socket message in App.tsx:", data);
+        queryClient.invalidateQueries({
+          queryKey: ["incidentPage"],
+        });
+      } else if (
+        (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
+          user?.taiKhoan?.tenDangNhap === "admin") &&
+        data.type === MessageTypeFunctions.INCIDENT_INSPECTION
+      ) {
+        console.log("Handling socket message in App.tsx:", data);
+        queryClient.invalidateQueries({
+          queryKey: ["incidentInspectionPage"],
+        });
+      } else if (
+        (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
+          user?.taiKhoan?.tenDangNhap === "admin") &&
+        data.type === MessageTypeFunctions.ACCEPTANCE_TEST
+      ) {
+        console.log("Handling socket message in App.tsx:", data);
+        queryClient.invalidateQueries({
+          queryKey: ["acceptanceTestPage"],
+        });
       }
     });
 
@@ -128,7 +186,15 @@ function App() {
         <Route path={ROUTES.NOT_FOUND} element={<NotFound />} />
         <Route
           path={ROUTES.MAIN}
-          element={user ? <Main /> : <Navigate to={ROUTES.LOGIN} />}
+          element={
+            user ? (
+              <MenuDataProvider>
+                <Main />
+              </MenuDataProvider>
+            ) : (
+              <Navigate to={ROUTES.LOGIN} />
+            )
+          }
         >
           <Route index element={<DashBoard />} />
           <Route
@@ -165,6 +231,11 @@ function App() {
             }
           />
           <Route path={ROUTES.ASSETGROUP} element={<AssetGroup />} />
+          <Route path={ROUTES.ASSETPROFILE} element={<AssetProfile />} />
+          <Route
+            path={ROUTES.ASSETPROFILEGROUP}
+            element={<AssetProfileGroup />}
+          />
           <Route path={ROUTES.MODELASSET} element={<ModelAsset />} />
           <Route path={ROUTES.TYPEASSET} element={<TypeAsset />} />
           <Route path={ROUTES.TOOLGROUP} element={<ToolGroup />} />
@@ -221,6 +292,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path={ROUTES.TOOLHANDOVER}
             element={
@@ -230,13 +302,25 @@ function App() {
             }
           />
           <Route
-            path={ROUTES.MAINTENANCEPLANREPAIR}
-            element={<MaintenancePlanRepair />}
+            path={ROUTES.HANDOVER_APPROVAL}
+            element={<HandoverApproval />}
           />
+          <Route path={ROUTES.HANDOVER_RECORD} element={<HandoverRecord />} />
           <Route
-            path={ROUTES.MAINTENANCEREPAIR}
-            element={<MaintenanceRepair />}
+            path={ROUTES.TRANSFER_APPROVAL}
+            element={<TransferApproval />}
           />
+          <Route path={ROUTES.TRANSFER_RECORD} element={<TransferRecord />} />
+          <Route
+            path={ROUTES.MAINTENANCEPLANREPAIR}
+            element={
+              <CmmsProvider>
+                <MaintenancePlanRepair />
+              </CmmsProvider>
+            }
+          />
+          <Route path={ROUTES.REPAIRLEVEL} element={<RepairLevel />} />
+          <Route path={ROUTES.REPAIRNORM} element={<RepairNorm />} />
           <Route
             path={ROUTES.REPORT}
             element={
@@ -247,6 +331,31 @@ function App() {
           />
           <Route path={ROUTES.HUONGDAN} element={<HuongDanSuDung />} />
           <Route path={ROUTES.ACCOUNT} element={<Account />} />
+
+          <Route
+            path={ROUTES.MAINTENANCE_MANAGER}
+            element={<MaintenanceManagerPage />}
+          />
+          <Route
+            path={ROUTES.MAINTENANCE_CYCLE}
+            element={<MaintenanceCyclePage />}
+          />
+          <Route
+            path={ROUTES.MAINTENANCE_APPROVAL}
+            element={
+              <CmmsProvider>
+                <MaintenanceApprovalPage />
+              </CmmsProvider>
+            }
+          />
+          <Route
+            path={ROUTES.MAINTENANCE_RECORD}
+            element={
+              <CmmsProvider>
+                <MaintenanceRecordPage />
+              </CmmsProvider>
+            }
+          />
         </Route>
         <Route path="*" element={<Navigate to={ROUTES.NOT_FOUND} replace />} />
       </Routes>
