@@ -1,11 +1,15 @@
 # Reference:
 # 1. https://github.com/actions/starter-workflows/blob/main/deployments/azure-webapps-node.yml
-name: Deploy for staging version
+name: Build and run tests for staging version
 
 on:
-  push:
+  pull_request:
     branches:
-      - develop # Deploy when code is pushed to 'develop'
+      - develop # Trigger when a pull request is opened for 'develop'
+
+concurrency:
+  group: build-and-test # ← cùng group thì xếp hàng
+  cancel-in-progress: false # ← không cancel job trước đó
 
 env:
   WEBAPP_NAME: qlts # set this to your application's name
@@ -16,7 +20,7 @@ env:
 #   contents: read
 
 jobs:
-  deploy:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -39,10 +43,10 @@ jobs:
           DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
           DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
         run: |
-          make staging
+          make test
           ls -al .env
           cat .env
-          cp .env deployment/staging/
+          cp .env deployment/test/
 
       - name: Ensure target directory exists
         uses: appleboy/ssh-action@v0.1.10
@@ -52,7 +56,7 @@ jobs:
           key: ${{ secrets.STAGING_SSH_KEY }}
           port: ${{ secrets.STAGING_PORT }}
           script: |
-            mkdir -p /home/${{ secrets.STAGING_USER }}/qlts/deployment/staging
+            mkdir -p /home/${{ secrets.STAGING_USER }}/qlts/deployment/test
 
       - name: Transfer docker-compose file to VPS for deployment
         uses: appleboy/scp-action@v0.1.4
@@ -61,8 +65,8 @@ jobs:
           username: ${{ secrets.STAGING_USER }}
           key: ${{ secrets.STAGING_SSH_KEY }}
           port: ${{ secrets.STAGING_PORT }}
-          source: deployment/staging/*
-          target: "/home/${{ secrets.STAGING_USER }}/qlts/deployment/staging"
+          source: deployment/test/*
+          target: "/home/${{ secrets.STAGING_USER }}/qlts/deployment/test"
           strip_components: 2 # Removes "deployment/staging/" folder path!
 
       - name: Clean up containers and stuff via SSH
@@ -74,12 +78,12 @@ jobs:
           port: ${{ secrets.STAGING_PORT }}
           script: |
             # Change to staging deployment directory
-            cd /home/${{ secrets.STAGING_USER }}/qlts/deployment/staging 
+            cd /home/${{ secrets.STAGING_USER }}/qlts/deployment/test 
             # Debug info
             pwd
             ls -al
             docker image prune -f
-            docker compose -f staging-docker-compose.yaml down # always down first
+            docker compose -f test-docker-compose.yaml down # always down first
             docker ps
 
       - name: Deploy to Staging via SSH
@@ -91,7 +95,7 @@ jobs:
           port: ${{ secrets.STAGING_PORT }}
           script: |
             ### Change to staging deployment directory
-            cd /home/${{ secrets.STAGING_USER }}/qlts/deployment/staging 
+            cd /home/${{ secrets.STAGING_USER }}/qlts/deployment/test 
             ### Clean up unused images
             docker image prune -f # clean up unused images
             ### Provide permissions and start the application

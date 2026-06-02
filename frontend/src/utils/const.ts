@@ -11,6 +11,7 @@ export const MessageTypeFunctions = {
   INSPECTION: "INSPECTION",
   MATERIAL: "MATERIAL",
   ACCEPTANCE_TEST: "ACCEPTANCE_TEST",
+  MEASURE: "MEASURE",
 };
 export const MessageTypeActions = {
   CREATE: "CREATE",

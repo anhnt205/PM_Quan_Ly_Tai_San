@@ -1,5 +1,5 @@
 import { useState, SyntheticEvent } from "react";
-import { Box, Tab, Tabs } from "@mui/material";
+import { Box, Grid, IconButton, Tab, Tabs } from "@mui/material";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import { useSelector } from "react-redux";
 import TableCustom from "../../components/common/TableCustom";
@@ -20,10 +20,14 @@ import { useAllUnitsQuery } from "../Unit/Mutation";
 import S3Service from "../../services/S3Service";
 import SignDocumentForm from "../ToolTransfer/components/SignDocumentForm";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
+import { VisibilityOff } from "@mui/icons-material";
 
 export default function ToolTransferRecordTab() {
   const [subTab, setSubTab] = useState(0); // 0: Cấp phát, 1: Điều chuyển, 2: Thu hồi
-  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 10,
+  });
   const [searchValue, setSearchValue] = useState("");
   const [status, setStatus] = useState("");
   const [showViewDocument, setShowViewDocument] = useState(false);
@@ -34,15 +38,22 @@ export default function ToolTransferRecordTab() {
   const type = subTab + 1; // 1, 2, 3
   const debouncedSearch = useDebounce(searchValue, 600);
 
-  const { data: pageData = { items: [], totalItems: 0, trangThaiCounts: {}, loaiCounts: {} }, isLoading } = 
-    useToolTransferPageQuery(
-      paginationModel.page,
-      paginationModel.pageSize,
-      debouncedSearch,
-      undefined, // Get all records
-      type,
-      status ? Number(status) : undefined
-    );
+  const {
+    data: pageData = {
+      items: [],
+      totalItems: 0,
+      trangThaiCounts: {},
+      loaiCounts: {},
+    },
+    isLoading,
+  } = useToolTransferPageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    debouncedSearch,
+    undefined, // Get all records
+    type,
+    status ? Number(status) : undefined,
+  );
 
   const { data: allStaffs = [] } = useAllStaffsQuery();
   const { data: allUnits = [] } = useAllUnitsQuery();
@@ -137,9 +148,8 @@ export default function ToolTransferRecordTab() {
       align: "center",
       renderCell: (params) => {
         if (!params.value) return null;
-        return showDownloadFile(
-          params.value,
-          () => S3Service.download(params.row.duongDanFile),
+        return showDownloadFile(params.value, () =>
+          S3Service.download(params.row.duongDanFile),
         );
       },
     },
@@ -191,35 +201,37 @@ export default function ToolTransferRecordTab() {
     },
   ];
 
-  if (showViewDocument) {
-    return (
-      <SignDocumentForm
-        key={selectedRow?.id}
-        selectedIds={[selectedRow?.id]}
-        document={selectedRow?.taiLieuCuoi}
-        onCancel={() => setShowViewDocument(false)}
-        onSign={() => {}} // Read-only
-        toolTransferDetail={selectedRow?.chiTietDieuDongCCDCVatTuDTOS || []}
-        showSignerSidebar={true}
-        allUnits={allUnits}
-        fullscreen={true}
-        staffs={allStaffs}
-        isEdit={false}
-      />
-    );
-  }
+  // if (showViewDocument) {
+  //   return (
+  //     <SignDocumentForm
+  //       key={selectedRow?.id}
+  //       selectedIds={[selectedRow?.id]}
+  //       document={selectedRow?.taiLieuCuoi}
+  //       onCancel={() => setShowViewDocument(false)}
+  //       onSign={() => {}} // Read-only
+  //       toolTransferDetail={selectedRow?.chiTietDieuDongCCDCVatTuDTOS || []}
+  //       showSignerSidebar={true}
+  //       allUnits={allUnits}
+  //       fullscreen={true}
+  //       staffs={allStaffs}
+  //       isEdit={false}
+  //     />
+  //   );
+  // }
 
   return (
     <Box sx={{ p: 2 }}>
-      <Box sx={{ 
-        mb: 2, 
-        borderBottom: 1, 
-        borderColor: "divider",
-        display: "flex",
-        justifyContent: "flex-end"
-      }}>
-        <Tabs 
-          value={subTab} 
+      <Box
+        sx={{
+          mb: 2,
+          borderBottom: 1,
+          borderColor: "divider",
+          display: "flex",
+          justifyContent: "flex-end",
+        }}
+      >
+        <Tabs
+          value={subTab}
           onChange={handleSubTabChange}
           sx={{
             minHeight: "40px",
@@ -243,25 +255,109 @@ export default function ToolTransferRecordTab() {
         </Tabs>
       </Box>
 
-      <TableCustom
-        tableId={`assetTransferRecordTab-${subTab}`}
-        title=""
-        columns={columns}
-        rows={pageData.items}
-        total={pageData.totalItems}
-        paginationModel={paginationModel}
-        onPaginationModelChange={setPaginationModel}
-        onRowClick={handleRowClick}
-        searchValue={searchValue}
-        setSearchValue={setSearchValue}
-        showStatusFilter={true}
-        showDelete={false}
-        statusOptions={statusOptions}
-        onStatusChange={setStatus}
-        statusValue={status}
-        isCheckShowShare={() => false}
-        loading={isLoading}
-      />
+      <Grid
+        container
+        sx={{
+          display: "flex",
+          alignItems: "stretch",
+          bgcolor: "background.paper",
+          borderRadius: "8px",
+          overflow: "hidden",
+          border: "1px solid",
+          borderColor: "divider",
+          height: "calc(100vh)",
+        }}
+      >
+        <Grid
+          size={{
+            xs: showViewDocument ? 6 : 12,
+          }}
+          sx={{
+            transition: "all 0.3s ease",
+            borderRight: showViewDocument ? "1px solid" : "none",
+            borderColor: "divider",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+          }}
+        >
+          <TableCustom
+            tableId={`assetTransferRecordTab-${subTab}`}
+            title=""
+            columns={columns}
+            rows={pageData.items}
+            total={pageData.totalItems}
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            onRowClick={handleRowClick}
+            searchValue={searchValue}
+            setSearchValue={setSearchValue}
+            showStatusFilter={true}
+            showDelete={false}
+            statusOptions={statusOptions}
+            onStatusChange={setStatus}
+            statusValue={status}
+            isCheckShowShare={() => false}
+            loading={isLoading}
+          />
+        </Grid>
+        {showViewDocument && (
+          <Grid
+            size={{ xs: 6 }}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              bgcolor: "white",
+              height: "100%",
+              overflow: "hidden",
+            }}
+          >
+            <Box
+              sx={{
+                p: 1,
+                borderBottom: "1px solid",
+                borderColor: "divider",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                bgcolor: "white",
+                pr: 1,
+              }}
+            >
+              <Box sx={{ ml: 2, fontWeight: "bold" }}>Xem tài liệu</Box>
+              <IconButton
+                size="small"
+                onClick={() => {
+                  setShowViewDocument(false);
+                }}
+              >
+                <VisibilityOff sx={{ fontSize: 20 }} />
+              </IconButton>
+            </Box>
+
+            <Box sx={{ flex: 1, overflow: "hidden" }}>
+              <Box sx={{ height: "calc(100vh - 200px)", overflow: "hidden" }}>
+                <SignDocumentForm
+                  key={selectedRow?.id}
+                  selectedIds={[selectedRow?.id]}
+                  document={selectedRow?.taiLieuCuoi}
+                  onCancel={() => setShowViewDocument(false)}
+                  onSign={() => {}} // Read-only
+                  toolTransferDetail={
+                    selectedRow?.chiTietDieuDongCCDCVatTuDTOS || []
+                  }
+                  showSignerSidebar={false}
+                  allUnits={allUnits}
+                  fullscreen={false}
+                  staffs={allStaffs}
+                  isEdit={false}
+                />
+              </Box>
+            </Box>
+          </Grid>
+        )}
+      </Grid>
     </Box>
   );
 }

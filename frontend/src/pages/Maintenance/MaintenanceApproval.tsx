@@ -127,17 +127,6 @@ export default function MaintenanceApprovalPage() {
 
   const { counts } = useMenuData();
 
-  const pendingCounts = [
-    counts.totalPlan,
-    counts.totalRepair,
-    counts.totalInspection,
-    (counts as any).totalBienPhap || 0,
-    counts.totalAcceptance,
-    counts.totalMaterialAssessment,
-    counts.totalIncident,
-    counts.totalIncidentInspection,
-  ];
-
   const searchDebounce = useDebounce(searchValue, 500);
   const {
     data: planPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
@@ -1254,45 +1243,54 @@ export default function MaintenanceApprovalPage() {
                 label: "Kế hoạch",
                 subLabel: "Kế hoạch bảo trì",
                 icon: ClipboardList,
+                count: counts.totalPlan,
               },
               {
                 label: "Lệnh sửa chữa",
                 subLabel: "Lệnh xử lý kỹ thuật",
                 icon: Wrench,
+                count: counts.totalRepair,
               },
               {
                 label: "BB Giám định",
                 subLabel: "Giám định máy móc",
                 icon: FileSearch,
+                count:
+                  counts.totalInspectionMachine + counts.totalInspectionVehicle,
               },
               {
                 label: "Biện pháp sửa chữa",
                 subLabel: "Biện pháp xử lý thiết bị",
                 icon: Wrench,
+                count: counts.totalMeasureMachine + counts.totalMeasureVehicle,
               },
               {
                 label: "BB Nghiệm thu",
                 subLabel: "Nghiệm thu hoàn thành",
                 icon: ClipboardCheck,
+                count:
+                  counts.totalMachineInspection + counts.totalVehicleAcceptance,
               },
               {
                 label: "BB Đánh giá VT",
                 subLabel: "Đánh giá vật tư tiêu hao",
                 icon: Boxes,
+                count: counts.totalMaterialAssessment,
               },
               {
                 label: "Phiếu báo sự cố",
                 subLabel: "Báo cáo sự cố thiết bị",
                 icon: AlertTriangle,
+                count: counts.totalIncident,
               },
               {
                 label: "BB Kiểm tra sự cố",
                 subLabel: "Kiểm tra hiện trạng SC",
                 icon: FileWarning,
+                count: counts.totalIncidentInspection,
               },
             ].map((tab, idx) => {
               const IconComponent = tab.icon;
-              const count = pendingCounts[idx] || 0;
               const isActive = activeTab === idx;
 
               return (
@@ -1372,7 +1370,7 @@ export default function MaintenanceApprovalPage() {
                       <IconComponent size={20} />
                     </Box>
 
-                    {count > 0 && (
+                    {tab.count > 0 && (
                       <Box
                         sx={{
                           display: "flex",
@@ -1393,7 +1391,7 @@ export default function MaintenanceApprovalPage() {
                             : "0 4px 8px rgba(239, 68, 68, 0.35)",
                         }}
                       >
-                        {count}
+                        {tab.count}
                       </Box>
                     )}
                   </Box>

@@ -19,12 +19,16 @@ import {
 import { showErrorAlert } from "../components/Alert";
 import {
   useMaintenanceAcceptanceTestPageQuery,
+  useMaintenanceAcceptanceTestVehiclePageQuery,
+  useMaintenanceBienPhapMayMocPageQuery,
+  useMaintenanceBienPhapPhuongTienPageQuery,
   useMaintenanceIncidentInspectionPageQuery,
   useMaintenanceIncidentPageQuery,
   useMaintenanceInspectionPageQuery,
   useMaintenanceMaterialAssessmentPageQuery,
   useMaintenancePlanningPageQuery,
   useMaintenanceRepairPageQuery,
+  useMaintenanceVehicleInspectionPageQuery,
 } from "../pages/Maintenance/mutation";
 
 interface MenuDataContextType {
@@ -53,8 +57,12 @@ interface MenuDataContextType {
     totalRepair: number;
     totalIncidentInspection: number;
     totalMaterialAssessment: number;
-    totalAcceptance: number;
-    totalInspection: number;
+    totalMachineInspection: number;
+    totalVehicleAcceptance: number;
+    totalInspectionMachine: number;
+    totalInspectionVehicle: number;
+    totalMeasureMachine: number;
+    totalMeasureVehicle: number;
   };
 }
 
@@ -125,6 +133,7 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
     999999,
   );
 
+  // kế hoạch
   const { data: plan = { items: [], totalItems: 0 } } =
     useMaintenancePlanningPageQuery(
       0,
@@ -136,6 +145,7 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
       true,
     );
 
+  // sự cố
   const { data: incident = { items: [], totalItems: 0 } } =
     useMaintenanceIncidentPageQuery(
       0,
@@ -147,6 +157,7 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
       true,
     );
 
+  // sửa chữa
   const { data: repair = { items: [], totalItems: 0 } } =
     useMaintenanceRepairPageQuery(
       0,
@@ -158,6 +169,7 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
       true,
     );
 
+  // kiểm tra sự cố
   const { data: incidentInspection = { items: [], totalItems: 0 } } =
     useMaintenanceIncidentInspectionPageQuery(
       0,
@@ -169,7 +181,8 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
       true,
     );
 
-  const { data: acceptance = { items: [], totalItems: 0 } } =
+  // nghiệm thu máy móc
+  const { data: machineInspection = { items: [], totalItems: 0 } } =
     useMaintenanceAcceptanceTestPageQuery(
       0,
       10,
@@ -180,6 +193,19 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
       true,
     );
 
+  // nghiệm thu phương tiện
+  const { data: vehicleAcceptance = { items: [], totalItems: 0 } } =
+    useMaintenanceAcceptanceTestVehiclePageQuery(
+      0,
+      10,
+      undefined,
+      undefined,
+      undefined,
+      user?.taiKhoan?.tenDangNhap,
+      true,
+    );
+
+  // đánh giá vật tư
   const { data: materialAssessment = { items: [], totalItems: 0 } } =
     useMaintenanceMaterialAssessmentPageQuery(
       0,
@@ -189,10 +215,22 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
       user?.taiKhoan?.tenDangNhap,
       true,
     );
-  const { data: inspection = { items: [], totalItems: 0 } } =
+
+  // giám định máy móc
+  const { data: inspectionMachine = { items: [], totalItems: 0 } } =
     useMaintenanceInspectionPageQuery(
       0,
-      999999,
+      10,
+      undefined,
+      undefined,
+      undefined,
+      user?.taiKhoan?.tenDangNhap,
+      true,
+    );
+  const { data: inspectionVehicle = { items: [], totalItems: 0 } } =
+    useMaintenanceVehicleInspectionPageQuery(
+      0,
+      10,
       undefined,
       undefined,
       undefined,
@@ -200,6 +238,28 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
       true,
     );
 
+  // biên pháp máy móc
+  const { data: bienPhapMayMoc = { items: [], totalItems: 0 } } =
+    useMaintenanceBienPhapMayMocPageQuery(
+      0,
+      10,
+      undefined,
+      undefined,
+      user?.taiKhoan?.tenDangNhap,
+      true,
+    );
+
+  // biên pháp phương tiện
+  const { data: bienPhapPhuongTien = { items: [], totalItems: 0 } } =
+    useMaintenanceBienPhapPhuongTienPageQuery(
+      0,
+      10,
+      undefined,
+      undefined,
+      user?.taiKhoan?.tenDangNhap,
+      true,
+    );
+  // điều chuyển tài sản
   const { data: transferAssetPage = { items: [], totalItems: 0 } } =
     useAssetTransferPageQuery(
       0,
@@ -212,6 +272,7 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
       true,
     );
 
+  // điều chuyển công cụ
   const { data: transferToolPage = { items: [], totalItems: 0 } } =
     useToolTransferPageQuery(
       0,
@@ -266,10 +327,12 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
     isBanHanh,
   );
 
+  // bàn giao tài sản
   const assetHandoverCount = getAssetHandoverCount(
     tenDangNhap,
     assetHandover.items,
   );
+  // bàn giao công cụ
   const toolHandoverCount = getToolHandoverCount(
     tenDangNhap,
     toolHandover.items,
@@ -301,8 +364,12 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
       totalRepair: repair.totalItems,
       totalIncidentInspection: incidentInspection.totalItems,
       totalMaterialAssessment: materialAssessment.totalItems,
-      totalAcceptance: acceptance.totalItems,
-      totalInspection: inspection.totalItems,
+      totalMachineInspection: machineInspection.totalItems,
+      totalVehicleAcceptance: vehicleAcceptance.totalItems,
+      totalInspectionMachine: inspectionMachine.totalItems,
+      totalInspectionVehicle: inspectionVehicle.totalItems,
+      totalMeasureMachine: bienPhapMayMoc.totalItems,
+      totalMeasureVehicle: bienPhapPhuongTien.totalItems,
     },
   };
 

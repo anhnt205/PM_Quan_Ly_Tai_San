@@ -1,10 +1,13 @@
 import { useState, SyntheticEvent } from "react";
-import { Box, Tab, Tabs } from "@mui/material";
+import { Badge, Box, Tab, Tabs } from "@mui/material";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import { useSelector } from "react-redux";
 import TableCustom from "../../components/common/TableCustom";
 import { AssetTransferData, SignaturesData } from "../AssetTransfer/types";
-import { useAssetTranferMutation, useAssetTransferPageQuery } from "../AssetTransfer/Mutation";
+import {
+  useAssetTranferMutation,
+  useAssetTransferPageQuery,
+} from "../AssetTransfer/Mutation";
 import {
   canSign,
   getDecision,
@@ -26,14 +29,21 @@ import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
 import S3Service from "../../services/S3Service";
 import SignDocumentForm from "../AssetTransfer/components/SignDocumentForm";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
+import { Construction } from "@mui/icons-material";
 
 interface AssetTransferApprovalTabProps {
-  isBanHanh: boolean;
+  assetTransferCounts: any;
 }
 
-export default function AssetTransferApprovalTab({ isBanHanh }: AssetTransferApprovalTabProps) {
+export default function AssetTransferApprovalTab({
+  assetTransferCounts,
+}: AssetTransferApprovalTabProps) {
+  console.log("assetTransferCounts", assetTransferCounts);
   const [subTab, setSubTab] = useState(0); // 0: Cấp phát, 1: Điều chuyển, 2: Thu hồi
-  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 10,
+  });
   const [searchValue, setSearchValue] = useState("");
   const [status, setStatus] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -42,7 +52,8 @@ export default function AssetTransferApprovalTab({ isBanHanh }: AssetTransferApp
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
 
   const { user } = useSelector((state: any) => state.user);
-  const { signMutation, updateManyMutation, decisionMutation } = useAssetTranferMutation();
+  const { signMutation, updateManyMutation, decisionMutation } =
+    useAssetTranferMutation();
 
   const type = subTab + 1; // 1, 2, 3
   const debouncedSearch = useDebounce(searchValue, 600);
@@ -61,7 +72,7 @@ export default function AssetTransferApprovalTab({ isBanHanh }: AssetTransferApp
     debouncedSearch,
     type,
     user?.taiKhoan?.tenDangNhap,
-    status ? Number(status) : undefined,
+    status !== "" ? Number(status) : undefined,
     undefined,
     undefined,
     true,
@@ -190,9 +201,8 @@ export default function AssetTransferApprovalTab({ isBanHanh }: AssetTransferApp
       headerAlign: "center",
       align: "center",
       renderCell: (params) => {
-        return showDownloadFile(
-          params.value,
-          () => S3Service.download(params.row.duongDanFile),
+        return showDownloadFile(params.value, () =>
+          S3Service.download(params.row.duongDanFile),
         );
       },
     },
@@ -265,15 +275,17 @@ export default function AssetTransferApprovalTab({ isBanHanh }: AssetTransferApp
 
   return (
     <Box sx={{ p: 2 }}>
-      <Box sx={{ 
-        mb: 2, 
-        borderBottom: 1, 
-        borderColor: "divider",
-        display: "flex",
-        justifyContent: "flex-end"
-      }}>
-        <Tabs 
-          value={subTab} 
+      <Box
+        sx={{
+          mb: 2,
+          borderBottom: 1,
+          borderColor: "divider",
+          display: "flex",
+          justifyContent: "flex-end",
+        }}
+      >
+        <Tabs
+          value={subTab}
           onChange={handleSubTabChange}
           sx={{
             minHeight: "40px",
@@ -291,9 +303,30 @@ export default function AssetTransferApprovalTab({ isBanHanh }: AssetTransferApp
             },
           }}
         >
-          <Tab label="Cấp phát tài sản" />
-          <Tab label="Điều chuyển tài sản" />
-          <Tab label="Thu hồi tài sản" />
+          <Tab
+            icon={
+              <Badge badgeContent={assetTransferCounts?.c1 ?? 0} color="error">
+                <Construction sx={{ fontSize: 20 }} />
+              </Badge>
+            }
+            label="Cấp phát tài sản"
+          />
+          <Tab
+            icon={
+              <Badge badgeContent={assetTransferCounts?.c2 ?? 0} color="error">
+                <Construction sx={{ fontSize: 20 }} />
+              </Badge>
+            }
+            label="Điều chuyển tài sản"
+          />
+          <Tab
+            icon={
+              <Badge badgeContent={assetTransferCounts?.c3 ?? 0} color="error">
+                <Construction sx={{ fontSize: 20 }} />
+              </Badge>
+            }
+            label="Thu hồi tài sản"
+          />
         </Tabs>
       </Box>
 
@@ -305,7 +338,7 @@ export default function AssetTransferApprovalTab({ isBanHanh }: AssetTransferApp
         total={pageData.totalItems}
         paginationModel={paginationModel}
         onPaginationModelChange={setPaginationModel}
-        onRowClick={handleRowClick}
+        onRowClick={() => {}}
         selectedIds={selectedIds}
         onSelectionChange={setSelectedIds}
         onSign={handleViewSignAssets}

@@ -1,10 +1,13 @@
 import { useState, SyntheticEvent } from "react";
-import { Box, Tab, Tabs } from "@mui/material";
+import { Badge, Box, Tab, Tabs } from "@mui/material";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import { useSelector } from "react-redux";
 import TableCustom from "../../components/common/TableCustom";
 import { ToolTransferData, ToolSignature } from "../ToolTransfer/types";
-import { useToolTransferMutation, useToolTransferPageQuery } from "../ToolTransfer/Mutation";
+import {
+  useToolTransferMutation,
+  useToolTransferPageQuery,
+} from "../ToolTransfer/Mutation";
 import {
   canSign,
   getDecision,
@@ -25,14 +28,20 @@ import { useAllUnitsQuery } from "../Unit/Mutation";
 import S3Service from "../../services/S3Service";
 import SignDocumentForm from "../ToolTransfer/components/SignDocumentForm";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
+import { Construction } from "@mui/icons-material";
 
 interface ToolTransferApprovalTabProps {
-  isBanHanh: boolean;
+  toolTransferCounts: any;
 }
 
-export default function ToolTransferApprovalTab({ isBanHanh }: ToolTransferApprovalTabProps) {
+export default function ToolTransferApprovalTab({
+  toolTransferCounts,
+}: ToolTransferApprovalTabProps) {
   const [subTab, setSubTab] = useState(0); // 0: Cấp phát, 1: Điều chuyển, 2: Thu hồi
-  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 10,
+  });
   const [searchValue, setSearchValue] = useState("");
   const [status, setStatus] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -41,23 +50,35 @@ export default function ToolTransferApprovalTab({ isBanHanh }: ToolTransferAppro
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
 
   const { user } = useSelector((state: any) => state.user);
-  const { signMutation, updateManyMutation, decisionMutation, handleSignatureList } = useToolTransferMutation();
+  const {
+    signMutation,
+    updateManyMutation,
+    decisionMutation,
+    handleSignatureList,
+  } = useToolTransferMutation();
 
   const type = subTab + 1; // 1, 2, 3
   const debouncedSearch = useDebounce(searchValue, 600);
 
-  const { data: pageData = { items: [], totalItems: 0, trangThaiCounts: {}, loaiCounts: {} }, isLoading } = 
-    useToolTransferPageQuery(
-      paginationModel.page,
-      paginationModel.pageSize,
-      debouncedSearch,
-      user?.taiKhoan?.tenDangNhap,
-      type,
-      status ? Number(status) : undefined,
-      undefined,
-      undefined,
-      true
-    );
+  const {
+    data: pageData = {
+      items: [],
+      totalItems: 0,
+      trangThaiCounts: {},
+      loaiCounts: {},
+    },
+    isLoading,
+  } = useToolTransferPageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    debouncedSearch,
+    user?.taiKhoan?.tenDangNhap,
+    type,
+    status !== "" ? Number(status) : undefined,
+    undefined,
+    undefined,
+    true,
+  );
 
   const { data: allStaffs = [] } = useAllStaffsQuery();
   const { data: allUnits = [] } = useAllUnitsQuery();
@@ -75,12 +96,12 @@ export default function ToolTransferApprovalTab({ isBanHanh }: ToolTransferAppro
     setSelectedIds([]);
   };
 
-  const handleRowClick = (params: GridRowParams) => {
-    const data = params.row as ToolTransferData;
-    setSelectedRow(data);
-    setSelectedDocument(data.taiLieuCuoi);
-    setShowSignDocument(true);
-  };
+  // const handleRowClick = (params: GridRowParams) => {
+  //   const data = params.row as ToolTransferData;
+  //   setSelectedRow(data);
+  //   setSelectedDocument(data.taiLieuCuoi);
+  //   setShowSignDocument(true);
+  // };
 
   const handleSign = (data: ToolSignature[]) => {
     signMutation.mutate({
@@ -182,9 +203,8 @@ export default function ToolTransferApprovalTab({ isBanHanh }: ToolTransferAppro
       align: "center",
       renderCell: (params) => {
         if (!params.value) return null;
-        return showDownloadFile(
-          params.value,
-          () => S3Service.download(params.row.duongDanFile),
+        return showDownloadFile(params.value, () =>
+          S3Service.download(params.row.duongDanFile),
         );
       },
     },
@@ -257,15 +277,17 @@ export default function ToolTransferApprovalTab({ isBanHanh }: ToolTransferAppro
 
   return (
     <Box sx={{ p: 2 }}>
-      <Box sx={{ 
-        mb: 2, 
-        borderBottom: 1, 
-        borderColor: "divider",
-        display: "flex",
-        justifyContent: "flex-end"
-      }}>
-        <Tabs 
-          value={subTab} 
+      <Box
+        sx={{
+          mb: 2,
+          borderBottom: 1,
+          borderColor: "divider",
+          display: "flex",
+          justifyContent: "flex-end",
+        }}
+      >
+        <Tabs
+          value={subTab}
           onChange={handleSubTabChange}
           sx={{
             minHeight: "40px",
@@ -283,9 +305,30 @@ export default function ToolTransferApprovalTab({ isBanHanh }: ToolTransferAppro
             },
           }}
         >
-          <Tab label="Cấp phát CCDC - vật tư" />
-          <Tab label="Điều chuyển CCDC - vật tư" />
-          <Tab label="Thu hồi CCDC - vật tư" />
+          <Tab
+            icon={
+              <Badge badgeContent={toolTransferCounts?.c1 ?? 0} color="error">
+                <Construction sx={{ fontSize: 20 }} />
+              </Badge>
+            }
+            label="Cấp phát CCDC - vật tư"
+          />
+          <Tab
+            icon={
+              <Badge badgeContent={toolTransferCounts?.c2 ?? 0} color="error">
+                <Construction sx={{ fontSize: 20 }} />
+              </Badge>
+            }
+            label="Điều chuyển CCDC - vật tư"
+          />
+          <Tab
+            icon={
+              <Badge badgeContent={toolTransferCounts?.c3 ?? 0} color="error">
+                <Construction sx={{ fontSize: 20 }} />
+              </Badge>
+            }
+            label="Thu hồi CCDC - vật tư"
+          />
         </Tabs>
       </Box>
 
@@ -297,7 +340,7 @@ export default function ToolTransferApprovalTab({ isBanHanh }: ToolTransferAppro
         total={pageData.totalItems}
         paginationModel={paginationModel}
         onPaginationModelChange={setPaginationModel}
-        onRowClick={handleRowClick}
+        onRowClick={() => {}}
         selectedIds={selectedIds}
         onSelectionChange={setSelectedIds}
         onSign={handleViewSignTools}

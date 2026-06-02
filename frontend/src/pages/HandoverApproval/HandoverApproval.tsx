@@ -1,16 +1,11 @@
 import { useState, SyntheticEvent } from "react";
-import { Box, Tab, Tabs, Badge, Typography } from "@mui/material";
+import { Box, Tab, Tabs, Badge } from "@mui/material";
 import PageAction from "../../components/common/PageAction";
 import AssetApprovalTab from "./AssetApprovalTab";
 import ToolApprovalTab from "./ToolApprovalTab";
 import { Inventory, Construction } from "@mui/icons-material";
 import { useSelector } from "react-redux";
-import { useAssetHandoverPageQuery } from "../AssetHandover/Mutation";
-import { useToolHandoverPageQuery } from "../ToolHandover/Mutation";
-import {
-  getAssetHandoverCount,
-  getToolHandoverCount,
-} from "../../utils/helpers";
+import { useMenuData } from "../../hooks/useMenuData";
 
 export default function HandoverApproval() {
   const [mainTab, setMainTab] = useState(0);
@@ -19,31 +14,11 @@ export default function HandoverApproval() {
   const handleMainTabChange = (_event: SyntheticEvent, newValue: number) => {
     setMainTab(newValue);
   };
-
-  const { data: assetHandover = { items: [] } } = useAssetHandoverPageQuery(
-    0,
-    999999,
-    undefined,
-    user?.taiKhoan?.tenDangNhap,
-    undefined,
-    true,
-  );
-  const assetHandoverCount = getAssetHandoverCount(
-    user?.taiKhoan?.tenDangNhap,
-    assetHandover.items,
-  );
-
-  const { data: toolHandover = { items: [] } } = useToolHandoverPageQuery(
-    0,
-    999999,
-    undefined,
-    undefined,
-    true,
-  );
-  const toolHandoverCount = getToolHandoverCount(
-    user?.taiKhoan?.tenDangNhap,
-    toolHandover.items,
-  );
+  const { counts } = useMenuData();
+  const {
+    assetHandover: assetHandoverCounts,
+    toolHandover: toolHandoverCounts,
+  } = counts;
 
   return (
     <Box
@@ -104,7 +79,7 @@ export default function HandoverApproval() {
           >
             <Tab
               icon={
-                <Badge badgeContent={assetHandoverCount} color="error">
+                <Badge badgeContent={assetHandoverCounts} color="error">
                   <Inventory sx={{ fontSize: 20 }} />
                 </Badge>
               }
@@ -113,7 +88,7 @@ export default function HandoverApproval() {
             />
             <Tab
               icon={
-                <Badge badgeContent={toolHandoverCount} color="error">
+                <Badge badgeContent={toolHandoverCounts} color="error">
                   <Construction sx={{ fontSize: 20 }} />
                 </Badge>
               }

@@ -166,7 +166,34 @@ function App() {
       ) {
         console.log("Handling socket message in App.tsx:", data);
         queryClient.invalidateQueries({
-          queryKey: ["acceptanceTestPage"],
+          queryKey: ["nghiemThuMayMocPage"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["nghiemThuPhuongTienPage"],
+        });
+      } else if (
+        (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
+          user?.taiKhoan?.tenDangNhap === "admin") &&
+        data.type === MessageTypeFunctions.INSPECTION
+      ) {
+        console.log("Handling socket message in App.tsx:", data);
+        queryClient.invalidateQueries({
+          queryKey: ["inspectionPage"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["vehicleInspectionPage"],
+        });
+      } else if (
+        (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
+          user?.taiKhoan?.tenDangNhap === "admin") &&
+        data.type === MessageTypeFunctions.MEASURE
+      ) {
+        console.log("Handling socket message in App.tsx:", data);
+        queryClient.invalidateQueries({
+          queryKey: ["bienPhapMayMocPage"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["bienPhapPhuongTienPage"],
         });
       }
     });

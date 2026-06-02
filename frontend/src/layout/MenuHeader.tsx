@@ -331,7 +331,12 @@ export default function Menuheader() {
     totalRepair,
     totalIncidentInspection,
     totalMaterialAssessment,
-    totalAcceptance,
+    totalInspectionMachine,
+    totalInspectionVehicle,
+    totalMachineInspection,
+    totalVehicleAcceptance,
+    totalMeasureMachine,
+    totalMeasureVehicle,
   } = counts;
 
   const handleConfirmExpiration = async (
@@ -547,7 +552,12 @@ export default function Menuheader() {
         totalRepair +
         totalIncidentInspection +
         totalMaterialAssessment +
-        totalAcceptance,
+        totalInspectionMachine +
+        totalInspectionVehicle +
+        totalMachineInspection +
+        totalVehicleAcceptance +
+        totalMeasureMachine +
+        totalMeasureVehicle,
       subMenu: [
         {
           text: "Quản lý sửa chữa",
@@ -574,7 +584,12 @@ export default function Menuheader() {
             totalRepair +
             totalIncidentInspection +
             totalMaterialAssessment +
-            totalAcceptance,
+            totalInspectionMachine +
+            totalInspectionVehicle +
+            totalMachineInspection +
+            totalVehicleAcceptance +
+            totalMeasureMachine +
+            totalMeasureVehicle,
         },
         {
           text: "Quản lý biên bản",

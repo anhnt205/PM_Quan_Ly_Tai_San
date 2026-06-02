@@ -1,15 +1,7 @@
 import { useState } from "react";
-import {
-  Box,
-  Grid,
-  IconButton,
-  Tooltip,
-  Tabs,
-  Tab,
-} from "@mui/material";
+import { Box, Grid, IconButton, Tabs, Tab } from "@mui/material";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import { useSelector } from "react-redux";
-import { Eye } from "lucide-react";
 import { VisibilityOff } from "@mui/icons-material";
 
 import TableCustom from "../../components/common/TableCustom";
@@ -23,13 +15,9 @@ import { useAllStaffsQuery } from "../Staff/Mutation";
 import { useAllDepartmentsQuery } from "../Department/Mutation";
 import { useAllUnitsQuery } from "../Unit/Mutation";
 import { useAllPositionsQuery } from "../Position/Mutation";
-import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
 import S3Service from "../../services/S3Service";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
-import {
-  showDownloadFile,
-  showStatusDocument,
-} from "../AssetTransfer/config";
+import { showDownloadFile } from "../AssetTransfer/config";
 import {
   canSign,
   getPermissionSigning,
@@ -54,28 +42,29 @@ export default function AssetApprovalTab() {
   const [isFullPageSign, setIsFullPageSign] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [tabValue, setTabValue] = useState(0);
-  const [sidebarMode, setSidebarMode] = useState<"document" | "signer" | null>(null);
+  const [sidebarMode, setSidebarMode] = useState<"document" | "signer" | null>(
+    null,
+  );
 
   const { user } = useSelector((state: any) => state.user);
   const { signMutation } = useAssetHandoverMutation();
 
   const searchDebounce = useDebounce(searchValue, 600);
-  
+
   const { data: handoverPage = { items: [], totalItems: 0 }, isLoading } =
     useAssetHandoverPageQuery(
       paginationModel.page,
       paginationModel.pageSize,
       searchDebounce,
       user?.taiKhoan?.tenDangNhap,
-      currentStatus ? Number(currentStatus) : undefined,
-      true
+      currentStatus !== "" ? Number(currentStatus) : undefined,
+      true,
     );
 
   const { data: staffs = [] } = useAllStaffsQuery();
   const { data: departments = [] } = useAllDepartmentsQuery();
   const { data: allUnits = [] } = useAllUnitsQuery();
   const { data: positions = [] } = useAllPositionsQuery();
-  const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
 
   const handleClose = () => {
     setSelectedIds([]);
@@ -261,11 +250,12 @@ export default function AssetApprovalTab() {
           overflow: "hidden",
         }}
       >
-        <Grid 
+        <Grid
           size={{ xs: showSidebar && sidebarMode === "document" ? 6 : 12 }}
           sx={{
             transition: "all 0.3s ease",
-            borderRight: showSidebar && sidebarMode === "document" ? "1px solid" : "none",
+            borderRight:
+              showSidebar && sidebarMode === "document" ? "1px solid" : "none",
             borderColor: "divider",
             overflow: "hidden",
           }}

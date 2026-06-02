@@ -2588,14 +2588,16 @@ export const useMaintenanceMutation = (
               : activeTab === 2
                 ? MessageTypeFunctions.INSPECTION
                 : activeTab === 3
-                  ? MessageTypeFunctions.ACCEPTANCE_TEST
+                  ? MessageTypeFunctions.MEASURE
                   : activeTab === 4
-                    ? MessageTypeFunctions.MATERIAL
-                    : activeTab === 5
-                      ? MessageTypeFunctions.INCIDENT
-                      : activeTab === 6
-                        ? MessageTypeFunctions.INSPECTION
-                        : "",
+                    ? MessageTypeFunctions.ACCEPTANCE_TEST
+                      : activeTab === 5
+                        ? MessageTypeFunctions.MATERIAL
+                        : activeTab === 6
+                          ? MessageTypeFunctions.INCIDENT
+                          : activeTab === 7
+                            ? MessageTypeFunctions.INCIDENT_INSPECTION
+                            : "",
         recieve: list,
       });
       showSuccessAlert("Ký thành công");

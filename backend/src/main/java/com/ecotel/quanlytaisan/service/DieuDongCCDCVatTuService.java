@@ -388,26 +388,89 @@ public class DieuDongCCDCVatTuService {
      */
     public boolean isNeedToSign(DieuDongCCDCVatTuDTO item, String userId) {
         if (userId == null || userId.isEmpty()) return false;
-        if (!Boolean.TRUE.equals(item.getShare())) return false;
-        if (item.getTrangThai() == 2 || item.getTrangThai() == 3) return false;
-
-        // Bước 1: Người lập phiếu ký nháy
-        if (Boolean.TRUE.equals(item.getNguoiLapPhieuKyNhay())) {
-            if (!Boolean.TRUE.equals(item.getTrangThaiKyNhay()))
-                return userId.equals(item.getIdNguoiKyNhay());
+        
+        // ===== Trạng thái nháp/hoàn thành/hủy bỏ (trangThai 2, 3 bỏ qua) =====
+        if (item.getTrangThai() != null && (item.getTrangThai() == 2 || item.getTrangThai() == 3||item.getTrangThai() == 4)) {
+            return false;
         }
 
-        // Bước 2: Người trình duyệt cấp phòng
-        boolean kyNhayDone = !Boolean.TRUE.equals(item.getNguoiLapPhieuKyNhay())
-                || Boolean.TRUE.equals(item.getTrangThaiKyNhay());
-        if (kyNhayDone && !Boolean.TRUE.equals(item.getTrinhDuyetCapPhongXacNhan())) {
-            return userId.equals(item.getIdTrinhDuyetCapPhong());
+        // ===== Kiểm tra điều kiện share / người tạo ký trước khi share =====
+        if (!Boolean.TRUE.equals(item.getShare())) {
+            // Nếu chưa share, chỉ cho phép ký nếu userId là người tạo trùng với người ký đầu tiên và người đó chưa ký.
+            boolean isCreatorAndFirstSigner = false;
+
+            // 1. Kiểm tra người lập/ký nháy (người ký đầu tiên)
+            if (Boolean.TRUE.equals(item.getNguoiLapPhieuKyNhay()) && item.getIdNguoiKyNhay() != null && !item.getIdNguoiKyNhay().isEmpty()) {
+                if (userId.equalsIgnoreCase(item.getNguoiTao()) && userId.equalsIgnoreCase(item.getIdNguoiKyNhay())) {
+                    if (!Boolean.TRUE.equals(item.getTrangThaiKyNhay())) {
+                        isCreatorAndFirstSigner = true;
+                    }
+                }
+            } else if (item.getIdTrinhDuyetCapPhong() != null && !item.getIdTrinhDuyetCapPhong().isEmpty()) {
+                // 2. Nếu không có ký nháy, thì người duyệt cấp phòng là người ký đầu tiên
+                if (userId.equalsIgnoreCase(item.getNguoiTao()) && userId.equalsIgnoreCase(item.getIdTrinhDuyetCapPhong())) {
+                    if (!Boolean.TRUE.equals(item.getTrinhDuyetCapPhongXacNhan())) {
+                        isCreatorAndFirstSigner = true;
+                    }
+                }
+            } else {
+                // 3. Nếu không có cả hai, kiểm tra người ký đầu tiên trong danh sách NguoiKy
+                List<NguoiKy> kyList = kyTaiLieuService.getAllNguoiKyByIdTaiLieu(item.getId());
+                if (kyList != null && !kyList.isEmpty()) {
+                    kyList.sort((a, b) -> {
+                        String idA = a.getId() != null ? a.getId() : "";
+                        String idB = b.getId() != null ? b.getId() : "";
+                        return idA.compareTo(idB);
+                    });
+                    
+                    NguoiKy firstUnsigned = null;
+                    for (NguoiKy nk : kyList) {
+                        if (nk.getTrangThai() != 1) {
+                            firstUnsigned = nk;
+                            break;
+                        }
+                    }
+                    if (firstUnsigned != null) {
+                        if (userId.equalsIgnoreCase(item.getNguoiTao()) && userId.equalsIgnoreCase(firstUnsigned.getIdNguoiKy())) {
+                            isCreatorAndFirstSigner = true;
+                        }
+                    }
+                }
+            }
+
+            if (!isCreatorAndFirstSigner) {
+                return false;
+            }
         }
 
-        // Bước 3: NguoiKy list & Giám đốc
-        if (Boolean.TRUE.equals(item.getTrinhDuyetCapPhongXacNhan())) {
+        // ===== Lượt ký tuần tự =====
+
+        // 1. Ký nháy
+        if (Boolean.TRUE.equals(item.getNguoiLapPhieuKyNhay()) && item.getIdNguoiKyNhay() != null && !item.getIdNguoiKyNhay().isEmpty()) {
+            if (!Boolean.TRUE.equals(item.getTrangThaiKyNhay())) {
+                return userId.equalsIgnoreCase(item.getIdNguoiKyNhay());
+            }
+        }
+
+        // 2. Trình duyệt cấp phòng
+        boolean kyNhayDone = !Boolean.TRUE.equals(item.getNguoiLapPhieuKyNhay()) || Boolean.TRUE.equals(item.getTrangThaiKyNhay());
+        if (kyNhayDone && item.getIdTrinhDuyetCapPhong() != null && !item.getIdTrinhDuyetCapPhong().isEmpty()) {
+            if (!Boolean.TRUE.equals(item.getTrinhDuyetCapPhongXacNhan())) {
+                return userId.equalsIgnoreCase(item.getIdTrinhDuyetCapPhong());
+            }
+        }
+
+        // 3. Danh sách người ký (kyList)
+        boolean capPhongDone = kyNhayDone && (item.getIdTrinhDuyetCapPhong() == null || item.getIdTrinhDuyetCapPhong().isEmpty() || Boolean.TRUE.equals(item.getTrinhDuyetCapPhongXacNhan()));
+        if (capPhongDone) {
             List<NguoiKy> kyList = kyTaiLieuService.getAllNguoiKyByIdTaiLieu(item.getId());
             if (kyList != null && !kyList.isEmpty()) {
+                kyList.sort((a, b) -> {
+                    String idA = a.getId() != null ? a.getId() : "";
+                    String idB = b.getId() != null ? b.getId() : "";
+                    return idA.compareTo(idB);
+                });
+
                 NguoiKy firstUnsigned = null;
                 boolean allSigned = true;
                 for (NguoiKy nk : kyList) {
@@ -416,14 +479,24 @@ public class DieuDongCCDCVatTuService {
                         if (firstUnsigned == null) firstUnsigned = nk;
                     }
                 }
-                if (firstUnsigned != null) return userId.equals(firstUnsigned.getIdNguoiKy());
-                if (allSigned && !Boolean.TRUE.equals(item.getTrinhDuyetGiamDocXacNhan()))
-                    return userId.equals(item.getIdTrinhDuyetGiamDoc());
+                if (firstUnsigned != null) return userId.equalsIgnoreCase(firstUnsigned.getIdNguoiKy());
+                
+                // 4. Trình duyệt Giám đốc (sau khi tất cả NguoiKy đã ký)
+                if (allSigned && item.getIdTrinhDuyetGiamDoc() != null && !item.getIdTrinhDuyetGiamDoc().isEmpty()) {
+                    if (!Boolean.TRUE.equals(item.getTrinhDuyetGiamDocXacNhan())) {
+                        return userId.equalsIgnoreCase(item.getIdTrinhDuyetGiamDoc());
+                    }
+                }
             } else {
-                if (!Boolean.TRUE.equals(item.getTrinhDuyetGiamDocXacNhan()))
-                    return userId.equals(item.getIdTrinhDuyetGiamDoc());
+                // Không có người ký trong danh sách, chuyển thẳng sang Giám đốc
+                if (item.getIdTrinhDuyetGiamDoc() != null && !item.getIdTrinhDuyetGiamDoc().isEmpty()) {
+                    if (!Boolean.TRUE.equals(item.getTrinhDuyetGiamDocXacNhan())) {
+                        return userId.equalsIgnoreCase(item.getIdTrinhDuyetGiamDoc());
+                    }
+                }
             }
         }
+
         return false;
     }
 

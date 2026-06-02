@@ -7,6 +7,7 @@ import com.ecotel.quanlytaisan.model.GiamDinhPhuongTien;
 import com.ecotel.quanlytaisan.model.GiamDinhPhuongTienDTO;
 import com.ecotel.quanlytaisan.model.GiamDinhPhuongTienChiTiet;
 import com.ecotel.quanlytaisan.model.PageResponse;
+import com.ecotel.quanlytaisan.model.SuaChuaDTO;
 import com.ecotel.quanlytaisan.model.NguoiKy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -255,19 +256,72 @@ public class GiamDinhPhuongTienService {
 
     public boolean isNeedToSign(GiamDinhPhuongTienDTO item, String userId) {
         if (userId == null || userId.isEmpty()) return false;
-        if (!Boolean.TRUE.equals(item.getShare())) return false;
-        if (item.getTrangThai() == 2 || item.getTrangThai() == 3) return false;
-
-        if (item.getIdNguoiLap() != null && !item.getIdNguoiLap().isEmpty()) {
-            if (!Boolean.TRUE.equals(item.getNguoiLapXacNhan()))
-                return userId.equals(item.getIdNguoiLap());
+        
+        // ===== Trạng thái nháp/hoàn thành/hủy bỏ (trangThai 2, 3 bỏ qua) =====
+        if (item.getTrangThai() != null && (item.getTrangThai() == 2 || item.getTrangThai() == 3)) {
+            return false;
         }
 
+        // ===== Kiểm tra điều kiện share / người tạo ký trước khi share =====
+        if (!Boolean.TRUE.equals(item.getShare())) {
+            // Nếu chưa share, chỉ cho phép ký nếu userId là người tạo trùng với người ký đầu tiên và người đó chưa ký.
+            boolean isCreatorAndFirstSigner = false;
+
+            // 1. Kiểm tra người lập (người ký đầu tiên)
+            if (item.getIdNguoiLap() != null && !item.getIdNguoiLap().isEmpty()) {
+                if (userId.equalsIgnoreCase(item.getNguoiTao()) && userId.equalsIgnoreCase(item.getIdNguoiLap())) {
+                    if (!Boolean.TRUE.equals(item.getNguoiLapXacNhan())) {
+                        isCreatorAndFirstSigner = true;
+                    }
+                }
+            } else {
+                // 2. Nếu không có người lập, kiểm tra người ký đầu tiên trong danh sách NguoiKy
+                List<NguoiKy> kyList = kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId());
+                if (kyList != null && !kyList.isEmpty()) {
+                    kyList.sort((a, b) -> {
+                        String idA = a.getId() != null ? a.getId() : "";
+                        String idB = b.getId() != null ? b.getId() : "";
+                        return idA.compareTo(idB);
+                    });
+                    
+                    NguoiKy firstUnsigned = null;
+                    for (NguoiKy nk : kyList) {
+                        if (nk.getTrangThai() != 1) {
+                            firstUnsigned = nk;
+                            break;
+                        }
+                    }
+                    if (firstUnsigned != null) {
+                        if (userId.equalsIgnoreCase(item.getNguoiTao()) && userId.equalsIgnoreCase(firstUnsigned.getIdNguoiKy())) {
+                            isCreatorAndFirstSigner = true;
+                        }
+                    }
+                }
+            }
+
+            if (!isCreatorAndFirstSigner) {
+                return false;
+            }
+        }
+
+        // Bước 1: Người lập
+        if (item.getIdNguoiLap() != null && !item.getIdNguoiLap().isEmpty()) {
+            if (!Boolean.TRUE.equals(item.getNguoiLapXacNhan()))
+                return userId.equalsIgnoreCase(item.getIdNguoiLap());
+        }
+
+        // Bước 2: NguoiKy list & Giám đốc
         boolean lapDone = item.getIdNguoiLap() == null || item.getIdNguoiLap().isEmpty()
                 || Boolean.TRUE.equals(item.getNguoiLapXacNhan());
         if (lapDone) {
             List<NguoiKy> kyList = kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId());
             if (kyList != null && !kyList.isEmpty()) {
+                kyList.sort((a, b) -> {
+                    String idA = a.getId() != null ? a.getId() : "";
+                    String idB = b.getId() != null ? b.getId() : "";
+                    return idA.compareTo(idB);
+                });
+
                 NguoiKy firstUnsigned = null;
                 boolean allSigned = true;
                 for (NguoiKy nk : kyList) {
@@ -276,12 +330,12 @@ public class GiamDinhPhuongTienService {
                         if (firstUnsigned == null) firstUnsigned = nk;
                     }
                 }
-                if (firstUnsigned != null) return userId.equals(firstUnsigned.getIdNguoiKy());
+                if (firstUnsigned != null) return userId.equalsIgnoreCase(firstUnsigned.getIdNguoiKy());
                 if (allSigned && !Boolean.TRUE.equals(item.getGiamDocXacNhan()))
-                    return userId.equals(item.getIdGiamDoc());
+                    return userId.equalsIgnoreCase(item.getIdGiamDoc());
             } else {
                 if (!Boolean.TRUE.equals(item.getGiamDocXacNhan()))
-                    return userId.equals(item.getIdGiamDoc());
+                    return userId.equalsIgnoreCase(item.getIdGiamDoc());
             }
         }
         return false;
