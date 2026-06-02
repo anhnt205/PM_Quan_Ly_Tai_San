@@ -102,7 +102,7 @@ export default function TaisanGroupCard({
         transition: "all 0.3s ease",
 
         "&:hover": {
-            boxShadow: "0 2px 8px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06)",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06)",
           // transform: "translateY(-2px)",
         },
       }}
@@ -238,12 +238,15 @@ export default function TaisanGroupCard({
               flex: 1,
               p: 1.2,
               borderRadius: 2,
-              background:
-                "linear-gradient(135deg, rgba(13,158,109,0.05) 0%, rgba(13,158,109,0.12) 100%)",
-              border: "1px solid rgba(13,158,109,0.08)",
+              background: "#f0fdf8",
+              border: "1px solid #d1fae9",
               display: "flex",
               alignItems: "center",
               gap: 1,
+              "&:hover": {
+                borderColor: "#04b46e",
+                background: "#f0fdf8",
+              },
             }}
           >
             <Inventory
@@ -257,7 +260,7 @@ export default function TaisanGroupCard({
               <Typography
                 variant="caption"
                 sx={{
-                  color: "text.secondary",
+                  color: "#0d9e6d",
                   display: "block",
                   fontSize: "0.7rem",
                   textTransform: "uppercase",
@@ -288,12 +291,15 @@ export default function TaisanGroupCard({
               flex: 1.2,
               p: 1.2,
               borderRadius: 2,
-              background:
-                "linear-gradient(135deg, rgba(26,115,232,0.05) 0%, rgba(26,115,232,0.12) 100%)",
-              border: "1px solid rgba(26,115,232,0.08)",
+              background: "#eff6ff",
+              border: "1px solid #dbeafe",
               display: "flex",
               alignItems: "center",
               gap: 1,
+              "&:hover": {
+                borderColor: "#3b82f6",
+                background: "#eff6ff",
+              },
             }}
           >
             <AttachMoney
@@ -307,7 +313,7 @@ export default function TaisanGroupCard({
               <Typography
                 variant="caption"
                 sx={{
-                  color: "text.secondary",
+                  color: "#1a73e8",
                   display: "block",
                   fontSize: "0.7rem",
                   textTransform: "uppercase",

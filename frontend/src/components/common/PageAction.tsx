@@ -59,7 +59,7 @@ export default function PageAction({
   const [openSignatureModal, setOpenSignatureModal] = useState(false);
 
   // Chỉ hiển thị dropdown "Tiện ích" khi còn chức năng lẻ (Đồng bộ CSDL)
-  const hasDropdownItems = !!onSyncDb;
+  const hasDropdownItems = Boolean(onSyncDb);
 
   const [anchorElExtra, setAnchorElExtra] = useState<null | HTMLElement>(null);
 

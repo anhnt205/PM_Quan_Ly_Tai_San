@@ -51,14 +51,14 @@ const SidebarContent = ({
         p: 1.5,
         mb: 1.5,
         border: "2px solid",
-        borderColor: signatureType === value ? "#667eea" : "#e5e7eb",
+        borderColor: signatureType === value ? "#04b46e" : "#e5e7eb",
         borderRadius: "12px",
         cursor: "pointer",
         transition: "all 0.2s",
-        bgcolor: signatureType === value ? alpha("#667eea", 0.05) : "white",
+        bgcolor: signatureType === value ? alpha("#04b46e", 0.05) : "white",
         "&:hover": {
-          borderColor: signatureType === value ? "#667eea" : "#d1d5db",
-          bgcolor: signatureType === value ? alpha("#667eea", 0.08) : "#f9fafb",
+          borderColor: signatureType === value ? "#04b46e" : "#d1d5db",
+          bgcolor: signatureType === value ? alpha("#04b46e", 0.08) : "#f9fafb",
         },
       }}
       onClick={() => setSignatureType(value)}
@@ -71,7 +71,7 @@ const SidebarContent = ({
               sx={{
                 color: "#9ca3af",
                 "&.Mui-checked": {
-                  color: "#667eea",
+                  color: "#04b46e",
                 },
               }}
             />
@@ -123,14 +123,14 @@ const SidebarContent = ({
               width: 32,
               height: 32,
               borderRadius: "8px",
-              bgcolor: alpha("#667eea", 0.1),
+              bgcolor: alpha("#04b46e", 0.1),
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
             }}
           >
-            <FileSignature size={18} color="#667eea" />
+            <FileSignature size={18} color="#04b46e" />
           </Box>
           <Box sx={{ flex: 1 }}>
             <Typography
@@ -243,7 +243,7 @@ const SidebarContent = ({
       {/* Action Buttons */}
       <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
         <Button
-          variant="contained"
+          variant="outlined"
           fullWidth
           onClick={handleSign}
           startIcon={<Pencil size={18} />}
@@ -253,11 +253,14 @@ const SidebarContent = ({
             textTransform: "none",
             fontSize: "0.938rem",
             fontWeight: 600,
-            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-            boxShadow: "0 2px 8px rgba(16, 185, 129, 0.3)",
+            color: "#04b46e",
+            borderColor: "rgba(4, 180, 110, 0.3)",
+            borderWidth: "1.5px",
+            bgcolor: "rgba(4, 180, 110, 0.04)",
             "&:hover": {
-              background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
-              boxShadow: "0 4px 12px rgba(16, 185, 129, 0.4)",
+              borderColor: "#04b46e",
+              bgcolor: "rgba(4, 180, 110, 0.08)",
+              borderWidth: "1.5px",
             },
           }}
         >
@@ -275,11 +278,11 @@ const SidebarContent = ({
             textTransform: "none",
             fontSize: "0.938rem",
             fontWeight: 600,
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            boxShadow: "0 2px 8px rgba(102, 126, 234, 0.3)",
+            background: "#04b46e",
+            boxShadow: "0 2px 8px rgba(4, 180, 110, 0.25)",
             "&:hover": {
-              background: "linear-gradient(135deg, #5568d3 0%, #6941a0 100%)",
-              boxShadow: "0 4px 12px rgba(102, 126, 234, 0.4)",
+              background: "linear-gradient(135deg, #038d56 0%, #016b41 100%)",
+              boxShadow: "0 4px 12px rgba(4, 180, 110, 0.35)",
             },
           }}
         >
@@ -299,11 +302,11 @@ const SidebarContent = ({
             fontWeight: 600,
             color: "#ef4444",
             borderColor: "#fecaca",
-            borderWidth: "2px !important",
+            borderWidth: "1.5px !important",
             "&:hover": {
               borderColor: "#fca5a5",
               bgcolor: alpha("#ef4444", 0.04),
-              borderWidth: "2px !important",
+              borderWidth: "1.5px !important",
             },
           }}
         >

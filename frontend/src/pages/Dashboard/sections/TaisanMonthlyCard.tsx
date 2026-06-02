@@ -281,7 +281,7 @@ export default function TaisanMonthlyCard({
                 <LabelList
                   dataKey="soLuong"
                   position="top"
-                  formatter={(val: number) => formattedPrice(val)}
+                  formatter={(val: any) => formattedPrice(val)}
                   style={{ fill: "#64748b", fontSize: "11px", fontWeight: 700 }}
                 />
               </Bar>

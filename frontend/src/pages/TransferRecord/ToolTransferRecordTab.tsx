@@ -200,7 +200,7 @@ export default function ToolTransferRecordTab() {
         onCancel={() => setShowViewDocument(false)}
         onSign={() => {}} // Read-only
         toolTransferDetail={selectedRow?.chiTietDieuDongCCDCVatTuDTOS || []}
-        showSignerSidebar={false}
+        showSignerSidebar={true}
         allUnits={allUnits}
         fullscreen={true}
         staffs={allStaffs}

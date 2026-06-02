@@ -335,11 +335,31 @@ export default function TableCustom({
   const [selectedItem, setSelectedItem] = useState<any[]>([]);
   const [columnVisibilityModel, setColumnVisibilityModel] =
     useState<GridColumnVisibilityModel>({});
-
+  const containerRef = useRef<HTMLDivElement>(null);
+  const savedPageSizeRef = useRef<number>(paginationModel?.pageSize ?? 10);
+  const [allSelectedRows, setAllSelectedRows] = useState<Map<string, any>>(new Map());
   const [isPermissionBanHanh, setIsPermissionBanHanh] = useState(false);
   const { getByIdMutation } = usePositionMutation();
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const toggleFullscreen = () => setIsFullscreen((prev) => !prev);
+    const toggleFullscreen = () => {
+        if (!isFullscreen) {
+            // Lưu pageSize hiện tại
+            savedPageSizeRef.current = paginationModel?.pageSize ?? 10;
+            const availableHeight = window.innerHeight - 200;
+            const rowHeight = 52;
+            const autoRows = Math.max(10, Math.floor(availableHeight / rowHeight));
+
+            onPaginationModelChange?.({ page: 0, pageSize: autoRows });
+            setIsFullscreen(true);
+        } else {
+            // Restore về pageSize cũ
+            onPaginationModelChange?.({
+                page: 0,
+                pageSize: savedPageSizeRef.current,
+            });
+            setIsFullscreen(false);
+        }
+    };
   useEffect(() => {
     const checkPermission = async () => {
       if (user?.taiKhoan?.chucVuId) {
@@ -370,12 +390,10 @@ export default function TableCustom({
     }
   }, [tableId]);
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isFullscreen) setIsFullscreen(false);
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isFullscreen]);
+    if (selectedIds.length === 0) {
+      setAllSelectedRows(new Map());
+    }
+  }, [selectedIds.length]);
   // Hàm xử lý khi người dùng thay đổi trạng thái ẩn/hiện cột
   const handleColumnVisibilityChange = (
     newModel: GridColumnVisibilityModel,
@@ -388,25 +406,38 @@ export default function TableCustom({
       );
     }
   };
-
-  return (
-    <Box
-      sx={
-        isFullscreen
-          ? {
-              position: "fixed",
-              inset: 0,
-              width: "100vw",
-              height: "100vh",
-              zIndex: 9999,
-              bgcolor: "background.paper",
-              overflow: "auto",
-              display: "flex",
-              flexDirection: "column",
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape" && isFullscreen) {
+                onPaginationModelChange?.({
+                    page: 0,
+                    pageSize: savedPageSizeRef.current,
+                });
+                setIsFullscreen(false);
             }
-          : {}
-      }
-    >
+        };
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, [isFullscreen]);
+  return (
+      <Box
+          ref={containerRef}
+          sx={
+              isFullscreen
+                  ? {
+                      position: "fixed",
+                      inset: 0,
+                      width: "100vw",
+                      height: "100vh",
+                       zIndex: 1200,
+                      bgcolor: "background.paper",
+                      overflow: "auto",
+                      display: "flex",
+                      flexDirection: "column",
+                  }
+                  : {}
+          }
+      >
       <Paper
         sx={{
           my: isFullscreen ? 0 : 2,
@@ -631,7 +662,7 @@ export default function TableCustom({
             </Box>
           </Grid>
         </Grid>
-        <Box sx={{ width: "100%", overflow: "hidden" }}>
+        <Box sx={{ width: "100%", overflow: "hidden", flex: 1, minHeight: 0 }}>
           {customContent ? (
             customContent
           ) : (
@@ -639,6 +670,7 @@ export default function TableCustom({
               getRowId={(row) => row.Id || row.id || row.soThe}
               onRowClick={onRowClick}
               columns={columns}
+              keepNonExistentRowsSelected
               rows={rows}
               showCellVerticalBorder={true}
               showToolbar={showToolbar && !isCompact}
@@ -646,8 +678,9 @@ export default function TableCustom({
               paginationMode={paginationMode}
               paginationModel={paginationModel}
               onPaginationModelChange={onPaginationModelChange}
-              pageSizeOptions={[10, 20, 50]}
+              pageSizeOptions={[10, 20, 50,100]}
               loading={loading}
+              // autoPageSize={isFullscreen}
               checkboxSelection={checkboxSelection}
               columnVisibilityModel={columnVisibilityModel}
               onColumnVisibilityModelChange={handleColumnVisibilityChange}
@@ -673,6 +706,21 @@ export default function TableCustom({
                   result = newSelection;
                 }
                 onSelectionChange?.(result);
+                setAllSelectedRows((prev) => {
+                  const next = new Map(prev);
+
+                  // Thêm các row mới được chọn từ trang hiện tại
+                  rows.forEach((row) => {
+                    const rowId = row.Id || row.id || row.soThe;
+                    if (result.includes(rowId)) {
+                      next.set(rowId, row);
+                    } else {
+                      next.delete(rowId);
+                    }
+                  });
+
+                  return next;
+                });
                 const selectedRows = rows.filter((row) => {
                   const rowId = row.Id || row.id || row.soThe;
                   return result.includes(rowId);
@@ -698,22 +746,22 @@ export default function TableCustom({
                     hasSelection={selectedItem.length > 0}
                     onExportSelectedExcel={
                       onExportSelectedExcel
-                        ? () => {
-                            onExportSelectedExcel(selectedItem);
-                          }
-                        : selectedItem.length > 0
                           ? () => {
-                              // Export mặc định dùng XLSX nếu không có handler tuỳ chỉnh
-                              const wb = XLSX.utils.book_new();
-                              const ws = XLSX.utils.json_to_sheet(selectedItem);
-                              XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-                              XLSX.writeFile(
-                                wb,
-                                `${exportSelectedFileName ?? "Danh_sach_da_chon"}_${dayjs().format("YYYYMMDD")}.xlsx`,
-                              );
-                            }
-                          : undefined
-                    }
+                            // @ts-ignore
+                            onExportSelectedExcel([...allSelectedRows.values()]);
+                          }
+                          : allSelectedRows.size > 0
+                              ? () => {
+                                const wb = XLSX.utils.book_new();
+                                // @ts-ignore
+                                const ws = XLSX.utils.json_to_sheet([...allSelectedRows.values()]);
+                                XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+                                XLSX.writeFile(
+                                    wb,
+                                    `${exportSelectedFileName ?? "Danh_sach_da_chon"}_${dayjs().format("YYYYMMDD")}.xlsx`,
+                                );
+                              }
+                              : undefined}
                   />
                 ),
                 filterPanel: CustomFilterPanel,
@@ -732,6 +780,7 @@ export default function TableCustom({
                 } as any,
               }}
               sx={{
+                ...(isFullscreen && { height: "100%" }),
                 fontSize: "14px",
                 "& .highlighted-row": {
                   backgroundColor: "rgba(31, 164, 99, 0.12) !important",
@@ -760,6 +809,9 @@ export default function TableCustom({
                   background: "#1FA463",
                   color: "black",
                 },
+                "& .MuiTablePagination-root": {
+                  zIndex: 10000, // cao hơn zIndex fullscreen (9999)
+                },
                 "& .MuiDataGrid-iconButtonContainer": {
                   visibility: "visible",
                 },
@@ -774,6 +826,7 @@ export default function TableCustom({
                 "& .MuiDataGrid-columnHeaderCheckbox .MuiCheckbox-root": {
                   color: "#fff",
                 },
+                /* global CSS */
               }}
             />
           )}

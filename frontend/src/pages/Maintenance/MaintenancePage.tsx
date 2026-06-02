@@ -27,6 +27,7 @@ import {
   Stack,
   useTheme,
   Pagination,
+  TextField,
 } from "@mui/material";
 import {
   BuildOutlined,
@@ -76,13 +77,13 @@ import {
   IncidentAdapter,
   IncidentInspectionAdapter,
 } from "./Adapter";
-import FieldYear from "../../components/TextField/FieldYear";
 import { useAllDepartmentsQuery } from "../Department/Mutation";
 import { useAssetByDonViQuery } from "../AssetTransfer/Mutation";
 import FieldAutoCompleted from "../../components/TextField/FieldAutoCompleted";
 import { findById } from "../../utils/helpers";
 import { BookXIcon } from "lucide-react";
 import PageAction from "../../components/common/PageAction";
+import { AssetGroup } from "../../utils/const";
 
 // ── Helpers ───────────────────────────────────────────────────
 const trangThaiChipProps = (
@@ -757,8 +758,17 @@ export default function MaintenanceStatPage() {
   const { user } = useSelector((state: RootState) => state.user);
 
   const [donVi, setDonVi] = useState("");
-  const [nam, setNam] = useState(new Date().getFullYear());
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [nhomTaiSan, setNhomTaiSan] = useState("");
   const [selectedId, setSelectedId] = useState("");
+  
+  const nam = useMemo(() => {
+    if (dateFrom) return new Date(dateFrom).getFullYear();
+    if (dateTo) return new Date(dateTo).getFullYear();
+    return new Date().getFullYear();
+  }, [dateFrom, dateTo]);
+
   const [modal, setModal] = useState<{
     open: boolean;
     title: string;
@@ -784,6 +794,18 @@ export default function MaintenanceStatPage() {
   const { data: departments = [] } = useAllDepartmentsQuery();
   const { data: assetsData = { items: [] } } = useAssetByDonViQuery(2, donVi);
   const assets = assetsData?.items || [];
+
+  const filteredAssets = useMemo(() => {
+    if (!nhomTaiSan) return assets;
+    return assets.filter(
+      (asset: any) =>
+        asset.idNhomTaiSan === nhomTaiSan ||
+        asset.tenNhom === nhomTaiSan ||
+        asset.nhomTaiSan === nhomTaiSan ||
+        (nhomTaiSan === "MAY_MOC" && (asset.tenNhom?.toLowerCase().includes("máy") || asset.tenNhomTaiSan?.toLowerCase().includes("máy"))) ||
+        (nhomTaiSan === "PHUONG_TIEN" && (asset.tenNhom?.toLowerCase().includes("thiết bị") || asset.tenNhomTaiSan?.toLowerCase().includes("thiết bị") || asset.tenNhom?.toLowerCase().includes("phương tiện")))
+    );
+  }, [assets, nhomTaiSan]);
 
   const { data: processPaged = { items: [], totalItems: 0 } } =
     useMaintenanceProcessPagedQuery(processPage, 10, selectedId, nam);
@@ -839,6 +861,11 @@ export default function MaintenanceStatPage() {
     undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom || undefined,
+    dateTo || undefined,
+    true,
+    nhomTaiSan || undefined,
   );
   const {
     data: repairPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
@@ -849,6 +876,9 @@ export default function MaintenanceStatPage() {
     undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom || undefined,
+    dateTo || undefined,
   );
   const {
     data: inspectionPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
@@ -859,6 +889,9 @@ export default function MaintenanceStatPage() {
     undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom || undefined,
+    dateTo || undefined,
   );
   const {
     data: materialPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
@@ -868,6 +901,9 @@ export default function MaintenanceStatPage() {
     "",
     undefined,
     user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom || undefined,
+    dateTo || undefined,
   );
   const {
     data: acceptancePaged = { items: [], totalItems: 0, trangThaiCounts: {} },
@@ -878,6 +914,9 @@ export default function MaintenanceStatPage() {
     undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom || undefined,
+    dateTo || undefined,
   );
   const {
     data: incidentPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
@@ -888,6 +927,9 @@ export default function MaintenanceStatPage() {
     undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom || undefined,
+    dateTo || undefined,
   );
   const {
     data: incidentInspectionPaged = {
@@ -902,6 +944,9 @@ export default function MaintenanceStatPage() {
     undefined,
     undefined,
     user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom || undefined,
+    dateTo || undefined,
   );
 
   const planItems = planPaged.items.map(PlanAdapter).map((item: any) => ({
@@ -1059,9 +1104,18 @@ export default function MaintenanceStatPage() {
                   color: "#04b46e",
                 },
               },
+                "& input[type='date']::-webkit-datetime-edit": {
+                    color: "rgba(4,180,110,0.8)",
+                },
+                "& input[type='date']::-webkit-datetime-edit-fields-wrapper": {
+                    color: "rgba(4,180,110,0.8)",
+                },
+                "& input[type='date']::-webkit-calendar-picker-indicator": {
+                    filter: "invert(51%) sepia(72%) saturate(450%) hue-rotate(109deg)",
+                },
             }}
           >
-            <Grid size={{ xs: 12, md: 4 }}>
+            <Grid size={{ xs: 12, md: 2.5 }}>
               <FieldAutoCompleted
                 title="Đơn vị"
                 data={departments}
@@ -1070,22 +1124,56 @@ export default function MaintenanceStatPage() {
                 value={donVi}
               />
             </Grid>
-            <Grid size={{ xs: 12, md: 5 }}>
+            <Grid size={{ xs: 12, md: 2 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel id="nhom-tai-san-select-label">Loại tài sản</InputLabel>
+                <Select
+                  labelId="nhom-tai-san-select-label"
+                  label="Loại tài sản"
+                  value={nhomTaiSan}
+                  onChange={(e) => {
+                    setNhomTaiSan(e.target.value);
+                    setSelectedId(""); // Clear selected device when group changes
+                  }}
+                >
+                  <MenuItem value="">Tất cả</MenuItem>
+                  <MenuItem value={AssetGroup.MAYMOC}>Máy móc</MenuItem>
+                  <MenuItem value={AssetGroup.PHUONGTIEN}>Thiết bị</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid size={{ xs: 12, md: 2 }}>
+              <TextField
+                label="Từ ngày"
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                fullWidth
+                size="small"
+
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 2 }}>
+              <TextField
+                label="Đến ngày"
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                fullWidth
+                size="small"
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 3.5 }}>
               <FieldAutoCompleted
                 title="Chọn Thiết Bị"
-                data={assets}
+                data={filteredAssets}
                 labelkey="tenTaiSan"
                 labelOption="id"
                 setValue={setSelectedId}
                 value={selectedId}
                 limitOptions={20}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 3 }}>
-              <FieldYear
-                title="Năm"
-                selectedYear={nam}
-                setSelectedYear={setNam}
               />
             </Grid>
           </Grid>

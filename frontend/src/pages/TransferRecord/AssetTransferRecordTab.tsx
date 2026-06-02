@@ -201,7 +201,7 @@ export default function AssetTransferRecordTab() {
         onCancel={() => setShowViewDocument(false)}
         onSign={() => {}} // Read-only
         assetTransferDetail={selectedRow?.chiTietDieuDongTaiSanDTOS || []}
-        showSignerSidebar={false}
+        showSignerSidebar={true}
         allUnits={allUnits}
         allCurrentStatus={allCurrentStatus}
         fullscreen={true}

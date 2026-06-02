@@ -312,6 +312,7 @@ export default function ToolManager() {
               onDeleteAll={deleteAllMutation.mutate}
               showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
               onViewOwnership={() => setOpenOwnership(true)}
+              onExportExcel={() => exportExcelMutation.mutate()}
             />
           </Box>
 

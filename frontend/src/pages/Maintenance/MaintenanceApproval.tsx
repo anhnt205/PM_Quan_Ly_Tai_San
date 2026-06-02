@@ -1266,6 +1266,11 @@ export default function MaintenanceApprovalPage() {
                 icon: FileSearch,
               },
               {
+                label: "Biện pháp sửa chữa",
+                subLabel: "Biện pháp xử lý thiết bị",
+                icon: Wrench,
+              },
+              {
                 label: "BB Nghiệm thu",
                 subLabel: "Nghiệm thu hoàn thành",
                 icon: ClipboardCheck,
