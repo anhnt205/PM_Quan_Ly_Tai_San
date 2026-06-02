@@ -23,6 +23,8 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
 
 interface CurrentStatusTabState {
   showForm: boolean;
@@ -56,6 +58,9 @@ export default function CurrentStatus() {
     pageSize: 10,
     page: 0,
   });
+
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
 
   const {
     createMutation,
@@ -171,6 +176,10 @@ export default function CurrentStatus() {
       <PageAction
         title="Quản lý hiện trạng"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
           setShowForm(true);
           setSelectedCurrentStatus(null);
           setReadOnly(false);
@@ -208,15 +217,22 @@ export default function CurrentStatus() {
       </Dialog>
 
       <Box p={2}>
-        {showForm && (
-          <Box py={2}>
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogContent sx={{ p: 0 }}>
             <CurrentStatusForm
               onCancel={() => {
                 setShowForm(false);
                 setSelectedCurrentStatus(null);
                 setReadOnly(false);
+                setIsCopy(false); // ← thêm dòng này
                 setField({ draftForm: undefined });
               }}
+              onMinimize={handleMinimize} // ← thêm prop này
               onEdit={handleEdit}
               selectedCurrentStatus={selectedCurrentStatus}
               readOnly={readOnly}
@@ -224,8 +240,11 @@ export default function CurrentStatus() {
               onFormChange={(values) => setField({ draftForm: values })}
               initialFormData={formData.draftForm}
             />
-          </Box>
-        )}
+          </DialogContent>
+        </Dialog>
+
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
+
         <TableCustom
           tableId="currentStatus"
           title="Quản lý hiện trạng"

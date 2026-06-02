@@ -23,6 +23,8 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
 
 interface ToolTypeTabState {
   showForm: boolean;
@@ -54,6 +56,9 @@ export default function ToolType() {
     pageSize: 10,
     page: 0,
   });
+
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
 
   const {
     createMutation,
@@ -175,6 +180,10 @@ export default function ToolType() {
       <PageAction
         title="Loại CCDC"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
           setShowForm(true);
           setSelectedToolType(null);
           setReadOnly(false);
@@ -202,15 +211,22 @@ export default function ToolType() {
       </Dialog>
 
       <Box p={2}>
-        {showForm && (
-          <Box py={2}>
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogContent sx={{ p: 0 }}>
             <TypeAssetForm
               onCancel={() => {
                 setShowForm(false);
                 setSelectedToolType(null);
                 setReadOnly(false);
+                setIsCopy(false);
                 setField({ draftForm: undefined });
               }}
+              onMinimize={handleMinimize}
               onEdit={handleEdit}
               selectedToolType={selectedToolType}
               readOnly={readOnly}
@@ -218,8 +234,11 @@ export default function ToolType() {
               onFormChange={(values) => setField({ draftForm: values })}
               initialFormData={formData.draftForm}
             />
-          </Box>
-        )}
+          </DialogContent>
+        </Dialog>
+
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
+          
         <TableCustom
           tableId="toolType"
           title="Quản lý loại CCDC"

@@ -2,6 +2,8 @@ import { SyntheticEvent, useEffect, useRef, useState } from "react";
 import {
   Badge,
   Box,
+  Dialog,
+  DialogContent,
   Grid,
   IconButton,
   Tab,
@@ -60,6 +62,8 @@ import S3Service from "../../services/S3Service";
 import api from "../../config/api.config";
 import { getAssetHandoverCount } from "../../utils/helpers";
 import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
 
 interface AssetHandoverTabState {
   showForm: boolean;
@@ -105,7 +109,6 @@ export default function AssetHandover() {
   const setShowSignDocument = (v: boolean) => setField({ showSignDocument: v });
   const setSelectedDocument = (v: any) => setField({ selectedDocument: v });
 
-  // Giữ nguyên các state này — không cần persist
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
     pageSize: 10,
@@ -114,6 +117,11 @@ export default function AssetHandover() {
   const [searchValue, setSearchValue] = useState("");
   const [showSignerSidebar, setShowSignerSidebar] = useState(true);
   const handleEdit = () => setReadOnly(false);
+
+  const [isClosing, setIsClosing] = useState(false);
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized =
+    !showForm && !isClosing && hasDraftData(formData.draftForm);
 
   const { user } = useSelector((state: any) => state.user);
   const {
@@ -309,6 +317,7 @@ export default function AssetHandover() {
   };
 
   const handleClose = () => {
+    setIsClosing(true);
     setSelectedIds([]);
     setSearchValue("");
     setShowSignDocument(false);
@@ -317,6 +326,7 @@ export default function AssetHandover() {
     setShowSidebar(false);
     setReadOnly(false);
     setField({ draftForm: undefined });
+    setTimeout(() => setIsClosing(false), 100);
   };
 
   const handleSign = (
@@ -684,6 +694,10 @@ export default function AssetHandover() {
           <PageAction
             title={"Biên bản bàn giao tài sản"}
             onNewClick={() => {
+              if (isMinimized) {
+                setShowForm(true);
+                return;
+              }
               setField({ draftForm: undefined });
               setSelectedRow(null);
               setReadOnly(false);
@@ -693,11 +707,17 @@ export default function AssetHandover() {
           />
 
           <Box sx={{ p: 2 }}>
-            {showForm && (
-              <Box sx={{ mb: 2 }}>
+            <Dialog
+              open={showForm}
+              onClose={handleMinimize}
+              maxWidth="lg"
+              fullWidth
+            >
+              <DialogContent sx={{ p: 0, overflow: "auto" }}>
                 <AssetHandoverForm
                   key={selectedRow?.id || "form-key"}
                   onClose={handleClose}
+                  onMinimize={handleMinimize}
                   onSave={handleSave}
                   onCancel={handleCancel}
                   onEdit={handleEdit}
@@ -710,11 +730,13 @@ export default function AssetHandover() {
                   staffs={(staffs || []).filter(
                     (staff: any) => staff.hasAccount,
                   )}
-                  onFormChange={(values) => setField({ draftForm: values })} // 👈 thêm
+                  onFormChange={(values) => setField({ draftForm: values })}
                   initialFormData={formData.draftForm}
                 />
-              </Box>
-            )}
+              </DialogContent>
+            </Dialog>
+
+            {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
 
             {/* Bước 1: Cấu trúc lại Grid để Tabs luôn chiếm 100% chiều ngang */}
             <Grid

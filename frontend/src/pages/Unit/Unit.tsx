@@ -23,6 +23,8 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
 
 interface UnitTabState {
   showForm: boolean;
@@ -54,6 +56,9 @@ export default function Unit() {
     pageSize: 10,
     page: 0,
   });
+
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
 
   const {
     createMutation,
@@ -171,6 +176,10 @@ export default function Unit() {
       <PageAction
         title="Quản lý đơn vị tính"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
           setShowForm(true);
           setSelectedUnit(null);
           setReadOnly(false);
@@ -199,15 +208,22 @@ export default function Unit() {
       </Dialog>
 
       <Box p={2}>
-        {showForm && (
-          <Box py={2}>
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogContent sx={{ p: 0 }}>
             <TypeAssetForm
               onCancel={() => {
                 setShowForm(false);
                 setSelectedUnit(null);
                 setReadOnly(false);
+                setIsCopy(false);
                 setField({ draftForm: undefined });
               }}
+              onMinimize={handleMinimize}
               onEdit={handleEdit}
               selectedUnit={selectedUnit}
               readOnly={readOnly}
@@ -215,8 +231,11 @@ export default function Unit() {
               onFormChange={(values) => setField({ draftForm: values })}
               initialFormData={formData.draftForm}
             />
-          </Box>
-        )}
+          </DialogContent>
+        </Dialog>
+
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
+          
         <TableCustom
           tableId="unit"
           title="Quản lý đơn vị tính"

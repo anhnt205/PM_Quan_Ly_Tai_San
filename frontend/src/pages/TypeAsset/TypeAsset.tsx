@@ -24,6 +24,8 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
 
 interface TypeAssetTabState {
   showForm: boolean;
@@ -54,6 +56,9 @@ export default function TypeAsset() {
     pageSize: 10,
     page: 0,
   });
+
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
 
   const {
     createMutation,
@@ -177,6 +182,10 @@ export default function TypeAsset() {
       <PageAction
         title="Quản lý loại tài sản"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
           setShowForm(true);
           setSelectedTypeAsset(null);
           setReadOnly(false);
@@ -212,15 +221,22 @@ export default function TypeAsset() {
             </Box>
           </DialogContent>
         </Dialog>
-        {showForm && (
-          <Box py={2}>
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogContent sx={{ p: 0 }}>
             <TypeAssetForm
               onCancel={() => {
                 setShowForm(false);
                 setSelectedTypeAsset(null);
                 setReadOnly(false);
+                setIsCopy(false);
                 setField({ draftForm: undefined });
               }}
+              onMinimize={handleMinimize}
               onEdit={handleEdit}
               selectedTypeAsset={selectedTypeAsset}
               readOnly={readOnly}
@@ -228,8 +244,11 @@ export default function TypeAsset() {
               onFormChange={(values) => setField({ draftForm: values })}
               initialFormData={formData.draftForm}
             />
-          </Box>
-        )}
+          </DialogContent>
+        </Dialog>
+
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
+
         <TableCustom
           tableId="typeAssset"
           title="Quản lý loại tài sản"

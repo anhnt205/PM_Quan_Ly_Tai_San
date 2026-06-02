@@ -26,6 +26,8 @@ import {
   Delete,
   Cancel,
   Visibility,
+  Remove,
+  Close,
 } from "@mui/icons-material";
 import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
@@ -76,6 +78,7 @@ interface ToolTransferFormProps {
   allUnits: any[];
   onFormChange?: (values: any) => void;
   initialFormData?: Record<string, any>;
+  onMinimize: () => void;
 }
 
 export default function ToolTransferForm({
@@ -92,6 +95,7 @@ export default function ToolTransferForm({
   allUnits,
   initialFormData,
   onFormChange,
+  onMinimize,
 }: ToolTransferFormProps) {
   const { user } = useSelector((state: RootState) => state.user);
   const [expanded, setExpanded] = useState(true);
@@ -220,7 +224,7 @@ export default function ToolTransferForm({
     },
   });
 
-  const debouncedValues = useDebounce(formik.values, 1500);
+  const debouncedValues = useDebounce(formik.values, 800);
   useEffect(() => {
     if (!selectedTool) {
       onFormChange?.(debouncedValues);
@@ -318,55 +322,40 @@ export default function ToolTransferForm({
           isEdit={[0].includes(selectedTool?.trangThai ?? 0) ? true : false}
         />
       )}
-      <Accordion
-        expanded={expanded}
+      <Box
         sx={{
-          background: "#f6f8f4ff",
-          boxShadow: "none",
-          margin: "0 !important",
-          "&:before": { display: "none" },
-          "&.Mui-expanded": { margin: "0 !important" },
+          bgcolor: "#ffffff",
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
         }}
       >
-        <AccordionSummary
-          component="div"
-          expandIcon={<ViewBtn expanded={expanded} setExpanded={setExpanded} />}
+        {/* Header sticky */}
+        <Box
           sx={{
-            cursor: "default",
-            "& .MuiAccordionSummary-content": { cursor: "pointer" },
-            "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
-              transform: "none",
-            },
+            p: 2,
+            bgcolor: "#ffffff",
+            borderBottom: "1px solid",
+            borderColor: "divider",
+            position: "sticky",
+            top: 0,
+            zIndex: 11,
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            {expanded ? <ArrowDropUp /> : <ArrowDropDown />}
-            <Typography>Chi tiết {label}</Typography>
-          </Box>
-        </AccordionSummary>
-        <AccordionDetails
-          sx={{
-            pt: 0,
-            pb: 2,
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          {/* THANH CÔNG CỤ: NÚT HÀNH ĐỘNG VÀ STEPPER */}
           <Box
             display="flex"
-            justifyContent="space-between"
             alignItems="center"
-            mb={2}
+            justifyContent="space-between"
           >
-            <Box>
-              {[0].includes(currentStatus) && (
-                <Box display="flex" gap={2}>
-                  {!readOnly && <SaveBtn onSave={formik.submitForm} />}
-                  {!readOnly && <CancelBtn onClick={onClose} />}
-                  {readOnly && <EditButton onClick={onEdit} />}
-                </Box>
-              )}
+            {/* Bên trái: Tiêu đề */}
+            <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
+              Chi tiết {label}
+            </Typography>
+
+            {/* Bên phải: Stepper + Các nút */}
+            <Box display="flex" alignItems="center" gap={1}>
+              <CustomStepper activeStep={currentStatus} />
+
               {![0, 2, 3, 4].includes(currentStatus) && (
                 <Button
                   size="small"
@@ -377,11 +366,19 @@ export default function ToolTransferForm({
                   Hủy phiếu {label}
                 </Button>
               )}
-            </Box>
-            {/* Tích hợp Component CustomStepper của bạn */}
-            <CustomStepper activeStep={currentStatus} />
-          </Box>
 
+              <IconButton size="small" onClick={onMinimize} title="Ẩn tạm">
+                <Remove fontSize="small" />
+              </IconButton>
+              <IconButton size="small" onClick={onClose} title="Đóng">
+                <Close fontSize="small" />
+              </IconButton>
+            </Box>
+          </Box>
+        </Box>
+
+        {/* Body — giữ nguyên toàn bộ Paper bên trong */}
+        <Box sx={{ flex: 1, overflow: "auto", p: 2 }}>
           <Paper
             sx={{
               p: 3,
@@ -866,17 +863,31 @@ export default function ToolTransferForm({
                 mt={2}
                 display="flex"
                 alignItems="center"
-                gap={0.5}
-                sx={{ cursor: "pointer", color: "#1976d2" }}
-                onClick={() => setIsPreview(true)}
+                justifyContent="space-between"
               >
-                <Typography variant="body2">Xem trước tài liệu</Typography>
-                <Visibility fontSize="small" />
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  gap={0.5}
+                  sx={{ cursor: "pointer", color: "#1976d2" }}
+                  onClick={() => setIsPreview(true)}
+                >
+                  <Typography variant="body2">Xem trước tài liệu</Typography>
+                  <Visibility fontSize="small" />
+                </Box>
+
+                {[0].includes(currentStatus) && (
+                  <Box display="flex" gap={2}>
+                    {!readOnly && <SaveBtn onSave={formik.submitForm} />}
+                    {!readOnly && <CancelBtn onClick={onClose} />}
+                    {readOnly && <EditButton onClick={onEdit} />}
+                  </Box>
+                )}
               </Box>
             </Box>
           </Paper>
-        </AccordionDetails>
-      </Accordion>
+        </Box>
+      </Box>
     </>
   );
 }

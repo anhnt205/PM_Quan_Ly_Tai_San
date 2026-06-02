@@ -58,6 +58,8 @@ import { RootState } from "../../redux/store";
 import { useConfig } from "../../hooks/useContext";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
 import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
 
 interface AssetManagerTabState {
   showForm: boolean;
@@ -101,6 +103,9 @@ export default function AssetManager() {
     pageSize: 10,
     page: 0,
   });
+
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
 
   const {
     createMutation,
@@ -495,6 +500,10 @@ export default function AssetManager() {
       <PageAction
         title="Quản lý tài sản"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
           setField({ draftForm: undefined });
           setShowForm(true);
           setSelectedAssets([]);
@@ -506,15 +515,30 @@ export default function AssetManager() {
         showExcel={true}
       />
       <Box p={2}>
-        {showForm && (
-          <Box py={2}>
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize}
+          maxWidth="xl"
+          fullWidth
+          PaperProps={{ sx: { height: "90vh" } }}
+        >
+          <DialogContent
+            sx={{
+              p: 0,
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
             <AssetManagerForm
               onCancel={() => {
                 setShowForm(false);
                 setSelectedAssets([]);
                 setReadOnly(true);
+                setIsCopy(false); // ← thêm
                 setField({ draftForm: undefined });
               }}
+              onMinimize={handleMinimize} // ← thêm
               selectedAssets={selectedAssets}
               readOnly={readOnly}
               onEdit={handleEdit}
@@ -529,8 +553,11 @@ export default function AssetManager() {
               onFormChange={(values) => setField({ draftForm: values })}
               initialFormData={formData.draftForm}
             />
-          </Box>
-        )}
+          </DialogContent>
+        </Dialog>
+
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
+
         <Paper sx={{ bgcolor: "#04b46eff", p: 2, mt: 2, width: "100%" }}>
           <Typography fontWeight={600} color="white">
             Quản lý tài sản

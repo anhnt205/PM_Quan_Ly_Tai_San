@@ -1,3 +1,4 @@
+import { ContentCopy, Delete } from "@mui/icons-material";
 import {
   Box,
   Chip,
@@ -7,22 +8,23 @@ import {
   IconButton,
   Typography,
 } from "@mui/material";
+import { GridColDef, GridRowParams } from "@mui/x-data-grid";
+import { useState } from "react";
+import { useSelector } from "react-redux";
+import { showConfirmAlert } from "../../components/Alert";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
-import { GridColDef, GridRowParams } from "@mui/x-data-grid";
+import { useDebounce } from "../../hooks/useDebounce";
+import { RootState } from "../../redux/store";
+import { useTabForm } from "../../redux/useTabForm";
 import ProjectForm from "./components/ProjectForm";
-import { ContentCopy, Delete } from "@mui/icons-material";
-import { useState } from "react";
 import {
   useAllProjectsQuery,
   useProjectMutation,
   useProjectsPageQuery,
 } from "./Mutation";
-import { showConfirmAlert } from "../../components/Alert";
-import { useDebounce } from "../../hooks/useDebounce";
-import { useSelector } from "react-redux";
-import { RootState } from "../../redux/store";
-import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
 
 interface ProjectTabState {
   showForm: boolean;
@@ -50,6 +52,9 @@ export default function Project() {
     pageSize: 10,
     page: 0,
   });
+
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
 
   const {
     createMutation,
@@ -184,6 +189,10 @@ export default function Project() {
       <PageAction
         title="Quản lý dự án"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
           setShowForm(true);
           setSelectedProject(null);
           setReadOnly(false);
@@ -213,15 +222,23 @@ export default function Project() {
             </Box>
           </DialogContent>
         </Dialog>
-        {showForm && (
-          <Box py={2}>
+
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogContent sx={{ p: 0 }}>
             <ProjectForm
               onCancel={() => {
                 setShowForm(false);
                 setSelectedProject(null);
                 setReadOnly(false);
+                setIsCopy(false);
                 setField({ draftForm: undefined });
               }}
+              onMinimize={handleMinimize}
               onEdit={handleEdit}
               selectedProject={selectedProject}
               readOnly={readOnly}
@@ -229,8 +246,11 @@ export default function Project() {
               onFormChange={(values) => setField({ draftForm: values })}
               initialFormData={formData.draftForm}
             />
-          </Box>
-        )}
+          </DialogContent>
+        </Dialog>
+
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
+
         <TableCustom
           tableId="project"
           title="Quản lý dự án"

@@ -23,6 +23,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
 
 interface MaintenanceRepairTypeTabState {
   showForm: boolean;
@@ -55,6 +57,9 @@ export default function MaintenanceRepairType() {
     pageSize: 10,
     page: 0,
   });
+
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
 
   const {
     createMutation,
@@ -177,6 +182,10 @@ export default function MaintenanceRepairType() {
       <PageAction
         title="Quản lý loại sửa chữa"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
           setShowForm(true);
           setSelectedRepairType(null);
           setReadOnly(false);
@@ -203,15 +212,22 @@ export default function MaintenanceRepairType() {
             </Box>
           </DialogContent>
         </Dialog>
-        {showForm && (
-          <Box py={2}>
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogContent sx={{ p: 0 }}>
             <MaintenanceRepairTypeForm
               onCancel={() => {
                 setShowForm(false);
                 setSelectedRepairType(null);
                 setReadOnly(false);
+                setIsCopy(false);
                 setField({ draftForm: undefined });
               }}
+              onMinimize={handleMinimize}
               onEdit={handleEdit}
               selectedRepairType={selectedRepairType}
               readOnly={readOnly}
@@ -219,8 +235,10 @@ export default function MaintenanceRepairType() {
               onFormChange={(values) => setField({ draftForm: values })}
               initialFormData={formData.draftForm}
             />
-          </Box>
-        )}
+          </DialogContent>
+        </Dialog>
+
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
         <TableCustom
           title="Quản lý loại sửa chữa"
           columns={columns}

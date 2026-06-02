@@ -5,6 +5,7 @@ import {
   ExpandMore,
   ExpandLess,
   Close,
+  Remove,
 } from "@mui/icons-material";
 import {
   Autocomplete,
@@ -935,6 +936,7 @@ export default function AssetManagerForm({
   allRepairTypes,
   initialFormData,
   onFormChange,
+  onMinimize,
 }: {
   onEdit: () => void;
   onCancel: () => void;
@@ -950,6 +952,7 @@ export default function AssetManagerForm({
   allRepairTypes: any[];
   onFormChange?: (values: any) => void;
   initialFormData?: Record<string, any>;
+  onMinimize: () => void;
 }) {
   const { data: countries = [] } = useCountriesQuery();
   const { data: allProjects = [] } = useAllProjectsQuery();
@@ -998,7 +1001,7 @@ export default function AssetManagerForm({
         <Box
           sx={{
             p: 2,
-            bgcolor: "#f6f8f4ff",
+            bgcolor: "#fffff",
             borderBottom: "1px solid",
             borderColor: "divider",
             display: "flex",
@@ -1009,7 +1012,27 @@ export default function AssetManagerForm({
             zIndex: 10,
           }}
         >
-          <Typography>Chi tiết tài sản</Typography>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              pb: 2,
+              borderBottom: "1px solid #f1f5f9",
+            }}
+          >
+            <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
+              Chi tiết tài sản
+            </Typography>
+            <Box display="flex" gap={0.5}>
+              <IconButton size="small" onClick={onMinimize} title="Ẩn tạm">
+                <Remove fontSize="small" />
+              </IconButton>
+              <IconButton size="small" onClick={onCancel} title="Đóng">
+                <Close fontSize="small" />
+              </IconButton>
+            </Box>
+          </Box>
           <Box display="flex" gap={1.5} alignItems="center">
             {!readOnly && <SaveBtn onSave={formik.submitForm} />}
             {readOnly && <EditButton onClick={onEdit} />}
@@ -1038,9 +1061,8 @@ export default function AssetManagerForm({
             <CancelBtn onClick={onCancel} />
           </Box>
         </Box>
-
         {/* List of Assets */}
-        <Box sx={{ flex: 1, p: 3, overflowY: "auto", bgcolor: "#f9fafb" }}>
+        <Box sx={{ flex: 1, p: 3, overflowY: "auto", bgcolor: "#ffffff" }}>
           <FieldArray name="assets">
             {({ push, remove }) => (
               <React.Fragment>

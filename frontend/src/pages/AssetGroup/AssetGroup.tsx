@@ -23,6 +23,8 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
 
 interface AssetGroupTabState {
   showForm: boolean;
@@ -55,6 +57,9 @@ export default function AssetGroup() {
     pageSize: 10,
     page: 0,
   });
+  // Thêm handleMinimize
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
 
   const {
     createMutation,
@@ -107,7 +112,7 @@ export default function AssetGroup() {
     setShowForm(false);
     setSelectedAssetGroup(null);
     setIsCopy(false);
-    setField({ draftForm: undefined })
+    setField({ draftForm: undefined });
   };
 
   const handleEdit = () => {
@@ -198,6 +203,10 @@ export default function AssetGroup() {
       <PageAction
         title="Quản lý nhóm tài sản"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
           setShowForm(true);
           setSelectedAssetGroup(null);
           setReadOnly(false);
@@ -234,15 +243,22 @@ export default function AssetGroup() {
       </Dialog>
 
       <Box p={2}>
-        {showForm && (
-          <Box py={2}>
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogContent sx={{ p: 0 }}>
             <AssetGroupForm
               onCancel={() => {
                 setShowForm(false);
                 setSelectedAssetGroup(null);
                 setReadOnly(false);
+                setIsCopy(false);
                 setField({ draftForm: undefined });
               }}
+              onMinimize={handleMinimize}
               onEdit={handleEdit}
               selectedAssetGroup={selectedAssetGroup}
               readOnly={readOnly}
@@ -250,8 +266,11 @@ export default function AssetGroup() {
               onFormChange={(values) => setField({ draftForm: values })}
               initialFormData={formData.draftForm}
             />
-          </Box>
-        )}
+          </DialogContent>
+        </Dialog>
+
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
+          
         <TableCustom
           tableId="assetGroup"
           title="Quản lý nhóm tài sản"

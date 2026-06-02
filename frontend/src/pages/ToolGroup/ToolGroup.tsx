@@ -23,6 +23,8 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
 
 interface ToolGroupTabState {
   showForm: boolean;
@@ -33,15 +35,15 @@ interface ToolGroupTabState {
 }
 
 export default function ToolGroup() {
-  const { formData, setField } = useTabForm<ToolGroupTabState>('/nhom_ccdc');
-const showForm = formData.showForm ?? false;
-const selectedToolGroup = formData.selectedToolGroup ?? null;
-const readOnly = formData.readOnly ?? false;
-const isCopy = formData.isCopy ?? false;
-const setShowForm = (v: boolean) => setField({ showForm: v });
-const setSelectedToolGroup = (v: any) => setField({ selectedToolGroup: v });
-const setReadOnly = (v: boolean) => setField({ readOnly: v });
-const setIsCopy = (v: boolean) => setField({ isCopy: v });
+  const { formData, setField } = useTabForm<ToolGroupTabState>("/nhom_ccdc");
+  const showForm = formData.showForm ?? false;
+  const selectedToolGroup = formData.selectedToolGroup ?? null;
+  const readOnly = formData.readOnly ?? false;
+  const isCopy = formData.isCopy ?? false;
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setSelectedToolGroup = (v: any) => setField({ selectedToolGroup: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+  const setIsCopy = (v: boolean) => setField({ isCopy: v });
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
@@ -54,6 +56,8 @@ const setIsCopy = (v: boolean) => setField({ isCopy: v });
     pageSize: 10,
     page: 0,
   });
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
 
   const {
     createMutation,
@@ -197,6 +201,10 @@ const setIsCopy = (v: boolean) => setField({ isCopy: v });
       <PageAction
         title="Quản lý nhóm ccdc"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
           setShowForm(true);
           setSelectedToolGroup(null);
           setReadOnly(false);
@@ -233,24 +241,33 @@ const setIsCopy = (v: boolean) => setField({ isCopy: v });
       </Dialog>
 
       <Box p={2}>
-        {showForm && (
-          <Box py={2}>
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogContent sx={{ p: 0 }}>
             <ToolGroupForm
               onCancel={() => {
                 setShowForm(false);
                 setSelectedToolGroup(null);
                 setReadOnly(false);
+                setIsCopy(false);
                 setField({ draftForm: undefined });
               }}
+              onMinimize={handleMinimize}
               onEdit={handleEdit}
               selectedToolGroup={selectedToolGroup}
               readOnly={readOnly}
               onSave={handleSave}
               onFormChange={(values) => setField({ draftForm: values })}
-initialFormData={formData.draftForm}
+              initialFormData={formData.draftForm}
             />
-          </Box>
-        )}
+          </DialogContent>
+        </Dialog>
+
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
         <TableCustom
           tableId="toolGroup"
           title="Quản lý nhóm ccdc"

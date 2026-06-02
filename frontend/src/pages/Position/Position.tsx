@@ -23,6 +23,8 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
 
 interface PositionTabState {
   showForm: boolean;
@@ -33,8 +35,7 @@ interface PositionTabState {
 }
 
 export default function Position() {
-  const { formData, setField } =
-    useTabForm<PositionTabState>("/chuc_vu");
+  const { formData, setField } = useTabForm<PositionTabState>("/chuc_vu");
   const showForm = formData.showForm ?? false;
   const selectedPosition = formData.selectedPosition ?? null;
   const readOnly = formData.readOnly ?? false;
@@ -98,6 +99,10 @@ export default function Position() {
   const handleEdit = () => {
     setReadOnly(false);
   };
+
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
+  const handleMinimize = () => setShowForm(false);
+
   const columns: GridColDef[] = [
     {
       field: "id",
@@ -268,6 +273,10 @@ export default function Position() {
       <PageAction
         title="Quản lý chức vụ"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
           setShowForm(true);
           setSelectedPosition(null);
           setReadOnly(false);
@@ -297,8 +306,14 @@ export default function Position() {
             </Box>
           </DialogContent>
         </Dialog>
-        {showForm && (
-          <Box py={2}>
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{ sx: { borderRadius: "12px" } }}
+        >
+          <DialogContent sx={{ p: 0 }}>
             <PositionForm
               onCancel={() => {
                 setShowForm(false);
@@ -306,6 +321,7 @@ export default function Position() {
                 setReadOnly(false);
                 setField({ draftForm: undefined });
               }}
+              onMinimize={handleMinimize}
               onEdit={handleEdit}
               selectedPosition={selectedPosition}
               readOnly={readOnly}
@@ -313,8 +329,9 @@ export default function Position() {
               onFormChange={(values) => setField({ draftForm: values })}
               initialFormData={formData.draftForm}
             />
-          </Box>
-        )}
+          </DialogContent>
+        </Dialog>
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
         <TableCustom
           tableId="position"
           title="Quản lý chức vụ"

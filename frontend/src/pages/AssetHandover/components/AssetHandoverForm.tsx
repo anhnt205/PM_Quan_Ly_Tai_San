@@ -33,6 +33,8 @@ import {
   Cancel,
   Visibility,
   FormatLineSpacing,
+  Remove,
+  Close,
 } from "@mui/icons-material";
 import { useFormik, FieldArray, FormikProvider } from "formik";
 
@@ -126,6 +128,7 @@ export default function AssetHandoverForm({
   positions = [],
   initialFormData,
   onFormChange,
+  onMinimize,
 }: {
   onEdit: () => void;
   onCancel: () => void;
@@ -140,6 +143,7 @@ export default function AssetHandoverForm({
   positions?: any[];
   onFormChange?: (values: any) => void;
   initialFormData?: Record<string, any>;
+  onMinimize: () => void;
 }) {
   const { user } = useSelector((state: any) => state.user);
   const currentStatus =
@@ -322,10 +326,10 @@ export default function AssetHandoverForm({
     },
   });
 
-  const debouncedValues = useDebounce(formik.values, 1000);
+  const debouncedValues = useDebounce(formik.values, 800);
 
   useEffect(() => {
-    if (!selectedAssetHandover) {
+    if (!selectedAssetHandover || selectedAssetHandover.isNew) {
       onFormChange?.(debouncedValues);
     }
   }, [debouncedValues]);
@@ -407,10 +411,6 @@ export default function AssetHandoverForm({
           document={document}
           bangKe={bangKe}
           previewDocument={priviewDocument}
-          // onClose={() => {
-          //   setIsPreview(false);
-          //   setPriviewDocument(false);
-          // }}
           onCancel={() => {
             setIsPreview(false);
             setPriviewDocument(false);
@@ -446,69 +446,52 @@ export default function AssetHandoverForm({
           }
         />
       )}
-      <Accordion
+
+      <Box
         sx={{
-          background: "#f6f8f4ff",
-          boxShadow: "none",
-          margin: "0 !important",
-          "& .MuiAccordionSummary-expandIconWrapper": { display: "none" },
+          bgcolor: "#ffffff",
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
         }}
-        expanded={expanded}
       >
-        <AccordionSummary
-          expandIcon={<ViewBtn expanded={expanded} setExpanded={setExpanded} />}
-          aria-controls="panel1-content"
-          id="panel1-header"
+        {/* Header sticky */}
+        <Box
           sx={{
-            flexDirection: "row",
-            "& .MuiAccordionSummary-content": {
-              margin: "12px 0",
-            },
-            "& .MuiAccordionSummary-expandIconWrapper": {
-              display: "flex",
-              transform: "none !important",
-            },
+            p: 2,
+            bgcolor: "#f6f8f4ff",
+            borderBottom: "1px solid",
+            borderColor: "divider",
+            position: "sticky",
+            top: 0,
+            zIndex: 11,
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            {expanded ? <ArrowDropUp /> : <ArrowDropDown />}
-            <Typography>Chi tiết {label}</Typography>
-          </Box>
-        </AccordionSummary>
-
-        <AccordionDetails
-          sx={{ pt: 0, pb: 2, display: "flex", flexDirection: "column" }}
-        >
-          {/* THANH CÔNG CỤ: NÚT HÀNH ĐỘNG VÀ STEPPER */}
+          {/* Title + Minimize/Close */}
           <Box
             display="flex"
-            justifyContent="space-between"
             alignItems="center"
-            mb={2}
+            justifyContent="space-between"
+            mb={1}
           >
-            <Box>
-              {[0, 2].includes(currentStatus) && (
-                <Box display="flex" gap={2}>
-                  {!readOnly && <SaveBtn onSave={formik.submitForm} />}
-                  {!readOnly && <CancelBtn onClick={onClose} />}
-                  {readOnly && <EditButton onClick={onEdit} />}
-                </Box>
-              )}
-              {![0, 2, 3].includes(currentStatus) && (
-                <Button
-                  size="small"
-                  sx={{ bgcolor: "red", color: "white" }}
-                  startIcon={<Cancel />}
-                  onClick={onCancel}
-                >
-                  Hủy phiếu {label}
-                </Button>
-              )}
-            </Box>
-            {/* Tích hợp Component CustomStepper của bạn */}
-            <CustomStepper activeStep={currentStatus} />
-          </Box>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
+              Chi tiết {label}
+            </Typography>
+            <Box display="flex" gap={0.5}>
+              <CustomStepper activeStep={currentStatus} />
 
+              <IconButton size="small" onClick={onMinimize} title="Ẩn tạm">
+                <Remove fontSize="small" />
+              </IconButton>
+              <IconButton size="small" onClick={onClose} title="Đóng">
+                <Close fontSize="small" />
+              </IconButton>
+            </Box>
+          </Box>
+        </Box>
+
+        {/* Body — giữ nguyên toàn bộ Paper bên trong */}
+        <Box sx={{ flex: 1, overflow: "auto", p: 2 }}>
           <Paper
             sx={{
               p: 3,
@@ -1115,16 +1098,50 @@ export default function AssetHandoverForm({
                 </TableContainer>
               </Collapse>
             </Box>
-            <PreviewBtn
-              handleClick={() => {
-                setBangKe(formik.values.taiLieuBangKe);
-                setIsPreview(true);
-                setPriviewDocument(false);
-              }}
-            />
+
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+              mt={3}
+              pt={2}
+              sx={{ borderTop: "1px solid #f1f5f9" }}
+            >
+              {/* Trái — Xem trước tài liệu */}
+              <PreviewBtn
+                handleClick={() => {
+                  setBangKe(formik.values.taiLieuBangKe);
+                  setIsPreview(true);
+                  setPriviewDocument(false);
+                }}
+              />
+
+              {/* Phải — Lưu / Hủy / Sửa */}
+              <Box display="flex" gap={2}>
+                {[0, 2].includes(currentStatus) && !readOnly && (
+                  <>
+                    <CancelBtn onClick={onClose} />
+                    <SaveBtn onSave={formik.submitForm} />
+                  </>
+                )}
+                {[0, 2].includes(currentStatus) && readOnly && (
+                  <EditButton onClick={onEdit} />
+                )}
+                {![0, 2, 3].includes(currentStatus) && (
+                  <Button
+                    size="small"
+                    sx={{ bgcolor: "red", color: "white" }}
+                    startIcon={<Cancel />}
+                    onClick={onCancel}
+                  >
+                    Hủy phiếu {label}
+                  </Button>
+                )}
+              </Box>
+            </Box>
           </Paper>
-        </AccordionDetails>
-      </Accordion>
+        </Box>
+      </Box>
     </>
   );
 }

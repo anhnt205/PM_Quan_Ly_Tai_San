@@ -1,5 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { Box, Grid, IconButton, Tooltip, Tabs, Tab } from "@mui/material";
+import {
+  Box,
+  Grid,
+  IconButton,
+  Tooltip,
+  Tabs,
+  Tab,
+  Dialog,
+  DialogContent,
+} from "@mui/material";
 import { VisibilityOff } from "@mui/icons-material";
 
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
@@ -40,6 +49,8 @@ import { useAllUnitsQuery } from "../Unit/Mutation";
 import S3Service from "../../services/S3Service";
 import BienBanTabContent from "./components/BienBanTabContent";
 import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
 
 interface ToolTransferTabState {
   showForm: boolean;
@@ -94,6 +105,9 @@ export default function ToolTransfer() {
     page: 0,
     pageSize: 10,
   });
+
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
 
   const [showSignerSidebar, setShowSignerSidebar] = useState(true);
   const [showBienBanDialog, setShowBienBanDialog] = useState(false);
@@ -543,6 +557,10 @@ export default function ToolTransfer() {
           <PageAction
             title={title}
             onNewClick={() => {
+              if (isMinimized) {
+                setShowForm(true);
+                return;
+              }
               setField({ draftForm: undefined });
               setSelectedRow(null);
               setShowSidebar(false);
@@ -551,11 +569,21 @@ export default function ToolTransfer() {
             }}
           />
           <Box sx={{ p: 2 }}>
-            {showForm && (
-              <Box sx={{ mb: 2 }}>
+            <Dialog
+              open={showForm}
+              onClose={handleMinimize}
+              maxWidth="lg"
+              fullWidth
+            >
+              <DialogContent sx={{ p: 0, overflow: "auto" }}>
                 <ToolTransferForm
-                  key={selectedRow ? `edit-${selectedRow.id}` : `new-form-type-${type}`}
+                  key={
+                    selectedRow
+                      ? `edit-${selectedRow.id}`
+                      : `new-form-type-${type}`
+                  }
                   onClose={handleClose}
+                  onMinimize={handleMinimize}
                   onSave={handleSave}
                   onEdit={handleEdit}
                   onCancel={async () => {
@@ -576,7 +604,10 @@ export default function ToolTransfer() {
                   onFormChange={(values) => setField({ draftForm: values })}
                   initialFormData={formData.draftForm}
                 />
-              </Box>
+              </DialogContent>
+            </Dialog>
+            {isMinimized && (
+              <DraftIndicator onClick={() => setShowForm(true)} />
             )}
             <Grid
               container
