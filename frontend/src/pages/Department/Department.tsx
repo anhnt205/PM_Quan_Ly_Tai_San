@@ -23,6 +23,8 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
 
 interface DepartmentTabState {
   showForm: boolean;
@@ -93,8 +95,11 @@ export default function Department() {
     setShowForm(false);
     setSelectedDepartment(null);
     setIsCopy(false);
-    setField({ draftForm: undefined })
+    setField({ draftForm: undefined });
   };
+
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
+  const handleMinimize = () => setShowForm(false);
 
   const handleEdit = () => {
     setReadOnly(false);
@@ -173,6 +178,10 @@ export default function Department() {
       <PageAction
         title="Quản lý phòng ban"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
           setShowForm(true);
           setSelectedDepartment(null);
           setReadOnly(false);
@@ -202,16 +211,22 @@ export default function Department() {
             </Box>
           </DialogContent>
         </Dialog>
-        {showForm && (
-          <Box py={2}>
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogContent sx={{ p: 0 }}>
             <DepartmentForm
               allDepartment={allDepartment}
               onCancel={() => {
                 setShowForm(false);
                 setSelectedDepartment(null);
                 setReadOnly(false);
-                setField({ draftForm: undefined })
+                setField({ draftForm: undefined });
               }}
+              onMinimize={handleMinimize}
               onEdit={handleEdit}
               selectedDepartment={selectedDepartment}
               readOnly={readOnly}
@@ -219,8 +234,11 @@ export default function Department() {
               onFormChange={(values) => setField({ draftForm: values })}
               initialFormData={formData.draftForm}
             />
-          </Box>
-        )}
+          </DialogContent>
+        </Dialog>
+
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
+        
         <TableCustom
           tableId="department"
           title="Quản lý phòng ban"

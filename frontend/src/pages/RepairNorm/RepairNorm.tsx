@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, IconButton } from "@mui/material";
+import { Box, Dialog, DialogContent, IconButton } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import PageAction from "../../components/common/PageAction";
 import {
@@ -16,6 +16,8 @@ import { showConfirmAlert } from "../../components/Alert";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
 
 interface RepairNormTabState {
   showForm: boolean;
@@ -52,6 +54,9 @@ export default function RepairNorm() {
   const setReadOnly = (v: boolean) => setField({ readOnly: v });
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
 
   const handleEdit = (row: DinhMucSuaChua) => {
     setEditData(row);
@@ -142,6 +147,10 @@ export default function RepairNorm() {
       <PageAction
         title="Định mức sửa chữa"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
           setField({ draftForm: undefined });
           setEditData(null);
           setReadOnly(false);
@@ -150,8 +159,13 @@ export default function RepairNorm() {
       />
 
       <Box p={2}>
-        {showForm && (
-          <Box py={2}>
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize}
+          maxWidth="lg"
+          fullWidth
+        >
+          <DialogContent sx={{ p: 0, overflow: "auto" }}>
             <RepairNormForm
               key={editData ? editData.id : "new-norm"}
               onCancel={() => {
@@ -160,15 +174,18 @@ export default function RepairNorm() {
                 setEditData(null);
                 setReadOnly(false);
               }}
+              onMinimize={handleMinimize}
               onEdit={() => setReadOnly(false)}
               onSave={handleSave}
               editData={editData}
               readOnly={readOnly}
-              onFormChange={(values) => setField({ draftForm: values })} 
+              onFormChange={(values) => setField({ draftForm: values })}
               initialFormData={formData.draftForm}
             />
-          </Box>
-        )}
+          </DialogContent>
+        </Dialog>
+
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
 
         <RepairNormTableCustom
           tableId="repairNormTable"

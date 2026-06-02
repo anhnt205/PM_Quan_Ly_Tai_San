@@ -2,6 +2,8 @@ import { SyntheticEvent, useEffect, useRef, useState } from "react";
 import {
   Badge,
   Box,
+  Dialog,
+  DialogContent,
   Grid,
   IconButton,
   Tab,
@@ -55,6 +57,8 @@ import { useAllPositionsQuery } from "../Position/Mutation";
 import S3Service from "../../services/S3Service";
 import { getToolHandoverCount } from "../../utils/helpers";
 import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
 
 interface ToolHandoverTabState {
   showForm: boolean;
@@ -115,6 +119,11 @@ export default function ToolHandover() {
   const isFirstMount = useRef(true);
   const [searchParams] = useSearchParams();
   const type = searchParams.get("type");
+
+  const [isClosing, setIsClosing] = useState(false);
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized =
+    !showForm && !isClosing && hasDraftData(formData.draftForm);
 
   const {
     createMutation,
@@ -308,6 +317,7 @@ export default function ToolHandover() {
   };
 
   const handleClose = () => {
+    setIsClosing(true);
     setSelectedIds([]);
     setSearchValue("");
     setShowSignDocument(false);
@@ -316,6 +326,7 @@ export default function ToolHandover() {
     setShowSidebar(false);
     setReadOnly(false);
     setField({ draftForm: undefined });
+    setTimeout(() => setIsClosing(false), 100);
   };
 
   const handleSign = (
@@ -670,6 +681,10 @@ export default function ToolHandover() {
           <PageAction
             title={"Biên bản bàn giao ccdc - vật tư"}
             onNewClick={() => {
+              if (isMinimized) {
+                setShowForm(true);
+                return;
+              }
               setField({ draftForm: undefined });
               setSelectedRow(null);
               setReadOnly(false);
@@ -679,11 +694,17 @@ export default function ToolHandover() {
           />
 
           <Box sx={{ p: 2 }}>
-            {showForm && (
-              <Box sx={{ mb: 2 }}>
+            <Dialog
+              open={showForm}
+              onClose={handleMinimize}
+              maxWidth="lg"
+              fullWidth
+            >
+              <DialogContent sx={{ p: 0, overflow: "auto" }}>
                 <ToolHandoverForm
                   key={selectedRow?.id || "form-key"}
                   onClose={handleClose}
+                  onMinimize={handleMinimize}
                   onSave={handleSave}
                   onCancel={handleCancel}
                   onEdit={handleEdit}
@@ -697,7 +718,11 @@ export default function ToolHandover() {
                   onFormChange={(values) => setField({ draftForm: values })}
                   initialFormData={formData.draftForm}
                 />
-              </Box>
+              </DialogContent>
+            </Dialog>
+
+            {isMinimized && (
+              <DraftIndicator onClick={() => setShowForm(true)} />
             )}
 
             <Grid container spacing={2}>

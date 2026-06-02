@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box, Dialog, DialogContent } from "@mui/material";
 import { useEffect, useState } from "react";
 import PageAction from "../../components/common/PageAction";
 import { GridRowParams } from "@mui/x-data-grid";
@@ -20,6 +20,8 @@ import { useSelector } from "react-redux";
 import SelectDbDialog from "../../components/common/SelectDbDialog";
 import ToolOwnershipModal from "./components/ToolOwnershipModal";
 import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
 
 interface ToolManagerTabState {
   showForm: boolean;
@@ -61,6 +63,9 @@ export default function ToolManager() {
     pageSize: 10,
     page: 0,
   });
+
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -191,6 +196,10 @@ export default function ToolManager() {
       <PageAction
         title="Quản lý CCDC - Vật tư"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
           setField({ draftForm: undefined });
           setShowForm(true);
           setSelectedTool(null);
@@ -208,27 +217,45 @@ export default function ToolManager() {
         showExcel={true}
       />
       <Box p={2}>
-        {showForm && (
-          <ToolForm
-            key={`${selectedTool?.id}-${readOnly}`}
-            onCancel={() => {
-              setField({ draftForm: undefined });
-              setShowForm(false);
-              setReadOnly(true);
-              setIsCopy(false);
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize}
+          maxWidth="lg"
+          fullWidth
+          PaperProps={{ sx: { height: "90vh" } }}
+        >
+          <DialogContent
+            sx={{
+              p: 0,
+              overflow: "auto",
+              display: "flex",
+              flexDirection: "column",
             }}
-            selectedTool={selectedTool}
-            readOnly={readOnly}
-            onEdit={handleEdit}
-            onSave={handleSave}
-            departments={allDepartments}
-            toolTypes={toolTypes}
-            allUnits={allUnits}
-            toolGroups={toolGroups}
-            onFormChange={(values) => setField({ draftForm: values })}
-            initialFormData={formData.draftForm}
-          />
-        )}
+          >
+            <ToolForm
+              key={`${selectedTool?.id}-${readOnly}`}
+              onCancel={() => {
+                setField({ draftForm: undefined });
+                setShowForm(false);
+                setReadOnly(true);
+                setIsCopy(false);
+              }}
+              onMinimize={handleMinimize}
+              selectedTool={selectedTool}
+              readOnly={readOnly}
+              onEdit={handleEdit}
+              onSave={handleSave}
+              departments={allDepartments}
+              toolTypes={toolTypes}
+              allUnits={allUnits}
+              toolGroups={toolGroups}
+              onFormChange={(values) => setField({ draftForm: values })}
+              initialFormData={formData.draftForm}
+            />
+          </DialogContent>
+        </Dialog>
+
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
 
         <Box
           sx={{

@@ -19,6 +19,8 @@ import ModelAssetForm from "./components/ModelAssetForm";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
 
 interface ModelAssetTabState {
   showForm: boolean;
@@ -51,6 +53,8 @@ export default function ModelAsset() {
     pageSize: 10,
     page: 0,
   });
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
 
   const {
     createMutation,
@@ -102,17 +106,11 @@ export default function ModelAsset() {
     setShowForm(false);
     setSelectedModelAsset(null);
     setIsCopy(false);
-    setField({ draftForm: undefined })
+    setField({ draftForm: undefined });
   };
 
   const handleEdit = () => {
     setReadOnly(false);
-  };
-
-  const handleCancel = () => {
-    setShowForm(false);
-    setSelectedModelAsset(null);
-    setField({ draftForm: undefined })
   };
 
   const columns: GridColDef[] = [
@@ -248,6 +246,10 @@ export default function ModelAsset() {
       <PageAction
         title="Quản lý mô hình tài sản"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
           setShowForm(true);
           setSelectedModelAsset(null);
           setReadOnly(false);
@@ -284,19 +286,34 @@ export default function ModelAsset() {
       </Dialog>
 
       <Box p={2}>
-        {showForm && (
-          <Box py={2}>
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogContent sx={{ p: 0 }}>
             <ModelAssetForm
               onEdit={handleEdit}
-              onCancel={handleCancel}
+              onCancel={() => {
+                setShowForm(false);
+                setSelectedModelAsset(null);
+                setReadOnly(false);
+                setIsCopy(false);
+                setField({ draftForm: undefined });
+              }}
+              onMinimize={handleMinimize}
               selectedModelAsset={selectedModelAsset}
               readOnly={readOnly}
               onSave={handleSave}
               onFormChange={(values) => setField({ draftForm: values })}
               initialFormData={formData.draftForm}
             />
-          </Box>
-        )}
+          </DialogContent>
+        </Dialog>
+
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
+
         <TableCustom
           tableId="modelAsset"
           title="Quản lý mô hình tài sản"

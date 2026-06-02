@@ -1,5 +1,14 @@
-import { useEffect, useState } from "react";
-import { Box, Grid, IconButton, Tooltip, Tabs, Tab } from "@mui/material";
+import { useEffect, useRef, useState } from "react";
+import {
+  Box,
+  Grid,
+  IconButton,
+  Tooltip,
+  Tabs,
+  Tab,
+  DialogContent,
+  Dialog,
+} from "@mui/material";
 import {
   Visibility as VisibilityIcon,
   VisibilityOff,
@@ -41,6 +50,8 @@ import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
 import { useAllUnitsQuery } from "../Unit/Mutation";
 import S3Service from "../../services/S3Service";
 import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
 
 interface AssetTransferTabState {
   showForm: boolean;
@@ -101,6 +112,11 @@ export default function AssetTransfer() {
   const [assetTransferDetail, setAssetTransferDetail] = useState<any[]>([]);
   const [assetHandover, setAssetHandover] = useState<AssetHandoverData[]>([]);
   const [showSignerSidebar, setShowSignerSidebar] = useState(true);
+
+  const isClosingRef = useRef(false);
+  const handleMinimize = () => setShowForm(false);
+  const isMinimized =
+    !showForm && !isClosingRef.current && hasDraftData(formData.draftForm);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -240,19 +256,23 @@ export default function AssetTransfer() {
     setReadOnly(false);
   };
   const handleClose = () => {
+    isClosingRef.current = true;
+    setShowForm(false);
+    setField({ draftForm: undefined });
     setSelectedIds([]);
     setSelectedDocument(null);
     setSearchValue("");
     setShowSignDocument(false);
     setSelectedRow(null);
-    setShowForm(false);
     setShowSidebar(false);
     setReadOnly(false);
     setAssetHandover([]);
     setSidebarMode(null);
     setIsFullPageSign(false);
     setTabValue(0);
-    setField({ draftForm: undefined });
+    setTimeout(() => {
+      isClosingRef.current = false;
+    }, 300);
   };
 
   const handleSend = (items: any[]) => {
@@ -582,17 +602,31 @@ export default function AssetTransfer() {
           <PageAction
             title={title}
             onNewClick={() => {
+              if (isMinimized) {
+                setShowForm(true);
+                return;
+              }
               setField({ draftForm: undefined });
               handleClose();
               setShowForm(true);
             }}
           />
           <Box sx={{ p: 2 }}>
-            {showForm && (
-              <Box sx={{ mb: 2 }}>
+            <Dialog
+              open={showForm}
+              onClose={handleMinimize}
+              maxWidth="lg"
+              fullWidth
+            >
+              <DialogContent sx={{ p: 0, overflow: "auto" }}>
                 <AssetTransferForm
-                  key={showForm ? `new-form-type-${type}` : `edit-${selectedRow?.id}`}
+                  key={
+                    showForm
+                      ? `new-form-type-${type}`
+                      : `edit-${selectedRow?.id}`
+                  }
                   onClose={handleClose}
+                  onMinimize={handleMinimize}
                   readOnly={readOnly}
                   type={Number(type)}
                   onEdit={handleEdit}
@@ -610,7 +644,11 @@ export default function AssetTransfer() {
                   onFormChange={(values) => setField({ draftForm: values })}
                   initialFormData={formData.draftForm}
                 />
-              </Box>
+              </DialogContent>
+            </Dialog>
+
+            {isMinimized && (
+              <DraftIndicator onClick={() => setShowForm(true)} />
             )}
 
             <Grid

@@ -1,4 +1,4 @@
-import { ContentCopy, Delete } from "@mui/icons-material";
+import { ContentCopy, Delete, EditNote } from "@mui/icons-material";
 import {
   Box,
   Chip,
@@ -20,6 +20,8 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { useTabForm } from "../../redux/useTabForm";
+import DraftIndicator from "../../components/common/DraftIndicator";
+import { hasDraftData } from "../../utils/draftUtils";
 
 interface StaffTabState {
   showForm: boolean;
@@ -116,6 +118,12 @@ export default function Staff() {
         }
       },
     });
+  };
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
+
+  const handleMinimize = () => {
+    setShowForm(false);
+    // Không xóa draftForm, không reset selectedStaff
   };
 
   const columns: GridColDef[] = [
@@ -254,12 +262,15 @@ export default function Staff() {
       ),
     },
   ];
-
   return (
     <Box sx={{ width: "100%" }}>
       <PageAction
         title="Quản lý nhân viên"
         onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
           setShowForm(true);
           setSelectedStaff(null);
           setReadOnly(false);
@@ -294,8 +305,14 @@ export default function Staff() {
             </Box>
           </DialogContent>
         </Dialog>
-        {showForm && (
-          <Box py={2}>
+
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize} // click ra ngoài = minimize
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogContent sx={{ p: 0 }}>
             <StaffForm
               onCancel={() => {
                 setShowForm(false);
@@ -304,6 +321,7 @@ export default function Staff() {
                 setIsCopy(false);
                 setField({ draftForm: undefined });
               }}
+              onMinimize={handleMinimize}
               onEdit={handleEdit}
               selectedStaff={selectedStaff}
               readOnly={readOnly}
@@ -312,8 +330,11 @@ export default function Staff() {
               onFormChange={(values) => setField({ draftForm: values })}
               initialFormData={formData.draftForm}
             />
-          </Box>
-        )}
+          </DialogContent>
+        </Dialog>
+
+        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
+
         <TableCustom
           tableId="staff"
           title="Quản lý nhân viên"
