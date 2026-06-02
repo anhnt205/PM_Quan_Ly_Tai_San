@@ -33,6 +33,12 @@ const ToggleBadge = styled(Box)(({ theme }) => ({
   border: "1px solid #e0e0e0",
   borderBottom: "none", // Quan trọng: bỏ border đáy để nối liền với sidebar
   whiteSpace: "nowrap",
+  transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+  "&:hover": {
+    backgroundColor: "#f0fdf4",
+    borderColor: "#04b46e",
+    transform: "translateX(-50%) translateY(-2px)",
+  },
 }));
 
 interface CollapsibleSidebarProps {
@@ -61,7 +67,7 @@ export default function CollapsibleSidebar({
           variant="caption"
           sx={{
             fontWeight: "bold",
-            color: "#8b5cf6",
+            color: "#04b46e",
             fontSize: "0.7rem",
             textTransform: "uppercase",
             letterSpacing: "0.5px",
@@ -71,9 +77,9 @@ export default function CollapsibleSidebar({
         </Typography>
 
         {isOpen ? (
-          <KeyboardArrowDown sx={{ color: "#8b5cf6", fontSize: "1.1rem" }} />
+          <KeyboardArrowDown sx={{ color: "#04b46e", fontSize: "1.1rem" }} />
         ) : (
-          <KeyboardArrowUp sx={{ color: "#8b5cf6", fontSize: "1.1rem" }} />
+          <KeyboardArrowUp sx={{ color: "#04b46e", fontSize: "1.1rem" }} />
         )}
       </ToggleBadge>
 

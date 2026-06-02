@@ -1,8 +1,8 @@
 export const maintenanceLevelColors: Record<string, string> = {
   "": "transparent",
-  CST: "#e8f5e9",
-  SCN: "#fff3e0",
-  SCC: "#fce4ec",
+  CST: "#1FA463",
+  SCN: "#f57c00",
+  SCC: "#d32f2f",
 };
 export interface PlanSigner {
   userId: string;

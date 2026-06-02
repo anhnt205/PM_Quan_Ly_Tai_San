@@ -434,6 +434,7 @@ export default function MaintenancePlanRepair() {
                 setDateTo={setDateTo}
                 nhomTaiSanFilter={nhomTaiSanFilter}
                 setNhomTaiSanFilter={setNhomTaiSanFilter}
+                isCompact={isDetailOpen}
               />
               <TableCustom
                 title="Danh sách kế hoạch"

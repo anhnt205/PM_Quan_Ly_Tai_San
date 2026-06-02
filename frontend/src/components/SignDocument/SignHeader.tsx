@@ -47,7 +47,7 @@ export const SignHeader = ({
           variant="h6"
           sx={{
             fontWeight: 600,
-            fontSize: title ? "0.8rem" : "1.125rem",
+            fontSize: "1.05rem",
             color: "#111827",
             mb: 0.25,
             whiteSpace: "nowrap",
@@ -80,24 +80,26 @@ export const SignHeader = ({
             variant="outlined"
             size="medium"
             onClick={handleExportPDF}
-            startIcon={<PictureAsPdf sx={{ fontSize: 18, color: "#e00c0c" }} />}
+            startIcon={<PictureAsPdf sx={{ fontSize: 18, color: "#ef4444" }} />}
             sx={{
                 textTransform: "none",
                 fontSize: "0.875rem",
-                fontWeight: 500,
+                fontWeight: 600,
                 px: 2.5,
-                py: 1,
-                borderRadius: "8px",
-                color: "#e00c0c",
-                borderColor: "#e00c0c",
+                py: 0.8,
+                borderRadius: "10px",
+                color: "#ef4444",
+                borderColor: "rgba(239, 68, 68, 0.25)",
                 bgcolor: "white",
+                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                 "&:hover": {
-                    borderColor: "#b00000",
-                    bgcolor: "#fff0f0",
-                    color: "#b00000",
-                    "& .MuiButton-startIcon svg": {
-                        color: "#b00000",
-                    },
+                    borderColor: "#ef4444",
+                    bgcolor: "rgba(239, 68, 68, 0.04)",
+                    transform: "translateY(-1px)",
+                    boxShadow: "0 2px 8px rgba(239, 68, 68, 0.08)",
+                },
+                "&:active": {
+                    transform: "translateY(0)",
                 },
             }}
         >
