@@ -1138,7 +1138,7 @@ export default function MaintenanceStatPage() {
                 >
                   <MenuItem value="">Tất cả</MenuItem>
                   <MenuItem value={AssetGroup.MAYMOC}>Máy móc</MenuItem>
-                  <MenuItem value={AssetGroup.PHUONGTIEN}>Thiết bị</MenuItem>
+                  <MenuItem value={AssetGroup.PHUONGTIEN}>Phương tiện</MenuItem>
                 </Select>
               </FormControl>
             </Grid>

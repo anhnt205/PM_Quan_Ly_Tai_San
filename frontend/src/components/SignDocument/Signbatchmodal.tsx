@@ -342,6 +342,17 @@ export const SignBatchModal: React.FC<SignBatchModalProps> = ({
           onClick={onClose}
           disabled={isProcessing && pendingCount > 0}
           variant="outlined"
+          sx={{
+            borderRadius: "8px",
+            textTransform: "none",
+            fontWeight: 600,
+            borderColor: "rgba(0, 0, 0, 0.12)",
+            color: "text.primary",
+            "&:hover": {
+              borderColor: "rgba(0, 0, 0, 0.24)",
+              bgcolor: "rgba(0, 0, 0, 0.04)",
+            },
+          }}
         >
           {allSigned ? "Đóng" : "Hủy"}
         </Button>
@@ -350,7 +361,17 @@ export const SignBatchModal: React.FC<SignBatchModalProps> = ({
             onClick={handleSignBatch}
             disabled={isProcessing || items.length === 0}
             variant="contained"
-            color="primary"
+            sx={{
+              borderRadius: "8px",
+              textTransform: "none",
+              fontWeight: 600,
+              bgcolor: "#04b46e",
+              boxShadow: "0 2px 8px rgba(4, 180, 110, 0.25)",
+              "&:hover": {
+                bgcolor: "#038d56",
+                boxShadow: "0 4px 12px rgba(4, 180, 110, 0.35)",
+              },
+            }}
           >
             {isProcessing ? "Đang ký..." : "Xác nhận ký"}
           </Button>

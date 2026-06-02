@@ -187,14 +187,16 @@ export default function DraggableSignature({
         margin: 0,
         touchAction: "none",
         cursor: isLocked ? "default" : "grab",
-        border: isLocked ? "none" : "1px dashed #1976d2",
+        border: isLocked ? "none" : "1.5px dashed #04b46e",
         pointerEvents: "auto",
+        transition: "border-color 0.2s, box-shadow 0.2s",
         "&:active": { cursor: isLocked ? "default" : "grabbing" },
         "&:hover": {
-          borderColor: isLocked ? "transparent" : "#1565c0",
+          borderColor: isLocked ? "transparent" : "#038d56",
+          boxShadow: isLocked ? "none" : "0 0 12px rgba(4, 180, 110, 0.3)",
           "& .sig-controls": { display: isLocked ? "none" : "flex" },
         },
-        ...(showMobileControls && !isLocked && { borderColor: "#1565c0" }),
+        ...(showMobileControls && !isLocked && { borderColor: "#038d56", boxShadow: "0 0 12px rgba(4, 180, 110, 0.3)" }),
       }}
     >
       <img
@@ -216,28 +218,35 @@ export default function DraggableSignature({
           sx={{
             display: showMobileControls ? "flex" : "none",
             position: "absolute",
-            top: -45,
+            top: -48,
             left: "50%",
             transform: "translateX(-50%)",
-            bgcolor: "white",
-            boxShadow: 3,
-            borderRadius: 1,
-            p: 0.5,
+            bgcolor: "rgba(255, 255, 255, 0.85)",
+            backdropFilter: "blur(12px)",
+            border: "1px solid rgba(4, 180, 110, 0.15)",
+            boxShadow: "0 4px 16px rgba(0, 0, 0, 0.08)",
+            borderRadius: "30px",
+            p: "4px 10px",
             gap: 0.5,
             alignItems: "center",
             zIndex: 101,
             whiteSpace: "nowrap",
             pointerEvents: "auto",
+            transition: "all 0.2s ease-in-out",
           }}
           onTouchStart={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
         >
           <Tooltip title="Giảm">
-            <IconButton size="small" onClick={() => handleZoom(scale - 0.1)}>
+            <IconButton 
+              size="small" 
+              onClick={() => handleZoom(scale - 0.1)}
+              sx={{ color: "#4b5563", "&:hover": { color: "#04b46e", bgcolor: "rgba(4, 180, 110, 0.06)" } }}
+            >
               <Remove fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Box sx={{ width: 60, px: 1 }}>
+          <Box sx={{ width: 60, px: 1, display: "flex", alignItems: "center" }}>
             <Slider
               size="small"
               min={0.5}
@@ -245,16 +254,35 @@ export default function DraggableSignature({
               step={0.1}
               value={scale}
               onChange={(_, val) => handleZoom(val as number)}
+              sx={{
+                color: "#04b46e",
+                "& .MuiSlider-thumb": {
+                  width: 12,
+                  height: 12,
+                  "&:hover, &.Mui-focusVisible": {
+                    boxShadow: "0px 0px 0px 6px rgba(4, 180, 110, 0.16)",
+                  },
+                },
+              }}
             />
           </Box>
           <Tooltip title="Tăng">
-            <IconButton size="small" onClick={() => handleZoom(scale + 0.1)}>
+            <IconButton 
+              size="small" 
+              onClick={() => handleZoom(scale + 0.1)}
+              sx={{ color: "#4b5563", "&:hover": { color: "#04b46e", bgcolor: "rgba(4, 180, 110, 0.06)" } }}
+            >
               <Add fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Box sx={{ width: 1, height: 20, bgcolor: "#ddd", mx: 0.5 }} />
+          <Box sx={{ width: 1, height: 16, bgcolor: "rgba(0, 0, 0, 0.1)", mx: 0.5 }} />
           <Tooltip title="Xóa">
-            <IconButton size="small" color="error" onClick={() => onDelete(id)}>
+            <IconButton 
+              size="small" 
+              color="error" 
+              onClick={() => onDelete(id)}
+              sx={{ "&:hover": { bgcolor: "rgba(239, 68, 68, 0.06)" } }}
+            >
               <Close fontSize="small" />
             </IconButton>
           </Tooltip>

@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { useQueries } from "@tanstack/react-query";
+import api from "../../../../config/api.config";
 import {
   Box,
   Typography,
@@ -26,6 +28,7 @@ import PostAddIcon from "@mui/icons-material/PostAdd";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import CheckIcon from "@mui/icons-material/Check";
 import { months, maintenanceLevelColors } from "../../../../mockdata/mockPlans";
 import type {
   AcceptanceTestRecord,
@@ -247,7 +250,9 @@ const ActionCell = ({
 // ── Component chính ───────────────────────────────────────
 const PlanDetailPanel = ({ plan, onClose }: Props) => {
   const [tab, setTab] = useState(0);
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedMonths, setSelectedMonths] = useState<number[]>([
+    new Date().getMonth(),
+  ]);
   const [selectedDeviceIds, setSelectedDeviceIds] = useState<string[]>([]);
   const [repairDialogOpen, setRepairDialogOpen] = useState(false);
   const [inspectionDialogOpen, setInspectionDialogOpen] = useState(false);
@@ -325,8 +330,51 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
     setSelectedMaterialAssessment(null);
   }, [plan?.id]);
 
-  const { data: chiTietTaiSanByKeHoach = [] } =
-    useMaintenancePlanningDetailsByMonthQuery(plan?.id, selectedMonth + 1);
+  const results = useQueries({
+    queries: selectedMonths.map((thang) => ({
+      queryKey: ["maintenancePlanningDetailsByMonth", plan?.id, thang + 1],
+      queryFn: async () => {
+        const res = await api.get(
+          `kehoachsuachua-chitiet-taisan/kehoach/${plan?.id}/thang/${thang + 1}`,
+        );
+        return res.data.data || res.data || [];
+      },
+      enabled: !!plan?.id,
+    })),
+  });
+
+  const allMonthsData = useMemo(() => {
+    return results.map((r) => r.data || []);
+  }, [results]);
+
+  const mergedDevices = useMemo(() => {
+    const devicesMap: Record<string, any> = {};
+
+    selectedMonths.forEach((thangIdx, queryIdx) => {
+      const monthData = allMonthsData[queryIdx] || [];
+      monthData.forEach((item: any) => {
+        const key = item.idTaiSan;
+        if (!devicesMap[key]) {
+          devicesMap[key] = {
+            id: item.id,
+            idTaiSan: item.idTaiSan,
+            tenTaiSan: item.tenTaiSan,
+            idNhomTaiSan: item.idNhomTaiSan,
+            soLuong: item.soLuong,
+            monthlyData: {},
+          };
+        }
+        devicesMap[key].monthlyData[thangIdx] = {
+          id: item.id,
+          capSuaChua: item.capSuaChua,
+          daCoLenhSuaChua: item.daCoLenhSuaChua,
+        };
+      });
+    });
+
+    return Object.values(devicesMap);
+  }, [selectedMonths, allMonthsData]);
+
   const { data: maintenanceRepairByPlan = [] } =
     useMaintenanceRepairByPlanQuery(plan?.id);
 
@@ -381,9 +429,14 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
       expandedAcceptances || "",
     );
 
-  const availableDevices = (chiTietTaiSanByKeHoach || []).filter(
-    (d: any) => d?.daCoLenhSuaChua !== 1,
-  );
+  const availableDevices = useMemo(() => {
+    if (selectedMonths.length > 1) return [];
+    const singleMonthIdx = selectedMonths[0];
+    return mergedDevices.filter((d: any) => {
+      const mData = d.monthlyData[singleMonthIdx];
+      return mData && mData.daCoLenhSuaChua !== 1;
+    });
+  }, [mergedDevices, selectedMonths]);
 
   const handleToggle = (id: string) => {
     const isVehicle = plan?.nhomTaiSan === AssetGroup.PHUONGTIEN;
@@ -399,7 +452,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
     setSelectedDeviceIds(
       selectedDeviceIds.length === availableDevices.length
         ? []
-        : availableDevices.map((d: any) => d.id || ""),
+        : availableDevices.map((d: any) => d.id || d.idTaiSan || ""),
     );
 
   const toggle = (
@@ -418,22 +471,36 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          mb: 1,
+          px: 2,
+          py: 1.5,
+          mx: -2,
+          mt: -2,
+          mb: 2,
+          bgcolor: "#1FA463",
+          color: "#fff",
+          borderTopLeftRadius: 8,
+          borderTopRightRadius: 8,
+          boxShadow: "0 2px 4px rgba(0,0,0,0.08)",
         }}
       >
-        <Typography variant="h6" fontWeight={700}>
-          Chi tiết: {plan.id}
+        <Typography variant="h6" fontWeight={700} sx={{ fontSize: "1.1rem" }}>
+          Chi tiết kế hoạch: {plan.id}
         </Typography>
-        <IconButton onClick={onClose} size="small">
-          <CloseIcon />
+        <IconButton onClick={onClose} size="small" sx={{ color: "#fff" }}>
+          <CloseIcon fontSize="small" />
         </IconButton>
       </Box>
 
+      {/* Info Section */}
       <Box
         sx={{
           display: "flex",
           gap: 2,
           mb: 2,
+          p: 1.5,
+          borderRadius: 2,
+          bgcolor: "#f1f8e9",
+          border: "1px solid #d0e7b5",
           flexWrap: "wrap",
           alignItems: "center",
         }}
@@ -457,7 +524,31 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
         {showStatus(plan.trangThai)}
       </Box>
 
-      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
+      <Tabs
+        value={tab}
+        onChange={(_, v) => setTab(v)}
+        sx={{
+          mb: 2,
+          borderBottom: 1,
+          borderColor: "divider",
+          "& .MuiTab-root": {
+            fontWeight: 600,
+            textTransform: "none",
+            fontSize: "0.95rem",
+            color: "text.secondary",
+            "&:hover": {
+              color: "#1FA463",
+              opacity: 0.85,
+            },
+          },
+          "& .MuiTab-root.Mui-selected": {
+            color: "#1FA463 !important",
+          },
+          "& .MuiTabs-indicator": {
+            backgroundColor: "#1FA463 !important",
+          },
+        }}
+      >
         <Tab label="Xem theo thiết bị" />
         <Tab label="Xem theo biên bản" />
       </Tabs>
@@ -467,18 +558,86 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
         <Box sx={{ flex: 1, overflow: "auto" }}>
           {plan.trangThai === 3 && (
             <Box sx={{ display: "flex", gap: 2, mb: 2, alignItems: "center" }}>
-              <FormControl size="small" sx={{ minWidth: 150 }}>
-                <InputLabel>Tháng SCBD</InputLabel>
+              <FormControl size="small" sx={{ minWidth: 200, mt: 1 }}>
+                <InputLabel
+                  id="month-scbd-label"
+                  sx={{
+                    color: "#1FA463",
+                    "&.Mui-focused": { color: "#17824e" },
+                  }}
+                >
+                  Tháng SCBD
+                </InputLabel>
                 <Select
-                  value={selectedMonth}
+                  labelId="month-scbd-label"
+                  multiple
+                  value={selectedMonths}
                   label="Tháng SCBD"
                   onChange={(e) => {
-                    setSelectedMonth(e.target.value as number);
+                    const val = e.target.value;
+                    const nextMonths =
+                      typeof val === "string"
+                        ? val.split(",").map(Number)
+                        : (val as number[]);
+                    nextMonths.sort((a, b) => a - b);
+                    setSelectedMonths(nextMonths);
                     setSelectedDeviceIds([]);
+                  }}
+                  renderValue={(selected) => (
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                      {(selected as number[]).map((value) => (
+                        <Chip
+                          key={value}
+                          label={months[value]}
+                          size="small"
+                          sx={{
+                            bgcolor: "#e8f5e9",
+                            color: "#1FA463",
+                            fontWeight: 600,
+                            border: "1px solid #c8e6c9",
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  )}
+                  sx={{
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "#1FA463",
+                    },
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "#17824e",
+                    },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "#17824e",
+                    },
                   }}
                 >
                   {months.map((m, idx) => (
-                    <MenuItem key={idx} value={idx}>
+                    <MenuItem
+                      key={idx}
+                      value={idx}
+                      sx={{
+                        "&.Mui-selected": {
+                          bgcolor: "rgba(31, 164, 99, 0.08)",
+                          "&:hover": {
+                            bgcolor: "rgba(31, 164, 99, 0.12)",
+                          },
+                        },
+                        "&:hover": {
+                          bgcolor: "rgba(31, 164, 99, 0.04)",
+                        },
+                      }}
+                    >
+                      <Checkbox
+                        checked={selectedMonths.includes(idx)}
+                        size="small"
+                        sx={{
+                          color: "#1FA463",
+                          "&.Mui-checked": {
+                            color: "#1FA463",
+                          },
+                        }}
+                      />
                       {m}
                     </MenuItem>
                   ))}
@@ -487,9 +646,15 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
               <Button
                 variant="contained"
                 startIcon={<PostAddIcon />}
-                disabled={selectedDeviceIds.length === 0}
+                disabled={
+                  selectedDeviceIds.length === 0 || selectedMonths.length > 1
+                }
                 onClick={() => setRepairDialogOpen(true)}
                 size="small"
+                sx={{
+                  bgcolor: "#1FA463",
+                  "&:hover": { bgcolor: "#17824e" },
+                }}
               >
                 Tạo Giấy đề nghị SC ({selectedDeviceIds.length})
               </Button>
@@ -499,88 +664,154 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
           <TableContainer component={Paper} sx={{ maxHeight: 400 }}>
             <Table size="small" stickyHeader>
               <TableHead>
-                <TableRow>
-                  {plan.trangThai === 3 && (
-                    <TableCell padding="checkbox">
-                      {plan?.nhomTaiSan !== AssetGroup.PHUONGTIEN && (
-                        <Checkbox
-                          indeterminate={
-                            selectedDeviceIds.length > 0 &&
-                            selectedDeviceIds.length < availableDevices.length
-                          }
-                          checked={
-                            availableDevices.length > 0 &&
-                            selectedDeviceIds.length === availableDevices.length
-                          }
-                          onChange={handleSelectAll}
-                        />
-                      )}
-                    </TableCell>
-                  )}
-                  <TableCell sx={{ fontWeight: 700 }}>STT</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Mã TB</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Tên TB</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Nhóm</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>
-                    Cấp BD tháng {selectedMonth + 1}
+                <TableRow
+                  sx={{
+                    "& th": {
+                      bgcolor: "#1FA463 !important",
+                      color: "#fff !important",
+                      fontWeight: 700,
+                    },
+                  }}
+                >
+                  <TableCell padding="checkbox">
+                    {plan?.nhomTaiSan !== AssetGroup.PHUONGTIEN && (
+                      <Checkbox
+                        indeterminate={
+                          selectedDeviceIds.length > 0 &&
+                          selectedDeviceIds.length < availableDevices.length
+                        }
+                        checked={
+                          availableDevices.length > 0 &&
+                          selectedDeviceIds.length === availableDevices.length
+                        }
+                        onChange={handleSelectAll}
+                        disabled={
+                          plan.trangThai !== 3 || selectedMonths.length > 1
+                        }
+                        sx={{
+                          color: "#fff",
+                          "&.Mui-checked": { color: "#fff" },
+                          "&.MuiCheckbox-indeterminate": { color: "#fff" },
+                          "&.Mui-disabled": {
+                            color: "rgba(255, 255, 255, 0.3) !important",
+                          },
+                        }}
+                      />
+                    )}
                   </TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>SL</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Trạng thái</TableCell>
+                  <TableCell>STT</TableCell>
+                  <TableCell>Mã TB</TableCell>
+                  <TableCell>Tên TB</TableCell>
+                  <TableCell>Nhóm</TableCell>
+                  {selectedMonths.map((mIdx) => (
+                    <TableCell key={mIdx}>Tháng {mIdx + 1}</TableCell>
+                  ))}
+                  <TableCell>SL</TableCell>
+                  {selectedMonths.length === 1 && (
+                    <TableCell>Trạng thái</TableCell>
+                  )}
                 </TableRow>
               </TableHead>
               <TableBody>
-                {chiTietTaiSanByKeHoach?.map((device: any, idx: number) => {
+                {mergedDevices?.map((device: any, idx: number) => {
+                  const isAlreadyRequested =
+                    selectedMonths.length === 1 &&
+                    device.monthlyData[selectedMonths[0]]?.daCoLenhSuaChua ===
+                      1;
                   return (
                     <TableRow
-                      key={device.id}
+                      key={device.idTaiSan}
                       sx={{
-                        bgcolor:
-                          device.daCoLenhSuaChua === 1 ? "#f5f5f5" : undefined,
+                        bgcolor: isAlreadyRequested ? "#f5f5f5" : undefined,
+                        "&:hover": {
+                          bgcolor: "rgba(31, 164, 99, 0.04) !important",
+                        },
                       }}
                     >
-                      {plan.trangThai === 3 && (
-                        <TableCell padding="checkbox">
-                          <Checkbox
-                            checked={selectedDeviceIds.includes(device.id)}
-                            onChange={() => handleToggle(device.id)}
-                            disabled={device.daCoLenhSuaChua === 1}
-                          />
-                        </TableCell>
-                      )}
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          checked={selectedDeviceIds.includes(device.id)}
+                          onChange={() => handleToggle(device.id)}
+                          disabled={
+                            plan.trangThai !== 3 ||
+                            selectedMonths.length > 1 ||
+                            isAlreadyRequested
+                          }
+                        />
+                      </TableCell>
                       <TableCell>{idx + 1}</TableCell>
                       <TableCell>{device.idTaiSan}</TableCell>
                       <TableCell>{device.tenTaiSan}</TableCell>
                       <TableCell>{device.idNhomTaiSan}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={device.capSuaChua}
-                          size="small"
-                          sx={{
-                            bgcolor:
-                              maintenanceLevelColors[device.capSuaChua] ||
-                              "transparent",
-                          }}
-                        />
-                      </TableCell>
+                      {selectedMonths.map((mIdx) => {
+                        const mData = device.monthlyData[mIdx];
+                        return (
+                          <TableCell key={mIdx}>
+                            {mData ? (
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 0.5,
+                                }}
+                              >
+                                <Chip
+                                  label={mData.capSuaChua}
+                                  size="small"
+                                  sx={{
+                                    bgcolor:
+                                      maintenanceLevelColors[
+                                        mData.capSuaChua
+                                      ] || "transparent",
+                                    color: "#fff",
+                                    fontWeight: 600,
+                                  }}
+                                />
+                                {mData.daCoLenhSuaChua === 1 && (
+                                  <CheckIcon
+                                    sx={{ color: "#1FA463", fontSize: 18 }}
+                                  />
+                                )}
+                              </Box>
+                            ) : (
+                              <span style={{ color: "#aaa" }}>—</span>
+                            )}
+                          </TableCell>
+                        );
+                      })}
                       <TableCell>{device.soLuong}</TableCell>
-                      <TableCell>
-                        {device.daCoLenhSuaChua === 1 ? (
-                          <Chip label="Đã lập lệnh" size="small" color="info" />
-                        ) : (
-                          <Chip
-                            label="Chưa lập"
-                            size="small"
-                            variant="outlined"
-                          />
-                        )}
-                      </TableCell>
+                      {selectedMonths.length === 1 && (
+                        <TableCell>
+                          {isAlreadyRequested ? (
+                            <Chip
+                              label="Đã lập lệnh"
+                              size="small"
+                              color="info"
+                            />
+                          ) : (
+                            <Chip
+                              label="Chưa lập"
+                              size="small"
+                              variant="outlined"
+                            />
+                          )}
+                        </TableCell>
+                      )}
                     </TableRow>
                   );
                 })}
-                {chiTietTaiSanByKeHoach?.length === 0 && (
+                {mergedDevices?.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
-                      Không có thiết bị cần SCBD trong tháng {selectedMonth + 1}
+                    <TableCell
+                      colSpan={
+                        6 +
+                        selectedMonths.length +
+                        (selectedMonths.length === 1 ? 1 : 0)
+                      }
+                      align="center"
+                      sx={{ py: 4 }}
+                    >
+                      Không có thiết bị cần SCBD trong các tháng đã chọn
                     </TableCell>
                   </TableRow>
                 )}
@@ -600,14 +831,20 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
           >
             <Table size="small" sx={{ minWidth: 900 }}>
               <TableHead>
-                <TableRow sx={{ bgcolor: "action.hover" }}>
-                  <TableCell sx={{ fontWeight: 700 }}>Biên bản</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Loại</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Ngày</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Trạng thái</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }} align="right">
-                    Thao tác
-                  </TableCell>
+                <TableRow
+                  sx={{
+                    "& th": {
+                      bgcolor: "#1FA463 !important",
+                      color: "#fff !important",
+                      fontWeight: 700,
+                    },
+                  }}
+                >
+                  <TableCell>Biên bản</TableCell>
+                  <TableCell>Loại</TableCell>
+                  <TableCell>Ngày</TableCell>
+                  <TableCell>Trạng thái</TableCell>
+                  <TableCell align="right">Thao tác</TableCell>
                 </TableRow>
               </TableHead>
 
@@ -1223,7 +1460,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
         plan={plan}
         initialData={selectedReq}
         selectedDeviceIds={selectedDeviceIds}
-        selectedMonth={selectedMonth}
+        selectedMonth={selectedMonths[0]}
         onSubmit={(req) => {
           if (selectedReq) {
             updateRepairMutation.mutateAsync(req);

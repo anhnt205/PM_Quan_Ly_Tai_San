@@ -8,6 +8,7 @@ export default function Filter({
   setDateTo,
   nhomTaiSanFilter,
   setNhomTaiSanFilter,
+  isCompact = false,
 }: {
   dateFrom?: string;
   setDateFrom?: (value: string) => void;
@@ -15,75 +16,118 @@ export default function Filter({
   setDateTo?: (value: string) => void;
   nhomTaiSanFilter?: AssetGroupType;
   setNhomTaiSanFilter?: (value: AssetGroupType) => void;
+  isCompact?: boolean;
 }) {
   return (
     <Box
       sx={{
         display: "flex",
-        alignItems: "center",
-        gap: 2,
+        flexDirection: { xs: "column", sm: isCompact ? "column" : "row" },
+        alignItems: {
+          xs: "flex-start",
+          sm: isCompact ? "flex-start" : "center",
+        },
+        gap: { xs: 1.5, sm: isCompact ? 1.5 : 2 },
         px: 2,
-        py: 1,
+        py: 1.5,
         borderBottom: "1px solid",
         borderColor: "divider",
         bgcolor: "#fafafa",
-        flexWrap: "wrap",
+        width: "100%",
+        boxSizing: "border-box",
       }}
     >
-      <Typography
-        variant="body2"
-        color="text.secondary"
-        sx={{ whiteSpace: "nowrap" }}
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: isCompact ? "column" : "row",
+          alignItems: isCompact ? "flex-start" : "center",
+          gap: 1.5,
+          flexWrap: "wrap",
+          width: isCompact ? "100%" : "auto",
+        }}
       >
-        Lọc theo ngày:
-      </Typography>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-        <Typography variant="caption" color="text.secondary">
-          Từ
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ fontWeight: 500 }}
+        >
+          Lọc theo ngày:
         </Typography>
-        <input
-          type="date"
-          value={dateFrom}
-          onChange={(e) => setDateFrom?.(e.target.value)}
-          style={{
-            border: "1px solid #ccc",
-            borderRadius: 6,
-            padding: "4px 8px",
-            fontSize: 13,
-            color: "inherit",
-            background: "transparent",
+
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            width: isCompact ? "100%" : "auto",
           }}
-        />
+        >
+          <Typography variant="caption" sx={{ minWidth: 28 }}>
+            Từ
+          </Typography>
+
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom?.(e.target.value)}
+            style={{
+              flex: 1,
+              minWidth: 0,
+              border: "1px solid #ccc",
+              borderRadius: 6,
+              padding: "4px 8px",
+              fontSize: 13,
+              color: "inherit",
+              background: "transparent",
+              fontFamily: "inherit",
+              outline: "none",
+            }}
+          />
+        </Box>
+
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            width: isCompact ? "100%" : "auto",
+          }}
+        >
+          <Typography variant="caption" sx={{ minWidth: 28, fontWeight: 400 }}>
+            Đến
+          </Typography>
+
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo?.(e.target.value)}
+            style={{
+              flex: 1,
+              minWidth: 0,
+              border: "1px solid #ccc",
+              borderRadius: 6,
+              padding: "4px 8px",
+              fontSize: 13,
+              color: "inherit",
+              background: "transparent",
+              fontFamily: "inherit",
+              outline: "none",
+            }}
+          />
+        </Box>
+
+        {(dateFrom || dateTo) && (
+          <Chip
+            label="Xóa bộ lọc"
+            size="small"
+            onDelete={() => {
+              setDateFrom?.("");
+              setDateTo?.("");
+            }}
+          />
+        )}
       </Box>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-        <Typography variant="caption" color="text.secondary">
-          Đến
-        </Typography>
-        <input
-          type="date"
-          value={dateTo}
-          onChange={(e) => setDateTo?.(e.target.value)}
-          style={{
-            border: "1px solid #ccc",
-            borderRadius: 6,
-            padding: "4px 8px",
-            fontSize: 13,
-            color: "inherit",
-            background: "transparent",
-          }}
-        />
-      </Box>
-      {(dateFrom || dateTo) && (
-        <Chip
-          label="Xóa bộ lọc"
-          size="small"
-          onDelete={() => {
-            setDateFrom?.("");
-            setDateTo?.("");
-          }}
-          sx={{ fontSize: 11 }}
-        />
-      )}
       {/*Filter theo nhom tai san */}
       {nhomTaiSanFilter !== undefined && (
         <Box
@@ -91,10 +135,13 @@ export default function Filter({
             display: "flex",
             alignItems: "center",
             gap: 1.5,
-            ml: "auto",
-            pl: 2,
-            borderLeft: { xs: "none", md: "1px solid" },
+            ml: { xs: 0, sm: isCompact ? 0 : "auto" },
+            pl: { xs: 0, sm: isCompact ? 0 : 2 },
+            borderLeft: { xs: "none", sm: isCompact ? "none" : "1px solid" },
             borderColor: "divider",
+            width: { xs: "100%", sm: "auto" },
+            justifyContent: { xs: "space-between", sm: "flex-start" },
+            mt: { xs: 0.5, sm: 0 },
           }}
         >
           <Typography variant="body2" color="text.secondary" fontWeight={500}>
@@ -125,7 +172,7 @@ export default function Filter({
                     : "transparent",
                 color:
                   nhomTaiSanFilter === AssetGroup.MAYMOC
-                    ? "primary.main"
+                    ? "#1FA463"
                     : "text.secondary",
                 boxShadow:
                   nhomTaiSanFilter === AssetGroup.MAYMOC
@@ -135,7 +182,7 @@ export default function Filter({
                 "&:hover": {
                   color:
                     nhomTaiSanFilter === AssetGroup.MAYMOC
-                      ? "primary.main"
+                      ? "#1FA463"
                       : "text.primary",
                 },
               }}
@@ -159,7 +206,7 @@ export default function Filter({
                     : "transparent",
                 color:
                   nhomTaiSanFilter === AssetGroup.PHUONGTIEN
-                    ? "primary.main"
+                    ? "#1FA463"
                     : "text.secondary",
                 boxShadow:
                   nhomTaiSanFilter === AssetGroup.PHUONGTIEN
@@ -169,7 +216,7 @@ export default function Filter({
                 "&:hover": {
                   color:
                     nhomTaiSanFilter === AssetGroup.PHUONGTIEN
-                      ? "primary.main"
+                      ? "#1FA463"
                       : "text.primary",
                 },
               }}

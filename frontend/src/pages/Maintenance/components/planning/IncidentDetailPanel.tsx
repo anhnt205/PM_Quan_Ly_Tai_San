@@ -333,14 +333,23 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          mb: 1,
+          px: 2,
+          py: 1.5,
+          mx: -2,
+          mt: -2,
+          mb: 2,
+          bgcolor: "#1FA463",
+          color: "#fff",
+          borderTopLeftRadius: 8,
+          borderTopRightRadius: 8,
+          boxShadow: "0 2px 4px rgba(0,0,0,0.08)",
         }}
       >
-        <Typography variant="h6" fontWeight={700}>
+        <Typography variant="h6" fontWeight={700} sx={{ fontSize: "1.1rem" }}>
           Chi tiết: Phiếu báo sự cố {inc.soPhieu || inc.number}
         </Typography>
-        <IconButton onClick={onClose} size="small">
-          <CloseIcon />
+        <IconButton onClick={onClose} size="small" sx={{ color: "#fff" }}>
+          <CloseIcon fontSize="small" />
         </IconButton>
       </Box>
 
@@ -350,6 +359,10 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
           display: "flex",
           gap: 2,
           mb: 2,
+          p: 1.5,
+          borderRadius: 2,
+          bgcolor: "#f1f8e9",
+          border: "1px solid #d0e7b5",
           flexWrap: "wrap",
           alignItems: "center",
         }}
@@ -370,14 +383,38 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
       </Box>
 
       {incident.moTa && (
-        <Box sx={{ mb: 2, p: 1, bgcolor: "#f5f5f5", borderRadius: 1 }}>
+        <Box sx={{ mb: 2, p: 1.5, bgcolor: "#f5f5f5", borderRadius: 2, border: "1px solid #e0e0e0" }}>
           <Typography variant="body2">
             <b>Mô tả:</b> {incident.moTa}
           </Typography>
         </Box>
       )}
 
-      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
+      <Tabs
+        value={tab}
+        onChange={(_, v) => setTab(v)}
+        sx={{
+          mb: 2,
+          borderBottom: 1,
+          borderColor: "divider",
+          "& .MuiTab-root": {
+            fontWeight: 600,
+            textTransform: "none",
+            fontSize: "0.95rem",
+            color: "text.secondary",
+            "&:hover": {
+              color: "#1FA463",
+              opacity: 0.85,
+            },
+          },
+          "& .MuiTab-root.Mui-selected": {
+            color: "#1FA463 !important",
+          },
+          "& .MuiTabs-indicator": {
+            backgroundColor: "#1FA463 !important",
+          },
+        }}
+      >
         <Tab label="Xem theo thiết bị" />
         <Tab label="Xem theo biên bản" />
       </Tabs>
@@ -389,10 +426,13 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
             <Box sx={{ display: "flex", gap: 2, mb: 2, alignItems: "center" }}>
               <Button
                 variant="contained"
-                color="primary"
                 disabled={selectedDeviceIds.length === 0}
                 onClick={() => setIncidentInspectionParentId(incident.id)}
                 size="small"
+                sx={{
+                  bgcolor: "#1FA463",
+                  "&:hover": { bgcolor: "#17824e" },
+                }}
               >
                 Tạo BB Kiểm tra sự cố ({selectedDeviceIds.length})
               </Button>
@@ -402,7 +442,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
           <TableContainer component={Paper} sx={{ maxHeight: 400 }}>
             <Table size="small" stickyHeader>
               <TableHead>
-                <TableRow>
+                <TableRow sx={{ "& th": { bgcolor: "#1FA463 !important", color: "#fff !important", fontWeight: 700 } }}>
                   {incident.trangThai === 3 && (
                     <TableCell padding="checkbox">
                       {plan?.nhomTaiSan !== AssetGroup.PHUONGTIEN && (
@@ -417,23 +457,35 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                               devicesInIncident.length
                           }
                           onChange={handleSelectAll}
+                          sx={{
+                            color: "#fff",
+                            "&.Mui-checked": { color: "#fff" },
+                            "&.MuiCheckbox-indeterminate": { color: "#fff" },
+                          }}
                         />
                       )}
                     </TableCell>
                   )}
-                  <TableCell sx={{ fontWeight: 700 }}>STT</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Mã TB</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Tên TB</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Nhóm</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Vị trí</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Tình trạng</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Trạng thái</TableCell>
+                  <TableCell>STT</TableCell>
+                  <TableCell>Mã TB</TableCell>
+                  <TableCell>Tên TB</TableCell>
+                  <TableCell>Nhóm</TableCell>
+                  <TableCell>Vị trí</TableCell>
+                  <TableCell>Tình trạng</TableCell>
+                  <TableCell>Trạng thái</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {incidentDevices?.map((device: any, idx: number) => {
                   return (
-                    <TableRow key={device.id}>
+                    <TableRow
+                      key={device.id}
+                      sx={{
+                        "&:hover": {
+                          bgcolor: "rgba(31, 164, 99, 0.04) !important",
+                        },
+                      }}
+                    >
                       {incident.trangThai === 3 && inc.daKiemTraSuCo !== 1 && (
                         <TableCell padding="checkbox">
                           <Checkbox
@@ -481,12 +533,12 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
           >
             <Table size="small" sx={{ minWidth: 900 }}>
               <TableHead>
-                <TableRow sx={{ bgcolor: "action.hover" }}>
-                  <TableCell sx={{ fontWeight: 700 }}>Biên bản</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Loại</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Ngày</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Trạng thái</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }} align="right">
+                <TableRow sx={{ "& th": { bgcolor: "#1FA463 !important", color: "#fff !important", fontWeight: 700 } }}>
+                  <TableCell>Biên bản</TableCell>
+                  <TableCell>Loại</TableCell>
+                  <TableCell>Ngày</TableCell>
+                  <TableCell>Trạng thái</TableCell>
+                  <TableCell align="right">
                     Thao tác
                   </TableCell>
                 </TableRow>
