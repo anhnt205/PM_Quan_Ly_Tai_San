@@ -14,6 +14,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class LyLichRequest {
+    String id;
     @NotNull
     String maLyLich;
     @NotNull
