@@ -1,7 +1,16 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Box, IconButton, Slider, Tooltip } from "@mui/material";
+import { Box, IconButton, Slider, Tooltip, Select, MenuItem } from "@mui/material";
 import { Close, Add, Remove } from "@mui/icons-material";
 import { useGetFileQuery } from "../../pages/Staff/Mutation";
+
+const findScrollContainer = (el: HTMLElement | null): HTMLElement | null => {
+  if (!el) return null;
+  const style = window.getComputedStyle(el);
+  if (style.overflowY === "auto" || style.overflowY === "scroll") {
+    return el;
+  }
+  return findScrollContainer(el.parentElement);
+};
 
 interface DraggableSignatureProps {
   id: string;
@@ -17,11 +26,13 @@ interface DraggableSignatureProps {
   initialScale?: number;
   sig: any;
   digitalSignatureMap: any;
-  containerWidth: number;
-  containerHeight: number;
-  onUpdatePosition: (id: string, xRatio: number, yRatio: number) => void;
+  pageTopOffset: number;
+  canvasDisplaySizes: { width: number; height: number }[];
+  onUpdatePosition: (id: string, xRatio: number, yRatio: number, page?: number) => void;
   onUpdateScale: (id: string, newScale: number) => void;
   onDelete: (id: string) => void;
+  onUpdatePage?: (id: string, newPage: number) => void;
+  pagesCount?: number;
   isLocked: boolean;
 }
 
@@ -33,13 +44,16 @@ export default function DraggableSignature({
   initialScale = 1,
   sig,
   digitalSignatureMap,
-  containerWidth,
-  containerHeight,
+  pageTopOffset,
+  canvasDisplaySizes,
   onUpdatePosition,
   onUpdateScale,
   onDelete,
+  onUpdatePage,
+  pagesCount = 1,
   isLocked = false,
 }: DraggableSignatureProps) {
+  const [showControls, setShowControls] = useState(false);
   const [showMobileControls, setShowMobileControls] = useState(false);
   const lastTapRef = useRef<number>(0);
 
@@ -51,9 +65,14 @@ export default function DraggableSignature({
   const { data: fileUrl } = useGetFileQuery(sig.chuKyNhay || sig.chuKyThuong);
 
   // ─── Tính vị trí pixel từ ratio ───────────────────────────────────────────
-  // containerWidth/Height có thể thay đổi khi resize → tính lại mỗi render
   const safeX = isNaN(xRatio) ? 0 : xRatio;
   const safeY = isNaN(yRatio) ? 0 : yRatio;
+
+  const sigPage = sig.page || 1;
+  const pageIdx = Math.min(sigPage - 1, canvasDisplaySizes.length - 1);
+  const currentCanvasSize = canvasDisplaySizes[pageIdx] || { width: 800, height: 600 };
+  const containerWidth = currentCanvasSize.width;
+  const containerHeight = currentCanvasSize.height;
 
   // Chiều rộng hiển thị: ưu tiên widthRatio, fallback về sig.width (px cũ)
   const baseWidthPx = widthRatio
@@ -63,26 +82,37 @@ export default function DraggableSignature({
 
   // Vị trí pixel tính từ ratio × kích thước container hiện tại
   const leftPx = safeX * containerWidth;
-  const topPx = safeY * containerHeight;
+  const topPx = pageTopOffset + safeY * containerHeight;
 
-  // ─── Dragging ref (chỉ lưu ratio, không lưu px) ───────────────────────────
-  const ratioRef = useRef({ x: safeX, y: safeY });
+  // ─── Dragging ref ──────────────────────────────────────────────────────────
+  const ratioRef = useRef({ x: safeX, y: safeY, page: sigPage });
   const boxRef = useRef<HTMLDivElement>(null);
 
+  // Click outside to hide control panels
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (boxRef.current && !boxRef.current.contains(e.target as Node)) {
+        setShowControls(false);
+        setShowMobileControls(false);
+      }
+    };
+    window.addEventListener("mousedown", handleOutsideClick);
+    return () => window.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
+
   // Cập nhật DOM position trực tiếp (bypass React re-render khi kéo)
-  const applyPositionToDOM = (xR: number, yR: number) => {
+  const applyPositionToDOM = (xR: number, yR: number, pOffset: number, cWidth: number, cHeight: number) => {
     if (boxRef.current) {
-      boxRef.current.style.left = `${xR * containerWidth}px`;
-      boxRef.current.style.top = `${yR * containerHeight}px`;
+      boxRef.current.style.left = `${xR * cWidth}px`;
+      boxRef.current.style.top = `${pOffset + yR * cHeight}px`;
     }
   };
 
-  // Khi container resize → vị trí pixel tự cập nhật qua leftPx/topPx
+  // Khi container resize hoặc thay đổi tọa độ từ bên ngoài
   useEffect(() => {
-    ratioRef.current = { x: safeX, y: safeY };
-    applyPositionToDOM(safeX, safeY);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [safeX, safeY, containerWidth, containerHeight]);
+    ratioRef.current = { x: safeX, y: safeY, page: sigPage };
+    applyPositionToDOM(safeX, safeY, pageTopOffset, containerWidth, containerHeight);
+  }, [safeX, safeY, pageTopOffset, containerWidth, containerHeight, sigPage]);
 
   // ─── Zoom ─────────────────────────────────────────────────────────────────
   const handleZoom = (newScale: number) => {
@@ -97,32 +127,118 @@ export default function DraggableSignature({
     if (isLocked) return;
     e.stopPropagation();
     e.preventDefault();
+    setShowControls(true);
 
     const startMouseX = e.clientX;
     const startMouseY = e.clientY;
-    const startRatioX = ratioRef.current.x;
-    const startRatioY = ratioRef.current.y;
+    const startLeftPx = ratioRef.current.x * containerWidth;
+    const startTopPx = pageTopOffset + ratioRef.current.y * containerHeight;
+
+    const scrollContainer = findScrollContainer(boxRef.current);
+    const startScrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
+
+    let currentClientX = startMouseX;
+    let currentClientY = startMouseY;
+    let animationFrameId: number | null = null;
+
+    const updatePosition = (clientX: number, clientY: number) => {
+      const dx = clientX - startMouseX;
+      const scrollContainerCurrent = findScrollContainer(boxRef.current);
+      const scrollDiff = scrollContainerCurrent ? (scrollContainerCurrent.scrollTop - startScrollTop) : 0;
+      const dy = (clientY - startMouseY) + scrollDiff;
+
+      const newLeftPx = startLeftPx + dx;
+      const newTopPx = startTopPx + dy;
+
+      if (boxRef.current) {
+        boxRef.current.style.left = `${newLeftPx}px`;
+        boxRef.current.style.top = `${newTopPx}px`;
+      }
+    };
+
+    const checkScroll = () => {
+      const scrollContainerCurrent = findScrollContainer(boxRef.current);
+      if (scrollContainerCurrent) {
+        const rect = scrollContainerCurrent.getBoundingClientRect();
+        const threshold = 60; // distance from edge in px
+        const maxSpeed = 15; // max scroll speed in px/frame
+        
+        let scrollAmount = 0;
+        if (currentClientY > rect.bottom - threshold) {
+          const ratio = (currentClientY - (rect.bottom - threshold)) / threshold;
+          scrollAmount = Math.min(maxSpeed, Math.max(1, ratio * maxSpeed));
+        } else if (currentClientY < rect.top + threshold) {
+          const ratio = ((rect.top + threshold) - currentClientY) / threshold;
+          scrollAmount = -Math.min(maxSpeed, Math.max(1, ratio * maxSpeed));
+        }
+        
+        if (scrollAmount !== 0) {
+          scrollContainerCurrent.scrollTop += scrollAmount;
+          updatePosition(currentClientX, currentClientY);
+        }
+      }
+      animationFrameId = requestAnimationFrame(checkScroll);
+    };
+
+    animationFrameId = requestAnimationFrame(checkScroll);
 
     const handleMouseMove = (ev: MouseEvent) => {
-      const dx = ev.clientX - startMouseX;
-      const dy = ev.clientY - startMouseY;
-
-      let newX = startRatioX + dx / containerWidth;
-      let newY = startRatioY + dy / containerHeight;
-
-      // Clamp: không cho chạy ra ngoài container
-      const maxX = (containerWidth - displayWidthPx) / containerWidth;
-      newX = Math.max(0, Math.min(newX, maxX));
-      newY = Math.max(0, Math.min(newY, 1));
-
-      ratioRef.current = { x: newX, y: newY };
-      applyPositionToDOM(newX, newY);
+      currentClientX = ev.clientX;
+      currentClientY = ev.clientY;
+      updatePosition(ev.clientX, ev.clientY);
     };
 
     const handleMouseUp = () => {
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+      }
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
-      onUpdatePosition(id, ratioRef.current.x, ratioRef.current.y);
+
+      const finalLeftPx = boxRef.current ? parseFloat(boxRef.current.style.left) : startLeftPx;
+      const finalTopPx = boxRef.current ? parseFloat(boxRef.current.style.top) : startTopPx;
+
+      // Xác định chữ ký thuộc trang nào dựa trên cao độ y (finalTopPx)
+      let droppedPage = 1;
+      let relativeY = 0;
+      let accumulatedTop = 0;
+
+      for (let i = 0; i < canvasDisplaySizes.length; i++) {
+        const pageH = canvasDisplaySizes[i]?.height || 0;
+        const pageBottom = accumulatedTop + pageH;
+
+        if (finalTopPx >= accumulatedTop && finalTopPx <= pageBottom) {
+          droppedPage = i + 1;
+          relativeY = (finalTopPx - accumulatedTop) / pageH;
+          break;
+        }
+
+        if (i < canvasDisplaySizes.length - 1) {
+          const nextAccumulatedTop = pageBottom + 24; // Khoảng cách giữa các trang (mb: 3)
+          if (finalTopPx > pageBottom && finalTopPx < nextAccumulatedTop) {
+            if (finalTopPx - pageBottom < nextAccumulatedTop - finalTopPx) {
+              droppedPage = i + 1;
+              relativeY = 1.0;
+            } else {
+              droppedPage = i + 2;
+              relativeY = 0.0;
+            }
+            break;
+          }
+        }
+        accumulatedTop = pageBottom + 24;
+      }
+
+      const targetPageSize = canvasDisplaySizes[droppedPage - 1] || canvasDisplaySizes[0];
+      const targetPageWidth = targetPageSize?.width || 800;
+      let relativeX = finalLeftPx / targetPageWidth;
+
+      const maxX = (targetPageWidth - displayWidthPx) / targetPageWidth;
+      relativeX = Math.max(0, Math.min(relativeX, maxX));
+      relativeY = Math.max(0, Math.min(relativeY, 1.0));
+
+      ratioRef.current = { x: relativeX, y: relativeY, page: droppedPage };
+      onUpdatePosition(id, relativeX, relativeY, droppedPage);
     };
 
     window.addEventListener("mousemove", handleMouseMove);
@@ -132,6 +248,7 @@ export default function DraggableSignature({
   // ─── Touch drag ───────────────────────────────────────────────────────────
   const handleTouchStart = (e: React.TouchEvent) => {
     if (isLocked) return;
+    setShowControls(true);
 
     const now = Date.now();
     if (now - lastTapRef.current < 300) {
@@ -142,41 +259,130 @@ export default function DraggableSignature({
     const touch = e.touches[0];
     const startTouchX = touch.clientX;
     const startTouchY = touch.clientY;
-    const startRatioX = ratioRef.current.x;
-    const startRatioY = ratioRef.current.y;
+    const startLeftPx = ratioRef.current.x * containerWidth;
+    const startTopPx = pageTopOffset + ratioRef.current.y * containerHeight;
+
+    const scrollContainer = findScrollContainer(boxRef.current);
+    const startScrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
+
+    let currentClientX = startTouchX;
+    let currentClientY = startTouchY;
+    let animationFrameId: number | null = null;
+
+    const updatePosition = (clientX: number, clientY: number) => {
+      const dx = clientX - startTouchX;
+      const scrollContainerCurrent = findScrollContainer(boxRef.current);
+      const scrollDiff = scrollContainerCurrent ? (scrollContainerCurrent.scrollTop - startScrollTop) : 0;
+      const dy = (clientY - startTouchY) + scrollDiff;
+
+      const newLeftPx = startLeftPx + dx;
+      const newTopPx = startTopPx + dy;
+
+      if (boxRef.current) {
+        boxRef.current.style.left = `${newLeftPx}px`;
+        boxRef.current.style.top = `${newTopPx}px`;
+      }
+    };
+
+    const checkScroll = () => {
+      const scrollContainerCurrent = findScrollContainer(boxRef.current);
+      if (scrollContainerCurrent) {
+        const rect = scrollContainerCurrent.getBoundingClientRect();
+        const threshold = 60;
+        const maxSpeed = 15;
+        
+        let scrollAmount = 0;
+        if (currentClientY > rect.bottom - threshold) {
+          const ratio = (currentClientY - (rect.bottom - threshold)) / threshold;
+          scrollAmount = Math.min(maxSpeed, Math.max(1, ratio * maxSpeed));
+        } else if (currentClientY < rect.top + threshold) {
+          const ratio = ((rect.top + threshold) - currentClientY) / threshold;
+          scrollAmount = -Math.min(maxSpeed, Math.max(1, ratio * maxSpeed));
+        }
+        
+        if (scrollAmount !== 0) {
+          scrollContainerCurrent.scrollTop += scrollAmount;
+          updatePosition(currentClientX, currentClientY);
+        }
+      }
+      animationFrameId = requestAnimationFrame(checkScroll);
+    };
+
+    animationFrameId = requestAnimationFrame(checkScroll);
 
     const handleTouchMove = (ev: TouchEvent) => {
       if (ev.cancelable) ev.preventDefault();
       const t = ev.touches[0];
-      const dx = t.clientX - startTouchX;
-      const dy = t.clientY - startTouchY;
-
-      let newX = startRatioX + dx / containerWidth;
-      let newY = startRatioY + dy / containerHeight;
-
-      const maxX = (containerWidth - displayWidthPx) / containerWidth;
-      newX = Math.max(0, Math.min(newX, maxX));
-      newY = Math.max(0, Math.min(newY, 1));
-
-      ratioRef.current = { x: newX, y: newY };
-      applyPositionToDOM(newX, newY);
+      currentClientX = t.clientX;
+      currentClientY = t.clientY;
+      updatePosition(t.clientX, t.clientY);
     };
 
     const handleTouchEnd = () => {
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+      }
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
-      onUpdatePosition(id, ratioRef.current.x, ratioRef.current.y);
+
+      const finalLeftPx = boxRef.current ? parseFloat(boxRef.current.style.left) : startLeftPx;
+      const finalTopPx = boxRef.current ? parseFloat(boxRef.current.style.top) : startTopPx;
+
+      let droppedPage = 1;
+      let relativeY = 0;
+      let accumulatedTop = 0;
+
+      for (let i = 0; i < canvasDisplaySizes.length; i++) {
+        const pageH = canvasDisplaySizes[i]?.height || 0;
+        const pageBottom = accumulatedTop + pageH;
+
+        if (finalTopPx >= accumulatedTop && finalTopPx <= pageBottom) {
+          droppedPage = i + 1;
+          relativeY = (finalTopPx - accumulatedTop) / pageH;
+          break;
+        }
+
+        if (i < canvasDisplaySizes.length - 1) {
+          const nextAccumulatedTop = pageBottom + 24;
+          if (finalTopPx > pageBottom && finalTopPx < nextAccumulatedTop) {
+            if (finalTopPx - pageBottom < nextAccumulatedTop - finalTopPx) {
+              droppedPage = i + 1;
+              relativeY = 1.0;
+            } else {
+              droppedPage = i + 2;
+              relativeY = 0.0;
+            }
+            break;
+          }
+        }
+        accumulatedTop = pageBottom + 24;
+      }
+
+      const targetPageSize = canvasDisplaySizes[droppedPage - 1] || canvasDisplaySizes[0];
+      const targetPageWidth = targetPageSize?.width || 800;
+      let relativeX = finalLeftPx / targetPageWidth;
+
+      const maxX = (targetPageWidth - displayWidthPx) / targetPageWidth;
+      relativeX = Math.max(0, Math.min(relativeX, maxX));
+      relativeY = Math.max(0, Math.min(relativeY, 1.0));
+
+      ratioRef.current = { x: relativeX, y: relativeY, page: droppedPage };
+      onUpdatePosition(id, relativeX, relativeY, droppedPage);
     };
 
     window.addEventListener("touchmove", handleTouchMove, { passive: false });
     window.addEventListener("touchend", handleTouchEnd);
   };
 
+  const controlsVisible = (showControls || showMobileControls) && !isLocked;
+
   return (
     <Box
       ref={boxRef}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
+      onMouseEnter={() => !isLocked && setShowControls(true)}
+      onMouseLeave={() => setShowControls(false)}
       sx={{
         position: "absolute",
         left: leftPx,
@@ -191,12 +397,10 @@ export default function DraggableSignature({
         pointerEvents: "auto",
         transition: "border-color 0.2s, box-shadow 0.2s",
         "&:active": { cursor: isLocked ? "default" : "grabbing" },
-        "&:hover": {
-          borderColor: isLocked ? "transparent" : "#038d56",
-          boxShadow: isLocked ? "none" : "0 0 12px rgba(4, 180, 110, 0.3)",
-          "& .sig-controls": { display: isLocked ? "none" : "flex" },
-        },
-        ...(showMobileControls && !isLocked && { borderColor: "#038d56", boxShadow: "0 0 12px rgba(4, 180, 110, 0.3)" }),
+        ...(controlsVisible && {
+          borderColor: "#038d56",
+          boxShadow: "0 0 12px rgba(4, 180, 110, 0.3)",
+        }),
       }}
     >
       <img
@@ -212,11 +416,11 @@ export default function DraggableSignature({
         }}
       />
 
-      {!isLocked && (
+      {controlsVisible && (
         <Box
           className="sig-controls"
           sx={{
-            display: showMobileControls ? "flex" : "none",
+            display: "flex",
             position: "absolute",
             top: -48,
             left: "50%",
@@ -233,6 +437,16 @@ export default function DraggableSignature({
             whiteSpace: "nowrap",
             pointerEvents: "auto",
             transition: "all 0.2s ease-in-out",
+            // Pseudo-element cầu nối để tránh mất hover khi di chuyển chuột qua khoảng trống
+            "&::after": {
+              content: '""',
+              position: "absolute",
+              bottom: -20,
+              left: 0,
+              right: 0,
+              height: 20,
+              bgcolor: "transparent",
+            }
           }}
           onTouchStart={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
@@ -275,6 +489,7 @@ export default function DraggableSignature({
               <Add fontSize="small" />
             </IconButton>
           </Tooltip>
+
           <Box sx={{ width: 1, height: 16, bgcolor: "rgba(0, 0, 0, 0.1)", mx: 0.5 }} />
           <Tooltip title="Xóa">
             <IconButton 

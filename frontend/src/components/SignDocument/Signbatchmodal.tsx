@@ -42,7 +42,7 @@ interface SignBatchModalProps {
     positions: any[],
   ) => Promise<{
     pdf: Uint8Array;
-    coordinates: Record<string, { xRatio: number; yRatio: number }>;
+    coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
   }>;
   staffs: any[];
   departments: any[];
@@ -132,6 +132,7 @@ export const SignBatchModal: React.FC<SignBatchModalProps> = ({
         const coords = result.coordinates[user?.taiKhoan?.tenDangNhap] ?? {
           xRatio: 0.2,
           yRatio: 0.8,
+          page: 1,
         };
         console.log(result);
         const displayWidth = 800;
@@ -146,6 +147,7 @@ export const SignBatchModal: React.FC<SignBatchModalProps> = ({
           ngayKy: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
           x: coords.xRatio,
           y: coords.yRatio,
+          page: coords.page || 1,
           chuKyNhay:
             (signatureType === 1 || signatureType === 5) && employee.chuKyNhay,
           chuKyThuong:

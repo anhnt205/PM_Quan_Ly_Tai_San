@@ -185,6 +185,7 @@ export default function SharedSignDocumentForm({
       scale: 1,
       chuKySo: result,
       isLocked: false,
+      page: 1,
     };
 
     setSignatures((prev) => [...prev, newSignature]);
@@ -247,6 +248,7 @@ export default function SharedSignDocumentForm({
       scale: signatureType === 2 || signatureType === 4 ? 2 : 1,
       chuKySo: key,
       isLocked: false,
+      page: 1,
     };
 
     setSignatures([...signatures, newSignature]);
@@ -289,17 +291,32 @@ export default function SharedSignDocumentForm({
     id: string,
     newXRatio: number,
     newYRatio: number,
+    newPage?: number,
   ) => {
     setSignatures((prev) =>
       prev.map((sig) =>
-        sig.id === id ? { ...sig, x: newXRatio, y: newYRatio } : sig,
+        sig.id === id
+          ? {
+              ...sig,
+              x: newXRatio,
+              y: newYRatio,
+              ...(newPage !== undefined ? { page: newPage } : {}),
+            }
+          : sig,
       ),
     );
   };
 
+
   const handleUpdateScale = (id: string, newScale: number) => {
     setSignatures((prev) =>
       prev.map((sig) => (sig.id === id ? { ...sig, scale: newScale } : sig)),
+    );
+  };
+
+  const handleUpdatePage = (id: string, newPage: number) => {
+    setSignatures((prev) =>
+      prev.map((sig) => (sig.id === id ? { ...sig, page: newPage } : sig)),
     );
   };
 
@@ -320,9 +337,7 @@ export default function SharedSignDocumentForm({
         res.arrayBuffer(),
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      const pages = pdfDoc.getPages();
-      const firstPage = pages[0];
-      const { width: pageWidth, height: pageHeight } = firstPage.getSize();
+      const pdfPages = pdfDoc.getPages();
 
       for (const sig of signatures) {
         let imageBytes: ArrayBuffer | undefined;
@@ -349,11 +364,15 @@ export default function SharedSignDocumentForm({
         if (imageBytes) {
           const pdfImage = await pdfDoc.embedPng(imageBytes);
 
+          const sigPageNum = sig.page || 1;
+          const targetPage = pdfPages[sigPageNum - 1] || pdfPages[0];
+          const { width: pageWidth, height: pageHeight } = targetPage.getSize();
+
           // [FIX] Dùng widthRatio để tính kích thước trong PDF — không phụ thuộc displayWidth
+          const canvasWidth = canvasDisplaySizes[sigPageNum - 1]?.width || canvasDisplaySizes[0]?.width || 800;
           const effectiveWidthRatio =
             sig.widthRatio ??
-            (sig.width * (sig.scale || 1)) /
-              (canvasDisplaySizes[0]?.width || 800);
+            (sig.width * (sig.scale || 1)) / canvasWidth;
           const pdfImageWidth =
             effectiveWidthRatio * (sig.scale || 1) * pageWidth;
           const pdfImageHeight =
@@ -361,7 +380,7 @@ export default function SharedSignDocumentForm({
           const x = sig.x * pageWidth;
           const y = pageHeight - sig.y * pageHeight - pdfImageHeight;
 
-          firstPage.drawImage(pdfImage, {
+          targetPage.drawImage(pdfImage, {
             x,
             y,
             width: pdfImageWidth,
@@ -396,8 +415,7 @@ export default function SharedSignDocumentForm({
       if (!sourceBytes) throw new Error("Không có dữ liệu để xuất");
 
       const pdfDoc = await PDFDocument.load(sourceBytes);
-      const page = pdfDoc.getPages()[0];
-      const { width, height } = page.getSize();
+      const pdfPages = pdfDoc.getPages();
 
       for (const sig of signatures) {
         let imageBytes: ArrayBuffer | undefined;
@@ -418,13 +436,18 @@ export default function SharedSignDocumentForm({
 
         if (imageBytes) {
           const img = await pdfDoc.embedPng(imageBytes);
+          const sigPageNum = sig.page || 1;
+          const targetPage = pdfPages[sigPageNum - 1] || pdfPages[0];
+          const { width, height } = targetPage.getSize();
+
           // [FIX] Dùng widthRatio
+          const canvasWidth = canvasDisplaySizes[sigPageNum - 1]?.width || canvasDisplaySizes[0]?.width || 800;
           const effectiveWidthRatio =
             sig.widthRatio ??
-            (sig.width * sig.scale) / (canvasDisplaySizes[0]?.width || 800);
+            (sig.width * sig.scale) / canvasWidth;
           const pdfW = effectiveWidthRatio * sig.scale * width;
           const pdfH = (img.height / img.width) * pdfW;
-          page.drawImage(img, {
+          targetPage.drawImage(img, {
             x: sig.x * width,
             y: height - sig.y * height - pdfH,
             width: pdfW,
@@ -588,6 +611,7 @@ export default function SharedSignDocumentForm({
               handleUpdatePosition={handleUpdatePosition}
               handleUpdateScale={handleUpdateScale}
               handleDeleteSignature={handleDeleteSignature}
+              handleUpdatePage={handleUpdatePage}
             />
           )}
         </Box>

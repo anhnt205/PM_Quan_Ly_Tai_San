@@ -14,4 +14,5 @@ export interface SignaturesData {
   width: number;
   widthRatio: number;
   isLocked: boolean;
+  page?: number;
 }

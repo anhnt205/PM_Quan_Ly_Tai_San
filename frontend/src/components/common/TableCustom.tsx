@@ -255,6 +255,7 @@ interface Props {
   handleAssetTransfer?: (department: string) => void;
   isCheckShowShare?: (item: any[]) => boolean;
   handleSignDocument?: (item: any, user: any, onSign: () => void) => void;
+  handleSignDocuments?: (items: any[]) => void;
   titleSearch?: string;
   extraActions?: React.ReactNode;
   customContent?: React.ReactNode;
@@ -308,6 +309,7 @@ export default function TableCustom({
   handleAssetTransfer,
   isCheckShowShare,
   handleSignDocument,
+  handleSignDocuments,
   selectedDate,
   setSelectedDate,
   titleSearch = "Tìm kiếm ...",
@@ -337,29 +339,31 @@ export default function TableCustom({
     useState<GridColumnVisibilityModel>({});
   const containerRef = useRef<HTMLDivElement>(null);
   const savedPageSizeRef = useRef<number>(paginationModel?.pageSize ?? 10);
-  const [allSelectedRows, setAllSelectedRows] = useState<Map<string, any>>(new Map());
+  const [allSelectedRows, setAllSelectedRows] = useState<Map<string, any>>(
+    new Map(),
+  );
   const [isPermissionBanHanh, setIsPermissionBanHanh] = useState(false);
   const { getByIdMutation } = usePositionMutation();
   const [isFullscreen, setIsFullscreen] = useState(false);
-    const toggleFullscreen = () => {
-        if (!isFullscreen) {
-            // Lưu pageSize hiện tại
-            savedPageSizeRef.current = paginationModel?.pageSize ?? 10;
-            const availableHeight = window.innerHeight - 200;
-            const rowHeight = 52;
-            const autoRows = Math.max(10, Math.floor(availableHeight / rowHeight));
+  const toggleFullscreen = () => {
+    if (!isFullscreen) {
+      // Lưu pageSize hiện tại
+      savedPageSizeRef.current = paginationModel?.pageSize ?? 10;
+      const availableHeight = window.innerHeight - 200;
+      const rowHeight = 52;
+      const autoRows = Math.max(10, Math.floor(availableHeight / rowHeight));
 
-            onPaginationModelChange?.({ page: 0, pageSize: autoRows });
-            setIsFullscreen(true);
-        } else {
-            // Restore về pageSize cũ
-            onPaginationModelChange?.({
-                page: 0,
-                pageSize: savedPageSizeRef.current,
-            });
-            setIsFullscreen(false);
-        }
-    };
+      onPaginationModelChange?.({ page: 0, pageSize: autoRows });
+      setIsFullscreen(true);
+    } else {
+      // Restore về pageSize cũ
+      onPaginationModelChange?.({
+        page: 0,
+        pageSize: savedPageSizeRef.current,
+      });
+      setIsFullscreen(false);
+    }
+  };
   useEffect(() => {
     const checkPermission = async () => {
       if (user?.taiKhoan?.chucVuId) {
@@ -406,38 +410,38 @@ export default function TableCustom({
       );
     }
   };
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape" && isFullscreen) {
-                onPaginationModelChange?.({
-                    page: 0,
-                    pageSize: savedPageSizeRef.current,
-                });
-                setIsFullscreen(false);
-            }
-        };
-        document.addEventListener("keydown", handleKeyDown);
-        return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [isFullscreen]);
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isFullscreen) {
+        onPaginationModelChange?.({
+          page: 0,
+          pageSize: savedPageSizeRef.current,
+        });
+        setIsFullscreen(false);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isFullscreen]);
   return (
-      <Box
-          ref={containerRef}
-          sx={
-              isFullscreen
-                  ? {
-                      position: "fixed",
-                      inset: 0,
-                      width: "100vw",
-                      height: "100vh",
-                       zIndex: 1200,
-                      bgcolor: "background.paper",
-                      overflow: "auto",
-                      display: "flex",
-                      flexDirection: "column",
-                  }
-                  : {}
-          }
-      >
+    <Box
+      ref={containerRef}
+      sx={
+        isFullscreen
+          ? {
+              position: "fixed",
+              inset: 0,
+              width: "100vw",
+              height: "100vh",
+              zIndex: 1200,
+              bgcolor: "background.paper",
+              overflow: "auto",
+              display: "flex",
+              flexDirection: "column",
+            }
+          : {}
+      }
+    >
       <Paper
         sx={{
           my: isFullscreen ? 0 : 2,
@@ -568,6 +572,7 @@ export default function TableCustom({
                   startIcon={<Edit />}
                   onClick={async (e) => {
                     e.stopPropagation();
+                    handleSignDocuments?.(selectedItem);
                     handleSignDocument?.(selectedItem[0], user, () =>
                       onSign?.(
                         selectedItem[0]?.taiLieuCuoi ||
@@ -678,7 +683,7 @@ export default function TableCustom({
               paginationMode={paginationMode}
               paginationModel={paginationModel}
               onPaginationModelChange={onPaginationModelChange}
-              pageSizeOptions={[10, 20, 50,100]}
+              pageSizeOptions={[10, 20, 50, 100]}
               loading={loading}
               // autoPageSize={isFullscreen}
               checkboxSelection={checkboxSelection}
@@ -746,22 +751,27 @@ export default function TableCustom({
                     hasSelection={selectedItem.length > 0}
                     onExportSelectedExcel={
                       onExportSelectedExcel
-                          ? () => {
+                        ? () => {
                             // @ts-ignore
-                            onExportSelectedExcel([...allSelectedRows.values()]);
+                            onExportSelectedExcel(
+                              Array.from(allSelectedRows.values()),
+                            );
                           }
-                          : allSelectedRows.size > 0
-                              ? () => {
-                                const wb = XLSX.utils.book_new();
-                                // @ts-ignore
-                                const ws = XLSX.utils.json_to_sheet([...allSelectedRows.values()]);
-                                XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-                                XLSX.writeFile(
-                                    wb,
-                                    `${exportSelectedFileName ?? "Danh_sach_da_chon"}_${dayjs().format("YYYYMMDD")}.xlsx`,
-                                );
-                              }
-                              : undefined}
+                        : allSelectedRows.size > 0
+                          ? () => {
+                              const wb = XLSX.utils.book_new();
+                              // @ts-ignore
+                              const ws = XLSX.utils.json_to_sheet(
+                                Array.from(allSelectedRows.values()),
+                              );
+                              XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+                              XLSX.writeFile(
+                                wb,
+                                `${exportSelectedFileName ?? "Danh_sach_da_chon"}_${dayjs().format("YYYYMMDD")}.xlsx`,
+                              );
+                            }
+                          : undefined
+                    }
                   />
                 ),
                 filterPanel: CustomFilterPanel,

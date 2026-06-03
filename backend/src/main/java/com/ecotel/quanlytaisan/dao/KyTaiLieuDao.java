@@ -17,12 +17,12 @@ public class KyTaiLieuDao {
     private JdbcTemplate jdbcTemplate;
 
     public List<KyTaiLieu> findById(String idTaiLieu) {
-        String sql = "SELECT KyTaiLieu.Id, IdTaiLieu, LoaiKy, X, Y, IdNguoiKy, ChuKySo, NgayKy, STT, Scale, Width, NhanVien.ChuKyNhay, NhanVien.ChuKyThuong FROM KyTaiLieu, NhanVien where IdTaiLieu = ? and NhanVien.Id = KyTaiLieu.IdNguoiKy";
+        String sql = "SELECT KyTaiLieu.Id, IdTaiLieu, LoaiKy, X, Y, IdNguoiKy, ChuKySo, NgayKy, STT, Scale, Width, Page, NhanVien.ChuKyNhay, NhanVien.ChuKyThuong FROM KyTaiLieu, NhanVien where IdTaiLieu = ? and NhanVien.Id = KyTaiLieu.IdNguoiKy";
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(KyTaiLieu.class), idTaiLieu);
     }
 
     public KyTaiLieu findById(Integer idTaiLieu) {
-        String sql = "SELECT KyTaiLieu.Id, IdTaiLieu, LoaiKy, X, Y, IdNguoiKy, ChuKySo, NgayKy, STT, Scale, Width, NhanVien.ChuKyNhay, NhanVien.ChuKyThuong FROM KyTaiLieu, NhanVien where KyTaiLieu.Id = ? and NhanVien.Id = KyTaiLieu.IdNguoiKy";
+        String sql = "SELECT KyTaiLieu.Id, IdTaiLieu, LoaiKy, X, Y, IdNguoiKy, ChuKySo, NgayKy, STT, Scale, Width, Page, NhanVien.ChuKyNhay, NhanVien.ChuKyThuong FROM KyTaiLieu, NhanVien where KyTaiLieu.Id = ? and NhanVien.Id = KyTaiLieu.IdNguoiKy";
         List<KyTaiLieu> results = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(KyTaiLieu.class), idTaiLieu);
         return results.isEmpty() ? null : results.get(0);
     }
@@ -37,8 +37,8 @@ public class KyTaiLieuDao {
             return 0;
         } else {
             // Nếu chưa tồn tại thì insert
-            String sql = "INSERT INTO KyTaiLieu (Id, IdTaiLieu, LoaiKy, X, Y, IdNguoiKy, ChuKySo, NgayKy, STT, Scale, Width) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            return jdbcTemplate.update(sql, da.getId(), da.getIdTaiLieu(), da.getLoaiKy(), da.getX(), da.getY(), da.getIdNguoiKy(), da.getChuKySo(), da.getNgayKy(), da.getStt(), da.getScale(), da.getWidth());
+            String sql = "INSERT INTO KyTaiLieu (Id, IdTaiLieu, LoaiKy, X, Y, IdNguoiKy, ChuKySo, NgayKy, STT, Scale, Width, Page) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            return jdbcTemplate.update(sql, da.getId(), da.getIdTaiLieu(), da.getLoaiKy(), da.getX(), da.getY(), da.getIdNguoiKy(), da.getChuKySo(), da.getNgayKy(), da.getStt(), da.getScale(), da.getWidth(), da.getPage() != null ? da.getPage() : 1);
         }
     }
 

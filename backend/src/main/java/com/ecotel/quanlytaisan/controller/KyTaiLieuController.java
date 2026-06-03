@@ -1,6 +1,5 @@
 package com.ecotel.quanlytaisan.controller;
 
-import com.ecotel.quanlytaisan.dao.KyTaiLieuDao;
 import com.ecotel.quanlytaisan.model.*;
 import com.ecotel.quanlytaisan.service.KyTaiLieuService;
 import com.ecotel.quanlytaisan.service.NotificationService;
@@ -8,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 

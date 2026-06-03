@@ -19,6 +19,7 @@ public class KyTaiLieu {
     private String chuKyThuong;
     private Float scale;
     private Float width;
+    private Integer page;
 
     public static KyTaiLieu mapToKyTaiLieu(String[] row) {
         KyTaiLieu ktl = new KyTaiLieu();
@@ -31,6 +32,11 @@ public class KyTaiLieu {
         ktl.setChuKySo(row[6]);
         ktl.setNgayKy(row[7]);
         ktl.setStt(row[8] != null && !row[8].isEmpty() ? Integer.parseInt(row[8]) : 0);
+        if (row.length > 9) {
+            ktl.setPage(row[9] != null && !row[9].isEmpty() ? Integer.parseInt(row[9]) : 1);
+        } else {
+            ktl.setPage(1);
+        }
         return ktl;
     }
 
@@ -45,6 +51,7 @@ public class KyTaiLieu {
         ktl.setChuKySo(getCellStringValue(row.getCell(6)));
         ktl.setNgayKy(getCellStringValue(row.getCell(7)));
         ktl.setStt(row.getCell(8) != null ? (int) row.getCell(8).getNumericCellValue() : 0);
+        ktl.setPage(row.getCell(9) != null ? (int) row.getCell(9).getNumericCellValue() : 1);
         return ktl;
     }
 

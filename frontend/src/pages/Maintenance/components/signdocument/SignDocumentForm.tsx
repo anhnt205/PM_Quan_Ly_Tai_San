@@ -23,7 +23,7 @@ interface SignDocumentFormProps {
   showHeader?: boolean;
   generatePdf?: () => Promise<{
     pdf: Uint8Array;
-    coordinates: Record<string, { xRatio: number; yRatio: number }>;
+    coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
   }>;
 }
 

@@ -1535,7 +1535,8 @@ export default function MaintenanceApprovalPage() {
                   isRowSelectable={(params) => canSign([params.row], user)}
                   showStatusFilter={false}
                   canSign={(items) => items.length >= 1}
-                  handleSignDocument={(items, _user, _onSign) => {
+                  handleSignDocuments={(items) => {
+                    console.log("items", items);
                     signBatch.openModal(items);
                   }}
                   onSign={() => {}}

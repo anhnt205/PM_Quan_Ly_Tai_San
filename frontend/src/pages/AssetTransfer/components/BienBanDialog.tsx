@@ -351,21 +351,23 @@ export default function BienBanDialog({
                 />
 
                 {/* LAYER 2: SIGNATURES (Nằm đè lên trên) */}
-                {signatures.map((sig) => {
-                  const currentCanvas = pages[index];
-                  const currentDisplay = displaySize[index];
-                  if (!currentCanvas || !currentDisplay) return null;
-                  const scale = currentDisplay.width / currentCanvas.width;
-                  return (
-                    <BoxSignatureImg
-                      key={sig.id}
-                      scale={scale}
-                      digitalSignatureMap={digitalSignatureMap}
-                      sig={sig}
-                      currentDisplay={currentDisplay}
-                    />
-                  );
-                })}
+                {signatures
+                  .filter((sig) => (sig.page || 1) === index + 1)
+                  .map((sig) => {
+                    const currentCanvas = pages[index];
+                    const currentDisplay = displaySize[index];
+                    if (!currentCanvas || !currentDisplay) return null;
+                    const scale = currentDisplay.width / currentCanvas.width;
+                    return (
+                      <BoxSignatureImg
+                        key={sig.id}
+                        scale={scale}
+                        digitalSignatureMap={digitalSignatureMap}
+                        sig={sig}
+                        currentDisplay={currentDisplay}
+                      />
+                    );
+                  })}
               </Box>
             ))}
           </Box>

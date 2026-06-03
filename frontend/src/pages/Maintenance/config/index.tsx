@@ -510,7 +510,7 @@ export const generateBienBanKeHoachPdf = async (
   positions: any[],
 ): Promise<{
   pdf: Uint8Array;
-  coordinates: Record<string, { xRatio: number; yRatio: number }>;
+  coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
 }> => {
   const listSigneInfos: any[] = listSigneInfo(
     plan,
@@ -653,6 +653,10 @@ export const generateBienBanKeHoachPdf = async (
   let finalY = (doc as any).lastAutoTable.finalY + 10;
 
   finalY += 15;
+  if (finalY > pageHeight - 80) {
+    doc.addPage();
+    finalY = 20;
+  }
 
   const marginX = 40; // Lề trái và lề phải (giống lề của bảng phía trên)
   const printableWidth = pageWidth - 2 * marginX; // Chiều rộng thực tế dùng để chia cột
@@ -660,7 +664,7 @@ export const generateBienBanKeHoachPdf = async (
   const colWidth = 45; // Độ rộng vùng text mỗi chữ ký
   const maxPerRow = 5; // Tối đa 4 chữ ký / hàng
   const rowGap = 70;
-  const coordinates: Record<string, { xRatio: number; yRatio: number }> = {};
+  const coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }> = {};
   const baseY = finalY;
   const baseWidthPx = 120;
   const displayWidth = 800;
@@ -692,6 +696,7 @@ export const generateBienBanKeHoachPdf = async (
     coordinates[s.idNhanVien] = {
       xRatio: Math.max(0, Math.min((x - sigWidthMm / 2) / pageWidth, 1)),
       yRatio: Math.max(0, Math.min((y + 5) / pageHeight, 1)), // +5 để vào giữa khoảng trống
+      page: (doc as any).internal.getNumberOfPages(),
     };
 
     // 1️⃣ Đơn vị (Phòng ban/Phân xưởng)
@@ -723,7 +728,7 @@ export const generateSuaChuaPdf = async (
   positions: any[],
 ): Promise<{
   pdf: Uint8Array;
-  coordinates: Record<string, { xRatio: number; yRatio: number }>;
+  coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
 }> => {
   const listSigneInfos: any[] = listSigneInfo(
     repair,
@@ -879,11 +884,15 @@ export const generateSuaChuaPdf = async (
 
   // Signatures
   let finalY = (doc as any).lastAutoTable.finalY + 20;
+  if (finalY > pageHeight - 80) {
+    doc.addPage();
+    finalY = 20;
+  }
   const marginX = 25;
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
-  const coordinates: Record<string, { xRatio: number; yRatio: number }> = {};
+  const coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }> = {};
   const baseWidthPx = 120;
   const displayWidth = 800;
 
@@ -908,6 +917,7 @@ export const generateSuaChuaPdf = async (
     coordinates[s.idNhanVien] = {
       xRatio: Math.max(0, Math.min((x - sigWidthMm / 2) / pageWidth, 1)),
       yRatio: Math.max(0, Math.min((yPos + 10) / pageHeight, 1)),
+      page: (doc as any).internal.getNumberOfPages(),
     };
 
     doc.setFont("times_new_roman", "bold");
@@ -932,7 +942,7 @@ export const generatePhieuSuCoPdf = async (
   positions: any[],
 ): Promise<{
   pdf: Uint8Array;
-  coordinates: Record<string, { xRatio: number; yRatio: number }>;
+  coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
 }> => {
   const listSigneInfos: any[] = listSigneInfo(
     incident,
@@ -1116,11 +1126,15 @@ export const generatePhieuSuCoPdf = async (
   });
 
   let finalY = (doc as any).lastAutoTable.finalY + 20;
+  if (finalY > pageHeight - 80) {
+    doc.addPage();
+    finalY = 20;
+  }
   const marginX = 30;
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
-  const coordinates: Record<string, { xRatio: number; yRatio: number }> = {};
+  const coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }> = {};
   const baseWidthPx = 120;
   const displayWidth = 800;
 
@@ -1145,6 +1159,7 @@ export const generatePhieuSuCoPdf = async (
     coordinates[s.idNhanVien] = {
       xRatio: Math.max(0, Math.min((x - sigWidthMm / 2) / pageWidth, 1)),
       yRatio: Math.max(0, Math.min((yPos + 10) / pageHeight, 1)),
+      page: (doc as any).internal.getNumberOfPages(),
     };
 
     doc.setFont("times_new_roman", "bold");
@@ -1168,7 +1183,7 @@ export const generateGiamDinhPdf = async (
   positions: any[],
 ): Promise<{
   pdf: Uint8Array;
-  coordinates: Record<string, { xRatio: number; yRatio: number }>;
+  coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
 }> => {
   const listSigneInfos: any[] = listSigneInfo(
     inspection,
@@ -1337,7 +1352,9 @@ export const generateGiamDinhPdf = async (
     },
   });
 
-  y = (doc as any).lastAutoTable.finalY + 10;
+  const lastY = (doc as any).lastAutoTable.finalY;
+  y = lastY + 10;
+
   doc.text(
     `Số để lại phục hồi phục vụ cho sản xuất: ${inspection.soDeLaiPhucHoi ?? "…………"}.`,
     20,
@@ -1359,13 +1376,17 @@ export const generateGiamDinhPdf = async (
     y,
   );
   y += 15;
+  if (y > pageHeight - 80) {
+    doc.addPage();
+    y = 20;
+  }
 
   // Signatures
   const marginX = 25;
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
-  const coordinates: Record<string, { xRatio: number; yRatio: number }> = {};
+  const coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }> = {};
   const baseWidthPx = 120;
   const displayWidth = 800;
 
@@ -1390,6 +1411,7 @@ export const generateGiamDinhPdf = async (
     coordinates[s.idNhanVien] = {
       xRatio: Math.max(0, Math.min((x - sigWidthMm / 2) / pageWidth, 1)),
       yRatio: Math.max(0, Math.min((yPos + 10) / pageHeight, 1)),
+      page: (doc as any).internal.getNumberOfPages(),
     };
 
     doc.setFont("times_new_roman", "bold");
@@ -1414,7 +1436,7 @@ export const generateGiamDinhPhuongTienPdf = async (
   positions: any[],
 ): Promise<{
   pdf: Uint8Array;
-  coordinates: Record<string, { xRatio: number; yRatio: number }>;
+  coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
 }> => {
   const listSigneInfos: any[] = listSigneInfo(
     inspection,
@@ -1587,13 +1609,17 @@ export const generateGiamDinhPhuongTienPdf = async (
     y,
   );
   y += 15;
+  if (y > pageHeight - 80) {
+    doc.addPage();
+    y = 20;
+  }
 
   // Signatures
   const marginX = 25;
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
-  const coordinates: Record<string, { xRatio: number; yRatio: number }> = {};
+  const coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }> = {};
   const baseWidthPx = 120;
   const displayWidth = 800;
 
@@ -1618,6 +1644,7 @@ export const generateGiamDinhPhuongTienPdf = async (
     coordinates[s.idNhanVien] = {
       xRatio: Math.max(0, Math.min((x - sigWidthMm / 2) / pageWidth, 1)),
       yRatio: Math.max(0, Math.min((yPos + 10) / pageHeight, 1)),
+      page: (doc as any).internal.getNumberOfPages(),
     };
 
     doc.setFont("times_new_roman", "bold");
@@ -1642,7 +1669,7 @@ export const generateNghiemThuPdf = async (
   positions: any[],
 ): Promise<{
   pdf: Uint8Array;
-  coordinates: Record<string, { xRatio: number; yRatio: number }>;
+  coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
 }> => {
   const listSigneInfos: any[] = listSigneInfo(
     item,
@@ -1838,12 +1865,16 @@ export const generateNghiemThuPdf = async (
   });
 
   y += 10;
+  if (y > pageHeight - 80) {
+    doc.addPage();
+    y = 20;
+  }
   // Signatures
   const marginX = 25;
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
-  const coordinates: Record<string, { xRatio: number; yRatio: number }> = {};
+  const coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }> = {};
   const baseWidthPx = 120;
   const displayWidth = 800;
 
@@ -1868,6 +1899,7 @@ export const generateNghiemThuPdf = async (
     coordinates[s.idNhanVien] = {
       xRatio: Math.max(0, Math.min((x - sigWidthMm / 2) / pageWidth, 1)),
       yRatio: Math.max(0, Math.min((yPos + 10) / pageHeight, 1)),
+      page: (doc as any).internal.getNumberOfPages(),
     };
 
     doc.setFont("times_new_roman", "bold");
@@ -1892,7 +1924,7 @@ export const generateDanhGiaVatTuPdf = async (
   positions: any[],
 ): Promise<{
   pdf: Uint8Array;
-  coordinates: Record<string, { xRatio: number; yRatio: number }>;
+  coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
 }> => {
   const listSigneInfos: any[] = listSigneInfo(
     item,
@@ -2042,7 +2074,9 @@ export const generateDanhGiaVatTuPdf = async (
     },
   });
 
-  y = (doc as any).lastAutoTable.finalY + 10;
+  const lastY = (doc as any).lastAutoTable.finalY;
+  y = lastY + 10;
+
   doc.setFont("times_new_roman", "normal");
   doc.text(
     `Số để lại phục hồi phục vụ cho sản xuất: ${item.soLuongPhucHoi ?? "…………"}.`,
@@ -2054,13 +2088,17 @@ export const generateDanhGiaVatTuPdf = async (
   y += 8;
   doc.text(`Số lượng hủy: ${item.soLuongHuy ?? "…………"} (mục)`, 20, y);
   y += 10;
+  if (y > pageHeight - 80) {
+    doc.addPage();
+    y = 20;
+  }
 
   // Signatures
   const marginX = 25;
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
-  const coordinates: Record<string, { xRatio: number; yRatio: number }> = {};
+  const coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }> = {};
   const baseWidthPx = 120;
   const displayWidth = 800;
 
@@ -2085,6 +2123,7 @@ export const generateDanhGiaVatTuPdf = async (
     coordinates[s.idNhanVien] = {
       xRatio: Math.max(0, Math.min((x - sigWidthMm / 2) / pageWidth, 1)),
       yRatio: Math.max(0, Math.min((yPos + 10) / pageHeight, 1)),
+      page: (doc as any).internal.getNumberOfPages(),
     };
 
     doc.setFont("times_new_roman", "bold");
@@ -2109,7 +2148,7 @@ export const generateKiemTraSuCoPdf = async (
   positions: any[],
 ): Promise<{
   pdf: Uint8Array;
-  coordinates: Record<string, { xRatio: number; yRatio: number }>;
+  coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
 }> => {
   const listSigneInfos: any[] = listSigneInfo(
     item,
@@ -2320,13 +2359,17 @@ export const generateKiemTraSuCoPdf = async (
   );
 
   y += 15;
+  if (y > pageHeight - 80) {
+    doc.addPage();
+    y = 20;
+  }
 
   // Signatures
   const marginX = 25;
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
-  const coordinates: Record<string, { xRatio: number; yRatio: number }> = {};
+  const coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }> = {};
   const baseWidthPx = 120;
   const displayWidth = 800;
 
@@ -2357,6 +2400,7 @@ export const generateKiemTraSuCoPdf = async (
     coordinates[s.idNhanVien] = {
       xRatio: Math.max(0, Math.min((x - sigWidthMm / 2) / pageWidth, 1)),
       yRatio: Math.max(0, Math.min((yPos + 10) / pageHeight, 1)),
+      page: (doc as any).internal.getNumberOfPages(),
     };
 
     doc.setFont("times_new_roman", "bold");
@@ -2381,7 +2425,7 @@ export const generateBienPhapMayMocPdf = async (
   positions: any[],
 ): Promise<{
   pdf: Uint8Array;
-  coordinates: Record<string, { xRatio: number; yRatio: number }>;
+  coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
 }> => {
   const listSigneInfos: any[] = listSigneInfo(
     item,
@@ -2513,13 +2557,17 @@ export const generateBienPhapMayMocPdf = async (
   });
 
   y = (doc as any).lastAutoTable.finalY + 20;
+  if (y > pageHeight - 80) {
+    doc.addPage();
+    y = 20;
+  }
 
   // Signatures block
   const marginX = 25;
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
-  const coordinates: Record<string, { xRatio: number; yRatio: number }> = {};
+  const coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }> = {};
   const baseWidthPx = 120;
   const displayWidth = 800;
 
@@ -2550,6 +2598,7 @@ export const generateBienPhapMayMocPdf = async (
     coordinates[s.idNhanVien] = {
       xRatio: Math.max(0, Math.min((x - sigWidthMm / 2) / pageWidth, 1)),
       yRatio: Math.max(0, Math.min((yPos + 10) / pageHeight, 1)),
+      page: (doc as any).internal.getNumberOfPages(),
     };
 
     doc.setFont("times_new_roman", "bold");
@@ -2574,7 +2623,7 @@ export const generateBienPhapPhuongTienPdf = async (
   positions: any[],
 ): Promise<{
   pdf: Uint8Array;
-  coordinates: Record<string, { xRatio: number; yRatio: number }>;
+  coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
 }> => {
   const listSigneInfos: any[] = listSigneInfo(
     item,
@@ -2822,13 +2871,17 @@ export const generateBienPhapPhuongTienPdf = async (
   y += 18;
 
   y = y + 15;
+  if (y > pageHeight - 80) {
+    doc.addPage();
+    y = 20;
+  }
 
   // Signatures block
   const marginX = 25;
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
-  const coordinates: Record<string, { xRatio: number; yRatio: number }> = {};
+  const coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }> = {};
   const baseWidthPx = 120;
   const displayWidth = 800;
 
@@ -2858,6 +2911,7 @@ export const generateBienPhapPhuongTienPdf = async (
     coordinates[s.idNhanVien] = {
       xRatio: Math.max(0, Math.min((x - sigWidthMm / 2) / pageWidth, 1)),
       yRatio: Math.max(0, Math.min((yPos + 10) / pageHeight, 1)),
+      page: (doc as any).internal.getNumberOfPages(),
     };
 
     doc.setFont("times_new_roman", "bold");
@@ -2882,7 +2936,7 @@ export const generateNghiemThuPhuongTienPdf = async (
   positions: any[],
 ): Promise<{
   pdf: Uint8Array;
-  coordinates: Record<string, { xRatio: number; yRatio: number }>;
+  coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
 }> => {
   const listSigneInfos: any[] = listSigneInfo(
     item,
@@ -3102,13 +3156,17 @@ export const generateNghiemThuPhuongTienPdf = async (
   doc.setFont("times_new_roman", "normal");
   doc.text(item.ketLuan || `Thiết bị ${item.tenTaiSan || ""} đã được sửa chữa đảm bảo kỹ thuật đưa vào sử dụng.`, 33, y);
   y += 18;
+  if (y > pageHeight - 80) {
+    doc.addPage();
+    y = 20;
+  }
 
   // Signatures block
   const marginX = 25;
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
-  const coordinates: Record<string, { xRatio: number; yRatio: number }> = {};
+  const coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }> = {};
   const baseWidthPx = 120;
   const displayWidth = 800;
 
@@ -3138,6 +3196,7 @@ export const generateNghiemThuPhuongTienPdf = async (
     coordinates[s.idNhanVien] = {
       xRatio: Math.max(0, Math.min((x - sigWidthMm / 2) / pageWidth, 1)),
       yRatio: Math.max(0, Math.min((yPos + 10) / pageHeight, 1)),
+      page: (doc as any).internal.getNumberOfPages(),
     };
 
     doc.setFont("times_new_roman", "bold");
