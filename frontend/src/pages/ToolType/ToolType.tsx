@@ -32,6 +32,10 @@ interface ToolTypeTabState {
   readOnly: boolean;
   isCopy: boolean;
   draftForm?: Record<string, any>;
+  showBulkForm: boolean;
+  bulkEditType?: "create" | "edit";
+  bulkItems?: any[];
+  bulkDraftData?: Record<string, any>;
 }
 
 export default function ToolType() {
@@ -44,6 +48,14 @@ export default function ToolType() {
   const setSelectedToolType = (v: any) => setField({ selectedToolType: v });
   const setReadOnly = (v: boolean) => setField({ readOnly: v });
   const setIsCopy = (v: boolean) => setField({ isCopy: v });
+
+  const showBulkForm = formData.showBulkForm ?? false;
+  const bulkEditType = formData.bulkEditType ?? "create";
+  const bulkItems = formData.bulkItems ?? [];
+  const setShowBulkForm = (v: boolean) => setField({ showBulkForm: v });
+  const setBulkEditType = (v: "create" | "edit") =>
+    setField({ bulkEditType: v });
+  const setBulkItems = (v: any[]) => setField({ bulkItems: v });
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
@@ -59,6 +71,8 @@ export default function ToolType() {
 
   const handleMinimize = () => setShowForm(false);
   const isMinimized = !showForm && hasDraftData(formData.draftForm);
+  const handleBulkMinimize = () => setShowBulkForm(false);
+  const isBulkMinimized = !showBulkForm && hasDraftData(formData.bulkDraftData);
 
   const {
     createMutation,
@@ -68,6 +82,8 @@ export default function ToolType() {
     importExcelMutation,
     exportMutation,
     deleteAllMutation,
+    createBatchMutation,
+    updateBatchMutation,
   } = useToolTypeMutation(
     paginationModel.page,
     paginationModel.pageSize,
@@ -101,20 +117,43 @@ export default function ToolType() {
   };
 
   const handleSave = (values: any) => {
-    if (selectedToolType && !isCopy) {
-      updateMutation.mutate(values);
+    if (Array.isArray(values)) {
+      if (bulkEditType === "create") {
+        createBatchMutation.mutate(values);
+      } else {
+        updateBatchMutation.mutate(values);
+      }
+      setShowBulkForm(false);
+      setBulkItems([]);
+      setSelectedIds([]);
+      setField({ bulkDraftData: undefined });
     } else {
-      createMutation.mutate(values);
+      if (selectedToolType && !isCopy) {
+        updateMutation.mutate(values);
+      } else {
+        createMutation.mutate(values);
+      }
+      setShowForm(false);
+      setSelectedToolType(null);
+      setIsCopy(false);
+      setField({ draftForm: undefined });
     }
-    setShowForm(false);
-    setSelectedToolType(null);
-    setIsCopy(false);
-    setField({ draftForm: undefined });
   };
 
   const handleEdit = () => {
     setReadOnly(false);
   };
+
+  const handleBulkEdit = () => {
+    if (selectedIds.length === 0) return;
+    const itemsToEdit = toolTypesPage.items
+      .filter((item: any) => selectedIds.includes(item.id))
+      .sort((a: any, b: any) => a.id.localeCompare(b.id));
+    setBulkEditType("edit");
+    setBulkItems(itemsToEdit);
+    setShowBulkForm(true);
+  };
+
   const columns: GridColDef[] = [
     {
       field: "id",
@@ -180,11 +219,17 @@ export default function ToolType() {
       <PageAction
         title="Loại CCDC"
         onNewClick={() => {
+          if (isBulkMinimized) {
+            setShowBulkForm(true);
+            return;
+          }
           if (isMinimized) {
             setShowForm(true);
             return;
           }
-          setShowForm(true);
+          setBulkEditType("create");
+          setBulkItems([{}]);
+          setShowBulkForm(true);
           setSelectedToolType(null);
           setReadOnly(false);
         }}
@@ -237,8 +282,44 @@ export default function ToolType() {
           </DialogContent>
         </Dialog>
 
-        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
-          
+        <Dialog
+          open={showBulkForm}
+          onClose={handleBulkMinimize}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogContent sx={{ p: 0 }}>
+            <TypeAssetForm
+              onEdit={() => {}}
+              onCancel={() => {
+                setBulkItems([]);
+                setSelectedIds([]);
+                setField({ bulkDraftData: undefined });
+                setShowBulkForm(false);
+              }}
+              onMinimize={handleBulkMinimize}
+              selectedToolType={null}
+              readOnly={false}
+              onSave={handleSave}
+              isBulkMode={true}
+              bulkItems={bulkItems}
+              onBulkItemsChange={(items) => {
+                setField({
+                  bulkDraftData: { items, bulkEditType },
+                  bulkItems: items,
+                });
+              }}
+              bulkEditType={bulkEditType}
+            />
+          </DialogContent>
+        </Dialog>
+
+        {isBulkMinimized ? (
+          <DraftIndicator onClick={() => setShowBulkForm(true)} />
+        ) : (
+          isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />
+        )}
+
         <TableCustom
           tableId="toolType"
           title="Quản lý loại CCDC"
@@ -258,6 +339,7 @@ export default function ToolType() {
           showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
           onImportExcel={handleImport}
           onExportExcel={() => exportMutation.mutate(allToolTypes)}
+          onBulkEdit={selectedIds.length > 1 ? handleBulkEdit : undefined}
         />
       </Box>
     </Box>

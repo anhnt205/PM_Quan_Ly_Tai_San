@@ -30,6 +30,47 @@ export const useDepartmentMutation = (
     },
   });
 
+  // ── Bulk CREATE ────────────────────────────────────────────────────────────
+  const createManyMutation = useMutation({
+    mutationFn: async (data: DepartmentType[]) => {
+      const res = await api.post("/phongban/batch", data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["departmentsPage"] });
+      queryClient.invalidateQueries({ queryKey: ["departmentsAll"] });
+      showSuccessAlert("Tạo nhiều phòng ban thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo nhiều phòng ban thất bại",
+      );
+    },
+  });
+
+  // ── Bulk UPDATE ────────────────────────────────────────────────────────────
+  const updateManyMutation = useMutation({
+    mutationFn: async (data: DepartmentType[]) => {
+      // PUT /phongban/batch — expects array of departments with id
+      const res = await api.put("/phongban/batch", data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["departmentsPage"] });
+      queryClient.invalidateQueries({ queryKey: ["departmentsAll"] });
+      showSuccessAlert("Cập nhật nhiều phòng ban thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Cập nhật nhiều phòng ban thất bại",
+      );
+    },
+  });
+
   const updateMutation = useMutation({
     mutationFn: async (data: DepartmentType) => {
       const res = await api.put(`/phongban/${data.id}`, data);
@@ -83,6 +124,7 @@ export const useDepartmentMutation = (
       );
     },
   });
+
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: DepartmentType[]) => {
       return new Promise((resolve) => {
@@ -98,7 +140,7 @@ export const useDepartmentMutation = (
               ? "Kho cấp phát"
               : item.loaiKho === 2
                 ? "Kho thu hồi"
-                : "Không phải kho", // Giá trị 0 hoặc undefined sẽ vào đây
+                : "Không phải kho",
         }));
 
         const worksheet = XLSX.utils.json_to_sheet(worksheetData);
@@ -129,7 +171,6 @@ export const useDepartmentMutation = (
       );
     },
   });
-
 
   const importExcelMutation = useMutation({
     mutationFn: (file: File) => {
@@ -201,7 +242,9 @@ export const useDepartmentMutation = (
 
   return {
     createMutation,
+    createManyMutation, // ← NEW
     updateMutation,
+    updateManyMutation, // ← NEW
     deleteOneMutation,
     deleteManyMutation,
     importExcelMutation,
@@ -236,7 +279,9 @@ export const useAllDepartmentsQuery = () => {
   return useQuery({
     queryKey: ["departmentsAll"],
     queryFn: async () => {
-      const res = await api.get("/phongban", { params: { idcongty: CongTy.CT001 } });
+      const res = await api.get("/phongban", {
+        params: { idcongty: CongTy.CT001 },
+      });
       return res.data;
     },
     placeholderData: (placeholderData) => placeholderData,

@@ -28,6 +28,19 @@ export const usePositionMutation = (
       );
     },
   });
+  const createBatchMutation = useMutation({
+    mutationFn: async (data: PositionType[]) => {
+      const res = await api.post("/chucvu/batch", data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["positionsPage"] });
+      showSuccessAlert("Tạo chức vụ thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(error.response?.data?.message || "Tạo chức vụ thất bại");
+    },
+  });
 
   const updateMutation = useMutation({
     mutationFn: async (data: PositionType) => {
@@ -44,6 +57,20 @@ export const usePositionMutation = (
           error.message ||
           "Sửa chức vụ thất bại",
       );
+    },
+  });
+
+  const updateBatchMutation = useMutation({
+    mutationFn: async (data: PositionType[]) => {
+      const res = await api.put("/chucvu/batch", data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["positionsPage"] });
+      showSuccessAlert("Sửa chức vụ thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(error.response?.data?.message || "Sửa chức vụ thất bại");
     },
   });
 
@@ -238,6 +265,8 @@ export const usePositionMutation = (
     exportMutation,
     getByIdMutation,
     deleteAllMutation,
+    createBatchMutation,
+    updateBatchMutation,
   };
 };
 

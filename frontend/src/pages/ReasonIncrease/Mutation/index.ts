@@ -25,6 +25,24 @@ export const useReasonIncreaseMutation = () => {
     },
   });
 
+  const createBatchMutation = useMutation({
+    mutationFn: async (data: ReasonIncreaseType[]) => {
+      const res = await api.post("/lydotang/batch", data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reasonIncreasesPage"] });
+      showSuccessAlert("Tạo hàng loạt lý do tăng thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo hàng loạt lý do tăng thất bại",
+      );
+    },
+  });
+
   const updateMutation = useMutation({
     mutationFn: async (data: ReasonIncreaseType) => {
       const res = await api.put(`/lydotang/${data.id}`, data);
@@ -39,6 +57,23 @@ export const useReasonIncreaseMutation = () => {
         error.response?.data?.message ||
           error.message ||
           "Sửa lý do tăng thất bại",
+      );
+    },
+  });
+  const updateBatchMutation = useMutation({
+    mutationFn: async (data: ReasonIncreaseType[]) => {
+      const res = await api.put("/lydotang/batch", data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reasonIncreasesPage"] });
+      showSuccessAlert("Sửa hàng loạt lý do tăng thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Sửa hàng loạt lý do tăng thất bại",
       );
     },
   });
@@ -210,6 +245,8 @@ export const useReasonIncreaseMutation = () => {
     exportMutation,
     importExcelMutation,
     deleteAllMutation,
+    createBatchMutation,
+    updateBatchMutation,
   };
 };
 

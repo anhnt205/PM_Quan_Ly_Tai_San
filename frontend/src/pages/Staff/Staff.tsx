@@ -1,6 +1,7 @@
 import { ContentCopy, Delete, EditNote } from "@mui/icons-material";
 import {
   Box,
+  Button,
   Chip,
   CircularProgress,
   Dialog,
@@ -13,6 +14,7 @@ import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import StaffForm from "./components/StaffForm";
+import StaffBulkForm from "./components/StaffBulkForm";
 import { useStaffMutation, useStaffPagesQuery } from "./Mutation";
 import { showConfirmAlert, showErrorAlert } from "../../components/Alert";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
@@ -29,6 +31,11 @@ interface StaffTabState {
   selectedStaff: any | null;
   readOnly: boolean;
   draftForm?: Record<string, any>;
+  draftBulkForm?: Record<string, any>;
+  showBulkForm: boolean;
+  bulkMode: "add" | "edit";
+  bulkItems: any[];
+  selectedRows: any[];
 }
 
 export default function Staff() {
@@ -45,6 +52,16 @@ export default function Staff() {
   const setReadOnly = (v: boolean) => setField({ readOnly: v });
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const showBulkForm = formData.showBulkForm ?? false;
+  const bulkMode = formData.bulkMode ?? "add";
+  const bulkItems = formData.bulkItems ?? [];
+  const selectedRows = formData.selectedRows ?? [];
+
+  const setShowBulkForm = (value: boolean) => setField({ showBulkForm: value });
+  const setBulkMode = (value: "add" | "edit") => setField({ bulkMode: value });
+  const setBulkItems = (value: any[]) => setField({ bulkItems: value });
+  const setSelectedRows = (value: any[]) => setField({ selectedRows: value });
+
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
 
@@ -57,7 +74,9 @@ export default function Staff() {
 
   const {
     createMutation,
+    createManyMutation,
     updateMutation,
+    updateManyMutation,
     deleteOneMutation,
     deleteManyMutation,
     uploadMutation,
@@ -102,6 +121,52 @@ export default function Staff() {
     setReadOnly(false);
   };
 
+  const handleBulkEdit = () => {
+    const rowsToEdit = selectedRows.length
+      ? selectedRows
+      : staffsPage.items.filter((item: any) => selectedIds.includes(item.id));
+    if (rowsToEdit.length === 0) {
+      showErrorAlert("Vui lòng chọn ít nhất một nhân viên để sửa hàng loạt");
+      return;
+    }
+    setField({
+      bulkMode: "edit",
+      bulkItems: rowsToEdit,
+      showBulkForm: true,
+    });
+  };
+
+  const handleBulkSave = (items: any[]) => {
+    if (bulkMode === "edit") {
+      updateManyMutation.mutate(items);
+    } else {
+      createManyMutation.mutate(items);
+    }
+    console.log("Saved items:", items);
+    setShowBulkForm(false);
+    setBulkItems([]);
+    setSelectedIds([]);
+    setSelectedRows([]);
+    setField({ draftBulkForm: undefined });
+  };
+
+  const handleBulkClose = (
+    event: any,
+    reason?: "backdropClick" | "escapeKeyDown" | string,
+  ) => {
+    if (reason === "backdropClick" || reason === "escapeKeyDown") {
+      setShowBulkForm(false);
+      return;
+    }
+    handleBulkCancel();
+  };
+
+  const handleBulkCancel = () => {
+    setShowBulkForm(false);
+    setBulkItems([]);
+    setField({ draftBulkForm: undefined });
+  };
+
   const handleImport = (file: File) => {
     importExcelMutation.mutate(file, {
       onError: (error: any) => {
@@ -120,6 +185,7 @@ export default function Staff() {
     });
   };
   const isMinimized = !showForm && hasDraftData(formData.draftForm);
+  const isBulkMinimized = !showBulkForm && hasDraftData(formData.draftBulkForm);
 
   const handleMinimize = () => {
     setShowForm(false);
@@ -268,13 +334,12 @@ export default function Staff() {
         title="Quản lý nhân viên"
         onNewClick={() => {
           if (isMinimized) {
-            setShowForm(true);
+            setShowBulkForm(true);
             return;
           }
-          setShowForm(true);
-          setSelectedStaff(null);
-          setReadOnly(false);
-          setIsCopy(false);
+          setBulkMode("add");
+          setBulkItems([]);
+          setShowBulkForm(true);
         }}
         onExport={() => exportMutation.mutate()}
         onImport={handleImport}
@@ -343,7 +408,36 @@ export default function Staff() {
           </DialogContent>
         </Dialog>
 
-        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
+        <Dialog
+          open={showBulkForm}
+          onClose={handleBulkClose}
+          maxWidth="xl"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: "16px",
+              border: "2px solid #1FA463",
+            },
+          }}
+        >
+          <DialogContent sx={{ p: 0 }}>
+            <StaffBulkForm
+              mode={bulkMode}
+              initialItems={bulkItems}
+              onCancel={handleBulkCancel}
+              onMinimize={() => setShowBulkForm(false)}
+              onSave={handleBulkSave}
+              onFormChange={(values) => setField({ draftBulkForm: values })}
+              initialFormData={formData.draftBulkForm}
+            />
+          </DialogContent>
+        </Dialog>
+
+        {isBulkMinimized ? (
+          <DraftIndicator onClick={() => setShowBulkForm(true)} />
+        ) : (
+          isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />
+        )}
 
         <TableCustom
           tableId="staff"
@@ -356,7 +450,13 @@ export default function Staff() {
           loading={isLoading}
           onRowClick={handleRowClick}
           selectedIds={selectedIds}
-          onSelectionChange={setSelectedIds}
+          onSelectionChange={(ids) => {
+            setSelectedIds(ids);
+            if (ids.length === 0) {
+              setSelectedRows([]);
+            }
+          }}
+          onSelectionRowsChange={setSelectedRows}
           onDelete={deleteManyMutation.mutate}
           searchValue={searchValue}
           setSearchValue={setSearchValue}
@@ -365,6 +465,7 @@ export default function Staff() {
           showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
           onImportExcel={handleImport}
           onExportExcel={() => exportMutation.mutate()}
+          onBulkEdit={selectedIds.length > 0 ? handleBulkEdit : undefined}
         />
       </Box>
       <ImportErrorDialog

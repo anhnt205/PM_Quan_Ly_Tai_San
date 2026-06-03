@@ -25,6 +25,8 @@ import { RootState } from "../../redux/store";
 import { useTabForm } from "../../redux/useTabForm";
 import { hasDraftData } from "../../utils/draftUtils";
 import DraftIndicator from "../../components/common/DraftIndicator";
+import { DepartmentType } from "./types";
+import BulkDepartmentForm from "./components/DepartmentBulkForm";
 
 interface DepartmentTabState {
   showForm: boolean;
@@ -32,6 +34,9 @@ interface DepartmentTabState {
   readOnly: boolean;
   isCopy: boolean;
   draftForm?: Record<string, any>;
+  bulkOpen?: boolean;
+  bulkMode?: "create" | "edit";
+  bulkDraft?: DepartmentType[];
 }
 
 export default function Department() {
@@ -50,6 +55,15 @@ export default function Department() {
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
 
+  const bulkOpen = formData.bulkOpen ?? false;
+  const bulkMode = formData.bulkMode ?? "create";
+  const bulkInitialRows = formData.bulkDraft ?? [];
+
+  const setBulkOpen = (v: boolean) => setField({ bulkOpen: v });
+  const setBulkMode = (v: "create" | "edit") => setField({ bulkMode: v });
+  const setBulkInitialRows = (v: DepartmentType[]) =>
+    setField({ bulkDraft: v });
+
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
     page: 0,
@@ -57,7 +71,9 @@ export default function Department() {
 
   const {
     createMutation,
+    createManyMutation,
     updateMutation,
+    updateManyMutation,
     deleteOneMutation,
     deleteManyMutation,
     importExcelMutation,
@@ -77,7 +93,7 @@ export default function Department() {
       debouncedSearchValue,
     );
 
-  const { data: allDepartment } = useAllDepartmentsQuery();
+  const { data: allDepartment = [] } = useAllDepartmentsQuery();
 
   const handleRowClick = (params: GridRowParams) => {
     setSelectedDepartment(params.row);
@@ -98,7 +114,38 @@ export default function Department() {
     setField({ draftForm: undefined });
   };
 
+  const handleOpenBulkCreate = () => {
+    setBulkInitialRows([]);
+    setBulkMode("create");
+    setBulkOpen(true);
+  };
+
+  const handleOpenBulkEdit = () => {
+    const selectedRows = departmentsPage.items.filter((item: DepartmentType) =>
+      selectedIds.includes(item.id),
+    );
+    if (selectedRows.length === 0) return;
+    setBulkInitialRows(selectedRows);
+    setBulkMode("edit");
+    setBulkOpen(true);
+  };
+
+  const handleBulkSave = (rows: DepartmentType[]) => {
+    if (bulkMode === "create") {
+      createManyMutation.mutate(rows);
+    } else {
+      updateManyMutation.mutate(rows);
+    }
+    setBulkOpen(false);
+    setBulkInitialRows([]);
+    setField({ bulkDraft: undefined });
+    setSelectedIds([]);
+  };
+
   const isMinimized = !showForm && hasDraftData(formData.draftForm);
+  const isMinimizedBulk =
+    !bulkOpen &&
+    hasDraftData(bulkInitialRows.length > 0 ? bulkInitialRows : undefined);
   const handleMinimize = () => setShowForm(false);
 
   const handleEdit = () => {
@@ -182,7 +229,7 @@ export default function Department() {
             setShowForm(true);
             return;
           }
-          setShowForm(true);
+          handleOpenBulkCreate();
           setSelectedDepartment(null);
           setReadOnly(false);
         }}
@@ -191,8 +238,14 @@ export default function Department() {
         showExcel={true}
       />
       <Box p={2}>
+        {/* Processing overlay */}
         <Dialog
-          open={exportMutation.isPending || importExcelMutation.isPending}
+          open={
+            exportMutation.isPending ||
+            importExcelMutation.isPending ||
+            createManyMutation.isPending ||
+            updateManyMutation.isPending
+          }
           PaperProps={{
             sx: {
               borderRadius: 0,
@@ -211,6 +264,8 @@ export default function Department() {
             </Box>
           </DialogContent>
         </Dialog>
+
+        {/* Single form Dialog */}
         <Dialog
           open={showForm}
           onClose={handleMinimize}
@@ -237,8 +292,29 @@ export default function Department() {
           </DialogContent>
         </Dialog>
 
+        {/* Bulk form Dialog */}
+        <BulkDepartmentForm
+          open={bulkOpen}
+          onClose={() => {
+            setBulkOpen(false);
+          }}
+          onCancel={() => {
+            setBulkOpen(false);
+            setBulkInitialRows([]);
+            setField({ bulkDraft: undefined });
+          }}
+          initialRows={bulkInitialRows}
+          allDepartment={allDepartment}
+          onSave={handleBulkSave}
+          mode={bulkMode}
+          onRowsChange={(rows: any) => setBulkInitialRows(rows)}
+        />
+
         {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
-        
+        {isMinimizedBulk && (
+          <DraftIndicator onClick={() => setBulkOpen(true)} />
+        )}
+
         <TableCustom
           tableId="department"
           title="Quản lý phòng ban"
@@ -258,6 +334,8 @@ export default function Department() {
           showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
           onImportExcel={(file) => importExcelMutation.mutate(file)}
           onExportExcel={() => exportMutation.mutate(allDepartment)}
+          onBulkEdit={selectedIds.length > 0 ? handleOpenBulkEdit : undefined}
+          bulkEditCount={selectedIds.length}
         />
       </Box>
     </Box>

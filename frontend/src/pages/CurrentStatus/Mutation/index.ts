@@ -30,6 +30,20 @@ export const useCurrentStatusMutation = (
     },
   });
 
+  const createBatchMutation = useMutation({
+    mutationFn: async (data: CurrentStatusType[]) => {
+      const res = await api.post("/hientrangkythuat/batch", data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["currentStatusPage"] });
+      showSuccessAlert("Tạo hàng loạt hiện trạng thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(error.response?.data?.message || "Tạo hàng loạt thất bại");
+    },
+  });
+
   const updateMutation = useMutation({
     mutationFn: async (data: CurrentStatusType) => {
       const res = await api.put(`/hientrangkythuat/${data.id}`, data);
@@ -47,6 +61,21 @@ export const useCurrentStatusMutation = (
       );
     },
   });
+
+  const updateBatchMutation = useMutation({
+    mutationFn: async (data: CurrentStatusType[]) => {
+      const res = await api.put("/hientrangkythuat/batch", data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["currentStatusPage"] });
+      showSuccessAlert("Sửa hàng loạt hiện trạng thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(error.response?.data?.message || "Sửa hàng loạt thất bại");
+    },
+  });
+
   const deleteOneMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await api.delete(`/hientrangkythuat/${id}`);
@@ -218,6 +247,8 @@ export const useCurrentStatusMutation = (
     importExcelMutation,
     exportMutation,
     deleteAllMutation,
+    createBatchMutation,
+    updateBatchMutation,
   };
 };
 

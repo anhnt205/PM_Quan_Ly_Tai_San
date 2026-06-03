@@ -32,6 +32,10 @@ interface CurrentStatusTabState {
   readOnly: boolean;
   isCopy: boolean;
   draftForm?: Record<string, any>;
+  showBulkForm: boolean;
+  bulkEditType?: "create" | "edit";
+  bulkItems?: any[];
+  bulkDraftData?: Record<string, any>;
 }
 
 export default function CurrentStatus() {
@@ -47,6 +51,14 @@ export default function CurrentStatus() {
   const setReadOnly = (v: boolean) => setField({ readOnly: v });
   const setIsCopy = (v: boolean) => setField({ isCopy: v });
 
+  const showBulkForm = formData.showBulkForm ?? false;
+  const bulkEditType = formData.bulkEditType ?? "create";
+  const bulkItems = formData.bulkItems ?? [];
+  const setShowBulkForm = (v: boolean) => setField({ showBulkForm: v });
+  const setBulkEditType = (v: "create" | "edit") =>
+    setField({ bulkEditType: v });
+  const setBulkItems = (v: any[]) => setField({ bulkItems: v });
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
@@ -61,6 +73,8 @@ export default function CurrentStatus() {
 
   const handleMinimize = () => setShowForm(false);
   const isMinimized = !showForm && hasDraftData(formData.draftForm);
+  const handleBulkMinimize = () => setShowBulkForm(false);
+  const isBulkMinimized = !showBulkForm && hasDraftData(formData.bulkDraftData);
 
   const {
     createMutation,
@@ -70,6 +84,8 @@ export default function CurrentStatus() {
     importExcelMutation,
     exportMutation,
     deleteAllMutation,
+    createBatchMutation,
+    updateBatchMutation,
   } = useCurrentStatusMutation(
     paginationModel.page,
     paginationModel.pageSize,
@@ -104,19 +120,41 @@ export default function CurrentStatus() {
   };
 
   const handleSave = (values: any) => {
-    if (selectedCurrentStatus && !isCopy) {
-      updateMutation.mutate(values);
+    if (Array.isArray(values)) {
+      if (bulkEditType === "create") {
+        createBatchMutation.mutate(values);
+      } else {
+        updateBatchMutation.mutate(values);
+      }
+      setShowBulkForm(false);
+      setBulkItems([]);
+      setSelectedIds([]);
+      setField({ bulkDraftData: undefined });
     } else {
-      createMutation.mutate(values);
+      if (selectedCurrentStatus && !isCopy) {
+        updateMutation.mutate(values);
+      } else {
+        createMutation.mutate(values);
+      }
+      setShowForm(false);
+      setSelectedCurrentStatus(null);
+      setIsCopy(false);
+      setField({ draftForm: undefined });
     }
-    setShowForm(false);
-    setSelectedCurrentStatus(null);
-    setIsCopy(false);
-    setField({ draftForm: undefined });
   };
 
   const handleEdit = () => {
     setReadOnly(false);
+  };
+
+  const handleBulkEdit = () => {
+    if (selectedIds.length === 0) return;
+    const itemsToEdit = currentStatusPage.items
+      .filter((item: any) => selectedIds.includes(item.id))
+      .sort((a: any, b: any) => String(a.id).localeCompare(String(b.id)));
+    setBulkEditType("edit");
+    setBulkItems(itemsToEdit);
+    setShowBulkForm(true);
   };
 
   const columns: GridColDef[] = [
@@ -176,11 +214,17 @@ export default function CurrentStatus() {
       <PageAction
         title="Quản lý hiện trạng"
         onNewClick={() => {
+          if (isBulkMinimized) {
+            setShowBulkForm(true);
+            return;
+          }
           if (isMinimized) {
             setShowForm(true);
             return;
           }
-          setShowForm(true);
+          setBulkEditType("create");
+          setBulkItems([{}]);
+          setShowBulkForm(true);
           setSelectedCurrentStatus(null);
           setReadOnly(false);
         }}
@@ -243,7 +287,43 @@ export default function CurrentStatus() {
           </DialogContent>
         </Dialog>
 
-        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
+        <Dialog
+          open={showBulkForm}
+          onClose={handleBulkMinimize}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogContent sx={{ p: 0 }}>
+            <CurrentStatusForm
+              onEdit={() => {}}
+              onCancel={() => {
+                setBulkItems([]);
+                setSelectedIds([]);
+                setField({ bulkDraftData: undefined });
+                setShowBulkForm(false);
+              }}
+              onMinimize={handleBulkMinimize}
+              selectedCurrentStatus={null}
+              readOnly={false}
+              onSave={handleSave}
+              isBulkMode={true}
+              bulkItems={bulkItems}
+              onBulkItemsChange={(items) => {
+                setField({
+                  bulkDraftData: { items, bulkEditType },
+                  bulkItems: items,
+                });
+              }}
+              bulkEditType={bulkEditType}
+            />
+          </DialogContent>
+        </Dialog>
+
+        {isBulkMinimized ? (
+          <DraftIndicator onClick={() => setShowBulkForm(true)} />
+        ) : (
+          isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />
+        )}
 
         <TableCustom
           tableId="currentStatus"
@@ -264,6 +344,7 @@ export default function CurrentStatus() {
           showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
           onImportExcel={handleImport}
           onExportExcel={() => exportMutation.mutate(allCurrentStatus)}
+          onBulkEdit={selectedIds.length > 1 ? handleBulkEdit : undefined}
         />
       </Box>
     </Box>

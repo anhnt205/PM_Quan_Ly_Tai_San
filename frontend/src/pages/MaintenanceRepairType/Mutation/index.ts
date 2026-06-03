@@ -18,8 +18,24 @@ export const useLoaiSCBDMutation = () => {
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || error.message || "Tạo loại sửa chữa thất bại",
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo loại sửa chữa thất bại",
       );
+    },
+  });
+
+  const createBatchMutation = useMutation({
+    mutationFn: async (data: MaintenanceRepairType[]) => {
+      const res = await api.post("/loaiscbd/batch", data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["loaiscbdPage"] });
+      showSuccessAlert("Tạo hàng loạt loại sửa chữa thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(error.response?.data?.message || "Tạo hàng loạt thất bại");
     },
   });
 
@@ -34,10 +50,27 @@ export const useLoaiSCBDMutation = () => {
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || error.message || "Sửa loại sửa chữa thất bại",
+        error.response?.data?.message ||
+          error.message ||
+          "Sửa loại sửa chữa thất bại",
       );
     },
   });
+
+  const updateBatchMutation = useMutation({
+    mutationFn: async (data: MaintenanceRepairType[]) => {
+      const res = await api.put("/loaiscbd/batch", data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["loaiscbdPage"] });
+      showSuccessAlert("Sửa hàng loạt loại sửa chữa thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(error.response?.data?.message || "Sửa hàng loạt thất bại");
+    },
+  });
+
   const deleteOneMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await api.delete(`/loaiscbd/${id}`);
@@ -49,7 +82,9 @@ export const useLoaiSCBDMutation = () => {
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || error.message || "Xóa loại sửa chữa thất bại",
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa loại sửa chữa thất bại",
       );
     },
   });
@@ -64,28 +99,30 @@ export const useLoaiSCBDMutation = () => {
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || error.message || "Xóa loại sửa chữa thất bại",
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa loại sửa chữa thất bại",
       );
     },
   });
 
-   const deleteAllMutation = useMutation({
-     mutationFn: async () => {
-       const res = await api.delete(`/loaiscbd/delete-all`);
-       return res.data.message;
-     },
-     onSuccess: (data) => {
-       queryClient.invalidateQueries({ queryKey: ["loaiscbdPage"] });
-       showSuccessAlert(data || "Xóa loại đơn vị sửa chữa thành công");
-     },
-     onError: (error: any) => {
-       showErrorAlert(
-         error.response?.data?.message ||
-           error.message ||
-           "Xóa loại đơn vị sửa chữa thất bại",
-       );
-     },
-   });
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.delete(`/loaiscbd/delete-all`);
+      return res.data.message;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["loaiscbdPage"] });
+      showSuccessAlert(data || "Xóa loại đơn vị sửa chữa thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa loại đơn vị sửa chữa thất bại",
+      );
+    },
+  });
 
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: MaintenanceRepairType[]) => {
@@ -179,6 +216,8 @@ export const useLoaiSCBDMutation = () => {
     exportMutation,
     importExcelMutation,
     deleteAllMutation,
+    createBatchMutation,
+    updateBatchMutation,
   };
 };
 

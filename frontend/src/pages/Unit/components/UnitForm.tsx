@@ -1,14 +1,15 @@
 import {
   InfoOutlineRounded,
-  ArrowDropUp,
-  ArrowDropDown,
+  Add,
+  Delete,
+  ContentCopy,
   Remove,
   Close,
 } from "@mui/icons-material";
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
+  Button,
+  Card,
+  TextField as MuiTextField,
   Box,
   Grid,
   IconButton,
@@ -20,7 +21,6 @@ import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
 import FieldInput from "../../../components/TextField/FieldInput";
 import { useFormik } from "formik";
-import ViewBtn from "../../../components/Button/ViewBtn";
 
 import EditButton from "../../../components/Button/EditButton";
 import { UnitValidation } from "../validation/Validation";
@@ -35,6 +35,10 @@ export default function UnitForm({
   initialFormData,
   onFormChange,
   onMinimize,
+  bulkEditType,
+  bulkItems,
+  isBulkMode,
+  onBulkItemsChange,
 }: {
   onEdit: () => void;
   onCancel: () => void;
@@ -44,6 +48,10 @@ export default function UnitForm({
   onFormChange?: (values: any) => void;
   initialFormData?: Record<string, any>;
   onMinimize: () => void;
+  isBulkMode?: boolean;
+  bulkItems?: any[];
+  onBulkItemsChange?: (items: any[]) => void;
+  bulkEditType?: "create" | "edit";
 }) {
   const formik = useFormik({
     initialValues: {
@@ -57,6 +65,74 @@ export default function UnitForm({
     },
   });
 
+  const normalizeItem = (item: any) => ({
+    id: item.id ?? "",
+    tenDonVi: item.tenDonVi ?? "",
+    note: item.note ?? "",
+  });
+
+  const [localBulkItems, setLocalBulkItems] = useState<any[]>(
+    initialFormData?.items && initialFormData.items.length > 0
+      ? initialFormData.items.map(normalizeItem)
+      : (bulkItems ?? []).map(normalizeItem),
+  );
+
+  const debouncedBulkItems = useDebounce(localBulkItems, 600);
+  useEffect(() => {
+    onBulkItemsChange?.(debouncedBulkItems);
+  }, [debouncedBulkItems]);
+
+  const handleAddItem = () => {
+    setLocalBulkItems((prev) => [...prev, normalizeItem({})]);
+  };
+
+  const handleCopyItem = (index: number) => {
+    const { id, ...rest } = localBulkItems[index];
+    setLocalBulkItems((prev) => [
+      ...prev.slice(0, index + 1),
+      { ...rest, id: "" },
+      ...prev.slice(index + 1),
+    ]);
+  };
+
+  const handleDeleteItem = (index: number) => {
+    if (localBulkItems.length === 1) return;
+    setLocalBulkItems((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleBulkItemChange = (index: number, field: string, value: any) => {
+    setLocalBulkItems((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+  const validateBulkItems = async () => {
+    let hasError = false;
+    const updated = await Promise.all(
+      localBulkItems.map(async (item) => {
+        try {
+          await UnitValidation.validate(item);
+          return { ...item, errors: undefined };
+        } catch (error: any) {
+          hasError = true;
+          return { ...item, errors: { [error.path]: error.message } };
+        }
+      }),
+    );
+    setLocalBulkItems(updated);
+    onBulkItemsChange?.(updated);
+    return { hasError };
+  };
+
+  const handleBulkSave = async () => {
+    const { hasError } = await validateBulkItems();
+    if (hasError) return;
+    const cleanItems = localBulkItems.map(({ errors, ...rest }) => rest);
+    onSave(cleanItems);
+  };
+
   const debouncedValues = useDebounce(formik.values, 800);
   useEffect(() => {
     onFormChange?.(debouncedValues);
@@ -68,6 +144,170 @@ export default function UnitForm({
       formik.setErrors({}); // Clear errors when selectedUnit changes
     }
   }, [selectedUnit, readOnly]); // Add readOnly to dependencies
+
+  if (isBulkMode) {
+    return (
+      <Box
+        sx={{
+          bgcolor: "#ffffff",
+          p: 4,
+          display: "flex",
+          flexDirection: "column",
+          gap: 3,
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            pb: 2,
+            borderBottom: "1px solid #f1f5f9",
+          }}
+        >
+          <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
+            {bulkEditType === "create"
+              ? `Thêm mới đơn vị tính (${localBulkItems.length})`
+              : `Sửa hàng loạt đơn vị tính (${localBulkItems.length})`}
+          </Typography>
+          <Box display="flex" gap={0.5}>
+            <IconButton size="small" onClick={onMinimize} title="Ẩn tạm">
+              <Remove fontSize="small" />
+            </IconButton>
+            <IconButton size="small" onClick={onCancel} title="Đóng">
+              <Close fontSize="small" />
+            </IconButton>
+          </Box>
+        </Box>
+
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+            maxHeight: "65vh",
+            overflowY: "auto",
+            overflowX: "hidden",
+            pr: 1,
+          }}
+        >
+          {localBulkItems.map((item, index) => (
+            <Card
+              key={index}
+              sx={{
+                flexShrink: 0,
+                p: 2,
+                borderRadius: "12px",
+                border: item.errors ? "1px solid #d32f2f" : "1px solid #e0e0e0",
+                backgroundColor: item.errors ? "#ffebee" : "#ffffff",
+              }}
+            >
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                mb={2}
+              >
+                <Typography sx={{ fontWeight: 600, color: "#1FA463" }}>
+                  Item {index + 1}
+                </Typography>
+                <Box display="flex" gap={1}>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleCopyItem(index)}
+                    title="Sao chép"
+                  >
+                    <ContentCopy fontSize="small" color="primary" />
+                  </IconButton>
+                  {localBulkItems.length > 1 && (
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDeleteItem(index)}
+                      title="Xóa"
+                    >
+                      <Delete fontSize="small" color="error" />
+                    </IconButton>
+                  )}
+                </Box>
+              </Box>
+
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <MuiTextField
+                    fullWidth
+                    size="small"
+                    label="Mã đơn vị tính *"
+                    value={item.id}
+                    onChange={(e) =>
+                      handleBulkItemChange(index, "id", e.target.value)
+                    }
+                    disabled={bulkEditType === "edit"}
+                    error={!!item.errors?.id}
+                    helperText={item.errors?.id}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <MuiTextField
+                    fullWidth
+                    size="small"
+                    label="Tên đơn vị tính *"
+                    value={item.tenDonVi}
+                    onChange={(e) =>
+                      handleBulkItemChange(index, "tenDonVi", e.target.value)
+                    }
+                    error={!!item.errors?.tenDonVi}
+                    helperText={item.errors?.tenDonVi}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <MuiTextField
+                    fullWidth
+                    size="small"
+                    label="Ghi chú"
+                    value={item.note}
+                    onChange={(e) =>
+                      handleBulkItemChange(index, "note", e.target.value)
+                    }
+                    multiline
+                    rows={2}
+                  />
+                </Grid>
+              </Grid>
+            </Card>
+          ))}
+        </Box>
+
+        <Button
+          variant="outlined"
+          startIcon={<Add />}
+          onClick={handleAddItem}
+          sx={{
+            alignSelf: "flex-start",
+            textTransform: "none",
+            borderColor: "#1FA463",
+            color: "#1FA463",
+            "&:hover": {
+              borderColor: "#1FA463",
+              backgroundColor: "rgba(31, 164, 99, 0.04)",
+            },
+          }}
+        >
+          Thêm item
+        </Button>
+
+        <Box
+          display="flex"
+          justifyContent="flex-end"
+          gap={2}
+          pt={2.5}
+          sx={{ borderTop: "1px solid #f1f5f9" }}
+        >
+          <CancelBtn onClick={onCancel} />
+          <SaveBtn onSave={handleBulkSave} />
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Box

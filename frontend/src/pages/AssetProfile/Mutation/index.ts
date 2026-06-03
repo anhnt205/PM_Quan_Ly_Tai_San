@@ -45,6 +45,62 @@ export const useAssetProfileMutation = (
     },
   });
 
+  const createBatchMutation = useMutation({
+    mutationFn: async (data: AssetProfileType[]) => {
+      const currentUser = user?.taiKhoan?.tenDangNhap || "admin";
+      const payload = data.map((item) => ({
+        maLyLich: item.maLyLich,
+        tenLyLich: item.tenLyLich,
+        moTa: item.moTa,
+        ngayTao: now,
+        nguoiTao: currentUser,
+        ngayCapNhat: now,
+        nguoiCapNhat: currentUser,
+      }));
+      const res = await api.post("/ly-lich/create-batch", payload);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assetProfiles"] });
+      queryClient.invalidateQueries({ queryKey: ["assetProfilesPage"] });
+      showSuccessAlert("Tạo hàng loạt lý lịch thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo hàng loạt lý lịch thất bại",
+      );
+    },
+  });
+
+  const updateBatchMutation = useMutation({
+    mutationFn: async (data: AssetProfileType[]) => {
+      const currentUser = user?.taiKhoan?.tenDangNhap || "admin";
+      const payload = data.map((item) => ({
+        maLyLich: item.maLyLich,
+        tenLyLich: item.tenLyLich,
+        moTa: item.moTa,
+        ngayCapNhat: now,
+        nguoiCapNhat: currentUser,
+      }));
+      const res = await api.put("/ly-lich/update-batch", payload);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assetProfiles"] });
+      queryClient.invalidateQueries({ queryKey: ["assetProfilesPage"] });
+      showSuccessAlert("Sửa hàng loạt lý lịch thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Sửa hàng loạt lý lịch thất bại",
+      );
+    },
+  });
+
   const updateMutation = useMutation({
     mutationFn: async (data: AssetProfileType) => {
       const currentUser = user?.taiKhoan?.tenDangNhap || "admin";
@@ -96,7 +152,7 @@ export const useAssetProfileMutation = (
   const deleteManyMutation = useMutation({
     mutationFn: async (ids: string[]) => {
       const requests = ids.map((id) => ({ id }));
-      const res = await api.put(`/ly-lich/update-list`, requests);
+      const res = await api.put(`/ly-lich/update-batch`, requests);
       return res.data.message;
     },
     onSuccess: (data) => {
@@ -240,6 +296,8 @@ export const useAssetProfileMutation = (
     exportMutation,
     importExcelMutation,
     deleteAllMutation,
+    createBatchMutation,
+    updateBatchMutation,
   };
 };
 
