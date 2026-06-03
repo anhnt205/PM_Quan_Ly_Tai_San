@@ -41,7 +41,7 @@ public class KeHoachSuaChuaService {
             String sortBy, String sortDir, String search,
             String loaiKeHoach, String idDonViGiao, String idDonViNhan,
             Integer trangThai, Integer nam, String userid, Boolean isSign,
-            String dateFrom, String dateTo, String nhomTaiSan
+            String dateFrom, String dateTo, String nhomTaiSan, String idTaiSan
     ) throws SQLException {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
@@ -89,6 +89,13 @@ public class KeHoachSuaChuaService {
             String dateToEnd = dateTo + " 23:59:59";
             sourceList = sourceList.stream()
                     .filter(i -> i.getNgayTao() != null && i.getNgayTao().compareTo(dateToEnd) <= 0)
+                    .collect(Collectors.toList());
+        }
+
+        if (idTaiSan != null && !idTaiSan.trim().isEmpty()) {
+            List<String> planIds = suaChuaChiTietTaiSanDao.findKeHoachIdsByTaiSanId(idTaiSan);
+            sourceList = sourceList.stream()
+                    .filter(i -> planIds.contains(i.getId()))
                     .collect(Collectors.toList());
         }
 

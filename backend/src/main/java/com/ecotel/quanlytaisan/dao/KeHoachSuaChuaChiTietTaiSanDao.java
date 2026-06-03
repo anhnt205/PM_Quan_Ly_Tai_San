@@ -78,6 +78,11 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(KeHoachSuaChuaChiTietTaiSan.class), idKeHoach);
     }
 
+    public List<String> findKeHoachIdsByTaiSanId(String idTaiSan) {
+        String sql = "SELECT DISTINCT IdKeHoachSuaChua FROM kehoachsuachua_chitiet_taisan WHERE IdTaiSan = ?";
+        return jdbcTemplate.queryForList(sql, String.class, idTaiSan);
+    }
+
     // ==================== ID ====================
     public String generateNextId() {
         return "CTTS_" + UUID.randomUUID().toString();

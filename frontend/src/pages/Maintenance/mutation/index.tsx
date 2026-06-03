@@ -42,8 +42,9 @@ export const useMaintenancePlanningPageQuery = (
   isSign?: boolean,
   dateFrom?: string,
   dateTo?: string,
-  enabled = true,
   nhomTaiSan?: string,
+  idTaiSan?: string,
+  enabled = true,
 ) => {
   return useQuery({
     queryKey: [
@@ -58,6 +59,7 @@ export const useMaintenancePlanningPageQuery = (
       dateFrom,
       dateTo,
       nhomTaiSan,
+      idTaiSan,
     ],
     queryFn: async () => {
       const res = await api.get("/kehoach-suachua/paged", {
@@ -72,6 +74,7 @@ export const useMaintenancePlanningPageQuery = (
           dateFrom: dateFrom,
           dateTo: dateTo,
           nhomTaiSan: nhomTaiSan,
+          idTaiSan: idTaiSan,
         },
       });
       return res.data.data || res.data;
@@ -2409,17 +2412,20 @@ export const useMaintenanceProcessPagedQuery = (
   page?: number,
   pageSize?: number,
   idTaiSan?: string,
-  nam?: number,
+  dateFrom?: string,
+  dateTo?: string,
+  nhomTaiSan?: string,
 ) => {
   return useQuery({
-    queryKey: ["maintenanceProcessPaged", page, pageSize, idTaiSan, nam],
+    queryKey: ["maintenanceProcessPaged", page, pageSize, idTaiSan, dateFrom, dateTo, nhomTaiSan],
     queryFn: async () => {
       const res = await api.get("/quy-trinh/paged", {
         params: {
           page: page,
           pageSize: pageSize,
           idTaiSan: idTaiSan,
-          nam: nam,
+          dateFrom: dateFrom,
+          dateTo: dateTo,
         },
       });
       return res.data.data || res.data;
@@ -2430,20 +2436,24 @@ export const useMaintenanceProcessPagedQuery = (
 
 export const useMaintenanceMaterialConsumptionQuery = (
   idTaiSan?: string,
-  nam?: number,
+  dateFrom?: string,
+  dateTo?: string,
+  nhomTaiSan?: string,
 ) => {
   return useQuery({
-    queryKey: ["maintenanceMaterialConsumption", idTaiSan, nam],
+    queryKey: ["maintenanceMaterialConsumption", idTaiSan, dateFrom, dateTo, nhomTaiSan],
     queryFn: async () => {
       const res = await api.get("/quy-trinh/material-consumption", {
         params: {
           idTaiSan: idTaiSan,
-          nam: nam,
+          dateFrom: dateFrom,
+          dateTo: dateTo,
+          nhomTaiSan: nhomTaiSan,
         },
       });
       return res.data.data || res.data || [];
     },
-    enabled: !!idTaiSan && !!nam,
+    enabled: !!idTaiSan  && !!nhomTaiSan,
   });
 };
 
@@ -2460,6 +2470,7 @@ export const useGetTaiSanByIdQuery = (id: string | undefined, nam?: number) => {
   });
 };
 
+// biện pháp sửa chữa máy móc
 export const useMaintenanceBienPhapMayMocPageQuery = (
   page?: number,
   pageSize?: number,
@@ -2504,6 +2515,7 @@ export const useMaintenanceBienPhapMayMocPageQuery = (
   });
 };
 
+// biện pháp sửa chữa phương tiện
 export const useMaintenanceBienPhapPhuongTienPageQuery = (
   page?: number,
   pageSize?: number,

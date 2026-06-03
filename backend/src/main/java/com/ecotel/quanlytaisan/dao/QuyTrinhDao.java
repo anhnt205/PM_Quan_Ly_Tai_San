@@ -216,28 +216,59 @@ public class QuyTrinhDao {
         return jdbcTemplate.queryForList(sql.toString(), params.toArray());
     }
 
-    public List<com.ecotel.quanlytaisan.model.VatTuTieuHaoDTO> getMaterialConsumption(String idTaiSan, Integer nam) {
-        String sql = """
-            SELECT 
-                cv.Id AS ma,
-                cv.Ten AS ten,
-                cv.DonViTinh AS donViTinh,
-                SUM(ntvt.SoLuong) AS soLuong
-            FROM nghiemthu_vattu ntvt
-            JOIN nghiemthu_taisan ntts ON ntvt.IdBienBanTaiSan = ntts.Id
-            JOIN giamdinh_maymoc_chitiet gdct ON ntts.IdChiTietGiamDinhMayMoc = gdct.Id
-            JOIN nghiemthu nt ON ntts.IdBienBan = nt.Id
-            LEFT JOIN suachua_chitiet scct ON gdct.IdBienBanChiTiet = scct.Id
-            LEFT JOIN suachua sc ON scct.IdSuaChua = sc.Id
-            LEFT JOIN kiemtra_suco_chitiet ksct ON gdct.IdBienBanChiTiet = ksct.Id
-            LEFT JOIN kiemtra_suco ks ON ksct.IdKiemTraSuCo = ks.Id
-            LEFT JOIN suco_thietbi sctb ON ks.IdSuCo = sctb.Id
-            JOIN kehoachsuachua kh ON (sc.IdKeHoach = kh.Id OR sctb.IdKeHoach = kh.Id)
-            LEFT JOIN CCDCVatTu cv ON ntvt.IdVatTu = cv.Id
-            WHERE (scct.IdTaiSan = ? OR ksct.IdTaiSan = ?)
-              AND kh.Nam = ?
-            GROUP BY cv.Id, cv.Ten, cv.DonViTinh
-            """;
-        return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(com.ecotel.quanlytaisan.model.VatTuTieuHaoDTO.class), idTaiSan, idTaiSan, nam);
+    public List<com.ecotel.quanlytaisan.model.VatTuTieuHaoDTO> getMaterialConsumption(
+            String idTaiSan, String dateFrom, String dateTo, String nhomTaiSan) {
+        StringBuilder sql = new StringBuilder();
+        List<Object> params = new java.util.ArrayList<>();
+
+        boolean isMayMoc = nhomTaiSan != null && 
+            (nhomTaiSan.equalsIgnoreCase("MAY_MOC") || nhomTaiSan.equalsIgnoreCase("MAYMOC") || nhomTaiSan.equalsIgnoreCase("may_moc"));
+
+        if (isMayMoc) {
+            sql.append("""
+                SELECT 
+                    cv.Id AS ma,
+                    cv.Ten AS ten,
+                    cv.DonViTinh AS donViTinh,
+                    SUM(ntvt.SoLuong) AS soLuong,
+                    cv.GiaTri AS giaTri
+                FROM nghiemthu_maymoc_vattu ntvt
+                JOIN nghiemthu_maymoc_taisan ntts ON ntvt.IdBienBanTaiSan = ntts.Id
+                JOIN nghiemthu_maymoc nt ON ntts.IdBienBan = nt.Id
+                LEFT JOIN CCDCVatTu cv ON ntvt.IdVatTu = cv.Id
+                WHERE ntts.IdTaiSan = ?
+            """);
+            params.add(idTaiSan);
+        } else {
+            sql.append("""
+                SELECT 
+                    cv.Id AS ma,
+                    cv.Ten AS ten,
+                    cv.DonViTinh AS donViTinh,
+                    SUM(ntptct.SoLuongThayTe) AS soLuong,
+                    cv.GiaTri AS giaTri
+                FROM nghiemthu_phuongtien_chitiet ntptct
+                JOIN nghiemthu_phuongtien nt ON ntptct.IdNghiemThuPhuongTien = nt.Id
+                LEFT JOIN CCDCVatTu cv ON ntptct.IdVatTu = cv.Id
+                WHERE nt.IdTaiSan = ?
+            """);
+            params.add(idTaiSan);
+        }
+
+        if (dateFrom != null && !dateFrom.isEmpty()) {
+            sql.append(" AND nt.NgayTao >= ?");
+            params.add(dateFrom);
+        }
+
+        if (dateTo != null && !dateTo.isEmpty()) {
+            sql.append(" AND nt.NgayTao <= ?");
+            params.add(dateTo + " 23:59:59");
+        }
+
+        sql.append(" GROUP BY cv.Id, cv.Ten, cv.DonViTinh, cv.GiaTri");
+
+        return jdbcTemplate.query(sql.toString(), 
+                new BeanPropertyRowMapper<>(com.ecotel.quanlytaisan.model.VatTuTieuHaoDTO.class), 
+                params.toArray());
     }
 }

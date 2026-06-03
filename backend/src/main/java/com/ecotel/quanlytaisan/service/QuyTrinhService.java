@@ -44,7 +44,8 @@ public class QuyTrinhService {
         return response;
     }
 
-    public List<com.ecotel.quanlytaisan.model.VatTuTieuHaoDTO> getMaterialConsumption(String idTaiSan, Integer nam) {
-        return quyTrinhDao.getMaterialConsumption(idTaiSan, nam);
+    public List<com.ecotel.quanlytaisan.model.VatTuTieuHaoDTO> getMaterialConsumption(
+            String idTaiSan, String dateFrom, String dateTo, String nhomTaiSan) {
+        return quyTrinhDao.getMaterialConsumption(idTaiSan, dateFrom, dateTo, nhomTaiSan);
     }
 }

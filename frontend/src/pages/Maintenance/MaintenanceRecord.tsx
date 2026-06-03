@@ -181,8 +181,9 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
-    activeTab === 0,
     bienPhapType,
+    undefined,
+    activeTab === 0,
   );
 
   const {

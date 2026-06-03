@@ -51,9 +51,11 @@ public class QuyTrinhController {
     @GetMapping("/material-consumption")
     public ResponseEntity<ApiResponse<Object>> getMaterialConsumption(
             @RequestParam String idTaiSan,
-            @RequestParam Integer nam) {
+            @RequestParam(required = false) String dateFrom,
+            @RequestParam(required = false) String dateTo,
+            @RequestParam(required = false) String nhomTaiSan) {
         try {
-            List<com.ecotel.quanlytaisan.model.VatTuTieuHaoDTO> result = quyTrinhService.getMaterialConsumption(idTaiSan, nam);
+            List<com.ecotel.quanlytaisan.model.VatTuTieuHaoDTO> result = quyTrinhService.getMaterialConsumption(idTaiSan, dateFrom, dateTo, nhomTaiSan);
             return ResponseEntity.ok(ApiResponse.success("Lấy vật tư tiêu hao thành công", result, result.size()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

@@ -12,4 +12,5 @@ public class VatTuTieuHaoDTO {
     private String ten;
     private String donViTinh;
     private Double soLuong;
+    private Double giaTri;
 }

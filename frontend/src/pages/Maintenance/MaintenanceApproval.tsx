@@ -141,8 +141,9 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
-    activeTab === 0,
     bienPhapType,
+    undefined,
+    activeTab === 0,
   );
 
   const {

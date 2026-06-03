@@ -42,13 +42,14 @@ public class KeHoachSuaChuaController {
             @RequestParam(value = "isSign", required = false) Boolean isSign,
             @RequestParam(value = "dateFrom", required = false) String dateFrom,
             @RequestParam(value = "dateTo", required = false) String dateTo,
-            @RequestParam(value = "nhomTaiSan", required = false) String nhomTaiSan
+            @RequestParam(value = "nhomTaiSan", required = false) String nhomTaiSan,
+            @RequestParam(value = "idTaiSan", required = false) String idTaiSan
     ) throws SQLException {
         try {
             PageResponse<KeHoachSuaChuaDTO> response = keHoachSuaChuaService.findAllPaged(
                     idCongTy, page, size, sortBy, sortDir, search,
                     loaiKeHoach, idDonViGiao, idDonViNhan, trangThai, nam, userid, isSign,
-                    dateFrom, dateTo, nhomTaiSan
+                    dateFrom, dateTo, nhomTaiSan, idTaiSan
             );
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", response, (int) response.getTotalItems()));
         } catch (Exception e) {

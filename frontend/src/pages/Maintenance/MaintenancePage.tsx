@@ -51,6 +51,7 @@ import {
   NotesOutlined,
   AvTimerOutlined,
   FilterList,
+  TrendingUpOutlined,
 } from "@mui/icons-material";
 
 import { useSelector } from "react-redux";
@@ -66,8 +67,11 @@ import {
   useMaintenanceProcessPagedQuery,
   useMaintenanceMaterialConsumptionQuery,
   useGetTaiSanByIdQuery,
+  useMaintenanceVehicleInspectionPageQuery,
+  useMaintenanceAcceptanceTestVehiclePageQuery,
+  useMaintenanceBienPhapMayMocPageQuery,
+  useMaintenanceBienPhapPhuongTienPageQuery,
 } from "./mutation";
-import { QuyTrinhSuaChuaData } from "./types";
 import {
   PlanAdapter,
   RepairAdapter,
@@ -81,107 +85,9 @@ import { useAllDepartmentsQuery } from "../Department/Mutation";
 import { useAssetByDonViQuery } from "../AssetTransfer/Mutation";
 import FieldAutoCompleted from "../../components/TextField/FieldAutoCompleted";
 import { findById } from "../../utils/helpers";
-import { BookXIcon } from "lucide-react";
 import PageAction from "../../components/common/PageAction";
 import { AssetGroup } from "../../utils/const";
-
-// ── Helpers ───────────────────────────────────────────────────
-const trangThaiChipProps = (
-  trang: string | number,
-): {
-  label: string;
-  color: "success" | "warning" | "info" | "error" | "default";
-} => {
-  if (trang === 0 || trang === "0")
-    return { label: "Bản nháp", color: "default" };
-  if (trang === 1 || trang === "1")
-    return { label: "Chờ duyệt", color: "warning" };
-  if (trang === 2 || trang === "2") return { label: "Từ chối", color: "error" };
-  if (trang === 3 || trang === "3")
-    return { label: "Đã duyệt", color: "success" };
-
-  switch (trang) {
-    case "da-duyet":
-      return { label: "Đã duyệt", color: "success" };
-    case "cho-duyet":
-      return { label: "Chờ duyệt", color: "warning" };
-    case "cho-ky":
-      return { label: "Chờ ký", color: "info" };
-    case "dot-xuat":
-      return { label: "Đột xuất", color: "error" };
-    default:
-      return { label: String(trang), color: "default" };
-  }
-};
-
-const getStatusColors = (colorName: string) => {
-  switch (colorName) {
-    case "success":
-      return { bg: "#e2fbe8", text: "#0f872f", border: "#bbf7c8" };
-    case "warning":
-      return { bg: "#fffbeb", text: "#b45309", border: "#fef3c7" };
-    case "info":
-      return { bg: "#eff6ff", text: "#1d4ed8", border: "#dbeafe" };
-    case "error":
-      return { bg: "#fef2f2", text: "#b91c1c", border: "#fee2e2" };
-    default:
-      return { bg: "#f1f5f9", text: "#475569", border: "#cbd5e1" };
-  }
-};
-
-const getStatusChipProps = (statusName?: string) => {
-  if (!statusName) return { bg: "#f1f5f9", text: "#475569", border: "#cbd5e1" };
-  const lower = statusName.toLowerCase();
-  if (
-    lower.includes("tốt") ||
-    lower.includes("bình thường") ||
-    lower.includes("hoạt động")
-  ) {
-    return { bg: "#e2fbe8", text: "#0f872f", border: "#bbf7c8" };
-  }
-  if (
-    lower.includes("hỏng") ||
-    lower.includes("sự cố") ||
-    lower.includes("lỗi") ||
-    lower.includes("sửa chữa")
-  ) {
-    return { bg: "#fef2f2", text: "#b91c1c", border: "#fee2e2" };
-  }
-  return { bg: "#fffbeb", text: "#b45309", border: "#fef3c7" };
-};
-
-const getProcessStepStatus = (
-  id?: string,
-  status?: number,
-): "done" | "pending" | "wait" => {
-  if (!id) return "wait";
-  if (status === 3) return "done";
-  return "pending";
-};
-
-const processStatusChipProps = (row: QuyTrinhSuaChuaData) => {
-  if (row.idNghiemThu) {
-    if (row.trangThaiNghiemThu === 3)
-      return { label: "Hoàn thành", color: "success" as const };
-    if (row.trangThaiNghiemThu === 1)
-      return { label: "Đợi nghiệm thu", color: "warning" as const };
-    return { label: "Đang nghiệm thu", color: "info" as const };
-  }
-
-  if (row.idGiamDinhMayMoc) {
-    if (row.trangThaiGiamDinh === 3)
-      return { label: "Chờ nghiệm thu", color: "warning" as const };
-    return { label: "Đang giám định", color: "info" as const };
-  }
-
-  if (row.idSuaChua) {
-    if (row.trangThaiSuaChua === 3)
-      return { label: "Chờ giám định", color: "warning" as const };
-    return trangThaiChipProps(row.trangThaiSuaChua);
-  }
-
-  return { label: "Chưa bắt đầu", color: "default" as const };
-};
+import { showStatus } from "./config";
 
 // ── Summary Card ──────────────────────────────────────────────
 const SummaryCard = ({
@@ -381,7 +287,7 @@ const QuyTrinhStep = ({
       display: "flex",
       flexDirection: "column",
       gap: 1,
-      minHeight: 210,
+      minHeight: 150,
       transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
       "&:hover": {
         transform: "translateY(-4px)",
@@ -466,9 +372,7 @@ const QuyTrinhStep = ({
           </Typography>
         </Box>
       ) : (
-        items.slice(0, 3).map((item) => {
-          const cfg = trangThaiChipProps(item.trang);
-          const statusColors = getStatusColors(cfg.color);
+        items.slice(0, 1).map((item) => {
           return (
             <Box
               key={item.ma}
@@ -494,23 +398,7 @@ const QuyTrinhStep = ({
               >
                 {item.ma}
               </Typography>
-              <Box
-                sx={{
-                  bgcolor: statusColors.bg,
-                  color: statusColors.text,
-                  border: `1px solid ${statusColors.border}`,
-                  px: 1,
-                  py: 0.25,
-                  borderRadius: "6px",
-                  fontSize: "0.65rem",
-                  fontWeight: 800,
-                  textTransform: "uppercase",
-                  letterSpacing: 0.3,
-                  lineHeight: 1.2,
-                }}
-              >
-                {cfg.label}
-              </Box>
+              {showStatus(item.trang)}
             </Box>
           );
         })
@@ -672,8 +560,6 @@ const ModalXemTatCa = ({
           </TableHead>
           <TableBody>
             {items.map((item, i) => {
-              const cfg = trangThaiChipProps(item.trang);
-              const statusColors = getStatusColors(cfg.color);
               return (
                 <TableRow
                   key={item.ma}
@@ -692,24 +578,7 @@ const ModalXemTatCa = ({
                     {item.ma}
                   </TableCell>
                   <TableCell sx={{ py: 1.5 }}>
-                    <Box
-                      sx={{
-                        bgcolor: statusColors.bg,
-                        color: statusColors.text,
-                        border: `1px solid ${statusColors.border}`,
-                        px: 1.25,
-                        py: 0.5,
-                        borderRadius: "6px",
-                        fontSize: "0.68rem",
-                        fontWeight: 800,
-                        display: "inline-block",
-                        textTransform: "uppercase",
-                        letterSpacing: 0.3,
-                        lineHeight: 1.2,
-                      }}
-                    >
-                      {cfg.label}
-                    </Box>
+                    {showStatus(item.trang)}
                   </TableCell>
                 </TableRow>
               );
@@ -760,14 +629,8 @@ export default function MaintenanceStatPage() {
   const [donVi, setDonVi] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-  const [nhomTaiSan, setNhomTaiSan] = useState("");
+  const [nhomTaiSan, setNhomTaiSan] = useState(AssetGroup.MAYMOC);
   const [selectedId, setSelectedId] = useState("");
-  
-  const nam = useMemo(() => {
-    if (dateFrom) return new Date(dateFrom).getFullYear();
-    if (dateTo) return new Date(dateTo).getFullYear();
-    return new Date().getFullYear();
-  }, [dateFrom, dateTo]);
 
   const [modal, setModal] = useState<{
     open: boolean;
@@ -787,57 +650,17 @@ export default function MaintenanceStatPage() {
     acceptance: 0,
     incident: 0,
     incidentInspection: 0,
+    measure: 0,
   });
-
-  const [processPage, setProcessPage] = useState(1);
 
   const { data: departments = [] } = useAllDepartmentsQuery();
   const { data: assetsData = { items: [] } } = useAssetByDonViQuery(2, donVi);
   const assets = assetsData?.items || [];
 
-  const filteredAssets = useMemo(() => {
-    if (!nhomTaiSan) return assets;
-    return assets.filter(
-      (asset: any) =>
-        asset.idNhomTaiSan === nhomTaiSan ||
-        asset.tenNhom === nhomTaiSan ||
-        asset.nhomTaiSan === nhomTaiSan ||
-        (nhomTaiSan === "MAY_MOC" && (asset.tenNhom?.toLowerCase().includes("máy") || asset.tenNhomTaiSan?.toLowerCase().includes("máy"))) ||
-        (nhomTaiSan === "PHUONG_TIEN" && (asset.tenNhom?.toLowerCase().includes("thiết bị") || asset.tenNhomTaiSan?.toLowerCase().includes("thiết bị") || asset.tenNhom?.toLowerCase().includes("phương tiện")))
-    );
-  }, [assets, nhomTaiSan]);
+  // const { data: processPaged = { items: [], totalItems: 0 } } =
+  //   useMaintenanceProcessPagedQuery(processPage, 10, selectedId, dateFrom, dateTo, nhomTaiSan);
 
-  const { data: processPaged = { items: [], totalItems: 0 } } =
-    useMaintenanceProcessPagedQuery(processPage, 10, selectedId, nam);
-
-  const { data: taiSanDetail = {} } = useGetTaiSanByIdQuery(selectedId, nam);
-
-  const getStatusIcon = (trangThai?: number) => {
-    switch (trangThai) {
-      case 3: // Đã duyệt / Hoàn thành
-        return (
-          <CheckCircleOutline
-            sx={{ color: "#2ecc71", fontSize: 18, mr: 0.5 }}
-          />
-        );
-      case 1: // Chờ duyệt
-        return (
-          <HourglassEmpty sx={{ color: "#f39c12", fontSize: 18, mr: 0.5 }} />
-        );
-      case 0: // Nháp
-        return (
-          <RadioButtonUnchecked
-            sx={{ color: "text.disabled", fontSize: 18, mr: 0.5 }}
-          />
-        );
-      case 2: // Từ chối
-        return (
-          <CloseOutlined sx={{ color: "#e74c3c", fontSize: 18, mr: 0.5 }} />
-        );
-      default:
-        return null;
-    }
-  };
+  const { data: taiSanDetail = {} } = useGetTaiSanByIdQuery(selectedId);
 
   // Pagination for phieu table
   const [page, setPage] = useState(1);
@@ -852,6 +675,7 @@ export default function MaintenanceStatPage() {
     setModal({ open: true, title, type });
 
   // ── Queries ──
+  // kế hoạch
   const {
     data: planPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
   } = useMaintenancePlanningPageQuery(
@@ -864,9 +688,11 @@ export default function MaintenanceStatPage() {
     undefined,
     dateFrom || undefined,
     dateTo || undefined,
-    true,
     nhomTaiSan || undefined,
+    selectedId || undefined,
+    true,
   );
+  // sửa chữa
   const {
     data: repairPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
   } = useMaintenanceRepairPageQuery(
@@ -880,8 +706,14 @@ export default function MaintenanceStatPage() {
     dateFrom || undefined,
     dateTo || undefined,
   );
+
+  // giám định máy móc
   const {
-    data: inspectionPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
+    data: machineInspectionPaged = {
+      items: [],
+      totalItems: 0,
+      trangThaiCounts: {},
+    },
   } = useMaintenanceInspectionPageQuery(
     pageModels.inspection,
     10,
@@ -892,7 +724,76 @@ export default function MaintenanceStatPage() {
     undefined,
     dateFrom || undefined,
     dateTo || undefined,
+    nhomTaiSan === AssetGroup.MAYMOC,
   );
+
+  // giám định phương tiện
+  const {
+    data: vehicleInspectionPaged = {
+      items: [],
+      totalItems: 0,
+      trangThaiCounts: {},
+    },
+  } = useMaintenanceVehicleInspectionPageQuery(
+    pageModels.inspection,
+    10,
+    "",
+    undefined,
+    undefined,
+    user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom || undefined,
+    dateTo || undefined,
+    nhomTaiSan === AssetGroup.PHUONGTIEN,
+  );
+  const inspectionPaged =
+    nhomTaiSan === AssetGroup.MAYMOC
+      ? machineInspectionPaged
+      : vehicleInspectionPaged;
+
+  // biện pháp máy móc
+  const {
+    data: machineMeasurePaged = {
+      items: [],
+      totalItems: 0,
+      trangThaiCounts: {},
+    },
+  } = useMaintenanceBienPhapMayMocPageQuery(
+    pageModels.measure,
+    10,
+    "",
+    undefined,
+    user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom || undefined,
+    dateTo || undefined,
+    nhomTaiSan === AssetGroup.MAYMOC,
+  );
+
+  // biện pháp phương tiện
+  const {
+    data: vehicleMeasurePaged = {
+      items: [],
+      totalItems: 0,
+      trangThaiCounts: {},
+    },
+  } = useMaintenanceBienPhapPhuongTienPageQuery(
+    pageModels.measure,
+    10,
+    "",
+    undefined,
+    user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom || undefined,
+    dateTo || undefined,
+    nhomTaiSan === AssetGroup.PHUONGTIEN,
+  );
+  const measurePaged =
+    nhomTaiSan === AssetGroup.MAYMOC
+      ? machineMeasurePaged
+      : vehicleMeasurePaged;
+
+  // vật tư
   const {
     data: materialPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
   } = useMaintenanceMaterialAssessmentPageQuery(
@@ -905,8 +806,13 @@ export default function MaintenanceStatPage() {
     dateFrom || undefined,
     dateTo || undefined,
   );
+  // nghiệm thu máy móc
   const {
-    data: acceptancePaged = { items: [], totalItems: 0, trangThaiCounts: {} },
+    data: acceptanceMachinePaged = {
+      items: [],
+      totalItems: 0,
+      trangThaiCounts: {},
+    },
   } = useMaintenanceAcceptanceTestPageQuery(
     pageModels.acceptance,
     10,
@@ -917,7 +823,33 @@ export default function MaintenanceStatPage() {
     undefined,
     dateFrom || undefined,
     dateTo || undefined,
+    nhomTaiSan === AssetGroup.MAYMOC,
   );
+  // nghiệm thu phương tiện
+  const {
+    data: acceptanceVehiclePaged = {
+      items: [],
+      totalItems: 0,
+      trangThaiCounts: {},
+    },
+  } = useMaintenanceAcceptanceTestVehiclePageQuery(
+    pageModels.acceptance,
+    10,
+    "",
+    undefined,
+    undefined,
+    user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom || undefined,
+    dateTo || undefined,
+    nhomTaiSan === AssetGroup.PHUONGTIEN,
+  );
+  const acceptancePaged =
+    nhomTaiSan === AssetGroup.MAYMOC
+      ? acceptanceMachinePaged
+      : acceptanceVehiclePaged;
+
+  // sự cố
   const {
     data: incidentPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
   } = useMaintenanceIncidentPageQuery(
@@ -931,6 +863,8 @@ export default function MaintenanceStatPage() {
     dateFrom || undefined,
     dateTo || undefined,
   );
+
+  // bb sự cố
   const {
     data: incidentInspectionPaged = {
       items: [],
@@ -961,6 +895,11 @@ export default function MaintenanceStatPage() {
     .map(InspectionAdapter)
     .map((item: any) => ({
       ma: item.idGiamDinhMayMoc || item.id,
+      trang: item.trangThai,
+    }));
+  const measureItems = measurePaged.items
+    .map((item: any) => ({
+      ma: item.idBienPhap || item.id,
       trang: item.trangThai,
     }));
   const materialItems = materialPaged.items
@@ -1015,14 +954,6 @@ export default function MaintenanceStatPage() {
     },
     {
       step: 4,
-      title: "GIÁM ĐỊNH",
-      icon: <FactCheckOutlined sx={{ fontSize: 16 }} />,
-      color: "#22c55e",
-      items: inspectionItems,
-      type: "inspection",
-    },
-    {
-      step: 5,
       title: "BB SỰ CỐ",
       icon: <SearchOutlined sx={{ fontSize: 16 }} />,
       color: "#8b5cf6",
@@ -1030,12 +961,20 @@ export default function MaintenanceStatPage() {
       type: "incidentInspection",
     },
     {
+      step: 5,
+      title: "GIÁM ĐỊNH",
+      icon: <FactCheckOutlined sx={{ fontSize: 16 }} />,
+      color: "#22c55e",
+      items: inspectionItems,
+      type: "inspection",
+    },
+    {
       step: 6,
-      title: "ĐÁNH GIÁ VT",
-      icon: <InventoryOutlined sx={{ fontSize: 16 }} />,
-      color: "#f97316",
-      items: materialItems,
-      type: "material",
+      title: "BIỆN PHÁP SỬA CHỮA",
+      icon: <TrendingUpOutlined sx={{ fontSize: 16 }} />,
+      color: "#aa22c5",
+      items: measureItems,
+      type: "measure",
     },
     {
       step: 7,
@@ -1044,6 +983,14 @@ export default function MaintenanceStatPage() {
       color: "#10b981",
       items: acceptanceItems,
       type: "acceptance",
+    },
+    {
+      step: 8,
+      title: "ĐÁNH GIÁ VT",
+      icon: <InventoryOutlined sx={{ fontSize: 16 }} />,
+      color: "#f97316",
+      items: materialItems,
+      type: "material",
     },
   ];
 
@@ -1104,15 +1051,16 @@ export default function MaintenanceStatPage() {
                   color: "#04b46e",
                 },
               },
-                "& input[type='date']::-webkit-datetime-edit": {
-                    color: "rgba(4,180,110,0.8)",
-                },
-                "& input[type='date']::-webkit-datetime-edit-fields-wrapper": {
-                    color: "rgba(4,180,110,0.8)",
-                },
-                "& input[type='date']::-webkit-calendar-picker-indicator": {
-                    filter: "invert(51%) sepia(72%) saturate(450%) hue-rotate(109deg)",
-                },
+              "& input[type='date']::-webkit-datetime-edit": {
+                color: "rgba(4,180,110,0.8)",
+              },
+              "& input[type='date']::-webkit-datetime-edit-fields-wrapper": {
+                color: "rgba(4,180,110,0.8)",
+              },
+              "& input[type='date']::-webkit-calendar-picker-indicator": {
+                filter:
+                  "invert(51%) sepia(72%) saturate(450%) hue-rotate(109deg)",
+              },
             }}
           >
             <Grid size={{ xs: 12, md: 2.5 }}>
@@ -1126,7 +1074,9 @@ export default function MaintenanceStatPage() {
             </Grid>
             <Grid size={{ xs: 12, md: 2 }}>
               <FormControl fullWidth size="small">
-                <InputLabel id="nhom-tai-san-select-label">Loại tài sản</InputLabel>
+                <InputLabel id="nhom-tai-san-select-label">
+                  Loại tài sản
+                </InputLabel>
                 <Select
                   labelId="nhom-tai-san-select-label"
                   label="Loại tài sản"
@@ -1136,7 +1086,6 @@ export default function MaintenanceStatPage() {
                     setSelectedId(""); // Clear selected device when group changes
                   }}
                 >
-                  <MenuItem value="">Tất cả</MenuItem>
                   <MenuItem value={AssetGroup.MAYMOC}>Máy móc</MenuItem>
                   <MenuItem value={AssetGroup.PHUONGTIEN}>Phương tiện</MenuItem>
                 </Select>
@@ -1150,7 +1099,6 @@ export default function MaintenanceStatPage() {
                 onChange={(e) => setDateFrom(e.target.value)}
                 fullWidth
                 size="small"
-
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
@@ -1168,7 +1116,7 @@ export default function MaintenanceStatPage() {
             <Grid size={{ xs: 12, md: 3.5 }}>
               <FieldAutoCompleted
                 title="Chọn Thiết Bị"
-                data={filteredAssets}
+                data={assets}
                 labelkey="tenTaiSan"
                 labelOption="id"
                 setValue={setSelectedId}
@@ -1222,6 +1170,15 @@ export default function MaintenanceStatPage() {
                   subLabel="Chờ duyệt"
                 />
                 <SummaryCard
+                  icon={<SearchOutlined sx={{ fontSize: 20 }} />}
+                  title="BB Sự Cố"
+                  color="#8b5cf6"
+                  main={incidentInspectionPaged.totalItems}
+                  mainLabel="Tổng BB sự cố"
+                  sub={incidentInspectionPaged.trangThaiCounts["1"] || 0}
+                  subLabel="Chờ duyệt"
+                />
+                <SummaryCard
                   icon={<DescriptionOutlined sx={{ fontSize: 20 }} />}
                   title="Lệnh SC"
                   color="#f59e0b"
@@ -1240,21 +1197,12 @@ export default function MaintenanceStatPage() {
                   subLabel="Chờ duyệt"
                 />
                 <SummaryCard
-                  icon={<SearchOutlined sx={{ fontSize: 20 }} />}
-                  title="BB Sự Cố"
-                  color="#8b5cf6"
-                  main={incidentInspectionPaged.totalItems}
-                  mainLabel="Tổng BB sự cố"
-                  sub={incidentInspectionPaged.trangThaiCounts["1"] || 0}
-                  subLabel="Chờ duyệt"
-                />
-                <SummaryCard
-                  icon={<InventoryOutlined sx={{ fontSize: 20 }} />}
-                  title="Đánh giá VT"
-                  color="#f97316"
-                  main={materialPaged.totalItems}
-                  mainLabel="Tổng bản đánh giá"
-                  sub={materialPaged.trangThaiCounts["1"] || 0}
+                  icon={<TrendingUpOutlined sx={{ fontSize: 20 }} />}
+                  title="Biện pháp"
+                  color="#aa22c5"
+                  main={measurePaged.totalItems}
+                  mainLabel="Tổng bản biện pháp"
+                  sub={measurePaged.trangThaiCounts["1"] || 0}
                   subLabel="Chờ duyệt"
                 />
                 <SummaryCard
@@ -1264,6 +1212,15 @@ export default function MaintenanceStatPage() {
                   main={acceptancePaged.totalItems}
                   mainLabel="Tổng bản nghiệm thu"
                   sub={acceptancePaged.trangThaiCounts["1"] || 0}
+                  subLabel="Chờ duyệt"
+                />
+                <SummaryCard
+                  icon={<InventoryOutlined sx={{ fontSize: 20 }} />}
+                  title="Đánh giá VT"
+                  color="#f97316"
+                  main={materialPaged.totalItems}
+                  mainLabel="Tổng bản đánh giá"
+                  sub={materialPaged.trangThaiCounts["1"] || 0}
                   subLabel="Chờ duyệt"
                 />
               </Box>
@@ -1429,15 +1386,9 @@ export default function MaintenanceStatPage() {
                       </Box>
                       <Box>
                         {(() => {
-                          const statusProps = getStatusChipProps(
-                            (taiSanDetail as any)?.tenHienTrang,
-                          );
                           return (
                             <Box
                               sx={{
-                                bgcolor: statusProps.bg,
-                                color: statusProps.text,
-                                border: `1px solid ${statusProps.border}`,
                                 px: 1.5,
                                 py: 0.5,
                                 borderRadius: "8px",
@@ -1489,7 +1440,7 @@ export default function MaintenanceStatPage() {
 
                     <Divider />
 
-                    <Box>
+                    {/* <Box>
                       <Box
                         sx={{
                           display: "flex",
@@ -1530,7 +1481,7 @@ export default function MaintenanceStatPage() {
                               py: 2,
                             }}
                           >
-                            Chưa có tiến độ sửa chữa nào trong năm {nam}
+                            Chưa có tiến độ sửa chữa nào
                           </Typography>
                         ) : (
                           processPaged.items.map((proc: any, index: number) => (
@@ -1587,7 +1538,7 @@ export default function MaintenanceStatPage() {
                           ))
                         )}
                       </Box>
-                    </Box>
+                    </Box> */}
 
                     <Divider />
 
@@ -1664,6 +1615,8 @@ export default function MaintenanceStatPage() {
                         "Tên vật tư",
                         "Đơn vị tính",
                         "Số lượng tiêu hao",
+                        "Đơn giá",
+                        "Thành tiền",
                       ].map((h) => (
                         <TableCell
                           key={h}
@@ -1685,7 +1638,9 @@ export default function MaintenanceStatPage() {
                   <TableBody>
                     <MaterialConsumptionRows
                       idTaiSan={selectedId}
-                      nam={nam}
+                      dateFrom={dateFrom}
+                      dateTo={dateTo}
+                      nhomTaiSan={nhomTaiSan}
                     />
                   </TableBody>
                 </Table>
@@ -1752,13 +1707,22 @@ export default function MaintenanceStatPage() {
 
 const MaterialConsumptionRows = ({
   idTaiSan,
-  nam,
+  dateFrom,
+  dateTo,
+  nhomTaiSan,
 }: {
   idTaiSan: string;
-  nam: number;
+  dateFrom: string;
+  dateTo: string;
+  nhomTaiSan: string;
 }) => {
   const { data: materials = [], isLoading } =
-    useMaintenanceMaterialConsumptionQuery(idTaiSan, nam);
+    useMaintenanceMaterialConsumptionQuery(
+      idTaiSan,
+      dateFrom,
+      dateTo,
+      nhomTaiSan,
+    );
 
   if (isLoading) {
     return (
@@ -1800,7 +1764,7 @@ const MaterialConsumptionRows = ({
             </Box>
             <Typography variant="body2" color="text.secondary" fontWeight={600}>
               {idTaiSan
-                ? `Thiết bị không có vật tư tiêu hao trong năm ${nam}`
+                ? `Thiết bị không có vật tư tiêu hao trong năm ${dateFrom} - ${dateTo}`
                 : "Vui lòng chọn thiết bị ở bộ lọc phía trên để xem vật tư tiêu hao"}
             </Typography>
           </Box>
@@ -1827,6 +1791,12 @@ const MaterialConsumptionRows = ({
           <TableCell>{m.donViTinh}</TableCell>
           <TableCell sx={{ fontWeight: 700, color: "primary.main" }}>
             {m.soLuong}
+          </TableCell>
+          <TableCell sx={{ fontWeight: 600 }}>
+            {m.giaTri != null ? m.giaTri.toLocaleString() : "—"}
+          </TableCell>
+          <TableCell sx={{ fontWeight: 600 }}>
+            {m.giaTri != null ? (m.giaTri * m.soLuong).toLocaleString() : "—"}
           </TableCell>
         </TableRow>
       ))}
