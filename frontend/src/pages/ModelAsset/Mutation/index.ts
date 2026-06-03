@@ -44,6 +44,35 @@ export const useModelAssetMutation = (
       );
     },
   });
+  const createBatchMutation = useMutation({
+    mutationFn: async (data: ModelAssetType[]) => {
+      const currentUser = user?.taiKhoan?.tenDangNhap || "admin";
+      const res = await api.post(
+        "/mohinhtaisan/batch",
+        data.map((item) => ({
+          ...item,
+          idCongTy: CongTy.CT001,
+          ngayTao: now,
+          nguoiTao: currentUser,
+          ngayCapNhat: now,
+          nguoiCapNhat: currentUser,
+        })),
+      );
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["modelAssets"] });
+      queryClient.invalidateQueries({ queryKey: ["modelAssetsPage"] });
+      showSuccessAlert("Tạo mô hình tài sản thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo mô hình tài sản thất bại",
+      );
+    },
+  });
 
   const updateMutation = useMutation({
     mutationFn: async (data: ModelAssetType) => {
@@ -56,6 +85,32 @@ export const useModelAssetMutation = (
       return res.data;
     },
     onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["modelAssets"] });
+      queryClient.invalidateQueries({ queryKey: ["modelAssetsPage"] });
+      showSuccessAlert("Sửa mô hình tài sản thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Sửa mô hình tài sản thất bại",
+      );
+    },
+  });
+  const updateBatchMutation = useMutation({
+    mutationFn: async (data: ModelAssetType[]) => {
+      const currentUser = user?.taiKhoan?.tenDangNhap || "admin";
+      const res = await api.put(
+        "/mohinhtaisan/batch",
+        data.map((item) => ({
+          ...item,
+          ngayCapNhat: now,
+          nguoiCapNhat: currentUser,
+        })),
+      );
+      return res.data;
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["modelAssets"] });
       queryClient.invalidateQueries({ queryKey: ["modelAssetsPage"] });
       showSuccessAlert("Sửa mô hình tài sản thành công");
@@ -107,23 +162,23 @@ export const useModelAssetMutation = (
     },
   });
 
-   const deleteAllMutation = useMutation({
-     mutationFn: async () => {
-       const res = await api.delete(`/mohinhtaisan/delete-all`);
-       return res.data.message;
-     },
-     onSuccess: (data) => {
-       queryClient.invalidateQueries({ queryKey: ["modelAssetsPage"] });
-       showSuccessAlert(data || "Xóa mô hình tài sản thành công");
-     },
-     onError: (error: any) => {
-       showErrorAlert(
-         error.response?.data?.message ||
-           error.message ||
-           "Xóa mô hình tài sản thất bại",
-       );
-     },
-   });
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.delete(`/mohinhtaisan/delete-all`);
+      return res.data.message;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["modelAssetsPage"] });
+      showSuccessAlert(data || "Xóa mô hình tài sản thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa mô hình tài sản thất bại",
+      );
+    },
+  });
 
   const exportMutation = useMutation({
     mutationFn: async () => {
@@ -289,6 +344,8 @@ export const useModelAssetMutation = (
     exportMutation,
     importExcelMutation,
     deleteAllMutation,
+    createBatchMutation,
+    updateBatchMutation,
   };
 };
 

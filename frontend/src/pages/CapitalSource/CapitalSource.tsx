@@ -32,6 +32,10 @@ interface CapitalSourceTabState {
   readOnly: boolean;
   isCopy: boolean;
   draftForm?: Record<string, any>;
+  showBulkForm: boolean;
+  bulkEditType?: "create" | "edit";
+  bulkItems?: any[];
+  bulkDraftData?: Record<string, any>;
 }
 
 export default function CapitalSource() {
@@ -47,6 +51,14 @@ export default function CapitalSource() {
   const setReadOnly = (v: boolean) => setField({ readOnly: v });
   const setIsCopy = (v: boolean) => setField({ isCopy: v });
 
+  const showBulkForm = formData.showBulkForm ?? false;
+  const bulkEditType = formData.bulkEditType ?? "create";
+  const bulkItems = formData.bulkItems ?? [];
+  const setShowBulkForm = (v: boolean) => setField({ showBulkForm: v });
+  const setBulkEditType = (v: "create" | "edit") =>
+    setField({ bulkEditType: v });
+  const setBulkItems = (v: any[]) => setField({ bulkItems: v });
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
@@ -58,6 +70,8 @@ export default function CapitalSource() {
 
   const handleMinimize = () => setShowForm(false);
   const isMinimized = !showForm && hasDraftData(formData.draftForm);
+  const handleBulkMinimize = () => setShowBulkForm(false);
+  const isBulkMinimized = !showBulkForm && hasDraftData(formData.bulkDraftData);
 
   const {
     createMutation,
@@ -67,6 +81,8 @@ export default function CapitalSource() {
     importExcelMutation,
     exportMutation,
     deleteAllMutation,
+    createBatchMutation,
+    updateBatchMutation,
   } = useCapitalSourceMutation();
 
   const debouncedSearchValue = useDebounce(searchValue, 600);
@@ -90,16 +106,38 @@ export default function CapitalSource() {
     setReadOnly(false);
   };
 
+  const handleBulkEdit = () => {
+    if (selectedIds.length === 0) return;
+    const itemsToEdit = capitalSourcesPage.items
+      .filter((item: any) => selectedIds.includes(item.id))
+      .sort((a: any, b: any) => a.id.localeCompare(b.id));
+    setBulkEditType("edit");
+    setBulkItems(itemsToEdit);
+    setShowBulkForm(true);
+  };
+
   const handleSave = (values: any) => {
-    if (selectedCapitalSource && !isCopy) {
-      updateMutation.mutate(values);
+    if (Array.isArray(values)) {
+      if (bulkEditType === "create") {
+        createBatchMutation.mutate(values);
+      } else {
+        updateBatchMutation.mutate(values);
+      }
+      setShowBulkForm(false);
+      setBulkItems([]);
+      setSelectedIds([]);
+      setField({ bulkDraftData: undefined });
     } else {
-      createMutation.mutate(values);
+      if (selectedCapitalSource && !isCopy) {
+        updateMutation.mutate(values);
+      } else {
+        createMutation.mutate(values);
+      }
+      setShowForm(false);
+      setSelectedCapitalSource(null);
+      setIsCopy(false);
+      setField({ draftForm: undefined });
     }
-    setShowForm(false);
-    setSelectedCapitalSource(null);
-    setIsCopy(false);
-    setField({ draftForm: undefined });
   };
 
   const columns: GridColDef[] = [
@@ -211,11 +249,17 @@ export default function CapitalSource() {
       <PageAction
         title="Quản lý nguồn vốn"
         onNewClick={() => {
+          if (isBulkMinimized) {
+            setShowBulkForm(true);
+            return;
+          }
           if (isMinimized) {
             setShowForm(true);
             return;
           }
-          setShowForm(true);
+          setBulkEditType("create");
+          setBulkItems([{}]);
+          setShowBulkForm(true);
           setSelectedCapitalSource(null);
           setReadOnly(false);
         }}
@@ -270,7 +314,44 @@ export default function CapitalSource() {
           </DialogContent>
         </Dialog>
 
-        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
+        <Dialog
+          open={showBulkForm}
+          onClose={handleBulkMinimize}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogContent sx={{ p: 0 }}>
+            <CapitalSourceForm
+              onEdit={() => {}}
+              onCancel={() => {
+                setBulkItems([]);
+                setSelectedIds([]);
+                setField({ bulkDraftData: undefined });
+                setShowBulkForm(false);
+              }}
+              onMinimize={handleBulkMinimize}
+              selectedCapitalSource={null}
+              readOnly={false}
+              onSave={handleSave}
+              isBulkMode={true}
+              bulkItems={bulkItems}
+              onBulkItemsChange={(items) => {
+                setField({
+                  bulkDraftData: { items, bulkEditType },
+                  bulkItems: items,
+                });
+              }}
+              bulkEditType={bulkEditType}
+            />
+          </DialogContent>
+        </Dialog>
+
+        {isBulkMinimized ? (
+          <DraftIndicator onClick={() => setShowBulkForm(true)} />
+        ) : (
+          isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />
+        )}
+
         <TableCustom
           tableId="capitalSource"
           title="Quản lý nguồn vốn"
@@ -290,6 +371,7 @@ export default function CapitalSource() {
           showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
           onImportExcel={(file) => importExcelMutation.mutate(file)}
           onExportExcel={() => exportMutation.mutate(allCapitalSources)}
+          onBulkEdit={selectedIds.length > 1 ? handleBulkEdit : undefined}
         />
       </Box>
     </Box>

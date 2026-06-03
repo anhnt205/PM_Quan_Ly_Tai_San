@@ -1,3 +1,4 @@
+import { ContentCopy, Delete } from "@mui/icons-material";
 import {
   Box,
   CircularProgress,
@@ -6,12 +7,11 @@ import {
   IconButton,
   Typography,
 } from "@mui/material";
+import { useState } from "react";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-import { ContentCopy, Delete } from "@mui/icons-material";
 import AssetProfileForm from "./components/AssetProfileForm";
-import { useState } from "react";
 import {
   useAllAssetProfileQuery,
   useAssetProfileMutation,
@@ -22,12 +22,43 @@ import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useDebounce } from "../../hooks/useDebounce";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
+import { useTabForm } from "../../redux/useTabForm";
+import { hasDraftData } from "../../utils/draftUtils";
+import DraftIndicator from "../../components/common/DraftIndicator";
+
+interface AssetProfileTabState {
+  showForm: boolean;
+  selectedAssetProfile: any | null;
+  readOnly: boolean;
+  isCopy: boolean;
+  draftForm?: Record<string, any>;
+  showBulkForm: boolean;
+  bulkEditType?: "create" | "edit";
+  bulkItems?: any[];
+  bulkDraftData?: Record<string, any>;
+}
 
 export default function AssetProfile() {
-  const [showForm, setShowForm] = useState(false);
-  const [selectedAssetProfile, setSelectedAssetProfile] = useState<any>(null);
-  const [readOnly, setReadOnly] = useState(false);
-  const [isCopy, setIsCopy] = useState(false);
+  const { formData, setField } =
+    useTabForm<AssetProfileTabState>("/ly_lich");
+  const showForm = formData.showForm ?? false;
+  const selectedAssetProfile = formData.selectedAssetProfile ?? null;
+  const readOnly = formData.readOnly ?? false;
+  const isCopy = formData.isCopy ?? false;
+  const setShowForm = (v: boolean) => setField({ showForm: v });
+  const setSelectedAssetProfile = (v: any) =>
+    setField({ selectedAssetProfile: v });
+  const setReadOnly = (v: boolean) => setField({ readOnly: v });
+  const setIsCopy = (v: boolean) => setField({ isCopy: v });
+
+  const showBulkForm = formData.showBulkForm ?? false;
+  const bulkEditType = formData.bulkEditType ?? "create";
+  const bulkItems = formData.bulkItems ?? [];
+  const setShowBulkForm = (v: boolean) => setField({ showBulkForm: v });
+  const setBulkEditType = (v: "create" | "edit") =>
+    setField({ bulkEditType: v });
+  const setBulkItems = (v: any[]) => setField({ bulkItems: v });
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
@@ -40,6 +71,12 @@ export default function AssetProfile() {
     page: 0,
   });
 
+  const handleMinimize = () => setShowForm(false);
+  const handleBulkMinimize = () => setShowBulkForm(false);
+  const isMinimized = !showForm && hasDraftData(formData.draftForm);
+  const isBulkMinimized =
+    !showBulkForm && hasDraftData(formData.bulkDraftData);
+
   const {
     createMutation,
     updateMutation,
@@ -48,6 +85,8 @@ export default function AssetProfile() {
     importExcelMutation,
     exportMutation,
     deleteAllMutation,
+    createBatchMutation,
+    updateBatchMutation,
   } = useAssetProfileMutation(
     paginationModel.page,
     paginationModel.pageSize,
@@ -67,8 +106,7 @@ export default function AssetProfile() {
     importExcelMutation.mutate(file, {
       onError: (error: any) => {
         if (error.message && error.message.includes("\n")) {
-          const errorList = error.message.split("\n");
-          setImportErrors(errorList);
+          setImportErrors(error.message.split("\n"));
           setShowErrorDialog(true);
         }
       },
@@ -83,19 +121,41 @@ export default function AssetProfile() {
   };
 
   const handleSave = (values: any) => {
-    if (selectedAssetProfile && !isCopy) {
-      updateMutation.mutate(values);
+    if (Array.isArray(values)) {
+      if (bulkEditType === "create") {
+        createBatchMutation.mutate(values);
+      } else {
+        updateBatchMutation.mutate(values);
+      }
+      setShowBulkForm(false);
+      setBulkItems([]);
+      setSelectedIds([]);
+      setField({ bulkDraftData: undefined });
     } else {
-      createMutation.mutate(values);
+      if (selectedAssetProfile && !isCopy) {
+        updateMutation.mutate(values);
+      } else {
+        createMutation.mutate(values);
+      }
+      setShowForm(false);
+      setSelectedAssetProfile(null);
+      setIsCopy(false);
+      setField({ draftForm: undefined });
     }
-    setShowForm(false);
-    setSelectedAssetProfile(null);
-    setIsCopy(false);
   };
 
-  const handleEdit = () => {
-    setReadOnly(false);
+  const handleEdit = () => setReadOnly(false);
+
+  const handleBulkEdit = () => {
+    if (selectedIds.length === 0) return;
+    const itemsToEdit = assetProfilePage.items
+      .filter((item: any) => selectedIds.includes(item.id))
+      .sort((a: any, b: any) => a.id.localeCompare(b.id));
+    setBulkEditType("edit");
+    setBulkItems(itemsToEdit);
+    setShowBulkForm(true);
   };
+
   const columns: GridColDef[] = [
     {
       field: "maLyLich",
@@ -189,7 +249,17 @@ export default function AssetProfile() {
       <PageAction
         title="Quản lý lý lịch tài sản"
         onNewClick={() => {
-          setShowForm(true);
+          if (isBulkMinimized) {
+            setShowBulkForm(true);
+            return;
+          }
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
+          setBulkEditType("create");
+          setBulkItems([{}]);
+          setShowBulkForm(true);
           setSelectedAssetProfile(null);
           setReadOnly(false);
         }}
@@ -197,6 +267,7 @@ export default function AssetProfile() {
         onImport={handleImport}
         showExcel={true}
       />
+
       <ImportErrorDialog
         open={showErrorDialog}
         onClose={() => setShowErrorDialog(false)}
@@ -225,21 +296,70 @@ export default function AssetProfile() {
       </Dialog>
 
       <Box p={2}>
-        {showForm && (
-          <Box py={2}>
+        <Dialog
+          open={showForm}
+          onClose={handleMinimize}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogContent sx={{ p: 0 }}>
             <AssetProfileForm
+              onEdit={handleEdit}
               onCancel={() => {
                 setShowForm(false);
                 setSelectedAssetProfile(null);
                 setReadOnly(false);
+                setIsCopy(false);
+                setField({ draftForm: undefined });
               }}
-              onEdit={handleEdit}
+              onMinimize={handleMinimize}
               selectedAssetProfile={selectedAssetProfile}
               readOnly={readOnly}
               onSave={handleSave}
+              onFormChange={(values) => setField({ draftForm: values })}
+              initialFormData={formData.draftForm}
             />
-          </Box>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={showBulkForm}
+          onClose={handleBulkMinimize}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogContent sx={{ p: 0 }}>
+            <AssetProfileForm
+              onEdit={() => {}}
+              onCancel={() => {
+                setBulkItems([]);
+                setSelectedIds([]);
+                setField({ bulkDraftData: undefined });
+                setShowBulkForm(false);
+              }}
+              onMinimize={handleBulkMinimize}
+              selectedAssetProfile={null}
+              readOnly={false}
+              onSave={handleSave}
+              isBulkMode={true}
+              bulkItems={bulkItems}
+              onBulkItemsChange={(items) => {
+                setField({
+                  bulkDraftData: { items, bulkEditType },
+                  bulkItems: items,
+                });
+              }}
+              bulkEditType={bulkEditType}
+            />
+          </DialogContent>
+        </Dialog>
+
+        {isBulkMinimized ? (
+          <DraftIndicator onClick={() => setShowBulkForm(true)} />
+        ) : (
+          isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />
         )}
+
         <TableCustom
           tableId="assetProfile"
           title="Quản lý lý lịch tài sản"
@@ -257,6 +377,9 @@ export default function AssetProfile() {
           setSearchValue={setSearchValue}
           onDeleteAll={deleteAllMutation.mutate}
           showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
+          onImportExcel={handleImport}
+          onExportExcel={() => exportMutation.mutate(allAssetProfile)}
+          onBulkEdit={selectedIds.length > 1 ? handleBulkEdit : undefined}
         />
       </Box>
     </Box>

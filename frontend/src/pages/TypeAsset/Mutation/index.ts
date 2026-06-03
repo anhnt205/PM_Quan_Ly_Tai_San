@@ -30,6 +30,23 @@ export const useTypeAssetMutation = (
       );
     },
   });
+  const createBatchMutation = useMutation({
+    mutationFn: async (data: TypeAssetType[]) => {
+      const res = await api.post("/loaitaisancon/batch", data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["allTypeAssets"] });
+      showSuccessAlert("Tạo hàng loạt loại tài sản thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo hàng loạt loại tài sản thất bại",
+      );
+    },
+  });
 
   const updateMutation = useMutation({
     mutationFn: async (data: TypeAssetType) => {
@@ -45,6 +62,23 @@ export const useTypeAssetMutation = (
         error.response?.data?.message ||
           error.message ||
           "Sửa loại tài sản thất bại",
+      );
+    },
+  });
+  const updateBatchMutation = useMutation({
+    mutationFn: async (data: TypeAssetType[]) => {
+      const res = await api.put("/loaitaisancon/batch", data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["allTypeAssets"] });
+      showSuccessAlert("Sửa hàng loạt loại tài sản thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Sửa hàng loạt loại tài sản thất bại",
       );
     },
   });
@@ -84,23 +118,23 @@ export const useTypeAssetMutation = (
       );
     },
   });
-   const deleteAllMutation = useMutation({
-     mutationFn: async () => {
-       const res = await api.delete(`/loaitaisan/delete-all`);
-       return res.data.message;
-     },
-     onSuccess: (data) => {
-       queryClient.invalidateQueries({ queryKey: ["typeAssetsPage"] });
-       showSuccessAlert(data || "Xóa loại tài sản thành công");
-     },
-     onError: (error: any) => {
-       showErrorAlert(
-         error.response?.data?.message ||
-           error.message ||
-           "Xóa loại tài sản thất bại",
-       );
-     },
-   });
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.delete(`/loaitaisan/delete-all`);
+      return res.data.message;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["typeAssetsPage"] });
+      showSuccessAlert(data || "Xóa loại tài sản thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa loại tài sản thất bại",
+      );
+    },
+  });
 
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: TypeAssetType[]) => {
@@ -232,6 +266,8 @@ export const useTypeAssetMutation = (
     importExcelMutation,
     exportMutation,
     deleteAllMutation,
+    createBatchMutation,
+    updateBatchMutation,
   };
 };
 

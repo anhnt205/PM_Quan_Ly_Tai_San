@@ -31,6 +31,32 @@ export const useStaffMutation = (
     },
   });
 
+  const createManyMutation = useMutation({
+    mutationFn: async (data: StaffType[]) => {
+      try {
+        const res = await api.post("/nhanvien/batch", data);
+        return res.data;
+      } catch (error: any) {
+        if (error.response?.status === 404) {
+          await Promise.all(data.map((item) => api.post("/nhanvien", item)));
+          return data;
+        }
+        throw error;
+      }
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["staffsPage"] });
+      showSuccessAlert("Tạo nhiều nhân viên thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo nhiều nhân viên thất bại",
+      );
+    },
+  });
+
   const updateMutation = useMutation({
     mutationFn: async (data: StaffType) => {
       const res = await api.put(`/nhanvien/${data.id}`, data);
@@ -45,6 +71,34 @@ export const useStaffMutation = (
         error.response?.data?.message ||
           error.message ||
           "Sửa nhân viên thất bại",
+      );
+    },
+  });
+
+  const updateManyMutation = useMutation({
+    mutationFn: async (data: StaffType[]) => {
+      try {
+        const res = await api.put("/nhanvien/batch", data);
+        return res.data;
+      } catch (error: any) {
+        if (error.response?.status === 404) {
+          await Promise.all(
+            data.map((item) => api.put(`/nhanvien/${item.id}`, item)),
+          );
+          return data;
+        }
+        throw error;
+      }
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["staffsPage"] });
+      showSuccessAlert("Cập nhật nhiều nhân viên thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Cập nhật nhiều nhân viên thất bại",
       );
     },
   });
@@ -340,7 +394,9 @@ export const useStaffMutation = (
     exportMutation,
     importExcelMutation,
     createMutation,
+    createManyMutation,
     updateMutation,
+    updateManyMutation,
     deleteOneMutation,
     deleteManyMutation,
     uploadMutation,

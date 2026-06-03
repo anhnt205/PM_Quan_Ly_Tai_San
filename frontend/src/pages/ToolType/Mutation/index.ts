@@ -32,6 +32,25 @@ export const useToolTypeMutation = (
     },
   });
 
+  const createBatchMutation = useMutation({
+    mutationFn: async (data: ToolTypeType[]) => {
+      const res = await api.post("/loaiccdccon/batch", data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["allToolTypes"] });
+      queryClient.invalidateQueries({ queryKey: ["toolTypesPage"] });
+      showSuccessAlert("Tạo hàng loạt loại CCDC thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo hàng loạt loại CCDC thất bại",
+      );
+    },
+  });
+
   const updateMutation = useMutation({
     mutationFn: async (data: ToolTypeType) => {
       const res = await api.put(`/loaiccdccon/${data.id}`, data);
@@ -46,6 +65,25 @@ export const useToolTypeMutation = (
         error.response?.data?.message ||
           error.message ||
           "Sửa loại ccdc thất bại",
+      );
+    },
+  });
+
+  const updateBatchMutation = useMutation({
+    mutationFn: async (data: ToolTypeType[]) => {
+      const res = await api.put("/loaiccdccon/batch", data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["allToolTypes"] });
+      queryClient.invalidateQueries({ queryKey: ["toolTypesPage"] });
+      showSuccessAlert("Sửa hàng loạt loại CCDC thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Sửa hàng loạt loại CCDC thất bại",
       );
     },
   });
@@ -86,23 +124,23 @@ export const useToolTypeMutation = (
     },
   });
 
-   const deleteAllMutation = useMutation({
-     mutationFn: async () => {
-       const res = await api.delete(`/loaiccdccon/delete-all`);
-       return res.data.message;
-     },
-     onSuccess: (data) => {
-       queryClient.invalidateQueries({ queryKey: ["toolTypesPage"] });
-       showSuccessAlert(data || "Xóa loại ccdc thành công");
-     },
-     onError: (error: any) => {
-       showErrorAlert(
-         error.response?.data?.message ||
-           error.message ||
-           "Xóa loại ccdc thất bại",
-       );
-     },
-   });
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.delete(`/loaiccdccon/delete-all`);
+      return res.data.message;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["toolTypesPage"] });
+      showSuccessAlert(data || "Xóa loại ccdc thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa loại ccdc thất bại",
+      );
+    },
+  });
 
   const { data: ccdcGroups = [] } = useAllToolGroupQuery();
 
@@ -223,6 +261,8 @@ export const useToolTypeMutation = (
     exportMutation,
     importExcelMutation,
     deleteAllMutation,
+    createBatchMutation,
+    updateBatchMutation,
   };
 };
 

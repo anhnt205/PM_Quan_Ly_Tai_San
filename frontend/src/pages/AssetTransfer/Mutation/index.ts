@@ -654,7 +654,6 @@ export const useAssetTransferPageQuery = (
           isSign: isSign,
         },
       });
-      console.log("Fetched asset transfer page data:", res.data);
       return res.data;
     },
     placeholderData: (previousData) => previousData,

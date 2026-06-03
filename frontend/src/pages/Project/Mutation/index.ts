@@ -27,6 +27,23 @@ export const useProjectMutation = (
       );
     },
   });
+  const createBatchMutation = useMutation({
+    mutationFn: async (data: ProjectType[]) => {
+      const res = await api.post("/duan/batch", data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projectsPage"] });
+      showSuccessAlert("Tạo hàng loạt dự án thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo hàng loạt dự án thất bại",
+      );
+    },
+  });
 
   const updateMutation = useMutation({
     mutationFn: async (data: ProjectType) => {
@@ -40,6 +57,23 @@ export const useProjectMutation = (
     onError: (error: any) => {
       showErrorAlert(
         error.response?.data?.message || error.message || "Sửa dự án thất bại",
+      );
+    },
+  });
+  const updateBatchMutation = useMutation({
+    mutationFn: async (data: ProjectType[]) => {
+      const res = await api.put("/duan/batch", data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projectsPage"] });
+      showSuccessAlert("Sửa hàng loạt dự án thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Sửa hàng loạt dự án thất bại",
       );
     },
   });
@@ -85,9 +119,7 @@ export const useProjectMutation = (
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message ||
-          error.message ||
-          "Xóa dự án thất bại",
+        error.response?.data?.message || error.message || "Xóa dự án thất bại",
       );
     },
   });
@@ -196,6 +228,8 @@ export const useProjectMutation = (
     exportMutation,
     importExcelMutation,
     deleteAllMutation,
+    createBatchMutation,
+    updateBatchMutation,
   };
 };
 

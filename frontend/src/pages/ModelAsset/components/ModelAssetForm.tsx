@@ -4,6 +4,9 @@ import {
   ArrowDropDown,
   Remove,
   Close,
+  ContentCopy,
+  Add,
+  Delete,
 } from "@mui/icons-material";
 import {
   Accordion,
@@ -19,6 +22,9 @@ import {
   InputLabel,
   FormHelperText,
   IconButton,
+  Button,
+  TextField,
+  Card,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import SaveBtn from "../../../components/Button/SaveBtn";
@@ -40,6 +46,10 @@ export default function ModelAssetForm({
   initialFormData,
   onFormChange,
   onMinimize,
+  bulkEditType,
+  isBulkMode,
+  bulkItems,
+  onBulkItemsChange,
 }: {
   onEdit: () => void;
   onCancel: () => void;
@@ -49,6 +59,10 @@ export default function ModelAssetForm({
   onFormChange?: (values: any) => void;
   initialFormData?: Record<string, any>;
   onMinimize: () => void;
+  isBulkMode?: boolean;
+  bulkItems?: any[];
+  onBulkItemsChange?: (items: any[]) => void;
+  bulkEditType?: "create" | "edit";
 }) {
   const [expanded, setExpanded] = useState(true);
   const formik = useFormik({
@@ -85,6 +99,336 @@ export default function ModelAssetForm({
       formik.setErrors({});
     }
   }, [selectedModelAsset, readOnly]);
+
+  // Bulk state
+  const [localBulkItems, setLocalBulkItems] = useState<any[]>(bulkItems ?? []);
+
+  const debouncedBulkItems = useDebounce(localBulkItems, 600);
+  useEffect(() => {
+    onBulkItemsChange?.(debouncedBulkItems);
+  }, [debouncedBulkItems]);
+
+  useEffect(() => {
+    if (
+      initialFormData?.items &&
+      Array.isArray(initialFormData.items) &&
+      initialFormData.items.length > 0
+    ) {
+      setLocalBulkItems(initialFormData.items);
+    }
+  }, []);
+
+  // Bulk handlers
+  const handleAddItem = () => {
+    const newItem = {
+      id: "",
+      tenMoHinh: "",
+      phuongPhapKhauHao: "",
+      kyKhauHao: "",
+      loaiKyKhauHao: "",
+      taiKhoanTaiSan: "",
+      taiKhoanKhauHao: "",
+      taiKhoanChiPhi: "",
+      idCongTy: CongTy.CT001,
+    };
+    const updated = [...localBulkItems, newItem];
+    setLocalBulkItems(updated);
+  };
+
+  const handleCopyItem = (index: number) => {
+    const { id, ...rest } = localBulkItems[index];
+    const newItem = { ...rest, id: "" };
+    const updated = [
+      ...localBulkItems.slice(0, index + 1),
+      newItem,
+      ...localBulkItems.slice(index + 1),
+    ];
+    setLocalBulkItems(updated);
+  };
+
+  const handleDeleteItem = (index: number) => {
+    if (localBulkItems.length === 1) return;
+    const updated = localBulkItems.filter((_, i) => i !== index);
+    setLocalBulkItems(updated);
+  };
+
+  const handleBulkItemChange = (index: number, field: string, value: any) => {
+    const updated = [...localBulkItems];
+    updated[index] = { ...updated[index], [field]: value };
+    setLocalBulkItems(updated);
+  };
+
+  const validateBulkItems = async () => {
+    let hasError = false;
+    const updated = await Promise.all(
+      localBulkItems.map(async (item) => {
+        try {
+          await ModelAssetValidation.validate(item);
+          return { ...item, errors: undefined };
+        } catch (error: any) {
+          hasError = true;
+          return { ...item, errors: { [error.path]: error.message } };
+        }
+      }),
+    );
+    setLocalBulkItems(updated);
+    onBulkItemsChange?.(updated);
+    return { hasError, items: updated };
+  };
+
+  const handleBulkSave = async () => {
+    const { hasError } = await validateBulkItems();
+    if (hasError) return;
+    onSave(localBulkItems);
+  };
+
+  if (isBulkMode) {
+    return (
+      <Box
+        sx={{
+          bgcolor: "#ffffff",
+          p: 4,
+          display: "flex",
+          flexDirection: "column",
+          gap: 3,
+        }}
+      >
+        {/* Header */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            pb: 2,
+            borderBottom: "1px solid #f1f5f9",
+          }}
+        >
+          <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
+            {bulkEditType === "create"
+              ? `Thêm mới mô hình tài sản (${localBulkItems.length})`
+              : `Sửa hàng loạt mô hình tài sản (${localBulkItems.length})`}
+          </Typography>
+          <Box display="flex" gap={0.5}>
+            <IconButton size="small" onClick={onMinimize} title="Ẩn tạm">
+              <Remove fontSize="small" />
+            </IconButton>
+            <IconButton size="small" onClick={onCancel} title="Đóng">
+              <Close fontSize="small" />
+            </IconButton>
+          </Box>
+        </Box>
+
+        {/* Items */}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+            maxHeight: "65vh",
+            overflowY: "auto",
+            overflowX: "hidden",
+            pr: 1,
+          }}
+        >
+          {localBulkItems.map((item, index) => (
+            <Card
+              key={index}
+              sx={{
+                flexShrink: 0,
+                p: 2,
+                borderRadius: "12px",
+                border: item.errors ? "1px solid #d32f2f" : "1px solid #e0e0e0",
+                backgroundColor: item.errors ? "#ffebee" : "#ffffff",
+              }}
+            >
+              {/* Card Header */}
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                mb={2}
+              >
+                <Typography sx={{ fontWeight: 600, color: "#1FA463" }}>
+                  Item {index + 1}
+                </Typography>
+                <Box display="flex" gap={1}>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleCopyItem(index)}
+                    title="Sao chép"
+                  >
+                    <ContentCopy fontSize="small" color="primary" />
+                  </IconButton>
+                  {localBulkItems.length > 1 && (
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDeleteItem(index)}
+                      title="Xóa"
+                    >
+                      <Delete fontSize="small" color="error" />
+                    </IconButton>
+                  )}
+                </Box>
+              </Box>
+
+              {/* Fields */}
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Mã mô hình *"
+                    value={item.id}
+                    onChange={(e) =>
+                      handleBulkItemChange(index, "id", e.target.value)
+                    }
+                    disabled={bulkEditType === "edit"}
+                    error={!!item.errors?.id}
+                    helperText={item.errors?.id}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Tên mô hình *"
+                    value={item.tenMoHinh}
+                    onChange={(e) =>
+                      handleBulkItemChange(index, "tenMoHinh", e.target.value)
+                    }
+                    error={!!item.errors?.tenMoHinh}
+                    helperText={item.errors?.tenMoHinh}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Phương pháp khấu hao</InputLabel>
+                    <Select
+                      value={item.phuongPhapKhauHao ?? ""}
+                      onChange={(e) =>
+                        handleBulkItemChange(
+                          index,
+                          "phuongPhapKhauHao",
+                          e.target.value,
+                        )
+                      }
+                      label="Phương pháp khấu hao"
+                    >
+                      <MenuItem value={1}>Đường thẳng</MenuItem>
+                      <MenuItem value={0}>Khác</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Kỳ khấu hao"
+                    type="number"
+                    value={item.kyKhauHao}
+                    onChange={(e) =>
+                      handleBulkItemChange(index, "kyKhauHao", e.target.value)
+                    }
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Loại kỳ khấu hao"
+                    value={item.loaiKyKhauHao}
+                    onChange={(e) =>
+                      handleBulkItemChange(
+                        index,
+                        "loaiKyKhauHao",
+                        e.target.value,
+                      )
+                    }
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Tài khoản tài sản"
+                    value={item.taiKhoanTaiSan}
+                    onChange={(e) =>
+                      handleBulkItemChange(
+                        index,
+                        "taiKhoanTaiSan",
+                        e.target.value,
+                      )
+                    }
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Tài khoản khấu hao"
+                    value={item.taiKhoanKhauHao}
+                    onChange={(e) =>
+                      handleBulkItemChange(
+                        index,
+                        "taiKhoanKhauHao",
+                        e.target.value,
+                      )
+                    }
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Tài khoản chi phí"
+                    value={item.taiKhoanChiPhi}
+                    onChange={(e) =>
+                      handleBulkItemChange(
+                        index,
+                        "taiKhoanChiPhi",
+                        e.target.value,
+                      )
+                    }
+                  />
+                </Grid>
+              </Grid>
+            </Card>
+          ))}
+        </Box>
+
+        {/* Add button */}
+        <Button
+          variant="outlined"
+          startIcon={<Add />}
+          onClick={handleAddItem}
+          sx={{
+            alignSelf: "flex-start",
+            textTransform: "none",
+            borderColor: "#1FA463",
+            color: "#1FA463",
+            "&:hover": {
+              borderColor: "#1FA463",
+              backgroundColor: "rgba(31, 164, 99, 0.04)",
+            },
+          }}
+        >
+          Thêm item
+        </Button>
+
+        {/* Footer */}
+        <Box
+          display="flex"
+          justifyContent="flex-end"
+          gap={2}
+          pt={2.5}
+          sx={{ borderTop: "1px solid #f1f5f9" }}
+        >
+          <CancelBtn onClick={onCancel} />
+          <SaveBtn onSave={handleBulkSave} />
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Box

@@ -30,6 +30,20 @@ export const useUnitMutation = (
     },
   });
 
+  const createBatchMutation = useMutation({
+    mutationFn: async (data: UnitType[]) => {
+      const res = await api.post("/donvitinh/batch", data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["unitsPage"] });
+      showSuccessAlert("Tạo hàng loạt đơn vị tính thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(error.response?.data?.message || "Tạo hàng loạt thất bại");
+    },
+  });
+
   const updateMutation = useMutation({
     mutationFn: async (data: UnitType) => {
       const res = await api.put(`/donvitinh/${data.id}`, data);
@@ -48,6 +62,19 @@ export const useUnitMutation = (
     },
   });
 
+  const updateBatchMutation = useMutation({
+    mutationFn: async (data: UnitType[]) => {
+      const res = await api.put("/donvitinh/batch", data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["unitsPage"] });
+      showSuccessAlert("Sửa hàng loạt đơn vị tính thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(error.response?.data?.message || "Sửa hàng loạt thất bại");
+    },
+  });
   const deleteOneMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await api.delete(`/donvitinh/${id}`);
@@ -84,23 +111,23 @@ export const useUnitMutation = (
     },
   });
 
-   const deleteAllMutation = useMutation({
-     mutationFn: async () => {
-       const res = await api.delete(`/donvitinh/delete-all`);
-       return res.data.message;
-     },
-     onSuccess: (data) => {
-       queryClient.invalidateQueries({ queryKey: ["unitsPage"] });
-       showSuccessAlert(data || "Xóa đơn vị tính thành công");
-     },
-     onError: (error: any) => {
-       showErrorAlert(
-         error.response?.data?.message ||
-           error.message ||
-           "Xóa đơn vị tính thất bại",
-       );
-     },
-   });
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.delete(`/donvitinh/delete-all`);
+      return res.data.message;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["unitsPage"] });
+      showSuccessAlert(data || "Xóa đơn vị tính thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa đơn vị tính thất bại",
+      );
+    },
+  });
 
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: UnitType[]) => {
@@ -204,6 +231,8 @@ export const useUnitMutation = (
     exportMutation,
     importExcelMutation,
     deleteAllMutation,
+    createBatchMutation,
+    updateBatchMutation,
   };
 };
 

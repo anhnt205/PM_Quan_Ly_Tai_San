@@ -362,7 +362,6 @@ export const handleSignDocument = async (
       label: `Người phê duyệt: ${item.tenTrinhDuyetGiamDoc}`,
     },
   ].filter((step) => step.id && step.id.trim() !== "");
-  console.log("signatureFlow", signatureFlow);
 
   // 2. Kiểm tra trạng thái hoàn thành/hủy
   if (item.trangThai === 3 || item.trangThai === 2) {

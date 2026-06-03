@@ -43,6 +43,25 @@ export const useToolGroupMutation = (
     },
   });
 
+  const createBatchMutation = useMutation({
+    mutationFn: async (data: ToolGroupType[]) => {
+      const res = await api.post("/nhomccdc/batch", data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["toolGroups"] });
+      queryClient.invalidateQueries({ queryKey: ["toolGroupsPage"] });
+      showSuccessAlert("Tạo hàng loạt nhóm CCDC thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo hàng loạt nhóm CCDC thất bại",
+      );
+    },
+  });
+
   const updateMutation = useMutation({
     mutationFn: async (data: ToolGroupType) => {
       const currentUser = user?.taiKhoan?.tenDangNhap || "admin";
@@ -63,6 +82,25 @@ export const useToolGroupMutation = (
         error.response?.data?.message ||
           error.message ||
           "Sửa nhóm ccdc thất bại",
+      );
+    },
+  });
+
+  const updateBatchMutation = useMutation({
+    mutationFn: async (data: ToolGroupType[]) => {
+      const res = await api.put("/nhomccdc/batch", data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["toolGroups"] });
+      queryClient.invalidateQueries({ queryKey: ["toolGroupsPage"] });
+      showSuccessAlert("Sửa hàng loạt nhóm CCDC thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Sửa hàng loạt nhóm CCDC thất bại",
       );
     },
   });
@@ -105,23 +143,23 @@ export const useToolGroupMutation = (
     },
   });
 
-   const deleteAllMutation = useMutation({
-     mutationFn: async () => {
-       const res = await api.delete(`/nhomccdc/delete-all`);
-       return res.data.message;
-     },
-     onSuccess: (data) => {
-       queryClient.invalidateQueries({ queryKey: ["toolGroupsPage"] });
-       showSuccessAlert(data || "Xóa nhóm ccdc thành công");
-     },
-     onError: (error: any) => {
-       showErrorAlert(
-         error.response?.data?.message ||
-           error.message ||
-           "Xóa nhóm ccdc thất bại",
-       );
-     },
-   });
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.delete(`/nhomccdc/delete-all`);
+      return res.data.message;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["toolGroupsPage"] });
+      showSuccessAlert(data || "Xóa nhóm ccdc thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa nhóm ccdc thất bại",
+      );
+    },
+  });
 
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: ToolGroupType[]) => {
@@ -238,7 +276,9 @@ export const useToolGroupMutation = (
     deleteManyMutation,
     exportMutation,
     importExcelMutation,
-    deleteAllMutation
+    deleteAllMutation,
+    createBatchMutation,
+    updateBatchMutation,
   };
 };
 

@@ -237,6 +237,7 @@ interface Props {
   isDepreciation?: boolean;
   selectedIds?: string[];
   onSelectionChange?: (ids: string[]) => void;
+  onSelectionRowsChange?: (rows: any[]) => void;
   onDelete?: (ids: string[]) => void;
   canSign?: (items: any[], user: any) => boolean;
   onSign?: (fileName: string, item: any) => void;
@@ -276,6 +277,8 @@ interface Props {
   onExportExcel?: () => void;
   onExportSelectedExcel?: (selectedRows: any[]) => void;
   exportSelectedFileName?: string;
+  onBulkEdit?: () => void;
+  bulkEditCount?: number;
 }
 
 export default function TableCustom({
@@ -293,6 +296,7 @@ export default function TableCustom({
   isDepreciation = false,
   selectedIds = [],
   onSelectionChange,
+  onSelectionRowsChange,
   onDelete,
   onSign,
   canSign,
@@ -331,6 +335,8 @@ export default function TableCustom({
   onExportExcel,
   onExportSelectedExcel,
   exportSelectedFileName,
+  bulkEditCount,
+  onBulkEdit,
 }: Props) {
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.user);
@@ -633,6 +639,7 @@ export default function TableCustom({
                   Xóa tất cả
                 </Button>
               )}
+
               {selectedIds.length > 0 && showDelete && (
                 <Button
                   size="small"
@@ -651,6 +658,11 @@ export default function TableCustom({
                   }}
                 >
                   {selectedIds.length} Xóa đã chọn
+                </Button>
+              )}
+              {onBulkEdit && (
+                <Button variant="outlined" size="small" onClick={onBulkEdit}>
+                  Sửa hàng loạt
                 </Button>
               )}
               {isDepreciation && (
@@ -724,6 +736,8 @@ export default function TableCustom({
                     }
                   });
 
+                  const nextRows = Array.from(next.values());
+                  onSelectionRowsChange?.(nextRows);
                   return next;
                 });
                 const selectedRows = rows.filter((row) => {

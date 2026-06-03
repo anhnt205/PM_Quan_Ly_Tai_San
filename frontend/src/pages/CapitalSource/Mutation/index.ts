@@ -30,6 +30,24 @@ export const useCapitalSourceMutation = (
     },
   });
 
+  const createBatchMutation = useMutation({
+    mutationFn: async (data: CapitalSourceType[]) => {
+      const res = await api.post("/nguonvon/batch", data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["capitalSourcesPage"] });
+      showSuccessAlert("Tạo hàng loạt nguồn vốn thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo hàng loạt nguồn vốn thất bại",
+      );
+    },
+  });
+
   const updateMutation = useMutation({
     mutationFn: async (data: CapitalSourceType) => {
       const res = await api.put(`/nguonvon/${data.id}`, data);
@@ -47,6 +65,25 @@ export const useCapitalSourceMutation = (
       );
     },
   });
+
+  const updateBatchMutation = useMutation({
+    mutationFn: async (data: CapitalSourceType[]) => {
+      const res = await api.put("/nguonvon/batch", data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["capitalSourcesPage"] });
+      showSuccessAlert("Sửa hàng loạt nguồn vốn thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Sửa hàng loạt nguồn vốn thất bại",
+      );
+    },
+  });
+
   const deleteOneMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await api.delete(`/nguonvon/${id}`);
@@ -225,6 +262,8 @@ export const useCapitalSourceMutation = (
     exportMutation,
     importExcelMutation,
     deleteAllMutation,
+    createBatchMutation,
+    updateBatchMutation,
   };
 };
 

@@ -32,6 +32,11 @@ interface PositionTabState {
   readOnly: boolean;
   isCopy: boolean;
   draftForm?: Record<string, any>;
+  bulkMode: boolean;
+  bulkEditType?: "create" | "edit";
+  bulkItems?: any[];
+  bulkDraftData?: Record<string, any>;
+  showBulkForm: boolean;
 }
 
 export default function Position() {
@@ -44,6 +49,16 @@ export default function Position() {
   const setSelectedPosition = (v: any) => setField({ selectedPosition: v });
   const setReadOnly = (v: boolean) => setField({ readOnly: v });
   const setIsCopy = (v: boolean) => setField({ isCopy: v });
+
+  const setBulkMode = (v: boolean) => setField({ bulkMode: v });
+  const setBulkEditType = (v: "create" | "edit") =>
+    setField({ bulkEditType: v });
+  const setBulkItems = (v: any[]) => setField({ bulkItems: v });
+  const bulkMode = formData.bulkMode ?? false;
+  const bulkEditType = formData.bulkEditType ?? "create";
+  const bulkItems = formData.bulkItems ?? [];
+  const showBulkForm = formData.showBulkForm ?? false;
+  const setShowBulkForm = (v: boolean) => setField({ showBulkForm: v });
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
@@ -62,6 +77,8 @@ export default function Position() {
     importExcelMutation,
     exportMutation,
     deleteAllMutation,
+    createBatchMutation,
+    updateBatchMutation,
   } = usePositionMutation(
     paginationModel.page,
     paginationModel.pageSize,
@@ -78,6 +95,10 @@ export default function Position() {
   const { data: allPositions = [] } = useAllPositionsQuery();
 
   const handleRowClick = (params: GridRowParams) => {
+    if (bulkMode) {
+      setBulkMode(false);
+      setBulkItems([]);
+    }
     setSelectedPosition(params.row);
     window.scrollTo({ top: 140, behavior: "smooth" });
     setReadOnly(true);
@@ -85,15 +106,28 @@ export default function Position() {
   };
 
   const handleSave = (values: any) => {
-    if (selectedPosition && !isCopy) {
-      updateMutation.mutate(values);
+    if (bulkMode) {
+      if (bulkEditType === "create") {
+        createBatchMutation.mutate(values);
+      } else {
+        updateBatchMutation.mutate(values);
+      }
+      setBulkMode(false);
+      setBulkItems([]);
+      setShowBulkForm(false);
+      setSelectedIds([]);
+      setField({ bulkDraftData: undefined });
     } else {
-      createMutation.mutate(values);
+      if (selectedPosition && !isCopy) {
+        updateMutation.mutate(values);
+      } else {
+        createMutation.mutate(values);
+      }
+      setShowForm(false);
+      setSelectedPosition(null);
+      setIsCopy(false);
+      setField({ draftForm: undefined });
     }
-    setShowForm(false);
-    setSelectedPosition(null);
-    setIsCopy(false);
-    setField({ draftForm: undefined });
   };
 
   const handleEdit = () => {
@@ -101,7 +135,38 @@ export default function Position() {
   };
 
   const isMinimized = !showForm && hasDraftData(formData.draftForm);
+  const isBulkMinimized = !showBulkForm && hasDraftData(formData.bulkDraftData);
   const handleMinimize = () => setShowForm(false);
+  const handleBulkMinimize = () => setShowBulkForm(false);
+
+  const handleRestoreFromDraft = () => {
+    if (isBulkMinimized) {
+      if (
+        formData.bulkDraftData?.items &&
+        Array.isArray(formData.bulkDraftData.items)
+      ) {
+        setBulkItems(formData.bulkDraftData.items);
+        setBulkMode(true);
+        if (formData.bulkDraftData?.bulkEditType) {
+          setBulkEditType(formData.bulkDraftData.bulkEditType);
+        }
+      }
+      setShowBulkForm(true);
+    } else {
+      setShowForm(true);
+    }
+  };
+
+  const handleBulkEdit = () => {
+    if (selectedIds.length === 0) return;
+    const itemsToEdit = positionsPage.items
+      .filter((item: any) => selectedIds.includes(item.id))
+      .sort((a: any, b: any) => a.id.localeCompare(b.id));
+    setBulkMode(true);
+    setBulkEditType("edit");
+    setBulkItems(itemsToEdit);
+    setShowBulkForm(true);
+  };
 
   const columns: GridColDef[] = [
     {
@@ -273,11 +338,18 @@ export default function Position() {
       <PageAction
         title="Quản lý chức vụ"
         onNewClick={() => {
+          if (isBulkMinimized) {
+            setShowBulkForm(true);
+            return;
+          }
           if (isMinimized) {
             setShowForm(true);
             return;
           }
-          setShowForm(true);
+          setBulkMode(true);
+          setBulkEditType("create");
+          setBulkItems([{}]);
+          setShowBulkForm(true);
           setSelectedPosition(null);
           setReadOnly(false);
         }}
@@ -306,32 +378,77 @@ export default function Position() {
             </Box>
           </DialogContent>
         </Dialog>
+        {/* Dialog single */}
         <Dialog
           open={showForm}
           onClose={handleMinimize}
           maxWidth="md"
           fullWidth
-          PaperProps={{ sx: { borderRadius: "12px" } }}
+        >
+          <DialogContent sx={{ p: 0 }}>
+            {selectedPosition || !readOnly ? (
+              <PositionForm
+                key={`single-${selectedPosition?.id || "new"}`}
+                onCancel={() => {
+                  setSelectedPosition(null);
+                  setReadOnly(false);
+                  setField({ draftForm: undefined });
+                  setShowForm(false);
+                }}
+                onMinimize={handleMinimize}
+                onEdit={handleEdit}
+                selectedPosition={selectedPosition}
+                readOnly={readOnly}
+                onSave={handleSave}
+                onFormChange={(values) => setField({ draftForm: values })}
+                initialFormData={formData.draftForm}
+                isBulkMode={false}
+              />
+            ) : null}
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog bulk */}
+        <Dialog
+          open={showBulkForm}
+          onClose={handleBulkMinimize}
+          maxWidth="md"
+          fullWidth
         >
           <DialogContent sx={{ p: 0 }}>
             <PositionForm
+              key={`bulk-${bulkItems.length}`}
               onCancel={() => {
-                setShowForm(false);
-                setSelectedPosition(null);
-                setReadOnly(false);
-                setField({ draftForm: undefined });
+                setBulkMode(false);
+                setBulkItems([]);
+                setSelectedIds([]);
+                setField({ bulkDraftData: undefined });
+                setShowBulkForm(false);
               }}
-              onMinimize={handleMinimize}
+              onMinimize={handleBulkMinimize}
               onEdit={handleEdit}
-              selectedPosition={selectedPosition}
-              readOnly={readOnly}
+              selectedPosition={null}
+              readOnly={false}
               onSave={handleSave}
-              onFormChange={(values) => setField({ draftForm: values })}
-              initialFormData={formData.draftForm}
+              onFormChange={undefined}
+              initialFormData={formData.bulkDraftData}
+              isBulkMode={true}
+              bulkItems={bulkItems}
+              onBulkItemsChange={(items) => {
+                setBulkItems(items);
+                setField({ bulkDraftData: { items, bulkEditType } });
+              }}
+              bulkEditType={bulkEditType}
             />
           </DialogContent>
         </Dialog>
-        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
+
+        {isBulkMinimized ? (
+          <DraftIndicator onClick={() => setShowBulkForm(true)} />
+        ) : (
+          isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />
+        )}
+
         <TableCustom
           tableId="position"
           title="Quản lý chức vụ"
@@ -351,6 +468,7 @@ export default function Position() {
           showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
           onImportExcel={(file) => importExcelMutation.mutate(file)}
           onExportExcel={() => exportMutation.mutate(allPositions)}
+          onBulkEdit={selectedIds.length > 1 ? handleBulkEdit : undefined}
         />
       </Box>
     </Box>

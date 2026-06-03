@@ -28,6 +28,10 @@ interface ModelAssetTabState {
   readOnly: boolean;
   isCopy: boolean;
   draftForm?: Record<string, any>;
+  showBulkForm: boolean;
+  bulkEditType?: "create" | "edit";
+  bulkItems?: any[];
+  bulkDraftData?: Record<string, any>;
 }
 
 export default function ModelAsset() {
@@ -42,6 +46,14 @@ export default function ModelAsset() {
   const setReadOnly = (v: boolean) => setField({ readOnly: v });
   const setIsCopy = (v: boolean) => setField({ isCopy: v });
 
+  const showBulkForm = formData.showBulkForm ?? false;
+  const bulkEditType = formData.bulkEditType ?? "create";
+  const bulkItems = formData.bulkItems ?? [];
+  const setShowBulkForm = (v: boolean) => setField({ showBulkForm: v });
+  const setBulkEditType = (v: "create" | "edit") =>
+    setField({ bulkEditType: v });
+  const setBulkItems = (v: any[]) => setField({ bulkItems: v });
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
@@ -53,8 +65,11 @@ export default function ModelAsset() {
     pageSize: 10,
     page: 0,
   });
+
   const handleMinimize = () => setShowForm(false);
+  const handleBulkMinimize = () => setShowBulkForm(false);
   const isMinimized = !showForm && hasDraftData(formData.draftForm);
+  const isBulkMinimized = !showBulkForm && hasDraftData(formData.bulkDraftData);
 
   const {
     createMutation,
@@ -64,6 +79,8 @@ export default function ModelAsset() {
     importExcelMutation,
     exportMutation,
     deleteAllMutation,
+    createBatchMutation,
+    updateBatchMutation,
   } = useModelAssetMutation(
     paginationModel.page,
     paginationModel.pageSize,
@@ -98,19 +115,41 @@ export default function ModelAsset() {
   };
 
   const handleSave = (values: any) => {
-    if (selectedModelAsset && !isCopy) {
-      updateMutation.mutate(values);
+    if (Array.isArray(values)) {
+      if (bulkEditType === "create") {
+        createBatchMutation.mutate(values);
+      } else {
+        updateBatchMutation.mutate(values);
+      }
+      setShowBulkForm(false);
+      setBulkItems([]);
+      setSelectedIds([]);
+      setField({ bulkDraftData: undefined });
     } else {
-      createMutation.mutate(values);
+      if (selectedModelAsset && !isCopy) {
+        updateMutation.mutate(values);
+      } else {
+        createMutation.mutate(values);
+      }
+      setShowForm(false);
+      setSelectedModelAsset(null);
+      setIsCopy(false);
+      setField({ draftForm: undefined });
     }
-    setShowForm(false);
-    setSelectedModelAsset(null);
-    setIsCopy(false);
-    setField({ draftForm: undefined });
   };
 
   const handleEdit = () => {
     setReadOnly(false);
+  };
+
+  const handleBulkEdit = () => {
+    if (selectedIds.length === 0) return;
+    const itemsToEdit = modelAssetPage.items
+      .filter((item: any) => selectedIds.includes(item.id))
+      .sort((a: any, b: any) => a.id.localeCompare(b.id));
+    setBulkEditType("edit");
+    setBulkItems(itemsToEdit);
+    setShowBulkForm(true);
   };
 
   const columns: GridColDef[] = [
@@ -246,11 +285,17 @@ export default function ModelAsset() {
       <PageAction
         title="Quản lý mô hình tài sản"
         onNewClick={() => {
+          if (isBulkMinimized) {
+            setShowBulkForm(true);
+            return;
+          }
           if (isMinimized) {
             setShowForm(true);
             return;
           }
-          setShowForm(true);
+          setBulkEditType("create");
+          setBulkItems([{}]);
+          setShowBulkForm(true);
           setSelectedModelAsset(null);
           setReadOnly(false);
         }}
@@ -311,8 +356,43 @@ export default function ModelAsset() {
             />
           </DialogContent>
         </Dialog>
+        <Dialog
+          open={showBulkForm}
+          onClose={handleBulkMinimize}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogContent sx={{ p: 0 }}>
+            <ModelAssetForm
+              key={`bulk-${bulkItems.length}`}
+              onEdit={handleEdit}
+              onCancel={() => {
+                setBulkItems([]);
+                setSelectedIds([]);
+                setField({ bulkDraftData: undefined });
+                setShowBulkForm(false);
+              }}
+              onMinimize={handleBulkMinimize}
+              selectedModelAsset={null}
+              readOnly={false}
+              onSave={handleSave}
+              onFormChange={undefined}
+              initialFormData={formData.bulkDraftData}
+              isBulkMode={true}
+              bulkItems={bulkItems}
+              onBulkItemsChange={(items) => {
+                setField({ bulkDraftData: { items, bulkEditType } });
+              }}
+              bulkEditType={bulkEditType}
+            />
+          </DialogContent>
+        </Dialog>
 
-        {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
+        {isBulkMinimized ? (
+          <DraftIndicator onClick={() => setShowBulkForm(true)} />
+        ) : (
+          isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />
+        )}
 
         <TableCustom
           tableId="modelAsset"
@@ -333,6 +413,7 @@ export default function ModelAsset() {
           showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
           onImportExcel={handleImport}
           onExportExcel={() => exportMutation.mutate()}
+          onBulkEdit={selectedIds.length > 1 ? handleBulkEdit : undefined}
         />
       </Box>
     </Box>
