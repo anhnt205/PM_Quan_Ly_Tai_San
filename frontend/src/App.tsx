@@ -49,6 +49,7 @@ import HandoverRecord from "./pages/HandoverRecord/HandoverRecord";
 import TransferApproval from "./pages/TransferApproval/TransferApproval";
 import TransferRecord from "./pages/TransferRecord/TransferRecord";
 import { MenuDataProvider } from "./context/MenuDataContext";
+import AssetProfile from "./pages/AssetProfile/AssetProfile";
 
 const ProtectedRoute = ({
   allowedRoles,
@@ -268,6 +269,7 @@ function App() {
           <Route path={ROUTES.UNIT} element={<Unit />} />
           <Route path={ROUTES.REASONINCREASE} element={<ReasonIncrease />} />
           <Route path={ROUTES.CURRENTSTATUS} element={<CurrentStatus />} />
+          <Route path={ROUTES.ASSETPROFILE} element={<AssetProfile />} />
           <Route
             path={ROUTES.ASSETMANAGER}
             element={

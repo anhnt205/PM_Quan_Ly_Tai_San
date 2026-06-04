@@ -25,4 +25,5 @@ public class LyLichRequest {
     String ngayCapNhat;
     String nguoiTao;
     String nguoiCapNhat;
+    String idLyLichTemplate;
 }
