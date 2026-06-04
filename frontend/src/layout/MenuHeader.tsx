@@ -408,6 +408,7 @@ export default function Menuheader() {
           subMenu: [
             { text: "Nhóm tài sản", path: ROUTES.ASSETGROUP },
             { text: "Mô hình tài sản", path: ROUTES.MODELASSET },
+            { text: "Lý lịch tài sản", path: ROUTES.ASSETPROFILE },
             { text: "Loại tài sản", path: ROUTES.TYPEASSET },
             { text: "Nhóm ccdc", path: ROUTES.TOOLGROUP },
             { text: "Loại ccdc", path: ROUTES.TOOLTYPE },

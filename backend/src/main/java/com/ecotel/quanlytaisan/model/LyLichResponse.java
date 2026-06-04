@@ -22,4 +22,6 @@ public class LyLichResponse {
     String ngayCapNhat;
     String nguoiTao;
     String nguoiCapNhat;
+    String idLyLichTemplate;
+    String LyLichTemplateTen;
 }

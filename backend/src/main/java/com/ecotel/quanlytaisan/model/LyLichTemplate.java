@@ -7,17 +7,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Data
 @Entity
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "lylich")
+@Table(name = "lylich_template")
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
-public class LyLich {
+public class LyLichTemplate {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
@@ -40,7 +37,4 @@ public class LyLich {
     String nguoiTao;
     @Column(name = "NguoiCapNhat")
     String nguoiCapNhat;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "IdLyLichTemplate")
-    LyLichTemplate lyLichTemplate;
 }

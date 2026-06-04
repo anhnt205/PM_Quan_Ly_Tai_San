@@ -40,4 +40,5 @@ export const ROUTES = {
   HANDOVER_RECORD: "/ban_giao_thiet_bi/quan_ly_bien_ban",
   TRANSFER_APPROVAL: "/dieu_chuyen_thiet_bi/phe_duyet",
   TRANSFER_RECORD: "/dieu_chuyen_thiet_bi/quan_ly_bien_ban",
+  ASSETPROFILE: "/ly_lich",
 } as const;
