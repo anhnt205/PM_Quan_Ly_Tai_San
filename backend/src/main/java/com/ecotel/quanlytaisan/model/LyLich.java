@@ -40,11 +40,4 @@ public class LyLich {
     String nguoiTao;
     @Column(name = "NguoiCapNhat")
     String nguoiCapNhat;
-
-    @OneToMany(
-            mappedBy = "lyLich",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
-    List<LyLichNhomTaiSan> nhomTaiSans = new ArrayList<>();
 }

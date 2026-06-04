@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface LyLichRepository extends JpaRepository<LyLich, String> {
+    boolean existsByMaLyLich(String maLyLich);
 }

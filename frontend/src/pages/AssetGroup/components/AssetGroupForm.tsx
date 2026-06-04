@@ -20,6 +20,7 @@ import {
   Button,
   Card,
   TextField,
+  Autocomplete,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import SaveBtn from "../../../components/Button/SaveBtn";
@@ -31,11 +32,14 @@ import { AssetGroupValidation } from "../validation/Validation";
 import EditButton from "../../../components/Button/EditButton";
 import { CongTy } from "../../../utils/const";
 import { useDebounce } from "../../../hooks/useDebounce";
+import { useLyLichQuery } from "../Mutation";
+import { LyLichType } from "../types";
 
 interface BulkItem {
   id: string;
   tenNhom: string;
   idCongTy: string;
+  idLyLich?: string;
   errors?: Record<string, string>;
 }
 
@@ -69,6 +73,13 @@ export default function AssetGroupForm({
   const [expanded, setExpanded] = useState(true);
   const [localBulkItems, setLocalBulkItems] = useState<BulkItem[]>(bulkItems);
   const debouncedBulkItems = useDebounce(localBulkItems, 600);
+  const { data: lyLichList = [] } = useLyLichQuery();
+  const normalizeBulkItems = (items: BulkItem[]): BulkItem[] =>
+    items.map((item) => ({
+      ...item,
+      idCongTy: item.idCongTy || CongTy.CT001,
+    }));
+
   useEffect(() => {
     onBulkItemsChange?.(debouncedBulkItems);
   }, [debouncedBulkItems]);
@@ -79,6 +90,7 @@ export default function AssetGroupForm({
       id: initialFormData?.id ?? "",
       tenNhom: initialFormData?.tenNhom ?? "",
       idCongTy: initialFormData?.idCongTy ?? CongTy.CT001,
+      idLyLich: initialFormData?.idLyLich ?? "",
     },
     validationSchema: AssetGroupValidation,
     onSubmit(values) {
@@ -93,19 +105,25 @@ export default function AssetGroupForm({
 
   useEffect(() => {
     if (selectedAssetGroup) {
-      formik.setValues(selectedAssetGroup);
+      // Extract idLyLich from lyLich object if not present
+      const values = {
+        ...selectedAssetGroup,
+        idLyLich:
+          selectedAssetGroup.idLyLich || selectedAssetGroup.lyLich?.id || "",
+      };
+      formik.setValues(values);
       formik.setErrors({});
     }
   }, [selectedAssetGroup, readOnly]);
 
   useEffect(() => {
     if (initialFormData?.items && initialFormData.items.length > 0) {
-      setLocalBulkItems(initialFormData.items);
+      setLocalBulkItems(normalizeBulkItems(initialFormData.items));
     }
   }, []);
 
   const validateBulkItems = async () => {
-    const updatedItems = [...localBulkItems];
+    const updatedItems = localBulkItems.map((item) => ({ ...item }));
     let hasError = false;
 
     for (let i = 0; i < updatedItems.length; i++) {
@@ -138,6 +156,7 @@ export default function AssetGroupForm({
       id: "",
       tenNhom: "",
       idCongTy: CongTy.CT001,
+      idLyLich: "",
     };
     const updatedItems = [...localBulkItems, newItem];
     setLocalBulkItems(updatedItems);
@@ -168,11 +187,12 @@ export default function AssetGroupForm({
     field: string,
     value: string,
   ) => {
-    const updatedItems = [...localBulkItems];
-    updatedItems[index] = {
-      ...updatedItems[index],
-      [field]: value,
-    };
+    const updatedItems = localBulkItems.map((item, i) => {
+      if (i !== index) return item;
+      const updated = { ...item, [field]: value };
+      if (!updated.idCongTy) updated.idCongTy = CongTy.CT001;
+      return updated;
+    });
     setLocalBulkItems(updatedItems);
   };
 
@@ -234,6 +254,24 @@ export default function AssetGroupForm({
                 formik={formik}
                 field="tenNhom"
                 disabled={readOnly}
+              />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <Autocomplete
+                options={lyLichList}
+                getOptionLabel={(option: any) => option?.tenLyLich || ""}
+                value={
+                  lyLichList.find(
+                    (item: LyLichType) => item.id === formik.values.idLyLich,
+                  ) || null
+                }
+                onChange={(event, newValue) => {
+                  formik.setFieldValue("idLyLich", newValue?.id || "");
+                }}
+                disabled={readOnly}
+                renderInput={(params) => (
+                  <TextField {...params} label="Chọn lý lịch" size="small" />
+                )}
               />
             </Grid>
           </Grid>
@@ -373,6 +411,24 @@ export default function AssetGroupForm({
                   error={!!item.errors?.tenNhom}
                   helperText={item.errors?.tenNhom}
                   size="small"
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <Autocomplete
+                  options={lyLichList}
+                  getOptionLabel={(option: any) => option?.tenLyLich || ""}
+                  value={
+                    lyLichList.find(
+                      (lyLich: LyLichType) => lyLich.id === item.idLyLich,
+                    ) || null
+                  }
+                  onChange={(event, newValue) => {
+                    handleBulkItemChange(index, "idLyLich", newValue?.id || "");
+                  }}
+                  size="small"
+                  renderInput={(params) => (
+                    <TextField {...params} label="Chọn lý lịch" size="small" />
+                  )}
                 />
               </Grid>
             </Grid>

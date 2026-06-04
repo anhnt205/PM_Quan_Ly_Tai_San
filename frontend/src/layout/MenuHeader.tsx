@@ -420,8 +420,6 @@ export default function Menuheader() {
             { text: "Quản lý dự án", path: ROUTES.PROJECT, code: "DUAN" },
             { text: "Quản lý nguồn vốn", path: ROUTES.CAPITALSOURCE },
             { text: "Lý do tăng", path: ROUTES.REASONINCREASE },
-            { text: "Lý lịch tài sản", path: ROUTES.ASSETPROFILE },
-            { text: "Lý lịch Nhóm tài sản", path: ROUTES.ASSETPROFILEGROUP },
             { text: "Loại sửa chữa", path: ROUTES.MAINTENANCEREPAIRTYPE },
             { text: "Đơn vị tính", path: ROUTES.UNIT },
             { text: "Hiện trạng", path: ROUTES.CURRENTSTATUS },

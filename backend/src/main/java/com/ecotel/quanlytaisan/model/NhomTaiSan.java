@@ -50,8 +50,11 @@ public class NhomTaiSan {
 
     @Column(name = "SoLuongTaiSan")
     private Integer soLuongTaiSan;
-    @OneToMany(mappedBy = "nhomTaiSan")
-    private List<LyLichNhomTaiSan> lyLiches = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "IdLyLich")
+    private LyLich lyLich;
+
     public static NhomTaiSan mapToNhomTaiSan(String[] row) {
         NhomTaiSan nts = new NhomTaiSan();
         nts.setId(row[0]);

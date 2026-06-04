@@ -16,6 +16,7 @@ import {
   useAllAssetGroupQuery,
   useAssetGroupMutation,
   useAssetGroupPageQuery,
+  useLyLichQuery,
 } from "./Mutation";
 import { showConfirmAlert } from "../../components/Alert";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
@@ -104,6 +105,7 @@ export default function AssetGroup() {
       debouncedSearchValue,
     );
   const { data: allAssetGroup = [] } = useAllAssetGroupQuery();
+  const { data: lyLichList = [] } = useLyLichQuery();
 
   const handleImport = (file: File) => {
     importExcelMutation.mutate(file, {
@@ -223,6 +225,15 @@ export default function AssetGroup() {
       minWidth: 200,
       align: "center",
       headerAlign: "center",
+    },
+    {
+      field: "lyLichName",
+      headerName: "Tên lý lịch",
+      flex: 1,
+      minWidth: 150,
+      align: "center",
+      headerAlign: "center",
+      valueGetter: (value: any, row: any) => row?.lyLich?.tenLyLich || "N/A",
     },
     {
       field: "ngayTao",
