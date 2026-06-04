@@ -1,5 +1,6 @@
 package com.ecotel.quanlytaisan.dao;
 
+import com.ecotel.quanlytaisan.model.LyLich;
 import com.ecotel.quanlytaisan.model.NhomTaiSan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -16,6 +17,16 @@ import java.util.List;
 public class NhomTaiSanDao {
     @Autowired
     private JdbcTemplate jdbcTemplate;
+    // Đoạn SELECT LyLich dùng chung cho tất cả các query
+    private static final String LL_SELECT =
+            "ll.Id AS ll_Id, ll.MaLyLich, ll.TenLyLich, ll.MoTa ";
+
+    private static final String LL_JOIN =
+            "LEFT JOIN LyLich ll ON nts.IdLyLich = ll.Id ";
+
+    // Thêm các cột của LyLich vào GROUP BY
+    private static final String LL_GROUP_BY =
+            ", nts.IdLyLich, ll.Id, ll.MaLyLich, ll.TenLyLich, ll.MoTa";
 
     private RowMapper<NhomTaiSan> rowMapper = new RowMapper<NhomTaiSan>() {
         @Override
@@ -30,6 +41,17 @@ public class NhomTaiSanDao {
             nts.setNguoiTao(rs.getString("NguoiTao"));
             nts.setNguoiCapNhat(rs.getString("NguoiCapNhat"));
             nts.setIsActive(rs.getBoolean("IsActive"));
+            // Ly lich
+            String lyLichId = rs.getString("ll_Id");
+            if (lyLichId != null) {
+                LyLich lyLich = LyLich.builder()
+                        .id(lyLichId)
+                        .maLyLich(rs.getString("MaLyLich"))
+                        .tenLyLich(rs.getString("TenLyLich"))
+                        .build();
+                nts.setLyLich(lyLich);
+            }
+
             // Đếm số lượng tài sản
             try {
                 nts.setSoLuongTaiSan(rs.getInt("SoLuongTaiSan"));
@@ -42,43 +64,34 @@ public class NhomTaiSanDao {
     };
 
     public List<NhomTaiSan> findAll(String idCongTy) {
-        String sql = "SELECT nts.*, COALESCE(COUNT(ts.Id), 0) AS SoLuongTaiSan " +
-                     "FROM NhomTaiSan nts " +
-                     "LEFT JOIN TaiSan ts ON nts.Id = ts.IdNhomTaiSan AND ts.IsActive = 1 " +
-                     "WHERE nts.IdCongTy = ? " +
-                     "GROUP BY nts.Id, nts.TenNhom, nts.HieuLuc, nts.IdCongTy, nts.NgayTao, nts.NgayCapNhat, nts.NguoiTao, nts.NguoiCapNhat, nts.IsActive";
+        String sql = "SELECT nts.*, " +
+                "COALESCE(COUNT(ts.Id), 0) AS SoLuongTaiSan, " +
+                LL_SELECT +
+                "FROM NhomTaiSan nts " +
+                "LEFT JOIN TaiSan ts ON nts.Id = ts.IdNhomTaiSan AND ts.IsActive = 1 " +
+                LL_JOIN +
+                "WHERE nts.IdCongTy = ? " +
+                "GROUP BY nts.Id, nts.TenNhom, nts.HieuLuc, nts.IdCongTy, " +
+                "nts.NgayTao, nts.NgayCapNhat, nts.NguoiTao, nts.NguoiCapNhat, nts.IsActive" +
+                LL_GROUP_BY;
         return jdbcTemplate.query(sql, rowMapper, idCongTy);
     }
 
     public List<NhomTaiSan> findAllPaged(String idCongTy, int offset, int limit, String sortBy, String sortDir, String keyword) {
-        // Xử lý sortBy an toàn
         String normalizedSortBy = sortBy != null ? sortBy.trim().toLowerCase() : "tennhom";
         String orderColumn;
         switch (normalizedSortBy) {
-            case "id":
-                orderColumn = "nts.Id";
-                break;
-            case "hieuluc":
-                orderColumn = "nts.HieuLuc";
-                break;
-            case "ngaytao":
-                orderColumn = "nts.NgayTao";
-                break;
-            case "ngaycapnhat":
-                orderColumn = "nts.NgayCapNhat";
-                break;
-            case "soluongtaisan":
-                orderColumn = "SoLuongTaiSan";
-                break;
+            case "id":           orderColumn = "nts.Id"; break;
+            case "hieuluc":      orderColumn = "nts.HieuLuc"; break;
+            case "ngaytao":      orderColumn = "nts.NgayTao"; break;
+            case "ngaycapnhat":  orderColumn = "nts.NgayCapNhat"; break;
+            case "soluongtaisan": orderColumn = "SoLuongTaiSan"; break;
             case "tennhom":
-            default:
-                orderColumn = "nts.TenNhom";
-                break;
+            default:             orderColumn = "nts.TenNhom"; break;
         }
 
         String direction = (sortDir != null && sortDir.equalsIgnoreCase("asc")) ? "ASC" : "DESC";
 
-        // Luôn có WHERE cơ bản
         String whereClause = "WHERE nts.IdCongTy = ?";
         boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
         if (hasKeyword) {
@@ -86,14 +99,15 @@ public class NhomTaiSanDao {
         }
 
         String sql = """
-        SELECT nts.*, COALESCE(COUNT(ts.Id), 0) AS SoLuongTaiSan
-        FROM NhomTaiSan nts
-        LEFT JOIN TaiSan ts ON nts.Id = ts.IdNhomTaiSan AND ts.IsActive = 1
-        %s
-        GROUP BY nts.Id, nts.TenNhom, nts.HieuLuc, nts.IdCongTy, nts.NgayTao, nts.NgayCapNhat, nts.NguoiTao, nts.NguoiCapNhat, nts.IsActive
-        ORDER BY %s %s
-        LIMIT ? OFFSET ?
-        """.formatted(whereClause, orderColumn, direction);
+                SELECT nts.*, COALESCE(COUNT(ts.Id), 0) AS SoLuongTaiSan, %s
+                FROM NhomTaiSan nts
+                LEFT JOIN TaiSan ts ON nts.Id = ts.IdNhomTaiSan AND ts.IsActive = 1
+                %s
+                %s
+                GROUP BY nts.Id, nts.TenNhom, nts.HieuLuc, nts.IdCongTy, nts.NgayTao, nts.NgayCapNhat, nts.NguoiTao, nts.NguoiCapNhat, nts.IsActive%s
+                ORDER BY %s %s
+                LIMIT ? OFFSET ?
+                """.formatted(LL_SELECT, LL_JOIN, whereClause, LL_GROUP_BY, orderColumn, direction);
 
         if (hasKeyword) {
             String searchPattern = "%" + keyword.trim() + "%";
@@ -120,11 +134,16 @@ public class NhomTaiSanDao {
     }
 
     public NhomTaiSan findById(String id) {
-        String sql = "SELECT nts.*, COALESCE(COUNT(ts.Id), 0) AS SoLuongTaiSan " +
-                     "FROM NhomTaiSan nts " +
-                     "LEFT JOIN TaiSan ts ON nts.Id = ts.IdNhomTaiSan AND ts.IsActive = 1 " +
-                     "WHERE nts.Id = ? " +
-                     "GROUP BY nts.Id, nts.TenNhom, nts.HieuLuc, nts.IdCongTy, nts.NgayTao, nts.NgayCapNhat, nts.NguoiTao, nts.NguoiCapNhat, nts.IsActive";
+        String sql = "SELECT nts.*, " +
+                "COALESCE(COUNT(ts.Id), 0) AS SoLuongTaiSan, " +
+                LL_SELECT +
+                "FROM NhomTaiSan nts " +
+                "LEFT JOIN TaiSan ts ON nts.Id = ts.IdNhomTaiSan AND ts.IsActive = 1 " +
+                LL_JOIN +
+                "WHERE nts.Id = ? " +
+                "GROUP BY nts.Id, nts.TenNhom, nts.HieuLuc, nts.IdCongTy, " +
+                "nts.NgayTao, nts.NgayCapNhat, nts.NguoiTao, nts.NguoiCapNhat, nts.IsActive" +
+                LL_GROUP_BY;
         return jdbcTemplate.queryForObject(sql, rowMapper, id);
     }
 
@@ -144,7 +163,7 @@ public class NhomTaiSanDao {
             return update(nts);
         } else {
             // Nếu chưa tồn tại thì insert
-            String sql = "INSERT INTO NhomTaiSan (Id, TenNhom, HieuLuc, IdCongTy, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO NhomTaiSan (Id, TenNhom, HieuLuc, IdCongTy, IdLyLich, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             String ngayTao = nts.getNgayTao();
             String ngayCapNhat = nts.getNgayCapNhat();
@@ -154,6 +173,7 @@ public class NhomTaiSanDao {
                     nts.getTenNhom(),
                     nts.getHieuLuc(),
                     nts.getIdCongTy(),
+                    nts.getLyLich() != null ? nts.getLyLich().getId() : null,
                     ngayTao,
                     ngayCapNhat,
                     nts.getNguoiTao(),
@@ -166,7 +186,7 @@ public class NhomTaiSanDao {
 
     public int update(NhomTaiSan nts) {
         String sql = "UPDATE NhomTaiSan " +
-                "SET TenNhom=?, HieuLuc=?, IdCongTy=?, NgayTao=?, NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?, IsActive=? " +
+                "SET TenNhom=?, HieuLuc=?, IdCongTy=?, IdLyLich=?, NgayTao=?, NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?, IsActive=? " +
                 "WHERE Id=?";
 
 
@@ -175,6 +195,7 @@ public class NhomTaiSanDao {
                 nts.getTenNhom(),
                 nts.getHieuLuc(),
                 nts.getIdCongTy(),
+                nts.getLyLich() != null ? nts.getLyLich().getId() : null,
                 nts.getNgayTao(),
                 nts.getNgayCapNhat(),
                 nts.getNguoiTao(),
@@ -185,7 +206,7 @@ public class NhomTaiSanDao {
     }
 
     public int batchUpdate(List<NhomTaiSan> list) {
-        String sql = "UPDATE NhomTaiSan SET TenNhom=?, HieuLuc=?, IdCongTy=?, NgayTao=?, NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?, IsActive=? WHERE Id=?";
+        String sql = "UPDATE NhomTaiSan SET TenNhom=?, HieuLuc=?, IdCongTy=?, IdLyLich=?, NgayTao=?, NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?, IsActive=? WHERE Id=?";
         int[] result = jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
             @Override
             public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
@@ -193,12 +214,13 @@ public class NhomTaiSanDao {
                 ps.setString(1, nts.getTenNhom());
                 ps.setBoolean(2, nts.getHieuLuc() != null ? nts.getHieuLuc() : false);
                 ps.setString(3, nts.getIdCongTy());
-                ps.setString(4, nts.getNgayTao());
-                ps.setString(5, nts.getNgayCapNhat());
-                ps.setString(6, nts.getNguoiTao());
-                ps.setString(7, nts.getNguoiCapNhat());
-                ps.setBoolean(8, nts.getIsActive() != null ? nts.getIsActive() : false);
-                ps.setString(9, nts.getId());
+                ps.setString(4, nts.getLyLich() != null ? nts.getLyLich().getId() : null);
+                ps.setString(5, nts.getNgayTao());
+                ps.setString(6, nts.getNgayCapNhat());
+                ps.setString(7, nts.getNguoiTao());
+                ps.setString(8, nts.getNguoiCapNhat());
+                ps.setBoolean(9, nts.getIsActive() != null ? nts.getIsActive() : false);
+                ps.setString(10, nts.getId());
             }
 
             @Override
@@ -217,7 +239,7 @@ public class NhomTaiSanDao {
     }
 
     public int batchInsert(List<NhomTaiSan> list) {
-        String sql = "INSERT INTO NhomTaiSan (Id, TenNhom, HieuLuc, IdCongTy, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO NhomTaiSan (Id, TenNhom, HieuLuc, IdCongTy, IdLyLich, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         int[] result = jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
             @Override
             public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
@@ -226,11 +248,12 @@ public class NhomTaiSanDao {
                 ps.setString(2, nts.getTenNhom());
                 ps.setBoolean(3, nts.getHieuLuc() != null ? nts.getHieuLuc() : false);
                 ps.setString(4, nts.getIdCongTy());
-                ps.setString(5, nts.getNgayTao());
-                ps.setString(6, nts.getNgayCapNhat());
-                ps.setString(7, nts.getNguoiTao());
-                ps.setString(8, nts.getNguoiCapNhat());
-                ps.setBoolean(9, nts.getIsActive() != null ? nts.getIsActive() : false);
+                ps.setString(5, nts.getLyLich() != null ? nts.getLyLich().getId() : null);
+                ps.setString(6, nts.getNgayTao());
+                ps.setString(7, nts.getNgayCapNhat());
+                ps.setString(8, nts.getNguoiTao());
+                ps.setString(9, nts.getNguoiCapNhat());
+                ps.setBoolean(10, nts.getIsActive() != null ? nts.getIsActive() : false);
             }
 
             @Override

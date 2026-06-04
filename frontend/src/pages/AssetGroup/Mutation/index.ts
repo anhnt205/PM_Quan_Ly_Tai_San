@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../../../config/api.config";
-import { AssetGroupType } from "../types";
+import { AssetGroupType, LyLichType } from "../types";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 import * as XLSX from "xlsx";
 import { b, formatDateTime, s } from "../../../utils/helpers";
@@ -106,29 +106,30 @@ export const useAssetGroupMutation = (
     },
   });
 
-   const deleteAllMutation = useMutation({
-     mutationFn: async () => {
-       const res = await api.delete(`/nhomtaisan/delete-all`);
-       return res.data.message;
-     },
-     onSuccess: (data) => {
-       queryClient.invalidateQueries({ queryKey: ["assetGroupsPage"] });
-       showSuccessAlert(data || "Xóa nhóm tài sản thành công");
-     },
-     onError: (error: any) => {
-       showErrorAlert(
-         error.response?.data?.message ||
-           error.message ||
-           "Xóa nhóm tài sản thất bại",
-       );
-     },
-   });
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.delete(`/nhomtaisan/delete-all`);
+      return res.data.message;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["assetGroupsPage"] });
+      showSuccessAlert(data || "Xóa nhóm tài sản thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Xóa nhóm tài sản thất bại",
+      );
+    },
+  });
 
   const exportMutation = useMutation({
     mutationFn: async (dataToExport: AssetGroupType[]) => {
       const payload = dataToExport.map((item) => ({
         "Mã nhóm tài sản": item.id || "",
         "Tên nhóm tài sản": item.tenNhom || "",
+        "Tên lý lịch": item.lyLich?.tenLyLich || "N/A",
         "Hiệu lực": item.hieuLuc ?? false,
         "Ngày tạo": item.ngayTao
           ? item.ngayTao.replace("T", " ").split(".")[0]
@@ -189,7 +190,8 @@ export const useAssetGroupMutation = (
 
               const rowErrors: string[] = [];
               if (!id) rowErrors.push("Mã nhóm tài sản không được để trống");
-              if (!tenNhom) rowErrors.push("Tên nhóm tài sản không được để trống");
+              if (!tenNhom)
+                rowErrors.push("Tên nhóm tài sản không được để trống");
 
               if (rowErrors.length > 0) {
                 errorMessages.push(`Dòng ${i + 1}: ${rowErrors.join(", ")}`);
@@ -275,6 +277,22 @@ export const useAllAssetGroupQuery = () => {
         },
       });
       return res.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};
+
+export const useLyLichQuery = () => {
+  return useQuery({
+    queryKey: ["lyLich"],
+    queryFn: async () => {
+      const res = await api.get("/ly-lich", {
+        params: {
+          page: 0,
+          size: 1000,
+        },
+      });
+      return res.data?.items || [];
     },
     placeholderData: (previousData) => previousData,
   });
