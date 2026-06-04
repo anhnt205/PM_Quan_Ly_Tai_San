@@ -31,6 +31,7 @@ import FieldInput from "../../../../components/TextField/FieldInput";
 import FieldDateTime from "../../../../components/TextField/FieldDateTime";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
 import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
+import { IncidentValidation } from "../../validation";
 
 interface Props {
   open: boolean;
@@ -75,6 +76,7 @@ const IncidentDialog = ({
       nguoiKyList: [] as any[],
       danhSachTaiSan: [] as any[],
     },
+    // validationSchema: IncidentValidation,
     onSubmit: (values) => {
       const idNguoiLapBieu =
         values.nguoiKyList.length > 0 ? values.nguoiKyList[0].userId : "";
@@ -224,13 +226,6 @@ const IncidentDialog = ({
     formik.setFieldValue("danhSachTaiSan", nextList);
   }, [assets]);
 
-  const isSubmitDisabled =
-    assets.length === 0 ||
-    !formik.values.idDonViBaoCao ||
-    !formik.values.ngayPhatHien ||
-    !formik.values.tenHeThongThietBi ||
-    !formik.values.phanHeViTri ||
-    formik.values.mucDo === undefined;
 
   const handleClose = () => {
     formik.resetForm();
@@ -367,7 +362,7 @@ const IncidentDialog = ({
                   )}
                   {formik.values.idDonViBaoCao && (
                     <StepAssets
-                      sourceDeptId={formik.values.idDonViBaoCao}
+                      idDonViGiao={formik.values.idDonViBaoCao}
                       assets={assets}
                       onAssetsChange={setAssets}
                     />
@@ -418,7 +413,6 @@ const IncidentDialog = ({
             variant="contained"
             color="primary"
             onClick={() => formik.handleSubmit()}
-            disabled={isSubmitDisabled}
           >
             Cập Nhật
           </Button>
@@ -427,7 +421,6 @@ const IncidentDialog = ({
             variant="contained"
             color="primary"
             onClick={() => formik.handleSubmit()}
-            disabled={isSubmitDisabled}
           >
             Tạo Phiếu và Lưu
           </Button>

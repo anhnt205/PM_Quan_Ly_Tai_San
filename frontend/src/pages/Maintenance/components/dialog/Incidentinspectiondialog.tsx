@@ -44,6 +44,7 @@ import dayjs from "dayjs";
 import React from "react";
 import { useFormik } from "formik";
 import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
+import { IncidentInspectionValidation } from "../../validation";
 
 interface Props {
   open: boolean;
@@ -89,6 +90,7 @@ const IncidentInspectionDialog = ({
       danhSachChiTiet: [] as IncidentInspectionDetailData[],
       nguoiKyList: [] as any[],
     },
+    // validationSchema: IncidentInspectionValidation,
     onSubmit: (values) => {
       const idNguoiLapBieu =
         values.nguoiKyList.length > 0 ? values.nguoiKyList[0].userId : "";
@@ -240,7 +242,7 @@ const IncidentInspectionDialog = ({
       idChiTietKiemTraSuCo: detail.id || "",
       idVatTu: "",
       idChiTietVatTu: "",
-      soLuong: 1,
+      soLuong: 0,
       tinhTrang: "",
       soLuongSuaChua: 0,
       soLuongThayMoi: 0,
@@ -563,6 +565,7 @@ const IncidentInspectionDialog = ({
                                   formik={formik}
                                   type="number"
                                   noBorder={true}
+                                  disabled={true}
                                 />
                               </TableCell>
                               <TableCell>
@@ -580,6 +583,14 @@ const IncidentInspectionDialog = ({
                                   formik={formik}
                                   type="number"
                                   noBorder={true}
+                                  onChange={(val) => {
+                                    const numRepair = Number(val || 0);
+                                    const numReplace = Number(vt.soLuongThayMoi || 0);
+                                    updateMaterial(assetIdx, vt.id!, {
+                                      soLuongSuaChua: numRepair,
+                                      soLuong: numRepair + numReplace,
+                                    });
+                                  }}
                                 />
                               </TableCell>
                               <TableCell>
@@ -589,6 +600,14 @@ const IncidentInspectionDialog = ({
                                   formik={formik}
                                   type="number"
                                   noBorder={true}
+                                  onChange={(val) => {
+                                    const numRepair = Number(vt.soLuongSuaChua || 0);
+                                    const numReplace = Number(val || 0);
+                                    updateMaterial(assetIdx, vt.id!, {
+                                      soLuongThayMoi: numReplace,
+                                      soLuong: numRepair + numReplace,
+                                    });
+                                  }}
                                 />
                               </TableCell>
                               <TableCell>
@@ -649,9 +668,6 @@ const IncidentInspectionDialog = ({
           variant="contained"
           color="primary"
           onClick={() => formik.handleSubmit()}
-          disabled={formik.values.danhSachChiTiet.some((entry) =>
-            (entry.danhSachVatTu || []).some((vt) => !vt.idChiTietVatTu),
-          )}
         >
           {initData?.id ? "Cập nhật biên bản" : "Tạo biên bản"}
         </Button>

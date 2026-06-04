@@ -47,6 +47,7 @@ import FieldInput from "../../../../components/TextField/FieldInput";
 import FieldDate from "../../../../components/TextField/FieldDate";
 import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 import AcceptanceTestPreview from "../preview/AcceptanceTestPreview";
+import { AcceptanceMachineValidation } from "../../validation";
 
 interface Props {
   open: boolean;
@@ -98,6 +99,7 @@ const AcceptanceTestDialog = ({
       danhSachTaiSan: [] as AcceptanceTestRecordAssetData[],
       nguoiKyList: [] as any[],
     },
+    // validationSchema: AcceptanceMachineValidation,
     onSubmit: (values) => {
       const idNguoiLapVal =
         values.nguoiKyList.length > 0 ? values.nguoiKyList[0].userId : "";
@@ -594,7 +596,6 @@ const AcceptanceTestDialog = ({
           variant="contained"
           color="success"
           disabled={
-            formik.values.nguoiKyList.length === 0 ||
             createMutation.isPending ||
             updateMutation.isPending
           }

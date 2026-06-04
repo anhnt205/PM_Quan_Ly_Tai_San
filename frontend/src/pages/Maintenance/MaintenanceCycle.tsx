@@ -79,7 +79,7 @@ export default function MaintenanceCycles() {
           label={p.value}
           size="small"
           sx={{
-            bgcolor: maintenanceLevelColors[p.value] || "transparent",
+            bgcolor: maintenanceLevelColors[p.value] || "#1FA463",
           }}
         />
       ),
@@ -149,7 +149,7 @@ export default function MaintenanceCycles() {
             label={p.value}
             size="small"
             sx={{
-              bgcolor: maintenanceLevelColors[p.value] || "transparent",
+              bgcolor: maintenanceLevelColors[p.value] || "#1FA463",
             }}
           />
         ) : (
@@ -162,7 +162,9 @@ export default function MaintenanceCycles() {
       width: 120,
       renderCell: (p: any) => {
         const isDone = !!p.value;
-        const cfg = isDone ? historyStatusConfig["1"] : historyStatusConfig["0"];
+        const cfg = isDone
+          ? historyStatusConfig["1"]
+          : historyStatusConfig["0"];
         return <Chip label={cfg.label} size="small" color={cfg.color} />;
       },
     },

@@ -60,16 +60,19 @@ public class BanGiaoTaiSanService {
 
         // Filter theo lượt ký - chỉ lấy những item mà đến lượt user ký
         // Ngoại lệ: admin lấy hết, NguoiTao cũng lấy không phân biệt thứ tự
-        if (userid != null && !userid.trim().isEmpty() && !"admin".equalsIgnoreCase(userid)) {
-            List<BanGiaoTaiSanDTO> filtered = new ArrayList<>();
-            for (BanGiaoTaiSanDTO item : sourceList) {
-                if (isSign != null && isSign) {
-                    if (isNeedToSign(item, userid)) filtered.add(item);
-                } else {
-                    if (isUserTurnToSign(item, userid)) filtered.add(item);
+        if (userid != null && !userid.trim().isEmpty()) {
+            boolean shouldFilter = !"admin".equalsIgnoreCase(userid) || (isSign != null && isSign);
+            if (shouldFilter) {
+                List<BanGiaoTaiSanDTO> filtered = new ArrayList<>();
+                for (BanGiaoTaiSanDTO item : sourceList) {
+                    if (isSign != null && isSign) {
+                        if (isNeedToSign(item, userid)) filtered.add(item);
+                    } else {
+                        if (isUserTurnToSign(item, userid)) filtered.add(item);
+                    }
                 }
+                sourceList = filtered;
             }
-            sourceList = filtered;
         }
 
         // Filter by idDonViGiao if provided
@@ -431,11 +434,6 @@ public class BanGiaoTaiSanService {
      * - userId = NguoiTao → lấy không phân biệt thứ tự
      */
     public boolean isUserTurnToSign(BanGiaoTaiSanDTO item, String userId) {
-        // Admin lấy hết
-        if ("admin".equalsIgnoreCase(userId)) {
-            return true;
-        }
-
         // Người tạo luôn được xem
         if (userId != null && userId.equals(item.getNguoiTao())) {
             return true;

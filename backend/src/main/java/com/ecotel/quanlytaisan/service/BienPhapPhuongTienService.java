@@ -133,16 +133,19 @@ public class BienPhapPhuongTienService {
 
         List<BienPhapPhuongTienDTO> source = bienPhapDao.findAll(idCongTy);
 
-        if (userid != null && !userid.isBlank() && !"admin".equalsIgnoreCase(userid)) {
-            List<BienPhapPhuongTienDTO> filtered = new ArrayList<>();
-            for (BienPhapPhuongTienDTO item : source) {
-                if (isSign != null && isSign) {
-                    if (isNeedToSign(item, userid)) filtered.add(item);
-                } else {
-                    if (isUserTurnToSign(item, userid)) filtered.add(item);
+        if (userid != null && !userid.isBlank()) {
+            boolean shouldFilter = !"admin".equalsIgnoreCase(userid) || (isSign != null && isSign);
+            if (shouldFilter) {
+                List<BienPhapPhuongTienDTO> filtered = new ArrayList<>();
+                for (BienPhapPhuongTienDTO item : source) {
+                    if (isSign != null && isSign) {
+                        if (isNeedToSign(item, userid)) filtered.add(item);
+                    } else {
+                        if (isUserTurnToSign(item, userid)) filtered.add(item);
+                    }
                 }
+                source = filtered;
             }
-            source = filtered;
         }
 
         Map<String, Long> trangThaiCounts = source.stream()
@@ -215,7 +218,6 @@ public class BienPhapPhuongTienService {
     }
 
     public boolean isUserTurnToSign(BienPhapPhuongTienDTO item, String userId) {
-        if ("admin".equalsIgnoreCase(userId)) return true;
         if (userId != null && userId.equals(item.getNguoiTao())) return true;
         if (!Boolean.TRUE.equals(item.getShare())) return false;
 

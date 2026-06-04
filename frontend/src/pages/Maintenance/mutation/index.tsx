@@ -585,7 +585,9 @@ export const useMaintenanceIncidenMutation = () => {
     },
     onSuccess: async (response, variables) => {
       handleUpdate(response, variables);
-      queryClient.invalidateQueries({ queryKey: ["incidentPage"] });
+      queryClient.invalidateQueries({
+        queryKey: ["maintenancePlanningGrouped"],
+      });
       queryClient.invalidateQueries({ queryKey: ["incidentByPlan"] });
       showSuccessAlert("Tạo sự cố thành công");
     },
@@ -816,12 +818,15 @@ export const useMaintenanceRepairMutation = () => {
   });
 
   // TÁCH VÀ GỌI CÁC API CON
-  const handleUpdate = (
+  // TÁCH VÀ GỌI CÁC API CON
+  const handleUpdate = async (
     response: MaintenanceRepairData | any,
     variables: MaintenanceRepairData,
   ) => {
     const repairId = response?.id || response?.data?.id;
     if (!repairId) return;
+
+    const promises: Promise<any>[] = [];
 
     // XỬ LÝ CHI TIẾT
     if (variables.danhSachTaiSan && variables.danhSachTaiSan.length > 0) {
@@ -837,26 +842,38 @@ export const useMaintenanceRepairMutation = () => {
       );
 
       if (createItems.length > 0)
-        createChiTietManyMutation.mutate(
-          createItems.map((i: any) => ({ ...i, idSuaChua: repairId })),
+        promises.push(
+          createChiTietManyMutation.mutateAsync(
+            createItems.map((i: any) => ({ ...i, idSuaChua: repairId })),
+          ),
         );
       if (updateItems.length > 0)
-        updateChiTietManyMutation.mutate(
-          updateItems.map((i: any) => ({ ...i, idSuaChua: repairId })),
+        promises.push(
+          updateChiTietManyMutation.mutateAsync(
+            updateItems.map((i: any) => ({ ...i, idSuaChua: repairId })),
+          ),
         );
       if (deleteItems.length > 0)
-        deleteChiTietManyMutation.mutate(deleteItems.map((i: any) => i.id));
+        promises.push(
+          deleteChiTietManyMutation.mutateAsync(
+            deleteItems.map((i: any) => i.id),
+          ),
+        );
     }
 
     if (variables.nguoiKyList && variables.nguoiKyList.length > 0) {
-      updateSignerMutation.mutate({
-        idTaiLieu: repairId,
-        data: variables.nguoiKyList.map((item) => ({
-          ...item,
+      promises.push(
+        updateSignerMutation.mutateAsync({
           idTaiLieu: repairId,
-        })),
-      });
+          data: variables.nguoiKyList.map((item) => ({
+            ...item,
+            idTaiLieu: repairId,
+          })),
+        }),
+      );
     }
+
+    await Promise.all(promises);
   };
 
   // --- API SỬA CHỮA ---
@@ -871,10 +888,13 @@ export const useMaintenanceRepairMutation = () => {
       ).data;
     },
     onSuccess: async (response, variables) => {
-      handleUpdate(response, variables);
+      await handleUpdate(response, variables);
       queryClient.invalidateQueries({ queryKey: ["repairPage"] });
       queryClient.invalidateQueries({
         queryKey: ["maintenancePlanningDetailsByMonth"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["incidentDetailByIncident"],
       });
       queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
       showSuccessAlert("Tạo giấy đề nghị sửa chữa thành công");
@@ -897,9 +917,12 @@ export const useMaintenanceRepairMutation = () => {
       ).data;
     },
     onSuccess: async (response, variables) => {
-      handleUpdate(response, variables);
+      await handleUpdate(response, variables);
       queryClient.invalidateQueries({ queryKey: ["repairPage"] });
       queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
+      queryClient.invalidateQueries({
+        queryKey: ["maintenancePlanningDetailsByMonth"],
+      });
 
       showSuccessAlert("Cập nhật giấy đề nghị thành công");
     },
@@ -940,7 +963,14 @@ export const useMaintenanceRepairMutation = () => {
       return (await api.delete(`/suachua/${data.id}`)).data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["repairPage"] });
       queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
+      queryClient.invalidateQueries({
+        queryKey: ["maintenancePlanningDetailsByMonth"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["maintenancePlanningDetailsByMonth"],
+      });
       showSuccessAlert("Xóa giấy đề nghị thành công");
     },
     onError: (error: any) => {
@@ -1254,6 +1284,16 @@ export const useMaintenanceInspectionMutation = () => {
         queryClient.invalidateQueries({
           queryKey: ["incidentInspectionBySuCo"],
         });
+        queryClient.invalidateQueries({
+          queryKey: ["incidentDetailByIncident"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["incidentDetailByIncident"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["maintenancePlanningDetailsByMonth"],
+        });
+
         showSuccessAlert("Tạo biên bản giám định thành công");
       } else {
         showErrorAlert(response.message || "Tạo biên bản giám định thất bại");
@@ -1505,6 +1545,12 @@ export const useMaintenanceVehicleInspectionMutation = () => {
         queryClient.invalidateQueries({
           queryKey: ["vehicleInspectionByBienBan"],
         });
+        queryClient.invalidateQueries({
+          queryKey: ["incidentDetailByIncident"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["maintenancePlanningDetailsByMonth"],
+        });
         showSuccessAlert("Tạo biên bản giám định phương tiện thành công");
       } else {
         showErrorAlert(
@@ -1577,6 +1623,12 @@ export const useMaintenanceVehicleInspectionMutation = () => {
         });
         queryClient.invalidateQueries({
           queryKey: ["vehicleInspectionByBienBan"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["incidentDetailByIncident"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["maintenancePlanningDetailsByMonth"],
         });
         showSuccessAlert("Xóa biên bản giám định phương tiện thành công");
       } else {
@@ -1717,6 +1769,12 @@ export const useMaintenanceAcceptanceTestMutation = () => {
     queryClient.invalidateQueries({ queryKey: ["nghiemThuMayMocByBienPhap"] });
     queryClient.invalidateQueries({
       queryKey: ["bienPhapMayMocByGiamDinh"],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["incidentDetailByIncident"],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["maintenancePlanningDetailsByMonth"],
     });
   };
 
@@ -1924,6 +1982,12 @@ export const useMaintenanceAcceptanceTestVehicleMutation = () => {
     });
     queryClient.invalidateQueries({
       queryKey: ["bienPhapPhuongTienByGiamDinh"],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["incidentDetailByIncident"],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["maintenancePlanningDetailsByMonth"],
     });
   };
 
@@ -2147,6 +2211,12 @@ export const useMaintenanceMaterialAssessmentMutation = () => {
       queryClient.invalidateQueries({
         queryKey: ["materialAssessmentByInspection"],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["incidentDetailByIncident"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["maintenancePlanningDetailsByMonth"],
+      });
       showSuccessAlert("Tạo biên bản đánh giá vật tư thành công");
     },
     onError: (error: any) => {
@@ -2206,6 +2276,12 @@ export const useMaintenanceMaterialAssessmentMutation = () => {
       });
       queryClient.invalidateQueries({
         queryKey: ["materialAssessmentByInspection"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["incidentDetailByIncident"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["maintenancePlanningDetailsByMonth"],
       });
       showSuccessAlert("Xóa biên bản thành công");
     },
@@ -2417,7 +2493,15 @@ export const useMaintenanceProcessPagedQuery = (
   nhomTaiSan?: string,
 ) => {
   return useQuery({
-    queryKey: ["maintenanceProcessPaged", page, pageSize, idTaiSan, dateFrom, dateTo, nhomTaiSan],
+    queryKey: [
+      "maintenanceProcessPaged",
+      page,
+      pageSize,
+      idTaiSan,
+      dateFrom,
+      dateTo,
+      nhomTaiSan,
+    ],
     queryFn: async () => {
       const res = await api.get("/quy-trinh/paged", {
         params: {
@@ -2441,7 +2525,13 @@ export const useMaintenanceMaterialConsumptionQuery = (
   nhomTaiSan?: string,
 ) => {
   return useQuery({
-    queryKey: ["maintenanceMaterialConsumption", idTaiSan, dateFrom, dateTo, nhomTaiSan],
+    queryKey: [
+      "maintenanceMaterialConsumption",
+      idTaiSan,
+      dateFrom,
+      dateTo,
+      nhomTaiSan,
+    ],
     queryFn: async () => {
       const res = await api.get("/quy-trinh/material-consumption", {
         params: {
@@ -2453,7 +2543,7 @@ export const useMaintenanceMaterialConsumptionQuery = (
       });
       return res.data.data || res.data || [];
     },
-    enabled: !!idTaiSan  && !!nhomTaiSan,
+    enabled: !!idTaiSan && !!nhomTaiSan,
   });
 };
 
@@ -2603,13 +2693,13 @@ export const useMaintenanceMutation = (
                   ? MessageTypeFunctions.MEASURE
                   : activeTab === 4
                     ? MessageTypeFunctions.ACCEPTANCE_TEST
-                      : activeTab === 5
-                        ? MessageTypeFunctions.MATERIAL
-                        : activeTab === 6
-                          ? MessageTypeFunctions.INCIDENT
-                          : activeTab === 7
-                            ? MessageTypeFunctions.INCIDENT_INSPECTION
-                            : "",
+                    : activeTab === 5
+                      ? MessageTypeFunctions.MATERIAL
+                      : activeTab === 6
+                        ? MessageTypeFunctions.INCIDENT
+                        : activeTab === 7
+                          ? MessageTypeFunctions.INCIDENT_INSPECTION
+                          : "",
         recieve: list,
       });
       showSuccessAlert("Ký thành công");

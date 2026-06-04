@@ -90,19 +90,22 @@ public class BanGiaoCCDCVatTuService {
         // Filter theo lượt ký - chỉ lấy những item mà đến lượt user ký
         // Ngoại lệ: admin lấy hết, NguoiTao cũng lấy không phân biệt thứ tự
         if (userid != null && !userid.trim().isEmpty()) {
-            List<BanGiaoCCDCVatTuDTO> filtered = new ArrayList<>();
-            for (BanGiaoCCDCVatTuDTO item : sourceList) {
-                if (isSign != null && isSign) {
-                    if (isNeedToSign(item, userid)) {
-                        filtered.add(item);
-                    }
-                } else {
-                    if (isUserTurnToSign(item, userid)) {
-                        filtered.add(item);
+            boolean shouldFilter = !"admin".equalsIgnoreCase(userid) || (isSign != null && isSign);
+            if (shouldFilter) {
+                List<BanGiaoCCDCVatTuDTO> filtered = new ArrayList<>();
+                for (BanGiaoCCDCVatTuDTO item : sourceList) {
+                    if (isSign != null && isSign) {
+                        if (isNeedToSign(item, userid)) {
+                            filtered.add(item);
+                        }
+                    } else {
+                        if (isUserTurnToSign(item, userid)) {
+                            filtered.add(item);
+                        }
                     }
                 }
+                sourceList = filtered;
             }
-            sourceList = filtered;
         }
 
         // Filter by idDonViGiao if provided
@@ -416,11 +419,6 @@ public class BanGiaoCCDCVatTuService {
     }
 
     public boolean isUserTurnToSign(BanGiaoCCDCVatTuDTO item, String userId) {
-        // Admin lấy hết
-        if ("admin".equalsIgnoreCase(userId)) {
-            return true;
-        }
-
         // Người tạo luôn được xem
         if (userId != null && userId.equals(item.getNguoiTao())) {
             return true;

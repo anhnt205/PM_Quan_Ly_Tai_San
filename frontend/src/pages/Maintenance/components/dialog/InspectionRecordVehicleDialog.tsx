@@ -45,6 +45,7 @@ import { listSigneInfo } from "../../config";
 import FieldInput from "../../../../components/TextField/FieldInput";
 import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 import InspectionRecordVehiclePreview from "../preview/InspectionRecordVehiclePreview";
+import { VehicleInspectionValidation } from "../../validation";
 
 interface Props {
   open: boolean;
@@ -72,7 +73,6 @@ const InspectionRecordVehicleDialog = ({
   const { createMutation, updateMutation } =
     useMaintenanceVehicleInspectionMutation();
 
-
   const parentAsset =
     incidentInspection?.danhSachChiTiet?.[0] ||
     repairRequest?.danhSachTaiSan?.[0];
@@ -89,7 +89,7 @@ const InspectionRecordVehicleDialog = ({
       ngayGiamDinh: dayjs().format("YYYY-MM-DD"),
       viTri: "",
       capBaoDuong: "",
-      donViSuaChua: repairRequest?.ghiChu || "",
+      donViSuaChua: "",
       noiDungKhac: "",
       idTaiSan: parentAsset?.idTaiSan || "",
       tenTaiSan: parentAsset?.tenTaiSan || "",
@@ -99,6 +99,7 @@ const InspectionRecordVehicleDialog = ({
       danhSachChiTiet: [] as VehicleInspectionRecordDetailData[],
       nguoiKyList: [] as any[],
     },
+    // validationSchema: VehicleInspectionValidation,
     onSubmit: (values) => {
       if (hasValidationError()) return;
       const idNguoiLapBieu =
@@ -239,7 +240,7 @@ const InspectionRecordVehicleDialog = ({
       idGiamDinhPhuongTien: formik.values.id,
       idVatTu: "",
       idChiTietVatTu: "",
-      soLuong: 1,
+      soLuong: 0,
       tinhTrang: "",
       soLuongSuaChua: 0,
       soLuongThayMoi: 0,
@@ -524,6 +525,7 @@ const InspectionRecordVehicleDialog = ({
                             field={`danhSachChiTiet.${origIdx}.soLuong`}
                             formik={formik}
                             noBorder={true}
+                            disabled={true}
                           />
                         </TableCell>
                         <TableCell>
@@ -539,6 +541,14 @@ const InspectionRecordVehicleDialog = ({
                             field={`danhSachChiTiet.${origIdx}.soLuongThayMoi`}
                             formik={formik}
                             noBorder={true}
+                            onChange={(val) => {
+                              const numRepair = Number(vt.soLuongSuaChua || 0);
+                              const numReplace = Number(val || 0);
+                              updateMaterialField(vt.id!, {
+                                soLuongThayMoi: numReplace,
+                                soLuong: numRepair + numReplace,
+                              });
+                            }}
                           />
                         </TableCell>
                         <TableCell>
@@ -547,6 +557,14 @@ const InspectionRecordVehicleDialog = ({
                             field={`danhSachChiTiet.${origIdx}.soLuongSuaChua`}
                             formik={formik}
                             noBorder={true}
+                            onChange={(val) => {
+                              const numRepair = Number(val || 0);
+                              const numReplace = Number(vt.soLuongThayMoi || 0);
+                              updateMaterialField(vt.id!, {
+                                soLuongSuaChua: numRepair,
+                                soLuong: numRepair + numReplace,
+                              });
+                            }}
                           />
                         </TableCell>
                         <TableCell>
@@ -604,9 +622,6 @@ const InspectionRecordVehicleDialog = ({
         <Button
           variant="contained"
           color="primary"
-          disabled={
-            formik.values.nguoiKyList.length === 0 || hasValidationError()
-          }
           onClick={() => formik.handleSubmit()}
         >
           {initData ? "Cập nhật" : "Tạo biên bản"}

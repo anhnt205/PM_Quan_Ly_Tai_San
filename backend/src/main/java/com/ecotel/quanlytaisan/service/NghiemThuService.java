@@ -193,16 +193,19 @@ public class NghiemThuService {
         List<NghiemThuDTO> sourceList = nghiemThuDao.findAll(idCongTy);
 
         // Filter by turn
-        if (userid != null && !userid.trim().isEmpty() && !"admin".equalsIgnoreCase(userid)) {
-            List<NghiemThuDTO> filtered = new ArrayList<>();
-            for (NghiemThuDTO item : sourceList) {
-                if (isSign != null && isSign) {
-                    if (isNeedToSign(item, userid)) filtered.add(item);
-                } else {
-                    if (isUserTurnToSign(item, userid)) filtered.add(item);
+        if (userid != null && !userid.trim().isEmpty()) {
+            boolean shouldFilter = !"admin".equalsIgnoreCase(userid) || (isSign != null && isSign);
+            if (shouldFilter) {
+                List<NghiemThuDTO> filtered = new ArrayList<>();
+                for (NghiemThuDTO item : sourceList) {
+                    if (isSign != null && isSign) {
+                        if (isNeedToSign(item, userid)) filtered.add(item);
+                    } else {
+                        if (isUserTurnToSign(item, userid)) filtered.add(item);
+                    }
                 }
+                sourceList = filtered;
             }
-            sourceList = filtered;
         }
 
         // Count by trangThai
@@ -343,7 +346,6 @@ public class NghiemThuService {
     }
 
     public boolean isUserTurnToSign(NghiemThuDTO item, String userId) {
-        if ("admin".equalsIgnoreCase(userId)) return true;
         if (userId != null && userId.equals(item.getNguoiTao())) return true;
         if (!Boolean.TRUE.equals(item.getShare())) return false;
 

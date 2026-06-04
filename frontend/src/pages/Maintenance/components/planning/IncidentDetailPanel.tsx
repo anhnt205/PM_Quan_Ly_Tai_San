@@ -309,7 +309,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
     });
   };
   const availableDevices = (incident?.danhSachTaiSan || []).filter(
-    (d: any) => d?.daKiemTraSuCo !== 1,
+    (d: any) => !d?.daKiemTraSuCo || d?.daKiemTraSuCo === 0,
   );
   const handleSelectAll = () =>
     setSelectedDeviceIds(
@@ -486,14 +486,14 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                         },
                       }}
                     >
-                      {incident.trangThai === 3 && inc.daKiemTraSuCo !== 1 && (
+                      {incident.trangThai === 3 && (
                         <TableCell padding="checkbox">
                           <Checkbox
                             checked={selectedDeviceIds.includes(
                               device.id ?? "",
                             )}
                             onChange={() => handleToggle(device.id ?? "")}
-                            disabled={device.daKiemTraSuCo === 1}
+                            disabled={device.daKiemTraSuCo !== undefined && device.daKiemTraSuCo >= 1}
                           />
                         </TableCell>
                       )}
@@ -504,9 +504,22 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                       <TableCell>{device?.viTri || "—"}</TableCell>
                       <TableCell>{device?.tinhTrang || "—"}</TableCell>
                       <TableCell>
-                        {device.daKiemTraSuCo === 1 ? (
+                        {device.daKiemTraSuCo === 1 && (
                           <Chip label="Đã kiểm tra" size="small" color="info" />
-                        ) : (
+                        )}
+                        {device.daKiemTraSuCo === 2 && (
+                          <Chip label="Đã giám định" size="small" color="warning" />
+                        )}
+                        {device.daKiemTraSuCo === 3 && (
+                          <Chip label="Đã lên biện pháp" size="small" color="error" />
+                        )}
+                        {device.daKiemTraSuCo === 4 && (
+                          <Chip label="Đã nghiệm thu" size="small" color="success" />
+                        )}
+                        {device.daKiemTraSuCo === 5 && (
+                          <Chip label="Đã đánh giá" size="small" color="primary" />
+                        )}
+                        {(!device.daKiemTraSuCo || device.daKiemTraSuCo === 0) && (
                           <Chip
                             label="Chưa kiểm tra"
                             size="small"

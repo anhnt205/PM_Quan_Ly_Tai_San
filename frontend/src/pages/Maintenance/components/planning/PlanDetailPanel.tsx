@@ -250,9 +250,12 @@ const ActionCell = ({
 // ── Component chính ───────────────────────────────────────
 const PlanDetailPanel = ({ plan, onClose }: Props) => {
   const [tab, setTab] = useState(0);
-  const [selectedMonths, setSelectedMonths] = useState<number[]>([
-    new Date().getMonth(),
-  ]);
+  const [selectedMonths, setSelectedMonths] = useState<number[]>(() => {
+    if (plan?.trangThai !== 3) {
+      return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+    }
+    return [new Date().getMonth()];
+  });
   const [selectedDeviceIds, setSelectedDeviceIds] = useState<string[]>([]);
   const [repairDialogOpen, setRepairDialogOpen] = useState(false);
   const [inspectionDialogOpen, setInspectionDialogOpen] = useState(false);
@@ -315,7 +318,6 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
     useMaintenanceAcceptanceTestVehicleMutation();
   const { deleteMutation: deleteMaterialAssessmentMutation } =
     useMaintenanceMaterialAssessmentMutation();
-
   useEffect(() => {
     setExpandedRequests(null);
     setExpandedInspections(null);
@@ -328,7 +330,13 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
     setAcceptanceParentBienPhapId(null);
     setMaterialParentAccId(null);
     setSelectedMaterialAssessment(null);
-  }, [plan?.id]);
+
+    if (plan?.trangThai !== 3) {
+      setSelectedMonths([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
+    } else {
+      setSelectedMonths([new Date().getMonth()]);
+    }
+  }, [plan?.id, plan?.trangThai]);
 
   const results = useQueries({
     queries: selectedMonths.map((thang) => ({
@@ -434,7 +442,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
     const singleMonthIdx = selectedMonths[0];
     return mergedDevices.filter((d: any) => {
       const mData = d.monthlyData[singleMonthIdx];
-      return mData && mData.daCoLenhSuaChua !== 1;
+      return mData && Number(mData.daCoLenhSuaChua || 0) === 0;
     });
   }, [mergedDevices, selectedMonths]);
 
@@ -701,10 +709,10 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                   </TableCell>
                   <TableCell>STT</TableCell>
                   <TableCell>Mã TB</TableCell>
-                  <TableCell>Tên TB</TableCell>
+                  <TableCell sx={{ minWidth: 150 }}>Tên</TableCell>
                   <TableCell>Nhóm</TableCell>
                   {selectedMonths.map((mIdx) => (
-                    <TableCell key={mIdx}>Tháng {mIdx + 1}</TableCell>
+                    <TableCell key={mIdx}>T{mIdx + 1}</TableCell>
                   ))}
                   <TableCell>SL</TableCell>
                   {selectedMonths.length === 1 && (
@@ -714,10 +722,10 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
               </TableHead>
               <TableBody>
                 {mergedDevices?.map((device: any, idx: number) => {
-                  const isAlreadyRequested =
-                    selectedMonths.length === 1 &&
-                    device.monthlyData[selectedMonths[0]]?.daCoLenhSuaChua ===
-                      1;
+                  const statusVal = selectedMonths.length === 1
+                    ? Number(device.monthlyData[selectedMonths[0]]?.daCoLenhSuaChua || 0)
+                    : 0;
+                  const isAlreadyRequested = statusVal > 0;
                   return (
                     <TableRow
                       key={device.idTaiSan}
@@ -762,12 +770,12 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                     bgcolor:
                                       maintenanceLevelColors[
                                         mData.capSuaChua
-                                      ] || "transparent",
+                                      ] || "#1FA463",
                                     color: "#fff",
                                     fontWeight: 600,
                                   }}
                                 />
-                                {mData.daCoLenhSuaChua === 1 && (
+                                {Number(mData.daCoLenhSuaChua || 0) > 0 && (
                                   <CheckIcon
                                     sx={{ color: "#1FA463", fontSize: 18 }}
                                   />
@@ -782,13 +790,22 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                       <TableCell>{device.soLuong}</TableCell>
                       {selectedMonths.length === 1 && (
                         <TableCell>
-                          {isAlreadyRequested ? (
-                            <Chip
-                              label="Đã lập lệnh"
-                              size="small"
-                              color="info"
-                            />
-                          ) : (
+                          {statusVal === 1 && (
+                            <Chip label="Đã lập lệnh" size="small" color="info" />
+                          )}
+                          {statusVal === 2 && (
+                            <Chip label="Đã giám định" size="small" color="warning" />
+                          )}
+                          {statusVal === 3 && (
+                            <Chip label="Đã lên biện pháp" size="small" color="error" />
+                          )}
+                          {statusVal === 4 && (
+                            <Chip label="Đã nghiệm thu" size="small" color="success" />
+                          )}
+                          {statusVal === 5 && (
+                            <Chip label="Đã đánh giá" size="small" color="primary" />
+                          )}
+                          {statusVal === 0 && (
                             <Chip
                               label="Chưa lập"
                               size="small"

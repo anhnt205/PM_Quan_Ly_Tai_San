@@ -152,7 +152,6 @@ export default function MaintenancePlanRepair() {
 
   const handleSaveIncident = async (selectedIncident: IncidenData) => {
     if (selectedIncident.id) {
-      console.log(selectedIncident);
       await updateIncidentMutation.mutateAsync(selectedIncident);
     } else {
       await createIncidentMutation.mutateAsync(selectedIncident);

@@ -25,6 +25,7 @@ import { listSigneInfo } from "../../config";
 import FieldInput from "../../../../components/TextField/FieldInput";
 import { useFormik } from "formik";
 import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
+import { MaintenanceValidation } from "../../validation";
 
 interface Props {
   open: boolean;
@@ -71,6 +72,7 @@ const RepairRequestDialog = ({
       danhSachTaiSan: [] as any[],
       nguoiKyList: [] as any[],
     },
+    // validationSchema: MaintenanceValidation,
     onSubmit: (values) => {
       const idNguoiLapBieu =
         values.nguoiKyList.length > 0 ? values.nguoiKyList[0].userId : "";
@@ -287,7 +289,6 @@ const RepairRequestDialog = ({
         <Button
           variant="contained"
           color="primary"
-          disabled={formik.values.nguoiKyList.length === 0}
           onClick={() => formik.handleSubmit()}
         >
           Tạo &amp; Gửi duyệt

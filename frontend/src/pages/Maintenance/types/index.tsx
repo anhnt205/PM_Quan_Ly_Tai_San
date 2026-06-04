@@ -458,7 +458,7 @@ export interface MaintenancePlanAssetItem {
   capSuaChuaThang12?: string;
 
   capSuaChua?: string;
-  daCoLenhSuaChua?: boolean;
+  daCoLenhSuaChua?: number;
 
   action?: ActionType;
 }

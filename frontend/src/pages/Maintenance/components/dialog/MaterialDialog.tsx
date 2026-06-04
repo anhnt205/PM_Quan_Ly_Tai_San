@@ -45,6 +45,7 @@ import FieldInput from "../../../../components/TextField/FieldInput";
 import TextFieldNumber from "../../../../components/TextField/TextFieldNumber";
 import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 import MaterialPreview from "../preview/MaterialPreview";
+import { MaterialValidation } from "../../validation";
 
 interface Props {
   open: boolean;
@@ -95,6 +96,7 @@ const MaterialDialog = ({
       danhSachChiTiet: [] as ChiTietVatTuThuHoiData[],
       nguoiKyList: [] as any[],
     },
+    // validationSchema: MaterialValidation,
     onSubmit: (values) => {
       const idNguoiLapBieu =
         values.nguoiKyList.length > 0 ? values.nguoiKyList[0].userId : "";
@@ -654,7 +656,6 @@ const MaterialDialog = ({
         <Button
           variant="contained"
           color="warning"
-          disabled={formik.values.nguoiKyList.length === 0}
           onClick={() => formik.handleSubmit()}
         >
           {initData ? "Cập nhật biên bản" : "Tạo biên bản"}

@@ -170,16 +170,19 @@ public class NghiemThuPhuongTienService {
         List<NghiemThuPhuongTienDTO> sourceList = nghiemThuPhuongTienDao.findAll(idCongTy);
 
         // Lọc theo user
-        if (userid != null && !userid.trim().isEmpty() && !"admin".equalsIgnoreCase(userid)) {
-            List<NghiemThuPhuongTienDTO> filtered = new ArrayList<>();
-            for (NghiemThuPhuongTienDTO item : sourceList) {
-                if (isSign != null && isSign) {
-                    if (isNeedToSign(item, userid)) filtered.add(item);
-                } else {
-                    if (isUserTurnToSign(item, userid)) filtered.add(item);
+        if (userid != null && !userid.trim().isEmpty()) {
+            boolean shouldFilter = !"admin".equalsIgnoreCase(userid) || (isSign != null && isSign);
+            if (shouldFilter) {
+                List<NghiemThuPhuongTienDTO> filtered = new ArrayList<>();
+                for (NghiemThuPhuongTienDTO item : sourceList) {
+                    if (isSign != null && isSign) {
+                        if (isNeedToSign(item, userid)) filtered.add(item);
+                    } else {
+                        if (isUserTurnToSign(item, userid)) filtered.add(item);
+                    }
                 }
+                sourceList = filtered;
             }
-            sourceList = filtered;
         }
 
         // Đếm theo trạng thái
@@ -323,7 +326,6 @@ public class NghiemThuPhuongTienService {
     }
 
     public boolean isUserTurnToSign(NghiemThuPhuongTienDTO item, String userId) {
-        if ("admin".equalsIgnoreCase(userId)) return true;
         if (userId != null && userId.equals(item.getNguoiTao())) return true;
         if (!Boolean.TRUE.equals(item.getShare())) return false;
 

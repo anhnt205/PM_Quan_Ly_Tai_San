@@ -29,6 +29,7 @@ import FieldAutoCompleted from "../../../../components/TextField/FieldAutoComple
 import FieldDate from "../../../../components/TextField/FieldDate";
 import FieldInput from "../../../../components/TextField/FieldInput";
 import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
+import { MachineMeasuresValidation } from "../../validation";
 
 interface Props {
   open: boolean;
@@ -77,6 +78,7 @@ const BienPhapMayMocDialog = ({
 
   const formik = useFormik({
     initialValues,
+    // validationSchema: MachineMeasuresValidation,
     onSubmit: async (values) => {
       const list: any[] = values.nguoiKyList ?? [];
       const idNguoiLap = list.length > 0 ? list[0].userId : "";

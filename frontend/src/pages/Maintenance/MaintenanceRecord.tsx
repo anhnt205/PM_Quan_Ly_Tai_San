@@ -1204,7 +1204,7 @@ export default function MaintenanceRecordPage() {
                   paginationModel={paginationModel}
                   onPaginationModelChange={setPaginationModel}
                   paginationMode="server"
-                  checkboxSelection={!isDetailOpen}
+                  checkboxSelection={true}
                   selectedIds={selectedIds}
                   onSelectionChange={setSelectedIds}
                   searchValue={searchValue}

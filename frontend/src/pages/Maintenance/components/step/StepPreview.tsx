@@ -21,6 +21,7 @@ import {
   maintenanceLevelColors,
   type PlanSigner,
 } from "../../../../mockdata/mockPlans";
+import FieldInput from "../../../../components/TextField/FieldInput";
 
 interface PlanAsset {
   deviceId: string;
@@ -41,8 +42,8 @@ interface PlanAsset {
 }
 
 interface Props {
-  sourceDeptId: string;
-  executionDeptId: string;
+  idDonViGiao: string;
+  idDonViNhan: string;
   // Mode 1: CreatePlanDialog (dùng assets array)
   assets?: PlanAsset[];
   // Mode 2: ApprovalPage/RecordPage (dùng assetIds, quantities, schedule)
@@ -57,8 +58,8 @@ interface Props {
 }
 
 const StepPreview = ({
-  sourceDeptId,
-  executionDeptId,
+  idDonViGiao,
+  idDonViNhan,
   assets,
   assetIds,
   quantities,
@@ -71,8 +72,8 @@ const StepPreview = ({
   // Xác định mode
   const isCreateMode = !!assets && Array.isArray(assets);
 
-  const sourceDept = departments?.find((d: any) => d.id === sourceDeptId);
-  const execDept = departments?.find((d: any) => d.id === executionDeptId);
+  const sourceDept = departments?.find((d: any) => d.id === idDonViGiao);
+  const execDept = departments?.find((d: any) => d.id === idDonViNhan);
 
   // Lọc thiết bị dựa trên mode
   const selectedDevices = isCreateMode
@@ -158,7 +159,7 @@ const StepPreview = ({
           fontWeight={700}
           sx={{ textTransform: "uppercase" }}
         >
-          Phân xưởng: {sourceDept?.tenPhongBan || sourceDeptId || "…"}
+          Phân xưởng: {sourceDept?.tenPhongBan || idDonViGiao || "…"}
         </Typography>
         <Typography
           variant="body2"
@@ -168,17 +169,11 @@ const StepPreview = ({
         >
           (Theo QĐ số{" "}
           {isCreateMode && formik ? (
-            <TextField
-              variant="standard"
-              size="small"
-              name="decisionNo"
-              placeholder="số QĐ"
-              value={formik.values.decisionNo}
-              onChange={formik.handleChange}
-              inputProps={{
-                style: { width: 80, textAlign: "center", fontSize: "0.875rem" },
-              }}
-              sx={{ mx: 0.5, verticalAlign: "middle" }}
+            <FieldInput
+              formik={formik}
+              field="soQuyetDinh"
+              noBorder={true}
+              sx={{ width: "100px" }}
             />
           ) : (
             <span style={{ fontWeight: 500 }}>—</span>
@@ -347,7 +342,7 @@ const StepPreview = ({
                       align="center"
                       sx={{ fontSize: "0.65rem", p: 0.5 }}
                     >
-                      {sourceDept?.tenPhongBan || sourceDeptId}
+                      {sourceDept?.tenPhongBan || idDonViGiao}
                     </TableCell>
                     <TableCell
                       align="center"
@@ -362,7 +357,7 @@ const StepPreview = ({
                         sx={{
                           fontSize: "0.65rem",
                           p: 0.5,
-                          bgcolor: maintenanceLevelColors[level],
+                          bgcolor: maintenanceLevelColors[level] || "#1FA463",
                           fontWeight: level ? 600 : 400,
                         }}
                       >

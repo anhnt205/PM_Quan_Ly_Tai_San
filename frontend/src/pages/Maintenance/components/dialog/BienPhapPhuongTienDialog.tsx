@@ -42,6 +42,7 @@ import api from "../../../../config/api.config";
 import FieldInput from "../../../../components/TextField/FieldInput";
 import FieldDate from "../../../../components/TextField/FieldDate";
 import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
+import { VehicleMeasuresValidation } from "../../validation";
 
 interface Props {
   open: boolean;
@@ -92,6 +93,7 @@ const BienPhapPhuongTienDialog = ({
 
   const formik = useFormik({
     initialValues,
+    // validationSchema: VehicleMeasuresValidation,
     onSubmit: async (values) => {
       const list: any[] = values.nguoiKyList ?? [];
       const idNguoiLap = list.length > 0 ? list[0].userId : "";
@@ -334,7 +336,7 @@ const BienPhapPhuongTienDialog = ({
                     formik={formik}
                   />
                   <FieldAutoCompleted
-                    title="Đơn vị quản lý / Đơn vị thực hiện"
+                    title="Đơn vị quản lý"
                     formik={formik}
                     field="donViQuanLy"
                     data={apiDepartments}
@@ -607,7 +609,7 @@ const BienPhapPhuongTienDialog = ({
         <Button
           variant="contained"
           color="primary"
-          disabled={isPending || formik.values.nguoiKyList.length === 0}
+          disabled={isPending}
           onClick={() => formik.submitForm()}
           sx={{ px: 3, fontWeight: 700 }}
         >

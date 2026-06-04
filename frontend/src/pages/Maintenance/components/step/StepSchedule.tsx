@@ -181,7 +181,10 @@ const StepSchedule = ({
                     <TableCell
                       key={idx}
                       align="center"
-                      sx={{ p: 0.5, bgcolor: maintenanceLevelColors[level] }}
+                      sx={{
+                        p: 0.5,
+                        bgcolor: maintenanceLevelColors[level] || "#1FA463",
+                      }}
                     >
                       <FieldAutoCompleted
                         data={levels}

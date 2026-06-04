@@ -530,11 +530,6 @@ public class DieuDongTaiSanService {
     }
 
     public boolean isUserTurnToSign(DieuDongTaiSanDTO item, String userId) {
-        // Admin lấy hết
-        if ("admin".equalsIgnoreCase(userId)) {
-            return true;
-        }
-
         // Người tạo luôn được xem
         if (userId != null && userId.equals(item.getNguoiTao())) {
             return true;

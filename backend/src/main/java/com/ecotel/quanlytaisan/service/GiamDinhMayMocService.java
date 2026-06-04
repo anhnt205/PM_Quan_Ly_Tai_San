@@ -164,16 +164,19 @@ public class GiamDinhMayMocService {
         List<GiamDinhMayMocDTO> sourceList = giamDinhMayMocDao.findAll(idCongTy);
 
         // Turn-based filter
-        if (userid != null && !userid.trim().isEmpty() && !"admin".equalsIgnoreCase(userid)) {
-            List<GiamDinhMayMocDTO> filtered = new ArrayList<>();
-            for (GiamDinhMayMocDTO item : sourceList) {
-                if (isSign != null && isSign) {
-                    if (isNeedToSign(item, userid)) filtered.add(item);
-                } else {
-                    if (isUserTurnToSign(item, userid)) filtered.add(item);
+        if (userid != null && !userid.trim().isEmpty()) {
+            boolean shouldFilter = !"admin".equalsIgnoreCase(userid) || (isSign != null && isSign);
+            if (shouldFilter) {
+                List<GiamDinhMayMocDTO> filtered = new ArrayList<>();
+                for (GiamDinhMayMocDTO item : sourceList) {
+                    if (isSign != null && isSign) {
+                        if (isNeedToSign(item, userid)) filtered.add(item);
+                    } else {
+                        if (isUserTurnToSign(item, userid)) filtered.add(item);
+                    }
                 }
+                sourceList = filtered;
             }
-            sourceList = filtered;
         }
 
         // Count statuses
@@ -316,7 +319,6 @@ public class GiamDinhMayMocService {
     }
 
     public boolean isUserTurnToSign(GiamDinhMayMocDTO item, String userId) {
-        if ("admin".equalsIgnoreCase(userId)) return true;
         if (userId != null && userId.equals(item.getNguoiTao())) return true;
         if (!Boolean.TRUE.equals(item.getShare())) return false;
 

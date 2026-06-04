@@ -27,16 +27,19 @@ public class KiemTraSuCoService {
         List<KiemTraSuCoDTO> all = mainDao.findAll(idCongTy);
         
         // Turn-based filter
-        if (userid != null && !userid.trim().isEmpty() && !"admin".equalsIgnoreCase(userid)) {
-            all = all.stream()
-                    .filter(item -> {
-                        if (isSign != null && isSign) {
-                            return isNeedToSign(item, userid);
-                        } else {
-                            return isUserTurnToSign(item, userid);
-                        }
-                    })
-                    .collect(Collectors.toList());
+        if (userid != null && !userid.trim().isEmpty()) {
+            boolean shouldFilter = !"admin".equalsIgnoreCase(userid) || (isSign != null && isSign);
+            if (shouldFilter) {
+                all = all.stream()
+                        .filter(item -> {
+                            if (isSign != null && isSign) {
+                                return isNeedToSign(item, userid);
+                            } else {
+                                return isUserTurnToSign(item, userid);
+                            }
+                        })
+                        .collect(Collectors.toList());
+            }
         }
 
         // Count by status
@@ -250,7 +253,6 @@ public class KiemTraSuCoService {
     }
 
     public boolean isUserTurnToSign(KiemTraSuCoDTO item, String userId) {
-        if ("admin".equalsIgnoreCase(userId)) return true;
         if (userId != null && userId.equals(item.getNguoiTao())) return true;
         if (!Boolean.TRUE.equals(item.getShare())) return false;
 

@@ -501,15 +501,10 @@ public class DieuDongCCDCVatTuService {
     }
 
     public boolean isUserTurnToSign(DieuDongCCDCVatTuDTO item, String userId) {
-        // Nếu đã hủy hoặc hoàn thành thì không hiển thị trong lượt ký (trừ admin/người tạo)
+        // Nếu đã hủy hoặc hoàn thành thì không hiển thị trong lượt ký (trừ người tạo)
         if (item.getTrangThai() == 2 || item.getTrangThai() == 3) {
-            if (!"admin".equalsIgnoreCase(userId) && (userId == null || !userId.equals(item.getNguoiTao())))
+            if (userId == null || !userId.equals(item.getNguoiTao()))
                 return false;
-        }
-
-        // Admin lấy hết
-        if ("admin".equalsIgnoreCase(userId)) {
-            return true;
         }
 
         // Người tạo luôn được xem

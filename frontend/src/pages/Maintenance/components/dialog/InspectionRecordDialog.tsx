@@ -46,14 +46,8 @@ import { listSigneInfo } from "../../config";
 import FieldInput from "../../../../components/TextField/FieldInput";
 import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 import InspectionRecordPreview from "../preview/InspectionRecordPreview";
+import { MachineInspectionValidation } from "../../validation";
 
-type SimpleDept = { id: string; name: string };
-type SimpleUser = {
-  id: string;
-  name: string;
-  departmentId?: string;
-  title?: string;
-};
 
 interface Props {
   open: boolean;
@@ -103,6 +97,7 @@ const InspectionRecordDialog = ({
       danhSachChiTiet: [] as InspectionRecordDetailData[],
       nguoiKyList: [] as any[],
     },
+    // validationSchema: MachineInspectionValidation,
     onSubmit: (values) => {
       if (hasValidationError()) return;
       const idNguoiLapBieu =
@@ -268,7 +263,7 @@ const InspectionRecordDialog = ({
       idChiTietGiamDinhMayMoc: formik.values.danhSachChiTiet[assetIdx].id,
       idVatTu: "",
       idChiTietVatTu: "",
-      soLuong: 1,
+      soLuong: 0,
       tinhTrang: "",
       soLuongSuaChua: 0,
       soLuongThayMoi: 0,
@@ -623,6 +618,7 @@ const InspectionRecordDialog = ({
                                 formik={formik}
                                 type="number"
                                 noBorder={true}
+                                disabled={true}
                               />
                             </TableCell>
                             <TableCell>
@@ -639,6 +635,14 @@ const InspectionRecordDialog = ({
                                 field={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.soLuongSuaChua`}
                                 formik={formik}
                                 noBorder={true}
+                                onChange={(val) => {
+                                  const numRepair = Number(val || 0);
+                                  const numReplace = Number(vt.soLuongThayMoi || 0);
+                                  updateMaterial(assetIdx, vt.id!, {
+                                    soLuongSuaChua: numRepair,
+                                    soLuong: numRepair + numReplace,
+                                  });
+                                }}
                               />
                             </TableCell>
                             <TableCell>
@@ -647,6 +651,14 @@ const InspectionRecordDialog = ({
                                 field={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.soLuongThayMoi`}
                                 formik={formik}
                                 noBorder={true}
+                                onChange={(val) => {
+                                  const numRepair = Number(vt.soLuongSuaChua || 0);
+                                  const numReplace = Number(val || 0);
+                                  updateMaterial(assetIdx, vt.id!, {
+                                    soLuongThayMoi: numReplace,
+                                    soLuong: numRepair + numReplace,
+                                  });
+                                }}
                               />
                             </TableCell>
                             <TableCell>

@@ -49,16 +49,19 @@ public class KeHoachSuaChuaService {
         List<KeHoachSuaChuaDTO> sourceList = keHoachSuaChuaDao.findAll(idCongTy);
 
         // Turn-based filter (không có quyền ban hành – chỉ filter theo lượt ký)
-        if (userid != null && !userid.trim().isEmpty() && !"admin".equalsIgnoreCase(userid)) {
-            List<KeHoachSuaChuaDTO> filtered = new ArrayList<>();
-            for (KeHoachSuaChuaDTO item : sourceList) {
-                if (isSign != null && isSign) {
-                    if (isNeedToSign(item, userid)) filtered.add(item);
-                } else {
-                    if (isUserTurnToSign(item, userid)) filtered.add(item);
+        if (userid != null && !userid.trim().isEmpty()) {
+            boolean shouldFilter = !"admin".equalsIgnoreCase(userid) || (isSign != null && isSign);
+            if (shouldFilter) {
+                List<KeHoachSuaChuaDTO> filtered = new ArrayList<>();
+                for (KeHoachSuaChuaDTO item : sourceList) {
+                    if (isSign != null && isSign) {
+                        if (isNeedToSign(item, userid)) filtered.add(item);
+                    } else {
+                        if (isUserTurnToSign(item, userid)) filtered.add(item);
+                    }
                 }
+                sourceList = filtered;
             }
-            sourceList = filtered;
         }
 
         // Filters
@@ -364,7 +367,6 @@ public class KeHoachSuaChuaService {
     }
 
     public boolean isUserTurnToSign(KeHoachSuaChuaDTO item, String userId) {
-        if ("admin".equalsIgnoreCase(userId)) return true;
         if (userId != null && userId.equals(item.getNguoiTao())) return true;
         if (!Boolean.TRUE.equals(item.getShare())) return false;
 

@@ -42,6 +42,7 @@ import FieldInput from "../../../../components/TextField/FieldInput";
 import TextFieldNumber from "../../../../components/TextField/TextFieldNumber";
 import { BienPhapPhuongTienData } from "../../types";
 import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
+import { AcceptanceVehicleValidation } from "../../validation";
 
 interface Props {
   open: boolean;
@@ -95,6 +96,7 @@ const NghiemThuPhuongTienDialog = ({
 
   const formik = useFormik({
     initialValues,
+    // validationSchema: AcceptanceVehicleValidation,
     onSubmit: async (values) => {
       const list: any[] = values.nguoiKyList ?? [];
       const idNguoiLap = list.length > 0 ? list[0].userId : "";
@@ -523,7 +525,7 @@ const NghiemThuPhuongTienDialog = ({
         <Button
           variant="contained"
           color="primary"
-          disabled={isPending || formik.values.nguoiKyList.length === 0}
+          disabled={isPending}
           onClick={() => formik.submitForm()}
           sx={{ px: 3, fontWeight: 700 }}
         >

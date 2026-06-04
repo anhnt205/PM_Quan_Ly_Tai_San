@@ -139,20 +139,23 @@ public class DanhGiaVatTuService {
         List<DanhGiaVatTu> sourceList = dao.findAll(idCongTy);
 
         // Lọc theo lượt ký (Turn to sign)
-        if (userid != null && !userid.trim().isEmpty() && !"admin".equalsIgnoreCase(userid)) {
-            List<DanhGiaVatTu> filtered = new ArrayList<>();
-            for (DanhGiaVatTu item : sourceList) {
-                if (isSign != null && isSign) {
-                    if (isNeedToSign(item, userid)) {
-                        filtered.add(item);
-                    }
-                } else {
-                    if (isUserTurnToSign(item, userid)) {
-                        filtered.add(item);
+        if (userid != null && !userid.trim().isEmpty()) {
+            boolean shouldFilter = !"admin".equalsIgnoreCase(userid) || (isSign != null && isSign);
+            if (shouldFilter) {
+                List<DanhGiaVatTu> filtered = new ArrayList<>();
+                for (DanhGiaVatTu item : sourceList) {
+                    if (isSign != null && isSign) {
+                        if (isNeedToSign(item, userid)) {
+                            filtered.add(item);
+                        }
+                    } else {
+                        if (isUserTurnToSign(item, userid)) {
+                            filtered.add(item);
+                        }
                     }
                 }
+                sourceList = filtered;
             }
-            sourceList = filtered;
         }
 
         // Đếm theo trạng thái
@@ -297,7 +300,6 @@ public class DanhGiaVatTuService {
         return false;
     }
     public boolean isUserTurnToSign(DanhGiaVatTu item, String userId) {
-        if ("admin".equalsIgnoreCase(userId)) return true;
         if (userId != null && userId.equals(item.getNguoiTao())) return true;
         if (!Boolean.TRUE.equals(item.getShare())) return false;
 

@@ -52,12 +52,12 @@ interface PlanAsset {
 }
 
 interface Props {
-  sourceDeptId: string;
+  idDonViGiao: string;
   assets: PlanAsset[];
   onAssetsChange: (assets: PlanAsset[]) => void;
 }
 
-const StepAssets = ({ sourceDeptId, assets, onAssetsChange }: Props) => {
+const StepAssets = ({ idDonViGiao, assets, onAssetsChange }: Props) => {
   const [openTable, setOpenTable] = useState(false);
 
   // State cho Modal phân trang
@@ -67,12 +67,12 @@ const StepAssets = ({ sourceDeptId, assets, onAssetsChange }: Props) => {
   const debouncedModalSearch = useDebounce(modalSearch, 500);
 
   const { data: deptDevices = { items: [], totalItems: 0 } } =
-    useAssetByDonViQuery(2, sourceDeptId, debouncedModalSearch, page, pageSize);
+    useAssetByDonViQuery(2, idDonViGiao, debouncedModalSearch, page, pageSize);
 
   // Lấy toàn bộ thiết bị để hỗ trợ Autocomplete (có thể giới hạn số lượng nếu cần)
   const { data: allDeptDevices = { items: [] } } = useAssetByDonViQuery(
     2,
-    sourceDeptId,
+    idDonViGiao,
     "",
     0,
     99999,

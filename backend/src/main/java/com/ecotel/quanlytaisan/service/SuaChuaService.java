@@ -41,16 +41,19 @@ public class SuaChuaService {
         List<SuaChuaDTO> sourceList = suaChuaDao.findAll(idCongTy);
 
         // Turn-based filter (chỉ hiển thị phiếu đến lượt user ký)
-        if (userid != null && !userid.trim().isEmpty() && !"admin".equalsIgnoreCase(userid)) {
-            List<SuaChuaDTO> filtered = new ArrayList<>();
-            for (SuaChuaDTO item : sourceList) {
-                if (isSign != null && isSign) {
-                    if (isNeedToSign(item, userid)) filtered.add(item);
-                } else {
-                    if (isUserTurnToSign(item, userid)) filtered.add(item);
+        if (userid != null && !userid.trim().isEmpty()) {
+            boolean shouldFilter = !"admin".equalsIgnoreCase(userid) || (isSign != null && isSign);
+            if (shouldFilter) {
+                List<SuaChuaDTO> filtered = new ArrayList<>();
+                for (SuaChuaDTO item : sourceList) {
+                    if (isSign != null && isSign) {
+                        if (isNeedToSign(item, userid)) filtered.add(item);
+                    } else {
+                        if (isUserTurnToSign(item, userid)) filtered.add(item);
+                    }
                 }
+                sourceList = filtered;
             }
-            sourceList = filtered;
         }
 
         // Đếm theo trạng thái
@@ -196,7 +199,6 @@ public class SuaChuaService {
     }
 
     public boolean isUserTurnToSign(SuaChuaDTO item, String userId) {
-        if ("admin".equalsIgnoreCase(userId)) return true;
         if (userId != null && userId.equals(item.getNguoiTao())) return true;
         if (!Boolean.TRUE.equals(item.getShare())) return false;
 
