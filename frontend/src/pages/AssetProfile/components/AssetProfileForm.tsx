@@ -29,6 +29,7 @@ import { useLyLichTemplateQuery } from "../Mutation";
 import { RootState } from "../../../redux/store";
 import { useSelector } from "react-redux";
 import AssetEbookContent from "../../AssetManager/components/AssetEbookContent";
+import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
 
 export default function AssetProfileForm({
   onEdit,
@@ -166,6 +167,7 @@ export default function AssetProfileForm({
     const cleanItems = localBulkItems.map(({ errors, ...rest }) => rest);
     onSave(cleanItems);
   };
+  console.log(localBulkItems);
 
   if (isBulkMode) {
     return (
@@ -281,46 +283,36 @@ export default function AssetProfileForm({
                     helperText={item.errors?.tenLyLich}
                   />
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <Autocomplete
-                    fullWidth
-                    size="small"
-                    options={lyLichTemplates}
-                    getOptionLabel={(option: any) => option.tenLyLich || ""}
-                    value={
-                      lyLichTemplates.find(
-                        (t: any) => t.id === item.idLyLichTemplate,
-                      ) || null
-                    }
-                    onChange={(_, value) => {
-                      handleBulkItemChange(
-                        index,
-                        "idLyLichTemplate",
-                        value?.id || "",
-                      );
-                    }}
-                    renderInput={(params) => (
-                      <MuiTextField
-                        {...params}
-                        label="Chọn Template"
-                        size="small"
-                      />
-                    )}
-                  />
-                </Grid>
                 <Grid size={{ xs: 12 }}>
-                  <MuiTextField
-                    fullWidth
-                    size="small"
-                    label="Mô tả"
-                    value={item.moTa}
-                    onChange={(e) =>
-                      handleBulkItemChange(index, "moTa", e.target.value)
+                  <FieldAutoCompleted
+                    title="Chọn Template"
+                    onChange={(value) =>
+                      handleBulkItemChange(index, "idLyLichTemplate", value.id)
                     }
-                    multiline
-                    rows={2}
+                    value={item.idLyLichTemplate}
+                    data={lyLichTemplates}
+                    labelkey="tenLyLich"
                   />
                 </Grid>
+                {lyLichTemplates.find(
+                  (t: any) => t.id === item.idLyLichTemplate,
+                )?.maLyLich === "LL02" && (
+                  <AssetEbookContent
+                    selectedAsset={null}
+                    readOnly={readOnly}
+                    onEdit={() => {}}
+                    onCancel={() => {}}
+                    onClose={() => {}}
+                    onSave={(values) => {}}
+                    allAssetModel={[]}
+                    allCurrentStatus={[]}
+                    assetGroups={[]}
+                    allDepartments={[]}
+                    allUnits={[]}
+                    allReasonIncreases={[]}
+                    isView={true}
+                  />
+                )}
               </Grid>
             </Card>
           ))}
@@ -416,44 +408,19 @@ export default function AssetProfileForm({
               disabled={readOnly}
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Autocomplete
-              fullWidth
-              size="small"
-              options={lyLichTemplates}
-              getOptionLabel={(option: any) => option.tenLyLich || ""}
-              value={
-                lyLichTemplates.find(
-                  (t: any) => t.id === formik.values.idLyLichTemplate,
-                ) || null
-              }
-              onChange={(_, value) => {
-                console.log("selected template:", value);
-                formik.setFieldValue("idLyLichTemplate", value?.id || "");
-              }}
-              disabled={readOnly}
-              renderInput={(params) => (
-                <MuiTextField
-                  {...params}
-                  label="Chọn LyLichTemplate"
-                  size="small"
-                />
-              )}
-            />
-          </Grid>
           <Grid size={{ xs: 12 }}>
-            <FieldInput
-              title="Mô tả"
+            <FieldAutoCompleted
+              title="Chọn Template"
               formik={formik}
-              field="moTa"
+              field="idLyLichTemplate"
               disabled={readOnly}
-              multiline
-              rows={3}
+              data={lyLichTemplates}
+              labelkey="tenLyLich"
             />
           </Grid>
           {lyLichTemplates.find(
             (t: any) => t.id === formik.values.idLyLichTemplate,
-          ).maLyLich === "LL02" && (
+          )?.maLyLich === "LL02" && (
             <AssetEbookContent
               selectedAsset={null}
               readOnly={readOnly}

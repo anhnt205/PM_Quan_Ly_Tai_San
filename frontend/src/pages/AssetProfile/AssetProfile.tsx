@@ -188,14 +188,6 @@ export default function AssetProfile() {
       headerAlign: "center",
     },
     {
-      field: "moTa",
-      headerName: "Mô tả",
-      flex: 1,
-      minWidth: 250,
-      align: "left",
-      headerAlign: "center",
-    },
-    {
       field: "ngayTao",
       headerName: "Ngày tạo",
       width: 200,

@@ -41,7 +41,7 @@ public class TaiSanDao {
             FROM TaiSan AS ts
             LEFT JOIN MoHinhTaiSan AS mhts ON ts.IdMoHinhTaiSan = mhts.Id
             LEFT JOIN NhomTaiSan AS nts ON ts.IdNhomTaiSan = nts.Id
-            LEFT JOIN lylich AS ll ON nts.idLyLich = ll.Id
+            LEFT JOIN lylich AS ll ON nts.IdLyLich = ll.Id
             LEFT JOIN lylich_template AS llt ON ll.IdLyLichTemplate = llt.Id
             LEFT JOIN LoaiTaiSanCon AS lts ON Ts.idLoaiTaiSanCon = lts.Id
             LEFT JOIN DuAn AS da ON ts.IdDuDan = da.Id
@@ -438,11 +438,14 @@ public class TaiSanDao {
                     pb2.TenPhongBan AS tenDonViHienThoi,
                     pb3.TenPhongBan AS tenDonViQuanlyKiThuat,
                     dvt.TenDonVi AS tenDonViTinh,
-                    ht.TenHTKT
+                    ht.TenHTKT,
+                    llt.MaLyLich as maLyLich
                 FROM 
                     TaiSan AS ts
                 LEFT JOIN MoHinhTaiSan AS mhts ON ts.IdMoHinhTaiSan = mhts.Id
                 LEFT JOIN NhomTaiSan AS nts ON ts.IdNhomTaiSan = nts.Id
+                LEFT JOIN lylich AS ll ON nts.IdLyLich = ll.Id
+                LEFT JOIN lylich_template AS llt ON ll.IdLyLichTemplate = llt.Id
                 LEFT JOIN LoaiTaiSanCon AS lts ON Ts.idLoaiTaiSanCon = lts.Id
                 LEFT JOIN DuAn AS da ON ts.IdDuDan = da.Id
                 LEFT JOIN NguonVon AS nv ON ts.IdNguonVon = nv.Id
@@ -607,11 +610,14 @@ public class TaiSanDao {
                     pb1.TenPhongBan AS tenDonViBanDau,
                     pb2.TenPhongBan AS tenDonViHienThoi,
                     pb3.TenPhongBan AS tenDonViQuanlyKiThuat,
-                    dvt.TenDonVi AS tenDonViTinh
+                    dvt.TenDonVi AS tenDonViTinh,
+                    llt.MaLyLich as maLyLich
                 FROM 
                     TaiSan AS ts
                 LEFT JOIN MoHinhTaiSan AS mhts ON ts.IdMoHinhTaiSan = mhts.Id
                 LEFT JOIN NhomTaiSan AS nts ON ts.IdNhomTaiSan = nts.Id
+                LEFT JOIN lylich AS ll ON nts.IdLyLich = ll.Id
+                LEFT JOIN lylich_template AS llt ON ll.IdLyLichTemplate = llt.Id
                 LEFT JOIN LoaiTaiSanCon AS lts ON Ts.idLoaiTaiSanCon = lts.Id
                 LEFT JOIN DuAn AS da ON ts.IdDuDan = da.Id
                 LEFT JOIN NguonVon AS nv ON ts.IdNguonVon = nv.Id
@@ -774,11 +780,14 @@ public class TaiSanDao {
                     pb1.TenPhongBan AS tenDonViBanDau,
                     pb2.TenPhongBan AS tenDonViHienThoi,
                     pb3.TenPhongBan AS tenDonViQuanlyKiThuat,
-                    dvt.TenDonVi AS tenDonViTinh
+                    dvt.TenDonVi AS tenDonViTinh,
+                    llt.MaLyLich as maLyLich
                 FROM 
                     TaiSan AS ts
                 LEFT JOIN MoHinhTaiSan AS mhts ON ts.IdMoHinhTaiSan = mhts.Id
                 LEFT JOIN NhomTaiSan AS nts ON ts.IdNhomTaiSan = nts.Id
+                LEFT JOIN lylich AS ll ON nts.IdLyLich = ll.Id
+                LEFT JOIN lylich_template AS llt ON ll.IdLyLichTemplate = llt.Id
                 LEFT JOIN LoaiTaiSanCon AS lts ON Ts.idLoaiTaiSanCon = lts.Id
                 LEFT JOIN DuAn AS da ON ts.IdDuDan = da.Id
                 LEFT JOIN NguonVon AS nv ON ts.IdNguonVon = nv.Id
@@ -921,10 +930,13 @@ public class TaiSanDao {
                         pb2.TenPhongBan AS tenDonViHienThoi,
                         pb3.TenPhongBan AS tenDonViQuanlyKiThuat,
                         dvt.TenDonVi AS tenDonViTinh,
-                        ht.TenHTKT AS tenHienTrang
+                        ht.TenHTKT AS tenHienTrang,
+                        llt.MaLyLich as maLyLich
                     FROM TaiSan ts
                     LEFT JOIN MoHinhTaiSan mhts ON ts.IdMoHinhTaiSan = mhts.Id
                     LEFT JOIN NhomTaiSan nts ON ts.IdNhomTaiSan = nts.Id
+                    LEFT JOIN lylich AS ll ON nts.IdLyLich = ll.Id
+                    LEFT JOIN lylich_template AS llt ON ll.IdLyLichTemplate = llt.Id
                     LEFT JOIN LoaiTaiSanCon AS lts ON Ts.idLoaiTaiSanCon = lts.Id
                     LEFT JOIN DuAn da ON ts.IdDuDan = da.Id
                     LEFT JOIN NguonVon nv ON ts.IdNguonVon = nv.Id
@@ -1676,11 +1688,14 @@ public class TaiSanDao {
                     ht.TenHTKT AS tenHienTrang,
                     pb1.TenPhongBan AS tenDonViBanDau,
                     pb2.TenPhongBan AS tenDonViHienThoi,
-                    dvt.TenDonVi AS tenDonViTinh
+                    dvt.TenDonVi AS tenDonViTinh,
+                    llt.MaLyLich as maLyLich
                 FROM 
                     TaiSan AS ts
                 LEFT JOIN MoHinhTaiSan AS mhts ON ts.IdMoHinhTaiSan = mhts.Id
                 LEFT JOIN NhomTaiSan AS nts ON ts.IdNhomTaiSan = nts.Id
+                LEFT JOIN lylich AS ll ON nts.IdLyLich = ll.Id
+                LEFT JOIN lylich_template AS llt ON ll.IdLyLichTemplate = llt.Id
                 LEFT JOIN LoaiTaiSanCon AS lts ON Ts.idLoaiTaiSanCon = lts.Id
                 LEFT JOIN DuAn AS da ON ts.IdDuDan = da.Id
                 LEFT JOIN NguonVon AS nv ON ts.IdNguonVon = nv.Id
@@ -1879,11 +1894,14 @@ public class TaiSanDao {
                     pb1.TenPhongBan AS tenDonViBanDau,
                     pb2.TenPhongBan AS tenDonViHienThoi,
                     pb3.TenPhongBan AS tenDonViQuanlyKiThuat,
-                    dvt.TenDonVi AS tenDonViTinh
+                    dvt.TenDonVi AS tenDonViTinh,
+                    llt.MaLyLich as maLyLich
                 FROM 
                     TaiSan AS ts
                 LEFT JOIN MoHinhTaiSan AS mhts ON ts.IdMoHinhTaiSan = mhts.Id
                 LEFT JOIN NhomTaiSan AS nts ON ts.IdNhomTaiSan = nts.Id
+                LEFT JOIN lylich AS ll ON nts.IdLyLich = ll.Id
+                LEFT JOIN lylich_template AS llt ON ll.IdLyLichTemplate = llt.Id
                 LEFT JOIN LoaiTaiSanCon AS lts ON Ts.idLoaiTaiSanCon = lts.Id
                 LEFT JOIN DuAn AS da ON ts.IdDuDan = da.Id
                 LEFT JOIN NguonVon AS nv ON ts.IdNguonVon = nv.Id

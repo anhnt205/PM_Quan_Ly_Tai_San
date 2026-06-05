@@ -47,7 +47,14 @@ import { useAllLoaiSCBDQuery } from "../MaintenanceRepairType/Mutation";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useAllModelAssetQuery } from "../ModelAsset/Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
-import { BookOpenCheckIcon, Eye, HistoryIcon, Archive, UserCheck, Building2 } from "lucide-react";
+import {
+  BookOpenCheckIcon,
+  Eye,
+  HistoryIcon,
+  Archive,
+  UserCheck,
+  Building2,
+} from "lucide-react";
 import AssetHistoryModal from "./components/AssetHistoryModal";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ShowStatus } from "./config";
@@ -193,6 +200,9 @@ export default function AssetManager() {
   }, [location, navigate]);
 
   const handleRowClick = (params: GridRowParams) => {
+    if (params.row?.maLyLich !== "LL02") {
+      return;
+    }
     setSelectedAssets([params.row]);
     setShowSidebar(true);
     setShowForm(false);
@@ -687,7 +697,9 @@ export default function AssetManager() {
                           boxShadow: isActive
                             ? "0 12px 24px -5px rgba(4, 180, 110, 0.45)"
                             : "0 6px 16px rgba(4, 180, 110, 0.08)",
-                          bgcolor: isActive ? undefined : "rgba(4, 180, 110, 0.02)",
+                          bgcolor: isActive
+                            ? undefined
+                            : "rgba(4, 180, 110, 0.02)",
                         },
                       }}
                     >
@@ -728,7 +740,9 @@ export default function AssetManager() {
                           sx={{
                             fontSize: 11,
                             lineHeight: 1.3,
-                            color: isActive ? "rgba(255,255,255,0.75)" : "#94a3b8",
+                            color: isActive
+                              ? "rgba(255,255,255,0.75)"
+                              : "#94a3b8",
                             fontWeight: 400,
                           }}
                         >
