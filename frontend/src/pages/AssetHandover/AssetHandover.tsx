@@ -810,7 +810,7 @@ export default function AssetHandover() {
                           textAlign: "left",
                           position: "relative",
                           overflow: "hidden",
-                          transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                          transition: "all 0.2s ease",
                           border: "1px solid",
                           borderColor: isActive
                             ? "transparent"
@@ -820,15 +820,11 @@ export default function AssetHandover() {
                             : "#ffffff",
                           color: isActive ? "#ffffff" : "#334155",
                           boxShadow: isActive
-                            ? "0 10px 20px -5px rgba(4, 180, 110, 0.35)"
-                            : "0 2px 4px rgba(148, 163, 184, 0.05)",
+                            ? "0 4px 12px rgba(4, 180, 110, 0.15)"
+                            : "0 2px 4px rgba(0, 0, 0, 0.05)",
                           "&:hover": {
-                            transform: "translateY(-4px)",
                             borderColor: isActive ? "transparent" : "#04b46e",
-                            boxShadow: isActive
-                              ? "0 12px 24px -5px rgba(4, 180, 110, 0.45)"
-                              : "0 6px 16px rgba(4, 180, 110, 0.08)",
-                            bgcolor: isActive ? undefined : "rgba(4, 180, 110, 0.02)",
+                            bgcolor: isActive ? undefined : "rgba(4, 180, 110, 0.04)",
                           },
                         }}
                       >

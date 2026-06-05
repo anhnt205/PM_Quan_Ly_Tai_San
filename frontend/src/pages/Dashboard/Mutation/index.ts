@@ -8,6 +8,14 @@ const fetchStatistics = async () => {
   return res.data;
 };
 
+export const useDashboardStatisticsQuery = () => {
+  return useQuery({
+    queryKey: ["dashboard-statistics"],
+    queryFn: fetchStatistics,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
 const fetchTaiSanSapHetHan = async () => {
   const res = await api.get("/dashboard/tai-san-sap-het-han-khau-hao");
   return res.data;
@@ -86,12 +94,6 @@ export const useDashboardMutation = (
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: statistics, isLoading: isLoadingStatistics } = useQuery({
-    queryKey: ["dashboard-statistics"],
-    queryFn: fetchStatistics,
-    staleTime: 5 * 60 * 1000,
-  });
-
   const { data: taiSanSapHet, isLoading: isLoadingTaiSanSapHet } = useQuery({
     queryKey: ["dashboard-tai-san-sap-het"],
     queryFn: fetchTaiSanSapHetHan,
@@ -122,6 +124,7 @@ export const useDashboardMutation = (
     queryKey: ["all-ccdc-for-dropdown"],
     queryFn: fetchAllCCDC,
     staleTime: 5 * 60 * 1000,
+    enabled: false,
   });
 
   const { data: allLoaiCCDC, isLoading: isLoadingAllLoaiCCDC } = useQuery({
@@ -134,6 +137,7 @@ export const useDashboardMutation = (
     queryKey: ["all-tai-san-for-dashboard"],
     queryFn: fetchAllTaiSan,
     staleTime: 5 * 60 * 1000,
+    enabled: false,
   });
 
   const { data: taiSanTheoLoai, isLoading: isLoadingTaiSanTheoLoai } = useQuery(
@@ -153,34 +157,7 @@ export const useDashboardMutation = (
       enabled: !!selectedNhomCCDC,
     });
 
-  const taiSanTheoThangFromStats = React.useMemo(() => {
-    if (!statistics || !statistics.data) return [];
-    return (
-      statistics.data.taiSanTangMoiTheoThang ||
-      statistics.data.taiSanTheoThang ||
-      []
-    );
-  }, [statistics]);
 
-  const ccdcTheoThangFromStats = React.useMemo(() => {
-    if (!statistics || !statistics.data) return [];
-    return (
-      statistics.data.ccdcTangMoiTheoThang ||
-      statistics.data.ccdcTheoThang ||
-      []
-    );
-  }, [statistics]);
-
-  const top5TaiSanFromStats = React.useMemo(() => {
-    if (!statistics || !statistics.data) return [];
-    return (
-      statistics.data.top5TaiSan ||
-      statistics.data.top5 ||
-      statistics.data.top5TaiSanGiaTri ||
-      statistics.data.top5TaiSanGiaTriCao ||
-      []
-    );
-  }, [statistics]);
 
   const nhomCCDCMap = React.useMemo(() => {
     const map = new Map<string, any>();
@@ -359,102 +336,7 @@ export const useDashboardMutation = (
     return [];
   }, [ccdcTheoNhomNormalized, nhomCCDCListNormalized]);
 
-  const ccdcTheoNhomByData = React.useMemo(() => {
-    const items = extractCCDCItems(allCCDCData);
-    if (items.length === 0) return [];
-    const nhomCountMap = new Map<string, number>();
-    let validItemsCount = 0;
-    items.forEach((item: any) => {
-      const tenNhom = getGroupValue(item);
-      if (tenNhom !== "Chưa xác định") {
-        const cur = nhomCountMap.get(tenNhom) || 0;
-        nhomCountMap.set(tenNhom, cur + 1);
-        validItemsCount++;
-      }
-    });
-    if (validItemsCount === 0) return [];
-    return Array.from(nhomCountMap.entries()).map(([ten, soLuong]) => ({
-      ten,
-      soLuong,
-      phanTram: validItemsCount > 0 ? (soLuong / validItemsCount) * 100 : 0,
-    }));
-  }, [allCCDCData, extractCCDCItems, getGroupValue]);
 
-  const { tongCCDC, tongGiaTriCCDC } = React.useMemo(() => {
-    const items = extractCCDCItems(allCCDCData);
-    const tong = items.length;
-    const parseNumber = (v: any) => {
-      if (v === undefined || v === null) return 0;
-      if (typeof v === "number") return v;
-      const cleaned = String(v).replace(/[^0-9.-]+/g, "");
-      const n = Number(cleaned);
-      return Number.isFinite(n) ? n : 0;
-    };
-
-    const tongGiaTri = items.reduce((sum: number, item: any) => {
-      const val =
-        item.giaTri !== undefined
-          ? parseNumber(item.giaTri)
-          : item.thanhTien !== undefined
-            ? parseNumber(item.thanhTien)
-            : 0;
-      return sum + val;
-    }, 0);
-    return { tongCCDC: tong, tongGiaTriCCDC: tongGiaTri };
-  }, [allCCDCData, extractCCDCItems]);
-
-  const ccdcTheoThangByNgayNhap = React.useMemo(() => {
-    const items = extractCCDCItems(allCCDCData);
-    const thangMap = new Map<string, number>();
-    items.forEach((item: any) => {
-      if (item.ngayNhap) {
-        const date = new Date(item.ngayNhap);
-        const thang = date.getMonth() + 1;
-        const nam = date.getFullYear();
-        const key = `${nam}-${thang}`;
-        const cur = thangMap.get(key) || 0;
-        thangMap.set(key, cur + 1);
-      }
-    });
-    return Array.from(thangMap.entries())
-      .map(([key, soLuong]) => {
-        const [nam, thang] = key.split("-").map(Number);
-        return { thang, nam, soLuong };
-      })
-      .sort((a, b) => (a.nam !== b.nam ? a.nam - b.nam : a.thang - b.thang));
-  }, [allCCDCData, extractCCDCItems]);
-
-  const extractTaiSanItems = React.useCallback((data: any) => {
-    if (!data) return [];
-    if (data?.data?.items) return data.data.items;
-    if (data?.items) return data.items;
-    if (data?.data?.content) return data.data.content;
-    if (data?.content) return data.content;
-    if (Array.isArray(data?.data)) return data.data;
-    if (Array.isArray(data)) return data;
-    return [];
-  }, []);
-
-  const taiSanTheoThangByNgayVaoSo = React.useMemo(() => {
-    const items = extractTaiSanItems(allTaiSanData);
-    const thangMap = new Map<string, number>();
-    items.forEach((item: any) => {
-      if (item.ngayVaoSo) {
-        const date = new Date(item.ngayVaoSo);
-        const thang = date.getMonth() + 1;
-        const nam = date.getFullYear();
-        const key = `${nam}-${thang}`;
-        const cur = thangMap.get(key) || 0;
-        thangMap.set(key, cur + 1);
-      }
-    });
-    return Array.from(thangMap.entries())
-      .map(([key, soLuong]) => {
-        const [nam, thang] = key.split("-").map(Number);
-        return { thang, nam, soLuong };
-      })
-      .sort((a, b) => (a.nam !== b.nam ? a.nam - b.nam : a.thang - b.thang));
-  }, [allTaiSanData, extractTaiSanItems]);
 
   // ✅ nhomTaiSanList được build từ nhomTaiSanData (query ở trên)
   const nhomTaiSanList = React.useMemo(() => {
@@ -469,14 +351,11 @@ export const useDashboardMutation = (
   }, [nhomTaiSanData]);
 
   const isLoading =
-    isLoadingStatistics ||
     isLoadingTaiSanSapHet ||
     isLoadingTaiSanTheoNhom ||
     isLoadingCCDCTheoNhom ||
     isLoadingNhomCCDCList ||
-    isLoadingAllCCDC ||
     isLoadingAllLoaiCCDC ||
-    isLoadingAllTaiSan ||
     isLoadingTaiSanTheoLoai ||
     isLoadingCCDCTheoLoai;
 
@@ -543,19 +422,12 @@ export const useDashboardMutation = (
   });
 
   return {
-    statistics: statistics?.data || null,
-    tongQuan: null,
     taiSanSapHet: taiSanSapHet?.data || [],
     taiSanTheoNhom: taiSanTheoNhomNormalized || [],
     ccdcTheoNhom: ccdcTheoNhomNormalized || [],
     nhomCCDCList: nhomCCDCList || [],
     nhomTaiSanList: nhomTaiSanList || [],
     uniqueNhomCCDC,
-    ccdcTheoNhomByData,
-    tongCCDC,
-    tongGiaTriCCDC,
-    ccdcTheoThangByNgayNhap,
-    taiSanTheoThangByNgayVaoSo,
     taiSanTheoLoai: (
       Array.isArray(taiSanTheoLoai?.data)
         ? taiSanTheoLoai.data
@@ -567,9 +439,6 @@ export const useDashboardMutation = (
       value: Number(it.soLuong ?? it.count ?? it.value ?? 0),
     })),
     ccdcTheoLoai: ccdcTheoLoaiNormalized || [],
-    taiSanTheoThang: taiSanTheoThangFromStats || [],
-    ccdcTheoThang: ccdcTheoThangFromStats || [],
-    top5TaiSan: top5TaiSanFromStats || [],
     isLoading,
   } as const;
 };

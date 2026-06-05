@@ -1293,7 +1293,10 @@ export default function MaintenanceStatPage() {
                     sx={{
                       background: "#04b46e",
                       px: 3,
-                      py: 2.5,
+                      py: 2,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
                     }}
                   >
                     <Typography
@@ -1304,6 +1307,18 @@ export default function MaintenanceStatPage() {
                     >
                       Thông Tin Thiết Bị
                     </Typography>
+                    <IconButton
+                      size="small"
+                      onClick={() => setSelectedId("")}
+                      sx={{
+                        color: "#fff",
+                        "&:hover": {
+                          bgcolor: "rgba(255, 255, 255, 0.15)",
+                        },
+                      }}
+                    >
+                      <CloseOutlined sx={{ fontSize: 18 }} />
+                    </IconButton>
                   </Box>
 
                   <Box

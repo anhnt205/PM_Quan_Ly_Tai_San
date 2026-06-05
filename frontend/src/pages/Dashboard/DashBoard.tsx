@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Box, Typography, Grid } from "@mui/material";
 import { Dashboard as DashboardIcon } from "@mui/icons-material";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
-import { useDashboardMutation } from "./Mutation";
+import { useDashboardMutation, useDashboardStatisticsQuery } from "./Mutation";
 import { COLORS } from "./components/PieChart";
 import SummaryCards from "./components/SummaryCards";
 import CcdcGroupCard from "./sections/CcdcGroupCard";
@@ -66,22 +66,18 @@ export default function DashBoard() {
   const [yearTaiSan, setYearTaiSan] = useState(currentYear);
   const [yearCCDC, setYearCCDC] = useState(currentYear);
 
+  const { data: statsData, isLoading: isLoadingStats } =
+    useDashboardStatisticsQuery();
+  const statistics = statsData?.data || null;
+
   const {
-    statistics,
     taiSanTheoNhom,
     ccdcTheoNhom,
     nhomCCDCList,
     nhomTaiSanList,
     uniqueNhomCCDC,
-    ccdcTheoNhomByData,
-    tongCCDC,
-    tongGiaTriCCDC,
-    ccdcTheoThangByNgayNhap,
-    taiSanTheoThangByNgayVaoSo,
     taiSanTheoLoai,
     ccdcTheoLoai,
-    taiSanTheoThang,
-    ccdcTheoThang,
     isLoading,
   } = useDashboardMutation(
     selectedNhomTaiSan,
@@ -90,8 +86,23 @@ export default function DashBoard() {
     yearCCDC,
   );
 
-  // console.log("API taiSanTheoLoai:", taiSanTheoLoai);
-  // console.log("API ccdcTheoLoai:", ccdcTheoLoai);
+  const tongCCDC = useMemo(() => statistics?.tongCCDC || 0, [statistics]);
+  const tongGiaTriCCDC = useMemo(
+    () => statistics?.tongGiaTriCCDC || 0,
+    [statistics],
+  );
+
+  const ccdcTheoThang = useMemo(() => {
+    if (!statistics) return [];
+    return statistics.ccdcTangMoiTheoThang || statistics.ccdcTheoThang || [];
+  }, [statistics]);
+
+  const taiSanTheoThang = useMemo(() => {
+    if (!statistics) return [];
+    return (
+      statistics.taiSanTangMoiTheoThang || statistics.taiSanTheoThang || []
+    );
+  }, [statistics]);
 
   // Tự động chọn nhóm CCDC đầu tiên nếu chưa chọn
   useEffect(() => {
@@ -160,19 +171,13 @@ export default function DashBoard() {
   const taiSanBarData = taiSanTheoLoai || [];
 
   // Dữ liệu tháng CCDC
-  const rawCcdcMonthly =
-    ccdcTheoThang && ccdcTheoThang.length > 0
-      ? ccdcTheoThang
-      : ccdcTheoThangByNgayNhap || [];
+  const rawCcdcMonthly = ccdcTheoThang || [];
   const ccdcMonthlyData = (rawCcdcMonthly || [])
     .filter((item: any) => item.nam === yearCCDC)
     .sort((a: any, b: any) => a.thang - b.thang);
 
   // Dữ liệu tháng tài sản
-  const rawTaiSanMonthly =
-    taiSanTheoThang && taiSanTheoThang.length > 0
-      ? taiSanTheoThang
-      : taiSanTheoThangByNgayVaoSo || [];
+  const rawTaiSanMonthly = taiSanTheoThang || [];
   const taiSanMonthlyData = (rawTaiSanMonthly || [])
     .filter((item: any) => item.nam === yearTaiSan)
     .sort((a: any, b: any) => a.thang - b.thang);
