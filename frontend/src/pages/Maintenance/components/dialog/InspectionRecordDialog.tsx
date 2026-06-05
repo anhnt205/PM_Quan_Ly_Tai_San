@@ -51,10 +51,6 @@ import { useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../redux/store";
 import { updateTabFormData } from "../../../../redux/tabsSlice";
 import { Remove } from "@mui/icons-material";
-<<<<<<< HEAD
-=======
-
->>>>>>> 0230394 ([fix] Sua loi bulk form, lam keep alive cho sua chua bao duong)
 
 interface Props {
   open: boolean;
@@ -181,19 +177,6 @@ const InspectionRecordDialog = ({
         nguoiKyList: intermediateSigners,
       };
 
-<<<<<<< HEAD
-=======
-      dispatch(
-        updateTabFormData({
-          path: tabPath,
-          data: {
-            [`inspectionDraft_${repairRequest?.id || incidentInspection?.id}`]:
-              null,
-          },
-        }),
-      );
-
->>>>>>> 0230394 ([fix] Sua loi bulk form, lam keep alive cho sua chua bao duong)
       if (initData) {
         updateMutation.mutate(record, {
           onSuccess: () => {
@@ -213,7 +196,6 @@ const InspectionRecordDialog = ({
   const apiUsersRef = useRef(apiUsers);
   const apiDepartmentsRef = useRef(apiDepartments);
   useEffect(() => {
-<<<<<<< HEAD
     apiUsersRef.current = apiUsers;
   }, [apiUsers]);
   useEffect(() => {
@@ -230,11 +212,6 @@ const InspectionRecordDialog = ({
         apiDepartmentsRef.current,
       );
 
-=======
-    if (!open) return;
-    if (initData) {
-      const listInfo = listSigneInfo(initData, apiUsers, apiDepartments);
->>>>>>> 0230394 ([fix] Sua loi bulk form, lam keep alive cho sua chua bao duong)
       formik.setValues({
         id: initData.id ?? "",
         idCongTy: initData.idCongTy ?? CongTy.CT001,
@@ -330,19 +307,7 @@ const InspectionRecordDialog = ({
       danhSachChiTiet,
       nguoiKyList: [],
     });
-<<<<<<< HEAD
   }, [open, initData, repairRequest, incidentInspection, savedDraft]);
-=======
-  }, [
-    open,
-    initData,
-    repairRequest,
-    incidentInspection,
-    apiDepartments,
-    apiUsers,
-    savedDraft,
-  ]);
->>>>>>> 0230394 ([fix] Sua loi bulk form, lam keep alive cho sua chua bao duong)
 
   const addMaterialRow = (assetIdx: number) => {
     const newMaterial: InspectionRecordVatTuData = {

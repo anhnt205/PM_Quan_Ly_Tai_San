@@ -211,53 +211,10 @@ const IncidentDialog = ({
         share: false,
         ngayTao: dayjs().format("YYYY-MM-DD HH:mm:ss"),
         nguoiKyList: savedDraft.nguoiKyList,
-<<<<<<< HEAD
         danhSachTaiSan: savedDraft.danhSachTaiSan ?? [],
       });
       return;
     }
-=======
-        danhSachTaiSan: [],
-      });
-      return;
-    }
-
-    setAssets([]);
-    const defaultDept =
-      selectedPlans && selectedPlans.length > 0
-        ? selectedPlans[0].idDonViGiao || ""
-        : "";
-    formik.setValues({
-      id: "",
-      idCongTy: CongTy.CT001,
-      idKeHoach:
-        selectedPlans && selectedPlans.length > 0 ? selectedPlans[0].id : "",
-      soPhieu: "",
-      idDonViBaoCao: defaultDept,
-      ngayPhatHien: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-      tenHeThongThietBi: "",
-      phanHeViTri: "",
-      mucDo: 2,
-      moTa: "",
-      idNguoiLap: "",
-      nguoiLapXacNhan: false,
-      idGiamDoc: "",
-      giamDocXacNhan: false,
-      trangThai: 0,
-      share: false,
-      ngayTao: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-      nguoiKyList: [],
-      danhSachTaiSan: [],
-    });
-  }, [
-    open,
-    initialIncident,
-    selectedPlans,
-    apiUsers,
-    apiDepartments,
-    savedDraft,
-  ]);
->>>>>>> 0230394 ([fix] Sua loi bulk form, lam keep alive cho sua chua bao duong)
 
     setAssets([]);
     const defaultDept =
@@ -339,10 +296,7 @@ const IncidentDialog = ({
             moTa: formik.values.moTa,
             nguoiKyList: formik.values.nguoiKyList,
             assets,
-<<<<<<< HEAD
             danhSachTaiSan: formik.values.danhSachTaiSan,
-=======
->>>>>>> 0230394 ([fix] Sua loi bulk form, lam keep alive cho sua chua bao duong)
           },
           lastMinimizedIncidentDialog: "incident",
         },

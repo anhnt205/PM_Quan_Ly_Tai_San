@@ -101,7 +101,6 @@ export default function PositionForm({
     }
   }, [selectedPosition, readOnly]);
 
-<<<<<<< HEAD
   useEffect(() => {
     if (initialFormData && Object.keys(initialFormData).length > 0) {
       formik.setValues({
@@ -126,8 +125,6 @@ export default function PositionForm({
     }
   }, [initialFormData]);
 
-=======
->>>>>>> 0230394 ([fix] Sua loi bulk form, lam keep alive cho sua chua bao duong)
   const [localBulkItems, setLocalBulkItems] = useState<any[]>(
     (initialFormData?.items?.length ?? 0) > 0
       ? initialFormData!.items
@@ -135,7 +132,6 @@ export default function PositionForm({
         ? bulkItems
         : [],
   );
-<<<<<<< HEAD
 
   useEffect(() => {
     if ((initialFormData?.items?.length ?? 0) > 0) {
@@ -144,8 +140,6 @@ export default function PositionForm({
       setLocalBulkItems(bulkItems);
     }
   }, [initialFormData, bulkItems]);
-=======
->>>>>>> 0230394 ([fix] Sua loi bulk form, lam keep alive cho sua chua bao duong)
 
   const debouncedBulkItems = useDebounce(localBulkItems, 600);
   useEffect(() => {

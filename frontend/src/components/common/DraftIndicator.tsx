@@ -7,7 +7,6 @@ export default function DraftIndicator({ onClick }: { onClick: () => void }) {
   const [isNearBottom, setIsNearBottom] = useState(false);
 
   useEffect(() => {
-<<<<<<< HEAD
     const timer = setTimeout(() => {
       const pagination = document.querySelector(".MuiTablePagination-root");
       if (!pagination) return;
@@ -21,17 +20,6 @@ export default function DraftIndicator({ onClick }: { onClick: () => void }) {
     }, 100);
 
     return () => clearTimeout(timer);
-=======
-    const pagination = document.querySelector(".MuiTablePagination-root");
-    if (!pagination) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsNearBottom(entry.isIntersecting),
-      { threshold: 0.1 }
-    );
-    observer.observe(pagination);
-    return () => observer.disconnect();
->>>>>>> 0230394 ([fix] Sua loi bulk form, lam keep alive cho sua chua bao duong)
   }, []);
 
   return (
