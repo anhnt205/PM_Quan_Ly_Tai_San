@@ -9,7 +9,7 @@ import {
   IconButton,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
@@ -150,15 +150,19 @@ export default function Staff() {
     setField({ draftBulkForm: undefined });
   };
 
-  const handleBulkClose = (
-    event: any,
-    reason?: "backdropClick" | "escapeKeyDown" | string,
-  ) => {
+  const bulkFormValuesRef = useRef<any>(null);
+
+  const handleBulkClose = (event: any, reason?: string) => {
     if (reason === "backdropClick" || reason === "escapeKeyDown") {
+      setField({ draftBulkForm: bulkFormValuesRef.current });
       setShowBulkForm(false);
       return;
     }
     handleBulkCancel();
+  };
+  const handleBulkMinimize = () => {
+    setField({ draftBulkForm: bulkFormValuesRef.current });
+    setShowBulkForm(false);
   };
 
   const handleBulkCancel = () => {
@@ -425,9 +429,11 @@ export default function Staff() {
               mode={bulkMode}
               initialItems={bulkItems}
               onCancel={handleBulkCancel}
-              onMinimize={() => setShowBulkForm(false)}
+              onMinimize={handleBulkMinimize}
               onSave={handleBulkSave}
-              onFormChange={(values) => setField({ draftBulkForm: values })}
+              onFormChange={(values) => {
+                bulkFormValuesRef.current = values;
+              }}
               initialFormData={formData.draftBulkForm}
             />
           </DialogContent>

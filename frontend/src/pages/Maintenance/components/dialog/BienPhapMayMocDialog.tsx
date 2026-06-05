@@ -30,6 +30,10 @@ import FieldDate from "../../../../components/TextField/FieldDate";
 import FieldInput from "../../../../components/TextField/FieldInput";
 import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 import { MachineMeasuresValidation } from "../../validation";
+import { useLocation } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../../../redux/store";
+import { updateTabFormData } from "../../../../redux/tabsSlice";
+import { Remove } from "@mui/icons-material";
 
 interface Props {
   open: boolean;
@@ -51,6 +55,15 @@ const BienPhapMayMocDialog = ({
   const { data: apiUsers = [] } = useAllStaffsQuery();
   const [document, setDocument] = useState<File | string | any>("");
   const { createMutation, updateMutation } = useBienPhapMayMocMutation();
+
+  const location = useLocation();
+  const tabPath = location.pathname;
+  const dispatch = useAppDispatch();
+
+  const savedDraft = useAppSelector((state) => {
+    const tab = state.tabs.tabs.find((t) => t.path === tabPath);
+    return tab?.formData?.[`bienPhapMayMocDraft_${idGiamDinhMayMoc}`] ?? null;
+  });
 
   const initialValues: BienPhapMayMocData & { nguoiKyList: any[] } = {
     id: "",
@@ -135,13 +148,66 @@ const BienPhapMayMocDialog = ({
           departmentName: item.donVi,
         })),
       } as any);
-    } else {
-      formik.setValues({ ...initialValues, idGiamDinhMayMoc });
+      return;
     }
-  }, [open, initData, idGiamDinhMayMoc, apiUsers, apiDepartments]);
+
+    if (savedDraft) {
+      formik.setValues({
+        ...initialValues,
+        idGiamDinhMayMoc,
+        soPhieu: savedDraft.soPhieu,
+        soDeNghi: savedDraft.soDeNghi,
+        donViSuaChua: savedDraft.donViSuaChua,
+        donViPhoiHop: savedDraft.donViPhoiHop,
+        hinhThuc: savedDraft.hinhThuc,
+        thoiGianBatDau: savedDraft.thoiGianBatDau,
+        thoiGianKetThuc: savedDraft.thoiGianKetThuc,
+        thoiGianNgay: savedDraft.thoiGianNgay,
+        ghiChu: savedDraft.ghiChu,
+        nguoiKyList: savedDraft.nguoiKyList,
+      });
+      return;
+    }
+
+    formik.setValues({ ...initialValues, idGiamDinhMayMoc });
+  }, [open, initData, idGiamDinhMayMoc, apiUsers, apiDepartments, savedDraft]);
 
   function handleClose() {
+    dispatch(
+      updateTabFormData({
+        path: tabPath,
+        data: {
+          [`bienPhapMayMocDraft_${idGiamDinhMayMoc}`]: null,
+          lastMinimizedDialog: null,
+        },
+      }),
+    );
     formik.resetForm();
+    onClose();
+  }
+
+  function handleMinimize() {
+    dispatch(
+      updateTabFormData({
+        path: tabPath,
+        data: {
+          [`bienPhapMayMocDraft_${idGiamDinhMayMoc}`]: {
+            idGiamDinhMayMoc,
+            soPhieu: formik.values.soPhieu,
+            soDeNghi: formik.values.soDeNghi,
+            donViSuaChua: formik.values.donViSuaChua,
+            donViPhoiHop: formik.values.donViPhoiHop,
+            hinhThuc: formik.values.hinhThuc,
+            thoiGianBatDau: formik.values.thoiGianBatDau,
+            thoiGianKetThuc: formik.values.thoiGianKetThuc,
+            thoiGianNgay: formik.values.thoiGianNgay,
+            ghiChu: formik.values.ghiChu,
+            nguoiKyList: formik.values.nguoiKyList,
+          },
+          lastMinimizedDialog: "bienPhapMayMoc",
+        },
+      }),
+    );
     onClose();
   }
 
@@ -150,7 +216,7 @@ const BienPhapMayMocDialog = ({
   return (
     <Dialog
       open={open}
-      onClose={handleClose}
+      onClose={handleMinimize}
       maxWidth="lg"
       fullWidth
       PaperProps={{ sx: { height: "90vh" } }}
@@ -177,9 +243,14 @@ const BienPhapMayMocDialog = ({
             )}
           </Box>
         </Box>
-        <IconButton size="small" onClick={handleClose}>
-          <CloseIcon />
-        </IconButton>
+        <Box sx={{ display: "flex", gap: 0.5 }}>
+          <IconButton size="small" onClick={handleMinimize}>
+            <Remove />
+          </IconButton>
+          <IconButton size="small" onClick={handleClose}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
       </DialogTitle>
 
       <Divider />

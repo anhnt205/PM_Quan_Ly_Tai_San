@@ -9,10 +9,6 @@ import {
   Typography,
   Divider,
   IconButton,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import IncidentPreview from "../preview/IncidentPreview";
@@ -32,6 +28,10 @@ import FieldDateTime from "../../../../components/TextField/FieldDateTime";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
 import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 import { IncidentValidation } from "../../validation";
+import { useLocation } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../../../redux/store";
+import { updateTabFormData } from "../../../../redux/tabsSlice";
+import { Remove } from "@mui/icons-material";
 
 interface Props {
   open: boolean;
@@ -53,6 +53,15 @@ const IncidentDialog = ({
 
   const { data: apiDepartments = [] } = useAllDepartmentsQuery();
   const { data: apiUsers = [] } = useAllStaffsQuery();
+
+  const location = useLocation();
+  const tabPath = location.pathname;
+  const dispatch = useAppDispatch();
+
+  const savedDraft = useAppSelector((state) => {
+    const tab = state.tabs.tabs.find((t) => t.path === tabPath);
+    return tab?.formData?.incidentDraft ?? null;
+  });
 
   const formik = useFormik({
     initialValues: {
@@ -106,8 +115,15 @@ const IncidentDialog = ({
         ngayPhatHien: dayjs(values.ngayPhatHien).format("YYYY-MM-DD HH:mm:ss"),
         ngayTao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       };
-      onSubmit(rec);
 
+      dispatch(
+        updateTabFormData({
+          path: tabPath,
+          data: { incidentDraft: null, lastMinimizedIncidentDialog: null },
+        }),
+      );
+
+      onSubmit(rec);
       formik.resetForm();
       setAssets([]);
       onClose();
@@ -171,24 +187,22 @@ const IncidentDialog = ({
         nguoiKyList: signersList,
         danhSachTaiSan: initialIncident.danhSachTaiSan || [],
       });
-    } else {
-      setAssets([]);
-      const defaultDept =
-        selectedPlans && selectedPlans.length > 0
-          ? selectedPlans[0].idDonViGiao || ""
-          : "";
+      return;
+    }
+
+    if (savedDraft) {
+      setAssets(savedDraft.assets);
       formik.setValues({
         id: "",
         idCongTy: CongTy.CT001,
-        idKeHoach:
-          selectedPlans && selectedPlans.length > 0 ? selectedPlans[0].id : "",
-        soPhieu: "",
-        idDonViBaoCao: defaultDept,
-        ngayPhatHien: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-        tenHeThongThietBi: "",
-        phanHeViTri: "",
-        mucDo: 2,
-        moTa: "",
+        idKeHoach: selectedPlans[0]?.id ?? "",
+        soPhieu: savedDraft.soPhieu,
+        idDonViBaoCao: savedDraft.idDonViBaoCao,
+        ngayPhatHien: savedDraft.ngayPhatHien,
+        tenHeThongThietBi: savedDraft.tenHeThongThietBi,
+        phanHeViTri: savedDraft.phanHeViTri,
+        mucDo: savedDraft.mucDo,
+        moTa: savedDraft.moTa,
         idNguoiLap: "",
         nguoiLapXacNhan: false,
         idGiamDoc: "",
@@ -196,47 +210,151 @@ const IncidentDialog = ({
         trangThai: 0,
         share: false,
         ngayTao: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-        nguoiKyList: [],
+        nguoiKyList: savedDraft.nguoiKyList,
+<<<<<<< HEAD
+        danhSachTaiSan: savedDraft.danhSachTaiSan ?? [],
+      });
+      return;
+    }
+=======
         danhSachTaiSan: [],
       });
+      return;
     }
-  }, [open, initialIncident, selectedPlans, apiUsers, apiDepartments]);
 
-  // Sync assets state to formik.values.danhSachTaiSan
-  useEffect(() => {
-    const nextList = assets.map((a: any) => {
-      const existing = formik.values.danhSachTaiSan.find(
-        (e: any) => e.idTaiSan === a.deviceId,
-      );
-
-      return {
-        id: a?.id,
-        idTaiSan: a.deviceId ?? "",
-        tenTaiSan: existing?.tenTaiSan ?? a.tenTaiSan ?? "",
-        soLuong: existing?.soLuong ?? a.quantity ?? 1,
-        tinhTrang: a.tenHienTrang ?? existing?.tinhTrang ?? "",
-        tenNhomTaiSan: a.tenNhom || "",
-        thuocHeThong: existing?.thuocHeThong ?? a.thuocHeThong ?? "",
-        idDonViQuanLyKyThuat:
-          existing?.idDonViQuanLyKyThuat ?? a.idDonViQuanLyKyThuat ?? "",
-        viTri: existing?.viTri ?? a.viTri ?? "",
-        action: a.action ?? Action.CREATE,
-      };
+    setAssets([]);
+    const defaultDept =
+      selectedPlans && selectedPlans.length > 0
+        ? selectedPlans[0].idDonViGiao || ""
+        : "";
+    formik.setValues({
+      id: "",
+      idCongTy: CongTy.CT001,
+      idKeHoach:
+        selectedPlans && selectedPlans.length > 0 ? selectedPlans[0].id : "",
+      soPhieu: "",
+      idDonViBaoCao: defaultDept,
+      ngayPhatHien: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+      tenHeThongThietBi: "",
+      phanHeViTri: "",
+      mucDo: 2,
+      moTa: "",
+      idNguoiLap: "",
+      nguoiLapXacNhan: false,
+      idGiamDoc: "",
+      giamDocXacNhan: false,
+      trangThai: 0,
+      share: false,
+      ngayTao: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+      nguoiKyList: [],
+      danhSachTaiSan: [],
     });
-    formik.setFieldValue("danhSachTaiSan", nextList);
-  }, [assets]);
+  }, [
+    open,
+    initialIncident,
+    selectedPlans,
+    apiUsers,
+    apiDepartments,
+    savedDraft,
+  ]);
+>>>>>>> 0230394 ([fix] Sua loi bulk form, lam keep alive cho sua chua bao duong)
 
+    setAssets([]);
+    const defaultDept =
+      selectedPlans && selectedPlans.length > 0
+        ? selectedPlans[0].idDonViGiao || ""
+        : "";
+    formik.setValues({
+      id: "",
+      idCongTy: CongTy.CT001,
+      idKeHoach:
+        selectedPlans && selectedPlans.length > 0 ? selectedPlans[0].id : "",
+      soPhieu: "",
+      idDonViBaoCao: defaultDept,
+      ngayPhatHien: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+      tenHeThongThietBi: "",
+      phanHeViTri: "",
+      mucDo: 2,
+      moTa: "",
+      idNguoiLap: "",
+      nguoiLapXacNhan: false,
+      idGiamDoc: "",
+      giamDocXacNhan: false,
+      trangThai: 0,
+      share: false,
+      ngayTao: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+      nguoiKyList: [],
+      danhSachTaiSan: [],
+    });
+  }, [
+    open,
+    initialIncident,
+    selectedPlans,
+    apiUsers,
+    apiDepartments,
+    savedDraft,
+  ]);
+
+  const handleAssetsChange = (newAssets: any[]) => {
+    setAssets(newAssets);
+    const nextList = newAssets.map((a: any) => ({
+      id: a?.id,
+      idTaiSan: a.deviceId ?? "",
+      tenTaiSan: a.tenTaiSan ?? "",
+      soLuong: a.quantity ?? 1,
+      tinhTrang: a.tenHienTrang ?? "",
+      tenNhomTaiSan: a.tenNhom || "",
+      thuocHeThong: a.thuocHeThong ?? "",
+      idDonViQuanLyKyThuat: a.idDonViQuanLyKyThuat ?? "",
+      viTri: a.viTri ?? "",
+      action: a.action ?? Action.CREATE,
+    }));
+    formik.setFieldValue("danhSachTaiSan", nextList);
+  };
 
   const handleClose = () => {
+    dispatch(
+      updateTabFormData({
+        path: tabPath,
+        data: { incidentDraft: null, lastMinimizedIncidentDialog: null },
+      }),
+    );
     formik.resetForm();
     setAssets([]);
+    onClose();
+  };
+
+  const handleMinimize = () => {
+    dispatch(
+      updateTabFormData({
+        path: tabPath,
+        data: {
+          incidentDraft: {
+            soPhieu: formik.values.soPhieu,
+            idDonViBaoCao: formik.values.idDonViBaoCao,
+            ngayPhatHien: formik.values.ngayPhatHien,
+            tenHeThongThietBi: formik.values.tenHeThongThietBi,
+            phanHeViTri: formik.values.phanHeViTri,
+            mucDo: formik.values.mucDo,
+            moTa: formik.values.moTa,
+            nguoiKyList: formik.values.nguoiKyList,
+            assets,
+<<<<<<< HEAD
+            danhSachTaiSan: formik.values.danhSachTaiSan,
+=======
+>>>>>>> 0230394 ([fix] Sua loi bulk form, lam keep alive cho sua chua bao duong)
+          },
+          lastMinimizedIncidentDialog: "incident",
+        },
+      }),
+    );
     onClose();
   };
 
   return (
     <Dialog
       open={open}
-      onClose={handleClose}
+      onClose={handleMinimize}
       maxWidth="lg"
       fullWidth
       PaperProps={{ sx: { height: "90vh" } }}
@@ -252,9 +370,14 @@ const IncidentDialog = ({
         <Typography variant="h6" fontWeight={600}>
           Tạo Phiếu báo sự cố thiết bị
         </Typography>
-        <IconButton size="small" onClick={handleClose}>
-          <CloseIcon />
-        </IconButton>
+        <Box sx={{ display: "flex", gap: 0.5 }}>
+          <IconButton size="small" onClick={handleMinimize}>
+            <Remove />
+          </IconButton>
+          <IconButton size="small" onClick={handleClose}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
       </DialogTitle>
 
       <Divider />
@@ -295,7 +418,7 @@ const IncidentDialog = ({
                     field="idDonViBaoCao"
                     formik={formik}
                     onChange={() => {
-                      setAssets([]);
+                      handleAssetsChange([]);
                     }}
                   />
 
@@ -364,7 +487,7 @@ const IncidentDialog = ({
                     <StepAssets
                       idDonViGiao={formik.values.idDonViBaoCao}
                       assets={assets}
-                      onAssetsChange={setAssets}
+                      onAssetsChange={handleAssetsChange}
                     />
                   )}
                 </Box>

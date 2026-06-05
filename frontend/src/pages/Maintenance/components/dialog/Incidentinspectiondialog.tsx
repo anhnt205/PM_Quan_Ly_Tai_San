@@ -45,6 +45,10 @@ import React from "react";
 import { useFormik } from "formik";
 import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 import { IncidentInspectionValidation } from "../../validation";
+import { useLocation } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../../../redux/store";
+import { updateTabFormData } from "../../../../redux/tabsSlice";
+import { Remove } from "@mui/icons-material";
 
 interface Props {
   open: boolean;
@@ -71,6 +75,17 @@ const IncidentInspectionDialog = ({
     updateMutation: updateIncInspMutation,
   } = useMaintenanceIncidentInspectionMutation();
 
+  const location = useLocation();
+  const tabPath = location.pathname;
+  const dispatch = useAppDispatch();
+
+  const savedDraft = useAppSelector((state) => {
+    const tab = state.tabs.tabs.find((t) => t.path === tabPath);
+    return (
+      tab?.formData?.[`incidentInspectionDraft_${incidentReport?.id}`] ?? null
+    );
+  });
+
   const formik = useFormik({
     initialValues: {
       id: "",
@@ -92,6 +107,15 @@ const IncidentInspectionDialog = ({
     },
     // validationSchema: IncidentInspectionValidation,
     onSubmit: (values) => {
+      dispatch(
+        updateTabFormData({
+          path: tabPath,
+          data: {
+            [`incidentInspectionDraft_${incidentReport?.id}`]: null,
+            lastMinimizedDialog: null,
+          },
+        }),
+      );
       const idNguoiLapBieu =
         values.nguoiKyList.length > 0 ? values.nguoiKyList[0].userId : "";
       const idTrinhDuyetGiamDoc =
@@ -158,74 +182,96 @@ const IncidentInspectionDialog = ({
   });
 
   useEffect(() => {
-    if (open) {
-      if (initData) {
-        const listInfo = listSigneInfo(initData, apiUsers, apiDepartments);
-        const signersList = (listInfo ?? []).map((item: any, idx: number) => ({
-          userId: item.idNhanVien || item.userId,
-          userName: item.hoTen || item.userName,
-          departmentId: item.idDonVi || item.departmentId,
-          departmentName: item.donVi || item.departmentName,
-          position: item.tenChucVu || item.position || "",
-          order: idx + 1,
-          signed: item.signed || false,
-        }));
+    if (!open) return;
 
-        formik.setValues({
-          id: initData.id ?? "",
-          idCongTy: initData.idCongTy ?? CongTy.CT001,
-          idSuCo: initData.idSuCo ?? incidentReport.id,
-          soPhieu: initData.soPhieu ?? "",
-          ngayKiemTra: initData.ngayKiemTra ?? dayjs().format("YYYY-MM-DD"),
-          viTri: initData.viTri ?? "",
-          nhanXetKetLuan: initData.nhanXetKetLuan ?? "",
-          bienPhapXuLy: initData.bienPhapXuLy ?? "",
-          idNguoiLap: initData.idNguoiLap ?? "",
-          nguoiLapXacNhan: initData.nguoiLapXacNhan ?? false,
-          idGiamDoc: initData.idGiamDoc ?? "",
-          giamDocXacNhan: initData.giamDocXacNhan ?? false,
-          trangThai: initData.trangThai ?? 0,
-          share: initData.share ?? false,
-          danhSachChiTiet: (initData.danhSachChiTiet || []).map((d: any) => ({
-            ...d,
-            danhSachVatTu: (d.danhSachVatTu || []).map((vt: any) => ({
-              ...vt,
-            })),
-          })),
-          nguoiKyList: signersList,
-        });
-      } else if (incidentReport?.danhSachTaiSan) {
-        const defaultList = incidentReport.danhSachTaiSan
-          .filter((d: any) => selectedDeviceIds.includes(String(d.id ?? "")))
-          .map((d: any) => ({
-            id: "",
-            idTaiSan: d.idTaiSan,
-            idSuCoChiTiet: d.id,
-            tenTaiSan: d.tenTaiSan || d.idTaiSan,
-            donViTinh: d.donViTinh || "",
-            danhSachVatTu: [] as IncidentInspectionVatTuData[],
-          }));
+    if (initData) {
+      const listInfo = listSigneInfo(initData, apiUsers, apiDepartments);
+      const signersList = (listInfo ?? []).map((item: any, idx: number) => ({
+        userId: item.idNhanVien || item.userId,
+        userName: item.hoTen || item.userName,
+        departmentId: item.idDonVi || item.departmentId,
+        departmentName: item.donVi || item.departmentName,
+        position: item.tenChucVu || item.position || "",
+        order: idx + 1,
+        signed: item.signed || false,
+      }));
 
-        formik.setValues({
-          id: "",
-          idCongTy: CongTy.CT001,
-          idSuCo: incidentReport.id,
-          soPhieu: `BB-KT-${incidentReport.id || Date.now()}`,
-          ngayKiemTra: dayjs().format("YYYY-MM-DD"),
-          viTri: incidentReport.phanHeViTri || "",
-          nhanXetKetLuan: "",
-          bienPhapXuLy: "",
-          idNguoiLap: "",
-          nguoiLapXacNhan: false,
-          idGiamDoc: "",
-          giamDocXacNhan: false,
-          trangThai: 0,
-          share: false,
-          danhSachChiTiet: defaultList,
-          nguoiKyList: [] as any[],
-        });
-      }
+      formik.setValues({
+        id: initData.id ?? "",
+        idCongTy: initData.idCongTy ?? CongTy.CT001,
+        idSuCo: initData.idSuCo ?? incidentReport.id,
+        soPhieu: initData.soPhieu ?? "",
+        ngayKiemTra: initData.ngayKiemTra ?? dayjs().format("YYYY-MM-DD"),
+        viTri: initData.viTri ?? "",
+        nhanXetKetLuan: initData.nhanXetKetLuan ?? "",
+        bienPhapXuLy: initData.bienPhapXuLy ?? "",
+        idNguoiLap: initData.idNguoiLap ?? "",
+        nguoiLapXacNhan: initData.nguoiLapXacNhan ?? false,
+        idGiamDoc: initData.idGiamDoc ?? "",
+        giamDocXacNhan: initData.giamDocXacNhan ?? false,
+        trangThai: initData.trangThai ?? 0,
+        share: initData.share ?? false,
+        danhSachChiTiet: (initData.danhSachChiTiet || []).map((d: any) => ({
+          ...d,
+          danhSachVatTu: (d.danhSachVatTu || []).map((vt: any) => ({ ...vt })),
+        })),
+        nguoiKyList: signersList,
+      });
+      return;
     }
+
+    const danhSachChiTiet = (incidentReport?.danhSachTaiSan || [])
+      .filter((d: any) => selectedDeviceIds.includes(String(d.id ?? "")))
+      .map((d: any) => ({
+        id: "",
+        idTaiSan: d.idTaiSan,
+        idSuCoChiTiet: d.id,
+        tenTaiSan: d.tenTaiSan || d.idTaiSan,
+        donViTinh: d.donViTinh || "",
+        danhSachVatTu: [] as IncidentInspectionVatTuData[],
+      }));
+
+    if (savedDraft) {
+      formik.setValues({
+        id: "",
+        idCongTy: CongTy.CT001,
+        idSuCo: incidentReport?.id || "",
+        idNguoiLap: "",
+        nguoiLapXacNhan: false,
+        idGiamDoc: "",
+        giamDocXacNhan: false,
+        trangThai: 0,
+        share: false,
+        // restore từ draft
+        soPhieu: savedDraft.soPhieu,
+        ngayKiemTra: savedDraft.ngayKiemTra,
+        viTri: savedDraft.viTri,
+        nhanXetKetLuan: savedDraft.nhanXetKetLuan,
+        bienPhapXuLy: savedDraft.bienPhapXuLy,
+        danhSachChiTiet: savedDraft.danhSachChiTiet,
+        nguoiKyList: savedDraft.nguoiKyList,
+      });
+      return;
+    }
+
+    formik.setValues({
+      id: "",
+      idCongTy: CongTy.CT001,
+      idSuCo: incidentReport?.id || "",
+      soPhieu: `BB-KT-${incidentReport?.id || Date.now()}`,
+      ngayKiemTra: dayjs().format("YYYY-MM-DD"),
+      viTri: incidentReport?.phanHeViTri || "",
+      nhanXetKetLuan: "",
+      bienPhapXuLy: "",
+      idNguoiLap: "",
+      nguoiLapXacNhan: false,
+      idGiamDoc: "",
+      giamDocXacNhan: false,
+      trangThai: 0,
+      share: false,
+      danhSachChiTiet,
+      nguoiKyList: [],
+    });
   }, [
     open,
     initData,
@@ -233,6 +279,7 @@ const IncidentInspectionDialog = ({
     selectedDeviceIds,
     apiUsers,
     apiDepartments,
+    savedDraft,
   ]);
 
   const addMaterialRow = (assetIdx: number) => {
@@ -299,7 +346,37 @@ const IncidentInspectionDialog = ({
     formik.setFieldValue(`danhSachChiTiet[${assetIdx}].danhSachVatTu`, updated);
   };
 
+  const handleMinimize = () => {
+    dispatch(
+      updateTabFormData({
+        path: tabPath,
+        data: {
+          [`incidentInspectionDraft_${incidentReport?.id}`]: {
+            soPhieu: formik.values.soPhieu,
+            ngayKiemTra: formik.values.ngayKiemTra,
+            viTri: formik.values.viTri,
+            nhanXetKetLuan: formik.values.nhanXetKetLuan,
+            bienPhapXuLy: formik.values.bienPhapXuLy,
+            danhSachChiTiet: formik.values.danhSachChiTiet,
+            nguoiKyList: formik.values.nguoiKyList,
+          },
+          lastMinimizedDialog: "incidentInspection",
+        },
+      }),
+    );
+    onClose();
+  };
+
   const handleClose = () => {
+    dispatch(
+      updateTabFormData({
+        path: tabPath,
+        data: {
+          [`incidentInspectionDraft_${incidentReport?.id}`]: null,
+          lastMinimizedDialog: null,
+        },
+      }),
+    );
     formik.resetForm();
     onClose();
   };
@@ -307,7 +384,7 @@ const IncidentInspectionDialog = ({
   return (
     <Dialog
       open={open}
-      onClose={handleClose}
+      onClose={handleMinimize}
       maxWidth="lg"
       fullWidth
       PaperProps={{ sx: { height: "90vh" } }}
@@ -322,9 +399,14 @@ const IncidentInspectionDialog = ({
         <Typography variant="h6" fontWeight={600}>
           Tạo Biên bản kiểm tra sự cố — {incidentReport.soPhieu}
         </Typography>
-        <IconButton size="small" onClick={handleClose}>
-          <CloseIcon />
-        </IconButton>
+        <Box sx={{ display: "flex", gap: 0.5 }}>
+          <IconButton size="small" onClick={handleMinimize}>
+            <Remove />
+          </IconButton>
+          <IconButton size="small" onClick={handleClose}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
       </DialogTitle>
 
       <Divider />

@@ -61,6 +61,7 @@ export default function Position() {
   const setShowBulkForm = (v: boolean) => setField({ showBulkForm: v });
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkFormKey, setBulkFormKey] = useState(0);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
 
@@ -95,14 +96,13 @@ export default function Position() {
   const { data: allPositions = [] } = useAllPositionsQuery();
 
   const handleRowClick = (params: GridRowParams) => {
-    if (bulkMode) {
-      setBulkMode(false);
-      setBulkItems([]);
-    }
-    setSelectedPosition(params.row);
     window.scrollTo({ top: 140, behavior: "smooth" });
-    setReadOnly(true);
-    setShowForm(true);
+    setField({
+      ...(bulkMode ? { bulkMode: false, bulkItems: [] } : {}),
+      selectedPosition: params.row,
+      readOnly: true,
+      showForm: true,
+    });
   };
 
   const handleSave = (values: any) => {
@@ -162,10 +162,20 @@ export default function Position() {
     const itemsToEdit = positionsPage.items
       .filter((item: any) => selectedIds.includes(item.id))
       .sort((a: any, b: any) => a.id.localeCompare(b.id));
+    setBulkFormKey((k) => k + 1);
+<<<<<<< HEAD
+    setField({
+      bulkMode: true,
+      bulkEditType: "edit",
+      bulkItems: itemsToEdit,
+      showBulkForm: true,
+    });
+=======
     setBulkMode(true);
     setBulkEditType("edit");
     setBulkItems(itemsToEdit);
     setShowBulkForm(true);
+>>>>>>> 0230394 ([fix] Sua loi bulk form, lam keep alive cho sua chua bao duong)
   };
 
   const columns: GridColDef[] = [
@@ -346,12 +356,20 @@ export default function Position() {
             setShowForm(true);
             return;
           }
+          setBulkFormKey((k) => k + 1);
+<<<<<<< HEAD
+          setField({
+            bulkMode: true,
+            bulkEditType: "create",
+            bulkItems: [{}],
+            showBulkForm: true,
+          });
+=======
           setBulkMode(true);
           setBulkEditType("create");
           setBulkItems([{}]);
           setShowBulkForm(true);
-          setSelectedPosition(null);
-          setReadOnly(false);
+>>>>>>> 0230394 ([fix] Sua loi bulk form, lam keep alive cho sua chua bao duong)
         }}
         onExport={() => exportMutation.mutate(allPositions)}
         onImport={(file) => importExcelMutation.mutate(file)}
@@ -407,17 +425,45 @@ export default function Position() {
             ) : null}
           </DialogContent>
         </Dialog>
-
         {/* Dialog bulk */}
         <Dialog
           open={showBulkForm}
           onClose={handleBulkMinimize}
           maxWidth="md"
           fullWidth
+          keepMounted={false}
         >
           <DialogContent sx={{ p: 0 }}>
+<<<<<<< HEAD
+            {showBulkForm && (
+              <PositionForm
+                key={`bulk-${bulkFormKey}`}
+                onCancel={() => {
+                  setBulkMode(false);
+                  setBulkItems([]);
+                  setSelectedIds([]);
+                  setField({ bulkDraftData: undefined });
+                  setShowBulkForm(false);
+                }}
+                onMinimize={handleBulkMinimize}
+                onEdit={handleEdit}
+                selectedPosition={null}
+                readOnly={false}
+                onSave={handleSave}
+                onFormChange={undefined}
+                initialFormData={formData.bulkDraftData}
+                isBulkMode={true}
+                bulkItems={bulkItems}
+                onBulkItemsChange={(items) => {
+                  setBulkItems(items);
+                  setField({ bulkDraftData: { items, bulkEditType } });
+                }}
+                bulkEditType={bulkEditType}
+              />
+            )}
+=======
             <PositionForm
-              key={`bulk-${bulkItems.length}`}
+              key={`bulk-${bulkFormKey}`}
               onCancel={() => {
                 setBulkMode(false);
                 setBulkItems([]);
@@ -440,11 +486,19 @@ export default function Position() {
               }}
               bulkEditType={bulkEditType}
             />
+>>>>>>> 0230394 ([fix] Sua loi bulk form, lam keep alive cho sua chua bao duong)
           </DialogContent>
         </Dialog>
 
         {isBulkMinimized ? (
-          <DraftIndicator onClick={() => setShowBulkForm(true)} />
+          <DraftIndicator
+            onClick={() => {
+              if (formData.bulkDraftData?.items) {
+                setBulkItems(formData.bulkDraftData.items);
+              }
+              setShowBulkForm(true);
+            }}
+          />
         ) : (
           isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />
         )}

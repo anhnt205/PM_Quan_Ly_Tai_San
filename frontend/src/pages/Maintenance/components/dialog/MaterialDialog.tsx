@@ -46,6 +46,10 @@ import TextFieldNumber from "../../../../components/TextField/TextFieldNumber";
 import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 import MaterialPreview from "../preview/MaterialPreview";
 import { MaterialValidation } from "../../validation";
+import { useLocation } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../../../redux/store";
+import { updateTabFormData } from "../../../../redux/tabsSlice";
+import { Remove } from "@mui/icons-material";
 
 interface Props {
   open: boolean;
@@ -70,6 +74,15 @@ const MaterialDialog = ({
   const { data: allLevel = [] } = useAllLoaiSCBDQuery();
   const { createMutation, updateMutation } =
     useMaintenanceMaterialAssessmentMutation();
+
+  const location = useLocation();
+  const tabPath = location.pathname;
+  const dispatch = useAppDispatch();
+
+  const savedDraft = useAppSelector((state) => {
+    const tab = state.tabs.tabs.find((t) => t.path === tabPath);
+    return tab?.formData?.[`materialDraft_${acceptanceRecord?.id}`] ?? null;
+  });
 
   const formik = useFormik({
     initialValues: {
@@ -167,122 +180,151 @@ const MaterialDialog = ({
   });
 
   useEffect(() => {
-    if (open) {
-      if (initData) {
-        const listInfo = listSigneInfo(initData, apiUsers, apiDepartments);
-        const signersList = (listInfo || []).map((item, idx) => ({
-          ...item,
-          userId: item.idNhanVien,
-          userName: item.hoTen,
-          departmentId: item.idDonVi,
-          departmentName: item.donVi,
-          order: idx + 1,
+    if (!open) return;
+    if (initData) {
+      const listInfo = listSigneInfo(initData, apiUsers, apiDepartments);
+      const signersList = (listInfo || []).map((item, idx) => ({
+        ...item,
+        userId: item.idNhanVien,
+        userName: item.hoTen,
+        departmentId: item.idDonVi,
+        departmentName: item.donVi,
+        order: idx + 1,
+        action: Action.UPDATE,
+      }));
+      formik.setValues({
+        id: initData.id || "",
+        idCongTy: initData.idCongTy || CongTy.CT001,
+        soPhieu: initData.soPhieu || "",
+        ngayDanhGia: initData.ngayDanhGia || dayjs().format("YYYY-MM-DD"),
+        viTri: initData.viTri || "",
+        capSuaChua: initData.capSuaChua || "",
+        tenThietBi: initData.tenThietBi || "",
+        kieu: initData.kieu || "",
+        soDangKi: initData.soDangKi || "",
+        idDonViQuanLy: initData.idDonViQuanLy || "",
+        idNghiemThu: initData.idNghiemThu || "",
+        soLuongPhucHoi: initData.soLuongPhucHoi || 0,
+        soLuongPheLieu: initData.soLuongPheLieu || 0,
+        soLuongHuy: initData.soLuongHuy || 0,
+        idNguoiLap: initData.idNguoiLap || "",
+        nguoiLapXacNhan: initData.nguoiLapXacNhan || false,
+        idGiamDoc: initData.idGiamDoc || "",
+        giamDocXacNhan: initData.giamDocXacNhan || false,
+        share: initData.share || false,
+        trangThai: initData.trangThai || 0,
+        danhSachChiTiet: (initData.danhSachChiTiet || []).map((vt: any) => ({
+          ...vt,
           action: Action.UPDATE,
-        }));
+        })),
+        nguoiKyList: signersList,
+      });
+      return;
+    }
 
-        formik.setValues({
-          id: initData.id || "",
-          idCongTy: initData.idCongTy || CongTy.CT001,
-          soPhieu: initData.soPhieu || "",
-          ngayDanhGia: initData.ngayDanhGia || dayjs().format("YYYY-MM-DD"),
-          viTri: initData.viTri || "",
-          capSuaChua: initData.capSuaChua || "",
-          tenThietBi: initData.tenThietBi || "",
-          kieu: initData.kieu || "",
-          soDangKi: initData.soDangKi || "",
-          idDonViQuanLy: initData.idDonViQuanLy || "",
-          idNghiemThu: initData.idNghiemThu || "",
-          soLuongPhucHoi: initData.soLuongPhucHoi || 0,
-          soLuongPheLieu: initData.soLuongPheLieu || 0,
-          soLuongHuy: initData.soLuongHuy || 0,
-          idNguoiLap: initData.idNguoiLap || "",
-          nguoiLapXacNhan: initData.nguoiLapXacNhan || false,
-          idGiamDoc: initData.idGiamDoc || "",
-          giamDocXacNhan: initData.giamDocXacNhan || false,
-          share: initData.share || false,
-          trangThai: initData.trangThai || 0,
-          danhSachChiTiet: (initData.danhSachChiTiet || []).map((vt: any) => ({
-            ...vt,
-            action: Action.UPDATE,
-          })),
-          nguoiKyList: signersList,
-        });
-      } else {
-        const list: ChiTietVatTuThuHoiData[] = [];
-        console.log("acceptanceRecord:", acceptanceRecord);
-        if ((acceptanceRecord?.danhSachTaiSan || []).length > 0) {
-          (acceptanceRecord?.danhSachTaiSan || [])
-            .filter((t: any) => t.danhSachVatTu && t.danhSachVatTu.length > 0)
-            .forEach((t: any) => {
-              (t.danhSachVatTu || []).forEach((vt: any) => {
-                list.push({
-                  idChiTietVatTu: vt.idChiTietVatTu || "",
-                  idVatTu: vt.idVatTu || "",
-                  tenVatTu: vt.tenVatTu || "",
-                  donViTinh: vt.donViTinh || "Cái",
-                  soLuong: vt.soLuong || 1,
-                  tinhTrang: "",
-                  bienPhapXuLy: "",
-                  ghiChu: "",
-                });
-              });
-            });
-        } else if ((acceptanceRecord?.danhSachChiTiet || []).length > 0) {
-          (acceptanceRecord?.danhSachChiTiet || []).forEach((vt: any) => {
+    // Tính danhSachChiTiet từ acceptanceRecord — luôn làm trước
+    const list: ChiTietVatTuThuHoiData[] = [];
+    if ((acceptanceRecord?.danhSachTaiSan || []).length > 0) {
+      (acceptanceRecord?.danhSachTaiSan || [])
+        .filter((t: any) => t.danhSachVatTu && t.danhSachVatTu.length > 0)
+        .forEach((t: any) => {
+          (t.danhSachVatTu || []).forEach((vt: any) => {
             list.push({
               idChiTietVatTu: vt.idChiTietVatTu || "",
               idVatTu: vt.idVatTu || "",
               tenVatTu: vt.tenVatTu || "",
               donViTinh: vt.donViTinh || "Cái",
-              soLuong: vt.soLuongThayThe || vt.soLuong || 1,
+              soLuong: vt.soLuong || 1,
               tinhTrang: "",
               bienPhapXuLy: "",
               ghiChu: "",
             });
           });
-        }
-
-        formik.setValues({
-          id: "",
-          idCongTy: CongTy.CT001,
-          soPhieu: `BB-DG-${repairRequest?.id || Date.now()}`,
-          ngayDanhGia: dayjs().format("YYYY-MM-DD"),
-          viTri: acceptanceRecord.viTri || "",
-          capSuaChua: acceptanceRecord.capSuaChua || "",
-          tenThietBi:
-            acceptanceRecord.tenThietBi || acceptanceRecord?.idTaiSan || "",
-          kieu: "",
-          soDangKi: acceptanceRecord.soDangKi || "",
-          idDonViQuanLy: plan.tenDonViGiao || "",
-          idNghiemThu: acceptanceRecord.id || "",
-          soLuongPhucHoi: 0,
-          soLuongPheLieu: 0,
-          soLuongHuy: 0,
-          idNguoiLap: "",
-          nguoiLapXacNhan: false,
-          idGiamDoc: "",
-          giamDocXacNhan: false,
-          share: false,
-          trangThai: 0,
-          danhSachChiTiet:
-            list.length > 0
-              ? list
-              : [
-                  {
-                    idChiTietVatTu: "",
-                    idVatTu: "",
-                    tenVatTu: "",
-                    donViTinh: "Cái",
-                    soLuong: 1,
-                    tinhTrang: "",
-                    bienPhapXuLy: "",
-                    ghiChu: "",
-                  },
-                ],
-          nguoiKyList: [] as any[],
         });
-      }
+    } else if ((acceptanceRecord?.danhSachChiTiet || []).length > 0) {
+      (acceptanceRecord?.danhSachChiTiet || []).forEach((vt: any) => {
+        list.push({
+          idChiTietVatTu: vt.idChiTietVatTu || "",
+          idVatTu: vt.idVatTu || "",
+          tenVatTu: vt.tenVatTu || "",
+          donViTinh: vt.donViTinh || "Cái",
+          soLuong: vt.soLuongThayThe || vt.soLuong || 1,
+          tinhTrang: "",
+          bienPhapXuLy: "",
+          ghiChu: "",
+        });
+      });
     }
+
+    const defaultList: ChiTietVatTuThuHoiData[] =
+      list.length > 0
+        ? list
+        : [
+            {
+              idChiTietVatTu: "",
+              idVatTu: "",
+              tenVatTu: "",
+              donViTinh: "Cái",
+              soLuong: 1,
+              tinhTrang: "",
+              bienPhapXuLy: "",
+              ghiChu: "",
+            },
+          ];
+
+    if (savedDraft) {
+      formik.setValues({
+        id: "",
+        idCongTy: CongTy.CT001,
+        idNghiemThu: acceptanceRecord.id || "",
+        idDonViQuanLy: plan.tenDonViGiao || "",
+        idNguoiLap: "",
+        nguoiLapXacNhan: false,
+        idGiamDoc: "",
+        giamDocXacNhan: false,
+        share: false,
+        trangThai: 0,
+        soPhieu: savedDraft.soPhieu,
+        ngayDanhGia: savedDraft.ngayDanhGia,
+        viTri: savedDraft.viTri,
+        capSuaChua: savedDraft.capSuaChua,
+        tenThietBi: savedDraft.tenThietBi,
+        kieu: savedDraft.kieu,
+        soDangKi: savedDraft.soDangKi,
+        soLuongPhucHoi: savedDraft.soLuongPhucHoi,
+        soLuongPheLieu: savedDraft.soLuongPheLieu,
+        soLuongHuy: savedDraft.soLuongHuy,
+        danhSachChiTiet: savedDraft.danhSachChiTiet,
+        nguoiKyList: savedDraft.nguoiKyList,
+      });
+      return;
+    }
+
+    formik.setValues({
+      id: "",
+      idCongTy: CongTy.CT001,
+      soPhieu: `BB-DG-${repairRequest?.id || Date.now()}`,
+      ngayDanhGia: dayjs().format("YYYY-MM-DD"),
+      viTri: acceptanceRecord.viTri || "",
+      capSuaChua: acceptanceRecord.capSuaChua || "",
+      tenThietBi:
+        acceptanceRecord.tenThietBi || acceptanceRecord?.idTaiSan || "",
+      kieu: "",
+      soDangKi: acceptanceRecord.soDangKi || "",
+      idDonViQuanLy: plan.tenDonViGiao || "",
+      idNghiemThu: acceptanceRecord.id || "",
+      soLuongPhucHoi: 0,
+      soLuongPheLieu: 0,
+      soLuongHuy: 0,
+      idNguoiLap: "",
+      nguoiLapXacNhan: false,
+      idGiamDoc: "",
+      giamDocXacNhan: false,
+      share: false,
+      trangThai: 0,
+      danhSachChiTiet: defaultList,
+      nguoiKyList: [],
+    });
   }, [
     open,
     initData,
@@ -291,6 +333,7 @@ const MaterialDialog = ({
     apiDepartments,
     plan,
     repairRequest,
+    savedDraft,
   ]);
 
   const listItems = formik.values.danhSachChiTiet;
@@ -367,6 +410,44 @@ const MaterialDialog = ({
   };
 
   const handleClose = () => {
+    dispatch(
+      updateTabFormData({
+        path: tabPath,
+        data: {
+          [`materialDraft_${acceptanceRecord?.id}`]: null,
+          lastMinimizedDialog: null,
+        },
+      }),
+    );
+    onClose();
+  };
+
+  const handleMinimize = () => {
+    dispatch(
+      updateTabFormData({
+        path: tabPath,
+        data: {
+          [`materialDraft_${acceptanceRecord?.id}`]: {
+            idNghiemThu: formik.values.idNghiemThu,
+            idBienPhapMayMoc: acceptanceRecord?.idBienPhapMayMoc,
+            materialParentAccId: acceptanceRecord?.id,
+            soPhieu: formik.values.soPhieu,
+            ngayDanhGia: formik.values.ngayDanhGia,
+            viTri: formik.values.viTri,
+            capSuaChua: formik.values.capSuaChua,
+            tenThietBi: formik.values.tenThietBi,
+            kieu: formik.values.kieu,
+            soDangKi: formik.values.soDangKi,
+            soLuongPhucHoi: formik.values.soLuongPhucHoi,
+            soLuongPheLieu: formik.values.soLuongPheLieu,
+            soLuongHuy: formik.values.soLuongHuy,
+            danhSachChiTiet: formik.values.danhSachChiTiet,
+            nguoiKyList: formik.values.nguoiKyList,
+          },
+          lastMinimizedDialog: "material",
+        },
+      }),
+    );
     onClose();
   };
 
@@ -377,7 +458,7 @@ const MaterialDialog = ({
   return (
     <Dialog
       open={open}
-      onClose={handleClose}
+      onClose={handleMinimize}
       maxWidth="lg"
       fullWidth
       PaperProps={{ sx: { height: "90vh" } }}
@@ -401,9 +482,14 @@ const MaterialDialog = ({
             </Typography>
           </Box>
         </Box>
-        <IconButton size="small" onClick={handleClose}>
-          <CloseIcon />
-        </IconButton>
+        <Box sx={{ display: "flex", gap: 0.5 }}>
+          <IconButton size="small" onClick={handleMinimize}>
+            <Remove />
+          </IconButton>
+          <IconButton size="small" onClick={handleClose}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
       </DialogTitle>
 
       <Divider />
@@ -644,7 +730,7 @@ const MaterialDialog = ({
         </Box>
 
         {/* Full-width Preview */}
-        <MaterialPreview d={d} formik={formik}/>
+        <MaterialPreview d={d} formik={formik} />
       </DialogContent>
 
       <Divider />

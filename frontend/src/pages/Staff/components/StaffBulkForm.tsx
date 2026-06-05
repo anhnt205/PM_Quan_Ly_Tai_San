@@ -106,11 +106,6 @@ export default function StaffBulkForm({
     }
   }, [initialItems, initialFormData]);
 
-  const debouncedValues = useDebounce(formik.values, 800);
-  useEffect(() => {
-    onFormChange?.(debouncedValues);
-  }, [debouncedValues]);
-
   const handleFileSelect = (fieldPath: string, fileKey: string) => {
     formik.setFieldValue(fieldPath, fileKey);
   };
@@ -123,7 +118,6 @@ export default function StaffBulkForm({
         display: "flex",
         flexDirection: "column",
         gap: 3,
-        minHeight: "60vh",
       }}
     >
       <Box
@@ -139,30 +133,15 @@ export default function StaffBulkForm({
           {mode === "edit" ? "Sửa nhiều nhân viên" : "Thêm nhiều nhân viên"}
         </Typography>
         <Box display="flex" alignItems="center" gap={1}>
-          {mode === "add" && (
-            <Button
-              startIcon={<Add />}
-              onClick={() => {
-                formik.setFieldValue("items", [
-                  ...formik.values.items,
-                  { ...defaultRow },
-                ]);
-              }}
-              variant="contained"
-              size="small"
-              sx={{
-                borderRadius: "10px",
-                bgcolor: "#1FA463",
-                color: "#fff",
-                textTransform: "none",
-                fontWeight: 700,
-              }}
-            >
-              Thêm dòng mới
-            </Button>
-          )}
           {onMinimize && (
-            <IconButton size="small" onClick={onMinimize} title="Ẩn">
+            <IconButton
+              size="small"
+              onClick={() => {
+                onFormChange?.(formik.values);
+                onMinimize?.();
+              }}
+              title="Ẩn"
+            >
               <Remove fontSize="small" />
             </IconButton>
           )}
@@ -177,7 +156,7 @@ export default function StaffBulkForm({
           <FieldArray name="items">
             {({ remove }) => (
               <Box display="flex" flexDirection="column" gap={2}>
-                {debouncedValues.items.map((item: any, index: number) => (
+                {formik.values.items.map((item: any, index: number) => (
                   <Paper
                     key={index}
                     variant="outlined"
@@ -357,9 +336,41 @@ export default function StaffBulkForm({
             )}
           </FieldArray>
 
-          <Box display="flex" justifyContent="flex-end" gap={2} mt={3}>
-            <CancelBtn onClick={onCancel} />
-            <SaveBtn onSave={formik.submitForm} />
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            gap={2}
+            mt={3}
+          >
+            {mode === "add" ? (
+              <Button
+                startIcon={<Add />}
+                onClick={() => {
+                  formik.setFieldValue("items", [
+                    ...formik.values.items,
+                    { ...defaultRow },
+                  ]);
+                }}
+                variant="contained"
+                size="small"
+                sx={{
+                  borderRadius: "10px",
+                  bgcolor: "#1FA463",
+                  color: "#fff",
+                  textTransform: "none",
+                  fontWeight: 700,
+                }}
+              >
+                Thêm dòng mới
+              </Button>
+            ) : (
+              <Box />
+            )}
+            <Box display="flex" gap={2}>
+              <CancelBtn onClick={onCancel} />
+              <SaveBtn onSave={formik.submitForm} />
+            </Box>
           </Box>
         </form>
       </FormikProvider>

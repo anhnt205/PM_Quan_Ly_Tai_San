@@ -28,6 +28,11 @@ import { MaintenancePlanData } from "../../types";
 import { listSigneInfo } from "../../config";
 import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 import { PlanMaintenanceValidation } from "../../validation";
+import { useLocation } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../../../redux/store";
+import { useEffect } from "react";
+import { updateTabFormData } from "../../../../redux/tabsSlice";
+import { Remove } from "@mui/icons-material";
 
 interface PlanAsset {
   id?: string;
@@ -64,9 +69,116 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
 
   const listInfo = listSigneInfo(initialData, users, departments);
 
+  const location = useLocation();
+  const tabPath = location.pathname;
+  const dispatch = useAppDispatch();
+
+  const draftKey = initialData
+    ? `planDraft_${initialData.id}`
+    : "planDraft_new";
+
+  const savedDraft = useAppSelector((state) => {
+    const tab = state.tabs.tabs.find((t) => t.path === tabPath);
+    return tab?.formData?.[draftKey] ?? null;
+  });
+
   const formik = useFormik({
     initialValues: {
-      id: initialData?.id || "",
+      id:  "",
+      tenKeHoach:  "",
+      soKeHoach:  "",
+      nam:  new Date().getFullYear(),
+      nhomTaiSan:  AssetGroup.MAYMOC,
+      idDonViGiao:  "",
+      idDonViNhan:  "",
+      soQuyetDinh:  "",
+      nguoiKyList: [] as any[],
+      danhSachTaiSan: [] as any[],
+      idCongTy:  "CT001",
+      idLoaiKeHoach:  "THIET_BI",
+      trangThai:  0,
+      share: false,
+    },
+    enableReinitialize: true,
+    // validationSchema: PlanMaintenanceValidation,
+    onSubmit: (values) => {
+      // 1. Ánh xạ chi tiết tài sản với 12 tháng
+      const danhSachTaiSan = values.danhSachTaiSan.map((a: PlanAsset) => ({
+        id: a.id,
+        idTaiSan: a.deviceId,
+        soLuong: a.quantity || 1,
+        idDonViBaoTri: a.idDonViBaoTri,
+        capSuaChuaThang1: a.month1,
+        capSuaChuaThang2: a.month2,
+        capSuaChuaThang3: a.month3,
+        capSuaChuaThang4: a.month4,
+        capSuaChuaThang5: a.month5,
+        capSuaChuaThang6: a.month6,
+        capSuaChuaThang7: a.month7,
+        capSuaChuaThang8: a.month8,
+        capSuaChuaThang9: a.month9,
+        capSuaChuaThang10: a.month10,
+        capSuaChuaThang11: a.month11,
+        capSuaChuaThang12: a.month12,
+        action: a.action,
+      }));
+
+      // 2. Phân tách người ký
+      const signers = formik.values.nguoiKyList;
+      const idNguoiLapBieu = signers.length > 0 ? signers[0].userId : "";
+      const idTrinhDuyetGiamDoc =
+      signers.length > 1 ? signers[signers.length - 1].userId : "";
+      
+      // Người ký trung gian (nếu có)
+      const intermediateSigners =
+        signers.length > 2
+          ? signers.slice(1, -1).map((s: PlanSigner, idx: number) => ({
+              id: `${generateCode("SIG-")}-${idx}`,
+              idNguoiKy: s.userId,
+              tenNguoiKy: s.userName,
+              idPhongBan: s.departmentId,
+              trangThai: 0,
+            }))
+            : [];
+
+      const newPlanData: any = {
+        // Dùng id làm ID nếu có, nếu không thì để null để Backend tự tạo hoặc Frontend tạo GUID
+        id: formik.values.id.trim() || undefined,
+        idCongTy: formik.values.idCongTy,
+        nhomTaiSan: formik.values.nhomTaiSan,
+        soKeHoach: formik.values.soKeHoach,
+        tenKeHoach: formik.values.tenKeHoach,
+        soQuyetDinh: formik.values.soQuyetDinh,
+        idLoaiKeHoach: formik.values.idLoaiKeHoach,
+        nam: formik.values.nam,
+        idDonViGiao: formik.values.idDonViGiao,
+        idDonViNhan: formik.values.idDonViNhan,
+        idNguoiLapBieu: idNguoiLapBieu,
+        nguoiLapBieuXacNhan: false,
+        idTrinhDuyetGiamDoc: idTrinhDuyetGiamDoc,
+        trinhDuyetGiamDocXacNhan: false,
+        trangThai: 0,
+        share: false,
+        ghiChu: `Kế hoạch SCBD - ${departments.find((d: any) => d.id === formik.values.idDonViGiao)?.tenPhongBan || formik.values.idDonViGiao}`,
+        danhSachTaiSan: danhSachTaiSan,
+        nguoiKyList: intermediateSigners,
+      };
+
+      onSave(newPlanData, isEdit);
+      handleClose();
+    },
+  });
+
+  const { data: fullDeptAssets = { items: [], totalItems: 0 } } =
+    useAssetByDonViQuery(2, formik.values.idDonViGiao, "");
+
+  useEffect(() => {
+    if (!open) return;
+
+    if (initialData) {
+      const listInfo = listSigneInfo(initialData, users, departments);
+      formik.setValues({
+         id: initialData?.id || "",
       tenKeHoach: initialData?.tenKeHoach || "",
       soKeHoach: initialData?.soKeHoach || "",
       nam: initialData?.nam || new Date().getFullYear(),
@@ -74,7 +186,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
       idDonViGiao: initialData?.idDonViGiao || "",
       idDonViNhan: initialData?.idDonViNhan || "",
       soQuyetDinh: initialData?.soQuyetDinh || "",
-      nguoiKyList: (listInfo || []).map((item, idx) => ({
+        nguoiKyList: (listInfo || []).map((item, idx) => ({
         ...item,
         userId: item.idNhanVien,
         userName: item.hoTen,
@@ -106,89 +218,49 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
       idLoaiKeHoach: initialData?.idLoaiKeHoach || "THIET_BI",
       trangThai: initialData?.trangThai || 0,
       share: initialData?.share ?? false,
-    },
-    enableReinitialize: true,
-    // validationSchema: PlanMaintenanceValidation,
-    onSubmit: (values) => {
-      // 1. Ánh xạ chi tiết tài sản với 12 tháng
-      const danhSachTaiSan = values.danhSachTaiSan.map((a: PlanAsset) => ({
-        id: a.id,
-        idTaiSan: a.deviceId,
-        soLuong: a.quantity || 1,
-        idDonViBaoTri: a.idDonViBaoTri,
-        capSuaChuaThang1: a.month1,
-        capSuaChuaThang2: a.month2,
-        capSuaChuaThang3: a.month3,
-        capSuaChuaThang4: a.month4,
-        capSuaChuaThang5: a.month5,
-        capSuaChuaThang6: a.month6,
-        capSuaChuaThang7: a.month7,
-        capSuaChuaThang8: a.month8,
-        capSuaChuaThang9: a.month9,
-        capSuaChuaThang10: a.month10,
-        capSuaChuaThang11: a.month11,
-        capSuaChuaThang12: a.month12,
-        action: a.action,
-      }));
+      });
+      return;
+    }
 
-      // 2. Phân tách người ký
-      const signers = formik.values.nguoiKyList;
-      const idNguoiLapBieu = signers.length > 0 ? signers[0].userId : "";
-      const idTrinhDuyetGiamDoc =
-        signers.length > 1 ? signers[signers.length - 1].userId : "";
+    if (savedDraft) {
+      formik.setValues(savedDraft);
+      return;
+    }
 
-      // Người ký trung gian (nếu có)
-      const intermediateSigners =
-        signers.length > 2
-          ? signers.slice(1, -1).map((s: PlanSigner, idx: number) => ({
-              id: `${generateCode("SIG-")}-${idx}`,
-              idNguoiKy: s.userId,
-              tenNguoiKy: s.userName,
-              idPhongBan: s.departmentId,
-              trangThai: 0,
-            }))
-          : [];
-
-      const newPlanData: any = {
-        // Dùng id làm ID nếu có, nếu không thì để null để Backend tự tạo hoặc Frontend tạo GUID
-        id: formik.values.id.trim() || undefined,
-        idCongTy: formik.values.idCongTy,
-        nhomTaiSan: formik.values.nhomTaiSan,
-        soKeHoach: formik.values.id,
-        tenKeHoach: formik.values.tenKeHoach,
-        soQuyetDinh: formik.values.soQuyetDinh,
-        idLoaiKeHoach: formik.values.idLoaiKeHoach,
-        nam: formik.values.nam,
-        idDonViGiao: formik.values.idDonViGiao,
-        idDonViNhan: formik.values.idDonViNhan,
-        idNguoiLapBieu: idNguoiLapBieu,
-        nguoiLapBieuXacNhan: false,
-        idTrinhDuyetGiamDoc: idTrinhDuyetGiamDoc,
-        trinhDuyetGiamDocXacNhan: false,
-        trangThai: 0,
-        share: false,
-        ghiChu: `Kế hoạch SCBD - ${departments.find((d: any) => d.id === formik.values.idDonViGiao)?.tenPhongBan || formik.values.idDonViGiao}`,
-        danhSachTaiSan: danhSachTaiSan,
-        nguoiKyList: intermediateSigners,
-      };
-
-      onSave(newPlanData, isEdit);
-      handleClose();
-    },
-  });
-
-  const { data: fullDeptAssets = { items: [], totalItems: 0 } } =
-    useAssetByDonViQuery(2, formik.values.idDonViGiao, "");
+    formik.resetForm();
+  }, [open, initialData, users, departments, savedDraft]);
 
   const handleClose = () => {
+    dispatch(
+      updateTabFormData({
+        path: tabPath,
+        data: {
+          [draftKey]: null,
+          lastMinimizedDialog: null,
+        },
+      }),
+    );
     formik.resetForm();
+    onClose();
+  };
+
+  const handleMinimize = () => {
+    dispatch(
+      updateTabFormData({
+        path: tabPath,
+        data: {
+          [draftKey]: formik.values,
+          lastMinimizedDialog: "plan",
+        },
+      }),
+    );
     onClose();
   };
 
   return (
     <Dialog
       open={open}
-      onClose={handleClose}
+      onClose={handleMinimize}
       maxWidth="xl"
       fullWidth
       PaperProps={{ sx: { height: "90vh" } }}
@@ -204,9 +276,14 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
         <Typography variant="h6" fontWeight={600}>
           Tạo kế hoạch mới
         </Typography>
-        <IconButton size="small" onClick={handleClose}>
-          <CloseIcon />
-        </IconButton>
+        <Box sx={{ display: "flex", gap: 0.5 }}>
+          <IconButton size="small" onClick={handleMinimize}>
+            <Remove />
+          </IconButton>
+          <IconButton size="small" onClick={handleClose}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
       </DialogTitle>
 
       <Divider />
@@ -322,7 +399,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
 
           {/* ── CỘT PHẢI: Quy trình duyệt ── */}
           <Box>
-            <SignerWorkflowSection formik={formik} fieldName="signers" />
+            <SignerWorkflowSection formik={formik} fieldName="nguoiKyList" />
           </Box>
         </Box>
 

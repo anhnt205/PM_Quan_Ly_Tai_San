@@ -100,11 +100,9 @@ function RowForm({
     };
   });
 
-  // Trong RowForm, thay useEffect notify parent
-  const debouncedValues = useDebounce(formik.values, 600);
   useEffect(() => {
-    onChange(debouncedValues);
-  }, [debouncedValues]);
+    onChange(formik.values);
+  }, [formik.values]);
 
   const hasError =
     Object.keys(formik.errors).length > 0 &&
@@ -293,7 +291,6 @@ export default function BulkDepartmentForm({
       const index = prev.findIndex((r) => r.key === key);
       const next = [...prev];
       next.splice(index + 1, 0, newRow); // chèn ngay sau row được copy
-      onRowsChange?.(next.map((r) => r.data as DepartmentType));
       return next;
     });
     setExpanded(newRow.key);
@@ -302,7 +299,6 @@ export default function BulkDepartmentForm({
   const handleDeleteRow = (key: string) => {
     setRows((prev) => {
       const next = prev.filter((r) => r.key !== key);
-      onRowsChange?.(next.map((r) => r.data as DepartmentType)); // thêm
       submitRefs.current.delete(key);
       return next;
     });
@@ -340,7 +336,6 @@ export default function BulkDepartmentForm({
       const next = prev.map((r) =>
         r.key === key ? { ...r, data: values } : r,
       );
-      onRowsChange?.(next.map((r) => r.data as DepartmentType)); // thêm
       return next;
     });
   };
@@ -349,8 +344,13 @@ export default function BulkDepartmentForm({
     return row.data.tenPhongBan || row.data.id || `Phòng ban ${index + 1}`;
   };
 
+  const handleMinimize = () => {
+    onRowsChange?.(rows.map((r) => r.data as DepartmentType));
+    onClose();
+  };
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={handleMinimize} maxWidth="md" fullWidth>
       {/* Title */}
       <DialogTitle
         sx={{
@@ -373,7 +373,7 @@ export default function BulkDepartmentForm({
           />
         </Box>
         <Box display="flex" alignItems="center">
-          <IconButton size="small" onClick={onClose}>
+          <IconButton size="small" onClick={handleMinimize}>
             <Remove fontSize="small" />
           </IconButton>
           <IconButton size="small" onClick={onCancel}>
@@ -406,30 +406,25 @@ export default function BulkDepartmentForm({
         {/* Accordion list */}
         <Box sx={{ px: 3, pt: 2, pb: 1, maxHeight: "60vh", overflowY: "auto" }}>
           {rows.map((row, index) => (
-            <Accordion
+            <Box
               key={row.key}
-              expanded={expanded === row.key}
-              onChange={(_, isExpanded) =>
-                setExpanded(isExpanded ? row.key : false)
-              }
               sx={{
-                mb: 1,
+                mb: 2,
                 border: "1px solid #e2e8f0",
-                borderRadius: "8px !important",
-                boxShadow: "none",
-                "&:before": { display: "none" },
+                borderRadius: "8px",
               }}
             >
-              <AccordionSummary
-                expandIcon={<ExpandMore />}
+              {/* Header */}
+              <Box
                 sx={{
-                  bgcolor: expanded === row.key ? "#f0fdf4" : "#fafafa",
-                  borderRadius: "8px",
-                  minHeight: 48,
-                  "& .MuiAccordionSummary-content": {
-                    alignItems: "center",
-                    gap: 1,
-                  },
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  px: 2,
+                  py: 1.5,
+                  bgcolor: "#f0fdf4",
+                  borderRadius: "8px 8px 0 0",
+                  borderBottom: "1px solid #e2e8f0",
                 }}
               >
                 <Box
@@ -452,47 +447,28 @@ export default function BulkDepartmentForm({
                 <Typography sx={{ fontWeight: 600, flex: 1 }}>
                   {getRowLabel(row, index)}
                 </Typography>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 0.25, // khoảng cách giữa Copy và Delete
-                    mr: 1,
-                  }}
-                >
+                <Box display="flex" alignItems="center" gap={0.25}>
                   <IconButton
                     size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCopyRow(row.key);
-                    }}
-                    sx={{
-                      p: 0.5,
-                      color: "primary.main",
-                    }}
+                    onClick={() => handleCopyRow(row.key)}
+                    sx={{ p: 0.5, color: "primary.main" }}
                   >
                     <ContentCopy fontSize="small" />
                   </IconButton>
-
                   {rows.length > 1 && (
                     <IconButton
                       size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteRow(row.key);
-                      }}
-                      sx={{
-                        p: 0.5,
-                        color: "error.main",
-                      }}
+                      onClick={() => handleDeleteRow(row.key)}
+                      sx={{ p: 0.5, color: "error.main" }}
                     >
                       <Delete fontSize="small" />
                     </IconButton>
                   )}
                 </Box>
-              </AccordionSummary>
+              </Box>
 
-              <AccordionDetails sx={{ pt: 2, px: 2 }}>
+              {/* Form */}
+              <Box sx={{ p: 2 }}>
                 <RowForm
                   rowIndex={index}
                   initialData={row.data}
@@ -501,37 +477,38 @@ export default function BulkDepartmentForm({
                   submitRef={getOrCreateRef(row.key)}
                   onChange={(values) => handleRowDataChange(row.key, values)}
                 />
-              </AccordionDetails>
-            </Accordion>
+              </Box>
+            </Box>
           ))}
+        </Box>
+        <Divider />
 
-          {/* Add row button — only in create mode */}
+        {/* Footer */}
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          px={3}
+          py={2}
+        >
           {mode === "create" && (
             <Button
               startIcon={<Add />}
               onClick={handleAddRow}
-              variant="outlined"
-              fullWidth
+              variant="contained"
               sx={{
-                mt: 1,
-                mb: 1,
-                borderStyle: "dashed",
-                color: "#1FA463",
-                borderColor: "#1FA463",
-                "&:hover": { borderStyle: "dashed", bgcolor: "#f0fdf4" },
+                bgcolor: "#1FA463",
+                color: "#fff",
+                "&:hover": { bgcolor: "#178a52" },
               }}
             >
               Thêm phòng ban
             </Button>
           )}
-        </Box>
-
-        <Divider />
-
-        {/* Footer */}
-        <Box display="flex" justifyContent="flex-end" gap={2} px={3} py={2}>
-          <CancelBtn onClick={onCancel} />
-          <SaveBtn onSave={handleSaveAll} />
+          <Box display="flex" gap={2} ml="auto">
+            <CancelBtn onClick={onCancel} />
+            <SaveBtn onSave={handleSaveAll} />
+          </Box>
         </Box>
       </DialogContent>
     </Dialog>
