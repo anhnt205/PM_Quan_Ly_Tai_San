@@ -130,6 +130,7 @@ export default function HoursAsset({
   onEdit,
   onCancel,
   allDepartments = [],
+  isView = false,
 }: {
   asset: any;
   onPageChange?: (page: number) => void;
@@ -139,6 +140,7 @@ export default function HoursAsset({
   onEdit: () => void;
   onCancel: () => void;
   allDepartments: DepartmentType[];
+  isView?: boolean;
 }) {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
@@ -352,26 +354,28 @@ export default function HoursAsset({
   return (
     <Box sx={bookStyles.container}>
       {/* Toolbar */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "flex-end",
-          mb: 2,
-          position: "sticky",
-          top: 0,
-          zIndex: 10,
-        }}
-      >
-        <Box sx={{ display: "flex", gap: 2 }}>
-          {!readOnly && (
-            <>
-              <SaveBtn onSave={handleSave} />
-              <CancelBtn onClick={handleCancel} />
-            </>
-          )}
-          {readOnly && <EditButton onClick={handleEditMode} />}
+      {!isView && (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+            mb: 2,
+            position: "sticky",
+            top: 0,
+            zIndex: 10,
+          }}
+        >
+          <Box sx={{ display: "flex", gap: 2 }}>
+            {!readOnly && (
+              <>
+                <SaveBtn onSave={handleSave} />
+                <CancelBtn onClick={handleCancel} />
+              </>
+            )}
+            {readOnly && <EditButton onClick={handleEditMode} />}
+          </Box>
         </Box>
-      </Box>
+      )}
 
       {/* Tiêu đề */}
       <Typography

@@ -40,7 +40,8 @@ const bookStyles = {
       top: 0,
       bottom: 0,
       width: "24px",
-      background: "linear-gradient(to right, rgba(139, 69, 19, 0.08), transparent)",
+      background:
+        "linear-gradient(to right, rgba(139, 69, 19, 0.08), transparent)",
       pointerEvents: "none" as const,
       borderTopLeftRadius: "12px",
       borderBottomLeftRadius: "12px",
@@ -52,7 +53,8 @@ const bookStyles = {
       top: 0,
       bottom: 0,
       width: "24px",
-      background: "linear-gradient(to left, rgba(139, 69, 19, 0.08), transparent)",
+      background:
+        "linear-gradient(to left, rgba(139, 69, 19, 0.08), transparent)",
       pointerEvents: "none" as const,
       borderTopRightRadius: "12px",
       borderBottomRightRadius: "12px",
@@ -125,6 +127,7 @@ interface AssetMaintenanceProps {
   onEdit?: () => void;
   onCancel?: () => void;
   onSave?: (values: any) => void;
+  isView?: boolean;
 }
 
 const EMPTY_ROWS_TARGET = 12;
@@ -138,6 +141,7 @@ export default function AssetMaintenance({
   onEdit,
   onCancel,
   onSave,
+  isView = false,
 }: AssetMaintenanceProps) {
   const [rows, setRows] = useState<IncidentRow[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -178,9 +182,13 @@ export default function AssetMaintenance({
     setRows(rows.filter((r) => r.id !== id));
   };
 
-  const handleChange = (id: string, field: keyof IncidentRow, value: string) => {
+  const handleChange = (
+    id: string,
+    field: keyof IncidentRow,
+    value: string,
+  ) => {
     setRows((prev) =>
-      prev.map((row) => (row.id === id ? { ...row, [field]: value } : row))
+      prev.map((row) => (row.id === id ? { ...row, [field]: value } : row)),
     );
   };
 
@@ -190,27 +198,29 @@ export default function AssetMaintenance({
   return (
     <Box sx={bookStyles.container}>
       {/* Toolbar */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "flex-end",
-          mb: 2,
-          position: "sticky",
-          top: 0,
-          zIndex: 10,
-        }}
-      >
-        <Box sx={{ display: "flex", gap: 2 }}>
-          {!readOnly && isEditMode && (
-            <>
-              <SaveBtn onSave={handleSave} />
-              <CancelBtn onClick={handleCancel} />
-            </>
-          )}
-          {!isEditMode && !readOnly && <EditButton onClick={handleEdit} />}
+      {!isView && (
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            mb: 2,
+            position: "sticky",
+            top: 0,
+            zIndex: 10,
+          }}
+        >
+          <Box sx={{ display: "flex", gap: 2 }}>
+            {!readOnly && isEditMode && (
+              <>
+                <SaveBtn onSave={handleSave} />
+                <CancelBtn onClick={handleCancel} />
+              </>
+            )}
+            {!isEditMode && !readOnly && <EditButton onClick={handleEdit} />}
+          </Box>
         </Box>
-      </Box>
+      )}
 
       {/* Tiêu đề */}
       <Typography
@@ -250,7 +260,12 @@ export default function AssetMaintenance({
         <TableContainer
           component={Paper}
           elevation={0}
-          sx={{ borderRadius: "0px", overflow: "hidden", width: "100%", mt: "4px" }}
+          sx={{
+            borderRadius: "0px",
+            overflow: "hidden",
+            width: "100%",
+            mt: "4px",
+          }}
         >
           <Table
             size="small"
@@ -275,7 +290,11 @@ export default function AssetMaintenance({
                   Họ tên và chữ ký người sửa chữa
                 </TableCell>
                 {/* Nhóm "Thiệt hại vì sự cố" – span 4 cột */}
-                <TableCell colSpan={4} align="center" sx={hcell({ width: "31%" })}>
+                <TableCell
+                  colSpan={4}
+                  align="center"
+                  sx={hcell({ width: "31%" })}
+                >
                   Thiệt hại vì sự cố
                 </TableCell>
                 {isEditMode && (
@@ -287,18 +306,12 @@ export default function AssetMaintenance({
 
               {/* Header tầng 2 */}
               <TableRow>
-                <TableCell sx={hcell({ width: "8%" })}>
-                  Giờ ngừng (h)
-                </TableCell>
-                <TableCell sx={hcell({ width: "9%" })}>
-                  Tiền công s/c
-                </TableCell>
+                <TableCell sx={hcell({ width: "8%" })}>Giờ ngừng (h)</TableCell>
+                <TableCell sx={hcell({ width: "9%" })}>Tiền công s/c</TableCell>
                 <TableCell sx={hcell({ width: "9%" })}>
                   Tiền nguyên vật liệu
                 </TableCell>
-                <TableCell sx={hcell({ width: "9%" })}>
-                  Tổng cộng (đ)
-                </TableCell>
+                <TableCell sx={hcell({ width: "9%" })}>Tổng cộng (đ)</TableCell>
               </TableRow>
             </TableHead>
 
@@ -310,13 +323,26 @@ export default function AssetMaintenance({
                   <TableCell align="center" sx={dcell()}>
                     {isEditMode ? (
                       <TextField
-                        fullWidth size="small" variant="standard"
-                        InputProps={{ disableUnderline: true, inputProps: { style: { textAlign: "center" } } }}
+                        fullWidth
+                        size="small"
+                        variant="standard"
+                        InputProps={{
+                          disableUnderline: true,
+                          inputProps: { style: { textAlign: "center" } },
+                        }}
                         value={row.ca}
-                        onChange={(e) => handleChange(row.id, "ca", e.target.value)}
+                        onChange={(e) =>
+                          handleChange(row.id, "ca", e.target.value)
+                        }
                       />
                     ) : (
-                      <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "14px", textAlign: "center" }}>
+                      <Typography
+                        sx={{
+                          fontFamily: '"Times New Roman", Times, serif',
+                          fontSize: "14px",
+                          textAlign: "center",
+                        }}
+                      >
                         {row.ca}
                       </Typography>
                     )}
@@ -325,14 +351,26 @@ export default function AssetMaintenance({
                   <TableCell align="center" sx={dcell()}>
                     {isEditMode ? (
                       <TextField
-                        fullWidth size="small" variant="standard" type="date"
+                        fullWidth
+                        size="small"
+                        variant="standard"
+                        type="date"
                         InputProps={{ disableUnderline: true }}
                         value={row.ngayThangNam}
-                        onChange={(e) => handleChange(row.id, "ngayThangNam", e.target.value)}
+                        onChange={(e) =>
+                          handleChange(row.id, "ngayThangNam", e.target.value)
+                        }
                       />
                     ) : (
-                      <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "14px" }}>
-                        {row.ngayThangNam ? dayjs(row.ngayThangNam).format("DD/MM/YYYY") : ""}
+                      <Typography
+                        sx={{
+                          fontFamily: '"Times New Roman", Times, serif',
+                          fontSize: "14px",
+                        }}
+                      >
+                        {row.ngayThangNam
+                          ? dayjs(row.ngayThangNam).format("DD/MM/YYYY")
+                          : ""}
                       </Typography>
                     )}
                   </TableCell>
@@ -340,14 +378,23 @@ export default function AssetMaintenance({
                   <TableCell sx={dcell()}>
                     {isEditMode ? (
                       <TextField
-                        fullWidth size="small" variant="standard"
+                        fullWidth
+                        size="small"
+                        variant="standard"
                         InputProps={{ disableUnderline: true }}
                         value={row.hoTenVanHanh}
-                        onChange={(e) => handleChange(row.id, "hoTenVanHanh", e.target.value)}
+                        onChange={(e) =>
+                          handleChange(row.id, "hoTenVanHanh", e.target.value)
+                        }
                         placeholder="Họ và tên..."
                       />
                     ) : (
-                      <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "14px" }}>
+                      <Typography
+                        sx={{
+                          fontFamily: '"Times New Roman", Times, serif',
+                          fontSize: "14px",
+                        }}
+                      >
                         {row.hoTenVanHanh}
                       </Typography>
                     )}
@@ -356,14 +403,25 @@ export default function AssetMaintenance({
                   <TableCell sx={dcell()}>
                     {isEditMode ? (
                       <TextField
-                        fullWidth size="small" variant="standard" multiline maxRows={3}
+                        fullWidth
+                        size="small"
+                        variant="standard"
+                        multiline
+                        maxRows={3}
                         InputProps={{ disableUnderline: true }}
                         value={row.nguyenNhan}
-                        onChange={(e) => handleChange(row.id, "nguyenNhan", e.target.value)}
+                        onChange={(e) =>
+                          handleChange(row.id, "nguyenNhan", e.target.value)
+                        }
                         placeholder="Mô tả nguyên nhân..."
                       />
                     ) : (
-                      <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "14px" }}>
+                      <Typography
+                        sx={{
+                          fontFamily: '"Times New Roman", Times, serif',
+                          fontSize: "14px",
+                        }}
+                      >
                         {row.nguyenNhan}
                       </Typography>
                     )}
@@ -372,14 +430,23 @@ export default function AssetMaintenance({
                   <TableCell sx={dcell()}>
                     {isEditMode ? (
                       <TextField
-                        fullWidth size="small" variant="standard"
+                        fullWidth
+                        size="small"
+                        variant="standard"
                         InputProps={{ disableUnderline: true }}
                         value={row.hoTenSuaChua}
-                        onChange={(e) => handleChange(row.id, "hoTenSuaChua", e.target.value)}
+                        onChange={(e) =>
+                          handleChange(row.id, "hoTenSuaChua", e.target.value)
+                        }
                         placeholder="Họ và tên..."
                       />
                     ) : (
-                      <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "14px" }}>
+                      <Typography
+                        sx={{
+                          fontFamily: '"Times New Roman", Times, serif',
+                          fontSize: "14px",
+                        }}
+                      >
                         {row.hoTenSuaChua}
                       </Typography>
                     )}
@@ -388,13 +455,26 @@ export default function AssetMaintenance({
                   <TableCell align="center" sx={dcell()}>
                     {isEditMode ? (
                       <TextField
-                        fullWidth size="small" variant="standard"
-                        InputProps={{ disableUnderline: true, inputProps: { style: { textAlign: "center" } } }}
+                        fullWidth
+                        size="small"
+                        variant="standard"
+                        InputProps={{
+                          disableUnderline: true,
+                          inputProps: { style: { textAlign: "center" } },
+                        }}
                         value={row.gioNgung}
-                        onChange={(e) => handleChange(row.id, "gioNgung", e.target.value)}
+                        onChange={(e) =>
+                          handleChange(row.id, "gioNgung", e.target.value)
+                        }
                       />
                     ) : (
-                      <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "14px", textAlign: "center" }}>
+                      <Typography
+                        sx={{
+                          fontFamily: '"Times New Roman", Times, serif',
+                          fontSize: "14px",
+                          textAlign: "center",
+                        }}
+                      >
                         {row.gioNgung}
                       </Typography>
                     )}
@@ -403,13 +483,26 @@ export default function AssetMaintenance({
                   <TableCell align="center" sx={dcell()}>
                     {isEditMode ? (
                       <TextField
-                        fullWidth size="small" variant="standard"
-                        InputProps={{ disableUnderline: true, inputProps: { style: { textAlign: "center" } } }}
+                        fullWidth
+                        size="small"
+                        variant="standard"
+                        InputProps={{
+                          disableUnderline: true,
+                          inputProps: { style: { textAlign: "center" } },
+                        }}
                         value={row.tienCongSC}
-                        onChange={(e) => handleChange(row.id, "tienCongSC", e.target.value)}
+                        onChange={(e) =>
+                          handleChange(row.id, "tienCongSC", e.target.value)
+                        }
                       />
                     ) : (
-                      <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "14px", textAlign: "center" }}>
+                      <Typography
+                        sx={{
+                          fontFamily: '"Times New Roman", Times, serif',
+                          fontSize: "14px",
+                          textAlign: "center",
+                        }}
+                      >
                         {row.tienCongSC}
                       </Typography>
                     )}
@@ -418,13 +511,30 @@ export default function AssetMaintenance({
                   <TableCell align="center" sx={dcell()}>
                     {isEditMode ? (
                       <TextField
-                        fullWidth size="small" variant="standard"
-                        InputProps={{ disableUnderline: true, inputProps: { style: { textAlign: "center" } } }}
+                        fullWidth
+                        size="small"
+                        variant="standard"
+                        InputProps={{
+                          disableUnderline: true,
+                          inputProps: { style: { textAlign: "center" } },
+                        }}
                         value={row.tienNguyenVatLieu}
-                        onChange={(e) => handleChange(row.id, "tienNguyenVatLieu", e.target.value)}
+                        onChange={(e) =>
+                          handleChange(
+                            row.id,
+                            "tienNguyenVatLieu",
+                            e.target.value,
+                          )
+                        }
                       />
                     ) : (
-                      <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "14px", textAlign: "center" }}>
+                      <Typography
+                        sx={{
+                          fontFamily: '"Times New Roman", Times, serif',
+                          fontSize: "14px",
+                          textAlign: "center",
+                        }}
+                      >
                         {row.tienNguyenVatLieu}
                       </Typography>
                     )}
@@ -433,13 +543,26 @@ export default function AssetMaintenance({
                   <TableCell align="center" sx={dcell()}>
                     {isEditMode ? (
                       <TextField
-                        fullWidth size="small" variant="standard"
-                        InputProps={{ disableUnderline: true, inputProps: { style: { textAlign: "center" } } }}
+                        fullWidth
+                        size="small"
+                        variant="standard"
+                        InputProps={{
+                          disableUnderline: true,
+                          inputProps: { style: { textAlign: "center" } },
+                        }}
                         value={row.tongCong}
-                        onChange={(e) => handleChange(row.id, "tongCong", e.target.value)}
+                        onChange={(e) =>
+                          handleChange(row.id, "tongCong", e.target.value)
+                        }
                       />
                     ) : (
-                      <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "14px", textAlign: "center" }}>
+                      <Typography
+                        sx={{
+                          fontFamily: '"Times New Roman", Times, serif',
+                          fontSize: "14px",
+                          textAlign: "center",
+                        }}
+                      >
                         {row.tongCong}
                       </Typography>
                     )}

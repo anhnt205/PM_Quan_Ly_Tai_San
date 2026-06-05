@@ -161,8 +161,9 @@ export const useAssetProfileMutation = (
 
   const deleteManyMutation = useMutation({
     mutationFn: async (ids: string[]) => {
-      const requests = ids.map((id) => ({ id }));
-      const res = await api.put(`/ly-lich/update-batch`, requests);
+      const res = await api.delete(`/ly-lich/delete-batch`, {
+        data: ids,
+      });
       return res.data.message;
     },
     onSuccess: (data) => {

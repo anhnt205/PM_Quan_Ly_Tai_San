@@ -2,6 +2,7 @@ package com.ecotel.quanlytaisan.model;
 
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,6 +21,7 @@ import java.util.List;
 @Access(AccessType.FIELD)
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class NhomTaiSan {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -50,6 +52,10 @@ public class NhomTaiSan {
 
     @Column(name = "SoLuongTaiSan")
     private Integer soLuongTaiSan;
+
+    // Field nhận ID từ JSON request (không map DB column)
+    @Transient
+    private String idLyLich;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "IdLyLich")

@@ -15,18 +15,22 @@ public class TemplateLyLichSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Xóa hết dữ liệu cũ
-        lyLichTemplateRepository.deleteAll();
-
-        // Thêm các seed mới
         List<LyLichTemplate> seeds = List.of(
-                buildLyLichTemplate("LL01", "Lý lịch thiết bị"),
+                buildLyLichTemplate("LL01", "Lý lịch phương tiện vận tải"),
                 buildLyLichTemplate("LL02", "Lý lịch máy móc")
         );
 
-        lyLichTemplateRepository.saveAll(seeds);
+        for (LyLichTemplate seed : seeds) {
+            lyLichTemplateRepository.findByMaLyLich(seed.getMaLyLich())
+                    .ifPresentOrElse(
+                            existing -> {
+                                existing.setTenLyLich(seed.getTenLyLich());
+                                lyLichTemplateRepository.save(existing);
+                            },
+                            () -> lyLichTemplateRepository.save(seed)
+                    );
+        }
     }
-
     private LyLichTemplate buildLyLichTemplate(String maLyLich, String tenLyLich) {
         return LyLichTemplate.builder()
                 .maLyLich(maLyLich)

@@ -28,6 +28,7 @@ import { useDebounce } from "../../../hooks/useDebounce";
 import { useLyLichTemplateQuery } from "../Mutation";
 import { RootState } from "../../../redux/store";
 import { useSelector } from "react-redux";
+import AssetEbookContent from "../../AssetManager/components/AssetEbookContent";
 
 export default function AssetProfileForm({
   onEdit,
@@ -450,6 +451,25 @@ export default function AssetProfileForm({
               rows={3}
             />
           </Grid>
+          {lyLichTemplates.find(
+            (t: any) => t.id === formik.values.idLyLichTemplate,
+          ).maLyLich === "LL02" && (
+            <AssetEbookContent
+              selectedAsset={null}
+              readOnly={readOnly}
+              onEdit={() => {}}
+              onCancel={() => {}}
+              onClose={() => {}}
+              onSave={(values) => {}}
+              allAssetModel={[]}
+              allCurrentStatus={[]}
+              assetGroups={[]}
+              allDepartments={[]}
+              allUnits={[]}
+              allReasonIncreases={[]}
+              isView={true}
+            />
+          )}
         </Grid>
       </Paper>
 

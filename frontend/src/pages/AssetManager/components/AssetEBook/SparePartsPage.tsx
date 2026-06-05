@@ -116,6 +116,7 @@ interface SparePartsPageProps {
   readOnly?: boolean;
   onEdit?: () => void;
   onCancel?: () => void;
+  isView?: boolean;
 }
 
 const EMPTY_ROWS_TARGET = 12;
@@ -128,6 +129,7 @@ const SparePartsPage: React.FC<SparePartsPageProps> = ({
   readOnly = true,
   onEdit,
   onCancel,
+  isView = false,
 }) => {
   const [rows, setRows] = useState<SparePartRow[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -164,9 +166,13 @@ const SparePartsPage: React.FC<SparePartsPageProps> = ({
     setRows(rows.filter((r) => r.id !== id));
   };
 
-  const handleChange = (id: string, field: keyof SparePartRow, value: string) => {
+  const handleChange = (
+    id: string,
+    field: keyof SparePartRow,
+    value: string,
+  ) => {
     setRows((prev) =>
-      prev.map((row) => (row.id === id ? { ...row, [field]: value } : row))
+      prev.map((row) => (row.id === id ? { ...row, [field]: value } : row)),
     );
   };
 
@@ -186,15 +192,17 @@ const SparePartsPage: React.FC<SparePartsPageProps> = ({
           zIndex: 10,
         }}
       >
-        <Box sx={{ display: "flex", gap: 2 }}>
-          {!readOnly && isEditMode && (
-            <>
-              <SaveBtn onSave={handleSave} />
-              <CancelBtn onClick={handleCancel} />
-            </>
-          )}
-          {!isEditMode && readOnly && <EditButton onClick={handleEdit} />}
-        </Box>
+        {!isView && (
+          <Box sx={{ display: "flex", gap: 2 }}>
+            {!readOnly && isEditMode && (
+              <>
+                <SaveBtn onSave={handleSave} />
+                <CancelBtn onClick={handleCancel} />
+              </>
+            )}
+            {!isEditMode && readOnly && <EditButton onClick={handleEdit} />}
+          </Box>
+        )}
       </Box>
 
       {/* Tiêu đề */}
@@ -202,7 +210,11 @@ const SparePartsPage: React.FC<SparePartsPageProps> = ({
         textAlign="center"
         fontSize={18}
         fontWeight={700}
-        sx={{ letterSpacing: "2px", mb: 2, fontFamily: '"Times New Roman", Times, serif' }}
+        sx={{
+          letterSpacing: "2px",
+          mb: 2,
+          fontFamily: '"Times New Roman", Times, serif',
+        }}
       >
         BẢNG KÊ CÁC PHỤ TÙNG CHÍNH CỦA MÁY
       </Typography>
@@ -231,9 +243,17 @@ const SparePartsPage: React.FC<SparePartsPageProps> = ({
         <TableContainer
           component={Paper}
           elevation={0}
-          sx={{ borderRadius: "0px", overflow: "hidden", width: "100%", marginTop: "4px" }}
+          sx={{
+            borderRadius: "0px",
+            overflow: "hidden",
+            width: "100%",
+            marginTop: "4px",
+          }}
         >
-          <Table size="small" sx={{ borderCollapse: "collapse", border: "1px solid black" }}>
+          <Table
+            size="small"
+            sx={{ borderCollapse: "collapse", border: "1px solid black" }}
+          >
             <TableHead>
               <TableRow>
                 <TableCell
@@ -296,7 +316,12 @@ const SparePartsPage: React.FC<SparePartsPageProps> = ({
                 <TableRow key={row.id}>
                   {/* TT */}
                   <TableCell align="center" sx={dataCellSx}>
-                    <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "15px" }}>
+                    <Typography
+                      sx={{
+                        fontFamily: '"Times New Roman", Times, serif',
+                        fontSize: "15px",
+                      }}
+                    >
                       {idx + 1}
                     </Typography>
                   </TableCell>
@@ -309,11 +334,18 @@ const SparePartsPage: React.FC<SparePartsPageProps> = ({
                         variant="standard"
                         InputProps={{ disableUnderline: true }}
                         value={row.tenVaQuyCache}
-                        onChange={(e) => handleChange(row.id, "tenVaQuyCache", e.target.value)}
+                        onChange={(e) =>
+                          handleChange(row.id, "tenVaQuyCache", e.target.value)
+                        }
                         placeholder="Nhập tên và quy cách..."
                       />
                     ) : (
-                      <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "15px" }}>
+                      <Typography
+                        sx={{
+                          fontFamily: '"Times New Roman", Times, serif',
+                          fontSize: "15px",
+                        }}
+                      >
                         {row.tenVaQuyCache}
                       </Typography>
                     )}
@@ -327,11 +359,18 @@ const SparePartsPage: React.FC<SparePartsPageProps> = ({
                         variant="standard"
                         InputProps={{ disableUnderline: true }}
                         value={row.donViTinh}
-                        onChange={(e) => handleChange(row.id, "donViTinh", e.target.value)}
+                        onChange={(e) =>
+                          handleChange(row.id, "donViTinh", e.target.value)
+                        }
                         placeholder="Chiếc..."
                       />
                     ) : (
-                      <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "15px" }}>
+                      <Typography
+                        sx={{
+                          fontFamily: '"Times New Roman", Times, serif',
+                          fontSize: "15px",
+                        }}
+                      >
                         {row.donViTinh}
                       </Typography>
                     )}
@@ -343,12 +382,23 @@ const SparePartsPage: React.FC<SparePartsPageProps> = ({
                         fullWidth
                         size="small"
                         variant="standard"
-                        InputProps={{ disableUnderline: true, inputProps: { style: { textAlign: "center" } } }}
+                        InputProps={{
+                          disableUnderline: true,
+                          inputProps: { style: { textAlign: "center" } },
+                        }}
                         value={row.soLuong}
-                        onChange={(e) => handleChange(row.id, "soLuong", e.target.value)}
+                        onChange={(e) =>
+                          handleChange(row.id, "soLuong", e.target.value)
+                        }
                       />
                     ) : (
-                      <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "15px", textAlign: "center" }}>
+                      <Typography
+                        sx={{
+                          fontFamily: '"Times New Roman", Times, serif',
+                          fontSize: "15px",
+                          textAlign: "center",
+                        }}
+                      >
                         {row.soLuong}
                       </Typography>
                     )}
@@ -360,12 +410,23 @@ const SparePartsPage: React.FC<SparePartsPageProps> = ({
                         fullWidth
                         size="small"
                         variant="standard"
-                        InputProps={{ disableUnderline: true, inputProps: { style: { textAlign: "center" } } }}
+                        InputProps={{
+                          disableUnderline: true,
+                          inputProps: { style: { textAlign: "center" } },
+                        }}
                         value={row.trongLuong}
-                        onChange={(e) => handleChange(row.id, "trongLuong", e.target.value)}
+                        onChange={(e) =>
+                          handleChange(row.id, "trongLuong", e.target.value)
+                        }
                       />
                     ) : (
-                      <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "15px", textAlign: "center" }}>
+                      <Typography
+                        sx={{
+                          fontFamily: '"Times New Roman", Times, serif',
+                          fontSize: "15px",
+                          textAlign: "center",
+                        }}
+                      >
                         {row.trongLuong}
                       </Typography>
                     )}
@@ -379,11 +440,18 @@ const SparePartsPage: React.FC<SparePartsPageProps> = ({
                         variant="standard"
                         InputProps={{ disableUnderline: true }}
                         value={row.nguyenLieu}
-                        onChange={(e) => handleChange(row.id, "nguyenLieu", e.target.value)}
+                        onChange={(e) =>
+                          handleChange(row.id, "nguyenLieu", e.target.value)
+                        }
                         placeholder="Thép, nhôm..."
                       />
                     ) : (
-                      <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "15px" }}>
+                      <Typography
+                        sx={{
+                          fontFamily: '"Times New Roman", Times, serif',
+                          fontSize: "15px",
+                        }}
+                      >
                         {row.nguyenLieu}
                       </Typography>
                     )}

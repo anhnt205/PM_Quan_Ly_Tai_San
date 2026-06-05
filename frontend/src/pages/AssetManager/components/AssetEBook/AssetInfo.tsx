@@ -114,6 +114,7 @@ export default function AssetInfo({
   currentPage = 2,
   totalPages = 4,
   onClose,
+  isView = false,
 }: {
   readOnly?: boolean;
   onEdit: () => void;
@@ -130,6 +131,7 @@ export default function AssetInfo({
   currentPage?: number;
   totalPages?: number;
   onClose: () => void;
+  isView?: boolean;
 }) {
   const [previewFile, setPreviewFile] = useState("");
   const formik = useFormik({
@@ -343,11 +345,11 @@ export default function AssetInfo({
           zIndex: 10,
         }}
       >
-        <Box sx={{ display: "flex", gap: 2 }}>
+        {!isView && <Box sx={{ display: "flex", gap: 2 }}>
           {!readOnly && <SaveBtn onSave={formik.submitForm} />}
           {!readOnly && <CancelBtn onClick={handleCancel} />}
           {readOnly && <EditButton onClick={onEdit} />}
-        </Box>
+        </Box>}
       </Box>
       {/* Header sách */}
       <Typography

@@ -39,7 +39,8 @@ const bookStyles = {
       top: 0,
       bottom: 0,
       width: "24px",
-      background: "linear-gradient(to right, rgba(139, 69, 19, 0.08), transparent)",
+      background:
+        "linear-gradient(to right, rgba(139, 69, 19, 0.08), transparent)",
       pointerEvents: "none" as const,
       borderTopLeftRadius: "12px",
       borderBottomLeftRadius: "12px",
@@ -51,7 +52,8 @@ const bookStyles = {
       top: 0,
       bottom: 0,
       width: "24px",
-      background: "linear-gradient(to left, rgba(139, 69, 19, 0.08), transparent)",
+      background:
+        "linear-gradient(to left, rgba(139, 69, 19, 0.08), transparent)",
       pointerEvents: "none" as const,
       borderTopRightRadius: "12px",
       borderBottomRightRadius: "12px",
@@ -124,6 +126,7 @@ interface MaintenanceMonthlyPageProps {
   onEdit?: () => void;
   onCancel?: () => void;
   onSave?: (values: any) => void;
+  isView?: boolean;
 }
 
 const EMPTY_ROWS_TARGET = 14;
@@ -137,13 +140,23 @@ const MaintenanceMonthlyPage: React.FC<MaintenanceMonthlyPageProps> = ({
   onEdit,
   onCancel,
   onSave,
+  isView = false,
 }) => {
   const [rows, setRows] = useState<RepairRow[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
 
-  const handleEdit = () => { setIsEditMode(true); onEdit?.(); };
-  const handleCancel = () => { setIsEditMode(false); onCancel?.(); };
-  const handleSave = () => { onSave?.({ rows }); setIsEditMode(false); };
+  const handleEdit = () => {
+    setIsEditMode(true);
+    onEdit?.();
+  };
+  const handleCancel = () => {
+    setIsEditMode(false);
+    onCancel?.();
+  };
+  const handleSave = () => {
+    onSave?.({ rows });
+    setIsEditMode(false);
+  };
 
   const handleAddRow = () => {
     setRows((prev) => [
@@ -164,10 +177,13 @@ const MaintenanceMonthlyPage: React.FC<MaintenanceMonthlyPageProps> = ({
     ]);
   };
 
-  const handleDeleteRow = (id: string) => setRows((prev) => prev.filter((r) => r.id !== id));
+  const handleDeleteRow = (id: string) =>
+    setRows((prev) => prev.filter((r) => r.id !== id));
 
   const handleChange = (id: string, field: keyof RepairRow, value: string) =>
-    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
+    setRows((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, [field]: value } : r)),
+    );
 
   const emptyCount = Math.max(0, EMPTY_ROWS_TARGET - rows.length);
 
@@ -184,19 +200,39 @@ const MaintenanceMonthlyPage: React.FC<MaintenanceMonthlyPageProps> = ({
   return (
     <Box sx={bookStyles.container}>
       {/* Toolbar */}
-      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2, position: "sticky", top: 0, zIndex: 10 }}>
-        <Box sx={{ display: "flex", gap: 2 }}>
-          {!readOnly && isEditMode && (
-            <><SaveBtn onSave={handleSave} /><CancelBtn onClick={handleCancel} /></>
-          )}
-          {!isEditMode && !readOnly && <EditButton onClick={handleEdit} />}
+      {!isView && (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+            mb: 2,
+            position: "sticky",
+            top: 0,
+            zIndex: 10,
+          }}
+        >
+          <Box sx={{ display: "flex", gap: 2 }}>
+            {!readOnly && isEditMode && (
+              <>
+                <SaveBtn onSave={handleSave} />
+                <CancelBtn onClick={handleCancel} />
+              </>
+            )}
+            {!isEditMode && !readOnly && <EditButton onClick={handleEdit} />}
+          </Box>
         </Box>
-      </Box>
+      )}
 
       {/* Tiêu đề */}
       <Typography
-        textAlign="center" fontSize={17} fontWeight={700}
-        sx={{ letterSpacing: "1px", mb: 2, fontFamily: '"Times New Roman", Times, serif' }}
+        textAlign="center"
+        fontSize={17}
+        fontWeight={700}
+        sx={{
+          letterSpacing: "1px",
+          mb: 2,
+          fontFamily: '"Times New Roman", Times, serif',
+        }}
       >
         THEO DÕI SỬA CHỮA MÁY TỪNG THÁNG
       </Typography>
@@ -204,8 +240,15 @@ const MaintenanceMonthlyPage: React.FC<MaintenanceMonthlyPageProps> = ({
       {isEditMode && (
         <Box display="flex" justifyContent="flex-end" mb={2}>
           <Button
-            variant="outlined" startIcon={<Add />} onClick={handleAddRow}
-            sx={{ borderColor: "#009e60", color: "#009e60", "&:hover": { borderColor: "#66bb6a", bgcolor: "#e6f7f0" }, textTransform: "none" }}
+            variant="outlined"
+            startIcon={<Add />}
+            onClick={handleAddRow}
+            sx={{
+              borderColor: "#009e60",
+              color: "#009e60",
+              "&:hover": { borderColor: "#66bb6a", bgcolor: "#e6f7f0" },
+              textTransform: "none",
+            }}
           >
             Thêm dòng
           </Button>
@@ -213,14 +256,32 @@ const MaintenanceMonthlyPage: React.FC<MaintenanceMonthlyPageProps> = ({
       )}
 
       <Box sx={bookStyles.content}>
-        <TableContainer component={Paper} elevation={0} sx={{ borderRadius: "0px", overflow: "hidden", width: "100%", mt: "4px" }}>
-          <Table size="small" sx={{ borderCollapse: "collapse", border: "1px solid black" }}>
+        <TableContainer
+          component={Paper}
+          elevation={0}
+          sx={{
+            borderRadius: "0px",
+            overflow: "hidden",
+            width: "100%",
+            mt: "4px",
+          }}
+        >
+          <Table
+            size="small"
+            sx={{ borderCollapse: "collapse", border: "1px solid black" }}
+          >
             <TableHead>
               {/* Hàng header tầng 1 */}
               <TableRow>
-                <TableCell rowSpan={2} sx={hcell()}>TT</TableCell>
-                <TableCell rowSpan={2} sx={hcell()}>Cấp sửa chữa</TableCell>
-                <TableCell colSpan={2} align="center" sx={hcell()}>Thời gian sửa chữa</TableCell>
+                <TableCell rowSpan={2} sx={hcell()}>
+                  TT
+                </TableCell>
+                <TableCell rowSpan={2} sx={hcell()}>
+                  Cấp sửa chữa
+                </TableCell>
+                <TableCell colSpan={2} align="center" sx={hcell()}>
+                  Thời gian sửa chữa
+                </TableCell>
                 <TableCell rowSpan={2} sx={hcell()}>
                   Thay thế sửa chữa hoặc cải tiến bộ phận nào của máy
                 </TableCell>
@@ -231,19 +292,32 @@ const MaintenanceMonthlyPage: React.FC<MaintenanceMonthlyPageProps> = ({
                   Tổng kim loại màu phục vụ cho sửa chữa (kg)
                 </TableCell>
                 <TableCell rowSpan={2} sx={hcell()}>
-                  Họ tên và chữ ký của người chịu trách nhiệm sửa chữa và kiểm tra kỹ thuật sau s/c
+                  Họ tên và chữ ký của người chịu trách nhiệm sửa chữa và kiểm
+                  tra kỹ thuật sau s/c
                 </TableCell>
                 <TableCell rowSpan={2} sx={hcell()}>
                   Xác nhận kết quả sau sửa chữa
                 </TableCell>
-                {isEditMode && <TableCell rowSpan={2} sx={hcell()}>Thao tác</TableCell>}
+                {isEditMode && (
+                  <TableCell rowSpan={2} sx={hcell()}>
+                    Thao tác
+                  </TableCell>
+                )}
               </TableRow>
               {/* Hàng header tầng 2 */}
               <TableRow>
-                <TableCell align="center" sx={hcell()}>Ngày vào</TableCell>
-                <TableCell align="center" sx={hcell()}>Ngày ra</TableCell>
-                <TableCell align="center" sx={hcell()}>Kế hoạch</TableCell>
-                <TableCell align="center" sx={hcell()}>Thực hiện</TableCell>
+                <TableCell align="center" sx={hcell()}>
+                  Ngày vào
+                </TableCell>
+                <TableCell align="center" sx={hcell()}>
+                  Ngày ra
+                </TableCell>
+                <TableCell align="center" sx={hcell()}>
+                  Kế hoạch
+                </TableCell>
+                <TableCell align="center" sx={hcell()}>
+                  Thực hiện
+                </TableCell>
               </TableRow>
             </TableHead>
 
@@ -252,65 +326,224 @@ const MaintenanceMonthlyPage: React.FC<MaintenanceMonthlyPageProps> = ({
                 <TableRow key={row.id}>
                   {/* TT */}
                   <TableCell align="center" sx={dcell()}>
-                    <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "13px" }}>{idx + 1}</Typography>
+                    <Typography
+                      sx={{
+                        fontFamily: '"Times New Roman", Times, serif',
+                        fontSize: "13px",
+                      }}
+                    >
+                      {idx + 1}
+                    </Typography>
                   </TableCell>
                   {/* Cấp sửa chữa */}
                   <TableCell sx={dcell()}>
-                    {isEditMode
-                      ? <TextField {...inputSx()} value={row.capSuaChua} onChange={(e) => handleChange(row.id, "capSuaChua", e.target.value)} placeholder="Cấp..." />
-                      : <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "13px" }}>{row.capSuaChua}</Typography>}
+                    {isEditMode ? (
+                      <TextField
+                        {...inputSx()}
+                        value={row.capSuaChua}
+                        onChange={(e) =>
+                          handleChange(row.id, "capSuaChua", e.target.value)
+                        }
+                        placeholder="Cấp..."
+                      />
+                    ) : (
+                      <Typography
+                        sx={{
+                          fontFamily: '"Times New Roman", Times, serif',
+                          fontSize: "13px",
+                        }}
+                      >
+                        {row.capSuaChua}
+                      </Typography>
+                    )}
                   </TableCell>
                   {/* Ngày vào */}
                   <TableCell align="center" sx={dcell()}>
-                    {isEditMode
-                      ? <TextField type="date" {...inputSx()} value={row.ngayVao} onChange={(e) => handleChange(row.id, "ngayVao", e.target.value)} />
-                      : <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "13px" }}>{row.ngayVao ? dayjs(row.ngayVao).format("DD/MM/YYYY") : ""}</Typography>}
+                    {isEditMode ? (
+                      <TextField
+                        type="date"
+                        {...inputSx()}
+                        value={row.ngayVao}
+                        onChange={(e) =>
+                          handleChange(row.id, "ngayVao", e.target.value)
+                        }
+                      />
+                    ) : (
+                      <Typography
+                        sx={{
+                          fontFamily: '"Times New Roman", Times, serif',
+                          fontSize: "13px",
+                        }}
+                      >
+                        {row.ngayVao
+                          ? dayjs(row.ngayVao).format("DD/MM/YYYY")
+                          : ""}
+                      </Typography>
+                    )}
                   </TableCell>
                   {/* Ngày ra */}
                   <TableCell align="center" sx={dcell()}>
-                    {isEditMode
-                      ? <TextField type="date" {...inputSx()} value={row.ngayRa} onChange={(e) => handleChange(row.id, "ngayRa", e.target.value)} />
-                      : <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "13px" }}>{row.ngayRa ? dayjs(row.ngayRa).format("DD/MM/YYYY") : ""}</Typography>}
+                    {isEditMode ? (
+                      <TextField
+                        type="date"
+                        {...inputSx()}
+                        value={row.ngayRa}
+                        onChange={(e) =>
+                          handleChange(row.id, "ngayRa", e.target.value)
+                        }
+                      />
+                    ) : (
+                      <Typography
+                        sx={{
+                          fontFamily: '"Times New Roman", Times, serif',
+                          fontSize: "13px",
+                        }}
+                      >
+                        {row.ngayRa
+                          ? dayjs(row.ngayRa).format("DD/MM/YYYY")
+                          : ""}
+                      </Typography>
+                    )}
                   </TableCell>
                   {/* Thay thế sửa chữa */}
                   <TableCell sx={dcell()}>
-                    {isEditMode
-                      ? <TextField {...inputSx()} value={row.thayTheSuaChua} onChange={(e) => handleChange(row.id, "thayTheSuaChua", e.target.value)} placeholder="Mô tả..." />
-                      : <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "13px" }}>{row.thayTheSuaChua}</Typography>}
+                    {isEditMode ? (
+                      <TextField
+                        {...inputSx()}
+                        value={row.thayTheSuaChua}
+                        onChange={(e) =>
+                          handleChange(row.id, "thayTheSuaChua", e.target.value)
+                        }
+                        placeholder="Mô tả..."
+                      />
+                    ) : (
+                      <Typography
+                        sx={{
+                          fontFamily: '"Times New Roman", Times, serif',
+                          fontSize: "13px",
+                        }}
+                      >
+                        {row.thayTheSuaChua}
+                      </Typography>
+                    )}
                   </TableCell>
                   {/* Kế hoạch */}
                   <TableCell align="center" sx={dcell()}>
-                    {isEditMode
-                      ? <TextField {...inputSx(true)} value={row.cong_keHoach} onChange={(e) => handleChange(row.id, "cong_keHoach", e.target.value)} />
-                      : <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "13px", textAlign: "center" }}>{row.cong_keHoach}</Typography>}
+                    {isEditMode ? (
+                      <TextField
+                        {...inputSx(true)}
+                        value={row.cong_keHoach}
+                        onChange={(e) =>
+                          handleChange(row.id, "cong_keHoach", e.target.value)
+                        }
+                      />
+                    ) : (
+                      <Typography
+                        sx={{
+                          fontFamily: '"Times New Roman", Times, serif',
+                          fontSize: "13px",
+                          textAlign: "center",
+                        }}
+                      >
+                        {row.cong_keHoach}
+                      </Typography>
+                    )}
                   </TableCell>
                   {/* Thực hiện */}
                   <TableCell align="center" sx={dcell()}>
-                    {isEditMode
-                      ? <TextField {...inputSx(true)} value={row.cong_thucHien} onChange={(e) => handleChange(row.id, "cong_thucHien", e.target.value)} />
-                      : <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "13px", textAlign: "center" }}>{row.cong_thucHien}</Typography>}
+                    {isEditMode ? (
+                      <TextField
+                        {...inputSx(true)}
+                        value={row.cong_thucHien}
+                        onChange={(e) =>
+                          handleChange(row.id, "cong_thucHien", e.target.value)
+                        }
+                      />
+                    ) : (
+                      <Typography
+                        sx={{
+                          fontFamily: '"Times New Roman", Times, serif',
+                          fontSize: "13px",
+                          textAlign: "center",
+                        }}
+                      >
+                        {row.cong_thucHien}
+                      </Typography>
+                    )}
                   </TableCell>
                   {/* Tổng kim loại */}
                   <TableCell align="center" sx={dcell()}>
-                    {isEditMode
-                      ? <TextField {...inputSx(true)} value={row.tongKimLoai} onChange={(e) => handleChange(row.id, "tongKimLoai", e.target.value)} />
-                      : <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "13px", textAlign: "center" }}>{row.tongKimLoai}</Typography>}
+                    {isEditMode ? (
+                      <TextField
+                        {...inputSx(true)}
+                        value={row.tongKimLoai}
+                        onChange={(e) =>
+                          handleChange(row.id, "tongKimLoai", e.target.value)
+                        }
+                      />
+                    ) : (
+                      <Typography
+                        sx={{
+                          fontFamily: '"Times New Roman", Times, serif',
+                          fontSize: "13px",
+                          textAlign: "center",
+                        }}
+                      >
+                        {row.tongKimLoai}
+                      </Typography>
+                    )}
                   </TableCell>
                   {/* Họ tên kỹ thuật */}
                   <TableCell sx={dcell()}>
-                    {isEditMode
-                      ? <TextField {...inputSx()} value={row.hoTenKyThuat} onChange={(e) => handleChange(row.id, "hoTenKyThuat", e.target.value)} placeholder="Họ và tên..." />
-                      : <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "13px" }}>{row.hoTenKyThuat}</Typography>}
+                    {isEditMode ? (
+                      <TextField
+                        {...inputSx()}
+                        value={row.hoTenKyThuat}
+                        onChange={(e) =>
+                          handleChange(row.id, "hoTenKyThuat", e.target.value)
+                        }
+                        placeholder="Họ và tên..."
+                      />
+                    ) : (
+                      <Typography
+                        sx={{
+                          fontFamily: '"Times New Roman", Times, serif',
+                          fontSize: "13px",
+                        }}
+                      >
+                        {row.hoTenKyThuat}
+                      </Typography>
+                    )}
                   </TableCell>
                   {/* Xác nhận */}
                   <TableCell sx={dcell()}>
-                    {isEditMode
-                      ? <TextField {...inputSx()} value={row.xacNhanKetQua} onChange={(e) => handleChange(row.id, "xacNhanKetQua", e.target.value)} placeholder="Kết quả..." />
-                      : <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: "13px" }}>{row.xacNhanKetQua}</Typography>}
+                    {isEditMode ? (
+                      <TextField
+                        {...inputSx()}
+                        value={row.xacNhanKetQua}
+                        onChange={(e) =>
+                          handleChange(row.id, "xacNhanKetQua", e.target.value)
+                        }
+                        placeholder="Kết quả..."
+                      />
+                    ) : (
+                      <Typography
+                        sx={{
+                          fontFamily: '"Times New Roman", Times, serif',
+                          fontSize: "13px",
+                        }}
+                      >
+                        {row.xacNhanKetQua}
+                      </Typography>
+                    )}
                   </TableCell>
                   {isEditMode && (
                     <TableCell align="center" sx={dcell()}>
-                      <IconButton size="small" onClick={() => handleDeleteRow(row.id)} sx={{ color: "#d32f2f" }}>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleDeleteRow(row.id)}
+                        sx={{ color: "#d32f2f" }}
+                      >
                         <Delete fontSize="small" />
                       </IconButton>
                     </TableCell>
@@ -319,13 +552,14 @@ const MaintenanceMonthlyPage: React.FC<MaintenanceMonthlyPageProps> = ({
               ))}
 
               {/* Dòng trống mô phỏng sổ sách */}
-              {!isEditMode && Array.from({ length: emptyCount }).map((_, i) => (
-                <TableRow key={`empty-${i}`}>
-                  {Array.from({ length: 10 }).map((__, ci) => (
-                    <TableCell key={ci} sx={{ ...dcell(), height: "38px" }} />
-                  ))}
-                </TableRow>
-              ))}
+              {!isEditMode &&
+                Array.from({ length: emptyCount }).map((_, i) => (
+                  <TableRow key={`empty-${i}`}>
+                    {Array.from({ length: 10 }).map((__, ci) => (
+                      <TableCell key={ci} sx={{ ...dcell(), height: "38px" }} />
+                    ))}
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </TableContainer>

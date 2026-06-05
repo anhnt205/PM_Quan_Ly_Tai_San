@@ -63,6 +63,13 @@ public class NhomTaiSanDao {
         }
     };
 
+    private String resolveIdLyLich(NhomTaiSan nts) {
+        if (nts.getIdLyLich() != null && !nts.getIdLyLich().isBlank()) {
+            return nts.getIdLyLich();
+        }
+        return nts.getLyLich() != null ? nts.getLyLich().getId() : null;
+    }
+
     public List<NhomTaiSan> findAll(String idCongTy) {
         String sql = "SELECT nts.*, " +
                 "COALESCE(COUNT(ts.Id), 0) AS SoLuongTaiSan, " +
@@ -173,7 +180,7 @@ public class NhomTaiSanDao {
                     nts.getTenNhom(),
                     nts.getHieuLuc(),
                     nts.getIdCongTy(),
-                    nts.getLyLich() != null ? nts.getLyLich().getId() : null,
+                    resolveIdLyLich(nts),
                     ngayTao,
                     ngayCapNhat,
                     nts.getNguoiTao(),
@@ -195,7 +202,7 @@ public class NhomTaiSanDao {
                 nts.getTenNhom(),
                 nts.getHieuLuc(),
                 nts.getIdCongTy(),
-                nts.getLyLich() != null ? nts.getLyLich().getId() : null,
+                resolveIdLyLich(nts),
                 nts.getNgayTao(),
                 nts.getNgayCapNhat(),
                 nts.getNguoiTao(),
@@ -214,7 +221,7 @@ public class NhomTaiSanDao {
                 ps.setString(1, nts.getTenNhom());
                 ps.setBoolean(2, nts.getHieuLuc() != null ? nts.getHieuLuc() : false);
                 ps.setString(3, nts.getIdCongTy());
-                ps.setString(4, nts.getLyLich() != null ? nts.getLyLich().getId() : null);
+                ps.setString(4, resolveIdLyLich(nts));
                 ps.setString(5, nts.getNgayTao());
                 ps.setString(6, nts.getNgayCapNhat());
                 ps.setString(7, nts.getNguoiTao());

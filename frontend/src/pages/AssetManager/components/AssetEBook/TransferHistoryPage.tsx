@@ -101,6 +101,7 @@ interface TransferHistoryPageProps {
   onEdit?: () => void;
   onCancel?: () => void;
   onSave?: (values: any) => void;
+  isView?: boolean;
 }
 
 interface RowData {
@@ -127,6 +128,7 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
   onEdit,
   onCancel,
   onSave,
+  isView = false,
 }) => {
   const queryClient = useQueryClient();
   const {
@@ -392,15 +394,17 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
           zIndex: 10,
         }}
       >
-        <Box sx={{ display: "flex", gap: 2 }}>
-          {!readOnly && isEditMode && (
-            <>
-              <SaveBtn onSave={handleSave} />
-              <CancelBtn onClick={handleCancel} />
-            </>
-          )}
-          {readOnly && !isEditMode && <EditButton onClick={handleEdit} />}
-        </Box>
+        {!isView && !isEditMode && (
+          <Box sx={{ display: "flex", gap: 2 }}>
+            {!readOnly && isEditMode && (
+              <>
+                <SaveBtn onSave={handleSave} />
+                <CancelBtn onClick={handleCancel} />
+              </>
+            )}
+            {readOnly && !isEditMode && <EditButton onClick={handleEdit} />}
+          </Box>
+        )}
       </Box>
 
       {/* Header sách */}
@@ -450,28 +454,33 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
             marginTop: "10px",
           }}
         >
-          <Table size="small" sx={{ borderCollapse: 'collapse', border: '1px solid black' }}>
+          <Table
+            size="small"
+            sx={{ borderCollapse: "collapse", border: "1px solid black" }}
+          >
             <TableHead>
               <TableRow>
                 <TableCell
                   align="center"
                   sx={{
                     fontFamily: '"Times New Roman", Times, serif',
-                    fontWeight: 'bold',
-                    fontSize: '16px',
+                    fontWeight: "bold",
+                    fontSize: "16px",
                     width: "15%",
                     border: "1px solid black",
                     backgroundColor: "transparent",
                   }}
                 >
-                  Ngày/tháng/<br/>năm
+                  Ngày/tháng/
+                  <br />
+                  năm
                 </TableCell>
                 <TableCell
                   align="center"
                   sx={{
                     fontFamily: '"Times New Roman", Times, serif',
-                    fontWeight: 'bold',
-                    fontSize: '16px',
+                    fontWeight: "bold",
+                    fontSize: "16px",
                     width: "30%",
                     border: "1px solid black",
                     backgroundColor: "transparent",
@@ -483,8 +492,8 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
                   align="center"
                   sx={{
                     fontFamily: '"Times New Roman", Times, serif',
-                    fontWeight: 'bold',
-                    fontSize: '16px',
+                    fontWeight: "bold",
+                    fontSize: "16px",
                     width: "25%",
                     border: "1px solid black",
                     backgroundColor: "transparent",
@@ -496,22 +505,24 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
                   align="center"
                   sx={{
                     fontFamily: '"Times New Roman", Times, serif',
-                    fontWeight: 'bold',
-                    fontSize: '16px',
+                    fontWeight: "bold",
+                    fontSize: "16px",
                     width: "30%",
                     border: "1px solid black",
                     backgroundColor: "transparent",
                   }}
                 >
-                  Họ tên và chữ ký người<br/>chịu trách nhiệm lắp đặt
+                  Họ tên và chữ ký người
+                  <br />
+                  chịu trách nhiệm lắp đặt
                 </TableCell>
                 {isEditMode && (
                   <TableCell
                     align="center"
                     sx={{
                       fontFamily: '"Times New Roman", Times, serif',
-                      fontWeight: 'bold',
-                      fontSize: '16px',
+                      fontWeight: "bold",
+                      fontSize: "16px",
                       width: "10%",
                       border: "1px solid black",
                       backgroundColor: "transparent",
@@ -525,7 +536,11 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={isEditMode ? 5 : 4} align="center" sx={{ border: "1px solid black" }}>
+                  <TableCell
+                    colSpan={isEditMode ? 5 : 4}
+                    align="center"
+                    sx={{ border: "1px solid black" }}
+                  >
                     Đang tải dữ liệu...
                   </TableCell>
                 </TableRow>
@@ -533,7 +548,16 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
                 <>
                   {visibleRows.map((row) => (
                     <TableRow key={row.id}>
-                      <TableCell align="center" sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}>
+                      <TableCell
+                        align="center"
+                        sx={{
+                          borderTop: "none",
+                          borderBottom: "1px dashed black",
+                          borderLeft: "1px solid black",
+                          borderRight: "1px solid black",
+                          padding: "8px",
+                        }}
+                      >
                         {isEditMode ? (
                           <TextField
                             type="date"
@@ -551,17 +575,34 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
                             }
                           />
                         ) : (
-                          <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: '16px' }}>
-                            {row.thoiGianBanGiao ? dayjs(row.thoiGianBanGiao).format("DD/MM/YYYY") : ''}
+                          <Typography
+                            sx={{
+                              fontFamily: '"Times New Roman", Times, serif',
+                              fontSize: "16px",
+                            }}
+                          >
+                            {row.thoiGianBanGiao
+                              ? dayjs(row.thoiGianBanGiao).format("DD/MM/YYYY")
+                              : ""}
                           </Typography>
                         )}
                       </TableCell>
 
-                      <TableCell sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}>
+                      <TableCell
+                        sx={{
+                          borderTop: "none",
+                          borderBottom: "1px dashed black",
+                          borderLeft: "1px solid black",
+                          borderRight: "1px solid black",
+                          padding: "8px",
+                        }}
+                      >
                         {isEditMode ? (
                           <Autocomplete
                             options={allDepartments.slice(0, 100)}
-                            getOptionLabel={(option) => option?.tenPhongBan || ""}
+                            getOptionLabel={(option) =>
+                              option?.tenPhongBan || ""
+                            }
                             isOptionEqualToValue={(option, value) =>
                               option.id === value?.id
                             }
@@ -596,17 +637,44 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
                             sx={{ width: "100%" }}
                           />
                         ) : (
-                          <Typography sx={{ fontFamily: '"Times New Roman", Times, serif', fontSize: '16px' }}>
+                          <Typography
+                            sx={{
+                              fontFamily: '"Times New Roman", Times, serif',
+                              fontSize: "16px",
+                            }}
+                          >
                             {row.tenDonViNhan || ""}
                           </Typography>
                         )}
                       </TableCell>
-                      <TableCell sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}></TableCell>
-                      <TableCell sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}></TableCell>
+                      <TableCell
+                        sx={{
+                          borderTop: "none",
+                          borderBottom: "1px dashed black",
+                          borderLeft: "1px solid black",
+                          borderRight: "1px solid black",
+                          padding: "8px",
+                        }}
+                      ></TableCell>
+                      <TableCell
+                        sx={{
+                          borderTop: "none",
+                          borderBottom: "1px dashed black",
+                          borderLeft: "1px solid black",
+                          borderRight: "1px solid black",
+                          padding: "8px",
+                        }}
+                      ></TableCell>
                       {isEditMode && (
                         <TableCell
                           align="center"
-                          sx={{ borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black", padding: '8px' }}
+                          sx={{
+                            borderTop: "none",
+                            borderBottom: "1px dashed black",
+                            borderLeft: "1px solid black",
+                            borderRight: "1px solid black",
+                            padding: "8px",
+                          }}
                         >
                           <IconButton
                             size="small"
@@ -619,16 +687,51 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
                       )}
                     </TableRow>
                   ))}
-                  
+
                   {/* Dòng trống mô phỏng sổ sách */}
-                  {!isEditMode && Array.from({ length: Math.max(0, 10 - visibleRows.length) }).map((_, index) => (
-                    <TableRow key={`empty-${index}`}>
-                      <TableCell sx={{ height: '40px', borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black" }}></TableCell>
-                      <TableCell sx={{ height: '40px', borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black" }}></TableCell>
-                      <TableCell sx={{ height: '40px', borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black" }}></TableCell>
-                      <TableCell sx={{ height: '40px', borderTop: "none", borderBottom: '1px dashed black', borderLeft: "1px solid black", borderRight: "1px solid black" }}></TableCell>
-                    </TableRow>
-                  ))}
+                  {!isEditMode &&
+                    Array.from({
+                      length: Math.max(0, 10 - visibleRows.length),
+                    }).map((_, index) => (
+                      <TableRow key={`empty-${index}`}>
+                        <TableCell
+                          sx={{
+                            height: "40px",
+                            borderTop: "none",
+                            borderBottom: "1px dashed black",
+                            borderLeft: "1px solid black",
+                            borderRight: "1px solid black",
+                          }}
+                        ></TableCell>
+                        <TableCell
+                          sx={{
+                            height: "40px",
+                            borderTop: "none",
+                            borderBottom: "1px dashed black",
+                            borderLeft: "1px solid black",
+                            borderRight: "1px solid black",
+                          }}
+                        ></TableCell>
+                        <TableCell
+                          sx={{
+                            height: "40px",
+                            borderTop: "none",
+                            borderBottom: "1px dashed black",
+                            borderLeft: "1px solid black",
+                            borderRight: "1px solid black",
+                          }}
+                        ></TableCell>
+                        <TableCell
+                          sx={{
+                            height: "40px",
+                            borderTop: "none",
+                            borderBottom: "1px dashed black",
+                            borderLeft: "1px solid black",
+                            borderRight: "1px solid black",
+                          }}
+                        ></TableCell>
+                      </TableRow>
+                    ))}
                 </>
               )}
             </TableBody>

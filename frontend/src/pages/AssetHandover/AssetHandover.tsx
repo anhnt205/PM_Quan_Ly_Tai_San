@@ -350,7 +350,8 @@ export default function AssetHandover() {
     {
       field: "soQuyetDinh",
       headerName: "Số quyết định",
-      width: 150,
+      minWidth: 150,
+      flex: 1,
       valueGetter: (params, row: any) => row.id,
       renderCell: (params) => params.value,
     },

@@ -36,11 +36,13 @@ public class TaiSanDao {
                 pb3.TenPhongBan AS tenDonViQuanlyKiThuat,
                 dvt.TenDonVi AS tenDonViTinh,
                 ht.TenHTKT AS tenHienTrang,
-                ts.IdDuDan as idDuAn
-                
+                ts.IdDuDan as idDuAn,
+                llt.MaLyLich as maLyLich
             FROM TaiSan AS ts
             LEFT JOIN MoHinhTaiSan AS mhts ON ts.IdMoHinhTaiSan = mhts.Id
             LEFT JOIN NhomTaiSan AS nts ON ts.IdNhomTaiSan = nts.Id
+            LEFT JOIN lylich AS ll ON nts.idLyLich = ll.Id
+            LEFT JOIN lylich_template AS llt ON ll.IdLyLichTemplate = llt.Id
             LEFT JOIN LoaiTaiSanCon AS lts ON Ts.idLoaiTaiSanCon = lts.Id
             LEFT JOIN DuAn AS da ON ts.IdDuDan = da.Id
             LEFT JOIN NguonVon AS nv ON ts.IdNguonVon = nv.Id

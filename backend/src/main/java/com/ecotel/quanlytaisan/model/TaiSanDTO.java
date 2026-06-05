@@ -79,4 +79,5 @@ public class TaiSanDTO {
     private Double gioHoatDong;
     private String idDonViQuanlyKiThuat;
     private String tenDonViQuanlyKiThuat;
+    private String maLyLich;
 }

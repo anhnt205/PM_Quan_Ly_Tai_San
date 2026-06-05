@@ -346,7 +346,8 @@ export default function ToolTransfer() {
     {
       field: "tenPhieu",
       headerName: "Phiếu ký nội sinh",
-      width: 200,
+      minWidth: 200,
+      flex: 1,
       headerAlign: "center",
       align: "center",
     },

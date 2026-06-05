@@ -267,7 +267,7 @@ export default function AssetTransferRecordTab() {
           overflow: "hidden",
           border: "1px solid",
           borderColor: "divider",
-          height: "calc(100vh)",
+          // height: "calc(100vh)",
         }}
       >
         <Grid
