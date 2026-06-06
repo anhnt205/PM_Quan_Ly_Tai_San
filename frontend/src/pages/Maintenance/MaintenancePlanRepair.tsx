@@ -550,7 +550,7 @@ export default function MaintenancePlanRepair() {
                                 >
                                   <Table size="small">
                                     <TableHead>
-                                      <TableRow sx={{ bgcolor: "#1FA463" }}>
+                                      <TableRow sx={{ bgcolor: "#0273a3" }}>
                                         <TableCell
                                           padding="checkbox"
                                           sx={{ color: "#fff", width: 40 }}

@@ -344,7 +344,7 @@ export default function BaoCaoTSCDContent({
               textTransform: "uppercase",
             }}
           >
-            CÔNG TY THAN UÔNG BÍ - TKV
+            CÔNG TY THAN KHO VẬN CẨM PHÁ - VINACOMIN
           </Typography>
         </Box>
 
@@ -579,7 +579,9 @@ export default function BaoCaoTSCDContent({
             <tbody>
               {inventoryItems.map((item, index) => (
                 <tr key={index}>
-                  <td style={{...tableBodyCellSx, textAlign: "center"}}>{item.stt}</td>
+                  <td style={{ ...tableBodyCellSx, textAlign: "center" }}>
+                    {item.stt}
+                  </td>
                   <td style={tableBodyCellSx}>
                     <InlineCell
                       value={item.tenTSCD}

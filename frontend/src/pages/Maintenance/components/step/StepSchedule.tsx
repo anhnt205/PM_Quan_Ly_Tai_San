@@ -183,7 +183,7 @@ const StepSchedule = ({
                       align="center"
                       sx={{
                         p: 0.5,
-                        bgcolor: maintenanceLevelColors[level] || "#1FA463",
+                        bgcolor: maintenanceLevelColors[level] || "#0273a3",
                       }}
                     >
                       <FieldAutoCompleted

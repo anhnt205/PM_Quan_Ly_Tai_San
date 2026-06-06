@@ -174,7 +174,7 @@ export default function ExpirationSettingDialog({
       {/* Header với gradient */}
       <Box
         sx={{
-          background: `linear-gradient(135deg, #1b8a4a 0%, #1b8a4a 100%)`,
+          background: `linear-gradient(135deg, #0273a3 0%, #0273a3 100%)`,
           position: "relative",
         }}
       >
@@ -471,18 +471,18 @@ export default function ExpirationSettingDialog({
           onClick={handleConfirm}
           variant="contained"
           disabled={loading}
-          sx={{
-            backgroundColor: "#1b8a4a",
-            borderRadius: 2,
-            textTransform: "none",
-            px: 4,
-            "&:hover": {
-              backgroundColor: "#17c45fff",
-              transform: "translateY(-1px)",
-              boxShadow: theme.shadows[4],
-            },
-            transition: "all 0.2s",
-          }}
+          // sx={{
+          //   backgroundColor: "#1b8a4a",
+          //   borderRadius: 2,
+          //   textTransform: "none",
+          //   px: 4,
+          //   "&:hover": {
+          //     backgroundColor: "#17c45fff",
+          //     transform: "translateY(-1px)",
+          //     boxShadow: theme.shadows[4],
+          //   },
+          //   transition: "all 0.2s",
+          // }}
         >
           {loading ? "Đang lưu..." : "Lưu cấu hình"}
         </Button>

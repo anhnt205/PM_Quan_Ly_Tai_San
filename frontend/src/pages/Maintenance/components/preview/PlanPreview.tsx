@@ -361,7 +361,7 @@ const PlanPreview = ({
                         sx={{
                           fontSize: "0.65rem",
                           p: 0.5,
-                          bgcolor: maintenanceLevelColors[level] || "#1FA463",
+                          bgcolor: maintenanceLevelColors[level] || "#0273a3",
                           fontWeight: level ? 600 : 400,
                         }}
                       >

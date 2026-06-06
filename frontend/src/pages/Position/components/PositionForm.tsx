@@ -240,7 +240,7 @@ export default function PositionForm({
             borderBottom: "1px solid #f1f5f9",
           }}
         >
-          <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: "#0273a3" }}>
             {bulkEditType === "create"
               ? `Thêm mới chức vụ (${localBulkItems.length})`
               : `Sửa hàng loạt chức vụ (${localBulkItems.length})`}
@@ -285,7 +285,7 @@ export default function PositionForm({
                 alignItems="center"
                 mb={2}
               >
-                <Typography sx={{ fontWeight: 600, color: "#1FA463" }}>
+                <Typography sx={{ fontWeight: 600, color: "#0273a3" }}>
                   Item {index + 1}
                 </Typography>
                 <Box display="flex" gap={1}>
@@ -340,7 +340,7 @@ export default function PositionForm({
               </Grid>
 
               {/* Checkboxes */}
-              <Typography sx={{ fontWeight: 600, color: "#1FA463", mb: 1 }}>
+              <Typography sx={{ fontWeight: 600, color: "#0273a3", mb: 1 }}>
                 Phân quyền
               </Typography>
               <Grid container spacing={1}>
@@ -398,11 +398,11 @@ export default function PositionForm({
             variant="outlined"
             startIcon={<Add />}
             onClick={handleAddItem}
-            sx={{
-              bgcolor: "#1FA463",
-              color: "#fff",
-              "&:hover": { bgcolor: "#178a52" },
-            }}
+            // sx={{
+            //   bgcolor: "#1FA463",
+            //   color: "#fff",
+            //   "&:hover": { bgcolor: "#178a52" },
+            // }}
           >
             Thêm dòng mới
           </Button>
@@ -436,7 +436,7 @@ export default function PositionForm({
           borderBottom: "1px solid #f1f5f9",
         }}
       >
-        <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
+        <Typography variant="h5" sx={{ fontWeight: 700, color: "#0273a3" }}>
           Chi tiết chức vụ
         </Typography>
         <Box display="flex" gap={0.5}>
@@ -452,8 +452,8 @@ export default function PositionForm({
       {/* Thông tin cơ bản */}
       <Paper sx={{ p: 2, borderRadius: "12px" }}>
         <Box display="flex" alignItems="center" gap={2} mb={2}>
-          <InfoOutlineRounded sx={{ color: "#1FA463" }} />
-          <Typography sx={{ fontWeight: 600, color: "#1FA463" }}>
+          <InfoOutlineRounded sx={{ color: "#0273a3" }} />
+          <Typography sx={{ fontWeight: 600, color: "#0273a3" }}>
             Thông tin chức vụ
           </Typography>
         </Box>
@@ -480,8 +480,8 @@ export default function PositionForm({
       {/* Phân quyền */}
       <Paper sx={{ p: 2, borderRadius: "12px" }}>
         <Box display="flex" alignItems="center" gap={2} mb={2}>
-          <InfoOutlineRounded sx={{ color: "#1FA463" }} />
-          <Typography sx={{ fontWeight: 600, color: "#1FA463" }}>
+          <InfoOutlineRounded sx={{ color: "#0273a3" }} />
+          <Typography sx={{ fontWeight: 600, color: "#0273a3" }}>
             Phân quyền
           </Typography>
         </Box>

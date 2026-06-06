@@ -739,7 +739,9 @@ export default function AssetHandover() {
               </DialogContent>
             </Dialog>
 
-            {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
+            {isMinimized && (
+              <DraftIndicator onClick={() => setShowForm(true)} />
+            )}
 
             {/* Bước 1: Cấu trúc lại Grid để Tabs luôn chiếm 100% chiều ngang */}
             <Grid
@@ -816,15 +818,20 @@ export default function AssetHandover() {
                             ? "transparent"
                             : "rgba(148, 163, 184, 0.25)",
                           background: isActive
-                            ? "linear-gradient(135deg, #04b46e 0%, #028a54 100%)"
+                            ? "linear-gradient(135deg, #0273a3 0%, #0273a3 100%)"
                             : "#ffffff",
                           color: isActive ? "#ffffff" : "#334155",
                           boxShadow: isActive
                             ? "0 4px 12px rgba(4, 180, 110, 0.15)"
                             : "0 2px 4px rgba(0, 0, 0, 0.05)",
                           "&:hover": {
-                            borderColor: isActive ? "transparent" : "#04b46e",
-                            bgcolor: isActive ? undefined : "rgba(4, 180, 110, 0.04)",
+                            borderColor: isActive ? "transparent" : "#0273a3",
+                            boxShadow: isActive
+                              ? "0 12px 24px -5px rgba(4, 180, 110, 0.45)"
+                              : "0 6px 16px rgba(4, 180, 110, 0.08)",
+                            bgcolor: isActive
+                              ? undefined
+                              : "rgba(4, 180, 110, 0.02)",
                           },
                         }}
                       >
@@ -865,7 +872,9 @@ export default function AssetHandover() {
                             sx={{
                               fontSize: 11,
                               lineHeight: 1.3,
-                              color: isActive ? "rgba(255,255,255,0.75)" : "#94a3b8",
+                              color: isActive
+                                ? "rgba(255,255,255,0.75)"
+                                : "#94a3b8",
                               fontWeight: 400,
                             }}
                           >
@@ -963,7 +972,7 @@ export default function AssetHandover() {
                       scrollButtons="auto"
                       sx={{
                         "& .MuiTabs-indicator": {
-                          backgroundColor: "#04b46eff",
+                          backgroundColor: "#0273a3",
                         },
                         "& .MuiTab-root": {
                           textTransform: "none",
@@ -971,7 +980,7 @@ export default function AssetHandover() {
                           fontSize: "0.875rem",
                           minWidth: 100,
                           "&.Mui-selected": {
-                            color: "#04b46eff",
+                            color: "#0273a3",
                           },
                         },
                       }}

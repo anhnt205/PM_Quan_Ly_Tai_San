@@ -142,8 +142,8 @@ export default function MauSo01Content({
         setTableRows(newRows);
         onContentChange?.({
           ...formData,
-          tableRows: newRows, 
-          tsRows: taiSan, 
+          tableRows: newRows,
+          tsRows: taiSan,
           ccdcRows: ccdc,
         });
         onFetchSuccess?.();
@@ -308,7 +308,7 @@ export default function MauSo01Content({
               mt: 0.5,
             }}
           >
-            CÔNG TY THAN UÔNG BÍ - TKV
+            CÔNG TY THAN KHO VẬN CẨM PHÁ - VINACOMIN
           </Typography>
         </Box>
 

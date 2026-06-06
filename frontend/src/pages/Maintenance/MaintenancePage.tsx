@@ -897,11 +897,10 @@ export default function MaintenanceStatPage() {
       ma: item.idGiamDinhMayMoc || item.id,
       trang: item.trangThai,
     }));
-  const measureItems = measurePaged.items
-    .map((item: any) => ({
-      ma: item.idBienPhap || item.id,
-      trang: item.trangThai,
-    }));
+  const measureItems = measurePaged.items.map((item: any) => ({
+    ma: item.idBienPhap || item.id,
+    trang: item.trangThai,
+  }));
   const materialItems = materialPaged.items
     .map(MaterialAssessmentAdapter)
     .map((item: any) => ({
@@ -1613,7 +1612,7 @@ export default function MaintenanceStatPage() {
                 />
                 <Typography fontWeight={700} color="grey.800">
                   VẬT TƯ TIÊU HAO:{" "}
-                  <span style={{ color: "#04b46eff" }}>
+                  <span style={{ color: "#0273a3" }}>
                     {findById(assets, selectedId)?.tenTaiSan?.toUpperCase() ||
                       "TẤT CẢ THIẾT BỊ"}
                   </span>

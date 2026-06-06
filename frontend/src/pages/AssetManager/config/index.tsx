@@ -113,7 +113,9 @@ export const generateAssetCoverPDF = async (
   doc.text("TẬP ĐOÀN CÔNG NGHIỆP THAN - KHOÁNG SẢN VIỆT NAM", 105, 30, {
     align: "center",
   });
-  doc.text("CÔNG TY CỔ PHẦN THAN UÔNG BÍ - TKV", 105, 40, { align: "center" });
+  doc.text("CÔNG TY CỔ PHẦN THAN KHO VẬN CẨM PHÁ - VINACOMIN", 105, 40, {
+    align: "center",
+  });
 
   // Tiêu đề chính
   doc.setFontSize(30);

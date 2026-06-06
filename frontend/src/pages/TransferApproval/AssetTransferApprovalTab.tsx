@@ -289,7 +289,7 @@ export default function AssetTransferApprovalTab({
           sx={{
             minHeight: "40px",
             "& .MuiTabs-indicator": {
-              backgroundColor: "#04b46eff",
+              backgroundColor: "#0273a3",
             },
             "& .MuiTab-root": {
               textTransform: "none",
@@ -297,7 +297,7 @@ export default function AssetTransferApprovalTab({
               fontSize: "0.85rem",
               minHeight: "40px",
               "&.Mui-selected": {
-                color: "#04b46eff",
+                color: "#0273a3",
               },
             },
           }}

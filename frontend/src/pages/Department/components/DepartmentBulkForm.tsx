@@ -362,14 +362,14 @@ export default function BulkDepartmentForm({
         }}
       >
         <Box display="flex" alignItems="center" gap={1.5}>
-          <InfoOutlineRounded sx={{ color: "#1FA463" }} />
-          <Typography variant="h6" sx={{ fontWeight: 700, color: "#1FA463" }}>
+          <InfoOutlineRounded sx={{ color: "#0273a3" }} />
+          <Typography variant="h6" sx={{ fontWeight: 700, color: "#0273a3" }}>
             {mode === "create" ? "Thêm nhiều phòng ban" : "Chỉnh sửa hàng loạt"}
           </Typography>
           <Chip
             label={`${rows.length} phòng ban`}
             size="small"
-            sx={{ bgcolor: "#e8f5e9", color: "#1FA463", fontWeight: 600 }}
+            sx={{ bgcolor: "#e8f5e9", color: "#0273a3", fontWeight: 600 }}
           />
         </Box>
         <Box display="flex" alignItems="center">
@@ -432,7 +432,7 @@ export default function BulkDepartmentForm({
                     width: 24,
                     height: 24,
                     borderRadius: "50%",
-                    bgcolor: "#1FA463",
+                    bgcolor: "#0273a3",
                     color: "#fff",
                     display: "flex",
                     alignItems: "center",
@@ -497,9 +497,12 @@ export default function BulkDepartmentForm({
               onClick={handleAddRow}
               variant="contained"
               sx={{
-                bgcolor: "#1FA463",
-                color: "#fff",
-                "&:hover": { bgcolor: "#178a52" },
+                mt: 1,
+                mb: 1,
+                borderStyle: "dashed",
+                color: "#0273a3",
+                borderColor: "#0273a3",
+                "&:hover": { borderStyle: "dashed", bgcolor: "#f0fdf4" },
               }}
             >
               Thêm dòng mới

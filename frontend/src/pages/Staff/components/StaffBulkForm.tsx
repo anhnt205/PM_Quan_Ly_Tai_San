@@ -129,7 +129,7 @@ export default function StaffBulkForm({
           borderBottom: "1px solid #f1f5f9",
         }}
       >
-        <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
+        <Typography variant="h5" sx={{ fontWeight: 700, color: "#0273a3" }}>
           {mode === "edit" ? "Sửa nhiều nhân viên" : "Thêm nhiều nhân viên"}
         </Typography>
         <Box display="flex" alignItems="center" gap={1}>
@@ -247,7 +247,7 @@ export default function StaffBulkForm({
                           onChange={formik.handleChange}
                           sx={{
                             color: "#e2e8f0",
-                            "&.Mui-checked": { color: "#1FA463" },
+                            "&.Mui-checked": { color: "#0273a3" },
                           }}
                         />
                         <Typography>Ký nháy</Typography>
@@ -259,7 +259,7 @@ export default function StaffBulkForm({
                           onChange={formik.handleChange}
                           sx={{
                             color: "#e2e8f0",
-                            "&.Mui-checked": { color: "#1FA463" },
+                            "&.Mui-checked": { color: "#0273a3" },
                           }}
                         />
                         <Typography>Ký thường</Typography>
@@ -271,7 +271,7 @@ export default function StaffBulkForm({
                           onChange={formik.handleChange}
                           sx={{
                             color: "#e2e8f0",
-                            "&.Mui-checked": { color: "#1FA463" },
+                            "&.Mui-checked": { color: "#0273a3" },
                           }}
                         />
                         <Typography>Ký số</Typography>
@@ -356,7 +356,7 @@ export default function StaffBulkForm({
                 size="small"
                 sx={{
                   borderRadius: "10px",
-                  bgcolor: "#1FA463",
+                  // bgcolor: "#1FA463",
                   color: "#fff",
                   textTransform: "none",
                   fontWeight: 700,

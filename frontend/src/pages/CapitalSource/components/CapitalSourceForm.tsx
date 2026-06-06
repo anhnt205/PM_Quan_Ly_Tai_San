@@ -183,7 +183,7 @@ export default function CapitalSourceForm({
             borderBottom: "1px solid #f1f5f9",
           }}
         >
-          <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: "#0273a3" }}>
             {bulkEditType === "create"
               ? `Thêm mới nguồn vốn (${localBulkItems.length})`
               : `Sửa hàng loạt nguồn vốn (${localBulkItems.length})`}
@@ -226,7 +226,7 @@ export default function CapitalSourceForm({
                 alignItems="center"
                 mb={2}
               >
-                <Typography sx={{ fontWeight: 600, color: "#1FA463" }}>
+                <Typography sx={{ fontWeight: 600, color: "#0273a3" }}>
                   Item {index + 1}
                 </Typography>
                 <Box display="flex" gap={1}>
@@ -326,11 +326,6 @@ export default function CapitalSourceForm({
             variant="outlined"
             startIcon={<Add />}
             onClick={handleAddItem}
-            sx={{
-              bgcolor: "#1FA463",
-              color: "#fff",
-              "&:hover": { bgcolor: "#178a52" },
-            }}
           >
             Thêm dòng mới
           </Button>
@@ -363,7 +358,7 @@ export default function CapitalSourceForm({
           borderBottom: "1px solid #f1f5f9",
         }}
       >
-        <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
+        <Typography variant="h5" sx={{ fontWeight: 700, color: "#0273a3" }}>
           Chi tiết nguồn vốn
         </Typography>
         <Box display="flex" gap={0.5}>
@@ -379,8 +374,8 @@ export default function CapitalSourceForm({
       {/* Body */}
       <Paper sx={{ p: 2, borderRadius: "12px" }}>
         <Box display="flex" alignItems="center" gap={2} mb={2}>
-          <InfoOutlineRounded sx={{ color: "#1FA463" }} />
-          <Typography sx={{ fontWeight: 600, color: "#1FA463" }}>
+          <InfoOutlineRounded sx={{ color: "#0273a3" }} />
+          <Typography sx={{ fontWeight: 600, color: "#0273a3" }}>
             Thông tin nguồn vốn
           </Typography>
         </Box>

@@ -92,8 +92,8 @@ const CustomToolbar = ({
           <ToolbarButton
             render={
               <Button
-                startIcon={<ViewColumnIcon sx={{ color: "#1FA463" }} />}
-                sx={{ color: "#1FA463" }}
+                startIcon={<ViewColumnIcon sx={{ color: "#0273a3" }} />}
+                sx={{ color: "#0273a3" }}
               >
                 Columns
               </Button>
@@ -106,8 +106,8 @@ const CustomToolbar = ({
           <ToolbarButton
             render={
               <Button
-                startIcon={<FilterListIcon sx={{ color: "#1FA463" }} />}
-                sx={{ color: "#1FA463" }}
+                startIcon={<FilterListIcon sx={{ color: "#0273a3" }} />}
+                sx={{ color: "#0273a3" }}
               >
                 Filter
               </Button>
@@ -120,8 +120,8 @@ const CustomToolbar = ({
           <ToolbarButton
             render={
               <Button
-                startIcon={<PrintIcon sx={{ color: "#1FA463" }} />}
-                sx={{ color: "#1FA463" }}
+                startIcon={<PrintIcon sx={{ color: "#0273a3" }} />}
+                sx={{ color: "#0273a3" }}
               >
                 Print
               </Button>
@@ -149,8 +149,8 @@ const CustomToolbar = ({
           <ToolbarButton
             render={
               <Button
-                startIcon={<UploadFileIcon sx={{ color: "#059669" }} />}
-                sx={{ color: "#059669" }}
+                startIcon={<UploadFileIcon sx={{ color: "#0273a3" }} />}
+                sx={{ color: "#0273a3" }}
                 onClick={() => fileInputRef.current?.click()}
               >
                 Import Excel
@@ -165,8 +165,8 @@ const CustomToolbar = ({
         <ToolbarButton
           render={
             <Button
-              startIcon={<FileDownloadIcon sx={{ color: "#059669" }} />}
-              sx={{ color: "#059669" }}
+              startIcon={<FileDownloadIcon sx={{ color: "#0273a3" }} />}
+              sx={{ color: "#0273a3" }}
               onClick={onExportExcel}
             >
               Xuất Excel
@@ -180,11 +180,11 @@ const CustomToolbar = ({
         <ToolbarButton
           render={
             <Button
-              startIcon={<FileDownloadIcon sx={{ color: "#059669" }} />}
+              startIcon={<FileDownloadIcon sx={{ color: "#0273a3" }} />}
               sx={{
-                color: "#059669",
+                color: "#0273a3",
                 fontWeight: 700,
-                border: "1px solid #059669",
+                border: "1px solid #0273a3",
                 borderRadius: "6px",
                 px: 1.5,
                 "&:hover": { backgroundColor: "rgba(5,150,105,0.08)" },
@@ -208,7 +208,7 @@ const CustomToolbar = ({
             <Button
               aria-label={isFullscreen ? "exit fullscreen" : "fullscreen"}
               onClick={onToggleFullscreen}
-              sx={{ color: "#1FA463", minWidth: "auto" }}
+              sx={{ color: "#0273a3", minWidth: "auto" }}
             >
               {isFullscreen ? (
                 <FullscreenExitIcon fontSize="small" />
@@ -507,7 +507,7 @@ export default function TableCustom({
               value={searchValue}
               onChange={(e) => setSearchValue?.(e.target.value)}
               InputProps={{
-                startAdornment: <Search sx={{ color: "#1FA463", mr: 0.5 }} />,
+                startAdornment: <Search sx={{ color: "#0273a3", mr: 0.5 }} />,
                 endAdornment: searchValue ? (
                   <IconButton onClick={() => setSearchValue?.("")} size="small">
                     <Close fontSize="small" />
@@ -518,18 +518,18 @@ export default function TableCustom({
                 "& .MuiOutlinedInput-root": {
                   borderRadius: "10px",
                   "& fieldset": {
-                    borderColor: "#1FA463",
+                    borderColor: "#0273a3",
                   },
                   "&:hover fieldset": {
-                    borderColor: "#1FA463",
+                    borderColor: "#0273a3",
                   },
                   "&.Mui-focused fieldset": {
-                    borderColor: "#1FA463",
+                    borderColor: "#0273a3",
                   },
                 },
                 "& .MuiInputLabel-root": {
                   "&.Mui-focused": {
-                    color: "#1FA463",
+                    color: "#0273a3",
                   },
                 },
               }}
@@ -823,7 +823,7 @@ export default function TableCustom({
                 },
                 filterPanel: { disableAddFilterButton: false },
                 toolbar: {
-                  color: "#1FA463",
+                  color: "#0273a3",
                   csvOptions: { disableToolbarButton: false },
                   printOptions: { disableToolbarButton: false },
                 } as any,
@@ -838,14 +838,14 @@ export default function TableCustom({
                   },
                 },
                 "& .MuiDataGrid-toolbarContainer .MuiButton-root": {
-                  color: "#1FA463",
+                  color: "#0273a3",
                   fontWeight: 600,
                   "&:hover": {
                     backgroundColor: "rgba(31, 164, 99, 0.04)",
                   },
                 },
                 "& .MuiDataGrid-columnHeader": {
-                  backgroundColor: "#1FA463",
+                  backgroundColor: "#0273a3",
                 },
                 "& .MuiDataGrid-columnHeaderTitle": {
                   color: "#fff",
@@ -855,7 +855,7 @@ export default function TableCustom({
                   color: "#ff5722 !important",
                 },
                 "& .MuiDataGrid-columnHeader .MuiDataGrid-sortButton": {
-                  background: "#1FA463",
+                  background: "#0273a3",
                   color: "black",
                 },
                 "& .MuiTablePagination-root": {

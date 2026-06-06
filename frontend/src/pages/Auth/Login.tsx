@@ -76,7 +76,7 @@ export default function Login() {
                     rgba(255, 255, 255, 0.15) 1px, 
                     transparent 2px, 
                     transparent 40px
-                ),linear-gradient(to right,rgb(0, 158, 96, 1) 0%,rgb(2, 110, 66, 1) 100%)`,
+                ),linear-gradient(to right,#0273a3 0%,#0273a3 100%)`,
         }}
       >
         <Typography fontSize={50} fontWeight={700} sx={{ color: "white" }}>
@@ -153,7 +153,7 @@ export default function Login() {
             sx={{
               p: 2,
               borderRadius: "12px",
-              background: "rgb(0, 158, 96, 1)",
+              background: "#0273a3",
               fontWeight: "bold",
             }}
             onClick={() => formik.submitForm()}

@@ -520,7 +520,7 @@ export default function ToolHandoverForm({
             justifyContent="space-between"
             mb={1}
           >
-            <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: "#0273a3" }}>
               Chi tiết {label}
             </Typography>
             <Box display="flex" gap={0.5}>

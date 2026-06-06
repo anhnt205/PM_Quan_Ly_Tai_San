@@ -66,7 +66,7 @@ export default function TransferApproval() {
           onChange={handleMainTabChange}
           sx={{
             "& .MuiTabs-indicator": {
-              backgroundColor: "#04b46eff",
+              backgroundColor: "#0273a3",
               height: 3,
               borderRadius: "3px 3px 0 0",
             },
@@ -80,7 +80,7 @@ export default function TransferApproval() {
               mr: 4,
               minWidth: "auto",
               "&.Mui-selected": {
-                color: "#04b46eff",
+                color: "#0273a3",
               },
             },
           }}
@@ -107,8 +107,12 @@ export default function TransferApproval() {
       </Box>
 
       <Box sx={{ flexGrow: 1, overflow: "auto" }}>
-        {mainTab === 0 && <AssetTransferApprovalTab assetTransferCounts={assetTransferCounts} />}
-        {mainTab === 1 && <ToolTransferApprovalTab toolTransferCounts={toolTransferCounts} />}
+        {mainTab === 0 && (
+          <AssetTransferApprovalTab assetTransferCounts={assetTransferCounts} />
+        )}
+        {mainTab === 1 && (
+          <ToolTransferApprovalTab toolTransferCounts={toolTransferCounts} />
+        )}
       </Box>
     </Box>
   );

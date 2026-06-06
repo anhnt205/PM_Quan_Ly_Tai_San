@@ -411,7 +411,7 @@ export default function ToolTableCustom({
                       sx={{
                         backgroundColor: "#d8eedf",
                         "& .MuiTableCell-head": {
-                          color: "#13633b",
+                          color: "#0273a3",
                           fontWeight: 700,
                           padding: "10px",
                           border: "1px solid #cce5d3",
@@ -528,7 +528,7 @@ export default function ToolTableCustom({
         gap={2}
         sx={{ background: "#f5f5f5" }}
       >
-        <TableView sx={{ color: "#1FA463" }} />
+        <TableView sx={{ color: "#0273a3" }} />
         <Typography>
           {title} ({total})
         </Typography>
@@ -659,11 +659,11 @@ export default function ToolTableCustom({
                 borderRadius: "8px",
                 textTransform: "none",
                 fontWeight: 600,
-                borderColor: "#1FA463",
-                color: "#1FA463",
+                borderColor: "#0273a3",
+                color: "#0273a3",
                 "&:hover": {
-                  borderColor: "#177e4b",
-                  bgcolor: "rgba(31, 164, 99, 0.04)",
+                  borderColor: "#0273a3",
+                  bgcolor: "rgba(2, 115, 163, 0.04)",
                 },
               }}
             >
@@ -679,14 +679,14 @@ export default function ToolTableCustom({
               startIcon={<FileDownloadIcon />}
               onClick={handleExportSelectedExcel}
               sx={{
-                borderColor: "#1FA463",
-                color: "#1FA463",
+                borderColor: "#0273a3",
+                color: "#0273a3",
                 borderRadius: "8px",
                 textTransform: "none",
                 fontWeight: 600,
                 "&:hover": {
-                  borderColor: "#177e4b",
-                  bgcolor: "rgba(31, 164, 99, 0.04)",
+                  borderColor: "#0273a3",
+                  bgcolor: "rgba(2, 115, 163, 0.04)",
                 },
               }}
             >
@@ -704,11 +704,11 @@ export default function ToolTableCustom({
               borderRadius: "8px",
               textTransform: "none",
               fontWeight: 600,
-              borderColor: "#1FA463",
-              color: "#1FA463",
+              borderColor: "#0273a3",
+              color: "#0273a3",
               "&:hover": {
-                borderColor: "#177e4b",
-                bgcolor: "rgba(31, 164, 99, 0.04)",
+                borderColor: "#0273a3",
+                bgcolor: "rgba(2, 115, 163, 0.04)",
               },
             }}
           >
@@ -738,7 +738,7 @@ export default function ToolTableCustom({
           <TableHead>
             <TableRow
               sx={{
-                backgroundColor: "#1FA463",
+                backgroundColor: "#0273a3",
                 "& .MuiTableCell-head": {
                   color: "#ffffff",
                   fontWeight: 700,

@@ -673,7 +673,7 @@ export default function Menuheader() {
         gap: 3,
         px: 3,
         background:
-          "linear-gradient(to right,rgb(0, 158, 96, 1) 0%,rgb(2, 110, 66, 1) 100%)",
+          "linear-gradient(to right,#0273a3 0%,#0273a3 100%)",
       }}
     >
       {canScrollLeft && (
@@ -782,7 +782,7 @@ export default function Menuheader() {
           </MenuItem>
           <MenuItem sx={{ py: 2 }} onClick={handleCloseSettingMenu}>
             <ListItemIcon>
-              <Person fontSize="small" color="success" />
+              <Person fontSize="small" color="primary" />
             </ListItemIcon>
             <Typography
               component={Link}
@@ -798,13 +798,13 @@ export default function Menuheader() {
           </MenuItem>
           <MenuItem sx={{ py: 2 }} onClick={handleOpenExpirationDialog}>
             <ListItemIcon>
-              <Settings fontSize="small" color="success" />
+              <Settings fontSize="small" color="primary" />
             </ListItemIcon>
             <Typography>Thiết lập thời gian</Typography>
           </MenuItem>
           <MenuItem sx={{ py: 2 }} onClick={handleOpenMssqlDialog}>
             <ListItemIcon>
-              <Storage fontSize="small" color="success" />
+              <Storage fontSize="small" color="primary" />
             </ListItemIcon>
             <Typography>Cấu hình server</Typography>
           </MenuItem>
@@ -818,7 +818,7 @@ export default function Menuheader() {
             }}
           >
             <ListItemIcon>
-              <Logout fontSize="small" color="success" />
+              <Logout fontSize="small" color="primary" />
             </ListItemIcon>
             <Typography>Đăng xuất</Typography>
           </MenuItem>

@@ -595,7 +595,9 @@ export const generateBienBanPdf = async (
   doc.text("THAN - KHOÁNG SẢN VIỆT NAM", 50, 26, { align: "center" });
 
   doc.setFont("times_new_roman", "bold");
-  doc.text("CÔNG TY THAN UÔNG BÍ - TKV", 50, 32, { align: "center" });
+  doc.text("CÔNG TY THAN KHO VẬN CẨM PHÁ - VINACOMIN", 50, 32, {
+    align: "center",
+  });
   doc.line(40, 34, 80, 34); // Đường kẻ dưới tên công ty
 
   doc.setFont("times_new_roman", "normal");

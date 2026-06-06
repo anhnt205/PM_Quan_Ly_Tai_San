@@ -14,11 +14,13 @@ import {
 import { FilterOption } from "../../components/common/FilterStatusGroup";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
-import { useChuKySuaChuaQuery, useMaintenanceHistoryQuery } from "./mutation/chukysuachua";
+import {
+  useChuKySuaChuaQuery,
+  useMaintenanceHistoryQuery,
+} from "./mutation/chukysuachua";
 import { useDebounce } from "../../hooks/useDebounce";
 import { maintenanceLevelColors } from "../../mockdata/mockPlans";
 import { GridColDef } from "@mui/x-data-grid";
-
 
 const historyStatusConfig: Record<
   string,
@@ -27,8 +29,6 @@ const historyStatusConfig: Record<
   "1": { label: "Đã BT", color: "success" },
   "0": { label: "Đang bảo trì", color: "warning" },
 };
-
-
 
 // ── Component chính ──────────────────────────────────────
 export default function MaintenanceCycles() {
@@ -75,7 +75,7 @@ export default function MaintenanceCycles() {
           label={p.value}
           size="small"
           sx={{
-            bgcolor: maintenanceLevelColors[p.value] || "#1FA463",
+            bgcolor: maintenanceLevelColors[p.value] || "#0273a3",
           }}
         />
       ),
@@ -145,7 +145,7 @@ export default function MaintenanceCycles() {
             label={p.value}
             size="small"
             sx={{
-              bgcolor: maintenanceLevelColors[p.value] || "#1FA463",
+              bgcolor: maintenanceLevelColors[p.value] || "#0273a3",
             }}
           />
         ) : (

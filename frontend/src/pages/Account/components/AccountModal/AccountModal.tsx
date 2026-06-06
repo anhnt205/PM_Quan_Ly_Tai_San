@@ -233,7 +233,7 @@ export default function AccountModal({ open, onClose }: Props) {
         sx={{
           p: 0,
           height: "100%",
-          overflow: "hidden",
+          // overflow: "hidden",
           display: "flex",
           flexDirection: "column",
           position: "relative",

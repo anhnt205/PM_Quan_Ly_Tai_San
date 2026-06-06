@@ -172,7 +172,7 @@ export default function Filter({
                     : "transparent",
                 color:
                   nhomTaiSanFilter === AssetGroup.MAYMOC
-                    ? "#1FA463"
+                    ? "#0273a3"
                     : "text.secondary",
                 boxShadow:
                   nhomTaiSanFilter === AssetGroup.MAYMOC
@@ -182,7 +182,7 @@ export default function Filter({
                 "&:hover": {
                   color:
                     nhomTaiSanFilter === AssetGroup.MAYMOC
-                      ? "#1FA463"
+                      ? "#0273a3"
                       : "text.primary",
                 },
               }}
@@ -206,7 +206,7 @@ export default function Filter({
                     : "transparent",
                 color:
                   nhomTaiSanFilter === AssetGroup.PHUONGTIEN
-                    ? "#1FA463"
+                    ? "#0273a3"
                     : "text.secondary",
                 boxShadow:
                   nhomTaiSanFilter === AssetGroup.PHUONGTIEN
@@ -216,7 +216,7 @@ export default function Filter({
                 "&:hover": {
                   color:
                     nhomTaiSanFilter === AssetGroup.PHUONGTIEN
-                      ? "#1FA463"
+                      ? "#0273a3"
                       : "text.primary",
                 },
               }}

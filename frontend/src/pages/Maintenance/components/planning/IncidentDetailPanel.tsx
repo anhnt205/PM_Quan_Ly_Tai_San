@@ -408,7 +408,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
           mx: -2,
           mt: -2,
           mb: 2,
-          bgcolor: "#1FA463",
+          bgcolor: "#0273a3",
           color: "#fff",
           borderTopLeftRadius: 8,
           borderTopRightRadius: 8,
@@ -481,15 +481,15 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
             fontSize: "0.95rem",
             color: "text.secondary",
             "&:hover": {
-              color: "#1FA463",
+              color: "#0273a3",
               opacity: 0.85,
             },
           },
           "& .MuiTab-root.Mui-selected": {
-            color: "#1FA463 !important",
+            color: "#0273a3 !important",
           },
           "& .MuiTabs-indicator": {
-            backgroundColor: "#1FA463 !important",
+            backgroundColor: "#0273a3 !important",
           },
         }}
       >
@@ -508,7 +508,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                 onClick={() => setIncidentInspectionParentId(incident.id)}
                 size="small"
                 sx={{
-                  bgcolor: "#1FA463",
+                  bgcolor: "#0273a3",
                   "&:hover": { bgcolor: "#17824e" },
                 }}
               >
@@ -523,7 +523,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                 <TableRow
                   sx={{
                     "& th": {
-                      bgcolor: "#1FA463 !important",
+                      bgcolor: "#0273a3 !important",
                       color: "#fff !important",
                       fontWeight: 700,
                     },
@@ -655,7 +655,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                 <TableRow
                   sx={{
                     "& th": {
-                      bgcolor: "#1FA463 !important",
+                      bgcolor: "#0273a3 !important",
                       color: "#fff !important",
                       fontWeight: 700,
                     },

@@ -311,7 +311,7 @@ export default function BBKiemKeContent({
               textTransform: "uppercase",
             }}
           >
-            CÔNG TY THAN UÔNG BÍ - TKV
+            CÔNG TY THAN KHO VẬN CẨM PHÁ - VINACOMIN
           </Typography>
         </Box>
 
@@ -711,9 +711,7 @@ export default function BBKiemKeContent({
           </Typography>
         </Box>
 
-        <Box
-          sx={{ mt: 5, display: "flex", justifyContent: "flex-end" }}
-        >
+        <Box sx={{ mt: 5, display: "flex", justifyContent: "flex-end" }}>
           <Box sx={{ width: "50%" }}></Box>
 
           <Box sx={{ width: "50%", textAlign: "center" }}>

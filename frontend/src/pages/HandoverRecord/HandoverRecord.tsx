@@ -15,29 +15,45 @@ export default function HandoverRecord() {
   };
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", height: "100%", bgcolor: "#f8f9fa" }}>
-      <PageAction title="Quản lý biên bản bàn giao" hideActionRow={true} />
-      <Box sx={{ 
-        px: 3, 
-        pt: 1.5,
-        pb: 0,
-        display: "flex", 
+    <Box
+      sx={{
+        display: "flex",
         flexDirection: "column",
-        bgcolor: "white",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-        zIndex: 1
-      }}>
-        <Box sx={{ fontWeight: "bold", fontSize: "1.25rem", color: "#344767", mb: 1 }}>
+        height: "100%",
+        bgcolor: "#f8f9fa",
+      }}
+    >
+      <PageAction title="Quản lý biên bản bàn giao" hideActionRow={true} />
+      <Box
+        sx={{
+          px: 3,
+          pt: 1.5,
+          pb: 0,
+          display: "flex",
+          flexDirection: "column",
+          bgcolor: "white",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+          zIndex: 1,
+        }}
+      >
+        <Box
+          sx={{
+            fontWeight: "bold",
+            fontSize: "1.25rem",
+            color: "#344767",
+            mb: 1,
+          }}
+        >
           Quản lý biên bản
         </Box>
-        <Tabs 
-          value={mainTab} 
+        <Tabs
+          value={mainTab}
           onChange={handleMainTabChange}
           sx={{
             "& .MuiTabs-indicator": {
-              backgroundColor: "#04b46eff",
+              backgroundColor: "#0273a3",
               height: 3,
-              borderRadius: "3px 3px 0 0"
+              borderRadius: "3px 3px 0 0",
             },
             "& .MuiTab-root": {
               textTransform: "none",
@@ -49,13 +65,21 @@ export default function HandoverRecord() {
               mr: 4,
               minWidth: "auto",
               "&.Mui-selected": {
-                color: "#04b46eff",
+                color: "#0273a3",
               },
             },
           }}
         >
-          <Tab icon={<Inventory sx={{ fontSize: 20 }} />} iconPosition="start" label={`Bàn giao tài sản (${counts.shareCounts?.totalAssetHandover || 0})`} />
-          <Tab icon={<Construction sx={{ fontSize: 20 }} />} iconPosition="start" label={`Bàn giao CCDC-Vật tư (${counts.shareCounts?.totalToolHandover || 0})`} />
+          <Tab
+            icon={<Inventory sx={{ fontSize: 20 }} />}
+            iconPosition="start"
+            label={`Bàn giao tài sản (${counts.shareCounts?.totalAssetHandover || 0})`}
+          />
+          <Tab
+            icon={<Construction sx={{ fontSize: 20 }} />}
+            iconPosition="start"
+            label={`Bàn giao CCDC-Vật tư (${counts.shareCounts?.totalToolHandover || 0})`}
+          />
         </Tabs>
       </Box>
 

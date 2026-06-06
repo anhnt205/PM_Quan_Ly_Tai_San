@@ -344,7 +344,7 @@ export default function RepairNormTableCustom({
         gap={2}
         sx={{ background: "#f5f5f5" }}
       >
-        <TableView sx={{ color: "#1FA463" }} />
+        <TableView sx={{ color: "#0273a3" }} />
         <Typography fontWeight="bold">
           {title} ({total})
         </Typography>
@@ -394,7 +394,7 @@ export default function RepairNormTableCustom({
           }}
         >
           <TableHead>
-            <TableRow sx={{ backgroundColor: "#1FA463" }}>
+            <TableRow sx={{ backgroundColor: "#0273a3" }}>
               <TableCell
                 align="center"
                 sx={{

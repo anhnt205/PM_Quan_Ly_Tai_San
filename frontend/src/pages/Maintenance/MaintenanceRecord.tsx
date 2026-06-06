@@ -1103,7 +1103,7 @@ export default function MaintenanceRecordPage() {
                       ? "transparent"
                       : "rgba(148, 163, 184, 0.25)",
                     background: isActive
-                      ? "linear-gradient(135deg, #04b46e 0%, #028a54 100%)"
+                      ? "linear-gradient(135deg, #0273a3 0%, #167aa2 100%)"
                       : "#ffffff",
                     color: isActive ? "#ffffff" : "#334155",
                     boxShadow: isActive
@@ -1111,7 +1111,7 @@ export default function MaintenanceRecordPage() {
                       : "0 2px 4px rgba(148, 163, 184, 0.05)",
                     "&:hover": {
                       transform: "translateY(-4px)",
-                      borderColor: isActive ? "transparent" : "#04b46e",
+                      borderColor: isActive ? "transparent" : "#0273a3",
                       boxShadow: isActive
                         ? "0 12px 24px -5px rgba(4, 180, 110, 0.45)"
                         : "0 6px 16px rgba(4, 180, 110, 0.08)",
@@ -1140,7 +1140,7 @@ export default function MaintenanceRecordPage() {
                         bgcolor: isActive
                           ? "rgba(255, 255, 255, 0.18)"
                           : "rgba(4, 180, 110, 0.08)",
-                        color: isActive ? "#ffffff" : "#04b46e",
+                        color: isActive ? "#ffffff" : "#0273a3",
                         transition: "all 0.25s ease",
                       }}
                     >

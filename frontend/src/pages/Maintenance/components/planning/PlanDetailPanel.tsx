@@ -553,7 +553,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
           mx: -2,
           mt: -2,
           mb: 2,
-          bgcolor: "#1FA463",
+          bgcolor: "#0273a3",
           color: "#fff",
           borderTopLeftRadius: 8,
           borderTopRightRadius: 8,
@@ -614,15 +614,15 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
             fontSize: "0.95rem",
             color: "text.secondary",
             "&:hover": {
-              color: "#1FA463",
+              color: "#0273a3",
               opacity: 0.85,
             },
           },
           "& .MuiTab-root.Mui-selected": {
-            color: "#1FA463 !important",
+            color: "#0273a3 !important",
           },
           "& .MuiTabs-indicator": {
-            backgroundColor: "#1FA463 !important",
+            backgroundColor: "#0273a3 !important",
           },
         }}
       >
@@ -639,7 +639,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                 <InputLabel
                   id="month-scbd-label"
                   sx={{
-                    color: "#1FA463",
+                    color: "#0273a3",
                     "&.Mui-focused": { color: "#17824e" },
                   }}
                 >
@@ -678,7 +678,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                           onMouseDown={(e) => e.stopPropagation()}
                           sx={{
                             bgcolor: "#e8f5e9",
-                            color: "#1FA463",
+                            color: "#0273a3",
                             fontWeight: 600,
                             border: "1px solid #c8e6c9",
                             "& .MuiChip-deleteIcon": {
@@ -691,7 +691,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                   )}
                   sx={{
                     "& .MuiOutlinedInput-notchedOutline": {
-                      borderColor: "#1FA463",
+                      borderColor: "#0273a3",
                     },
                     "&:hover .MuiOutlinedInput-notchedOutline": {
                       borderColor: "#17824e",
@@ -721,9 +721,9 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                         checked={selectedMonths.includes(idx)}
                         size="small"
                         sx={{
-                          color: "#1FA463",
+                          color: "#0273a3",
                           "&.Mui-checked": {
-                            color: "#1FA463",
+                            color: "#0273a3",
                           },
                         }}
                       />
@@ -741,7 +741,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                 onClick={() => setRepairDialogOpen(true)}
                 size="small"
                 sx={{
-                  bgcolor: "#1FA463",
+                  bgcolor: "#0273a3",
                   "&:hover": { bgcolor: "#17824e" },
                 }}
               >
@@ -756,7 +756,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                 <TableRow
                   sx={{
                     "& th": {
-                      bgcolor: "#1FA463 !important",
+                      bgcolor: "#0273a3 !important",
                       color: "#fff !important",
                       fontWeight: 700,
                     },
@@ -855,14 +855,14 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                     bgcolor:
                                       maintenanceLevelColors[
                                         mData.capSuaChua
-                                      ] || "#1FA463",
+                                      ] || "#0273a3",
                                     color: "#fff",
                                     fontWeight: 600,
                                   }}
                                 />
                                 {Number(mData.daCoLenhSuaChua || 0) > 0 && (
                                   <CheckIcon
-                                    sx={{ color: "#1FA463", fontSize: 18 }}
+                                    sx={{ color: "#0273a3", fontSize: 18 }}
                                   />
                                 )}
                               </Box>
@@ -956,7 +956,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                 <TableRow
                   sx={{
                     "& th": {
-                      bgcolor: "#1FA463 !important",
+                      bgcolor: "#0273a3 !important",
                       color: "#fff !important",
                       fontWeight: 700,
                     },

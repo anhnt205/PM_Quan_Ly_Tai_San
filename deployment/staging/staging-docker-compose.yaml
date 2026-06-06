@@ -1,9 +1,9 @@
 services:
-  qlts_reverse_proxy_service:
-    image: ${REGISTRY}/qlts_reverse_proxy_img:${VERSION}
+  cp_qlts_reverse_proxy_service:
+    image: ${REGISTRY}/cp_qlts_reverse_proxy_img:${VERSION}
     ports:
       # HOST_PORT:CONTAINER_PORT
-      - "7777:8888"
+      - "7766:8888"
     stdin_open: true
     environment:
       - TZ=Asia/Ho_Chi_Minh
@@ -11,16 +11,13 @@ services:
       - frontnet
       - backnet
     depends_on:
-      - qlts_frontend_service
-      - qlts_backend_service
+      - cp_qlts_frontend_service
+      - cp_qlts_backend_service
 
-  qlts_frontend_service:
+  cp_qlts_frontend_service:
     image:
-      ${REGISTRY}/qlts_frontend_img:${VERSION}
+      ${REGISTRY}/cp_qlts_frontend_img:${VERSION}
       # target: development
-    ports:
-      # HOST_PORT:CONTAINER_PORT
-      - "9999:80"
     stdin_open: true
     environment:
       - TZ=Asia/Ho_Chi_Minh
@@ -31,19 +28,19 @@ services:
     networks:
       - frontnet
 
-  qlts_backend_service:
+  cp_qlts_backend_service:
     env_file:
       - .env_backend
-    image: ${REGISTRY}/qlts_backend_img:${VERSION}
+    image: ${REGISTRY}/cp_qlts_backend_img:${VERSION}
     depends_on:
-      - qlts_mysql
+      - cp_qlts_mysql
     ports:
-      - "8386:8386"
+      - "8366:8386"
     networks:
       - backnet
     restart: unless-stopped
 
-  qlts_mysql:
+  cp_qlts_mysql:
     image: mysql:8.0.36
     command: --lower_case_table_names=1
     environment:
@@ -52,18 +49,18 @@ services:
       MYSQL_USER: admin
       MYSQL_PASSWORD: admin
     ports:
-      - "3311:3306"
+      - "3366:3306"
     volumes:
-      - qlts_mysql_data:/var/lib/mysql
+      - cp_qlts_mysql_data:/var/lib/mysql
     networks:
       - backnet
 
 volumes:
- qlts_mysql_data: # ✅ Cho postgres
+  cp_qlts_mysql_data:
     driver: local
     driver_opts:
       type: none
-      device: /mnt/hdd/qlts_mysql_data
+      device: /mnt/hdd/cp_qlts_mysql_data
       o: bind
 networks:
   frontnet:

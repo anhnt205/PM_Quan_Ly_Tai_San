@@ -214,7 +214,7 @@ export default function PageAction({
           {/* Tiêu đề trang nằm bên trái */}
           <Box
             sx={{
-              borderLeft: "4px solid #14a760",
+              borderLeft: "4px solid #0273a3",
               pl: 1.5,
               py: 0.5,
             }}
@@ -241,21 +241,21 @@ export default function PageAction({
                 size="small"
                 onClick={() => setOpenSignatureModal(true)}
                 startIcon={<DriveFileRenameOutline />}
-                sx={{
-                  borderRadius: "10px",
-                  borderColor: "rgba(59, 130, 246, 0.3)",
-                  color: "#3b82f6",
-                  fontWeight: 600,
-                  textTransform: "none",
-                  fontSize: "0.85rem",
-                  px: 2,
-                  py: 0.75,
-                  transition: "all 0.2s ease-in-out",
-                  "&:hover": {
-                    borderColor: "#3b82f6",
-                    bgcolor: "rgba(59, 130, 246, 0.05)",
-                  },
-                }}
+                // sx={{
+                //   borderRadius: "10px",
+                //   borderColor: "rgba(59, 130, 246, 0.3)",
+                //   color: "#3b82f6",
+                //   fontWeight: 600,
+                //   textTransform: "none",
+                //   fontSize: "0.85rem",
+                //   px: 2,
+                //   py: 0.75,
+                //   transition: "all 0.2s ease-in-out",
+                //   "&:hover": {
+                //     borderColor: "#3b82f6",
+                //     bgcolor: "rgba(59, 130, 246, 0.05)",
+                //   },
+                // }}
               >
                 Import chữ ký
               </Button>
@@ -269,21 +269,21 @@ export default function PageAction({
                   size="small"
                   onClick={(e) => setAnchorElExtra(e.currentTarget)}
                   endIcon={<KeyboardArrowDown />}
-                  sx={{
-                    borderRadius: "10px",
-                    borderColor: "rgba(20, 167, 96, 0.3)",
-                    color: "#14a760",
-                    fontWeight: 600,
-                    textTransform: "none",
-                    fontSize: "0.85rem",
-                    px: 2,
-                    py: 0.75,
-                    transition: "all 0.2s ease-in-out",
-                    "&:hover": {
-                      borderColor: "#14a760",
-                      bgcolor: "rgba(20, 167, 96, 0.05)",
-                    },
-                  }}
+                  // sx={{
+                  //   borderRadius: "10px",
+                  //   borderColor: "rgba(20, 167, 96, 0.3)",
+                  //   color: "#14a760",
+                  //   fontWeight: 600,
+                  //   textTransform: "none",
+                  //   fontSize: "0.85rem",
+                  //   px: 2,
+                  //   py: 0.75,
+                  //   transition: "all 0.2s ease-in-out",
+                  //   "&:hover": {
+                  //     borderColor: "#14a760",
+                  //     bgcolor: "rgba(20, 167, 96, 0.05)",
+                  //   },
+                  // }}
                 >
                   Tiện ích
                 </Button>
@@ -324,22 +324,22 @@ export default function PageAction({
                 size="small"
                 onClick={onNewClick}
                 startIcon={<Add />}
-                sx={{
-                  borderRadius: "10px",
-                  bgcolor: "#14a760",
-                  color: "#fff",
-                  fontWeight: 700,
-                  textTransform: "none",
-                  fontSize: "0.85rem",
-                  px: 2.5,
-                  py: 0.8,
-                  boxShadow: "0 4px 12px rgba(20, 167, 96, 0.2)",
-                  transition: "all 0.2s ease-in-out",
-                  "&:hover": {
-                    bgcolor: "#118f51",
-                    boxShadow: "0 6px 16px rgba(20, 167, 96, 0.3)",
-                  },
-                }}
+                // sx={{
+                //   borderRadius: "10px",
+                //   bgcolor: "#0273a3",
+                //   color: "#fff",
+                //   fontWeight: 700,
+                //   textTransform: "none",
+                //   fontSize: "0.85rem",
+                //   px: 2.5,
+                //   py: 0.8,
+                //   boxShadow: "0 4px 12px rgba(20, 167, 96, 0.2)",
+                //   transition: "all 0.2s ease-in-out",
+                //   "&:hover": {
+                //     bgcolor: "#1999cfff",
+                //     boxShadow: "0 6px 16px rgba(20, 167, 96, 0.3)",
+                //   },
+                // }}
               >
                 Thêm mới
               </Button>

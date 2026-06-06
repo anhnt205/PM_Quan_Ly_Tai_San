@@ -709,7 +709,7 @@ export default function AssetTransfer() {
                       scrollButtons="auto"
                       sx={{
                         "& .MuiTabs-indicator": {
-                          backgroundColor: "#04b46eff",
+                          backgroundColor: "#0273a3",
                         },
                         "& .MuiTab-root": {
                           textTransform: "none",
@@ -717,7 +717,7 @@ export default function AssetTransfer() {
                           fontSize: "0.875rem",
                           minWidth: 100,
                           "&.Mui-selected": {
-                            color: "#04b46eff",
+                            color: "#0273a3",
                           },
                         },
                       }}

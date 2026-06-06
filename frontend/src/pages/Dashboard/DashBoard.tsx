@@ -204,7 +204,7 @@ export default function DashBoard() {
           py: 3,
           borderRadius: "16px",
           background:
-            "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0f9ff 100%)",
+            "linear-gradient(135deg, #e1f1f8ff 0%, #daf4ffff 50%, #c9eefeff 100%)",
           border: "1px solid rgba(4, 180, 110, 0.1)",
           position: "relative",
           overflow: "hidden",
@@ -221,16 +221,16 @@ export default function DashBoard() {
         >
           <Box
             sx={{
-              bgcolor: "rgba(4, 180, 110, 0.12)",
+              bgcolor: "#0273a3",
               borderRadius: "14px",
               p: 1.3,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              boxShadow: "0 4px 14px rgba(4, 180, 110, 0.1)",
+              boxShadow: "0 4px 14px #0273a3",
             }}
           >
-            <DashboardOutlinedIcon sx={{ color: "#04b46e", fontSize: 28 }} />
+            <DashboardOutlinedIcon sx={{ color: "#ffffff", fontSize: 28 }} />
           </Box>
           <Box>
             <Typography

@@ -292,7 +292,7 @@ export default function ToolTransferApprovalTab({
           sx={{
             minHeight: "40px",
             "& .MuiTabs-indicator": {
-              backgroundColor: "#04b46eff",
+              backgroundColor: "#0273a3",
             },
             "& .MuiTab-root": {
               textTransform: "none",
@@ -300,7 +300,7 @@ export default function ToolTransferApprovalTab({
               fontSize: "0.85rem",
               minHeight: "40px",
               "&.Mui-selected": {
-                color: "#04b46eff",
+                color: "#0273a3",
               },
             },
           }}

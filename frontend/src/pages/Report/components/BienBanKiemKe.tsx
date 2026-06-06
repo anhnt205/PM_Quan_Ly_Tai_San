@@ -172,7 +172,7 @@ export default function BienBanKiemKe({ title }: { title?: string }) {
       r++;
 
       wsData[r] = Array(COLS).fill("");
-      wsData[r][0] = cell("CÔNG TY THAN UÔNG BÍ - TKV", {
+      wsData[r][0] = cell("CÔNG TY THAN KHO VẬN CẨM PHÁ - VINACOMIN", {
         font: fontB,
         alignment: { horizontal: "center", wrapText: true },
       });

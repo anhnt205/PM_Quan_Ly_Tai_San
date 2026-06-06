@@ -134,15 +134,15 @@ export default function StaffForm({
           borderRadius: "8px",
           transition: "all 0.2s",
           "& fieldset": { borderColor: "#e2e8f0" },
-          "&:hover fieldset": { borderColor: "#1FA463" },
+          "&:hover fieldset": { borderColor: "#0273a3" },
           "&.Mui-focused fieldset": {
-            borderColor: "#1FA463",
+            borderColor: "#0273a3",
             borderWidth: "1.5px",
           },
         },
         "& .MuiInputLabel-root": {
           color: "#64748b",
-          "&.Mui-focused": { color: "#1FA463" },
+          "&.Mui-focused": { color: "#0273a3" },
         },
       }}
     >
@@ -156,7 +156,7 @@ export default function StaffForm({
           borderBottom: "1px solid #f1f5f9",
         }}
       >
-        <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
+        <Typography variant="h5" sx={{ fontWeight: 700, color: "#0273a3" }}>
           Chi tiết nhân viên
         </Typography>
         <Box display="flex" gap={0.5}>
@@ -172,9 +172,9 @@ export default function StaffForm({
       {/* Phần 1: Thông tin nhân viên */}
       <Box>
         <Box display="flex" alignItems="center" gap={1.2} mb={2.5}>
-          <InfoOutlineRounded sx={{ color: "#1FA463", fontSize: "20px" }} />
+          <InfoOutlineRounded sx={{ color: "#0273a3", fontSize: "20px" }} />
           <Typography
-            sx={{ fontWeight: 600, fontSize: "16px", color: "#1FA463" }}
+            sx={{ fontWeight: 600, fontSize: "16px", color: "#0273a3" }}
           >
             Thông tin nhân viên
           </Typography>
@@ -238,9 +238,9 @@ export default function StaffForm({
       {/* Phần 2: Quyền ký duyệt */}
       <Box sx={{ mt: 1.5 }}>
         <Box display="flex" alignItems="center" gap={1.2} mb={2}>
-          <Security sx={{ color: "#1FA463", fontSize: "20px" }} />
+          <Security sx={{ color: "#0273a3", fontSize: "20px" }} />
           <Typography
-            sx={{ fontWeight: 600, fontSize: "16px", color: "#1FA463" }}
+            sx={{ fontWeight: 600, fontSize: "16px", color: "#0273a3" }}
           >
             Quyền ký duyệt
           </Typography>
@@ -279,7 +279,7 @@ export default function StaffForm({
                   color: "#e2e8f0",
                   p: 0,
                   mr: 1.5,
-                  "&.Mui-checked": { color: "#1FA463" },
+                  "&.Mui-checked": { color: "#0273a3" },
                 }}
               />
               <Typography sx={{ fontWeight: 500, color: "#334155" }}>
@@ -323,7 +323,7 @@ export default function StaffForm({
                   color: "#e2e8f0",
                   p: 0,
                   mr: 1.5,
-                  "&.Mui-checked": { color: "#1FA463" },
+                  "&.Mui-checked": { color: "#0273a3" },
                 }}
               />
               <Typography sx={{ fontWeight: 500, color: "#334155" }}>
@@ -357,7 +357,7 @@ export default function StaffForm({
                   color: "#e2e8f0",
                   p: 0,
                   mr: 1.5,
-                  "&.Mui-checked": { color: "#1FA463" },
+                  "&.Mui-checked": { color: "#0273a3" },
                 }}
               />
               <Typography sx={{ fontWeight: 500, color: "#334155" }}>
@@ -432,7 +432,7 @@ export default function StaffForm({
                     sx={{
                       color: "#e2e8f0",
                       p: 0,
-                      "&.Mui-checked": { color: "#1FA463" },
+                      "&.Mui-checked": { color: "#0273a3" },
                     }}
                   />
                   <Typography

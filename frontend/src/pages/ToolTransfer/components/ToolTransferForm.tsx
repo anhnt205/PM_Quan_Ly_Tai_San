@@ -348,7 +348,7 @@ export default forwardRef(function ToolTransferForm(
             justifyContent="space-between"
           >
             {/* Bên trái: Tiêu đề */}
-            <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: "#0273a3" }}>
               Chi tiết {label}
             </Typography>
 

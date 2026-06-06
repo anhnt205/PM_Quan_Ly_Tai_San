@@ -58,7 +58,7 @@ export default function HandoverApproval() {
             onChange={handleMainTabChange}
             sx={{
               "& .MuiTabs-indicator": {
-                backgroundColor: "#04b46eff",
+                backgroundColor: "#0273a3",
                 height: 3,
                 borderRadius: "3px 3px 0 0",
               },
@@ -72,7 +72,7 @@ export default function HandoverApproval() {
                 mr: 4,
                 minWidth: "auto",
                 "&.Mui-selected": {
-                  color: "#04b46eff",
+                  color: "#0273a3",
                 },
               },
             }}

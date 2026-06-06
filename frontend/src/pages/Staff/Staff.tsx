@@ -386,7 +386,7 @@ export default function Staff() {
           PaperProps={{
             sx: {
               borderRadius: "16px",
-              border: "2px solid #1FA463",
+              border: "2px solid #0273a3",
             },
           }}
         >
@@ -419,7 +419,7 @@ export default function Staff() {
           PaperProps={{
             sx: {
               borderRadius: "16px",
-              border: "2px solid #1FA463",
+              border: "2px solid #0273a3",
             },
           }}
         >

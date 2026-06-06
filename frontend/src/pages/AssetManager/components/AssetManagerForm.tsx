@@ -1021,7 +1021,7 @@ export default function AssetManagerForm({
               borderBottom: "1px solid #f1f5f9",
             }}
           >
-            <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: "#0273a3" }}>
               Chi tiết tài sản
             </Typography>
             <Box display="flex" gap={0.5}>
