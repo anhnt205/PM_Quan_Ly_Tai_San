@@ -17,7 +17,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
 import FieldInput from "../../../components/TextField/FieldInput";
@@ -80,9 +80,18 @@ export default function PositionForm({
     },
   });
 
+  const onFormChangeRef = useRef(onFormChange);
+  const onBulkItemsChangeRef = useRef(onBulkItemsChange);
+  useEffect(() => {
+    onFormChangeRef.current = onFormChange;
+  });
+  useEffect(() => {
+    onBulkItemsChangeRef.current = onBulkItemsChange;
+  });
+
   const debouncedValues = useDebounce(formik.values, 800);
   useEffect(() => {
-    onFormChange?.(debouncedValues);
+    onFormChangeRef.current?.(debouncedValues);
   }, [debouncedValues]);
 
   useEffect(() => {
@@ -92,23 +101,50 @@ export default function PositionForm({
     }
   }, [selectedPosition, readOnly]);
 
-  // Bulk mode state
-  const [localBulkItems, setLocalBulkItems] = useState<any[]>(bulkItems ?? []);
+  useEffect(() => {
+    if (initialFormData && Object.keys(initialFormData).length > 0) {
+      formik.setValues({
+        id: initialFormData?.id ?? "",
+        tenChucVu: initialFormData?.tenChucVu ?? "",
+        quanLyNhanVien: initialFormData?.quanLyNhanVien ?? false,
+        quanLyPhongBan: initialFormData?.quanLyPhongBan ?? false,
+        quanLyDuAn: initialFormData?.quanLyDuAn ?? false,
+        quanLyNguonVon: initialFormData?.quanLyNguonVon ?? false,
+        quanLyMoHinhTaiSan: initialFormData?.quanLyMoHinhTaiSan ?? false,
+        quanLyNhomTaiSan: initialFormData?.quanLyNhomTaiSan ?? false,
+        quanLyTaiSan: initialFormData?.quanLyTaiSan ?? false,
+        quanLyCCDCVatTu: initialFormData?.quanLyCCDCVatTu ?? false,
+        dieuDongTaiSan: initialFormData?.dieuDongTaiSan ?? false,
+        dieuDongCCDCVatTu: initialFormData?.dieuDongCCDCVatTu ?? false,
+        banGiaoTaiSan: initialFormData?.banGiaoTaiSan ?? false,
+        banGiaoCCDCVatTu: initialFormData?.banGiaoCCDCVatTu ?? false,
+        baoCao: initialFormData?.baoCao ?? false,
+        banHanhQuyetDinh: initialFormData?.banHanhQuyetDinh ?? false,
+        idCongTy: initialFormData?.idCongTy ?? CongTy.CT001,
+      });
+    }
+  }, [initialFormData]);
+
+  const [localBulkItems, setLocalBulkItems] = useState<any[]>(
+    (initialFormData?.items?.length ?? 0) > 0
+      ? initialFormData!.items
+      : (bulkItems?.length ?? 0) > 0
+        ? bulkItems
+        : [],
+  );
+
+  useEffect(() => {
+    if ((initialFormData?.items?.length ?? 0) > 0) {
+      setLocalBulkItems(initialFormData!.items);
+    } else if ((bulkItems?.length ?? 0) > 0) {
+      setLocalBulkItems(bulkItems);
+    }
+  }, [initialFormData, bulkItems]);
 
   const debouncedBulkItems = useDebounce(localBulkItems, 600);
   useEffect(() => {
-    onBulkItemsChange?.(debouncedBulkItems);
+    onBulkItemsChangeRef.current?.(debouncedBulkItems);
   }, [debouncedBulkItems]);
-
-  useEffect(() => {
-    if (
-      initialFormData?.items &&
-      Array.isArray(initialFormData.items) &&
-      initialFormData.items.length > 0
-    ) {
-      setLocalBulkItems(initialFormData.items);
-    }
-  }, []);
 
   // Bulk handlers
   const handleAddItem = () => {
@@ -172,7 +208,7 @@ export default function PositionForm({
       }),
     );
     setLocalBulkItems(updated);
-    onBulkItemsChange?.(updated);
+    onBulkItemsChangeRef.current?.(updated);
     return { hasError, items: updated };
   };
 
@@ -350,35 +386,33 @@ export default function PositionForm({
           ))}
         </Box>
 
-        {/* Add button */}
-        <Button
-          variant="outlined"
-          startIcon={<Add />}
-          onClick={handleAddItem}
-          sx={{
-            alignSelf: "flex-start",
-            textTransform: "none",
-            borderColor: "#1FA463",
-            color: "#1FA463",
-            "&:hover": {
-              borderColor: "#1FA463",
-              backgroundColor: "rgba(31, 164, 99, 0.04)",
-            },
-          }}
-        >
-          Thêm item
-        </Button>
-
-        {/* Footer */}
         <Box
           display="flex"
-          justifyContent="flex-end"
-          gap={2}
+          justifyContent="space-between"
+          alignItems="center"
           pt={2.5}
           sx={{ borderTop: "1px solid #f1f5f9" }}
         >
-          <CancelBtn onClick={onCancel} />
-          <SaveBtn onSave={handleBulkSave} />
+          <Button
+            variant="outlined"
+            startIcon={<Add />}
+            onClick={handleAddItem}
+            sx={{
+              textTransform: "none",
+              borderColor: "#1FA463",
+              color: "#1FA463",
+              "&:hover": {
+                borderColor: "#1FA463",
+                backgroundColor: "rgba(31, 164, 99, 0.04)",
+              },
+            }}
+          >
+            Thêm item
+          </Button>
+          <Box display="flex" gap={2}>
+            <CancelBtn onClick={onCancel} />
+            <SaveBtn onSave={handleBulkSave} />
+          </Box>
         </Box>
       </Box>
     );

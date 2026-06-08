@@ -43,6 +43,10 @@ import FieldInput from "../../../../components/TextField/FieldInput";
 import FieldDate from "../../../../components/TextField/FieldDate";
 import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 import { VehicleMeasuresValidation } from "../../validation";
+import { useLocation } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../../../redux/store";
+import { updateTabFormData } from "../../../../redux/tabsSlice";
+import { Remove } from "@mui/icons-material";
 
 interface Props {
   open: boolean;
@@ -66,6 +70,17 @@ const BienPhapPhuongTienDialog = ({
   const { createMutation, updateMutation } = useBienPhapPhuongTienMutation();
 
   const [parentInspection, setParentInspection] = useState<any>(null);
+
+  const location = useLocation();
+  const tabPath = location.pathname;
+  const dispatch = useAppDispatch();
+
+  const savedDraft = useAppSelector((state) => {
+    const tab = state.tabs.tabs.find((t) => t.path === tabPath);
+    return (
+      tab?.formData?.[`bienPhapPhuongTienDraft_${idGiamDinhPhuongTien}`] ?? null
+    );
+  });
 
   const initialValues: BienPhapPhuongTienData & { nguoiKyList: any[] } = {
     id: "",
@@ -134,6 +149,7 @@ const BienPhapPhuongTienDialog = ({
 
   useEffect(() => {
     if (!open) return;
+
     if (initData) {
       const listInfo = listSigneInfo(initData as any, apiUsers, apiDepartments);
       formik.setValues({
@@ -146,69 +162,122 @@ const BienPhapPhuongTienDialog = ({
         })),
       } as any);
 
-      // Fetch parent inspection details to get tenTaiSan etc
       if (initData.idGiamDinhPhuongTien) {
         api
           .get(`/giamdinh-phuongtien/${initData.idGiamDinhPhuongTien}`)
-          .then((res) => {
-            const data = res.data?.data || res.data;
-            setParentInspection(data);
-          })
-          .catch((err) =>
-            console.error("Error fetching parent vehicle inspection:", err),
-          );
+          .then((res) => setParentInspection(res.data?.data || res.data))
+          .catch((err) => console.error(err));
       }
-    } else {
+      return;
+    }
+
+    if (savedDraft) {
       formik.setValues({
         ...initialValues,
-        idGiamDinhPhuongTien: idGiamDinhPhuongTien,
+        idGiamDinhPhuongTien,
+        soBienBan: savedDraft.soBienBan,
+        donViQuanLy: savedDraft.donViQuanLy,
+        tienDoTuNgay: savedDraft.tienDoTuNgay,
+        tienDoDenNgay: savedDraft.tienDoDenNgay,
+        mucDich: savedDraft.mucDich,
+        yeuCau: savedDraft.yeuCau,
+        tinhTrangHienTai: savedDraft.tinhTrangHienTai,
+        noiDungThucHien: savedDraft.noiDungThucHien,
+        bienPhapAnToan: savedDraft.bienPhapAnToan,
+        idTaiSan: savedDraft.idTaiSan,
+        danhSachChiTiet: savedDraft.danhSachChiTiet,
+        nguoiKyList: savedDraft.nguoiKyList,
       });
       if (idGiamDinhPhuongTien) {
         api
           .get(`/giamdinh-phuongtien/${idGiamDinhPhuongTien}`)
-          .then((res) => {
-            const data = res.data?.data || res.data;
-            setParentInspection(data);
-            formik.setFieldValue("idTaiSan", data.idTaiSan || "");
-            formik.setFieldValue("soBienBan", `BP-${data.soPhieu || ""}`);
-            formik.setFieldValue(
-              "donViQuanLy",
-              data.donViSuaChua ||
-                data.tenDonVi ||
-                data.donViQuanLy ||
-                "Xưởng cơ giới",
-            );
-
-            // Map inspection details to measure details
-            if (data.danhSachChiTiet) {
-              const mappedDetails = data.danhSachChiTiet.map((item: any) => ({
-                id: "",
-                idBienPhap: "",
-                idVatTu: item.idVatTu || "",
-                idChiTietVatTu: item.idChiTietVatTu || "",
-                tenVatTu: item.tenVatTu || "",
-                donViTinh: item.donViTinh || "Cái",
-                soLuongCap:
-                  item.soLuongSuaChua ||
-                  item.soLuongThayMoi ||
-                  item.soLuong ||
-                  1,
-                soLuongThuHoi: item.soLuongThayMoi || 0,
-                ghiChu: item.ghiChu || "",
-              }));
-              formik.setFieldValue("danhSachChiTiet", mappedDetails);
-            }
-          })
-          .catch((err) =>
-            console.error("Error fetching parent vehicle inspection:", err),
-          );
+          .then((res) => setParentInspection(res.data?.data || res.data))
+          .catch((err) => console.error(err));
       }
+      return;
     }
-  }, [open, initData, idGiamDinhPhuongTien, apiUsers, apiDepartments]);
+
+    formik.setValues({ ...initialValues, idGiamDinhPhuongTien });
+    if (idGiamDinhPhuongTien) {
+      api
+        .get(`/giamdinh-phuongtien/${idGiamDinhPhuongTien}`)
+        .then((res) => {
+          const data = res.data?.data || res.data;
+          setParentInspection(data);
+          formik.setFieldValue("idTaiSan", data.idTaiSan || "");
+          formik.setFieldValue("soBienBan", `BP-${data.soPhieu || ""}`);
+          formik.setFieldValue(
+            "donViQuanLy",
+            data.donViSuaChua ||
+              data.tenDonVi ||
+              data.donViQuanLy ||
+              "Xưởng cơ giới",
+          );
+          if (data.danhSachChiTiet) {
+            const mappedDetails = data.danhSachChiTiet.map((item: any) => ({
+              id: "",
+              idBienPhap: "",
+              idVatTu: item.idVatTu || "",
+              idChiTietVatTu: item.idChiTietVatTu || "",
+              tenVatTu: item.tenVatTu || "",
+              donViTinh: item.donViTinh || "Cái",
+              soLuongCap:
+                item.soLuongSuaChua || item.soLuongThayMoi || item.soLuong || 1,
+              soLuongThuHoi: item.soLuongThayMoi || 0,
+              ghiChu: item.ghiChu || "",
+            }));
+            formik.setFieldValue("danhSachChiTiet", mappedDetails);
+          }
+        })
+        .catch((err) => console.error(err));
+    }
+  }, [
+    open,
+    initData,
+    idGiamDinhPhuongTien,
+    apiUsers,
+    apiDepartments,
+    savedDraft,
+  ]);
 
   function handleClose() {
+    dispatch(
+      updateTabFormData({
+        path: tabPath,
+        data: {
+          [`bienPhapPhuongTienDraft_${idGiamDinhPhuongTien}`]: null,
+          lastMinimizedDialog: null,
+        },
+      }),
+    );
     setParentInspection(null);
     formik.resetForm();
+    onClose();
+  }
+  function handleMinimize() {
+    dispatch(
+      updateTabFormData({
+        path: tabPath,
+        data: {
+          [`bienPhapPhuongTienDraft_${idGiamDinhPhuongTien}`]: {
+            idGiamDinhPhuongTien,
+            soBienBan: formik.values.soBienBan,
+            donViQuanLy: formik.values.donViQuanLy,
+            tienDoTuNgay: formik.values.tienDoTuNgay,
+            tienDoDenNgay: formik.values.tienDoDenNgay,
+            mucDich: formik.values.mucDich,
+            yeuCau: formik.values.yeuCau,
+            tinhTrangHienTai: formik.values.tinhTrangHienTai,
+            noiDungThucHien: formik.values.noiDungThucHien,
+            bienPhapAnToan: formik.values.bienPhapAnToan,
+            idTaiSan: formik.values.idTaiSan,
+            danhSachChiTiet: formik.values.danhSachChiTiet,
+            nguoiKyList: formik.values.nguoiKyList,
+          },
+          lastMinimizedDialog: "bienPhapPhuongTien",
+        },
+      }),
+    );
     onClose();
   }
 
@@ -246,7 +315,7 @@ const BienPhapPhuongTienDialog = ({
   return (
     <Dialog
       open={open}
-      onClose={handleClose}
+      onClose={handleMinimize}
       maxWidth="lg"
       fullWidth
       PaperProps={{ sx: { height: "90vh", borderRadius: 3 } }}
@@ -279,9 +348,22 @@ const BienPhapPhuongTienDialog = ({
             )}
           </Box>
         </Box>
-        <IconButton size="small" onClick={handleClose} sx={{ color: "white" }}>
-          <CloseIcon />
-        </IconButton>
+        <Box sx={{ display: "flex", gap: 0.5 }}>
+          <IconButton
+            size="small"
+            onClick={handleMinimize}
+            sx={{ color: "white" }}
+          >
+            <Remove />
+          </IconButton>
+          <IconButton
+            size="small"
+            onClick={handleClose}
+            sx={{ color: "white" }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </Box>
       </DialogTitle>
 
       <DialogContent sx={{ p: 3, overflow: "auto", bgcolor: "grey.50" }}>

@@ -32,7 +32,6 @@ import { showConfirmAlert } from "../../../../components/Alert";
 import { devices } from "../../../../mockdata/mockDevices";
 import { departments } from "../../../../mockdata/mockDepartments";
 
-
 import InspectionRecordDialog from "../dialog/InspectionRecordDialog";
 import AcceptanceTestDialog from "../dialog/AcceptanceTestDialog";
 import MaterialDialog from "../dialog/MaterialDialog";
@@ -69,6 +68,9 @@ import { MaintenancePlanData } from "../../types";
 import type { IncidenData, DanhGiaVatTuData } from "../../types";
 import { showServerity, showStatus } from "../../config";
 import { AssetGroup } from "../../../../utils/const";
+import { useLocation } from "react-router-dom";
+import { useAppSelector } from "../../../../redux/store";
+import DraftIndicator from "../../../../components/common/DraftIndicator";
 
 interface Props {
   incident: IncidenData;
@@ -201,6 +203,41 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
     null,
   );
 
+  const location = useLocation();
+  const tabPath = location.pathname;
+
+  const [acceptanceDialogOpen, setAcceptanceDialogOpen] = useState(false);
+  const [materialDialogOpen, setMaterialDialogOpen] = useState(false);
+
+  const lastMinimizedDialog = useAppSelector((state) => {
+    const tab = state.tabs.tabs.find((t) => t.path === tabPath);
+    return tab?.formData?.lastMinimizedDialog ?? null;
+  });
+  const drafts = useAppSelector((state) => {
+    const t = state.tabs.tabs.find((t) => t.path === tabPath);
+    const formData = t?.formData ?? {};
+    const prefixes = [
+      "inspectionDraft_",
+      "inspectionVehicleDraft_",
+      "bienPhapMayMocDraft_",
+      "bienPhapPhuongTienDraft_",
+      "acceptanceDraft_",
+      "materialDraft_",
+      "acceptanceVehicleDraft_",
+    ];
+
+    return prefixes.reduce(
+      (acc, prefix) => {
+        const key = Object.keys(formData).find((k) => k.startsWith(prefix));
+        const name = prefix.replace("Draft_", "Draft");
+        // inspectionDraft, inspectionVehicleDraft, bienPhapMayMocDraft...
+        acc[name] = key ? formData[key] : null;
+        return acc;
+      },
+      {} as Record<string, any>,
+    );
+  });
+
   const { deleteMutation: deleteMaterialAssessmentMutation } =
     useMaintenanceMaterialAssessmentMutation();
   const { deleteMutation: deleteIncidentInspectionMutation } =
@@ -263,7 +300,9 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
   );
   const { data: bienPhapPhuongTienRecords = [] } =
     useBienPhapPhuongTienByGiamDinhQuery(
-      plan?.nhomTaiSan === AssetGroup.PHUONGTIEN ? expandedInspections || "" : "",
+      plan?.nhomTaiSan === AssetGroup.PHUONGTIEN
+        ? expandedInspections || ""
+        : "",
     );
   const bienPhapRecords =
     plan?.nhomTaiSan === AssetGroup.MAYMOC
@@ -321,7 +360,6 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
   const reporterDept = incident.idDonViBaoCao
     ? departments.find((d) => d.id === incident.idDonViBaoCao)
     : null;
-
 
   const inc: any = incident;
 
@@ -383,7 +421,15 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
       </Box>
 
       {incident.moTa && (
-        <Box sx={{ mb: 2, p: 1.5, bgcolor: "#f5f5f5", borderRadius: 2, border: "1px solid #e0e0e0" }}>
+        <Box
+          sx={{
+            mb: 2,
+            p: 1.5,
+            bgcolor: "#f5f5f5",
+            borderRadius: 2,
+            border: "1px solid #e0e0e0",
+          }}
+        >
           <Typography variant="body2">
             <b>Mô tả:</b> {incident.moTa}
           </Typography>
@@ -442,7 +488,15 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
           <TableContainer component={Paper} sx={{ maxHeight: 400 }}>
             <Table size="small" stickyHeader>
               <TableHead>
-                <TableRow sx={{ "& th": { bgcolor: "#1FA463 !important", color: "#fff !important", fontWeight: 700 } }}>
+                <TableRow
+                  sx={{
+                    "& th": {
+                      bgcolor: "#1FA463 !important",
+                      color: "#fff !important",
+                      fontWeight: 700,
+                    },
+                  }}
+                >
                   {incident.trangThai === 3 && (
                     <TableCell padding="checkbox">
                       {plan?.nhomTaiSan !== AssetGroup.PHUONGTIEN && (
@@ -546,14 +600,20 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
           >
             <Table size="small" sx={{ minWidth: 900 }}>
               <TableHead>
-                <TableRow sx={{ "& th": { bgcolor: "#1FA463 !important", color: "#fff !important", fontWeight: 700 } }}>
+                <TableRow
+                  sx={{
+                    "& th": {
+                      bgcolor: "#1FA463 !important",
+                      color: "#fff !important",
+                      fontWeight: 700,
+                    },
+                  }}
+                >
                   <TableCell>Biên bản</TableCell>
                   <TableCell>Loại</TableCell>
                   <TableCell>Ngày</TableCell>
                   <TableCell>Trạng thái</TableCell>
-                  <TableCell align="right">
-                    Thao tác
-                  </TableCell>
+                  <TableCell align="right">Thao tác</TableCell>
                 </TableRow>
               </TableHead>
 
@@ -831,6 +891,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                                               setAcceptanceParentBienPhapId(
                                                 bp.id,
                                               );
+                                              setAcceptanceDialogOpen(true);
                                             }}
                                             isAdd={
                                               bp.trangThai === 3 &&
@@ -851,7 +912,8 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                                             editColor="primary"
                                             isDelete={bp.trangThai === 0}
                                             onDelete={() =>
-                                              (plan?.nhomTaiSan === AssetGroup.MAYMOC
+                                              (plan?.nhomTaiSan ===
+                                              AssetGroup.MAYMOC
                                                 ? deleteBienPhapMayMocMutation
                                                 : deleteBienPhapPhuongTienMutation
                                               ).mutateAsync(bp.id)
@@ -862,186 +924,181 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
 
                                       {/* Depth 4: BB Nghiệm thu */}
                                       {isBPExpanded &&
-                                        acceptanceRecords.map(
-                                          (acc: any) => {
-                                            const materials =
-                                              materialQualityRecords.filter(
-                                                (m: any) =>
-                                                  m.idNghiemThu === acc.id,
-                                              );
-                                            const isAccExpanded =
-                                              expandedAcceptances ===
-                                              (acc.id ?? "");
+                                        acceptanceRecords.map((acc: any) => {
+                                          const materials =
+                                            materialQualityRecords.filter(
+                                              (m: any) =>
+                                                m.idNghiemThu === acc.id,
+                                            );
+                                          const isAccExpanded =
+                                            expandedAcceptances ===
+                                            (acc.id ?? "");
 
-                                            return (
-                                              <React.Fragment
-                                                key={`incacc-${acc.id}`}
-                                              >
-                                                <TableRow hover>
-                                                  <TableCell sx={{ pl: 14 }}>
-                                                    <Box
+                                          return (
+                                            <React.Fragment
+                                              key={`incacc-${acc.id}`}
+                                            >
+                                              <TableRow hover>
+                                                <TableCell sx={{ pl: 14 }}>
+                                                  <Box
+                                                    sx={{
+                                                      display: "flex",
+                                                      alignItems: "center",
+                                                    }}
+                                                  >
+                                                    {acc.daCoDanhGiaVatTu ===
+                                                      1 && (
+                                                      <IconButton
+                                                        size="small"
+                                                        onClick={() =>
+                                                          setExpandedAcceptances(
+                                                            (prev) =>
+                                                              prev === acc.id
+                                                                ? null
+                                                                : (acc.id ??
+                                                                  null),
+                                                          )
+                                                        }
+                                                      >
+                                                        {isAccExpanded ? (
+                                                          <KeyboardArrowUpIcon />
+                                                        ) : (
+                                                          <KeyboardArrowDownIcon />
+                                                        )}
+                                                      </IconButton>
+                                                    )}
+                                                    <Typography
+                                                      variant="body2"
                                                       sx={{
-                                                        display: "flex",
-                                                        alignItems: "center",
+                                                        ml:
+                                                          acc.daCoDanhGiaVatTu ===
+                                                            1 ||
+                                                          materials.length > 0
+                                                            ? 0
+                                                            : "28px",
                                                       }}
                                                     >
-                                                      {acc.daCoDanhGiaVatTu ===
-                                                        1 && (
-                                                        <IconButton
+                                                      {acc.soPhieu}
+                                                    </Typography>
+                                                  </Box>
+                                                </TableCell>
+                                                <TableCell>
+                                                  <Chip
+                                                    label="BB Nghiệm thu"
+                                                    size="small"
+                                                    color="warning"
+                                                    sx={{ color: "#fff" }}
+                                                  />
+                                                </TableCell>
+                                                <TableCell>
+                                                  {acc.ngayTao}
+                                                </TableCell>
+                                                <TableCell>
+                                                  {showStatus(
+                                                    acc.trangThai ?? 0,
+                                                  )}
+                                                </TableCell>
+                                                <TableCell align="right">
+                                                  <ActionCell
+                                                    onAdd={() => {
+                                                      setMaterialParentAccId(
+                                                        acc.id ?? "",
+                                                      );
+                                                      setMaterialDialogOpen(
+                                                        true,
+                                                      );
+                                                    }}
+                                                    isAdd={
+                                                      acc.trangThai === 3 &&
+                                                      acc.daCoDanhGiaVatTu !== 1
+                                                    }
+                                                    addTooltip="Tạo BB Vật tư"
+                                                    addColor="secondary"
+                                                    isEdit={acc.trangThai === 0}
+                                                    onEdit={() => {
+                                                      setSelectedAcc(acc);
+                                                      setAcceptanceParentBienPhapId(
+                                                        acc.idBienPhapMayMoc,
+                                                      );
+                                                    }}
+                                                    editTooltip="Chỉnh sửa BB Nghiệm thu"
+                                                    editColor="primary"
+                                                    isDelete={
+                                                      acc.trangThai === 0
+                                                    }
+                                                    onDelete={() =>
+                                                      (plan?.nhomTaiSan ===
+                                                      AssetGroup.MAYMOC
+                                                        ? deleteAcceptanceMutation
+                                                        : deleteAcceptanceVehicleMutation
+                                                      ).mutateAsync(acc.id)
+                                                    }
+                                                  />
+                                                </TableCell>
+                                              </TableRow>
+
+                                              {/* Depth 5: BB Vật tư */}
+                                              {isAccExpanded &&
+                                                materialQualityRecords.map(
+                                                  (mat: any) => (
+                                                    <TableRow
+                                                      hover
+                                                      key={`incmat-${mat.id}`}
+                                                    >
+                                                      <TableCell
+                                                        sx={{ pl: 18 }}
+                                                      >
+                                                        <Typography variant="body2">
+                                                          {mat.soPhieu}
+                                                        </Typography>
+                                                      </TableCell>
+                                                      <TableCell>
+                                                        <Chip
+                                                          label="BB Vật tư"
                                                           size="small"
-                                                          onClick={() =>
-                                                            setExpandedAcceptances(
-                                                              (prev) =>
-                                                                prev === acc.id
-                                                                  ? null
-                                                                  : (acc.id ??
-                                                                    null),
+                                                          color="secondary"
+                                                        />
+                                                      </TableCell>
+                                                      <TableCell>
+                                                        {mat.ngayDanhGia || "—"}
+                                                      </TableCell>
+                                                      <TableCell>
+                                                        {showStatus(
+                                                          mat.trangThai ?? 0,
+                                                        )}
+                                                      </TableCell>
+                                                      <TableCell align="right">
+                                                        <ActionCell
+                                                          isEdit={
+                                                            mat.trangThai === 0
+                                                          }
+                                                          onEdit={() => {
+                                                            setSelectedMaterialAssessment(
+                                                              mat,
+                                                            );
+                                                            setMaterialParentAccId(
+                                                              mat.idNghiemThu ||
+                                                                "",
+                                                            );
+                                                          }}
+                                                          isDelete={
+                                                            mat.trangThai === 0
+                                                          }
+                                                          onDelete={() =>
+                                                            deleteMaterialAssessmentMutation.mutateAsync(
+                                                              mat.id || "",
                                                             )
                                                           }
-                                                        >
-                                                          {isAccExpanded ? (
-                                                            <KeyboardArrowUpIcon />
-                                                          ) : (
-                                                            <KeyboardArrowDownIcon />
-                                                          )}
-                                                        </IconButton>
-                                                      )}
-                                                      <Typography
-                                                        variant="body2"
-                                                        sx={{
-                                                          ml:
-                                                            acc.daCoDanhGiaVatTu ===
-                                                              1 ||
-                                                            materials.length > 0
-                                                              ? 0
-                                                              : "28px",
-                                                        }}
-                                                      >
-                                                        {acc.soPhieu}
-                                                      </Typography>
-                                                    </Box>
-                                                  </TableCell>
-                                                  <TableCell>
-                                                    <Chip
-                                                      label="BB Nghiệm thu"
-                                                      size="small"
-                                                      color="warning"
-                                                      sx={{ color: "#fff" }}
-                                                    />
-                                                  </TableCell>
-                                                  <TableCell>
-                                                    {acc.ngayTao}
-                                                  </TableCell>
-                                                  <TableCell>
-                                                    {showStatus(
-                                                      acc.trangThai ?? 0,
-                                                    )}
-                                                  </TableCell>
-                                                  <TableCell align="right">
-                                                    <ActionCell
-                                                      onAdd={() =>
-                                                        setMaterialParentAccId(
-                                                          acc.id ?? "",
-                                                        )
-                                                      }
-                                                      isAdd={
-                                                        acc.trangThai === 3 &&
-                                                        acc.daCoDanhGiaVatTu !==
-                                                          1
-                                                      }
-                                                      addTooltip="Tạo BB Vật tư"
-                                                      addColor="secondary"
-                                                      isEdit={
-                                                        acc.trangThai === 0
-                                                      }
-                                                      onEdit={() => {
-                                                        setSelectedAcc(acc);
-                                                        setAcceptanceParentBienPhapId(
-                                                          acc.idBienPhapMayMoc,
-                                                        );
-                                                      }}
-                                                      editTooltip="Chỉnh sửa BB Nghiệm thu"
-                                                      editColor="primary"
-                                                      isDelete={
-                                                        acc.trangThai === 0
-                                                      }
-                                                      onDelete={() =>
-                                                        (plan?.nhomTaiSan ===
-                                                        AssetGroup.MAYMOC
-                                                          ? deleteAcceptanceMutation
-                                                          : deleteAcceptanceVehicleMutation
-                                                        ).mutateAsync(acc.id)
-                                                      }
-                                                    />
-                                                  </TableCell>
-                                                </TableRow>
-
-                                                {/* Depth 5: BB Vật tư */}
-                                                {isAccExpanded &&
-                                                  materialQualityRecords.map(
-                                                    (mat: any) => (
-                                                      <TableRow
-                                                        hover
-                                                        key={`incmat-${mat.id}`}
-                                                      >
-                                                        <TableCell
-                                                          sx={{ pl: 18 }}
-                                                        >
-                                                          <Typography variant="body2">
-                                                            {mat.soPhieu}
-                                                          </Typography>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                          <Chip
-                                                            label="BB Vật tư"
-                                                            size="small"
-                                                            color="secondary"
-                                                          />
-                                                        </TableCell>
-                                                        <TableCell>
-                                                          {mat.ngayDanhGia ||
-                                                            "—"}
-                                                        </TableCell>
-                                                        <TableCell>
-                                                          {showStatus(
-                                                            mat.trangThai ?? 0,
-                                                          )}
-                                                        </TableCell>
-                                                        <TableCell align="right">
-                                                          <ActionCell
-                                                            isEdit={
-                                                              mat.trangThai ===
-                                                              0
-                                                            }
-                                                            onEdit={() => {
-                                                              setSelectedMaterialAssessment(
-                                                                mat,
-                                                              );
-                                                              setMaterialParentAccId(
-                                                                mat.idNghiemThu ||
-                                                                  "",
-                                                              );
-                                                            }}
-                                                            isDelete={
-                                                              mat.trangThai ===
-                                                              0
-                                                            }
-                                                            onDelete={() =>
-                                                              deleteMaterialAssessmentMutation.mutateAsync(
-                                                                mat.id || "",
-                                                              )
-                                                            }
-                                                            editTooltip="Chỉnh sửa BB Đánh giá Vật tư"
-                                                            editColor="secondary"
-                                                          />
-                                                        </TableCell>
-                                                      </TableRow>
-                                                    ),
-                                                  )}
-                                              </React.Fragment>
-                                            );
-                                          },
-                                        )}
+                                                          editTooltip="Chỉnh sửa BB Đánh giá Vật tư"
+                                                          editColor="secondary"
+                                                        />
+                                                      </TableCell>
+                                                    </TableRow>
+                                                  ),
+                                                )}
+                                            </React.Fragment>
+                                          );
+                                        })}
                                     </React.Fragment>
                                   );
                                 })}
@@ -1063,7 +1120,6 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
           open={true}
           onClose={() => {
             setIncidentInspectionParentId(null);
-            setSelectedDeviceIds([]);
             setSelectedIncidentInspection(null);
           }}
           plan={plan}
@@ -1154,7 +1210,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
           );
         })()}
 
-      {(acceptanceParentBienPhapId || selectedAcc) &&
+      {(acceptanceDialogOpen || selectedAcc) &&
         (() => {
           if (plan?.nhomTaiSan === AssetGroup.PHUONGTIEN) {
             const bp = bienPhapRecords.find(
@@ -1200,6 +1256,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
               onClose={() => {
                 setAcceptanceParentBienPhapId(null);
                 setSelectedAcc(null);
+                setAcceptanceDialogOpen(false);
               }}
               plan={plan}
               repairRequest={null as any}
@@ -1210,7 +1267,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
           ) : null;
         })()}
 
-      {(materialParentAccId || selectedMaterialAssessment) &&
+      {(materialDialogOpen || selectedMaterialAssessment) &&
         (() => {
           const parentId = selectedMaterialAssessment
             ? selectedMaterialAssessment.idNghiemThu
@@ -1224,6 +1281,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
               onClose={() => {
                 setMaterialParentAccId(null);
                 setSelectedMaterialAssessment(null);
+                setMaterialDialogOpen(false);
               }}
               plan={plan}
               repairRequest={null as any}
@@ -1262,6 +1320,65 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
             <Button onClick={() => setIncidentPreviewId(null)}>Đóng</Button>
           </DialogActions>
         </Dialog>
+      )}
+      {[
+        {
+          key: "incidentInspection",
+          onClick: () => setIncidentInspectionParentId(incident.id),
+        },
+        {
+          key: "inspection",
+          onClick: () => {
+            const draft =
+              plan?.nhomTaiSan === AssetGroup.PHUONGTIEN
+                ? drafts.inspectionVehicleDraft
+                : drafts.inspectionDraft;
+            setIncInspectionParentBBKTKSCId(draft?.idBienBan ?? null);
+          },
+        },
+        {
+          key: "bienPhapMayMoc",
+          onClick: () =>
+            setBienPhapParentInspId(
+              drafts.bienPhapMayMocDraft?.idGiamDinhMayMoc ?? null,
+            ),
+        },
+        {
+          key: "acceptance",
+          onClick: () => {
+            setAcceptanceParentBienPhapId(
+              drafts.acceptanceDraft?.idBienPhapMayMoc ?? null,
+            );
+            setAcceptanceDialogOpen(true);
+          },
+        },
+        {
+          key: "material",
+          onClick: () => {
+            setMaterialParentAccId(drafts.materialDraft?.idNghiemThu ?? null);
+            setMaterialDialogOpen(true);
+          },
+        },
+        {
+          key: "bienPhapPhuongTien",
+          onClick: () =>
+            setBienPhapParentInspId(
+              drafts.bienPhapPhuongTienDraft?.idGiamDinhPhuongTien ?? null,
+            ),
+        },
+        {
+          key: "acceptanceVehicle",
+          onClick: () => {
+            setAcceptanceParentBienPhapId(
+              drafts.acceptanceVehicleDraft?.idBienPhapPhuongTien ?? null,
+            );
+            setAcceptanceDialogOpen(true);
+          },
+        },
+      ].map(({ key, onClick }) =>
+        lastMinimizedDialog === key ? (
+          <DraftIndicator key={key} onClick={onClick} />
+        ) : null,
       )}
     </Box>
   );

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useFormik } from "formik";
 import {
   Dialog,
@@ -47,7 +47,10 @@ import FieldInput from "../../../../components/TextField/FieldInput";
 import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 import InspectionRecordPreview from "../preview/InspectionRecordPreview";
 import { MachineInspectionValidation } from "../../validation";
-
+import { useLocation } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../../../redux/store";
+import { updateTabFormData } from "../../../../redux/tabsSlice";
+import { Remove } from "@mui/icons-material";
 
 interface Props {
   open: boolean;
@@ -73,6 +76,19 @@ const InspectionRecordDialog = ({
   const { data: allToolDetail = [] } = useAllToolDetailQuery();
 
   const { createMutation, updateMutation } = useMaintenanceInspectionMutation();
+
+  const location = useLocation();
+  const tabPath = location.pathname;
+  const dispatch = useAppDispatch();
+
+  const savedDraft = useAppSelector((state) => {
+    const tab = state.tabs.tabs.find((t) => t.path === tabPath);
+    return (
+      tab?.formData?.[
+        `inspectionDraft_${repairRequest?.id || incidentInspection?.id}`
+      ] ?? null
+    );
+  });
 
   const formik = useFormik({
     initialValues: {
@@ -160,6 +176,7 @@ const InspectionRecordDialog = ({
         }),
         nguoiKyList: intermediateSigners,
       };
+
       if (initData) {
         updateMutation.mutate(record, {
           onSuccess: () => {
@@ -176,86 +193,121 @@ const InspectionRecordDialog = ({
     },
   });
 
+  const apiUsersRef = useRef(apiUsers);
+  const apiDepartmentsRef = useRef(apiDepartments);
   useEffect(() => {
-    if (open) {
-      if (initData) {
-        const listInfo = listSigneInfo(initData, apiUsers, apiDepartments);
+    apiUsersRef.current = apiUsers;
+  }, [apiUsers]);
+  useEffect(() => {
+    apiDepartmentsRef.current = apiDepartments;
+  }, [apiDepartments]);
 
-        formik.setValues({
-          id: initData.id ?? "",
-          idCongTy: initData.idCongTy ?? CongTy.CT001,
-          idBienBan: initData.idBienBan ?? "",
-          loaiBienBan: initData.loaiBienBan ?? "",
-          soPhieu: initData.soPhieu ?? "",
-          ngayGiamDinh: initData.ngayGiamDinh ?? "",
-          viTri: initData.viTri ?? "",
-          soDeLaiPhucHoi: initData.soDeLaiPhucHoi ?? 0,
-          soDeLamPheLieu: initData.soDeLamPheLieu ?? 0,
-          soLuongHuy: initData.soLuongHuy ?? 0,
-          idNguoiLap: initData.idNguoiLap ?? "",
-          nguoiLapXacNhan: initData.nguoiLapXacNhan ?? false,
-          idGiamDoc: initData.idGiamDoc ?? "",
-          giamDocXacNhan: initData.giamDocXacNhan ?? false,
-          share: initData.share ?? false,
-          trangThai: initData.trangThai ?? 0,
-          danhSachChiTiet: (initData.danhSachChiTiet ?? []).map((e: any) => ({
-            ...e,
-            danhSachVatTu: (e.danhSachVatTu || []).map((vt: any) => ({
-              ...vt,
-              action: Action.UPDATE,
-            })),
+  useEffect(() => {
+    if (!open) return;
+    if (initData) {
+      
+      const listInfo = listSigneInfo(
+        initData,
+        apiUsersRef.current,
+        apiDepartmentsRef.current,
+      );
+
+      formik.setValues({
+        id: initData.id ?? "",
+        idCongTy: initData.idCongTy ?? CongTy.CT001,
+        idBienBan: initData.idBienBan ?? "",
+        loaiBienBan: initData.loaiBienBan ?? "",
+        soPhieu: initData.soPhieu ?? "",
+        ngayGiamDinh: initData.ngayGiamDinh ?? "",
+        viTri: initData.viTri ?? "",
+        soDeLaiPhucHoi: initData.soDeLaiPhucHoi ?? 0,
+        soDeLamPheLieu: initData.soDeLamPheLieu ?? 0,
+        soLuongHuy: initData.soLuongHuy ?? 0,
+        idNguoiLap: initData.idNguoiLap ?? "",
+        nguoiLapXacNhan: initData.nguoiLapXacNhan ?? false,
+        idGiamDoc: initData.idGiamDoc ?? "",
+        giamDocXacNhan: initData.giamDocXacNhan ?? false,
+        share: initData.share ?? false,
+        trangThai: initData.trangThai ?? 0,
+        danhSachChiTiet: (initData.danhSachChiTiet ?? []).map((e: any) => ({
+          ...e,
+          danhSachVatTu: (e.danhSachVatTu || []).map((vt: any) => ({
+            ...vt,
             action: Action.UPDATE,
-          })) as InspectionRecordDetailData[],
-          nguoiKyList: (listInfo ?? []).map((item: any) => {
-            return {
-              userId: item.idNhanVien,
-              userName: item.hoTen,
-              departmentId: item.idDonVi,
-              departmentName: item.donVi,
-            };
-          }),
-        });
-      } else {
-        formik.setValues({
-          id: "",
-          idCongTy: CongTy.CT001,
-          idBienBan: incidentInspection?.id || repairRequest?.id || "",
-          loaiBienBan: incidentInspection
-            ? TypeBienBan.SU_CO
-            : TypeBienBan.SUA_CHUA,
-          soPhieu: "",
-          ngayGiamDinh: dayjs().format("YYYY-MM-DD"),
-          viTri: "",
-          soDeLaiPhucHoi: 0,
-          soDeLamPheLieu: 0,
-          soLuongHuy: 0,
-          idNguoiLap: "",
-          nguoiLapXacNhan: false,
-          idGiamDoc: "",
-          giamDocXacNhan: false,
-          share: false,
-          trangThai: 0,
-          danhSachChiTiet: (
-            repairRequest?.danhSachTaiSan ||
-            incidentInspection?.danhSachChiTiet ||
-            []
-          ).map((e: any) => ({
-            ...e,
-            id: "",
-            idBienBanChiTiet: e.id,
-          })) as InspectionRecordDetailData[],
-          nguoiKyList: [] as any[],
-        });
-      }
+          })),
+          action: Action.UPDATE,
+        })) as InspectionRecordDetailData[],
+        nguoiKyList: (listInfo ?? []).map((item: any) => ({
+          userId: item.idNhanVien,
+          userName: item.hoTen,
+          departmentId: item.idDonVi,
+          departmentName: item.donVi,
+        })),
+      });
+      return;
     }
-  }, [
-    open,
-    initData,
-    repairRequest,
-    incidentInspection,
-    apiDepartments,
-    apiUsers,
-  ]);
+
+    // Tính danhSachChiTiet từ props — luôn làm trước
+    const danhSachChiTiet = (
+      repairRequest?.danhSachTaiSan ||
+      incidentInspection?.danhSachChiTiet ||
+      []
+    ).map((e: any) => ({
+      ...e,
+      id: "",
+      idBienBanChiTiet: e.id,
+    })) as InspectionRecordDetailData[];
+
+    if (savedDraft) {
+      formik.setValues({
+        id: "",
+        idCongTy: CongTy.CT001,
+        idBienBan: incidentInspection?.id || repairRequest?.id || "",
+        loaiBienBan: incidentInspection
+          ? TypeBienBan.SU_CO
+          : TypeBienBan.SUA_CHUA,
+        idNguoiLap: "",
+        nguoiLapXacNhan: false,
+        idGiamDoc: "",
+        giamDocXacNhan: false,
+        share: false,
+        trangThai: 0,
+        // restore từ draft
+        soPhieu: savedDraft.soPhieu,
+        ngayGiamDinh: savedDraft.ngayGiamDinh,
+        viTri: savedDraft.viTri,
+        soDeLaiPhucHoi: savedDraft.soDeLaiPhucHoi,
+        soDeLamPheLieu: savedDraft.soDeLamPheLieu,
+        soLuongHuy: savedDraft.soLuongHuy,
+        danhSachChiTiet: savedDraft.danhSachChiTiet,
+        nguoiKyList: savedDraft.nguoiKyList,
+      });
+      return;
+    }
+
+    formik.setValues({
+      id: "",
+      idCongTy: CongTy.CT001,
+      idBienBan: incidentInspection?.id || repairRequest?.id || "",
+      loaiBienBan: incidentInspection
+        ? TypeBienBan.SU_CO
+        : TypeBienBan.SUA_CHUA,
+      soPhieu: "",
+      ngayGiamDinh: dayjs().format("YYYY-MM-DD"),
+      viTri: "",
+      soDeLaiPhucHoi: 0,
+      soDeLamPheLieu: 0,
+      soLuongHuy: 0,
+      idNguoiLap: "",
+      nguoiLapXacNhan: false,
+      idGiamDoc: "",
+      giamDocXacNhan: false,
+      share: false,
+      trangThai: 0,
+      danhSachChiTiet,
+      nguoiKyList: [],
+    });
+  }, [open, initData, repairRequest, incidentInspection, savedDraft]);
 
   const addMaterialRow = (assetIdx: number) => {
     const newMaterial: InspectionRecordVatTuData = {
@@ -353,10 +405,43 @@ const InspectionRecordDialog = ({
     return false;
   }
 
-  function handleClose() {
+  const handleClose = () => {
+    dispatch(
+      updateTabFormData({
+        path: tabPath,
+        data: {
+          [`inspectionDraft_${repairRequest?.id || incidentInspection?.id}`]:
+            null,
+          lastMinimizedDialog: null,
+        },
+      }),
+    );
     onClose();
     formik.resetForm();
-  }
+  };
+
+  const handleMinimize = () => {
+    dispatch(
+      updateTabFormData({
+        path: tabPath,
+        data: {
+          [`inspectionDraft_${repairRequest?.id || incidentInspection?.id}`]: {
+            soPhieu: formik.values.soPhieu,
+            ngayGiamDinh: formik.values.ngayGiamDinh,
+            viTri: formik.values.viTri,
+            soDeLaiPhucHoi: formik.values.soDeLaiPhucHoi,
+            soDeLamPheLieu: formik.values.soDeLamPheLieu,
+            soLuongHuy: formik.values.soLuongHuy,
+            danhSachChiTiet: formik.values.danhSachChiTiet,
+            nguoiKyList: formik.values.nguoiKyList,
+            idBienBan: formik.values.idBienBan,
+          },
+          lastMinimizedDialog: "inspection",
+        },
+      }),
+    );
+    onClose();
+  };
 
   const referenceLabel = repairRequest
     ? `${repairRequest.soPhieu || repairRequest.id} — Tháng ${repairRequest.thang}/${repairRequest.nam}`
@@ -365,7 +450,7 @@ const InspectionRecordDialog = ({
   return (
     <Dialog
       open={open}
-      onClose={handleClose}
+      onClose={handleMinimize}
       maxWidth="lg"
       fullWidth
       PaperProps={{ sx: { height: "90vh" } }}
@@ -389,9 +474,14 @@ const InspectionRecordDialog = ({
             </Typography>
           </Box>
         </Box>
-        <IconButton size="small" onClick={handleClose}>
-          <CloseIcon />
-        </IconButton>
+        <Box sx={{ display: "flex", gap: 0.5 }}>
+          <IconButton size="small" onClick={handleMinimize}>
+            <Remove />
+          </IconButton>
+          <IconButton size="small" onClick={handleClose}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
       </DialogTitle>
 
       <Divider />
@@ -637,7 +727,9 @@ const InspectionRecordDialog = ({
                                 noBorder={true}
                                 onChange={(val) => {
                                   const numRepair = Number(val || 0);
-                                  const numReplace = Number(vt.soLuongThayMoi || 0);
+                                  const numReplace = Number(
+                                    vt.soLuongThayMoi || 0,
+                                  );
                                   updateMaterial(assetIdx, vt.id!, {
                                     soLuongSuaChua: numRepair,
                                     soLuong: numRepair + numReplace,
@@ -652,7 +744,9 @@ const InspectionRecordDialog = ({
                                 formik={formik}
                                 noBorder={true}
                                 onChange={(val) => {
-                                  const numRepair = Number(vt.soLuongSuaChua || 0);
+                                  const numRepair = Number(
+                                    vt.soLuongSuaChua || 0,
+                                  );
                                   const numReplace = Number(val || 0);
                                   updateMaterial(assetIdx, vt.id!, {
                                     soLuongThayMoi: numReplace,

@@ -46,6 +46,10 @@ import FieldInput from "../../../../components/TextField/FieldInput";
 import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 import InspectionRecordVehiclePreview from "../preview/InspectionRecordVehiclePreview";
 import { VehicleInspectionValidation } from "../../validation";
+import { useLocation } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../../../redux/store";
+import { updateTabFormData } from "../../../../redux/tabsSlice";
+import { Remove } from "@mui/icons-material";
 
 interface Props {
   open: boolean;
@@ -72,6 +76,17 @@ const InspectionRecordVehicleDialog = ({
 
   const { createMutation, updateMutation } =
     useMaintenanceVehicleInspectionMutation();
+
+  const location = useLocation();
+  const tabPath = location.pathname;
+  const dispatch = useAppDispatch();
+
+  const idBienBan = incidentInspection?.id || repairRequest?.id || "";
+
+  const savedDraft = useAppSelector((state) => {
+    const tab = state.tabs.tabs.find((t) => t.path === tabPath);
+    return tab?.formData?.[`inspectionVehicleDraft_${idBienBan}`] ?? null;
+  });
 
   const parentAsset =
     incidentInspection?.danhSachChiTiet?.[0] ||
@@ -160,78 +175,103 @@ const InspectionRecordVehicleDialog = ({
       };
 
       if (initData) {
-        updateMutation.mutateAsync(record).then(() => onClose());
+        updateMutation.mutateAsync(record).then(() => handleClose());
       } else {
-        createMutation.mutateAsync(record).then(() => onClose());
+        createMutation.mutateAsync(record).then(() => handleClose());
       }
     },
   });
 
   useEffect(() => {
-    if (open) {
-      if (initData) {
-        const listInfo = listSigneInfo(initData, apiUsers, apiDepartments);
+    if (!open) return;
 
-        formik.setValues({
-          id: initData.id ?? "",
-          idCongTy: initData.idCongTy ?? CongTy.CT001,
-          idBienBan: initData.idBienBan ?? "",
-          loaiBienBan: initData.loaiBienBan ?? "",
-          soPhieu: initData.soPhieu ?? "",
-          ngayGiamDinh: initData.ngayGiamDinh ?? "",
-          viTri: initData.viTri ?? "",
-          capBaoDuong: initData.capBaoDuong ?? "",
-          donViSuaChua: initData.donViSuaChua ?? "",
-          noiDungKhac: initData.noiDungKhac ?? "",
-          idTaiSan: initData.idTaiSan ?? "",
-          tenTaiSan: initData.tenTaiSan ?? "",
-          tinhTrang: initData.tinhTrang ?? "",
-          share: initData.share ?? false,
-          trangThai: initData.trangThai ?? 0,
-          danhSachChiTiet: (initData.danhSachChiTiet ?? []).map((e: any) => ({
-            ...e,
-            action: Action.UPDATE,
-          })) as VehicleInspectionRecordDetailData[],
-          nguoiKyList: (listInfo ?? []).map((item: any) => {
-            return {
-              userId: item.idNhanVien,
-              userName: item.hoTen,
-              departmentId: item.idDonVi,
-              departmentName: item.donVi,
-            };
-          }),
-        });
-      } else {
-        formik.setValues({
-          id: "",
-          idCongTy: CongTy.CT001,
-          idBienBan: incidentInspection?.id || repairRequest?.id || "",
-          loaiBienBan: incidentInspection
-            ? TypeBienBan.SU_CO
-            : TypeBienBan.SUA_CHUA,
-          soPhieu: "",
-          ngayGiamDinh: dayjs().format("YYYY-MM-DD"),
-          viTri: "",
-          capBaoDuong: "",
-          donViSuaChua: "",
-          noiDungKhac: "",
-          idTaiSan: parentAsset?.idTaiSan || "",
-          tenTaiSan: parentAsset?.tenTaiSan || "",
-          tinhTrang: "",
-          share: false,
-          trangThai: 0,
-          danhSachChiTiet: [] as VehicleInspectionRecordDetailData[],
-          nguoiKyList: [] as any[],
-        });
-      }
+    if (initData) {
+      const listInfo = listSigneInfo(initData, apiUsers, apiDepartments);
+      formik.setValues({
+        id: initData.id ?? "",
+        idCongTy: initData.idCongTy ?? CongTy.CT001,
+        idBienBan: initData.idBienBan ?? "",
+        loaiBienBan: initData.loaiBienBan ?? "",
+        soPhieu: initData.soPhieu ?? "",
+        ngayGiamDinh: initData.ngayGiamDinh ?? "",
+        viTri: initData.viTri ?? "",
+        capBaoDuong: initData.capBaoDuong ?? "",
+        donViSuaChua: initData.donViSuaChua ?? "",
+        noiDungKhac: initData.noiDungKhac ?? "",
+        idTaiSan: initData.idTaiSan ?? "",
+        tenTaiSan: initData.tenTaiSan ?? "",
+        tinhTrang: initData.tinhTrang ?? "",
+        share: initData.share ?? false,
+        trangThai: initData.trangThai ?? 0,
+        danhSachChiTiet: (initData.danhSachChiTiet ?? []).map((e: any) => ({
+          ...e,
+          action: Action.UPDATE,
+        })) as VehicleInspectionRecordDetailData[],
+        nguoiKyList: (listInfo ?? []).map((item: any) => ({
+          userId: item.idNhanVien,
+          userName: item.hoTen,
+          departmentId: item.idDonVi,
+          departmentName: item.donVi,
+        })),
+      });
+      return;
     }
+
+    if (savedDraft) {
+      formik.setValues({
+        id: "",
+        idCongTy: CongTy.CT001,
+        idBienBan,
+        loaiBienBan: incidentInspection
+          ? TypeBienBan.SU_CO
+          : TypeBienBan.SUA_CHUA,
+        soPhieu: savedDraft.soPhieu,
+        ngayGiamDinh: savedDraft.ngayGiamDinh,
+        viTri: savedDraft.viTri,
+        capBaoDuong: savedDraft.capBaoDuong,
+        donViSuaChua: savedDraft.donViSuaChua,
+        noiDungKhac: savedDraft.noiDungKhac,
+        idTaiSan: parentAsset?.idTaiSan || "",
+        tenTaiSan: parentAsset?.tenTaiSan || "",
+        tinhTrang: savedDraft.tinhTrang,
+        share: false,
+        trangThai: 0,
+        danhSachChiTiet: savedDraft.danhSachChiTiet,
+        nguoiKyList: savedDraft.nguoiKyList,
+      });
+      return;
+    }
+
+    formik.setValues({
+      id: "",
+      idCongTy: CongTy.CT001,
+      idBienBan,
+      loaiBienBan: incidentInspection
+        ? TypeBienBan.SU_CO
+        : TypeBienBan.SUA_CHUA,
+      soPhieu: "",
+      ngayGiamDinh: dayjs().format("YYYY-MM-DD"),
+      viTri: "",
+      capBaoDuong: "",
+      donViSuaChua: "",
+      noiDungKhac: "",
+      idTaiSan: parentAsset?.idTaiSan || "",
+      tenTaiSan: parentAsset?.tenTaiSan || "",
+      tinhTrang: "",
+      share: false,
+      trangThai: 0,
+      danhSachChiTiet: [] as VehicleInspectionRecordDetailData[],
+      nguoiKyList: [] as any[],
+    });
   }, [
     open,
     initData,
-    repairRequest,
-    incidentInspection,
-    apiDepartments,
+    idBienBan,
     apiUsers,
+    apiDepartments,
+    savedDraft,
+    incidentInspection,
+    parentAsset,
   ]);
 
   const addMaterialRow = () => {
@@ -302,12 +342,45 @@ const InspectionRecordVehicleDialog = ({
   }
 
   function handleClose() {
+    dispatch(
+      updateTabFormData({
+        path: tabPath,
+        data: {
+          [`inspectionVehicleDraft_${idBienBan}`]: null,
+          lastMinimizedDialog: null,
+        },
+      }),
+    );
     formik.resetForm();
     onClose();
   }
 
+  function handleMinimize() {
+    dispatch(
+      updateTabFormData({
+        path: tabPath,
+        data: {
+          [`inspectionVehicleDraft_${idBienBan}`]: {
+            idBienBan,
+            soPhieu: formik.values.soPhieu,
+            ngayGiamDinh: formik.values.ngayGiamDinh,
+            viTri: formik.values.viTri,
+            capBaoDuong: formik.values.capBaoDuong,
+            donViSuaChua: formik.values.donViSuaChua,
+            noiDungKhac: formik.values.noiDungKhac,
+            tinhTrang: formik.values.tinhTrang,
+            danhSachChiTiet: formik.values.danhSachChiTiet,
+            nguoiKyList: formik.values.nguoiKyList,
+          },
+          lastMinimizedDialog: "inspection",
+        },
+      }),
+    );
+    onClose();
+  }
+
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="xl" fullWidth>
+    <Dialog open={open} onClose={handleMinimize} maxWidth="xl" fullWidth>
       <DialogTitle
         sx={{
           display: "flex",
@@ -328,9 +401,22 @@ const InspectionRecordVehicleDialog = ({
             </Typography>
           </Box>
         </Box>
-        <IconButton size="small" onClick={handleClose} sx={{ color: "white" }}>
-          <CloseIcon />
-        </IconButton>
+        <Box sx={{ display: "flex", gap: 0.5 }}>
+          <IconButton
+            size="small"
+            onClick={handleMinimize}
+            sx={{ color: "white" }}
+          >
+            <Remove />
+          </IconButton>
+          <IconButton
+            size="small"
+            onClick={handleClose}
+            sx={{ color: "white" }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </Box>
       </DialogTitle>
 
       <DialogContent sx={{ p: 3 }}>

@@ -43,6 +43,10 @@ import TextFieldNumber from "../../../../components/TextField/TextFieldNumber";
 import { BienPhapPhuongTienData } from "../../types";
 import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 import { AcceptanceVehicleValidation } from "../../validation";
+import { useLocation } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../../../redux/store";
+import { updateTabFormData } from "../../../../redux/tabsSlice";
+import { Remove } from "@mui/icons-material";
 
 interface Props {
   open: boolean;
@@ -72,6 +76,17 @@ const NghiemThuPhuongTienDialog = ({
 
   const { createMutation, updateMutation } =
     useMaintenanceAcceptanceTestVehicleMutation();
+
+  const location = useLocation();
+  const tabPath = location.pathname;
+  const dispatch = useAppDispatch();
+
+  const savedDraft = useAppSelector((state) => {
+    const tab = state.tabs.tabs.find((t) => t.path === tabPath);
+    return (
+      tab?.formData?.[`acceptanceVehicleDraft_${idBienPhapPhuongTien}`] ?? null
+    );
+  });
 
   const initialValues: NghiemThuPhuongTienData & { nguoiKyList: any[] } = {
     id: "",
@@ -137,6 +152,7 @@ const NghiemThuPhuongTienDialog = ({
 
   useEffect(() => {
     if (!open) return;
+
     if (initData) {
       const listInfo = listSigneInfo(initData as any, apiUsers, apiDepartments);
       formik.setValues({
@@ -148,31 +164,79 @@ const NghiemThuPhuongTienDialog = ({
           departmentName: item.donVi,
         })),
       } as any);
-    } else {
+      return;
+    }
+
+    if (savedDraft) {
       formik.setValues({
         ...initialValues,
         idBienPhapPhuongTien: bienPhap?.id || "",
         idTaiSan: bienPhap?.idTaiSan || "",
-        danhSachChiTiet: (bienPhap?.danhSachChiTiet || []).map(
-          (item: BienPhapPhuongTienChiTietData) => {
-            return {
-              idChiTietVatTu: item.idChiTietVatTu,
-              idVatTu: item.idVatTu,
-              soLuongThayThe: item.soLuongCap,
-              soLuongThuHoi: item.soLuongThuHoi,
-              phanTramConLai: 0,
-              bienPhapXuLy: "",
-              ghiChu: "",
-              donViTinh: item.donViTinh,
-            };
-          },
-        ),
+        soPhieu: savedDraft.soPhieu,
+        noiDung: savedDraft.noiDung,
+        tinhTrang: savedDraft.tinhTrang,
+        congViecPhatSinh: savedDraft.congViecPhatSinh,
+        chiPhiNhanCong: savedDraft.chiPhiNhanCong,
+        ketLuan: savedDraft.ketLuan,
+        danhSachChiTiet: savedDraft.danhSachChiTiet,
+        nguoiKyList: savedDraft.nguoiKyList,
       });
+      return;
     }
-  }, [open, initData, bienPhap, apiUsers, apiDepartments]);
+
+    formik.setValues({
+      ...initialValues,
+      idBienPhapPhuongTien: bienPhap?.id || "",
+      idTaiSan: bienPhap?.idTaiSan || "",
+      danhSachChiTiet: (bienPhap?.danhSachChiTiet || []).map(
+        (item: BienPhapPhuongTienChiTietData) => ({
+          idChiTietVatTu: item.idChiTietVatTu,
+          idVatTu: item.idVatTu,
+          soLuongThayThe: item.soLuongCap,
+          soLuongThuHoi: item.soLuongThuHoi,
+          phanTramConLai: 0,
+          bienPhapXuLy: "",
+          ghiChu: "",
+          donViTinh: item.donViTinh,
+        }),
+      ),
+    });
+  }, [open, initData, bienPhap, apiUsers, apiDepartments, savedDraft]);
 
   function handleClose() {
+    dispatch(
+      updateTabFormData({
+        path: tabPath,
+        data: {
+          [`acceptanceVehicleDraft_${idBienPhapPhuongTien}`]: null,
+          lastMinimizedDialog: null,
+        },
+      }),
+    );
     formik.resetForm();
+    onClose();
+  }
+
+  function handleMinimize() {
+    dispatch(
+      updateTabFormData({
+        path: tabPath,
+        data: {
+          [`acceptanceVehicleDraft_${idBienPhapPhuongTien}`]: {
+            idBienPhapPhuongTien,
+            soPhieu: formik.values.soPhieu,
+            noiDung: formik.values.noiDung,
+            tinhTrang: formik.values.tinhTrang,
+            congViecPhatSinh: formik.values.congViecPhatSinh,
+            chiPhiNhanCong: formik.values.chiPhiNhanCong,
+            ketLuan: formik.values.ketLuan,
+            danhSachChiTiet: formik.values.danhSachChiTiet,
+            nguoiKyList: formik.values.nguoiKyList,
+          },
+          lastMinimizedDialog: "acceptanceVehicle",
+        },
+      }),
+    );
     onClose();
   }
 
@@ -210,7 +274,7 @@ const NghiemThuPhuongTienDialog = ({
   return (
     <Dialog
       open={open}
-      onClose={handleClose}
+      onClose={handleMinimize}
       maxWidth="lg"
       fullWidth
       PaperProps={{ sx: { height: "90vh", borderRadius: 3 } }}
@@ -242,9 +306,22 @@ const NghiemThuPhuongTienDialog = ({
             )}
           </Box>
         </Box>
-        <IconButton size="small" onClick={handleClose} sx={{ color: "white" }}>
-          <CloseIcon />
-        </IconButton>
+        <Box sx={{ display: "flex", gap: 0.5 }}>
+          <IconButton
+            size="small"
+            onClick={handleMinimize}
+            sx={{ color: "white" }}
+          >
+            <Remove />
+          </IconButton>
+          <IconButton
+            size="small"
+            onClick={handleClose}
+            sx={{ color: "white" }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </Box>
       </DialogTitle>
 
       <DialogContent sx={{ p: 3, overflow: "auto", bgcolor: "grey.50" }}>

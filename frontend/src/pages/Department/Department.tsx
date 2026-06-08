@@ -143,9 +143,7 @@ export default function Department() {
   };
 
   const isMinimized = !showForm && hasDraftData(formData.draftForm);
-  const isMinimizedBulk =
-    !bulkOpen &&
-    hasDraftData(bulkInitialRows.length > 0 ? bulkInitialRows : undefined);
+  const isMinimizedBulk = !bulkOpen && bulkInitialRows.length > 0;
   const handleMinimize = () => setShowForm(false);
 
   const handleEdit = () => {

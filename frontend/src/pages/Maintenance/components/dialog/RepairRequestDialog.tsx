@@ -26,6 +26,14 @@ import FieldInput from "../../../../components/TextField/FieldInput";
 import { useFormik } from "formik";
 import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 import { MaintenanceValidation } from "../../validation";
+import { useLocation } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../../../redux/store";
+import {
+  clearTabFormData,
+  updateTabFormData,
+} from "../../../../redux/tabsSlice";
+import { MinimizeIcon } from "lucide-react";
+import { Remove } from "@mui/icons-material";
 
 interface Props {
   open: boolean;
@@ -51,6 +59,9 @@ const RepairRequestDialog = ({
 
   const { data: apiDepartments = [] } = useAllDepartmentsQuery();
   const { data: apiUsers = [] } = useAllStaffsQuery();
+  const location = useLocation();
+  const tabPath = location.pathname;
+  const dispatch = useAppDispatch();
 
   const formik = useFormik({
     initialValues: {
@@ -102,11 +113,23 @@ const RepairRequestDialog = ({
         ngayTao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
         ngayCapNhat: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       };
+      dispatch(
+        updateTabFormData({
+          path: tabPath,
+          data: { [`repairDraft_${plan.id}`]: null },
+        }),
+      );
       onSubmit(req);
       formik.resetForm();
       onClose();
     },
   });
+
+  const savedDraft = useAppSelector((state) => {
+    const tab = state.tabs.tabs.find((t) => t.path === tabPath);
+    return tab?.formData?.[`repairDraft_${plan.id}`] ?? null;
+  });
+  
 
   useEffect(() => {
     if (!open) return;
@@ -143,32 +166,36 @@ const RepairRequestDialog = ({
         danhSachTaiSan: initialData.danhSachTaiSan ?? [],
         nguoiKyList: signersList,
       });
-    } else {
-      const assetsList = (plan?.danhSachTaiSan || [])
-        ?.filter((item) => selectedDeviceIds.includes(item.id ?? ""))
-        ?.map((s: any) => {
-          const level = s[`capSuaChuaThang${selectedMonth + 1}`] || "";
-          return {
-            idKeHoachChiTiet: s.id || "",
-            idTaiSan: s.idTaiSan || "",
-            tenTaiSan: s.tenTaiSan || "",
-            nhomTaiSan: s.idNhomTaiSan || "",
-            capSuaChua: level,
-            soLuong: s.soLuong,
-            donViQuanLy: plan.idDonViGiao || "",
-            donViBaoTri: s.idDonViBaoTri || "",
-            action: Action.CREATE,
-          };
-        });
+      return;
+    }
 
+    // Luôn tính lại danhSachTaiSan từ props
+    const assetsList = (plan?.danhSachTaiSan || [])
+      ?.filter((item) => selectedDeviceIds.includes(item.id ?? ""))
+      ?.map((s: any) => {
+        const level = s[`capSuaChuaThang${selectedMonth + 1}`] || "";
+        return {
+          idKeHoachChiTiet: s.id || "",
+          idTaiSan: s.idTaiSan || "",
+          tenTaiSan: s.tenTaiSan || "",
+          nhomTaiSan: s.idNhomTaiSan || "",
+          capSuaChua: level,
+          soLuong: s.soLuong,
+          donViQuanLy: plan.idDonViGiao || "",
+          donViBaoTri: s.idDonViBaoTri || "",
+          action: Action.CREATE,
+        };
+      });
+
+    if (savedDraft) {
       formik.setValues({
         id: "",
         idCongTy: CongTy.CT001,
-        soPhieu: "",
+        soPhieu: savedDraft.soPhieu,
         idKeHoach: plan?.id || "",
         thang: selectedMonth + 1,
         nam: plan?.nam || 2026,
-        ghiChu: "",
+        ghiChu: savedDraft.ghiChu,
         idNguoiLap: "",
         nguoiLapXacNhan: false,
         idGiamDoc: "",
@@ -178,20 +205,72 @@ const RepairRequestDialog = ({
         ngayTao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
         ngayCapNhat: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
         danhSachTaiSan: assetsList,
-        nguoiKyList: [] as any[],
+        nguoiKyList: savedDraft.nguoiKyList,
       });
+      return;
     }
-  }, [open, initialData, apiUsers, apiDepartments, selectedDeviceIds, plan]);
+
+    formik.setValues({
+      id: "",
+      idCongTy: CongTy.CT001,
+      soPhieu: "",
+      idKeHoach: plan?.id || "",
+      thang: selectedMonth + 1,
+      nam: plan?.nam || 2026,
+      ghiChu: "",
+      idNguoiLap: "",
+      nguoiLapXacNhan: false,
+      idGiamDoc: "",
+      giamDocXacNhan: false,
+      share: false,
+      trangThai: 0,
+      ngayTao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      ngayCapNhat: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      danhSachTaiSan: assetsList,
+      nguoiKyList: [],
+    });
+  }, [
+    open,
+    initialData,
+    apiUsers,
+    apiDepartments,
+    selectedDeviceIds,
+    plan,
+    savedDraft,
+  ]);
 
   const handleClose = () => {
+    dispatch(
+      updateTabFormData({
+        path: tabPath,
+        data: { [`repairDraft_${plan.id}`]: null, lastMinimizedDialog: null },
+      }),
+    );
     formik.resetForm();
     onClose();
+  };
+
+  const handleMinimize = () => {
+    dispatch(
+      updateTabFormData({
+        path: tabPath,
+        data: {
+          [`repairDraft_${plan.id}`]: {
+            soPhieu: formik.values.soPhieu,
+            ghiChu: formik.values.ghiChu,
+            nguoiKyList: formik.values.nguoiKyList,
+          },
+          lastMinimizedDialog: "repair",
+        },
+      }),
+    );
+    onClose(); // không resetForm
   };
 
   return (
     <Dialog
       open={open}
-      onClose={handleClose}
+      onClose={handleMinimize}
       maxWidth="lg"
       fullWidth
       PaperProps={{ sx: { height: "90vh" } }}
@@ -207,9 +286,14 @@ const RepairRequestDialog = ({
         <Typography variant="h6" fontWeight={600}>
           Tạo Giấy đề nghị sửa chữa
         </Typography>
-        <IconButton size="small" onClick={handleClose}>
-          <CloseIcon />
-        </IconButton>
+        <Box sx={{ display: "flex", gap: 0.5 }}>
+          <IconButton size="small" onClick={handleMinimize}>
+            <Remove />
+          </IconButton>
+          <IconButton size="small" onClick={handleClose}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
       </DialogTitle>
 
       <Divider />

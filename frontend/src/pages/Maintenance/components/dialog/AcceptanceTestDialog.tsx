@@ -48,6 +48,10 @@ import FieldDate from "../../../../components/TextField/FieldDate";
 import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 import AcceptanceTestPreview from "../preview/AcceptanceTestPreview";
 import { AcceptanceMachineValidation } from "../../validation";
+import { useLocation } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../../../redux/store";
+import { updateTabFormData } from "../../../../redux/tabsSlice";
+import { Remove } from "@mui/icons-material";
 
 interface Props {
   open: boolean;
@@ -71,6 +75,19 @@ const AcceptanceTestDialog = ({
   const { user } = useSelector((state: any) => state.user);
   const { createMutation, updateMutation } =
     useMaintenanceAcceptanceTestMutation();
+
+  const location = useLocation();
+  const tabPath = location.pathname;
+  const dispatch = useAppDispatch();
+
+  const savedDraft = useAppSelector((state) => {
+    const tab = state.tabs.tabs.find((t) => t.path === tabPath);
+    return (
+      tab?.formData?.[
+        `acceptanceDraft_${bienPhapId || inspectionRecord?.id}`
+      ] ?? null
+    );
+  });
 
   const { data: apiDepartments = [] } = useAllDepartmentsQuery();
   const { data: apiUsers = [] } = useAllStaffsQuery();
@@ -164,123 +181,144 @@ const AcceptanceTestDialog = ({
   });
 
   useEffect(() => {
-    if (open) {
-      if (initData) {
-        const listInfo = listSigneInfo(initData, apiUsers, apiDepartments);
-        formik.setValues({
-          id: initData.id ?? "",
-          idCongTy: initData.idCongTy ?? CongTy.CT001,
-          idBienPhapMayMoc: initData.idBienPhapMayMoc ?? "",
-          soPhieu: initData.soPhieu ?? "",
-          ngayNghiemThu: initData.ngayNghiemThu ?? "",
-          viTri: initData.viTri ?? "",
-          tenThietBi: initData.tenThietBi ?? "",
-          soDangKi: initData.soDangKi ?? "",
-          capSuaChua: initData.capSuaChua ?? "",
-          ketQua: initData.ketQua ?? "đảm bảo yêu cầu kỹ thuật",
-          noiDung: initData.noiDung ?? "",
-          idNguoiLap: initData.idNguoiLap ?? "",
-          nguoiLapXacNhan: initData.nguoiLapXacNhan ?? false,
-          idGiamDoc: initData.idGiamDoc ?? "",
-          giamDocXacNhan: initData.giamDocXacNhan ?? false,
-          share: initData.share ?? false,
-          trangThai: initData.trangThai ?? 0,
-          danhSachTaiSan: (initData.danhSachTaiSan || []).map((ts) => ({
-            ...ts,
-            danhSachVatTu: (ts.danhSachVatTu || []).map((vt) => ({
-              ...vt,
-            })),
-          })) as AcceptanceTestRecordAssetData[],
-          nguoiKyList: (listInfo ?? []).map((item: any) => {
-            return {
-              userId: item.idNhanVien,
-              userName: item.hoTen,
-              departmentId: item.idDonVi,
-              departmentName: item.donVi,
-            };
-          }),
-        });
-      } else {
-        const list: AcceptanceTestRecordAssetData[] = [];
-        (inspectionRecord?.danhSachChiTiet || []).forEach(
-          (entry: InspectionRecordDetailData, idx: number) => {
-            const activeVatTu = entry.danhSachVatTu || [];
-            const tsId = `NTTS_${Date.now()}_${idx}`;
-
-            if (activeVatTu.length > 0) {
-              list.push({
-                id: tsId,
-                idTaiSan: entry.idTaiSan || "",
-                idChiTietGiamDinhMayMoc: entry.id || "",
-                tenTaiSan: entry.tenTaiSan || "",
-                donViTinh: entry.donViTinh || "Cái",
-                danhSachVatTu: activeVatTu.map((vt: any, vtIdx: number) => {
-                  const qty =
-                    vt.soLuongThayMoi || vt.soLuongSuaChua
-                      ? (vt.soLuongThayMoi || 0) + (vt.soLuongSuaChua || 0)
-                      : vt.soLuong || 1;
-                  return {
-                    id: `NTVT_${Date.now()}_${idx}_${vtIdx}`,
-                    idBienBanTaiSan: tsId,
-                    idChiTietVatTu: vt.idChiTietVatTu || "",
-                    idVatTu: vt.idVatTu || "",
-                    tenVatTu: vt.tenVatTu || "",
-                    donViTinh: vt.donViTinh || "Cái",
-                    soLuong: qty,
-                    ghiChu: vt.ghiChu || "",
-                  };
-                }),
-              });
-            } else {
-              list.push({
-                id: tsId,
-                idTaiSan: entry.idTaiSan || "",
-                idChiTietGiamDinhMayMoc: entry.id || "",
-                tenTaiSan: entry.tenTaiSan || "",
-                donViTinh: entry.donViTinh || "Cái",
-                danhSachVatTu: [
-                  {
-                    id: `NTVT_${Date.now()}_${idx}_0`,
-                    idBienBanTaiSan: tsId,
-                    idChiTietVatTu: "",
-                    idVatTu: "",
-                    tenVatTu: "",
-                    donViTinh: "Cái",
-                    soLuong: 1,
-                    ghiChu: "",
-                  },
-                ],
-              });
-            }
-          },
-        );
-        formik.setValues({
-          id: "",
-          idCongTy: CongTy.CT001,
-          idBienPhapMayMoc: bienPhapId || inspectionRecord?.id || "",
-          soPhieu: `BB-NT-${repairRequest?.id ?? ""}`,
-          ngayNghiemThu: dayjs().format("YYYY-MM-DD"),
-          viTri: "",
-          tenThietBi:
-            inspectionRecord.danhSachChiTiet
-              ?.map((e) => e.idTaiSan)
-              .join(", ") ?? "",
-          soDangKi: "",
-          capSuaChua: "",
-          ketQua: "đảm bảo yêu cầu kỹ thuật",
-          noiDung: "",
-          idNguoiLap: "",
-          nguoiLapXacNhan: false,
-          idGiamDoc: "",
-          giamDocXacNhan: false,
-          share: false,
-          trangThai: 0,
-          danhSachTaiSan: list,
-          nguoiKyList: [] as any[],
-        });
-      }
+    if (!open) return;
+    if (initData) {
+      const listInfo = listSigneInfo(initData, apiUsers, apiDepartments);
+      formik.setValues({
+        id: initData.id ?? "",
+        idCongTy: initData.idCongTy ?? CongTy.CT001,
+        idBienPhapMayMoc: initData.idBienPhapMayMoc ?? "",
+        soPhieu: initData.soPhieu ?? "",
+        ngayNghiemThu: initData.ngayNghiemThu ?? "",
+        viTri: initData.viTri ?? "",
+        tenThietBi: initData.tenThietBi ?? "",
+        soDangKi: initData.soDangKi ?? "",
+        capSuaChua: initData.capSuaChua ?? "",
+        ketQua: initData.ketQua ?? "đảm bảo yêu cầu kỹ thuật",
+        noiDung: initData.noiDung ?? "",
+        idNguoiLap: initData.idNguoiLap ?? "",
+        nguoiLapXacNhan: initData.nguoiLapXacNhan ?? false,
+        idGiamDoc: initData.idGiamDoc ?? "",
+        giamDocXacNhan: initData.giamDocXacNhan ?? false,
+        share: initData.share ?? false,
+        trangThai: initData.trangThai ?? 0,
+        danhSachTaiSan: (initData.danhSachTaiSan || []).map((ts) => ({
+          ...ts,
+          danhSachVatTu: (ts.danhSachVatTu || []).map((vt) => ({ ...vt })),
+        })) as AcceptanceTestRecordAssetData[],
+        nguoiKyList: (listInfo ?? []).map((item: any) => ({
+          userId: item.idNhanVien,
+          userName: item.hoTen,
+          departmentId: item.idDonVi,
+          departmentName: item.donVi,
+        })),
+      });
+      return;
     }
-  }, [open, initData, apiUsers, apiDepartments]);
+
+    // Tính danhSachTaiSan từ inspectionRecord — luôn làm trước
+    const list: AcceptanceTestRecordAssetData[] = [];
+    (inspectionRecord?.danhSachChiTiet || []).forEach(
+      (entry: InspectionRecordDetailData, idx: number) => {
+        const activeVatTu = entry.danhSachVatTu || [];
+        const tsId = `NTTS_${Date.now()}_${idx}`;
+        if (activeVatTu.length > 0) {
+          list.push({
+            id: tsId,
+            idTaiSan: entry.idTaiSan || "",
+            idChiTietGiamDinhMayMoc: entry.id || "",
+            tenTaiSan: entry.tenTaiSan || "",
+            donViTinh: entry.donViTinh || "Cái",
+            danhSachVatTu: activeVatTu.map((vt: any, vtIdx: number) => {
+              const qty =
+                vt.soLuongThayMoi || vt.soLuongSuaChua
+                  ? (vt.soLuongThayMoi || 0) + (vt.soLuongSuaChua || 0)
+                  : vt.soLuong || 1;
+              return {
+                id: `NTVT_${Date.now()}_${idx}_${vtIdx}`,
+                idBienBanTaiSan: tsId,
+                idChiTietVatTu: vt.idChiTietVatTu || "",
+                idVatTu: vt.idVatTu || "",
+                tenVatTu: vt.tenVatTu || "",
+                donViTinh: vt.donViTinh || "Cái",
+                soLuong: qty,
+                ghiChu: vt.ghiChu || "",
+              };
+            }),
+          });
+        } else {
+          list.push({
+            id: tsId,
+            idTaiSan: entry.idTaiSan || "",
+            idChiTietGiamDinhMayMoc: entry.id || "",
+            tenTaiSan: entry.tenTaiSan || "",
+            donViTinh: entry.donViTinh || "Cái",
+            danhSachVatTu: [
+              {
+                id: `NTVT_${Date.now()}_${idx}_0`,
+                idBienBanTaiSan: tsId,
+                idChiTietVatTu: "",
+                idVatTu: "",
+                tenVatTu: "",
+                donViTinh: "Cái",
+                soLuong: 1,
+                ghiChu: "",
+              },
+            ],
+          });
+        }
+      },
+    );
+
+    if (savedDraft) {
+      formik.setValues({
+        id: "",
+        idCongTy: CongTy.CT001,
+        idBienPhapMayMoc: bienPhapId || inspectionRecord?.id || "",
+        idNguoiLap: "",
+        nguoiLapXacNhan: false,
+        idGiamDoc: "",
+        giamDocXacNhan: false,
+        share: false,
+        trangThai: 0,
+        soPhieu: savedDraft.soPhieu,
+        ngayNghiemThu: savedDraft.ngayNghiemThu,
+        viTri: savedDraft.viTri,
+        tenThietBi: savedDraft.tenThietBi,
+        soDangKi: savedDraft.soDangKi,
+        capSuaChua: savedDraft.capSuaChua,
+        ketQua: savedDraft.ketQua,
+        noiDung: savedDraft.noiDung,
+        danhSachTaiSan: savedDraft.danhSachTaiSan,
+        nguoiKyList: savedDraft.nguoiKyList,
+      });
+      return;
+    }
+
+    formik.setValues({
+      id: "",
+      idCongTy: CongTy.CT001,
+      idBienPhapMayMoc: bienPhapId || inspectionRecord?.id || "",
+      soPhieu: `BB-NT-${repairRequest?.id ?? ""}`,
+      ngayNghiemThu: dayjs().format("YYYY-MM-DD"),
+      viTri: "",
+      tenThietBi:
+        inspectionRecord.danhSachChiTiet?.map((e) => e.idTaiSan).join(", ") ??
+        "",
+      soDangKi: "",
+      capSuaChua: "",
+      ketQua: "đảm bảo yêu cầu kỹ thuật",
+      noiDung: "",
+      idNguoiLap: "",
+      nguoiLapXacNhan: false,
+      idGiamDoc: "",
+      giamDocXacNhan: false,
+      share: false,
+      trangThai: 0,
+      danhSachTaiSan: list,
+      nguoiKyList: [],
+    });
+  }, [open, initData, apiUsers, apiDepartments, savedDraft]);
 
   const addMaterialRow = (assetIdx: number) => {
     const ts = formik.values.danhSachTaiSan[assetIdx];
@@ -328,6 +366,41 @@ const AcceptanceTestDialog = ({
   };
 
   const handleClose = () => {
+    dispatch(
+      updateTabFormData({
+        path: tabPath,
+        data: {
+          [`acceptanceDraft_${bienPhapId || inspectionRecord?.id}`]: null,
+          lastMinimizedDialog: null,
+        },
+      }),
+    );
+    onClose();
+  };
+  const handleMinimize = () => {
+    dispatch(
+      updateTabFormData({
+        path: tabPath,
+        data: {
+          [`acceptanceDraft_${bienPhapId || inspectionRecord?.id}`]: {
+            idBienPhapMayMoc: formik.values.idBienPhapMayMoc,
+            idGiamDinh: inspectionRecord?.id,
+            acceptanceParentBienPhapId: bienPhapId || inspectionRecord?.id,
+            soPhieu: formik.values.soPhieu,
+            ngayNghiemThu: formik.values.ngayNghiemThu,
+            viTri: formik.values.viTri,
+            tenThietBi: formik.values.tenThietBi,
+            soDangKi: formik.values.soDangKi,
+            capSuaChua: formik.values.capSuaChua,
+            ketQua: formik.values.ketQua,
+            noiDung: formik.values.noiDung,
+            danhSachTaiSan: formik.values.danhSachTaiSan,
+            nguoiKyList: formik.values.nguoiKyList,
+          },
+          lastMinimizedDialog: "acceptance",
+        },
+      }),
+    );
     onClose();
   };
 
@@ -336,7 +409,7 @@ const AcceptanceTestDialog = ({
   return (
     <Dialog
       open={open}
-      onClose={handleClose}
+      onClose={handleMinimize}
       maxWidth="lg"
       fullWidth
       PaperProps={{ sx: { height: "90vh" } }}
@@ -361,9 +434,14 @@ const AcceptanceTestDialog = ({
             </Typography>
           </Box>
         </Box>
-        <IconButton size="small" onClick={handleClose}>
-          <CloseIcon />
-        </IconButton>
+        <Box sx={{ display: "flex", gap: 0.5 }}>
+          <IconButton size="small" onClick={handleMinimize}>
+            <Remove />
+          </IconButton>
+          <IconButton size="small" onClick={handleClose}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
       </DialogTitle>
 
       <Divider />
@@ -583,7 +661,7 @@ const AcceptanceTestDialog = ({
         </Box>
 
         {/* Full-width Preview */}
-        <AcceptanceTestPreview formik={formik} d={d}/>
+        <AcceptanceTestPreview formik={formik} d={d} />
       </DialogContent>
 
       <Divider />

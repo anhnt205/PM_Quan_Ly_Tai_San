@@ -26,7 +26,7 @@ import ExpandMore from "@mui/icons-material/ExpandMore";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { useCmms } from "../../hooks/CmmsContext";
 import IncidentDialog from "./components/dialog/IncidentDialog";
@@ -62,22 +62,12 @@ import { useAllDepartmentsQuery } from "../Department/Mutation";
 import { showConfirmAlert } from "../../components/Alert";
 import { useSelector } from "react-redux";
 import Filter from "./components/Filter";
+import { useAppSelector } from "../../redux/store";
+import DraftIndicator from "../../components/common/DraftIndicator";
 
 export default function MaintenancePlanRepair() {
   const navigate = useNavigate();
   const { user } = useSelector((state: any) => state.user);
-
-  /**
-   * Navigation state machine:
-   *   selectedPlan=null, selectedIncident=null  → List mode  (bảng full width)
-   *   selectedPlan≠null, selectedIncident=null  → Plan mode  (bảng 400px + PlanDetailPanel)
-   *   selectedPlan≠null, selectedIncident≠null  → Incident mode (bảng 400px + IncidentDetailPanel)
-   *
-   * Ở compact mode (plan/incident), bảng trái dùng TableCustom với columnsCollapsed
-   * hiển thị toàn bộ filtered — giữ nguyên như code gốc.
-   * Thêm mới: phía dưới TableCustom có incident sub-rows của plan đang chọn,
-   * cho phép chuyển đổi giữa chi tiết KH và từng SC dễ dàng.
-   */
 
   const [selectedPlan, setSelectedPlan] = useState<MaintenancePlanData | null>(
     null,
@@ -119,6 +109,19 @@ export default function MaintenancePlanRepair() {
   );
   const { createMutation, updateMutation, deleteMutation, updateManyMutation } =
     useMaintenancePlanningMutation();
+
+  const location = useLocation();
+  const tabPath = location.pathname;
+
+  const lastMinimizedDialog = useAppSelector((state) => {
+    const tab = state.tabs.tabs.find((t) => t.path === tabPath);
+    return tab?.formData?.lastMinimizedDialog ?? null;
+  });
+
+  const lastMinimizedIncidentDialog = useAppSelector((state) => {
+    const tab = state.tabs.tabs.find((t) => t.path === tabPath);
+    return tab?.formData?.lastMinimizedIncidentDialog ?? null;
+  });
 
   // su co
   const {
@@ -172,7 +175,6 @@ export default function MaintenancePlanRepair() {
     return Object.values(groupedData.data.data).flat() as MaintenancePlanData[];
   }, [groupedData]);
 
-  // ── Toggle helpers ────────────────────────────────────────
   const toggleYear = (year: string) =>
     setExpandedYears((prev) => ({ ...prev, [year]: !prev[year] }));
 
@@ -1463,6 +1465,19 @@ export default function MaintenancePlanRepair() {
         initialIncident={selectedIncident}
         onSubmit={handleSaveIncident}
       />
+
+      {(lastMinimizedDialog === "plan" ||
+        lastMinimizedIncidentDialog === "incident") && (
+        <DraftIndicator
+          onClick={() => {
+            if (lastMinimizedIncidentDialog === "incident") {
+              setShowIncidentDialog(true);
+            } else {
+              setShowForm(true);
+            }
+          }}
+        />
+      )}
     </>
   );
 }

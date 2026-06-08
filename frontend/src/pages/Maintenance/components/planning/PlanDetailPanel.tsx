@@ -73,6 +73,9 @@ import { showStatus } from "../../config";
 import { DeleteIcon, EditIcon, TrashIcon } from "lucide-react";
 import { showConfirmAlert } from "../../../../components/Alert";
 import { AssetGroup } from "../../../../utils/const";
+import { useLocation } from "react-router-dom";
+import { useAppSelector } from "../../../../redux/store";
+import DraftIndicator from "../../../../components/common/DraftIndicator";
 
 interface Props {
   plan: MaintenancePlanData;
@@ -296,6 +299,36 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
 
   const [selectedAcc, setSelectedAcc] = useState<any | null>(null);
   const [acceptanceDialogOpen, setAcceptanceDialogOpen] = useState(false);
+  const [bienPhapDialogOpen, setBienPhapDialogOpen] = useState(false);
+
+  const location = useLocation();
+  const tabPath = location.pathname;
+
+  const lastMinimizedDialog = useAppSelector((state) => {
+    const tab = state.tabs.tabs.find((t) => t.path === tabPath);
+    return tab?.formData?.lastMinimizedDialog ?? null;
+  });
+  const drafts = useAppSelector((state) => {
+    const t = state.tabs.tabs.find((t) => t.path === tabPath);
+    const formData = t?.formData ?? {};
+    const prefixes = [
+      "bienPhapMayMocDraft_",
+      "bienPhapPhuongTienDraft_",
+      "acceptanceDraft_",
+      "materialDraft_",
+      "acceptanceVehicleDraft_",
+    ];
+
+    return prefixes.reduce(
+      (acc, prefix) => {
+        const key = Object.keys(formData).find((k) => k.startsWith(prefix));
+        const name = prefix.replace("Draft_", "Draft");
+        acc[name] = key ? formData[key] : null;
+        return acc;
+      },
+      {} as Record<string, any>,
+    );
+  });
 
   // sua chua
   const {
@@ -1518,7 +1551,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
         })()}
 
       {/* BienPhapMayMocDialog / BienPhapPhuongTienDialog */}
-      {(bienPhapParentInspId || selectedBienPhap) &&
+      {(bienPhapParentInspId || selectedBienPhap || bienPhapDialogOpen) &&
         (() => {
           const parentId = selectedBienPhap
             ? selectedBienPhap.idGiamDinhMayMoc ||
@@ -1535,6 +1568,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                 onClose={() => {
                   setBienPhapParentInspId(null);
                   setSelectedBienPhap(null);
+                  setBienPhapDialogOpen(false);
                 }}
                 idGiamDinhPhuongTien={parentId ?? ""}
                 soPhieuGiamDinh={parentInsp?.soPhieu}
@@ -1548,6 +1582,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
               onClose={() => {
                 setBienPhapParentInspId(null);
                 setSelectedBienPhap(null);
+                setBienPhapDialogOpen(false);
               }}
               idGiamDinhMayMoc={parentId ?? ""}
               soPhieuGiamDinh={parentInsp?.soPhieu}
@@ -1671,6 +1706,54 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
             />
           ) : null;
         })()}
+
+      {[
+        { key: "repair", onClick: () => setRepairDialogOpen(true) },
+        { key: "inspection", onClick: () => setInspectionDialogOpen(true) },
+        {
+          key: "bienPhapMayMoc",
+          onClick: () =>
+            setBienPhapParentInspId(
+              drafts.bienPhapMayMocDraft?.idGiamDinhMayMoc ?? null,
+            ),
+        },
+        {
+          key: "acceptance",
+          onClick: () => {
+            setAcceptanceParentBienPhapId(
+              drafts.acceptanceDraft?.acceptanceParentBienPhapId ?? null,
+            );
+            setAcceptanceDialogOpen(true);
+          },
+        },
+        {
+          key: "material",
+          onClick: () =>
+            setMaterialParentAccId(
+              drafts.materialDraft?.materialParentAccId ?? null,
+            ),
+        },
+        {
+          key: "bienPhapPhuongTien",
+          onClick: () =>
+            setBienPhapParentInspId(
+              drafts.bienPhapPhuongTienDraft?.idGiamDinhPhuongTien ?? null,
+            ),
+        },
+        {
+          key: "acceptanceVehicle",
+          onClick: () => {
+            setAcceptanceParentBienPhapId(
+              drafts.acceptanceVehicleDraft?.idBienPhapPhuongTien ?? null,
+            );
+            setAcceptanceDialogOpen(true);
+          },
+        },
+      ].map(({ key, onClick }) =>
+        lastMinimizedDialog === key ? (
+          <DraftIndicator key={key} onClick={onClick} />
+        ) : null,
+      )}
     </Box>
   );
 };
