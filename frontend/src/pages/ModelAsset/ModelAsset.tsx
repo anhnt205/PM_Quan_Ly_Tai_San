@@ -10,7 +10,7 @@ import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import { ContentCopy, Delete } from "@mui/icons-material";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useModelAssetMutation, useModelAssetPageQuery } from "./Mutation";
 import { showConfirmAlert } from "../../components/Alert";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
@@ -57,6 +57,7 @@ export default function ModelAsset() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
+  const bulkFormValuesRef = useRef<any>(null);
 
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
@@ -67,9 +68,29 @@ export default function ModelAsset() {
   });
 
   const handleMinimize = () => setShowForm(false);
-  const handleBulkMinimize = () => setShowBulkForm(false);
+  const handleBulkMinimize = () => {
+    setField({ bulkDraftData: bulkFormValuesRef.current });
+    setShowBulkForm(false);
+  };
   const isMinimized = !showForm && hasDraftData(formData.draftForm);
   const isBulkMinimized = !showBulkForm && hasDraftData(formData.bulkDraftData);
+
+  const handleBulkCancel = () => {
+    setSelectedIds([]);
+    setField({
+      bulkDraftData: undefined,
+      bulkItems: [],
+      showBulkForm: false,
+    });
+  };
+  const handleBulkClose = (event: any, reason?: string) => {
+    if (reason === "backdropClick" || reason === "escapeKeyDown") {
+      setField({ bulkDraftData: bulkFormValuesRef.current });
+      setShowBulkForm(false);
+      return;
+    }
+    handleBulkCancel();
+  };
 
   const {
     createMutation,
@@ -358,7 +379,7 @@ export default function ModelAsset() {
         </Dialog>
         <Dialog
           open={showBulkForm}
-          onClose={handleBulkMinimize}
+          onClose={handleBulkClose}
           maxWidth="md"
           fullWidth
         >
@@ -366,12 +387,7 @@ export default function ModelAsset() {
             <ModelAssetForm
               key={`bulk-${bulkItems.length}`}
               onEdit={handleEdit}
-              onCancel={() => {
-                setBulkItems([]);
-                setSelectedIds([]);
-                setField({ bulkDraftData: undefined });
-                setShowBulkForm(false);
-              }}
+              onCancel={handleBulkCancel}
               onMinimize={handleBulkMinimize}
               selectedModelAsset={null}
               readOnly={false}
@@ -381,7 +397,7 @@ export default function ModelAsset() {
               isBulkMode={true}
               bulkItems={bulkItems}
               onBulkItemsChange={(items) => {
-                setField({ bulkDraftData: { items, bulkEditType } });
+                bulkFormValuesRef.current = { items, bulkEditType };
               }}
               bulkEditType={bulkEditType}
             />

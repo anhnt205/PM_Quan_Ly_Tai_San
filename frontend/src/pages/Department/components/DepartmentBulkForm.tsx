@@ -502,7 +502,7 @@ export default function BulkDepartmentForm({
                 "&:hover": { bgcolor: "#178a52" },
               }}
             >
-              Thêm phòng ban
+              Thêm dòng mới
             </Button>
           )}
           <Box display="flex" gap={2} ml="auto">

@@ -44,7 +44,6 @@ export default function ReportS22DN({ title }: { title?: string }) {
         setOpenSnackbar(true);
         return;
       }
-      console.log("Lấy dữ liệu báo cáo:", values);
       setFetchKey((k) => k + 1);
     },
   });

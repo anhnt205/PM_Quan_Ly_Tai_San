@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
   Grid,
@@ -114,7 +114,14 @@ export default function AssetTransfer() {
   const [showSignerSidebar, setShowSignerSidebar] = useState(true);
 
   const isClosingRef = useRef(false);
-  const handleMinimize = () => setShowForm(false);
+  const formRef = useRef<{ getValues: () => any }>(null);
+
+  const handleMinimize = () => {
+    setShowForm(false);
+    const values = formRef.current?.getValues();
+    if (values) setField({ draftForm: values });
+  };
+
   const isMinimized =
     !showForm && !isClosingRef.current && hasDraftData(formData.draftForm);
 
@@ -336,248 +343,208 @@ export default function AssetTransfer() {
     setTabValue(2);
   };
 
-  const columns: GridColDef<any>[] = [
-    {
-      field: "trangThai",
-      headerName: "Trạng thái phiếu",
-      width: 140,
-      headerAlign: "center",
-      align: "center",
-      renderCell: (params) => showStatus(params.row.trangThai ?? 0),
-    },
-    {
-      field: "id",
-      headerName: "Mã",
-      width: 150,
-      headerAlign: "center",
-      align: "center",
-    },
-    {
-      field: "tenPhieu",
-      headerName: "Phiếu ký nội sinh",
-      minWidth: 200,
-      flex: 1,
-      headerAlign: "center",
-      align: "center",
-    },
-
-    {
-      field: "trichYeu",
-      headerName: "Trích yếu",
-      width: 180,
-      headerAlign: "center",
-      align: "center",
-    },
-
-    {
-      field: "ngayHieuLuc",
-      headerName: "Ngày có hiệu lực",
-      width: 160,
-      headerAlign: "center",
-      align: "center",
-      renderCell(params) {
-        if (!params.row?.tgGnTuNgay) return "";
-        return new Date(params.row?.tgGnTuNgay).toLocaleString("vi-VN");
+  const columns = useMemo<GridColDef<any>[]>(
+    () => [
+      {
+        field: "trangThai",
+        headerName: "Trạng thái phiếu",
+        width: 140,
+        headerAlign: "center",
+        align: "center",
+        renderCell: (params) => showStatus(params.row.trangThai ?? 0),
       },
-    },
-
-    {
-      field: "tenTrinhDuyetGiamDoc",
-      headerName: "Trình duyệt biên bản",
-      width: 160,
-      headerAlign: "center",
-      align: "center",
-    },
-
-    {
-      field: "tenFile",
-      headerName: "Tài liệu duyệt",
-      width: 180,
-      headerAlign: "center",
-      align: "center",
-      renderCell: (params) => {
-        return showDownloadFile(
-          params.value,
-          () => S3Service.download(params.row.duongDanFile),
-          // handleDownloadFile(params.value),
-        );
+      {
+        field: "id",
+        headerName: "Mã",
+        width: 150,
+        headerAlign: "center",
+        align: "center",
       },
-    },
-    {
-      field: "tgGnTuNgay",
-      headerName: "Thời gian giao nhận từ ngày",
-      width: 160,
-      headerAlign: "center",
-      align: "center",
-      valueFormatter: (value: any) => {
-        if (!value) return "";
-        return new Date(value).toLocaleString("vi-VN");
+      {
+        field: "tenPhieu",
+        headerName: "Phiếu ký nội sinh",
+        minWidth: 200,
+        flex: 1,
+        headerAlign: "center",
+        align: "center",
       },
-    },
 
-    {
-      field: "tgGnDenNgay",
-      headerName: "Thời gian giao nhận đến ngày",
-      width: 160,
-      headerAlign: "center",
-      align: "center",
-      valueFormatter: (value: any) => {
-        if (!value) return "";
-        return new Date(value).toLocaleString("vi-VN");
+      {
+        field: "trichYeu",
+        headerName: "Trích yếu",
+        width: 180,
+        headerAlign: "center",
+        align: "center",
       },
-    },
 
-    {
-      field: "tenDonViGiao",
-      headerName: "Đơn vị giao",
-      width: 180,
-      headerAlign: "center",
-      align: "center",
-    },
-    {
-      field: "tenDonViNhan",
-      headerName: "Đơn vị nhận",
-      width: 180,
-      headerAlign: "center",
-      align: "center",
-    },
-
-    {
-      field: "TrangThaiKy",
-      headerName: "Trạng thái ký",
-      width: 140,
-      headerAlign: "center",
-      align: "center",
-      renderCell: (params) =>
-        ShowPermissionSigning(
-          getPermissionSigning(params.row, user, allStaffs),
-        ),
-    },
-
-    {
-      field: "TrangThaiBanGiao",
-      headerName: "Trạng thái bàn giao",
-      width: 140,
-      headerAlign: "center",
-      align: "center",
-      renderCell: (params) =>
-        showStatusDocument(params.row?.trangThaiPhieuDieuDong ?? 0),
-    },
-
-    {
-      field: "share",
-      headerName: "Trình duyệt",
-      width: 140,
-      headerAlign: "center",
-      align: "center",
-      renderCell: (params) =>
-        showShareStatus(
-          params.row?.share ?? false,
-          params.row?.nguoiTao === user?.taiKhoan?.tenDangNhap,
-        ),
-    },
-
-    {
-      field: "HanhDong",
-      headerName: "Hành động",
-      width: 140,
-      headerAlign: "center",
-      align: "center",
-      sortable: false,
-      filterable: false,
-      renderCell: (params) => {
-        const rowData = params.row as AssetTransferData;
-        return (
-          <Box sx={{ display: "flex", gap: 0.5, justifyContent: "center" }}>
-            <Tooltip title="Chỉnh sửa">
-              <IconButton
-                color="primary"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setField({
-                    selectedRow: rowData,
-                    showForm: true,
-                    readOnly: true,
-                    showSidebar: false,
-                  });
-                }}
-                sx={{
-                  padding: "4px",
-                  "&:hover": { bgcolor: "rgba(25, 118, 210, 0.08)" },
-                }}
-              >
-                <Edit size={20} strokeWidth={2} />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Xóa">
-              <IconButton
-                color="error"
-                disabled={!isCheckShowDelete(rowData, user)}
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  const confirm = await showConfirmAlert(
-                    `Xóa phiếu ${title} "${rowData?.id}"`,
-                  );
-                  if (confirm.isConfirmed) {
-                    deleteOneMutation.mutate(rowData);
-                  }
-                }}
-                sx={{
-                  padding: "4px",
-                  "&:hover": { bgcolor: "rgba(244, 67, 54, 0.08)" },
-                }}
-              >
-                <Trash2 size={20} strokeWidth={2} />
-              </IconButton>
-            </Tooltip>
-            {/* 
-            <Tooltip title="Xem phiếu bàn giao">
-              <IconButton
-                color="primary"
-                disabled={!rowData.coPhieuBanGiao}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleViewBienBan(rowData.id);
-                }}
-                sx={{
-                  padding: "4px",
-                  "&:hover": { bgcolor: "rgba(25, 118, 210, 0.08)" },
-                }}
-              >
-                <Building size={20} strokeWidth={2} />
-              </IconButton>
-            </Tooltip>
-
-            <Tooltip title="Xem">
-              <IconButton
-                color="success"
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  setSelectedDocument(rowData.taiLieuCuoi);
-                  setAssetTransferDetail(
-                    rowData.chiTietDieuDongTaiSanDTOS || [],
-                  );
-                  setShowSignerSidebar(false); // Ẩn sidebar khi xem
-                  setSelectedIds([]);
-                  setShowSignDocument(true);
-                  setIsFullPageSign(false);
-                  setSidebarMode("document");
-                  setShowSidebar(true);
-                  setTabValue(0);
-                }}
-                sx={{
-                  padding: "4px",
-                  "&:hover": { bgcolor: "rgba(76, 175, 80, 0.08)" },
-                }}
-              >
-                <VisibilityIcon sx={{ fontSize: 20 }} />
-              </IconButton>
-            </Tooltip> */}
-          </Box>
-        );
+      {
+        field: "ngayHieuLuc",
+        headerName: "Ngày có hiệu lực",
+        width: 160,
+        headerAlign: "center",
+        align: "center",
+        renderCell(params) {
+          if (!params.row?.tgGnTuNgay) return "";
+          return new Date(params.row?.tgGnTuNgay).toLocaleString("vi-VN");
+        },
       },
-    },
-  ];
+
+      {
+        field: "tenTrinhDuyetGiamDoc",
+        headerName: "Trình duyệt biên bản",
+        width: 160,
+        headerAlign: "center",
+        align: "center",
+      },
+
+      {
+        field: "tenFile",
+        headerName: "Tài liệu duyệt",
+        width: 180,
+        headerAlign: "center",
+        align: "center",
+        renderCell: (params) => {
+          return showDownloadFile(
+            params.value,
+            () => S3Service.download(params.row.duongDanFile),
+            // handleDownloadFile(params.value),
+          );
+        },
+      },
+      {
+        field: "tgGnTuNgay",
+        headerName: "Thời gian giao nhận từ ngày",
+        width: 160,
+        headerAlign: "center",
+        align: "center",
+        valueFormatter: (value: any) => {
+          if (!value) return "";
+          return new Date(value).toLocaleString("vi-VN");
+        },
+      },
+
+      {
+        field: "tgGnDenNgay",
+        headerName: "Thời gian giao nhận đến ngày",
+        width: 160,
+        headerAlign: "center",
+        align: "center",
+        valueFormatter: (value: any) => {
+          if (!value) return "";
+          return new Date(value).toLocaleString("vi-VN");
+        },
+      },
+
+      {
+        field: "tenDonViGiao",
+        headerName: "Đơn vị giao",
+        width: 180,
+        headerAlign: "center",
+        align: "center",
+      },
+      {
+        field: "tenDonViNhan",
+        headerName: "Đơn vị nhận",
+        width: 180,
+        headerAlign: "center",
+        align: "center",
+      },
+
+      {
+        field: "TrangThaiKy",
+        headerName: "Trạng thái ký",
+        width: 140,
+        headerAlign: "center",
+        align: "center",
+        renderCell: (params) =>
+          ShowPermissionSigning(
+            getPermissionSigning(params.row, user, allStaffs),
+          ),
+      },
+
+      {
+        field: "TrangThaiBanGiao",
+        headerName: "Trạng thái bàn giao",
+        width: 140,
+        headerAlign: "center",
+        align: "center",
+        renderCell: (params) =>
+          showStatusDocument(params.row?.trangThaiPhieuDieuDong ?? 0),
+      },
+
+      {
+        field: "share",
+        headerName: "Trình duyệt",
+        width: 140,
+        headerAlign: "center",
+        align: "center",
+        renderCell: (params) =>
+          showShareStatus(
+            params.row?.share ?? false,
+            params.row?.nguoiTao === user?.taiKhoan?.tenDangNhap,
+          ),
+      },
+
+      {
+        field: "HanhDong",
+        headerName: "Hành động",
+        width: 140,
+        headerAlign: "center",
+        align: "center",
+        sortable: false,
+        filterable: false,
+        renderCell: (params) => {
+          const rowData = params.row as AssetTransferData;
+          return (
+            <Box sx={{ display: "flex", gap: 0.5, justifyContent: "center" }}>
+              <Tooltip title="Chỉnh sửa">
+                <IconButton
+                  color="primary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setField({
+                      selectedRow: rowData,
+                      showForm: true,
+                      readOnly: true,
+                      showSidebar: false,
+                    });
+                  }}
+                  sx={{
+                    padding: "4px",
+                    "&:hover": { bgcolor: "rgba(25, 118, 210, 0.08)" },
+                  }}
+                >
+                  <Edit size={20} strokeWidth={2} />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Xóa">
+                <IconButton
+                  color="error"
+                  disabled={!isCheckShowDelete(rowData, user)}
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const confirm = await showConfirmAlert(
+                      `Xóa phiếu ${title} "${rowData?.id}"`,
+                    );
+                    if (confirm.isConfirmed) {
+                      deleteOneMutation.mutate(rowData);
+                    }
+                  }}
+                  sx={{
+                    padding: "4px",
+                    "&:hover": { bgcolor: "rgba(244, 67, 54, 0.08)" },
+                  }}
+                >
+                  <Trash2 size={20} strokeWidth={2} />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          );
+        },
+      },
+    ],
+    [allStaffs, user, title],
+  );
 
   return (
     <>
@@ -617,10 +584,14 @@ export default function AssetTransfer() {
               open={showForm}
               onClose={handleMinimize}
               maxWidth="lg"
+              slotProps={{
+                transition: { timeout: 100 },
+              }}
               fullWidth
             >
               <DialogContent sx={{ p: 0, overflow: "auto" }}>
                 <AssetTransferForm
+                  ref={formRef}
                   key={
                     showForm
                       ? `new-form-type-${type}`
@@ -642,7 +613,6 @@ export default function AssetTransfer() {
                   )}
                   allUnits={allUnits}
                   allCurrentStatus={allCurrentStatus}
-                  onFormChange={(values) => setField({ draftForm: values })}
                   initialFormData={formData.draftForm}
                 />
               </DialogContent>

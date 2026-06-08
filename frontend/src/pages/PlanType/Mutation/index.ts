@@ -213,7 +213,6 @@ export const useAllPlanTypeQuery = () => {
           size: 9999,
         },
       });
-      console.log(res.data.data);
       return res.data.data;
     },
     placeholderData: (placeholderData) => placeholderData,

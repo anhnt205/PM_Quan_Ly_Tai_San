@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
   Grid,
@@ -105,9 +105,16 @@ export default function ToolTransfer() {
     page: 0,
     pageSize: 10,
   });
+  const formRef = useRef<{ getValues: () => any }>(null);
+  const isClosingRef = useRef(false);
 
-  const handleMinimize = () => setShowForm(false);
-  const isMinimized = !showForm && hasDraftData(formData.draftForm);
+  const handleMinimize = () => {
+    setShowForm(false);
+    const values = formRef.current?.getValues();
+    if (values) setField({ draftForm: values });
+  };
+  const isMinimized =
+    !showForm && !isClosingRef.current && hasDraftData(formData.draftForm);
 
   const [showSignerSidebar, setShowSignerSidebar] = useState(true);
   const [showBienBanDialog, setShowBienBanDialog] = useState(false);
@@ -226,6 +233,7 @@ export default function ToolTransfer() {
 
   // --- HANDLERS ---
   const handleClose = () => {
+    isClosingRef.current = true;
     setShowForm(false);
     setSelectedRow(null);
     setShowSidebar(false);
@@ -233,6 +241,9 @@ export default function ToolTransfer() {
     setSelectedIds([]);
     setShowSignDocument(false);
     setField({ draftForm: undefined });
+    setTimeout(() => {
+      isClosingRef.current = false;
+    }, 300);
   };
   const handleSend = (items: any[]) => {
     handleSendToSigner(items, updateManyMutation.mutateAsync, handleClose);
@@ -327,183 +338,184 @@ export default function ToolTransfer() {
     setTabValue(2);
   };
 
-  const columns: GridColDef<ToolTransferData>[] = [
-    {
-      field: "trangThai",
-      headerName: "Trạng thái phiếu",
-      width: 140,
-      headerAlign: "center",
-      align: "center",
-      renderCell: (params) => showStatus(params.value ?? 0),
-    },
-    {
-      field: "id",
-      headerName: "Mã",
-      width: 150,
-      headerAlign: "center",
-      align: "center",
-    },
-    {
-      field: "tenPhieu",
-      headerName: "Phiếu ký nội sinh",
-      minWidth: 200,
-      flex: 1,
-      headerAlign: "center",
-      align: "center",
-    },
-    {
-      field: "trichYeu",
-      headerName: "Trích yếu",
-      width: 180,
-      headerAlign: "center",
-      align: "center",
-    },
-    {
-      field: "ngayHieuLuc",
-      headerName: "Ngày có hiệu lực",
-      width: 160,
-      headerAlign: "center",
-      align: "center",
-      renderCell: (params) => {
-        if (!params.row?.tgGnTuNgay) return "";
-        return new Date(params.row?.tgGnTuNgay).toLocaleString("vi-VN");
+  const columns = useMemo<GridColDef<ToolTransferData>[]>(
+    () => [
+      {
+        field: "trangThai",
+        headerName: "Trạng thái phiếu",
+        width: 140,
+        headerAlign: "center",
+        align: "center",
+        renderCell: (params) => showStatus(params.value ?? 0),
       },
-    },
-    {
-      field: "nguoiTao",
-      headerName: "Trình duyệt biên bản",
-      width: 160,
-      headerAlign: "center",
-      align: "center",
-    },
-    {
-      field: "tenFile",
-      headerName: "Tài liệu duyệt",
-      width: 180,
-      headerAlign: "center",
-      align: "center",
-      renderCell: (params) => {
-        if (!params.value) return null;
-        return showDownloadFile(params.value, () =>
-          S3Service.download(params.row.duongDanFile),
-        );
+      {
+        field: "id",
+        headerName: "Mã",
+        width: 150,
+        headerAlign: "center",
+        align: "center",
       },
-    },
-    {
-      field: "tgGnTuNgay",
-      headerName: "Thời gian giao nhận từ ngày",
-      width: 160,
-      headerAlign: "center",
-      align: "center",
-      valueFormatter: (value: any) =>
-        value ? new Date(value).toLocaleString("vi-VN") : "",
-    },
-    {
-      field: "tgGnDenNgay",
-      headerName: "Thời gian giao nhận đến ngày",
-      width: 160,
-      headerAlign: "center",
-      align: "center",
-      valueFormatter: (value: any) =>
-        value ? new Date(value).toLocaleString("vi-VN") : "",
-    },
-    {
-      field: "tenDonViGiao",
-      headerName: "Đơn vị giao",
-      width: 180,
-      headerAlign: "center",
-      align: "center",
-    },
-    {
-      field: "tenDonViNhan",
-      headerName: "Đơn vị nhận",
-      width: 180,
-      headerAlign: "center",
-      align: "center",
-    },
-    {
-      field: "trangThaiKy",
-      headerName: "Trạng thái ký",
-      width: 140,
-      headerAlign: "center",
-      align: "center",
-      renderCell: (params) =>
-        ShowPermissionSigning(
-          getPermissionSigning(params.row, user, allStaffs),
-        ),
-    },
-    {
-      field: "trangThaiPhieuDieuDong",
-      headerName: "Trạng thái bàn giao",
-      width: 140,
-      headerAlign: "center",
-      align: "center",
-      renderCell: (params) =>
-        showStatusDocument(params.row?.trangThaiPhieuDieuDong ?? 0),
-    },
-    {
-      field: "share",
-      headerName: "Trình duyệt",
-      width: 140,
-      headerAlign: "center",
-      align: "center",
-      renderCell: (params) =>
-        showShareStatus(
-          params.row?.share ?? false,
-          params.row?.nguoiTao == user?.taiKhoan?.tenDangNhap,
-        ),
-    },
-    {
-      field: "HanhDong",
-      headerName: "Hành động",
-      width: 140,
-      headerAlign: "center",
-      align: "center",
-      sortable: false,
-      filterable: false,
-      renderCell: (params) => {
-        const rowData = params.row as ToolTransferData;
-        return (
-          <Box
-            sx={{
-              display: "flex",
-              gap: 0.5,
-              justifyContent: "center",
-              alignItems: "center",
-              height: "100%", // Thêm dòng này để Box lấp đầy chiều cao của cell
-              width: "100%", // Thêm dòng này để đảm bảo căn giữa ngang tuyệt đối
-            }}
-          >
-            <Tooltip title="Xóa">
-              <IconButton
-                size="small"
-                color="error"
-                disabled={!isCheckShowDelete(rowData, user)}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete(rowData);
-                }}
-              >
-                <Trash2 size={18} />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Sửa">
-              <IconButton
-                size="small"
-                color="info"
-                // disabled={rowData.trangThai !== 0}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedRow(rowData);
-                  setReadOnly(true);
-                  setShowForm(true);
-                  setShowSidebar(false);
-                }}
-              >
-                <Edit size={18} />
-              </IconButton>
-            </Tooltip>
-            {/* <Tooltip title="Xem phiếu bàn giao">
+      {
+        field: "tenPhieu",
+        headerName: "Phiếu ký nội sinh",
+        minWidth: 200,
+        flex: 1,
+        headerAlign: "center",
+        align: "center",
+      },
+      {
+        field: "trichYeu",
+        headerName: "Trích yếu",
+        width: 180,
+        headerAlign: "center",
+        align: "center",
+      },
+      {
+        field: "ngayHieuLuc",
+        headerName: "Ngày có hiệu lực",
+        width: 160,
+        headerAlign: "center",
+        align: "center",
+        renderCell: (params) => {
+          if (!params.row?.tgGnTuNgay) return "";
+          return new Date(params.row?.tgGnTuNgay).toLocaleString("vi-VN");
+        },
+      },
+      {
+        field: "nguoiTao",
+        headerName: "Trình duyệt biên bản",
+        width: 160,
+        headerAlign: "center",
+        align: "center",
+      },
+      {
+        field: "tenFile",
+        headerName: "Tài liệu duyệt",
+        width: 180,
+        headerAlign: "center",
+        align: "center",
+        renderCell: (params) => {
+          if (!params.value) return null;
+          return showDownloadFile(params.value, () =>
+            S3Service.download(params.row.duongDanFile),
+          );
+        },
+      },
+      {
+        field: "tgGnTuNgay",
+        headerName: "Thời gian giao nhận từ ngày",
+        width: 160,
+        headerAlign: "center",
+        align: "center",
+        valueFormatter: (value: any) =>
+          value ? new Date(value).toLocaleString("vi-VN") : "",
+      },
+      {
+        field: "tgGnDenNgay",
+        headerName: "Thời gian giao nhận đến ngày",
+        width: 160,
+        headerAlign: "center",
+        align: "center",
+        valueFormatter: (value: any) =>
+          value ? new Date(value).toLocaleString("vi-VN") : "",
+      },
+      {
+        field: "tenDonViGiao",
+        headerName: "Đơn vị giao",
+        width: 180,
+        headerAlign: "center",
+        align: "center",
+      },
+      {
+        field: "tenDonViNhan",
+        headerName: "Đơn vị nhận",
+        width: 180,
+        headerAlign: "center",
+        align: "center",
+      },
+      {
+        field: "trangThaiKy",
+        headerName: "Trạng thái ký",
+        width: 140,
+        headerAlign: "center",
+        align: "center",
+        renderCell: (params) =>
+          ShowPermissionSigning(
+            getPermissionSigning(params.row, user, allStaffs),
+          ),
+      },
+      {
+        field: "trangThaiPhieuDieuDong",
+        headerName: "Trạng thái bàn giao",
+        width: 140,
+        headerAlign: "center",
+        align: "center",
+        renderCell: (params) =>
+          showStatusDocument(params.row?.trangThaiPhieuDieuDong ?? 0),
+      },
+      {
+        field: "share",
+        headerName: "Trình duyệt",
+        width: 140,
+        headerAlign: "center",
+        align: "center",
+        renderCell: (params) =>
+          showShareStatus(
+            params.row?.share ?? false,
+            params.row?.nguoiTao == user?.taiKhoan?.tenDangNhap,
+          ),
+      },
+      {
+        field: "HanhDong",
+        headerName: "Hành động",
+        width: 140,
+        headerAlign: "center",
+        align: "center",
+        sortable: false,
+        filterable: false,
+        renderCell: (params) => {
+          const rowData = params.row as ToolTransferData;
+          return (
+            <Box
+              sx={{
+                display: "flex",
+                gap: 0.5,
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100%", // Thêm dòng này để Box lấp đầy chiều cao của cell
+                width: "100%", // Thêm dòng này để đảm bảo căn giữa ngang tuyệt đối
+              }}
+            >
+              <Tooltip title="Xóa">
+                <IconButton
+                  size="small"
+                  color="error"
+                  disabled={!isCheckShowDelete(rowData, user)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(rowData);
+                  }}
+                >
+                  <Trash2 size={18} />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Sửa">
+                <IconButton
+                  size="small"
+                  color="info"
+                  // disabled={rowData.trangThai !== 0}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedRow(rowData);
+                    setReadOnly(true);
+                    setShowForm(true);
+                    setShowSidebar(false);
+                  }}
+                >
+                  <Edit size={18} />
+                </IconButton>
+              </Tooltip>
+              {/* <Tooltip title="Xem phiếu bàn giao">
               <IconButton
                 size="small"
                 color="primary"
@@ -528,11 +540,13 @@ export default function ToolTransfer() {
                 <Eye size={18} />
               </IconButton>
             </Tooltip> */}
-          </Box>
-        );
+            </Box>
+          );
+        },
       },
-    },
-  ];
+    ],
+    [allStaffs, user, title],
+  );
 
   return (
     <>
@@ -575,9 +589,13 @@ export default function ToolTransfer() {
               onClose={handleMinimize}
               maxWidth="lg"
               fullWidth
+              slotProps={{
+                transition: { timeout: 150 },
+              }}
             >
               <DialogContent sx={{ p: 0, overflow: "auto" }}>
                 <ToolTransferForm
+                  ref={formRef}
                   key={
                     selectedRow
                       ? `edit-${selectedRow.id}`
@@ -602,7 +620,6 @@ export default function ToolTransfer() {
                   allUnits={allUnits}
                   label={label}
                   type={Number(type)}
-                  onFormChange={(values) => setField({ draftForm: values })}
                   initialFormData={formData.draftForm}
                 />
               </DialogContent>

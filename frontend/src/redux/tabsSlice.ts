@@ -10,24 +10,33 @@ interface Tab {
 interface TabsState {
   tabs: Tab[];
   activeTab: string;
+  isTabLimited: boolean;
 }
 
 const initialState: TabsState = {
   tabs: [],
   activeTab: "",
+  isTabLimited: false,
 };
 
 const tabsSlice = createSlice({
   name: "tabs",
   initialState,
   reducers: {
+
     addTab: (state, action: PayloadAction<Tab>) => {
       const exists = state.tabs.find((tab) => tab.path === action.payload.path);
+      if (!exists && state.tabs.length >= 7) {
+        state.isTabLimited = true;
+        return;
+      }
+      state.isTabLimited = false;
       if (!exists) {
         state.tabs.push(action.payload);
       }
       state.activeTab = action.payload.path;
     },
+
     removeTab: (state, action: PayloadAction<string>) => {
       state.tabs = state.tabs.filter((tab) => tab.path !== action.payload);
       if (state.activeTab === action.payload) {
@@ -38,9 +47,11 @@ const tabsSlice = createSlice({
         }
       }
     },
+
     setActiveTab: (state, action: PayloadAction<string>) => {
       state.activeTab = action.payload;
     },
+
     clearTabs: (state) => {
       state.tabs = [];
       state.activeTab = "";
@@ -63,7 +74,6 @@ const tabsSlice = createSlice({
       const tab = state.tabs.find((t) => t.path === action.payload.path);
       if (tab) {
         tab.isFormOpen = action.payload.isOpen;
-        // Khi đóng form thì clear data luôn
         if (!action.payload.isOpen) {
           tab.formData = {};
         }
@@ -77,6 +87,11 @@ const tabsSlice = createSlice({
         tab.isFormOpen = false;
       }
     },
+
+    clearTabLimited: (state) => {
+      state.isTabLimited = false;
+    },
+
   },
 });
 
@@ -88,5 +103,6 @@ export const {
   clearTabFormData,
   setTabFormOpen,
   updateTabFormData,
+  clearTabLimited,
 } = tabsSlice.actions;
 export default tabsSlice.reducer;

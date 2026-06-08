@@ -49,7 +49,6 @@ export default function BaoCaoTSCD({ title }: { title?: string }) {
         setOpenSnackbar(true);
         return;
       }
-      console.log("Lấy dữ liệu báo cáo:", values);
       setFetchKey((k) => k + 1);
     },
   });

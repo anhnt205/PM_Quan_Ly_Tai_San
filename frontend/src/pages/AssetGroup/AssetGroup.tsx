@@ -341,8 +341,26 @@ export default function AssetGroup() {
           onClose={handleMinimize}
           maxWidth={bulkMode ? "sm" : "md"}
           fullWidth
+          slotProps={{
+            paper: {
+              sx: {
+                maxHeight: "90vh",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+              },
+            },
+          }}
         >
-          <DialogContent sx={{ p: 0 }}>
+          <DialogContent
+            sx={{
+              p: 0,
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              flex: 1,
+            }}
+          >
             {bulkMode || selectedAssetGroup ? (
               <AssetGroupForm
                 key={

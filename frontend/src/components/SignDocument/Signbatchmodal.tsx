@@ -134,7 +134,6 @@ export const SignBatchModal: React.FC<SignBatchModalProps> = ({
           yRatio: 0.8,
           page: 1,
         };
-        console.log(result);
         const displayWidth = 800;
         const baseWidthPx = 120;
 

@@ -146,7 +146,6 @@ export default function SignDocumentForm({
     setSignatures((prev) =>
       prev.map((sig) => (sig.id === id ? { ...sig, x: newX, y: newY } : sig)),
     );
-    console.log(newX, newY);
   };
 
   // Xóa chữ ký
@@ -163,7 +162,6 @@ export default function SignDocumentForm({
       y: 0.1, // 10% từ trên
       type: signatureType,
     };
-    console.log("Thêm chữ ký:", newSignature);
     setSignatures([...signatures, newSignature]);
   };
 

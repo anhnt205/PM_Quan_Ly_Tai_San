@@ -571,7 +571,6 @@ const InspectionRecordVehicleDialog = ({
                               ) || null
                             }
                             onChange={(newValue: any) => {
-                              console.log("newValue", newValue);
                               updateMaterialField(vt.id!, {
                                 idChiTietVatTu: newValue
                                   ? String(newValue.id)

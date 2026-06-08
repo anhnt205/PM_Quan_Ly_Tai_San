@@ -25,7 +25,6 @@ import { useFormik } from "formik";
 import { PositionValidation } from "../validation/Validation";
 import EditButton from "../../../components/Button/EditButton";
 import { CongTy } from "../../../utils/const";
-import { useDebounce } from "../../../hooks/useDebounce";
 
 export default function PositionForm({
   onEdit,
@@ -89,11 +88,6 @@ export default function PositionForm({
     onBulkItemsChangeRef.current = onBulkItemsChange;
   });
 
-  const debouncedValues = useDebounce(formik.values, 800);
-  useEffect(() => {
-    onFormChangeRef.current?.(debouncedValues);
-  }, [debouncedValues]);
-
   useEffect(() => {
     if (selectedPosition) {
       formik.setValues(selectedPosition);
@@ -125,26 +119,31 @@ export default function PositionForm({
     }
   }, [initialFormData]);
 
-  const [localBulkItems, setLocalBulkItems] = useState<any[]>(
-    (initialFormData?.items?.length ?? 0) > 0
-      ? initialFormData!.items
-      : (bulkItems?.length ?? 0) > 0
-        ? bulkItems
-        : [],
-  );
+  const [localBulkItems, setLocalBulkItems] = useState<any[]>(() => {
+    if ((initialFormData?.items?.length ?? 0) > 0)
+      return initialFormData!.items;
+    if ((bulkItems?.length ?? 0) > 0) return bulkItems;
+    return [];
+  });
 
+  const prevInitialFormDataRef = useRef(initialFormData);
   useEffect(() => {
+    if (initialFormData === prevInitialFormDataRef.current) return;
+    prevInitialFormDataRef.current = initialFormData;
     if ((initialFormData?.items?.length ?? 0) > 0) {
       setLocalBulkItems(initialFormData!.items);
-    } else if ((bulkItems?.length ?? 0) > 0) {
-      setLocalBulkItems(bulkItems);
     }
-  }, [initialFormData, bulkItems]);
+  }, [initialFormData]);
 
-  const debouncedBulkItems = useDebounce(localBulkItems, 600);
+  const listEndRef = useRef<HTMLDivElement>(null);
+  const prevLengthRef = useRef(localBulkItems.length);
+
   useEffect(() => {
-    onBulkItemsChangeRef.current?.(debouncedBulkItems);
-  }, [debouncedBulkItems]);
+    if (localBulkItems.length > prevLengthRef.current) {
+      listEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+    prevLengthRef.current = localBulkItems.length;
+  }, [localBulkItems.length]);
 
   // Bulk handlers
   const handleAddItem = () => {
@@ -199,11 +198,16 @@ export default function PositionForm({
     const updated = await Promise.all(
       localBulkItems.map(async (item) => {
         try {
-          await PositionValidation.validate(item);
-          return { ...item, errors: undefined }; // tạo object mới
+          await PositionValidation.validate(item, { abortEarly: false });
+          return { ...item, errors: undefined };
         } catch (error: any) {
           hasError = true;
-          return { ...item, errors: { [error.path]: error.message } }; // tạo object mới
+          // error.inner chứa tất cả lỗi khi abortEarly: false
+          const errors = error.inner.reduce((acc: any, err: any) => {
+            acc[err.path] = err.message;
+            return acc;
+          }, {});
+          return { ...item, errors };
         }
       }),
     );
@@ -216,6 +220,15 @@ export default function PositionForm({
     const { hasError } = await validateBulkItems();
     if (hasError) return;
     onSave(localBulkItems);
+  };
+
+  const handleMinimize = () => {
+    if (isBulkMode) {
+      onBulkItemsChangeRef.current?.(localBulkItems);
+    } else {
+      onFormChangeRef.current?.(formik.values);
+    }
+    onMinimize();
   };
 
   // Bulk mode render
@@ -246,7 +259,7 @@ export default function PositionForm({
               : `Sửa hàng loạt chức vụ (${localBulkItems.length})`}
           </Typography>
           <Box display="flex" gap={0.5}>
-            <IconButton size="small" onClick={onMinimize} title="Ẩn tạm">
+            <IconButton size="small" onClick={handleMinimize} title="Ẩn tạm">
               <Remove fontSize="small" />
             </IconButton>
             <IconButton size="small" onClick={onCancel} title="Đóng">
@@ -384,6 +397,7 @@ export default function PositionForm({
               </Grid>
             </Card>
           ))}
+          <div ref={listEndRef} />
         </Box>
 
         <Box
@@ -398,16 +412,12 @@ export default function PositionForm({
             startIcon={<Add />}
             onClick={handleAddItem}
             sx={{
-              textTransform: "none",
-              borderColor: "#1FA463",
-              color: "#1FA463",
-              "&:hover": {
-                borderColor: "#1FA463",
-                backgroundColor: "rgba(31, 164, 99, 0.04)",
-              },
+              bgcolor: "#1FA463",
+              color: "#fff",
+              "&:hover": { bgcolor: "#178a52" },
             }}
           >
-            Thêm item
+            Thêm dòng mới
           </Button>
           <Box display="flex" gap={2}>
             <CancelBtn onClick={onCancel} />
@@ -443,7 +453,7 @@ export default function PositionForm({
           Chi tiết chức vụ
         </Typography>
         <Box display="flex" gap={0.5}>
-          <IconButton size="small" onClick={onMinimize} title="Ẩn tạm">
+          <IconButton size="small" onClick={handleMinimize} title="Ẩn tạm">
             <Remove fontSize="small" />
           </IconButton>
           <IconButton size="small" onClick={onCancel} title="Đóng">

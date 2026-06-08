@@ -36,7 +36,6 @@ export default function MauSo21({ title }: { title?: string }) {
   const [contentData, setContentData] = useState({});
 
   const handleContentChange = useCallback((data: any) => {
-    console.log("contentData updated with:", data);
     setContentData(data);
   }, []);
 
@@ -55,7 +54,6 @@ export default function MauSo21({ title }: { title?: string }) {
         setOpenSnackbar(true);
         return;
       }
-      console.log("Lấy dữ liệu báo cáo:", values);
       setFetchKey((k) => k + 1);
     },
   });
@@ -70,7 +68,6 @@ export default function MauSo21({ title }: { title?: string }) {
 
   const handleExport = () => {
     const data = contentData as any;
-    console.log("Export clicked, contentData:", contentData);
     const hasData = data && Array.isArray(data.rows) && data.rows.length > 0;
 
     if (!hasData) {
