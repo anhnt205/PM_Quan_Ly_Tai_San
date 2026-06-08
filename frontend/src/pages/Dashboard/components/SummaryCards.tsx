@@ -43,27 +43,28 @@ export default function SummaryCards({
     {
       title: "Tổng nguyên giá tài sản",
       value: formatPrice(tongNguyenGia),
-      icon: <MonetizationOnOutlined sx={{ fontSize: 22, color: "#1a73e8" }} />,
-      accentColor: "#1a73e8",
-      iconBg: "#eff6ff",
+      icon: <MonetizationOnOutlined sx={{ fontSize: 22, color: "#04b46e" }} />,
+      accentColor: "#04b46e",
+      iconBg: "#f0fdf8",
     },
     {
       title: "Tổng số lượng CCDC",
       value: tongCCDC.toLocaleString("vi-VN"),
-      icon: <ConstructionOutlined sx={{ fontSize: 22, color: "#f59e0b" }} />,
-      accentColor: "#f59e0b",
-      iconBg: "#fffbeb",
+      icon: <ConstructionOutlined sx={{ fontSize: 22, color: "#04b46e" }} />,
+      accentColor: "#04b46e",
+      iconBg: "#f0fdf8",
     },
     {
       title: "Tổng giá trị CCDC",
       value: formatPrice(tongGiaTriCCDC),
       icon: (
-        <AccountBalanceWalletOutlined sx={{ fontSize: 22, color: "#8b5cf6" }} />
+          <AccountBalanceWalletOutlined sx={{ fontSize: 22, color: "#04b46e" }} />
       ),
-      accentColor: "#8b5cf6",
-      iconBg: "#faf5ff",
+      accentColor: "#04b46e",
+      iconBg: "#f0fdf8",
     },
   ];
+
 
   return (
     <Grid container spacing={2.5} sx={{ mb: 4 }}>
@@ -78,8 +79,8 @@ export default function SummaryCards({
               overflow: "hidden",
               transition: "box-shadow 0.2s, transform 0.2s",
               "&:hover": {
-                transform: "translateY(-2px)",
-                boxShadow: `0 8px 24px rgba(0,0,0,0.08)`,
+                transform: "translateY(-1x)",
+                boxShadow: `0 4px 12px rgba(0,0,0,0.08)`,
               },
             }}
           >

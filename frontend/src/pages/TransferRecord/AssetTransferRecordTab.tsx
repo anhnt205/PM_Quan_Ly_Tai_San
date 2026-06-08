@@ -267,7 +267,7 @@ export default function AssetTransferRecordTab() {
           overflow: "hidden",
           border: "1px solid",
           borderColor: "divider",
-          // height: "calc(100vh)",
+          height: "calc(100vh - 270px)",
         }}
       >
         <Grid
@@ -339,7 +339,7 @@ export default function AssetTransferRecordTab() {
             </Box>
 
             <Box sx={{ flex: 1, overflow: "hidden" }}>
-              <Box sx={{ height: "calc(100vh - 200px)", overflow: "hidden" }}>
+              <Box sx={{ height: "100%", overflow: "hidden" }}>
                 <SignDocumentForm
                   key={selectedRow?.id}
                   selectedIds={[selectedRow?.id]}

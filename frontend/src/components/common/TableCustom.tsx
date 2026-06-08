@@ -546,6 +546,25 @@ export default function TableCustom({
                     fullWidth
                     label="Tìm kiếm theo phòng ban..."
                     size="small"
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "10px",
+                        "& fieldset": {
+                          borderColor: "#1FA463",
+                        },
+                        "&:hover fieldset": {
+                          borderColor: "#1FA463",
+                        },
+                        "&.Mui-focused fieldset": {
+                          borderColor: "#1FA463",
+                        },
+                      },
+                      "& .MuiInputLabel-root": {
+                        "&.Mui-focused": {
+                          color: "#1FA463",
+                        },
+                      },
+                    }}
                   />
                 )}
               />

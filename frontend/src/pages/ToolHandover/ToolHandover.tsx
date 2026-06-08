@@ -9,6 +9,8 @@ import {
   Tab,
   Tabs,
   Tooltip,
+  ButtonBase,
+  Typography,
 } from "@mui/material";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import { useSearchParams } from "react-router-dom";
@@ -23,7 +25,7 @@ import {
 } from "./types";
 import { useToolHandoverMutation, useToolHandoverPageQuery } from "./Mutation";
 import { ClassOutlined, TableChart, VisibilityOff } from "@mui/icons-material";
-import { Edit, Eye, Trash2, ListPlus } from "lucide-react";
+import { Edit, Eye, Trash2, ListPlus, FileText, Truck } from "lucide-react";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
 import {
   showDownloadFile,
@@ -726,7 +728,166 @@ export default function ToolHandover() {
               <DraftIndicator onClick={() => setShowForm(true)} />
             )}
 
-            <Grid container spacing={2}>
+            <Grid
+              container
+              sx={{
+                border: "1px solid #e0e0e0",
+                borderRadius: "8px",
+                overflow: "hidden",
+              }}
+            >
+              {/* HÀNG 1: TABS - Luôn full width (size 12) */}
+              <Grid size={{ xs: 12 }}>
+                <Box
+                  sx={{
+                    width: "100%",
+                    overflowX: "auto",
+                    display: "flex",
+                    gap: 2,
+                    p: 2,
+                    bgcolor: "#f8fafc",
+                    borderBottom: "1px solid",
+                    borderColor: "divider",
+                    "&::-webkit-scrollbar": {
+                      height: "6px",
+                    },
+                    "&::-webkit-scrollbar-thumb": {
+                      bgcolor: "grey.300",
+                      borderRadius: "4px",
+                    },
+                    "&::-webkit-scrollbar-track": {
+                      bgcolor: "transparent",
+                    },
+                  }}
+                >
+                  {[
+                    {
+                      label: "Biên bản bàn giao",
+                      subLabel: "Bàn giao vật tư",
+                      icon: FileText,
+                      count: toolHandoverCount,
+                    },
+                    {
+                      label: "Quyết định điều động",
+                      subLabel: "Điều động thiết bị",
+                      icon: Truck,
+                      count: transferPage?.totalItems || 0,
+                    },
+                  ].map((t, idx) => {
+                    const IconComponent = t.icon;
+                    const isActive = activeTab === idx;
+
+                    return (
+                      <ButtonBase
+                        key={idx}
+                        onClick={() => {
+                          setActiveTab(idx);
+                          handleClose();
+                        }}
+                        focusRipple
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "flex-start",
+                          justifyContent: "space-between",
+                          minWidth: 175,
+                          flex: "1 0 175px",
+                          height: 110,
+                          p: 2,
+                          borderRadius: "14px",
+                          textAlign: "left",
+                          position: "relative",
+                          overflow: "hidden",
+                          transition: "all 0.2s ease",
+                          border: "1px solid",
+                          borderColor: isActive
+                            ? "transparent"
+                            : "rgba(148, 163, 184, 0.25)",
+                          background: isActive
+                            ? "linear-gradient(135deg, #04b46e 0%, #028a54 100%)"
+                            : "#ffffff",
+                          color: isActive ? "#ffffff" : "#334155",
+                          boxShadow: isActive
+                            ? "0 4px 12px rgba(4, 180, 110, 0.15)"
+                            : "0 2px 4px rgba(0, 0, 0, 0.05)",
+                          "&:hover": {
+                            borderColor: isActive ? "transparent" : "#04b46e",
+                            bgcolor: isActive ? undefined : "rgba(4, 180, 110, 0.04)",
+                          },
+                        }}
+                      >
+                        {/* Top Row: Icon and Badge */}
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            width: "100%",
+                            mb: 1.5,
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              width: 36,
+                              height: 36,
+                              borderRadius: "10px",
+                              bgcolor: isActive
+                                ? "rgba(255, 255, 255, 0.18)"
+                                : "rgba(4, 180, 110, 0.08)",
+                              color: isActive ? "#ffffff" : "#04b46e",
+                              transition: "all 0.25s ease",
+                            }}
+                          >
+                            <IconComponent size={20} />
+                          </Box>
+                          {t.count > 0 && (
+                            <Badge
+                              badgeContent={t.count}
+                              color="error"
+                              sx={{
+                                "& .MuiBadge-badge": {
+                                  position: "static",
+                                  transform: "none",
+                                },
+                              }}
+                            />
+                          )}
+                        </Box>
+
+                        {/* Bottom: Labels */}
+                        <Box sx={{ width: "100%" }}>
+                          <Typography
+                            sx={{
+                              fontSize: 13,
+                              fontWeight: 700,
+                              lineHeight: 1.3,
+                              color: "inherit",
+                              mb: 0.25,
+                            }}
+                          >
+                            {t.label}
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontSize: 11,
+                              lineHeight: 1.3,
+                              color: isActive ? "rgba(255,255,255,0.75)" : "#94a3b8",
+                              fontWeight: 400,
+                            }}
+                          >
+                            {t.subLabel}
+                          </Typography>
+                        </Box>
+                      </ButtonBase>
+                    );
+                  })}
+                </Box>
+              </Grid>
+
+              {/* HÀNG 2: BẢNG */}
               <Grid
                 size={{
                   xs: showSidebar && sidebarMode === "document" ? 6 : 12,
@@ -741,49 +902,6 @@ export default function ToolHandover() {
                   overflow: "hidden",
                 }}
               >
-                <Box
-                  sx={{
-                    borderBottom: 1,
-                    borderColor: "divider",
-                    bgcolor: "#fff",
-                    display: "flex",
-                    justifyContent: "flex-end",
-                  }}
-                >
-                  <Tabs
-                    value={activeTab}
-                    onChange={handleTabChange}
-                    sx={{
-                      "& .MuiTab-root": {
-                        textTransform: "none",
-                        fontWeight: "bold",
-                        minHeight: "64px",
-                      },
-                    }}
-                  >
-                    <Tab
-                      icon={
-                        <Badge badgeContent={toolHandoverCount} color="error">
-                          <ClassOutlined />
-                        </Badge>
-                      }
-                      label="Biên bản bàn giao"
-                      iconPosition="top"
-                    />
-                    <Tab
-                      icon={
-                        <Badge
-                          badgeContent={transferPage?.totalItems}
-                          color="error"
-                        >
-                          <TableChart />
-                        </Badge>
-                      }
-                      label="Quyết định điều động"
-                      iconPosition="top"
-                    />
-                  </Tabs>
-                </Box>
 
                 <TableCustom
                   tableId="toolHandover"

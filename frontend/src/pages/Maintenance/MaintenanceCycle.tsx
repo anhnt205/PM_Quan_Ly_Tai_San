@@ -4,8 +4,8 @@ import {
   Card,
   CardContent,
   Chip,
-  Tabs,
-  Tab,
+  ButtonBase,
+  Typography,
 } from "@mui/material";
 import {
   LoopOutlined, // icon cho "Chu kỳ theo nhóm"
@@ -28,11 +28,7 @@ const historyStatusConfig: Record<
   "0": { label: "Đang bảo trì", color: "warning" },
 };
 
-// ── Tab configs — giống pattern MaintenanceRecordPage ────
-const tabConfigs = [
-  { label: "Chu kỳ theo tài sản", icon: <LoopOutlined /> },
-  { label: "Lịch sử bảo dưỡng", icon: <HistoryOutlined /> },
-];
+
 
 // ── Component chính ──────────────────────────────────────
 export default function MaintenanceCycles() {
@@ -171,7 +167,7 @@ export default function MaintenanceCycles() {
   ];
 
   // reset khi đổi tab
-  const handleTabChange = (_: any, val: number) => {
+  const handleTabChange = (val: number) => {
     setActiveTab(val);
     setSearchValue("");
     setStatusFilter("");
@@ -194,28 +190,124 @@ export default function MaintenanceCycles() {
           {/* ── Tabs ── */}
           <Box
             sx={{
-              borderBottom: 1,
-              borderColor: "divider",
-              bgcolor: "background.paper",
+              width: "100%",
+              overflowX: "auto",
               display: "flex",
-              justifyContent: "flex-end",
+              gap: 2,
+              p: 2,
+              bgcolor: "#f8fafc",
+              borderBottom: "1px solid",
+              borderColor: "divider",
+              "&::-webkit-scrollbar": {
+                height: "6px",
+              },
+              "&::-webkit-scrollbar-thumb": {
+                bgcolor: "grey.300",
+                borderRadius: "4px",
+              },
+              "&::-webkit-scrollbar-track": {
+                bgcolor: "transparent",
+              },
             }}
           >
-            <Tabs
-              value={activeTab}
-              onChange={handleTabChange}
-              sx={{
-                "& .MuiTab-root": {
-                  textTransform: "none",
-                  fontWeight: "bold",
-                  minHeight: 64,
-                },
-              }}
-            >
-              {tabConfigs.map((t, i) => (
-                <Tab key={i} iconPosition="top" icon={t.icon} label={t.label} />
-              ))}
-            </Tabs>
+            {[
+              {
+                label: "Chu kỳ theo tài sản",
+                subLabel: "Quản lý chu kỳ bảo dưỡng",
+                icon: LoopOutlined,
+              },
+              {
+                label: "Lịch sử bảo dưỡng",
+                subLabel: "Lịch sử bảo dưỡng ",
+                icon: HistoryOutlined,
+              },
+            ].map((t, idx) => {
+              const IconComponent = t.icon;
+              const isActive = activeTab === idx;
+
+              return (
+                <ButtonBase
+                  key={idx}
+                  onClick={() => handleTabChange(idx)}
+                  focusRipple
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-start",
+                    justifyContent: "space-between",
+                    minWidth: 175,
+                    flex: "1 0 175px",
+                    height: 110,
+                    p: 2,
+                    borderRadius: "14px",
+                    textAlign: "left",
+                    position: "relative",
+                    overflow: "hidden",
+                    transition: "all 0.2s ease",
+                    border: "1px solid",
+                    borderColor: isActive
+                      ? "transparent"
+                      : "rgba(148, 163, 184, 0.25)",
+                    background: isActive
+                      ? "linear-gradient(135deg, #04b46e 0%, #028a54 100%)"
+                      : "#ffffff",
+                    color: isActive ? "#ffffff" : "#334155",
+                    boxShadow: isActive
+                      ? "0 4px 12px rgba(4, 180, 110, 0.15)"
+                      : "0 2px 4px rgba(0, 0, 0, 0.05)",
+                    "&:hover": {
+                      borderColor: isActive ? "transparent" : "#04b46e",
+                      bgcolor: isActive ? undefined : "rgba(4, 180, 110, 0.04)",
+                    },
+                  }}
+                >
+                  {/* Top Row: Icon */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 36,
+                      height: 36,
+                      borderRadius: "10px",
+                      bgcolor: isActive
+                        ? "rgba(255, 255, 255, 0.18)"
+                        : "rgba(4, 180, 110, 0.08)",
+                      color: isActive ? "#ffffff" : "#04b46e",
+                      transition: "all 0.25s ease",
+                      mb: 1.5,
+                    }}
+                  >
+                    <IconComponent sx={{ fontSize: 20 }} />
+                  </Box>
+
+                  {/* Bottom: Labels */}
+                  <Box sx={{ width: "100%" }}>
+                    <Typography
+                      sx={{
+                        fontSize: 13,
+                        fontWeight: 700,
+                        lineHeight: 1.3,
+                        color: "inherit",
+                        mb: 0.25,
+                      }}
+                    >
+                      {t.label}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontSize: 11,
+                        lineHeight: 1.3,
+                        color: isActive ? "rgba(255,255,255,0.75)" : "#94a3b8",
+                        fontWeight: 400,
+                      }}
+                    >
+                      {t.subLabel}
+                    </Typography>
+                  </Box>
+                </ButtonBase>
+              );
+            })}
           </Box>
 
           {/* ── Nội dung theo tab ── */}

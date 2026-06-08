@@ -248,6 +248,7 @@ export default function AssetApprovalTab() {
           border: "1px solid #e0e0e0",
           borderRadius: "8px",
           overflow: "hidden",
+          height: "calc(100vh - 220px)",
         }}
       >
         <Grid
@@ -343,7 +344,7 @@ export default function AssetApprovalTab() {
 
             <Box sx={{ flex: 1, overflow: "hidden" }}>
               {tabValue === 0 ? (
-                <Box sx={{ height: "calc(100vh - 200px)", overflow: "hidden" }}>
+                <Box sx={{ height: "100%", overflow: "hidden" }}>
                   <SignDocumentForm
                     key={selectedRow?.id}
                     selectedIds={[selectedRow?.id]}
@@ -362,7 +363,7 @@ export default function AssetApprovalTab() {
                   />
                 </Box>
               ) : (
-                <Box sx={{ height: "calc(100vh - 200px)", overflow: "hidden" }}>
+                <Box sx={{ height: "100%", overflow: "hidden" }}>
                   <SignerSidebar
                     key={selectedRow?.id}
                     selectedRow={selectedRow}
