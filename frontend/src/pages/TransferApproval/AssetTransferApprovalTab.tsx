@@ -38,7 +38,6 @@ interface AssetTransferApprovalTabProps {
 export default function AssetTransferApprovalTab({
   assetTransferCounts,
 }: AssetTransferApprovalTabProps) {
-  console.log("assetTransferCounts", assetTransferCounts);
   const [subTab, setSubTab] = useState(0); // 0: Cấp phát, 1: Điều chuyển, 2: Thu hồi
   const [paginationModel, setPaginationModel] = useState({
     page: 0,

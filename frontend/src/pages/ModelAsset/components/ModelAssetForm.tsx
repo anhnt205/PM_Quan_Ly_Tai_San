@@ -83,11 +83,6 @@ export default function ModelAssetForm({
     },
   });
 
-  const debouncedValues = useDebounce(formik.values, 800);
-  useEffect(() => {
-    onFormChange?.(debouncedValues);
-  }, [debouncedValues]);
-
   const phuongPhapOptions = [
     { value: 1, label: "Đường thẳng" },
     { value: 0, label: "Khác" },
@@ -102,11 +97,6 @@ export default function ModelAssetForm({
 
   // Bulk state
   const [localBulkItems, setLocalBulkItems] = useState<any[]>(bulkItems ?? []);
-
-  const debouncedBulkItems = useDebounce(localBulkItems, 600);
-  useEffect(() => {
-    onBulkItemsChange?.(debouncedBulkItems);
-  }, [debouncedBulkItems]);
 
   useEffect(() => {
     if (
@@ -156,6 +146,7 @@ export default function ModelAssetForm({
     const updated = [...localBulkItems];
     updated[index] = { ...updated[index], [field]: value };
     setLocalBulkItems(updated);
+    onBulkItemsChange?.(updated);
   };
 
   const validateBulkItems = async () => {
@@ -396,35 +387,29 @@ export default function ModelAssetForm({
           ))}
         </Box>
 
-        {/* Add button */}
-        <Button
-          variant="outlined"
-          startIcon={<Add />}
-          onClick={handleAddItem}
-          sx={{
-            alignSelf: "flex-start",
-            textTransform: "none",
-            borderColor: "#1FA463",
-            color: "#1FA463",
-            "&:hover": {
-              borderColor: "#1FA463",
-              backgroundColor: "rgba(31, 164, 99, 0.04)",
-            },
-          }}
-        >
-          Thêm item
-        </Button>
-
-        {/* Footer */}
         <Box
           display="flex"
-          justifyContent="flex-end"
-          gap={2}
+          justifyContent="space-between"
+          alignItems="center"
           pt={2.5}
           sx={{ borderTop: "1px solid #f1f5f9" }}
         >
-          <CancelBtn onClick={onCancel} />
-          <SaveBtn onSave={handleBulkSave} />
+          <Button
+            variant="outlined"
+            startIcon={<Add />}
+            onClick={handleAddItem}
+            sx={{
+              bgcolor: "#1FA463",
+              color: "#fff",
+              "&:hover": { bgcolor: "#178a52" },
+            }}
+          >
+            Thêm dòng mới
+          </Button>
+          <Box display="flex" gap={2}>
+            <CancelBtn onClick={onCancel} />
+            <SaveBtn onSave={handleBulkSave} />
+          </Box>
         </Box>
       </Box>
     );

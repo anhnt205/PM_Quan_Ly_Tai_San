@@ -476,7 +476,6 @@ export const canSign = (items: any[], user?: any): boolean => {
 
   const item = items[0];
   const signatureFlow = buildSignatureFlow(item);
-  console.log("signatureFlow:", signatureFlow);
 
   const currentIndex = signatureFlow.findIndex(
     (s) => s.id === user?.taiKhoan?.tenDangNhap,
@@ -518,7 +517,6 @@ export const generateBienBanKeHoachPdf = async (
     departments,
     positions,
   );
-  console.log("listSigneInfos:", listSigneInfos);
   const doc = new jsPDF("l", "mm", "a4");
 
   doc.setFont("times_new_roman", "bold");

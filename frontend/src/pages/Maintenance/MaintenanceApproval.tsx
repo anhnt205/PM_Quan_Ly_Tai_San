@@ -1537,7 +1537,6 @@ export default function MaintenanceApprovalPage() {
                   showStatusFilter={false}
                   canSign={(items) => items.length >= 1}
                   handleSignDocuments={(items) => {
-                    console.log("items", items);
                     signBatch.openModal(items);
                   }}
                   onSign={() => {}}

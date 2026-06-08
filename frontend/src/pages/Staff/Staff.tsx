@@ -142,7 +142,6 @@ export default function Staff() {
     } else {
       createManyMutation.mutate(items);
     }
-    console.log("Saved items:", items);
     setShowBulkForm(false);
     setBulkItems([]);
     setSelectedIds([]);

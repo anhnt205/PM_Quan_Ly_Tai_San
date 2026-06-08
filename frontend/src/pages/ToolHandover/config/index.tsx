@@ -566,16 +566,12 @@ export const generateBienBanPdf = async (
   departments: any[],
   positions: any[],
 ): Promise<Uint8Array> => {
-  console.log(">>> CHECK toolHandover inside PDF:", toolHandover);
-  console.log(">>> CHECK allUnits:", allUnits);
-
   const listSigneInfos: any[] = await listSigneInfo(
     toolHandover,
     staffs,
     departments,
     positions,
   );
-  console.log(">>> CHECK listSigneInfos:", listSigneInfos);
 
   const doc = new jsPDF("p", "mm", "a4");
 

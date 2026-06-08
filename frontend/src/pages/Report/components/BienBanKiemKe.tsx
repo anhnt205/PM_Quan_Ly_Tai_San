@@ -327,7 +327,6 @@ export default function BienBanKiemKe({ title }: { title?: string }) {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "e") {
         e.preventDefault();
-        console.log("Ctrl+E pressed -> trigger export");
         handleExport();
       }
     };

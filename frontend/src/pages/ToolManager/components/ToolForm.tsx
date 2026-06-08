@@ -100,7 +100,6 @@ export default function ToolForm({
     },
     validationSchema: ToolValidation,
     onSubmit(values) {
-      console.log(values);
       onSave({
         ...values,
         // Đảm bảo số lượng tổng của CCDC cũng là số

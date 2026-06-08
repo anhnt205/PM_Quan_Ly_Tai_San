@@ -118,9 +118,7 @@ export default function BienBanDialog({
           setLoading(false);
           return;
         }
-        console.log("Đang tải PDF từ URL:", pdfUrl);
         const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
-        console.log("PDF tải thành công, số trang:", pdf.numPages);
         const canvases: HTMLCanvasElement[] = [];
 
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {

@@ -19,9 +19,10 @@ import CustomProgress from "../loading/CustomProgress";
 import ImportSignatureModal from "./ImportSignatureModal";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
-import { addTab, removeTab, setActiveTab } from "../../redux/tabsSlice";
+import { addTab, clearTabLimited, removeTab, setActiveTab } from "../../redux/tabsSlice";
 import { useLocation, useNavigate } from "react-router-dom";
 import React from "react";
+import { showTabLimitAlert } from "../Alert";
 
 interface Props {
   loading?: boolean;
@@ -54,7 +55,7 @@ export default function PageAction({
   const dispatch = useDispatch();
   const location = useLocation();
   const navigate = useNavigate();
-  const { tabs } = useSelector((state: RootState) => state.tabs);
+  const { tabs, isTabLimited, activeTab } = useSelector((state: RootState) => state.tabs);
 
   const [openSignatureModal, setOpenSignatureModal] = useState(false);
 
@@ -90,6 +91,14 @@ export default function PageAction({
     setAnchorElExtra(null);
     if (onSyncDb) onSyncDb();
   };
+
+  useEffect(() => {
+    if (isTabLimited) {
+      showTabLimitAlert();
+      dispatch(clearTabLimited());
+      navigate(activeTab || "/");
+    }
+  }, [isTabLimited]);
 
   return (
     <Box

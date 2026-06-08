@@ -35,7 +35,6 @@ export const showConfirmAlert = (message = "Bạn có chắc chắn không?") =>
   });
 };
 
-
 export const confirmPin = async (): Promise<string | null> => {
   const { value } = await Swal.fire({
     title: "Xác nhận mã Pin",
@@ -97,4 +96,16 @@ export const confirmPin = async (): Promise<string | null> => {
   });
 
   return value ?? null;
+};
+
+export const showTabLimitAlert = () => {
+  return Swal.fire({
+    title: "Đã đạt giới hạn tab!",
+    text: "Bạn đang mở tối đa 7 tabs. Vui lòng đóng bớt tab trước khi mở tab mới.",
+    icon: "warning",
+    confirmButtonText: "Đã hiểu",
+    timer: 3000,
+    timerProgressBar: true,
+    showConfirmButton: false,
+  });
 };

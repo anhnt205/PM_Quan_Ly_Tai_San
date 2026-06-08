@@ -53,7 +53,6 @@ export default function MauSo01({ title }: { title?: string }) {
         setOpenSnackbar(true);
         return;
       }
-      console.log("Lấy dữ liệu báo cáo:", values);
       setFetchKey((k) => k + 1);
     },
   });
@@ -79,13 +78,6 @@ export default function MauSo01({ title }: { title?: string }) {
       setOpenSnackbar(true);
       return;
     }
-
-    console.log("Export MauSo01 data", {
-      tsRowsLen: data.tsRows?.length,
-      ccdcRowsLen: data.ccdcRows?.length,
-      rowsLen: data.rows?.length,
-      tableRowsLen: data.tableRows?.length,
-    });
 
     const border = {
       top: { style: "thin" },

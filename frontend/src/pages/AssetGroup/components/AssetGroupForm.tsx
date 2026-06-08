@@ -1,7 +1,5 @@
 import {
   InfoOutlineRounded,
-  ArrowDropUp,
-  ArrowDropDown,
   Remove,
   Close,
   ContentCopy,
@@ -9,9 +7,6 @@ import {
   Add,
 } from "@mui/icons-material";
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Box,
   Grid,
   IconButton,
@@ -22,16 +17,14 @@ import {
   TextField,
   Autocomplete,
 } from "@mui/material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback, memo } from "react";
 import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
 import FieldInput from "../../../components/TextField/FieldInput";
 import { useFormik } from "formik";
-import ViewBtn from "../../../components/Button/ViewBtn";
 import { AssetGroupValidation } from "../validation/Validation";
 import EditButton from "../../../components/Button/EditButton";
 import { CongTy } from "../../../utils/const";
-import { useDebounce } from "../../../hooks/useDebounce";
 import { useLyLichQuery } from "../Mutation";
 import { LyLichType } from "../types";
 
@@ -70,19 +63,52 @@ export default function AssetGroupForm({
   onBulkItemsChange?: (items: BulkItem[]) => void;
   bulkEditType?: "create" | "edit";
 }) {
-  const [expanded, setExpanded] = useState(true);
   const [localBulkItems, setLocalBulkItems] = useState<BulkItem[]>(bulkItems);
-  const debouncedBulkItems = useDebounce(localBulkItems, 600);
   const { data: lyLichList = [] } = useLyLichQuery();
+
+  // Refs để giữ giá trị mới nhất mà không cần sync lên parent liên tục
+  const latestBulkItemsRef = useRef<BulkItem[]>(localBulkItems);
+  const latestSingleValuesRef = useRef<Record<string, any>>({});
+
   const normalizeBulkItems = (items: BulkItem[]): BulkItem[] =>
     items.map((item) => ({
       ...item,
       idCongTy: item.idCongTy || CongTy.CT001,
     }));
 
+  // Sync ref khi localBulkItems thay đổi (không gọi parent)
   useEffect(() => {
-    onBulkItemsChange?.(debouncedBulkItems);
-  }, [debouncedBulkItems]);
+    latestBulkItemsRef.current = localBulkItems;
+  }, [localBulkItems]);
+
+  // Flush lên parent (redux) — chỉ gọi khi minimize hoặc outside click
+  const flushToParent = useCallback(() => {
+    if (isBulkMode) {
+      onBulkItemsChange?.(latestBulkItemsRef.current);
+    } else {
+      onFormChange?.(latestSingleValuesRef.current);
+    }
+  }, [isBulkMode, onBulkItemsChange, onFormChange]);
+
+  const handleMinimize = useCallback(() => {
+    flushToParent();
+    onMinimize();
+  }, [flushToParent, onMinimize]);
+
+  // Click outside để flush
+  const containerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        flushToParent();
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [flushToParent]);
 
   // Single mode formik
   const formik = useFormik({
@@ -98,14 +124,13 @@ export default function AssetGroupForm({
     },
   });
 
-  const debouncedValues = useDebounce(formik.values, 800);
+  // Sync formik values vào ref (không gọi parent)
   useEffect(() => {
-    onFormChange?.(debouncedValues);
-  }, [debouncedValues]);
+    latestSingleValuesRef.current = formik.values;
+  }, [formik.values]);
 
   useEffect(() => {
     if (selectedAssetGroup) {
-      // Extract idLyLich from lyLich object if not present
       const values = {
         ...selectedAssetGroup,
         idLyLich:
@@ -123,83 +148,74 @@ export default function AssetGroupForm({
   }, []);
 
   const validateBulkItems = async () => {
-    const updatedItems = localBulkItems.map((item) => ({ ...item }));
-    let hasError = false;
+    // Dùng Promise.all thay vì await tuần tự
+    const results = await Promise.all(
+      localBulkItems.map(async (item) => {
+        try {
+          await AssetGroupValidation.validate(item);
+          return { ...item, errors: undefined };
+        } catch (error: any) {
+          return { ...item, errors: { [error.path]: error.message } };
+        }
+      }),
+    );
 
-    for (let i = 0; i < updatedItems.length; i++) {
-      try {
-        await AssetGroupValidation.validate(updatedItems[i]);
-        updatedItems[i].errors = undefined;
-      } catch (error: any) {
-        hasError = true;
-        updatedItems[i].errors = {
-          [error.path]: error.message,
-        };
-      }
-    }
-
-    setLocalBulkItems(updatedItems);
-    onBulkItemsChange?.(updatedItems);
-    return { hasError, items: updatedItems };
+    const hasError = results.some((item) => !!item.errors);
+    setLocalBulkItems(results);
+    latestBulkItemsRef.current = results;
+    return { hasError, items: results };
   };
 
   const handleBulkSave = async () => {
-    const { hasError } = await validateBulkItems();
-    if (hasError) {
-      return;
-    }
-    onSave(localBulkItems);
+    const { hasError, items } = await validateBulkItems();
+    if (hasError) return;
+    onSave(items);
   };
 
-  const handleAddItem = () => {
+  const handleAddItem = useCallback(() => {
     const newItem: BulkItem = {
       id: "",
       tenNhom: "",
       idCongTy: CongTy.CT001,
       idLyLich: "",
     };
-    const updatedItems = [...localBulkItems, newItem];
-    setLocalBulkItems(updatedItems);
-  };
+    setLocalBulkItems((prev) => [...prev, newItem]);
+  }, []);
 
-  const handleCopyItem = (index: number) => {
-    const itemToCopy = localBulkItems[index];
-    const newItem: BulkItem = {
-      ...itemToCopy,
-      id: "",
-    };
-    const updatedItems = [
-      ...localBulkItems.slice(0, index + 1),
-      newItem,
-      ...localBulkItems.slice(index + 1),
-    ];
-    setLocalBulkItems(updatedItems);
-  };
-
-  const handleDeleteItem = (index: number) => {
-    if (localBulkItems.length === 1) return;
-    const updatedItems = localBulkItems.filter((_, i) => i !== index);
-    setLocalBulkItems(updatedItems);
-  };
-
-  const handleBulkItemChange = (
-    index: number,
-    field: string,
-    value: string,
-  ) => {
-    const updatedItems = localBulkItems.map((item, i) => {
-      if (i !== index) return item;
-      const updated = { ...item, [field]: value };
-      if (!updated.idCongTy) updated.idCongTy = CongTy.CT001;
-      return updated;
+  const handleCopyItem = useCallback((index: number) => {
+    setLocalBulkItems((prev) => {
+      const itemToCopy = prev[index];
+      const newItem: BulkItem = { ...itemToCopy, id: "" };
+      return [...prev.slice(0, index + 1), newItem, ...prev.slice(index + 1)];
     });
-    setLocalBulkItems(updatedItems);
-  };
+  }, []);
+
+  const handleDeleteItem = useCallback((index: number) => {
+    setLocalBulkItems((prev) => {
+      if (prev.length === 1) return prev;
+      return prev.filter((_, i) => i !== index);
+    });
+  }, []);
+
+  const handleBulkItemChange = useCallback(
+    (index: number, field: string, value: string) => {
+      setLocalBulkItems((prev) =>
+        prev.map((item, i) => {
+          if (i !== index) return item;
+          const updated = { ...item, [field]: value };
+          if (!updated.idCongTy) updated.idCongTy = CongTy.CT001;
+          return updated;
+        }),
+      );
+    },
+    [],
+  );
 
   // Render single mode
   if (!isBulkMode) {
     return (
       <Box
+        ref={containerRef}
         sx={{
           bgcolor: "#ffffff",
           p: 4,
@@ -222,7 +238,7 @@ export default function AssetGroupForm({
             Chi tiết nhóm tài sản
           </Typography>
           <Box display="flex" gap={0.5}>
-            <IconButton size="small" onClick={onMinimize} title="Ẩn tạm">
+            <IconButton size="small" onClick={handleMinimize} title="Ẩn tạm">
               <Remove fontSize="small" />
             </IconButton>
             <IconButton size="small" onClick={onCancel} title="Đóng">
@@ -265,7 +281,7 @@ export default function AssetGroupForm({
                     (item: LyLichType) => item.id === formik.values.idLyLich,
                   ) || null
                 }
-                onChange={(event, newValue) => {
+                onChange={(_, newValue) => {
                   formik.setFieldValue("idLyLich", newValue?.id || "");
                 }}
                 disabled={readOnly}
@@ -301,12 +317,15 @@ export default function AssetGroupForm({
   // Render bulk mode
   return (
     <Box
+      ref={containerRef}
       sx={{
         bgcolor: "#ffffff",
         p: 4,
         display: "flex",
         flexDirection: "column",
         gap: 3,
+        flex: 1,
+        overflow: "hidden",
       }}
     >
       {/* Header */}
@@ -325,7 +344,7 @@ export default function AssetGroupForm({
             : `Sửa hàng loạt nhóm tài sản (${localBulkItems.length})`}
         </Typography>
         <Box display="flex" gap={0.5}>
-          <IconButton size="small" onClick={onMinimize} title="Ẩn tạm">
+          <IconButton size="small" onClick={handleMinimize} title="Ẩn tạm">
             <Remove fontSize="small" />
           </IconButton>
           <IconButton size="small" onClick={onCancel} title="Đóng">
@@ -340,132 +359,158 @@ export default function AssetGroupForm({
           display: "flex",
           flexDirection: "column",
           gap: 2,
-          maxHeight: "60vh",
+          flex: 1,
+          minHeight: 0,
           overflowY: "auto",
+          pr: 0.5,
         }}
       >
         {localBulkItems.map((item, index) => (
-          <Card
+          <BulkItemCard
             key={index}
-            sx={{
-              p: 2,
-              borderRadius: "12px",
-              border: item.errors ? "1px solid #d32f2f" : "1px solid #e0e0e0",
-              backgroundColor: item.errors ? "#ffebee" : "#ffffff",
-            }}
-          >
-            {/* Item Header */}
-            <Box
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-              mb={2}
-            >
-              <Typography sx={{ fontWeight: 600, color: "#1FA463" }}>
-                Item {index + 1}
-              </Typography>
-              <Box display="flex" gap={1}>
-                <IconButton
-                  size="small"
-                  onClick={() => handleCopyItem(index)}
-                  title="Sao chép"
-                >
-                  <ContentCopy fontSize="small" color="primary" />
-                </IconButton>
-                {localBulkItems.length > 1 && (
-                  <IconButton
-                    size="small"
-                    onClick={() => handleDeleteItem(index)}
-                    title="Xóa"
-                  >
-                    <Delete fontSize="small" color="error" />
-                  </IconButton>
-                )}
-              </Box>
-            </Box>
-
-            {/* Item Fields */}
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 6 }}>
-                <TextField
-                  fullWidth
-                  label="Mã nhóm tài sản *"
-                  value={item.id}
-                  onChange={(e) =>
-                    handleBulkItemChange(index, "id", e.target.value)
-                  }
-                  disabled={bulkEditType === "edit"}
-                  error={!!item.errors?.id}
-                  helperText={item.errors?.id}
-                  size="small"
-                />
-              </Grid>
-              <Grid size={{ xs: 6 }}>
-                <TextField
-                  fullWidth
-                  label="Tên nhóm tài sản *"
-                  value={item.tenNhom}
-                  onChange={(e) =>
-                    handleBulkItemChange(index, "tenNhom", e.target.value)
-                  }
-                  error={!!item.errors?.tenNhom}
-                  helperText={item.errors?.tenNhom}
-                  size="small"
-                />
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <Autocomplete
-                  options={lyLichList}
-                  getOptionLabel={(option: any) => option?.tenLyLich || ""}
-                  value={
-                    lyLichList.find(
-                      (lyLich: LyLichType) => lyLich.id === item.idLyLich,
-                    ) || null
-                  }
-                  onChange={(event, newValue) => {
-                    handleBulkItemChange(index, "idLyLich", newValue?.id || "");
-                  }}
-                  size="small"
-                  renderInput={(params) => (
-                    <TextField {...params} label="Chọn lý lịch" size="small" />
-                  )}
-                />
-              </Grid>
-            </Grid>
-          </Card>
+            item={item}
+            index={index}
+            lyLichList={lyLichList}
+            bulkEditType={bulkEditType}
+            totalItems={localBulkItems.length}
+            onCopy={handleCopyItem}
+            onDelete={handleDeleteItem}
+            onChange={handleBulkItemChange}
+          />
         ))}
       </Box>
-
-      {/* Add Item Button */}
-      <Button
-        variant="outlined"
-        startIcon={<Add />}
-        onClick={handleAddItem}
-        sx={{
-          alignSelf: "flex-start",
-          textTransform: "none",
-          borderColor: "#1FA463",
-          color: "#1FA463",
-          "&:hover": {
-            borderColor: "#1FA463",
-            backgroundColor: "rgba(31, 164, 99, 0.04)",
-          },
-        }}
-      >
-        Thêm item
-      </Button>
 
       {/* Footer */}
       <Box
         display="flex"
-        justifyContent="flex-end"
-        gap={2}
+        justifyContent="space-between"
+        alignItems="center"
         pt={2.5}
         sx={{ borderTop: "1px solid #f1f5f9" }}
       >
-        <CancelBtn onClick={onCancel} />
-        <SaveBtn onSave={handleBulkSave} />
+        <Button
+          variant="outlined"
+          startIcon={<Add />}
+          onClick={handleAddItem}
+          sx={{
+            bgcolor: "#1FA463",
+            color: "#fff",
+            "&:hover": { bgcolor: "#178a52" },
+          }}
+        >
+          Thêm dòng mới
+        </Button>
+        <Box display="flex" gap={2}>
+          <CancelBtn onClick={onCancel} />
+          <SaveBtn onSave={handleBulkSave} />
+        </Box>
       </Box>
     </Box>
   );
 }
+
+// Tách BulkItemCard ra component riêng + memo để tránh re-render toàn bộ list
+const BulkItemCard = memo(function BulkItemCard({
+  item,
+  index,
+  lyLichList,
+  bulkEditType,
+  totalItems,
+  onCopy,
+  onDelete,
+  onChange,
+}: {
+  item: BulkItem;
+  index: number;
+  lyLichList: LyLichType[];
+  bulkEditType: "create" | "edit";
+  totalItems: number;
+  onCopy: (index: number) => void;
+  onDelete: (index: number) => void;
+  onChange: (index: number, field: string, value: string) => void;
+}) {
+  return (
+    <Card
+      sx={{
+        p: 2,
+        flexShrink: 0,
+        borderRadius: "12px",
+        border: item.errors ? "1px solid #d32f2f" : "1px solid #e0e0e0",
+        backgroundColor: item.errors ? "#ffebee" : "#ffffff",
+      }}
+    >
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
+        <Typography sx={{ fontWeight: 600, color: "#1FA463" }}>
+          Item {index + 1}
+        </Typography>
+        <Box display="flex" gap={1}>
+          <IconButton
+            size="small"
+            onClick={() => onCopy(index)}
+            title="Sao chép"
+          >
+            <ContentCopy fontSize="small" color="primary" />
+          </IconButton>
+          {totalItems > 1 && (
+            <IconButton
+              size="small"
+              onClick={() => onDelete(index)}
+              title="Xóa"
+            >
+              <Delete fontSize="small" color="error" />
+            </IconButton>
+          )}
+        </Box>
+      </Box>
+
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 6 }}>
+          <TextField
+            fullWidth
+            label="Mã nhóm tài sản *"
+            value={item.id}
+            onChange={(e) => onChange(index, "id", e.target.value)}
+            disabled={bulkEditType === "edit"}
+            error={!!item.errors?.id}
+            helperText={item.errors?.id}
+            size="small"
+          />
+        </Grid>
+        <Grid size={{ xs: 6 }}>
+          <TextField
+            fullWidth
+            label="Tên nhóm tài sản *"
+            value={item.tenNhom}
+            onChange={(e) => onChange(index, "tenNhom", e.target.value)}
+            error={!!item.errors?.tenNhom}
+            helperText={item.errors?.tenNhom}
+            size="small"
+          />
+        </Grid>
+        <Grid size={{ xs: 12 }}>
+          <Autocomplete
+            options={lyLichList}
+            getOptionLabel={(option: any) => option?.tenLyLich || ""}
+            value={
+              lyLichList.find(
+                (lyLich: LyLichType) => lyLich.id === item.idLyLich,
+              ) || null
+            }
+            onChange={(_, newValue) => {
+              onChange(index, "idLyLich", newValue?.id || "");
+            }}
+            size="small"
+            renderInput={(params) => (
+              <TextField {...params} label="Chọn lý lịch" size="small" />
+            )}
+          />
+        </Grid>
+      </Grid>
+    </Card>
+  );
+});

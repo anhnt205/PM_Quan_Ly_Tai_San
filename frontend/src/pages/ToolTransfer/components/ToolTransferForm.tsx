@@ -1,7 +1,4 @@
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Box,
   Button,
   Checkbox,
@@ -17,12 +14,15 @@ import {
   styled,
 } from "@mui/material";
 import { useFormik } from "formik";
-import { useEffect, useMemo, useState } from "react";
-import ViewBtn from "../../../components/Button/ViewBtn";
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useState,
+} from "react";
 import {
   Add,
-  ArrowDropDown,
-  ArrowDropUp,
   Delete,
   Cancel,
   Visibility,
@@ -81,28 +81,29 @@ interface ToolTransferFormProps {
   onMinimize: () => void;
 }
 
-export default function ToolTransferForm({
-  onEdit,
-  onClose,
-  selectedTool,
-  readOnly,
-  type,
-  onSave,
-  onCancel,
-  label,
-  isSignedForm = false,
-  departments,
-  allUnits,
-  initialFormData,
-  onFormChange,
-  onMinimize,
-}: ToolTransferFormProps) {
+export default forwardRef(function ToolTransferForm(
+  {
+    onEdit,
+    onClose,
+    selectedTool,
+    readOnly,
+    type,
+    onSave,
+    onCancel,
+    label,
+    isSignedForm = false,
+    departments,
+    allUnits,
+    initialFormData,
+    onFormChange,
+    onMinimize,
+  }: ToolTransferFormProps,
+  ref: any,
+) {
   const { user } = useSelector((state: RootState) => state.user);
   const [expanded, setExpanded] = useState(true);
   const [isPreview, setIsPreview] = useState(false);
   const [document, setDocument] = useState<File | string | any>("");
-  // const [tools, setTools] = useState<any[]>([]);
-  // const [searchCCDC, setSearchValue] = useState("");
 
   const { data: staffs = [] } = useAllStaffsQuery();
 
@@ -174,12 +175,14 @@ export default function ToolTransferForm({
           ...item,
           id: `${generateCode("CTBG-")}-${index}`,
         }));
-      const nguoiKyList = values.nguoiKyList.map((item: any, index: number) => ({
-        ...item,
-        id: `${generateCode("NK-")}-${index}`,
-        idTaiLieu: values.id,
-        idPhongBan: values.idDonViDeNghi,
-      }));
+      const nguoiKyList = values.nguoiKyList.map(
+        (item: any, index: number) => ({
+          ...item,
+          id: `${generateCode("NK-")}-${index}`,
+          idTaiLieu: values.id,
+          idPhongBan: values.idDonViDeNghi,
+        }),
+      );
       const bangKeBytes = await generateBangKePdf(
         values.chiTietDieuDongCCDCVatTuDTOS,
         allUnits,
@@ -224,12 +227,9 @@ export default function ToolTransferForm({
     },
   });
 
-  const debouncedValues = useDebounce(formik.values, 800);
-  useEffect(() => {
-    if (!selectedTool) {
-      onFormChange?.(debouncedValues);
-    }
-  }, [debouncedValues]);
+  useImperativeHandle(ref, () => ({
+    getValues: () => formik.values,
+  }));
 
   useEffect(() => {
     if (selectedTool) {
@@ -620,7 +620,7 @@ export default function ToolTransferForm({
                   onUploadSuccess={(matchedWrapperAssets) => {
                     const existingIds =
                       formik.values.chiTietDieuDongCCDCVatTuDTOS.map(
-                        (i:any) => i.idCustom,
+                        (i: any) => i.idCustom,
                       );
                     const newItems = matchedWrapperAssets
                       .map((wrapper) => wrapper.originalData)
@@ -890,4 +890,4 @@ export default function ToolTransferForm({
       </Box>
     </>
   );
-}
+});
