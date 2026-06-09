@@ -154,11 +154,15 @@ export default function ModelAssetForm({
     const updated = await Promise.all(
       localBulkItems.map(async (item) => {
         try {
-          await ModelAssetValidation.validate(item);
+          await ModelAssetValidation.validate(item, { abortEarly: false });
           return { ...item, errors: undefined };
         } catch (error: any) {
           hasError = true;
-          return { ...item, errors: { [error.path]: error.message } };
+          const errors = error.inner?.reduce((acc: any, e: any) => {
+            acc[e.path] = e.message;
+            return acc;
+          }, {}) ?? { [error.path]: error.message };
+          return { ...item, errors };
         }
       }),
     );
@@ -228,8 +232,7 @@ export default function ModelAssetForm({
                 flexShrink: 0,
                 p: 2,
                 borderRadius: "12px",
-                border: item.errors ? "1px solid #d32f2f" : "1px solid #e0e0e0",
-                backgroundColor: item.errors ? "#ffebee" : "#ffffff",
+                border: "1px solid #e0e0e0",
               }}
             >
               {/* Card Header */}

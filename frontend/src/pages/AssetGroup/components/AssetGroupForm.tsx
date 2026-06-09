@@ -152,13 +152,22 @@ export default function AssetGroupForm({
     const results = await Promise.all(
       localBulkItems.map(async (item) => {
         try {
-          await AssetGroupValidation.validate(item);
+          await AssetGroupValidation.validate(item, { abortEarly: false });
           return { ...item, errors: undefined };
         } catch (error: any) {
-          return { ...item, errors: { [error.path]: error.message } };
+          const errors: Record<string, string> = {};
+          for (const field of ["id", "tenNhom"]) {
+            try {
+              await AssetGroupValidation.validateAt(field, item);
+            } catch (fieldError: any) {
+              errors[field] = fieldError.message;
+            }
+          }
+          return { ...item, errors };
         }
       }),
     );
+    console.log("re", results);
 
     const hasError = results.some((item) => !!item.errors);
     setLocalBulkItems(results);
@@ -168,6 +177,7 @@ export default function AssetGroupForm({
 
   const handleBulkSave = async () => {
     const { hasError, items } = await validateBulkItems();
+    console.log("item", items);
     if (hasError) return;
     onSave(items);
   };
@@ -435,8 +445,7 @@ const BulkItemCard = memo(function BulkItemCard({
         p: 2,
         flexShrink: 0,
         borderRadius: "12px",
-        border: item.errors ? "1px solid #d32f2f" : "1px solid #e0e0e0",
-        backgroundColor: item.errors ? "#ffebee" : "#ffffff",
+        border: "1px solid #e0e0e0",
       }}
     >
       <Box
