@@ -26,6 +26,26 @@ import { PositionValidation } from "../validation/Validation";
 import EditButton from "../../../components/Button/EditButton";
 import { CongTy } from "../../../utils/const";
 
+const normalizeItem = (item: any) => ({
+  id: item.id ?? "",
+  tenChucVu: item.tenChucVu ?? "",
+  quanLyNhanVien: item.quanLyNhanVien ?? false,
+  quanLyPhongBan: item.quanLyPhongBan ?? false,
+  quanLyDuAn: item.quanLyDuAn ?? false,
+  quanLyNguonVon: item.quanLyNguonVon ?? false,
+  quanLyMoHinhTaiSan: item.quanLyMoHinhTaiSan ?? false,
+  quanLyNhomTaiSan: item.quanLyNhomTaiSan ?? false,
+  quanLyTaiSan: item.quanLyTaiSan ?? false,
+  quanLyCCDCVatTu: item.quanLyCCDCVatTu ?? false,
+  dieuDongTaiSan: item.dieuDongTaiSan ?? false,
+  dieuDongCCDCVatTu: item.dieuDongCCDCVatTu ?? false,
+  banGiaoTaiSan: item.banGiaoTaiSan ?? false,
+  banGiaoCCDCVatTu: item.banGiaoCCDCVatTu ?? false,
+  baoCao: item.baoCao ?? false,
+  banHanhQuyetDinh: item.banHanhQuyetDinh ?? false,
+  idCongTy: item.idCongTy ?? CongTy.CT001,
+});
+
 export default function PositionForm({
   onEdit,
   onCancel,
@@ -54,25 +74,7 @@ export default function PositionForm({
   bulkEditType?: "create" | "edit";
 }) {
   const formik = useFormik({
-    initialValues: {
-      id: initialFormData?.id ?? "",
-      tenChucVu: initialFormData?.tenChucVu ?? "",
-      quanLyNhanVien: initialFormData?.quanLyNhanVien ?? false,
-      quanLyPhongBan: initialFormData?.quanLyPhongBan ?? false,
-      quanLyDuAn: initialFormData?.quanLyDuAn ?? false,
-      quanLyNguonVon: initialFormData?.quanLyNguonVon ?? false,
-      quanLyMoHinhTaiSan: initialFormData?.quanLyMoHinhTaiSan ?? false,
-      quanLyNhomTaiSan: initialFormData?.quanLyNhomTaiSan ?? false,
-      quanLyTaiSan: initialFormData?.quanLyTaiSan ?? false,
-      quanLyCCDCVatTu: initialFormData?.quanLyCCDCVatTu ?? false,
-      dieuDongTaiSan: initialFormData?.dieuDongTaiSan ?? false,
-      dieuDongCCDCVatTu: initialFormData?.dieuDongCCDCVatTu ?? false,
-      banGiaoTaiSan: initialFormData?.banGiaoTaiSan ?? false,
-      banGiaoCCDCVatTu: initialFormData?.banGiaoCCDCVatTu ?? false,
-      baoCao: initialFormData?.baoCao ?? false,
-      banHanhQuyetDinh: initialFormData?.banHanhQuyetDinh ?? false,
-      idCongTy: initialFormData?.idCongTy ?? CongTy.CT001,
-    },
+    initialValues: normalizeItem(initialFormData ?? {}),
     validationSchema: PositionValidation,
     onSubmit(values) {
       onSave(values);
@@ -90,39 +92,21 @@ export default function PositionForm({
 
   useEffect(() => {
     if (selectedPosition) {
-      formik.setValues(selectedPosition);
+      formik.setValues(normalizeItem(selectedPosition));
       formik.setErrors({});
     }
   }, [selectedPosition, readOnly]);
 
   useEffect(() => {
     if (initialFormData && Object.keys(initialFormData).length > 0) {
-      formik.setValues({
-        id: initialFormData?.id ?? "",
-        tenChucVu: initialFormData?.tenChucVu ?? "",
-        quanLyNhanVien: initialFormData?.quanLyNhanVien ?? false,
-        quanLyPhongBan: initialFormData?.quanLyPhongBan ?? false,
-        quanLyDuAn: initialFormData?.quanLyDuAn ?? false,
-        quanLyNguonVon: initialFormData?.quanLyNguonVon ?? false,
-        quanLyMoHinhTaiSan: initialFormData?.quanLyMoHinhTaiSan ?? false,
-        quanLyNhomTaiSan: initialFormData?.quanLyNhomTaiSan ?? false,
-        quanLyTaiSan: initialFormData?.quanLyTaiSan ?? false,
-        quanLyCCDCVatTu: initialFormData?.quanLyCCDCVatTu ?? false,
-        dieuDongTaiSan: initialFormData?.dieuDongTaiSan ?? false,
-        dieuDongCCDCVatTu: initialFormData?.dieuDongCCDCVatTu ?? false,
-        banGiaoTaiSan: initialFormData?.banGiaoTaiSan ?? false,
-        banGiaoCCDCVatTu: initialFormData?.banGiaoCCDCVatTu ?? false,
-        baoCao: initialFormData?.baoCao ?? false,
-        banHanhQuyetDinh: initialFormData?.banHanhQuyetDinh ?? false,
-        idCongTy: initialFormData?.idCongTy ?? CongTy.CT001,
-      });
+      formik.setValues(normalizeItem(initialFormData));
     }
   }, [initialFormData]);
 
   const [localBulkItems, setLocalBulkItems] = useState<any[]>(() => {
     if ((initialFormData?.items?.length ?? 0) > 0)
-      return initialFormData!.items;
-    if ((bulkItems?.length ?? 0) > 0) return bulkItems;
+      return initialFormData!.items.map(normalizeItem);
+    if ((bulkItems?.length ?? 0) > 0) return bulkItems.map(normalizeItem);
     return [];
   });
 
@@ -131,7 +115,7 @@ export default function PositionForm({
     if (initialFormData === prevInitialFormDataRef.current) return;
     prevInitialFormDataRef.current = initialFormData;
     if ((initialFormData?.items?.length ?? 0) > 0) {
-      setLocalBulkItems(initialFormData!.items);
+      setLocalBulkItems(initialFormData!.items.map(normalizeItem));
     }
   }, [initialFormData]);
 
@@ -217,9 +201,13 @@ export default function PositionForm({
   };
 
   const handleBulkSave = async () => {
-    const { hasError } = await validateBulkItems();
+    const { hasError, items } = await validateBulkItems();
     if (hasError) return;
-    onSave(localBulkItems);
+
+    // Dùng items từ validate, đồng thời strip field errors trước khi save
+    const cleanItems = items.map(({ errors, ...rest }) => rest);
+    console.log("item", cleanItems);
+    onSave(cleanItems);
   };
 
   const handleMinimize = () => {
