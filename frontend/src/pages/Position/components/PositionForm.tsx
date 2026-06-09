@@ -196,7 +196,6 @@ export default function PositionForm({
       }),
     );
     setLocalBulkItems(updated);
-    onBulkItemsChangeRef.current?.(updated);
     return { hasError, items: updated };
   };
 
@@ -275,8 +274,8 @@ export default function PositionForm({
                 flexShrink: 0,
                 p: 2,
                 borderRadius: "12px",
-                border: item.errors ? "1px solid #d32f2f" : "1px solid #e0e0e0",
-                backgroundColor: item.errors ? "#ffebee" : "#ffffff",
+                border: "1px solid #e0e0e0",
+                backgroundColor:  "#ffffff",
               }}
             >
               {/* Card Header */}
