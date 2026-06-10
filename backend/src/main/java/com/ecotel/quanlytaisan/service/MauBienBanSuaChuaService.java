@@ -48,8 +48,12 @@ public class MauBienBanSuaChuaService {
         Optional<MauBienBanSuaChua> existingOpt = repository.findById(id);
         if (existingOpt.isPresent()) {
             MauBienBanSuaChua existing = existingOpt.get();
-            existing.setMa(entity.getMa());
-            existing.setTen(entity.getTen());
+            if (entity.getMa() != null) {
+                existing.setMa(entity.getMa());
+            }
+            if (entity.getTen() != null) {
+                existing.setTen(entity.getTen());
+            }
             if (entity.getMacDinh() != null) {
                 existing.setMacDinh(entity.getMacDinh());
             }

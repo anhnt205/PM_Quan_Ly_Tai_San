@@ -294,12 +294,15 @@ public class SuCoThietBiDao {
     }
 
     public int huySuCo(String id) {
-        kyTaiLieuDao.delete(id);
+        final int STATUS_CANCELLED = 0;
         String now = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date());
         int r = jdbcTemplate.update(
-                "UPDATE suco_thietbi SET TrangThai = 0, Share = 0, NgayCapNhat = ? WHERE Id = ?",
-                now, id);
-        if (r > 0) CompletableFuture.runAsync(this::refreshCache);
+                "UPDATE suco_thietbi SET TrangThai = ?, Share = 0, NgayCapNhat = ? WHERE Id = ?",
+                STATUS_CANCELLED, now, id);
+        if (r > 0) {
+            kyTaiLieuDao.delete(id);
+            CompletableFuture.runAsync(this::refreshCache);
+        }
         return r;
     }
 

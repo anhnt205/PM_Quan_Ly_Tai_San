@@ -296,25 +296,26 @@ export default function AssetProfileForm({
                     labelkey="tenLyLich"
                   />
                 </Grid>
-                {lyLichTemplates.find(
-                  (t: any) => t.id === item.idLyLichTemplate,
-                )?.maLyLich !== "" && (
-                  <AssetEbookContent
-                    selectedAsset={null}
-                    readOnly={readOnly}
-                    onEdit={() => {}}
-                    onCancel={() => {}}
-                    onClose={() => {}}
-                    onSave={(values) => {}}
-                    allAssetModel={[]}
-                    allCurrentStatus={[]}
-                    assetGroups={[]}
-                    allDepartments={[]}
-                    allUnits={[]}
-                    allReasonIncreases={[]}
-                    isView={true}
-                  />
-                )}
+                {(() => {
+                  const template = lyLichTemplates.find((t: any) => t.id === item.idLyLichTemplate);
+                  return template && template.maLyLich !== "" && (
+                    <AssetEbookContent
+                      selectedAsset={null}
+                      readOnly={readOnly}
+                      onEdit={() => {}}
+                      onCancel={() => {}}
+                      onClose={() => {}}
+                      onSave={(values) => {}}
+                      allAssetModel={[]}
+                      allCurrentStatus={[]}
+                      assetGroups={[]}
+                      allDepartments={[]}
+                      allUnits={[]}
+                      allReasonIncreases={[]}
+                      isView={true}
+                    />
+                  );
+                })()}
               </Grid>
             </Card>
           ))}
@@ -416,25 +417,26 @@ export default function AssetProfileForm({
               labelkey="tenLyLich"
             />
           </Grid>
-          {lyLichTemplates.find(
-            (t: any) => t.id === formik.values.idLyLichTemplate,
-          )?.maLyLich !== "" && (
-            <AssetEbookContent
-              selectedAsset={null}
-              readOnly={readOnly}
-              onEdit={() => {}}
-              onCancel={() => {}}
-              onClose={() => {}}
-              onSave={(values) => {}}
-              allAssetModel={[]}
-              allCurrentStatus={[]}
-              assetGroups={[]}
-              allDepartments={[]}
-              allUnits={[]}
-              allReasonIncreases={[]}
-              isView={true}
-            />
-          )}
+          {(() => {
+            const template = lyLichTemplates.find((t: any) => t.id === formik.values.idLyLichTemplate);
+            return template && template.maLyLich !== "" && (
+              <AssetEbookContent
+                selectedAsset={null}
+                readOnly={readOnly}
+                onEdit={() => {}}
+                onCancel={() => {}}
+                onClose={() => {}}
+                onSave={(values) => {}}
+                allAssetModel={[]}
+                allCurrentStatus={[]}
+                assetGroups={[]}
+                allDepartments={[]}
+                allUnits={[]}
+                allReasonIncreases={[]}
+                isView={true}
+              />
+            );
+          })()}
         </Grid>
       </Paper>
 

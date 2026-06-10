@@ -212,10 +212,14 @@ public class KiemTraSuCoDao {
     }
 
     public int huy(String id) {
-        kyTaiLieuDao.delete(id);
+        final int STATUS_CANCELLED = 0;
         String now = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        String sql = "UPDATE kiemtra_suco SET TrangThai = 0, Share = 0, NgayCapNhat = ? WHERE Id = ?";
-        return jdbcTemplate.update(sql, now, id);
+        String sql = "UPDATE kiemtra_suco SET TrangThai = ?, Share = 0, NgayCapNhat = ? WHERE Id = ?";
+        int r = jdbcTemplate.update(sql, STATUS_CANCELLED, now, id);
+        if (r > 0) {
+            kyTaiLieuDao.delete(id);
+        }
+        return r;
     }
 
     public int delete(String id) {
