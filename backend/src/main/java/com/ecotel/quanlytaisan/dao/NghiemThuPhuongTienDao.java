@@ -8,7 +8,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.PostConstruct;
+import java.time.LocalDateTime;
 import java.time.Year;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -18,6 +20,9 @@ public class NghiemThuPhuongTienDao {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private KyTaiLieuDao kyTaiLieuDao;
 
     private static List<NghiemThuPhuongTienDTO> cache = new java.util.ArrayList<>();
 
@@ -31,7 +36,7 @@ public class NghiemThuPhuongTienDao {
             SELECT
                 nt.Id, nt.IdCongTy, nt.IdBienPhapPhuongTien, nt.IdTaiSan,
                 nt.SoPhieu, nt.NoiDung, nt.TinhTrang, nt.CongViecPhatSinh,
-                nt.ChiPhiNhanCong, nt.KetLuan,
+                nt.ChiPhiNhanCong, nt.KetLuan, nt.GhiChuBienBan,
                 nt.IdNguoiLap, nt.NguoiLapXacNhan,
                 nt.IdGiamDoc, nt.GiamDocXacNhan,
                 nt.Share, nt.TrangThai,
@@ -126,15 +131,15 @@ public class NghiemThuPhuongTienDao {
                 Id, IdCongTy, IdBienPhapPhuongTien, IdTaiSan, SoPhieu,
                 NoiDung, TinhTrang, CongViecPhatSinh, ChiPhiNhanCong, KetLuan,
                 IdNguoiLap, NguoiLapXacNhan, IdGiamDoc, GiamDocXacNhan,
-                Share, TrangThai, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                Share, TrangThai, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, GhiChuBienBan
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         int r = jdbcTemplate.update(sql,
                 e.getId(), e.getIdCongTy(), e.getIdBienPhapPhuongTien(), e.getIdTaiSan(), e.getSoPhieu(),
                 e.getNoiDung(), e.getTinhTrang(), e.getCongViecPhatSinh(), e.getChiPhiNhanCong(), e.getKetLuan(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai() != null ? e.getTrangThai() : 0,
-                e.getNgayTao(), e.getNgayCapNhat(), e.getNguoiTao(), e.getNguoiCapNhat()
+                e.getNgayTao(), e.getNgayCapNhat(), e.getNguoiTao(), e.getNguoiCapNhat(), e.getGhiChuBienBan()
         );
         if (r > 0) { CompletableFuture.runAsync(this::refreshCache); return findById(e.getId()); }
         return null;
@@ -149,7 +154,7 @@ public class NghiemThuPhuongTienDao {
                 IdNguoiLap = ?, NguoiLapXacNhan = ?,
                 IdGiamDoc = ?, GiamDocXacNhan = ?,
                 Share = ?, TrangThai = ?,
-                NgayCapNhat = ?, NguoiCapNhat = ?
+                NgayCapNhat = ?, NguoiCapNhat = ?, GhiChuBienBan = ?
             WHERE Id = ?
             """;
         int r = jdbcTemplate.update(sql,
@@ -159,7 +164,7 @@ public class NghiemThuPhuongTienDao {
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(),
                 e.getIdGiamDoc(), e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai(),
-                e.getNgayCapNhat(), e.getNguoiCapNhat(),
+                e.getNgayCapNhat(), e.getNguoiCapNhat(), e.getGhiChuBienBan(),
                 e.getId()
         );
         if (r > 0) { CompletableFuture.runAsync(this::refreshCache); return findById(e.getId()); }
@@ -169,6 +174,15 @@ public class NghiemThuPhuongTienDao {
     public int updateTrangThai(String id, Integer trangThai) {
         int r = jdbcTemplate.update(
                 "UPDATE nghiemthu_phuongtien SET TrangThai = ? WHERE Id = ?", trangThai, id);
+        if (r > 0) CompletableFuture.runAsync(this::refreshCache);
+        return r;
+    }
+
+    public int huy(String id) {
+        kyTaiLieuDao.delete(id);
+        int r = jdbcTemplate.update(
+                "UPDATE nghiemthu_phuongtien SET TrangThai = 0, Share = 0, NgayCapNhat = ? WHERE Id = ?",
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")), id);
         if (r > 0) CompletableFuture.runAsync(this::refreshCache);
         return r;
     }

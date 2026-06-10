@@ -8,7 +8,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.PostConstruct;
+import java.time.LocalDateTime;
 import java.time.Year;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -18,6 +20,9 @@ public class SuaChuaDao {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private KyTaiLieuDao kyTaiLieuDao;
 
     private static List<SuaChuaDTO> cache = new java.util.ArrayList<>();
 
@@ -36,6 +41,7 @@ public class SuaChuaDao {
                 sc.Thang,
                 sc.Nam,
                 sc.GhiChu,
+                sc.GhiChuBienBan,
                 sc.IdNguoiLap,
                 nvLap.HoTen AS tenNguoiLap,
                 sc.NguoiLapXacNhan,
@@ -132,14 +138,14 @@ public class SuaChuaDao {
             INSERT INTO suachua (
                 Id, IdCongTy, SoPhieu, IdKeHoach, Thang, Nam, GhiChu,
                 IdNguoiLap, NguoiLapXacNhan, IdGiamDoc, GiamDocXacNhan,
-                Share, TrangThai, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                Share, TrangThai, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, GhiChuBienBan
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         int r = jdbcTemplate.update(sql,
                 e.getId(), e.getIdCongTy(), e.getSoPhieu(), e.getIdKeHoach(), e.getThang(), e.getNam(), e.getGhiChu(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai() != null ? e.getTrangThai() : 0, 
-                e.getNgayTao(), e.getNgayCapNhat(), e.getNguoiTao(), e.getNguoiCapNhat()
+                e.getNgayTao(), e.getNgayCapNhat(), e.getNguoiTao(), e.getNguoiCapNhat(), e.getGhiChuBienBan()
         );
         if (r > 0) { CompletableFuture.runAsync(this::refreshCache); return findById(e.getId()); }
         return null;
@@ -150,13 +156,13 @@ public class SuaChuaDao {
             UPDATE suachua SET
                 SoPhieu = ?, IdKeHoach = ?, Thang = ?, Nam = ?, GhiChu = ?,
                 IdNguoiLap = ?, NguoiLapXacNhan = ?, IdGiamDoc = ?, GiamDocXacNhan = ?,
-                Share = ?, TrangThai = ?, NgayCapNhat = ?, NguoiCapNhat = ?
+                Share = ?, TrangThai = ?, NgayCapNhat = ?, NguoiCapNhat = ?, GhiChuBienBan = ?
             WHERE Id = ?
             """;
         int r = jdbcTemplate.update(sql,
                 e.getSoPhieu(), e.getIdKeHoach(), e.getThang(), e.getNam(), e.getGhiChu(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),
-                e.getShare(), e.getTrangThai(), e.getNgayCapNhat(), e.getNguoiCapNhat(),
+                e.getShare(), e.getTrangThai(), e.getNgayCapNhat(), e.getNguoiCapNhat(), e.getGhiChuBienBan(),
                 e.getId()
         );
         if (r > 0) { CompletableFuture.runAsync(this::refreshCache); return findById(e.getId()); }
@@ -165,6 +171,15 @@ public class SuaChuaDao {
 
     public int updateTrangThai(String id, Integer trangThai) {
         int r = jdbcTemplate.update("UPDATE suachua SET TrangThai = ? WHERE Id = ?", trangThai, id);
+        if (r > 0) CompletableFuture.runAsync(this::refreshCache);
+        return r;
+    }
+
+    public int huySuaChua(String id) {
+        kyTaiLieuDao.delete(id);
+        int r = jdbcTemplate.update(
+                "UPDATE suachua SET TrangThai = 0, Share = 0, NgayCapNhat = ? WHERE Id = ?",
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")), id);
         if (r > 0) CompletableFuture.runAsync(this::refreshCache);
         return r;
     }

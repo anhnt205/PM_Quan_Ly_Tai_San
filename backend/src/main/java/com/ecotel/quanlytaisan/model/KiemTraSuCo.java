@@ -17,6 +17,7 @@ public class KiemTraSuCo {
     private String viTri;
     private String nhanXetKetLuan;
     private String bienPhapXuLy;
+    private String ghiChuBienBan;
     
     // Người lập
     private String idNguoiLap;

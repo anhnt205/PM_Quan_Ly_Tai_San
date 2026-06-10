@@ -21,6 +21,7 @@ public class DanhGiaVatTu {
     private Integer soLuongPhucHoi;
     private Integer soLuongPheLieu;
     private Integer soLuongHuy;
+    private String ghiChuBienBan;
     
     // Người lập phiếu
     private String idNguoiLap;

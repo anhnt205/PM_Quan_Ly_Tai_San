@@ -18,6 +18,7 @@ public class NghiemThuPhuongTien {
     private String congViecPhatSinh;  // Công việc phát sinh
     private BigDecimal chiPhiNhanCong; // Chi phí nhân công
     private String ketLuan;           // Kết luận
+    private String ghiChuBienBan;
 
     // Người lập phiếu
     private String idNguoiLap;

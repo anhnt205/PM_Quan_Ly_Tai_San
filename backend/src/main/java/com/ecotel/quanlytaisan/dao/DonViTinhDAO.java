@@ -23,6 +23,7 @@ public class DonViTinhDAO {
             dvt.setId(rs.getString("Id"));
             dvt.setTenDonVi(rs.getString("TenDonVi"));
             dvt.setNote(rs.getString("Note"));
+            dvt.setLaHeThong(rs.getObject("LaHeThong") != null ? rs.getBoolean("LaHeThong") : null);
             return dvt;
         }
     };
@@ -61,7 +62,8 @@ public class DonViTinhDAO {
         String sql = """
             SELECT dvt.Id,
                    dvt.TenDonVi,
-                   dvt.Note
+                   dvt.Note,
+                   dvt.LaHeThong
             FROM DonViTinh AS dvt
             %s
             ORDER BY %s %s
@@ -122,25 +124,30 @@ public class DonViTinhDAO {
             return update(dvt);
         } else {
             // Nếu chưa tồn tại thì insert
-            String sql = "INSERT INTO DonViTinh (Id, TenDonVi, Note) VALUES (?, ?, ?)";
-            return jdbcTemplate.update(sql, dvt.getId(), dvt.getTenDonVi(), dvt.getNote());
+            String sql = "INSERT INTO DonViTinh (Id, TenDonVi, Note, LaHeThong) VALUES (?, ?, ?, ?)";
+            return jdbcTemplate.update(sql, dvt.getId(), dvt.getTenDonVi(), dvt.getNote(), dvt.getLaHeThong());
         }
     }
 
     public int update(DonViTinh dvt) {
-        String sql = "UPDATE DonViTinh SET TenDonVi=?, Note=? WHERE Id=?";
-        return jdbcTemplate.update(sql, dvt.getTenDonVi(), dvt.getNote(), dvt.getId());
+        String sql = "UPDATE DonViTinh SET TenDonVi=?, Note=?, LaHeThong=? WHERE Id=?";
+        return jdbcTemplate.update(sql, dvt.getTenDonVi(), dvt.getNote(), dvt.getLaHeThong(), dvt.getId());
     }
 
     public int batchUpdate(List<DonViTinh> list) {
-        String sql = "UPDATE DonViTinh SET TenDonVi=?, Note=? WHERE Id=?";
+        String sql = "UPDATE DonViTinh SET TenDonVi=?, Note=?, LaHeThong=? WHERE Id=?";
         int[] result = jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
             @Override
             public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
                 DonViTinh dvt = list.get(i);
                 ps.setString(1, dvt.getTenDonVi());
                 ps.setString(2, dvt.getNote());
-                ps.setString(3, dvt.getId());
+                if (dvt.getLaHeThong() != null) {
+                    ps.setBoolean(3, dvt.getLaHeThong());
+                } else {
+                    ps.setNull(3, java.sql.Types.BOOLEAN);
+                }
+                ps.setString(4, dvt.getId());
             }
 
             @Override
@@ -159,7 +166,7 @@ public class DonViTinhDAO {
     }
 
     public int batchInsert(List<DonViTinh> list) {
-        String sql = "INSERT INTO DonViTinh (Id, TenDonVi, Note) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO DonViTinh (Id, TenDonVi, Note, LaHeThong) VALUES (?, ?, ?, ?)";
         int[] result = jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
             @Override
             public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
@@ -167,6 +174,11 @@ public class DonViTinhDAO {
                 ps.setString(1, dvt.getId());
                 ps.setString(2, dvt.getTenDonVi());
                 ps.setString(3, dvt.getNote());
+                if (dvt.getLaHeThong() != null) {
+                    ps.setBoolean(4, dvt.getLaHeThong());
+                } else {
+                    ps.setNull(4, java.sql.Types.BOOLEAN);
+                }
             }
 
             @Override

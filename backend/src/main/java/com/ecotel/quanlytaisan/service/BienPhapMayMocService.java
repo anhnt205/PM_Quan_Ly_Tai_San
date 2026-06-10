@@ -95,7 +95,7 @@ public class BienPhapMayMocService {
     }
 
     @Transactional
-    public int huy(String id) { return bienPhapDao.updateTrangThai(id, 2); }
+    public int huy(String id) { return bienPhapDao.huy(id); }
 
     @Transactional
     public void bulkUpdate(List<BienPhapMayMoc> list) {

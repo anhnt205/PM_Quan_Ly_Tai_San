@@ -11,6 +11,7 @@ public class KeHoachSuaChua {
     private String id;
     private String idCongTy;
     private String nhomTaiSan;
+    private String tenMauBienBanSuaChua;
 
     // Thông tin cơ bản
     private String soKeHoach;

@@ -58,6 +58,7 @@ public class SuCoThietBiDao {
                 sc.PhanHeViTri,
                 sc.MucDo,
                 sc.MoTa,
+                sc.GhiChuBienBan,
 
                 sc.IdNguoiLap,
                 nvLap.HoTen             AS tenNguoiLap,
@@ -175,8 +176,8 @@ public class SuCoThietBiDao {
                 IdNguoiLap, NguoiLapXacNhan,
                 IdGiamDoc, GiamDocXacNhan,
                 Share, TrangThai,
-                NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, GhiChuBienBan
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         int r = jdbcTemplate.update(sql,
                 e.getId(), e.getIdCongTy(), e.getIdKeHoach(), e.getSoPhieu(),
@@ -188,7 +189,7 @@ public class SuCoThietBiDao {
                 e.getIdGiamDoc(), e.getGiamDocXacNhan(),
                 e.getShare(),
                 e.getTrangThai() != null ? e.getTrangThai() : 0,
-                e.getNgayTao(), e.getNgayCapNhat(), e.getNguoiTao(), e.getNguoiCapNhat()
+                e.getNgayTao(), e.getNgayCapNhat(), e.getNguoiTao(), e.getNguoiCapNhat(), e.getGhiChuBienBan()
         );
         if (r > 0) { CompletableFuture.runAsync(this::refreshCache); return findById(e.getId()); }
         return null;
@@ -207,7 +208,7 @@ public class SuCoThietBiDao {
                 IdNguoiLap = ?, NguoiLapXacNhan = ?,
                 IdGiamDoc = ?, GiamDocXacNhan = ?,
                 Share = ?, TrangThai = ?,
-                NgayCapNhat = ?, NguoiCapNhat = ?
+                NgayCapNhat = ?, NguoiCapNhat = ?, GhiChuBienBan = ?
             WHERE Id = ?
             """;
         int r = jdbcTemplate.update(sql,
@@ -217,7 +218,7 @@ public class SuCoThietBiDao {
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(),
                 e.getIdGiamDoc(), e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai(),
-                e.getNgayCapNhat(), e.getNguoiCapNhat(),
+                e.getNgayCapNhat(), e.getNguoiCapNhat(), e.getGhiChuBienBan(),
                 e.getId()
         );
         if (r > 0) { CompletableFuture.runAsync(this::refreshCache); return findById(e.getId()); }
@@ -293,9 +294,10 @@ public class SuCoThietBiDao {
     }
 
     public int huySuCo(String id) {
-        String now = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        kyTaiLieuDao.delete(id);
+        String now = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date());
         int r = jdbcTemplate.update(
-                "UPDATE suco_thietbi SET TrangThai = 2, NgayCapNhat = ? WHERE Id = ?",
+                "UPDATE suco_thietbi SET TrangThai = 0, Share = 0, NgayCapNhat = ? WHERE Id = ?",
                 now, id);
         if (r > 0) CompletableFuture.runAsync(this::refreshCache);
         return r;

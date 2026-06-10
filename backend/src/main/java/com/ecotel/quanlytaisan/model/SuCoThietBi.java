@@ -47,6 +47,8 @@ public class SuCoThietBi {
     /** Mô tả chi tiết sự cố */
     private String moTa;
 
+    private String ghiChuBienBan;
+
     // ---------- Người lập ----------
 
     /** ID nhân viên lập phiếu */

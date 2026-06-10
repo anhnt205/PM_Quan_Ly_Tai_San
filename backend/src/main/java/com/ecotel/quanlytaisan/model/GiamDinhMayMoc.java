@@ -15,6 +15,7 @@ public class GiamDinhMayMoc {
     private Integer soDeLaiPhucHoi;
     private Integer soDeLamPheLieu;
     private Integer soLuongHuy;
+    private String ghiChuBienBan;
     
     // Người lập phiếu
     private String idNguoiLap;

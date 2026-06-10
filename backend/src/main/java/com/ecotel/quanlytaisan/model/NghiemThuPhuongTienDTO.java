@@ -18,6 +18,7 @@ public class NghiemThuPhuongTienDTO {
     private String congViecPhatSinh;
     private BigDecimal chiPhiNhanCong;
     private String ketLuan;
+    private String ghiChuBienBan;
 
     // Người lập phiếu
     private String idNguoiLap;

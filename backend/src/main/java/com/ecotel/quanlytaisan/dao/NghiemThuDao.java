@@ -8,7 +8,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.PostConstruct;
+import java.time.LocalDateTime;
 import java.time.Year;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -18,6 +20,9 @@ public class NghiemThuDao {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private KyTaiLieuDao kyTaiLieuDao;
 
     private static List<NghiemThuDTO> cache = new java.util.ArrayList<>();
 
@@ -31,7 +36,7 @@ public class NghiemThuDao {
             SELECT
                 nt.Id, nt.IdCongTy, nt.IdBienPhapMayMoc, nt.SoPhieu, nt.NgayNghiemThu,
                 nt.ViTri, nt.TenThietBi, nt.SoDangKi, nt.CapSuaChua,
-                nt.KetQua, nt.NoiDung,
+                nt.KetQua, nt.NoiDung, nt.GhiChuBienBan,
                 nt.IdNguoiLap, nt.NguoiLapXacNhan, nt.IdGiamDoc, nt.GiamDocXacNhan,
                 nt.Share, nt.TrangThai, nt.NgayTao, nt.NgayCapNhat, nt.NguoiTao, nt.NguoiCapNhat,
                 nvLap.HoTen AS tenNguoiLap,
@@ -111,15 +116,15 @@ public class NghiemThuDao {
                 Id, IdCongTy, IdBienPhapMayMoc, SoPhieu, NgayNghiemThu, ViTri,
                 TenThietBi, SoDangKi, CapSuaChua, KetQua, NoiDung,
                 IdNguoiLap, NguoiLapXacNhan, IdGiamDoc, GiamDocXacNhan,
-                Share, TrangThai, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                Share, TrangThai, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, GhiChuBienBan
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         int r = jdbcTemplate.update(sql,
                 e.getId(), e.getIdCongTy(), e.getIdBienPhapMayMoc(), e.getSoPhieu(), e.getNgayNghiemThu(), e.getViTri(),
                 e.getTenThietBi(), e.getSoDangKi(), e.getCapSuaChua(), e.getKetQua(), e.getNoiDung(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai() != null ? e.getTrangThai() : 0,
-                e.getNgayTao(), e.getNgayCapNhat(), e.getNguoiTao(), e.getNguoiCapNhat()
+                e.getNgayTao(), e.getNgayCapNhat(), e.getNguoiTao(), e.getNguoiCapNhat(), e.getGhiChuBienBan()
         );
         if (r > 0) { CompletableFuture.runAsync(this::refreshCache); return findById(e.getId()); }
         return null;
@@ -131,14 +136,14 @@ public class NghiemThuDao {
                 IdBienPhapMayMoc = ?, SoPhieu = ?, NgayNghiemThu = ?, ViTri = ?,
                 TenThietBi = ?, SoDangKi = ?, CapSuaChua = ?, KetQua = ?, NoiDung = ?,
                 IdNguoiLap = ?, NguoiLapXacNhan = ?, IdGiamDoc = ?, GiamDocXacNhan = ?,
-                Share = ?, TrangThai = ?, NgayCapNhat = ?, NguoiCapNhat = ?
+                Share = ?, TrangThai = ?, NgayCapNhat = ?, NguoiCapNhat = ?, GhiChuBienBan = ?
             WHERE Id = ?
             """;
         int r = jdbcTemplate.update(sql,
                 e.getIdBienPhapMayMoc(), e.getSoPhieu(), e.getNgayNghiemThu(), e.getViTri(),
                 e.getTenThietBi(), e.getSoDangKi(), e.getCapSuaChua(), e.getKetQua(), e.getNoiDung(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),
-                e.getShare(), e.getTrangThai(), e.getNgayCapNhat(), e.getNguoiCapNhat(),
+                e.getShare(), e.getTrangThai(), e.getNgayCapNhat(), e.getNguoiCapNhat(), e.getGhiChuBienBan(),
                 e.getId()
         );
         if (r > 0) { CompletableFuture.runAsync(this::refreshCache); return findById(e.getId()); }
@@ -147,6 +152,15 @@ public class NghiemThuDao {
 
     public int updateTrangThai(String id, Integer trangThai) {
         int r = jdbcTemplate.update("UPDATE nghiemthu_maymoc SET TrangThai = ? WHERE Id = ?", trangThai, id);
+        if (r > 0) CompletableFuture.runAsync(this::refreshCache);
+        return r;
+    }
+
+    public int huy(String id) {
+        kyTaiLieuDao.delete(id);
+        int r = jdbcTemplate.update(
+                "UPDATE nghiemthu_maymoc SET TrangThai = 0, Share = 0, NgayCapNhat = ? WHERE Id = ?",
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")), id);
         if (r > 0) CompletableFuture.runAsync(this::refreshCache);
         return r;
     }

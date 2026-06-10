@@ -298,7 +298,7 @@ export default function AssetProfileForm({
                 </Grid>
                 {lyLichTemplates.find(
                   (t: any) => t.id === item.idLyLichTemplate,
-                )?.maLyLich === "LL02" && (
+                )?.maLyLich !== "" && (
                   <AssetEbookContent
                     selectedAsset={null}
                     readOnly={readOnly}
@@ -418,7 +418,7 @@ export default function AssetProfileForm({
           </Grid>
           {lyLichTemplates.find(
             (t: any) => t.id === formik.values.idLyLichTemplate,
-          )?.maLyLich === "LL02" && (
+          )?.maLyLich !== "" && (
             <AssetEbookContent
               selectedAsset={null}
               readOnly={readOnly}
