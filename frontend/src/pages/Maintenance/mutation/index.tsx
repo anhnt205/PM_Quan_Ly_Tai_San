@@ -2778,8 +2778,43 @@ export const useMaintenanceMutation = (
     },
   });
 
+  const cancelMutation = useMutation({
+    mutationFn: async ({ id }: { id: string }) => {
+      const res = await api.post(`/${apiUri}/huy?id=${id}`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [key] });
+      showSuccessAlert("Từ chối biên bản thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message || error.message || "Từ chối thất bại",
+      );
+    },
+  });
+  const saveNoteMutation = useMutation({
+    mutationFn: async ({
+      id,
+      ghiChuBienBan,
+    }: {
+      id: string;
+      ghiChuBienBan: string;
+    }) => {
+      const res = await api.put(`/${apiUri}/${id}`, { ghiChuBienBan });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [key] });
+    },
+    onError: (error: any) => {
+      showErrorAlert(error.response?.data?.message || "Lưu ghi chú thất bại");
+    },
+  });
   return {
     signMutation,
     updateManyMutation,
+    cancelMutation,
+    saveNoteMutation,
   };
 };

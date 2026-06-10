@@ -7,7 +7,9 @@ import {
   MenuBookTwoTone,
   Edit,
   Close,
+  CalendarMonth,
 } from "@mui/icons-material";
+import LichTrinhVanDungModal from "./components/AssetLichTrinhVanDungModal";
 import {
   Box,
   Button,
@@ -99,6 +101,7 @@ export default function AssetManager() {
   const setStatus = (v: string) => setField({ status: v });
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [openScheduleModal, setOpenScheduleModal] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("");
@@ -784,22 +787,40 @@ export default function AssetManager() {
                 checkboxSelection={true}
                 extraActions={
                   selectedIds.length > 0 && (
-                    <Button
-                      variant="contained"
-                      size="small"
-                      color="info"
-                      onClick={() => {
-                        const mapped = assetsPage.items.filter((item: any) =>
-                          selectedIds.includes(item.id || item.soThe),
-                        );
-                        setSelectedAssets(mapped);
-                        setReadOnly(true);
-                        setShowForm(true);
-                        setShowSidebar(false);
-                      }}
-                    >
-                      Chỉnh sửa ({selectedIds.length})
-                    </Button>
+                    <>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        color="info"
+                        onClick={() => {
+                          const mapped = assetsPage.items.filter((item: any) =>
+                            selectedIds.includes(item.id || item.soThe),
+                          );
+                          setSelectedAssets(mapped);
+                          setReadOnly(true);
+                          setShowForm(true);
+                          setShowSidebar(false);
+                        }}
+                      >
+                        Chỉnh sửa ({selectedIds.length})
+                      </Button>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        startIcon={<CalendarMonth />}
+                        onClick={() => {
+                          setOpenScheduleModal(true);
+                        }}
+                        sx={{
+                          bgcolor: "#7c3aed",
+                          textTransform: "none",
+                          fontWeight: 600,
+                          "&:hover": { bgcolor: "#6d28d9" },
+                        }}
+                      >
+                        Lịch trình vận dụng ({selectedIds.length})
+                      </Button>
+                    </>
                   )
                 }
                 onDelete={deleteManyMutation.mutate}
@@ -874,6 +895,13 @@ export default function AssetManager() {
           setShowForm(false);
         }}
         selectedAsset={selectedAssets[0]}
+      />
+      <LichTrinhVanDungModal
+        open={openScheduleModal}
+        onClose={() => setOpenScheduleModal(false)}
+        selectedAssets={assetsPage.items.filter((item: any) =>
+          selectedIds.includes(item.id || item.soThe),
+        )}
       />
     </Box>
   );

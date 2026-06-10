@@ -16,13 +16,13 @@ import jsPDF from "jspdf";
 export const getTypeInfo = (type: string | number | null) => {
   switch (Number(type)) {
     case 1:
-      return { title: "Cấp phát CCDC - Vật tư", label: "cấp phát" };
+      return { title: "Cấp phát CCDC - Vật tư", label: "cấp phát CCDC - Vật tư" };
     case 2:
-      return { title: "Điều chuyển CCDC - Vật tư", label: "điều chuyển" };
+      return { title: "Điều chuyển CCDC - Vật tư", label: "điều chuyển CCDC - Vật tư" };
     case 3:
-      return { title: "Thu hồi CCDC - Vật tư", label: "thu hồi" };
+      return { title: "Thu hồi CCDC - Vật tư", label: "thu hồi CCDC - Vật tư" };
     default:
-      return { title: "Quản lý CCDC - Vật tư", label: "CCDC" };
+      return { title: "Quản lý CCDC - Vật tư", label: "CCDC - Vật tư" };
   }
 };
 

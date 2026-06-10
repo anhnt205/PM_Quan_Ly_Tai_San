@@ -21,6 +21,8 @@ interface SignDocumentFormProps {
   isEdit?: boolean;
   title?: string;
   showHeader?: boolean;
+  onSaveNote?: (note: string) => Promise<void>;
+  onReject?: () => Promise<void>;
   generatePdf?: () => Promise<{
     pdf: Uint8Array;
     coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
@@ -44,6 +46,8 @@ export default function SignDocumentForm({
   isEdit,
   title,
   showHeader = true,
+  onSaveNote,
+  onReject,
   generatePdf,
 }: SignDocumentFormProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -134,6 +138,10 @@ export default function SignDocumentForm({
       sourcePdfBytes={sourcePdfBytes}
       showHeader={showHeader}
       initialSignatures={signatures}
+      trangThai={plan?.trangThai}
+      initialNote={plan?.ghiChuBienBan || ""}
+      onSaveNote={onSaveNote}
+      onReject={onReject}
     />
   );
 }
