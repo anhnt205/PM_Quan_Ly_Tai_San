@@ -1,6 +1,7 @@
 package com.ecotel.quanlytaisan.config;
 
 import com.ecotel.quanlytaisan.model.ApiResponse;
+import com.ecotel.quanlytaisan.exception.ResourceNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,26 +10,35 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.security.access.AccessDeniedException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     // Not found - 404
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleResourceNotFoundException(ResourceNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.failure(e.getMessage(), null));
+    }
+
+    // Generic Runtime Error - 500
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Void>> handleRuntimeException(RuntimeException e) {
-        String message = e.getMessage();
-        if (message != null && message.contains("Không tìm thấy")) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.failure(message, null));
-        }
+        logger.error("Unhandled RuntimeException", e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.failure(message, null));
+                .body(ApiResponse.failure("Đã xảy ra lỗi hệ thống.", null));
     }
 
     // Duplicate/constraint violation - 409
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiResponse<Void>> handleDataIntegrityViolation(DataIntegrityViolationException e) {
+        logger.error("DataIntegrityViolationException", e);
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(ApiResponse.failure("Dữ liệu bị trùng hoặc vi phạm ràng buộc: " + e.getMessage(), null));
+                .body(ApiResponse.failure("Dữ liệu không hợp lệ hoặc vi phạm ràng buộc.", null));
     }
 
     // Access Denied - 403
@@ -52,8 +62,8 @@ public class GlobalExceptionHandler {
     // Generic - 500
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
-        e.printStackTrace();
+        logger.error("Unhandled Exception", e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+                .body(ApiResponse.failure("Đã xảy ra lỗi hệ thống.", null));
     }
 }

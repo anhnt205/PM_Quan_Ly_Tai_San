@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -87,7 +88,7 @@ public class KiemTraSuCoController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Object>> insert(@RequestBody KiemTraSuCo entity) {
+    public ResponseEntity<ApiResponse<Object>> insert(@Valid @RequestBody KiemTraSuCo entity) {
         try {
             KiemTraSuCo result = service.insert(entity);
             if (result != null) {
@@ -100,7 +101,7 @@ public class KiemTraSuCoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @RequestBody KiemTraSuCo entity) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id, @Valid @RequestBody KiemTraSuCo entity) {
         try {
             entity.setId(id);
             KiemTraSuCo result = service.update(entity);

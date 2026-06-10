@@ -298,7 +298,7 @@ export default function AssetProfileForm({
                 </Grid>
                 {(() => {
                   const template = lyLichTemplates.find((t: any) => t.id === item.idLyLichTemplate);
-                  return template && template.maLyLich !== "" && (
+                  return template && typeof template.maLyLich === "string" && template.maLyLich.trim() !== "" && (
                     <AssetEbookContent
                       selectedAsset={null}
                       readOnly={readOnly}
@@ -419,7 +419,7 @@ export default function AssetProfileForm({
           </Grid>
           {(() => {
             const template = lyLichTemplates.find((t: any) => t.id === formik.values.idLyLichTemplate);
-            return template && template.maLyLich !== "" && (
+            return template && typeof template.maLyLich === "string" && template.maLyLich.trim() !== "" && (
               <AssetEbookContent
                 selectedAsset={null}
                 readOnly={readOnly}

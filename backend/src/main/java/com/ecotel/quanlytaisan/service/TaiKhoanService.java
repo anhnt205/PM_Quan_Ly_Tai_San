@@ -136,6 +136,7 @@ public class TaiKhoanService {
     public String generateToken(String username){
         Date now =new Date();
         Date expiration=new Date(now.getTime()+EXPIRATION);
+        // TODO: Replace username-based scope with persisted role after RBAC implementation.
         String scope = username.equals("admin") ? "ADMIN" : "USER";
         JWSHeader header=new JWSHeader(JWSAlgorithm.HS512);
         JWTClaimsSet jwtClaimsSet=new JWTClaimsSet.Builder()

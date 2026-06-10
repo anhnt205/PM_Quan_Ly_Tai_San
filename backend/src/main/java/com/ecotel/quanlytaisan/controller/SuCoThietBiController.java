@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -133,7 +134,7 @@ public class SuCoThietBiController {
      */
     @PostMapping
     public ResponseEntity<ApiResponse<Object>> create(
-            @RequestBody SuCoThietBi entity
+            @Valid @RequestBody SuCoThietBi entity
     ) throws SQLException {
         try {
             SuCoThietBi result = suCoService.insert(entity);
@@ -154,7 +155,7 @@ public class SuCoThietBiController {
      */
     @PostMapping("/batch")
     public ResponseEntity<ApiResponse<Object>> createBatch(
-            @RequestBody List<SuCoThietBi> list
+            @RequestBody List<@Valid SuCoThietBi> list
     ) {
         try {
             int total = 0;
@@ -180,7 +181,7 @@ public class SuCoThietBiController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> update(
             @PathVariable("id") String id,
-            @RequestBody SuCoThietBi entity
+            @Valid @RequestBody SuCoThietBi entity
     ) throws SQLException {
         try {
             entity.setId(id);
@@ -202,7 +203,7 @@ public class SuCoThietBiController {
      */
     @PutMapping("/batch")
     public ResponseEntity<ApiResponse<Object>> updateBatch(
-            @RequestBody List<SuCoThietBi> list
+            @RequestBody List<@Valid SuCoThietBi> list
     ) {
         try {
             int total = 0;

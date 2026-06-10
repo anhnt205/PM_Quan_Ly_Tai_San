@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -79,7 +80,7 @@ public class DanhGiaVatTuController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Object>> create(@RequestBody DanhGiaVatTu entity) {
+    public ResponseEntity<ApiResponse<Object>> create(@Valid @RequestBody DanhGiaVatTu entity) {
         try {
             DanhGiaVatTu created = service.insert(entity);
             return ResponseEntity.ok(ApiResponse.success("Tạo thành công", created, 1));
@@ -90,7 +91,7 @@ public class DanhGiaVatTuController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody DanhGiaVatTu entity) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @Valid @RequestBody DanhGiaVatTu entity) {
         try {
             entity.setId(id);
             DanhGiaVatTu updated = service.update(entity);

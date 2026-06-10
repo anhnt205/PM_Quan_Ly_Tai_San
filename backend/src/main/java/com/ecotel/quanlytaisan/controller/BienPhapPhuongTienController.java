@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -100,7 +101,7 @@ public class BienPhapPhuongTienController {
     // ─── POST tạo mới ─────────────────────────────────────────────────────────
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Object>> create(@RequestBody BienPhapPhuongTien entity) {
+    public ResponseEntity<ApiResponse<Object>> create(@Valid @RequestBody BienPhapPhuongTien entity) {
         try {
             BienPhapPhuongTien created = service.insert(entity);
             return ResponseEntity.ok(ApiResponse.success("Tạo biện pháp thành công", created, 1));
@@ -114,7 +115,7 @@ public class BienPhapPhuongTienController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> update(@PathVariable String id,
-                                                      @RequestBody BienPhapPhuongTien entity) {
+                                                      @Valid @RequestBody BienPhapPhuongTien entity) {
         try {
             entity.setId(id);
             BienPhapPhuongTien updated = service.update(entity);
@@ -177,7 +178,7 @@ public class BienPhapPhuongTienController {
     }
 
     @PutMapping("/batch")
-    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<BienPhapPhuongTien> list) {
+    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<@Valid BienPhapPhuongTien> list) {
         try {
             service.bulkUpdate(list);
             return ResponseEntity.ok(ApiResponse.success("Cập nhật danh sách thành công", null, list.size()));

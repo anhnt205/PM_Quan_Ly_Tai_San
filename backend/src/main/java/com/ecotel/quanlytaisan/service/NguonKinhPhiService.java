@@ -1,6 +1,7 @@
 package com.ecotel.quanlytaisan.service;
 
 import com.ecotel.quanlytaisan.dao.NguonKinhPhiDao;
+import com.ecotel.quanlytaisan.exception.ResourceNotFoundException;
 import com.ecotel.quanlytaisan.model.NguonKinhPhi;
 import com.ecotel.quanlytaisan.model.PageResponse;
 import org.apache.poi.ss.usermodel.Row;
@@ -40,7 +41,7 @@ public class NguonKinhPhiService {
     public NguonKinhPhi getById(String id) {
         NguonKinhPhi nkp = nguonKinhPhiDao.findById(id);
         if (nkp == null) {
-            throw new RuntimeException("Không tìm thấy nguồn kinh phí với mã: " + id);
+            throw new ResourceNotFoundException("Không tìm thấy nguồn kinh phí với mã: " + id);
             // Hoặc return null nếu muốn xử lý ở Controller
         }
         return nkp;

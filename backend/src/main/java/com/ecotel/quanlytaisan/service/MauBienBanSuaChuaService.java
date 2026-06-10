@@ -2,6 +2,7 @@ package com.ecotel.quanlytaisan.service;
 
 import com.ecotel.quanlytaisan.model.MauBienBanSuaChua;
 import com.ecotel.quanlytaisan.model.PageResponse;
+import com.ecotel.quanlytaisan.exception.ResourceNotFoundException;
 import com.ecotel.quanlytaisan.repository.MauBienBanSuaChuaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -64,12 +65,32 @@ public class MauBienBanSuaChuaService {
             }
             return updated;
         }
-        throw new RuntimeException("Không tìm thấy mẫu biên bản với ID: " + id);
+        throw new ResourceNotFoundException("Không tìm thấy mẫu biên bản với ID: " + id);
     }
 
     @Transactional
     public List<MauBienBanSuaChua> updateBatch(List<MauBienBanSuaChua> entities) {
-        List<MauBienBanSuaChua> updated = repository.saveAll(entities);
+        List<MauBienBanSuaChua> mergedList = new java.util.ArrayList<>();
+        for (MauBienBanSuaChua entity : entities) {
+            if (entity.getId() == null) {
+                throw new IllegalArgumentException("ID không được để trống khi cập nhật");
+            }
+            MauBienBanSuaChua existing = repository.findById(entity.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mẫu biên bản với ID: " + entity.getId()));
+            
+            if (entity.getMa() != null) {
+                existing.setMa(entity.getMa());
+            }
+            if (entity.getTen() != null) {
+                existing.setTen(entity.getTen());
+            }
+            if (entity.getMacDinh() != null) {
+                existing.setMacDinh(entity.getMacDinh());
+            }
+            mergedList.add(existing);
+        }
+
+        List<MauBienBanSuaChua> updated = repository.saveAll(mergedList);
         Optional<MauBienBanSuaChua> macDinhOpt = updated.stream()
                 .filter(e -> Boolean.TRUE.equals(e.getMacDinh()))
                 .reduce((first, second) -> second);
@@ -116,7 +137,7 @@ public class MauBienBanSuaChuaService {
     @Transactional
     public MauBienBanSuaChua setMacDinh(String id) {
         MauBienBanSuaChua entity = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy mẫu biên bản với ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mẫu biên bản với ID: " + id));
         entity.setMacDinh(true);
         MauBienBanSuaChua saved = repository.save(entity);
         repository.resetMacDinhForAllExcept(id);
