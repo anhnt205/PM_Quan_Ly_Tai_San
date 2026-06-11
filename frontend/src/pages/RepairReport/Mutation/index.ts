@@ -78,6 +78,26 @@ export const useBienBanSuaChuaMutation = () => {
     },
   });
 
+  const deleteBatchMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const res = await api.delete(`/mau-bien-ban-sua-chua/batch`, {
+        data: ids,
+      });
+      return res.data;
+    },
+    onSuccess: (res) => {
+      if (res.success) {
+        showSuccessAlert(`Xóa biên bản thành công`);
+        queryClient.invalidateQueries({ queryKey: ["bienBanSuaChuaPage"] });
+      } else {
+        showErrorAlert(res.message);
+      }
+    },
+    onError: (err: any) => {
+      showErrorAlert(err.response?.data?.message || "Lỗi khi xóa biên bản");
+    },
+  });
+
   const deleteAllMutation = useMutation({
     mutationFn: async () => {
       const res = await api.delete(`/mau-bien-ban-sua-chua/all`);
@@ -95,5 +115,11 @@ export const useBienBanSuaChuaMutation = () => {
       showErrorAlert(err.response?.data?.message || "Lỗi khi xóa biên bản");
     },
   });
-  return { createMutation, deleteMutation, updateMutation, deleteAllMutation };
+  return {
+    createMutation,
+    deleteMutation,
+    updateMutation,
+    deleteAllMutation,
+    deleteBatchMutation,
+  };
 };

@@ -52,8 +52,13 @@ export default function RepairReport() {
 
   const debouncedSearchValue = useDebounce(searchValue, 600);
 
-  const { createMutation, deleteAllMutation, deleteMutation, updateMutation } =
-    useBienBanSuaChuaMutation();
+  const {
+    createMutation,
+    deleteAllMutation,
+    deleteMutation,
+    updateMutation,
+    deleteBatchMutation,
+  } = useBienBanSuaChuaMutation();
 
   const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =
     useBienBanSuaChuaPageQuery(
@@ -68,29 +73,18 @@ export default function RepairReport() {
     setShowForm(true);
   };
 
-  const handleSave = (values: any) => {
-    if (selectedRepairReport) {
-    console.log("ABCC", values);
-
-      updateMutation.mutate(values);
-    } else {
-      createMutation.mutate(values);
-    }
-    setShowForm(false);
-    setSelectedRepairReport(null);
-    setField({ draftForm: undefined });
-  };
-
-  const handleDeleteMany = async (ids: string[]) => {
-    const confirm = await showConfirmAlert(
-      `Xác nhận xóa ${ids.length} bản ghi?`,
-    );
-    if (confirm.isConfirmed) {
-      // Hiện tại mutation chỉ có delete single, gọi loop hoặc cập nhật mutation
-      for (const id of ids) {
-        await deleteMutation.mutateAsync(id);
+  const handleSave = async (values: any) => {
+    try {
+      if (selectedRepairReport) {
+        await updateMutation.mutateAsync(values);
+      } else {
+        await createMutation.mutateAsync(values);
       }
-      setSelectedIds([]);
+      setShowForm(false);
+      setSelectedRepairReport(null);
+      setField({ draftForm: undefined });
+    } catch {
+      // Alert is handled in mutation hooks; keep form open for user correction/retry.
     }
   };
 
@@ -197,7 +191,7 @@ export default function RepairReport() {
           onRowClick={handleRowClick}
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
-          onDelete={handleDeleteMany}
+          onDelete={deleteBatchMutation.mutate}
           searchValue={searchValue}
           setSearchValue={setSearchValue}
           onDeleteAll={deleteAllMutation.mutate}

@@ -114,10 +114,10 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
       idLoaiKeHoach: "THIET_BI",
       trangThai: 0,
       share: false,
-      tenMauBienBanSuaChua: tenMauMacDinh,
+      tenMauBienBanSuaChua:
+        tenMauMacDinh ??
+        `KẾ HOẠCH SỬA CHỮA BẢO DƯỠNG THIẾT BỊ NĂM ${new Date().getFullYear()}`,
     },
-    enableReinitialize: true,
-    // validationSchema: PlanMaintenanceValidation,
     onSubmit: (values) => {
       // 1. Ánh xạ chi tiết tài sản với 12 tháng
       const danhSachTaiSan = values.danhSachTaiSan.map((a: PlanAsset) => ({
@@ -179,7 +179,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
         ghiChu: `Kế hoạch SCBD - ${departments.find((d: any) => d.id === formik.values.idDonViGiao)?.tenPhongBan || formik.values.idDonViGiao}`,
         danhSachTaiSan: danhSachTaiSan,
         nguoiKyList: intermediateSigners,
-        tenMauBienBanSuaChua: tenMauMacDinh,
+        tenMauBienBanSuaChua: formik.values.tenMauBienBanSuaChua,
       };
 
       onSave(newPlanData, isEdit);
@@ -238,7 +238,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
         share: initialData?.share ?? false,
         tenMauBienBanSuaChua:
           initialData.tenMauBienBanSuaChua ??
-          `KẾ HOẠCH SỬA CHỮA BẢO DƯỠNG THIẾT BỊ NĂM ${new Date().getFullYear()}`,
+          `KẾ HOẠCH SỬA CHỮA BẢO DƯỠNG THIẾT BỊ NĂM ${initialData.nam}`,
       });
       return;
     }
@@ -465,6 +465,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
             departments={departments}
             formik={formik}
             tenMau={tenMauMacDinh}
+            nam={formik.values.nam}
           />
         </Box>
       </DialogContent>
