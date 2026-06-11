@@ -136,7 +136,7 @@ public class GiamDinhMayMocService {
 
     @Transactional
     public int huyGiamDinh(String id) {
-        return giamDinhMayMocDao.updateTrangThai(id, 2); // 2 = Hủy
+        return giamDinhMayMocDao.huy(id); 
     }
 
     @Transactional

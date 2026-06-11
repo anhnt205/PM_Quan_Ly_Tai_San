@@ -200,7 +200,7 @@ export default function AssetManager() {
   }, [location, navigate]);
 
   const handleRowClick = (params: GridRowParams) => {
-    if (params.row?.maLyLich !== "LL02") {
+    if (!params.row?.maLyLich) {
       return;
     }
     setSelectedAssets([params.row]);

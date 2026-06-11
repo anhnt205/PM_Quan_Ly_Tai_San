@@ -112,4 +112,9 @@ public class KyTaiLieuDao {
         }
         return count;
     }
+
+    public int deleteAllNguoiKy(String idTaiLieu) {
+        String sql = "DELETE FROM NguoiKy WHERE IdTaiLieu = ?";
+        return jdbcTemplate.update(sql, idTaiLieu);
+    }
 }

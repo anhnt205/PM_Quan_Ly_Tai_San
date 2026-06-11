@@ -161,7 +161,7 @@ public class GiamDinhPhuongTienService {
 
     @Transactional
     public int huyGiamDinh(String id) {
-        return giamDinhPhuongTienDao.updateTrangThai(id, 2); // 2 = Hủy
+        return giamDinhPhuongTienDao.huy(id); 
     }
 
     @Transactional

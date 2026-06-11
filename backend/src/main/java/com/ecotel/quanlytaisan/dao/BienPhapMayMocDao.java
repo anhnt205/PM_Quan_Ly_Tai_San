@@ -8,7 +8,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.PostConstruct;
+import java.time.LocalDateTime;
 import java.time.Year;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -17,8 +19,13 @@ import java.util.stream.Collectors;
 @Repository
 public class BienPhapMayMocDao {
 
+    public static final int STATUS_CANCELLED = 0;
+
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private KyTaiLieuDao kyTaiLieuDao;
 
     private static List<BienPhapMayMocDTO> cache = new ArrayList<>();
 
@@ -34,7 +41,7 @@ public class BienPhapMayMocDao {
                 bp.SoPhieu, bp.SoDeNghi,
                 bp.DonViSuaChua, bp.DonViPhoiHop, bp.HinhThuc,
                 bp.ThoiGianBatDau, bp.ThoiGianKetThuc, bp.ThoiGianNgay,
-                bp.GhiChu, bp.TenFile, bp.DuongDanFile,
+                bp.GhiChu, bp.GhiChuBienBan, bp.TenFile, bp.DuongDanFile,
                 bp.IdNguoiLap, bp.NguoiLapXacNhan,
                 bp.IdGiamDoc,  bp.GiamDocXacNhan,
                 bp.Share, bp.TrangThai,
@@ -136,8 +143,8 @@ public class BienPhapMayMocDao {
                 GhiChu, TenFile, DuongDanFile,
                 IdNguoiLap, NguoiLapXacNhan, IdGiamDoc, GiamDocXacNhan,
                 Share, TrangThai,
-                NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, GhiChuBienBan
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         int r = jdbcTemplate.update(sql,
                 e.getId(), e.getIdCongTy(), e.getIdGiamDinhMayMoc(),
@@ -148,7 +155,7 @@ public class BienPhapMayMocDao {
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(),
                 e.getIdGiamDoc(),  e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai() != null ? e.getTrangThai() : 0,
-                e.getNgayTao(), e.getNgayCapNhat(), e.getNguoiTao(), e.getNguoiCapNhat()
+                e.getNgayTao(), e.getNgayCapNhat(), e.getNguoiTao(), e.getNguoiCapNhat(), e.getGhiChuBienBan()
         );
         if (r > 0) { CompletableFuture.runAsync(this::refreshCache); return findById(e.getId()); }
         return null;
@@ -165,7 +172,7 @@ public class BienPhapMayMocDao {
                 IdNguoiLap = ?, NguoiLapXacNhan = ?,
                 IdGiamDoc = ?,  GiamDocXacNhan = ?,
                 Share = ?, TrangThai = ?,
-                NgayCapNhat = ?, NguoiCapNhat = ?
+                NgayCapNhat = ?, NguoiCapNhat = ?, GhiChuBienBan = ?
             WHERE Id = ?
             """;
         int r = jdbcTemplate.update(sql,
@@ -177,7 +184,7 @@ public class BienPhapMayMocDao {
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(),
                 e.getIdGiamDoc(),  e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai(),
-                e.getNgayCapNhat(), e.getNguoiCapNhat(),
+                e.getNgayCapNhat(), e.getNguoiCapNhat(), e.getGhiChuBienBan(),
                 e.getId()
         );
         if (r > 0) { CompletableFuture.runAsync(this::refreshCache); return findById(e.getId()); }
@@ -188,6 +195,17 @@ public class BienPhapMayMocDao {
         int r = jdbcTemplate.update(
                 "UPDATE bienphap_maymoc SET TrangThai = ? WHERE Id = ?", trangThai, id);
         if (r > 0) CompletableFuture.runAsync(this::refreshCache);
+        return r;
+    }
+
+    public int huy(String id) {
+        int r = jdbcTemplate.update(
+                "UPDATE bienphap_maymoc SET TrangThai = ?, Share = 0, NgayCapNhat = ? WHERE Id = ?",
+                STATUS_CANCELLED, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")), id);
+        if (r > 0) {
+            kyTaiLieuDao.delete(id);
+            CompletableFuture.runAsync(this::refreshCache);
+        }
         return r;
     }
 

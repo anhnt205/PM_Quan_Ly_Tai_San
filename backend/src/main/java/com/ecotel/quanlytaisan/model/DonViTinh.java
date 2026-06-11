@@ -10,6 +10,7 @@ public class DonViTinh {
     private String id;
     private String tenDonVi;
     private String note;
+    private Boolean laHeThong;
 
     public static DonViTinh mapToDonViTinh(String[] row) {
         DonViTinh dvt = new DonViTinh();
@@ -50,5 +51,13 @@ public class DonViTinh {
 
     public void setNote(String note) {
         this.note = note;
+    }
+
+    public Boolean getLaHeThong() {
+        return laHeThong;
+    }
+
+    public void setLaHeThong(Boolean laHeThong) {
+        this.laHeThong = laHeThong;
     }
 }

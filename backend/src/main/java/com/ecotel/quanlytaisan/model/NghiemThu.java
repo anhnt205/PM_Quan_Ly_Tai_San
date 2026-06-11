@@ -16,6 +16,7 @@ public class NghiemThu {
     private String capSuaChua;
     private String ketQua;
     private String noiDung;
+    private String ghiChuBienBan;
 
     // Người lập phiếu
     private String idNguoiLap;

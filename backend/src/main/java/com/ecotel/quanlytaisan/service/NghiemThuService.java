@@ -162,7 +162,7 @@ public class NghiemThuService {
 
     @Transactional
     public int huyNghiemThu(String id) {
-        return nghiemThuDao.updateTrangThai(id, 2);
+        return nghiemThuDao.huy(id);
     }
 
     @Transactional

@@ -10,7 +10,9 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.time.Year;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,6 +21,9 @@ public class DanhGiaVatTuDao {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private KyTaiLieuDao kyTaiLieuDao;
 
     public List<DanhGiaVatTu> findAll(String idCongTy) {
         String sql = """
@@ -98,15 +103,15 @@ public class DanhGiaVatTuDao {
                 TenThietBi, Kieu, SoDangKi, IdDonViQuanLy, IdNghiemThu,
                 SoLuongPhucHoi, SoLuongPheLieu, SoLuongHuy,
                 IdNguoiLap, NguoiLapXacNhan, IdGiamDoc, GiamDocXacNhan,
-                Share, TrangThai, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                Share, TrangThai, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, GhiChuBienBan
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         jdbcTemplate.update(sql,
                 e.getId(), e.getIdCongTy(), e.getSoPhieu(), e.getNgayDanhGia(), e.getViTri(), e.getCapSuaChua(),
                 e.getTenThietBi(), e.getKieu(), e.getSoDangKi(), e.getIdDonViQuanLy(), e.getIdNghiemThu(),
                 e.getSoLuongPhucHoi(), e.getSoLuongPheLieu(), e.getSoLuongHuy(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),
-                e.getShare(), e.getTrangThai(), e.getNgayTao(), e.getNgayCapNhat(), e.getNguoiTao(), e.getNguoiCapNhat()
+                e.getShare(), e.getTrangThai(), e.getNgayTao(), e.getNgayCapNhat(), e.getNguoiTao(), e.getNguoiCapNhat(), e.getGhiChuBienBan()
         );
         return e;
     }
@@ -118,7 +123,7 @@ public class DanhGiaVatTuDao {
                 TenThietBi = ?, Kieu = ?, SoDangKi = ?, IdDonViQuanLy = ?, IdNghiemThu = ?,
                 SoLuongPhucHoi = ?, SoLuongPheLieu = ?, SoLuongHuy = ?,
                 IdNguoiLap = ?, NguoiLapXacNhan = ?, IdGiamDoc = ?, GiamDocXacNhan = ?,
-                Share = ?, TrangThai = ?, NgayCapNhat = ?, NguoiCapNhat = ?
+                Share = ?, TrangThai = ?, NgayCapNhat = ?, NguoiCapNhat = ?, GhiChuBienBan = ?
             WHERE Id = ?
             """;
         jdbcTemplate.update(sql,
@@ -126,7 +131,7 @@ public class DanhGiaVatTuDao {
                 e.getTenThietBi(), e.getKieu(), e.getSoDangKi(), e.getIdDonViQuanLy(), e.getIdNghiemThu(),
                 e.getSoLuongPhucHoi(), e.getSoLuongPheLieu(), e.getSoLuongHuy(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),
-                e.getShare(), e.getTrangThai(), e.getNgayCapNhat(), e.getNguoiCapNhat(),
+                e.getShare(), e.getTrangThai(), e.getNgayCapNhat(), e.getNguoiCapNhat(), e.getGhiChuBienBan(),
                 e.getId()
         );
         return e;
@@ -158,6 +163,17 @@ public class DanhGiaVatTuDao {
 
     public int updateTrangThai(String id, Integer trangThai) {
         return jdbcTemplate.update("UPDATE danhgia_vattu SET TrangThai = ? WHERE Id = ?", trangThai, id);
+    }
+
+    public int huy(String id) {
+        final int STATUS_CANCELLED = 0;
+        int r = jdbcTemplate.update(
+                "UPDATE danhgia_vattu SET TrangThai = ?, Share = 0, NgayCapNhat = ? WHERE Id = ?",
+                STATUS_CANCELLED, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")), id);
+        if (r > 0) {
+            kyTaiLieuDao.delete(id);
+        }
+        return r;
     }
 
     public int delete(String id) {

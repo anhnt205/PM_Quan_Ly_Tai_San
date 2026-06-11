@@ -13,6 +13,7 @@ public class SuaChuaDTO {
     private Integer thang;
     private Integer nam;
     private String ghiChu;
+    private String ghiChuBienBan;
     
     // Người lập phiếu
     private String idNguoiLap;

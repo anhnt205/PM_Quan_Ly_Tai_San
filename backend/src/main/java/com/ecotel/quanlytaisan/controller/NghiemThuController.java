@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.HashMap;
 import java.util.List;
@@ -78,7 +79,7 @@ public class NghiemThuController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Object>> create(@RequestBody NghiemThu entity) {
+    public ResponseEntity<ApiResponse<Object>> create(@Valid @RequestBody NghiemThu entity) {
         try {
             NghiemThu created = service.insert(entity);
             return ResponseEntity.ok(ApiResponse.success("Tạo biên bản nghiệm thu thành công", created, 1));
@@ -89,7 +90,7 @@ public class NghiemThuController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody NghiemThu entity) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @Valid @RequestBody NghiemThu entity) {
         try {
             entity.setId(id);
             NghiemThu updated = service.update(entity);
@@ -125,7 +126,7 @@ public class NghiemThuController {
     }
 
     @PutMapping("/batch")
-    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<NghiemThu> list) {
+    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<@Valid NghiemThu> list) {
         try {
             service.bulkUpdate(list);
             return ResponseEntity.ok(ApiResponse.success("Cập nhật danh sách thành công", null, list.size()));

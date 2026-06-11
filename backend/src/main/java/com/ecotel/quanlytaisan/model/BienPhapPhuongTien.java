@@ -18,6 +18,7 @@ public class BienPhapPhuongTien {
     private String bienPhapAnToan;
     private String idGiamDinhPhuongTien;
     private String donViQuanLy;
+    private String ghiChuBienBan;
 
     // Luồng ký
     private String  idNguoiLap;

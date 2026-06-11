@@ -13,6 +13,7 @@ public class KiemTraSuCoDTO {
     private String viTri;
     private String nhanXetKetLuan;
     private String bienPhapXuLy;
+    private String ghiChuBienBan;
     private Integer trangThai;
     private Boolean share;
     private String ngayTao;

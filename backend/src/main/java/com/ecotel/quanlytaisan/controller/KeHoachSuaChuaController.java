@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -112,7 +113,7 @@ public class KeHoachSuaChuaController {
     // ==================== CREATE ====================
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Object>> create(@RequestBody KeHoachSuaChua entity) throws SQLException {
+    public ResponseEntity<ApiResponse<Object>> create(@Valid @RequestBody KeHoachSuaChua entity) throws SQLException {
         try {
             KeHoachSuaChua result = keHoachSuaChuaService.insert(entity);
             if (result != null) return ResponseEntity.status(HttpStatus.CREATED)
@@ -128,7 +129,7 @@ public class KeHoachSuaChuaController {
     // ==================== CREATE BATCH ====================
 
     @PostMapping("/batch")
-    public ResponseEntity<ApiResponse<Object>> createBatch(@RequestBody List<KeHoachSuaChua> list) {
+    public ResponseEntity<ApiResponse<Object>> createBatch(@RequestBody List<@Valid KeHoachSuaChua> list) {
         try {
             int total = 0;
             for (KeHoachSuaChua item : list) {
@@ -148,7 +149,7 @@ public class KeHoachSuaChuaController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> update(
-            @PathVariable("id") String id, @RequestBody KeHoachSuaChua entity) throws SQLException {
+            @PathVariable("id") String id, @Valid @RequestBody KeHoachSuaChua entity) throws SQLException {
         try {
             entity.setId(id);
             KeHoachSuaChua result = keHoachSuaChuaService.update(entity);
@@ -164,7 +165,7 @@ public class KeHoachSuaChuaController {
     // ==================== UPDATE BATCH ====================
 
     @PutMapping("/batch")
-    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<KeHoachSuaChua> list) {
+    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<@Valid KeHoachSuaChua> list) {
         try {
             int total = 0;
             for (KeHoachSuaChua item : list) {

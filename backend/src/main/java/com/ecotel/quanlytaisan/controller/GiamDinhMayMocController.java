@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.HashMap;
 import java.util.List;
@@ -81,7 +82,7 @@ public class GiamDinhMayMocController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Object>> create(@RequestBody GiamDinhMayMoc entity) {
+    public ResponseEntity<ApiResponse<Object>> create(@Valid @RequestBody GiamDinhMayMoc entity) {
         try {
             GiamDinhMayMoc created = service.insert(entity);
             return ResponseEntity.ok(ApiResponse.success("Tạo biên bản thành công", created, 1));
@@ -92,7 +93,7 @@ public class GiamDinhMayMocController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody GiamDinhMayMoc entity) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @Valid @RequestBody GiamDinhMayMoc entity) {
         try {
             entity.setId(id);
             GiamDinhMayMoc updated = service.update(entity);
@@ -128,7 +129,7 @@ public class GiamDinhMayMocController {
     }
 
     @PutMapping("/batch")
-    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<GiamDinhMayMoc> list) {
+    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<@Valid GiamDinhMayMoc> list) {
         try {
             service.bulkUpdate(list);
             return ResponseEntity.ok(ApiResponse.success("Cập nhật danh sách thành công", null, list.size()));

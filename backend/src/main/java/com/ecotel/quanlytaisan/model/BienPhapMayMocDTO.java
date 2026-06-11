@@ -19,6 +19,7 @@ public class BienPhapMayMocDTO {
     private String thoiGianKetThuc;
     private Integer thoiGianNgay;
     private String ghiChu;
+    private String ghiChuBienBan;
     private String tenFile;
     private String duongDanFile;
 

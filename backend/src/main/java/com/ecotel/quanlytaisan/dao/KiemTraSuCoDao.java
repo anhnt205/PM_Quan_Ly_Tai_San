@@ -25,7 +25,7 @@ public class KiemTraSuCoDao {
         return """
             SELECT
                 kt.Id, kt.IdCongTy, kt.IdSuCo, kt.SoPhieu, kt.NgayKiemTra, kt.ViTri,
-                kt.NhanXetKetLuan, kt.BienPhapXuLy, kt.IdNguoiLap, kt.NguoiLapXacNhan,
+                kt.NhanXetKetLuan, kt.BienPhapXuLy, kt.GhiChuBienBan, kt.IdNguoiLap, kt.NguoiLapXacNhan,
                 kt.IdGiamDoc, kt.GiamDocXacNhan, kt.Share, kt.TrangThai,
                 kt.NgayTao, kt.NgayCapNhat, kt.NguoiTao, kt.NguoiCapNhat,
                 sc.SoPhieu AS soPhieuSuCo,
@@ -106,8 +106,8 @@ public class KiemTraSuCoDao {
                 Id, IdCongTy, IdSuCo, SoPhieu, NgayKiemTra, ViTri,
                 NhanXetKetLuan, BienPhapXuLy, IdNguoiLap, NguoiLapXacNhan,
                 IdGiamDoc, GiamDocXacNhan, Share, TrangThai,
-                NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, GhiChuBienBan
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         
         String now = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -118,7 +118,7 @@ public class KiemTraSuCoDao {
                 e.getId(), e.getIdCongTy(), e.getIdSuCo(), e.getSoPhieu(), e.getNgayKiemTra(), e.getViTri(),
                 e.getNhanXetKetLuan(), e.getBienPhapXuLy(), e.getIdNguoiLap(), e.getNguoiLapXacNhan(),
                 e.getIdGiamDoc(), e.getGiamDocXacNhan(), e.getShare(), e.getTrangThai() != null ? e.getTrangThai() : 0,
-                ngayTao, ngayCapNhat, e.getNguoiTao(), e.getNguoiCapNhat()
+                ngayTao, ngayCapNhat, e.getNguoiTao(), e.getNguoiCapNhat(), e.getGhiChuBienBan()
         );
         if (r > 0) return findById(e.getId());
         return null;
@@ -130,7 +130,7 @@ public class KiemTraSuCoDao {
                 IdSuCo = ?, SoPhieu = ?, NgayKiemTra = ?, ViTri = ?,
                 NhanXetKetLuan = ?, BienPhapXuLy = ?, IdNguoiLap = ?, NguoiLapXacNhan = ?,
                 IdGiamDoc = ?, GiamDocXacNhan = ?, Share = ?, TrangThai = ?,
-                NgayCapNhat = ?, NguoiCapNhat = ?
+                NgayCapNhat = ?, NguoiCapNhat = ?, GhiChuBienBan = ?
             WHERE Id = ?
             """;
         
@@ -141,7 +141,7 @@ public class KiemTraSuCoDao {
                 e.getIdSuCo(), e.getSoPhieu(), e.getNgayKiemTra(), e.getViTri(),
                 e.getNhanXetKetLuan(), e.getBienPhapXuLy(), e.getIdNguoiLap(), e.getNguoiLapXacNhan(),
                 e.getIdGiamDoc(), e.getGiamDocXacNhan(), e.getShare(), e.getTrangThai(),
-                ngayCapNhat, e.getNguoiCapNhat(), e.getId()
+                ngayCapNhat, e.getNguoiCapNhat(), e.getGhiChuBienBan(), e.getId()
         );
         if (r > 0) return findById(e.getId());
         return null;
@@ -212,9 +212,14 @@ public class KiemTraSuCoDao {
     }
 
     public int huy(String id) {
+        final int STATUS_CANCELLED = 0;
         String now = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        String sql = "UPDATE kiemtra_suco SET TrangThai = 2, NgayCapNhat = ? WHERE Id = ?";
-        return jdbcTemplate.update(sql, now, id);
+        String sql = "UPDATE kiemtra_suco SET TrangThai = ?, Share = 0, NgayCapNhat = ? WHERE Id = ?";
+        int r = jdbcTemplate.update(sql, STATUS_CANCELLED, now, id);
+        if (r > 0) {
+            kyTaiLieuDao.delete(id);
+        }
+        return r;
     }
 
     public int delete(String id) {

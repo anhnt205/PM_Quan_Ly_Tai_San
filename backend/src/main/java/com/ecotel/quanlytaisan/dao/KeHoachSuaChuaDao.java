@@ -77,6 +77,7 @@ public class KeHoachSuaChuaDao {
 
                 kh.Share,
                 kh.ByStep,
+                kh.TenMauBienBanSuaChua,
 
                 (SELECT COUNT(*) FROM suco_thietbi sc WHERE sc.IdKeHoach = kh.Id) AS soLuongSuCo
 
@@ -162,8 +163,8 @@ public class KeHoachSuaChuaDao {
                 IdTrinhDuyetGiamDoc, TrinhDuyetGiamDocXacNhan,
                 TrangThai, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat,
                 GhiChu, DuongDanFile, TenFile, NgayKy, DuongDanTaiLieuBangKe,
-                Share, ByStep, NhomTaiSan
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                Share, ByStep, NhomTaiSan, TenMauBienBanSuaChua
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         int r = jdbcTemplate.update(sql,
                 e.getId(), e.getIdCongTy(), e.getSoKeHoach(), e.getTenKeHoach(), e.getSoQuyetDinh(),
@@ -175,7 +176,7 @@ public class KeHoachSuaChuaDao {
                 e.getNgayTao(), e.getNgayCapNhat(), e.getNguoiTao(), e.getNguoiCapNhat(),
                 e.getGhiChu(), e.getDuongDanFile(), e.getTenFile(), e.getNgayKy(),
                 e.getDuongDanTaiLieuBangKe(),
-                e.getShare(), e.getByStep(), e.getNhomTaiSan()
+                e.getShare(), e.getByStep(), e.getNhomTaiSan(), e.getTenMauBienBanSuaChua()
         );
         if (r > 0) { CompletableFuture.runAsync(this::refreshCache); return findById(e.getId()); }
         return null;
@@ -193,7 +194,7 @@ public class KeHoachSuaChuaDao {
                 IdTrinhDuyetGiamDoc = ?, TrinhDuyetGiamDocXacNhan = ?,
                 TrangThai = ?, NgayCapNhat = ?, NguoiCapNhat = ?,
                 GhiChu = ?, DuongDanFile = ?, TenFile = ?, NgayKy = ?, DuongDanTaiLieuBangKe = ?,
-                Share = ?, ByStep = ?, NhomTaiSan = ?
+                Share = ?, ByStep = ?, NhomTaiSan = ?, TenMauBienBanSuaChua = ?
             WHERE Id = ?
             """;
         int r = jdbcTemplate.update(sql,
@@ -205,7 +206,7 @@ public class KeHoachSuaChuaDao {
                 e.getTrangThai(), e.getNgayCapNhat(), e.getNguoiCapNhat(),
                 e.getGhiChu(), e.getDuongDanFile(), e.getTenFile(),
                 e.getNgayKy(), e.getDuongDanTaiLieuBangKe(),
-                e.getShare(), e.getByStep(), e.getNhomTaiSan(),
+                e.getShare(), e.getByStep(), e.getNhomTaiSan(), e.getTenMauBienBanSuaChua(),
                 e.getId()
         );
         if (r > 0) { CompletableFuture.runAsync(this::refreshCache); return findById(e.getId()); }
@@ -281,10 +282,14 @@ public class KeHoachSuaChuaDao {
     }
 
     public int huyKeHoach(String id) {
+        final int STATUS_CANCELLED = 0;
         int r = jdbcTemplate.update(
-                "UPDATE kehoachsuachua SET TrangThai = 2, NgayCapNhat = ? WHERE Id = ?",
-                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")), id);
-        if (r > 0) CompletableFuture.runAsync(this::refreshCache);
+                "UPDATE kehoachsuachua SET TrangThai = ?, Share = 0, NgayCapNhat = ? WHERE Id = ?",
+                STATUS_CANCELLED, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")), id);
+        if (r > 0) {
+            kyTaiLieuDao.delete(id);
+            CompletableFuture.runAsync(this::refreshCache);
+        }
         return r;
     }
 

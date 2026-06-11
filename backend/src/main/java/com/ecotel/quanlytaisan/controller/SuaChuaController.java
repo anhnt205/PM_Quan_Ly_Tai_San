@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -80,7 +81,7 @@ public class SuaChuaController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Object>> create(@RequestBody SuaChua entity) {
+    public ResponseEntity<ApiResponse<Object>> create(@Valid @RequestBody SuaChua entity) {
         try {
             SuaChua result = service.insert(entity);
             if (result != null) return ResponseEntity.status(HttpStatus.CREATED)
@@ -94,7 +95,7 @@ public class SuaChuaController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody SuaChua entity) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @Valid @RequestBody SuaChua entity) {
         try {
             entity.setId(id);
             SuaChua result = service.update(entity);

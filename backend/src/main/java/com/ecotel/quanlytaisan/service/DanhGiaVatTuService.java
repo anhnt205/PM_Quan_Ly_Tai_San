@@ -123,7 +123,7 @@ public class DanhGiaVatTuService {
 
     @Transactional
     public int huy(String id) {
-        return dao.updateTrangThai(id, 2); // 2: Hủy
+        return dao.huy(id);
     }
 
     @Transactional
