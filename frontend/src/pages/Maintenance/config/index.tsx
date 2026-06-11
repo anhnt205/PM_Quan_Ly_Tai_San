@@ -507,9 +507,13 @@ export const generateBienBanKeHoachPdf = async (
   staffs: any[],
   departments: any[],
   positions: any[],
+
 ): Promise<{
   pdf: Uint8Array;
-  coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
+  coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  >;
 }> => {
   const listSigneInfos: any[] = listSigneInfo(
     plan,
@@ -527,12 +531,12 @@ export const generateBienBanKeHoachPdf = async (
   const centerX = pageWidth / 2;
 
   doc.text(
-    `KẾ HOẠCH SỬA CHỮA BẢO DƯỠNG THIẾT BỊ NĂM ${plan.nam ?? new Date().getFullYear()}`,
+    plan.tenMauBienBanSuaChua
+      ? `${plan.tenMauBienBanSuaChua}`
+      : `KẾ HOẠCH SỬA CHỮA BẢO DƯỠNG THIẾT BỊ NĂM ${plan.nam ?? new Date().getFullYear()}`,
     centerX,
     20,
-    {
-      align: "center",
-    },
+    { align: "center" },
   );
   doc.text(
     `PHÂN XƯỞNG: ${(plan.tenDonViGiao || ".......................................................").toUpperCase()}`,
@@ -662,7 +666,10 @@ export const generateBienBanKeHoachPdf = async (
   const colWidth = 45; // Độ rộng vùng text mỗi chữ ký
   const maxPerRow = 5; // Tối đa 4 chữ ký / hàng
   const rowGap = 70;
-  const coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }> = {};
+  const coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  > = {};
   const baseY = finalY;
   const baseWidthPx = 120;
   const displayWidth = 800;
@@ -726,7 +733,10 @@ export const generateSuaChuaPdf = async (
   positions: any[],
 ): Promise<{
   pdf: Uint8Array;
-  coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
+  coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  >;
 }> => {
   const listSigneInfos: any[] = listSigneInfo(
     repair,
@@ -890,7 +900,10 @@ export const generateSuaChuaPdf = async (
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
-  const coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }> = {};
+  const coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  > = {};
   const baseWidthPx = 120;
   const displayWidth = 800;
 
@@ -940,7 +953,10 @@ export const generatePhieuSuCoPdf = async (
   positions: any[],
 ): Promise<{
   pdf: Uint8Array;
-  coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
+  coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  >;
 }> => {
   const listSigneInfos: any[] = listSigneInfo(
     incident,
@@ -1132,7 +1148,10 @@ export const generatePhieuSuCoPdf = async (
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
-  const coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }> = {};
+  const coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  > = {};
   const baseWidthPx = 120;
   const displayWidth = 800;
 
@@ -1181,7 +1200,10 @@ export const generateGiamDinhPdf = async (
   positions: any[],
 ): Promise<{
   pdf: Uint8Array;
-  coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
+  coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  >;
 }> => {
   const listSigneInfos: any[] = listSigneInfo(
     inspection,
@@ -1384,7 +1406,10 @@ export const generateGiamDinhPdf = async (
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
-  const coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }> = {};
+  const coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  > = {};
   const baseWidthPx = 120;
   const displayWidth = 800;
 
@@ -1434,7 +1459,10 @@ export const generateGiamDinhPhuongTienPdf = async (
   positions: any[],
 ): Promise<{
   pdf: Uint8Array;
-  coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
+  coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  >;
 }> => {
   const listSigneInfos: any[] = listSigneInfo(
     inspection,
@@ -1480,13 +1508,13 @@ export const generateGiamDinhPhuongTienPdf = async (
   // Title
   doc.setFont("times_new_roman", "bold");
   doc.setFontSize(14);
-  doc.text("BIÊN BẢN GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ", pageWidth / 2, 50, { align: "center" });
   doc.text(
-    "VÀO SỬA CHỮA",
+    "BIÊN BẢN GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ",
     pageWidth / 2,
-    58,
+    50,
     { align: "center" },
   );
+  doc.text("VÀO SỬA CHỮA", pageWidth / 2, 58, { align: "center" });
 
   doc.setFont("times_new_roman", "normal");
   doc.setFontSize(11);
@@ -1544,16 +1572,18 @@ export const generateGiamDinhPhuongTienPdf = async (
   y += 1;
 
   // Table
-  const tableData: any[] = (inspection.danhSachChiTiet || []).map((vt: any, vtIdx: number) => [
-    `${vtIdx + 1}`,
-    vt.tenVatTu || vt.idChiTietVatTu || "",
-    vt.donViTinh || "",
-    vt.soLuong || 0,
-    vt.tinhTrang || "",
-    vt.soLuongThayMoi || 0,
-    vt.soLuongSuaChua || 0,
-    vt.ghiChu || "",
-  ]);
+  const tableData: any[] = (inspection.danhSachChiTiet || []).map(
+    (vt: any, vtIdx: number) => [
+      `${vtIdx + 1}`,
+      vt.tenVatTu || vt.idChiTietVatTu || "",
+      vt.donViTinh || "",
+      vt.soLuong || 0,
+      vt.tinhTrang || "",
+      vt.soLuongThayMoi || 0,
+      vt.soLuongSuaChua || 0,
+      vt.ghiChu || "",
+    ],
+  );
 
   autoTable(doc, {
     startY: y,
@@ -1592,7 +1622,7 @@ export const generateGiamDinhPhuongTienPdf = async (
   });
 
   y = (doc as any).lastAutoTable.finalY + 10;
-  
+
   const noiDungKhacText = `Các nội dung cần thống nhất khác: ${inspection.noiDungKhac || "................."}`;
   const noiDungKhacLines = doc.splitTextToSize(noiDungKhacText, pageWidth - 40);
   noiDungKhacLines.forEach((line: string) => {
@@ -1617,7 +1647,10 @@ export const generateGiamDinhPhuongTienPdf = async (
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
-  const coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }> = {};
+  const coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  > = {};
   const baseWidthPx = 120;
   const displayWidth = 800;
 
@@ -1667,7 +1700,10 @@ export const generateNghiemThuPdf = async (
   positions: any[],
 ): Promise<{
   pdf: Uint8Array;
-  coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
+  coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  >;
 }> => {
   const listSigneInfos: any[] = listSigneInfo(
     item,
@@ -1872,7 +1908,10 @@ export const generateNghiemThuPdf = async (
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
-  const coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }> = {};
+  const coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  > = {};
   const baseWidthPx = 120;
   const displayWidth = 800;
 
@@ -1922,7 +1961,10 @@ export const generateDanhGiaVatTuPdf = async (
   positions: any[],
 ): Promise<{
   pdf: Uint8Array;
-  coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
+  coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  >;
 }> => {
   const listSigneInfos: any[] = listSigneInfo(
     item,
@@ -2096,7 +2138,10 @@ export const generateDanhGiaVatTuPdf = async (
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
-  const coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }> = {};
+  const coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  > = {};
   const baseWidthPx = 120;
   const displayWidth = 800;
 
@@ -2146,7 +2191,10 @@ export const generateKiemTraSuCoPdf = async (
   positions: any[],
 ): Promise<{
   pdf: Uint8Array;
-  coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
+  coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  >;
 }> => {
   const listSigneInfos: any[] = listSigneInfo(
     item,
@@ -2367,7 +2415,10 @@ export const generateKiemTraSuCoPdf = async (
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
-  const coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }> = {};
+  const coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  > = {};
   const baseWidthPx = 120;
   const displayWidth = 800;
 
@@ -2423,7 +2474,10 @@ export const generateBienPhapMayMocPdf = async (
   positions: any[],
 ): Promise<{
   pdf: Uint8Array;
-  coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
+  coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  >;
 }> => {
   const listSigneInfos: any[] = listSigneInfo(
     item,
@@ -2565,7 +2619,10 @@ export const generateBienPhapMayMocPdf = async (
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
-  const coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }> = {};
+  const coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  > = {};
   const baseWidthPx = 120;
   const displayWidth = 800;
 
@@ -2621,7 +2678,10 @@ export const generateBienPhapPhuongTienPdf = async (
   positions: any[],
 ): Promise<{
   pdf: Uint8Array;
-  coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
+  coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  >;
 }> => {
   const listSigneInfos: any[] = listSigneInfo(
     item,
@@ -2639,26 +2699,36 @@ export const generateBienPhapPhuongTienPdf = async (
   doc.setFont("times_new_roman", "normal");
   doc.setFontSize(9.5);
   doc.text("TẬP ĐOÀN CÔNG NGHIỆP", leftColCenter, 20, { align: "center" });
-  doc.text("THAN – KHOÁNG SẢN VIỆT NAM", leftColCenter, 25, { align: "center" });
+  doc.text("THAN – KHOÁNG SẢN VIỆT NAM", leftColCenter, 25, {
+    align: "center",
+  });
   doc.setFont("times_new_roman", "bold");
   doc.setFontSize(10);
-  doc.text("CÔNG TY THAN UÔNG BÍ – TKV", leftColCenter, 30, { align: "center" });
-  
+  doc.text("CÔNG TY THAN UÔNG BÍ – TKV", leftColCenter, 30, {
+    align: "center",
+  });
+
   // Underline for Company name
   doc.setLineWidth(0.3);
   doc.line(leftColCenter - 20, 31.5, leftColCenter + 20, 31.5);
-  
+
   doc.setFont("times_new_roman", "normal");
   doc.setFontSize(10);
-  doc.text(`Số: ${item.soBienBan || "401"} /BP- CV`, leftColCenter, 37, { align: "center" });
+  doc.text(`Số: ${item.soBienBan || "401"} /BP- CV`, leftColCenter, 37, {
+    align: "center",
+  });
 
   // Header Right
   doc.setFont("times_new_roman", "bold");
   doc.setFontSize(10);
-  doc.text("CỘNG HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM", rightColCenter, 20, { align: "center" });
+  doc.text("CỘNG HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM", rightColCenter, 20, {
+    align: "center",
+  });
   doc.setFontSize(11);
-  doc.text("Độc lập – Tự do – Hạnh phúc", rightColCenter, 25, { align: "center" });
-  
+  doc.text("Độc lập – Tự do – Hạnh phúc", rightColCenter, 25, {
+    align: "center",
+  });
+
   // Underline for national motto
   doc.setLineWidth(0.3);
   doc.line(rightColCenter - 15, 26.5, rightColCenter + 15, 26.5);
@@ -2673,15 +2743,17 @@ export const generateBienPhapPhuongTienPdf = async (
   // Title
   doc.setFont("times_new_roman", "bold");
   doc.setFontSize(13);
-  doc.text("BIỆN PHÁP SỬA CHỮA THIẾT BỊ", pageWidth / 2, 47, { align: "center" });
-  
+  doc.text("BIỆN PHÁP SỬA CHỮA THIẾT BỊ", pageWidth / 2, 47, {
+    align: "center",
+  });
+
   doc.setFont("times_new_roman_italic", "italic");
   doc.setFontSize(11);
   doc.text(
     `V/v sửa chữa thiết bị ô tô xe máy – ${item.tenTaiSan || "Xe ô tô DONGFENG biển số 14C-12876"}`,
     pageWidth / 2,
     52,
-    { align: "center" }
+    { align: "center" },
   );
   doc.setFont("times_new_roman_italic", "italic");
   doc.text(
@@ -2709,9 +2781,14 @@ export const generateBienPhapPhuongTienPdf = async (
 
   const renderBulletList = (text: string, x: number, maxWidth: number) => {
     if (!text) return;
-    const items = text.split("\n").map((i) => i.trim()).filter(Boolean);
+    const items = text
+      .split("\n")
+      .map((i) => i.trim())
+      .filter(Boolean);
     items.forEach((itemText) => {
-      const formattedItem = itemText.startsWith("-") ? itemText : `- ${itemText}`;
+      const formattedItem = itemText.startsWith("-")
+        ? itemText
+        : `- ${itemText}`;
       const lines = doc.splitTextToSize(formattedItem, maxWidth);
       lines.forEach((line: string, idx: number) => {
         if (y > pageHeight - 20) {
@@ -2736,12 +2813,21 @@ export const generateBienPhapPhuongTienPdf = async (
   doc.setFont("times_new_roman", "bold");
   doc.text("1. Mục đích:", 15, y);
   y += 6;
-  renderBulletList(item.mucDich || "Sửa chữa bảo dưỡng xe ô tô để huy động phục vụ sản xuất.", 15, 180);
+  renderBulletList(
+    item.mucDich || "Sửa chữa bảo dưỡng xe ô tô để huy động phục vụ sản xuất.",
+    15,
+    180,
+  );
 
   doc.setFont("times_new_roman", "bold");
   doc.text("2. Yêu cầu:", 15, y);
   y += 6;
-  renderBulletList(item.yeuCau || "Thiết bị được sửa chữa lắp đặt phải đúng KTCB, trong quá trình lắp đặt phải có cán bộ chỉ huy trực tiếp tại hiện trường đảm bảo an toàn cho con người và thiết bị.", 15, 180);
+  renderBulletList(
+    item.yeuCau ||
+      "Thiết bị được sửa chữa lắp đặt phải đúng KTCB, trong quá trình lắp đặt phải có cán bộ chỉ huy trực tiếp tại hiện trường đảm bảo an toàn cho con người và thiết bị.",
+    15,
+    180,
+  );
 
   // II. TÌNH TRẠNG HIỆN TẠI
   if (y > pageHeight - 25) {
@@ -2751,7 +2837,12 @@ export const generateBienPhapPhuongTienPdf = async (
   doc.setFont("times_new_roman", "bold");
   doc.text("II. TÌNH TRẠNG HIỆN TẠI", 15, y);
   y += 6;
-  renderBulletList(item.tinhTrangHienTai || "Đến kỳ bảo dưỡng.\nThiết bị hoạt động không ổn định.", 15, 180);
+  renderBulletList(
+    item.tinhTrangHienTai ||
+      "Đến kỳ bảo dưỡng.\nThiết bị hoạt động không ổn định.",
+    15,
+    180,
+  );
 
   // III. BIỆN PHÁP SỬA CHỮA
   if (y > pageHeight - 25) {
@@ -2765,7 +2856,12 @@ export const generateBienPhapPhuongTienPdf = async (
   doc.setFont("times_new_roman", "bold");
   doc.text("1. Nội dung thực hiện:", 15, y);
   y += 6;
-  renderBulletList(item.noiDungThucHien || "Vệ sinh công nghiệp thiết bị trước khi sửa chữa.\nTiến hành tháo lắp, kiểm tra và bảo dưỡng theo quy trình.\nVận hành chạy thử sau khi sửa chữa xong.", 15, 180);
+  renderBulletList(
+    item.noiDungThucHien ||
+      "Vệ sinh công nghiệp thiết bị trước khi sửa chữa.\nTiến hành tháo lắp, kiểm tra và bảo dưỡng theo quy trình.\nVận hành chạy thử sau khi sửa chữa xong.",
+    15,
+    180,
+  );
 
   if (y > pageHeight - 25) {
     doc.addPage();
@@ -2788,7 +2884,12 @@ export const generateBienPhapPhuongTienPdf = async (
   ];
 
   const tableBody = (item.danhSachChiTiet || []).map((vt: any, idx: number) => {
-    const slCap = vt.soLuongCap != null ? String(vt.soLuongCap) : (vt.soLuong != null ? String(vt.soLuong) : "—");
+    const slCap =
+      vt.soLuongCap != null
+        ? String(vt.soLuongCap)
+        : vt.soLuong != null
+          ? String(vt.soLuong)
+          : "—";
     const slThuHoi = vt.soLuongThuHoi != null ? String(vt.soLuongThuHoi) : "—";
     return [
       idx + 1,
@@ -2801,7 +2902,14 @@ export const generateBienPhapPhuongTienPdf = async (
   });
 
   if (tableBody.length === 0) {
-    tableBody.push(["—", "Không có vật tư thiết bị thay thế", "—", "—", "—", "—"]);
+    tableBody.push([
+      "—",
+      "Không có vật tư thiết bị thay thế",
+      "—",
+      "—",
+      "—",
+      "—",
+    ]);
   }
 
   autoTable(doc, {
@@ -2857,7 +2965,12 @@ export const generateBienPhapPhuongTienPdf = async (
   doc.setFont("times_new_roman", "bold");
   doc.text("IV. BIỆN PHÁP AN TOÀN", 15, y);
   y += 6;
-  renderBulletList(item.bienPhapAnToan || "Thợ sửa chữa trang bị đầy đủ bảo hộ lao động theo quy định ATBHLĐ.\nChỉ những người được phổ biến biện pháp, phân công nhiệm vụ mới được tham gia công việc.", 15, 180);
+  renderBulletList(
+    item.bienPhapAnToan ||
+      "Thợ sửa chữa trang bị đầy đủ bảo hộ lao động theo quy định ATBHLĐ.\nChỉ những người được phổ biến biện pháp, phân công nhiệm vụ mới được tham gia công việc.",
+    15,
+    180,
+  );
 
   if (y > pageHeight - 20) {
     doc.addPage();
@@ -2865,7 +2978,12 @@ export const generateBienPhapPhuongTienPdf = async (
   }
   doc.setFont("times_new_roman_italic", "italic");
   doc.setFontSize(10.5);
-  doc.text("- Trong quá trình thực hiện phải tuân thủ các quy định, quy trình của nhà nước, Công ty đã ban hành đảm bảo kỹ thuật, an toàn ./. ", 15, y, { maxWidth: 180 });
+  doc.text(
+    "- Trong quá trình thực hiện phải tuân thủ các quy định, quy trình của nhà nước, Công ty đã ban hành đảm bảo kỹ thuật, an toàn ./. ",
+    15,
+    y,
+    { maxWidth: 180 },
+  );
   y += 18;
 
   y = y + 15;
@@ -2879,7 +2997,10 @@ export const generateBienPhapPhuongTienPdf = async (
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
-  const coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }> = {};
+  const coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  > = {};
   const baseWidthPx = 120;
   const displayWidth = 800;
 
@@ -2934,7 +3055,10 @@ export const generateNghiemThuPhuongTienPdf = async (
   positions: any[],
 ): Promise<{
   pdf: Uint8Array;
-  coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
+  coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  >;
 }> => {
   const listSigneInfos: any[] = listSigneInfo(
     item,
@@ -2952,11 +3076,15 @@ export const generateNghiemThuPhuongTienPdf = async (
   doc.setFont("times_new_roman", "normal");
   doc.setFontSize(9.5);
   doc.text("TẬP ĐOÀN CÔNG NGHIỆP", leftColCenter, 20, { align: "center" });
-  doc.text("THAN – KHOÁNG SẢN VIỆT NAM", leftColCenter, 25, { align: "center" });
+  doc.text("THAN – KHOÁNG SẢN VIỆT NAM", leftColCenter, 25, {
+    align: "center",
+  });
   doc.setFont("times_new_roman", "bold");
   doc.setFontSize(10);
-  doc.text("CÔNG TY THAN UÔNG BÍ – TKV", leftColCenter, 30, { align: "center" });
-  
+  doc.text("CÔNG TY THAN UÔNG BÍ – TKV", leftColCenter, 30, {
+    align: "center",
+  });
+
   // Underline for Company name
   doc.setLineWidth(0.3);
   doc.line(leftColCenter - 20, 31.5, leftColCenter + 20, 31.5);
@@ -2964,10 +3092,14 @@ export const generateNghiemThuPhuongTienPdf = async (
   // Header Right
   doc.setFont("times_new_roman", "bold");
   doc.setFontSize(10);
-  doc.text("CỘNG HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM", rightColCenter, 20, { align: "center" });
+  doc.text("CỘNG HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM", rightColCenter, 20, {
+    align: "center",
+  });
   doc.setFontSize(11);
-  doc.text("Độc lập – Tự do – Hạnh phúc", rightColCenter, 25, { align: "center" });
-  
+  doc.text("Độc lập – Tự do – Hạnh phúc", rightColCenter, 25, {
+    align: "center",
+  });
+
   // Underline for national motto
   doc.setLineWidth(0.3);
   doc.line(rightColCenter - 15, 26.5, rightColCenter + 15, 26.5);
@@ -3049,13 +3181,21 @@ export const generateNghiemThuPhuongTienPdf = async (
     doc.addPage();
     y = 20;
   }
-  doc.text(`1. Tình trạng kỹ thuật của thiết bị sau khi đã sửa chữa: ${item.tinhTrang || "Đảm bảo kỹ thuật."}`, 15, y);
+  doc.text(
+    `1. Tình trạng kỹ thuật của thiết bị sau khi đã sửa chữa: ${item.tinhTrang || "Đảm bảo kỹ thuật."}`,
+    15,
+    y,
+  );
   y += 6;
   if (y > pageHeight - 20) {
     doc.addPage();
     y = 20;
   }
-  doc.text(`2. Công việc phát sinh: ${item.congViecPhatSinh || "Không."}`, 15, y);
+  doc.text(
+    `2. Công việc phát sinh: ${item.congViecPhatSinh || "Không."}`,
+    15,
+    y,
+  );
   y += 6;
   if (y > pageHeight - 20) {
     doc.addPage();
@@ -3067,10 +3207,26 @@ export const generateNghiemThuPhuongTienPdf = async (
   // Table of Materials
   const tableHead: any[][] = [
     [
-      { content: "TT", rowSpan: 2, styles: { halign: "center", valign: "middle" } },
-      { content: "Vật tư - Phụ tùng thay thế", colSpan: 3, styles: { halign: "center" } },
-      { content: "Vật tư - Phụ tùng thu hồi", colSpan: 3, styles: { halign: "center" } },
-      { content: "Ghi chú", rowSpan: 2, styles: { halign: "center", valign: "middle" } },
+      {
+        content: "TT",
+        rowSpan: 2,
+        styles: { halign: "center", valign: "middle" },
+      },
+      {
+        content: "Vật tư - Phụ tùng thay thế",
+        colSpan: 3,
+        styles: { halign: "center" },
+      },
+      {
+        content: "Vật tư - Phụ tùng thu hồi",
+        colSpan: 3,
+        styles: { halign: "center" },
+      },
+      {
+        content: "Ghi chú",
+        rowSpan: 2,
+        styles: { halign: "center", valign: "middle" },
+      },
     ],
     [
       "Tên vật tư",
@@ -3096,7 +3252,16 @@ export const generateNghiemThuPhuongTienPdf = async (
   });
 
   if (tableBody.length === 0) {
-    tableBody.push(["—", "Không có vật tư thiết bị thay thế/thu hồi", "—", "—", "—", "—", "—", "—"]);
+    tableBody.push([
+      "—",
+      "Không có vật tư thiết bị thay thế/thu hồi",
+      "—",
+      "—",
+      "—",
+      "—",
+      "—",
+      "—",
+    ]);
   }
 
   autoTable(doc, {
@@ -3152,7 +3317,12 @@ export const generateNghiemThuPhuongTienPdf = async (
   doc.setFont("times_new_roman", "bold");
   doc.text("Kết luận:", 15, y);
   doc.setFont("times_new_roman", "normal");
-  doc.text(item.ketLuan || `Thiết bị ${item.tenTaiSan || ""} đã được sửa chữa đảm bảo kỹ thuật đưa vào sử dụng.`, 33, y);
+  doc.text(
+    item.ketLuan ||
+      `Thiết bị ${item.tenTaiSan || ""} đã được sửa chữa đảm bảo kỹ thuật đưa vào sử dụng.`,
+    33,
+    y,
+  );
   y += 18;
   if (y > pageHeight - 80) {
     doc.addPage();
@@ -3164,7 +3334,10 @@ export const generateNghiemThuPhuongTienPdf = async (
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
-  const coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }> = {};
+  const coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  > = {};
   const baseWidthPx = 120;
   const displayWidth = 800;
 

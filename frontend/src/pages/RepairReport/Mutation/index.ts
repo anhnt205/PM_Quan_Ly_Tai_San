@@ -1,0 +1,99 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import api from "../../../config/api.config";
+import { BienBanSuaChua } from "../types";
+import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
+
+export const useBienBanSuaChuaPageQuery = (
+  page: number,
+  size: number,
+  search: string,
+) => {
+  return useQuery({
+    queryKey: ["bienBanSuaChuaPage", page, size, search],
+    queryFn: async () => {
+      const res = await api.get("/mau-bien-ban-sua-chua/paged", {
+        params: { page, size, search },
+      });
+      return res.data;
+    },
+  });
+};
+
+export const useBienBanSuaChuaMutation = () => {
+  const queryClient = useQueryClient();
+
+  const createMutation = useMutation({
+    mutationFn: async (data: BienBanSuaChua) => {
+      const res = await api.post("/mau-bien-ban-sua-chua", data);
+      return res.data;
+    },
+    onSuccess: (res) => {
+      if (res.success) {
+        showSuccessAlert("Tạo biên bản thành công");
+        queryClient.invalidateQueries({ queryKey: ["bienBanSuaChuaPage"] });
+      } else {
+        showErrorAlert(res.message);
+      }
+    },
+    onError: (err: any) => {
+      showErrorAlert(err.response?.data?.message || "Lỗi khi tạo biên bản");
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: BienBanSuaChua) => {
+      const res = await api.put(`/mau-bien-ban-sua-chua/${data.id}`, data);
+      return res.data;
+    },
+    onSuccess: (res) => {
+      if (res.success) {
+        showSuccessAlert("Cập nhật biên bản thành công");
+        queryClient.invalidateQueries({ queryKey: ["bienBanSuaChuaPage"] });
+      } else {
+        showErrorAlert(res.message);
+      }
+    },
+    onError: (err: any) => {
+      showErrorAlert(
+        err.response?.data?.message || "Lỗi khi cập nhật biên bản",
+      );
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.delete(`/mau-bien-ban-sua-chua/${id}`);
+      return res.data;
+    },
+    onSuccess: (res) => {
+      if (res.success) {
+        showSuccessAlert("Xóa biên bản thành công");
+        queryClient.invalidateQueries({ queryKey: ["bienBanSuaChuaPage"] });
+      } else {
+        showErrorAlert(res.message);
+      }
+    },
+    onError: (err: any) => {
+      showErrorAlert(err.response?.data?.message || "Lỗi khi xóa biên bản");
+    },
+  });
+
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.delete(`/mau-bien-ban-sua-chua/all`);
+      return res.data;
+    },
+    onSuccess: (res) => {
+      if (res.success) {
+        showSuccessAlert("Xóa biên bản thành công");
+        queryClient.invalidateQueries({ queryKey: ["bienBanSuaChuaPage"] });
+      } else {
+        showErrorAlert(res.message);
+      }
+    },
+    onError: (err: any) => {
+      showErrorAlert(err.response?.data?.message || "Lỗi khi xóa biên bản");
+    },
+  });
+  return { createMutation, deleteMutation, updateMutation, deleteAllMutation };
+};
