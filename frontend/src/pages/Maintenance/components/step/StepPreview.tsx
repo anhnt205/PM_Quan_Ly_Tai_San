@@ -55,6 +55,8 @@ interface Props {
   deptDevices?: any;
   departments?: any;
   formik?: any; // chỉ dùng trong CreatePlanDialog
+  tenMau?: string;
+  nam?: number;
 }
 
 const StepPreview = ({
@@ -68,6 +70,8 @@ const StepPreview = ({
   deptDevices,
   departments,
   formik,
+  tenMau,
+  nam,
 }: Props) => {
   // Xác định mode
   const isCreateMode = !!assets && Array.isArray(assets);
@@ -151,7 +155,7 @@ const StepPreview = ({
           align="center"
           sx={{ textTransform: "uppercase", mb: 0.5 }}
         >
-          Kế hoạch sửa chữa bảo dưỡng thiết bị năm {year}
+          {tenMau ?? `Kế hoạch sửa chữa bảo dưỡng thiết bị năm ${nam ?? year}`}
         </Typography>
         <Typography
           variant="h6"

@@ -427,6 +427,7 @@ export interface MaintenancePlanData {
   danhSachTaiSan?: MaintenancePlanAssetItem[];
   nguoiKyList?: any[];
   soLuongSuCo?: number;
+  tenMauBienBanSuaChua?: string;
 }
 
 export interface MaintenancePlanAssetItem {

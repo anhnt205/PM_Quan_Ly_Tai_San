@@ -50,6 +50,7 @@ import TransferApproval from "./pages/TransferApproval/TransferApproval";
 import TransferRecord from "./pages/TransferRecord/TransferRecord";
 import { MenuDataProvider } from "./context/MenuDataContext";
 import AssetProfile from "./pages/AssetProfile/AssetProfile";
+import RepairReport from "./pages/RepairReport/RepairReport";
 
 const ProtectedRoute = ({
   allowedRoles,
@@ -269,6 +270,7 @@ function App() {
           <Route path={ROUTES.UNIT} element={<Unit />} />
           <Route path={ROUTES.REASONINCREASE} element={<ReasonIncrease />} />
           <Route path={ROUTES.CURRENTSTATUS} element={<CurrentStatus />} />
+          <Route path={ROUTES.REPAIRREPORTTEMPLATE} element={<RepairReport />} />
           <Route path={ROUTES.ASSETPROFILE} element={<AssetProfile />} />
           <Route
             path={ROUTES.ASSETMANAGER}

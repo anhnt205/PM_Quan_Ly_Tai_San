@@ -424,6 +424,7 @@ export default function Menuheader() {
             { text: "Loại sửa chữa", path: ROUTES.MAINTENANCEREPAIRTYPE },
             { text: "Đơn vị tính", path: ROUTES.UNIT },
             { text: "Hiện trạng", path: ROUTES.CURRENTSTATUS },
+            { text: "Biên bản sửa chữa", path: ROUTES.REPAIRREPORTTEMPLATE },
           ],
         },
       ],

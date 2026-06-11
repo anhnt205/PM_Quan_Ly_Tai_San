@@ -41,4 +41,5 @@ export const ROUTES = {
   TRANSFER_APPROVAL: "/dieu_chuyen_thiet_bi/phe_duyet",
   TRANSFER_RECORD: "/dieu_chuyen_thiet_bi/quan_ly_bien_ban",
   ASSETPROFILE: "/ly_lich",
+  REPAIRREPORTTEMPLATE: "/mau_bien_ban_sua_chua"
 } as const;

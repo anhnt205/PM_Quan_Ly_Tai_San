@@ -30,9 +30,10 @@ import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 import { PlanMaintenanceValidation } from "../../validation";
 import { useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../redux/store";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { updateTabFormData } from "../../../../redux/tabsSlice";
 import { Remove } from "@mui/icons-material";
+import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
 
 interface PlanAsset {
   id?: string;
@@ -82,25 +83,41 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
     return tab?.formData?.[draftKey] ?? null;
   });
 
+  const [paginationModel, setPaginationModel] = useState({
+    pageSize: 9999,
+    page: 0,
+  });
+
+  const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =
+    useBienBanSuaChuaPageQuery(
+      paginationModel.page,
+      paginationModel.pageSize,
+      "",
+    );
+  const tenMauMacDinh = repairReportPage?.data?.items?.find(
+    (item: any) => item.macDinh === true,
+  )?.ten;
+
   const formik = useFormik({
     initialValues: {
-      id:  "",
-      tenKeHoach:  "",
-      soKeHoach:  "",
-      nam:  new Date().getFullYear(),
-      nhomTaiSan:  AssetGroup.MAYMOC,
-      idDonViGiao:  "",
-      idDonViNhan:  "",
-      soQuyetDinh:  "",
+      id: "",
+      tenKeHoach: "",
+      soKeHoach: "",
+      nam: new Date().getFullYear(),
+      nhomTaiSan: AssetGroup.MAYMOC,
+      idDonViGiao: "",
+      idDonViNhan: "",
+      soQuyetDinh: "",
       nguoiKyList: [] as any[],
       danhSachTaiSan: [] as any[],
-      idCongTy:  "CT001",
-      idLoaiKeHoach:  "THIET_BI",
-      trangThai:  0,
+      idCongTy: "CT001",
+      idLoaiKeHoach: "THIET_BI",
+      trangThai: 0,
       share: false,
+      tenMauBienBanSuaChua:
+        tenMauMacDinh ??
+        `KẾ HOẠCH SỬA CHỮA BẢO DƯỠNG THIẾT BỊ NĂM ${new Date().getFullYear()}`,
     },
-    enableReinitialize: true,
-    // validationSchema: PlanMaintenanceValidation,
     onSubmit: (values) => {
       // 1. Ánh xạ chi tiết tài sản với 12 tháng
       const danhSachTaiSan = values.danhSachTaiSan.map((a: PlanAsset) => ({
@@ -127,8 +144,8 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
       const signers = formik.values.nguoiKyList;
       const idNguoiLapBieu = signers.length > 0 ? signers[0].userId : "";
       const idTrinhDuyetGiamDoc =
-      signers.length > 1 ? signers[signers.length - 1].userId : "";
-      
+        signers.length > 1 ? signers[signers.length - 1].userId : "";
+
       // Người ký trung gian (nếu có)
       const intermediateSigners =
         signers.length > 2
@@ -139,7 +156,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
               idPhongBan: s.departmentId,
               trangThai: 0,
             }))
-            : [];
+          : [];
 
       const newPlanData: any = {
         // Dùng id làm ID nếu có, nếu không thì để null để Backend tự tạo hoặc Frontend tạo GUID
@@ -162,6 +179,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
         ghiChu: `Kế hoạch SCBD - ${departments.find((d: any) => d.id === formik.values.idDonViGiao)?.tenPhongBan || formik.values.idDonViGiao}`,
         danhSachTaiSan: danhSachTaiSan,
         nguoiKyList: intermediateSigners,
+        tenMauBienBanSuaChua: formik.values.tenMauBienBanSuaChua,
       };
 
       onSave(newPlanData, isEdit);
@@ -178,46 +196,49 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
     if (initialData) {
       const listInfo = listSigneInfo(initialData, users, departments);
       formik.setValues({
-         id: initialData?.id || "",
-      tenKeHoach: initialData?.tenKeHoach || "",
-      soKeHoach: initialData?.soKeHoach || "",
-      nam: initialData?.nam || new Date().getFullYear(),
-      nhomTaiSan: initialData?.nhomTaiSan || AssetGroup.MAYMOC,
-      idDonViGiao: initialData?.idDonViGiao || "",
-      idDonViNhan: initialData?.idDonViNhan || "",
-      soQuyetDinh: initialData?.soQuyetDinh || "",
+        id: initialData?.id || "",
+        tenKeHoach: initialData?.tenKeHoach || "",
+        soKeHoach: initialData?.soKeHoach || "",
+        nam: initialData?.nam || new Date().getFullYear(),
+        nhomTaiSan: initialData?.nhomTaiSan || AssetGroup.MAYMOC,
+        idDonViGiao: initialData?.idDonViGiao || "",
+        idDonViNhan: initialData?.idDonViNhan || "",
+        soQuyetDinh: initialData?.soQuyetDinh || "",
         nguoiKyList: (listInfo || []).map((item, idx) => ({
-        ...item,
-        userId: item.idNhanVien,
-        userName: item.hoTen,
-        departmentId: item.idDonVi,
-        departmentName: item.donVi,
-        order: idx + 1,
-        action: Action.UPDATE,
-      })),
-      danhSachTaiSan: (initialData?.danhSachTaiSan || []).map((item) => ({
-        ...item,
-        deviceId: item.idTaiSan,
-        quantity: item.soLuong ?? 1,
-        idDonViBaoTri: item.idDonViBaoTri,
-        month1: item.capSuaChuaThang1 ?? "",
-        month2: item.capSuaChuaThang2 ?? "",
-        month3: item.capSuaChuaThang3 ?? "",
-        month4: item.capSuaChuaThang4 ?? "",
-        month5: item.capSuaChuaThang5 ?? "",
-        month6: item.capSuaChuaThang6 ?? "",
-        month7: item.capSuaChuaThang7 ?? "",
-        month8: item.capSuaChuaThang8 ?? "",
-        month9: item.capSuaChuaThang9 ?? "",
-        month10: item.capSuaChuaThang10 ?? "",
-        month11: item.capSuaChuaThang11 ?? "",
-        month12: item.capSuaChuaThang12 ?? "",
-        action: Action.UPDATE,
-      })),
-      idCongTy: initialData?.idCongTy || "CT001",
-      idLoaiKeHoach: initialData?.idLoaiKeHoach || "THIET_BI",
-      trangThai: initialData?.trangThai || 0,
-      share: initialData?.share ?? false,
+          ...item,
+          userId: item.idNhanVien,
+          userName: item.hoTen,
+          departmentId: item.idDonVi,
+          departmentName: item.donVi,
+          order: idx + 1,
+          action: Action.UPDATE,
+        })),
+        danhSachTaiSan: (initialData?.danhSachTaiSan || []).map((item) => ({
+          ...item,
+          deviceId: item.idTaiSan,
+          quantity: item.soLuong ?? 1,
+          idDonViBaoTri: item.idDonViBaoTri,
+          month1: item.capSuaChuaThang1 ?? "",
+          month2: item.capSuaChuaThang2 ?? "",
+          month3: item.capSuaChuaThang3 ?? "",
+          month4: item.capSuaChuaThang4 ?? "",
+          month5: item.capSuaChuaThang5 ?? "",
+          month6: item.capSuaChuaThang6 ?? "",
+          month7: item.capSuaChuaThang7 ?? "",
+          month8: item.capSuaChuaThang8 ?? "",
+          month9: item.capSuaChuaThang9 ?? "",
+          month10: item.capSuaChuaThang10 ?? "",
+          month11: item.capSuaChuaThang11 ?? "",
+          month12: item.capSuaChuaThang12 ?? "",
+          action: Action.UPDATE,
+        })),
+        idCongTy: initialData?.idCongTy || "CT001",
+        idLoaiKeHoach: initialData?.idLoaiKeHoach || "THIET_BI",
+        trangThai: initialData?.trangThai || 0,
+        share: initialData?.share ?? false,
+        tenMauBienBanSuaChua:
+          initialData.tenMauBienBanSuaChua ??
+          `KẾ HOẠCH SỬA CHỮA BẢO DƯỠNG THIẾT BỊ NĂM ${initialData.nam}`,
       });
       return;
     }
@@ -443,6 +464,8 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
             deptDevices={fullDeptAssets}
             departments={departments}
             formik={formik}
+            tenMau={tenMauMacDinh}
+            nam={formik.values.nam}
           />
         </Box>
       </DialogContent>

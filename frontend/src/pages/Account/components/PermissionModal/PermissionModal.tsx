@@ -25,7 +25,6 @@ export default function PermissionModal({ open, onClose, userId }: Props) {
     useAccountMutation(undefined, undefined, undefined, userId);
 
   const [localPermissions, setLocalPermissions] = useState<any[]>([]);
-
   useEffect(() => {
     if (open && userPermissions && localPermissions.length === 0) {
       setLocalPermissions(userPermissions);
@@ -104,6 +103,14 @@ export default function PermissionModal({ open, onClose, userId }: Props) {
                 </Typography>
 
                 <Box sx={{ display: "flex", gap: 3 }}>
+                  <Box display="flex" alignItems="center">
+                    <Checkbox
+                      size="small"
+                      checked={!!item.canCreate}
+                     disabled
+                    />
+                    <Typography variant="body2">Xem</Typography>
+                  </Box>
                   <Box display="flex" alignItems="center">
                     <Checkbox
                       size="small"
