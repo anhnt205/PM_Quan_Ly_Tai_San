@@ -981,3 +981,36 @@ export const useChuKySuaChuaQuery = (idTaiSan?: string) => {
     placeholderData: (previousData) => previousData,
   });
 };
+
+// lịch trình
+export const useLichTrinhQuery = (idTaiSan?: string, nam?: string, thang?: string) => {
+  return useQuery({
+    queryKey: ["lichtrinh", idTaiSan, nam, thang],
+    queryFn: async () => {
+      const res = await api.get(`/lichtrinh`, { params: { idTaiSan, nam, thang } });
+      const list = res.data.data || res.data || [];
+      return list[0] ?? null; // chỉ cần 1 record theo tài sản
+    },
+    enabled: !!idTaiSan && !!nam && !!thang,
+    staleTime: 30_000,
+    placeholderData: (previousData) => previousData,
+  });
+};
+
+export const useCreateLichTrinhBatchMutation = () => {
+  return useMutation({
+    mutationFn: async (data: any[]) => {
+      const res = await api.post("/lichtrinh/batch", data);
+      return res.data;
+    },
+  });
+};
+
+export const useUpdateLichTrinhBatchMutation = () => {
+  return useMutation({
+    mutationFn: async (data: any[]) => {
+      const res = await api.put("/lichtrinh/batch", data);
+      return res.data;
+    },
+  });
+};

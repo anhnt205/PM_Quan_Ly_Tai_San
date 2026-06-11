@@ -1,50 +1,41 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   Box,
   Button,
+  CircularProgress,
   Dialog,
   DialogContent,
   DialogTitle,
   IconButton,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  TextField,
-  Typography,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
   Chip,
-  Fade,
+  Typography,
 } from "@mui/material";
 import { Close, Save, CalendarMonth, Settings } from "@mui/icons-material";
 import dayjs from "dayjs";
-import { showSuccessAlert } from "../../../components/Alert";
+import { useQueryClient } from "@tanstack/react-query";
+import { showSuccessAlert, showErrorAlert } from "../../../components/Alert";
 import LichTrinhTable from "./AssetLichTrinhVanDungTable";
+import {
+  useLichTrinhQuery,
+  useCreateLichTrinhBatchMutation,
+  useUpdateLichTrinhBatchMutation,
+} from "../Mutation";
+import { AssetLichTrinhChiTietType, AssetLichTrinhType } from "../types";
 
 // ============================================================
 // Types
 // ============================================================
-interface ShiftRecord {
-  idTaiSan: string;
-  nam: number;
-  thang: number;
-  ngay: number;
-  ca: number; // 1, 2, 3
-  soGio: number;
-}
-
 export interface AssetScheduleData {
+  idLichTrinh?: string;
   idTaiSan: string;
   tenTaiSan: string;
   soThe: string;
   ghiChu: string;
-  shifts: ShiftRecord[];
+  chiTietLichTrinhs: AssetLichTrinhChiTietType[];
 }
 
 interface LichTrinhVanDungModalProps {
@@ -59,31 +50,8 @@ interface LichTrinhVanDungModalProps {
 const getDaysInMonth = (month: number, year: number) =>
   new Date(year, month, 0).getDate();
 
-const generateMockShifts = (
-  idTaiSan: string,
-  month: number,
-  year: number,
-): ShiftRecord[] => {
-  const days = getDaysInMonth(month, year);
-  const records: ShiftRecord[] = [];
-  const filledDays = Math.ceil(days * 0.6);
-  for (let d = 1; d <= filledDays; d++) {
-    for (let ca = 1; ca <= 3; ca++) {
-      records.push({
-        idTaiSan,
-        nam: year,
-        thang: month,
-        ngay: d,
-        ca,
-        soGio: Math.floor(Math.random() * 6) + 2,
-      });
-    }
-  }
-  return records;
-};
-
 // ============================================================
-// Design System Tokens (Industrial Utilitarian & Luxury Tech)
+// Design System Tokens
 // ============================================================
 export const colors = {
   bgApp: "#f8fafc",
@@ -134,9 +102,7 @@ export const inputSx = {
     borderRadius: "4px",
     backgroundColor: "transparent",
     transition: "all 0.2s ease",
-    "&:hover": {
-      backgroundColor: "rgba(16, 185, 129, 0.04)",
-    },
+    "&:hover": { backgroundColor: "rgba(16, 185, 129, 0.04)" },
     "&.Mui-focused": {
       backgroundColor: "#ffffff",
       boxShadow: "0 0 0 2px rgba(16, 185, 129, 0.2)",
@@ -165,6 +131,37 @@ export const sumCellSx = {
 };
 
 // ============================================================
+// AssetScheduleItem — fetch data riêng mỗi tài sản
+// ============================================================
+interface AssetScheduleItemProps {
+  asset: any;
+  nam: string;
+  thang: string;
+  onDataReady: (idTaiSan: string, nam: string, thang: string, data: AssetScheduleData) => void;
+}
+
+const AssetScheduleItem = React.memo(
+  ({ asset, nam, thang, onDataReady }: AssetScheduleItemProps) => {
+    const idTaiSan = asset.id || asset.soThe;
+    const { data: schedule } = useLichTrinhQuery(idTaiSan, nam, thang);
+
+    useEffect(() => {
+      const result: AssetScheduleData = {
+        idLichTrinh: schedule?.id,
+        idTaiSan,
+        tenTaiSan: asset.tenTaiSan || "Không tên",
+        soThe: asset.soThe || "",
+        ghiChu: schedule?.ghiChu || "",
+        chiTietLichTrinhs: schedule?.chiTietLichTrinhs || [],
+      };
+      onDataReady(idTaiSan, nam, thang, result);
+    }, [schedule, idTaiSan, nam, thang, asset.tenTaiSan, asset.soThe, onDataReady]);
+
+    return null;
+  }
+);
+
+// ============================================================
 // Component chính
 // ============================================================
 export default function LichTrinhVanDungModal({
@@ -172,146 +169,151 @@ export default function LichTrinhVanDungModal({
   onClose,
   selectedAssets,
 }: LichTrinhVanDungModalProps) {
+  const queryClient = useQueryClient();
   const now = dayjs();
   const [selectedMonth, setSelectedMonth] = useState(now.month() + 1);
   const [selectedYear, setSelectedYear] = useState(now.year());
 
-  const [assetsData, setAssetsData] = useState<AssetScheduleData[]>([]);
+  // Map "idTaiSan|nam|thang" -> AssetScheduleData
+  const [assetsMap, setAssetsMap] = useState<Record<string, AssetScheduleData>>({});
+
+  const createBatch = useCreateLichTrinhBatchMutation();
+  const updateBatch = useUpdateLichTrinhBatchMutation();
+
+  const nam = selectedYear.toString();
+  const thang = selectedMonth.toString();
 
   const daysInMonth = useMemo(
     () => getDaysInMonth(selectedMonth, selectedYear),
     [selectedMonth, selectedYear],
   );
 
-  // Khởi tạo data khi mở modal hoặc đổi tháng/năm
+  // Reset map chỉ khi đóng modal
   useEffect(() => {
-    if (!open || selectedAssets.length === 0) return;
-    const newData: AssetScheduleData[] = selectedAssets.map((asset) => ({
-      idTaiSan: asset.id || asset.soThe,
-      tenTaiSan: asset.tenTaiSan || "Không tên",
-      soThe: asset.soThe || "",
-      ghiChu: "",
-      shifts: generateMockShifts(
-        asset.id || asset.soThe,
-        selectedMonth,
-        selectedYear,
-      ),
-    }));
-    setAssetsData(newData);
-  }, [open, selectedAssets, selectedMonth, selectedYear]);
+    if (!open) setAssetsMap({});
+  }, [open]);
 
-  // Lấy giá trị giờ
-  const getShiftValue = useCallback(
-    (assetIdx: number, day: number, ca: number): number => {
-      const asset = assetsData[assetIdx];
-      if (!asset) return 0;
-      const found = asset.shifts.find(
-        (s) =>
-          s.ngay === day &&
-          s.ca === ca &&
-          s.thang === selectedMonth &&
-          s.nam === selectedYear,
-      );
-      return found ? found.soGio : 0;
-    },
-    [assetsData, selectedMonth, selectedYear],
-  );
-
-  // Set giá trị giờ
-  const setShiftValue = useCallback(
-    (assetIdx: number, day: number, ca: number, value: number) => {
-      setAssetsData((prev) => {
-        const updated = [...prev];
-        const asset = { ...updated[assetIdx] };
-        const shifts = [...asset.shifts];
-        const idx = shifts.findIndex(
-          (s) =>
-            s.ngay === day &&
-            s.ca === ca &&
-            s.thang === selectedMonth &&
-            s.nam === selectedYear,
-        );
-        if (idx >= 0) {
-          shifts[idx] = { ...shifts[idx], soGio: value };
-        } else {
-          shifts.push({
-            idTaiSan: asset.idTaiSan,
-            nam: selectedYear,
-            thang: selectedMonth,
-            ngay: day,
-            ca,
-            soGio: value,
-          });
+  // Callback nhận data từ từng AssetScheduleItem
+  // Key = idTaiSan|nam|thang để tránh hiển thị data tháng cũ
+  const handleDataReady = useCallback(
+    (idTaiSan: string, n: string, t: string, data: AssetScheduleData) => {
+      const key = `${idTaiSan}|${n}|${t}`;
+      setAssetsMap((prev) => {
+        if (
+          prev[key]?.idLichTrinh === data.idLichTrinh &&
+          prev[key]?.chiTietLichTrinhs === data.chiTietLichTrinhs
+        ) {
+          return prev;
         }
-        asset.shifts = shifts;
-        updated[assetIdx] = asset;
-        return updated;
-      });
-    },
-    [selectedMonth, selectedYear],
-  );
-
-  // Set trường meta
-  const setAssetField = useCallback(
-    (assetIdx: number, field: keyof AssetScheduleData, value: any) => {
-      setAssetsData((prev) => {
-        const updated = [...prev];
-        updated[assetIdx] = { ...updated[assetIdx], [field]: value };
-        return updated;
+        return { ...prev, [key]: data };
       });
     },
     [],
   );
 
-  // Tổng giờ 1 ngày (Ca1+Ca2+Ca3) cho 1 tài sản
-  const getDayTotal = useCallback(
-    (assetIdx: number, day: number): number => {
-      let sum = 0;
-      for (let ca = 1; ca <= 3; ca++) sum += getShiftValue(assetIdx, day, ca);
-      return sum;
-    },
-    [getShiftValue],
+  // Lấy mảng theo thứ tự selectedAssets, chỉ lấy data đúng tháng/năm hiện tại
+  const assetsData = useMemo(
+    () =>
+      selectedAssets
+        .map((a) => assetsMap[`${a.id || a.soThe}|${nam}|${thang}`])
+        .filter(Boolean) as AssetScheduleData[],
+    [assetsMap, selectedAssets, nam, thang],
   );
 
-  // Tổng giờ 1 ca trong cả tháng
-  const getShiftMonthTotal = useCallback(
-    (assetIdx: number, ca: number): number => {
-      let sum = 0;
-      for (let d = 1; d <= daysInMonth; d++) {
-        sum += getShiftValue(assetIdx, d, ca);
-      }
-      return sum;
+  // Set giá trị giờ
+  const setShiftValue = useCallback(
+    (assetIdx: number, day: number, ca: number, value: number) => {
+      const idTaiSan = selectedAssets[assetIdx]?.id || selectedAssets[assetIdx]?.soThe;
+      if (!idTaiSan) return;
+      const key = `${idTaiSan}|${nam}|${thang}`;
+      setAssetsMap((prev) => {
+        const asset = prev[key];
+        if (!asset) return prev;
+        const chiTiets = [...asset.chiTietLichTrinhs];
+        const dayStr = day.toString();
+        const idx = chiTiets.findIndex((s) => s.ngay === dayStr);
+        if (idx >= 0) {
+          const detail = { ...chiTiets[idx] };
+          if (ca === 1) detail.ca1 = value;
+          if (ca === 2) detail.ca2 = value;
+          if (ca === 3) detail.ca3 = value;
+          chiTiets[idx] = detail;
+        } else {
+          chiTiets.push({
+            idLichTrinh: asset.idLichTrinh,
+            ngay: dayStr,
+            ca1: ca === 1 ? value : 0,
+            ca2: ca === 2 ? value : 0,
+            ca3: ca === 3 ? value : 0,
+          });
+        }
+        return { ...prev, [key]: { ...asset, chiTietLichTrinhs: chiTiets } };
+      });
     },
-    [getShiftValue, daysInMonth],
+    [selectedAssets, nam, thang],
   );
 
-  // Tổng cộng cả tháng (tất cả ca)
-  const getMonthGrandTotal = useCallback(
-    (assetIdx: number): number => {
-      let sum = 0;
-      for (let ca = 1; ca <= 3; ca++) {
-        sum += getShiftMonthTotal(assetIdx, ca);
-      }
-      return sum;
+  // Set trường meta
+  const setAssetField = useCallback(
+    (assetIdx: number, field: keyof AssetScheduleData, value: any) => {
+      const idTaiSan = selectedAssets[assetIdx]?.id || selectedAssets[assetIdx]?.soThe;
+      if (!idTaiSan) return;
+      const key = `${idTaiSan}|${nam}|${thang}`;
+      setAssetsMap((prev) => {
+        const asset = prev[key];
+        if (!asset) return prev;
+        return { ...prev, [key]: { ...asset, [field]: value } };
+      });
     },
-    [getShiftMonthTotal],
+    [selectedAssets, nam, thang],
   );
 
   // Lưu
-  const handleSave = () => {
-    const allRecords: ShiftRecord[] = [];
-    assetsData.forEach((asset) => {
-      asset.shifts.forEach((s) => {
-        if (s.soGio > 0) allRecords.push(s);
-      });
+  const handleSave = async () => {
+    const toCreate: AssetLichTrinhType[] = [];
+    const toUpdate: AssetLichTrinhType[] = [];
+
+    Object.values(assetsMap).forEach((asset) => {
+      const validChiTiets = asset.chiTietLichTrinhs.filter(
+        (ct) => (ct.ca1 || 0) > 0 || (ct.ca2 || 0) > 0 || (ct.ca3 || 0) > 0,
+      );
+      const payload: AssetLichTrinhType = {
+        idTaiSan: asset.idTaiSan,
+        nam,
+        thang,
+        ghiChu: asset.ghiChu,
+        chiTietLichTrinhs: validChiTiets,
+      };
+      if (asset.idLichTrinh) {
+        payload.id = asset.idLichTrinh;
+        toUpdate.push(payload);
+      } else {
+        toCreate.push(payload);
+      }
     });
-    console.log("📦 Payload gửi lên Backend:", allRecords);
-    showSuccessAlert(`Lưu thành công ${allRecords.length} bản ghi hoạt động!`);
-    onClose();
+
+    try {
+      const promises: Promise<any>[] = [];
+      if (toCreate.length > 0) promises.push(createBatch.mutateAsync(toCreate));
+      if (toUpdate.length > 0) promises.push(updateBatch.mutateAsync(toUpdate));
+
+      if (promises.length > 0) {
+        await Promise.all(promises);
+        showSuccessAlert("Lưu lịch trình thành công!");
+        queryClient.invalidateQueries({ queryKey: ["lichtrinh"] });
+      }
+    } catch (error) {
+      console.error(error);
+      showErrorAlert("Có lỗi xảy ra khi lưu lịch trình");
+    }
   };
 
-  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-  const ROWS_PER_ASSET = 4;
+  const days = useMemo(
+    () => Array.from({ length: daysInMonth }, (_, i) => i + 1),
+    [daysInMonth],
+  );
+
+  const isSaving = createBatch.isPending || updateBatch.isPending;
 
   return (
     <Dialog
@@ -339,7 +341,19 @@ export default function LichTrinhVanDungModal({
         },
       }}
     >
-      {/* ===== HEADER BAR (SLATE GRADIENT) ===== */}
+      {/* Render ẩn — mỗi tài sản fetch data riêng biệt khi modal mở */}
+      {open &&
+        selectedAssets.map((asset) => (
+          <AssetScheduleItem
+            key={`${asset.id || asset.soThe}-${nam}-${thang}`}
+            asset={asset}
+            nam={nam}
+            thang={thang}
+            onDataReady={handleDataReady}
+          />
+        ))}
+
+      {/* ===== HEADER ===== */}
       <DialogTitle
         sx={{
           background: colors.headerBg,
@@ -377,7 +391,7 @@ export default function LichTrinhVanDungModal({
             >
               Lịch trình vận dụng
             </Typography>
-            <Typography sx={{ fontSize: "11px", color: colors.textMuted }}>
+            <Typography sx={{ fontSize: "11px", color: colors.textMain }}>
               Báo cáo & Nhập giờ máy hoạt động chi tiết
             </Typography>
           </Box>
@@ -414,7 +428,7 @@ export default function LichTrinhVanDungModal({
           bgcolor: colors.bgApp,
         }}
       >
-        {/* ===== CONTROLS PANEL ===== */}
+        {/* ===== CONTROLS ===== */}
         <Box
           sx={{
             display: "flex",
@@ -430,22 +444,14 @@ export default function LichTrinhVanDungModal({
         >
           <Box sx={{ display: "flex", gap: 2.5, alignItems: "center" }}>
             <FormControl size="small" sx={{ minWidth: 130 }}>
-              <InputLabel
-                id="month-select-label"
-                sx={{ fontSize: "13px", fontWeight: 500 }}
-              >
+              <InputLabel sx={{ fontSize: "13px", fontWeight: 500 }}>
                 Tháng
               </InputLabel>
               <Select
-                labelId="month-select-label"
                 value={selectedMonth}
                 label="Tháng"
                 onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                sx={{
-                  borderRadius: "8px",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                }}
+                sx={{ borderRadius: "8px", fontSize: "13px", fontWeight: 600 }}
               >
                 {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
                   <MenuItem key={m} value={m}>
@@ -456,33 +462,22 @@ export default function LichTrinhVanDungModal({
             </FormControl>
 
             <FormControl size="small" sx={{ minWidth: 120 }}>
-              <InputLabel
-                id="year-select-label"
-                sx={{ fontSize: "13px", fontWeight: 500 }}
-              >
+              <InputLabel sx={{ fontSize: "13px", fontWeight: 500 }}>
                 Năm
               </InputLabel>
               <Select
-                labelId="year-select-label"
                 value={selectedYear}
                 label="Năm"
                 onChange={(e) => setSelectedYear(Number(e.target.value))}
-                sx={{
-                  borderRadius: "8px",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                }}
+                sx={{ borderRadius: "8px", fontSize: "13px", fontWeight: 600 }}
               >
-                {[
-                  now.year() - 2,
-                  now.year() - 1,
-                  now.year(),
-                  now.year() + 1,
-                ].map((y) => (
-                  <MenuItem key={y} value={y}>
-                    Năm {y}
-                  </MenuItem>
-                ))}
+                {[now.year() - 2, now.year() - 1, now.year(), now.year() + 1].map(
+                  (y) => (
+                    <MenuItem key={y} value={y}>
+                      Năm {y}
+                    </MenuItem>
+                  ),
+                )}
               </Select>
             </FormControl>
 
@@ -513,8 +508,11 @@ export default function LichTrinhVanDungModal({
 
           <Button
             variant="contained"
-            startIcon={<Save />}
+            startIcon={
+              isSaving ? <CircularProgress size={16} color="inherit" /> : <Save />
+            }
             onClick={handleSave}
+            disabled={isSaving}
             sx={{
               bgcolor: colors.accent,
               textTransform: "none",
@@ -523,29 +521,19 @@ export default function LichTrinhVanDungModal({
               px: 4,
               py: 1,
               borderRadius: "8px",
-              boxShadow: "0 4px 6px -1px rgba(16, 185, 129, 0.2)",
-              transition: "all 0.2s",
-              "&:hover": {
-                bgcolor: colors.accentHover,
-                boxShadow: "0 6px 12px -2px rgba(16, 185, 129, 0.3)",
-                transform: "translateY(-1px)",
-              },
+              "&:hover": { bgcolor: colors.accentHover },
             }}
           >
-            Lưu dữ liệu
+            {isSaving ? "Đang lưu..." : "Lưu dữ liệu"}
           </Button>
         </Box>
 
-        {/* ===== TABLE LAYOUT CONTAINER ===== */}
+        {/* ===== TABLE ===== */}
         <LichTrinhTable
           assetsData={assetsData}
           days={days}
           daysInMonth={daysInMonth}
-          getShiftValue={getShiftValue}
           setShiftValue={setShiftValue}
-          getDayTotal={getDayTotal}
-          getShiftMonthTotal={getShiftMonthTotal}
-          getMonthGrandTotal={getMonthGrandTotal}
           setAssetField={setAssetField}
         />
       </DialogContent>

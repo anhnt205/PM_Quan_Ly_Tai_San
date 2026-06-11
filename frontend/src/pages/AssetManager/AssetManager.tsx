@@ -467,38 +467,6 @@ export default function AssetManager() {
             </IconButton>
           </Tooltip>
 
-          {/* <Tooltip title="Xem lý lịch">
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation();
-                setModalOpenBook(true);
-                setSelectedAsset(params.row);
-              }}
-            >
-              <MenuBookTwoTone color="success" />
-            </IconButton>
-          </Tooltip> */}
-          {/* <Tooltip title="Xem">
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation();
-                setOpenViewModal(true);
-              }}
-            >
-              <Eye color="#0288d1" />
-            </IconButton>
-          </Tooltip>
-
-          <Tooltip title="Xem lịch sử điều chuyển">
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation();
-                handleOpenHistory(params.row);
-              }}
-            >
-              <HistoryIcon color="#7b1fa2" />
-            </IconButton>
-          </Tooltip> */}
         </>
       ),
     },
@@ -898,7 +866,10 @@ export default function AssetManager() {
       />
       <LichTrinhVanDungModal
         open={openScheduleModal}
-        onClose={() => setOpenScheduleModal(false)}
+        onClose={() => {
+          setOpenScheduleModal(false);
+          setSelectedIds([]);
+        }}
         selectedAssets={assetsPage.items.filter((item: any) =>
           selectedIds.includes(item.id || item.soThe),
         )}
