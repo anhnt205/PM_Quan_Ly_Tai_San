@@ -177,6 +177,10 @@ public class SuCoThietBiService {
         return suCoDao.update(entity);
     }
 
+    public int updateGhiChu(String id, String ghiChuBienBan) {
+        return suCoDao.updateGhiChu(id, ghiChuBienBan);
+    }
+
     public int updateTrangThai(String id, String userId) {
         return suCoDao.updateTrangThai(id, userId);
     }

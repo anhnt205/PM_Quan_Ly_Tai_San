@@ -44,6 +44,7 @@ public class KeHoachSuaChua {
 
     // File đính kèm chính
     private String ghiChu;
+    private String ghiChuBienBan;
     private String duongDanFile;
     private String tenFile;
     private String ngayKy;

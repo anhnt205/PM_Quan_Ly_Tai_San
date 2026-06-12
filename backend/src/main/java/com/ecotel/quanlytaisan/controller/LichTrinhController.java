@@ -49,18 +49,16 @@ public class LichTrinhController {
         if (result > 0) {
             return ResponseEntity.ok(ApiResponse.success("Cập nhật batch lịch trình thành công", dtos, result));
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.failure("Không tìm thấy lịch trình để cập nhật", result));
+        return ResponseEntity.ok(ApiResponse.failure("Không có lịch trình nào được cập nhật", result));
     }
 
-    @DeleteMapping("/batch")
+     @DeleteMapping("/batch")
     public ResponseEntity<ApiResponse<Object>> deleteBatch(@RequestBody List<String> ids) {
         int result = lichTrinhService.deleteBatch(ids);
         if (result > 0) {
             return ResponseEntity.ok(ApiResponse.success("Xóa batch lịch trình thành công", ids, result));
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.failure("Không tìm thấy lịch trình để xóa", result));
+        return ResponseEntity.ok(ApiResponse.failure("Không tìm thấy lịch trình để xóa", result));
     }
 
     @PostMapping
@@ -73,11 +71,7 @@ public class LichTrinhController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<LichTrinhDTO>> update(@PathVariable String id, @Valid @RequestBody LichTrinhDTO dto) {
         LichTrinhDTO updated = lichTrinhService.update(id, dto);
-        if (updated != null) {
-            return ResponseEntity.ok(ApiResponse.success("Cập nhật lịch trình thành công", updated, 1));
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.failure("Không tìm thấy lịch trình để cập nhật", null));
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật lịch trình thành công", updated, 1));
     }
 
     @DeleteMapping("/{id}")

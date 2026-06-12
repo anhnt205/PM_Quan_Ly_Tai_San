@@ -211,6 +211,13 @@ public class KiemTraSuCoDao {
         return 0;
     }
 
+    public int updateGhiChu(String id, String ghiChuBienBan) {
+        String now = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        return jdbcTemplate.update(
+                "UPDATE kiemtra_suco SET GhiChuBienBan = ?, NgayCapNhat = ? WHERE Id = ?",
+                ghiChuBienBan, now, id);
+    }
+
     public int huy(String id) {
         final int STATUS_CANCELLED = 0;
         String now = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));

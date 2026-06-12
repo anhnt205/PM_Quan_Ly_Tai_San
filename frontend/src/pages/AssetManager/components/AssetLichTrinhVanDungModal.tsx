@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import {
   Box,
   Button,
@@ -137,7 +143,12 @@ interface AssetScheduleItemProps {
   asset: any;
   nam: string;
   thang: string;
-  onDataReady: (idTaiSan: string, nam: string, thang: string, data: AssetScheduleData) => void;
+  onDataReady: (
+    idTaiSan: string,
+    nam: string,
+    thang: string,
+    data: AssetScheduleData,
+  ) => void;
 }
 
 const AssetScheduleItem = React.memo(
@@ -155,10 +166,18 @@ const AssetScheduleItem = React.memo(
         chiTietLichTrinhs: schedule?.chiTietLichTrinhs || [],
       };
       onDataReady(idTaiSan, nam, thang, result);
-    }, [schedule, idTaiSan, nam, thang, asset.tenTaiSan, asset.soThe, onDataReady]);
+    }, [
+      schedule,
+      idTaiSan,
+      nam,
+      thang,
+      asset.tenTaiSan,
+      asset.soThe,
+      onDataReady,
+    ]);
 
     return null;
-  }
+  },
 );
 
 // ============================================================
@@ -175,7 +194,9 @@ export default function LichTrinhVanDungModal({
   const [selectedYear, setSelectedYear] = useState(now.year());
 
   // Map "idTaiSan|nam|thang" -> AssetScheduleData
-  const [assetsMap, setAssetsMap] = useState<Record<string, AssetScheduleData>>({});
+  const [assetsMap, setAssetsMap] = useState<Record<string, AssetScheduleData>>(
+    {},
+  );
 
   const createBatch = useCreateLichTrinhBatchMutation();
   const updateBatch = useUpdateLichTrinhBatchMutation();
@@ -223,7 +244,8 @@ export default function LichTrinhVanDungModal({
   // Set giá trị giờ
   const setShiftValue = useCallback(
     (assetIdx: number, day: number, ca: number, value: number) => {
-      const idTaiSan = selectedAssets[assetIdx]?.id || selectedAssets[assetIdx]?.soThe;
+      const idTaiSan =
+        selectedAssets[assetIdx]?.id || selectedAssets[assetIdx]?.soThe;
       if (!idTaiSan) return;
       const key = `${idTaiSan}|${nam}|${thang}`;
       setAssetsMap((prev) => {
@@ -256,7 +278,8 @@ export default function LichTrinhVanDungModal({
   // Set trường meta
   const setAssetField = useCallback(
     (assetIdx: number, field: keyof AssetScheduleData, value: any) => {
-      const idTaiSan = selectedAssets[assetIdx]?.id || selectedAssets[assetIdx]?.soThe;
+      const idTaiSan =
+        selectedAssets[assetIdx]?.id || selectedAssets[assetIdx]?.soThe;
       if (!idTaiSan) return;
       const key = `${idTaiSan}|${nam}|${thang}`;
       setAssetsMap((prev) => {
@@ -293,13 +316,27 @@ export default function LichTrinhVanDungModal({
     });
 
     try {
-      const promises: Promise<any>[] = [];
-      if (toCreate.length > 0) promises.push(createBatch.mutateAsync(toCreate));
-      if (toUpdate.length > 0) promises.push(updateBatch.mutateAsync(toUpdate));
+      const settled = await Promise.allSettled([
+        ...(toCreate.length > 0 ? [createBatch.mutateAsync(toCreate)] : []),
+        ...(toUpdate.length > 0 ? [updateBatch.mutateAsync(toUpdate)] : []),
+      ]);
 
-      if (promises.length > 0) {
-        await Promise.all(promises);
+      if (settled.length === 0) return;
+
+      const failures = settled.filter((r) => r.status === "rejected");
+      const hasSuccess = failures.length < settled.length;
+
+      if (failures.length === 0) {
         showSuccessAlert("Lưu lịch trình thành công!");
+      } else if (hasSuccess) {
+        showSuccessAlert(
+          "Một số lịch trình đã được lưu, nhưng có lỗi xảy ra với các mục khác.",
+        );
+      } else {
+        throw new Error("Tất cả các thao tác lưu đều thất bại");
+      }
+
+      if (hasSuccess) {
         queryClient.invalidateQueries({ queryKey: ["lichtrinh"] });
       }
     } catch (error) {
@@ -471,13 +508,16 @@ export default function LichTrinhVanDungModal({
                 onChange={(e) => setSelectedYear(Number(e.target.value))}
                 sx={{ borderRadius: "8px", fontSize: "13px", fontWeight: 600 }}
               >
-                {[now.year() - 2, now.year() - 1, now.year(), now.year() + 1].map(
-                  (y) => (
-                    <MenuItem key={y} value={y}>
-                      Năm {y}
-                    </MenuItem>
-                  ),
-                )}
+                {[
+                  now.year() - 2,
+                  now.year() - 1,
+                  now.year(),
+                  now.year() + 1,
+                ].map((y) => (
+                  <MenuItem key={y} value={y}>
+                    Năm {y}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
 
@@ -509,7 +549,11 @@ export default function LichTrinhVanDungModal({
           <Button
             variant="contained"
             startIcon={
-              isSaving ? <CircularProgress size={16} color="inherit" /> : <Save />
+              isSaving ? (
+                <CircularProgress size={16} color="inherit" />
+              ) : (
+                <Save />
+              )
             }
             onClick={handleSave}
             disabled={isSaving}

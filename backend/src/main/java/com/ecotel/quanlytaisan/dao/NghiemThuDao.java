@@ -156,6 +156,15 @@ public class NghiemThuDao {
         return r;
     }
 
+    public int updateGhiChu(String id, String ghiChuBienBan) {
+        String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        int r = jdbcTemplate.update(
+                "UPDATE nghiemthu_maymoc SET GhiChuBienBan = ?, NgayCapNhat = ? WHERE Id = ?",
+                ghiChuBienBan, now, id);
+        if (r > 0) CompletableFuture.runAsync(this::refreshCache);
+        return r;
+    }
+
     public int huy(String id) {
         final int STATUS_CANCELLED = 0;
         int r = jdbcTemplate.update(

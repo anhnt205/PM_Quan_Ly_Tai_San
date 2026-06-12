@@ -2801,7 +2801,7 @@ export const useMaintenanceMutation = (
       id: string;
       ghiChuBienBan: string;
     }) => {
-      const res = await api.put(`/${apiUri}/${id}`, { ghiChuBienBan });
+      const res = await api.patch(`/${apiUri}/${id}/ghi-chu`, { ghiChuBienBan });
       return res.data;
     },
     onSuccess: () => {

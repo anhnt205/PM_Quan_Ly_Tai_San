@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
-import { Close, PictureAsPdf, Description, Edit, Cancel } from "@mui/icons-material";
+import {
+  Close,
+  PictureAsPdf,
+  Description,
+  Edit,
+  Cancel,
+} from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -61,7 +67,8 @@ export const SignHeader = ({
     }
   };
 
-  const showReject = trangThai !== undefined && trangThai !== 0 && trangThai !== 3;
+  const showReject =
+    !!onReject && trangThai !== undefined && trangThai !== 0 && trangThai !== 3;
 
   return (
     <Box
@@ -77,7 +84,15 @@ export const SignHeader = ({
       }}
     >
       {/* Left Section */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, flex: 1, minWidth: 0 }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 2,
+          flex: 1,
+          minWidth: 0,
+        }}
+      >
         <Box
           sx={{
             width: 40,
@@ -127,38 +142,41 @@ export const SignHeader = ({
       </Box>
 
       {/* Right Section */}
-      <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", flexShrink: 0 }}>
+      <Box
+        sx={{ display: "flex", gap: 1.5, alignItems: "center", flexShrink: 0 }}
+      >
         {/* Nút Ghi chú - luôn luôn hiển thị */}
-        <Button
-          variant="outlined"
-          size="medium"
-          onClick={handleOpenNoteDialog}
-          startIcon={<Edit sx={{ fontSize: 18, color: "#028a54" }} />}
-          sx={{
-            textTransform: "none",
-            fontSize: "0.875rem",
-            fontWeight: 600,
-            px: 2.5,
-            py: 0.8,
-            borderRadius: "10px",
-            color: "#028a54",
-            borderColor: "rgba(2, 138, 84, 0.25)",
-            bgcolor: "white",
-            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-            "&:hover": {
-              borderColor: "#028a54",
-              bgcolor: "rgba(2, 138, 84, 0.04)",
-              transform: "translateY(-1px)",
-              boxShadow: "0 2px 8px rgba(2, 138, 84, 0.08)",
-            },
-            "&:active": {
-              transform: "translateY(0)",
-            },
-          }}
-        >
-          Ghi chú
-        </Button>
-
+        {onSaveNote && (
+          <Button
+            variant="outlined"
+            size="medium"
+            onClick={handleOpenNoteDialog}
+            startIcon={<Edit sx={{ fontSize: 18, color: "#028a54" }} />}
+            sx={{
+              textTransform: "none",
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              px: 2.5,
+              py: 0.8,
+              borderRadius: "10px",
+              color: "#028a54",
+              borderColor: "rgba(2, 138, 84, 0.25)",
+              bgcolor: "white",
+              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+              "&:hover": {
+                borderColor: "#028a54",
+                bgcolor: "rgba(2, 138, 84, 0.04)",
+                transform: "translateY(-1px)",
+                boxShadow: "0 2px 8px rgba(2, 138, 84, 0.08)",
+              },
+              "&:active": {
+                transform: "translateY(0)",
+              },
+            }}
+          >
+            Ghi chú
+          </Button>
+        )}
         {/* Nút Từ chối - hiển thị có điều kiện */}
         {showReject && (
           <Button
@@ -248,7 +266,9 @@ export const SignHeader = ({
           },
         }}
       >
-        <DialogTitle sx={{ fontWeight: 600, pb: 1 }}>Ghi chú tài liệu</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 600, pb: 1 }}>
+          Ghi chú tài liệu
+        </DialogTitle>
         <DialogContent sx={{ pt: 1 }}>
           <TextField
             autoFocus

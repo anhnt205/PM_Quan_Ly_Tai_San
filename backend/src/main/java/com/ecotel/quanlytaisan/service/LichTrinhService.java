@@ -1,6 +1,7 @@
 package com.ecotel.quanlytaisan.service;
 
 import com.ecotel.quanlytaisan.repository.LichTrinhRepository;
+import com.ecotel.quanlytaisan.exception.ResourceNotFoundException;
 import com.ecotel.quanlytaisan.model.ChiTietLichTrinh;
 import com.ecotel.quanlytaisan.model.LichTrinh;
 import com.ecotel.quanlytaisan.model.LichTrinhDTO;
@@ -93,8 +94,8 @@ public class LichTrinhService {
         for (LichTrinhDTO dto : dtos) {
             if (dto.getId() == null || dto.getId().isEmpty()) continue;
 
-            // Tìm entity hiện tại để merge hoặc tạo mới entity nếu ko tìm thấy
-            LichTrinh lt = lichTrinhRepository.findById(dto.getId()).orElse(new LichTrinh());
+            LichTrinh lt = lichTrinhRepository.findById(dto.getId()).orElse(null);
+            if (lt == null) continue;
             BeanUtils.copyProperties(dto, lt, "chiTietLichTrinhs");
 
             if (dto.getChiTietLichTrinhs() != null) {
@@ -156,7 +157,7 @@ public class LichTrinhService {
         
         LichTrinh lt = lichTrinhRepository.findById(id).orElse(null);
         if (lt == null) {
-            throw new IllegalArgumentException("Không tìm thấy lịch trình để cập nhật");
+            throw new ResourceNotFoundException("Không tìm thấy lịch trình để cập nhật");
         }
         
         BeanUtils.copyProperties(dto, lt, "id", "chiTietLichTrinhs");

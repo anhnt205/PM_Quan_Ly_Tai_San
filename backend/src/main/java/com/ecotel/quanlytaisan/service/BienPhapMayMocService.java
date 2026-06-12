@@ -62,6 +62,10 @@ public class BienPhapMayMocService {
         return saved;
     }
 
+    public int updateGhiChu(String id, String ghiChuBienBan) {
+        return bienPhapDao.updateGhiChu(id, ghiChuBienBan);
+    }
+
     @Transactional
     public int updateTrangThai(String id, String userId) {
         BienPhapMayMoc bp = bienPhapDao.findById(id);

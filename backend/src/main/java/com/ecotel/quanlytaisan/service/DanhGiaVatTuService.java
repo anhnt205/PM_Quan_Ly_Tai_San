@@ -126,6 +126,10 @@ public class DanhGiaVatTuService {
         return dao.huy(id);
     }
 
+    public int updateGhiChu(String id, String ghiChuBienBan) {
+        return dao.updateGhiChu(id, ghiChuBienBan);
+    }
+
     @Transactional
     public int delete(String id) {
         return dao.delete(id);

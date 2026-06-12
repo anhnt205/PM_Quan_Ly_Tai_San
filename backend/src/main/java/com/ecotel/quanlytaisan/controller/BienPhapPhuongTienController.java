@@ -187,4 +187,18 @@ public class BienPhapPhuongTienController {
                     .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
         }
     }
+    @PatchMapping("/{id}/ghi-chu")
+    public ResponseEntity<ApiResponse<Object>> updateGhiChu(
+            @PathVariable("id") String id,
+            @RequestBody java.util.Map<String, String> body) {
+        try {
+            String ghiChu = body.get("ghiChuBienBan");
+            int result = service.updateGhiChu(id, ghiChu);
+            if (result > 0) return ResponseEntity.ok(ApiResponse.success("Cập nhật ghi chú thành công", null, result));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.failure("Không tìm thấy bản ghi", 0));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
 }

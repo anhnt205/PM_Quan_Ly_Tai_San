@@ -617,7 +617,7 @@ export default function MaintenanceRecordPage() {
       onSign: () => {},
       onReject: handleReject,
       onSaveNote: handleSaveNote,
-      plan: selectedRow,
+      data: selectedRow,
       staffs: staffs || [],
       departments: departments || [],
       positions: positions || [],
@@ -1247,7 +1247,6 @@ export default function MaintenanceRecordPage() {
                   setSearchValue={setSearchValue}
                   showDelete={false}
                   onRowClick={(params) => {
-                    console.log("Chi tiết biên bản:", params.row);
                     setSelectedRow(params.row);
 
                     setDetailTab(0);

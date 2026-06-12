@@ -257,6 +257,10 @@ public class KeHoachSuaChuaService {
         return keHoachSuaChuaDao.update(entity);
     }
 
+    public int updateGhiChu(String id, String ghiChuBienBan) {
+        return keHoachSuaChuaDao.updateGhiChu(id, ghiChuBienBan);
+    }
+
     public int updateTrangThai(String id, String userId) {
         return keHoachSuaChuaDao.updateTrangThai(id, userId);
     }

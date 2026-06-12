@@ -70,6 +70,7 @@ public class KeHoachSuaChuaDao {
                 kh.NguoiCapNhat,
 
                 kh.GhiChu,
+                kh.GhiChuBienBan,
                 kh.DuongDanFile,
                 kh.TenFile,
                 kh.NgayKy,
@@ -162,9 +163,9 @@ public class KeHoachSuaChuaDao {
                 IdNguoiLapBieu, NguoiLapBieuXacNhan,
                 IdTrinhDuyetGiamDoc, TrinhDuyetGiamDocXacNhan,
                 TrangThai, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat,
-                GhiChu, DuongDanFile, TenFile, NgayKy, DuongDanTaiLieuBangKe,
+                GhiChu, GhiChuBienBan, DuongDanFile, TenFile, NgayKy, DuongDanTaiLieuBangKe,
                 Share, ByStep, NhomTaiSan, TenMauBienBanSuaChua
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         int r = jdbcTemplate.update(sql,
                 e.getId(), e.getIdCongTy(), e.getSoKeHoach(), e.getTenKeHoach(), e.getSoQuyetDinh(),
@@ -174,7 +175,7 @@ public class KeHoachSuaChuaDao {
                 e.getIdTrinhDuyetGiamDoc(), e.getTrinhDuyetGiamDocXacNhan(),
                 e.getTrangThai() != null ? e.getTrangThai() : 0,
                 e.getNgayTao(), e.getNgayCapNhat(), e.getNguoiTao(), e.getNguoiCapNhat(),
-                e.getGhiChu(), e.getDuongDanFile(), e.getTenFile(), e.getNgayKy(),
+                e.getGhiChu(), e.getGhiChuBienBan(), e.getDuongDanFile(), e.getTenFile(), e.getNgayKy(),
                 e.getDuongDanTaiLieuBangKe(),
                 e.getShare(), e.getByStep(), e.getNhomTaiSan(), e.getTenMauBienBanSuaChua()
         );
@@ -193,7 +194,7 @@ public class KeHoachSuaChuaDao {
                 IdNguoiLapBieu = ?, NguoiLapBieuXacNhan = ?,
                 IdTrinhDuyetGiamDoc = ?, TrinhDuyetGiamDocXacNhan = ?,
                 TrangThai = ?, NgayCapNhat = ?, NguoiCapNhat = ?,
-                GhiChu = ?, DuongDanFile = ?, TenFile = ?, NgayKy = ?, DuongDanTaiLieuBangKe = ?,
+                GhiChu = ?, GhiChuBienBan = ?, DuongDanFile = ?, TenFile = ?, NgayKy = ?, DuongDanTaiLieuBangKe = ?,
                 Share = ?, ByStep = ?, NhomTaiSan = ?, TenMauBienBanSuaChua = ?
             WHERE Id = ?
             """;
@@ -204,7 +205,7 @@ public class KeHoachSuaChuaDao {
                 e.getIdNguoiLapBieu(), e.getNguoiLapBieuXacNhan(),
                 e.getIdTrinhDuyetGiamDoc(), e.getTrinhDuyetGiamDocXacNhan(),
                 e.getTrangThai(), e.getNgayCapNhat(), e.getNguoiCapNhat(),
-                e.getGhiChu(), e.getDuongDanFile(), e.getTenFile(),
+                e.getGhiChu(), e.getGhiChuBienBan(), e.getDuongDanFile(), e.getTenFile(),
                 e.getNgayKy(), e.getDuongDanTaiLieuBangKe(),
                 e.getShare(), e.getByStep(), e.getNhomTaiSan(), e.getTenMauBienBanSuaChua(),
                 e.getId()
@@ -279,6 +280,15 @@ public class KeHoachSuaChuaDao {
             return trangThai;
         }
         return 0;
+    }
+
+    public int updateGhiChu(String id, String ghiChuBienBan) {
+        String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        int r = jdbcTemplate.update(
+                "UPDATE kehoachsuachua SET GhiChuBienBan = ?, NgayCapNhat = ? WHERE Id = ?",
+                ghiChuBienBan, now, id);
+        if (r > 0) CompletableFuture.runAsync(this::refreshCache);
+        return r;
     }
 
     public int huyKeHoach(String id) {
