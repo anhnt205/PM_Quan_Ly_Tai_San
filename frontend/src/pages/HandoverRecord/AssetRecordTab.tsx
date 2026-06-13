@@ -217,10 +217,14 @@ export default function AssetRecordTab() {
             borderRight: showSidebar ? "1px solid" : "none",
             borderColor: "divider",
             overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+            height: "100%",
           }}
         >
           <TableCustom
             tableId="assetHandoverRecord"
+            sx={{ height: "100%" }}
             loading={isLoading}
             title=""
             columns={columns}

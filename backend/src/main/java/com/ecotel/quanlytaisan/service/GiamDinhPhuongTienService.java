@@ -95,6 +95,10 @@ public class GiamDinhPhuongTienService {
         return parent;
     }
 
+    public int updateGhiChu(String id, String ghiChuBienBan) {
+        return giamDinhPhuongTienDao.updateGhiChu(id, ghiChuBienBan);
+    }
+
     @Transactional
     public int updateTrangThai(String id, String userId) {
         GiamDinhPhuongTien gd = giamDinhPhuongTienDao.findById(id);

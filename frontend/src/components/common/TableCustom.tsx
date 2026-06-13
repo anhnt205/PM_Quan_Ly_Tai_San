@@ -279,6 +279,7 @@ interface Props {
   exportSelectedFileName?: string;
   onBulkEdit?: () => void;
   bulkEditCount?: number;
+  sx?: any;
 }
 
 export default function TableCustom({
@@ -337,6 +338,7 @@ export default function TableCustom({
   exportSelectedFileName,
   bulkEditCount,
   onBulkEdit,
+  sx,
 }: Props) {
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.user);
@@ -445,14 +447,18 @@ export default function TableCustom({
               display: "flex",
               flexDirection: "column",
             }
-          : {}
+          : {
+              display: "flex",
+              flexDirection: "column",
+              ...sx,
+            }
       }
     >
       <Paper
         sx={{
-          my: isFullscreen ? 0 : 2,
+          my: (isFullscreen || sx?.height) ? 0 : 2,
           width: "100%",
-          flex: isFullscreen ? 1 : undefined,
+          flex: (isFullscreen || sx?.height) ? 1 : undefined,
           display: "flex",
           flexDirection: "column",
         }}

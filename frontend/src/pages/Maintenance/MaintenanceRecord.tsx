@@ -1,5 +1,10 @@
 import React, { useState } from "react";
 import {
+  showConfirmAlert,
+  showSuccessAlert,
+  showErrorAlert,
+} from "../../components/Alert";
+import {
   Box,
   Chip,
   Alert,
@@ -117,55 +122,56 @@ export default function MaintenanceRecordPage() {
 
   const { counts } = useMenuData();
 
-  const { updateManyMutation } = useMaintenanceMutation(
-    activeTab === 0
-      ? "maintenancePlanningPage"
-      : activeTab === 1
-        ? "repairPage"
-        : activeTab === 2
-          ? bienPhapType === AssetGroup.MAYMOC
-            ? "inspectionPage"
-            : "vehicleInspectionPage"
-          : activeTab === 3
+  const { updateManyMutation, cancelMutation, saveNoteMutation } =
+    useMaintenanceMutation(
+      activeTab === 0
+        ? "maintenancePlanningPage"
+        : activeTab === 1
+          ? "repairPage"
+          : activeTab === 2
             ? bienPhapType === AssetGroup.MAYMOC
-              ? "bienPhapMayMocPage"
-              : "bienPhapPhuongTienPage"
-            : activeTab === 4
+              ? "inspectionPage"
+              : "vehicleInspectionPage"
+            : activeTab === 3
               ? bienPhapType === AssetGroup.MAYMOC
-                ? "nghiemThuMayMocPage"
-                : "nghiemThuPhuongTienPage"
-              : activeTab === 5
-                ? "materialAssessmentPage"
-                : activeTab === 6
-                  ? "incidentPage"
-                  : activeTab === 7
-                    ? "incidentInspectionPage"
-                    : "",
-    activeTab === 0
-      ? "kehoach-suachua"
-      : activeTab === 1
-        ? "suachua"
-        : activeTab === 2
-          ? bienPhapType === AssetGroup.MAYMOC
-            ? "giamdinh-maymoc"
-            : "giamdinh-phuongtien"
-          : activeTab === 3
+                ? "bienPhapMayMocPage"
+                : "bienPhapPhuongTienPage"
+              : activeTab === 4
+                ? bienPhapType === AssetGroup.MAYMOC
+                  ? "nghiemThuMayMocPage"
+                  : "nghiemThuPhuongTienPage"
+                : activeTab === 5
+                  ? "materialAssessmentPage"
+                  : activeTab === 6
+                    ? "incidentPage"
+                    : activeTab === 7
+                      ? "incidentInspectionPage"
+                      : "",
+      activeTab === 0
+        ? "kehoach-suachua"
+        : activeTab === 1
+          ? "suachua"
+          : activeTab === 2
             ? bienPhapType === AssetGroup.MAYMOC
-              ? "bienphap-maymoc"
-              : "bienphap-phuongtien"
-            : activeTab === 4
+              ? "giamdinh-maymoc"
+              : "giamdinh-phuongtien"
+            : activeTab === 3
               ? bienPhapType === AssetGroup.MAYMOC
-                ? "nghiemthu-maymoc"
-                : "nghiemthu-phuongtien"
-              : activeTab === 5
-                ? "danhgia-vattu"
-                : activeTab === 6
-                  ? "suco-thietbi"
-                  : activeTab === 7
-                    ? "kiemtra-suco"
-                    : "",
-    activeTab,
-  );
+                ? "bienphap-maymoc"
+                : "bienphap-phuongtien"
+              : activeTab === 4
+                ? bienPhapType === AssetGroup.MAYMOC
+                  ? "nghiemthu-maymoc"
+                  : "nghiemthu-phuongtien"
+                : activeTab === 5
+                  ? "danhgia-vattu"
+                  : activeTab === 6
+                    ? "suco-thietbi"
+                    : activeTab === 7
+                      ? "kiemtra-suco"
+                      : "",
+      activeTab,
+    );
 
   const searchDebounce = useDebounce(searchValue, 500);
   const {
@@ -575,13 +581,43 @@ export default function MaintenanceRecordPage() {
 
   const renderPreview = () => {
     if (!selectedRow) return null;
+    const handleReject = async () => {
+      if (!selectedRow) return;
+      const confirm = await showConfirmAlert(
+        "Bạn có chắc muốn từ chối biên bản này?",
+      );
+      if (!confirm.isConfirmed) return;
+      try {
+        await cancelMutation.mutateAsync({ id: selectedRow.id });
+        setSelectedRow(null);
+      } catch (error) {
+        console.error("Lỗi khi từ chối biên bản:", error);
+      }
+    };
+
+    const handleSaveNote = async (note: string) => {
+      if (!selectedRow) return;
+      try {
+        await saveNoteMutation.mutateAsync({
+          id: selectedRow.id,
+          ghiChuBienBan: note,
+        });
+        setSelectedRow((prev: any) =>
+          prev ? { ...prev, ghiChuBienBan: note } : null,
+        );
+        showSuccessAlert("Lưu ghi chú thành công");
+      } catch (_) {}
+    };
+
     const commonProps = {
       selectedIds: [selectedRow.id],
       onCancel: () => {
         setSelectedRow(null);
       },
       onSign: () => {},
-      plan: selectedRow,
+      onReject: handleReject,
+      onSaveNote: handleSaveNote,
+      data: selectedRow,
       staffs: staffs || [],
       departments: departments || [],
       positions: positions || [],
@@ -1212,6 +1248,7 @@ export default function MaintenanceRecordPage() {
                   showDelete={false}
                   onRowClick={(params) => {
                     setSelectedRow(params.row);
+
                     setDetailTab(0);
                   }}
                   isRowSelectable={() => true}

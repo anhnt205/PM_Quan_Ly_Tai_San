@@ -1,55 +1,3 @@
-// ============================================================
-// THAY ĐỔI 1: Trong handleSign và handleConfirmPinDialog
-// Thêm widthRatio khi tạo newSignature
-// ============================================================
-
-// Trong handleSign — thay dòng width: 120 bằng:
-//
-//   const displayWidth = canvasDisplaySizes[0]?.width || 800;
-//   widthRatio: 120 / displayWidth,   // lưu tỉ lệ, không lưu px tuyệt đối
-//   width: 120,                        // giữ lại để tương thích export PDF
-//
-// Tương tự trong handleConfirmPinDialog.
-
-// ============================================================
-// THAY ĐỔI 2: Pass setCanvasDisplaySizes xuống PdfViewer
-// ============================================================
-//
-// <PdfViewer
-//   pages={pages}
-//   signatures={signatures}
-//   canvasDisplaySizes={canvasDisplaySizes}
-//   setCanvasDisplaySizes={setCanvasDisplaySizes}   // ← THÊM DÒNG NÀY
-//   digitalSignatureMap={digitalSignatureMap}
-//   handleUpdatePosition={handleUpdatePosition}
-//   handleUpdateScale={handleUpdateScale}
-//   handleDeleteSignature={handleDeleteSignature}
-// />
-
-// ============================================================
-// THAY ĐỔI 3: Xóa useEffect ResizeObserver cũ trong SharedSignDocumentForm
-// (vì PdfViewer tự quản lý việc observe canvas của nó)
-// ============================================================
-//
-// XÓA đoạn này:
-//
-// useEffect(() => {
-//   if (pages.length === 0) return;
-//   const observer = new ResizeObserver(() => {
-//     const sizes = pages.map((canvas) => ({
-//       width: canvas.getBoundingClientRect().width || canvas.width,
-//       height: canvas.getBoundingClientRect().height || canvas.height,
-//     }));
-//     setCanvasDisplaySizes(sizes);
-//   });
-//   pages.forEach((canvas) => observer.observe(canvas));
-//   return () => observer.disconnect();
-// }, [pages]);
-
-// ============================================================
-// File đầy đủ với tất cả thay đổi đã áp dụng:
-// ============================================================
-
 import {
   Box,
   Paper,
@@ -58,7 +6,9 @@ import {
   CircularProgress,
   useMediaQuery,
   useTheme,
+  Typography,
 } from "@mui/material";
+import { RateReviewOutlined } from "@mui/icons-material";
 import { useState, useEffect, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import { PDFDocument } from "pdf-lib";
@@ -96,6 +46,10 @@ interface SharedSignDocumentFormProps {
   showSignerSidebar?: boolean;
   sourcePdfBytes?: Uint8Array | null;
   showHeader?: boolean;
+  trangThai?: number;
+  initialNote?: string;
+  onSaveNote?: (note: string) => Promise<void>;
+  onReject?: () => Promise<void>;
 }
 
 export default function SharedSignDocumentForm({
@@ -111,6 +65,10 @@ export default function SharedSignDocumentForm({
   showSignerSidebar = true,
   sourcePdfBytes: externalSourcePdfBytes,
   showHeader = true,
+  trangThai,
+  initialNote,
+  onSaveNote,
+  onReject,
 }: SharedSignDocumentFormProps) {
   const [signatureType, setSignatureType] = useState(0);
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -539,7 +497,69 @@ export default function SharedSignDocumentForm({
             setSignatures([]);
           }}
           title={title}
+          trangThai={trangThai}
+          initialNote={initialNote}
+          onSaveNote={onSaveNote}
+          onReject={onReject}
         />
+      )}
+
+      {initialNote && (
+        <Box
+          sx={{
+            bgcolor: "#fffbeb", // Soft amber background
+            borderBottom: "1px solid #fef3c7",
+            borderLeft: "4px solid #d97706", // Dark amber indicator border
+            px: 3,
+            py: 1.5,
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 32,
+              height: 32,
+              borderRadius: "8px",
+              bgcolor: "#fef3c7",
+              color: "#d97706",
+              flexShrink: 0,
+            }}
+          >
+            <RateReviewOutlined sx={{ fontSize: 18 }} />
+          </Box>
+          <Box sx={{ minWidth: 0, flex: 1 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                fontWeight: 700,
+                color: "#b45309",
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
+                display: "block",
+                mb: 0.25,
+                fontSize: "0.675rem",
+              }}
+            >
+              Ghi chú biên bản
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "#78350f",
+                fontWeight: 500,
+                fontSize: "0.875rem",
+                wordBreak: "break-word",
+              }}
+            >
+              {initialNote}
+            </Typography>
+          </Box>
+        </Box>
       )}
 
       <Box

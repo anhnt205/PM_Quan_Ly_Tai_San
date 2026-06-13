@@ -286,6 +286,7 @@ export default function AssetTransferRecordTab() {
         >
           <TableCustom
             tableId={`assetTransferRecordTab-${subTab}`}
+            sx={{ height: "100%" }}
             title=""
             columns={columns}
             rows={pageData.items}

@@ -147,3 +147,30 @@ export interface MaintenanceIncidentType {
   isDeleted?: boolean;
   isUpdated?: boolean;
 }
+
+// lịch trình
+
+
+export interface AssetLichTrinhType {
+  id?: string;
+  idTaiSan: string;
+  nam: string;
+  thang: string;
+  ghiChu?: string;
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+  chiTietLichTrinhs?: AssetLichTrinhChiTietType[];
+}
+
+export interface AssetLichTrinhChiTietType {
+  id?: string;
+  idLichTrinh?: string;
+  ngay: string;
+  ca1?:number;
+  ca2?:number;
+  ca3?:number;
+}
+
+

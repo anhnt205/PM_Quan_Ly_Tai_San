@@ -198,6 +198,15 @@ public class BienPhapMayMocDao {
         return r;
     }
 
+    public int updateGhiChu(String id, String ghiChuBienBan) {
+        String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        int r = jdbcTemplate.update(
+                "UPDATE bienphap_maymoc SET GhiChuBienBan = ?, NgayCapNhat = ? WHERE Id = ?",
+                ghiChuBienBan, now, id);
+        if (r > 0) CompletableFuture.runAsync(this::refreshCache);
+        return r;
+    }
+
     public int huy(String id) {
         int r = jdbcTemplate.update(
                 "UPDATE bienphap_maymoc SET TrangThai = ?, Share = 0, NgayCapNhat = ? WHERE Id = ?",

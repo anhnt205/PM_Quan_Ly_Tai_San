@@ -34,7 +34,7 @@ import {
   showShareStatus,
   showStatus,
   showStatusDocument,
-} from "../AssetTransfer/config"; // Dùng chung config
+} from "./config"; // Dùng config riêng của CCDC
 import { Building, Eye, Trash2, Edit } from "lucide-react";
 import { ToolSignature, ToolTransferData } from "./types";
 import { useToolTransferMutation, useToolTransferPageQuery } from "./Mutation";

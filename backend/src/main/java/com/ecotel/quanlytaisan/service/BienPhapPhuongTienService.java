@@ -109,6 +109,10 @@ public class BienPhapPhuongTienService {
     @Transactional
     public int huy(String id) { return bienPhapDao.huy(id); }
 
+    public int updateGhiChu(String id, String ghiChuBienBan) {
+        return bienPhapDao.updateGhiChu(id, ghiChuBienBan);
+    }
+
     @Transactional
     public void bulkUpdate(List<BienPhapPhuongTien> list) {
         list.forEach(bienPhapDao::update);

@@ -303,6 +303,10 @@ public class SuaChuaService {
         }
     }
 
+    public int updateGhiChu(String id, String ghiChuBienBan) {
+        return suaChuaDao.updateGhiChu(id, ghiChuBienBan);
+    }
+
     @Transactional
     public int updateTrangThai(String id, String userId) {
         SuaChua sc = suaChuaDao.findById(id);

@@ -114,6 +114,10 @@ public class NghiemThuService {
         return updated;
     }
 
+    public int updateGhiChu(String id, String ghiChuBienBan) {
+        return nghiemThuDao.updateGhiChu(id, ghiChuBienBan);
+    }
+
     @Transactional
     public int updateTrangThai(String id, String userId) {
         NghiemThu nt = nghiemThuDao.findById(id);

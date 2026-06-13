@@ -158,6 +158,10 @@ public class KiemTraSuCoService {
         return mainDao.huy(id);
     }
 
+    public int updateGhiChu(String id, String ghiChuBienBan) {
+        return mainDao.updateGhiChu(id, ghiChuBienBan);
+    }
+
     @Transactional
     public int delete(String id) {
         detailDao.deleteByIdKiemTraSuCo(id);

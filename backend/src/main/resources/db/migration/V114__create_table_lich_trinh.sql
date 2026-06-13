@@ -1,0 +1,21 @@
+CREATE TABLE LichTrinh (
+    Id VARCHAR(36) PRIMARY KEY,
+    IdTaiSan VARCHAR(36) NOT NULL,
+    Nam VARCHAR(20) NOT NULL,
+    Thang VARCHAR(20) NOT NULL,
+    GhiChu TEXT,
+    NgayTao VARCHAR(100),
+    NgayCapNhat VARCHAR(100),
+    NguoiTao VARCHAR(100),
+    NguoiCapNhat VARCHAR(100)
+);
+
+CREATE TABLE ChiTietLichTrinh (
+    Id VARCHAR(36) PRIMARY KEY,
+    IdLichTrinh VARCHAR(36) NOT NULL,
+    Ngay VARCHAR(100) NOT NULL,
+    Ca1 INT DEFAULT 0,
+    Ca2 INT DEFAULT 0,
+    Ca3 INT DEFAULT 0,
+    CONSTRAINT FK_ChiTietLichTrinh_LichTrinh FOREIGN KEY (IdLichTrinh) REFERENCES LichTrinh(Id) ON DELETE CASCADE
+);

@@ -259,10 +259,14 @@ export default function AssetApprovalTab() {
               showSidebar && sidebarMode === "document" ? "1px solid" : "none",
             borderColor: "divider",
             overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+            height: "100%",
           }}
         >
           <TableCustom
             tableId="assetHandoverApproval"
+            sx={{ height: "100%" }}
             loading={isLoading}
             title="Phê duyệt bàn giao tài sản"
             columns={columns}

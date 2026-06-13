@@ -293,6 +293,15 @@ public class SuCoThietBiDao {
         return 0;
     }
 
+    public int updateGhiChu(String id, String ghiChuBienBan) {
+        String now = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date());
+        int r = jdbcTemplate.update(
+                "UPDATE suco_thietbi SET GhiChuBienBan = ?, NgayCapNhat = ? WHERE Id = ?",
+                ghiChuBienBan, now, id);
+        if (r > 0) CompletableFuture.runAsync(this::refreshCache);
+        return r;
+    }
+
     public int huySuCo(String id) {
         final int STATUS_CANCELLED = 0;
         String now = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date());

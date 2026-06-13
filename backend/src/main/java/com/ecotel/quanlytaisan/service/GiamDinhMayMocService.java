@@ -69,6 +69,10 @@ public class GiamDinhMayMocService {
         return giamDinhMayMocDao.update(entity);
     }
 
+    public int updateGhiChu(String id, String ghiChuBienBan) {
+        return giamDinhMayMocDao.updateGhiChu(id, ghiChuBienBan);
+    }
+
     @Transactional
     public int updateTrangThai(String id, String userId) {
         GiamDinhMayMoc gd = giamDinhMayMocDao.findById(id);

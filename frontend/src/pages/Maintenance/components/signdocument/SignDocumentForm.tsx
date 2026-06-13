@@ -10,7 +10,7 @@ interface SignDocumentFormProps {
   onSign: (data: any[], item: any) => void;
   fullscreen?: boolean;
   showSignerSidebar?: boolean;
-  plan: any;
+  data: any;
   allUnits?: any[];
   staffs?: any[];
   departments?: any[];
@@ -21,9 +21,14 @@ interface SignDocumentFormProps {
   isEdit?: boolean;
   title?: string;
   showHeader?: boolean;
+  onSaveNote?: (note: string) => Promise<void>;
+  onReject?: () => Promise<void>;
   generatePdf?: () => Promise<{
     pdf: Uint8Array;
-    coordinates: Record<string, { xRatio: number; yRatio: number; page?: number }>;
+    coordinates: Record<
+      string,
+      { xRatio: number; yRatio: number; page?: number }
+    >;
   }>;
 }
 
@@ -33,7 +38,7 @@ export default function SignDocumentForm({
   onSign,
   fullscreen = true,
   showSignerSidebar = true,
-  plan,
+  data,
   allUnits = [],
   staffs = [],
   departments = [],
@@ -44,6 +49,8 @@ export default function SignDocumentForm({
   isEdit,
   title,
   showHeader = true,
+  onSaveNote,
+  onReject,
   generatePdf,
 }: SignDocumentFormProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -110,13 +117,13 @@ export default function SignDocumentForm({
     return () => {
       if (pdfUrl) URL.revokeObjectURL(pdfUrl);
     };
-  }, [plan, generatePdf]);
+  }, [data, generatePdf]);
 
   const handleSignComplete = async (
     newSignatures: SignaturesData[],
     pdfBlob: Blob,
   ) => {
-    await onSign(newSignatures, plan);
+    await onSign(newSignatures, data);
     onCancel();
   };
 
@@ -134,6 +141,10 @@ export default function SignDocumentForm({
       sourcePdfBytes={sourcePdfBytes}
       showHeader={showHeader}
       initialSignatures={signatures}
+      trangThai={data?.trangThai}
+      initialNote={data?.ghiChuBienBan || ""}
+      onSaveNote={onSaveNote}
+      onReject={onReject}
     />
   );
 }
