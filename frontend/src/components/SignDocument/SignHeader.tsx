@@ -67,8 +67,7 @@ export const SignHeader = ({
     }
   };
 
-  const showReject =
-    !!onReject && trangThai !== undefined && trangThai !== 0 && trangThai !== 3;
+  const showReject = !!onReject && trangThai === 1;
 
   return (
     <Box

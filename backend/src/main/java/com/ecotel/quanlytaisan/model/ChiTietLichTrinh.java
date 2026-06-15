@@ -23,8 +23,7 @@ public class ChiTietLichTrinh {
     private LichTrinh lichTrinh;
 
     @Column(name = "Ngay", nullable = false)
-    @NotBlank(message = "ngay trong chi tiết lịch trình là bắt buộc")
-    private String ngay;
+    private Integer ngay;
 
     @Column(name = "Ca1")
     private Integer ca1;

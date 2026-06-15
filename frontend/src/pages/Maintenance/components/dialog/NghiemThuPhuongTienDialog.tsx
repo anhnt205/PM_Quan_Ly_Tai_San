@@ -31,7 +31,7 @@ import {
   NghiemThuPhuongTienChiTietData,
   BienPhapPhuongTienChiTietData,
 } from "../../types";
-import { CongTy } from "../../../../utils/const";
+import { CongTy, LOAI_BIEN_BAN_TYPE } from "../../../../utils/const";
 import { generateCode } from "../../../../utils/helpers";
 import { PlanSigner } from "../../../../mockdata/mockPlans";
 import { listSigneInfo } from "../../config";
@@ -47,6 +47,8 @@ import { useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../redux/store";
 import { updateTabFormData } from "../../../../redux/tabsSlice";
 import { Remove } from "@mui/icons-material";
+import AcceptanceVehiclePreview from "../preview/AcceptanceVehiclePreview";
+import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
 
 interface Props {
   open: boolean;
@@ -88,6 +90,16 @@ const NghiemThuPhuongTienDialog = ({
     );
   });
 
+  const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =
+    useBienBanSuaChuaPageQuery(
+      0,
+      9999,
+      "",
+      LOAI_BIEN_BAN_TYPE.NGHIEM_THU_PHUONG_TIEN,
+      true,
+    );
+  const mauMacDinh = repairReportPage?.data?.items?.[0];
+
   const initialValues: NghiemThuPhuongTienData & { nguoiKyList: any[] } = {
     id: "",
     idCongTy: CongTy.CT001,
@@ -105,6 +117,8 @@ const NghiemThuPhuongTienDialog = ({
     giamDocXacNhan: false,
     share: false,
     trangThai: 0,
+    tenMauBienBan: mauMacDinh?.ten || "NGHIỆM THU SẢN PHẨM",
+    congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
     danhSachChiTiet: [],
     nguoiKyList: [],
   };
@@ -157,6 +171,9 @@ const NghiemThuPhuongTienDialog = ({
       const listInfo = listSigneInfo(initData as any, apiUsers, apiDepartments);
       formik.setValues({
         ...initData,
+        tenMauBienBan:
+          initData.tenMauBienBan || mauMacDinh?.ten || "NGHIỆM THU SẢN PHẨM",
+        congTy: initData.congTy || mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
         nguoiKyList: (listInfo ?? []).map((item: any) => ({
           userId: item.idNhanVien,
           userName: item.hoTen,
@@ -178,6 +195,8 @@ const NghiemThuPhuongTienDialog = ({
         congViecPhatSinh: savedDraft.congViecPhatSinh,
         chiPhiNhanCong: savedDraft.chiPhiNhanCong,
         ketLuan: savedDraft.ketLuan,
+        tenMauBienBan: savedDraft.tenMauBienBan,
+        congTy: savedDraft.congTy,
         danhSachChiTiet: savedDraft.danhSachChiTiet,
         nguoiKyList: savedDraft.nguoiKyList,
       });
@@ -230,6 +249,14 @@ const NghiemThuPhuongTienDialog = ({
             congViecPhatSinh: formik.values.congViecPhatSinh,
             chiPhiNhanCong: formik.values.chiPhiNhanCong,
             ketLuan: formik.values.ketLuan,
+            tenMauBienBan:
+              formik.values.tenMauBienBan ||
+              mauMacDinh?.ten ||
+              "NGHIỆM THU SẢN PHẨM",
+            congTy:
+              formik.values.congTy ||
+              mauMacDinh?.congTy ||
+              "THAN UÔNG BÍ - TKV",
             danhSachChiTiet: formik.values.danhSachChiTiet,
             nguoiKyList: formik.values.nguoiKyList,
           },
@@ -590,6 +617,27 @@ const NghiemThuPhuongTienDialog = ({
               </TableBody>
             </Table>
           </TableContainer>
+        </Box>
+
+        {/* Preview */}
+        <Box sx={{ mt: 3 }}>
+          <Typography
+            variant="subtitle1"
+            fontWeight={700}
+            color="primary.main"
+            mb={1.5}
+          >
+            Xem trước biên bản
+          </Typography>
+          <AcceptanceVehiclePreview
+            row={{
+              ...formik.values,
+              tenTaiSan,
+              nguoiKyList: formik.values.nguoiKyList,
+            }}
+            tieude={formik.values.tenMauBienBan}
+            congty={formik.values.congTy}
+          />
         </Box>
       </DialogContent>
 

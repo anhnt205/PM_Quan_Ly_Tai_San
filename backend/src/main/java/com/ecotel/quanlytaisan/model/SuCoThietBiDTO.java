@@ -17,6 +17,8 @@ public class SuCoThietBiDTO {
 
     /** ID công ty */
     private String idCongTy;
+    private String congTy;
+    private String tenMauBienBan;
 
     /** ID kế hoạch sửa chữa liên quan */
     private String idKeHoach;

@@ -16,6 +16,7 @@ import {
   useBienBanSuaChuaPageQuery,
 } from "./Mutation";
 import RepairReportForm from "./components/RepairReportForm";
+import { BienBanSuaChua } from "./types";
 
 interface RepairReportTabState {
   showForm: boolean;
@@ -172,7 +173,7 @@ export default function RepairReport() {
               readOnly={readOnly}
               onSave={handleSave}
               onFormChange={(values: any) => setField({ draftForm: values })}
-              initialFormData={formData.draftForm}
+              initialFormData={formData.draftForm as BienBanSuaChua}
             />
           </DialogContent>
         </Dialog>

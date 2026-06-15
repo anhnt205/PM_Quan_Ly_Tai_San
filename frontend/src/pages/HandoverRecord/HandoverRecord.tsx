@@ -1,29 +1,18 @@
 import { useState, SyntheticEvent } from "react";
-import { Box, Tab, Tabs, Badge } from "@mui/material";
+import { Box, Tab, Tabs } from "@mui/material";
 import PageAction from "../../components/common/PageAction";
 import AssetRecordTab from "./AssetRecordTab";
 import ToolRecordTab from "./ToolRecordTab";
 import { Inventory, Construction } from "@mui/icons-material";
-import { useSelector } from "react-redux";
-import { useAssetHandoverPageQuery } from "../AssetHandover/Mutation";
-import { useToolHandoverPageQuery } from "../ToolHandover/Mutation";
-import { getAssetHandoverCount, getToolHandoverCount } from "../../utils/helpers";
+import { useMenuData } from "../../hooks/useMenuData";
 
 export default function HandoverRecord() {
   const [mainTab, setMainTab] = useState(0);
-  const { user } = useSelector((state: any) => state.user);
+  const { counts } = useMenuData();
 
   const handleMainTabChange = (_event: SyntheticEvent, newValue: number) => {
     setMainTab(newValue);
   };
-
-  // Although this is a Record page, we might still want to show badges for pending items 
-  // or maybe not. User said "tương tự" (similar), so I'll keep the structure.
-  const { data: assetHandover = { items: [] } } = useAssetHandoverPageQuery(0, 999999);
-  const assetHandoverCount = getAssetHandoverCount(user?.taiKhoan?.tenDangNhap, assetHandover.items);
-
-  const { data: toolHandover = { items: [] } } = useToolHandoverPageQuery(0, 999999);
-  const toolHandoverCount = getToolHandoverCount(user?.taiKhoan?.tenDangNhap, toolHandover.items);
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%", bgcolor: "#f8f9fa" }}>
@@ -65,24 +54,8 @@ export default function HandoverRecord() {
             },
           }}
         >
-          <Tab 
-            icon={
-              <Badge badgeContent={assetHandoverCount} color="error">
-                <Inventory sx={{ fontSize: 20 }} />
-              </Badge>
-            } 
-            iconPosition="start" 
-            label="Bàn giao tài sản" 
-          />
-          <Tab 
-            icon={
-              <Badge badgeContent={toolHandoverCount} color="error">
-                <Construction sx={{ fontSize: 20 }} />
-              </Badge>
-            } 
-            iconPosition="start" 
-            label="Bàn giao vật tư" 
-          />
+          <Tab icon={<Inventory sx={{ fontSize: 20 }} />} iconPosition="start" label={`Bàn giao tài sản (${counts.shareCounts?.totalAssetHandover || 0})`} />
+          <Tab icon={<Construction sx={{ fontSize: 20 }} />} iconPosition="start" label={`Bàn giao CCDC-Vật tư (${counts.shareCounts?.totalToolHandover || 0})`} />
         </Tabs>
       </Box>
 

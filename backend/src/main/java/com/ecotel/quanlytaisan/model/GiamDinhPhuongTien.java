@@ -7,6 +7,8 @@ import java.util.List;
 public class GiamDinhPhuongTien {
     private String id;
     private String idCongTy;
+    private String congTy;
+    private String tenMauBienBan;
     private String idBienBan;
     private String loaiBienBan; // sua_chua, su_co
     private String soPhieu;

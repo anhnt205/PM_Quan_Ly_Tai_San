@@ -12,10 +12,9 @@ import {
 } from "@mui/material";
 import { departments } from "../../../../mockdata/mockDepartments";
 import type { PlanSigner } from "../../../../mockdata/mockPlans";
-import { MaintenancePlanData } from "../../../MainenancePlanRepair/types";
+import { MaintenancePlanData } from "../../types";
 
 interface Props {
-  plan: MaintenancePlanData;
   assets: any[];
   month: number;
   year: number;
@@ -24,10 +23,11 @@ interface Props {
   sourceDeptId: string;
   execDeptId: string;
   note: string;
+  tieude?: string;
+  congty?: string;
 }
 
 const RepairRequestPreview = ({
-  plan,
   assets,
   month,
   year,
@@ -36,6 +36,8 @@ const RepairRequestPreview = ({
   sourceDeptId,
   execDeptId,
   note,
+  tieude,
+  congty,
 }: Props) => {
   const sourceDept = departments.find((d) => d.id === sourceDeptId);
   const execDept = departments.find((d) => d.id === execDeptId);
@@ -54,7 +56,7 @@ const RepairRequestPreview = ({
           <Typography
             sx={{ fontWeight: 700, fontSize: 13, fontFamily: "inherit" }}
           >
-            CÔNG TY THAN UÔNG BÍ - TKV
+            CÔNG TY {congty ? congty : "..."}
           </Typography>
           <Typography
             sx={{
@@ -106,9 +108,10 @@ const RepairRequestPreview = ({
           fontSize: 16,
           color: "primary.main",
           fontFamily: "inherit",
+          textTransform: "uppercase",
         }}
       >
-        GIẤY ĐỀ NGHỊ SỬA CHỮA
+        {tieude ? tieude : "..."}
       </Typography>
       <Typography
         sx={{

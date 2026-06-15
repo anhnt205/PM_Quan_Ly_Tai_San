@@ -28,6 +28,7 @@ import TransferHistoryPage from "./AssetEBook/TransferHistoryPage";
 import {
   useAssetHoursPageQuery,
   useHistoryAssethandoverQuery,
+  useLichTrinhYearQuery,
 } from "../Mutation";
 import HoursAsset from "./AssetEBook/HoursAsset";
 import AssetMaintenance from "./AssetEBook/AssetMaintenance";
@@ -98,6 +99,12 @@ const AssetEbookContent = ({
   const { data: assetHoursPage = { items: [], totalItems: 0 } } =
     useAssetHoursPageQuery(0, 999, selectedAsset?.id);
 
+  const currentYear = new Date().getFullYear();
+  const { data: scheduleList = [] } = useLichTrinhYearQuery(
+    selectedAsset?.id || selectedAsset?.soThe,
+    currentYear
+  );
+
   useEffect(() => {
     if (!selectedAsset) return;
     let cancelled = false;
@@ -133,7 +140,8 @@ const AssetEbookContent = ({
 
         // Trang 5: Giờ (km) hoạt động theo năm
         const activity = await generateMonthlyActivityReport(
-          assetHoursPage.items,
+          scheduleList,
+          currentYear
         );
         if (activity) listPdf.push(activity);
 
@@ -171,7 +179,7 @@ const AssetEbookContent = ({
     return () => {
       cancelled = true;
     };
-  }, [selectedAsset, historyData.totalItems, assetHoursPage.totalItems]);
+  }, [selectedAsset, historyData.totalItems, assetHoursPage.totalItems, scheduleList]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

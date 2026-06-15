@@ -34,7 +34,7 @@ import {
 import { listSigneInfo } from "../../config";
 import { PlanSigner } from "../../../../mockdata/mockPlans";
 import { generateCode } from "../../../../utils/helpers";
-import { CongTy } from "../../../../utils/const";
+import { CongTy, LOAI_BIEN_BAN_TYPE } from "../../../../utils/const";
 import { useMaintenanceIncidentInspectionMutation } from "../../mutation";
 import FieldDate from "../../../../components/TextField/FieldDate";
 import { useAllToolDetailQuery } from "../../../ToolManager/Mutation";
@@ -49,6 +49,7 @@ import { useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../redux/store";
 import { updateTabFormData } from "../../../../redux/tabsSlice";
 import { Remove } from "@mui/icons-material";
+import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
 
 interface Props {
   open: boolean;
@@ -86,6 +87,16 @@ const IncidentInspectionDialog = ({
     );
   });
 
+  const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =
+    useBienBanSuaChuaPageQuery(
+      0,
+      9999,
+      "",
+      LOAI_BIEN_BAN_TYPE.KIEM_TRA_SU_CO,
+      true,
+    );
+  const mauMacDinh = repairReportPage?.data?.items?.[0];
+
   const formik = useFormik({
     initialValues: {
       id: "",
@@ -102,6 +113,8 @@ const IncidentInspectionDialog = ({
       giamDocXacNhan: false,
       trangThai: 0,
       share: false,
+      tenMauBienBan: mauMacDinh?.ten ?? `KIỂM TRA SỰ CỐ THIẾT BỊ`,
+      congTy: mauMacDinh?.congTy ?? "THAN UÔNG BÍ - TKV",
       danhSachChiTiet: [] as IncidentInspectionDetailData[],
       nguoiKyList: [] as any[],
     },
@@ -211,6 +224,11 @@ const IncidentInspectionDialog = ({
         giamDocXacNhan: initData.giamDocXacNhan ?? false,
         trangThai: initData.trangThai ?? 0,
         share: initData.share ?? false,
+        tenMauBienBan:
+          initData.tenMauBienBan ??
+          mauMacDinh?.ten ??
+          `KIỂM TRA SỰ CỐ THIẾT BỊ`,
+        congTy: initData.congTy ?? mauMacDinh?.congTy ?? "THAN UÔNG BÍ - TKV",
         danhSachChiTiet: (initData.danhSachChiTiet || []).map((d: any) => ({
           ...d,
           danhSachVatTu: (d.danhSachVatTu || []).map((vt: any) => ({ ...vt })),
@@ -250,6 +268,8 @@ const IncidentInspectionDialog = ({
         bienPhapXuLy: savedDraft.bienPhapXuLy,
         danhSachChiTiet: savedDraft.danhSachChiTiet,
         nguoiKyList: savedDraft.nguoiKyList,
+        tenMauBienBan: savedDraft.tenMauBienBan,
+        congTy: savedDraft.congTy,
       });
       return;
     }
@@ -271,6 +291,8 @@ const IncidentInspectionDialog = ({
       share: false,
       danhSachChiTiet,
       nguoiKyList: [],
+      tenMauBienBan: mauMacDinh?.ten ?? `KIỂM TRA SỰ CỐ THIẾT BỊ`,
+      congTy: mauMacDinh?.congTy ?? "THAN UÔNG BÍ - TKV",
     });
   }, [
     open,
@@ -357,6 +379,14 @@ const IncidentInspectionDialog = ({
             viTri: formik.values.viTri,
             nhanXetKetLuan: formik.values.nhanXetKetLuan,
             bienPhapXuLy: formik.values.bienPhapXuLy,
+            tenMauBienBan:
+              formik.values.tenMauBienBan ||
+              mauMacDinh?.ten ||
+              `KIỂM TRA SỰ CỐ THIẾT BỊ`,
+            congTy:
+              formik.values.congTy ||
+              mauMacDinh?.congTy ||
+              "THAN UÔNG BÍ - TKV",
             danhSachChiTiet: formik.values.danhSachChiTiet,
             nguoiKyList: formik.values.nguoiKyList,
           },
@@ -667,7 +697,9 @@ const IncidentInspectionDialog = ({
                                   noBorder={true}
                                   onChange={(val) => {
                                     const numRepair = Number(val || 0);
-                                    const numReplace = Number(vt.soLuongThayMoi || 0);
+                                    const numReplace = Number(
+                                      vt.soLuongThayMoi || 0,
+                                    );
                                     updateMaterial(assetIdx, vt.id!, {
                                       soLuongSuaChua: numRepair,
                                       soLuong: numRepair + numReplace,
@@ -683,7 +715,9 @@ const IncidentInspectionDialog = ({
                                   type="number"
                                   noBorder={true}
                                   onChange={(val) => {
-                                    const numRepair = Number(vt.soLuongSuaChua || 0);
+                                    const numRepair = Number(
+                                      vt.soLuongSuaChua || 0,
+                                    );
                                     const numReplace = Number(val || 0);
                                     updateMaterial(assetIdx, vt.id!, {
                                       soLuongThayMoi: numReplace,
@@ -735,6 +769,8 @@ const IncidentInspectionDialog = ({
               recommendation={formik.values.bienPhapXuLy}
               danhSachChiTiet={formik.values.danhSachChiTiet}
               signers={formik.values.nguoiKyList}
+              tieude={formik.values.tenMauBienBan}
+              congty={formik.values.congTy}
             />
           </Box>
         </Box>

@@ -141,12 +141,12 @@ export const sumCellSx = {
 // ============================================================
 interface AssetScheduleItemProps {
   asset: any;
-  nam: string;
-  thang: string;
+  nam: number;
+  thang: number;
   onDataReady: (
     idTaiSan: string,
-    nam: string,
-    thang: string,
+    nam: number,
+    thang: number,
     data: AssetScheduleData,
   ) => void;
 }
@@ -201,8 +201,8 @@ export default function LichTrinhVanDungModal({
   const createBatch = useCreateLichTrinhBatchMutation();
   const updateBatch = useUpdateLichTrinhBatchMutation();
 
-  const nam = selectedYear.toString();
-  const thang = selectedMonth.toString();
+  const nam = selectedYear;
+  const thang = selectedMonth;
 
   const daysInMonth = useMemo(
     () => getDaysInMonth(selectedMonth, selectedYear),
@@ -217,7 +217,7 @@ export default function LichTrinhVanDungModal({
   // Callback nhận data từ từng AssetScheduleItem
   // Key = idTaiSan|nam|thang để tránh hiển thị data tháng cũ
   const handleDataReady = useCallback(
-    (idTaiSan: string, n: string, t: string, data: AssetScheduleData) => {
+    (idTaiSan: string, n: number, t: number, data: AssetScheduleData) => {
       const key = `${idTaiSan}|${n}|${t}`;
       setAssetsMap((prev) => {
         if (
@@ -252,8 +252,7 @@ export default function LichTrinhVanDungModal({
         const asset = prev[key];
         if (!asset) return prev;
         const chiTiets = [...asset.chiTietLichTrinhs];
-        const dayStr = day.toString();
-        const idx = chiTiets.findIndex((s) => s.ngay === dayStr);
+        const idx = chiTiets.findIndex((s) => s.ngay === day);
         if (idx >= 0) {
           const detail = { ...chiTiets[idx] };
           if (ca === 1) detail.ca1 = value;
@@ -263,7 +262,7 @@ export default function LichTrinhVanDungModal({
         } else {
           chiTiets.push({
             idLichTrinh: asset.idLichTrinh,
-            ngay: dayStr,
+            ngay: day,
             ca1: ca === 1 ? value : 0,
             ca2: ca === 2 ? value : 0,
             ca3: ca === 3 ? value : 0,
@@ -296,7 +295,7 @@ export default function LichTrinhVanDungModal({
     const toCreate: AssetLichTrinhType[] = [];
     const toUpdate: AssetLichTrinhType[] = [];
 
-    Object.values(assetsMap).forEach((asset) => {
+    assetsData.forEach((asset) => {
       const validChiTiets = asset.chiTietLichTrinhs.filter(
         (ct) => (ct.ca1 || 0) > 0 || (ct.ca2 || 0) > 0 || (ct.ca3 || 0) > 0,
       );

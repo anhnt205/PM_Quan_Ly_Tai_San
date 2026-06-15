@@ -18,7 +18,7 @@ import { MaintenancePlanData } from "../../types";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
 import { generateCode } from "../../../../utils/helpers";
-import { Action, CongTy } from "../../../../utils/const";
+import { Action, CongTy, LOAI_BIEN_BAN_TYPE } from "../../../../utils/const";
 import dayjs from "dayjs";
 import { MaintenanceRepairData } from "../../types";
 import { listSigneInfo } from "../../config";
@@ -34,6 +34,7 @@ import {
 } from "../../../../redux/tabsSlice";
 import { MinimizeIcon } from "lucide-react";
 import { Remove } from "@mui/icons-material";
+import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
 
 interface Props {
   open: boolean;
@@ -63,6 +64,10 @@ const RepairRequestDialog = ({
   const tabPath = location.pathname;
   const dispatch = useAppDispatch();
 
+  const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =
+    useBienBanSuaChuaPageQuery(0, 9999, "", LOAI_BIEN_BAN_TYPE.SUA_CHUA, true);
+  const mauMacDinh = repairReportPage?.data?.items?.[0];
+
   const formik = useFormik({
     initialValues: {
       id: "",
@@ -78,6 +83,8 @@ const RepairRequestDialog = ({
       giamDocXacNhan: false,
       share: false,
       trangThai: 0,
+      tenMauBienBan: mauMacDinh?.ten || "ĐỀ NGHỊ SỬA CHỮA, BẢO DƯỠNG THIẾT BỊ",
+      congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
       ngayTao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       ngayCapNhat: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       danhSachTaiSan: [] as any[],
@@ -129,7 +136,6 @@ const RepairRequestDialog = ({
     const tab = state.tabs.tabs.find((t) => t.path === tabPath);
     return tab?.formData?.[`repairDraft_${plan.id}`] ?? null;
   });
-  
 
   useEffect(() => {
     if (!open) return;
@@ -163,6 +169,12 @@ const RepairRequestDialog = ({
           initialData.ngayTao ||
           dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
         ngayCapNhat: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+        tenMauBienBan:
+          initialData.tenMauBienBan ||
+          mauMacDinh?.ten ||
+          "ĐỀ NGHỊ SỬA CHỮA, BẢO DƯỠNG THIẾT BỊ",
+        congTy:
+          initialData.congTy || mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
         danhSachTaiSan: initialData.danhSachTaiSan ?? [],
         nguoiKyList: signersList,
       });
@@ -204,6 +216,11 @@ const RepairRequestDialog = ({
         trangThai: 0,
         ngayTao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
         ngayCapNhat: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+        tenMauBienBan:
+          savedDraft.tenMauBienBan ||
+          mauMacDinh?.ten ||
+          "ĐỀ NGHỊ SỬA CHỮA, BẢO DƯỠNG THIẾT BỊ",
+        congTy: savedDraft.congTy || mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
         danhSachTaiSan: assetsList,
         nguoiKyList: savedDraft.nguoiKyList,
       });
@@ -224,6 +241,8 @@ const RepairRequestDialog = ({
       giamDocXacNhan: false,
       share: false,
       trangThai: 0,
+      tenMauBienBan: mauMacDinh?.ten || "ĐỀ NGHỊ SỬA CHỮA, BẢO DƯỠNG THIẾT BỊ",
+      congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
       ngayTao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       ngayCapNhat: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       danhSachTaiSan: assetsList,
@@ -258,6 +277,8 @@ const RepairRequestDialog = ({
           [`repairDraft_${plan.id}`]: {
             soPhieu: formik.values.soPhieu,
             ghiChu: formik.values.ghiChu,
+            tenMauBienBan: formik.values.tenMauBienBan,
+            congTy: formik.values.congTy,
             nguoiKyList: formik.values.nguoiKyList,
           },
           lastMinimizedDialog: "repair",
@@ -348,7 +369,6 @@ const RepairRequestDialog = ({
           {/* ── Hàng dưới: Preview FULL WIDTH ── */}
           <Box>
             <RepairRequestPreview
-              plan={plan}
               assets={formik.values.danhSachTaiSan}
               month={
                 initialData?.thang ? initialData?.thang : selectedMonth + 1
@@ -359,6 +379,8 @@ const RepairRequestDialog = ({
               sourceDeptId={sourceDeptId}
               execDeptId={execDeptId}
               note={formik.values.ghiChu}
+              tieude={formik.values.tenMauBienBan}
+              congty={formik.values.congTy}
             />
           </Box>
         </Box>

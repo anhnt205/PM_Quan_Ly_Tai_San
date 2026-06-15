@@ -63,6 +63,24 @@ interface MenuDataContextType {
     totalInspectionVehicle: number;
     totalMeasureMachine: number;
     totalMeasureVehicle: number;
+    shareCounts: {
+      totalPlan: number;
+      totalIncident: number;
+      totalRepair: number;
+      totalIncidentInspection: number;
+      totalMaterialAssessment: number;
+      totalInspectionMachine: number;
+      totalInspectionVehicle: number;
+      totalMachineInspection: number;
+      totalVehicleAcceptance: number;
+      totalMeasureMachine: number;
+      totalMeasureVehicle: number;
+      totalAssetTransfer: number;
+      totalToolTransfer: number;
+      totalAssetHandover: number;
+      totalToolHandover: number;
+      total: number;
+    };
   };
 }
 
@@ -338,6 +356,18 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
     toolHandover.items,
   );
 
+  // share counts
+  const { data: shareCountsData = { total: 0 } } = useQuery({
+    queryKey: ["maintenanceShareCounts", tenDangNhap],
+    queryFn: async () => {
+      const res = await api.get(`/maintenance/share-counts`, {
+        params: { userid: tenDangNhap },
+      });
+      return res.data?.data || { total: 0 };
+    },
+    enabled: !!tenDangNhap,
+  });
+
   const value = {
     config,
     updateConfig: updateConfigMutation.mutate,
@@ -370,6 +400,24 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
       totalInspectionVehicle: inspectionVehicle.totalItems,
       totalMeasureMachine: bienPhapMayMoc.totalItems,
       totalMeasureVehicle: bienPhapPhuongTien.totalItems,
+      shareCounts: {
+        totalPlan: shareCountsData.totalPlan || 0,
+        totalIncident: shareCountsData.totalIncident || 0,
+        totalRepair: shareCountsData.totalRepair || 0,
+        totalIncidentInspection: shareCountsData.totalIncidentInspection || 0,
+        totalMaterialAssessment: shareCountsData.totalMaterialAssessment || 0,
+        totalInspectionMachine: shareCountsData.totalInspectionMachine || 0,
+        totalInspectionVehicle: shareCountsData.totalInspectionVehicle || 0,
+        totalMachineInspection: shareCountsData.totalMachineInspection || 0,
+        totalVehicleAcceptance: shareCountsData.totalVehicleAcceptance || 0,
+        totalMeasureMachine: shareCountsData.totalMeasureMachine || 0,
+        totalMeasureVehicle: shareCountsData.totalMeasureVehicle || 0,
+        totalAssetTransfer: shareCountsData.totalAssetTransfer || 0,
+        totalToolTransfer: shareCountsData.totalToolTransfer || 0,
+        totalAssetHandover: shareCountsData.totalAssetHandover || 0,
+        totalToolHandover: shareCountsData.totalToolHandover || 0,
+        total: shareCountsData.total || 0,
+      },
     },
   };
 

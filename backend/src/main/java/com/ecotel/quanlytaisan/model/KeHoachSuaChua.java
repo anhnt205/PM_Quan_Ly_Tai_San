@@ -10,6 +10,7 @@ import lombok.Data;
 public class KeHoachSuaChua {
     private String id;
     private String idCongTy;
+    private String congTy;
     private String nhomTaiSan;
     private String tenMauBienBanSuaChua;
 

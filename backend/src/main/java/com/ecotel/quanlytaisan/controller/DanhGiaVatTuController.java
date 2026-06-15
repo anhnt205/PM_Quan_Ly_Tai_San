@@ -3,6 +3,7 @@ package com.ecotel.quanlytaisan.controller;
 import com.ecotel.quanlytaisan.model.ApiResponse;
 import com.ecotel.quanlytaisan.model.DanhGiaVatTu;
 import com.ecotel.quanlytaisan.model.PageResponse;
+import com.ecotel.quanlytaisan.model.UpdateGhiChuRequest;
 import com.ecotel.quanlytaisan.service.DanhGiaVatTuService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -150,12 +151,11 @@ public class DanhGiaVatTuController {
     @PatchMapping("/{id}/ghi-chu")
     public ResponseEntity<ApiResponse<Object>> updateGhiChu(
             @PathVariable("id") String id,
-            @RequestBody java.util.Map<String, String> body) {
+            @Valid @RequestBody UpdateGhiChuRequest body) {
         try {
-            String ghiChu = body.get("ghiChuBienBan");
-            int result = service.updateGhiChu(id, ghiChu);
+            int result = service.updateGhiChu(id, body.getGhiChuBienBan());
             if (result > 0) return ResponseEntity.ok(ApiResponse.success("Cập nhật ghi chú thành công", null, result));
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.failure("Không tìm thấy bản ghi", 0));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.failure("Không tìm thấy bản ghi", result));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));

@@ -11,6 +11,7 @@ import java.util.List;
 public class KeHoachSuaChuaDTO {
     private String id;
     private String idCongTy;
+    private String congTy;
     private String nhomTaiSan;
     private String tenMauBienBanSuaChua;
 

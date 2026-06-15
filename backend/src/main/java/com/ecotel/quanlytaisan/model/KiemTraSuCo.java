@@ -11,6 +11,8 @@ import java.util.List;
 public class KiemTraSuCo {
     private String id;
     private String idCongTy;
+    private String congTy;
+    private String tenMauBienBan;
     private String idSuCo;
     private String soPhieu;
     private String ngayKiemTra;

@@ -24,6 +24,8 @@ export interface IncidenData {
   nguoiTao: string;
   nguoiCapNhat?: string;
   daCoGiamDinh?: number;
+  congTy?: string;
+  tenMauBienBan?: string;
   danhSachTaiSan?: IncidenDetailData[];
   nguoiKyList?: any[];
 }
@@ -70,6 +72,8 @@ export interface MaintenanceRepairData {
   ngayCapNhat?: string;
   nguoiTao?: string;
   nguoiCapNhat?: string;
+  tenMauBienBan?: string;
+  congTy?: string;
   danhSachTaiSan?: MaintenanceRepairDetailData[];
   nguoiKyList?: any[];
 }
@@ -127,6 +131,9 @@ export interface DanhGiaVatTuData {
   nguoiTao?: string;
   nguoiCapNhat?: string;
 
+  tenMauBienBan?: string;
+  congTy?: string;
+
   danhSachChiTiet?: ChiTietVatTuThuHoiData[];
   nguoiKyList?: any[];
 }
@@ -172,6 +179,9 @@ export interface IncidentInspectionData {
   ngayCapNhat?: string;
   nguoiTao?: string;
   nguoiCapNhat?: string;
+
+  tenMauBienBan?: string;
+  congTy?: string;
 
   danhSachChiTiet?: IncidentInspectionDetailData[];
   nguoiKyList?: any[];
@@ -263,6 +273,9 @@ export interface BienPhapMayMocData {
   nguoiTao?: string;
   nguoiCapNhat?: string;
 
+  tenMauBienBan?: string;
+  congTy?: string;
+
   // Join
   soPhieuGiamDinhMayMoc?: string;
   nguoiKyList?: any[];
@@ -297,6 +310,9 @@ export interface BienPhapPhuongTienData {
   ngayCapNhat?: string;
   nguoiTao?: string;
   nguoiCapNhat?: string;
+
+  tenMauBienBan?: string;
+  congTy?: string;
 
   // Join fields
   tenNguoiLap?: string;
@@ -359,6 +375,9 @@ export interface NghiemThuPhuongTienData {
   tenGiamDoc?: string;
   tenTaiSan?: string;
   soPhieuBienPhapPhuongTien?: string;
+
+  tenMauBienBan?: string;
+  congTy?: string;
 
   danhSachChiTiet?: NghiemThuPhuongTienChiTietData[];
   nguoiKyList?: any[];
@@ -428,6 +447,11 @@ export interface MaintenancePlanData {
   nguoiKyList?: any[];
   soLuongSuCo?: number;
   tenMauBienBanSuaChua?: string;
+  coQuanDong1?: string;
+  coQuanDong2?: string;
+  coQuanDong3?: string;
+  tieuDe1?: string;
+  tieuDe2?: string;
 }
 
 export interface MaintenancePlanAssetItem {
@@ -492,6 +516,9 @@ export interface InspectionRecordData {
   tenGiamDoc?: string;
   soPhieuSuaChua?: string;
   daCoBienPhap?: number;
+
+  tenMauBienBan?: string;
+  congTy?: string;
 
   danhSachChiTiet?: InspectionRecordDetailData[];
   nguoiKyList?: any[];
@@ -562,6 +589,8 @@ export interface AcceptanceTestRecordData {
   tenNguoiLap?: string;
   tenGiamDoc?: string;
   soPhieuBienPhapMayMoc?: string;
+  tenMauBienBan?: string;
+  congTy?: string;
   daCoDanhGiaVatTu?: number;
   danhSachTaiSan?: AcceptanceTestRecordAssetData[];
   chuKyList?: any[];
@@ -621,6 +650,9 @@ export interface VehicleInspectionRecordData {
   soPhieuBienBan?: string;
   tenTaiSan?: string;
   daCoNghiemThu?: number;
+
+  tenMauBienBan?: string;
+  congTy?: string;
 
   danhSachChiTiet?: VehicleInspectionRecordDetailData[];
   nguoiKyList?: any[];

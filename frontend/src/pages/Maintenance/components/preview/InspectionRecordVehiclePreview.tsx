@@ -1,11 +1,25 @@
-import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
+import {
+  Box,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from "@mui/material";
 import React from "react";
 import { Action } from "../../../../utils/const";
 
 export default function InspectionRecordVehiclePreview({
   formik,
+  tieude,
+  congty,
 }: {
-  formik: any;
+  formik?: any;
+  tieude?: string;
+  congty?: string;
 }) {
   const groupSignersByDept = (signerList: any[]) => {
     const groups: { deptName: string; members: any[] }[] = [];
@@ -46,9 +60,9 @@ export default function InspectionRecordVehiclePreview({
             variant="caption"
             display="block"
             fontWeight={700}
-            sx={{ textTransform: "uppercase" }}
+            sx={{ textTransform: "uppercase", textDecoration: "underline" }}
           >
-            <u>CÔNG TY THAN UÔNG BÍ - TKV</u>
+            CÔNG TY {congty || "............."}
           </Typography>
         </Box>
         <Box sx={{ textAlign: "center" }}>
@@ -66,79 +80,72 @@ export default function InspectionRecordVehiclePreview({
         display="block"
         sx={{ textAlign: "right", fontStyle: "italic", mb: 2 }}
       >
-        Quảng Ninh, ngày {new Date(formik.values.ngayGiamDinh).getDate()} tháng{" "}
-        {new Date(formik.values.ngayGiamDinh).getMonth() + 1} năm{" "}
-        {new Date(formik.values.ngayGiamDinh).getFullYear()}
+        Quảng Ninh, ngày {new Date(formik?.values.ngayGiamDinh).getDate()} tháng{" "}
+        {new Date(formik?.values.ngayGiamDinh).getMonth() + 1} năm{" "}
+        {new Date(formik?.values.ngayGiamDinh).getFullYear()}
       </Typography>
 
       <Typography
         variant="subtitle1"
         align="center"
         fontWeight={700}
+        sx={{ mb: 0.5, textTransform: "uppercase" }}
         display="block"
-        sx={{ color: "primary.main", mb: 0.5 }}
       >
-        BIÊN BẢN GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ
-      </Typography>
-      <Typography
-        variant="subtitle2"
-        align="center"
-        fontWeight={700}
-        display="block"
-        sx={{ mb: 2 }}
-      >
-        VÀO SỬA CHỮA
+        {tieude || "................................................................."}
       </Typography>
 
       <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>
-        Hôm nay, ngày {new Date(formik.values.ngayGiamDinh).getDate()} tháng{" "}
-        {new Date(formik.values.ngayGiamDinh).getMonth() + 1} năm{" "}
-        {new Date(formik.values.ngayGiamDinh).getFullYear()}. Tại{" "}
-        {formik.values.viTri || "……………………………"}
+        Hôm nay, ngày {new Date(formik?.values.ngayGiamDinh).getDate()} tháng{" "}
+        {new Date(formik?.values.ngayGiamDinh).getMonth() + 1} năm{" "}
+        {new Date(formik?.values.ngayGiamDinh).getFullYear()}. Tại{" "}
+        {formik?.values.viTri || "……………………………"}
       </Typography>
       <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>
         Chúng tôi gồm :
       </Typography>
 
       <Box sx={{ pl: 2, mb: 1.5 }}>
-        {groupSignersByDept(formik.values.nguoiKyList).map((group, gIdx) => (
-          <Box key={gIdx} sx={{ mb: 1 }}>
-            <Typography
-              variant="caption"
-              fontWeight={700}
-              display="block"
-              sx={{ mb: 0.25 }}
-            >
-              * {group.deptName}:
-            </Typography>
-            <Box sx={{ pl: 3 }}>
-              {group.members.map((member, mIdx) => (
-                <Box
-                  key={member.userId || mIdx}
-                  sx={{
-                    display: "flex",
-                    mb: 0.25,
-                    alignItems: "baseline",
-                  }}
-                >
-                  <Typography variant="caption" sx={{ width: 25 }}>
-                    {mIdx + 1}.
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    sx={{ width: 200, fontWeight: 500 }}
+        {groupSignersByDept(formik?.values.nguoiKyList || []).map(
+          (group, gIdx) => (
+            <Box key={gIdx} sx={{ mb: 1 }}>
+              <Typography
+                variant="caption"
+                fontWeight={700}
+                display="block"
+                sx={{ mb: 0.25 }}
+              >
+                * {group.deptName}:
+              </Typography>
+              <Box sx={{ pl: 3 }}>
+                {group.members.map((member, mIdx) => (
+                  <Box
+                    key={member.userId || mIdx}
+                    sx={{
+                      display: "flex",
+                      mb: 0.25,
+                      alignItems: "baseline",
+                    }}
                   >
-                    Ông: {member.userName || "………………………"}
-                  </Typography>
-                  <Typography variant="caption">
-                    Chức vụ: {member.position || "—"}
-                  </Typography>
-                </Box>
-              ))}
+                    <Typography variant="caption" sx={{ width: 25 }}>
+                      {mIdx + 1}.
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{ width: 200, fontWeight: 500 }}
+                    >
+                      Ông: {member.userName || "………………………"}
+                    </Typography>
+                    <Typography variant="caption">
+                      Chức vụ: {member.position || "—"}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
             </Box>
-          </Box>
-        ))}
-        {formik.values.nguoiKyList.length === 0 && (
+          ),
+        )}
+        {formik?.values.nguoiKyList.length === 0 && (
           <Typography
             variant="caption"
             sx={{ fontStyle: "italic", color: "text.secondary" }}
@@ -150,10 +157,10 @@ export default function InspectionRecordVehiclePreview({
 
       <Typography variant="caption" display="block" sx={{ mb: 1 }}>
         Cùng thực hiện giải thể kiểm tra tình trạng kỹ thuật thiết bị:{" "}
-        {formik.values.tenTaiSan || ".............."} trước khi vào sửa chữa bảo
-        dưỡng cấp {formik.values.capBaoDuong || "............"} và bàn giao cho
-        phân xưởng {formik.values.donViSuaChua || "............."} sửa chữa với
-        tình trạng kỹ thuật và nội dung sửa chữa sau:
+        {formik?.values.tenTaiSan || ".............."} trước khi vào sửa chữa
+        bảo dưỡng cấp {formik?.values.capBaoDuong || "............"} và bàn giao
+        cho phân xưởng {formik?.values.donViSuaChua || "............."} sửa chữa
+        với tình trạng kỹ thuật và nội dung sửa chữa sau:
       </Typography>
 
       <TableContainer component={Paper} variant="outlined" sx={{ mb: 2 }}>
@@ -201,7 +208,7 @@ export default function InspectionRecordVehiclePreview({
             </TableRow>
           </TableHead>
           <TableBody>
-            {formik.values.danhSachChiTiet
+            {formik?.values.danhSachChiTiet
               .filter((v: any) => v.action !== Action.DELETE)
               .map((vt: any, vtIdx: number) => (
                 <TableRow key={vt.id || vtIdx}>
@@ -231,7 +238,7 @@ export default function InspectionRecordVehiclePreview({
                   </TableCell>
                 </TableRow>
               ))}
-            {formik.values.danhSachChiTiet.filter(
+            {formik?.values.danhSachChiTiet.filter(
               (v: any) => v.action !== Action.DELETE,
             ).length === 0 && (
               <TableRow>
@@ -255,7 +262,7 @@ export default function InspectionRecordVehiclePreview({
         sx={{ mb: 1.5, whiteSpace: "pre-line" }}
       >
         Các nội dung cần thống nhất khác:{" "}
-        {formik.values.noiDungKhac || "................."}
+        {formik?.values.noiDungKhac || "................."}
       </Typography>
 
       <Typography variant="caption" display="block" sx={{ mb: 2 }}>
@@ -272,7 +279,7 @@ export default function InspectionRecordVehiclePreview({
         }}
       >
         {(() => {
-          const sorted = [...(formik.values.nguoiKyList || [])].sort(
+          const sorted = [...(formik?.values.nguoiKyList || [])].sort(
             (a, b) => (a.order || 0) - (b.order || 0),
           );
 

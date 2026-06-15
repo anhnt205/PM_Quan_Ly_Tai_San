@@ -15,14 +15,19 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useFormik } from "formik";
 import type { PlanSigner } from "../../../../mockdata/mockPlans";
 import StepSchedule from "../step/StepSchedule";
-import StepPreview from "../step/StepPreview";
+import StepPreview from "../preview/PlanPreview";
 import StepAssets from "../step/StepAssets";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
 import { useAssetByDonViQuery } from "../../../AssetTransfer/Mutation";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
 import FieldInput from "../../../../components/TextField/FieldInput";
-import { Action, ActionType, AssetGroup } from "../../../../utils/const";
+import {
+  Action,
+  ActionType,
+  AssetGroup,
+  LOAI_BIEN_BAN_TYPE,
+} from "../../../../utils/const";
 import { generateCode } from "../../../../utils/helpers";
 import { MaintenancePlanData } from "../../types";
 import { listSigneInfo } from "../../config";
@@ -83,20 +88,9 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
     return tab?.formData?.[draftKey] ?? null;
   });
 
-  const [paginationModel, setPaginationModel] = useState({
-    pageSize: 9999,
-    page: 0,
-  });
-
   const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =
-    useBienBanSuaChuaPageQuery(
-      paginationModel.page,
-      paginationModel.pageSize,
-      "",
-    );
-  const tenMauMacDinh = repairReportPage?.data?.items?.find(
-    (item: any) => item.macDinh === true,
-  )?.ten;
+    useBienBanSuaChuaPageQuery(0, 9999, "", LOAI_BIEN_BAN_TYPE.KE_HOACH, true);
+  const tenMauMacDinh = repairReportPage?.data?.items?.[0]?.ten;
 
   const formik = useFormik({
     initialValues: {
@@ -237,7 +231,8 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
         trangThai: initialData?.trangThai || 0,
         share: initialData?.share ?? false,
         tenMauBienBanSuaChua:
-          initialData.tenMauBienBanSuaChua ??
+          initialData.tenMauBienBanSuaChua ||
+          tenMauMacDinh ||
           `KẾ HOẠCH SỬA CHỮA BẢO DƯỠNG THIẾT BỊ NĂM ${initialData.nam}`,
       });
       return;
@@ -464,7 +459,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
             deptDevices={fullDeptAssets}
             departments={departments}
             formik={formik}
-            tenMau={tenMauMacDinh}
+            tieude={formik.values.tenMauBienBanSuaChua}
             nam={formik.values.nam}
           />
         </Box>

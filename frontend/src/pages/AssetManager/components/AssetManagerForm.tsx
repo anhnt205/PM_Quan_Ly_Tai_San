@@ -611,7 +611,7 @@ const AssetRow = ({
             </Grid>
           </Grid>
 
-          {asset.donViTinh?.toLocaleLowerCase() === "ht" && (
+          {allUnits.find((i) => i.id === asset.donViTinh)?.laHeThong && (
             <Box mt={4}>
               <Typography
                 variant="subtitle2"
@@ -1066,7 +1066,7 @@ export default function AssetManagerForm({
           <FieldArray name="assets">
             {({ push, remove }) => (
               <React.Fragment>
-                {formik.values.assets.map((_, index) => (
+                {formik.values.assets.map((_: any, index: number) => (
                   <AssetRow
                     key={index}
                     index={index}

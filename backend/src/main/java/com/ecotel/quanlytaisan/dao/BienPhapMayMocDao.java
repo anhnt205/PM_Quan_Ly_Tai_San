@@ -37,7 +37,7 @@ public class BienPhapMayMocDao {
     private String buildSelectSql() {
         return """
             SELECT
-                bp.Id, bp.IdCongTy, bp.IdGiamDinhMayMoc,
+                bp.Id, bp.IdCongTy, bp.CongTy, bp.TenMauBienBan, bp.IdGiamDinhMayMoc,
                 bp.SoPhieu, bp.SoDeNghi,
                 bp.DonViSuaChua, bp.DonViPhoiHop, bp.HinhThuc,
                 bp.ThoiGianBatDau, bp.ThoiGianKetThuc, bp.ThoiGianNgay,
@@ -136,7 +136,7 @@ public class BienPhapMayMocDao {
         e.setId(generateNextId());
         String sql = """
             INSERT INTO bienphap_maymoc (
-                Id, IdCongTy, IdGiamDinhMayMoc,
+                Id, IdCongTy, CongTy, TenMauBienBan, IdGiamDinhMayMoc,
                 SoPhieu, SoDeNghi,
                 DonViSuaChua, DonViPhoiHop, HinhThuc,
                 ThoiGianBatDau, ThoiGianKetThuc, ThoiGianNgay,
@@ -144,10 +144,10 @@ public class BienPhapMayMocDao {
                 IdNguoiLap, NguoiLapXacNhan, IdGiamDoc, GiamDocXacNhan,
                 Share, TrangThai,
                 NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, GhiChuBienBan
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         int r = jdbcTemplate.update(sql,
-                e.getId(), e.getIdCongTy(), e.getIdGiamDinhMayMoc(),
+                e.getId(), e.getIdCongTy(), e.getCongTy(), e.getTenMauBienBan(), e.getIdGiamDinhMayMoc(),
                 e.getSoPhieu(), e.getSoDeNghi(),
                 e.getDonViSuaChua(), e.getDonViPhoiHop(), e.getHinhThuc(),
                 e.getThoiGianBatDau(), e.getThoiGianKetThuc(), e.getThoiGianNgay(),
@@ -164,6 +164,7 @@ public class BienPhapMayMocDao {
     public BienPhapMayMoc update(BienPhapMayMoc e) {
         String sql = """
             UPDATE bienphap_maymoc SET
+                CongTy = ?, TenMauBienBan = ?,
                 IdGiamDinhMayMoc = ?,
                 SoPhieu = ?, SoDeNghi = ?,
                 DonViSuaChua = ?, DonViPhoiHop = ?, HinhThuc = ?,
@@ -176,6 +177,7 @@ public class BienPhapMayMocDao {
             WHERE Id = ?
             """;
         int r = jdbcTemplate.update(sql,
+                e.getCongTy(), e.getTenMauBienBan(),
                 e.getIdGiamDinhMayMoc(),
                 e.getSoPhieu(), e.getSoDeNghi(),
                 e.getDonViSuaChua(), e.getDonViPhoiHop(), e.getHinhThuc(),

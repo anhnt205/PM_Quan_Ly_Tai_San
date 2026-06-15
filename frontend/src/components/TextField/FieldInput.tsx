@@ -18,6 +18,7 @@ interface Props {
   rows?: number;
   noBorder?: boolean;
   sx?: any;
+  placeholder?: string;
 }
 export default function FieldInput({
   title,
@@ -33,7 +34,8 @@ export default function FieldInput({
   multiline = false,
   rows = 1,
   noBorder = false,
-  sx
+  sx,
+  placeholder,
 }: Props) {
   const currentValue = formik && field ? getIn(formik.values, field) : "";
   const touched = formik && field ? getIn(formik.touched, field) : false;
@@ -69,6 +71,7 @@ export default function FieldInput({
       value={localValue}
       multiline={multiline}
       rows={rows}
+      placeholder={placeholder}
       onChange={(e) => {
         setLocalValue(e.target.value);
         if (onChange) {

@@ -23,8 +23,8 @@ public class LichTrinhController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<LichTrinhDTO>>> getAll(
             @RequestParam(value = "idTaiSan", required = false) String idTaiSan,
-            @RequestParam(value = "nam", required = false) String nam,
-            @RequestParam(value = "thang", required = false) String thang,
+            @RequestParam(value = "nam", required = false) Integer nam,
+            @RequestParam(value = "thang", required = false) Integer thang,
             @RequestParam(value = "sortBy", required = false) String sortBy,
             @RequestParam(value = "sortDir", required = false) String sortDir) {
 
@@ -39,7 +39,7 @@ public class LichTrinhController {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(ApiResponse.success("Tạo batch lịch trình thành công", dtos, result));
         }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.failure("Tạo batch lịch trình thất bại", result));
     }
 

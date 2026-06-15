@@ -24,7 +24,7 @@ public class KiemTraSuCoDao {
     private String buildSelectSql() {
         return """
             SELECT
-                kt.Id, kt.IdCongTy, kt.IdSuCo, kt.SoPhieu, kt.NgayKiemTra, kt.ViTri,
+                kt.Id, kt.IdCongTy, kt.CongTy, kt.TenMauBienBan, kt.IdSuCo, kt.SoPhieu, kt.NgayKiemTra, kt.ViTri,
                 kt.NhanXetKetLuan, kt.BienPhapXuLy, kt.GhiChuBienBan, kt.IdNguoiLap, kt.NguoiLapXacNhan,
                 kt.IdGiamDoc, kt.GiamDocXacNhan, kt.Share, kt.TrangThai,
                 kt.NgayTao, kt.NgayCapNhat, kt.NguoiTao, kt.NguoiCapNhat,
@@ -103,11 +103,11 @@ public class KiemTraSuCoDao {
         }
         String sql = """
             INSERT INTO kiemtra_suco (
-                Id, IdCongTy, IdSuCo, SoPhieu, NgayKiemTra, ViTri,
+                Id, IdCongTy, CongTy, TenMauBienBan, IdSuCo, SoPhieu, NgayKiemTra, ViTri,
                 NhanXetKetLuan, BienPhapXuLy, IdNguoiLap, NguoiLapXacNhan,
                 IdGiamDoc, GiamDocXacNhan, Share, TrangThai,
                 NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, GhiChuBienBan
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         
         String now = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -115,7 +115,7 @@ public class KiemTraSuCoDao {
         String ngayCapNhat = e.getNgayCapNhat() != null ? e.getNgayCapNhat() : now;
 
         int r = jdbcTemplate.update(sql,
-                e.getId(), e.getIdCongTy(), e.getIdSuCo(), e.getSoPhieu(), e.getNgayKiemTra(), e.getViTri(),
+                e.getId(), e.getIdCongTy(), e.getCongTy(), e.getTenMauBienBan(), e.getIdSuCo(), e.getSoPhieu(), e.getNgayKiemTra(), e.getViTri(),
                 e.getNhanXetKetLuan(), e.getBienPhapXuLy(), e.getIdNguoiLap(), e.getNguoiLapXacNhan(),
                 e.getIdGiamDoc(), e.getGiamDocXacNhan(), e.getShare(), e.getTrangThai() != null ? e.getTrangThai() : 0,
                 ngayTao, ngayCapNhat, e.getNguoiTao(), e.getNguoiCapNhat(), e.getGhiChuBienBan()
@@ -127,7 +127,7 @@ public class KiemTraSuCoDao {
     public KiemTraSuCo update(KiemTraSuCo e) {
         String sql = """
             UPDATE kiemtra_suco SET
-                IdSuCo = ?, SoPhieu = ?, NgayKiemTra = ?, ViTri = ?,
+                CongTy = ?, TenMauBienBan = ?, IdSuCo = ?, SoPhieu = ?, NgayKiemTra = ?, ViTri = ?,
                 NhanXetKetLuan = ?, BienPhapXuLy = ?, IdNguoiLap = ?, NguoiLapXacNhan = ?,
                 IdGiamDoc = ?, GiamDocXacNhan = ?, Share = ?, TrangThai = ?,
                 NgayCapNhat = ?, NguoiCapNhat = ?, GhiChuBienBan = ?
@@ -138,7 +138,7 @@ public class KiemTraSuCoDao {
         String ngayCapNhat = e.getNgayCapNhat() != null ? e.getNgayCapNhat() : now;
 
         int r = jdbcTemplate.update(sql,
-                e.getIdSuCo(), e.getSoPhieu(), e.getNgayKiemTra(), e.getViTri(),
+                e.getCongTy(), e.getTenMauBienBan(), e.getIdSuCo(), e.getSoPhieu(), e.getNgayKiemTra(), e.getViTri(),
                 e.getNhanXetKetLuan(), e.getBienPhapXuLy(), e.getIdNguoiLap(), e.getNguoiLapXacNhan(),
                 e.getIdGiamDoc(), e.getGiamDocXacNhan(), e.getShare(), e.getTrangThai(),
                 ngayCapNhat, e.getNguoiCapNhat(), e.getGhiChuBienBan(), e.getId()

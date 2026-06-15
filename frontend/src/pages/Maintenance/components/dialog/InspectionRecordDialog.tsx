@@ -33,7 +33,12 @@ import {
 } from "../../types";
 import { IncidentInspectionData, MaintenanceRepairData } from "../../types";
 import { useMaintenanceInspectionMutation } from "../../mutation";
-import { Action, CongTy, TypeBienBan } from "../../../../utils/const";
+import {
+  Action,
+  CongTy,
+  LOAI_BIEN_BAN_TYPE,
+  TypeBienBan,
+} from "../../../../utils/const";
 import { generateCode } from "../../../../utils/helpers";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
@@ -51,6 +56,7 @@ import { useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../redux/store";
 import { updateTabFormData } from "../../../../redux/tabsSlice";
 import { Remove } from "@mui/icons-material";
+import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
 
 interface Props {
   open: boolean;
@@ -90,6 +96,16 @@ const InspectionRecordDialog = ({
     );
   });
 
+  const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =
+    useBienBanSuaChuaPageQuery(
+      0,
+      9999,
+      "",
+      LOAI_BIEN_BAN_TYPE.GIAM_DINH_MAY_MOC,
+      true,
+    );
+  const mauMacDinh = repairReportPage?.data?.items?.[0];
+
   const formik = useFormik({
     initialValues: {
       id: "",
@@ -110,6 +126,10 @@ const InspectionRecordDialog = ({
       giamDocXacNhan: false,
       share: false,
       trangThai: 0,
+      tenMauBienBan:
+        mauMacDinh?.ten ??
+        `GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ ĐƯA VÀO SỬA CHỮA`,
+      congTy: mauMacDinh?.congTy ?? "THAN UÔNG BÍ - TKV",
       danhSachChiTiet: [] as InspectionRecordDetailData[],
       nguoiKyList: [] as any[],
     },
@@ -153,6 +173,8 @@ const InspectionRecordDialog = ({
         giamDocXacNhan: false,
         trangThai: 0,
         share: false,
+        tenMauBienBan: values.tenMauBienBan,
+        congTy: values.congTy,
         danhSachChiTiet: values.danhSachChiTiet.map((e) => {
           const actualDetailId = e.id ? e.id : generateCode("GDCT_");
           return {
@@ -205,7 +227,6 @@ const InspectionRecordDialog = ({
   useEffect(() => {
     if (!open) return;
     if (initData) {
-      
       const listInfo = listSigneInfo(
         initData,
         apiUsersRef.current,
@@ -229,6 +250,11 @@ const InspectionRecordDialog = ({
         giamDocXacNhan: initData.giamDocXacNhan ?? false,
         share: initData.share ?? false,
         trangThai: initData.trangThai ?? 0,
+        tenMauBienBan:
+          initData.tenMauBienBan ??
+          mauMacDinh?.ten ??
+          "GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ ĐƯA VÀO SỬA CHỮA",
+        congTy: initData.congTy ?? mauMacDinh?.congTy ?? "THAN UÔNG BÍ - TKV",
         danhSachChiTiet: (initData.danhSachChiTiet ?? []).map((e: any) => ({
           ...e,
           danhSachVatTu: (e.danhSachVatTu || []).map((vt: any) => ({
@@ -281,6 +307,8 @@ const InspectionRecordDialog = ({
         soLuongHuy: savedDraft.soLuongHuy,
         danhSachChiTiet: savedDraft.danhSachChiTiet,
         nguoiKyList: savedDraft.nguoiKyList,
+        tenMauBienBan: savedDraft.tenMauBienBan,
+        congTy: savedDraft.congTy,
       });
       return;
     }
@@ -304,6 +332,10 @@ const InspectionRecordDialog = ({
       giamDocXacNhan: false,
       share: false,
       trangThai: 0,
+      tenMauBienBan:
+        mauMacDinh?.ten ??
+        `GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ ĐƯA VÀO SỬA CHỮA`,
+      congTy: mauMacDinh?.congTy ?? "THAN UÔNG BÍ - TKV",
       danhSachChiTiet,
       nguoiKyList: [],
     });
@@ -435,6 +467,14 @@ const InspectionRecordDialog = ({
             danhSachChiTiet: formik.values.danhSachChiTiet,
             nguoiKyList: formik.values.nguoiKyList,
             idBienBan: formik.values.idBienBan,
+            tenMauBienBan:
+              formik.values.tenMauBienBan ||
+              mauMacDinh?.ten ||
+              "GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ ĐƯA VÀO SỬA CHỮA",
+            congTy:
+              formik.values.congTy ||
+              mauMacDinh?.congTy ||
+              "THAN UÔNG BÍ - TKV",
           },
           lastMinimizedDialog: "inspection",
         },
@@ -793,6 +833,8 @@ const InspectionRecordDialog = ({
             formik={formik}
             repairRequest={repairRequest}
             plan={plan}
+            tieude={formik.values.tenMauBienBan}
+            congty={formik.values.congTy}
           />
         </Box>
       </DialogContent>

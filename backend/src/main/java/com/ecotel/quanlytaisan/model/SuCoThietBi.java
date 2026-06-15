@@ -16,6 +16,8 @@ public class SuCoThietBi {
 
     /** ID công ty sở hữu phiếu sự cố */
     private String idCongTy;
+    private String congTy;
+    private String tenMauBienBan;
 
     /** ID kế hoạch sửa chữa liên quan (nếu có) */
     private String idKeHoach;

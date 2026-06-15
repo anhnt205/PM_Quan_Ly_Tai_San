@@ -7,12 +7,14 @@ export const useBienBanSuaChuaPageQuery = (
   page: number,
   size: number,
   search: string,
+  loaiBienBan?: string,
+  macDinh?: boolean,
 ) => {
   return useQuery({
-    queryKey: ["bienBanSuaChuaPage", page, size, search],
+    queryKey: ["bienBanSuaChuaPage", page, size, search, loaiBienBan, macDinh],
     queryFn: async () => {
       const res = await api.get("/mau-bien-ban-sua-chua/paged", {
-        params: { page, size, search },
+        params: { page, size, search, loaiBienBan, macDinh },
       });
       return res.data;
     },

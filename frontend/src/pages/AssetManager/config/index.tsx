@@ -361,7 +361,8 @@ export const generateAssetPdf = async (
 };
 
 export const generateMonthlyActivityReport = async (
-  data: AssetHoursType[],
+  scheduleList: any[],
+  selectedYear: number = new Date().getFullYear(),
 ): Promise<Uint8Array> => {
   const doc = new jsPDF({ orientation: "landscape" });
   doc.setFont("times_new_roman", "bold");
@@ -370,59 +371,41 @@ export const generateMonthlyActivityReport = async (
     align: "center",
   });
 
-  // Sắp xếp theo ngày tăng dần
-  const sorted = [...(data || [])].sort((a, b) => {
-    const da = `${a.nam}-${String(a.thang).padStart(2, "0")}-${String(a.ngay).padStart(2, "0")}`;
-    const db = `${b.nam}-${String(b.thang).padStart(2, "0")}-${String(b.ngay).padStart(2, "0")}`;
-    return da.localeCompare(db);
+  const rows = Array.from({ length: 12 }).map((_, i) => {
+    const monthStr = String(i + 1);
+    const schedule = scheduleList?.find((s: any) => s.thang === monthStr);
+    let totalHours = 0;
+    if (schedule?.chiTietLichTrinhs) {
+      schedule.chiTietLichTrinhs.forEach((ct: any) => {
+        totalHours += (ct.ca1 || 0) + (ct.ca2 || 0) + (ct.ca3 || 0);
+      });
+    }
+    return {
+      month: i + 1,
+      year: selectedYear,
+      totalHours,
+    };
   });
 
-  // Map sang dòng bảng
-  const tableData: any[][] = sorted.map((item) => {
-    const dateStr = item.ngay
-      ? `${String(item.ngay).padStart(2, "0")}/${String(item.thang).padStart(2, "0")}/${item.nam}`
-      : `${String(item.thang).padStart(2, "0")}/${item.nam}`;
-    return [
-      dateStr,
-      item.tenDonVi || "",
-      item.gioHoatDong > 0 ? item.gioHoatDong : "",
-      item.ketQuaHoatDong || "",
-      item.gioNgungMay_HongMay > 0 ? item.gioNgungMay_HongMay : "",
-      item.gioNgungMay_ChoDoi > 0 ? item.gioNgungMay_ChoDoi : "",
-      item.gioNgungMay_MatDien > 0 ? item.gioNgungMay_MatDien : "",
-      item.gioNgungMay_ThieuNguyenLieu > 0
-        ? item.gioNgungMay_ThieuNguyenLieu
-        : "",
-      item.gioNgungMay_LyDoKhac > 0 ? item.gioNgungMay_LyDoKhac : "",
-      item.ghiChu || "",
-    ];
-  });
+  const grandTotal = rows.reduce((acc, row) => acc + row.totalHours, 0);
 
-  // Đảm bảo ít nhất 15 dòng
-  const EMPTY_ROWS = 15;
-  while (tableData.length < EMPTY_ROWS) {
-    tableData.push(["", "", "", "", "", "", "", "", "", ""]);
-  }
+  const tableData: any[][] = rows.map((r) => [
+    `${String(r.month).padStart(2, "0")}/${r.year}`,
+    "", // Đơn vị quản lý
+    r.totalHours > 0 ? r.totalHours : "", // Giờ hoạt động
+    "", // Kết quả
+    "", "", "", "", "", // Ngừng máy
+    "", // Ghi chú
+  ]);
 
-  // Dòng tổng
-  const sum = (field: keyof AssetHoursType) =>
-    sorted.reduce((s, r) => s + (Number(r[field]) || 0), 0);
   tableData.push([
     {
       content: "TỔNG",
       colSpan: 2,
       styles: { halign: "center", fontStyle: "bold" },
     },
-    sum("gioHoatDong") > 0 ? sum("gioHoatDong") : "",
-    "",
-    sum("gioNgungMay_HongMay") > 0 ? sum("gioNgungMay_HongMay") : "",
-    sum("gioNgungMay_ChoDoi") > 0 ? sum("gioNgungMay_ChoDoi") : "",
-    sum("gioNgungMay_MatDien") > 0 ? sum("gioNgungMay_MatDien") : "",
-    sum("gioNgungMay_ThieuNguyenLieu") > 0
-      ? sum("gioNgungMay_ThieuNguyenLieu")
-      : "",
-    sum("gioNgungMay_LyDoKhac") > 0 ? sum("gioNgungMay_LyDoKhac") : "",
-    "",
+    grandTotal > 0 ? grandTotal : "",
+    "", "", "", "", "", "", "",
   ]);
 
   autoTable(doc, {

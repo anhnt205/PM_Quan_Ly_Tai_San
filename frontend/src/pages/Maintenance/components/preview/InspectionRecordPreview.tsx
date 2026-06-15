@@ -16,10 +16,14 @@ export default function InspectionRecordPreview({
   formik,
   plan,
   repairRequest,
+  tieude,
+  congty,
 }: {
-  formik: any;
-  plan: any;
-  repairRequest: any;
+  formik?: any;
+  plan?: any;
+  repairRequest?: any;
+  tieude?: string;
+  congty?: string;
 }) {
   return (
     <Box
@@ -45,9 +49,9 @@ export default function InspectionRecordPreview({
             variant="caption"
             display="block"
             fontWeight={700}
-            sx={{ textTransform: "uppercase" }}
+            sx={{ textTransform: "uppercase", textDecoration: "underline" }}
           >
-            Công <u>ty than Uông Bí</u> - TKV
+            Công ty {congty || "............."}
           </Typography>
         </Box>
         <Box sx={{ textAlign: "center" }}>
@@ -64,9 +68,9 @@ export default function InspectionRecordPreview({
         display="block"
         sx={{ textAlign: "right", fontStyle: "italic", mb: 2 }}
       >
-        Quảng Ninh, ngày {new Date(formik.values.ngayGiamDinh).getDate()} tháng{" "}
-        {new Date(formik.values.ngayGiamDinh).getMonth() + 1} năm{" "}
-        {new Date(formik.values.ngayGiamDinh).getFullYear()}
+        Quảng Ninh, ngày {new Date(formik?.values?.ngayGiamDinh).getDate()}{" "}
+        tháng {new Date(formik?.values?.ngayGiamDinh).getMonth() + 1} năm{" "}
+        {new Date(formik?.values?.ngayGiamDinh).getFullYear()}
       </Typography>
       <Typography
         variant="subtitle2"
@@ -82,21 +86,21 @@ export default function InspectionRecordPreview({
         align="center"
         fontWeight={700}
         display="block"
-        sx={{ mb: 2 }}
+        sx={{ mb: 2, textTransform: "uppercase" }}
       >
-        GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ ĐƯA VÀO SỬA CHỮA
+        {tieude || "................................................................."}
       </Typography>
       <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>
-        Hôm nay, ngày {new Date(formik.values.ngayGiamDinh).getDate()} tháng{" "}
-        {new Date(formik.values.ngayGiamDinh).getMonth() + 1} năm{" "}
-        {new Date(formik.values.ngayGiamDinh).getFullYear()}. Tại{" "}
-        {formik.values.viTri || "……………………………"}
+        Hôm nay, ngày {new Date(formik?.values?.ngayGiamDinh).getDate()} tháng{" "}
+        {new Date(formik?.values?.ngayGiamDinh).getMonth() + 1} năm{" "}
+        {new Date(formik?.values?.ngayGiamDinh).getFullYear()}. Tại{" "}
+        {formik?.values?.viTri || "……………………………"}
       </Typography>
       <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>
         Chúng tôi gồm:
       </Typography>
       <Box sx={{ pl: 2, mb: 1 }}>
-        {formik.values.nguoiKyList.map((s: any, i: number) => (
+        {formik?.values?.nguoiKyList?.map((s: any, i: number) => (
           <Box key={i} sx={{ display: "flex", gap: 3, mb: 0.25 }}>
             <Typography variant="caption" sx={{ minWidth: 16 }}>
               {i + 1}.
@@ -116,9 +120,9 @@ export default function InspectionRecordPreview({
       </Box>
       <Typography variant="caption" display="block" sx={{ mb: 1 }}>
         Cùng tiến hành thực hiện giải thể và kiểm tra tình trạng kỹ thuật thiết
-        bị theo văn bản đề nghị số <b>{repairRequest?.soPhieu ?? plan.id}</b>{" "}
+        bị theo văn bản đề nghị số <b>{repairRequest?.soPhieu ?? plan?.id}</b>{" "}
         ngày {repairRequest?.ngayTao ?? "—"} của phân xưởng{" "}
-        {plan.tenDonViGiao || "……………"}.
+        {plan?.tenDonViGiao || "……………"}.
       </Typography>
       <Typography variant="caption" display="block">
         Số đăng ký: ……………… trước khi đưa vào sửa chữa cấp ………………
@@ -171,7 +175,7 @@ export default function InspectionRecordPreview({
             </TableRow>
           </TableHead>
           <TableBody>
-            {formik.values.danhSachChiTiet.map((entry: any, idx: number) => (
+            {formik?.values?.danhSachChiTiet?.map((entry: any, idx: number) => (
               <React.Fragment key={`pv-group-${idx}`}>
                 <TableRow key={`group-${idx}`} sx={{ bgcolor: "#fafafa" }}>
                   <TableCell sx={{ fontSize: "0.75rem", fontWeight: 600 }}>
@@ -235,13 +239,13 @@ export default function InspectionRecordPreview({
         </Table>
       </TableContainer>
       <Typography variant="caption" display="block">
-        Số để lại phục hồi: {formik.values.soDeLaiPhucHoi || "…………"}.
+        Số để lại phục hồi: {formik?.values?.soDeLaiPhucHoi || "…………"}.
       </Typography>
       <Typography variant="caption" display="block">
-        Số để làm phế liệu: {formik.values.soDeLamPheLieu || "…………"} (mục)
+        Số để làm phế liệu: {formik?.values?.soDeLamPheLieu || "…………"} (mục)
       </Typography>
       <Typography variant="caption" display="block" sx={{ mb: 1.5 }}>
-        Số lượng hủy: {formik.values.soLuongHuy || "…………"} (mục)
+        Số lượng hủy: {formik?.values?.soLuongHuy || "…………"} (mục)
       </Typography>
       <Typography variant="caption" display="block" sx={{ mb: 2 }}>
         Biên bản được lập xong lúc …… giờ cùng ngày và được các thành phần cùng
@@ -256,7 +260,7 @@ export default function InspectionRecordPreview({
         }}
       >
         {(() => {
-          const sorted = [...(formik.values.nguoiKyList || [])].sort(
+          const sorted = [...(formik?.values?.nguoiKyList || [])].sort(
             (a, b) => (a.order || 0) - (b.order || 0),
           );
           const cols = sorted.map((s) => ({

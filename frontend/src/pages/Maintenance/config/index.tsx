@@ -507,7 +507,6 @@ export const generateBienBanKeHoachPdf = async (
   staffs: any[],
   departments: any[],
   positions: any[],
-
 ): Promise<{
   pdf: Uint8Array;
   coordinates: Record<
@@ -754,9 +753,14 @@ export const generateSuaChuaPdf = async (
   const rightColCenter = (pageWidth * 3) / 4;
 
   // Header Left
-  doc.text("CÔNG TY THAN UÔNG BÍ - TKV", leftColCenter, 20, {
-    align: "center",
-  });
+  doc.text(
+    `CÔNG TY ${repair?.congTy || "THAN UÔNG BÍ - TKV"}`,
+    leftColCenter,
+    20,
+    {
+      align: "center",
+    },
+  );
   doc.text(`Đơn vị: ${"................"}`, leftColCenter, 26, {
     align: "center",
   });
@@ -781,9 +785,14 @@ export const generateSuaChuaPdf = async (
   // Title
   doc.setFont("times_new_roman", "bold");
   doc.setFontSize(16);
-  doc.text("ĐỀ NGHỊ SỬA CHỮA, BẢO DƯỠNG THIẾT BỊ", pageWidth / 2, 50, {
-    align: "center",
-  });
+  doc.text(
+    repair?.tenMauBienBan || "ĐỀ NGHỊ SỬA CHỮA, BẢO DƯỠNG THIẾT BỊ",
+    pageWidth / 2,
+    50,
+    {
+      align: "center",
+    },
+  );
   doc.setFontSize(12);
   doc.text(`Số: ${repair.soPhieu || "..."}`, pageWidth / 2, 58, {
     align: "center",
@@ -974,9 +983,14 @@ export const generatePhieuSuCoPdf = async (
   const rightColCenter = (pageWidth * 3) / 4;
 
   // Header Left
-  doc.text("CÔNG TY THAN UÔNG BÍ - TKV", leftColCenter, 20, {
-    align: "center",
-  });
+  doc.text(
+    incident?.congTy || "CÔNG TY THAN UÔNG BÍ - TKV",
+    leftColCenter,
+    20,
+    {
+      align: "center",
+    },
+  );
   doc.text(`Đơn vị: ${incident.tenDonViBaoCao}`, leftColCenter, 26, {
     align: "center",
   });
@@ -1017,7 +1031,12 @@ export const generatePhieuSuCoPdf = async (
   // Title
   doc.setFont("times_new_roman", "bold");
   doc.setFontSize(16);
-  doc.text("PHIẾU BÁO SỰ CỐ THIẾT BỊ", pageWidth / 2, 50, { align: "center" });
+  doc.text(
+    incident?.tenMauBienBan || "PHIẾU BÁO SỰ CỐ THIẾT BỊ",
+    pageWidth / 2,
+    50,
+    { align: "center" },
+  );
   doc.setFontSize(12);
   doc.text(
     `Số: ${incident.soPhieu || (incident as any).number || "..."}`,
@@ -1225,9 +1244,14 @@ export const generateGiamDinhPdf = async (
   doc.text("THAN – KHOÁNG SẢN VIỆT NAM", leftColCenter, 26, {
     align: "center",
   });
-  doc.text("CÔNG TY THAN UÔNG BÍ - TKV", leftColCenter, 32, {
-    align: "center",
-  });
+  doc.text(
+    `CÔNG TY ${inspection?.congTy || "THAN UÔNG BÍ - TKV"}`,
+    leftColCenter,
+    32,
+    {
+      align: "center",
+    },
+  );
   doc.line(leftColCenter - 15, 33, leftColCenter + 15, 33);
 
   // Header Right
@@ -1251,7 +1275,8 @@ export const generateGiamDinhPdf = async (
   doc.setFontSize(14);
   doc.text("BIÊN BẢN", pageWidth / 2, 50, { align: "center" });
   doc.text(
-    "GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ ĐƯA VÀO SỬA CHỮA",
+    inspection?.tenMauBienBan ||
+      "GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ ĐƯA VÀO SỬA CHỮA",
     pageWidth / 2,
     58,
     { align: "center" },
@@ -1484,9 +1509,14 @@ export const generateGiamDinhPhuongTienPdf = async (
   doc.text("THAN – KHOÁNG SẢN VIỆT NAM", leftColCenter, 26, {
     align: "center",
   });
-  doc.text("CÔNG TY THAN UÔNG BÍ - TKV", leftColCenter, 32, {
-    align: "center",
-  });
+  doc.text(
+    `CÔNG TY ${inspection?.congTy || "THAN UÔNG BÍ - TKV"}`,
+    leftColCenter,
+    32,
+    {
+      align: "center",
+    },
+  );
   doc.line(leftColCenter - 15, 33, leftColCenter + 15, 33);
 
   // Header Right
@@ -1509,7 +1539,8 @@ export const generateGiamDinhPhuongTienPdf = async (
   doc.setFont("times_new_roman", "bold");
   doc.setFontSize(14);
   doc.text(
-    "BIÊN BẢN GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ",
+    inspection?.tenMauBienBan ||
+      "BIÊN BẢN GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ",
     pageWidth / 2,
     50,
     { align: "center" },
@@ -1725,9 +1756,14 @@ export const generateNghiemThuPdf = async (
   doc.text("THAN – KHOÁNG SẢN VIỆT NAM", leftColCenter, 26, {
     align: "center",
   });
-  doc.text("CÔNG TY THAN UÔNG BÍ - TKV", leftColCenter, 32, {
-    align: "center",
-  });
+  doc.text(
+    `CÔNG TY ${item?.congTy || "THAN UÔNG BÍ - TKV"}`,
+    leftColCenter,
+    32,
+    {
+      align: "center",
+    },
+  );
   doc.line(leftColCenter - 15, 33, leftColCenter + 15, 33);
 
   // Header Right
@@ -1751,7 +1787,8 @@ export const generateNghiemThuPdf = async (
   doc.setFontSize(14);
   doc.text("BIÊN BẢN", pageWidth / 2, 50, { align: "center" });
   doc.text(
-    "NGHIỆM THU CHẠY THỬ VÀ BÀN GIAO THIẾT BỊ SAU SỬA CHỮA",
+    item?.tenMauBienBan ||
+      "NGHIỆM THU CHẠY THỬ VÀ BÀN GIAO THIẾT BỊ SAU SỬA CHỮA",
     pageWidth / 2,
     58,
     { align: "center" },
@@ -1986,9 +2023,14 @@ export const generateDanhGiaVatTuPdf = async (
   doc.text("THAN – KHOÁNG SẢN VIỆT NAM", leftColCenter, 26, {
     align: "center",
   });
-  doc.text("CÔNG TY THAN UÔNG BÍ - TKV", leftColCenter, 32, {
-    align: "center",
-  });
+  doc.text(
+    `CÔNG TY ${item?.congTy || "THAN UÔNG BÍ - TKV"}`,
+    leftColCenter,
+    32,
+    {
+      align: "center",
+    },
+  );
   doc.line(leftColCenter - 15, 33, leftColCenter + 15, 33);
 
   // Header Right
@@ -2012,7 +2054,8 @@ export const generateDanhGiaVatTuPdf = async (
   doc.setFontSize(14);
   doc.text("BIÊN BẢN", pageWidth / 2, 50, { align: "center" });
   doc.text(
-    "ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA",
+    item?.tenMauBienBan ||
+      "ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA",
     pageWidth / 2,
     58,
     { align: "center" },
@@ -2218,9 +2261,12 @@ export const generateKiemTraSuCoPdf = async (
     align: "center",
   });
   doc.setFont("times_new_roman", "bold");
-  doc.text("CÔNG TY THAN UÔNG BÍ - TKV", leftColCenter, 30, {
-    align: "center",
-  });
+  doc.text(
+    `CÔNG TY ${item?.congTy || "THAN UÔNG BÍ - TKV"}`,
+    leftColCenter,
+    30,
+    { align: "center" },
+  );
   doc.line(leftColCenter - 25, 31, leftColCenter + 25, 31);
 
   // Header Right
@@ -2243,7 +2289,12 @@ export const generateKiemTraSuCoPdf = async (
   doc.setFont("times_new_roman", "bold");
   doc.setFontSize(14);
   doc.text("BIÊN BẢN", pageWidth / 2, 45, { align: "center" });
-  doc.text("KIỂM TRA SỰ CỐ THIẾT BỊ", pageWidth / 2, 53, { align: "center" });
+  doc.text(
+    item?.tenMauBienBan || "KIỂM TRA SỰ CỐ THIẾT BỊ",
+    pageWidth / 2,
+    53,
+    { align: "center" },
+  );
 
   doc.setFont("times_new_roman", "normal");
   doc.setFontSize(12);
@@ -2501,9 +2552,12 @@ export const generateBienPhapMayMocPdf = async (
     align: "center",
   });
   doc.setFont("times_new_roman", "bold");
-  doc.text("CÔNG TY THAN UÔNG BÍ - TKV", leftColCenter, 30, {
-    align: "center",
-  });
+  doc.text(
+    `CÔNG TY ${item?.congTy || "THAN UÔNG BÍ - TKV"}`,
+    leftColCenter,
+    30,
+    { align: "center" },
+  );
   doc.line(leftColCenter - 25, 31, leftColCenter + 25, 31);
 
   // Header Right
@@ -2525,9 +2579,12 @@ export const generateBienPhapMayMocPdf = async (
   // Title
   doc.setFont("times_new_roman", "bold");
   doc.setFontSize(14);
-  doc.text("BIỆN PHÁP SỬA CHỮA MÁY MÓC THIẾT BỊ", pageWidth / 2, 48, {
-    align: "center",
-  });
+  doc.text(
+    item?.tenMauBienBan || "BIỆN PHÁP SỬA CHỮA MÁY MÓC THIẾT BỊ",
+    pageWidth / 2,
+    48,
+    { align: "center" },
+  );
 
   let y = 62;
 
@@ -2704,9 +2761,12 @@ export const generateBienPhapPhuongTienPdf = async (
   });
   doc.setFont("times_new_roman", "bold");
   doc.setFontSize(10);
-  doc.text("CÔNG TY THAN UÔNG BÍ – TKV", leftColCenter, 30, {
-    align: "center",
-  });
+  doc.text(
+    `CÔNG TY ${item?.congTy || "THAN UÔNG BÍ - TKV"}`,
+    leftColCenter,
+    30,
+    { align: "center" },
+  );
 
   // Underline for Company name
   doc.setLineWidth(0.3);
@@ -2743,9 +2803,12 @@ export const generateBienPhapPhuongTienPdf = async (
   // Title
   doc.setFont("times_new_roman", "bold");
   doc.setFontSize(13);
-  doc.text("BIỆN PHÁP SỬA CHỮA THIẾT BỊ", pageWidth / 2, 47, {
-    align: "center",
-  });
+  doc.text(
+    item?.tenMauBienBan || "BIỆN PHÁP SỬA CHỮA THIẾT BỊ",
+    pageWidth / 2,
+    47,
+    { align: "center" },
+  );
 
   doc.setFont("times_new_roman_italic", "italic");
   doc.setFontSize(11);
@@ -3081,9 +3144,12 @@ export const generateNghiemThuPhuongTienPdf = async (
   });
   doc.setFont("times_new_roman", "bold");
   doc.setFontSize(10);
-  doc.text("CÔNG TY THAN UÔNG BÍ – TKV", leftColCenter, 30, {
-    align: "center",
-  });
+  doc.text(
+    `CÔNG TY ${item?.congTy || "THAN UÔNG BÍ - TKV"}`,
+    leftColCenter,
+    30,
+    { align: "center" },
+  );
 
   // Underline for Company name
   doc.setLineWidth(0.3);
@@ -3114,7 +3180,12 @@ export const generateNghiemThuPhuongTienPdf = async (
   // Title
   doc.setFont("times_new_roman", "bold");
   doc.setFontSize(13);
-  doc.text("NGHIỆM THU SẢN PHẨM", pageWidth / 2, 47, { align: "center" });
+  doc.text(
+    item?.tenMauBienBan || "NGHIỆM THU SẢN PHẨM",
+    pageWidth / 2,
+    47,
+    { align: "center" },
+  );
 
   let y = 57;
 

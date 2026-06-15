@@ -606,7 +606,9 @@ export default function MaintenanceRecordPage() {
           prev ? { ...prev, ghiChuBienBan: note } : null,
         );
         showSuccessAlert("Lưu ghi chú thành công");
-      } catch (_) {}
+      } catch (error) {
+        console.error("Lỗi khi lưu ghi chú:", error);
+      }
     };
 
     const commonProps = {
@@ -1020,51 +1022,55 @@ export default function MaintenanceRecordPage() {
                 label: "Kế hoạch",
                 subLabel: "Kế hoạch bảo trì",
                 icon: ClipboardList,
-                count: counts.totalPlan,
+                count: counts.shareCounts?.totalPlan || 0,
               },
               {
                 label: "Lệnh sửa chữa",
                 subLabel: "Lệnh xử lý kỹ thuật",
                 icon: Wrench,
-                count: counts.totalRepair,
+                count: counts.shareCounts?.totalRepair || 0,
               },
               {
                 label: "BB Giám định",
                 subLabel: "Giám định máy móc",
                 icon: FileSearch,
                 count:
-                  counts.totalInspectionMachine + counts.totalInspectionVehicle,
+                  (counts.shareCounts?.totalInspectionMachine || 0) +
+                  (counts.shareCounts?.totalInspectionVehicle || 0),
               },
               {
                 label: "Biện pháp sửa chữa",
                 subLabel: "Biện pháp xử lý thiết bị",
                 icon: Wrench,
-                count: counts.totalMeasureMachine + counts.totalMeasureVehicle,
+                count:
+                  (counts.shareCounts?.totalMeasureMachine || 0) +
+                  (counts.shareCounts?.totalMeasureVehicle || 0),
               },
               {
                 label: "BB Nghiệm thu",
                 subLabel: "Nghiệm thu hoàn thành",
                 icon: ClipboardCheck,
                 count:
-                  counts.totalMachineInspection + counts.totalVehicleAcceptance,
+                  (counts.shareCounts?.totalMachineInspection || 0) +
+                  (counts.shareCounts?.totalVehicleAcceptance || 0),
               },
               {
                 label: "BB Đánh giá VT",
                 subLabel: "Đánh giá vật tư tiêu hao",
                 icon: Boxes,
-                count: counts.totalMaterialAssessment,
+                count: counts.shareCounts?.totalMaterialAssessment || 0,
               },
               {
                 label: "Phiếu báo sự cố",
                 subLabel: "Báo cáo sự cố thiết bị",
                 icon: AlertTriangle,
-                count: counts.totalIncident,
+                count: counts.shareCounts?.totalIncident || 0,
               },
               {
                 label: "BB Kiểm tra sự cố",
                 subLabel: "Kiểm tra hiện trạng SC",
                 icon: FileWarning,
-                count: counts.totalIncidentInspection,
+                count: counts.shareCounts?.totalIncidentInspection || 0,
               },
             ].map((tab, idx) => {
               const IconComponent = tab.icon;

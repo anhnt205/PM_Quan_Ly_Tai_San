@@ -38,6 +38,7 @@ public class KeHoachSuaChuaDao {
             SELECT
                 kh.Id,
                 kh.IdCongTy,
+                kh.CongTy,
                 kh.SoKeHoach,
                 kh.TenKeHoach,
                 kh.SoQuyetDinh,
@@ -158,17 +159,17 @@ public class KeHoachSuaChuaDao {
         e.setNgayCapNhat(now);
         String sql = """
             INSERT INTO kehoachsuachua (
-                Id, IdCongTy, SoKeHoach, TenKeHoach, SoQuyetDinh, IdLoaiKeHoach, IdLoaiSuaChua, Nam,
+                Id, IdCongTy, CongTy, SoKeHoach, TenKeHoach, SoQuyetDinh, IdLoaiKeHoach, IdLoaiSuaChua, Nam,
                 IdDonViGiao, IdDonViNhan,
                 IdNguoiLapBieu, NguoiLapBieuXacNhan,
                 IdTrinhDuyetGiamDoc, TrinhDuyetGiamDocXacNhan,
                 TrangThai, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat,
                 GhiChu, GhiChuBienBan, DuongDanFile, TenFile, NgayKy, DuongDanTaiLieuBangKe,
                 Share, ByStep, NhomTaiSan, TenMauBienBanSuaChua
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         int r = jdbcTemplate.update(sql,
-                e.getId(), e.getIdCongTy(), e.getSoKeHoach(), e.getTenKeHoach(), e.getSoQuyetDinh(),
+                e.getId(), e.getIdCongTy(), e.getCongTy(), e.getSoKeHoach(), e.getTenKeHoach(), e.getSoQuyetDinh(),
                 e.getIdLoaiKeHoach(), e.getIdLoaiSuaChua(), e.getNam(),
                 e.getIdDonViGiao(), e.getIdDonViNhan(),
                 e.getIdNguoiLapBieu(), e.getNguoiLapBieuXacNhan(),
@@ -189,7 +190,7 @@ public class KeHoachSuaChuaDao {
         e.setNgayCapNhat(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         String sql = """
             UPDATE kehoachsuachua SET
-                SoKeHoach = ?, TenKeHoach = ?, SoQuyetDinh = ?, IdLoaiKeHoach = ?, IdLoaiSuaChua = ?, Nam = ?,
+                CongTy = ?, SoKeHoach = ?, TenKeHoach = ?, SoQuyetDinh = ?, IdLoaiKeHoach = ?, IdLoaiSuaChua = ?, Nam = ?,
                 IdDonViGiao = ?, IdDonViNhan = ?,
                 IdNguoiLapBieu = ?, NguoiLapBieuXacNhan = ?,
                 IdTrinhDuyetGiamDoc = ?, TrinhDuyetGiamDocXacNhan = ?,
@@ -199,7 +200,7 @@ public class KeHoachSuaChuaDao {
             WHERE Id = ?
             """;
         int r = jdbcTemplate.update(sql,
-                e.getSoKeHoach(), e.getTenKeHoach(), e.getSoQuyetDinh(), e.getIdLoaiKeHoach(),
+                e.getCongTy(), e.getSoKeHoach(), e.getTenKeHoach(), e.getSoQuyetDinh(), e.getIdLoaiKeHoach(),
                 e.getIdLoaiSuaChua(), e.getNam(),
                 e.getIdDonViGiao(), e.getIdDonViNhan(),
                 e.getIdNguoiLapBieu(), e.getNguoiLapBieuXacNhan(),

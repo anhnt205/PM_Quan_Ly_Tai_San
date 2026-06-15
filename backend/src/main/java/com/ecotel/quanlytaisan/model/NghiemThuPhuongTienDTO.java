@@ -8,6 +8,8 @@ import java.util.List;
 public class NghiemThuPhuongTienDTO {
     private String id;
     private String idCongTy;
+    private String congTy;
+    private String tenMauBienBan;
     private String idBienPhapPhuongTien;
     private String idTaiSan;
 

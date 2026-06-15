@@ -36,6 +36,8 @@ public class SuaChuaDao {
             SELECT
                 sc.Id,
                 sc.IdCongTy,
+                sc.CongTy,
+                sc.TenMauBienBan,
                 sc.SoPhieu,
                 sc.IdKeHoach,
                 sc.Thang,
@@ -136,13 +138,13 @@ public class SuaChuaDao {
         e.setId(generateNextId());
         String sql = """
             INSERT INTO suachua (
-                Id, IdCongTy, SoPhieu, IdKeHoach, Thang, Nam, GhiChu,
+                Id, IdCongTy, CongTy, TenMauBienBan, SoPhieu, IdKeHoach, Thang, Nam, GhiChu,
                 IdNguoiLap, NguoiLapXacNhan, IdGiamDoc, GiamDocXacNhan,
                 Share, TrangThai, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, GhiChuBienBan
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         int r = jdbcTemplate.update(sql,
-                e.getId(), e.getIdCongTy(), e.getSoPhieu(), e.getIdKeHoach(), e.getThang(), e.getNam(), e.getGhiChu(),
+                e.getId(), e.getIdCongTy(), e.getCongTy(), e.getTenMauBienBan(), e.getSoPhieu(), e.getIdKeHoach(), e.getThang(), e.getNam(), e.getGhiChu(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai() != null ? e.getTrangThai() : 0, 
                 e.getNgayTao(), e.getNgayCapNhat(), e.getNguoiTao(), e.getNguoiCapNhat(), e.getGhiChuBienBan()
@@ -154,13 +156,13 @@ public class SuaChuaDao {
     public SuaChua update(SuaChua e) {
         String sql = """
             UPDATE suachua SET
-                SoPhieu = ?, IdKeHoach = ?, Thang = ?, Nam = ?, GhiChu = ?,
+                CongTy = ?, TenMauBienBan = ?, SoPhieu = ?, IdKeHoach = ?, Thang = ?, Nam = ?, GhiChu = ?,
                 IdNguoiLap = ?, NguoiLapXacNhan = ?, IdGiamDoc = ?, GiamDocXacNhan = ?,
                 Share = ?, TrangThai = ?, NgayCapNhat = ?, NguoiCapNhat = ?, GhiChuBienBan = ?
             WHERE Id = ?
             """;
         int r = jdbcTemplate.update(sql,
-                e.getSoPhieu(), e.getIdKeHoach(), e.getThang(), e.getNam(), e.getGhiChu(),
+                e.getCongTy(), e.getTenMauBienBan(), e.getSoPhieu(), e.getIdKeHoach(), e.getThang(), e.getNam(), e.getGhiChu(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai(), e.getNgayCapNhat(), e.getNguoiCapNhat(), e.getGhiChuBienBan(),
                 e.getId()
