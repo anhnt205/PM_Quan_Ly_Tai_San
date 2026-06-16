@@ -17,6 +17,8 @@ export interface ToolType {
   ngayTao: string;
   nguoiCapNhat: string;
   ngayCapNhat: string;
+  donViTinh2?: string;
+  soLuong2?: number;
   isActive: boolean;
 }
 

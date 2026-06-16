@@ -1,4 +1,4 @@
-import { Box, Dialog, DialogContent } from "@mui/material";
+import { Box, Dialog, DialogContent, Tab, Tabs } from "@mui/material";
 import { useEffect, useState } from "react";
 import PageAction from "../../components/common/PageAction";
 import { GridRowParams } from "@mui/x-data-grid";
@@ -30,6 +30,7 @@ interface ToolManagerTabState {
   readOnly: boolean;
   isCopy: boolean;
   draftForm?: Record<string, any>;
+  activeTab?: number;
 }
 
 export default function ToolManager() {
@@ -40,11 +41,13 @@ export default function ToolManager() {
   const readOnly = formData.readOnly ?? false;
   const isCopy = formData.isCopy ?? false;
   const showSidebar = formData.showSidebar ?? false;
+  const activeTab = formData.activeTab ?? 0;
   const setShowForm = (v: boolean) => setField({ showForm: v });
   const setSelectedTool = (v: any) => setField({ selectedTool: v });
   const setReadOnly = (v: boolean) => setField({ readOnly: v });
   const setIsCopy = (v: boolean) => setField({ isCopy: v });
   const setShowSidebar = (v: boolean) => setField({ showSidebar: v });
+  const setActiveTab = (v: number) => setField({ activeTab: v });
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
@@ -128,8 +131,36 @@ export default function ToolManager() {
   };
 
   const [columns, setColumns] = useState(() =>
-    createColumns(handleOpenHistory, handleCopy, handleRowEdit),
+    createColumns(
+      handleOpenHistory,
+      handleCopy,
+      handleRowEdit,
+      activeTab === 1,
+    ),
   );
+
+  useEffect(() => {
+    setColumns((prevColumns) => {
+      return prevColumns.map((col) => {
+        if (col.key === "id") {
+          return { ...col, label: activeTab === 1 ? "Mã vật tư" : "Mã CCDC" };
+        }
+        if (col.key === "ten") {
+          return { ...col, label: activeTab === 1 ? "Tên vật tư" : "Tên CCDC" };
+        }
+        if (col.key === "tenNhomCCDC") {
+          return {
+            ...col,
+            label: activeTab === 1 ? "Nhóm vật tư" : "Nhóm CCDC",
+          };
+        }
+        if (col.key === "donViTinh2" || col.key === "soLuong2") {
+          return { ...col, isShow: activeTab === 1 };
+        }
+        return col;
+      });
+    });
+  }, [activeTab]);
 
   // const handleRowClick = (params: GridRowParams) => {
   //   setSelectedTool(params.row);
@@ -216,6 +247,47 @@ export default function ToolManager() {
         }
         showExcel={true}
       />
+      <Box
+        sx={{
+          px: 3,
+          bgcolor: "white",
+          borderBottom: "1px solid",
+          borderColor: "divider",
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <Tabs
+          value={activeTab}
+          onChange={(_, newValue) => {
+            setActiveTab(newValue);
+            setSelectedIds([]);
+          }}
+          sx={{
+            "& .MuiTabs-indicator": {
+              backgroundColor: "#04b46eff",
+              height: 3,
+              borderRadius: "3px 3px 0 0",
+            },
+            "& .MuiTab-root": {
+              textTransform: "none",
+              fontWeight: 600,
+              fontSize: "0.95rem",
+              minHeight: "48px",
+              color: "#67748e",
+              px: 0,
+              mr: 4,
+              minWidth: "auto",
+              "&.Mui-selected": {
+                color: "#04b46eff",
+              },
+            },
+          }}
+        >
+          <Tab label="CCDC" />
+          <Tab label="Vật tư" />
+        </Tabs>
+      </Box>
       <Box p={2}>
         <Dialog
           open={showForm}
@@ -282,7 +354,7 @@ export default function ToolManager() {
           >
             <ToolTableCustom
               tableId="toolManager"
-              title="Quản lý CCDC - Vật tư"
+              title={activeTab === 1 ? "Quản lý Vật tư" : "Quản lý CCDC"}
               rows={toolsPage?.items || []}
               total={toolsPage?.totalItems || 0}
               columns={columns}
@@ -313,6 +385,7 @@ export default function ToolManager() {
               showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
               onViewOwnership={() => setOpenOwnership(true)}
               onExportExcel={() => exportExcelMutation.mutate()}
+              isVatTu={activeTab === 1}
             />
           </Box>
 

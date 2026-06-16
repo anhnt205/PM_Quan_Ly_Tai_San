@@ -79,6 +79,8 @@ export default function ToolForm({
         dayjs(new Date()).format("YYYY-MM-DDTHH:mm:ss"),
       donViTinh: initialFormData?.donViTinh ?? "",
       soLuong: initialFormData?.soLuong ?? 0,
+      donViTinh2: initialFormData?.donViTinh2 ?? "",
+      soLuong2: initialFormData?.soLuong2 ?? 0,
       idNhomCCDC: initialFormData?.idNhomCCDC ?? "",
       giaTri: initialFormData?.giaTri ?? 0,
       soKyHieu: initialFormData?.soKyHieu ?? "",
@@ -104,6 +106,7 @@ export default function ToolForm({
         ...values,
         // Đảm bảo số lượng tổng của CCDC cũng là số
         soLuong: Number(values.soLuong || 0),
+        soLuong2: Number(values.soLuong2 || 0),
         giaTri: Number(values.giaTri || 0),
 
         chiTietTaiSanList: values.chiTietTaiSanList.map((item: any) => ({
@@ -131,6 +134,8 @@ export default function ToolForm({
     if (selectedTool) {
       formik.setValues({
         ...selectedTool,
+        donViTinh2: selectedTool.donViTinh2 ?? "",
+        soLuong2: selectedTool.soLuong2 ?? 0,
         chiTietTaiSanList: selectedTool.chiTietTaiSanList.map(
           (item: any, index: number) => {
             const ownerRecord = selectedTool.chiTietDonViSoHuuList?.find(
@@ -335,6 +340,16 @@ export default function ToolForm({
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
+                  <FieldAutoCompleted
+                    title="Đơn vị tính 2"
+                    data={allUnits}
+                    labelkey="tenDonVi"
+                    field="donViTinh2"
+                    formik={formik}
+                    disabled={readOnly}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
                   <FieldDateTime
                     title="Ngày nhập"
                     formik={formik}
@@ -380,6 +395,14 @@ export default function ToolForm({
                     formik={formik}
                     field="soLuong"
                     disabled={true}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <TextFieldNumber
+                    title="Số lượng 2"
+                    formik={formik}
+                    field="soLuong2"
+                    disabled={readOnly}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>

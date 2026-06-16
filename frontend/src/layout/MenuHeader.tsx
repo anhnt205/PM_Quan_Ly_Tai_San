@@ -477,23 +477,23 @@ export default function Menuheader() {
           ],
         },
         {
-          text: "Điều chuyển CCDC - vật tư",
+          text: "Điều chuyển CCDC",
           path: "#",
           code: "DIEUDONG_CCDC",
           count: toolTransferCounts.total,
           subMenu: [
             {
-              text: "Cấp phát CCDC - vật tư",
+              text: "Cấp phát CCDC",
               path: `${ROUTES.TOOLTRANSFER}?type=1`,
               count: toolTransferCounts.c1,
             },
             {
-              text: "Điều chuyển CCDC - vật tư",
+              text: "Điều chuyển CCDC",
               path: `${ROUTES.TOOLTRANSFER}?type=2`,
               count: toolTransferCounts.c2,
             },
             {
-              text: "Thu hồi CCDC - vật tư",
+              text: "Thu hồi CCDC",
               path: `${ROUTES.TOOLTRANSFER}?type=3`,
               count: toolTransferCounts.c3,
             },
@@ -530,7 +530,7 @@ export default function Menuheader() {
           count: assetHandoverCount + transferAssetPageItems,
         },
         {
-          text: "Bàn giao CCDC-Vật tư",
+          text: "Bàn giao CCDC",
           path: ROUTES.TOOLHANDOVER,
           code: "BANGIAO_CCDC",
           count: toolHandoverCount + transferToolPageItems,
