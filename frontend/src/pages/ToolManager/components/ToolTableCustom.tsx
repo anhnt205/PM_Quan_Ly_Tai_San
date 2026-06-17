@@ -59,6 +59,7 @@ interface Props {
   selectedToolGroup?: string;
   onSelectedToolGroupChange?: (id: string) => void;
   onExportExcel?: () => void;
+  isVatTu?: boolean;
 }
 
 export default function ToolTableCustom({
@@ -87,6 +88,7 @@ export default function ToolTableCustom({
   selectedToolGroup,
   onSelectedToolGroupChange,
   onExportExcel,
+  isVatTu,
 }: Props) {
   const [expandedRows, setExpandedRows] = useState<Set<string | number>>(
     new Set(),
@@ -584,7 +586,7 @@ export default function ToolTableCustom({
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Nhóm ccdc"
+                label={isVatTu ? "Nhóm vật tư" : "Nhóm ccdc"}
                 fullWidth
                 size="small"
                 variant="outlined"

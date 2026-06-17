@@ -17,17 +17,18 @@ export const createColumns = (
   handleOpenHistory: (row: any) => void,
   handleCopy: (row: any) => void,
   handleRowEdit: (row: any) => void,
+  isVatTu?: boolean,
 ): ColumnConfig[] => [
   {
     key: "id",
-    label: "Mã CCDC",
+    label: isVatTu ? "Mã vật tư" : "Mã CCDC",
     visible: true,
     isShow: true,
     width: 150,
   },
   {
     key: "ten",
-    label: "Tên CCDC",
+    label: isVatTu ? "Tên vật tư" : "Tên CCDC",
     visible: true,
     isShow: true,
     width: 400,
@@ -41,7 +42,7 @@ export const createColumns = (
   // },
   {
     key: "tenNhomCCDC",
-    label: "Nhóm CCDC",
+    label: isVatTu ? "Nhóm vật tư" : "Nhóm CCDC",
     visible: true,
     isShow: true,
     width: 100,
@@ -71,6 +72,23 @@ export const createColumns = (
     isShow: true,
     width: 100,
     render: (v: any) => Number(v).toLocaleString("vi-VN"),
+  },
+  {
+    key: "donViTinh2",
+    label: "Đơn vị tính 2",
+    visible: true,
+    isShow: isVatTu ?? false,
+    width: 100,
+    align: "center",
+  },
+  {
+    key: "soLuong2",
+    label: "Số lượng 2",
+    align: "center",
+    visible: true,
+    isShow: isVatTu ?? false,
+    width: 100,
+    render: (v: any) => v !== undefined && v !== null ? Number(v).toLocaleString("vi-VN") : "",
   },
   {
     key: "giaTri",
