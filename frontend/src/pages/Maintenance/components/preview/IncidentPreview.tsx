@@ -38,6 +38,8 @@ interface Props {
   deviceEntries?: IncidenDetailData[];
   onDeviceEntriesChange?: (entries: IncidenDetailData[]) => void;
   planIds?: string[];
+  tieude?: string;
+  congty?: string;
 }
 
 // ─── Ô text chỉnh sửa inline ───
@@ -237,6 +239,8 @@ const IncidentPreview = ({
   deviceEntries = [],
   onDeviceEntriesChange,
   planIds = [],
+  tieude,
+  congty,
 }: Props) => {
   const severityLabels: Record<number, string> = {
     0: "Nhẹ",
@@ -308,9 +312,9 @@ const IncidentPreview = ({
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
         <Box sx={{ textAlign: "center", flex: 1 }}>
           <Typography
-            sx={{ fontWeight: 700, fontSize: 13, fontFamily: "inherit" }}
+            sx={{ fontWeight: 700, fontSize: 13, fontFamily: "inherit", textTransform: "uppercase" }}
           >
-            CÔNG TY THAN UÔNG BÍ - TKV
+            CÔNG TY {congty || "............"}
           </Typography>
           <Typography
             sx={{
@@ -361,9 +365,10 @@ const IncidentPreview = ({
           fontSize: 16,
           color: "primary.main",
           fontFamily: "inherit",
+          textTransform: "uppercase",
         }}
       >
-        PHIẾU BÁO SỰ CỐ THIẾT BỊ
+        {tieude || "......................."}
       </Typography>
       <Typography
         sx={{

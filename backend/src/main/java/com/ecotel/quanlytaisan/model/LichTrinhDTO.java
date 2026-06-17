@@ -2,6 +2,7 @@ package com.ecotel.quanlytaisan.model;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.util.List;
@@ -13,11 +14,11 @@ public class LichTrinhDTO {
     @NotBlank(message = "idTaiSan là bắt buộc")
     private String idTaiSan;
     
-    @NotBlank(message = "nam là bắt buộc")
-    private String nam;
+    @NotNull(message = "Năm là bắt buộc")
+    private Integer nam;
     
-    @NotBlank(message = "thang là bắt buộc")
-    private String thang;
+    @NotNull(message = "Tháng là bắt buộc")
+    private Integer thang;
     
     private String ghiChu;
     private String ngayTao;

@@ -265,7 +265,7 @@ export default function ToolTransferRecordTab() {
           overflow: "hidden",
           border: "1px solid",
           borderColor: "divider",
-          height: "calc(100vh - 270px)",
+          // height: "calc(100vh - 270px)",
         }}
       >
         <Grid
@@ -283,7 +283,7 @@ export default function ToolTransferRecordTab() {
           }}
         >
           <TableCustom
-            tableId={`assetTransferRecordTab-${subTab}`}
+            tableId={`toolTransferRecordTab-${subTab}`}
             sx={{ height: "100%" }}
             title=""
             columns={columns}
@@ -310,8 +310,8 @@ export default function ToolTransferRecordTab() {
               display: "flex",
               flexDirection: "column",
               bgcolor: "white",
-              height: "100%",
               overflow: "hidden",
+              height: "calc(100vh)",
             }}
           >
             <Box

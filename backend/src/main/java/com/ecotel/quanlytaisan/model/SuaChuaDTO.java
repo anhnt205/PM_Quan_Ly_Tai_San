@@ -8,6 +8,8 @@ import java.util.List;
 public class SuaChuaDTO {
     private String id;
     private String idCongTy;
+    private String congTy;
+    private String tenMauBienBan;
     private String soPhieu;
     private String idKeHoach;
     private Integer thang;

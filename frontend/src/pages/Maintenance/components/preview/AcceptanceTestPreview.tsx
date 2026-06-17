@@ -15,9 +15,13 @@ import React from "react";
 export default function AcceptanceTestPreview({
   formik,
   d,
+  tieude,
+  congty,
 }: {
-  formik: any;
+  formik?: any;
   d: Date;
+  tieude?: string;
+  congty?: string;
 }) {
   return (
     <Box
@@ -40,8 +44,13 @@ export default function AcceptanceTestPreview({
           <Typography variant="caption" display="block">
             THAN – KHOÁNG SẢN VIỆT NAM
           </Typography>
-          <Typography variant="caption" display="block" fontWeight={700}>
-            CÔNG <u>TY THAN UÔNG BÍ</u> - TKV
+          <Typography
+            variant="caption"
+            display="block"
+            fontWeight={700}
+            sx={{ textTransform: "uppercase", textDecoration: "underline" }}
+          >
+            CÔNG TY {congty || "............."}
           </Typography>
         </Box>
         <Box sx={{ textAlign: "center" }}>
@@ -75,20 +84,21 @@ export default function AcceptanceTestPreview({
         variant="subtitle2"
         align="center"
         fontWeight={700}
-        sx={{ mb: 2 }}
+        sx={{ mb: 2, textTransform: "uppercase" }}
       >
-        NGHIỆM THU CHẠY THỬ VÀ BÀN GIAO THIẾT BỊ SAU SỬA CHỮA
+        {tieude ||
+          ".............................................................."}
       </Typography>
 
       <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>
         Hôm nay, ngày {d.getDate()} tháng {d.getMonth() + 1} năm{" "}
-        {d.getFullYear()}. Tại {formik.values.viTri || "………………………"}
+        {d.getFullYear()}. Tại {formik?.values.viTri || "………………………"}
       </Typography>
       <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>
         Chúng tôi gồm:
       </Typography>
       <Box sx={{ pl: 2, mb: 1.5 }}>
-        {formik.values.nguoiKyList.map((s: any, i: number) => (
+        {formik?.values.nguoiKyList.map((s: any, i: number) => (
           <Box key={i} sx={{ display: "flex", gap: 3, mb: 0.25 }}>
             <Typography variant="caption" sx={{ minWidth: 16 }}>
               {i + 1}.
@@ -108,7 +118,7 @@ export default function AcceptanceTestPreview({
       </Box>
 
       <Typography variant="caption" display="block" sx={{ mb: 1.5 }}>
-        Cùng tiến hành nghiệm thu thiết bị: <b>{formik.values.tenThietBi}</b>
+        Cùng tiến hành nghiệm thu thiết bị: <b>{formik?.values.tenThietBi}</b>
       </Typography>
 
       <TableContainer component={Paper} variant="outlined" sx={{ mb: 1.5 }}>
@@ -146,7 +156,7 @@ export default function AcceptanceTestPreview({
             </TableRow>
           </TableHead>
           <TableBody>
-            {formik.values.danhSachTaiSan.map((ts: any, assetIdx: number) => {
+            {formik?.values.danhSachTaiSan.map((ts: any, assetIdx: number) => {
               const activeVatTu = ts.danhSachVatTu || [];
               return (
                 <React.Fragment key={`pv-${ts.id || assetIdx}`}>
@@ -197,7 +207,7 @@ export default function AcceptanceTestPreview({
         sx={{ mb: 0.5 }}
       >
         2. Kết quả kiểm tra chạy thử:{" "}
-        <span style={{ fontWeight: 400 }}>{formik.values.ketQua}</span>
+        <span style={{ fontWeight: 400 }}>{formik?.values.ketQua}</span>
       </Typography>
       <Typography
         variant="caption"
@@ -212,7 +222,7 @@ export default function AcceptanceTestPreview({
         display="block"
         sx={{ mb: 0.5, borderBottom: "1px dotted #999", pb: 0.5 }}
       >
-        {formik.values.noiDung || "………………………………………………………………………………………………………………"}
+        {formik?.values.noiDung || "………………………………………………………………………………………………………………"}
       </Typography>
       <Typography variant="caption" display="block" sx={{ mb: 2 }}>
         ………………………………………………………………………………………………………………
@@ -229,7 +239,7 @@ export default function AcceptanceTestPreview({
         }}
       >
         {(() => {
-          const sorted = [...(formik.values.nguoiKyList || [])].sort(
+          const sorted = [...(formik?.values.nguoiKyList || [])].sort(
             (a, b) => (a.order || 0) - (b.order || 0),
           );
           const cols = sorted.map((s) => ({

@@ -7,6 +7,12 @@ import {
   useMediaQuery,
   useTheme,
   Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Tooltip,
 } from "@mui/material";
 import { RateReviewOutlined } from "@mui/icons-material";
 import { useState, useEffect, useRef } from "react";
@@ -79,6 +85,8 @@ export default function SharedSignDocumentForm({
   const [signatures, setSignatures] =
     useState<SignaturesData[]>(initialSignatures);
   const [pages, setPages] = useState<HTMLCanvasElement[]>([]);
+  const [isSignLoading, setIsSignLoading] = useState(false);
+  const [viewNoteOpen, setViewNoteOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [pdfError, setPdfError] = useState<string | null>(null);
   const [digitalSignatureMap, setDigitalSignatureMap] = useState<
@@ -504,63 +512,44 @@ export default function SharedSignDocumentForm({
         />
       )}
 
-      {initialNote && (
-        <Box
-          sx={{
-            bgcolor: "#fffbeb", // Soft amber background
-            borderBottom: "1px solid #fef3c7",
-            borderLeft: "4px solid #d97706", // Dark amber indicator border
-            px: 3,
-            py: 1.5,
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
-          }}
-        >
-          <Box
+      {/* Popup Dialog xem ghi chú */}
+      <Dialog
+        open={viewNoteOpen}
+        onClose={() => setViewNoteOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: "12px", p: 1 },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 600, pb: 1, color: "#d97706", display: "flex", alignItems: "center", gap: 1 }}>
+          <RateReviewOutlined /> Nội dung ghi chú
+        </DialogTitle>
+        <DialogContent sx={{ pt: 1 }}>
+          <Typography
+            variant="body1"
             sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 32,
-              height: 32,
+              color: "#78350f",
+              bgcolor: "#fffbeb",
+              p: 2,
               borderRadius: "8px",
-              bgcolor: "#fef3c7",
-              color: "#d97706",
-              flexShrink: 0,
+              border: "1px solid #fde68a",
+              wordBreak: "break-word",
+              whiteSpace: "pre-wrap",
             }}
           >
-            <RateReviewOutlined sx={{ fontSize: 18 }} />
-          </Box>
-          <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography
-              variant="caption"
-              sx={{
-                fontWeight: 700,
-                color: "#b45309",
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
-                display: "block",
-                mb: 0.25,
-                fontSize: "0.675rem",
-              }}
-            >
-              Ghi chú biên bản
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                color: "#78350f",
-                fontWeight: 500,
-                fontSize: "0.875rem",
-                wordBreak: "break-word",
-              }}
-            >
-              {initialNote}
-            </Typography>
-          </Box>
-        </Box>
-      )}
+            {initialNote}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setViewNoteOpen(false)}
+            sx={{ textTransform: "none", fontWeight: 600, color: "#64748b" }}
+          >
+            Đóng
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Box
         sx={{
@@ -612,8 +601,34 @@ export default function SharedSignDocumentForm({
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
+            position: "relative",
           }}
         >
+          {initialNote && (
+            <Tooltip title="Xem ghi chú biên bản">
+              <Button
+                variant="contained"
+                onClick={() => setViewNoteOpen(true)}
+                startIcon={<RateReviewOutlined />}
+                sx={{
+                  position: "absolute",
+                  top: 16,
+                  right: 16,
+                  bgcolor: "#fef3c7",
+                  color: "#d97706",
+                  "&:hover": { bgcolor: "#fde68a" },
+                  zIndex: 98,
+                  borderRadius: "20px",
+                  fontWeight: 600,
+                  boxShadow: "0px 4px 12px rgba(0,0,0,0.1)",
+                  textTransform: "none",
+                }}
+              >
+                Ghi chú
+              </Button>
+            </Tooltip>
+          )}
+
           {pdfError && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {pdfError}

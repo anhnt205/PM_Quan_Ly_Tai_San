@@ -99,15 +99,15 @@ public class DanhGiaVatTuDao {
         if (e.getId() == null) e.setId(generateNextId());
         String sql = """
             INSERT INTO danhgia_vattu (
-                Id, IdCongTy, SoPhieu, NgayDanhGia, ViTri, CapSuaChua,
+                Id, IdCongTy, CongTy, TenMauBienBan, SoPhieu, NgayDanhGia, ViTri, CapSuaChua,
                 TenThietBi, Kieu, SoDangKi, IdDonViQuanLy, IdNghiemThu,
                 SoLuongPhucHoi, SoLuongPheLieu, SoLuongHuy,
                 IdNguoiLap, NguoiLapXacNhan, IdGiamDoc, GiamDocXacNhan,
                 Share, TrangThai, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, GhiChuBienBan
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         jdbcTemplate.update(sql,
-                e.getId(), e.getIdCongTy(), e.getSoPhieu(), e.getNgayDanhGia(), e.getViTri(), e.getCapSuaChua(),
+                e.getId(), e.getIdCongTy(), e.getCongTy(), e.getTenMauBienBan(), e.getSoPhieu(), e.getNgayDanhGia(), e.getViTri(), e.getCapSuaChua(),
                 e.getTenThietBi(), e.getKieu(), e.getSoDangKi(), e.getIdDonViQuanLy(), e.getIdNghiemThu(),
                 e.getSoLuongPhucHoi(), e.getSoLuongPheLieu(), e.getSoLuongHuy(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),
@@ -119,7 +119,7 @@ public class DanhGiaVatTuDao {
     public DanhGiaVatTu update(DanhGiaVatTu e) {
         String sql = """
             UPDATE danhgia_vattu SET
-                SoPhieu = ?, NgayDanhGia = ?, ViTri = ?, CapSuaChua = ?,
+                CongTy = ?, TenMauBienBan = ?, SoPhieu = ?, NgayDanhGia = ?, ViTri = ?, CapSuaChua = ?,
                 TenThietBi = ?, Kieu = ?, SoDangKi = ?, IdDonViQuanLy = ?, IdNghiemThu = ?,
                 SoLuongPhucHoi = ?, SoLuongPheLieu = ?, SoLuongHuy = ?,
                 IdNguoiLap = ?, NguoiLapXacNhan = ?, IdGiamDoc = ?, GiamDocXacNhan = ?,
@@ -127,7 +127,7 @@ public class DanhGiaVatTuDao {
             WHERE Id = ?
             """;
         jdbcTemplate.update(sql,
-                e.getSoPhieu(), e.getNgayDanhGia(), e.getViTri(), e.getCapSuaChua(),
+                e.getCongTy(), e.getTenMauBienBan(), e.getSoPhieu(), e.getNgayDanhGia(), e.getViTri(), e.getCapSuaChua(),
                 e.getTenThietBi(), e.getKieu(), e.getSoDangKi(), e.getIdDonViQuanLy(), e.getIdNghiemThu(),
                 e.getSoLuongPhucHoi(), e.getSoLuongPheLieu(), e.getSoLuongHuy(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),

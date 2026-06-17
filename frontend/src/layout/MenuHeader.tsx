@@ -337,6 +337,7 @@ export default function Menuheader() {
     totalVehicleAcceptance,
     totalMeasureMachine,
     totalMeasureVehicle,
+    shareCounts,
   } = counts;
 
   const handleConfirmExpiration = async (
@@ -446,7 +447,11 @@ export default function Menuheader() {
       text: "Điều chuyển thiết bị",
       icon: <LocalShipping fontSize="small" />,
       path: "#",
-      count: assetTransferCounts.total + toolTransferCounts.total,
+      count:
+        assetTransferCounts.total +
+        toolTransferCounts.total +
+        shareCounts.totalAssetTransfer +
+        shareCounts.totalToolTransfer,
       subMenu: [
         {
           text: "Điều chuyển tài sản",
@@ -502,6 +507,7 @@ export default function Menuheader() {
         {
           text: "Quản lý biên bản",
           path: ROUTES.TRANSFER_RECORD,
+          count: shareCounts.totalAssetTransfer + shareCounts.totalToolTransfer,
         },
       ],
     },
@@ -513,7 +519,9 @@ export default function Menuheader() {
         assetHandoverCount +
         toolHandoverCount +
         transferAssetPageItems +
-        transferToolPageItems,
+        transferToolPageItems +
+        shareCounts.totalAssetHandover +
+        shareCounts.totalToolHandover,
       subMenu: [
         {
           text: "Bàn giao tài sản",
@@ -539,6 +547,7 @@ export default function Menuheader() {
         {
           text: "Quản lý biên bản",
           path: ROUTES.HANDOVER_RECORD,
+          count: shareCounts.totalAssetHandover + shareCounts.totalToolHandover,
         },
       ],
     },
@@ -557,7 +566,8 @@ export default function Menuheader() {
         totalMachineInspection +
         totalVehicleAcceptance +
         totalMeasureMachine +
-        totalMeasureVehicle,
+        totalMeasureVehicle +
+        shareCounts.total,
       subMenu: [
         {
           text: "Quản lý sửa chữa",
@@ -594,6 +604,7 @@ export default function Menuheader() {
         {
           text: "Quản lý biên bản",
           path: ROUTES.MAINTENANCE_RECORD,
+          count: shareCounts.total,
         },
       ],
     },

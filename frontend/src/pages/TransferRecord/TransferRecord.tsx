@@ -4,9 +4,11 @@ import PageAction from "../../components/common/PageAction";
 import { LocalShipping, Construction } from "@mui/icons-material";
 import AssetTransferRecordTab from "./AssetTransferRecordTab";
 import ToolTransferRecordTab from "./ToolTransferRecordTab";
+import { useMenuData } from "../../hooks/useMenuData";
 
 export default function TransferRecord() {
   const [mainTab, setMainTab] = useState(0);
+  const { counts } = useMenuData();
 
   const handleMainTabChange = (_event: SyntheticEvent, newValue: number) => {
     setMainTab(newValue);
@@ -52,8 +54,8 @@ export default function TransferRecord() {
             },
           }}
         >
-          <Tab icon={<LocalShipping sx={{ fontSize: 20 }} />} iconPosition="start" label="Điều chuyển tài sản" />
-          <Tab icon={<Construction sx={{ fontSize: 20 }} />} iconPosition="start" label="Điều chuyển vật tư" />
+          <Tab icon={<LocalShipping sx={{ fontSize: 20 }} />} iconPosition="start" label={`Điều chuyển tài sản (${counts.shareCounts?.totalAssetTransfer || 0})`} />
+          <Tab icon={<Construction sx={{ fontSize: 20 }} />} iconPosition="start" label={`Điều chuyển vật tư (${counts.shareCounts?.totalToolTransfer || 0})`} />
         </Tabs>
       </Box>
 

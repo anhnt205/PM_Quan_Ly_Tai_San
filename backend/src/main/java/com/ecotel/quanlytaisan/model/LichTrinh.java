@@ -18,10 +18,10 @@ public class LichTrinh {
     private String idTaiSan;
 
     @Column(name = "Nam", nullable = false)
-    private String nam;
+    private Integer nam;
 
     @Column(name = "Thang", nullable = false)
-    private String thang;
+    private Integer thang;
 
     @Column(name = "GhiChu")
     private String ghiChu;

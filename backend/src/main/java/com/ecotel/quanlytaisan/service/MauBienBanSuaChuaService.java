@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -20,52 +19,54 @@ public class MauBienBanSuaChuaService {
 
     private final MauBienBanSuaChuaRepository repository;
 
+    /**
+     * Nếu entity được đặt là macDinh=true và có loaiBienBan,
+     * chỉ reset các bản ghi cùng loaiBienBan.
+     * Nếu không có loaiBienBan, fallback reset toàn bảng (hành vi cũ).
+     */
+    private void applyMacDinhReset(MauBienBanSuaChua saved) {
+        if (!Boolean.TRUE.equals(saved.getMacDinh())) return;
+
+        if (saved.getLoaiBienBan() != null && !saved.getLoaiBienBan().isBlank()) {
+            repository.resetMacDinhForLoaiBienBanExcept(saved.getId(), saved.getLoaiBienBan());
+        } else {
+            repository.resetMacDinhForAllExcept(saved.getId());
+        }
+    }
+
     @Transactional
     public MauBienBanSuaChua create(MauBienBanSuaChua entity) {
-        if (Boolean.TRUE.equals(entity.getMacDinh())) {
-            MauBienBanSuaChua saved = repository.save(entity);
-            repository.resetMacDinhForAllExcept(saved.getId());
-            return saved;
-        }
-        return repository.save(entity);
+        entity.setId(null); // đảm bảo INSERT, tránh Hibernate merge khi frontend gửi id=""
+        MauBienBanSuaChua saved = repository.save(entity);
+        applyMacDinhReset(saved);
+        return saved;
     }
 
     @Transactional
     public List<MauBienBanSuaChua> createBatch(List<MauBienBanSuaChua> entities) {
         List<MauBienBanSuaChua> saved = repository.saveAll(entities);
         // Nếu trong danh sách thêm có phần tử đặt mặc định, lấy phần tử cuối cùng làm mặc định
-        Optional<MauBienBanSuaChua> macDinhOpt = saved.stream()
+        saved.stream()
                 .filter(e -> Boolean.TRUE.equals(e.getMacDinh()))
-                .reduce((first, second) -> second);
-                
-        if (macDinhOpt.isPresent()) {
-            repository.resetMacDinhForAllExcept(macDinhOpt.get().getId());
-        }
+                .reduce((first, second) -> second)
+                .ifPresent(this::applyMacDinhReset);
         return saved;
     }
 
     @Transactional
     public MauBienBanSuaChua update(String id, MauBienBanSuaChua entity) {
-        Optional<MauBienBanSuaChua> existingOpt = repository.findById(id);
-        if (existingOpt.isPresent()) {
-            MauBienBanSuaChua existing = existingOpt.get();
-            if (entity.getMa() != null) {
-                existing.setMa(entity.getMa());
-            }
-            if (entity.getTen() != null) {
-                existing.setTen(entity.getTen());
-            }
-            if (entity.getMacDinh() != null) {
-                existing.setMacDinh(entity.getMacDinh());
-            }
+        MauBienBanSuaChua existing = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mẫu biên bản với ID: " + id));
 
-            MauBienBanSuaChua updated = repository.save(existing);
-            if (Boolean.TRUE.equals(updated.getMacDinh())) {
-                repository.resetMacDinhForAllExcept(updated.getId());
-            }
-            return updated;
-        }
-        throw new ResourceNotFoundException("Không tìm thấy mẫu biên bản với ID: " + id);
+        if (entity.getMa() != null) existing.setMa(entity.getMa());
+        if (entity.getTen() != null) existing.setTen(entity.getTen());
+        if (entity.getMacDinh() != null) existing.setMacDinh(entity.getMacDinh());
+        if (entity.getLoaiBienBan() != null) existing.setLoaiBienBan(entity.getLoaiBienBan());
+        if (entity.getCongTy() != null) existing.setCongTy(entity.getCongTy());
+
+        MauBienBanSuaChua updated = repository.save(existing);
+        applyMacDinhReset(updated);
+        return updated;
     }
 
     @Transactional
@@ -77,27 +78,20 @@ public class MauBienBanSuaChuaService {
             }
             MauBienBanSuaChua existing = repository.findById(entity.getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mẫu biên bản với ID: " + entity.getId()));
-            
-            if (entity.getMa() != null) {
-                existing.setMa(entity.getMa());
-            }
-            if (entity.getTen() != null) {
-                existing.setTen(entity.getTen());
-            }
-            if (entity.getMacDinh() != null) {
-                existing.setMacDinh(entity.getMacDinh());
-            }
+
+            if (entity.getMa() != null) existing.setMa(entity.getMa());
+            if (entity.getTen() != null) existing.setTen(entity.getTen());
+            if (entity.getMacDinh() != null) existing.setMacDinh(entity.getMacDinh());
+            if (entity.getLoaiBienBan() != null) existing.setLoaiBienBan(entity.getLoaiBienBan());
+            if (entity.getCongTy() != null) existing.setCongTy(entity.getCongTy());
             mergedList.add(existing);
         }
 
         List<MauBienBanSuaChua> updated = repository.saveAll(mergedList);
-        Optional<MauBienBanSuaChua> macDinhOpt = updated.stream()
+        updated.stream()
                 .filter(e -> Boolean.TRUE.equals(e.getMacDinh()))
-                .reduce((first, second) -> second);
-                
-        if (macDinhOpt.isPresent()) {
-            repository.resetMacDinhForAllExcept(macDinhOpt.get().getId());
-        }
+                .reduce((first, second) -> second)
+                .ifPresent(this::applyMacDinhReset);
         return updated;
     }
 
@@ -116,15 +110,13 @@ public class MauBienBanSuaChuaService {
         repository.deleteAll();
     }
 
-    public PageResponse<MauBienBanSuaChua> getPaged(int page, int size, String ten) {
+    public PageResponse<MauBienBanSuaChua> getPaged(int page, int size, String ten, String loaiBienBan, Boolean macDinh) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<MauBienBanSuaChua> pageResult;
-        
-        if (ten != null && !ten.trim().isEmpty()) {
-            pageResult = repository.findByTenContainingIgnoreCase(ten.trim(), pageable);
-        } else {
-            pageResult = repository.findAll(pageable);
-        }
+
+        String t = (ten != null && !ten.trim().isEmpty()) ? ten.trim() : null;
+        String l = (loaiBienBan != null && !loaiBienBan.trim().isEmpty()) ? loaiBienBan.trim() : null;
+
+        Page<MauBienBanSuaChua> pageResult = repository.findByTenAndLoaiBienBanAndMacDinh(t, l, macDinh, pageable);
 
         return new PageResponse<>(
                 pageResult.getContent(),
@@ -134,13 +126,16 @@ public class MauBienBanSuaChuaService {
         );
     }
 
+    /**
+     * Đặt mặc định theo loaiBienBan: chỉ 1 mẫu được là mặc định trong mỗi loại.
+     */
     @Transactional
     public MauBienBanSuaChua setMacDinh(String id) {
         MauBienBanSuaChua entity = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mẫu biên bản với ID: " + id));
         entity.setMacDinh(true);
         MauBienBanSuaChua saved = repository.save(entity);
-        repository.resetMacDinhForAllExcept(id);
+        applyMacDinhReset(saved);
         return saved;
     }
 }

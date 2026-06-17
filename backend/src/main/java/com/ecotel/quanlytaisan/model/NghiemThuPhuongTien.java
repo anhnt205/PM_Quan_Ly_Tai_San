@@ -8,6 +8,8 @@ import java.util.List;
 public class NghiemThuPhuongTien {
     private String id;
     private String idCongTy;
+    private String congTy;
+    private String tenMauBienBan;
     private String idBienPhapPhuongTien; // FK -> bienphap_phuongtien.Id
     private String idTaiSan;
 

@@ -31,7 +31,7 @@ import {
   BienPhapPhuongTienData,
   BienPhapPhuongTienChiTietData,
 } from "../../types";
-import { CongTy } from "../../../../utils/const";
+import { CongTy, LOAI_BIEN_BAN_TYPE } from "../../../../utils/const";
 import { generateCode } from "../../../../utils/helpers";
 import { PlanSigner } from "../../../../mockdata/mockPlans";
 import { listSigneInfo } from "../../config";
@@ -47,6 +47,8 @@ import { useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../redux/store";
 import { updateTabFormData } from "../../../../redux/tabsSlice";
 import { Remove } from "@mui/icons-material";
+import MeasureVehiclePreview from "../preview/MeasureVehiclePreview";
+import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
 
 interface Props {
   open: boolean;
@@ -82,6 +84,16 @@ const BienPhapPhuongTienDialog = ({
     );
   });
 
+  const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =
+    useBienBanSuaChuaPageQuery(
+      0,
+      9999,
+      "",
+      LOAI_BIEN_BAN_TYPE.BIEN_PHAP_PHUONG_TIEN,
+      true,
+    );
+  const mauMacDinh = repairReportPage?.data?.items?.[0];
+
   const initialValues: BienPhapPhuongTienData & { nguoiKyList: any[] } = {
     id: "",
     idCongTy: CongTy.CT001,
@@ -102,6 +114,8 @@ const BienPhapPhuongTienDialog = ({
     share: false,
     trangThai: 0,
     donViQuanLy: "",
+    tenMauBienBan: mauMacDinh?.ten || "BIỆN PHÁP SỬA CHỮA THIẾT BỊ",
+    congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
     danhSachChiTiet: [],
     nguoiKyList: [],
   };
@@ -128,6 +142,8 @@ const BienPhapPhuongTienDialog = ({
         ...values,
         idNguoiLap,
         idGiamDoc,
+        tenMauBienBan: values.tenMauBienBan,
+        congTy: values.congTy,
         nguoiKyList,
         danhSachChiTiet: (values.danhSachChiTiet || []).map((item) => ({
           ...item,
@@ -154,6 +170,11 @@ const BienPhapPhuongTienDialog = ({
       const listInfo = listSigneInfo(initData as any, apiUsers, apiDepartments);
       formik.setValues({
         ...initData,
+        tenMauBienBan:
+          initData?.tenMauBienBan ||
+          mauMacDinh?.ten ||
+          "BIỆN PHÁP SỬA CHỮA THIẾT BỊ",
+        congTy: initData?.congTy || mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
         nguoiKyList: (listInfo ?? []).map((item: any) => ({
           userId: item.idNhanVien,
           userName: item.hoTen,
@@ -205,6 +226,7 @@ const BienPhapPhuongTienDialog = ({
           const data = res.data?.data || res.data;
           setParentInspection(data);
           formik.setFieldValue("idTaiSan", data.idTaiSan || "");
+          formik.setFieldValue("tenTaiSan", data.tenTaiSan || "");
           formik.setFieldValue("soBienBan", `BP-${data.soPhieu || ""}`);
           formik.setFieldValue(
             "donViQuanLy",
@@ -271,6 +293,8 @@ const BienPhapPhuongTienDialog = ({
             noiDungThucHien: formik.values.noiDungThucHien,
             bienPhapAnToan: formik.values.bienPhapAnToan,
             idTaiSan: formik.values.idTaiSan,
+            tenMauBienBan: formik.values.tenMauBienBan,
+            congTy: formik.values.congTy,
             danhSachChiTiet: formik.values.danhSachChiTiet,
             nguoiKyList: formik.values.nguoiKyList,
           },
@@ -679,6 +703,14 @@ const BienPhapPhuongTienDialog = ({
               </TableBody>
             </Table>
           </TableContainer>
+        </Box>
+
+        <Box mt={4}>
+          <MeasureVehiclePreview
+            row={formik.values}
+            tieude={formik.values.tenMauBienBan}
+            congty={formik.values.congTy}
+          />
         </Box>
       </DialogContent>
 

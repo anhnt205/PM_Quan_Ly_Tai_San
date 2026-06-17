@@ -24,7 +24,7 @@ public class LichTrinhService {
     @Autowired
     private LichTrinhRepository lichTrinhRepository;
 
-    public List<LichTrinhDTO> getAll(String idTaiSan, String nam, String thang, String sortBy, String sortDir) {
+    public List<LichTrinhDTO> getAll(String idTaiSan, Integer nam, Integer thang, String sortBy, String sortDir) {
         String normalizedSortBy = sortBy != null && !sortBy.trim().isEmpty() ? sortBy.trim() : "ngayTao";
         Sort.Direction direction = (sortDir != null && sortDir.equalsIgnoreCase("asc")) ? Sort.Direction.ASC : Sort.Direction.DESC;
         Sort sort = Sort.by(direction, normalizedSortBy);
@@ -34,10 +34,10 @@ public class LichTrinhService {
             if (idTaiSan != null && !idTaiSan.trim().isEmpty()) {
                 predicates.add(cb.equal(root.get("idTaiSan"), idTaiSan));
             }
-            if (nam != null && !nam.trim().isEmpty()) {
+            if (nam != null) {
                 predicates.add(cb.equal(root.get("nam"), nam));
             }
-            if (thang != null && !thang.trim().isEmpty()) {
+            if (thang != null) {
                 predicates.add(cb.equal(root.get("thang"), thang));
             }
             return cb.and(predicates.toArray(new Predicate[0]));

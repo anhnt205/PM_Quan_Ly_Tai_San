@@ -7,6 +7,8 @@ import java.util.List;
 public class BienPhapMayMoc {
     private String id;
     private String idCongTy;
+    private String congTy;
+    private String tenMauBienBan;
     private String idGiamDinhMayMoc;  // FK -> giamdinh_maymoc.Id
 
     // Thông tin chính

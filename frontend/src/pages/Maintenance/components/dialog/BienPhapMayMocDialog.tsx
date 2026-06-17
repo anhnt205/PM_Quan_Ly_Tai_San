@@ -18,7 +18,7 @@ import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
 import { useBienPhapMayMocMutation } from "../../mutation/bienPhapMayMoc";
 import { BienPhapMayMocData } from "../../types";
-import { CongTy } from "../../../../utils/const";
+import { CongTy, LOAI_BIEN_BAN_TYPE } from "../../../../utils/const";
 import { generateCode } from "../../../../utils/helpers";
 import { PlanSigner } from "../../../../mockdata/mockPlans";
 import { listSigneInfo } from "../../config";
@@ -34,6 +34,8 @@ import { useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../redux/store";
 import { updateTabFormData } from "../../../../redux/tabsSlice";
 import { Remove } from "@mui/icons-material";
+import MeasureMachinPreview from "../preview/MeasureMachinPreview";
+import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
 
 interface Props {
   open: boolean;
@@ -64,6 +66,15 @@ const BienPhapMayMocDialog = ({
     const tab = state.tabs.tabs.find((t) => t.path === tabPath);
     return tab?.formData?.[`bienPhapMayMocDraft_${idGiamDinhMayMoc}`] ?? null;
   });
+  const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =
+    useBienBanSuaChuaPageQuery(
+      0,
+      9999,
+      "",
+      LOAI_BIEN_BAN_TYPE.BIEN_PHAP_MAY_MOC,
+      true,
+    );
+  const mauMacDinh = repairReportPage?.data?.items?.[0];
 
   const initialValues: BienPhapMayMocData & { nguoiKyList: any[] } = {
     id: "",
@@ -86,6 +97,9 @@ const BienPhapMayMocDialog = ({
     giamDocXacNhan: false,
     share: false,
     trangThai: 0,
+    tenMauBienBan:
+      mauMacDinh?.ten || "BIỆN PHÁP SỬA CHỮA MÁY MÓC THIẾT BỊ",
+    congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
     nguoiKyList: [],
   };
 
@@ -141,6 +155,11 @@ const BienPhapMayMocDialog = ({
       const listInfo = listSigneInfo(initData, apiUsers, apiDepartments);
       formik.setValues({
         ...initData,
+        tenMauBienBan:
+          initData?.tenMauBienBan ||
+          mauMacDinh?.ten ||
+          "BIỆN PHÁP SỬA CHỮA MÁY MÓC THIẾT BỊ",
+        congTy: initData?.congTy || mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
         nguoiKyList: (listInfo ?? []).map((item: any) => ({
           userId: item.idNhanVien,
           userName: item.hoTen,
@@ -164,6 +183,8 @@ const BienPhapMayMocDialog = ({
         thoiGianKetThuc: savedDraft.thoiGianKetThuc,
         thoiGianNgay: savedDraft.thoiGianNgay,
         ghiChu: savedDraft.ghiChu,
+        tenMauBienBan: savedDraft.tenMauBienBan,
+        congTy: savedDraft.congTy,
         nguoiKyList: savedDraft.nguoiKyList,
       });
       return;
@@ -202,6 +223,8 @@ const BienPhapMayMocDialog = ({
             thoiGianKetThuc: formik.values.thoiGianKetThuc,
             thoiGianNgay: formik.values.thoiGianNgay,
             ghiChu: formik.values.ghiChu,
+            tenMauBienBan: formik.values.tenMauBienBan,
+            congTy: formik.values.congTy,
             nguoiKyList: formik.values.nguoiKyList,
           },
           lastMinimizedDialog: "bienPhapMayMoc",
@@ -421,6 +444,13 @@ const BienPhapMayMocDialog = ({
           <Box>
             <SignerWorkflowSection formik={formik} />
           </Box>
+        </Box>
+        <Box>
+          <MeasureMachinPreview
+            row={formik.values}
+            tieude={formik.values.tenMauBienBan}
+            congty={formik.values.congTy}
+          />
         </Box>
       </DialogContent>
 

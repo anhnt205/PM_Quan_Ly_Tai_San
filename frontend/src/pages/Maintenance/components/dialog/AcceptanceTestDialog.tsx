@@ -37,7 +37,7 @@ import { useAllStaffsQuery } from "../../../Staff/Mutation";
 import { generateCode } from "../../../../utils/helpers";
 import { useMaintenanceAcceptanceTestMutation } from "../../mutation";
 import { useSelector } from "react-redux";
-import { CongTy } from "../../../../utils/const";
+import { CongTy, LOAI_BIEN_BAN_TYPE } from "../../../../utils/const";
 import dayjs from "dayjs";
 import { useAllToolDetailQuery } from "../../../ToolManager/Mutation";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
@@ -52,6 +52,7 @@ import { useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../redux/store";
 import { updateTabFormData } from "../../../../redux/tabsSlice";
 import { Remove } from "@mui/icons-material";
+import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
 
 interface Props {
   open: boolean;
@@ -94,6 +95,16 @@ const AcceptanceTestDialog = ({
   const { data: allToolDetail = [] } = useAllToolDetailQuery();
   const { data: allLevel = [] } = useAllLoaiSCBDQuery();
 
+  const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =
+    useBienBanSuaChuaPageQuery(
+      0,
+      9999,
+      "",
+      LOAI_BIEN_BAN_TYPE.NGHIEM_THU_MAY_MOC,
+      true,
+    );
+  const mauMacDinh = repairReportPage?.data?.items?.[0];
+
   const formik = useFormik({
     initialValues: {
       id: "",
@@ -113,6 +124,10 @@ const AcceptanceTestDialog = ({
       giamDocXacNhan: false,
       share: false,
       trangThai: 0,
+      tenMauBienBan:
+        mauMacDinh?.ten ||
+        "NGHIỆM THU CHẠY THỬ VÀ BÀN GIAO THIẾT BỊ SAU SỬA CHỮA",
+      congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
       danhSachTaiSan: [] as AcceptanceTestRecordAssetData[],
       nguoiKyList: [] as any[],
     },
@@ -202,6 +217,11 @@ const AcceptanceTestDialog = ({
         giamDocXacNhan: initData.giamDocXacNhan ?? false,
         share: initData.share ?? false,
         trangThai: initData.trangThai ?? 0,
+        tenMauBienBan:
+          initData?.tenMauBienBan ||
+          mauMacDinh?.ten ||
+          "NGHIỆM THU CHẠY THỬ VÀ BÀN GIAO THIẾT BỊ SAU SỬA CHỮA",
+        congTy: initData?.congTy || mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
         danhSachTaiSan: (initData.danhSachTaiSan || []).map((ts) => ({
           ...ts,
           danhSachVatTu: (ts.danhSachVatTu || []).map((vt) => ({ ...vt })),
@@ -289,6 +309,8 @@ const AcceptanceTestDialog = ({
         capSuaChua: savedDraft.capSuaChua,
         ketQua: savedDraft.ketQua,
         noiDung: savedDraft.noiDung,
+        tenMauBienBan: savedDraft.tenMauBienBan,
+        congTy: savedDraft.congTy,
         danhSachTaiSan: savedDraft.danhSachTaiSan,
         nguoiKyList: savedDraft.nguoiKyList,
       });
@@ -315,6 +337,10 @@ const AcceptanceTestDialog = ({
       giamDocXacNhan: false,
       share: false,
       trangThai: 0,
+      tenMauBienBan:
+        mauMacDinh?.ten ||
+        "NGHIỆM THU CHẠY THỬ VÀ BÀN GIAO THIẾT BỊ SAU SỬA CHỮA",
+      congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
       danhSachTaiSan: list,
       nguoiKyList: [],
     });
@@ -394,6 +420,8 @@ const AcceptanceTestDialog = ({
             capSuaChua: formik.values.capSuaChua,
             ketQua: formik.values.ketQua,
             noiDung: formik.values.noiDung,
+            tenMauBienBan: formik.values.tenMauBienBan,
+            congTy: formik.values.congTy,
             danhSachTaiSan: formik.values.danhSachTaiSan,
             nguoiKyList: formik.values.nguoiKyList,
           },
@@ -661,7 +689,12 @@ const AcceptanceTestDialog = ({
         </Box>
 
         {/* Full-width Preview */}
-        <AcceptanceTestPreview formik={formik} d={d} />
+        <AcceptanceTestPreview
+          formik={formik}
+          d={d}
+          tieude={formik.values.tenMauBienBan}
+          congty={formik.values.congTy}
+        />
       </DialogContent>
 
       <Divider />
@@ -673,10 +706,7 @@ const AcceptanceTestDialog = ({
         <Button
           variant="contained"
           color="success"
-          disabled={
-            createMutation.isPending ||
-            updateMutation.isPending
-          }
+          disabled={createMutation.isPending || updateMutation.isPending}
           onClick={formik.submitForm}
         >
           {createMutation.isPending || updateMutation.isPending

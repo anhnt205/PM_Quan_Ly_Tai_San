@@ -25,9 +25,6 @@ import {
 } from "@mui/icons-material";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
-import { useCmms } from "../../hooks/CmmsContext";
-import MaterialQualityPreview from "./components/preview/MaterialQualityPreview";
-import IncidentInspectionPreview from "./components/preview/IncidentInspectionPreview";
 import { useSignBatch } from "../../hooks/useSignBatch";
 import { SignBatchModal } from "../../components/SignDocument/Signbatchmodal";
 import {
@@ -659,7 +656,7 @@ export default function MaintenanceApprovalPage() {
               setIsDetailOpen(false);
             }}
             onSign={() => {}}
-            plan={selectedRow}
+            data={selectedRow}
             staffs={staffs || []}
             departments={departments || []}
             positions={positions || []}
@@ -685,7 +682,7 @@ export default function MaintenanceApprovalPage() {
               setIsDetailOpen(false);
             }}
             onSign={() => {}}
-            plan={selectedRow}
+            data={selectedRow}
             staffs={staffs || []}
             departments={departments || []}
             positions={positions || []}
@@ -706,7 +703,7 @@ export default function MaintenanceApprovalPage() {
               setIsDetailOpen(false);
             }}
             onSign={() => {}}
-            plan={selectedRow}
+            data={selectedRow}
             staffs={staffs || []}
             departments={departments || []}
             positions={positions || []}
@@ -739,7 +736,7 @@ export default function MaintenanceApprovalPage() {
               setIsDetailOpen(false);
             }}
             onSign={() => {}}
-            plan={selectedRow}
+            data={selectedRow}
             staffs={staffs || []}
             departments={departments || []}
             positions={positions || []}
@@ -772,7 +769,7 @@ export default function MaintenanceApprovalPage() {
               setIsDetailOpen(false);
             }}
             onSign={() => {}}
-            plan={selectedRow}
+            data={selectedRow}
             staffs={staffs || []}
             departments={departments || []}
             positions={positions || []}
@@ -805,7 +802,7 @@ export default function MaintenanceApprovalPage() {
               setIsDetailOpen(false);
             }}
             onSign={() => {}}
-            plan={selectedRow}
+            data={selectedRow}
             staffs={staffs || []}
             departments={departments || []}
             positions={positions || []}
@@ -831,7 +828,7 @@ export default function MaintenanceApprovalPage() {
               setIsDetailOpen(false);
             }}
             onSign={() => {}}
-            plan={selectedRow}
+            data={selectedRow}
             staffs={staffs || []}
             departments={departments || []}
             positions={positions || []}
@@ -852,7 +849,7 @@ export default function MaintenanceApprovalPage() {
               setIsDetailOpen(false);
             }}
             onSign={() => {}}
-            plan={selectedRow}
+            data={selectedRow}
             staffs={staffs || []}
             departments={departments || []}
             positions={positions || []}
@@ -1016,7 +1013,7 @@ export default function MaintenanceApprovalPage() {
             setSelectedRow(null);
           }}
           onSign={handleSign}
-          plan={selectedRow}
+          data={selectedRow}
           staffs={staffs || []}
           departments={departments || []}
           positions={positions || []}
@@ -1040,7 +1037,7 @@ export default function MaintenanceApprovalPage() {
             setSelectedRow(null);
           }}
           onSign={handleSign}
-          plan={selectedRow}
+          data={selectedRow}
           staffs={staffs || []}
           departments={departments || []}
           positions={positions || []}
@@ -1059,7 +1056,7 @@ export default function MaintenanceApprovalPage() {
             setSelectedRow(null);
           }}
           onSign={handleSign}
-          plan={selectedRow}
+          data={selectedRow}
           staffs={staffs || []}
           departments={departments || []}
           positions={positions || []}
@@ -1085,7 +1082,7 @@ export default function MaintenanceApprovalPage() {
             setSelectedRow(null);
           }}
           onSign={handleSign}
-          plan={selectedRow}
+          data={selectedRow}
           staffs={staffs || []}
           departments={departments || []}
           positions={positions || []}
@@ -1116,7 +1113,7 @@ export default function MaintenanceApprovalPage() {
             setSelectedRow(null);
           }}
           onSign={handleSign}
-          plan={selectedRow}
+          data={selectedRow}
           staffs={staffs || []}
           departments={departments || []}
           positions={positions || []}
@@ -1147,7 +1144,7 @@ export default function MaintenanceApprovalPage() {
             setSelectedRow(null);
           }}
           onSign={handleSign}
-          plan={selectedRow}
+          data={selectedRow}
           staffs={staffs || []}
           departments={departments || []}
           positions={positions || []}
@@ -1167,7 +1164,7 @@ export default function MaintenanceApprovalPage() {
             setSelectedRow(null);
           }}
           onSign={handleSign}
-          plan={selectedRow}
+          data={selectedRow}
           staffs={staffs || []}
           departments={departments || []}
           positions={positions || []}
@@ -1187,7 +1184,7 @@ export default function MaintenanceApprovalPage() {
             setSelectedRow(null);
           }}
           onSign={handleSign}
-          plan={selectedRow}
+          data={selectedRow}
           staffs={staffs || []}
           departments={departments || []}
           positions={positions || []}

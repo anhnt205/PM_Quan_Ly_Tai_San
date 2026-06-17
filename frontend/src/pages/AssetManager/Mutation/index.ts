@@ -982,8 +982,7 @@ export const useChuKySuaChuaQuery = (idTaiSan?: string) => {
   });
 };
 
-// lịch trình
-export const useLichTrinhQuery = (idTaiSan?: string, nam?: string, thang?: string) => {
+export const useLichTrinhQuery = (idTaiSan?: string, nam?: number, thang?: number) => {
   return useQuery({
     queryKey: ["lichtrinh", idTaiSan, nam, thang],
     queryFn: async () => {
@@ -993,7 +992,18 @@ export const useLichTrinhQuery = (idTaiSan?: string, nam?: string, thang?: strin
     },
     enabled: !!idTaiSan && !!nam && !!thang,
     staleTime: 30_000,
-    placeholderData: (previousData) => previousData,
+  });
+};
+
+export const useLichTrinhYearQuery = (idTaiSan?: string, nam?: number) => {
+  return useQuery({
+    queryKey: ["lichtrinhYear", idTaiSan, nam],
+    queryFn: async () => {
+      const res = await api.get(`/lichtrinh`, { params: { idTaiSan, nam } });
+      return res.data.data || res.data || [];
+    },
+    enabled: !!idTaiSan && !!nam,
+    staleTime: 30_000,
   });
 };
 

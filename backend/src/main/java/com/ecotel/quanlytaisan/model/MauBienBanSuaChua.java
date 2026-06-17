@@ -28,4 +28,10 @@ public class MauBienBanSuaChua {
     @Column(name = "MacDinh")
     @Builder.Default
     Boolean macDinh = false;
+
+    @Column(name = "LoaiBienBan")
+    String loaiBienBan;
+
+    @Column(name = "CongTy")
+    String congTy;
 }

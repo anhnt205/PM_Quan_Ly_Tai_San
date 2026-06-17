@@ -23,6 +23,8 @@ interface Props {
   recommendation?: string;
   danhSachChiTiet?: IncidentInspectionDetailData[];
   signers?: PlanSigner[];
+  tieude?: string;
+  congty?: string;
 }
 
 const IncidentInspectionPreview = ({
@@ -33,6 +35,8 @@ const IncidentInspectionPreview = ({
   recommendation,
   danhSachChiTiet = [],
   signers = [],
+  tieude,
+  congty,
 }: Props) => {
   const { data: apiDepartments = [] } = useAllDepartmentsQuery();
 
@@ -49,20 +53,22 @@ const IncidentInspectionPreview = ({
       {/* Header */}
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
         <Box sx={{ textAlign: "center", flex: 1 }}>
-          <Typography
-            sx={{ fontSize: 13, fontFamily: "inherit" }}
-          >
+          <Typography sx={{ fontSize: 13, fontFamily: "inherit" }}>
             TẬP ĐOÀN CÔNG NGHIỆP
           </Typography>
-          <Typography
-            sx={{ fontSize: 13, fontFamily: "inherit" }}
-          >
+          <Typography sx={{ fontSize: 13, fontFamily: "inherit" }}>
             THAN - KHOÁNG SẢN VIỆT NAM
           </Typography>
           <Typography
-            sx={{ fontWeight: 700, fontSize: 13, fontFamily: "inherit", textDecoration: "underline" }}
+            sx={{
+              fontWeight: 700,
+              fontSize: 13,
+              fontFamily: "inherit",
+              textTransform: "uppercase",
+              textDecoration: "underline",
+            }}
           >
-            CÔNG TY THAN UÔNG BÍ - TKV
+            CÔNG TY {congty || "............."}
           </Typography>
         </Box>
         <Box sx={{ textAlign: "center", flex: 1 }}>
@@ -122,9 +128,10 @@ const IncidentInspectionPreview = ({
           color: "#0066cc",
           mb: 2,
           fontFamily: "inherit",
+          textTransform: "uppercase",
         }}
       >
-        KIỂM TRA SỰ CỐ THIẾT BỊ
+        {tieude || "............."}
       </Typography>
 
       <Divider sx={{ mb: 2 }} />
@@ -132,7 +139,9 @@ const IncidentInspectionPreview = ({
       {/* Chủ tịch, Hôm nay, Chứng tỏ gồm */}
       <Box sx={{ mb: 2, fontSize: 12 }}>
         <Typography sx={{ fontFamily: "inherit", mb: 1 }}>
-          Hôm nay, ngày ....... tháng ........ năm ........... Tại {location || "....................................................................."}
+          Hôm nay, ngày ....... tháng ........ năm ........... Tại{" "}
+          {location ||
+            "....................................................................."}
         </Typography>
         <Typography sx={{ fontFamily: "inherit", fontWeight: 600, mb: 1 }}>
           Chúng tôi gồm:
@@ -163,13 +172,16 @@ const IncidentInspectionPreview = ({
       {/* Main content */}
       <Box sx={{ mb: 2, fontSize: 12 }}>
         <Typography sx={{ fontFamily: "inherit", mb: 1 }}>
-          Đã tiến hành kiểm tra tình trạng kỹ thuật thiết bị: .............................................................................
+          Đã tiến hành kiểm tra tình trạng kỹ thuật thiết bị:
+          .............................................................................
         </Typography>
         <Typography sx={{ fontFamily: "inherit", mb: 1 }}>
-          Số đăng ký: ..............................................................................
+          Số đăng ký:
+          ..............................................................................
         </Typography>
         <Typography sx={{ fontFamily: "inherit", mb: 1 }}>
-          Sau khi xảy ra sự cố vào lúc ....... giờ ....... ngày ....... tháng ....... năm ..........
+          Sau khi xảy ra sự cố vào lúc ....... giờ ....... ngày ....... tháng
+          ....... năm ..........
         </Typography>
       </Box>
 
@@ -184,28 +196,32 @@ const IncidentInspectionPreview = ({
         </Typography>
 
         <Typography sx={{ fontFamily: "inherit", fontWeight: 600, mb: 1 }}>
-          2. Điều kiện vận hành: ...............................................................................
+          2. Điều kiện vận hành:
+          ...............................................................................
         </Typography>
         <Typography sx={{ fontFamily: "inherit", ml: 2, mb: 2 }}>
           ..........................................................................
         </Typography>
 
         <Typography sx={{ fontFamily: "inherit", fontWeight: 600, mb: 1 }}>
-          3. Nội dung sửa chữa/ bảo dưỡng gần nhất: ........................................................
+          3. Nội dung sửa chữa/ bảo dưỡng gần nhất:
+          ........................................................
         </Typography>
         <Typography sx={{ fontFamily: "inherit", ml: 2, mb: 2 }}>
           ..........................................................................
         </Typography>
 
         <Typography sx={{ fontFamily: "inherit", fontWeight: 600, mb: 1 }}>
-          4. Tình trạng thiết bị: ...............................................................................
+          4. Tình trạng thiết bị:
+          ...............................................................................
         </Typography>
         <Typography sx={{ fontFamily: "inherit", ml: 2, mb: 2 }}>
           ..........................................................................
         </Typography>
 
         <Typography sx={{ fontFamily: "inherit", fontWeight: 600, mb: 1 }}>
-          5. Sơ bộ xác định nguyên nhân: ...............................................................
+          5. Sơ bộ xác định nguyên nhân:
+          ...............................................................
         </Typography>
         <Typography sx={{ fontFamily: "inherit", ml: 2, mb: 2 }}>
           ..........................................................................
@@ -215,7 +231,8 @@ const IncidentInspectionPreview = ({
           6. Nội dung đề nghị đề xuất biện pháp xử lý:
         </Typography>
         <Typography sx={{ fontFamily: "inherit", ml: 2, mb: 2 }}>
-          {recommendation || "......................................................................."}
+          {recommendation ||
+            "......................................................................."}
         </Typography>
 
         <Typography sx={{ fontFamily: "inherit", fontWeight: 600, mb: 1 }}>
@@ -274,7 +291,10 @@ const IncidentInspectionPreview = ({
                     <TableCell align="center" sx={{ fontWeight: 700 }}>
                       {assetIdx + 1}
                     </TableCell>
-                    <TableCell colSpan={7} sx={{ fontWeight: 700, color: "primary.main" }}>
+                    <TableCell
+                      colSpan={7}
+                      sx={{ fontWeight: 700, color: "primary.main" }}
+                    >
                       Thiết bị: {entry.tenTaiSan}
                     </TableCell>
                   </TableRow>
@@ -283,27 +303,39 @@ const IncidentInspectionPreview = ({
                   {!entry.danhSachVatTu || entry.danhSachVatTu.length === 0 ? (
                     <TableRow>
                       <TableCell></TableCell>
-                      <TableCell colSpan={7} sx={{ fontStyle: "italic", color: "text.secondary" }}>
+                      <TableCell
+                        colSpan={7}
+                        sx={{ fontStyle: "italic", color: "text.secondary" }}
+                      >
                         Chưa có vật tư/phụ tùng nào được kiểm tra.
                       </TableCell>
                     </TableRow>
                   ) : (
                     entry.danhSachVatTu.map((vt, vtIdx) => (
                       <TableRow key={vt.id || vtIdx}>
-                        <TableCell align="right" sx={{ color: "text.secondary", pr: 2 }}>
+                        <TableCell
+                          align="right"
+                          sx={{ color: "text.secondary", pr: 2 }}
+                        >
                           {assetIdx + 1}.{vtIdx + 1}
                         </TableCell>
                         <TableCell sx={{ pl: 3 }}>
                           {vt.tenVatTu || vt.idVatTu || "—"}
                         </TableCell>
-                        <TableCell align="center">{vt.donViTinh || "—"}</TableCell>
+                        <TableCell align="center">
+                          {vt.donViTinh || "—"}
+                        </TableCell>
                         <TableCell align="center">{vt.soLuong || 0}</TableCell>
                         <TableCell>{vt.tinhTrang || "—"}</TableCell>
                         <TableCell align="center">
-                          {(vt.soLuongSuaChua || 0) > 0 ? vt.soLuongSuaChua : "—"}
+                          {(vt.soLuongSuaChua || 0) > 0
+                            ? vt.soLuongSuaChua
+                            : "—"}
                         </TableCell>
                         <TableCell align="center">
-                          {(vt.soLuongThayMoi || 0) > 0 ? vt.soLuongThayMoi : "—"}
+                          {(vt.soLuongThayMoi || 0) > 0
+                            ? vt.soLuongThayMoi
+                            : "—"}
                         </TableCell>
                         <TableCell>{vt.ghiChu || "—"}</TableCell>
                       </TableRow>

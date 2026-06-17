@@ -203,7 +203,7 @@ export default function ToolRecordTab() {
           border: "1px solid #e0e0e0",
           borderRadius: "8px",
           overflow: "hidden",
-          height: "calc(100vh - 220px)",
+          // height: "calc(100vh - 220px)",
         }}
       >
         <Grid 
@@ -247,7 +247,7 @@ export default function ToolRecordTab() {
               display: "flex",
               flexDirection: "column",
               bgcolor: "white",
-              height: "100%",
+              height: "100vh",
               overflow: "hidden",
             }}
           >

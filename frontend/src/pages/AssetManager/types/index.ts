@@ -154,8 +154,8 @@ export interface MaintenanceIncidentType {
 export interface AssetLichTrinhType {
   id?: string;
   idTaiSan: string;
-  nam: string;
-  thang: string;
+  nam: number;
+  thang: number;
   ghiChu?: string;
   ngayTao?: string;
   ngayCapNhat?: string;
@@ -167,7 +167,7 @@ export interface AssetLichTrinhType {
 export interface AssetLichTrinhChiTietType {
   id?: string;
   idLichTrinh?: string;
-  ngay: string;
+  ngay: number;
   ca1?:number;
   ca2?:number;
   ca3?:number;

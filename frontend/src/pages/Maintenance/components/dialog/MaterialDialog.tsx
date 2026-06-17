@@ -39,7 +39,12 @@ import { generateCode } from "../../../../utils/helpers";
 import { useMaintenanceMaterialAssessmentMutation } from "../../mutation";
 import { useAllToolDetailQuery } from "../../../ToolManager/Mutation";
 import { useAllLoaiSCBDQuery } from "../../../MaintenanceRepairType/Mutation";
-import { CongTy, Action, BIEN_PHAP_XU_LY } from "../../../../utils/const";
+import {
+  CongTy,
+  Action,
+  BIEN_PHAP_XU_LY,
+  LOAI_BIEN_BAN_TYPE,
+} from "../../../../utils/const";
 import { listSigneInfo } from "../../config";
 import FieldInput from "../../../../components/TextField/FieldInput";
 import TextFieldNumber from "../../../../components/TextField/TextFieldNumber";
@@ -50,6 +55,7 @@ import { useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../redux/store";
 import { updateTabFormData } from "../../../../redux/tabsSlice";
 import { Remove } from "@mui/icons-material";
+import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
 
 interface Props {
   open: boolean;
@@ -83,6 +89,15 @@ const MaterialDialog = ({
     const tab = state.tabs.tabs.find((t) => t.path === tabPath);
     return tab?.formData?.[`materialDraft_${acceptanceRecord?.id}`] ?? null;
   });
+  const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =
+    useBienBanSuaChuaPageQuery(
+      0,
+      9999,
+      "",
+      LOAI_BIEN_BAN_TYPE.DANH_GIA_VAT_TU,
+      true,
+    );
+  const mauMacDinh = repairReportPage?.data?.items?.[0];
 
   const formik = useFormik({
     initialValues: {
@@ -106,6 +121,10 @@ const MaterialDialog = ({
       giamDocXacNhan: false,
       share: false,
       trangThai: 0,
+      tenMauBienBan:
+        mauMacDinh?.ten ||
+        "ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA",
+      congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
       danhSachChiTiet: [] as ChiTietVatTuThuHoiData[],
       nguoiKyList: [] as any[],
     },
@@ -152,6 +171,8 @@ const MaterialDialog = ({
         giamDocXacNhan: values.giamDocXacNhan || false,
         share: values.share || false,
         trangThai: values.trangThai || 0,
+        tenMauBienBan: values.tenMauBienBan,
+        congTy: values.congTy,
         nguoiKyList: intermediateSigners,
         danhSachChiTiet: values.danhSachChiTiet.map((vt) => ({
           id: vt.id || undefined,
@@ -213,6 +234,11 @@ const MaterialDialog = ({
         giamDocXacNhan: initData.giamDocXacNhan || false,
         share: initData.share || false,
         trangThai: initData.trangThai || 0,
+        tenMauBienBan:
+          initData.tenMauBienBan ||
+          mauMacDinh?.ten ||
+          "ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA",
+        congTy: initData.congTy || mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
         danhSachChiTiet: (initData.danhSachChiTiet || []).map((vt: any) => ({
           ...vt,
           action: Action.UPDATE,
@@ -294,6 +320,11 @@ const MaterialDialog = ({
         soLuongPhucHoi: savedDraft.soLuongPhucHoi,
         soLuongPheLieu: savedDraft.soLuongPheLieu,
         soLuongHuy: savedDraft.soLuongHuy,
+        tenMauBienBan:
+          savedDraft.tenMauBienBan ||
+          mauMacDinh?.ten ||
+          "ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA",
+        congTy: savedDraft.congTy || mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
         danhSachChiTiet: savedDraft.danhSachChiTiet,
         nguoiKyList: savedDraft.nguoiKyList,
       });
@@ -322,6 +353,10 @@ const MaterialDialog = ({
       giamDocXacNhan: false,
       share: false,
       trangThai: 0,
+      tenMauBienBan:
+        mauMacDinh?.ten ||
+        "ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA",
+      congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
       danhSachChiTiet: defaultList,
       nguoiKyList: [],
     });
@@ -443,6 +478,14 @@ const MaterialDialog = ({
             soLuongHuy: formik.values.soLuongHuy,
             danhSachChiTiet: formik.values.danhSachChiTiet,
             nguoiKyList: formik.values.nguoiKyList,
+            tenMauBienBan:
+              formik.values.tenMauBienBan ||
+              mauMacDinh?.ten ||
+              "ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA",
+            congTy:
+              formik.values.congTy ||
+              mauMacDinh?.congTy ||
+              "THAN UÔNG BÍ - TKV",
           },
           lastMinimizedDialog: "material",
         },
@@ -730,7 +773,12 @@ const MaterialDialog = ({
         </Box>
 
         {/* Full-width Preview */}
-        <MaterialPreview d={d} formik={formik} />
+        <MaterialPreview
+          d={d}
+          formik={formik}
+          tieude={formik.values.tenMauBienBan}
+          congty={formik.values.congTy}
+        />
       </DialogContent>
 
       <Divider />

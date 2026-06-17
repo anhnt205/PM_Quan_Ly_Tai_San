@@ -1,6 +1,7 @@
 import { ContentCopy, Delete } from "@mui/icons-material";
 import {
   Box,
+  Checkbox,
   CircularProgress,
   Dialog,
   DialogContent,
@@ -173,6 +174,16 @@ export default function Unit() {
       minWidth: 150,
       align: "center",
       headerAlign: "center",
+    },
+    {
+      field: "laHeThong",
+      headerName: "Hệ thống",
+      minWidth: 70,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => (
+        <Typography>{params.row.laHeThong ? "✓" : ""}</Typography>
+      ),
     },
     {
       field: "action",

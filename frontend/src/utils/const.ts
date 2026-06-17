@@ -65,3 +65,48 @@ export const BIEN_PHAP_XU_LY = {
   PHE_LIEU: "Phế liệu",
   HUY: "Hủy",
 } as const;
+
+export const LOAI_BIEN_BAN_TYPE = {
+  KE_HOACH: "KE_HOACH",
+  SUA_CHUA: "SUA_CHUA",
+  PHIEU_SU_CO: "PHIEU_SU_CO",
+  KIEM_TRA_SU_CO: "KIEM_TRA_SU_CO",
+  GIAM_DINH_MAY_MOC: "GIAM_DINH_MAY_MOC",
+  GIAM_DINH_PHUONG_TIEN: "GIAM_DINH_PHUONG_TIEN",
+  BIEN_PHAP_MAY_MOC: "BIEN_PHAP_MAY_MOC",
+  BIEN_PHAP_PHUONG_TIEN: "BIEN_PHAP_PHUONG_TIEN",
+  NGHIEM_THU_MAY_MOC: "NGHIEM_THU_MAY_MOC",
+  NGHIEM_THU_PHUONG_TIEN: "NGHIEM_THU_PHUONG_TIEN",
+  DANH_GIA_VAT_TU: "DANH_GIA_VAT_TU",
+} as const;
+export const LOAI_BIEN_BAN_OPTIONS = [
+  { id: LOAI_BIEN_BAN_TYPE.KE_HOACH, label: "Kế hoạch sửa chữa bảo dưỡng" },
+  { id: LOAI_BIEN_BAN_TYPE.SUA_CHUA, label: "Đề nghị sửa chữa, bảo dưỡng" },
+  { id: LOAI_BIEN_BAN_TYPE.PHIEU_SU_CO, label: "Phiếu báo sự cố thiết bị" },
+  { id: LOAI_BIEN_BAN_TYPE.KIEM_TRA_SU_CO, label: "Biên bản kiểm tra sự cố" },
+  {
+    id: LOAI_BIEN_BAN_TYPE.GIAM_DINH_MAY_MOC,
+    label: "Biên bản giám định kỹ thuật máy móc",
+  },
+  {
+    id: LOAI_BIEN_BAN_TYPE.GIAM_DINH_PHUONG_TIEN,
+    label: "Biên bản giám định phương tiện",
+  },
+  {
+    id: LOAI_BIEN_BAN_TYPE.BIEN_PHAP_MAY_MOC,
+    label: "Biện pháp sửa chữa máy móc",
+  },
+  {
+    id: LOAI_BIEN_BAN_TYPE.BIEN_PHAP_PHUONG_TIEN,
+    label: "Biện pháp sửa chữa phương tiện",
+  },
+  {
+    id: LOAI_BIEN_BAN_TYPE.NGHIEM_THU_MAY_MOC,
+    label: "Biên bản nghiệm thu máy móc",
+  },
+  {
+    id: LOAI_BIEN_BAN_TYPE.NGHIEM_THU_PHUONG_TIEN,
+    label: "Nghiệm thu sản phẩm phương tiện",
+  },
+  { id: LOAI_BIEN_BAN_TYPE.DANH_GIA_VAT_TU, label: "Biên bản đánh giá vật tư" },
+];

@@ -19,7 +19,7 @@ import type { PlanSigner } from "../../../../mockdata/mockPlans";
 import { MaintenancePlanData } from "../../types";
 import type { IncidenData, IncidenDetailData } from "../../types/index";
 import dayjs from "dayjs";
-import { Action, CongTy } from "../../../../utils/const";
+import { Action, CongTy, LOAI_BIEN_BAN_TYPE } from "../../../../utils/const";
 import { generateCode } from "../../../../utils/helpers";
 import { listSigneInfo } from "../../config";
 import { useFormik } from "formik";
@@ -32,6 +32,7 @@ import { useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../redux/store";
 import { updateTabFormData } from "../../../../redux/tabsSlice";
 import { Remove } from "@mui/icons-material";
+import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
 
 interface Props {
   open: boolean;
@@ -63,6 +64,16 @@ const IncidentDialog = ({
     return tab?.formData?.incidentDraft ?? null;
   });
 
+  const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =
+    useBienBanSuaChuaPageQuery(
+      0,
+      9999,
+      "",
+      LOAI_BIEN_BAN_TYPE.PHIEU_SU_CO,
+      true,
+    );
+  const mauMacDinh = repairReportPage?.data?.items?.[0];
+
   const formik = useFormik({
     initialValues: {
       id: "",
@@ -81,6 +92,8 @@ const IncidentDialog = ({
       giamDocXacNhan: false,
       trangThai: 0,
       share: false,
+      tenMauBienBan: mauMacDinh?.ten ?? `PHIẾU BÁO SỰ CỐ THIẾT BỊ`,
+      congTy: mauMacDinh?.congTy ?? "THAN UÔNG BÍ - TKV",
       ngayTao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       nguoiKyList: [] as any[],
       danhSachTaiSan: [] as any[],
@@ -181,6 +194,9 @@ const IncidentDialog = ({
         giamDocXacNhan: initialIncident.giamDocXacNhan ?? false,
         trangThai: initialIncident.trangThai ?? 0,
         share: initialIncident.share ?? false,
+        tenMauBienBan:
+          initialIncident.tenMauBienBan ?? `PHIẾU BÁO SỰ CỐ THIẾT BỊ`,
+        congTy: initialIncident.congTy ?? "THAN UÔNG BÍ - TKV",
         ngayTao:
           initialIncident.ngayTao ||
           dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
@@ -209,6 +225,8 @@ const IncidentDialog = ({
         giamDocXacNhan: false,
         trangThai: 0,
         share: false,
+        tenMauBienBan: savedDraft.tenMauBienBan ?? `PHIẾU BÁO SỰ CỐ THIẾT BỊ`,
+        congTy: savedDraft.congTy ?? "THAN UÔNG BÍ - TKV",
         ngayTao: dayjs().format("YYYY-MM-DD HH:mm:ss"),
         nguoiKyList: savedDraft.nguoiKyList,
         danhSachTaiSan: savedDraft.danhSachTaiSan ?? [],
@@ -239,6 +257,8 @@ const IncidentDialog = ({
       giamDocXacNhan: false,
       trangThai: 0,
       share: false,
+      tenMauBienBan: mauMacDinh?.ten ?? `PHIẾU BÁO SỰ CỐ THIẾT BỊ`,
+      congTy: mauMacDinh?.congTy ?? "THAN UÔNG BÍ - TKV",
       ngayTao: dayjs().format("YYYY-MM-DD HH:mm:ss"),
       nguoiKyList: [],
       danhSachTaiSan: [],
@@ -294,6 +314,14 @@ const IncidentDialog = ({
             phanHeViTri: formik.values.phanHeViTri,
             mucDo: formik.values.mucDo,
             moTa: formik.values.moTa,
+            tenMauBienBan:
+              formik.values.tenMauBienBan ||
+              mauMacDinh?.ten ||
+              `PHIẾU BÁO SỰ CỐ THIẾT BỊ`,
+            congTy:
+              formik.values.congTy ||
+              mauMacDinh?.congTy ||
+              "THAN UÔNG BÍ - TKV",
             nguoiKyList: formik.values.nguoiKyList,
             assets,
             danhSachTaiSan: formik.values.danhSachTaiSan,
@@ -474,6 +502,8 @@ const IncidentDialog = ({
                 formik.setFieldValue("danhSachTaiSan", newEntries);
               }}
               planIds={planIds}
+              tieude={formik.values.tenMauBienBan}
+              congty={formik.values.congTy}
             />
           </Box>
         </Box>

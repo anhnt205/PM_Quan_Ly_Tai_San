@@ -15,6 +15,8 @@ import {
   IconButton,
   Paper,
   Typography,
+  Checkbox,
+  FormControlLabel,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import SaveBtn from "../../../components/Button/SaveBtn";
@@ -58,6 +60,7 @@ export default function UnitForm({
       id: initialFormData?.id ?? "",
       tenDonVi: initialFormData?.tenDonVi ?? "",
       note: initialFormData?.note ?? "",
+      laHeThong: initialFormData?.laHeThong ?? false,
     },
     validationSchema: UnitValidation,
     onSubmit(values) {
@@ -69,6 +72,7 @@ export default function UnitForm({
     id: item.id ?? "",
     tenDonVi: item.tenDonVi ?? "",
     note: item.note ?? "",
+    laHeThong: item.laHeThong ?? false,
   });
 
   const [localBulkItems, setLocalBulkItems] = useState<any[]>(
@@ -275,6 +279,24 @@ export default function UnitForm({
                     rows={2}
                   />
                 </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={item.laHeThong || false}
+                        onChange={(e) =>
+                          handleBulkItemChange(
+                            index,
+                            "laHeThong",
+                            e.target.checked
+                          )
+                        }
+                        disabled={bulkEditType === "edit" || readOnly}
+                      />
+                    }
+                    label="Là hệ thống"
+                  />
+                </Grid>
               </Grid>
             </Card>
           ))}
@@ -372,6 +394,21 @@ export default function UnitForm({
               formik={formik}
               field="note"
               disabled={readOnly}
+            />
+          </Grid>
+          <Grid size={{ xs: 12 }}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={formik.values.laHeThong || false}
+                  onChange={(e) =>
+                    formik.setFieldValue("laHeThong", e.target.checked)
+                  }
+                  name="laHeThong"
+                  disabled={readOnly}
+                />
+              }
+              label="Là hệ thống"
             />
           </Grid>
         </Grid>

@@ -1,13 +1,27 @@
-import { Box, Chip, Divider, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
-import { FormikProps } from "formik";
-import { DanhGiaVatTuData } from "../../types";
+import {
+  Box,
+  Chip,
+  Divider,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from "@mui/material";
 
 export default function MaterialPreview({
   d,
   formik,
+  congty,
+  tieude,
 }: {
   d: Date;
-  formik: any;
+  formik?: any;
+  congty?: string;
+  tieude?: string;
 }) {
   return (
     <Box
@@ -30,8 +44,13 @@ export default function MaterialPreview({
           <Typography variant="caption" display="block">
             THAN – KHOÁNG SẢN VIỆT NAM
           </Typography>
-          <Typography variant="caption" display="block" fontWeight={700}>
-            CÔNG <u>TY THAN UÔNG BÍ</u> - TKV
+          <Typography
+            variant="caption"
+            display="block"
+            fontWeight={700}
+            sx={{ textDecoration: "underline", textTransform: "uppercase" }}
+          >
+            CÔNG TY {congty || "................."}
           </Typography>
         </Box>
         <Box sx={{ textAlign: "center" }}>
@@ -65,32 +84,33 @@ export default function MaterialPreview({
         variant="subtitle2"
         align="center"
         fontWeight={700}
-        sx={{ mb: 2 }}
+        sx={{ mb: 2, textTransform: "uppercase" }}
       >
-        ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA
+        {tieude ||
+          ".............................................................."}
       </Typography>
 
       <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>
         Hôm nay, ngày {d.getDate()} tháng {d.getMonth() + 1} năm{" "}
-        {d.getFullYear()}. Tại {formik.values.viTri || "………………………"}
+        {d.getFullYear()}. Tại {formik?.values.viTri || "………………………"}
       </Typography>
       <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>
         Hội đồng đánh giá chất lượng vật tư phụ tùng thu hồi sau sửa chữa cấp:{" "}
-        <b>{formik.values.capSuaChua || "……………"}</b>
+        <b>{formik?.values.capSuaChua || "……………"}</b>
       </Typography>
       <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>
-        Của thiết bị: <b>{formik.values.tenThietBi || "……………"}</b> Kiểu:{" "}
-        {formik.values.kieu || "………"} Số:{" "}
-        {formik.values.soDangKi || "……………………………"}
+        Của thiết bị: <b>{formik?.values.tenThietBi || "……………"}</b> Kiểu:{" "}
+        {formik?.values.kieu || "………"} Số:{" "}
+        {formik?.values.soDangKi || "……………………………"}
       </Typography>
       <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>
-        Đơn vị quản lý vận hành: {formik.values.idDonViQuanLy || "………………"}
+        Đơn vị quản lý vận hành: {formik?.values.idDonViQuanLy || "………………"}
       </Typography>
       <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>
         Thành phần gồm:
       </Typography>
       <Box sx={{ pl: 2, mb: 1.5 }}>
-        {formik.values.nguoiKyList?.map((s: any, i: number) => (
+        {formik?.values.nguoiKyList?.map((s: any, i: number) => (
           <Box key={i} sx={{ display: "flex", gap: 3, mb: 0.25 }}>
             <Typography variant="caption" sx={{ minWidth: 16 }}>
               {i + 1}.
@@ -150,7 +170,7 @@ export default function MaterialPreview({
             </TableRow>
           </TableHead>
           <TableBody>
-            {formik.values.danhSachChiTiet.map((item: any, idx: number) => (
+            {formik?.values.danhSachChiTiet.map((item: any, idx: number) => (
               <TableRow key={idx}>
                 <TableCell sx={{ fontSize: "0.72rem" }}>
                   {String(idx + 1).padStart(2, "0")}
@@ -181,13 +201,13 @@ export default function MaterialPreview({
 
       <Typography variant="caption" display="block">
         Số để lại phục hồi phục vụ cho sản xuất:{" "}
-        {formik.values.soLuongPhucHoi || "…………"}.
+        {formik?.values.soLuongPhucHoi || "…………"}.
       </Typography>
       <Typography variant="caption" display="block">
-        Số để làm phế liệu: {formik.values.soLuongPheLieu || "…………"} (mục)
+        Số để làm phế liệu: {formik?.values.soLuongPheLieu || "…………"} (mục)
       </Typography>
       <Typography variant="caption" display="block" sx={{ mb: 1.5 }}>
-        Số lượng hủy: {formik.values.soLuongHuy || "…………"} (mục)
+        Số lượng hủy: {formik?.values.soLuongHuy || "…………"} (mục)
       </Typography>
 
       <Divider sx={{ mb: 2 }} />
@@ -201,7 +221,7 @@ export default function MaterialPreview({
         }}
       >
         {(() => {
-          const sorted = [...(formik.values.nguoiKyList || [])].sort(
+          const sorted = [...(formik?.values.nguoiKyList || [])].sort(
             (a, b) => (a.order || 0) - (b.order || 0),
           );
           const cols = sorted.map((s, idx) => ({

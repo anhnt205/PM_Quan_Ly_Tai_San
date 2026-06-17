@@ -66,8 +66,10 @@ public class MauBienBanSuaChuaController {
     public ResponseEntity<ApiResponse<PageResponse<MauBienBanSuaChua>>> getPaged(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String ten) {
-        PageResponse<MauBienBanSuaChua> response = service.getPaged(page, size, ten);
+            @RequestParam(required = false) String ten,
+            @RequestParam(required = false) String loaiBienBan,
+            @RequestParam(required = false) Boolean macDinh) {
+        PageResponse<MauBienBanSuaChua> response = service.getPaged(page, size, ten, loaiBienBan, macDinh);
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", response, null));
     }
 

@@ -35,7 +35,7 @@ public class BienPhapPhuongTienDao {
     private String buildSelectSql() {
         return """
             SELECT
-                bp.Id, bp.IdCongTy, bp.SoBienBan, bp.IdTaiSan,
+                bp.Id, bp.IdCongTy, bp.CongTy, bp.TenMauBienBan, bp.SoBienBan, bp.IdTaiSan,
                 bp.MucDich, bp.YeuCau, bp.TinhTrangHienTai, bp.NoiDungThucHien,
                 bp.TienDoTuNgay, bp.TienDoDenNgay, bp.BienPhapAnToan, bp.IdGiamDinhPhuongTien,
                 bp.DonViQuanLy, bp.GhiChuBienBan,
@@ -129,16 +129,16 @@ public class BienPhapPhuongTienDao {
         e.setId(generateNextId());
         String sql = """
             INSERT INTO bienphap_phuongtien (
-                Id, IdCongTy, SoBienBan, IdTaiSan,
+                Id, IdCongTy, CongTy, TenMauBienBan, SoBienBan, IdTaiSan,
                 MucDich, YeuCau, TinhTrangHienTai, NoiDungThucHien,
                 TienDoTuNgay, TienDoDenNgay, BienPhapAnToan, IdGiamDinhPhuongTien,
                 DonViQuanLy,
                 IdNguoiLap, NguoiLapXacNhan, IdGiamDoc, GiamDocXacNhan,
                 Share, TrangThai, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, GhiChuBienBan
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         int r = jdbcTemplate.update(sql,
-                e.getId(), e.getIdCongTy(), e.getSoBienBan(), e.getIdTaiSan(),
+                e.getId(), e.getIdCongTy(), e.getCongTy(), e.getTenMauBienBan(), e.getSoBienBan(), e.getIdTaiSan(),
                 e.getMucDich(), e.getYeuCau(), e.getTinhTrangHienTai(), e.getNoiDungThucHien(),
                 e.getTienDoTuNgay(), e.getTienDoDenNgay(), e.getBienPhapAnToan(), e.getIdGiamDinhPhuongTien(),
                 e.getDonViQuanLy(),
@@ -153,7 +153,7 @@ public class BienPhapPhuongTienDao {
     public BienPhapPhuongTien update(BienPhapPhuongTien e) {
         String sql = """
             UPDATE bienphap_phuongtien SET
-                SoBienBan = ?, IdTaiSan = ?,
+                CongTy = ?, TenMauBienBan = ?, SoBienBan = ?, IdTaiSan = ?,
                 MucDich = ?, YeuCau = ?, TinhTrangHienTai = ?, NoiDungThucHien = ?,
                 TienDoTuNgay = ?, TienDoDenNgay = ?, BienPhapAnToan = ?, IdGiamDinhPhuongTien = ?,
                 DonViQuanLy = ?,
@@ -162,7 +162,7 @@ public class BienPhapPhuongTienDao {
             WHERE Id = ?
             """;
         int r = jdbcTemplate.update(sql,
-                e.getSoBienBan(), e.getIdTaiSan(),
+                e.getCongTy(), e.getTenMauBienBan(), e.getSoBienBan(), e.getIdTaiSan(),
                 e.getMucDich(), e.getYeuCau(), e.getTinhTrangHienTai(), e.getNoiDungThucHien(),
                 e.getTienDoTuNgay(), e.getTienDoDenNgay(), e.getBienPhapAnToan(), e.getIdGiamDinhPhuongTien(),
                 e.getDonViQuanLy(),

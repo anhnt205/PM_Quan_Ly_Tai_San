@@ -123,6 +123,7 @@ function App() {
       ) {
         console.log("Handling socket message in App.tsx:", data);
         queryClient.invalidateQueries({ queryKey: ["repairPage"] });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceShareCounts"] });
       } else if (
         (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
           user?.taiKhoan?.tenDangNhap === "admin") &&
@@ -132,6 +133,7 @@ function App() {
         queryClient.invalidateQueries({
           queryKey: ["maintenancePlanningPage"],
         });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceShareCounts"] });
       } else if (
         (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
           user?.taiKhoan?.tenDangNhap === "admin") &&
@@ -141,6 +143,7 @@ function App() {
         queryClient.invalidateQueries({
           queryKey: ["materialAssessmentPage"],
         });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceShareCounts"] });
       } else if (
         (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
           user?.taiKhoan?.tenDangNhap === "admin") &&
@@ -150,6 +153,7 @@ function App() {
         queryClient.invalidateQueries({
           queryKey: ["incidentPage"],
         });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceShareCounts"] });
       } else if (
         (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
           user?.taiKhoan?.tenDangNhap === "admin") &&
@@ -159,6 +163,7 @@ function App() {
         queryClient.invalidateQueries({
           queryKey: ["incidentInspectionPage"],
         });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceShareCounts"] });
       } else if (
         (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
           user?.taiKhoan?.tenDangNhap === "admin") &&
@@ -171,6 +176,7 @@ function App() {
         queryClient.invalidateQueries({
           queryKey: ["nghiemThuPhuongTienPage"],
         });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceShareCounts"] });
       } else if (
         (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
           user?.taiKhoan?.tenDangNhap === "admin") &&
@@ -183,6 +189,7 @@ function App() {
         queryClient.invalidateQueries({
           queryKey: ["vehicleInspectionPage"],
         });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceShareCounts"] });
       } else if (
         (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
           user?.taiKhoan?.tenDangNhap === "admin") &&
@@ -195,6 +202,7 @@ function App() {
         queryClient.invalidateQueries({
           queryKey: ["bienPhapPhuongTienPage"],
         });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceShareCounts"] });
       }
     });
 
@@ -270,7 +278,10 @@ function App() {
           <Route path={ROUTES.UNIT} element={<Unit />} />
           <Route path={ROUTES.REASONINCREASE} element={<ReasonIncrease />} />
           <Route path={ROUTES.CURRENTSTATUS} element={<CurrentStatus />} />
-          <Route path={ROUTES.REPAIRREPORTTEMPLATE} element={<RepairReport />} />
+          <Route
+            path={ROUTES.REPAIRREPORTTEMPLATE}
+            element={<RepairReport />}
+          />
           <Route path={ROUTES.ASSETPROFILE} element={<AssetProfile />} />
           <Route
             path={ROUTES.ASSETMANAGER}

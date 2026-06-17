@@ -34,7 +34,7 @@ public class GiamDinhMayMocDao {
     private String buildSelectSql() {
         return """
             SELECT
-                gd.Id, gd.IdCongTy, gd.IdBienBan, gd.LoaiBienBan, gd.SoPhieu, gd.NgayGiamDinh, gd.ViTri,
+                gd.Id, gd.IdCongTy, gd.CongTy, gd.TenMauBienBan, gd.IdBienBan, gd.LoaiBienBan, gd.SoPhieu, gd.NgayGiamDinh, gd.ViTri,
                 gd.SoDeLaiPhucHoi, gd.SoDeLamPheLieu, gd.SoLuongHuy, gd.GhiChuBienBan,
                 gd.IdNguoiLap, gd.NguoiLapXacNhan, gd.IdGiamDoc, gd.GiamDocXacNhan,
                 gd.Share, gd.TrangThai, gd.NgayTao, gd.NgayCapNhat, gd.NguoiTao, gd.NguoiCapNhat,
@@ -108,14 +108,14 @@ public class GiamDinhMayMocDao {
         e.setId(generateNextId());
         String sql = """
             INSERT INTO giamdinh_maymoc (
-                Id, IdCongTy, IdBienBan, LoaiBienBan, SoPhieu, NgayGiamDinh, ViTri,
+                Id, IdCongTy, CongTy, TenMauBienBan, IdBienBan, LoaiBienBan, SoPhieu, NgayGiamDinh, ViTri,
                 SoDeLaiPhucHoi, SoDeLamPheLieu, SoLuongHuy,
                 IdNguoiLap, NguoiLapXacNhan, IdGiamDoc, GiamDocXacNhan,
                 Share, TrangThai, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, GhiChuBienBan
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         int r = jdbcTemplate.update(sql,
-                e.getId(), e.getIdCongTy(), e.getIdBienBan(), e.getLoaiBienBan(), e.getSoPhieu(), e.getNgayGiamDinh(), e.getViTri(),
+                e.getId(), e.getIdCongTy(), e.getCongTy(), e.getTenMauBienBan(), e.getIdBienBan(), e.getLoaiBienBan(), e.getSoPhieu(), e.getNgayGiamDinh(), e.getViTri(),
                 e.getSoDeLaiPhucHoi(), e.getSoDeLamPheLieu(), e.getSoLuongHuy(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai() != null ? e.getTrangThai() : 0, 
@@ -128,14 +128,14 @@ public class GiamDinhMayMocDao {
     public GiamDinhMayMoc update(GiamDinhMayMoc e) {
         String sql = """
             UPDATE giamdinh_maymoc SET
-                IdBienBan = ?, LoaiBienBan = ?, SoPhieu = ?, NgayGiamDinh = ?, ViTri = ?,
+                CongTy = ?, TenMauBienBan = ?, IdBienBan = ?, LoaiBienBan = ?, SoPhieu = ?, NgayGiamDinh = ?, ViTri = ?,
                 SoDeLaiPhucHoi = ?, SoDeLamPheLieu = ?, SoLuongHuy = ?,
                 IdNguoiLap = ?, NguoiLapXacNhan = ?, IdGiamDoc = ?, GiamDocXacNhan = ?,
                 Share = ?, TrangThai = ?, NgayCapNhat = ?, NguoiCapNhat = ?, GhiChuBienBan = ?
             WHERE Id = ?
             """;
         int r = jdbcTemplate.update(sql,
-                e.getIdBienBan(), e.getLoaiBienBan(), e.getSoPhieu(), e.getNgayGiamDinh(), e.getViTri(),
+                e.getCongTy(), e.getTenMauBienBan(), e.getIdBienBan(), e.getLoaiBienBan(), e.getSoPhieu(), e.getNgayGiamDinh(), e.getViTri(),
                 e.getSoDeLaiPhucHoi(), e.getSoDeLamPheLieu(), e.getSoLuongHuy(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai(), e.getNgayCapNhat(), e.getNguoiCapNhat(), e.getGhiChuBienBan(),

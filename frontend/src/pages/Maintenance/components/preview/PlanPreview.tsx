@@ -55,11 +55,11 @@ interface Props {
   deptDevices?: any;
   departments?: any;
   formik?: any; // chỉ dùng trong CreatePlanDialog
-  tenMau?: string;
+  tieude?: string;
   nam?: number;
 }
 
-const StepPreview = ({
+const PlanPreview = ({
   idDonViGiao,
   idDonViNhan,
   assets,
@@ -70,7 +70,7 @@ const StepPreview = ({
   deptDevices,
   departments,
   formik,
-  tenMau,
+  tieude,
   nam,
 }: Props) => {
   // Xác định mode
@@ -155,7 +155,7 @@ const StepPreview = ({
           align="center"
           sx={{ textTransform: "uppercase", mb: 0.5 }}
         >
-          {tenMau ?? `Kế hoạch sửa chữa bảo dưỡng thiết bị năm ${nam ?? year}`}
+          {tieude || `.......`}
         </Typography>
         <Typography
           variant="h6"
@@ -441,4 +441,4 @@ const StepPreview = ({
   );
 };
 
-export default StepPreview;
+export default PlanPreview;
