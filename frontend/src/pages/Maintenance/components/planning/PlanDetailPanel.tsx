@@ -631,11 +631,23 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                           key={value}
                           label={months[value]}
                           size="small"
+                          onDelete={(e) => {
+                            e.stopPropagation();
+                            const nextMonths = selectedMonths.filter(
+                              (m) => m !== value
+                            );
+                            setSelectedMonths(nextMonths);
+                            setSelectedDeviceIds([]);
+                          }}
+                          onMouseDown={(e) => e.stopPropagation()}
                           sx={{
                             bgcolor: "#e8f5e9",
                             color: "#1FA463",
                             fontWeight: 600,
                             border: "1px solid #c8e6c9",
+                            "& .MuiChip-deleteIcon": {
+                              color: "#d32f2f",
+                            },
                           }}
                         />
                       ))}
