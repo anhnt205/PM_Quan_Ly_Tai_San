@@ -11,6 +11,7 @@ public class NghiemThuPhuongTien {
     private String congTy;
     private String tenMauBienBan;
     private String idBienPhapPhuongTien; // FK -> bienphap_phuongtien.Id
+    private String idGiamDinhPhuongTien;
     private String idTaiSan;
 
     // Thông tin chính

@@ -42,6 +42,7 @@ public class GiamDinhMayMocDTO {
     private String tenGiamDoc;
     private String soPhieuBienBan;
     private Integer daCoBienPhap;
+    private Integer daCoNghiemThu;
 
     // Danh sách chi tiết
     private List<GiamDinhMayMocChiTiet> danhSachChiTiet;

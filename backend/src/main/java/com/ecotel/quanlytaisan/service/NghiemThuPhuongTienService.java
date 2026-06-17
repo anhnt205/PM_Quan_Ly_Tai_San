@@ -43,6 +43,12 @@ public class NghiemThuPhuongTienService {
         return list;
     }
 
+    public List<NghiemThuPhuongTienDTO> findByIdGiamDinhPhuongTien(String idGiamDinhPhuongTien) {
+        List<NghiemThuPhuongTienDTO> list = nghiemThuPhuongTienDao.findByIdGiamDinhPhuongTien(idGiamDinhPhuongTien);
+        for (NghiemThuPhuongTienDTO item : list) enrichData(item);
+        return list;
+    }
+
     private void enrichData(NghiemThuPhuongTienDTO item) {
         item.setChuKyList(kyTaiLieuDao.findById(item.getId()));
         item.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId()));

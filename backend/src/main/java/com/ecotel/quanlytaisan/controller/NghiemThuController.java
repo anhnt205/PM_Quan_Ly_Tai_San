@@ -78,6 +78,17 @@ public class NghiemThuController {
         }
     }
 
+    @GetMapping("/giamdinh-maymoc/{idGiamDinhMayMoc}")
+    public ResponseEntity<ApiResponse<Object>> getByIdGiamDinhMayMoc(@PathVariable("idGiamDinhMayMoc") String idGiamDinhMayMoc) {
+        try {
+            List<NghiemThuDTO> list = service.findByIdGiamDinhMayMoc(idGiamDinhMayMoc);
+            return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", list, list.size()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
     @PostMapping
     public ResponseEntity<ApiResponse<Object>> create(@Valid @RequestBody NghiemThu entity) {
         try {

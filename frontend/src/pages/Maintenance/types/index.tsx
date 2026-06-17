@@ -346,6 +346,7 @@ export interface NghiemThuPhuongTienData {
   id?: string;
   idCongTy?: string;
   idBienPhapPhuongTien?: string;
+  idGiamDinhPhuongTien?: string;
   idTaiSan?: string;
 
   // Thông tin chính
@@ -516,6 +517,7 @@ export interface InspectionRecordData {
   tenGiamDoc?: string;
   soPhieuSuaChua?: string;
   daCoBienPhap?: number;
+  daCoNghiemThu?: number;
 
   tenMauBienBan?: string;
   congTy?: string;
@@ -568,6 +570,7 @@ export interface AcceptanceTestRecordData {
   id?: string;
   idCongTy?: string;
   idBienPhapMayMoc?: string;
+  idGiamDinhMayMoc?: string;
   soPhieu?: string;
   ngayNghiemThu?: string;
   viTri?: string;

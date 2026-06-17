@@ -86,6 +86,18 @@ public class NghiemThuPhuongTienController {
         }
     }
 
+    @GetMapping("/giamdinh-phuongtien/{idGiamDinhPhuongTien}")
+    public ResponseEntity<ApiResponse<Object>> getByIdGiamDinhPhuongTien(
+            @PathVariable("idGiamDinhPhuongTien") String idGiamDinhPhuongTien) {
+        try {
+            List<NghiemThuPhuongTienDTO> list = service.findByIdGiamDinhPhuongTien(idGiamDinhPhuongTien);
+            return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", list, list.size()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
     // ─── POST create ─────────────────────────────────────────────────────────
     @PostMapping
     public ResponseEntity<ApiResponse<Object>> create(@Valid @RequestBody NghiemThuPhuongTien entity) {

@@ -1759,14 +1759,36 @@ export const useMaintenanceAcceptanceByBienPhapQuery = (
   });
 };
 
+export const useMaintenanceAcceptanceByGiamDinhQuery = (
+  idGiamDinhMayMoc: string | undefined,
+) => {
+  return useQuery({
+    queryKey: ["nghiemThuMayMocByGiamDinh", idGiamDinhMayMoc],
+    queryFn: async () => {
+      const res = await api.get(
+        `/nghiemthu-maymoc/giamdinh-maymoc/${idGiamDinhMayMoc}`,
+      );
+      return (res.data.data || res.data).map((item: any) =>
+        AcceptanceTestAdapter(item),
+      );
+    },
+    enabled: !!idGiamDinhMayMoc,
+  });
+};
+
 export const useMaintenanceAcceptanceTestMutation = () => {
   const queryClient = useQueryClient();
   const now = dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss");
   const { user } = useSelector((state: any) => state.user);
 
   const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["inspectionByBienBan"] });
+    queryClient.invalidateQueries({ queryKey: ["repairRequestPage"] });
     queryClient.invalidateQueries({ queryKey: ["nghiemThuMayMocPage"] });
     queryClient.invalidateQueries({ queryKey: ["nghiemThuMayMocByBienPhap"] });
+    queryClient.invalidateQueries({
+      queryKey: ["nghiemThuMayMocByGiamDinh"],
+    });
     queryClient.invalidateQueries({
       queryKey: ["bienPhapMayMocByGiamDinh"],
     });
@@ -1970,6 +1992,23 @@ export const useMaintenanceAcceptanceVehicleByBienPhapQuery = (
   });
 };
 
+export const useMaintenanceAcceptanceVehicleByGiamDinhQuery = (
+  idGiamDinhPhuongTien: string | undefined,
+) => {
+  return useQuery({
+    queryKey: ["nghiemThuPhuongTienByGiamDinh", idGiamDinhPhuongTien],
+    queryFn: async () => {
+      const res = await api.get(
+        `/nghiemthu-phuongtien/giamdinh-phuongtien/${idGiamDinhPhuongTien}`,
+      );
+      return (res.data.data || res.data).map((item: any) =>
+        AcceptanceTestAdapter(item),
+      );
+    },
+    enabled: !!idGiamDinhPhuongTien,
+  });
+};
+
 export const useMaintenanceAcceptanceTestVehicleMutation = () => {
   const queryClient = useQueryClient();
   const now = dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss");
@@ -1979,6 +2018,12 @@ export const useMaintenanceAcceptanceTestVehicleMutation = () => {
     queryClient.invalidateQueries({ queryKey: ["nghiemThuPhuongTienPage"] });
     queryClient.invalidateQueries({
       queryKey: ["nghiemThuPhuongTienByBienPhap"],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["nghiemThuPhuongTienByGiamDinh"],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["vehicleInspectionByBienBan"],
     });
     queryClient.invalidateQueries({
       queryKey: ["bienPhapPhuongTienByGiamDinh"],
@@ -2205,6 +2250,9 @@ export const useMaintenanceMaterialAssessmentMutation = () => {
         queryKey: ["nghiemThuMayMocByBienPhap"],
       });
       queryClient.invalidateQueries({
+        queryKey: ["nghiemThuMayMocByGiamDinh"],
+      });
+      queryClient.invalidateQueries({
         queryKey: ["nghiemThuPhuongTienByBienPhap"],
       });
 
@@ -2247,6 +2295,9 @@ export const useMaintenanceMaterialAssessmentMutation = () => {
         queryKey: ["nghiemThuMayMocByBienPhap"],
       });
       queryClient.invalidateQueries({
+        queryKey: ["nghiemThuMayMocByGiamDinh"],
+      });
+      queryClient.invalidateQueries({
         queryKey: ["nghiemThuPhuongTienByBienPhap"],
       });
       queryClient.invalidateQueries({
@@ -2270,6 +2321,9 @@ export const useMaintenanceMaterialAssessmentMutation = () => {
       queryClient.invalidateQueries({ queryKey: ["materialAssessmentPage"] });
       queryClient.invalidateQueries({
         queryKey: ["nghiemThuMayMocByBienPhap"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["nghiemThuMayMocByGiamDinh"],
       });
       queryClient.invalidateQueries({
         queryKey: ["nghiemThuPhuongTienByBienPhap"],
@@ -2464,6 +2518,7 @@ export const useMaintenanceIncidentInspectionMutation = () => {
     onSuccess: (res: any) => {
       if (res.success || res > 0) {
         queryClient.invalidateQueries({ queryKey: ["incidentInspectionPage"] });
+        queryClient.invalidateQueries({ queryKey: ["incidentDetailByIncident"] });
         queryClient.invalidateQueries({
           queryKey: ["incidentInspectionBySuCo"],
         });

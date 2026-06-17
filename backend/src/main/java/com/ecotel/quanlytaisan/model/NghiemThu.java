@@ -10,6 +10,7 @@ public class NghiemThu {
     private String congTy;
     private String tenMauBienBan;
     private String idBienPhapMayMoc;
+    private String idGiamDinhMayMoc;
     private String soPhieu;
     private String ngayNghiemThu;
     private String viTri;
