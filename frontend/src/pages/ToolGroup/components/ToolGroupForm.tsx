@@ -61,6 +61,7 @@ export default function ToolGroupForm({
       id: initialFormData?.id ?? "",
       ten: initialFormData?.ten ?? "",
       idCongTy: initialFormData?.idCongTy ?? CongTy.CT001,
+      
     },
     validationSchema: ToolGroupValidation,
     onSubmit(values) {
