@@ -129,7 +129,7 @@ const InspectionRecordDialog = ({
       tenMauBienBan:
         mauMacDinh?.ten ??
         `GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ ĐƯA VÀO SỬA CHỮA`,
-      congTy: mauMacDinh?.congTy ?? "THAN UÔNG BÍ - TKV",
+      congTy: mauMacDinh?.congTy ?? "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
       danhSachChiTiet: [] as InspectionRecordDetailData[],
       nguoiKyList: [] as any[],
     },
@@ -254,7 +254,10 @@ const InspectionRecordDialog = ({
           initData.tenMauBienBan ??
           mauMacDinh?.ten ??
           "GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ ĐƯA VÀO SỬA CHỮA",
-        congTy: initData.congTy ?? mauMacDinh?.congTy ?? "THAN UÔNG BÍ - TKV",
+        congTy:
+          initData.congTy ??
+          mauMacDinh?.congTy ??
+          "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
         danhSachChiTiet: (initData.danhSachChiTiet ?? []).map((e: any) => ({
           ...e,
           danhSachVatTu: (e.danhSachVatTu || []).map((vt: any) => ({
@@ -335,7 +338,7 @@ const InspectionRecordDialog = ({
       tenMauBienBan:
         mauMacDinh?.ten ??
         `GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ ĐƯA VÀO SỬA CHỮA`,
-      congTy: mauMacDinh?.congTy ?? "THAN UÔNG BÍ - TKV",
+      congTy: mauMacDinh?.congTy ?? "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
       danhSachChiTiet,
       nguoiKyList: [],
     });
@@ -474,7 +477,7 @@ const InspectionRecordDialog = ({
             congTy:
               formik.values.congTy ||
               mauMacDinh?.congTy ||
-              "THAN UÔNG BÍ - TKV",
+              "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
           },
           lastMinimizedDialog: "inspection",
         },

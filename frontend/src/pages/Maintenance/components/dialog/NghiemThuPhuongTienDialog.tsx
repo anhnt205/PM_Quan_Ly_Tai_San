@@ -122,7 +122,7 @@ const NghiemThuPhuongTienDialog = ({
     share: false,
     trangThai: 0,
     tenMauBienBan: mauMacDinh?.ten || "NGHIỆM THU SẢN PHẨM",
-    congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+    congTy: mauMacDinh?.congTy || "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
     danhSachChiTiet: [],
     nguoiKyList: [],
   };
@@ -177,7 +177,10 @@ const NghiemThuPhuongTienDialog = ({
         ...initData,
         tenMauBienBan:
           initData.tenMauBienBan || mauMacDinh?.ten || "NGHIỆM THU SẢN PHẨM",
-        congTy: initData.congTy || mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+        congTy:
+          initData.congTy ||
+          mauMacDinh?.congTy ||
+          "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
         nguoiKyList: (listInfo ?? []).map((item: any) => ({
           userId: item.idNhanVien,
           userName: item.hoTen,
@@ -303,7 +306,7 @@ const NghiemThuPhuongTienDialog = ({
             congTy:
               formik.values.congTy ||
               mauMacDinh?.congTy ||
-              "THAN UÔNG BÍ - TKV",
+              "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
             danhSachChiTiet: formik.values.danhSachChiTiet,
             nguoiKyList: formik.values.nguoiKyList,
           },

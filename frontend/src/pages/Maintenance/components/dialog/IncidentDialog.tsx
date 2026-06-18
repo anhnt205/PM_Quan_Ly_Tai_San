@@ -93,7 +93,7 @@ const IncidentDialog = ({
       trangThai: 0,
       share: false,
       tenMauBienBan: mauMacDinh?.ten ?? `PHIẾU BÁO SỰ CỐ THIẾT BỊ`,
-      congTy: mauMacDinh?.congTy ?? "THAN UÔNG BÍ - TKV",
+      congTy: mauMacDinh?.congTy ?? "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
       ngayTao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       nguoiKyList: [] as any[],
       danhSachTaiSan: [] as any[],
@@ -196,7 +196,7 @@ const IncidentDialog = ({
         share: initialIncident.share ?? false,
         tenMauBienBan:
           initialIncident.tenMauBienBan ?? `PHIẾU BÁO SỰ CỐ THIẾT BỊ`,
-        congTy: initialIncident.congTy ?? "THAN UÔNG BÍ - TKV",
+        congTy: initialIncident.congTy ?? "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
         ngayTao:
           initialIncident.ngayTao ||
           dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
@@ -226,7 +226,7 @@ const IncidentDialog = ({
         trangThai: 0,
         share: false,
         tenMauBienBan: savedDraft.tenMauBienBan ?? `PHIẾU BÁO SỰ CỐ THIẾT BỊ`,
-        congTy: savedDraft.congTy ?? "THAN UÔNG BÍ - TKV",
+        congTy: savedDraft.congTy ?? "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
         ngayTao: dayjs().format("YYYY-MM-DD HH:mm:ss"),
         nguoiKyList: savedDraft.nguoiKyList,
         danhSachTaiSan: savedDraft.danhSachTaiSan ?? [],
@@ -258,7 +258,7 @@ const IncidentDialog = ({
       trangThai: 0,
       share: false,
       tenMauBienBan: mauMacDinh?.ten ?? `PHIẾU BÁO SỰ CỐ THIẾT BỊ`,
-      congTy: mauMacDinh?.congTy ?? "THAN UÔNG BÍ - TKV",
+      congTy: mauMacDinh?.congTy ?? "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
       ngayTao: dayjs().format("YYYY-MM-DD HH:mm:ss"),
       nguoiKyList: [],
       danhSachTaiSan: [],
@@ -321,7 +321,7 @@ const IncidentDialog = ({
             congTy:
               formik.values.congTy ||
               mauMacDinh?.congTy ||
-              "THAN UÔNG BÍ - TKV",
+              "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
             nguoiKyList: formik.values.nguoiKyList,
             assets,
             danhSachTaiSan: formik.values.danhSachTaiSan,

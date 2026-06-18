@@ -63,7 +63,7 @@ const BienPhapMayMocDialog = ({
   const dispatch = useAppDispatch();
 
   const savedDraft = useAppSelector((state) => {
-    const tab = state.tabs.tabs.find((t:any) => t.path === tabPath);
+    const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
     return tab?.formData?.[`bienPhapMayMocDraft_${idGiamDinhMayMoc}`] ?? null;
   });
   const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =
@@ -97,9 +97,8 @@ const BienPhapMayMocDialog = ({
     giamDocXacNhan: false,
     share: false,
     trangThai: 0,
-    tenMauBienBan:
-      mauMacDinh?.ten || "BIỆN PHÁP SỬA CHỮA MÁY MÓC THIẾT BỊ",
-    congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+    tenMauBienBan: mauMacDinh?.ten || "BIỆN PHÁP SỬA CHỮA MÁY MÓC THIẾT BỊ",
+    congTy: mauMacDinh?.congTy || "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
     nguoiKyList: [],
   };
 
@@ -159,7 +158,10 @@ const BienPhapMayMocDialog = ({
           initData?.tenMauBienBan ||
           mauMacDinh?.ten ||
           "BIỆN PHÁP SỬA CHỮA MÁY MÓC THIẾT BỊ",
-        congTy: initData?.congTy || mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+        congTy:
+          initData?.congTy ||
+          mauMacDinh?.congTy ||
+          "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
         nguoiKyList: (listInfo ?? []).map((item: any) => ({
           userId: item.idNhanVien,
           userName: item.hoTen,

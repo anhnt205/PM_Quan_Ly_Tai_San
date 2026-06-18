@@ -114,7 +114,7 @@ const IncidentInspectionDialog = ({
       trangThai: 0,
       share: false,
       tenMauBienBan: mauMacDinh?.ten ?? `KIỂM TRA SỰ CỐ THIẾT BỊ`,
-      congTy: mauMacDinh?.congTy ?? "THAN UÔNG BÍ - TKV",
+      congTy: mauMacDinh?.congTy ?? "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
       danhSachChiTiet: [] as IncidentInspectionDetailData[],
       nguoiKyList: [] as any[],
     },
@@ -228,7 +228,10 @@ const IncidentInspectionDialog = ({
           initData.tenMauBienBan ??
           mauMacDinh?.ten ??
           `KIỂM TRA SỰ CỐ THIẾT BỊ`,
-        congTy: initData.congTy ?? mauMacDinh?.congTy ?? "THAN UÔNG BÍ - TKV",
+        congTy:
+          initData.congTy ??
+          mauMacDinh?.congTy ??
+          "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
         danhSachChiTiet: (initData.danhSachChiTiet || []).map((d: any) => ({
           ...d,
           danhSachVatTu: (d.danhSachVatTu || []).map((vt: any) => ({ ...vt })),
@@ -292,7 +295,7 @@ const IncidentInspectionDialog = ({
       danhSachChiTiet,
       nguoiKyList: [],
       tenMauBienBan: mauMacDinh?.ten ?? `KIỂM TRA SỰ CỐ THIẾT BỊ`,
-      congTy: mauMacDinh?.congTy ?? "THAN UÔNG BÍ - TKV",
+      congTy: mauMacDinh?.congTy ?? "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
     });
   }, [
     open,
@@ -386,7 +389,7 @@ const IncidentInspectionDialog = ({
             congTy:
               formik.values.congTy ||
               mauMacDinh?.congTy ||
-              "THAN UÔNG BÍ - TKV",
+              "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
             danhSachChiTiet: formik.values.danhSachChiTiet,
             nguoiKyList: formik.values.nguoiKyList,
           },

@@ -124,7 +124,7 @@ const MaterialDialog = ({
       tenMauBienBan:
         mauMacDinh?.ten ||
         "ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA",
-      congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+      congTy: mauMacDinh?.congTy || "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
       danhSachChiTiet: [] as ChiTietVatTuThuHoiData[],
       nguoiKyList: [] as any[],
     },
@@ -238,7 +238,10 @@ const MaterialDialog = ({
           initData.tenMauBienBan ||
           mauMacDinh?.ten ||
           "ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA",
-        congTy: initData.congTy || mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+        congTy:
+          initData.congTy ||
+          mauMacDinh?.congTy ||
+          "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
         danhSachChiTiet: (initData.danhSachChiTiet || []).map((vt: any) => ({
           ...vt,
           action: Action.UPDATE,
@@ -324,7 +327,10 @@ const MaterialDialog = ({
           savedDraft.tenMauBienBan ||
           mauMacDinh?.ten ||
           "ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA",
-        congTy: savedDraft.congTy || mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+        congTy:
+          savedDraft.congTy ||
+          mauMacDinh?.congTy ||
+          "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
         danhSachChiTiet: savedDraft.danhSachChiTiet,
         nguoiKyList: savedDraft.nguoiKyList,
       });
@@ -356,7 +362,7 @@ const MaterialDialog = ({
       tenMauBienBan:
         mauMacDinh?.ten ||
         "ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA",
-      congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+      congTy: mauMacDinh?.congTy || "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
       danhSachChiTiet: defaultList,
       nguoiKyList: [],
     });
@@ -485,7 +491,7 @@ const MaterialDialog = ({
             congTy:
               formik.values.congTy ||
               mauMacDinh?.congTy ||
-              "THAN UÔNG BÍ - TKV",
+              "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
           },
           lastMinimizedDialog: "material",
         },

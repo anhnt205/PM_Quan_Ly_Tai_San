@@ -115,7 +115,7 @@ const BienPhapPhuongTienDialog = ({
     trangThai: 0,
     donViQuanLy: "",
     tenMauBienBan: mauMacDinh?.ten || "BIỆN PHÁP SỬA CHỮA THIẾT BỊ",
-    congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+    congTy: mauMacDinh?.congTy || "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
     danhSachChiTiet: [],
     nguoiKyList: [],
   };
@@ -174,7 +174,10 @@ const BienPhapPhuongTienDialog = ({
           initData?.tenMauBienBan ||
           mauMacDinh?.ten ||
           "BIỆN PHÁP SỬA CHỮA THIẾT BỊ",
-        congTy: initData?.congTy || mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+        congTy:
+          initData?.congTy ||
+          mauMacDinh?.congTy ||
+          "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
         nguoiKyList: (listInfo ?? []).map((item: any) => ({
           userId: item.idNhanVien,
           userName: item.hoTen,
