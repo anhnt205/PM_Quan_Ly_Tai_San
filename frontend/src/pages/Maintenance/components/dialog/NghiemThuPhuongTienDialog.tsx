@@ -227,8 +227,8 @@ const NghiemThuPhuongTienDialog = ({
               tenVatTu: item.tenVatTu || "",
               donViTinh: item.donViTinh || "Cái",
               soLuongThayThe:
-                item.soLuongSuaChua || item.soLuongThayMoi || item.soLuong || 1,
-              soLuongThuHoi: item.soLuongThayMoi || 0,
+                item.soLuongSuaChua ?? item.soLuongThayMoi ?? item.soLuong ?? 1,
+              soLuongThuHoi: item.soLuongThayMoi ?? 0,
               phanTramConLai: 0,
               bienPhapXuLy: "",
               ghiChu: "",
@@ -258,7 +258,15 @@ const NghiemThuPhuongTienDialog = ({
         }),
       ),
     });
-  }, [open, initData, bienPhap, apiUsers, apiDepartments, savedDraft]);
+  }, [
+    open,
+    initData,
+    bienPhap,
+    apiUsers,
+    apiDepartments,
+    savedDraft,
+    idGiamDinhPhuongTien,
+  ]);
 
   function handleClose() {
     dispatch(

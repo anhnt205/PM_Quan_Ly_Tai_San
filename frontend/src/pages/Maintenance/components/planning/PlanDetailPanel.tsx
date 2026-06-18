@@ -670,7 +670,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                           onDelete={(e) => {
                             e.stopPropagation();
                             const nextMonths = selectedMonths.filter(
-                              (m) => m !== value
+                              (m) => m !== value,
                             );
                             setSelectedMonths(nextMonths);
                             setSelectedDeviceIds([]);
@@ -1972,7 +1972,6 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                 setAcceptanceDialogOpen(false);
               }}
               plan={plan}
-              repairRequest={null as any}
               inspectionRecord={parentInsp}
               initData={selectedAcc}
               bienPhapId={bp ? bp.id : undefined}

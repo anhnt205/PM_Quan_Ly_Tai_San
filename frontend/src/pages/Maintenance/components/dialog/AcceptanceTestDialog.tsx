@@ -58,7 +58,7 @@ interface Props {
   open: boolean;
   onClose: () => void;
   plan: MaintenancePlanData;
-  repairRequest: MaintenanceRepairData;
+  repairRequest?: MaintenanceRepairData;
   inspectionRecord: InspectionRecordData;
   initData?: AcceptanceTestRecordData;
   bienPhapId?: string;

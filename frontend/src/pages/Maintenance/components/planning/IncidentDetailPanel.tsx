@@ -1120,7 +1120,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
 
                                                 {/* Depth 5: BB Vật tư */}
                                                 {isAccExpanded &&
-                                                  materialQualityRecords.map(
+                                                  materials.map(
                                                     (mat: any) => (
                                                       <TableRow
                                                         hover
@@ -1300,58 +1300,52 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
 
                                         {/* Depth 4: BB Vật tư (từ Nghiệm thu trực tiếp) */}
                                         {isAccExpanded &&
-                                          materialQualityRecords.map(
-                                            (mat: any) => (
-                                              <TableRow
-                                                hover
-                                                key={`incmat-direct-${mat.id}`}
-                                              >
-                                                <TableCell sx={{ pl: 14 }}>
-                                                  <Typography variant="body2">
-                                                    {mat.soPhieu}
-                                                  </Typography>
-                                                </TableCell>
-                                                <TableCell>
-                                                  <Chip
-                                                    label="BB Vật tư"
-                                                    size="small"
-                                                    color="secondary"
-                                                  />
-                                                </TableCell>
-                                                <TableCell>
-                                                  {mat.ngayDanhGia || "—"}
-                                                </TableCell>
-                                                <TableCell>
-                                                  {showStatus(
-                                                    mat.trangThai ?? 0,
-                                                  )}
-                                                </TableCell>
-                                                <TableCell align="right">
-                                                  <ActionCell
-                                                    isEdit={mat.trangThai === 0}
-                                                    onEdit={() => {
-                                                      setSelectedMaterialAssessment(
-                                                        mat,
-                                                      );
-                                                      setMaterialParentAccId(
-                                                        mat.idNghiemThu || "",
-                                                      );
-                                                    }}
-                                                    isDelete={
-                                                      mat.trangThai === 0
-                                                    }
-                                                    onDelete={() =>
-                                                      deleteMaterialAssessmentMutation.mutateAsync(
-                                                        mat.id || "",
-                                                      )
-                                                    }
-                                                    editTooltip="Chỉnh sửa BB Đánh giá Vật tư"
-                                                    editColor="secondary"
-                                                  />
-                                                </TableCell>
-                                              </TableRow>
-                                            ),
-                                          )}
+                                          materials.map((mat: any) => (
+                                            <TableRow
+                                              hover
+                                              key={`incmat-direct-${mat.id}`}
+                                            >
+                                              <TableCell sx={{ pl: 14 }}>
+                                                <Typography variant="body2">
+                                                  {mat.soPhieu}
+                                                </Typography>
+                                              </TableCell>
+                                              <TableCell>
+                                                <Chip
+                                                  label="BB Vật tư"
+                                                  size="small"
+                                                  color="secondary"
+                                                />
+                                              </TableCell>
+                                              <TableCell>
+                                                {mat.ngayDanhGia || "—"}
+                                              </TableCell>
+                                              <TableCell>
+                                                {showStatus(mat.trangThai ?? 0)}
+                                              </TableCell>
+                                              <TableCell align="right">
+                                                <ActionCell
+                                                  isEdit={mat.trangThai === 0}
+                                                  onEdit={() => {
+                                                    setSelectedMaterialAssessment(
+                                                      mat,
+                                                    );
+                                                    setMaterialParentAccId(
+                                                      mat.idNghiemThu || "",
+                                                    );
+                                                  }}
+                                                  isDelete={mat.trangThai === 0}
+                                                  onDelete={() =>
+                                                    deleteMaterialAssessmentMutation.mutateAsync(
+                                                      mat.id || "",
+                                                    )
+                                                  }
+                                                  editTooltip="Chỉnh sửa BB Đánh giá Vật tư"
+                                                  editColor="secondary"
+                                                />
+                                              </TableCell>
+                                            </TableRow>
+                                          ))}
                                       </React.Fragment>
                                     );
                                   })}

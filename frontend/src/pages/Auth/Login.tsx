@@ -164,7 +164,7 @@ export default function Login() {
       </Box>
       <Box sx={{ position: "absolute", bottom: 10, left: 10, index: 999 }}>
         <Typography sx={{ color: "white" }}>
-          quanlytaisan-Version:dev_2.0_05/04/2026
+          quanlytaisan-Version:dev_3.0_18/06/2026
         </Typography>
       </Box>
     </Box>
