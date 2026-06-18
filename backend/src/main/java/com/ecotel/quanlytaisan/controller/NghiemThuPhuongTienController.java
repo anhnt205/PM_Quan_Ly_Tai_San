@@ -7,11 +7,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/nghiemthu-phuongtien")
 public class NghiemThuPhuongTienController {
@@ -83,6 +85,19 @@ public class NghiemThuPhuongTienController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
+    @GetMapping("/giamdinh-phuongtien/{idGiamDinhPhuongTien}")
+    public ResponseEntity<ApiResponse<Object>> getByIdGiamDinhPhuongTien(
+            @PathVariable("idGiamDinhPhuongTien") String idGiamDinhPhuongTien) {
+        try {
+            List<NghiemThuPhuongTienDTO> list = service.findByIdGiamDinhPhuongTien(idGiamDinhPhuongTien);
+            return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", list, list.size()));
+        } catch (Exception e) {
+            log.error("Lỗi hệ thống khi xử lý yêu cầu", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống, vui lòng thử lại sau.", null));
         }
     }
 

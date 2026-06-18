@@ -90,7 +90,7 @@ const InspectionRecordVehicleDialog = ({
   const idBienBan = incidentInspection?.id || repairRequest?.id || "";
 
   const savedDraft = useAppSelector((state) => {
-    const tab = state.tabs.tabs.find((t) => t.path === tabPath);
+    const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
     return tab?.formData?.[`inspectionVehicleDraft_${idBienBan}`] ?? null;
   });
 

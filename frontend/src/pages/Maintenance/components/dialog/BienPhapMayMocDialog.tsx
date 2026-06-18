@@ -63,7 +63,7 @@ const BienPhapMayMocDialog = ({
   const dispatch = useAppDispatch();
 
   const savedDraft = useAppSelector((state) => {
-    const tab = state.tabs.tabs.find((t) => t.path === tabPath);
+    const tab = state.tabs.tabs.find((t:any) => t.path === tabPath);
     return tab?.formData?.[`bienPhapMayMocDraft_${idGiamDinhMayMoc}`] ?? null;
   });
   const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =

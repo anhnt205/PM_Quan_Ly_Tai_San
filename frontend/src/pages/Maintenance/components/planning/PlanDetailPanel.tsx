@@ -60,6 +60,8 @@ import {
   useMaintenanceInspectionByBienBanQuery,
   useMaintenanceVehicleInspectionByBienBanQuery,
   useMaintenanceVehicleInspectionMutation,
+  useMaintenanceAcceptanceByGiamDinhQuery,
+  useMaintenanceAcceptanceVehicleByGiamDinhQuery,
 } from "../../mutation";
 import {
   useBienPhapMayMocByGiamDinhQuery,
@@ -174,6 +176,10 @@ interface ActionCellProps {
   editColor?: "primary" | "success" | "warning" | "secondary" | "error";
   onDelete?: () => void;
   isDelete?: boolean;
+  onAdd2?: () => void;
+  isAdd2?: boolean;
+  addTooltip2?: string;
+  addColor2?: "primary" | "success" | "warning" | "secondary" | "error";
 }
 
 const ActionCell = ({
@@ -187,6 +193,10 @@ const ActionCell = ({
   editColor,
   onDelete,
   isDelete,
+  onAdd2,
+  isAdd2,
+  addTooltip2,
+  addColor2 = "warning",
 }: ActionCellProps) => (
   <Box
     sx={{
@@ -221,6 +231,21 @@ const ActionCell = ({
           onClick={(e) => {
             e.stopPropagation();
             onAdd();
+          }}
+        >
+          <AddCircleOutlineIcon sx={{ fontSize: 16 }} />
+        </IconButton>
+      </Tooltip>
+    )}
+    {onAdd2 && (
+      <Tooltip title={addTooltip2} placement="top">
+        <IconButton
+          size="small"
+          disabled={!isAdd2}
+          color={addColor2}
+          onClick={(e) => {
+            e.stopPropagation();
+            onAdd2();
           }}
         >
           <AddCircleOutlineIcon sx={{ fontSize: 16 }} />
@@ -305,11 +330,11 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
   const tabPath = location.pathname;
 
   const lastMinimizedDialog = useAppSelector((state) => {
-    const tab = state.tabs.tabs.find((t) => t.path === tabPath);
+    const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
     return tab?.formData?.lastMinimizedDialog ?? null;
   });
   const drafts = useAppSelector((state) => {
-    const t = state.tabs.tabs.find((t) => t.path === tabPath);
+    const t = state.tabs.tabs.find((t: any) => t.path === tabPath);
     const formData = t?.formData ?? {};
     const prefixes = [
       "bienPhapMayMocDraft_",
@@ -460,10 +485,21 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
   const { data: acceptanceTestVehicleRecords = [] } =
     useMaintenanceAcceptanceVehicleByBienPhapQuery(expandedBienPhap || "");
 
+  // Nghiệm thu theo giám định đang expand
+  const { data: acceptanceTestByGiamDinhRecords = [] } =
+    useMaintenanceAcceptanceByGiamDinhQuery(expandedInspections || "");
+
+  // Nghiệm thu phương tiện theo giám định đang expand
+  const { data: acceptanceTestVehicleByGiamDinhRecords = [] } =
+    useMaintenanceAcceptanceVehicleByGiamDinhQuery(expandedInspections || "");
+
   const acceptanceRecords =
     plan?.nhomTaiSan === AssetGroup.MAYMOC
-      ? acceptanceTestRecords
-      : acceptanceTestVehicleRecords;
+      ? [...acceptanceTestRecords, ...acceptanceTestByGiamDinhRecords]
+      : [
+          ...acceptanceTestVehicleRecords,
+          ...acceptanceTestVehicleByGiamDinhRecords,
+        ];
 
   const { data: materialQualityRecords = [] } =
     useMaintenanceMaterialAssessmentByInspectionQuery(
@@ -634,7 +670,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                           onDelete={(e) => {
                             e.stopPropagation();
                             const nextMonths = selectedMonths.filter(
-                              (m) => m !== value
+                              (m) => m !== value,
                             );
                             setSelectedMonths(nextMonths);
                             setSelectedDeviceIds([]);
@@ -767,9 +803,13 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
               </TableHead>
               <TableBody>
                 {mergedDevices?.map((device: any, idx: number) => {
-                  const statusVal = selectedMonths.length === 1
-                    ? Number(device.monthlyData[selectedMonths[0]]?.daCoLenhSuaChua || 0)
-                    : 0;
+                  const statusVal =
+                    selectedMonths.length === 1
+                      ? Number(
+                          device.monthlyData[selectedMonths[0]]
+                            ?.daCoLenhSuaChua || 0,
+                        )
+                      : 0;
                   const isAlreadyRequested = statusVal > 0;
                   return (
                     <TableRow
@@ -836,19 +876,39 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                       {selectedMonths.length === 1 && (
                         <TableCell>
                           {statusVal === 1 && (
-                            <Chip label="Đã lập lệnh" size="small" color="info" />
+                            <Chip
+                              label="Đã lập lệnh"
+                              size="small"
+                              color="info"
+                            />
                           )}
                           {statusVal === 2 && (
-                            <Chip label="Đã giám định" size="small" color="warning" />
+                            <Chip
+                              label="Đã giám định"
+                              size="small"
+                              color="warning"
+                            />
                           )}
                           {statusVal === 3 && (
-                            <Chip label="Đã lên biện pháp" size="small" color="error" />
+                            <Chip
+                              label="Đã lên biện pháp"
+                              size="small"
+                              color="error"
+                            />
                           )}
                           {statusVal === 4 && (
-                            <Chip label="Đã nghiệm thu" size="small" color="success" />
+                            <Chip
+                              label="Đã nghiệm thu"
+                              size="small"
+                              color="success"
+                            />
                           )}
                           {statusVal === 5 && (
-                            <Chip label="Đã đánh giá" size="small" color="primary" />
+                            <Chip
+                              label="Đã đánh giá"
+                              size="small"
+                              color="primary"
+                            />
                           )}
                           {statusVal === 0 && (
                             <Chip
@@ -1046,7 +1106,8 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                           isLast={isInspLast}
                                         />
                                       </Box>
-                                      {insp.daCoBienPhap === 1 && (
+                                      {((insp.daCoBienPhap ?? 0) > 0 ||
+                                        (insp.daCoNghiemThu ?? 0) > 0) && (
                                         <IconButton
                                           size="small"
                                           sx={{
@@ -1070,7 +1131,11 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                       <Typography
                                         variant="body2"
                                         sx={{
-                                          ml: `${CONNECTOR_WIDTH * 2 + 8}px`,
+                                          ml:
+                                            (insp.daCoBienPhap ?? 0) > 0 ||
+                                            (insp.daCoNghiemThu ?? 0) > 0
+                                              ? `${CONNECTOR_WIDTH * 2 + 8}px`
+                                              : `${CONNECTOR_WIDTH * 2 + 36}px`,
                                         }}
                                       >
                                         {insp.soPhieu}
@@ -1091,8 +1156,11 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                     <TableCell align="right">
                                       <ActionCell
                                         isAdd={
-                                          insp?.trangThai === 3 &&
-                                          insp.daCoBienPhap !== 1
+                                          insp.trangThai === 3 &&
+                                          (!insp.daCoBienPhap ||
+                                            insp.daCoBienPhap === 0) &&
+                                          (!insp.daCoNghiemThu ||
+                                            insp.daCoNghiemThu === 0)
                                         }
                                         onAdd={() => {
                                           setExpandedInspections(
@@ -1121,6 +1189,24 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                         editColor="primary"
                                         addTooltip="Tạo Biện pháp sửa chữa"
                                         addColor="error"
+                                        onAdd2={() => {
+                                          setExpandedInspections(
+                                            insp.id ?? null,
+                                          );
+                                          setAcceptanceParentBienPhapId(
+                                            insp.id,
+                                          );
+                                          setAcceptanceDialogOpen(true);
+                                        }}
+                                        isAdd2={
+                                          insp.trangThai === 3 &&
+                                          (!insp.daCoBienPhap ||
+                                            insp.daCoBienPhap === 0) &&
+                                          (!insp.daCoNghiemThu ||
+                                            insp.daCoNghiemThu === 0)
+                                        }
+                                        addTooltip2="Tạo BB Nghiệm thu"
+                                        addColor2="warning"
                                       />
                                     </TableCell>
                                   </TableRow>
@@ -1501,6 +1587,242 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                         </React.Fragment>
                                       );
                                     })}
+
+                                  {/* Depth 3 (Parallel): BB Nghiệm thu trực tiếp từ Giám định */}
+                                  {expandedInspections === insp.id &&
+                                    acceptanceRecords
+                                      .filter(
+                                        (acc: any) =>
+                                          !acc.idBienPhapMayMoc &&
+                                          !acc.idBienPhapPhuongTien &&
+                                          (acc.inspectionRecordId === insp.id ||
+                                            acc.idGiamDinhMayMoc === insp.id ||
+                                            acc.idGiamDinhPhuongTien ===
+                                              insp.id),
+                                      )
+                                      .map(
+                                        (
+                                          acc: any,
+                                          accIdx: number,
+                                          arr: any[],
+                                        ) => {
+                                          const materials =
+                                            materialQualityRecords.filter(
+                                              (m: any) =>
+                                                m.idNghiemThu === acc.id,
+                                            );
+                                          const isAccExpanded =
+                                            expandedAcceptances ===
+                                            (acc.id ?? "");
+                                          const isAccLast =
+                                            accIdx === arr.length - 1 &&
+                                            bienPhapRecords.length === 0;
+
+                                          return (
+                                            <React.Fragment
+                                              key={`incacc-direct-${acc.id}`}
+                                            >
+                                              <TableRow hover>
+                                                <TableCell
+                                                  sx={{
+                                                    pl: 2,
+                                                    position: "relative",
+                                                    height: ROW_H,
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                  }}
+                                                >
+                                                  <Box
+                                                    sx={{
+                                                      position: "absolute",
+                                                      left: 0,
+                                                      top: 0,
+                                                      height: "100%",
+                                                      display: "flex",
+                                                      alignItems: "center",
+                                                    }}
+                                                  >
+                                                    <TreeConnector
+                                                      depth={3}
+                                                      isLast={isAccLast}
+                                                    />
+                                                  </Box>
+                                                  {acc.daCoDanhGiaVatTu ===
+                                                    1 && (
+                                                    <IconButton
+                                                      size="small"
+                                                      sx={{
+                                                        ml: `${CONNECTOR_WIDTH * 3 - 6}px`,
+                                                      }}
+                                                      onClick={() =>
+                                                        toggle(
+                                                          expandedAcceptances,
+                                                          acc.id,
+                                                          setExpandedAcceptances,
+                                                        )
+                                                      }
+                                                    >
+                                                      {isAccExpanded ? (
+                                                        <KeyboardArrowUpIcon />
+                                                      ) : (
+                                                        <KeyboardArrowDownIcon />
+                                                      )}
+                                                    </IconButton>
+                                                  )}
+                                                  <Typography
+                                                    variant="body2"
+                                                    sx={{
+                                                      ml:
+                                                        acc.daCoDanhGiaVatTu ===
+                                                        1
+                                                          ? `${CONNECTOR_WIDTH * 3 + 8}px`
+                                                          : `${CONNECTOR_WIDTH * 3 + 36}px`,
+                                                    }}
+                                                  >
+                                                    {acc.soPhieu}
+                                                  </Typography>
+                                                </TableCell>
+                                                <TableCell>
+                                                  <Chip
+                                                    label="BB Nghiệm thu"
+                                                    size="small"
+                                                    color="warning"
+                                                    sx={{ color: "#fff" }}
+                                                  />
+                                                </TableCell>
+                                                <TableCell>
+                                                  {acc.ngayTao}
+                                                </TableCell>
+                                                <TableCell>
+                                                  {showStatus(
+                                                    acc.trangThai ?? 0,
+                                                  )}
+                                                </TableCell>
+                                                <TableCell align="right">
+                                                  <ActionCell
+                                                    onAdd={() => {
+                                                      setMaterialParentAccId(
+                                                        acc.id ?? "",
+                                                      );
+                                                    }}
+                                                    isAdd={
+                                                      acc.trangThai === 3 &&
+                                                      acc.daCoDanhGiaVatTu !== 1
+                                                    }
+                                                    addTooltip="Tạo BB Vật tư"
+                                                    addColor="secondary"
+                                                    isEdit={acc.trangThai === 0}
+                                                    onEdit={() => {
+                                                      setSelectedAcc(acc);
+                                                      setAcceptanceParentBienPhapId(
+                                                        acc.inspectionRecordId ||
+                                                          acc.idGiamDinhMayMoc ||
+                                                          acc.idGiamDinhPhuongTien,
+                                                      );
+                                                      setAcceptanceDialogOpen(
+                                                        true,
+                                                      );
+                                                    }}
+                                                    editTooltip="Chỉnh sửa BB Nghiệm thu"
+                                                    editColor="primary"
+                                                    isDelete={
+                                                      acc.trangThai === 0
+                                                    }
+                                                    onDelete={() =>
+                                                      (plan?.nhomTaiSan ===
+                                                      AssetGroup.MAYMOC
+                                                        ? deleteAcceptanceMutation
+                                                        : deleteAcceptanceVehicleMutation
+                                                      ).mutateAsync(acc.id)
+                                                    }
+                                                  />
+                                                </TableCell>
+                                              </TableRow>
+
+                                              {/* Depth 4: BB Vật tư */}
+                                              {isAccExpanded &&
+                                                materials.map((mat: any) => (
+                                                  <TableRow hover key={mat.id}>
+                                                    <TableCell
+                                                      sx={{
+                                                        pl: 2,
+                                                        position: "relative",
+                                                        height: ROW_H,
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                      }}
+                                                    >
+                                                      <Box
+                                                        sx={{
+                                                          position: "absolute",
+                                                          left: 0,
+                                                          top: 0,
+                                                          height: "100%",
+                                                          display: "flex",
+                                                          alignItems: "center",
+                                                        }}
+                                                      >
+                                                        <TreeConnector
+                                                          depth={4}
+                                                          isLast={false}
+                                                        />
+                                                      </Box>
+                                                      <Typography
+                                                        variant="body2"
+                                                        sx={{
+                                                          ml: `${CONNECTOR_WIDTH * 4 + 36}px`,
+                                                        }}
+                                                      >
+                                                        {mat.soPhieu}
+                                                      </Typography>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                      <Chip
+                                                        label="BB Vật tư"
+                                                        size="small"
+                                                        color="secondary"
+                                                      />
+                                                    </TableCell>
+                                                    <TableCell>
+                                                      {mat.ngayDanhGia || "—"}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                      {showStatus(
+                                                        mat.trangThai ?? 0,
+                                                      )}
+                                                    </TableCell>
+                                                    <TableCell align="right">
+                                                      <ActionCell
+                                                        isEdit={
+                                                          mat.trangThai === 0
+                                                        }
+                                                        onEdit={() => {
+                                                          setSelectedMaterialAssessment(
+                                                            mat,
+                                                          );
+                                                          setMaterialParentAccId(
+                                                            mat.idNghiemThu ||
+                                                              "",
+                                                          );
+                                                        }}
+                                                        isDelete={
+                                                          mat.trangThai === 0
+                                                        }
+                                                        onDelete={() =>
+                                                          deleteMaterialAssessmentMutation.mutateAsync(
+                                                            mat.id || "",
+                                                          )
+                                                        }
+                                                        editTooltip="Chỉnh sửa BB Đánh giá Vật tư"
+                                                        editColor="secondary"
+                                                      />
+                                                    </TableCell>
+                                                  </TableRow>
+                                                ))}
+                                            </React.Fragment>
+                                          );
+                                        },
+                                      )}
                                 </React.Fragment>
                               );
                             },
@@ -1606,14 +1928,12 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
       {acceptanceDialogOpen &&
         (() => {
           if (plan?.nhomTaiSan === AssetGroup.PHUONGTIEN) {
-            const bp = bienPhapRecords.find(
-              (r: any) =>
-                r.id ===
-                (selectedAcc
-                  ? selectedAcc.idBienPhapPhuongTien ||
-                    selectedAcc.idGiamDinhPhuongTien
-                  : acceptanceParentBienPhapId),
-            );
+            const targetId = selectedAcc
+              ? selectedAcc.idBienPhapPhuongTien ||
+                selectedAcc.idGiamDinhPhuongTien
+              : acceptanceParentBienPhapId;
+            const bp = bienPhapRecords.find((r: any) => r.id === targetId);
+            const insp = inspectionRecords.find((r: any) => r.id === targetId);
             return (
               <NghiemThuPhuongTienDialog
                 open={true}
@@ -1622,13 +1942,8 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                   setAcceptanceParentBienPhapId(null);
                   setSelectedAcc(null);
                 }}
-                idBienPhapPhuongTien={
-                  selectedAcc
-                    ? selectedAcc.idBienPhapPhuongTien ||
-                      selectedAcc.idGiamDinhPhuongTien ||
-                      ""
-                    : (acceptanceParentBienPhapId ?? "")
-                }
+                idBienPhapPhuongTien={bp ? bp.id : ""}
+                idGiamDinhPhuongTien={insp ? insp.id : ""}
                 idTaiSan={bp?.idTaiSan}
                 tenTaiSan={bp?.tenTaiSan}
                 soBienBanBienPhap={bp?.soPhieu || bp?.soBienBan}
@@ -1637,64 +1952,35 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
               />
             );
           }
-          if (selectedAcc) {
-            const bp = bienPhapRecords.find(
-              (r: any) => r.id === selectedAcc.idBienPhapMayMoc,
-            );
-            const parentInsp = bp
-              ? inspectionRecords.find((r: any) => r.id === bp.idGiamDinhMayMoc)
-              : null;
-            const parentReq = parentInsp
-              ? maintenanceRepairByPlan.find(
-                  (rr: MaintenanceRepairData) => rr.id === parentInsp.idSuaChua,
-                )
-              : null;
-            return (
-              <AcceptanceTestDialog
-                open={true}
-                onClose={() => {
-                  setAcceptanceDialogOpen(false);
-                  setAcceptanceParentBienPhapId(null);
-                  setSelectedAcc(null);
-                }}
-                plan={plan}
-                repairRequest={parentReq!}
-                inspectionRecord={parentInsp!}
-                initData={selectedAcc}
-                bienPhapId={bp?.id}
-              />
-            );
-          } else {
-            const bp = bienPhapRecords.find(
-              (r: any) => r.id === acceptanceParentBienPhapId,
-            );
-            const parentInsp = bp
-              ? inspectionRecords.find((r: any) => r.id === bp.idGiamDinhMayMoc)
-              : null;
-            const parentReq = parentInsp
-              ? maintenanceRepairByPlan.find(
-                  (rr: MaintenanceRepairData) => rr.id === parentInsp.idSuaChua,
-                )
-              : null;
-            return parentInsp ? (
-              <AcceptanceTestDialog
-                open={true}
-                onClose={() => {
-                  setAcceptanceDialogOpen(false);
-                  setAcceptanceParentBienPhapId(null);
-                }}
-                plan={plan}
-                repairRequest={parentReq!}
-                inspectionRecord={parentInsp}
-                bienPhapId={acceptanceParentBienPhapId || undefined}
-              />
-            ) : null;
-          }
+          const targetBpId = selectedAcc
+            ? selectedAcc.idBienPhapMayMoc || selectedAcc.idGiamDinhMayMoc
+            : acceptanceParentBienPhapId;
+          const bp = bienPhapRecords.find((r: any) => r.id === targetBpId);
+          const directInsp = inspectionRecords.find(
+            (r: any) => r.id === targetBpId,
+          );
+          const parentInsp = bp
+            ? inspectionRecords.find((r: any) => r.id === bp.idGiamDinhMayMoc)
+            : directInsp;
+
+          return parentInsp ? (
+            <AcceptanceTestDialog
+              open={true}
+              onClose={() => {
+                setAcceptanceParentBienPhapId(null);
+                setSelectedAcc(null);
+                setAcceptanceDialogOpen(false);
+              }}
+              plan={plan}
+              inspectionRecord={parentInsp}
+              initData={selectedAcc}
+              bienPhapId={bp ? bp.id : undefined}
+            />
+          ) : null;
         })()}
 
       {materialParentAccId &&
         (() => {
-          console.log(materialParentAccId);
           const parentAcc = acceptanceRecords.find(
             (a: any) => a.id === materialParentAccId,
           );

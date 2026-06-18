@@ -61,8 +61,8 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
                 EXISTS (
                     SELECT 1 FROM danhgia_vattu dg
                     INNER JOIN nghiemthu_maymoc ntmm ON dg.IdNghiemThu = ntmm.Id
-                    INNER JOIN bienphap_maymoc bpm ON ntmm.IdBienPhapMayMoc = bpm.Id
-                    INNER JOIN giamdinh_maymoc gdmm ON bpm.IdGiamDinhMayMoc = gdmm.Id
+                    LEFT JOIN bienphap_maymoc bpm ON ntmm.IdBienPhapMayMoc = bpm.Id
+                                    INNER JOIN giamdinh_maymoc gdmm ON (bpm.IdGiamDinhMayMoc = gdmm.Id OR ntmm.IdGiamDinhMayMoc = gdmm.Id)
                     INNER JOIN giamdinh_maymoc_chitiet gdmmct ON gdmm.Id = gdmmct.IdGiamDinhMayMoc
                     INNER JOIN suachua_chitiet scct ON gdmmct.IdBienBanChiTiet = scct.Id
                     INNER JOIN suachua sc ON scct.IdSuaChua = sc.Id
@@ -73,8 +73,8 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
             subQuery4 = """
                 EXISTS (
                     SELECT 1 FROM nghiemthu_maymoc ntmm
-                    INNER JOIN bienphap_maymoc bpm ON ntmm.IdBienPhapMayMoc = bpm.Id
-                    INNER JOIN giamdinh_maymoc gdmm ON bpm.IdGiamDinhMayMoc = gdmm.Id
+                    LEFT JOIN bienphap_maymoc bpm ON ntmm.IdBienPhapMayMoc = bpm.Id
+                                    INNER JOIN giamdinh_maymoc gdmm ON (bpm.IdGiamDinhMayMoc = gdmm.Id OR ntmm.IdGiamDinhMayMoc = gdmm.Id)
                     INNER JOIN giamdinh_maymoc_chitiet gdmmct ON gdmm.Id = gdmmct.IdGiamDinhMayMoc
                     INNER JOIN suachua_chitiet scct ON gdmmct.IdBienBanChiTiet = scct.Id
                     INNER JOIN suachua sc ON scct.IdSuaChua = sc.Id
@@ -108,8 +108,8 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
                 EXISTS (
                     SELECT 1 FROM danhgia_vattu dg
                     INNER JOIN nghiemthu_phuongtien ntpt ON dg.IdNghiemThu = ntpt.Id
-                    INNER JOIN bienphap_phuongtien bpp ON ntpt.IdBienPhapPhuongTien = bpp.Id
-                    INNER JOIN giamdinh_phuongtien gdpt ON bpp.IdGiamDinhPhuongTien = gdpt.Id
+                    LEFT JOIN bienphap_phuongtien bpp ON ntpt.IdBienPhapPhuongTien = bpp.Id
+                                    INNER JOIN giamdinh_phuongtien gdpt ON (bpp.IdGiamDinhPhuongTien = gdpt.Id OR ntpt.IdGiamDinhPhuongTien = gdpt.Id)
                     INNER JOIN suachua sc ON gdpt.IdBienBan = sc.Id AND gdpt.LoaiBienBan = 'sua_chua'
                     INNER JOIN suachua_chitiet scct ON scct.IdSuaChua = sc.Id
                     WHERE scct.IdKeHoachChiTiet = kscctt.Id
@@ -119,8 +119,8 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
             subQuery4 = """
                 EXISTS (
                     SELECT 1 FROM nghiemthu_phuongtien ntpt
-                    INNER JOIN bienphap_phuongtien bpp ON ntpt.IdBienPhapPhuongTien = bpp.Id
-                    INNER JOIN giamdinh_phuongtien gdpt ON bpp.IdGiamDinhPhuongTien = gdpt.Id
+                    LEFT JOIN bienphap_phuongtien bpp ON ntpt.IdBienPhapPhuongTien = bpp.Id
+                                    INNER JOIN giamdinh_phuongtien gdpt ON (bpp.IdGiamDinhPhuongTien = gdpt.Id OR ntpt.IdGiamDinhPhuongTien = gdpt.Id)
                     INNER JOIN suachua sc ON gdpt.IdBienBan = sc.Id AND gdpt.LoaiBienBan = 'sua_chua'
                     INNER JOIN suachua_chitiet scct ON scct.IdSuaChua = sc.Id
                     WHERE scct.IdKeHoachChiTiet = kscctt.Id

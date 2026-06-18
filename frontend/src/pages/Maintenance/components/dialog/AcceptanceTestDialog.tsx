@@ -58,7 +58,7 @@ interface Props {
   open: boolean;
   onClose: () => void;
   plan: MaintenancePlanData;
-  repairRequest: MaintenanceRepairData;
+  repairRequest?: MaintenanceRepairData;
   inspectionRecord: InspectionRecordData;
   initData?: AcceptanceTestRecordData;
   bienPhapId?: string;
@@ -82,7 +82,7 @@ const AcceptanceTestDialog = ({
   const dispatch = useAppDispatch();
 
   const savedDraft = useAppSelector((state) => {
-    const tab = state.tabs.tabs.find((t) => t.path === tabPath);
+    const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
     return (
       tab?.formData?.[
         `acceptanceDraft_${bienPhapId || inspectionRecord?.id}`
@@ -109,7 +109,8 @@ const AcceptanceTestDialog = ({
     initialValues: {
       id: "",
       idCongTy: CongTy.CT001,
-      idBienPhapMayMoc: bienPhapId || inspectionRecord?.id || "",
+      idBienPhapMayMoc: bienPhapId || "",
+      idGiamDinhMayMoc: inspectionRecord?.id || "",
       soPhieu: "",
       ngayNghiemThu: dayjs().format("YYYY-MM-DD"),
       viTri: "",
@@ -203,6 +204,7 @@ const AcceptanceTestDialog = ({
         id: initData.id ?? "",
         idCongTy: initData.idCongTy ?? CongTy.CT001,
         idBienPhapMayMoc: initData.idBienPhapMayMoc ?? "",
+        idGiamDinhMayMoc: initData.idGiamDinhMayMoc ?? "",
         soPhieu: initData.soPhieu ?? "",
         ngayNghiemThu: initData.ngayNghiemThu ?? "",
         viTri: initData.viTri ?? "",
@@ -235,7 +237,6 @@ const AcceptanceTestDialog = ({
       });
       return;
     }
-
     // Tính danhSachTaiSan từ inspectionRecord — luôn làm trước
     const list: AcceptanceTestRecordAssetData[] = [];
     (inspectionRecord?.danhSachChiTiet || []).forEach(
@@ -294,7 +295,8 @@ const AcceptanceTestDialog = ({
       formik.setValues({
         id: "",
         idCongTy: CongTy.CT001,
-        idBienPhapMayMoc: bienPhapId || inspectionRecord?.id || "",
+        idBienPhapMayMoc: bienPhapId || "",
+        idGiamDinhMayMoc: inspectionRecord?.id || "",
         idNguoiLap: "",
         nguoiLapXacNhan: false,
         idGiamDoc: "",
@@ -320,7 +322,8 @@ const AcceptanceTestDialog = ({
     formik.setValues({
       id: "",
       idCongTy: CongTy.CT001,
-      idBienPhapMayMoc: bienPhapId || inspectionRecord?.id || "",
+      idBienPhapMayMoc: bienPhapId || "",
+      idGiamDinhMayMoc: inspectionRecord?.id || "",
       soPhieu: `BB-NT-${repairRequest?.id ?? ""}`,
       ngayNghiemThu: dayjs().format("YYYY-MM-DD"),
       viTri: "",
@@ -410,6 +413,7 @@ const AcceptanceTestDialog = ({
         data: {
           [`acceptanceDraft_${bienPhapId || inspectionRecord?.id}`]: {
             idBienPhapMayMoc: formik.values.idBienPhapMayMoc,
+            idGiamDinhMayMoc: formik.values.idGiamDinhMayMoc,
             idGiamDinh: inspectionRecord?.id,
             acceptanceParentBienPhapId: bienPhapId || inspectionRecord?.id,
             soPhieu: formik.values.soPhieu,

@@ -49,6 +49,14 @@ public class NghiemThuService {
         return list;
     }
 
+    public List<NghiemThuDTO> findByIdGiamDinhMayMoc(String idGiamDinhMayMoc) {
+        List<NghiemThuDTO> list = nghiemThuDao.findByIdGiamDinhMayMoc(idGiamDinhMayMoc);
+        for (NghiemThuDTO item : list) {
+            enrichData(item);
+        }
+        return list;
+    }
+
     private void enrichData(NghiemThuDTO item) {
         item.setChuKyList(kyTaiLieuDao.findById(item.getId()));
         item.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId()));

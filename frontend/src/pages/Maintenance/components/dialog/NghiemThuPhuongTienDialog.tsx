@@ -36,6 +36,7 @@ import { generateCode } from "../../../../utils/helpers";
 import { PlanSigner } from "../../../../mockdata/mockPlans";
 import { listSigneInfo } from "../../config";
 import dayjs from "dayjs";
+import api from "../../../../config/api.config";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
 import { useAllToolDetailQuery } from "../../../ToolManager/Mutation";
 import FieldInput from "../../../../components/TextField/FieldInput";
@@ -54,6 +55,7 @@ interface Props {
   open: boolean;
   onClose: () => void;
   idBienPhapPhuongTien: string;
+  idGiamDinhPhuongTien?: string;
   idTaiSan?: string;
   tenTaiSan?: string;
   soBienBanBienPhap?: string;
@@ -65,6 +67,7 @@ const NghiemThuPhuongTienDialog = ({
   open,
   onClose,
   idBienPhapPhuongTien,
+  idGiamDinhPhuongTien,
   idTaiSan,
   tenTaiSan,
   soBienBanBienPhap,
@@ -83,12 +86,12 @@ const NghiemThuPhuongTienDialog = ({
   const tabPath = location.pathname;
   const dispatch = useAppDispatch();
 
+  const draftId = idBienPhapPhuongTien || idGiamDinhPhuongTien || "new";
   const savedDraft = useAppSelector((state) => {
-    const tab = state.tabs.tabs.find((t) => t.path === tabPath);
-    return (
-      tab?.formData?.[`acceptanceVehicleDraft_${idBienPhapPhuongTien}`] ?? null
-    );
+    const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
+    return tab?.formData?.[`acceptanceVehicleDraft_${draftId}`] ?? null;
   });
+  const [parentInspection, setParentInspection] = useState<any>(null);
 
   const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =
     useBienBanSuaChuaPageQuery(
@@ -104,6 +107,7 @@ const NghiemThuPhuongTienDialog = ({
     id: "",
     idCongTy: CongTy.CT001,
     idBienPhapPhuongTien: idBienPhapPhuongTien || "",
+    idGiamDinhPhuongTien: idGiamDinhPhuongTien || "",
     idTaiSan: idTaiSan || "",
     soPhieu: "",
     noiDung: "",
@@ -188,6 +192,7 @@ const NghiemThuPhuongTienDialog = ({
       formik.setValues({
         ...initialValues,
         idBienPhapPhuongTien: bienPhap?.id || "",
+        idGiamDinhPhuongTien: idGiamDinhPhuongTien || "",
         idTaiSan: bienPhap?.idTaiSan || "",
         soPhieu: savedDraft.soPhieu,
         noiDung: savedDraft.noiDung,
@@ -203,9 +208,42 @@ const NghiemThuPhuongTienDialog = ({
       return;
     }
 
+    if (!bienPhap && idGiamDinhPhuongTien) {
+      formik.setValues({ ...initialValues, idGiamDinhPhuongTien });
+      api
+        .get(`/giamdinh-phuongtien/${idGiamDinhPhuongTien}`)
+        .then((res) => {
+          const data = res.data?.data || res.data;
+          setParentInspection(data);
+          formik.setFieldValue("idTaiSan", data.idTaiSan || "");
+          formik.setFieldValue("tenTaiSan", data.tenTaiSan || "");
+          formik.setFieldValue("soPhieu", `NT-${data.soPhieu || ""}`);
+          if (data.danhSachChiTiet) {
+            const mappedDetails = data.danhSachChiTiet.map((item: any) => ({
+              id: "",
+              idNghiemThuPhuongTien: "",
+              idVatTu: item.idVatTu || "",
+              idChiTietVatTu: item.idChiTietVatTu || "",
+              tenVatTu: item.tenVatTu || "",
+              donViTinh: item.donViTinh || "Cái",
+              soLuongThayThe:
+                item.soLuongSuaChua ?? item.soLuongThayMoi ?? item.soLuong ?? 1,
+              soLuongThuHoi: item.soLuongThayMoi ?? 0,
+              phanTramConLai: 0,
+              bienPhapXuLy: "",
+              ghiChu: "",
+            }));
+            formik.setFieldValue("danhSachChiTiet", mappedDetails);
+          }
+        })
+        .catch((err) => console.error(err));
+      return;
+    }
+
     formik.setValues({
       ...initialValues,
       idBienPhapPhuongTien: bienPhap?.id || "",
+      idGiamDinhPhuongTien: idGiamDinhPhuongTien || "",
       idTaiSan: bienPhap?.idTaiSan || "",
       danhSachChiTiet: (bienPhap?.danhSachChiTiet || []).map(
         (item: BienPhapPhuongTienChiTietData) => ({
@@ -220,14 +258,22 @@ const NghiemThuPhuongTienDialog = ({
         }),
       ),
     });
-  }, [open, initData, bienPhap, apiUsers, apiDepartments, savedDraft]);
+  }, [
+    open,
+    initData,
+    bienPhap,
+    apiUsers,
+    apiDepartments,
+    savedDraft,
+    idGiamDinhPhuongTien,
+  ]);
 
   function handleClose() {
     dispatch(
       updateTabFormData({
         path: tabPath,
         data: {
-          [`acceptanceVehicleDraft_${idBienPhapPhuongTien}`]: null,
+          [`acceptanceVehicleDraft_${draftId}`]: null,
           lastMinimizedDialog: null,
         },
       }),
@@ -241,8 +287,9 @@ const NghiemThuPhuongTienDialog = ({
       updateTabFormData({
         path: tabPath,
         data: {
-          [`acceptanceVehicleDraft_${idBienPhapPhuongTien}`]: {
+          [`acceptanceVehicleDraft_${draftId}`]: {
             idBienPhapPhuongTien,
+            idGiamDinhPhuongTien,
             soPhieu: formik.values.soPhieu,
             noiDung: formik.values.noiDung,
             tinhTrang: formik.values.tinhTrang,

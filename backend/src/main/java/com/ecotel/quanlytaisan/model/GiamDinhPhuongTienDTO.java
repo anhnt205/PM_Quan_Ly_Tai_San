@@ -45,6 +45,7 @@ public class GiamDinhPhuongTienDTO {
     private String tenTaiSan;
     private String soPhieuBienBan;
     private Integer daCoBienPhap;
+    private Integer daCoNghiemThu;
 
     // Danh sách chi tiết
     private List<GiamDinhPhuongTienChiTiet> danhSachChiTiet;

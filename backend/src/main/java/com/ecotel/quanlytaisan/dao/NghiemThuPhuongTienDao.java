@@ -34,7 +34,7 @@ public class NghiemThuPhuongTienDao {
     private String buildSelectSql() {
         return """
             SELECT
-                nt.Id, nt.IdCongTy, nt.CongTy, nt.TenMauBienBan, nt.IdBienPhapPhuongTien, nt.IdTaiSan,
+                nt.Id, nt.IdCongTy,nt.CongTy,nt.TenMauBienBan, nt.IdBienPhapPhuongTien, nt.IdGiamDinhPhuongTien, nt.IdTaiSan,
                 nt.SoPhieu, nt.NoiDung, nt.TinhTrang, nt.CongViecPhatSinh,
                 nt.ChiPhiNhanCong, nt.KetLuan, nt.GhiChuBienBan,
                 nt.IdNguoiLap, nt.NguoiLapXacNhan,
@@ -92,6 +92,12 @@ public class NghiemThuPhuongTienDao {
                 new BeanPropertyRowMapper<>(NghiemThuPhuongTienDTO.class), idBienPhapPhuongTien);
     }
 
+    public List<NghiemThuPhuongTienDTO> findByIdGiamDinhPhuongTien(String idGiamDinhPhuongTien) {
+        String sql = buildSelectSql() + " WHERE nt.IdGiamDinhPhuongTien = ?";
+        return jdbcTemplate.query(sql,
+                new BeanPropertyRowMapper<>(NghiemThuPhuongTienDTO.class), idGiamDinhPhuongTien);
+    }
+
     public String generateNextId() {
         int currentYear = Year.now().getValue();
         String seqName  = "NGHIEMTHU_PHUONGTIEN";
@@ -128,14 +134,14 @@ public class NghiemThuPhuongTienDao {
         e.setId(generateNextId());
         String sql = """
             INSERT INTO nghiemthu_phuongtien (
-                Id, IdCongTy, CongTy, TenMauBienBan, IdBienPhapPhuongTien, IdTaiSan, SoPhieu,
+                Id, IdCongTy, CongTy, TenMauBienBan, IdBienPhapPhuongTien, IdGiamDinhPhuongTien, IdTaiSan, SoPhieu,
                 NoiDung, TinhTrang, CongViecPhatSinh, ChiPhiNhanCong, KetLuan,
                 IdNguoiLap, NguoiLapXacNhan, IdGiamDoc, GiamDocXacNhan,
                 Share, TrangThai, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, GhiChuBienBan
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         int r = jdbcTemplate.update(sql,
-                e.getId(), e.getIdCongTy(), e.getCongTy(), e.getTenMauBienBan(), e.getIdBienPhapPhuongTien(), e.getIdTaiSan(), e.getSoPhieu(),
+                e.getId(), e.getIdCongTy(), e.getCongTy(), e.getTenMauBienBan(), e.getIdBienPhapPhuongTien(), e.getIdGiamDinhPhuongTien(), e.getIdTaiSan(), e.getSoPhieu(),
                 e.getNoiDung(), e.getTinhTrang(), e.getCongViecPhatSinh(), e.getChiPhiNhanCong(), e.getKetLuan(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai() != null ? e.getTrangThai() : 0,
@@ -148,7 +154,7 @@ public class NghiemThuPhuongTienDao {
     public NghiemThuPhuongTien update(NghiemThuPhuongTien e) {
         String sql = """
             UPDATE nghiemthu_phuongtien SET
-                CongTy = ?, TenMauBienBan = ?, IdBienPhapPhuongTien = ?, IdTaiSan = ?, SoPhieu = ?,
+                CongTy = ?, TenMauBienBan = ?, IdBienPhapPhuongTien = ?, IdGiamDinhPhuongTien = ?, IdTaiSan = ?, SoPhieu = ?,
                 NoiDung = ?, TinhTrang = ?, CongViecPhatSinh = ?,
                 ChiPhiNhanCong = ?, KetLuan = ?,
                 IdNguoiLap = ?, NguoiLapXacNhan = ?,
@@ -158,7 +164,7 @@ public class NghiemThuPhuongTienDao {
             WHERE Id = ?
             """;
         int r = jdbcTemplate.update(sql,
-                e.getCongTy(), e.getTenMauBienBan(), e.getIdBienPhapPhuongTien(), e.getIdTaiSan(), e.getSoPhieu(),
+                e.getCongTy(), e.getTenMauBienBan(), e.getIdBienPhapPhuongTien(), e.getIdGiamDinhPhuongTien(), e.getIdTaiSan(), e.getSoPhieu(),
                 e.getNoiDung(), e.getTinhTrang(), e.getCongViecPhatSinh(),
                 e.getChiPhiNhanCong(), e.getKetLuan(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(),

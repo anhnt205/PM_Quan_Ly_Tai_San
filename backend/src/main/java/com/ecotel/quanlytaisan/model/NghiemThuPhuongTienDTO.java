@@ -11,6 +11,7 @@ public class NghiemThuPhuongTienDTO {
     private String congTy;
     private String tenMauBienBan;
     private String idBienPhapPhuongTien;
+    private String idGiamDinhPhuongTien;
     private String idTaiSan;
 
     // Thông tin chính
