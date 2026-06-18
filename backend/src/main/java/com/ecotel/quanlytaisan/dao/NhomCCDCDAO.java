@@ -109,7 +109,7 @@ public class NhomCCDCDAO {
             // Nếu chưa tồn tại thì insert
             String sql = "INSERT INTO NhomCCDC (Id, Ten, HieuLuc, IdCongTy, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat) " +
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-            return jdbcTemplate.update(sql, nhom.getId(), nhom.getTen(), nhom.getHieuLuc(),
+            return jdbcTemplate.update(sql, nhom.getId(), nhom.getTen(), nhom.getHieuLuc() != null ? nhom.getHieuLuc() : true,
                     nhom.getIdCongTy(), nhom.getNgayTao(), nhom.getNgayCapNhat(),
                     nhom.getNguoiTao(), nhom.getNguoiCapNhat());
         }
@@ -117,7 +117,7 @@ public class NhomCCDCDAO {
 
     public int update(NhomCCDC nhom) {
         String sql = "UPDATE NhomCCDC SET Ten=?, HieuLuc=?, IdCongTy=?, NgayCapNhat=?, NguoiCapNhat=? WHERE Id=?";
-        return jdbcTemplate.update(sql, nhom.getTen(), nhom.getHieuLuc(), nhom.getIdCongTy(),
+        return jdbcTemplate.update(sql, nhom.getTen(), nhom.getHieuLuc() != null ? nhom.getHieuLuc() : true, nhom.getIdCongTy(),
                 nhom.getNgayCapNhat(), nhom.getNguoiCapNhat(), nhom.getId());
     }
 
@@ -144,7 +144,7 @@ public class NhomCCDCDAO {
                 NhomCCDC nhom = nhomCCDCs.get(i);
                 ps.setString(1, nhom.getId());
                 ps.setString(2, nhom.getTen());
-                ps.setBoolean(3, nhom.getHieuLuc());
+                ps.setBoolean(3, nhom.getHieuLuc() != null ? nhom.getHieuLuc() : true);
                 ps.setString(4, nhom.getIdCongTy());
                 ps.setString(5, nhom.getNgayTao());
                 ps.setString(6, nhom.getNgayCapNhat());
@@ -167,7 +167,7 @@ public class NhomCCDCDAO {
             public void setValues(PreparedStatement ps, int i) throws SQLException {
                 NhomCCDC nhom = nhomCCDCs.get(i);
                 ps.setString(1, nhom.getTen());
-                ps.setBoolean(2, nhom.getHieuLuc());
+                ps.setBoolean(2, nhom.getHieuLuc() != null ? nhom.getHieuLuc() : true);
                 ps.setString(3, nhom.getIdCongTy());
                 ps.setString(4, nhom.getNgayCapNhat());
                 ps.setString(5, nhom.getNguoiCapNhat());

@@ -16,10 +16,10 @@ export const useToolGroupMutation = (
 ) => {
   const queryClient = useQueryClient();
   const { user } = useSelector((state: RootState) => state.user);
+  const currentUser = user?.taiKhoan?.tenDangNhap || "admin";
   const now = dayjs(new Date()).format("YYYY-MM-DDTHH:mm:ss");
   const createMutation = useMutation({
     mutationFn: async (data: ToolGroupType) => {
-      const currentUser = user?.taiKhoan?.tenDangNhap || "admin";
       const res = await api.post("/nhomccdc", {
         ...data,
         ngayTao: now,
@@ -45,7 +45,16 @@ export const useToolGroupMutation = (
 
   const createBatchMutation = useMutation({
     mutationFn: async (data: ToolGroupType[]) => {
-      const res = await api.post("/nhomccdc/batch", data);
+      const res = await api.post(
+        "/nhomccdc/batch",
+        data.map((item) => ({
+          ...item,
+          ngayTao: now,
+          nguoiTao: currentUser,
+          ngayCapNhat: now,
+          nguoiCapNhat: currentUser,
+        })),
+      );
       return res.data;
     },
     onSuccess: () => {
@@ -88,7 +97,14 @@ export const useToolGroupMutation = (
 
   const updateBatchMutation = useMutation({
     mutationFn: async (data: ToolGroupType[]) => {
-      const res = await api.put("/nhomccdc/batch", data);
+      const res = await api.put(
+        "/nhomccdc/batch",
+        data.map((item) => ({
+          ...item,
+          ngayCapNhat: now,
+          nguoiCapNhat: currentUser,
+        })),
+      );
       return res.data;
     },
     onSuccess: () => {

@@ -102,6 +102,11 @@ export default function CurrentStatus() {
 
   const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
 
+  const tableRows = currentStatusPage.items.map((item: any) => ({
+    ...item,
+    id: String(item.id),
+  }));
+
   const handleImport = (file: File) => {
     importExcelMutation.mutate(file, {
       onError: (error: any) => {
@@ -149,7 +154,7 @@ export default function CurrentStatus() {
 
   const handleBulkEdit = () => {
     if (selectedIds.length === 0) return;
-    const itemsToEdit = currentStatusPage.items
+    const itemsToEdit = tableRows
       .filter((item: any) => selectedIds.includes(item.id))
       .sort((a: any, b: any) => String(a.id).localeCompare(String(b.id)));
     setBulkEditType("edit");
@@ -329,7 +334,7 @@ export default function CurrentStatus() {
           tableId="currentStatus"
           title="Quản lý hiện trạng"
           columns={columns}
-          rows={currentStatusPage.items}
+          rows={tableRows}
           total={currentStatusPage.totalItems}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
