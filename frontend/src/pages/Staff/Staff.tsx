@@ -1,4 +1,4 @@
-import { ContentCopy, Delete, EditNote } from "@mui/icons-material";
+import { ContentCopy, Delete, Edit } from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -298,11 +298,21 @@ export default function Staff() {
     {
       field: "action",
       headerName: "Hành động",
-      width: 100,
+      width: 150,
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
         <Box display="flex" gap={1} justifyContent="center" alignItems="center">
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRowClick({ row: params.row } as GridRowParams);
+              setIsCopy(false);
+              setReadOnly(false);
+            }}
+          >
+            <Edit color="primary" />
+          </IconButton>
           <IconButton
             onClick={(e) => {
               e.stopPropagation();

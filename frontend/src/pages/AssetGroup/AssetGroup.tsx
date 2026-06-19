@@ -9,7 +9,7 @@ import {
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-import { Delete, ContentCopy } from "@mui/icons-material";
+import { Delete, ContentCopy, Edit } from "@mui/icons-material";
 import AssetGroupForm from "./components/AssetGroupForm";
 import { useState } from "react";
 import {
@@ -266,11 +266,20 @@ export default function AssetGroup() {
     {
       field: "action",
       headerName: "Hành động",
-      width: 100,
+      width: 150,
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
         <Box display="flex" gap={1} justifyContent="center" alignItems="center">
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRowClick({ row: params.row } as GridRowParams);
+              setReadOnly(false);
+            }}
+          >
+            <Edit color="primary" />
+          </IconButton>
           <IconButton
             onClick={(e) => {
               e.stopPropagation();

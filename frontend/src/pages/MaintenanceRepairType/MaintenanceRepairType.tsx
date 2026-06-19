@@ -10,7 +10,7 @@ import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import MaintenanceRepairTypeForm from "./components/MaintenanceRepairTypeForm";
-import { ContentCopy, Delete } from "@mui/icons-material";
+import { ContentCopy, Delete, Edit } from "@mui/icons-material";
 import { useState, useEffect, useCallback } from "react";
 import {
   showConfirmAlert,
@@ -184,11 +184,21 @@ export default function MaintenanceRepairType() {
     {
       field: "action",
       headerName: "Hành động",
-      width: 100,
+      width: 150,
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
         <Box display="flex" gap={1} justifyContent="center" alignItems="center">
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRowClick({ row: params.row } as GridRowParams);
+              setIsCopy(false);
+              setReadOnly(false);
+            }}
+          >
+            <Edit color="primary" />
+          </IconButton>
           <IconButton
             onClick={(e) => {
               e.stopPropagation();
