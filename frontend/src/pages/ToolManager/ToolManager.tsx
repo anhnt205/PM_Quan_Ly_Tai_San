@@ -98,12 +98,14 @@ export default function ToolManager() {
   });
 
   const searchDebounce = useDebounce(searchValue, 600);
+  const loai = activeTab === 1 ? "vattu" : "ccdc";
   const { data: toolsPage, isLoading } = useToolPageQuery(
     paginationModel.page,
     paginationModel.pageSize,
     searchDebounce,
     selectedDepartment,
     selectedToolGroup,
+    loai,
   );
   const { data: allDepartments = [] } = useAllDepartmentsQuery();
   const { data: toolTypes = [] } = useAllToolTypeQuery();

@@ -660,6 +660,7 @@ export const useToolPageQuery = (
   searchValue?: string,
   idDonViSoHuu?: string,
   idNhomCCDC?: string,
+  loai?: string,
 ) => {
   const idcongty = CongTy.CT001;
   return useQuery({
@@ -670,6 +671,7 @@ export const useToolPageQuery = (
       searchValue,
       idDonViSoHuu,
       idNhomCCDC,
+      loai,
     ],
     queryFn: async () => {
       const res = await api.get("/ccdcvattu/paged", {
@@ -680,6 +682,7 @@ export const useToolPageQuery = (
           search: searchValue,
           iddonvisohuu: idDonViSoHuu,
           idnhomccdc: idNhomCCDC,
+          loai: loai,
         },
       });
       return res.data.data || res.data;

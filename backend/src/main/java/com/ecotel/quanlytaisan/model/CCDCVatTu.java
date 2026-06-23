@@ -29,6 +29,8 @@ public class CCDCVatTu {
     private Boolean isActive;
     private String idLoaiCCDCCon;
     private Integer hienTrang;
+    private String donViTinh2;
+    private Integer soLuong2;
     public static CCDCVatTu mapToCCDCVatTu(String[] row) {
         CCDCVatTu ccdc = new CCDCVatTu();
         ccdc.setId(row[0]);

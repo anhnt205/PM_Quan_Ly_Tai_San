@@ -104,7 +104,7 @@ public class NhomCCDCDAO {
         
         if (count > 0) {
             // Nếu tồn tại thì update
-            return update(nhom);
+            return updateGiuLaCCDCLaVatTu(nhom);
         } else {
             // Nếu chưa tồn tại thì insert
             String sql = "INSERT INTO NhomCCDC (Id, Ten, HieuLuc, IdCongTy, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, LaCCDC, LaVatTu) " +
@@ -123,6 +123,19 @@ public class NhomCCDCDAO {
                 nhom.getNgayCapNhat(), nhom.getNguoiCapNhat(),
                 nhom.getLaCCDC() != null ? nhom.getLaCCDC() : false,
                 nhom.getLaVatTu() != null ? nhom.getLaVatTu() : false,
+                nhom.getId());
+    }
+
+    /** Update KHÔNG đụng tới LaCCDC, LaVatTu — dùng khi đồng bộ từ nguồn ngoài (job sync),
+     *  để giữ nguyên giá trị người dùng đã tick tay trước đó trên giao diện. */
+    public int updateGiuLaCCDCLaVatTu(NhomCCDC nhom) {
+        String sql = "UPDATE NhomCCDC SET Ten=?, HieuLuc=?, IdCongTy=?, NgayCapNhat=?, NguoiCapNhat=? WHERE Id=?";
+        return jdbcTemplate.update(sql,
+                nhom.getTen(),
+                nhom.getHieuLuc() != null ? nhom.getHieuLuc() : true,
+                nhom.getIdCongTy(),
+                nhom.getNgayCapNhat(),
+                nhom.getNguoiCapNhat(),
                 nhom.getId());
     }
 

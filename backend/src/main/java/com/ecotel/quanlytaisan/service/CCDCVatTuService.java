@@ -48,19 +48,19 @@ public class CCDCVatTuService {
     public PageResponse<CCDCVatTuDTO> getAllPaged(
         String idCongTy, int page, int size,
         String sortBy, String sortDir,
-        String search, String idDonViSoHuu,String idNhomCCDC) {
+        String search, String idDonViSoHuu, String idNhomCCDC, String loai) {
 
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
 
         boolean hasDonVi = idDonViSoHuu != null && !idDonViSoHuu.trim().isEmpty();
 
-        long total = ccdcVatTuDao.countAllPaged(idCongTy, search, idDonViSoHuu,idNhomCCDC);
+        long total = ccdcVatTuDao.countAllPaged(idCongTy, search, idDonViSoHuu, idNhomCCDC, loai);
         if (total == 0) return new PageResponse<>(List.of(), 0, page, size);
 
         int offset = page * size;
         List<CCDCVatTuDTO> items = ccdcVatTuDao.findAllPaged(
-                idCongTy, offset, size, sortBy, sortDir, search, idDonViSoHuu,idNhomCCDC);
+                idCongTy, offset, size, sortBy, sortDir, search, idDonViSoHuu, idNhomCCDC, loai);
 
         for (CCDCVatTuDTO item : items) {
             item.setChiTietTaiSanList(chiTietTaiSanDao.findAll(item.getId()));

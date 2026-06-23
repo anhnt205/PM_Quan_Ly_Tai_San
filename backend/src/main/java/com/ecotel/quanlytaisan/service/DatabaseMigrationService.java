@@ -133,24 +133,18 @@ public class DatabaseMigrationService {
      */
     private Map<String, MigrationGroup> loadVatTuList(JdbcTemplate remote, String dbStr, LocalDateTime fromDate) {
        // Nếu có fromDate thì chỉ lấy MA_VTHH xuất hiện trong phiếu mới
-    String dateFilter = fromDate != null
+        String dateFilter = fromDate != null
             ? "AND px_h.NGAY_VAO_SO >= '" + fromDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "' "
             : "";
 
         String sql = String.format(
-            "SELECT dmvt.MA_VTHH, dmvt.TEN_VTHH, dmvt.MA_DVT, dmvt.MA_NHOM_VTHH, dmvt.LOAI_VTHH, dmvt.PROPERTY1, " +
+            "SELECT dmvt.MA_VTHH, dmvt.TEN_VTHH, dmvt.MA_DVT,dmvt.MA_DVT1, dmvt.MA_NHOM_VTHH, dmvt.LOAI_VTHH, dmvt.PROPERTY1, " +
             "       (SELECT TOP 1 vc.GIA_GOC " +
             "        FROM [%s].dbo.VTHH_CT vc " +
             "        WHERE vc.MA_VTHH = dmvt.MA_VTHH AND vc.GIA_GOC IS NOT NULL AND vc.GIA_GOC > 0 " +
             "        ORDER BY vc.GIA_GOC DESC) AS GIA_GOC " +
-            "FROM [%s].dbo.DM_VTHH dmvt " +
-            "WHERE EXISTS (" +
-            "      SELECT 1 FROM [%s].dbo.VTHHPX_CT px " +
-            "      JOIN [%s].dbo.VTHHPX px_h ON px_h.PR_KEY = px.FR_KEY " +
-            "      WHERE px.MA_VTHH = dmvt.MA_VTHH AND px_h.TRAN_ID = 'NKHOPX' " +
-            dateFilter +  // <-- chỉ vật tư có phiếu mới
-            "  )",
-            dbStr, dbStr, dbStr, dbStr
+            "FROM [%s].dbo.DM_VTHH dmvt",
+            dbStr, dbStr
         );
 
         List<Map<String, Object>> rows = remote.queryForList(sql);
@@ -174,6 +168,7 @@ public class DatabaseMigrationService {
             // vatTu.setSoKyHieu(maVthh);
             vatTu.setTen(nvl(row.get("TEN_VTHH")));
             vatTu.setDonViTinh(nvl(row.get("MA_DVT")));
+            vatTu.setDonViTinh2(nvl(row.get("MA_DVT1")));
             vatTu.setIdNhomCCDC(nvl(row.get("MA_NHOM_VTHH")));   // dùng MA_NHOM_VTHH thay MA_NHOM_VTHH1
             vatTu.setNuocSanXuat(nvl(row.get("PROPERTY1")));      // PROPERTY1 = nuớc sản xuất
             vatTu.setIdLoaiCCDCCon(nvl(row.get("LOAI_VTHH")));
@@ -243,29 +238,21 @@ public class DatabaseMigrationService {
     // ─── Bước 3b: Đồng bộ danh mục PhongBan từ DM_DTTH ───────────────────────
     /**
      * Query bảng DM_DTTH trên remote để lấy (MA_DTTH, TEN_DTTH),
-     * chỉ lấy những MA_DTTH thực sự xuất hiện trong cột MA_PBAN_NHAP của bảng VTHHPX
-     * (phiếu nhập kho TRAN_ID = 'NKHOPX'), rồi upsert vào bảng PhongBan local.
+     * đồng bộ toàn bộ danh mục vào PhongBan local.
+     * Nếu đã tồn tại, chỉ update tên phòng ban để giữ nguyên các field setup khác (IsKho, IdQuanLy...).
      */
     private void loadAndSyncPhongBan(JdbcTemplate remote, String dbStr) {
-        System.out.println("  Đồng bộ danh mục PhongBan từ DM_DTTH (lọc theo MA_PBAN_NHAP)...");
+        System.out.println("  Đồng bộ toàn bộ danh mục PhongBan từ DM_DTTH...");
         String sql = String.format(
-            "SELECT d.MA_DTTH, d.TEN_DTTH " +
-            "FROM [%s].dbo.DM_DTTH d " +
-            "WHERE d.MA_DTTH IN (" +
-            "    SELECT DISTINCT px.MA_PBAN_NHAP " +
-            "    FROM [%s].dbo.VTHHPX px " +
-            "    WHERE px.TRAN_ID = 'NKHOPX' " +
-            "      AND px.MA_PBAN_NHAP IS NOT NULL " +
-            "      AND px.MA_PBAN_NHAP <> ''" +
-            ")",
-            dbStr, dbStr
+            "SELECT MA_DTTH, TEN_DTTH FROM [%s].dbo.DM_DTTH",
+            dbStr
         );
 
         List<Map<String, Object>> rows;
         try {
             rows = remote.queryForList(sql);
         } catch (Exception e) {
-            System.err.println("  [CẢNH BÁO] Không thể query DM_DTHH: " + e.getMessage());
+            System.err.println("  [CẢNH BÁO] Không thể query DM_DTTH: " + e.getMessage());
             return;
         }
 
@@ -278,18 +265,28 @@ public class DatabaseMigrationService {
             String tenDthh = nvl(row.get("TEN_DTTH"));
             if (maDthh.isEmpty()) continue;
 
-            PhongBan pb = new PhongBan();
-            pb.setId(maDthh);
-            pb.setTenPhongBan(tenDthh);
-            pb.setIdCongTy("ct001");
-            pb.setIsActive(true);
-            pb.setNgayTao(now);
-            pb.setNgayCapNhat(now);
-            pb.setNguoiTao("system");
-            pb.setNguoiCapNhat("system");
-
             try {
-                phongBanDao.insert(pb);  // insert() đã có logic check tồn tại → upsert
+                int exists = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM PhongBan WHERE Id = ?", Integer.class, maDthh);
+                if (exists > 0) {
+                    // Chỉ cập nhật tên phòng ban và timestamp, giữ nguyên các cấu hình khác
+                    jdbcTemplate.update("UPDATE PhongBan SET TenPhongBan = ?, NgayCapNhat = ?, NguoiCapNhat = ? WHERE Id = ?", tenDthh, now, "system", maDthh);
+                } else {
+                    PhongBan pb = new PhongBan();
+                    pb.setId(maDthh);
+                    pb.setTenPhongBan(tenDthh);
+                    pb.setIdCongTy("ct001");
+                    pb.setIsActive(true);
+                    pb.setNgayTao(now);
+                    pb.setNgayCapNhat(now);
+                    pb.setNguoiTao("system");
+                    pb.setNguoiCapNhat("system");
+                    
+                    // Insert trực tiếp để tránh ghi đè các trường null
+                    jdbcTemplate.update(
+                        "INSERT INTO PhongBan (Id, TenPhongBan, IdCongTy, IsActive, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                        pb.getId(), pb.getTenPhongBan(), pb.getIdCongTy(), pb.getIsActive(), pb.getNgayTao(), pb.getNgayCapNhat(), pb.getNguoiTao(), pb.getNguoiCapNhat()
+                    );
+                }
                 count++;
             } catch (Exception e) {
                 System.err.println("  [LỖI] Không thể upsert PhongBan id=" + maDthh + ": " + e.getMessage());
@@ -370,117 +367,180 @@ public class DatabaseMigrationService {
 
     // ─── Bước 4: Ghi toàn bộ vào MySQL ───────────────────────────────────────
     private void persistToMySQL(Map<String, MigrationGroup> groupMap) {
-    System.out.println("Đang ghi vào MySQL...");
-    int successCount = 0, errorCount = 0;
-    DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
-    String now = LocalDateTime.now().format(fmt);
+        System.out.println("Đang ghi vào MySQL (Chế độ tối ưu Batch Processing)...");
+        int successCount = 0, errorCount = 0;
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+        String now = LocalDateTime.now().format(fmt);
 
-    List<String> allIds = new ArrayList<>(groupMap.keySet());
+        List<String> allIds = new ArrayList<>(groupMap.keySet());
+        int batchSize = 1000;
 
-    // ── BATCH 1: Fetch toàn bộ record hiện tại của ChiTietDonViSoHuu ──────────
-    // Map<maVthh, Map<soChungTu, soLuongDaBanGiao>>
-    Map<String, Map<String, Integer>> existingMap = new HashMap<>();
-    if (!allIds.isEmpty()) {
-        String inClause = String.join(",", Collections.nCopies(allIds.size(), "?"));
-        jdbcTemplate.query(
-            "SELECT IdCCDCVT, SoChungTu, COALESCE(SoLuongDaBanGiao, 0) AS SoLuongDaBanGiao " +
-            "FROM ChiTietDonViSoHuu " +
-            "WHERE IdCCDCVT IN (" + inClause + ") AND SoChungTu IS NOT NULL",
-            allIds.toArray(),
-            rs -> {
-                existingMap
-                    .computeIfAbsent(rs.getString("IdCCDCVT"), k -> new HashMap<>())
-                    .put(rs.getString("SoChungTu"), rs.getInt("SoLuongDaBanGiao"));
+        // Map<maVthh, Map<soChungTu, soLuongDaBanGiao>>
+        Map<String, Map<String, Integer>> existingMap = new HashMap<>();
+        Set<String> existingCcdcIds = new HashSet<>();
+        Set<String> existingChiTietTaiSanIds = new HashSet<>();
+
+        if (!allIds.isEmpty()) {
+            for (int i = 0; i < allIds.size(); i += batchSize) {
+                List<String> chunk = allIds.subList(i, Math.min(i + batchSize, allIds.size()));
+                String inClause = String.join(",", Collections.nCopies(chunk.size(), "?"));
+                
+                jdbcTemplate.query(
+                    "SELECT IdCCDCVT, SoChungTu, COALESCE(SoLuongDaBanGiao, 0) AS SoLuongDaBanGiao " +
+                    "FROM ChiTietDonViSoHuu " +
+                    "WHERE IdCCDCVT IN (" + inClause + ") AND SoChungTu IS NOT NULL",
+                    chunk.toArray(),
+                    rs -> {
+                        existingMap
+                            .computeIfAbsent(rs.getString("IdCCDCVT"), k -> new HashMap<>())
+                            .put(rs.getString("SoChungTu"), rs.getInt("SoLuongDaBanGiao"));
+                    }
+                );
+
+                jdbcTemplate.query(
+                    "SELECT Id FROM CCDCVatTu WHERE Id IN (" + inClause + ")",
+                    chunk.toArray(),
+                    rs -> {
+                        existingCcdcIds.add(rs.getString("Id"));
+                    }
+                );
+
+                jdbcTemplate.query(
+                    "SELECT Id FROM ChiTietTaiSan WHERE IdTaiSan IN (" + inClause + ")",
+                    chunk.toArray(),
+                    rs -> {
+                        existingChiTietTaiSanIds.add(rs.getString("Id"));
+                    }
+                );
             }
-        );
-    }
+        }
 
-    // ── Vòng lặp chính ────────────────────────────────────────────────────────
-    for (MigrationGroup g : groupMap.values()) {
-        try {
-            String maVthh    = g.vatTu.getId();
-            String chiTietId = maVthh + "_1";
-            Map<String, Integer> existingSctMap = existingMap.getOrDefault(maVthh, Collections.emptyMap());
+        List<Object[]> ccdcInsertBatch = new ArrayList<>();
+        List<Object[]> ccdcUpdateBatch = new ArrayList<>();
+        
+        List<Object[]> chiTietInsertBatch = new ArrayList<>();
+        List<Object[]> chiTietUpdateBatch = new ArrayList<>();
 
-            // 4a. Upsert CCDCVatTu
-            ccdcVatTuDao.insert(g.vatTu);
+        List<Object[]> donViInsertBatch = new ArrayList<>();
+        List<Object[]> donViUpdateBatch = new ArrayList<>();
 
-            // 4b. Upsert ChiTietTaiSan (tổng sẽ cập nhật lại cuối bước)
-            ChiTietTaiSan chiTiet = new ChiTietTaiSan();
-            chiTiet.setId(chiTietId);
-            chiTiet.setIdTaiSan(maVthh);
-            chiTiet.setSoLuong(g.vatTu.getSoLuong());
-            chiTiet.setNuocSanXuat(g.vatTu.getNuocSanXuat());
-            chiTietTaiSanDao.insert(chiTiet);
+        for (MigrationGroup g : groupMap.values()) {
+            try {
+                CCDCVatTu vatTu = g.vatTu;
+                String maVthh = vatTu.getId();
+                String chiTietId = maVthh + "_1";
+                
+                // 1. CCDCVatTu
+                if (existingCcdcIds.contains(maVthh)) {
+                    ccdcUpdateBatch.add(new Object[]{
+                        vatTu.getIdDonVi(), vatTu.getTen(), vatTu.getNgayNhap(), vatTu.getDonViTinh(),
+                        vatTu.getSoLuong(), vatTu.getGiaTri(), vatTu.getSoKyHieu(), vatTu.getKyHieu(),
+                        vatTu.getCongSuat(), vatTu.getNuocSanXuat(), vatTu.getNamSanXuat(), vatTu.getGhiChu(),
+                        vatTu.getIdCongTy(), vatTu.getNgayTao(), vatTu.getNgayCapNhat(), vatTu.getNguoiTao(),
+                        vatTu.getNguoiCapNhat(), vatTu.getIsActive(), vatTu.getIdNhomCCDC(), vatTu.getIdLoaiCCDCCon(),
+                        vatTu.getHienTrang(), vatTu.getDonViTinh2(), vatTu.getSoLuong2(), maVthh
+                    });
+                } else {
+                    ccdcInsertBatch.add(new Object[]{
+                        vatTu.getId(), vatTu.getIdDonVi(), vatTu.getTen(), vatTu.getNgayNhap(), vatTu.getDonViTinh(),
+                        vatTu.getSoLuong(), vatTu.getGiaTri(), vatTu.getSoKyHieu(), vatTu.getKyHieu(),
+                        vatTu.getCongSuat(), vatTu.getNuocSanXuat(), vatTu.getNamSanXuat(), vatTu.getGhiChu(),
+                        vatTu.getIdCongTy(), vatTu.getNgayTao(), vatTu.getNgayCapNhat(), vatTu.getNguoiTao(),
+                        vatTu.getNguoiCapNhat(), vatTu.getIsActive(), vatTu.getIdNhomCCDC(), vatTu.getIdLoaiCCDCCon(),
+                        vatTu.getHienTrang(), vatTu.getDonViTinh2(), vatTu.getSoLuong2()
+                    });
+                }
 
-            // 4c. Xoá chỉ các record chưa có SoChungTu (migration cũ / null)
-            jdbcTemplate.update(
-                "DELETE FROM ChiTietDonViSoHuu WHERE IdCCDCVT = ? AND (SoChungTu IS NULL OR SoChungTu = '')",
-                maVthh
-            );
+                // 2. ChiTietTaiSan
+                if (existingChiTietTaiSanIds.contains(chiTietId)) {
+                    chiTietUpdateBatch.add(new Object[]{
+                        maVthh, null, null, vatTu.getSoKyHieu(), 
+                        vatTu.getCongSuat(), vatTu.getNuocSanXuat(), vatTu.getNamSanXuat(), vatTu.getSoLuong(),
+                        chiTietId
+                    });
+                } else {
+                    chiTietInsertBatch.add(new Object[]{
+                        chiTietId, maVthh, null, null, vatTu.getSoKyHieu(), vatTu.getCongSuat(), 
+                        vatTu.getNuocSanXuat(), vatTu.getNamSanXuat(), vatTu.getSoLuong()
+                    });
+                }
 
-            if (!g.phieuNhapList.isEmpty()) {
-                List<Object[]> toInsert = new ArrayList<>();
-                List<Object[]> toUpdate = new ArrayList<>();
-                int totalEffective = 0;
+                // 3. Delete old donvisoHuu (no SoChungTu) (đã được gom lại thực thi riêng)
 
+                // 4. ChiTietDonViSoHuu
+                Map<String, Integer> existingSctMap = existingMap.getOrDefault(maVthh, Collections.emptyMap());
+                
                 for (PhieuNhap phieu : g.phieuNhapList) {
                     String ngay = phieu.ngayVaoSo != null ? phieu.ngayVaoSo : now;
 
                     if (phieu.soChungTu != null && existingSctMap.containsKey(phieu.soChungTu)) {
-                        // Record đã tồn tại → lấy SoLuongDaBanGiao hiện tại rồi trừ
-                        int daBanGiao   = existingSctMap.get(phieu.soChungTu);
+                        int daBanGiao = existingSctMap.get(phieu.soChungTu);
                         int effectiveSl = Math.max(0, phieu.soLuong - daBanGiao);
-                        totalEffective += effectiveSl;
-
-                        toUpdate.add(new Object[]{
+                        
+                        donViUpdateBatch.add(new Object[]{
                             effectiveSl, phieu.maPbanNhap, ngay, chiTietId,
                             phieu.soChungTu, maVthh
                         });
                     } else {
-                        // Phiếu mới → chưa có bàn giao, ghi nguyên soLuong
-                        totalEffective += phieu.soLuong;
-
-                        toInsert.add(new Object[]{
-                            UUID.randomUUID().toString(),
-                            maVthh, phieu.maPbanNhap, phieu.soLuong,
+                        donViInsertBatch.add(new Object[]{
+                            UUID.randomUUID().toString(), maVthh, phieu.maPbanNhap, phieu.soLuong,
                             null, ngay, "system", chiTietId, phieu.soChungTu
                         });
                     }
                 }
 
-                if (!toInsert.isEmpty()) {
-                    jdbcTemplate.batchUpdate(
-                        "INSERT INTO ChiTietDonViSoHuu " +
-                        "(Id, IdCCDCVT, IdDonViSoHuu, SoLuong, ThoiGianBanGiao, NgayTao, NguoiTao, IdTsCon, SoChungTu) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                        toInsert
-                    );
-                }
-                if (!toUpdate.isEmpty()) {
-                    jdbcTemplate.batchUpdate(
-                        "UPDATE ChiTietDonViSoHuu SET SoLuong = ?, IdDonViSoHuu = ?, NgayTao = ?, IdTsCon = ? " +
-                        "WHERE SoChungTu = ? AND IdCCDCVT = ?",
-                        toUpdate
-                    );
-                }
+                // Đã gỡ cập nhật tổng bằng batch lẻ, thay bằng 1 câu update duy nhất ở cuối hàm
 
-                // 4d. Cập nhật tổng effective vào CCDCVatTu + ChiTietTaiSan
-                int tongSoLuong = getTongSoLuongTuDonViSoHuu(maVthh);
-                jdbcTemplate.update("UPDATE CCDCVatTu SET SoLuong = ? WHERE Id = ?", tongSoLuong, maVthh);
-                jdbcTemplate.update("UPDATE ChiTietTaiSan SET SoLuong = ? WHERE Id = ?", tongSoLuong, chiTietId);
+                successCount++;
+            } catch (Exception ex) {
+                errorCount++;
+                System.err.println("  [LỖI] Xử lý batch chuẩn bị cho vật tư " + g.vatTu.getId() + ": " + ex.getMessage());
             }
+        }
 
-            successCount++;
+        // Execute queries
+        System.out.println("  Thực thi batch delete ChiTietDonViSoHuu cũ...");
+        if (!allIds.isEmpty()) {
+            for (int i = 0; i < allIds.size(); i += batchSize) {
+                List<String> chunk = allIds.subList(i, Math.min(i + batchSize, allIds.size()));
+                String inClause = String.join(",", Collections.nCopies(chunk.size(), "?"));
+                jdbcTemplate.update("DELETE FROM ChiTietDonViSoHuu WHERE (SoChungTu IS NULL OR SoChungTu = '') AND IdCCDCVT IN (" + inClause + ")", chunk.toArray());
+            }
+        }
 
-        } catch (Exception ex) {
-            errorCount++;
-            System.err.println("  [LỖI] Vật tư " + g.vatTu.getId() + ": " + ex.getMessage());
+        System.out.println("  Thực thi batch insert/update CCDCVatTu...");
+        executeBatchWithChunks("INSERT INTO CCDCVatTu (Id, IdDonVi, Ten, NgayNhap, DonVitinh, SoLuong, GiaTri, SoKyHieu, KyHieu, CongSuat, NuocSanXuat, NamSanXuat, GhiChu, IdCongTy, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive, IdNhomCCDC, IdLoaiCCDCCon, HienTrang, DonViTinh2, SoLuong2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", ccdcInsertBatch);
+        executeBatchWithChunks("UPDATE CCDCVatTu SET IdDonVi=?, Ten=?, NgayNhap=?, DonVitinh=?, SoLuong=?, GiaTri=?, SoKyHieu=?, KyHieu=?, CongSuat=?, NuocSanXuat=?, NamSanXuat=?, GhiChu=?, IdCongTy=?, NgayTao=?, NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?, IsActive=?, IdNhomCCDC=?, IdLoaiCCDCCon=?, HienTrang=?, DonViTinh2=?, SoLuong2=? WHERE Id=?", ccdcUpdateBatch);
+
+        System.out.println("  Thực thi batch insert/update ChiTietTaiSan...");
+        executeBatchWithChunks("INSERT INTO ChiTietTaiSan (Id, IdTaiSan, NgayVaoSo, NgaySuDung, SoKyHieu, CongSuat, NuocSanXuat, NamSanXuat, SoLuong) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)", chiTietInsertBatch);
+        executeBatchWithChunks("UPDATE ChiTietTaiSan SET IdTaiSan=?, NgayVaoSo=?, NgaySuDung=?, SoKyHieu=?, CongSuat=?, NuocSanXuat=?, NamSanXuat=?, SoLuong=? WHERE Id=?", chiTietUpdateBatch);
+
+        System.out.println("  Thực thi batch insert/update ChiTietDonViSoHuu...");
+        executeBatchWithChunks("INSERT INTO ChiTietDonViSoHuu (Id, IdCCDCVT, IdDonViSoHuu, SoLuong, ThoiGianBanGiao, NgayTao, NguoiTao, IdTsCon, SoChungTu) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", donViInsertBatch);
+        executeBatchWithChunks("UPDATE ChiTietDonViSoHuu SET SoLuong = ?, IdDonViSoHuu = ?, NgayTao = ?, IdTsCon = ? WHERE SoChungTu = ? AND IdCCDCVT = ?", donViUpdateBatch);
+
+        System.out.println("  Cập nhật tổng số lượng cho CCDCVatTu và ChiTietTaiSan...");
+        jdbcTemplate.update("UPDATE CCDCVatTu c " +
+                "LEFT JOIN (SELECT IdCCDCVT, COALESCE(SUM(SoLuong), 0) as total FROM ChiTietDonViSoHuu GROUP BY IdCCDCVT) t ON c.Id = t.IdCCDCVT " +
+                "SET c.SoLuong = COALESCE(t.total, 0)");
+        
+        jdbcTemplate.update("UPDATE ChiTietTaiSan c " +
+                "LEFT JOIN (SELECT IdCCDCVT, COALESCE(SUM(SoLuong), 0) as total FROM ChiTietDonViSoHuu GROUP BY IdCCDCVT) t ON c.IdTaiSan = t.IdCCDCVT " +
+                "SET c.SoLuong = COALESCE(t.total, 0)");
+
+        System.out.println("  Thành công: " + successCount + " | Lỗi: " + errorCount + " mã vật tư.");
+    }
+
+    private void executeBatchWithChunks(String sql, List<Object[]> batchArgs) {
+        if (batchArgs.isEmpty()) return;
+        int chunkSize = 1000;
+        for (int i = 0; i < batchArgs.size(); i += chunkSize) {
+            List<Object[]> chunk = batchArgs.subList(i, Math.min(i + chunkSize, batchArgs.size()));
+            jdbcTemplate.batchUpdate(sql, chunk);
         }
     }
 
-    System.out.println("  Thành công: " + successCount + " | Lỗi: " + errorCount + " mã vật tư.");
-}
 
     // ─── Utility ──────────────────────────────────────────────────────────────
     /** Chuyển Object → String, trả về "" nếu null */

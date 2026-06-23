@@ -276,7 +276,6 @@ export default function ToolGroupForm({
                           onChange={(e) =>
                             handleBulkItemChange(index, "laCCDC", e.target.checked)
                           }
-                          disabled={bulkEditType === "edit"}
                           color="primary"
                         />
                       }
@@ -289,7 +288,6 @@ export default function ToolGroupForm({
                           onChange={(e) =>
                             handleBulkItemChange(index, "laVatTu", e.target.checked)
                           }
-                          disabled={bulkEditType === "edit"}
                           color="primary"
                         />
                       }
