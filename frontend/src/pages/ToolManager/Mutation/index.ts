@@ -30,7 +30,7 @@ export const useToolManagerMutation = (
 
   const syncBakMutation = useMutation({
     mutationFn: async (dbConfigId: string) => {
-      const res = await api.post(`/migration/sync/${dbConfigId}`);
+      const res = await api.post(`/migration/sync-vat-tu/${dbConfigId}`);
       return res.data;
     },
     onSuccess: (data) => {

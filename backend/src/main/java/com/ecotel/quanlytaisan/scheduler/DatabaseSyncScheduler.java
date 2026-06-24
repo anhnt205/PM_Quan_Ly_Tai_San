@@ -52,7 +52,8 @@ public class DatabaseSyncScheduler {
 
         if (shouldSync) {
             try {
-                databaseMigrationService.processMigration(defaultDb.getId());
+                databaseMigrationService.processVatTuMigration(defaultDb.getId());
+                // databaseMigrationService.processTaiSanMigration(defaultDb.getId());
                 System.out.println("Sync Background Job executed successfully at " + now);
             } catch (Exception e) {
                 System.err.println("Sync Background Job failed: " + e.getMessage());

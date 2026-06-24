@@ -63,7 +63,7 @@ public class TaiSanDao {
     /**
      * Cập nhật hiện trạng (hienTrang) cho tài sản
      */
-    public int updateHienTrang(String idTaiSan, Integer hienTrang) {
+    public int updateHienTrang(String idTaiSan, String hienTrang) {
         String sql = "UPDATE TaiSan SET HienTrang = ? WHERE Id = ?";
         return jdbcTemplate.update(sql, hienTrang, idTaiSan);
     }
@@ -1114,7 +1114,7 @@ public class TaiSanDao {
                 ps.setString(24, ts.getLyDoTang());
                 
                 // Integer
-                if (ts.getHienTrang() != null) ps.setInt(25, ts.getHienTrang()); else ps.setNull(25, java.sql.Types.INTEGER);
+                if (ts.getHienTrang() != null) ps.setString(25, ts.getHienTrang()); else ps.setNull(25, java.sql.Types.VARCHAR);
                 if (ts.getSoLuong() != null) ps.setInt(26, ts.getSoLuong()); else ps.setNull(26, java.sql.Types.INTEGER);
                 
                 ps.setString(27, ts.getDonViTinh());
@@ -1214,7 +1214,7 @@ public class TaiSanDao {
                 ps.setString(23, ts.getLyDoTang());
                 
                 // Integer
-                if (ts.getHienTrang() != null) ps.setInt(24, ts.getHienTrang()); else ps.setNull(24, java.sql.Types.INTEGER);
+                if (ts.getHienTrang() != null) ps.setString(24, ts.getHienTrang()); else ps.setNull(24, java.sql.Types.VARCHAR);
                 if (ts.getSoLuong() != null) ps.setInt(25, ts.getSoLuong()); else ps.setNull(25, java.sql.Types.INTEGER);
                 
                 ps.setString(26, ts.getDonViTinh());

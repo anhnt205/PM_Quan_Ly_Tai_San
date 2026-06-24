@@ -70,6 +70,9 @@ import { FilterOption } from "../../components/common/FilterStatusGroup";
 import { useTabForm } from "../../redux/useTabForm";
 import { hasDraftData } from "../../utils/draftUtils";
 import DraftIndicator from "../../components/common/DraftIndicator";
+import SyncLoadingModal from "../../components/common/SyncLoadingModal";
+import SelectDbDialog from "../../components/common/SelectDbDialog";
+
 
 interface AssetManagerTabState {
   showForm: boolean;
@@ -109,6 +112,7 @@ export default function AssetManager() {
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.user);
   const { config } = useConfig();
+  const [openSelectDb, setOpenSelectDb] = useState(false);
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
@@ -127,6 +131,7 @@ export default function AssetManager() {
     importAssetMutation,
     deleteAllMutation,
     createBatchMutation,
+    syncTaiSanMutation,
   } = useAssetManagerMutation((messages) => {
     setImportErrors(messages); // Lưu mảng lỗi vào state
     setOpenErrorModal(true); // Mở Modal MUI hiển thị danh sách lỗi
@@ -479,6 +484,19 @@ export default function AssetManager() {
         onClose={() => setOpenErrorModal(false)}
         errors={importErrors}
       />
+      <SelectDbDialog
+        open={openSelectDb}
+        onClose={() => setOpenSelectDb(false)}
+        onConfirm={(dbId) => syncTaiSanMutation.mutate(dbId)}
+      />
+      <SyncLoadingModal
+        open={importAssetMutation.isPending || syncTaiSanMutation.isPending}
+        title={
+          syncTaiSanMutation.isPending
+            ? "Đang đồng bộ SQL Server..."
+            : "Đang xử lý file Excel..."
+        }
+      />
 
       <PageAction
         title="Quản lý tài sản"
@@ -495,6 +513,11 @@ export default function AssetManager() {
         loading={exportAssetMutation.isPending || importAssetMutation.isPending}
         onExport={() => exportAssetMutation.mutate()}
         onImport={(file) => importAssetMutation.mutate(file)}
+        onSyncDb={
+          user?.taiKhoan?.tenDangNhap === "admin"
+            ? () => setOpenSelectDb(true)
+            : undefined
+        }
         showExcel={true}
       />
       <Box p={2}>

@@ -239,7 +239,6 @@ export default function CurrentStatusForm({
                     fullWidth
                     size="small"
                     label="Mã hiện trạng *"
-                    type="number"
                     value={item.id}
                     onChange={(e) =>
                       handleBulkItemChange(index, "id", e.target.value)
@@ -339,7 +338,6 @@ export default function CurrentStatusForm({
         <Grid container spacing={2}>
           <Grid size={{ xs: 6 }}>
             <FieldInput
-              type="number"
               title="Mã hiện trạng *"
               formik={formik}
               field="id"

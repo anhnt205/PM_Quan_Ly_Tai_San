@@ -13,15 +13,27 @@ public class DatabaseMigrationController {
     @Autowired
     private DatabaseMigrationService migrationService;
 
-    @PostMapping("/sync/{dbConfigId}")
-    public ResponseEntity<?> syncDatabase(@PathVariable String dbConfigId) {
+    @PostMapping("/sync-vat-tu/{dbConfigId}")
+    public ResponseEntity<?> syncDatabaseVatTu(@PathVariable String dbConfigId) {
         try {
-            migrationService.processMigration(dbConfigId);
+            migrationService.processVatTuMigration(dbConfigId);
             return ResponseEntity.ok("Đồng bộ dữ liệu CSDL thành công! Hệ thống đã cập nhật danh mục vật tư.");
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Lỗi khi đồng bộ: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/sync-tai-san/{dbConfigId}")
+    public ResponseEntity<?> syncDatabaseTaiSan(@PathVariable String dbConfigId) {
+        try {
+            migrationService.processTaiSanMigration(dbConfigId);
+            return ResponseEntity.ok("Đồng bộ dữ liệu TÀI SẢN thành công! Hệ thống đã cập nhật các danh mục tài sản.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi đồng bộ tài sản: " + e.getMessage());
         }
     }
 }

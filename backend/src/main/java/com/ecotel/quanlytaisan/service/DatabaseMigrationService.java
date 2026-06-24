@@ -70,7 +70,7 @@ public class DatabaseMigrationService {
     }
 
     // ─── Entry point ──────────────────────────────────────────────────────────
-    public void processMigration(String dbConfigId) {
+    public void processVatTuMigration(String dbConfigId) {
         // 1. Đọc cấu hình kết nối
         DbConfig config = dbConfigDao.findById(dbConfigId);
         if (config == null) {
@@ -100,6 +100,7 @@ public class DatabaseMigrationService {
 
         loadAndSyncNhomVthh(remote, dbStr);
         loadAndSyncPhongBan(remote, dbStr);
+        loadAndSyncDonViTinh(remote, dbStr);
 
         // Truyền fromDate vào loadVatTuList
         Map<String, MigrationGroup> groupMap = loadVatTuList(remote, dbStr, fromDate);
@@ -109,6 +110,38 @@ public class DatabaseMigrationService {
         persistToMySQL(groupMap);
 
         System.out.println("=== Đồng bộ hoàn tất: " + groupMap.size() + " mã vật tư ===");
+    }
+
+    // ─── Entry point cho Tài Sản ──────────────────────────────────────────────
+    public void processTaiSanMigration(String dbConfigId) {
+        // 1. Đọc cấu hình kết nối
+        DbConfig config = dbConfigDao.findById(dbConfigId);
+        if (config == null) {
+            throw new RuntimeException("Chưa cấu hình Cơ sở dữ liệu để đồng bộ!");
+        }
+        String dbms = config.getDbms() != null ? config.getDbms().toUpperCase() : "MSSQL";
+        if (!"MSSQL".equals(dbms)) {
+            throw new RuntimeException("Tính năng đồng bộ hiện chỉ hỗ trợ MS SQL Server.");
+        }
+        String dbStr = (config.getDbName() != null && !config.getDbName().isEmpty()) ? config.getDbName() : "";
+        if (dbStr.isEmpty()) {
+            throw new RuntimeException("Chưa cấu hình Tên Database (DbName)!");
+        }
+
+        System.out.println("=== Bắt đầu đồng bộ danh mục TÀI SẢN từ database: " + dbStr + " ===");
+
+        // 2. Tạo JdbcTemplate trỏ tới remote MSSQL
+        JdbcTemplate remote = buildRemoteJdbcTemplate(config, dbStr);
+
+        // Đồng bộ các danh mục cho tài sản trước
+        loadAndSyncDonViTinh(remote, dbStr);
+        loadAndSyncHienTrangKyThuat(remote, dbStr);
+        loadAndSyncNhomTaiSan(remote, dbStr);
+        loadAndSyncLyDoTang(remote, dbStr);
+        loadAndSyncPhongBan(remote, dbStr);
+
+        System.out.println("=== Đồng bộ các danh mục cho tài sản hoàn tất ===");
+        loadAndSyncTaiSanMain(remote, dbStr);
     }
 
     // ─── Bước 1: Kết nối remote ───────────────────────────────────────────────
@@ -178,7 +211,7 @@ public class DatabaseMigrationService {
             vatTu.setNgayCapNhat(now);
             vatTu.setSoLuong(0);          // sẽ cộng dồn ở bước 3
             vatTu.setGiaTri(giaGoc);
-            vatTu.setHienTrang(0);
+            vatTu.setHienTrang(null);
 
             groupMap.put(maVthh, new MigrationGroup(vatTu));
         }
@@ -265,6 +298,11 @@ public class DatabaseMigrationService {
             String tenDthh = nvl(row.get("TEN_DTTH"));
             if (maDthh.isEmpty()) continue;
 
+            // Bỏ qua một số mã phòng ban theo yêu cầu
+            if (java.util.Arrays.asList("00", "2293", "511", "711", "CDUB", "CTMT", "CTNH").contains(maDthh)) {
+                continue;
+            }
+
             try {
                 int exists = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM PhongBan WHERE Id = ?", Integer.class, maDthh);
                 if (exists > 0) {
@@ -293,6 +331,154 @@ public class DatabaseMigrationService {
             }
         }
         System.out.println("  Đã đồng bộ " + count + " phòng ban vào PhongBan.");
+    }
+
+    // ─── Đồng bộ danh mục Đơn vị tính (DM_DVT) ──────────────────────────────
+    private void loadAndSyncDonViTinh(JdbcTemplate remote, String dbStr) {
+        System.out.println("  Đồng bộ danh mục DonViTinh từ DM_DVT...");
+        String sql = String.format("SELECT MA_DVT, TEN_DVT FROM [%s].dbo.DM_DVT", dbStr);
+        List<Map<String, Object>> rows;
+        try {
+            rows = remote.queryForList(sql);
+        } catch (Exception e) {
+            System.err.println("  [CẢNH BÁO] Không thể query DM_DVT: " + e.getMessage());
+            return;
+        }
+
+        int count = 0;
+        for (Map<String, Object> row : rows) {
+            String ma = nvl(row.get("MA_DVT"));
+            String ten = nvl(row.get("TEN_DVT"));
+            if (ma.isEmpty()) continue;
+
+            try {
+                int exists = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM DonViTinh WHERE Id = ?", Integer.class, ma);
+                if (exists > 0) {
+                    jdbcTemplate.update("UPDATE DonViTinh SET TenDonVi = ? WHERE Id = ?", ten, ma);
+                } else {
+                    jdbcTemplate.update("INSERT INTO DonViTinh (Id, TenDonVi, Note, LaHeThong) VALUES (?, ?, ?, ?)", ma, ten, "", false);
+                }
+                count++;
+            } catch (Exception e) {
+                System.err.println("  [LỖI] Không thể upsert DonViTinh id=" + ma + ": " + e.getMessage());
+            }
+        }
+        System.out.println("  Đã đồng bộ " + count + " đơn vị tính.");
+    }
+
+    // ─── Đồng bộ danh mục Hiện trạng kỹ thuật (DM_HIENTRANG / DM_HIEN_TRANG) ──
+    private void loadAndSyncHienTrangKyThuat(JdbcTemplate remote, String dbStr) {
+        String sql1 = String.format("SELECT MA_HIEN_TRANG, TEN_HIEN_TRANG FROM [%s].dbo.DM_HIENTRANG", dbStr);
+        String sql2 = String.format("SELECT MA_HIEN_TRANG, TEN_HIEN_TRANG FROM [%s].dbo.DM_HIEN_TRANG", dbStr);
+        
+        List<Map<String, Object>> rows = null;
+        try {
+            rows = remote.queryForList(sql1);
+            System.out.println("  Đồng bộ danh mục HienTrangKyThuat từ bảng DM_HIENTRANG...");
+        } catch (Exception e) {
+            try {
+                rows = remote.queryForList(sql2);
+                System.out.println("  Đồng bộ danh mục HienTrangKyThuat từ bảng DM_HIEN_TRANG...");
+            } catch (Exception ex) {
+                System.err.println("  [CẢNH BÁO] Không thể query DM_HIENTRANG hay DM_HIEN_TRANG: " + ex.getMessage());
+                return;
+            }
+        }
+        
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+        String now = LocalDateTime.now().format(fmt);
+        int count = 0;
+
+        for (Map<String, Object> row : rows) {
+            String maStr = nvl(row.get("MA_HIEN_TRANG"));
+            String ten = nvl(row.get("TEN_HIEN_TRANG"));
+            if (maStr.isEmpty()) continue;
+            
+            try {
+                int exists = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM HienTrangKyThuat WHERE Id = ?", Integer.class, maStr);
+                if (exists > 0) {
+                    jdbcTemplate.update("UPDATE HienTrangKyThuat SET TenHTKT = ?, NgayCapNhat = ?, NguoiCapNhat = ? WHERE Id = ?", ten, now, "system", maStr);
+                } else {
+                    jdbcTemplate.update("INSERT INTO HienTrangKyThuat (Id, TenHTKT, MoTa, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
+                            maStr, ten, "", now, now, "system", "system", true);
+                }
+                count++;
+            } catch (Exception e) {
+                System.err.println("  [LỖI] Không thể upsert HienTrangKyThuat id=" + maStr + ": " + e.getMessage());
+            }
+        }
+        System.out.println("  Đã đồng bộ " + count + " hiện trạng kỹ thuật.");
+    }
+
+    // ─── Đồng bộ danh mục Nhóm tài sản (DM_NHOM_TSCD) ───────────────────────
+    private void loadAndSyncNhomTaiSan(JdbcTemplate remote, String dbStr) {
+        System.out.println("  Đồng bộ danh mục NhomTaiSan từ DM_NHOM_TSCD...");
+        String sql = String.format("SELECT MA_NHOM_TSCD, TEN_NHOM_TSCD FROM [%s].dbo.DM_NHOM_TSCD", dbStr);
+        List<Map<String, Object>> rows;
+        try {
+            rows = remote.queryForList(sql);
+        } catch (Exception e) {
+            System.err.println("  [CẢNH BÁO] Không thể query DM_NHOM_TSCD: " + e.getMessage());
+            return;
+        }
+
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+        String now = LocalDateTime.now().format(fmt);
+        int count = 0;
+
+        for (Map<String, Object> row : rows) {
+            String ma = nvl(row.get("MA_NHOM_TSCD"));
+            String ten = nvl(row.get("TEN_NHOM_TSCD"));
+            if (ma.isEmpty()) continue;
+
+            try {
+                int exists = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM NhomTaiSan WHERE Id = ?", Integer.class, ma);
+                if (exists > 0) {
+                    jdbcTemplate.update("UPDATE NhomTaiSan SET TenNhom = ?, NgayCapNhat = ?, NguoiCapNhat = ? WHERE Id = ?", ten, now, "system", ma);
+                } else {
+                    jdbcTemplate.update("INSERT INTO NhomTaiSan (Id, TenNhom, HieuLuc, IdCongTy, IdLyLich, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+                            ma, ten, true, "ct001", null, now, now, "system", "system", true);
+                }
+                count++;
+            } catch (Exception e) {
+                System.err.println("  [LỖI] Không thể upsert NhomTaiSan id=" + ma + ": " + e.getMessage());
+            }
+        }
+        System.out.println("  Đã đồng bộ " + count + " nhóm tài sản.");
+    }
+
+    // ─── Đồng bộ danh mục Lý do tăng (DM_LYDO_TG) ───────────────────────────
+    private void loadAndSyncLyDoTang(JdbcTemplate remote, String dbStr) {
+        System.out.println("  Đồng bộ danh mục LyDoTang từ DM_LYDO_TG...");
+        String sql = String.format("SELECT MA_LYDO_TG, TEN_LYDO_TG, TANG_GIAM FROM [%s].dbo.DM_LYDO_TG", dbStr);
+        List<Map<String, Object>> rows;
+        try {
+            rows = remote.queryForList(sql);
+        } catch (Exception e) {
+            System.err.println("  [CẢNH BÁO] Không thể query DM_LYDO_TG: " + e.getMessage());
+            return;
+        }
+
+        int count = 0;
+        for (Map<String, Object> row : rows) {
+            String ma = nvl(row.get("MA_LYDO_TG"));
+            String ten = nvl(row.get("TEN_LYDO_TG"));
+            Integer tangGiam = parseInteger(row.get("TANG_GIAM"), 1);
+            if (ma.isEmpty()) continue;
+
+            try {
+                int exists = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM LyDoTang WHERE Id = ?", Integer.class, ma);
+                if (exists > 0) {
+                    jdbcTemplate.update("UPDATE LyDoTang SET Ten = ?, TangGiam = ? WHERE Id = ?", ten, tangGiam, ma);
+                } else {
+                    jdbcTemplate.update("INSERT INTO LyDoTang (Id, Ten, TangGiam) VALUES (?, ?, ?)", ma, ten, tangGiam);
+                }
+                count++;
+            } catch (Exception e) {
+                System.err.println("  [LỖI] Không thể upsert LyDoTang id=" + ma + ": " + e.getMessage());
+            }
+        }
+        System.out.println("  Đã đồng bộ " + count + " lý do tăng giảm.");
     }
 
     // ─── Bước 3: Load VTHHPX + VTHHPX_CT, nhóm theo MA_PBAN_NHAP ────────────
@@ -537,10 +723,122 @@ public class DatabaseMigrationService {
         int chunkSize = 1000;
         for (int i = 0; i < batchArgs.size(); i += chunkSize) {
             List<Object[]> chunk = batchArgs.subList(i, Math.min(i + chunkSize, batchArgs.size()));
-            jdbcTemplate.batchUpdate(sql, chunk);
+            try {
+                jdbcTemplate.batchUpdate(sql, chunk);
+            } catch (Exception e) {
+                System.err.println("  [LỖI] Batch chunk thất bại, đang chuyển sang chạy từng dòng để bảo toàn dữ liệu hợp lệ...");
+                for (Object[] args : chunk) {
+                    try {
+                        jdbcTemplate.update(sql, args);
+                    } catch (Exception ex) {
+                        System.err.println("    [BỎ QUA] Lỗi dòng: " + ex.getMessage());
+                    }
+                }
+            }
         }
     }
 
+    // ─── Đồng bộ dữ liệu Tài sản chính (TS) ──────────────────────────────────
+    private void loadAndSyncTaiSanMain(JdbcTemplate remote, String dbStr) {
+        System.out.println("  Đồng bộ dữ liệu Tài sản từ bảng TS và TS_GIATRI...");
+        String sql = String.format(
+            "SELECT " +
+            "ts.SO_THE, ts.MA_TS, ts.TEN_TS, ts.MA_NHOM_TSCD, ts.MA_LYDO_TANG, " +
+            "ts.MA_KY_HIEU, ts.SO_KY_HIEU, ts.NUOC_SX, ts.NAM_SX, ts.MA_DVT, " +
+            "ts.MA_HIEN_TRANG, ts.NGAY_VAO_SO, ts.NGAY_SD, " +
+            "(SELECT TOP 1 NGUYEN_GIA FROM [%s].dbo.TS_GIATRI WHERE FR_KEY = ts.PR_KEY) AS NGUYEN_GIA " +
+            "FROM [%s].dbo.TS ts",
+            dbStr, dbStr
+        );
+
+        List<Map<String, Object>> rows;
+        try {
+            rows = remote.queryForList(sql);
+            System.out.println("  -> Đã truy vấn được " + rows.size() + " dòng từ bảng TS.");
+        } catch (Exception e) {
+            System.err.println("  [CẢNH BÁO] Không thể query dữ liệu TS: " + e.getMessage());
+            return;
+        }
+
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+        String now = LocalDateTime.now().format(fmt);
+        
+        List<Object[]> insertBatch = new ArrayList<>();
+        List<Object[]> updateBatch = new ArrayList<>();
+        
+        // Lấy danh sách các Id tài sản hiện có để chia ra insert/update
+        List<String> existingIds = jdbcTemplate.queryForList("SELECT Id FROM TaiSan", String.class);
+        Set<String> existingIdSet = new HashSet<>(existingIds);
+
+        // Tập hợp để theo dõi các MA_TS đã xử lý trong lô dữ liệu hiện tại (loại bỏ trùng lặp)
+        Set<String> processedIds = new HashSet<>();
+        int emptyIdCount = 0;
+
+        for (Map<String, Object> row : rows) {
+            String id = nvl(row.get("SO_THE"));
+            if (id.isEmpty()) {
+                emptyIdCount++;
+                continue;
+            }
+            
+            if (!processedIds.add(id)) {
+                System.out.println("  [BỎ QUA] Phát hiện dữ liệu trùng lặp SO_THE: " + id);
+                continue;
+            }
+            
+            String soThe = nvl(row.get("SO_THE"));
+            String tenTaiSan = nvl(row.get("TEN_TS"));
+            String idNhomTaiSan = nvl(row.get("MA_NHOM_TSCD"));
+            String lyDoTang = nvl(row.get("MA_LYDO_TANG"));
+            String kyHieu = nvl(row.get("MA_KY_HIEU"));
+            String soKyHieu = nvl(row.get("SO_KY_HIEU"));
+            String nuocSanXuat = nvl(row.get("NUOC_SX"));
+            Integer namSanXuat = parseInteger(row.get("NAM_SX"), null);
+            String donViTinh = nvl(row.get("MA_DVT"));
+            String hienTrang = nvl(row.get("MA_HIEN_TRANG"));
+            
+            // Format dates (lấy chuỗi, cắt 10 ký tự)
+            String rawNgayVaoSo = nvl(row.get("NGAY_VAO_SO"));
+            String ngayVaoSo = rawNgayVaoSo.length() >= 10 ? rawNgayVaoSo.substring(0, 10) : rawNgayVaoSo;
+            
+            String rawNgaySuDung = nvl(row.get("NGAY_SD"));
+            String ngaySuDung = rawNgaySuDung.length() >= 10 ? rawNgaySuDung.substring(0, 10) : rawNgaySuDung;
+            
+            Double nguyenGia = row.get("NGUYEN_GIA") != null ? ((Number) row.get("NGUYEN_GIA")).doubleValue() : null;
+            Integer soLuong = 1;
+            String idDonViBanDau = "K30";
+            
+            if (existingIdSet.contains(id)) {
+                // Update
+                updateBatch.add(new Object[]{
+                    soThe, tenTaiSan, idNhomTaiSan, lyDoTang, kyHieu, soKyHieu, 
+                    nuocSanXuat, namSanXuat, donViTinh, hienTrang, ngayVaoSo, 
+                    ngaySuDung, nguyenGia, now, "system", id
+                });
+            } else {
+                // Insert
+                insertBatch.add(new Object[]{
+                    id, soThe, tenTaiSan, idNhomTaiSan, lyDoTang, kyHieu, soKyHieu,
+                    nuocSanXuat, namSanXuat, donViTinh, hienTrang, ngayVaoSo,
+                    ngaySuDung, nguyenGia, soLuong, idDonViBanDau, "ct001",
+                    true, now, now, "system", "system"
+                });
+            }
+        }
+
+        System.out.println("  Bắt đầu batch insert/update dữ liệu TaiSan...");
+        
+        String insertSql = "INSERT INTO TaiSan (Id, SoThe, TenTaiSan, IdNhomTaiSan, LyDoTang, KyHieu, SoKyHieu, NuocSanXuat, NamSanXuat, DonViTinh, HienTrang, NgayVaoSo, NgaySuDung, NguyenGia, SoLuong, IdDonViBanDau, IdCongTy, IsActive, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        executeBatchWithChunks(insertSql, insertBatch);
+        
+        String updateSql = "UPDATE TaiSan SET SoThe=?, TenTaiSan=?, IdNhomTaiSan=?, LyDoTang=?, KyHieu=?, SoKyHieu=?, NuocSanXuat=?, NamSanXuat=?, DonViTinh=?, HienTrang=?, NgayVaoSo=?, NgaySuDung=?, NguyenGia=?, NgayCapNhat=?, NguoiCapNhat=? WHERE Id=?";
+        executeBatchWithChunks(updateSql, updateBatch);
+        
+        System.out.println("  Đã hoàn tất đồng bộ TaiSan (Insert: " + insertBatch.size() + ", Update: " + updateBatch.size() + ").");
+        if (emptyIdCount > 0) {
+            System.err.println("  [CẢNH BÁO] Có " + emptyIdCount + " tài sản bị bỏ qua vì trường SO_THE trống (null hoặc chuỗi rỗng)!");
+        }
+    }
 
     // ─── Utility ──────────────────────────────────────────────────────────────
     /** Chuyển Object → String, trả về "" nếu null */
@@ -589,6 +887,16 @@ public class DatabaseMigrationService {
             return total != null ? total : 0;
         } catch (Exception e) {
             return 0;
+        }
+    }
+
+    private Integer parseInteger(Object obj, Integer defaultValue) {
+        if (obj == null) return defaultValue;
+        if (obj instanceof Number) return ((Number) obj).intValue();
+        try {
+            return Integer.parseInt(obj.toString().trim());
+        } catch (NumberFormatException e) {
+            return defaultValue;
         }
     }
 }

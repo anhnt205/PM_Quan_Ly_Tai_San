@@ -12,6 +12,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
@@ -300,20 +301,26 @@ public class TaiSanService {
         return taiSanDao.updateTaiSanConTaiSan(map);
     }
 
+    @Transactional
     public int delete(String id) {
+        chuKySuaChuaDao.deleteByIdTaiSan(id);
         taiSanDao.deleteTaiSanConByTaiSan(id);
         return taiSanDao.delete(id);
     }
 
+    @Transactional
     public int batchDelete(List<String> ids) {
         if (ids == null || ids.isEmpty()) {
             return 0;
         }
+        chuKySuaChuaDao.batchDeleteByIdTaiSan(ids);
         taiSanDao.batchDeleteTaiSanConByTaiSan(ids);
         return taiSanDao.batchDelete(ids);
     }
 
+    @Transactional
     public int deleteAll() {
+        chuKySuaChuaDao.deleteAll();
         taiSanDao.deleteAllTaiSanCon();
         return taiSanDao.deleteAll();
     }

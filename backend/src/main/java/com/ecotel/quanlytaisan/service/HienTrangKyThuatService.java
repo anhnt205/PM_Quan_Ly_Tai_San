@@ -32,7 +32,7 @@ public class HienTrangKyThuatService {
         return hienTrangKyThuatDAO.findAllIncludeInactive();
     }
 
-    public HienTrangKyThuat getById(Integer id) {
+    public HienTrangKyThuat getById(String id) {
         return hienTrangKyThuatDAO.findById(id);
     }
 
@@ -52,15 +52,15 @@ public class HienTrangKyThuatService {
         return hienTrangKyThuatDAO.batchUpdate(list);
     }
 
-    public int delete(Integer id) {
+    public int delete(String id) {
         return hienTrangKyThuatDAO.delete(id);
     }
 
-    public int batchDelete(List<Integer> ids) {
+    public int batchDelete(List<String> ids) {
         return hienTrangKyThuatDAO.batchDelete(ids);
     }
 
-    public int softDelete(Integer id) {
+    public int softDelete(String id) {
         return hienTrangKyThuatDAO.softDelete(id);
     }
 

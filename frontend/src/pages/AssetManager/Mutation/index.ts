@@ -629,6 +629,22 @@ export const useAssetManagerMutation = (
     },
   });
 
+  const syncTaiSanMutation = useMutation({
+    mutationFn: async (dbConfigId: string) => {
+      const res = await api.post(`/migration/sync-tai-san/${dbConfigId}`);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["assetsPage"] });
+      showSuccessAlert(data || "Đồng bộ dữ liệu SQL Server thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data || error.message || "Quá trình đồng bộ thất bại"
+      );
+    },
+  });
+
   return {
     createMutation,
     updateMutation,
@@ -645,6 +661,7 @@ export const useAssetManagerMutation = (
     updateAssetOwnershipMutation,
     deleteAllMutation,
     createBatchMutation,
+    syncTaiSanMutation,
   };
 };
 
