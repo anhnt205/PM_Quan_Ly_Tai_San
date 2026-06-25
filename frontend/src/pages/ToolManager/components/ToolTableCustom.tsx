@@ -32,6 +32,101 @@ import { ColumnConfig } from "../columnConfig";
 import ColumnConfigMenu from "./ColumnConfig";
 import { findById } from "../../../utils/helpers";
 import { showConfirmAlert } from "../../../components/Alert";
+import { useQuery } from "@tanstack/react-query";
+import { fetchToolDetails } from "../Mutation";
+
+const ExpandedRowDetails = ({ toolId, allDepartments }: { toolId: string; allDepartments: any[] }) => {
+  const { data: fullTool, isLoading } = useQuery({
+    queryKey: ["toolDetails", toolId],
+    queryFn: () => fetchToolDetails(toolId),
+  });
+
+  const detailsToShow = fullTool?.chiTietDonViSoHuuList || [];
+
+  return (
+    <Box sx={{ p: 2 }}>
+      <Typography
+        variant="subtitle2"
+        sx={{
+          fontWeight: 700,
+          mb: 2,
+          fontSize: "14px",
+          color: "#115230",
+        }}
+      >
+        Chi tiết đơn vị sở hữu
+      </Typography>
+
+      <Table
+        size="small"
+        sx={{
+          backgroundColor: "#ffffff",
+          border: "1px solid #cce5d3",
+          width: "100%",
+          tableLayout: "fixed",
+          boxSizing: "border-box",
+        }}
+      >
+        <TableHead>
+          <TableRow
+            sx={{
+              backgroundColor: "#d8eedf",
+              "& .MuiTableCell-head": {
+                color: "#13633b",
+                fontWeight: 700,
+                padding: "10px",
+                border: "1px solid #cce5d3",
+              },
+            }}
+          >
+            <TableCell>Số chứng từ</TableCell>
+            <TableCell>Đơn vị sở hữu</TableCell>
+            <TableCell>Số lượng đang sở hữu</TableCell>
+            <TableCell>Số lượng đã bàn giao</TableCell>
+            <TableCell>Ngày vào sổ</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {isLoading ? (
+            <TableRow>
+              <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
+                <CircularProgress size={24} color="success" />
+              </TableCell>
+            </TableRow>
+          ) : detailsToShow.length > 0 ? (
+            detailsToShow.map((detail: any, index: number) => (
+              <TableRow key={`detail-item-${detail.soKyHieu || index}`}>
+                <TableCell sx={{ border: "1px solid #e2ece5" }}>
+                  {detail.soChungTu || "-"}
+                </TableCell>
+                <TableCell sx={{ border: "1px solid #e2ece5" }}>
+                  {findById(allDepartments, detail.idDonViSoHuu)?.tenPhongBan ||
+                    detail.idDonViSoHuu ||
+                    "-"}
+                </TableCell>
+                <TableCell sx={{ border: "1px solid #e2ece5" }}>
+                  {detail.soLuong || 0}
+                </TableCell>
+                <TableCell sx={{ border: "1px solid #e2ece5" }}>
+                  {detail.soLuongDaBanGiao || 0}
+                </TableCell>
+                <TableCell sx={{ border: "1px solid #e2ece5" }}>
+                  {detail.ngayTao || "-"}
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={5} align="center" sx={{ py: 2 }}>
+                Không có dữ liệu chi tiết
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </Box>
+  );
+};
 
 interface Props {
   tableId?: string;
@@ -182,13 +277,11 @@ export default function ToolTableCustom({
   };
 
   const handleExpandClick = (id: string | number) => {
-    const newExpanded = new Set(expandedRows);
-    if (newExpanded.has(id)) {
-      newExpanded.delete(id);
+    if (expandedRows.has(id)) {
+      setExpandedRows(new Set());
     } else {
-      newExpanded.add(id);
+      setExpandedRows(new Set([id]));
     }
-    setExpandedRows(newExpanded);
   };
 
   const handleExpandAll = () => {
@@ -218,13 +311,24 @@ export default function ToolTableCustom({
     [columns],
   );
 
-  const handleExportSelectedExcel = () => {
+  const handleExportSelectedExcel = async () => {
     const selectedRows = rows.filter((row) =>
       selectedIds.includes(String(row.id)),
     );
     if (selectedRows.length === 0) return;
 
-    const dataToExport = selectedRows.map((row) => {
+    const enrichedRows = await Promise.all(
+      selectedRows.map(async (row) => {
+        try {
+          const full = await fetchToolDetails(row.id);
+          return { ...row, chiTietDonViSoHuuList: full.chiTietDonViSoHuuList };
+        } catch (e) {
+          return row;
+        }
+      })
+    );
+
+    const dataToExport = enrichedRows.map((row) => {
       const item: Record<string, any> = {};
       visibleColumns.forEach((col) => {
         const rawValue = row[col.key];
@@ -382,89 +486,7 @@ export default function ToolTableCustom({
               }}
             >
               {/* Wrap content in an inner Box for padding, so the outer Box width remains exact */}
-              <Box sx={{ p: 2 }}>
-                <Typography
-                  variant="subtitle2"
-                  sx={{
-                    fontWeight: 700,
-                    mb: 2,
-                    fontSize: "14px",
-                    color: "#115230",
-                  }}
-                >
-                  Chi tiết đơn vị sở hữu
-                </Typography>
-
-                {/* Sub-table */}
-                <Table
-                  size="small"
-                  sx={{
-                    backgroundColor: "#ffffff",
-                    border: "1px solid #cce5d3",
-                    width: "100%",
-                    tableLayout: "fixed",
-                    boxSizing: "border-box",
-                  }}
-                >
-                  <TableHead>
-                    <TableRow
-                      sx={{
-                        backgroundColor: "#d8eedf",
-                        "& .MuiTableCell-head": {
-                          color: "#13633b",
-                          fontWeight: 700,
-                          padding: "10px",
-                          border: "1px solid #cce5d3",
-                        },
-                      }}
-                    >
-                      <TableCell>Số chứng từ</TableCell>
-                      <TableCell>Đơn vị sở hữu</TableCell>
-                      <TableCell>Số lượng đang sở hữu</TableCell>
-                      <TableCell>Số lượng đã bàn giao</TableCell>
-                      <TableCell>Ngày vào sổ</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {loading ? (
-                      <TableRow>
-                        <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
-                          <CircularProgress size={24} color="success" />
-                        </TableCell>
-                      </TableRow>
-                    ) : detailsToShow.length > 0 ? (
-                      detailsToShow.map((detail: any) => (
-                        <TableRow key={`detail-item-${detail.soKyHieu}`}>
-                          <TableCell sx={{ border: "1px solid #e2ece5" }}>
-                            {detail.soChungTu || "-"}
-                          </TableCell>
-                          <TableCell sx={{ border: "1px solid #e2ece5" }}>
-                            {findById(allDepartments, detail.idDonViSoHuu)
-                              ?.tenPhongBan ||
-                              detail.idDonViSoHuu ||
-                              "-"}
-                          </TableCell>
-                          <TableCell sx={{ border: "1px solid #e2ece5" }}>
-                            {detail.soLuong || 0}
-                          </TableCell>
-                          <TableCell sx={{ border: "1px solid #e2ece5" }}>
-                            {detail.soLuongDaBanGiao || 0}
-                          </TableCell>
-                          <TableCell sx={{ border: "1px solid #e2ece5" }}>
-                            {detail.ngayTao || "-"}
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={5} align="center" sx={{ py: 2 }}>
-                          Không có dữ liệu chi tiết
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </Box>
+              <ExpandedRowDetails toolId={row.id} allDepartments={allDepartments} />
             </Box>
           </TableCell>
         </TableRow>,

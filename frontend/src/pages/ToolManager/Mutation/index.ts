@@ -654,6 +654,11 @@ export const useToolManagerMutation = (
   };
 };
 
+export const fetchToolDetails = async (id: string) => {
+  const res = await api.get(`/ccdcvattu/${id}`);
+  return res.data.data || res.data;
+};
+
 export const useToolPageQuery = (
   page?: number,
   pageSize?: number,

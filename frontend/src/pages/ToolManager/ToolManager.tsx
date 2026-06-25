@@ -5,7 +5,7 @@ import { GridRowParams } from "@mui/x-data-grid";
 import ToolForm from "./components/ToolForm";
 import ToolTableCustom from "./components/ToolTableCustom";
 import ToolDetailSidebar from "./components/ToolDetailSidebar";
-import { useToolManagerMutation, useToolPageQuery } from "./Mutation";
+import { useToolManagerMutation, useToolPageQuery, fetchToolDetails } from "./Mutation";
 import { createColumns } from "./columnConfig";
 import { useAllDepartmentsQuery } from "../Department/Mutation";
 import { useAllToolTypeQuery } from "../ToolType/Mutation";
@@ -116,20 +116,30 @@ export default function ToolManager() {
     setOpenHistory(true);
   };
 
-  const handleCopy = (row: any) => {
-    const { id, ...copyData } = row;
-    setSelectedTool({ ...copyData, id: "" });
-    setIsCopy(true);
-    setReadOnly(false);
-    setShowForm(true);
-    setShowSidebar(false); // Ẩn sidebar nếu nó đang mở
+  const handleCopy = async (row: any) => {
+    try {
+      const fullTool = await fetchToolDetails(row.id);
+      const { id, ...copyData } = fullTool;
+      setSelectedTool({ ...copyData, id: "" });
+      setIsCopy(true);
+      setReadOnly(false);
+      setShowForm(true);
+      setShowSidebar(false); // Ẩn sidebar nếu nó đang mở
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const handleRowEdit = (row: any) => {
-    setSelectedTool(row);
-    setReadOnly(true);
-    setShowForm(true);
-    setShowSidebar(false);
+  const handleRowEdit = async (row: any) => {
+    try {
+      const fullTool = await fetchToolDetails(row.id);
+      setSelectedTool(fullTool);
+      setReadOnly(true);
+      setShowForm(true);
+      setShowSidebar(false);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const [columns, setColumns] = useState(() =>
@@ -361,11 +371,14 @@ export default function ToolManager() {
               total={toolsPage?.totalItems || 0}
               columns={columns}
               onColumnsChange={setColumns}
-              onRowClick={(row) => {
-                setSelectedTool(row);
-                // setReadOnly(true);
-                // setShowForm(true);
-                setShowSidebar(true);
+              onRowClick={async (row) => {
+                try {
+                  const fullTool = await fetchToolDetails(row.id);
+                  setSelectedTool(fullTool);
+                  setShowSidebar(true);
+                } catch (e) {
+                  console.error(e);
+                }
               }}
               selectedIds={selectedIds}
               onSelectionChange={setSelectedIds}
