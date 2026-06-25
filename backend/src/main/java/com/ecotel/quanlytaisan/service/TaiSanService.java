@@ -332,6 +332,12 @@ public class TaiSanService {
             String idDonVi = map.get("idDonVi");
             result += taiSanDao.updateDonViSoHuu(id, idDonVi);
 
+            List<TaiSanCon> childAssets = taiSanDao.getTaiSanConByTaiSan(id);
+            if (childAssets != null && !childAssets.isEmpty()) {
+                for (TaiSanCon child : childAssets) {
+                    taiSanDao.updateDonViSoHuu(child.getIdTaiSanCon(), idDonVi);
+                }
+            }
         }
         return result;
     }

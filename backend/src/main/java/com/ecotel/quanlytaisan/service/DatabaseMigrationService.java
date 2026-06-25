@@ -138,7 +138,7 @@ public class DatabaseMigrationService {
         loadAndSyncHienTrangKyThuat(remote, dbStr);
         loadAndSyncNhomTaiSan(remote, dbStr);
         loadAndSyncLyDoTang(remote, dbStr);
-        loadAndSyncPhongBan(remote, dbStr);
+        // loadAndSyncPhongBan(remote, dbStr);
 
         System.out.println("=== Đồng bộ các danh mục cho tài sản hoàn tất ===");
         loadAndSyncTaiSanMain(remote, dbStr);
@@ -298,8 +298,9 @@ public class DatabaseMigrationService {
             String tenDthh = nvl(row.get("TEN_DTTH"));
             if (maDthh.isEmpty()) continue;
 
-            // Bỏ qua một số mã phòng ban theo yêu cầu
-            if (java.util.Arrays.asList("00", "2293", "511", "711", "CDUB", "CTMT", "CTNH").contains(maDthh)) {
+            // Bỏ qua một số mã phòng ban theo yêu cầu (bao gồm cả các mã có hậu tố, VD: 2293.1)
+            if (java.util.Arrays.asList("00", "2293", "511", "711", "CDUB", "CTMT", "CTNH")
+                    .stream().anyMatch(maDthh::startsWith)) {
                 continue;
             }
 

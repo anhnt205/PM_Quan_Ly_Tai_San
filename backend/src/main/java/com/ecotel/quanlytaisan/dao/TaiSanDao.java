@@ -958,7 +958,7 @@ public class TaiSanDao {
     }
 
     public List<TaiSanDTO> findByIdLoaiTS(String idLoaiTS) {
-        String sql = SELECT_TAISAN_DTO + " WHERE ts.IdLoaiTaiSan = ?";
+        String sql = SELECT_TAISAN_DTO + " WHERE ts.IdLoaiTaiSanCon = ?";
         List<TaiSanDTO> taiSanDTOList = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(TaiSanDTO.class), idLoaiTS);
         for (TaiSanDTO dto : taiSanDTOList) {
             List<NguonKinhPhi> nguonKinhPhiList = setNguonKinhPhiDao.getNguonKinhPhiByTaiSan(dto.getSoThe());

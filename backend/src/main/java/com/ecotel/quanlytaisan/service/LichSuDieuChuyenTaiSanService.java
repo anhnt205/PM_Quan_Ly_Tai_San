@@ -7,7 +7,10 @@ import com.ecotel.quanlytaisan.model.PageResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import com.ecotel.quanlytaisan.dao.TaiSanDao;
+import com.ecotel.quanlytaisan.model.TaiSanCon;
 
 @Service
 public class LichSuDieuChuyenTaiSanService {
@@ -15,11 +18,31 @@ public class LichSuDieuChuyenTaiSanService {
     @Autowired
     private LichSuDieuChuyenTaiSanDao lichSuDieuChuyenTaiSanDao;
 
+    @Autowired
+    private TaiSanDao taiSanDao;
+
     public int createBatch(List<LichSuDieuChuyenTaiSanDTO> list) {
         if (list == null || list.isEmpty()) {
             return 0;
         }
-        return lichSuDieuChuyenTaiSanDao.createBatch(list);
+
+        List<LichSuDieuChuyenTaiSanDTO> fullList = new ArrayList<>(list);
+        for (LichSuDieuChuyenTaiSanDTO dto : list) {
+            List<TaiSanCon> childAssets = taiSanDao.getTaiSanConByTaiSan(dto.getIdTaiSan());
+            if (childAssets != null && !childAssets.isEmpty()) {
+                for (TaiSanCon child : childAssets) {
+                    LichSuDieuChuyenTaiSanDTO childDto = new LichSuDieuChuyenTaiSanDTO();
+                    childDto.setIdTaiSan(child.getIdTaiSanCon());
+                    childDto.setIdBanGiaoTaiSan(dto.getIdBanGiaoTaiSan());
+                    childDto.setIdDonViNhan(dto.getIdDonViNhan());
+                    childDto.setIdDonViGiao(dto.getIdDonViGiao());
+                    childDto.setThoiGianBanGiao(dto.getThoiGianBanGiao());
+                    fullList.add(childDto);
+                }
+            }
+        }
+
+        return lichSuDieuChuyenTaiSanDao.createBatch(fullList);
     }
 
     public PageResponse<LichSuDieuChuyenTaiSan> getAllPaged(int page, int size, String idTaiSan, String fromDate, String toDate) {

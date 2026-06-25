@@ -694,6 +694,7 @@ export default forwardRef(function AssetTransferForm({
                             );
                           }}
                           disabled={readOnly}
+                          limitOptions={10}
                         />
                       </CustomTableCell>
                       <CustomTableCell>
@@ -703,7 +704,7 @@ export default forwardRef(function AssetTransferForm({
                           data={allUnits}
                           formik={formik}
                           field={`chiTietDieuDongTaiSanDTOS.${index}.donViTinh`}
-                          disabled={readOnly}
+                          disabled={true}
                         />
                       </CustomTableCell>
                       <CustomTableCell>
@@ -712,7 +713,7 @@ export default forwardRef(function AssetTransferForm({
                           type="number"
                           formik={formik}
                           field={`chiTietDieuDongTaiSanDTOS.${index}.soLuong`}
-                          disabled={readOnly}
+                          disabled={true}
                         />
                       </CustomTableCell>
                       <CustomTableCell>

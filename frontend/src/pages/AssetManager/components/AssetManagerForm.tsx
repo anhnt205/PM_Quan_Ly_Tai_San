@@ -134,8 +134,9 @@ const AssetRow = ({
 }: AssetRowProps) => {
   const [isExpanded, setIsExpanded] = useState(index === 0);
   const asset = formik.values.assets[index];
-
-  const { data: assetsByType = [] } = useAssetByTypeQuery(asset.idNhomTaiSan);
+  const { data: assetsByType = [] } = useAssetByTypeQuery(
+    asset.idLoaiTaiSanCon,
+  );
   const { data: typeAssetsByAssetGroup = [] } = useAllTypeAssetByGroupQuery(
     asset.idNhomTaiSan,
   );
