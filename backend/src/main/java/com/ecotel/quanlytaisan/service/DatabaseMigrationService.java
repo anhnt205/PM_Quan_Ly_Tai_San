@@ -138,7 +138,7 @@ public class DatabaseMigrationService {
         loadAndSyncHienTrangKyThuat(remote, dbStr);
         loadAndSyncNhomTaiSan(remote, dbStr);
         loadAndSyncLyDoTang(remote, dbStr);
-        // loadAndSyncPhongBan(remote, dbStr);
+        loadAndSyncPhongBan(remote, dbStr);
 
         System.out.println("=== Đồng bộ các danh mục cho tài sản hoàn tất ===");
         loadAndSyncTaiSanMain(remote, dbStr);
@@ -275,9 +275,9 @@ public class DatabaseMigrationService {
      * Nếu đã tồn tại, chỉ update tên phòng ban để giữ nguyên các field setup khác (IsKho, IdQuanLy...).
      */
     private void loadAndSyncPhongBan(JdbcTemplate remote, String dbStr) {
-        System.out.println("  Đồng bộ toàn bộ danh mục PhongBan từ DM_DTTH...");
+        System.out.println("  Đồng bộ toàn bộ danh mục PhongBan từ DM_DTPN...");
         String sql = String.format(
-            "SELECT MA_DTTH, TEN_DTTH FROM [%s].dbo.DM_DTTH",
+            "SELECT MA_DTPN, TEN_DTPN FROM [%s].dbo.DM_DTPN WHERE MA_LOAI_DTPN = 'PBAN' ",
             dbStr
         );
 
@@ -285,7 +285,7 @@ public class DatabaseMigrationService {
         try {
             rows = remote.queryForList(sql);
         } catch (Exception e) {
-            System.err.println("  [CẢNH BÁO] Không thể query DM_DTTH: " + e.getMessage());
+            System.err.println("  [CẢNH BÁO] Không thể query DM_DTPN: " + e.getMessage());
             return;
         }
 
@@ -294,15 +294,9 @@ public class DatabaseMigrationService {
         int count = 0;
 
         for (Map<String, Object> row : rows) {
-            String maDthh  = nvl(row.get("MA_DTTH"));
-            String tenDthh = nvl(row.get("TEN_DTTH"));
+            String maDthh  = nvl(row.get("MA_DTPN"));
+            String tenDthh = nvl(row.get("TEN_DTPN"));
             if (maDthh.isEmpty()) continue;
-
-            // Bỏ qua một số mã phòng ban theo yêu cầu (bao gồm cả các mã có hậu tố, VD: 2293.1)
-            if (java.util.Arrays.asList("00", "2293", "511", "711", "CDUB", "CTMT", "CTNH")
-                    .stream().anyMatch(maDthh::startsWith)) {
-                continue;
-            }
 
             try {
                 int exists = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM PhongBan WHERE Id = ?", Integer.class, maDthh);
@@ -331,6 +325,28 @@ public class DatabaseMigrationService {
                 System.err.println("  [LỖI] Không thể upsert PhongBan id=" + maDthh + ": " + e.getMessage());
             }
         }
+        
+        // Đảm bảo có Kho công ty (K30) và Kho thu hồi (Kth)
+        String[][] defaultKhos = {
+            {"K30", "Kho công ty"},
+            {"Kth", "Kho thu hồi"}
+        };
+        
+        for (String[] kho : defaultKhos) {
+            try {
+                int exists = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM PhongBan WHERE Id = ?", Integer.class, kho[0]);
+                if (exists == 0) {
+                    jdbcTemplate.update(
+                        "INSERT INTO PhongBan (Id, TenPhongBan, IdCongTy, IsActive, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                        kho[0], kho[1], "ct001", true, now, now, "system", "system"
+                    );
+                    System.out.println("  [THÊM MỚI] Đã thêm phòng ban/kho mặc định: " + kho[1] + " (" + kho[0] + ")");
+                }
+            } catch (Exception e) {
+                System.err.println("  [LỖI] Không thể kiểm tra/thêm kho mặc định " + kho[0] + ": " + e.getMessage());
+            }
+        }
+        
         System.out.println("  Đã đồng bộ " + count + " phòng ban vào PhongBan.");
     }
 
@@ -746,7 +762,7 @@ public class DatabaseMigrationService {
             "SELECT " +
             "ts.SO_THE, ts.MA_TS, ts.TEN_TS, ts.MA_NHOM_TSCD, ts.MA_LYDO_TANG, " +
             "ts.MA_KY_HIEU, ts.SO_KY_HIEU, ts.NUOC_SX, ts.NAM_SX, ts.MA_DVT, " +
-            "ts.MA_HIEN_TRANG, ts.NGAY_VAO_SO, ts.NGAY_SD, " +
+            "ts.MA_HIEN_TRANG, ts.NGAY_VAO_SO, ts.NGAY_SD, ts.MA_PBAN, " +
             "(SELECT TOP 1 NGUYEN_GIA FROM [%s].dbo.TS_GIATRI WHERE FR_KEY = ts.PR_KEY) AS NGUYEN_GIA " +
             "FROM [%s].dbo.TS ts",
             dbStr, dbStr
@@ -768,8 +784,10 @@ public class DatabaseMigrationService {
         List<Object[]> updateBatch = new ArrayList<>();
         
         // Lấy danh sách các Id tài sản hiện có để chia ra insert/update
-        List<String> existingIds = jdbcTemplate.queryForList("SELECT Id FROM TaiSan", String.class);
-        Set<String> existingIdSet = new HashSet<>(existingIds);
+        Map<String, String> existingTaiSanMap = new HashMap<>();
+        jdbcTemplate.query("SELECT Id, IdDonViHienThoi FROM TaiSan", rs -> {
+            existingTaiSanMap.put(rs.getString("Id"), rs.getString("IdDonViHienThoi"));
+        });
 
         // Tập hợp để theo dõi các MA_TS đã xử lý trong lô dữ liệu hiện tại (loại bỏ trùng lặp)
         Set<String> processedIds = new HashSet<>();
@@ -808,20 +826,24 @@ public class DatabaseMigrationService {
             Double nguyenGia = row.get("NGUYEN_GIA") != null ? ((Number) row.get("NGUYEN_GIA")).doubleValue() : null;
             Integer soLuong = 1;
             String idDonViBanDau = "K30";
+            String maPban = nvl(row.get("MA_PBAN"));
             
-            if (existingIdSet.contains(id)) {
+            if (existingTaiSanMap.containsKey(id)) {
                 // Update
+                String existingIdDonViHienThoi = existingTaiSanMap.get(id);
+                String idDonViHienThoiToUpdate = (existingIdDonViHienThoi != null && !existingIdDonViHienThoi.trim().isEmpty()) ? existingIdDonViHienThoi : maPban;
+                
                 updateBatch.add(new Object[]{
                     soThe, tenTaiSan, idNhomTaiSan, lyDoTang, kyHieu, soKyHieu, 
                     nuocSanXuat, namSanXuat, donViTinh, hienTrang, ngayVaoSo, 
-                    ngaySuDung, nguyenGia, now, "system", id
+                    ngaySuDung, nguyenGia, idDonViHienThoiToUpdate, now, "system", id
                 });
             } else {
                 // Insert
                 insertBatch.add(new Object[]{
                     id, soThe, tenTaiSan, idNhomTaiSan, lyDoTang, kyHieu, soKyHieu,
                     nuocSanXuat, namSanXuat, donViTinh, hienTrang, ngayVaoSo,
-                    ngaySuDung, nguyenGia, soLuong, idDonViBanDau, "ct001",
+                    ngaySuDung, nguyenGia, soLuong, idDonViBanDau, maPban, "ct001",
                     true, now, now, "system", "system"
                 });
             }
@@ -829,10 +851,10 @@ public class DatabaseMigrationService {
 
         System.out.println("  Bắt đầu batch insert/update dữ liệu TaiSan...");
         
-        String insertSql = "INSERT INTO TaiSan (Id, SoThe, TenTaiSan, IdNhomTaiSan, LyDoTang, KyHieu, SoKyHieu, NuocSanXuat, NamSanXuat, DonViTinh, HienTrang, NgayVaoSo, NgaySuDung, NguyenGia, SoLuong, IdDonViBanDau, IdCongTy, IsActive, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String insertSql = "INSERT INTO TaiSan (Id, SoThe, TenTaiSan, IdNhomTaiSan, LyDoTang, KyHieu, SoKyHieu, NuocSanXuat, NamSanXuat, DonViTinh, HienTrang, NgayVaoSo, NgaySuDung, NguyenGia, SoLuong, IdDonViBanDau, IdDonViHienThoi, IdCongTy, IsActive, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         executeBatchWithChunks(insertSql, insertBatch);
         
-        String updateSql = "UPDATE TaiSan SET SoThe=?, TenTaiSan=?, IdNhomTaiSan=?, LyDoTang=?, KyHieu=?, SoKyHieu=?, NuocSanXuat=?, NamSanXuat=?, DonViTinh=?, HienTrang=?, NgayVaoSo=?, NgaySuDung=?, NguyenGia=?, NgayCapNhat=?, NguoiCapNhat=? WHERE Id=?";
+        String updateSql = "UPDATE TaiSan SET SoThe=?, TenTaiSan=?, IdNhomTaiSan=?, LyDoTang=?, KyHieu=?, SoKyHieu=?, NuocSanXuat=?, NamSanXuat=?, DonViTinh=?, HienTrang=?, NgayVaoSo=?, NgaySuDung=?, NguyenGia=?, IdDonViHienThoi=?, NgayCapNhat=?, NguoiCapNhat=? WHERE Id=?";
         executeBatchWithChunks(updateSql, updateBatch);
         
         System.out.println("  Đã hoàn tất đồng bộ TaiSan (Insert: " + insertBatch.size() + ", Update: " + updateBatch.size() + ").");
