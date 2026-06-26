@@ -36,16 +36,16 @@ public class LoaiTaiSanConDao {
 
         // Xây dựng SQL động với JOIN
         StringBuilder sql = new StringBuilder(
-                "SELECT ltsc.*, lts.TenLoaiTaiSan as TenLoaiTs " +
+                "SELECT ltsc.*, lts.TenNhom as TenLoaiTs " +
                         "FROM LoaiTaiSanCon ltsc " +
-                        "LEFT JOIN LoaiTaiSan lts ON ltsc.IdLoaiTs = lts.Id " +
+                        "LEFT JOIN NhomTaiSan lts ON ltsc.IdLoaiTs = lts.Id " +
                         "WHERE 1=1"
         );
         List<Object> params = new ArrayList<>();
 
         if (search != null && !search.trim().isEmpty()) {
             String keyword = "%" + search.trim() + "%";
-            sql.append(" AND (ltsc.Id LIKE ? OR ltsc.IdLoaiTs LIKE ? OR ltsc.TenLoai LIKE ? OR lts.TenLoaiTaiSan LIKE ?)");
+            sql.append(" AND (ltsc.Id LIKE ? OR ltsc.IdLoaiTs LIKE ? OR ltsc.TenLoai LIKE ? OR lts.TenNhom LIKE ?)");
             params.add(keyword);
             params.add(keyword);
             params.add(keyword);
@@ -64,14 +64,14 @@ public class LoaiTaiSanConDao {
     public long countAll(String search) {
         StringBuilder sql = new StringBuilder(
                 "SELECT COUNT(*) FROM LoaiTaiSanCon ltsc " +
-                        "LEFT JOIN LoaiTaiSan lts ON ltsc.IdLoaiTs = lts.Id " +
+                        "LEFT JOIN NhomTaiSan lts ON ltsc.IdLoaiTs = lts.Id " +
                         "WHERE 1=1"
         );
         List<Object> params = new ArrayList<>();
 
         if (search != null && !search.trim().isEmpty()) {
             String keyword = "%" + search.trim() + "%";
-            sql.append(" AND (ltsc.Id LIKE ? OR ltsc.IdLoaiTs LIKE ? OR ltsc.TenLoai LIKE ? OR lts.TenLoaiTaiSan LIKE ?)");
+            sql.append(" AND (ltsc.Id LIKE ? OR ltsc.IdLoaiTs LIKE ? OR ltsc.TenLoai LIKE ? OR lts.TenNhom LIKE ?)");
             params.add(keyword);
             params.add(keyword);
             params.add(keyword);
@@ -107,17 +107,17 @@ public class LoaiTaiSanConDao {
     };
 
     public List<LoaiTaiSanCon> findAll() {
-        String sql = "SELECT ltsc.*, lts.TenLoaiTaiSan as TenLoaiTs " +
+        String sql = "SELECT ltsc.*, lts.TenNhom as TenLoaiTs " +
                 "FROM LoaiTaiSanCon ltsc " +
-                "LEFT JOIN LoaiTaiSan lts ON ltsc.IdLoaiTs = lts.Id";
+                "LEFT JOIN NhomTaiSan lts ON ltsc.IdLoaiTs = lts.Id";
         return jdbcTemplate.query(sql, rowMapperWithJoin);
     }
 
 
     public LoaiTaiSanCon findById(String id) {
-        String sql = "SELECT ltsc.*, lts.TenLoaiTaiSan as TenLoaiTs " +
+        String sql = "SELECT ltsc.*, lts.TenNhom as TenLoaiTs " +
                 "FROM LoaiTaiSanCon ltsc " +
-                "LEFT JOIN LoaiTaiSan lts ON ltsc.IdLoaiTs = lts.Id " +
+                "LEFT JOIN NhomTaiSan lts ON ltsc.IdLoaiTs = lts.Id " +
                 "WHERE ltsc.Id = ?";
         try {
             return jdbcTemplate.queryForObject(sql, rowMapperWithJoin, id);
@@ -127,9 +127,9 @@ public class LoaiTaiSanConDao {
     }
 
     public List<LoaiTaiSanCon> findByIdLoaiTs(String idLoaiTs) {
-        String sql = "SELECT ltsc.*, lts.TenLoaiTaiSan as TenLoaiTs " +
+        String sql = "SELECT ltsc.*, lts.TenNhom as TenLoaiTs " +
                 "FROM LoaiTaiSanCon ltsc " +
-                "LEFT JOIN LoaiTaiSan lts ON ltsc.IdLoaiTs = lts.Id " +
+                "LEFT JOIN NhomTaiSan lts ON ltsc.IdLoaiTs = lts.Id " +
                 "WHERE ltsc.IdLoaiTs = ?";
         return jdbcTemplate.query(sql, rowMapperWithJoin, idLoaiTs);
     }

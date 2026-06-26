@@ -43,7 +43,7 @@ public class HienTrangKyThuatController {
     }
 
     @GetMapping("/{id}")
-    public HienTrangKyThuat getById(@PathVariable("id") Integer id) {
+    public HienTrangKyThuat getById(@PathVariable("id") String id) {
         return hienTrangKyThuatService.getById(id);
     }
 
@@ -95,7 +95,7 @@ public class HienTrangKyThuatController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") Integer id, @RequestBody HienTrangKyThuat htkt) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @RequestBody HienTrangKyThuat htkt) {
         try {
             htkt.setId(id);
             int result = hienTrangKyThuatService.update(htkt);
@@ -111,7 +111,7 @@ public class HienTrangKyThuatController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") Integer id) {
+    public ResponseEntity<ApiResponse<Object>> delete(@PathVariable("id") String id) {
         try {
             int result = hienTrangKyThuatService.delete(id);
             if (result > 0) {
@@ -126,7 +126,7 @@ public class HienTrangKyThuatController {
     }
 
     @DeleteMapping("/soft/{id}")
-    public ResponseEntity<ApiResponse<Object>> softDelete(@PathVariable("id") Integer id) {
+    public ResponseEntity<ApiResponse<Object>> softDelete(@PathVariable("id") String id) {
         try {
             int result = hienTrangKyThuatService.softDelete(id);
             if (result > 0) {
@@ -141,7 +141,7 @@ public class HienTrangKyThuatController {
     }
 
     @DeleteMapping("/batch")
-    public ResponseEntity<ApiResponse<Object>> deleteBatch(@RequestBody List<Integer> ids) {
+    public ResponseEntity<ApiResponse<Object>> deleteBatch(@RequestBody List<String> ids) {
         try {
             int total = hienTrangKyThuatService.batchDelete(ids);
             if (total > 0) {

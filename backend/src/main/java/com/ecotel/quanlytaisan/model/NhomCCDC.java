@@ -15,6 +15,8 @@ public class NhomCCDC {
     private String ngayCapNhat;
     private String nguoiTao;
     private String nguoiCapNhat;
+    private Boolean laCCDC;
+    private Boolean laVatTu;
     public static NhomCCDC mapToNhomCCDC(String[] row) {
         NhomCCDC nccdc = new NhomCCDC();
         nccdc.setId(row[0]);

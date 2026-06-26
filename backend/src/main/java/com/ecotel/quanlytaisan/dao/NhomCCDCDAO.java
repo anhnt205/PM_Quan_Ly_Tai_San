@@ -54,7 +54,7 @@ public class NhomCCDCDAO {
         }
 
         String sql = """
-        SELECT Id, Ten, HieuLuc, IdCongTy, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat
+        SELECT Id, Ten, HieuLuc, IdCongTy, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, LaCCDC, LaVatTu
         FROM NhomCCDC
         %s
         ORDER BY %s %s
@@ -104,21 +104,39 @@ public class NhomCCDCDAO {
         
         if (count > 0) {
             // Nếu tồn tại thì update
-            return update(nhom);
+            return updateGiuLaCCDCLaVatTu(nhom);
         } else {
             // Nếu chưa tồn tại thì insert
-            String sql = "INSERT INTO NhomCCDC (Id, Ten, HieuLuc, IdCongTy, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO NhomCCDC (Id, Ten, HieuLuc, IdCongTy, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, LaCCDC, LaVatTu) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             return jdbcTemplate.update(sql, nhom.getId(), nhom.getTen(), nhom.getHieuLuc() != null ? nhom.getHieuLuc() : true,
                     nhom.getIdCongTy(), nhom.getNgayTao(), nhom.getNgayCapNhat(),
-                    nhom.getNguoiTao(), nhom.getNguoiCapNhat());
+                    nhom.getNguoiTao(), nhom.getNguoiCapNhat(),
+                    nhom.getLaCCDC() != null ? nhom.getLaCCDC() : false,
+                    nhom.getLaVatTu() != null ? nhom.getLaVatTu() : false);
         }
     }
 
     public int update(NhomCCDC nhom) {
-        String sql = "UPDATE NhomCCDC SET Ten=?, HieuLuc=?, IdCongTy=?, NgayCapNhat=?, NguoiCapNhat=? WHERE Id=?";
+        String sql = "UPDATE NhomCCDC SET Ten=?, HieuLuc=?, IdCongTy=?, NgayCapNhat=?, NguoiCapNhat=?, LaCCDC=?, LaVatTu=? WHERE Id=?";
         return jdbcTemplate.update(sql, nhom.getTen(), nhom.getHieuLuc() != null ? nhom.getHieuLuc() : true, nhom.getIdCongTy(),
-                nhom.getNgayCapNhat(), nhom.getNguoiCapNhat(), nhom.getId());
+                nhom.getNgayCapNhat(), nhom.getNguoiCapNhat(),
+                nhom.getLaCCDC() != null ? nhom.getLaCCDC() : false,
+                nhom.getLaVatTu() != null ? nhom.getLaVatTu() : false,
+                nhom.getId());
+    }
+
+    /** Update KHÔNG đụng tới LaCCDC, LaVatTu — dùng khi đồng bộ từ nguồn ngoài (job sync),
+     *  để giữ nguyên giá trị người dùng đã tick tay trước đó trên giao diện. */
+    public int updateGiuLaCCDCLaVatTu(NhomCCDC nhom) {
+        String sql = "UPDATE NhomCCDC SET Ten=?, HieuLuc=?, IdCongTy=?, NgayCapNhat=?, NguoiCapNhat=? WHERE Id=?";
+        return jdbcTemplate.update(sql,
+                nhom.getTen(),
+                nhom.getHieuLuc() != null ? nhom.getHieuLuc() : true,
+                nhom.getIdCongTy(),
+                nhom.getNgayCapNhat(),
+                nhom.getNguoiCapNhat(),
+                nhom.getId());
     }
 
     public int delete(String id) {
@@ -127,8 +145,8 @@ public class NhomCCDCDAO {
     }
 
     public int insertBatch(List<NhomCCDC> nhomCCDCs) {
-        String sql = "INSERT INTO NhomCCDC (Id, Ten, HieuLuc, IdCongTy, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
+        String sql = "INSERT INTO NhomCCDC (Id, Ten, HieuLuc, IdCongTy, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, LaCCDC, LaVatTu) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
                 "ON DUPLICATE KEY UPDATE " +
                 "Ten = VALUES(Ten), " +
                 "HieuLuc = VALUES(HieuLuc), " +
@@ -136,7 +154,9 @@ public class NhomCCDCDAO {
                 "NgayTao = VALUES(NgayTao), " +
                 "NgayCapNhat = VALUES(NgayCapNhat), " +
                 "NguoiTao = VALUES(NguoiTao), " +
-                "NguoiCapNhat = VALUES(NguoiCapNhat)";
+                "NguoiCapNhat = VALUES(NguoiCapNhat), " +
+                "LaCCDC = VALUES(LaCCDC), " +
+                "LaVatTu = VALUES(LaVatTu)";
 
         int[] results = jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
@@ -150,6 +170,8 @@ public class NhomCCDCDAO {
                 ps.setString(6, nhom.getNgayCapNhat());
                 ps.setString(7, nhom.getNguoiTao());
                 ps.setString(8, nhom.getNguoiCapNhat());
+                ps.setBoolean(9, nhom.getLaCCDC() != null ? nhom.getLaCCDC() : false);
+                ps.setBoolean(10, nhom.getLaVatTu() != null ? nhom.getLaVatTu() : false);
             }
 
             @Override
@@ -161,7 +183,7 @@ public class NhomCCDCDAO {
     }
 
     public int updateBatch(List<NhomCCDC> nhomCCDCs) {
-        String sql = "UPDATE NhomCCDC SET Ten=?, HieuLuc=?, IdCongTy=?, NgayCapNhat=?, NguoiCapNhat=? WHERE Id=?";
+        String sql = "UPDATE NhomCCDC SET Ten=?, HieuLuc=?, IdCongTy=?, NgayCapNhat=?, NguoiCapNhat=?, LaCCDC=?, LaVatTu=? WHERE Id=?";
         int[] results = jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
@@ -171,7 +193,9 @@ public class NhomCCDCDAO {
                 ps.setString(3, nhom.getIdCongTy());
                 ps.setString(4, nhom.getNgayCapNhat());
                 ps.setString(5, nhom.getNguoiCapNhat());
-                ps.setString(6, nhom.getId());
+                ps.setBoolean(6, nhom.getLaCCDC() != null ? nhom.getLaCCDC() : false);
+                ps.setBoolean(7, nhom.getLaVatTu() != null ? nhom.getLaVatTu() : false);
+                ps.setString(8, nhom.getId());
             }
             
             @Override

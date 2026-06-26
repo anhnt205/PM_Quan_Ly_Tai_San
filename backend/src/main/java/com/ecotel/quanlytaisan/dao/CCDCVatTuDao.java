@@ -44,7 +44,9 @@ public class CCDCVatTuDao {
                     ccdc.NguoiCapNhat,
                     ccdc.IsActive,
                     ccdc.IdLoaiCCDCCon, 
-                    ccdc.HienTrang
+                    ccdc.HienTrang,
+                    ccdc.DonViTinh2,
+                    ccdc.SoLuong2
                 FROM 
                     CCDCVatTu AS ccdc
                 LEFT JOIN 
@@ -64,10 +66,12 @@ public class CCDCVatTuDao {
         return jdbcTemplate.queryForObject(sql, Long.class, idCongTy);
     }
 
-    public long countAllPaged(String idCongTy, String search, String idDonViSoHuu,String idNhomCCDC) {
+    public long countAllPaged(String idCongTy, String search, String idDonViSoHuu, String idNhomCCDC, String loai) {
     boolean hasSearch = search != null && !search.trim().isEmpty();
     boolean hasDonVi  = idDonViSoHuu != null && !idDonViSoHuu.trim().isEmpty();
     boolean hasNhomCCDC = idNhomCCDC != null && !idNhomCCDC.trim().isEmpty();
+    boolean isVatTu = "vattu".equalsIgnoreCase(loai);
+    boolean isCCDC  = "ccdc".equalsIgnoreCase(loai);
 
     StringBuilder sql = new StringBuilder("""
             SELECT COUNT(DISTINCT ccdc.Id)
@@ -81,8 +85,13 @@ public class CCDCVatTuDao {
     }
 
     sql.append(" WHERE ccdc.IdCongTy = ? ");
-     if (hasNhomCCDC) {
+    if (hasNhomCCDC) {
         sql.append(" AND ccdc.IdNhomCCDC = ? \n");
+    }
+    if (isCCDC) {
+        sql.append(" AND nccdc.laCCDC = TRUE \n");
+    } else if (isVatTu) {
+        sql.append(" AND nccdc.laVatTu = TRUE \n");
     }
 
     if (hasSearch) {
@@ -117,11 +126,13 @@ public class CCDCVatTuDao {
     public List<CCDCVatTuDTO> findAllPaged(
             String idCongTy, int offset, int limit,
             String sortBy, String sortDir,
-            String search, String idDonViSoHuu,String idNhomCCDC) {
+            String search, String idDonViSoHuu, String idNhomCCDC, String loai) {
 
         boolean hasSearch = search != null && !search.trim().isEmpty();
         boolean hasDonVi  = idDonViSoHuu != null && !idDonViSoHuu.trim().isEmpty();
         boolean hasNhomCCDC = idNhomCCDC != null && !idNhomCCDC.trim().isEmpty();
+        boolean isVatTu = "vattu".equalsIgnoreCase(loai);
+        boolean isCCDC  = "ccdc".equalsIgnoreCase(loai);
 
         String orderColumn = resolveOrderColumn(sortBy);
         String direction   = resolveDirection(sortDir);
@@ -160,7 +171,9 @@ public class CCDCVatTuDao {
                     ccdc.NguoiCapNhat,
                     ccdc.IsActive,
                     ccdc.IdLoaiCCDCCon,
-                    ccdc.HienTrang
+                    ccdc.HienTrang,
+                    ccdc.DonViTinh2,
+                    ccdc.SoLuong2
                 FROM CCDCVatTu AS ccdc
                 LEFT JOIN PhongBan AS pb ON ccdc.IdDonVi = pb.Id
                 LEFT JOIN NhomCCDC AS nccdc ON nccdc.Id = ccdc.IdNhomCCDC
@@ -173,6 +186,11 @@ public class CCDCVatTuDao {
         sql.append(" WHERE ccdc.IdCongTy = ? \n");
         if (hasNhomCCDC) {
             sql.append(" AND ccdc.IdNhomCCDC = ? \n");
+        }
+        if (isCCDC) {
+            sql.append(" AND nccdc.laCCDC = TRUE \n");
+        } else if (isVatTu) {
+            sql.append(" AND nccdc.laVatTu = TRUE \n");
         }
 
         if (hasSearch) {
@@ -200,7 +218,8 @@ public class CCDCVatTuDao {
                         ccdc.GiaTri, ccdc.SoKyHieu, ccdc.KyHieu, ccdc.CongSuat,
                         ccdc.NuocSanXuat, ccdc.NamSanXuat, ccdc.GhiChu, ccdc.IdCongTy,
                         ccdc.NgayTao, ccdc.NgayCapNhat, ccdc.NguoiTao, ccdc.NguoiCapNhat,
-                        ccdc.IsActive, ccdc.IdLoaiCCDCCon, ccdc.HienTrang
+                        ccdc.IsActive, ccdc.IdLoaiCCDCCon, ccdc.HienTrang,
+                        ccdc.DonViTinh2, ccdc.SoLuong2
                     """);
         }
 
@@ -274,7 +293,9 @@ public class CCDCVatTuDao {
                     ccdc.NguoiCapNhat,
                     ccdc.IsActive,
                     ccdc.IdLoaiCCDCCon, 
-                    ccdc.HienTrang
+                    ccdc.HienTrang,
+                    ccdc.DonViTinh2,
+                    ccdc.SoLuong2
                 FROM 
                     CCDCVatTu AS ccdc
                 LEFT JOIN 
@@ -333,7 +354,9 @@ public class CCDCVatTuDao {
                       ccdc.NguoiCapNhat,
                       ccdc.IsActive,
                       ccdc.IdLoaiCCDCCon,
-                         ccdc.HienTrang
+                         ccdc.HienTrang,
+                         ccdc.DonViTinh2,
+                         ccdc.SoLuong2
                   FROM 
                       CCDCVatTu AS ccdc
                   LEFT JOIN 
@@ -361,14 +384,14 @@ public class CCDCVatTuDao {
             return update(ccdc);
         } else {
             // Nếu chưa tồn tại thì insert
-            String sql = "INSERT INTO CCDCVatTu (Id, IdDonVi, Ten, NgayNhap, DonVitinh, SoLuong, GiaTri, SoKyHieu, KyHieu, CongSuat, NuocSanXuat, NamSanXuat, GhiChu, IdCongTy, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive,IdNhomCCDC,IdLoaiCCDCCon,   HienTrang) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?, ?)";
-            return jdbcTemplate.update(sql, ccdc.getId(), ccdc.getIdDonVi(), ccdc.getTen(), ccdc.getNgayNhap(), ccdc.getDonViTinh(), ccdc.getSoLuong(), ccdc.getGiaTri(), ccdc.getSoKyHieu(), ccdc.getKyHieu(), ccdc.getCongSuat(), ccdc.getNuocSanXuat(), ccdc.getNamSanXuat(), ccdc.getGhiChu(), ccdc.getIdCongTy(), ccdc.getNgayTao(), ccdc.getNgayCapNhat(), ccdc.getNguoiTao(), ccdc.getNguoiCapNhat(), ccdc.getIsActive(), ccdc.getIdNhomCCDC(),ccdc.getIdLoaiCCDCCon(), ccdc.getHienTrang());
+            String sql = "INSERT INTO CCDCVatTu (Id, IdDonVi, Ten, NgayNhap, DonVitinh, SoLuong, GiaTri, SoKyHieu, KyHieu, CongSuat, NuocSanXuat, NamSanXuat, GhiChu, IdCongTy, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive,IdNhomCCDC,IdLoaiCCDCCon, HienTrang, DonViTinh2, SoLuong2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?, ?, ?, ?)";
+            return jdbcTemplate.update(sql, ccdc.getId(), ccdc.getIdDonVi(), ccdc.getTen(), ccdc.getNgayNhap(), ccdc.getDonViTinh(), ccdc.getSoLuong(), ccdc.getGiaTri(), ccdc.getSoKyHieu(), ccdc.getKyHieu(), ccdc.getCongSuat(), ccdc.getNuocSanXuat(), ccdc.getNamSanXuat(), ccdc.getGhiChu(), ccdc.getIdCongTy(), ccdc.getNgayTao(), ccdc.getNgayCapNhat(), ccdc.getNguoiTao(), ccdc.getNguoiCapNhat(), ccdc.getIsActive(), ccdc.getIdNhomCCDC(),ccdc.getIdLoaiCCDCCon(), ccdc.getHienTrang(), ccdc.getDonViTinh2(), ccdc.getSoLuong2());
         }
     }
 
     public int update(CCDCVatTu ccdc) {
-        String sql = "UPDATE CCDCVatTu SET IdDonVi=?, Ten=?, NgayNhap=?, DonVitinh=?, SoLuong=?, GiaTri=?, SoKyHieu=?, KyHieu=?, CongSuat=?, NuocSanXuat=?, NamSanXuat=?, GhiChu=?, IdCongTy=?, NgayTao=?, NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?, IsActive=?,IdNhomCCDC=?,IdLoaiCCDCCon=?,    HienTrang=? WHERE Id=?";
-        return jdbcTemplate.update(sql, ccdc.getIdDonVi(), ccdc.getTen(), ccdc.getNgayNhap(), ccdc.getDonViTinh(), ccdc.getSoLuong(), ccdc.getGiaTri(), ccdc.getSoKyHieu(), ccdc.getKyHieu(), ccdc.getCongSuat(), ccdc.getNuocSanXuat(), ccdc.getNamSanXuat(), ccdc.getGhiChu(), ccdc.getIdCongTy(), ccdc.getNgayTao(), ccdc.getNgayCapNhat(), ccdc.getNguoiTao(), ccdc.getNguoiCapNhat(), ccdc.getIsActive(), ccdc.getIdNhomCCDC(),ccdc.getIdLoaiCCDCCon(), ccdc.getHienTrang(), ccdc.getId());
+        String sql = "UPDATE CCDCVatTu SET IdDonVi=?, Ten=?, NgayNhap=?, DonVitinh=?, SoLuong=?, GiaTri=?, SoKyHieu=?, KyHieu=?, CongSuat=?, NuocSanXuat=?, NamSanXuat=?, GhiChu=?, IdCongTy=?, NgayTao=?, NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?, IsActive=?,IdNhomCCDC=?,IdLoaiCCDCCon=?, HienTrang=?, DonViTinh2=?, SoLuong2=? WHERE Id=?";
+        return jdbcTemplate.update(sql, ccdc.getIdDonVi(), ccdc.getTen(), ccdc.getNgayNhap(), ccdc.getDonViTinh(), ccdc.getSoLuong(), ccdc.getGiaTri(), ccdc.getSoKyHieu(), ccdc.getKyHieu(), ccdc.getCongSuat(), ccdc.getNuocSanXuat(), ccdc.getNamSanXuat(), ccdc.getGhiChu(), ccdc.getIdCongTy(), ccdc.getNgayTao(), ccdc.getNgayCapNhat(), ccdc.getNguoiTao(), ccdc.getNguoiCapNhat(), ccdc.getIsActive(), ccdc.getIdNhomCCDC(),ccdc.getIdLoaiCCDCCon(), ccdc.getHienTrang(), ccdc.getDonViTinh2(), ccdc.getSoLuong2(), ccdc.getId());
     }
 
     public int delete(String id) {

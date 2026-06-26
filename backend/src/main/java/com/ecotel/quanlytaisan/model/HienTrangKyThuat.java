@@ -5,7 +5,7 @@ import org.apache.poi.ss.usermodel.Row;
 import static com.ecotel.quanlytaisan.utils.ParserHelper.getCellStringValue;
 
 public class HienTrangKyThuat {
-    private Integer id;
+    private String id;
     private String tenHTKT;
     private String moTa;
     private String ngayTao;
@@ -16,7 +16,7 @@ public class HienTrangKyThuat {
 
     public static HienTrangKyThuat mapToHienTrangKyThuat(String[] row) {
         HienTrangKyThuat htkt = new HienTrangKyThuat();
-        htkt.setId(row[0] != null && !row[0].isEmpty() ? Integer.parseInt(row[0]) : null);
+        htkt.setId(row[0] != null && !row[0].isEmpty() ? row[0] : null);
         htkt.setTenHTKT(row.length > 1 ? row[1] : null);
         htkt.setMoTa(row.length > 2 ? row[2] : null);
         htkt.setNgayTao(row.length > 3 ? row[3] : null);
@@ -30,7 +30,7 @@ public class HienTrangKyThuat {
     public static HienTrangKyThuat mapToHienTrangKyThuat(Row row) {
         HienTrangKyThuat htkt = new HienTrangKyThuat();
         String idStr = getCellStringValue(row.getCell(0));
-        htkt.setId(idStr != null && !idStr.isEmpty() ? Integer.parseInt(idStr) : null);
+        htkt.setId(idStr != null && !idStr.isEmpty() ? idStr : null);
         htkt.setTenHTKT(getCellStringValue(row.getCell(1)));
         htkt.setMoTa(getCellStringValue(row.getCell(2)));
         htkt.setNgayTao(getCellStringValue(row.getCell(3)));
@@ -43,11 +43,11 @@ public class HienTrangKyThuat {
     }
 
     // Getter & Setter
-    public Integer getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(String id) {
         this.id = id;
     }
 

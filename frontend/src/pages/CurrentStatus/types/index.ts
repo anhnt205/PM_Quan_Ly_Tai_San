@@ -1,5 +1,5 @@
 export interface CurrentStatusType {
-  id: number;
+  id: string;
   tenHTKT: string;
   moTa?: string;
   ngayTao?: string;

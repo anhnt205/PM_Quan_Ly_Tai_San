@@ -38,14 +38,14 @@ export default function FieldAutoCompleted({
   labelOption,
   componentsProps,
   autocompleteSx,
-  limitOptions,
+  limitOptions = 10,
   value: valueProp,
   setValue: setValueProp,
   noBorder,
   fontSize,
 }: Props) {
-// ... (omitting middle for brevity, but I should provide the full block in a real tool call)
-// actually I'll just use shorter chunks
+  // ... (omitting middle for brevity, but I should provide the full block in a real tool call)
+  // actually I'll just use shorter chunks
 
   const currentValue =
     formik && field ? getIn(formik.values, field) : valueProp;

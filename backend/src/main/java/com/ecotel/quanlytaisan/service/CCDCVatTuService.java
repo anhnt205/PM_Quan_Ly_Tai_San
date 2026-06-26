@@ -48,30 +48,22 @@ public class CCDCVatTuService {
     public PageResponse<CCDCVatTuDTO> getAllPaged(
         String idCongTy, int page, int size,
         String sortBy, String sortDir,
-        String search, String idDonViSoHuu,String idNhomCCDC) {
+        String search, String idDonViSoHuu, String idNhomCCDC, String loai) {
 
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
 
         boolean hasDonVi = idDonViSoHuu != null && !idDonViSoHuu.trim().isEmpty();
 
-        long total = ccdcVatTuDao.countAllPaged(idCongTy, search, idDonViSoHuu,idNhomCCDC);
+        long total = ccdcVatTuDao.countAllPaged(idCongTy, search, idDonViSoHuu, idNhomCCDC, loai);
         if (total == 0) return new PageResponse<>(List.of(), 0, page, size);
 
         int offset = page * size;
         List<CCDCVatTuDTO> items = ccdcVatTuDao.findAllPaged(
-                idCongTy, offset, size, sortBy, sortDir, search, idDonViSoHuu,idNhomCCDC);
+                idCongTy, offset, size, sortBy, sortDir, search, idDonViSoHuu, idNhomCCDC, loai);
 
-        for (CCDCVatTuDTO item : items) {
-            item.setChiTietTaiSanList(chiTietTaiSanDao.findAll(item.getId()));
-            item.setTaiSanConList(taiSanDao.getTaiSanConByTaiSan(item.getId()));
-
-            // Nếu lọc theo đơn vị: chỉ trả ChiTietDonViSoHuu của đơn vị đó
-            List<ChiTietDonViSoHuu> chiTietList = hasDonVi
-                    ? chiTietDonViSoHuuDao.findByIdCCDCVTAndIdDonViSoHuu(item.getId(), idDonViSoHuu)
-                    : chiTietDonViSoHuuDao.findByIdCCDCVT(item.getId());
-            item.setChiTietDonViSoHuuList(chiTietList);
-        }
+        // Removed eager loading to improve performance
+        // Details are now fetched on demand via getById
 
         return new PageResponse<>(items, total, page, size);
     }
@@ -101,15 +93,7 @@ public class CCDCVatTuService {
         int toIndex = Math.min(fromIndex + size, filtered.size());
         List<CCDCVatTuDTO> items = new ArrayList<>(filtered.subList(fromIndex, toIndex));
 
-        // Load chi tiết cho trang hiện tại
-        for (CCDCVatTuDTO item : items) {
-            List<ChiTietTaiSan> chiTietTaiSanList = chiTietTaiSanDao.findAll(item.getId());
-            item.setChiTietTaiSanList(chiTietTaiSanList);
-            List<TaiSanCon> taiSanConList = taiSanDao.getTaiSanConByTaiSan(item.getId());
-            item.setTaiSanConList(taiSanConList);
-            List<ChiTietDonViSoHuu> chiTietDonViSoHuuList = chiTietDonViSoHuuDao.findByIdCCDCVT(item.getId());
-            item.setChiTietDonViSoHuuList(chiTietDonViSoHuuList);
-        }
+        // Load chi tiết được chuyển sang getById để tối ưu performance
 
         return new PageResponse<>(items, total, page, size);
     }
@@ -125,14 +109,7 @@ public class CCDCVatTuService {
 
         int offset = page * size;
         List<CCDCVatTuDTO> items = ccdcVatTuDao.findAllPagedByDonViSoHuu(idCongTy, idDonViSoHuu, offset, size, sortBy, sortDir, daBanGiao);
-        for (CCDCVatTuDTO item : items) {
-            List<ChiTietTaiSan> chiTietTaiSanList = chiTietTaiSanDao.findAll(item.getId());
-            item.setChiTietTaiSanList(chiTietTaiSanList);
-            List<TaiSanCon> taiSanConList = taiSanDao.getTaiSanConByTaiSan(item.getId());
-            item.setTaiSanConList(taiSanConList);
-            List<ChiTietDonViSoHuu> chiTietDonViSoHuuList = chiTietDonViSoHuuDao.findByIdCCDCVT(item.getId());
-            item.setChiTietDonViSoHuuList(chiTietDonViSoHuuList);
-        }
+        // Load chi tiết được chuyển sang getById để tối ưu performance
         return new PageResponse<>(items, total, page, size);
     }
 
@@ -214,7 +191,13 @@ public class CCDCVatTuService {
     }
 
     public CCDCVatTuDTO getById(String id) {
-        return ccdcVatTuDao.findById(id);
+        CCDCVatTuDTO dto = ccdcVatTuDao.findById(id);
+        if (dto != null) {
+            dto.setChiTietTaiSanList(chiTietTaiSanDao.findAll(dto.getId()));
+            dto.setTaiSanConList(taiSanDao.getTaiSanConByTaiSan(dto.getId()));
+            dto.setChiTietDonViSoHuuList(chiTietDonViSoHuuDao.findByIdCCDCVT(dto.getId()));
+        }
+        return dto;
     }
 
     public int create(CCDCVatTu ccdc) {

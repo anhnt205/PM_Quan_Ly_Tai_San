@@ -42,8 +42,9 @@ public class CCDCVatTuController {
             @RequestParam(value = "sortDir", required = false) String sortDir,
             @RequestParam(value = "search", required = false) String search,
             @RequestParam(value = "iddonvisohuu", required = false) String idDonViSoHuu,
-            @RequestParam(value = "idnhomccdc", required = false) String idNhomCCDC) { // <<< thêm
-        return ccdcVatTuService.getAllPaged(idcongty, page, size, sortBy, sortDir, search, idDonViSoHuu,idNhomCCDC);
+            @RequestParam(value = "idnhomccdc", required = false) String idNhomCCDC,
+            @RequestParam(value = "loai", required = false) String loai) {
+        return ccdcVatTuService.getAllPaged(idcongty, page, size, sortBy, sortDir, search, idDonViSoHuu, idNhomCCDC, loai);
     }
 
     @GetMapping("/paged-id-don-vi-ban-dau")

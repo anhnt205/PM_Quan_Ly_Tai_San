@@ -66,6 +66,18 @@ public class ChuKySuaChuaDao {
         return jdbcTemplate.update(sql, idTaiSan);
     }
 
+    public int batchDeleteByIdTaiSan(List<String> ids) {
+        if (ids == null || ids.isEmpty()) return 0;
+        String placeholders = String.join(",", java.util.Collections.nCopies(ids.size(), "?"));
+        String sql = "DELETE FROM ChuKySuaChua WHERE IdTaiSan IN (" + placeholders + ")";
+        return jdbcTemplate.update(sql, ids.toArray());
+    }
+
+    public int deleteAll() {
+        String sql = "DELETE FROM ChuKySuaChua WHERE IdTaiSan IN (SELECT Id FROM TaiSan)";
+        return jdbcTemplate.update(sql);
+    }
+
     public List<ChuKySuaChuaDTO> findPaged(int page, int pageSize, String searchValue) {
         StringBuilder sql = new StringBuilder("""
             SELECT ck.*, ts.TenTaiSan, loai.Ten as TenLoaiSuaChua

@@ -31,7 +31,7 @@ public class TaiSan {
     private String nuocSanXuat;
     private Integer namSanXuat;
     private String lyDoTang;
-    private Integer hienTrang;
+    private String hienTrang;
     private Integer soLuong;
     private String donViTinh;
     private String ghiChu;
@@ -82,7 +82,7 @@ public class TaiSan {
         ts.setNuocSanXuat(line[i++]);
         ts.setNamSanXuat(parseInteger(line[i++]));
         ts.setLyDoTang(line[i++]);
-        ts.setHienTrang(parseInteger(line[i++]));
+        ts.setHienTrang(line[i++]);
         ts.setSoLuong(parseInteger(line[i++]));
         ts.setDonViTinh(line[i++]);
         ts.setGhiChu(line[i++]);
@@ -137,7 +137,7 @@ public class TaiSan {
         ts.setNuocSanXuat(getCellString(row.getCell(i++)));
         ts.setNamSanXuat(getCellInteger(row.getCell(i++)));
         ts.setLyDoTang(getCellString(row.getCell(i++)));
-        ts.setHienTrang(getCellInteger(row.getCell(i++)));
+        ts.setHienTrang(getCellString(row.getCell(i++)));
         ts.setSoLuong(getCellInteger(row.getCell(i++)));
         ts.setDonViTinh(getCellString(row.getCell(i++)));
         ts.setGhiChu(getCellString(row.getCell(i++)));

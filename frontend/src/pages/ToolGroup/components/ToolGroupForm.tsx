@@ -16,6 +16,8 @@ import {
   Button,
   Card,
   TextField as MuiTextField,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
@@ -61,7 +63,8 @@ export default function ToolGroupForm({
       id: initialFormData?.id ?? "",
       ten: initialFormData?.ten ?? "",
       idCongTy: initialFormData?.idCongTy ?? CongTy.CT001,
-      
+      laCCDC: initialFormData?.laCCDC ?? false,
+      laVatTu: initialFormData?.laVatTu ?? false,
     },
     validationSchema: ToolGroupValidation,
     onSubmit(values) {
@@ -81,7 +84,7 @@ export default function ToolGroupForm({
   }, [debouncedBulkItems]);
 
   const handleAddItem = () => {
-    const newItem = { id: "", ten: "", idCongTy: CongTy.CT001 };
+    const newItem = { id: "", ten: "", idCongTy: CongTy.CT001, laCCDC: false, laVatTu: false };
     const updated = [...localBulkItems, newItem];
     setLocalBulkItems(updated);
   };
@@ -264,6 +267,34 @@ export default function ToolGroupForm({
                     helperText={item.errors?.ten}
                   />
                 </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <Box display="flex" gap={2}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={item.laCCDC || false}
+                          onChange={(e) =>
+                            handleBulkItemChange(index, "laCCDC", e.target.checked)
+                          }
+                          color="primary"
+                        />
+                      }
+                      label="Là CCDC"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={item.laVatTu || false}
+                          onChange={(e) =>
+                            handleBulkItemChange(index, "laVatTu", e.target.checked)
+                          }
+                          color="primary"
+                        />
+                      }
+                      label="Là Vật tư"
+                    />
+                  </Box>
+                </Grid>
               </Grid>
             </Card>
           ))}
@@ -354,6 +385,32 @@ export default function ToolGroupForm({
               field="ten"
               disabled={readOnly}
             />
+          </Grid>
+          <Grid size={{ xs: 12 }}>
+            <Box display="flex" gap={2}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formik.values.laCCDC}
+                    onChange={(e) => formik.setFieldValue('laCCDC', e.target.checked)}
+                    disabled={readOnly}
+                    color="primary"
+                  />
+                }
+                label="Là CCDC"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formik.values.laVatTu}
+                    onChange={(e) => formik.setFieldValue('laVatTu', e.target.checked)}
+                    disabled={readOnly}
+                    color="primary"
+                  />
+                }
+                label="Là Vật tư"
+              />
+            </Box>
           </Grid>
         </Grid>
       </Paper>

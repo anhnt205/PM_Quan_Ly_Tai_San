@@ -3,6 +3,8 @@ export interface ToolGroupType {
   idCongTy: string;
   ten: string;
   hieuLuc: boolean;
+  laCCDC?: boolean;
+  laVatTu?: boolean;
   ngayTao?: string;
   ngayCapNhat?: string;
   nguoiTao?: string;

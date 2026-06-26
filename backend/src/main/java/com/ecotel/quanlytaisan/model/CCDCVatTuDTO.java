@@ -32,5 +32,7 @@ public class CCDCVatTuDTO {
     private List<TaiSanCon> taiSanConList;
     private List<ChiTietDonViSoHuu> chiTietDonViSoHuuList;
     private String idLoaiCCDCCon;
-    private Integer hienTrang;
+    private String hienTrang;
+    private String donViTinh2;
+    private Integer soLuong2;
 }

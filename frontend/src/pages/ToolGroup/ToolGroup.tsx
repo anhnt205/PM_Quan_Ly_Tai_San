@@ -1,5 +1,6 @@
 import {
   Box,
+  Checkbox,
   CircularProgress,
   Dialog,
   DialogContent,
@@ -172,6 +173,26 @@ export default function ToolGroup() {
       headerAlign: "center",
     },
     {
+      field: "laCCDC",
+      headerName: "CCDC",
+      width: 100,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => {
+        return <Checkbox checked={params.row.laCCDC} disabled />;
+      },
+    },
+    {
+      field: "laVatTu",
+      headerName: "Vật tư",
+      width: 100,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => {
+        return <Checkbox checked={params.row.laVatTu} disabled />;
+      },
+    },
+    {
       field: "ngayTao",
       headerName: "Ngày tạo",
       width: 200,
@@ -179,22 +200,8 @@ export default function ToolGroup() {
       headerAlign: "center",
     },
     {
-      field: "ngayCapNhat",
-      headerName: "Ngày cập nhật",
-      width: 200,
-      align: "center",
-      headerAlign: "center",
-    },
-    {
       field: "nguoiTao",
       headerName: "Người tạo",
-      width: 200,
-      align: "center",
-      headerAlign: "center",
-    },
-    {
-      field: "nguoiCapNhat",
-      headerName: "Người cập nhật",
       width: 200,
       align: "center",
       headerAlign: "center",

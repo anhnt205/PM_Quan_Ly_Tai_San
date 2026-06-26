@@ -19,7 +19,7 @@ public class HienTrangKyThuatDAO {
         @Override
         public HienTrangKyThuat mapRow(ResultSet rs, int rowNum) throws SQLException {
             HienTrangKyThuat htkt = new HienTrangKyThuat();
-            htkt.setId(rs.getInt("Id"));
+            htkt.setId(rs.getString("Id"));
             htkt.setTenHTKT(rs.getString("TenHTKT"));
             htkt.setMoTa(rs.getString("MoTa"));
             htkt.setNgayTao(rs.getString("NgayTao"));
@@ -41,7 +41,7 @@ public class HienTrangKyThuatDAO {
         return jdbcTemplate.query(sql, rowMapper);
     }
 
-    public HienTrangKyThuat findById(Integer id) {
+    public HienTrangKyThuat findById(String id) {
         String sql = "SELECT * FROM HienTrangKyThuat WHERE Id = ?";
         List<HienTrangKyThuat> results = jdbcTemplate.query(sql, rowMapper, id);
         return results.isEmpty() ? null : results.get(0);
@@ -93,9 +93,9 @@ public class HienTrangKyThuatDAO {
                 ps.setString(4, htkt.getNguoiCapNhat());
                 ps.setBoolean(5, htkt.getIsActive() != null ? htkt.getIsActive() : true);
                 if (htkt.getId() != null) {
-                    ps.setInt(6, htkt.getId());
+                    ps.setString(6, htkt.getId());
                 } else {
-                    ps.setNull(6, java.sql.Types.INTEGER);
+                    ps.setNull(6, java.sql.Types.VARCHAR);
                 }
             }
 
@@ -121,9 +121,9 @@ public class HienTrangKyThuatDAO {
             public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
                 HienTrangKyThuat htkt = list.get(i);
                 if (htkt.getId() != null) {
-                    ps.setInt(1, htkt.getId());
+                    ps.setString(1, htkt.getId());
                 } else {
-                    ps.setNull(1, java.sql.Types.INTEGER);
+                    ps.setNull(1, java.sql.Types.VARCHAR);
                 }
                 ps.setString(2, htkt.getTenHTKT());
                 ps.setString(3, htkt.getMoTa());
@@ -154,7 +154,7 @@ public class HienTrangKyThuatDAO {
             return 0;
         }
 
-        List<Integer> ids = new java.util.ArrayList<>();
+        List<String> ids = new java.util.ArrayList<>();
         for (HienTrangKyThuat htkt : list) {
             if (htkt.getId() != null) {
                 ids.add(htkt.getId());
@@ -174,16 +174,16 @@ public class HienTrangKyThuatDAO {
         }
 
         String checkSql = "SELECT Id FROM HienTrangKyThuat WHERE Id IN (" + inBuilder.toString() + ")";
-        List<Integer> existingIds = jdbcTemplate.query(
+        List<String> existingIds = jdbcTemplate.query(
                 checkSql,
-                (rs, rowNum) -> rs.getInt("Id"),
+                (rs, rowNum) -> rs.getString("Id"),
                 ids.toArray()
         );
 
         List<HienTrangKyThuat> toInsert = new java.util.ArrayList<>();
         List<HienTrangKyThuat> toUpdate = new java.util.ArrayList<>();
 
-        java.util.Set<Integer> existingSet = new java.util.HashSet<>(existingIds);
+        java.util.Set<String> existingSet = new java.util.HashSet<>(existingIds);
         for (HienTrangKyThuat htkt : list) {
             if (htkt.getId() == null) {
                 continue;
@@ -206,12 +206,12 @@ public class HienTrangKyThuatDAO {
         return total;
     }
 
-    public int delete(Integer id) {
+    public int delete(String id) {
         String sql = "DELETE FROM HienTrangKyThuat WHERE Id=?";
         return jdbcTemplate.update(sql, id);
     }
 
-    public int batchDelete(List<Integer> ids) {
+    public int batchDelete(List<String> ids) {
         if (ids == null || ids.isEmpty()) {
             return 0;
         }
@@ -220,7 +220,7 @@ public class HienTrangKyThuatDAO {
         int[] result = jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
             @Override
             public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
-                ps.setInt(1, ids.get(i));
+                ps.setString(1, ids.get(i));
             }
 
             @Override
@@ -238,7 +238,7 @@ public class HienTrangKyThuatDAO {
         return total;
     }
 
-    public int softDelete(Integer id) {
+    public int softDelete(String id) {
         String sql = "UPDATE HienTrangKyThuat SET IsActive = 0 WHERE Id=?";
         return jdbcTemplate.update(sql, id);
     }
