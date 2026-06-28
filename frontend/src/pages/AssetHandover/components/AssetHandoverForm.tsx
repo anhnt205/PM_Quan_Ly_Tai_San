@@ -275,7 +275,7 @@ export default function AssetHandoverForm({
       });
       const fileBangeKe = new File(
         [bangKeBytes.buffer as ArrayBuffer],
-        `BienBan_${values.banGiaoTaiSan}.pdf`,
+        `BienBan_${values.banGiaoTaiSan}_${Date.now()}.pdf`,
         {
           type: "application/pdf",
         },
@@ -296,7 +296,7 @@ export default function AssetHandoverForm({
 
       if (!keyTaiLieuBangKe) {
         keyTaiLieuBangKe = await S3Service.put({
-          name: `BGTS_${values.banGiaoTaiSan}.pdf`,
+          name: `BGTS_${values.banGiaoTaiSan}_${Date.now()}.pdf`,
           file: fileBangeKe,
           type: "tailieu",
         });

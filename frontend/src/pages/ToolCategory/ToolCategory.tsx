@@ -1,53 +1,50 @@
 import { Box, Dialog, DialogContent, Tab, Tabs } from "@mui/material";
 import { useEffect, useState } from "react";
 import PageAction from "../../components/common/PageAction";
-import { GridRowParams } from "@mui/x-data-grid";
-import ToolForm from "./components/ToolForm";
-import ToolTableCustom from "./components/ToolTableCustom";
-import ToolDetailSidebar from "./components/ToolDetailSidebar";
-import { useToolManagerMutation, useToolPageQuery, fetchToolDetails } from "./Mutation";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "../../redux/store";
+
+import ToolForm from "../ToolManager/components/ToolForm";
+import ToolTableCustom from "../ToolManager/components/ToolTableCustom";
+import ToolDetailSidebar from "../ToolManager/components/ToolDetailSidebar";
+import { useToolManagerMutation, useToolPageQuery, fetchToolDetails } from "../ToolManager/Mutation";
 import { createColumns } from "./columnConfig";
 import { useAllDepartmentsQuery } from "../Department/Mutation";
 import { useAllToolTypeQuery } from "../ToolType/Mutation";
 import { useAllUnitsQuery } from "../Unit/Mutation";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useDebounce } from "../../hooks/useDebounce";
-import AssetHistoryModal from "./components/ToolHistoryModal";
-import { useLocation, useNavigate } from "react-router-dom";
+import AssetHistoryModal from "../ToolManager/components/ToolHistoryModal";
 import SyncLoadingModal from "../../components/common/SyncLoadingModal";
-import { RootState } from "../../redux/store";
-import { useSelector } from "react-redux";
 import SelectDbDialog from "../../components/common/SelectDbDialog";
-import ToolOwnershipModal from "./components/ToolOwnershipModal";
+import ToolOwnershipModal from "../ToolManager/components/ToolOwnershipModal";
 import { useTabForm } from "../../redux/useTabForm";
 import { hasDraftData } from "../../utils/draftUtils";
 import DraftIndicator from "../../components/common/DraftIndicator";
 
-interface ToolManagerTabState {
+interface ToolCategoryTabState {
   showForm: boolean;
   showSidebar: boolean;
   selectedTool: any | null;
   readOnly: boolean;
   isCopy: boolean;
   draftForm?: Record<string, any>;
-  activeTab?: number;
 }
 
-export default function ToolManager() {
-  const { formData, setField } =
-    useTabForm<ToolManagerTabState>("/quan_ly_ccdc");
+export default function ToolCategory() {
+  const { formData, setField } = useTabForm<ToolCategoryTabState>("/danh_muc_ccdc_vat_tu");
   const showForm = formData.showForm ?? false;
   const selectedTool = formData.selectedTool ?? null;
   const readOnly = formData.readOnly ?? false;
   const isCopy = formData.isCopy ?? false;
   const showSidebar = formData.showSidebar ?? false;
-  const activeTab = formData.activeTab ?? 0;
+
   const setShowForm = (v: boolean) => setField({ showForm: v });
   const setSelectedTool = (v: any) => setField({ selectedTool: v });
   const setReadOnly = (v: boolean) => setField({ readOnly: v });
   const setIsCopy = (v: boolean) => setField({ isCopy: v });
   const setShowSidebar = (v: boolean) => setField({ showSidebar: v });
-  const setActiveTab = (v: number) => setField({ activeTab: v });
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
@@ -98,7 +95,7 @@ export default function ToolManager() {
   });
 
   const searchDebounce = useDebounce(searchValue, 600);
-  const loai = activeTab === 1 ? "vattu" : "ccdc";
+  const loai = undefined; // Không lọc theo loại để lấy cả CCDC và Vật tư
   const { data: toolsPage, isLoading, refetch } = useToolPageQuery(
     paginationModel.page,
     paginationModel.pageSize,
@@ -107,6 +104,7 @@ export default function ToolManager() {
     selectedToolGroup,
     loai,
   );
+  
   const { data: allDepartments = [] } = useAllDepartmentsQuery();
   const { data: toolTypes = [] } = useAllToolTypeQuery();
   const { data: allUnits = [] } = useAllUnitsQuery();
@@ -124,7 +122,7 @@ export default function ToolManager() {
       setIsCopy(true);
       setReadOnly(false);
       setShowForm(true);
-      setShowSidebar(false); // Ẩn sidebar nếu nó đang mở
+      setShowSidebar(false);
     } catch (e) {
       console.error(e);
     }
@@ -143,40 +141,8 @@ export default function ToolManager() {
   };
 
   const [columns, setColumns] = useState(() =>
-    createColumns(
-      handleOpenHistory,
-      activeTab === 1,
-    ),
+    createColumns(handleOpenHistory, handleCopy, handleRowEdit),
   );
-
-  useEffect(() => {
-    setColumns((prevColumns) => {
-      return prevColumns.map((col) => {
-        if (col.key === "id") {
-          return { ...col, label: activeTab === 1 ? "Mã vật tư" : "Mã CCDC" };
-        }
-        if (col.key === "ten") {
-          return { ...col, label: activeTab === 1 ? "Tên vật tư" : "Tên CCDC" };
-        }
-        if (col.key === "tenNhomCCDC") {
-          return {
-            ...col,
-            label: activeTab === 1 ? "Nhóm vật tư" : "Nhóm CCDC",
-          };
-        }
-        if (col.key === "donViTinh2" || col.key === "soLuong2") {
-          return { ...col, isShow: activeTab === 1 };
-        }
-        return col;
-      });
-    });
-  }, [activeTab]);
-
-  // const handleRowClick = (params: GridRowParams) => {
-  //   setSelectedTool(params.row);
-  //   setReadOnly(true);
-  //   setShowForm(false);
-  // };
 
   const handleEdit = () => {
     setReadOnly(false);
@@ -235,52 +201,30 @@ export default function ToolManager() {
         }
       />
       <PageAction
-        title="Quản lý CCDC - Vật tư"
-        loading={exportExcelMutation.isPending || importExcelMutation.isPending}
-        showExcel={false}
-        onRefresh={() => refetch()}
-      />
-      <Box
-        sx={{
-          px: 3,
-          bgcolor: "white",
-          borderBottom: "1px solid",
-          borderColor: "divider",
-          display: "flex",
-          alignItems: "center",
+        title="Danh mục CCDC - Vật tư"
+        onNewClick={() => {
+          if (isMinimized) {
+            setShowForm(true);
+            return;
+          }
+          setField({ draftForm: undefined });
+          setShowForm(true);
+          setSelectedTool(null);
+          setReadOnly(false);
+          setIsCopy(false);
         }}
-      >
-        <Tabs
-          value={activeTab}
-          onChange={(_, newValue) => {
-            setActiveTab(newValue);
-            setSelectedIds([]);
-          }}
-          sx={{
-            "& .MuiTabs-indicator": {
-              backgroundColor: "#04b46eff",
-              height: 3,
-              borderRadius: "3px 3px 0 0",
-            },
-            "& .MuiTab-root": {
-              textTransform: "none",
-              fontWeight: 600,
-              fontSize: "0.95rem",
-              minHeight: "48px",
-              color: "#67748e",
-              px: 0,
-              mr: 4,
-              minWidth: "auto",
-              "&.Mui-selected": {
-                color: "#04b46eff",
-              },
-            },
-          }}
-        >
-          <Tab label="CCDC" />
-          <Tab label="Vật tư" />
-        </Tabs>
-      </Box>
+        loading={exportExcelMutation.isPending || importExcelMutation.isPending}
+        onExport={() => exportExcelMutation.mutate()}
+        onImport={(file) => importExcelMutation.mutate(file)}
+        onSyncDb={
+          user?.taiKhoan?.tenDangNhap === "admin"
+            ? () => setOpenSelectDb(true)
+            : undefined
+        }
+        onRefresh={() => refetch()}
+        showExcel={true}
+      />
+      
       <Box p={2}>
         <Dialog
           open={showForm}
@@ -298,7 +242,7 @@ export default function ToolManager() {
             }}
           >
             <ToolForm
-              key={`${selectedTool?.id}-true`}
+              key={`${selectedTool?.id}-${readOnly}`}
               onCancel={() => {
                 setField({ draftForm: undefined });
                 setShowForm(false);
@@ -307,9 +251,9 @@ export default function ToolManager() {
               }}
               onMinimize={handleMinimize}
               selectedTool={selectedTool}
-              readOnly={true}
-              onEdit={() => {}}
-              onSave={() => {}}
+              readOnly={readOnly}
+              onEdit={handleEdit}
+              onSave={handleSave}
               departments={allDepartments}
               toolTypes={toolTypes}
               allUnits={allUnits}
@@ -346,8 +290,8 @@ export default function ToolManager() {
             }}
           >
             <ToolTableCustom
-              tableId="toolManager"
-              title={activeTab === 1 ? "Quản lý Vật tư" : "Quản lý CCDC"}
+              tableId="toolCategory"
+              title="Danh mục CCDC - Vật tư"
               rows={toolsPage?.items || []}
               total={toolsPage?.totalItems || 0}
               columns={columns}
@@ -363,6 +307,9 @@ export default function ToolManager() {
               }}
               selectedIds={selectedIds}
               onSelectionChange={setSelectedIds}
+              onDelete={(ids) => {
+                deleteManyMutation.mutate(ids);
+              }}
               setSearchValue={setSearchValue}
               searchValue={searchValue}
               paginationModel={paginationModel}
@@ -374,9 +321,11 @@ export default function ToolManager() {
               toolGroups={toolGroups}
               selectedToolGroup={selectedToolGroup}
               onSelectedToolGroupChange={setSelectedToolGroup}
+              onDeleteAll={deleteAllMutation.mutate}
+              showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
               onViewOwnership={() => setOpenOwnership(true)}
-              isVatTu={activeTab === 1}
-              hideSelection={true}
+              onExportExcel={() => exportExcelMutation.mutate()}
+              isVatTu={false}
             />
           </Box>
 

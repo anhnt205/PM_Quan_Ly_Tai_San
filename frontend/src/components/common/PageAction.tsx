@@ -14,6 +14,7 @@ import {
   KeyboardArrowDown,
   Add,
   DriveFileRenameOutline,
+  Refresh,
 } from "@mui/icons-material";
 import CustomProgress from "../loading/CustomProgress";
 import ImportSignatureModal from "./ImportSignatureModal";
@@ -38,6 +39,7 @@ interface Props {
   showImportSignature?: boolean;
   onImportSignature?: (files: File[]) => void;
   hideActionRow?: boolean;
+  onRefresh?: () => void;
 }
 
 export default function PageAction({
@@ -51,6 +53,7 @@ export default function PageAction({
   showImportSignature = false,
   onImportSignature,
   hideActionRow = false,
+  onRefresh,
 }: Props) {
   const dispatch = useDispatch();
   const location = useLocation();
@@ -258,6 +261,32 @@ export default function PageAction({
                 // }}
               >
                 Import chữ ký
+              </Button>
+            )}
+
+            {onRefresh && (
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={onRefresh}
+                startIcon={<Refresh />}
+                sx={{
+                  borderRadius: "10px",
+                  borderColor: "rgba(100, 116, 139, 0.3)",
+                  color: "#64748b",
+                  fontWeight: 600,
+                  textTransform: "none",
+                  fontSize: "0.85rem",
+                  px: 2,
+                  py: 0.75,
+                  transition: "all 0.2s ease-in-out",
+                  "&:hover": {
+                    borderColor: "#64748b",
+                    bgcolor: "rgba(100, 116, 139, 0.05)",
+                  },
+                }}
+              >
+                Làm mới
               </Button>
             )}
 

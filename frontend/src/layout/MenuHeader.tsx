@@ -413,6 +413,7 @@ export default function Menuheader() {
             { text: "Loại tài sản", path: ROUTES.TYPEASSET },
             { text: "Nhóm ccdc", path: ROUTES.TOOLGROUP },
             { text: "Loại ccdc", path: ROUTES.TOOLTYPE },
+            { text: "CCDC-Vật tư", path: ROUTES.TOOLCATEGORY, code: "CCDCVT" },
           ],
         },
         {

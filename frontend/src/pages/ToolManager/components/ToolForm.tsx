@@ -97,7 +97,16 @@ export default function ToolForm({
       isActive: initialFormData?.isActive ?? true,
       idLoaiCCDCCon: initialFormData?.idLoaiCCDCCon ?? "",
       hienTrang: initialFormData?.hienTrang ?? 0,
-      chiTietTaiSanList: initialFormData?.chiTietTaiSanList ?? [],
+      chiTietTaiSanList: initialFormData?.chiTietTaiSanList?.length ? initialFormData.chiTietTaiSanList : [
+        {
+          id: "",
+          soLuong: 1,
+          congSuat: "",
+          nuocSanXuat: "",
+          namSanXuat: 0,
+          isInserted: true,
+        }
+      ],
       chiTietDonViSoHuuList: initialFormData?.chiTietDonViSoHuuList ?? [],
     },
     validationSchema: ToolValidation,

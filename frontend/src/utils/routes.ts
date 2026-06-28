@@ -21,6 +21,7 @@ export const ROUTES = {
   ASSETHANDOVER: "/ban_giao_tai_san",
   ASSETDEPRECIATION: "/khau_hao_tai_san",
   TOOLMANAGER: "/quan_ly_ccdc",
+  TOOLCATEGORY: "/danh_muc_ccdc_vat_tu",
   TOOLTRANSFER: "/dieu_dong_ccdc",
   TOOLHANDOVER: "/ban_giao_ccdc",
   MAINTENANCEREPAIR: "/sua_chua_bao_duong",

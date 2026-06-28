@@ -155,6 +155,7 @@ interface Props {
   onSelectedToolGroupChange?: (id: string) => void;
   onExportExcel?: () => void;
   isVatTu?: boolean;
+  hideSelection?: boolean;
 }
 
 export default function ToolTableCustom({
@@ -184,6 +185,7 @@ export default function ToolTableCustom({
   onSelectedToolGroupChange,
   onExportExcel,
   isVatTu,
+  hideSelection = false,
 }: Props) {
   const [expandedRows, setExpandedRows] = useState<Set<string | number>>(
     new Set(),
@@ -423,13 +425,15 @@ export default function ToolTableCustom({
         </TableCell>
 
         {/* Checkbox Column */}
-        <TableCell width="50px" align="center">
-          <Checkbox
-            checked={isSelected}
-            onChange={() => handleSelectRow(row.id)}
-            inputProps={{ "aria-label": `Select row ${row.id}` }}
-          />
-        </TableCell>
+        {!hideSelection && (
+          <TableCell width="50px" align="center">
+            <Checkbox
+              checked={isSelected}
+              onChange={() => handleSelectRow(row.id)}
+              inputProps={{ "aria-label": `Select row ${row.id}` }}
+            />
+          </TableCell>
+        )}
 
         {/* Data Columns */}
         {visibleColumns.map((col) => {
@@ -786,24 +790,26 @@ export default function ToolTableCustom({
               >
                 {expandedRows.size === total ? <ExpandLess /> : <ExpandMore />}
               </TableCell>
-              <TableCell
-                padding="checkbox"
-                width="50px"
-                sx={{ color: "#ffffff", fontWeight: 700, minWidth: 50 }}
-              >
-                <Checkbox
-                  checked={isAllSelected}
-                  indeterminate={isIndeterminate}
-                  onChange={handleSelectAll}
-                  inputProps={{ "aria-label": "Select all" }}
-                  sx={{
-                    color: "#ffffff !important",
-                    "&.Mui-checked": {
+              {!hideSelection && (
+                <TableCell
+                  padding="checkbox"
+                  width="50px"
+                  sx={{ color: "#ffffff", fontWeight: 700, minWidth: 50 }}
+                >
+                  <Checkbox
+                    checked={isAllSelected}
+                    indeterminate={isIndeterminate}
+                    onChange={handleSelectAll}
+                    inputProps={{ "aria-label": "Select all" }}
+                    sx={{
                       color: "#ffffff !important",
-                    },
-                  }}
-                />
-              </TableCell>
+                      "&.Mui-checked": {
+                        color: "#ffffff !important",
+                      },
+                    }}
+                  />
+                </TableCell>
+              )}
               {visibleColumns.map((col) => (
                 <TableCell
                   key={col.key}
