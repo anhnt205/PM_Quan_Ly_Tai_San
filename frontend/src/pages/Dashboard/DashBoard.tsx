@@ -302,7 +302,7 @@ export default function DashBoard() {
         </Grid>
 
         {/* ── Tài sản Section ─────────────────────────── */}
-        <SectionHeader label="Tài sản" color="#04b46e" />
+        <SectionHeader label="Tài sản" color="#1976d2" />
 
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, md: 3 }}>

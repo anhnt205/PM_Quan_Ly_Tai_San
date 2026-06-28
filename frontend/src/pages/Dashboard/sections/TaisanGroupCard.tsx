@@ -128,7 +128,7 @@ export default function TaisanGroupCard({
           {/* Header */}
           <Box
             sx={{
-              borderLeft: "4px solid #0d9e6d",
+              borderLeft: "4px solid #04b46e",
               pl: 1.5,
               mb: 2,
             }}
@@ -136,7 +136,7 @@ export default function TaisanGroupCard({
             <Typography
               variant="subtitle1"
               sx={{
-                color: "#0d9e6d",
+                color: "#04b46e",
                 fontWeight: 700,
               }}
             >
@@ -244,7 +244,7 @@ export default function TaisanGroupCard({
               alignItems: "center",
               gap: 1,
               "&:hover": {
-                borderColor: "#04b46e",
+                borderColor: "#1976d2",
                 background: "#f0fdf8",
               },
             }}
@@ -252,7 +252,7 @@ export default function TaisanGroupCard({
             <Inventory
               sx={{
                 fontSize: 18,
-                color: "#0d9e6d",
+                color: "#1976d2",
               }}
             />
 
@@ -260,7 +260,7 @@ export default function TaisanGroupCard({
               <Typography
                 variant="caption"
                 sx={{
-                  color: "#0d9e6d",
+                  color: "#1976d2",
                   display: "block",
                   fontSize: "0.7rem",
                   textTransform: "uppercase",

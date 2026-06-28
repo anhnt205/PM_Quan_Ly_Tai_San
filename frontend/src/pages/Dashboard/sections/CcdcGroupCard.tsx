@@ -37,7 +37,7 @@ export default function CcdcGroupCard({
       <Box
         sx={{
           height: 3,
-          background: "#04b46e",
+          background: "#1976d2",
           borderRadius: "16px 16px 0 0",
         }}
       />

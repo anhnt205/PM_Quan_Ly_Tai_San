@@ -36,31 +36,31 @@ export default function SummaryCards({
     {
       title: "Tổng số lượng tài sản",
       value: tongTaiSan.toLocaleString("vi-VN"),
-      icon: <InventoryOutlined sx={{ fontSize: 22, color: "#04b46e" }} />,
-      accentColor: "#04b46e",
+      icon: <InventoryOutlined sx={{ fontSize: 22, color: "#1976d2" }} />,
+      accentColor: "#1976d2",
       iconBg: "#f0fdf8",
     },
     {
       title: "Tổng nguyên giá tài sản",
       value: formatPrice(tongNguyenGia),
-      icon: <MonetizationOnOutlined sx={{ fontSize: 22, color: "#04b46e" }} />,
-      accentColor: "#04b46e",
+      icon: <MonetizationOnOutlined sx={{ fontSize: 22, color: "#1976d2" }} />,
+      accentColor: "#1976d2",
       iconBg: "#f0fdf8",
     },
     {
       title: "Tổng số lượng CCDC",
       value: tongCCDC.toLocaleString("vi-VN"),
-      icon: <ConstructionOutlined sx={{ fontSize: 22, color: "#04b46e" }} />,
-      accentColor: "#04b46e",
+      icon: <ConstructionOutlined sx={{ fontSize: 22, color: "#1976d2" }} />,
+      accentColor: "#1976d2",
       iconBg: "#f0fdf8",
     },
     {
       title: "Tổng giá trị CCDC",
       value: formatPrice(tongGiaTriCCDC),
       icon: (
-          <AccountBalanceWalletOutlined sx={{ fontSize: 22, color: "#04b46e" }} />
+        <AccountBalanceWalletOutlined sx={{ fontSize: 22, color: "#1976d2" }} />
       ),
-      accentColor: "#04b46e",
+      accentColor: "#1976d2",
       iconBg: "#f0fdf8",
     },
   ];

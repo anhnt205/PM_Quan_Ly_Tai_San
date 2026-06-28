@@ -47,7 +47,7 @@ export default function StatisticCard({
       {/* Title */}
       <Typography
         variant="subtitle1"
-        sx={{ color: "#04b46e", fontWeight: 600, mb: 2 }}
+        sx={{ color: "#1976d2", fontWeight: 600, mb: 2 }}
       >
         {title}
       </Typography>
