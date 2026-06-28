@@ -3,6 +3,8 @@ package com.ecotel.quanlytaisan.model;
 import lombok.Data;
 import org.apache.poi.ss.usermodel.Row;
 
+import java.util.List;
+
 import static com.ecotel.quanlytaisan.utils.ParserHelper.*;
 
 @Data
@@ -31,6 +33,10 @@ public class CCDCVatTu {
     private String hienTrang;
     private String donViTinh2;
     private Integer soLuong2;
+    
+    private List<ChiTietTaiSan> chiTietTaiSanList;
+    private List<ChiTietDonViSoHuu> chiTietDonViSoHuuList;
+    
     public static CCDCVatTu mapToCCDCVatTu(String[] row) {
         CCDCVatTu ccdc = new CCDCVatTu();
         ccdc.setId(row[0]);

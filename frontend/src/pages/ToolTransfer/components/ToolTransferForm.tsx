@@ -210,7 +210,7 @@ export default forwardRef(function ToolTransferForm(
 
       if (!keyTaiLieuCuoi) {
         keyTaiLieuCuoi = await S3Service.put({
-          name: `DDCCDC_${values.tenPhieu}.pdf`,
+          name: `DDCCDC_${values.tenPhieu}_${Date.now()}.pdf`,
           file: mergePdf,
           type: "tailieu",
         });

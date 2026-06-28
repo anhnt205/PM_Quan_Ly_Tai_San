@@ -15,45 +15,31 @@ export interface ColumnConfig {
 
 export const createColumns = (
   handleOpenHistory: (row: any) => void,
-  isVatTu?: boolean,
+  handleCopy: (row: any) => void,
+  handleRowEdit: (row: any) => void,
 ): ColumnConfig[] => [
   {
     key: "id",
-    label: isVatTu ? "Mã vật tư" : "Mã CCDC",
+    label: "Mã CCDC/Vật tư",
     visible: true,
     isShow: true,
     width: 150,
   },
   {
     key: "ten",
-    label: isVatTu ? "Tên vật tư" : "Tên CCDC",
+    label: "Tên CCDC/Vật tư",
     visible: true,
     isShow: true,
     width: 400,
   },
-  // {
-  //   key: "tenDonVi",
-  //   label: "Đơn vị nhập",
-  //   visible: true,
-  //   isShow: true,
-  //   width: 200,
-  // },
   {
     key: "tenNhomCCDC",
-    label: isVatTu ? "Nhóm vật tư" : "Nhóm CCDC",
+    label: "Nhóm CCDC/Vật tư",
     visible: true,
     isShow: true,
-    width: 100,
+    width: 150,
     align: "center",
   },
-  // {
-  //   key: "ngayNhap",
-  //   label: "Ngày nhập",
-  //   visible: true,
-  //   isShow: true,
-  //   width: 120,
-  //   align: "center",
-  // },
   {
     key: "donViTinh",
     label: "Đơn vị tính",
@@ -75,7 +61,7 @@ export const createColumns = (
     key: "donViTinh2",
     label: "Đơn vị tính 2",
     visible: true,
-    isShow: isVatTu ?? false,
+    isShow: true,
     width: 100,
     align: "center",
   },
@@ -84,7 +70,7 @@ export const createColumns = (
     label: "Số lượng 2",
     align: "center",
     visible: true,
-    isShow: isVatTu ?? false,
+    isShow: true,
     width: 100,
     render: (v: any) => v !== undefined && v !== null ? Number(v).toLocaleString("vi-VN") : "",
   },
@@ -97,7 +83,6 @@ export const createColumns = (
     width: 100,
     render: (v: any) => Number(v).toLocaleString("vi-VN"),
   },
-  // { key: "kyHieu", label: "Ký hiệu", visible: true, isShow: true, width: 100 },
   {
     key: "ghiChu",
     label: "Ghi chú",
@@ -164,6 +149,24 @@ export const createColumns = (
     width: 100,
     render: (_: any, row: any) => (
       <Box display="flex" gap={1} justifyContent="center" alignItems="center">
+        <Tooltip title="Chỉnh sửa">
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRowEdit(row);
+            }}
+          >
+            <Edit color="success" />
+          </IconButton>
+        </Tooltip>
+        <IconButton
+          onClick={(e) => {
+            e.stopPropagation();
+            handleCopy(row);
+          }}
+        >
+          <ContentCopy color="primary" />
+        </IconButton>
         <Tooltip title="Xem lịch sử điều chuyển">
           <IconButton
             size="small"

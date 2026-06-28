@@ -20,6 +20,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CCDCVatTuService {
@@ -200,22 +204,59 @@ public class CCDCVatTuService {
         return dto;
     }
 
+    @Transactional
     public int create(CCDCVatTu ccdc) {
-        return ccdcVatTuDao.insert(ccdc);
+        int result = ccdcVatTuDao.insert(ccdc);
+        if (result > 0) {
+            if (ccdc.getChiTietTaiSanList() != null) {
+                for (ChiTietTaiSan ts : ccdc.getChiTietTaiSanList()) {
+                    if (ts.getId() == null || ts.getId().trim().isEmpty()) {
+                        ts.setId(UUID.randomUUID().toString());
+                    }
+                    ts.setIdTaiSan(ccdc.getId());
+                    chiTietTaiSanDao.insert(ts);
+                }
+            }
+        }
+        return result;
     }
 
+    @Transactional
     public int update(CCDCVatTu ccdc) {
-        return ccdcVatTuDao.update(ccdc);
+        int result = ccdcVatTuDao.update(ccdc);
+        if (ccdc.getChiTietTaiSanList() != null) {
+            for (ChiTietTaiSan ts : ccdc.getChiTietTaiSanList()) {
+                if (ts.getId() == null || ts.getId().trim().isEmpty()) {
+                    ts.setId(UUID.randomUUID().toString());
+                }
+                ts.setIdTaiSan(ccdc.getId());
+                chiTietTaiSanDao.insert(ts);
+            }
+        }
+        return result;
     }
 
+    @Transactional
     public int delete(String id) {
+        // Find children and delete their owner units
+        List<ChiTietTaiSan> children = chiTietTaiSanDao.findAll(id);
+        for (ChiTietTaiSan child : children) {
+            chiTietTaiSanDao.delete(child.getId());
+        }
+        
+        List<ChiTietDonViSoHuu> dvshList = chiTietDonViSoHuuDao.findByIdCCDCVT(id);
+        for (ChiTietDonViSoHuu dvsh : dvshList) {
+            chiTietDonViSoHuuDao.deleteById(dvsh.getId());
+        }
+
         taiSanDao.deleteTaiSanConByTaiSan(id);
         return ccdcVatTuDao.delete(id);
     }
 
+    @Transactional
     public int deleteAll() {
-        ccdcVatTuDao.deleteAllChiTietTaiSan();
         ccdcVatTuDao.deleteAllChiTietDonViSoHuu();
+        ccdcVatTuDao.deleteAllChiTietTaiSan();
         return ccdcVatTuDao.deleteAll();
     }
 

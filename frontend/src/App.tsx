@@ -22,6 +22,7 @@ import Unit from "./pages/Unit/Unit";
 import ReasonIncrease from "./pages/ReasonIncrease/ResonIncrease";
 import CurrentStatus from "./pages/CurrentStatus/CurrentStatus";
 import ToolManager from "./pages/ToolManager/ToolManager";
+import ToolCategory from "./pages/ToolCategory/ToolCategory";
 import AssetHandover from "./pages/AssetHandover/AssetHandover";
 import Report from "./pages/Report/Report";
 import ToolTransfer from "./pages/ToolTransfer/ToolTransfer";
@@ -316,6 +317,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["CCDCVT"]}>
                 <ToolManager />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={ROUTES.TOOLCATEGORY}
+            element={
+              <ProtectedRoute allowedRoles={["CCDCVT"]}>
+                <ToolCategory />
               </ProtectedRoute>
             }
           />

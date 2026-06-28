@@ -273,7 +273,7 @@ export default function ToolHandoverForm({
       });
       const fileBangeKe = new File(
         [bangKeBytes.buffer as ArrayBuffer],
-        `BienBan_${values.banGiaoCCDCVatTu}.pdf`,
+        `BienBan_${values.banGiaoCCDCVatTu}_${Date.now()}.pdf`,
         {
           type: "application/pdf",
         },
@@ -294,7 +294,7 @@ export default function ToolHandoverForm({
 
       if (!keyTaiLieuBangKe) {
         keyTaiLieuBangKe = await S3Service.put({
-          name: `BGCCDC_${values.banGiaoCCDCVatTu}.pdf`,
+          name: `BGCCDC_${values.banGiaoCCDCVatTu}_${Date.now()}.pdf`,
           file: fileBangeKe,
           type: "tailieu",
         });

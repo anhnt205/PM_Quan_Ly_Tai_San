@@ -193,7 +193,7 @@ export default forwardRef(function AssetTransferForm({
 
       if (!keyTaiLieuCuoi) {
         keyTaiLieuCuoi = await S3Service.put({
-          name: `DDTS_${values.tenPhieu}.pdf`,
+          name: `DDTS_${values.tenPhieu}_${Date.now()}.pdf`,
           file: mergePdf,
           type: "tailieu",
         });
