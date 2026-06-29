@@ -45,6 +45,16 @@ public class KyTaiLieuService {
         return kyTaiLieuDao.delete(id);
     }
 
+    public int update(KyTaiLieu obj) {
+        return kyTaiLieuDao.update(obj);
+    }
+    public int[] insertNguoiKyBatch(List<NguoiKy> list) {
+        return kyTaiLieuDao.insertNguoiKyBatch(list);
+    }
+    public int deleteAllNguoiKy(String idTaiLieu) {
+        return kyTaiLieuDao.deleteAllNguoiKy(idTaiLieu);
+    }
+
     public int addNguoiKy(NguoiKy nguoiKy) {
         return kyTaiLieuDao.addNguoiKy(nguoiKy);
     }

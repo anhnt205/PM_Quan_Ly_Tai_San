@@ -42,6 +42,11 @@ public class KyTaiLieuDao {
         }
     }
 
+    public int update(KyTaiLieu obj) {
+        String sql = "UPDATE KyTaiLieu SET IdTaiLieu=?, LoaiKy=?, X=?, Y=?, IdNguoiKy=?, ChuKySo=?, NgayKy=?, STT=?, Scale=?, Width=?, Page=? WHERE Id=?";
+        return jdbcTemplate.update(sql, obj.getIdTaiLieu(), obj.getLoaiKy(), obj.getX(), obj.getY(), obj.getIdNguoiKy(), obj.getChuKySo(), obj.getNgayKy(), obj.getStt(), obj.getScale(), obj.getWidth(), obj.getPage(), obj.getId());
+    }
+
     public int delete(String id) {
         String sql = "DELETE FROM KyTaiLieu where IdTaiLieu = ?";
         return jdbcTemplate.update(sql, id);
@@ -50,6 +55,27 @@ public class KyTaiLieuDao {
     public int addNguoiKy(NguoiKy nguoiKy) {
         String sql = "INSERT INTO NguoiKy(Id,IdTaiLieu,IdNguoiKy,TrangThai,IdPhongBan) VALUES (?, ?,?,?,?)";
         return jdbcTemplate.update(sql, nguoiKy.getId(), nguoiKy.getIdTaiLieu(), nguoiKy.getIdNguoiKy(), nguoiKy.getTrangThai(), nguoiKy.getIdPhongBan());
+    }
+
+    public int[] insertNguoiKyBatch(List<NguoiKy> list) {
+        if (list == null || list.isEmpty()) return new int[0];
+        String sql = "INSERT INTO NguoiKy (Id, IdTaiLieu, IdNguoiKy, TrangThai, IdPhongBan) VALUES (?, ?, ?, ?, ?)";
+        return jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                NguoiKy obj = list.get(i);
+                ps.setString(1, obj.getId());
+                ps.setString(2, obj.getIdTaiLieu());
+                ps.setString(3, obj.getIdNguoiKy());
+                ps.setInt(4, obj.getTrangThai() != null ? obj.getTrangThai() : 0);
+                ps.setString(5, obj.getIdPhongBan());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return list.size();
+            }
+        });
     }
 
     public int updateTrangThai(String id, String trangThai) {

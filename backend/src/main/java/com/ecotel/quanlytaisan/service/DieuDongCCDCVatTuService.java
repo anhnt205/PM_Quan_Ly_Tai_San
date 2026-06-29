@@ -20,9 +20,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 public class DieuDongCCDCVatTuService {
@@ -40,6 +43,9 @@ public class DieuDongCCDCVatTuService {
 
     @Autowired
     private ChucVuService chucVuService;
+
+    @Autowired
+    private S3Service s3Service;
 
     public DieuDongCCDCVatTuService() {
         this.dao = new DieuDongCCDCVatTuDao();
@@ -339,16 +345,167 @@ public class DieuDongCCDCVatTuService {
         return dao.findById(id);
     }
 
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public DieuDongCCDCVatTu insert(DieuDongCCDCVatTu obj) throws SQLException {
-        return dao.insert(obj);
+        DieuDongCCDCVatTu result = dao.insert(obj);
+        if (result != null) {
+            if (obj.getChiTietDieuDongCCDCVatTuDTOS() != null && !obj.getChiTietDieuDongCCDCVatTuDTOS().isEmpty()) {
+                List<ChiTietDieuDongCCDCVatTu> insertList = new ArrayList<>();
+                for (ChiTietDieuDongCCDCVatTuDTO dto : obj.getChiTietDieuDongCCDCVatTuDTOS()) {
+                    ChiTietDieuDongCCDCVatTu ct = new ChiTietDieuDongCCDCVatTu();
+                    ct.setId(dto.getId());
+                    ct.setIdDieuDongCCDCVatTu(result.getId());
+                    ct.setIdCCDCVatTu(dto.getIdCCDCVatTu());
+                    ct.setSoChungTu(dto.getSoChungTu());
+                    ct.setSoLuong(dto.getSoLuong() != null ? dto.getSoLuong().doubleValue() : 0.0);
+                    ct.setSoLuongXuat(dto.getSoLuongXuat() != null ? dto.getSoLuongXuat().doubleValue() : 0.0);
+                    ct.setGhiChu(dto.getGhiChu());
+                    ct.setNgayTao(dto.getNgayTao());
+                    ct.setNgayCapNhat(dto.getNgayCapNhat());
+                    ct.setNguoiTao(dto.getNguoiTao());
+                    ct.setNguoiCapNhat(dto.getNguoiCapNhat());
+                    ct.setIsActive(dto.getIsActive());
+                    ct.setIdChiTietCCDCVatTu(dto.getIdChiTietCCDCVatTu());
+                    ct.setHienTrang(dto.getHienTrang());
+                    ct.setMoTa(dto.getMoTa());
+                    insertList.add(ct);
+                }
+                chiTietDieuDongCCDCVatTuDao.batchInsert(insertList);
+            }
+            if (obj.getNguoiKyList() != null && !obj.getNguoiKyList().isEmpty()) {
+                kyTaiLieuService.insertNguoiKyBatch(obj.getNguoiKyList());
+            }
+        }
+        return result;
     }
 
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public DieuDongCCDCVatTu update(DieuDongCCDCVatTu obj) throws SQLException {
-        return dao.update(obj);
+        DieuDongCCDCVatTu oldObj = dao.findById(obj.getId());
+        List<String> keysToDelete = new ArrayList<>();
+        if (oldObj != null) {
+            if (oldObj.getDuongDanFile() != null && !oldObj.getDuongDanFile().isEmpty() 
+                    && !oldObj.getDuongDanFile().equals(obj.getDuongDanFile())) {
+                keysToDelete.add(oldObj.getDuongDanFile());
+            }
+            if (oldObj.getTaiLieuCuoi() != null && !oldObj.getTaiLieuCuoi().isEmpty() 
+                    && !oldObj.getTaiLieuCuoi().equals(obj.getTaiLieuCuoi())) {
+                keysToDelete.add(oldObj.getTaiLieuCuoi());
+            }
+        }
+
+        DieuDongCCDCVatTu result = dao.update(obj);
+        if (result != null) {
+            if (obj.getChiTietDieuDongCCDCVatTuDTOS() != null) {
+                List<ChiTietDieuDongCCDCVatTuDTO> currentDetails = chiTietDieuDongCCDCVatTuDao.findAll(obj.getId());
+                Set<String> newIds = new HashSet<>();
+                for (ChiTietDieuDongCCDCVatTuDTO ct : obj.getChiTietDieuDongCCDCVatTuDTOS()) {
+                    if (ct.getId() != null && !ct.getId().isEmpty()) {
+                        newIds.add(ct.getId());
+                    }
+                }
+                
+                List<String> idsToDelete = new ArrayList<>();
+                for (ChiTietDieuDongCCDCVatTuDTO current : currentDetails) {
+                    if (!newIds.contains(current.getId())) {
+                        idsToDelete.add(current.getId());
+                    }
+                }
+                if (!idsToDelete.isEmpty()) {
+                    chiTietDieuDongCCDCVatTuDao.batchDelete(idsToDelete);
+                }
+
+                List<ChiTietDieuDongCCDCVatTu> itemsToInsert = new ArrayList<>();
+                List<ChiTietDieuDongCCDCVatTu> itemsToUpdate = new ArrayList<>();
+                Set<String> currentIds = new HashSet<>();
+                for (ChiTietDieuDongCCDCVatTuDTO c : currentDetails) currentIds.add(c.getId());
+
+                for (ChiTietDieuDongCCDCVatTuDTO dto : obj.getChiTietDieuDongCCDCVatTuDTOS()) {
+                    ChiTietDieuDongCCDCVatTu ct = new ChiTietDieuDongCCDCVatTu();
+                    ct.setId(dto.getId());
+                    ct.setIdDieuDongCCDCVatTu(result.getId());
+                    ct.setIdCCDCVatTu(dto.getIdCCDCVatTu());
+                    ct.setSoChungTu(dto.getSoChungTu());
+                    ct.setSoLuong(dto.getSoLuong() != null ? dto.getSoLuong().doubleValue() : 0.0);
+                    ct.setSoLuongXuat(dto.getSoLuongXuat() != null ? dto.getSoLuongXuat().doubleValue() : 0.0);
+                    ct.setGhiChu(dto.getGhiChu());
+                    ct.setNgayTao(dto.getNgayTao());
+                    ct.setNgayCapNhat(dto.getNgayCapNhat());
+                    ct.setNguoiTao(dto.getNguoiTao());
+                    ct.setNguoiCapNhat(dto.getNguoiCapNhat());
+                    ct.setIsActive(dto.getIsActive());
+                    ct.setIdChiTietCCDCVatTu(dto.getIdChiTietCCDCVatTu());
+                    ct.setHienTrang(dto.getHienTrang());
+                    ct.setMoTa(dto.getMoTa());
+                    
+                    if (currentIds.contains(dto.getId())) {
+                        itemsToUpdate.add(ct);
+                    } else {
+                        itemsToInsert.add(ct);
+                    }
+                }
+                if (!itemsToInsert.isEmpty()) chiTietDieuDongCCDCVatTuDao.batchInsert(itemsToInsert);
+                if (!itemsToUpdate.isEmpty()) chiTietDieuDongCCDCVatTuDao.batchUpdate(itemsToUpdate);
+            }
+
+            if (obj.getNguoiKyList() != null) {
+                kyTaiLieuService.deleteAllNguoiKy(obj.getId());
+                if (!obj.getNguoiKyList().isEmpty()) {
+                    kyTaiLieuService.insertNguoiKyBatch(obj.getNguoiKyList());
+                }
+            }
+
+            if (!keysToDelete.isEmpty()) {
+                TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            for (String key : keysToDelete) {
+                                try {
+                                    s3Service.deleteFile(key);
+                                } catch (Exception e) {
+                                    // ignore
+                                }
+                            }
+                        }
+                    }
+                );
+            }
+        }
+        return result;
     }
 
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public int delete(String id) throws SQLException {
-        return dao.delete(id);
+        DieuDongCCDCVatTu oldObj = dao.findById(id);
+        List<String> keysToDelete = new ArrayList<>();
+        if (oldObj != null) {
+            if (oldObj.getDuongDanFile() != null && !oldObj.getDuongDanFile().isEmpty()) {
+                keysToDelete.add(oldObj.getDuongDanFile());
+            }
+            if (oldObj.getTaiLieuCuoi() != null && !oldObj.getTaiLieuCuoi().isEmpty()) {
+                keysToDelete.add(oldObj.getTaiLieuCuoi());
+            }
+        }
+        kyTaiLieuService.deleteAllNguoiKy(id);
+        int rows = dao.delete(id);
+        if (rows > 0 && !keysToDelete.isEmpty()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        for (String key : keysToDelete) {
+                            try {
+                                s3Service.deleteFile(key);
+                            } catch (Exception e) {
+                                // ignore
+                            }
+                        }
+                    }
+                }
+            );
+        }
+        return rows;
     }
 
     public int[] banHanhQuyetDinh(List<BanHanhRequest> requests) {
@@ -359,7 +516,9 @@ public class DieuDongCCDCVatTuService {
         return dao.updateTrangThai(id, userId);
     }
 
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public int huyTrangThai(String id) {
+        kyTaiLieuService.deleteAllNguoiKy(id);
         return dao.huyDieuDong(id);
     }
 
