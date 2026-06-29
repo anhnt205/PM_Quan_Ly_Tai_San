@@ -6,12 +6,7 @@ import * as XLSX from "xlsx";
 import { s } from "../../../utils/helpers";
 import { CongTy } from "../../../utils/const";
 
-export const useTypeAssetMutation = (
-  page?: number,
-  pageSize?: number,
-  searchValue?: string,
-  assetGroup?: string,
-) => {
+export const useTypeAssetMutation = () => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: async (data: TypeAssetType) => {
@@ -20,6 +15,7 @@ export const useTypeAssetMutation = (
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["allTypeAssets"] });
+      queryClient.invalidateQueries({ queryKey: ["typeAssetsPage"] });
       showSuccessAlert("Tạo loại tài sản thành công");
     },
     onError: (error: any) => {
@@ -37,6 +33,7 @@ export const useTypeAssetMutation = (
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["allTypeAssets"] });
+      queryClient.invalidateQueries({ queryKey: ["typeAssetsPage"] });
       showSuccessAlert("Tạo hàng loạt loại tài sản thành công");
     },
     onError: (error: any) => {
@@ -55,6 +52,7 @@ export const useTypeAssetMutation = (
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["allTypeAssets"] });
+      queryClient.invalidateQueries({ queryKey: ["typeAssetsPage"] });
       showSuccessAlert("Sửa loại tài sản thành công");
     },
     onError: (error: any) => {
@@ -72,6 +70,7 @@ export const useTypeAssetMutation = (
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["allTypeAssets"] });
+      queryClient.invalidateQueries({ queryKey: ["typeAssetsPage"] });
       showSuccessAlert("Sửa hàng loạt loại tài sản thành công");
     },
     onError: (error: any) => {
@@ -90,6 +89,7 @@ export const useTypeAssetMutation = (
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["allTypeAssets"] });
+      queryClient.invalidateQueries({ queryKey: ["typeAssetsPage"] });
       showSuccessAlert("Xóa loại ccdc thành công");
     },
     onError: (error: any) => {
@@ -108,6 +108,7 @@ export const useTypeAssetMutation = (
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["allTypeAssets"] });
+      queryClient.invalidateQueries({ queryKey: ["typeAssetsPage"] });
       showSuccessAlert(data || "Xóa loại tài sản thành công");
     },
     onError: (error: any) => {
@@ -124,6 +125,7 @@ export const useTypeAssetMutation = (
       return res.data.message;
     },
     onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["allTypeAssets"] });
       queryClient.invalidateQueries({ queryKey: ["typeAssetsPage"] });
       showSuccessAlert(data || "Xóa loại tài sản thành công");
     },

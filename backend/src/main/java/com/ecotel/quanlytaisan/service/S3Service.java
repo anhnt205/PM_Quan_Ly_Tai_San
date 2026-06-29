@@ -14,6 +14,10 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
+import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
+import software.amazon.awssdk.services.s3.model.Delete;
 
 import java.time.Duration;
 import java.util.UUID;
@@ -155,5 +159,46 @@ public class S3Service {
         s3Client.putObject(objectRequest, RequestBody.fromBytes(data));
 
         return fileKey;
+    }
+
+    public void deleteFile(String key) {
+        if (key == null || key.trim().isEmpty()) {
+            return;
+        }
+        try {
+            DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(key)
+                    .build();
+            s3Client.deleteObject(deleteObjectRequest);
+        } catch (Exception e) {
+            System.err.println("Error deleting file from S3: " + e.getMessage());
+        }
+    }
+
+    public void deleteFiles(java.util.List<String> keys) {
+        if (keys == null || keys.isEmpty()) return;
+
+        // AWS S3 DeleteObjects allows a maximum of 1000 keys per request
+        for (int i = 0; i < keys.size(); i += 1000) {
+            java.util.List<String> subList = keys.subList(i, Math.min(keys.size(), i + 1000));
+            java.util.List<ObjectIdentifier> objectIdentifiers = subList.stream()
+                    .map(key -> ObjectIdentifier.builder().key(key).build())
+                    .toList();
+
+            Delete delete = Delete.builder()
+                    .objects(objectIdentifiers)
+                    .build();
+
+            try {
+                DeleteObjectsRequest deleteObjectsRequest = DeleteObjectsRequest.builder()
+                        .bucket(bucketName)
+                        .delete(delete)
+                        .build();
+                s3Client.deleteObjects(deleteObjectsRequest);
+            } catch (Exception e) {
+                System.err.println("Error bulk deleting files from S3: " + e.getMessage());
+            }
+        }
     }
 }

@@ -69,19 +69,83 @@ public class NhanVienService {
     }
 
     public int update(NhanVien nv) {
-        return nhanVienDao.update(nv);
+        NhanVien oldNv = nhanVienDao.findEntityById(nv.getId());
+        String oldChuKyNhay = null;
+        String oldChuKyThuong = null;
+        if (oldNv != null) {
+            if (oldNv.getChuKyNhay() != null && !oldNv.getChuKyNhay().trim().isEmpty() && !oldNv.getChuKyNhay().equals(nv.getChuKyNhay())) {
+                oldChuKyNhay = oldNv.getChuKyNhay();
+            }
+            if (oldNv.getChuKyThuong() != null && !oldNv.getChuKyThuong().trim().isEmpty() && !oldNv.getChuKyThuong().equals(nv.getChuKyThuong())) {
+                oldChuKyThuong = oldNv.getChuKyThuong();
+            }
+        }
+        int result = nhanVienDao.update(nv);
+        if (result > 0) {
+            if (oldChuKyNhay != null) s3Service.deleteFile(oldChuKyNhay);
+            if (oldChuKyThuong != null) s3Service.deleteFile(oldChuKyThuong);
+        }
+        return result;
     }
 
     public int batchUpdate(List<NhanVien> list) {
-        return nhanVienDao.batchUpdate(list);
+        List<String> keysToDelete = new ArrayList<>();
+        for (NhanVien nv : list) {
+            NhanVien oldNv = nhanVienDao.findEntityById(nv.getId());
+            if (oldNv != null) {
+                if (oldNv.getChuKyNhay() != null && !oldNv.getChuKyNhay().trim().isEmpty() && !oldNv.getChuKyNhay().equals(nv.getChuKyNhay())) {
+                    keysToDelete.add(oldNv.getChuKyNhay());
+                }
+                if (oldNv.getChuKyThuong() != null && !oldNv.getChuKyThuong().trim().isEmpty() && !oldNv.getChuKyThuong().equals(nv.getChuKyThuong())) {
+                    keysToDelete.add(oldNv.getChuKyThuong());
+                }
+            }
+        }
+        int result = nhanVienDao.batchUpdate(list);
+        if (result > 0 && !keysToDelete.isEmpty()) {
+            s3Service.deleteFiles(keysToDelete);
+        }
+        return result;
     }
 
     public int delete(String id) {
-        return nhanVienDao.delete(id);
+        NhanVien oldNv = nhanVienDao.findEntityById(id);
+        String oldChuKyNhay = null;
+        String oldChuKyThuong = null;
+        if (oldNv != null) {
+            if (oldNv.getChuKyNhay() != null && !oldNv.getChuKyNhay().trim().isEmpty()) {
+                oldChuKyNhay = oldNv.getChuKyNhay();
+            }
+            if (oldNv.getChuKyThuong() != null && !oldNv.getChuKyThuong().trim().isEmpty()) {
+                oldChuKyThuong = oldNv.getChuKyThuong();
+            }
+        }
+        int result = nhanVienDao.delete(id);
+        if (result > 0) {
+            if (oldChuKyNhay != null) s3Service.deleteFile(oldChuKyNhay);
+            if (oldChuKyThuong != null) s3Service.deleteFile(oldChuKyThuong);
+        }
+        return result;
     }
 
     public int batchDelete(List<String> ids) {
-        return nhanVienDao.batchDelete(ids);
+        List<String> keysToDelete = new ArrayList<>();
+        for (String id : ids) {
+            NhanVien oldNv = nhanVienDao.findEntityById(id);
+            if (oldNv != null) {
+                if (oldNv.getChuKyNhay() != null && !oldNv.getChuKyNhay().trim().isEmpty()) {
+                    keysToDelete.add(oldNv.getChuKyNhay());
+                }
+                if (oldNv.getChuKyThuong() != null && !oldNv.getChuKyThuong().trim().isEmpty()) {
+                    keysToDelete.add(oldNv.getChuKyThuong());
+                }
+            }
+        }
+        int result = nhanVienDao.batchDelete(ids);
+        if (result > 0 && !keysToDelete.isEmpty()) {
+            s3Service.deleteFiles(keysToDelete);
+        }
+        return result;
     }
 
 
@@ -283,7 +347,11 @@ public class NhanVienService {
 
 
     public void deleteAll() {
-        nhanVienDao.deleteAll();
+        List<String> keysToDelete = nhanVienDao.getAllS3Keys();
+        int result = nhanVienDao.deleteAll();
+        if (result > 0 && keysToDelete != null && !keysToDelete.isEmpty()) {
+            s3Service.deleteFiles(keysToDelete);
+        }
     }
 
 }

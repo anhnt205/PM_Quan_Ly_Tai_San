@@ -36,6 +36,7 @@ import { ModelAssetValidation } from "../validation/Validation";
 import EditButton from "../../../components/Button/EditButton";
 import { CongTy } from "../../../utils/const";
 import { useDebounce } from "../../../hooks/useDebounce";
+import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
 
 export default function ModelAssetForm({
   onEdit,
@@ -84,8 +85,8 @@ export default function ModelAssetForm({
   });
 
   const phuongPhapOptions = [
-    { value: 1, label: "Đường thẳng" },
-    { value: 0, label: "Khác" },
+    { id: 1, label: "Đường thẳng" },
+    { id: 0, label: "Khác" },
   ];
 
   useEffect(() => {
@@ -478,33 +479,14 @@ export default function ModelAssetForm({
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <FormControl
-              fullWidth
-              size="small"
-              error={
-                formik.touched.phuongPhapKhauHao &&
-                Boolean(formik.errors.phuongPhapKhauHao)
-              }
-            >
-              <InputLabel>Phương pháp khấu hao</InputLabel>
-              <Select
-                name="phuongPhapKhauHao"
-                value={formik.values.phuongPhapKhauHao}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                disabled={readOnly}
-                label="Phương pháp khấu hao"
-              >
-                <MenuItem value={1}>Đường thẳng</MenuItem>
-                <MenuItem value={0}>Khác</MenuItem>
-              </Select>
-              {formik.touched.phuongPhapKhauHao &&
-                formik.errors.phuongPhapKhauHao && (
-                  <FormHelperText>
-                    {formik.errors.phuongPhapKhauHao}
-                  </FormHelperText>
-                )}
-            </FormControl>
+            <FieldAutoCompleted
+              title="Phương pháp khấu hao *"
+              formik={formik}
+              field="phuongPhapKhauHao"
+              disabled={readOnly}
+              data={phuongPhapOptions}
+              labelkey="label"
+            />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <FieldInput

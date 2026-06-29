@@ -13,6 +13,7 @@ export interface StaffType {
   boPhan?: string;
   chucVu?: string;
   phongBanId?: string;
+  chucVuId?: string;
   nguoiQuanLy?: string;
   laQuanLy?: boolean;
   avatar?: string;

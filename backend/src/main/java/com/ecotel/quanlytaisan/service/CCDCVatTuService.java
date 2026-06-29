@@ -217,6 +217,39 @@ public class CCDCVatTuService {
                     chiTietTaiSanDao.insert(ts);
                 }
             }
+
+            // Xử lý tạo đơn vị sở hữu nếu chưa có
+            List<ChiTietDonViSoHuu> existingOwners = chiTietDonViSoHuuDao.findByIdCCDCVT(ccdc.getId());
+            if (existingOwners == null || existingOwners.isEmpty()) {
+                if (ccdc.getIdDonVi() != null && !ccdc.getIdDonVi().trim().isEmpty()) {
+                    List<ChiTietDonViSoHuu> dvshList = new ArrayList<>();
+                    if (ccdc.getChiTietTaiSanList() != null) {
+                        for (ChiTietTaiSan ts : ccdc.getChiTietTaiSanList()) {
+                            ChiTietDonViSoHuu dvsh = new ChiTietDonViSoHuu();
+                            dvsh.setId(UUID.randomUUID().toString());
+                            dvsh.setIdCCDCVT(ccdc.getId());
+                            dvsh.setIdDonViSoHuu(ccdc.getIdDonVi());
+                            dvsh.setSoLuong(ts.getSoLuong());
+                            dvsh.setThoiGianBanGiao(ccdc.getNgayNhap() != null && !ccdc.getNgayNhap().trim().isEmpty() ? ccdc.getNgayNhap() : LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")));
+                            dvsh.setNgayTao(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")));
+                            dvsh.setNguoiTao(ccdc.getNguoiTao() != null && !ccdc.getNguoiTao().trim().isEmpty() ? ccdc.getNguoiTao() : "system");
+                            dvsh.setIdTsCon(ts.getId());
+                            dvshList.add(dvsh);
+                        }
+                    }
+                    ccdc.setChiTietDonViSoHuuList(dvshList);
+                }
+            }
+
+            if (ccdc.getChiTietDonViSoHuuList() != null) {
+                for (ChiTietDonViSoHuu dvsh : ccdc.getChiTietDonViSoHuuList()) {
+                    if (dvsh.getId() == null || dvsh.getId().trim().isEmpty()) {
+                        dvsh.setId(UUID.randomUUID().toString());
+                    }
+                    dvsh.setIdCCDCVT(ccdc.getId());
+                    chiTietDonViSoHuuDao.insert(dvsh);
+                }
+            }
         }
         return result;
     }
@@ -233,6 +266,40 @@ public class CCDCVatTuService {
                 chiTietTaiSanDao.insert(ts);
             }
         }
+
+        // Xử lý tạo đơn vị sở hữu nếu chưa có
+        List<ChiTietDonViSoHuu> existingOwners = chiTietDonViSoHuuDao.findByIdCCDCVT(ccdc.getId());
+        if (existingOwners == null || existingOwners.isEmpty()) {
+            if (ccdc.getIdDonVi() != null && !ccdc.getIdDonVi().trim().isEmpty()) {
+                List<ChiTietDonViSoHuu> dvshList = new ArrayList<>();
+                if (ccdc.getChiTietTaiSanList() != null) {
+                    for (ChiTietTaiSan ts : ccdc.getChiTietTaiSanList()) {
+                        ChiTietDonViSoHuu dvsh = new ChiTietDonViSoHuu();
+                        dvsh.setId(UUID.randomUUID().toString());
+                        dvsh.setIdCCDCVT(ccdc.getId());
+                        dvsh.setIdDonViSoHuu(ccdc.getIdDonVi());
+                        dvsh.setSoLuong(ts.getSoLuong());
+                        dvsh.setThoiGianBanGiao(ccdc.getNgayNhap() != null && !ccdc.getNgayNhap().trim().isEmpty() ? ccdc.getNgayNhap() : LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")));
+                        dvsh.setNgayTao(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")));
+                        dvsh.setNguoiTao(ccdc.getNguoiTao() != null && !ccdc.getNguoiTao().trim().isEmpty() ? ccdc.getNguoiTao() : "system");
+                        dvsh.setIdTsCon(ts.getId());
+                        dvshList.add(dvsh);
+                    }
+                }
+                ccdc.setChiTietDonViSoHuuList(dvshList);
+            }
+        }
+
+        if (ccdc.getChiTietDonViSoHuuList() != null) {
+            for (ChiTietDonViSoHuu dvsh : ccdc.getChiTietDonViSoHuuList()) {
+                if (dvsh.getId() == null || dvsh.getId().trim().isEmpty()) {
+                    dvsh.setId(UUID.randomUUID().toString());
+                }
+                dvsh.setIdCCDCVT(ccdc.getId());
+                chiTietDonViSoHuuDao.insert(dvsh);
+            }
+        }
+
         return result;
     }
 

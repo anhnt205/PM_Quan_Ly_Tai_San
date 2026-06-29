@@ -222,6 +222,7 @@ export default function Staff() {
       field: "emailCongViec",
       headerName: "Email",
       flex: 1,
+      minWidth: 150,
       align: "center",
       headerAlign: "center",
     },
