@@ -20,7 +20,7 @@ import { useAllDepartmentsQuery } from "../../Department/Mutation";
 import { CongTy } from "../../../utils/const";
 import { Delete, Add, Close, Remove } from "@mui/icons-material";
 import { StaffType } from "../types";
-import { useDebounce } from "../../../hooks/useDebounce";
+import { StaffBulkValidation } from "../validation/Validation";
 
 const defaultRow: StaffType = {
   id: "",
@@ -42,22 +42,6 @@ const defaultRow: StaffType = {
   savePin: false,
 };
 
-const StaffBulkValidation = yup.object({
-  items: yup
-    .array()
-    .of(
-      yup.object({
-        id: yup.string().required("Bắt buộc"),
-        hoTen: yup.string().required("Bắt buộc"),
-        diDong: yup.string().required("Bắt buộc"),
-        emailCongViec: yup.string().required("Bắt buộc"),
-        boPhan: yup.string().required("Bắt buộc"),
-        chucVu: yup.string().required("Bắt buộc"),
-      }),
-    )
-    .min(1, "Yêu cầu ít nhất một dòng"),
-});
-
 export default function StaffBulkForm({
   mode = "add",
   onCancel,
@@ -77,6 +61,8 @@ export default function StaffBulkForm({
 }) {
   const { data: allPositions = [] } = useAllPositionsQuery();
   const { data: allDepartments = [] } = useAllDepartmentsQuery();
+
+  console.log(initialItems);
 
   const formik = useFormik({
     enableReinitialize: true,
@@ -101,6 +87,8 @@ export default function StaffBulkForm({
         items: initialItems.map((item) => ({
           ...defaultRow,
           ...item,
+          boPhan: item?.phongBanId,
+          chucVu: item?.chucVuId,
         })),
       });
     }

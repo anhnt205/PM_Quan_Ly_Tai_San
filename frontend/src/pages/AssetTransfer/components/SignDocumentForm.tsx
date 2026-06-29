@@ -85,6 +85,7 @@ export default function SignDocumentForm({
         }
       } catch (error) {
         console.error("Lỗi hiển thị tài liệu:", error);
+        showErrorAlert("Không thể tải tài liệu, vui lòng kiểm tra lại!");
       } finally {
         setLoading(false);
       }

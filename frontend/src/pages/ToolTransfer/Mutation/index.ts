@@ -49,26 +49,6 @@ export const useToolTransferMutation = (
     },
     onSuccess: async (response, data) => {
       const idDDTS = response.data.id;
-      if (
-        data.chiTietDieuDongCCDCVatTuDTOS &&
-        data.chiTietDieuDongCCDCVatTuDTOS.length > 0
-      ) {
-        createToolTransferDetailManyMutation.mutate(
-          data.chiTietDieuDongCCDCVatTuDTOS?.map((item) => ({
-            ...item,
-            idDieuDongCCDCVatTu: idDDTS,
-          })),
-        );
-      }
-      if (data.nguoiKyList && data.nguoiKyList.length > 0) {
-        updateSignerMutation.mutate({
-          idTaiLieu: idDDTS,
-          data: data.nguoiKyList.map((item) => ({
-            ...item,
-            idTaiLieu: idDDTS,
-          })),
-        });
-      }
       const list = await listNguoiKy([data]);
       socketService.send({
         type: MessageTypeFunctions.TOOL_TRANSFER,
@@ -97,26 +77,6 @@ export const useToolTransferMutation = (
       return res.data;
     },
     onSuccess: async (response, data) => {
-      if (data.initialChiTiet && data.initialChiTiet.length > 0) {
-        deleteToolTransferDetailManyMutation.mutate(data.initialChiTiet);
-      }
-      if (
-        data.chiTietDieuDongCCDCVatTuDTOS &&
-        data.chiTietDieuDongCCDCVatTuDTOS.length > 0
-      ) {
-        createToolTransferDetailManyMutation.mutate(
-          data.chiTietDieuDongCCDCVatTuDTOS.map((item) => ({
-            ...item,
-            idDieuDongCCDCVatTu: data.id,
-          })),
-        );
-      }
-      if (data.nguoiKyList && data.nguoiKyList.length > 0 && data.id) {
-        updateSignerMutation.mutate({
-          idTaiLieu: data.id,
-          data: data.nguoiKyList,
-        });
-      }
       const list = await listNguoiKy([data]);
       socketService.send({
         type: MessageTypeFunctions.TOOL_TRANSFER,
@@ -156,7 +116,6 @@ export const useToolTransferMutation = (
       return res.data;
     },
     onSuccess: async (_, data) => {
-      deleteSignerMutation.mutate(data.id);
       const list = await listNguoiKy([data]);
       socketService.send({
         type: MessageTypeFunctions.TOOL_TRANSFER,
@@ -229,7 +188,6 @@ export const useToolTransferMutation = (
     },
     onSuccess: async (response, data) => {
       queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
-      deleteSignerMutation.mutate(data.id);
       const list = await listNguoiKy([data]);
       socketService.send({
         type: MessageTypeFunctions.TOOL_TRANSFER,

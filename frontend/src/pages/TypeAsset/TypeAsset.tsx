@@ -40,7 +40,8 @@ interface TypeAssetTabState {
 }
 
 export default function TypeAsset() {
-  const { formData, setField } = useTabForm<TypeAssetTabState>("/loai_tai_san");
+  const { formData, setField } =
+    useTabForm<TypeAssetTabState>("/loai_tai_san");
   const showForm = formData.showForm ?? false;
   const selectedTypeAsset = formData.selectedTypeAsset ?? null;
   const readOnly = formData.readOnly ?? false;
@@ -84,11 +85,7 @@ export default function TypeAsset() {
     deleteAllMutation,
     createBatchMutation,
     updateBatchMutation,
-  } = useTypeAssetMutation(
-    paginationModel.page,
-    paginationModel.pageSize,
-    searchValue,
-  );
+  } = useTypeAssetMutation();
 
   const debouncedSearchValue = useDebounce(searchValue, 600);
   const { data: typeAssetPage = { items: [], totalItems: 0 }, isLoading } =

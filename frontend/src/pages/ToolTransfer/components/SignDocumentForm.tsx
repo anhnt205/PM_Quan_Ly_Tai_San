@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
 import { ToolSignature } from "../types";
-import {
-  canUserSign,
-  generateBangKePdf,
-} from "../config";
+import { canUserSign, generateBangKePdf } from "../config";
 import { mergeBangKeWithOriginalPdf } from "../../AssetTransfer/config";
 import { showErrorAlert } from "../../../components/Alert";
 import S3Service from "../../../services/S3Service";
@@ -78,6 +75,7 @@ export default function SignDocumentForm({
         }
       } catch (error) {
         console.error("Lỗi hiển thị tài liệu:", error);
+        showErrorAlert("Không thể tải tài liệu, vui lòng kiểm tra lại!");
       } finally {
         setLoading(false);
       }
@@ -96,7 +94,9 @@ export default function SignDocumentForm({
       onCancel();
     } catch (error: any) {
       console.error("Lỗi khi lưu chữ ký:", error);
-      showErrorAlert(`Có lỗi xảy ra: ${error.message || "Không thể lưu chữ ký."}`);
+      showErrorAlert(
+        `Có lỗi xảy ra: ${error.message || "Không thể lưu chữ ký."}`,
+      );
     }
   };
 

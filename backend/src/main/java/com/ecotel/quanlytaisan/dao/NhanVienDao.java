@@ -643,6 +643,13 @@ public class NhanVienDao {
         return jdbcTemplate.update(sql);
     }
 
+    public List<String> getAllS3Keys() {
+        String sql = "SELECT ChuKyNhay FROM NhanVien WHERE ChuKyNhay IS NOT NULL AND ChuKyNhay != '' " +
+                     "UNION " +
+                     "SELECT ChuKyThuong FROM NhanVien WHERE ChuKyThuong IS NOT NULL AND ChuKyThuong != ''";
+        return jdbcTemplate.queryForList(sql, String.class);
+    }
+
 
 
 

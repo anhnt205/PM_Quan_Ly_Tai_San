@@ -97,16 +97,18 @@ export default function ToolForm({
       isActive: initialFormData?.isActive ?? true,
       idLoaiCCDCCon: initialFormData?.idLoaiCCDCCon ?? "",
       hienTrang: initialFormData?.hienTrang ?? 0,
-      chiTietTaiSanList: initialFormData?.chiTietTaiSanList?.length ? initialFormData.chiTietTaiSanList : [
-        {
-          id: "",
-          soLuong: 1,
-          congSuat: "",
-          nuocSanXuat: "",
-          namSanXuat: 0,
-          isInserted: true,
-        }
-      ],
+      chiTietTaiSanList: initialFormData?.chiTietTaiSanList?.length
+        ? initialFormData.chiTietTaiSanList
+        : [
+            {
+              id: "",
+              soLuong: 1,
+              congSuat: "",
+              nuocSanXuat: "",
+              namSanXuat: 0,
+              isInserted: true,
+            },
+          ],
       chiTietDonViSoHuuList: initialFormData?.chiTietDonViSoHuuList ?? [],
     },
     validationSchema: ToolValidation,
@@ -355,6 +357,16 @@ export default function ToolForm({
                     labelkey="tenDonVi"
                     field="donViTinh2"
                     formik={formik}
+                    disabled={readOnly}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <FieldAutoCompleted
+                    title="Đơn vị ban đầu"
+                    data={departments}
+                    labelkey="tenPhongBan"
+                    formik={formik}
+                    field="idDonVi"
                     disabled={readOnly}
                   />
                 </Grid>

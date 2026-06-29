@@ -59,6 +59,9 @@ public class DieuDongCCDCVatTu {
     private Boolean coPhieuBanGiao;
     private String taiLieuCuoi;
     private String ngayQuyetDinh;
+    private java.util.List<ChiTietDieuDongCCDCVatTuDTO> chiTietDieuDongCCDCVatTuDTOS;
+    private java.util.List<NguoiKy> nguoiKyList;
+    private java.util.List<NguoiKy> chuKyList;
 
     public static DieuDongCCDCVatTu mapToDieuDongCCDCVatTu(String[] row) {
         DieuDongCCDCVatTu dd = new DieuDongCCDCVatTu();

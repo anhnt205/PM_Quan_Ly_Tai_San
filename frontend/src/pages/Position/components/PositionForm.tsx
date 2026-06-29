@@ -205,7 +205,6 @@ export default function PositionForm({
 
     // Dùng items từ validate, đồng thời strip field errors trước khi save
     const cleanItems = items.map(({ errors, ...rest }) => rest);
-    console.log("item", cleanItems);
     onSave(cleanItems);
   };
 
@@ -699,7 +698,6 @@ export default function PositionForm({
         </Grid>
       </Paper>
 
-      {/* Footer */}
       <Box
         display="flex"
         justifyContent="flex-end"

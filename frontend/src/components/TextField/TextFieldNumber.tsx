@@ -1,6 +1,8 @@
 import { TextField } from "@mui/material";
 import { getIn } from "formik";
+import { useEffect, useState, useRef } from "react";
 import { NumericFormat } from "react-number-format";
+import { useDebounce } from "../../hooks/useDebounce";
 
 interface Props {
   title?: string;
@@ -23,6 +25,35 @@ export default function TextFieldNumber({
   const currentValue = formik && field ? getIn(formik.values, field) : "";
   const touched = formik && field ? getIn(formik.touched, field) : false;
   const error = formik && field ? getIn(formik.errors, field) : "";
+
+  // Local state để input mượt, debounce để set vào formik
+  const [localValue, setLocalValue] = useState(currentValue);
+  const debouncedValue = useDebounce(localValue, 300);
+  const isFirstRender = useRef(true);
+
+  // Khi debouncedValue thay đổi mới set vào formik và gọi onChange
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    
+    if (formik && field && debouncedValue !== getIn(formik.values, field)) {
+      formik.setFieldValue(field, debouncedValue);
+    }
+    
+    if (onChange) {
+      onChange(debouncedValue);
+    }
+  }, [debouncedValue]);
+
+  // Đồng bộ localValue khi giá trị trong formik thay đổi từ bên ngoài
+  useEffect(() => {
+    if (currentValue !== localValue && currentValue !== debouncedValue) {
+      setLocalValue(currentValue);
+    }
+  }, [currentValue]);
+
   return (
     <NumericFormat
       size="small"
@@ -30,16 +61,12 @@ export default function TextFieldNumber({
       label={title}
       fullWidth
       disabled={disabled}
-      value={currentValue}
+      value={localValue}
       thousandSeparator="."
       decimalSeparator=","
       fixedDecimalScale={false}
       onValueChange={(values: any) => {
-        formik.setFieldValue(
-          field,
-          values.floatValue === undefined ? 0 : values.floatValue,
-        );
-        onChange && onChange(values.floatValue);
+        setLocalValue(values.floatValue === undefined ? 0 : values.floatValue);
       }}
       // Giữ nguyên style của bạn
       error={Boolean(touched && error)}

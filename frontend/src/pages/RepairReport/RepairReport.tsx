@@ -1,4 +1,4 @@
-import { Delete } from "@mui/icons-material";
+import { Delete, Edit } from "@mui/icons-material";
 import { Box, Dialog, DialogContent, IconButton } from "@mui/material";
 import { useState } from "react";
 import PageAction from "../../components/common/PageAction";
@@ -122,17 +122,28 @@ export default function RepairReport() {
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
-        <IconButton
-          onClick={async (e) => {
-            e.stopPropagation();
-            const confirm = await showConfirmAlert("Xác nhận xóa!");
-            if (confirm.isConfirmed) {
-              deleteMutation.mutate(params.row.id);
-            }
-          }}
-        >
-          <Delete color="error" />
-        </IconButton>
+        <Box display="flex" gap={1} justifyContent="center" alignItems="center">
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRowClick({ row: params.row } as GridRowParams);
+              setReadOnly(false);
+            }}
+          >
+            <Edit color="primary" />
+          </IconButton>
+          <IconButton
+            onClick={async (e) => {
+              e.stopPropagation();
+              const confirm = await showConfirmAlert("Xác nhận xóa!");
+              if (confirm.isConfirmed) {
+                deleteMutation.mutate(params.row.id);
+              }
+            }}
+          >
+            <Delete color="error" />
+          </IconButton>
+        </Box>
       ),
     },
   ];

@@ -54,6 +54,8 @@ import PrintIcon from "@mui/icons-material/Print";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import { useRef } from "react";
+import FieldSearch from "../TextField/FieldSearch";
+import FieldAutoCompleted from "../TextField/FieldAutoCompleted";
 const CustomFilterPanel = (props: any) => {
   return (
     <GridFilterPanel
@@ -320,7 +322,7 @@ export default function TableCustom({
   titleSearch = "Tìm kiếm ...",
   extraActions,
   customContent,
-  departments,
+  departments = [],
   selectedDepartment,
   setSelectedDepartment,
   isFilterDepartment = false,
@@ -456,9 +458,9 @@ export default function TableCustom({
     >
       <Paper
         sx={{
-          my: (isFullscreen || sx?.height) ? 0 : 2,
+          my: isFullscreen || sx?.height ? 0 : 2,
           width: "100%",
-          flex: (isFullscreen || sx?.height) ? 1 : undefined,
+          flex: isFullscreen || sx?.height ? 1 : undefined,
           display: "flex",
           flexDirection: "column",
         }}
@@ -500,79 +502,20 @@ export default function TableCustom({
 
         <Grid container spacing={2} p={2}>
           <Grid size={{ xs: 12, sm: isCompact ? 12 : 4 }}>
-            <TextField
-              label={titleSearch}
-              fullWidth
-              size="small"
-              value={searchValue}
-              onChange={(e) => setSearchValue?.(e.target.value)}
-              InputProps={{
-                startAdornment: <Search sx={{ color: "#0273a3", mr: 0.5 }} />,
-                endAdornment: searchValue ? (
-                  <IconButton onClick={() => setSearchValue?.("")} size="small">
-                    <Close fontSize="small" />
-                  </IconButton>
-                ) : null,
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: "10px",
-                  "& fieldset": {
-                    borderColor: "#0273a3",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "#0273a3",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#0273a3",
-                  },
-                },
-                "& .MuiInputLabel-root": {
-                  "&.Mui-focused": {
-                    color: "#0273a3",
-                  },
-                },
-              }}
+            <FieldSearch
+              searchValue={searchValue}
+              setSearchValue={setSearchValue}
+              titleSearch={titleSearch}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: isCompact ? 12 : 3 }}>
             {isFilterDepartment && !isCompact && (
-              <Autocomplete
-                options={departments || []}
-                value={
-                  departments?.find((d) => d.id === selectedDepartment) || null
-                }
-                getOptionLabel={(option) => option.tenPhongBan || ""}
-                onChange={(e, newValue) => {
-                  setSelectedDepartment?.(newValue ? newValue.id : null);
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    fullWidth
-                    label="Tìm kiếm theo phòng ban..."
-                    size="small"
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "10px",
-                        "& fieldset": {
-                          borderColor: "#1FA463",
-                        },
-                        "&:hover fieldset": {
-                          borderColor: "#1FA463",
-                        },
-                        "&.Mui-focused fieldset": {
-                          borderColor: "#1FA463",
-                        },
-                      },
-                      "& .MuiInputLabel-root": {
-                        "&.Mui-focused": {
-                          color: "#1FA463",
-                        },
-                      },
-                    }}
-                  />
-                )}
+              <FieldAutoCompleted
+                title="Tìm kiếm theo phòng ban ..."
+                data={departments}
+                labelkey="tenPhongBan"
+                value={selectedDepartment}
+                setValue={setSelectedDepartment}
               />
             )}
           </Grid>

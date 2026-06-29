@@ -633,6 +633,11 @@ public class DatabaseMigrationService {
                 String maVthh = vatTu.getId();
                 String chiTietId = maVthh + "_1";
                 
+                // Lấy đơn vị sở hữu đầu tiên gán vào idDonVi của vật tư
+                if ((vatTu.getIdDonVi() == null || vatTu.getIdDonVi().trim().isEmpty()) && !g.phieuNhapList.isEmpty()) {
+                    vatTu.setIdDonVi(g.phieuNhapList.get(0).maPbanNhap);
+                }
+
                 // 1. CCDCVatTu
                 if (existingCcdcIds.contains(maVthh)) {
                     ccdcUpdateBatch.add(new Object[]{

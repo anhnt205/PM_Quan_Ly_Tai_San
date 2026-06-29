@@ -54,7 +54,7 @@ const RepairRequestPreview = ({
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
         <Box sx={{ textAlign: "center", flex: 1 }}>
           <Typography
-            sx={{ fontWeight: 700, fontSize: 13, fontFamily: "inherit" }}
+            sx={{ fontWeight: 700, fontSize: 13, fontFamily: "inherit", textTransform: "uppercase" }}
           >
             CÔNG TY {congty ? congty : "..."}
           </Typography>

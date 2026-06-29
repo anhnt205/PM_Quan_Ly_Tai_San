@@ -106,7 +106,7 @@ class S3Service {
 
     // 5. Trả về key
     const key = url.split(".amazonaws.com/")[1].split("?")[0];
-    return key || "";
+    return key ? decodeURIComponent(key) : "";
   }
   public async updatePresignedPutUrl(
     documentUrl: string,
