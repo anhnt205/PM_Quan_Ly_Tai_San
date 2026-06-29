@@ -114,6 +114,76 @@ public class ChiTietDieuDongTaiSanDao {
         return jdbcTemplate.update(sql, id);
     }
 
+    public int[] batchInsert(List<ChiTietDieuDongTaiSan> list) {
+        String sql = "INSERT INTO ChiTietDieuDongTaiSan (Id, IdDieuDongTaiSan, IdTaiSan, SoLuong, GhiChu, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive, HienTrang, MoTa, DaBanGiao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        return jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                ChiTietDieuDongTaiSan obj = list.get(i);
+                ps.setString(1, obj.getId());
+                ps.setString(2, obj.getIdDieuDongTaiSan());
+                ps.setString(3, obj.getIdTaiSan());
+                ps.setObject(4, obj.getSoLuong());
+                ps.setString(5, obj.getGhiChu());
+                ps.setString(6, obj.getNgayTao());
+                ps.setString(7, obj.getNgayCapNhat());
+                ps.setString(8, obj.getNguoiTao());
+                ps.setString(9, obj.getNguoiCapNhat());
+                ps.setObject(10, obj.getIsActive());
+                ps.setString(11, obj.getHienTrang());
+                ps.setString(12, obj.getMoTa());
+                ps.setObject(13, false);
+            }
+
+            @Override
+            public int getBatchSize() {
+                return list.size();
+            }
+        });
+    }
+
+    public int[] batchUpdate(List<ChiTietDieuDongTaiSan> list) {
+        String sql = "UPDATE ChiTietDieuDongTaiSan SET IdDieuDongTaiSan=?, IdTaiSan=?, SoLuong=?, GhiChu=?, NgayTao=?, NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?, IsActive=?, HienTrang=?, MoTa=? WHERE Id=?";
+        return jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                ChiTietDieuDongTaiSan obj = list.get(i);
+                ps.setString(1, obj.getIdDieuDongTaiSan());
+                ps.setString(2, obj.getIdTaiSan());
+                ps.setObject(3, obj.getSoLuong());
+                ps.setString(4, obj.getGhiChu());
+                ps.setString(5, obj.getNgayTao());
+                ps.setString(6, obj.getNgayCapNhat());
+                ps.setString(7, obj.getNguoiTao());
+                ps.setString(8, obj.getNguoiCapNhat());
+                ps.setObject(9, obj.getIsActive());
+                ps.setString(10, obj.getHienTrang());
+                ps.setString(11, obj.getMoTa());
+                ps.setString(12, obj.getId());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return list.size();
+            }
+        });
+    }
+
+    public int[] batchDelete(List<String> ids) {
+        String sql = "DELETE FROM ChiTietDieuDongTaiSan WHERE Id = ?";
+        return jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                ps.setString(1, ids.get(i));
+            }
+
+            @Override
+            public int getBatchSize() {
+                return ids.size();
+            }
+        });
+    }
+
     /**
      * Cập nhật trạng thái DaBanGiao của chi tiết điều động tài sản
      */

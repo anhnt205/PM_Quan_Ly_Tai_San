@@ -33,27 +33,6 @@ export const useAssetTranferMutation = () => {
       return res.data;
     },
     onSuccess: async (response, data) => {
-      const idDDTS = response.data.id;
-      if (
-        data.chiTietDieuDongTaiSanDTOS &&
-        data.chiTietDieuDongTaiSanDTOS.length > 0
-      ) {
-        createAssetTransferDetailManyMutation.mutate(
-          data.chiTietDieuDongTaiSanDTOS?.map((item) => ({
-            ...item,
-            idDieuDongTaiSan: idDDTS,
-          })),
-        );
-      }
-      if (data.nguoiKyList && data.nguoiKyList.length > 0) {
-        updateSignerMutation.mutate({
-          idTaiLieu: idDDTS,
-          data: data.nguoiKyList.map((item) => ({
-            ...item,
-            idTaiLieu: idDDTS,
-          })),
-        });
-      }
       const list = await listNguoiKy([data]);
       socketService.send({
         type: MessageTypeFunctions.ASSET_TRANSFER,
@@ -82,26 +61,6 @@ export const useAssetTranferMutation = () => {
       return res.data;
     },
     onSuccess: async (response, data) => {
-      if (data.initialChiTiet && data.initialChiTiet.length > 0) {
-        deleteAssetTransferDetailManyMutation.mutate(data.initialChiTiet);
-      }
-      if (
-        data.chiTietDieuDongTaiSanDTOS &&
-        data.chiTietDieuDongTaiSanDTOS.length > 0
-      ) {
-        createAssetTransferDetailManyMutation.mutate(
-          data.chiTietDieuDongTaiSanDTOS.map((item) => ({
-            ...item,
-            idDieuDongTaiSan: data.id,
-          })),
-        );
-      }
-      if (data.nguoiKyList && data.nguoiKyList.length > 0 && data.id) {
-        updateSignerMutation.mutate({
-          idTaiLieu: data.id,
-          data: data.nguoiKyList,
-        });
-      }
       const list = await listNguoiKy([data]);
       socketService.send({
         type: MessageTypeFunctions.ASSET_TRANSFER,
@@ -141,7 +100,6 @@ export const useAssetTranferMutation = () => {
       return res.data;
     },
     onSuccess: async (_, data) => {
-      deleteSignerMutation.mutate(data.id);
       const list = await listNguoiKy([data]);
       socketService.send({
         type: MessageTypeFunctions.ASSET_TRANSFER,
@@ -183,7 +141,6 @@ export const useAssetTranferMutation = () => {
     },
     onSuccess: async (response, data) => {
       queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
-      deleteSignerMutation.mutate(data.id);
       const list = await listNguoiKy([data]);
       socketService.send({
         type: MessageTypeFunctions.ASSET_TRANSFER,
@@ -230,44 +187,6 @@ export const useAssetTranferMutation = () => {
     },
   });
 
-  // chi tiết điều động
-
-  const createAssetTransferDetailManyMutation = useMutation({
-    mutationFn: async (data: AssetTransferDetail[]) => {
-      const res = await api.post("/chitietdieudongtaisan/batch", data);
-      return res.data;
-    },
-    onSuccess: (response, data) => {
-      queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
-
-      console.log("Tạo chi tiết điều động tài sản thành công");
-    },
-    onError: (error: any) => {
-      console.log(
-        error.response?.data?.message ||
-          error.message ||
-          "Tạo chi tiết điều động tài sản thất bại",
-      );
-    },
-  });
-  const deleteAssetTransferDetailManyMutation = useMutation({
-    mutationFn: async (data: string[]) => {
-      const res = await api.delete("/chitietdieudongtaisan/batch", { data });
-      return res.data;
-    },
-    onSuccess: (response, data) => {
-      queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
-
-      console.log("Tạo chi tiết điều động tài sản thành công");
-    },
-    onError: (error: any) => {
-      console.log(
-        error.response?.data?.message ||
-          error.message ||
-          "Tạo chi tiết điều động tài sản thất bại",
-      );
-    },
-  });
 
   const assetTransferDetailAllMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -277,67 +196,6 @@ export const useAssetTranferMutation = () => {
         },
       });
       return res.data;
-    },
-  });
-  // nguoi ky
-  const createSignerMutation = useMutation({
-    mutationFn: async (data: Signer) => {
-      const res = await api.post("/chuky/nguoi-ky", data);
-      return res.data;
-    },
-    onSuccess: (response, data) => {
-      queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
-
-      console.log("Tạo người ký thành công");
-    },
-    onError: (error: any) => {
-      console.log(
-        error.response?.data?.message ||
-          error.message ||
-          "Tạo người ký thất bại",
-      );
-    },
-  });
-  const updateSignerMutation = useMutation({
-    mutationFn: async ({
-      idTaiLieu,
-      data,
-    }: {
-      idTaiLieu: string;
-      data: Signer[];
-    }) => {
-      const res = await api.put(`/chuky/nguoi-ky/update/${idTaiLieu}`, data);
-      return res.data;
-    },
-    onSuccess: (response, data) => {
-      queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
-
-      console.log("Cập nhật người ký thành công");
-    },
-    onError: (error: any) => {
-      console.log(
-        error.response?.data?.message ||
-          error.message ||
-          "Cập nhật người ký thất bại",
-      );
-    },
-  });
-  const deleteSignerMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await api.delete(`/chuky/${id}`);
-      return res.data;
-    },
-    onSuccess: (response, data) => {
-      queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
-
-      console.log("Xóa người ký thành công");
-    },
-    onError: (error: any) => {
-      console.log(
-        error.response?.data?.message ||
-          error.message ||
-          "Xóa người ký thất bại",
-      );
     },
   });
 

@@ -60,6 +60,9 @@ public class DieuDongTaiSan {
 
     private String ngayQuyetDinh;
 
+    private java.util.List<ChiTietDieuDongTaiSan> chiTietDieuDongTaiSanDTOS;
+    private java.util.List<NguoiKy> nguoiKyList;
+
     // Custom getters for null safety
     public Boolean getTrangThaiKyNhay() {
         return trangThaiKyNhay != null ? trangThaiKyNhay : false;

@@ -166,9 +166,10 @@ public class S3Service {
             return;
         }
         try {
+            String decodedKey = java.net.URLDecoder.decode(key, java.nio.charset.StandardCharsets.UTF_8.name());
             DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
                     .bucket(bucketName)
-                    .key(key)
+                    .key(decodedKey)
                     .build();
             s3Client.deleteObject(deleteObjectRequest);
         } catch (Exception e) {

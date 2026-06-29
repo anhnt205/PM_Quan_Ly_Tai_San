@@ -650,7 +650,7 @@ public class DieuDongTaiSanDao {
 
             int result = jdbcTemplate.update(sql, obj.getId(), obj.getSoQuyetDinh(), obj.getTenPhieu(), obj.getIdDonViGiao(), obj.getIdDonViNhan(), obj.getIdNguoiKyNhay(), obj.getTrangThaiKyNhay(), obj.getNguoiLapPhieuKyNhay(), obj.getIdDonViDeNghi(), obj.getTgGnTuNgay(), obj.getTgGnDenNgay(), obj.getIdTrinhDuyetCapPhong(), obj.getTrinhDuyetCapPhongXacNhan(), obj.getIdTrinhDuyetGiamDoc(), obj.getTrinhDuyetGiamDocXacNhan(), obj.getDiaDiemGiaoNhan(), obj.getIdPhongBanXemPhieu(), obj.getNoiNhan(), obj.getTrangThai(), "CT001", obj.getNgayTao(), obj.getNgayCapNhat(), obj.getNguoiTao(), obj.getNguoiCapNhat(), obj.getCoHieuLuc(), obj.getLoai(), obj.getShare(), obj.getTrichYeu(), obj.getDuongDanFile(), obj.getTenFile(), obj.getNgayKy(), obj.getByStep(), obj.getTaiLieuCuoi(),obj.getNgayQuyetDinh());
             if (result > 0) {
-                CompletableFuture.runAsync(this::refreshCache);
+                refreshCache();
             }
             return obj;
         }
@@ -673,7 +673,7 @@ public class DieuDongTaiSanDao {
         int result = jdbcTemplate.update(sql, obj.getSoQuyetDinh(), obj.getTenPhieu(), obj.getIdDonViGiao(), obj.getIdDonViNhan(), obj.getIdNguoiKyNhay(), obj.getTrangThaiKyNhay(), obj.getNguoiLapPhieuKyNhay(), obj.getIdDonViDeNghi(), obj.getTgGnTuNgay(), obj.getTgGnDenNgay(), obj.getIdTrinhDuyetCapPhong(), obj.getTrinhDuyetCapPhongXacNhan(), obj.getIdTrinhDuyetGiamDoc(), obj.getTrinhDuyetGiamDocXacNhan(), obj.getDiaDiemGiaoNhan(), obj.getIdPhongBanXemPhieu(), obj.getNoiNhan(), obj.getTrangThai(), "CT001", obj.getNgayTao(), obj.getNgayCapNhat(), obj.getNguoiTao(), obj.getNguoiCapNhat(), obj.getCoHieuLuc(), obj.getLoai(), obj.getShare(), obj.getTrichYeu(), obj.getDuongDanFile(), obj.getTenFile(), obj.getNgayKy(), obj.getByStep(), obj.getTaiLieuCuoi(),obj.getNgayQuyetDinh(), obj.getId()  // điều kiện WHERE
         );
         if (result > 0) {
-            CompletableFuture.runAsync(this::refreshCache);
+            refreshCache();
             return findById(obj.getId());
         }
         return null;
@@ -683,7 +683,7 @@ public class DieuDongTaiSanDao {
         String sql = "UPDATE DieuDongTaiSan SET CoPhieuBanGiao = ? WHERE Id = ?";
         int result = jdbcTemplate.update(sql, coPhieuBanGiao, id);
         if (result > 0) {
-            CompletableFuture.runAsync(this::refreshCache);
+            refreshCache();
         }
         return result;
     }
@@ -698,7 +698,7 @@ public class DieuDongTaiSanDao {
         int result = jdbcTemplate.update(sql, daBanGiao, id  // điều kiện WHERE
         );
         if (result > 0) {
-            CompletableFuture.runAsync(this::refreshCache);
+            refreshCache();
         }
         return result;
     }
@@ -730,7 +730,7 @@ public class DieuDongTaiSanDao {
         boolean isUpdated = java.util.Arrays.stream(results).anyMatch(r -> r > 0 || r == -2); 
         
         if (isUpdated) {
-            CompletableFuture.runAsync(this::refreshCache);
+            refreshCache();
         }
 
         return results;
@@ -837,7 +837,7 @@ public class DieuDongTaiSanDao {
         String sql = "DELETE FROM DieuDongTaiSan WHERE Id = ?";
         int result = jdbcTemplate.update(sql, id);
         if (result > 0) {
-            CompletableFuture.runAsync(this::refreshCache);
+            refreshCache();
         }
         return result;
     }
@@ -911,7 +911,7 @@ public class DieuDongTaiSanDao {
         dieuDongTaiSan.setTrangThai(trangThai);
         DieuDongTaiSan result = update(dieuDongTaiSan);
         if (result != null) {
-            CompletableFuture.runAsync(this::refreshCache);
+            refreshCache();
             return trangThai;
         }
         return 0;
@@ -929,7 +929,7 @@ public class DieuDongTaiSanDao {
 
         int result = jdbcTemplate.update(sql, id);
         if (result > 0) {
-            CompletableFuture.runAsync(this::refreshCache);
+            refreshCache();
         }
         return result;
     }

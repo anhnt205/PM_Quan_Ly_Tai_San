@@ -11,6 +11,8 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
@@ -40,6 +42,9 @@ public class DieuDongTaiSanService {
 
     @Autowired
     private ChucVuService chucVuService;
+
+    @Autowired
+    private S3Service s3Service;
 
     public DieuDongTaiSanService() {
         this.dao = new DieuDongTaiSanDao();
@@ -331,16 +336,168 @@ public class DieuDongTaiSanService {
         return dao.findByIdDTO(id);
     }
 
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public DieuDongTaiSan insert(DieuDongTaiSan obj) throws SQLException {
-        return dao.insert(obj);
+        if (obj.getId() == null || obj.getId().isEmpty()) {
+            obj.setId(UUID.randomUUID().toString());
+        }
+        DieuDongTaiSan result = dao.insert(obj);
+        if (result != null) {
+            if (obj.getChiTietDieuDongTaiSanDTOS() != null && !obj.getChiTietDieuDongTaiSanDTOS().isEmpty()) {
+                List<ChiTietDieuDongTaiSan> itemsToInsert = new ArrayList<>();
+                for (ChiTietDieuDongTaiSan ct : obj.getChiTietDieuDongTaiSanDTOS()) {
+                    if (ct.getId() == null || ct.getId().isEmpty()) {
+                        ct.setId(UUID.randomUUID().toString());
+                    }
+                    ct.setIdDieuDongTaiSan(result.getId());
+                    itemsToInsert.add(ct);
+                }
+                chiTietDieuDongTaiSanDao.batchInsert(itemsToInsert);
+            }
+            if (obj.getNguoiKyList() != null) {
+                for (NguoiKy nk : obj.getNguoiKyList()) {
+                    if (nk.getId() == null || nk.getId().isEmpty()) {
+                        nk.setId(UUID.randomUUID().toString());
+                    }
+                    nk.setIdTaiLieu(result.getId());
+                    kyTaiLieuDao.addNguoiKy(nk);
+                }
+            }
+        }
+        return result;
     }
 
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public DieuDongTaiSan update(DieuDongTaiSan obj) throws SQLException {
-        return dao.update(obj);
+        DieuDongTaiSan oldObj = dao.findById(obj.getId());
+        List<String> keysToDelete = new ArrayList<>();
+        if (oldObj != null) {
+            if (oldObj.getDuongDanFile() != null && !oldObj.getDuongDanFile().isEmpty() 
+                    && !oldObj.getDuongDanFile().equals(obj.getDuongDanFile())) {
+                keysToDelete.add(oldObj.getDuongDanFile());
+            }
+            if (oldObj.getTaiLieuCuoi() != null && !oldObj.getTaiLieuCuoi().isEmpty() 
+                    && !oldObj.getTaiLieuCuoi().equals(obj.getTaiLieuCuoi())) {
+                keysToDelete.add(oldObj.getTaiLieuCuoi());
+            }
+        }
+
+        DieuDongTaiSan result = dao.update(obj);
+        if (result != null) {
+            if (obj.getChiTietDieuDongTaiSanDTOS() != null) {
+                List<ChiTietDieuDongTaiSanDTO> currentDetails = chiTietDieuDongTaiSanDao.findAll(obj.getId());
+                Set<String> newIds = new HashSet<>();
+                for (ChiTietDieuDongTaiSan ct : obj.getChiTietDieuDongTaiSanDTOS()) {
+                    if (ct.getId() != null && !ct.getId().isEmpty()) {
+                        newIds.add(ct.getId());
+                    }
+                }
+                
+                List<String> idsToDelete = new ArrayList<>();
+                for (ChiTietDieuDongTaiSanDTO current : currentDetails) {
+                    if (!newIds.contains(current.getId())) {
+                        idsToDelete.add(current.getId());
+                    }
+                }
+                if (!idsToDelete.isEmpty()) {
+                    chiTietDieuDongTaiSanDao.batchDelete(idsToDelete);
+                }
+
+                List<ChiTietDieuDongTaiSan> itemsToInsert = new ArrayList<>();
+                List<ChiTietDieuDongTaiSan> itemsToUpdate = new ArrayList<>();
+                Set<String> currentIds = new HashSet<>();
+                for (ChiTietDieuDongTaiSanDTO c : currentDetails) currentIds.add(c.getId());
+
+                for (ChiTietDieuDongTaiSan ct : obj.getChiTietDieuDongTaiSanDTOS()) {
+                    ct.setIdDieuDongTaiSan(result.getId());
+                    if (ct.getId() == null || ct.getId().isEmpty()) {
+                        ct.setId(UUID.randomUUID().toString());
+                        itemsToInsert.add(ct);
+                    } else if (!currentIds.contains(ct.getId())) {
+                        itemsToInsert.add(ct);
+                    } else {
+                        itemsToUpdate.add(ct);
+                    }
+                }
+                
+                if (!itemsToInsert.isEmpty()) {
+                    chiTietDieuDongTaiSanDao.batchInsert(itemsToInsert);
+                }
+                if (!itemsToUpdate.isEmpty()) {
+                    chiTietDieuDongTaiSanDao.batchUpdate(itemsToUpdate);
+                }
+            }
+            if (obj.getNguoiKyList() != null) {
+                for (NguoiKy nk : obj.getNguoiKyList()) {
+                    if (nk.getId() == null || nk.getId().isEmpty()) {
+                        nk.setId(UUID.randomUUID().toString());
+                    }
+                    nk.setIdTaiLieu(result.getId());
+                }
+                kyTaiLieuDao.updateNguoiKy(result.getId(), obj.getNguoiKyList());
+            }
+
+            if (!keysToDelete.isEmpty()) {
+                TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            for (String key : keysToDelete) {
+                                try {
+                                    s3Service.deleteFile(key);
+                                } catch (Exception e) {
+                                    // ignore
+                                }
+                            }
+                        }
+                    }
+                );
+            }
+        }
+        return result;
     }
 
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public int delete(String id) throws SQLException {
-        return dao.delete(id);
+        DieuDongTaiSan oldObj = dao.findById(id);
+        List<String> keysToDelete = new ArrayList<>();
+        if (oldObj != null) {
+            if (oldObj.getDuongDanFile() != null && !oldObj.getDuongDanFile().isEmpty()) {
+                keysToDelete.add(oldObj.getDuongDanFile());
+            }
+            if (oldObj.getTaiLieuCuoi() != null && !oldObj.getTaiLieuCuoi().isEmpty()) {
+                keysToDelete.add(oldObj.getTaiLieuCuoi());
+            }
+        }
+
+        List<ChiTietDieuDongTaiSanDTO> currentDetails = chiTietDieuDongTaiSanDao.findAll(id);
+        List<String> idsToDelete = new ArrayList<>();
+        for (ChiTietDieuDongTaiSanDTO current : currentDetails) {
+            idsToDelete.add(current.getId());
+        }
+        if (!idsToDelete.isEmpty()) {
+            chiTietDieuDongTaiSanDao.batchDelete(idsToDelete);
+        }
+        kyTaiLieuDao.deleteAllNguoiKy(id);
+        
+        int rows = dao.delete(id);
+        if (rows > 0 && !keysToDelete.isEmpty()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        for (String key : keysToDelete) {
+                            try {
+                                s3Service.deleteFile(key);
+                            } catch (Exception e) {
+                                // ignore
+                            }
+                        }
+                    }
+                }
+            );
+        }
+        return rows;
     }
 
     public int updateTrangThaiBanGiao(String id, boolean daBanGiao) {
@@ -355,7 +512,9 @@ public class DieuDongTaiSanService {
         return dao.banHanhQuyetDinh(requests);
     }
 
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public int huyTrangThai(String id) {
+        kyTaiLieuDao.deleteAllNguoiKy(id);
         return dao.huyDieuDong(id);
     }
 
