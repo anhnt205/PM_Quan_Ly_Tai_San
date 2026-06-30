@@ -79,7 +79,7 @@ const defaultAsset = {
   soLuong: 1,
   donViTinh: "",
   ghiChu: "",
-  idDonViBanDau: "K30",
+  idDonViBanDau: "Kty",
   idDonViHienThoi: "",
   idDonViQuanlyKiThuat: "",
   moTa: "",
@@ -564,7 +564,7 @@ const AssetRow = ({
                 <FieldAutoCompleted
                   title="Kho"
                   data={allDepartments.filter(
-                    (i) => i.id?.toLocaleLowerCase() === "k30",
+                    (i) => i.id?.toLocaleLowerCase() === "Kty",
                   )}
                   labelkey="tenPhongBan"
                   formik={formik}

@@ -100,7 +100,7 @@ export default forwardRef(function AssetTransferForm({
       id: initialFormData?.id ?? "",
       soQuyetDinh: initialFormData?.soQuyetDinh ?? "",
       tenPhieu: initialFormData?.tenPhieu ?? "",
-      idDonViGiao: initialFormData?.idDonViGiao ?? (type === 1 ? "K30" : ""),
+      idDonViGiao: initialFormData?.idDonViGiao ?? (type === 1 ? "Kty" : ""),
       idDonViNhan: initialFormData?.idDonViNhan ?? (type === 3 ? "kth" : ""),
       idNguoiKyNhay: initialFormData?.idNguoiKyNhay ?? "",
       trangThaiKyNhay: initialFormData?.trangThaiKyNhay ?? false,

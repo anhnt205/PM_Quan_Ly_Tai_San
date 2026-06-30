@@ -212,7 +212,7 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
       thoiGianBanGiao: dayjs().format("YYYY-MM-DD"),
       idDonViNhan: "",
       tenDonViNhan: "",
-      idDonViGiao: asset.idDonViHienThoi || asset.idDonViBanDau || "K30",
+      idDonViGiao: asset.idDonViHienThoi || asset.idDonViBanDau || "Kty",
       tenDonViGiao: "",
       idTaiSan: asset.id,
       isNew: true,
@@ -315,7 +315,7 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
           idTaiSan: asset.id,
           thoiGianBanGiao: `${row.thoiGianBanGiao}T00:00:00`,
           idDonViNhan: row.idDonViNhan,
-          idDonViGiao: row.idDonViGiao || "K30",
+          idDonViGiao: row.idDonViGiao || "Kty",
         }));
 
         await new Promise((resolve, reject) => {
@@ -358,7 +358,7 @@ const TransferHistoryPage: React.FC<TransferHistoryPageProps> = ({
         updateAssetOwnershipMutation.mutate([
           {
             id: asset.id,
-            idDonVi: "K30",
+            idDonVi: "Kty",
           },
         ]);
       }
