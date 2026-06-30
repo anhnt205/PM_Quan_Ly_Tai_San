@@ -7,7 +7,11 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 
 @Repository
 public class ChiTietBanGiaoTaiSanDao {
@@ -169,6 +173,95 @@ public class ChiTietBanGiaoTaiSanDao {
         return result;
     }
 
+    public int[] batchInsert(List<ChiTietBanGiaoTaiSan> list) {
+        String sql = "INSERT INTO ChiTietBanGiaoTaiSan (Id, IdBanGiaoTaiSan, IdTaiSan, SoLuong, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive, HienTrang, MoTa, GhiChu) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        int[] result = jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                ChiTietBanGiaoTaiSan obj = list.get(i);
+                ps.setString(1, obj.getId());
+                ps.setString(2, obj.getIdBanGiaoTaiSan());
+                ps.setString(3, obj.getIdTaiSan());
+                ps.setDouble(4, obj.getSoLuong() != null ? obj.getSoLuong() : 0.0);
+                ps.setString(5, obj.getNgayTao());
+                ps.setString(6, obj.getNgayCapNhat());
+                ps.setString(7, obj.getNguoiTao());
+                ps.setString(8, obj.getNguoiCapNhat());
+                ps.setObject(9, obj.getIsActive());
+                ps.setString(10, obj.getHienTrang());
+                ps.setString(11, obj.getMoTa());
+                ps.setString(12, obj.getGhiChu());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return list.size();
+            }
+        });
+        
+        for (ChiTietBanGiaoTaiSan obj : list) {
+            if (obj.getIdTaiSan() != null && !obj.getIdTaiSan().trim().isEmpty()) {
+                updateDaBanGiaoForDieuDong(obj.getIdBanGiaoTaiSan(), obj.getIdTaiSan(), true);
+            }
+        }
+        return result;
+    }
+
+    public int[] batchUpdate(List<ChiTietBanGiaoTaiSan> list) {
+        String sql = "UPDATE ChiTietBanGiaoTaiSan SET IdBanGiaoTaiSan=?, IdTaiSan=?, SoLuong=?, NgayTao=?, NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?, IsActive=?, HienTrang=?, MoTa=?, GhiChu=? WHERE Id=?";
+        int[] result = jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                ChiTietBanGiaoTaiSan obj = list.get(i);
+                ps.setString(1, obj.getIdBanGiaoTaiSan());
+                ps.setString(2, obj.getIdTaiSan());
+                ps.setDouble(3, obj.getSoLuong() != null ? obj.getSoLuong() : 0.0);
+                ps.setString(4, obj.getNgayTao());
+                ps.setString(5, obj.getNgayCapNhat());
+                ps.setString(6, obj.getNguoiTao());
+                ps.setString(7, obj.getNguoiCapNhat());
+                ps.setObject(8, obj.getIsActive());
+                ps.setString(9, obj.getHienTrang());
+                ps.setString(10, obj.getMoTa());
+                ps.setString(11, obj.getGhiChu());
+                ps.setString(12, obj.getId());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return list.size();
+            }
+        });
+        
+        for (ChiTietBanGiaoTaiSan obj : list) {
+            if (obj.getIdTaiSan() != null && !obj.getIdTaiSan().trim().isEmpty()) {
+                updateDaBanGiaoForDieuDong(obj.getIdBanGiaoTaiSan(), obj.getIdTaiSan(), true);
+            }
+        }
+        return result;
+    }
+
+    public int batchDelete(List<String> ids) {
+        if (ids == null || ids.isEmpty()) return 0;
+        
+        // Before deleting, reset DaBanGiao
+        for (String id : ids) {
+            try {
+                String getSql = "SELECT IdTaiSan, IdBanGiaoTaiSan FROM ChiTietBanGiaoTaiSan WHERE Id = ?";
+                var oldData = jdbcTemplate.queryForMap(getSql, id);
+                String idTaiSan = (String) oldData.get("IdTaiSan");
+                String idBanGiaoTaiSan = (String) oldData.get("IdBanGiaoTaiSan");
+                if (idTaiSan != null && !idTaiSan.trim().isEmpty()) {
+                    updateDaBanGiaoForDieuDong(idBanGiaoTaiSan, idTaiSan, false);
+                }
+            } catch (Exception e) {}
+        }
+        
+        String placeholders = String.join(",", Collections.nCopies(ids.size(), "?"));
+        String sql = "DELETE FROM ChiTietBanGiaoTaiSan WHERE Id IN (" + placeholders + ")";
+        return jdbcTemplate.update(sql, ids.toArray());
+    }
+
     /**
      * Cập nhật DaBanGiao cho ChiTietDieuDongTaiSan dựa trên IdTaiSan và IdBanGiaoTaiSan.
      * Tìm IdDieuDongTaiSan từ BanGiaoTaiSan.QuyetDinhDieuDongSo
@@ -180,8 +273,8 @@ public class ChiTietBanGiaoTaiSanDao {
         }
 
         try {
-            // Lấy QuyetDinhDieuDongSo từ BanGiaoTaiSan (chính là IdDieuDongTaiSan)
-            String getIdDieuDongSql = "SELECT QuyetDinhDieuDongSo FROM BanGiaoTaiSan WHERE Id = ?";
+            // Lấy LenhDieuDong từ BanGiaoTaiSan (chính là IdDieuDongTaiSan)
+            String getIdDieuDongSql = "SELECT LenhDieuDong FROM BanGiaoTaiSan WHERE Id = ?";
             String idDieuDongTaiSan = jdbcTemplate.queryForObject(getIdDieuDongSql, String.class, idBanGiaoTaiSan);
 
             if (idDieuDongTaiSan != null && !idDieuDongTaiSan.trim().isEmpty()) {

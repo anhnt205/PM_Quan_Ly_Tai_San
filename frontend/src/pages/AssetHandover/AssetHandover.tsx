@@ -514,7 +514,7 @@ export default function AssetHandover() {
       valueGetter: (params, row: any) => row.ngayKy,
     },
     {
-      field: "tggnTuNgay",
+      field: "tgGnTuNgay",
       headerName: "Ngày có hiệu lực",
       width: 180,
     },

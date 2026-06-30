@@ -52,8 +52,8 @@ public class ChiTietDonViSoHuuService {
      * Lấy danh sách ChiTietDonViSoHuu theo idDonViSoHuu, đã JOIN sẵn thông tin
      * CCDCVatTu và ChiTietTaiSan trong một câu SQL dữ liệu đầy đủ.
      */
-    public List<ChiTietDonViSoHuuEnrichedDTO> getEnrichedByIdDonViSoHuu(String idDonViSoHuu) {
-        return dao.findEnrichedByIdDonViSoHuu(idDonViSoHuu);
+    public List<ChiTietDonViSoHuuEnrichedDTO> getEnrichedByIdDonViSoHuu(String idDonViSoHuu,String loai) {
+        return dao.findEnrichedByIdDonViSoHuu(idDonViSoHuu,loai);
     }
 
     public ChiTietDonViSoHuu add(ChiTietDonViSoHuu entity) {

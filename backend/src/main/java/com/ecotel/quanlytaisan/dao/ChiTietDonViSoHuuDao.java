@@ -259,7 +259,9 @@ public class ChiTietDonViSoHuuDao {
      * từ CCDCVatTu và ChiTietTaiSan (chỉ những bản ghi có cả idCCDCVT và idTsCon hợp lệ).
      * Tránh phải fetch toàn bộ CCDCVatTu rồi join ở tầng ứng dụng.
      */
-    public List<ChiTietDonViSoHuuEnrichedDTO> findEnrichedByIdDonViSoHuu(String idDonViSoHuu) {
+    public List<ChiTietDonViSoHuuEnrichedDTO> findEnrichedByIdDonViSoHuu(String idDonViSoHuu,String loai) {
+        boolean isVatTu = "vattu".equalsIgnoreCase(loai);
+        boolean isCCDC  = "ccdc".equalsIgnoreCase(loai);
         String sql = """
                 SELECT
                     dvsh.Id            AS id,
@@ -273,13 +275,20 @@ public class ChiTietDonViSoHuuDao {
                     ccdc.DonViTinh     AS donViTinh,
                     ccdc.GiaTri        AS giaTri,
                     ctts.NamSanXuat    AS namSanXuat,
-                    ctts.NuocSanXuat   AS nuocSanXuat
+                    ctts.NuocSanXuat   AS nuocSanXuat,
+                    ccdc.IdNhomCCDC
                 FROM ChiTietDonViSoHuu dvsh
                 INNER JOIN CCDCVatTu ccdc  ON ccdc.Id  = dvsh.IdCCDCVT
                 INNER JOIN ChiTietTaiSan ctts ON ctts.Id = dvsh.IdTsCon
+                LEFT JOIN NhomCCDC nccdc ON nccdc.Id = ccdc.IdNhomCCDC
                 WHERE dvsh.IdDonViSoHuu = ?
-                ORDER BY dvsh.NgayTao DESC
                 """;
+        if (isCCDC) {
+            sql += " AND nccdc.laCCDC = TRUE \n";
+        } else if (isVatTu) {
+            sql += " AND nccdc.laVatTu = TRUE \n";
+        }
+        sql += " ORDER BY dvsh.NgayTao DESC \n";
         return jdbcTemplate.query(sql,
                 new BeanPropertyRowMapper<>(ChiTietDonViSoHuuEnrichedDTO.class),
                 idDonViSoHuu);

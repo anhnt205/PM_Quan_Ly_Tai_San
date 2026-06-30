@@ -906,6 +906,7 @@ public class DieuDongTaiSanDao {
 
         if (allKy) {
             trangThai = 3;
+            dieuDongTaiSan.setNgayKy(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         }
 
         dieuDongTaiSan.setTrangThai(trangThai);

@@ -291,6 +291,7 @@ export default forwardRef(function ToolTransferForm(
   const { data: toolsByDepartment = [], isLoading } =
     useToolByDepartmentPageQuery({
       departmentId: formik.values.idDonViGiao,
+      loai: 'ccdc'
     });
 
   const tools = useMemo(() => {

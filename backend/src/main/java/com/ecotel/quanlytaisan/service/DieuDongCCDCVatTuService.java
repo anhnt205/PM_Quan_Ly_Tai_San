@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
@@ -345,7 +347,7 @@ public class DieuDongCCDCVatTuService {
         return dao.findById(id);
     }
 
-    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public DieuDongCCDCVatTu insert(DieuDongCCDCVatTu obj) throws SQLException {
         DieuDongCCDCVatTu result = dao.insert(obj);
         if (result != null) {
@@ -379,7 +381,7 @@ public class DieuDongCCDCVatTuService {
         return result;
     }
 
-    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public DieuDongCCDCVatTu update(DieuDongCCDCVatTu obj) throws SQLException {
         DieuDongCCDCVatTu oldObj = dao.findById(obj.getId());
         List<String> keysToDelete = new ArrayList<>();
@@ -475,7 +477,7 @@ public class DieuDongCCDCVatTuService {
         return result;
     }
 
-    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public int delete(String id) throws SQLException {
         DieuDongCCDCVatTu oldObj = dao.findById(id);
         List<String> keysToDelete = new ArrayList<>();
@@ -488,6 +490,7 @@ public class DieuDongCCDCVatTuService {
             }
         }
         kyTaiLieuService.deleteAllNguoiKy(id);
+        kyTaiLieuService.delete(id);
         int rows = dao.delete(id);
         if (rows > 0 && !keysToDelete.isEmpty()) {
             TransactionSynchronizationManager.registerSynchronization(
@@ -516,9 +519,9 @@ public class DieuDongCCDCVatTuService {
         return dao.updateTrangThai(id, userId);
     }
 
-    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public int huyTrangThai(String id) {
-        kyTaiLieuService.deleteAllNguoiKy(id);
+        kyTaiLieuService.delete(id);
         return dao.huyDieuDong(id);
     }
 

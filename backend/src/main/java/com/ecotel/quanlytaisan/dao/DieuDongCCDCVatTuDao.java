@@ -772,6 +772,7 @@ public class DieuDongCCDCVatTuDao {
 
         if (allKy) {
             trangThai = 3;
+            dieuDongCCDCVatTu.setNgayKy(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         }
 
         dieuDongCCDCVatTu.setTrangThai(trangThai);

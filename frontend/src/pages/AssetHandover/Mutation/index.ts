@@ -41,48 +41,6 @@ export const useAssetHandoverMutation = () => {
       return res.data;
     },
     onSuccess: async (response, data) => {
-      const idBGTS = response.data.id;
-      if (data.chiTietBanGiaoTaiSan && data.chiTietBanGiaoTaiSan.length > 0) {
-        createAssetHandoverDetailManyMutation.mutate(
-          data.chiTietBanGiaoTaiSan?.map((item) => ({
-            ...item,
-            idBanGiaoTaiSan: idBGTS,
-          })),
-        );
-      }
-      if (data.nguoiKyList && data.nguoiKyList.length > 0) {
-        updateSignerMutation.mutate({
-          idTaiLieu: idBGTS,
-          data: data.nguoiKyList.map((item) => ({
-            ...item,
-            idTaiLieu: idBGTS,
-          })),
-        });
-      }
-
-      if (data.trangThai === 3) {
-        updateAssetOwnershipMutation.mutate(
-          data.chiTietBanGiaoTaiSan.map((item) => ({
-            id: item.idTaiSan,
-            idDonVi: data.idDonViNhan,
-          })),
-        );
-        updateStateAssetTransferMutation.mutate({
-          id: data.lenhDieuDong,
-          trangThaiBanGiao: true,
-        });
-        createManyHistoryAssetMutation.mutate(
-          data.chiTietBanGiaoTaiSan.map((item, index) => ({
-            id: generateCode("LSDCTS-") + `${item.idTaiSan} -`,
-            idBanGiaoTaiSan: idBGTS,
-            idTaiSan: item.idTaiSan,
-            idDonViNhan: data.idDonViNhan,
-            idDonViGiao: data.idDonViGiao,
-            thoiGianBanGiao: dayjs(new Date()).format("YYYY-MM-DD"),
-          })),
-        );
-      }
-
       const list = await listNguoiKy([data]);
       socketService.send({
         type: MessageTypeFunctions.ASSET_HANDOVER,
@@ -111,18 +69,6 @@ export const useAssetHandoverMutation = () => {
       return res.data;
     },
     onSuccess: async (response, data) => {
-      if (data.initialChiTiet && data.initialChiTiet.length > 0) {
-        deleteAssetHandoverDetailManyMutation.mutate(data.initialChiTiet);
-      }
-      if (data.chiTietBanGiaoTaiSan && data.chiTietBanGiaoTaiSan.length > 0) {
-        createAssetHandoverDetailManyMutation.mutate(data.chiTietBanGiaoTaiSan);
-      }
-      if (data.nguoiKyList && data.nguoiKyList.length > 0 && data.id) {
-        updateSignerMutation.mutate({
-          idTaiLieu: data.id,
-          data: data.nguoiKyList,
-        });
-      }
       const list = await listNguoiKy([data]);
       socketService.send({
         type: MessageTypeFunctions.ASSET_HANDOVER,
@@ -144,7 +90,6 @@ export const useAssetHandoverMutation = () => {
     mutationFn: async (data: any) =>
       (await api.delete(`/bangiaotaisan/${data.id}`)).data,
     onSuccess: async (response, data) => {
-      deleteSignerMutation.mutate(data.id);
       const list = await listNguoiKy([data]);
       socketService.send({
         type: MessageTypeFunctions.ASSET_HANDOVER,
@@ -178,7 +123,6 @@ export const useAssetHandoverMutation = () => {
     },
     onSuccess: async (response, data) => {
       queryClient.invalidateQueries({ queryKey: [mainKey] });
-      deleteSignerMutation.mutate(data.id);
       const list = await listNguoiKy([data]);
       socketService.send({
         type: MessageTypeFunctions.ASSET_HANDOVER,
