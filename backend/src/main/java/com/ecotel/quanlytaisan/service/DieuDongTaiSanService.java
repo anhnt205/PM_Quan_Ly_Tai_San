@@ -11,6 +11,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
@@ -336,7 +337,7 @@ public class DieuDongTaiSanService {
         return dao.findByIdDTO(id);
     }
 
-    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public DieuDongTaiSan insert(DieuDongTaiSan obj) throws SQLException {
         if (obj.getId() == null || obj.getId().isEmpty()) {
             obj.setId(UUID.randomUUID().toString());
@@ -367,7 +368,7 @@ public class DieuDongTaiSanService {
         return result;
     }
 
-    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public DieuDongTaiSan update(DieuDongTaiSan obj) throws SQLException {
         DieuDongTaiSan oldObj = dao.findById(obj.getId());
         List<String> keysToDelete = new ArrayList<>();
@@ -457,7 +458,7 @@ public class DieuDongTaiSanService {
         return result;
     }
 
-    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public int delete(String id) throws SQLException {
         DieuDongTaiSan oldObj = dao.findById(id);
         List<String> keysToDelete = new ArrayList<>();
@@ -479,6 +480,7 @@ public class DieuDongTaiSanService {
             chiTietDieuDongTaiSanDao.batchDelete(idsToDelete);
         }
         kyTaiLieuDao.deleteAllNguoiKy(id);
+        kyTaiLieuDao.delete(id);
         
         int rows = dao.delete(id);
         if (rows > 0 && !keysToDelete.isEmpty()) {
@@ -512,9 +514,9 @@ public class DieuDongTaiSanService {
         return dao.banHanhQuyetDinh(requests);
     }
 
-    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public int huyTrangThai(String id) {
-        kyTaiLieuDao.deleteAllNguoiKy(id);
+        kyTaiLieuDao.delete(id);
         return dao.huyDieuDong(id);
     }
 

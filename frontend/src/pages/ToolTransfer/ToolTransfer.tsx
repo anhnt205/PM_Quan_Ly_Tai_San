@@ -329,15 +329,6 @@ export default function ToolTransfer() {
     setSelectedRow(item);
     setToolTransferDetail(item.chiTietDieuDongCCDCVatTuDTOS || []);
   };
-
-  const handleViewBienBan = async (id: string) => {
-    const result: any[] = await getToolHandoverMutation.mutateAsync(id);
-    setToolHandover(result);
-    setShowSidebar(true);
-    setSidebarMode("document");
-    setTabValue(2);
-  };
-
   const columns = useMemo<GridColDef<ToolTransferData>[]>(
     () => [
       {

@@ -714,7 +714,7 @@ public class BanGiaoTaiSanDao {
                 entity.getIdGiamDoc(), entity.getGiamDocKy(), entity.getSoQuyetDinh(), entity.getNgayQuyetDinh(),
                 entity.getDiaDiemQuyetDinh(), entity.getTaiLieuBangKe());
         if (result > 0) {
-            CompletableFuture.runAsync(this::refreshCache);
+            this.refreshCache();
             // Cập nhật CoPhieuBanGiao = true cho phiếu điều động
             if (entity.getQuyetDinhDieuDongSo() != null && !entity.getQuyetDinhDieuDongSo().isEmpty()) {
                 dieuDongTaiSanDao.updateCoPhieuBanGiao(entity.getQuyetDinhDieuDongSo(), true);
@@ -749,7 +749,7 @@ public class BanGiaoTaiSanDao {
                 entity.getIdGiamDoc(), entity.getGiamDocKy(), entity.getSoQuyetDinh(), entity.getNgayQuyetDinh(),
                 entity.getDiaDiemQuyetDinh(), entity.getTaiLieuBangKe(), entity.getId());
         if (result > 0) {
-            CompletableFuture.runAsync(this::refreshCache);
+            this.refreshCache();
             return findById(entity.getId());
         }
         return null;
@@ -763,7 +763,7 @@ public class BanGiaoTaiSanDao {
         String sql = "DELETE FROM BanGiaoTaiSan WHERE Id = ?";
         int result = jdbcTemplate.update(sql, id);
         if (result > 0) {
-            CompletableFuture.runAsync(this::refreshCache);
+            this.refreshCache();
             // Cập nhật CoPhieuBanGiao = false cho phiếu điều động nếu không còn phiếu bàn giao nào khác sử dụng
             if (quyetDinhDieuDongSo != null && !quyetDinhDieuDongSo.isEmpty()) {
                 int remainingCount = countByQuyetDinhDieuDongSo(quyetDinhDieuDongSo);
@@ -795,6 +795,9 @@ public class BanGiaoTaiSanDao {
 
     @Autowired
     private TaiSanDao taiSanDao;
+
+    @Autowired
+    private LichSuDieuChuyenTaiSanDao lichSuDieuChuyenTaiSanDao;
 
     public boolean checkAllOtherNguoiKy(String idTaiLieu) {
         List<NguoiKy> nguoiKyList = kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(idTaiLieu);
@@ -862,40 +865,13 @@ public class BanGiaoTaiSanDao {
         banGiaoTaiSan.setTrangThai(trangThai);
         BanGiaoTaiSan result = update(banGiaoTaiSan);
         if (result != null) {
-            CompletableFuture.runAsync(this::refreshCache);
-
-            // Khi hoàn thành bàn giao (trangThai = 3), cập nhật IdDonViHienThoi của các tài sản
-            if (trangThai == 3) {
-                updateDonViHienThoiForTaiSan(id, banGiaoTaiSan.getIdDonViNhan());
-            }
-
+            this.refreshCache();
             return trangThai;
         }
         return 0;
     }
 
-    /**
-     * Cập nhật IdDonViHienThoi của các tài sản trong chi tiết bàn giao
-     * khi phiếu bàn giao hoàn thành
-     */
-    private void updateDonViHienThoiForTaiSan(String idBanGiaoTaiSan, String idDonViNhan) {
-        try {
-            // Lấy toàn bộ chi tiết bàn giao tài sản
-            List<ChiTietBanGiaoTaiSanDTO> chiTietList = chiTietBanGiaoTaiSanDao.findAll(idBanGiaoTaiSan);
 
-            // Cập nhật IdDonViHienThoi cho từng tài sản
-            for (ChiTietBanGiaoTaiSanDTO chiTiet : chiTietList) {
-                String idTaiSan = chiTiet.getIdTaiSan();
-                if (idTaiSan != null && !idTaiSan.isEmpty()) {
-                    taiSanDao.updateDonViSoHuu(idTaiSan, idDonViNhan);
-                }
-            }
-            System.out.println("Đã cập nhật IdDonViHienThoi cho " + chiTietList.size() + " tài sản");
-        } catch (Exception e) {
-            System.err.println("Lỗi khi cập nhật IdDonViHienThoi cho tài sản: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
 
     public int huyTrangThai(String id) {
         String sql = """
@@ -908,7 +884,7 @@ public class BanGiaoTaiSanDao {
 
         int result = jdbcTemplate.update(sql, id);
         if (result > 0) {
-            CompletableFuture.runAsync(this::refreshCache);
+            this.refreshCache();
         }
         return result;
     }

@@ -106,9 +106,9 @@ public class ChiTietDonViSoHuuController {
     // --- GET BY IdDonViSoHuu (ENRICHED - JOIN CCDCVatTu + ChiTietTaiSan) ---
     @GetMapping("/by-donvisohuu-enriched/{id}")
     public ResponseEntity<ApiResponse<List<ChiTietDonViSoHuuEnrichedDTO>>> getEnrichedByIdDonViSoHuu(
-            @PathVariable("id") String id) {
+            @PathVariable("id") String id,@RequestParam(required = false) String loai) {
         try {
-            List<ChiTietDonViSoHuuEnrichedDTO> list = service.getEnrichedByIdDonViSoHuu(id);
+            List<ChiTietDonViSoHuuEnrichedDTO> list = service.getEnrichedByIdDonViSoHuu(id,loai);
             return ResponseEntity.ok(
                     ApiResponse.success("Lấy danh sách enriched theo IdDonViSoHuu thành công", list, list.size()));
         } catch (Exception e) {

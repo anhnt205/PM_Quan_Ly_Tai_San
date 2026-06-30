@@ -3,6 +3,8 @@ package com.ecotel.quanlytaisan.model;
 import lombok.Data;
 import org.apache.poi.ss.usermodel.Row;
 
+import java.util.List;
+
 import static com.ecotel.quanlytaisan.utils.ParserHelper.*;
 
 @Data
@@ -41,6 +43,8 @@ public class BanGiaoTaiSan {
     private String ngayQuyetDinh;
     private String diaDiemQuyetDinh;
     private String taiLieuBangKe;
+    private List<ChiTietBanGiaoTaiSan> chiTietBanGiaoTaiSan;
+    private List<NguoiKy> nguoiKyList;
 
 
 

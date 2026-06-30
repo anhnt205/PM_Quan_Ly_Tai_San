@@ -4,6 +4,8 @@ import com.ecotel.quanlytaisan.dao.BanGiaoTaiSanDao;
 import com.ecotel.quanlytaisan.dao.ChiTietBanGiaoTaiSanDao;
 import com.ecotel.quanlytaisan.dao.KyTaiLieuDao;
 import com.ecotel.quanlytaisan.dao.NhanVienDao;
+import com.ecotel.quanlytaisan.dao.TaiSanDao;
+import com.ecotel.quanlytaisan.dao.DieuDongTaiSanDao;
 import com.ecotel.quanlytaisan.model.*;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -11,6 +13,9 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
@@ -19,7 +24,6 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.Comparator;
 
 @Service
 public class BanGiaoTaiSanService {
@@ -31,7 +35,14 @@ public class BanGiaoTaiSanService {
     private NhanVienDao nhanVienDao;
     @Autowired
     private KyTaiLieuDao kyTaiLieuDao;
-
+    @Autowired
+    private S3Service s3Service;
+    @Autowired
+    private TaiSanDao taiSanDao;
+    @Autowired
+    private DieuDongTaiSanDao dieuDongTaiSanDao;
+    @Autowired
+    private LichSuDieuChuyenTaiSanService lichSuDieuChuyenTaiSanService;
     public BanGiaoTaiSanService() {
         this.dao = new BanGiaoTaiSanDao();
     }
@@ -282,20 +293,248 @@ public class BanGiaoTaiSanService {
         return dao.findByIdDTO(id);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public BanGiaoTaiSan insert(BanGiaoTaiSan obj) throws SQLException {
-        return dao.insert(obj);
+        if (obj.getId() == null || obj.getId().isEmpty()) {
+            obj.setId(UUID.randomUUID().toString());
+        }
+        BanGiaoTaiSan result = dao.insert(obj);
+        if (result != null) {
+            if (obj.getChiTietBanGiaoTaiSan() != null && !obj.getChiTietBanGiaoTaiSan().isEmpty()) {
+                List<ChiTietBanGiaoTaiSan> itemsToInsert = new ArrayList<>();
+                for (ChiTietBanGiaoTaiSan ct : obj.getChiTietBanGiaoTaiSan()) {
+                    if (ct.getId() == null || ct.getId().isEmpty()) {
+                        ct.setId(UUID.randomUUID().toString());
+                    }
+                    ct.setIdBanGiaoTaiSan(result.getId());
+                    itemsToInsert.add(ct);
+                }
+                chiTietBanGiaoTaiSanDao.batchInsert(itemsToInsert);
+            }
+            if (obj.getNguoiKyList() != null) {
+                for (NguoiKy nk : obj.getNguoiKyList()) {
+                    if (nk.getId() == null || nk.getId().isEmpty()) {
+                        nk.setId(UUID.randomUUID().toString());
+                    }
+                    nk.setIdTaiLieu(result.getId());
+                }
+                kyTaiLieuDao.insertNguoiKyBatch(obj.getNguoiKyList());
+            }
+        }
+        return result;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public BanGiaoTaiSan update(BanGiaoTaiSan obj) throws SQLException {
-        return dao.update(obj);
+        BanGiaoTaiSan oldObj = null;
+        try {
+            oldObj = dao.findById(obj.getId());
+        } catch(Exception e) {}
+        List<String> keysToDelete = new ArrayList<>();
+        if (oldObj != null) {
+            if (oldObj.getDuongDanFile() != null && !oldObj.getDuongDanFile().isEmpty() 
+                    && !oldObj.getDuongDanFile().equals(obj.getDuongDanFile())) {
+                keysToDelete.add(oldObj.getDuongDanFile());
+            }
+            if (oldObj.getTaiLieuBangKe() != null && !oldObj.getTaiLieuBangKe().isEmpty() 
+                    && !oldObj.getTaiLieuBangKe().equals(obj.getTaiLieuBangKe())) {
+                keysToDelete.add(oldObj.getTaiLieuBangKe());
+            }
+        }
+
+        BanGiaoTaiSan result = dao.update(obj);
+        if (result != null) {
+            if (obj.getChiTietBanGiaoTaiSan() != null) {
+                List<ChiTietBanGiaoTaiSanDTO> currentDetails = chiTietBanGiaoTaiSanDao.findAll(obj.getId());
+                Set<String> newIds = new HashSet<>();
+                for (ChiTietBanGiaoTaiSan ct : obj.getChiTietBanGiaoTaiSan()) {
+                    if (ct.getId() != null && !ct.getId().isEmpty()) {
+                        newIds.add(ct.getId());
+                    }
+                }
+                
+                List<String> idsToDelete = new ArrayList<>();
+                for (ChiTietBanGiaoTaiSanDTO current : currentDetails) {
+                    if (!newIds.contains(current.getId())) {
+                        idsToDelete.add(current.getId());
+                    }
+                }
+                if (!idsToDelete.isEmpty()) {
+                    chiTietBanGiaoTaiSanDao.batchDelete(idsToDelete);
+                }
+
+                List<ChiTietBanGiaoTaiSan> itemsToInsert = new ArrayList<>();
+                List<ChiTietBanGiaoTaiSan> itemsToUpdate = new ArrayList<>();
+                Set<String> currentIds = new HashSet<>();
+                for (ChiTietBanGiaoTaiSanDTO c : currentDetails) currentIds.add(c.getId());
+
+                for (ChiTietBanGiaoTaiSan ct : obj.getChiTietBanGiaoTaiSan()) {
+                    ct.setIdBanGiaoTaiSan(result.getId());
+                    if (ct.getId() == null || ct.getId().isEmpty()) {
+                        ct.setId(UUID.randomUUID().toString());
+                        itemsToInsert.add(ct);
+                    } else if (!currentIds.contains(ct.getId())) {
+                        itemsToInsert.add(ct);
+                    } else {
+                        itemsToUpdate.add(ct);
+                    }
+                }
+                
+                if (!itemsToInsert.isEmpty()) {
+                    chiTietBanGiaoTaiSanDao.batchInsert(itemsToInsert);
+                }
+                if (!itemsToUpdate.isEmpty()) {
+                    chiTietBanGiaoTaiSanDao.batchUpdate(itemsToUpdate);
+                }
+            }
+            if (obj.getNguoiKyList() != null) {
+                for (NguoiKy nk : obj.getNguoiKyList()) {
+                    if (nk.getId() == null || nk.getId().isEmpty()) {
+                        nk.setId(UUID.randomUUID().toString());
+                    }
+                    nk.setIdTaiLieu(result.getId());
+                }
+                kyTaiLieuDao.updateNguoiKy(result.getId(), obj.getNguoiKyList());
+            }
+
+            if (!keysToDelete.isEmpty()) {
+                TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            for (String key : keysToDelete) {
+                                try {
+                                    s3Service.deleteFile(key);
+                                } catch (Exception e) {
+                                    // ignore
+                                }
+                            }
+                        }
+                    }
+                );
+            }
+        }
+        return result;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public int delete(String id) throws SQLException {
-        return dao.delete(id);
+        BanGiaoTaiSan oldObj = null;
+        List<String> keysToDelete = new ArrayList<>();
+
+        try {
+            oldObj = dao.findById(id);
+            if (oldObj != null) {
+                if (oldObj.getDuongDanFile() != null && !oldObj.getDuongDanFile().isEmpty()) {
+                    keysToDelete.add(oldObj.getDuongDanFile());
+                }
+                if (oldObj.getTaiLieuBangKe() != null && !oldObj.getTaiLieuBangKe().isEmpty()) {
+                    keysToDelete.add(oldObj.getTaiLieuBangKe());
+                }
+            }
+        } catch (Exception e) { }
+        
+        if (oldObj != null) {
+            List<ChiTietBanGiaoTaiSanDTO> details = chiTietBanGiaoTaiSanDao.findAll(id);
+            if (!details.isEmpty()) {
+                List<String> detailIds = new ArrayList<>();
+                for (ChiTietBanGiaoTaiSanDTO dto : details) {
+                    detailIds.add(dto.getId());
+                }
+                chiTietBanGiaoTaiSanDao.batchDelete(detailIds);
+            }
+            kyTaiLieuDao.deleteAllNguoiKy(id);
+            kyTaiLieuDao.delete(id);
+        }
+        
+        int res = dao.delete(id);
+        
+        if (res > 0 && oldObj != null) {
+             TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        for (String key : keysToDelete) {
+                            try {
+                                s3Service.deleteFile(key);
+                            } catch (Exception e) {
+                                // ignore
+                            }
+                        }
+                    }
+                }
+            );
+        }
+        
+        return res;
     }
 
+    @Transactional
     public int updateTrangThai(String id, String userId) {
-        return dao.updateTrangThai(id, userId);
+        int trangThai = dao.updateTrangThai(id, userId);
+        if (trangThai == 3) {
+            handleHoanThanhBanGiao(id);
+        }
+        return trangThai;
+    }
+
+    private void handleHoanThanhBanGiao(String idBanGiaoTaiSan) {
+        try {
+            BanGiaoTaiSan banGiaoTaiSan = dao.findById(idBanGiaoTaiSan);
+            if (banGiaoTaiSan == null) return;
+
+            String idDonViNhan = banGiaoTaiSan.getIdDonViNhan();
+            String idDonViGiao = banGiaoTaiSan.getIdDonViGiao();
+            String lenhDieuDong = banGiaoTaiSan.getLenhDieuDong();
+
+            List<ChiTietBanGiaoTaiSanDTO> chiTietList = chiTietBanGiaoTaiSanDao.findAll(idBanGiaoTaiSan);
+            List<LichSuDieuChuyenTaiSanDTO> lichSuList = new ArrayList<>();
+            String thoiGianBanGiao = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            List<String> taiSanIds = new ArrayList<>();
+
+            for (ChiTietBanGiaoTaiSanDTO chiTiet : chiTietList) {
+                String idTaiSan = chiTiet.getIdTaiSan();
+                if (idTaiSan != null && !idTaiSan.isEmpty()) {
+                    taiSanIds.add(idTaiSan);
+                    taiSanDao.updateDonViSoHuu(idTaiSan, idDonViNhan);
+
+                    LichSuDieuChuyenTaiSanDTO ls = new LichSuDieuChuyenTaiSanDTO();
+                    ls.setIdBanGiaoTaiSan(idBanGiaoTaiSan);
+                    ls.setIdTaiSan(idTaiSan);
+                    ls.setIdDonViNhan(idDonViNhan);
+                    ls.setIdDonViGiao(idDonViGiao);
+                    ls.setThoiGianBanGiao(thoiGianBanGiao);
+                    lichSuList.add(ls);
+                }
+            }
+
+            // Xử lý tài sản con
+            if (!taiSanIds.isEmpty()) {
+                List<TaiSanCon> childAssets = taiSanDao.getTaiSanConByTaiSanIds(taiSanIds);
+                if (childAssets != null && !childAssets.isEmpty()) {
+                    for (TaiSanCon child : childAssets) {
+                        String childId = child.getIdTaiSanCon();
+                        if (childId != null && !childId.isEmpty()) {
+                            taiSanDao.updateDonViSoHuu(childId, idDonViNhan);
+                        }
+                    }
+                }
+            }
+
+            if (!lichSuList.isEmpty()) {
+                lichSuDieuChuyenTaiSanService.createBatch(lichSuList);
+            }
+
+            if (lenhDieuDong != null && !lenhDieuDong.isEmpty()) {
+                dieuDongTaiSanDao.updateTrangThaiBanGiao(lenhDieuDong, true);
+            }
+
+            System.out.println("Đã xử lý hoàn thành bàn giao cho " + lichSuList.size() + " tài sản (bao gồm tài sản con)");
+        } catch (Exception e) {
+            System.err.println("Lỗi khi xử lý hoàn thành bàn giao: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Lỗi khi xử lý hoàn thành bàn giao: " + e.getMessage(), e);
+        }
     }
 
     public boolean isNeedToSign(BanGiaoTaiSanDTO item, String userId) {
@@ -412,7 +651,9 @@ public class BanGiaoTaiSanService {
         return false;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public int huyTrangThai(String id) {
+        kyTaiLieuDao.delete(id);
         return dao.huyTrangThai(id);
     }
 
