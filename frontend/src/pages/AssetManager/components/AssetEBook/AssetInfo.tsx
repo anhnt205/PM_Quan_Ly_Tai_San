@@ -166,7 +166,7 @@ export default function AssetInfo({
       soLuong: 1,
       donViTinh: "",
       ghiChu: "",
-      idDonViBanDau: "K30",
+      idDonViBanDau: "Kty",
       idDonViHienThoi: "",
       moTa: "",
       idCongTy: CongTy.CT001,
@@ -345,11 +345,13 @@ export default function AssetInfo({
           zIndex: 10,
         }}
       >
-        {!isView && <Box sx={{ display: "flex", gap: 2 }}>
-          {!readOnly && <SaveBtn onSave={formik.submitForm} />}
-          {!readOnly && <CancelBtn onClick={handleCancel} />}
-          {readOnly && <EditButton onClick={onEdit} />}
-        </Box>}
+        {!isView && (
+          <Box sx={{ display: "flex", gap: 2 }}>
+            {!readOnly && <SaveBtn onSave={formik.submitForm} />}
+            {!readOnly && <CancelBtn onClick={handleCancel} />}
+            {readOnly && <EditButton onClick={onEdit} />}
+          </Box>
+        )}
       </Box>
       {/* Header sách */}
       <Typography
@@ -1282,7 +1284,7 @@ export default function AssetInfo({
                 <FieldAutoCompleted
                   title="Kho"
                   data={allDepartments.filter(
-                    (i) => i.id?.toLocaleLowerCase() === "k30",
+                    (i) => i.id?.toLocaleLowerCase() === "Kty",
                   )}
                   labelkey="tenPhongBan"
                   formik={formik}

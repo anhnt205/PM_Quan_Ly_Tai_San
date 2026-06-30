@@ -533,9 +533,11 @@ export const useAssetManagerMutation = (
                 soLuong: 1,
                 donViTinh: String(item["Đơn vị tính"] || ""),
                 ghiChu: String(item["Ghi chú"] || ""),
-                idDonViBanDau: String(item["Mã đơn vị ban đầu"] || "K30"),
+                idDonViBanDau: String(item["Mã đơn vị ban đầu"] || "Kty"),
                 idDonViHienThoi: String(item["Mã đơn vị hiện thời"] || ""),
-                idDonViQuanlyKiThuat: String(item["Mã đơn vị quản lý kỹ thuật"] || ""),
+                idDonViQuanlyKiThuat: String(
+                  item["Mã đơn vị quản lý kỹ thuật"] || "",
+                ),
                 moTa: String(item["Mô tả"] || ""),
                 idCongTy: idCongTy,
                 ngayTao: now,

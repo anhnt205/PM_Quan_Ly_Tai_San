@@ -326,24 +326,28 @@ public class DatabaseMigrationService {
             }
         }
         
-        // Đảm bảo có Kho công ty (K30) và Kho thu hồi (Kth)
-        String[][] defaultKhos = {
-            {"K30", "Kho công ty"},
-            {"Kth", "Kho thu hồi"}
+        // Đảm bảo có Kho công ty (Kty) và Kho thu hồi (Kth)
+        Object[][] defaultKhos = {
+            {"Kty", "Kho công ty", 1},
+            {"Kth", "Kho thu hồi", 2}
         };
         
-        for (String[] kho : defaultKhos) {
+        for (Object[] kho : defaultKhos) {
+            String id = (String) kho[0];
+            String name = (String) kho[1];
+            int loaiKho = (int) kho[2];
+
             try {
-                int exists = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM PhongBan WHERE Id = ?", Integer.class, kho[0]);
+                int exists = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM PhongBan WHERE Id = ?", Integer.class, id);
                 if (exists == 0) {
                     jdbcTemplate.update(
-                        "INSERT INTO PhongBan (Id, TenPhongBan, IdCongTy, IsActive, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                        kho[0], kho[1], "ct001", true, now, now, "system", "system"
+                        "INSERT INTO PhongBan (Id, TenPhongBan, IdCongTy, IsActive, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsKho, LoaiKho) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        id, name, "ct001", true, now, now, "system", "system", true, loaiKho
                     );
-                    System.out.println("  [THÊM MỚI] Đã thêm phòng ban/kho mặc định: " + kho[1] + " (" + kho[0] + ")");
+                    System.out.println("  [THÊM MỚI] Đã thêm phòng ban/kho mặc định: " + name + " (" + id + ")");
                 }
             } catch (Exception e) {
-                System.err.println("  [LỖI] Không thể kiểm tra/thêm kho mặc định " + kho[0] + ": " + e.getMessage());
+                System.err.println("  [LỖI] Không thể kiểm tra/thêm kho mặc định " + id + ": " + e.getMessage());
             }
         }
         
@@ -830,7 +834,7 @@ public class DatabaseMigrationService {
             
             Double nguyenGia = row.get("NGUYEN_GIA") != null ? ((Number) row.get("NGUYEN_GIA")).doubleValue() : null;
             Integer soLuong = 1;
-            String idDonViBanDau = "K30";
+            String idDonViBanDau = "Kty";
             String maPban = nvl(row.get("MA_PBAN"));
             
             if (existingTaiSanMap.containsKey(id)) {
