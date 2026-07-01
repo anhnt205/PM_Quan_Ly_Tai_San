@@ -1,36 +1,20 @@
 package com.ecotel.quanlytaisan.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * Web MVC configuration.
+ *
+ * LƯU Ý: PermissionInterceptor đã bị loại bỏ.
+ * Phân quyền hiện được xử lý bởi:
+ *  - {@link com.ecotel.quanlytaisan.security.AppTokenFilter} — xác định loại token
+ *  - {@link com.ecotel.quanlytaisan.security.PermissionFilter} — kiểm tra @RequirePermission
+ *
+ * CORS được cấu hình tại CorsConfigurationSource bean trong SecurityConfig.
+ */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
-
-    @Autowired
-    private PermissionInterceptor permissionInterceptor;
-
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOriginPatterns("*")
-                .allowedMethods("GET", "POST", "PUT","PATCH", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
-                .allowCredentials(true);
-    }
-
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(permissionInterceptor)
-                .addPathPatterns("/api/**")
-                .excludePathPatterns(
-                    "/api/userpermission/**", // Cho phép kiểm tra quyền
-                    "/api/auth/**", // Cho phép authentication
-                    "/api/websocket/**", // Cho phép WebSocket test API
-                    "/api/test/**", // Cho phép test API
-                    "/error" // Cho phép error pages
-                );
-    }
+    // CORS được quản lý bởi Spring Security (CorsConfigurationSource bean)
+    // Không cần addCorsMappings vì sẽ xung đột với Spring Security CORS filter
 }

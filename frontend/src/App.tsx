@@ -2,7 +2,9 @@ import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { ROUTES } from "./utils/routes";
 import Login from "./pages/Auth/Login";
 import Main from "./layout/Main";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "./redux/userSlice";
+import { isTokenValid } from "./utils/auth";
 import Staff from "./pages/Staff/Staff";
 import DashBoard from "./pages/Dashboard/DashBoard";
 import Department from "./pages/Department/Department";
@@ -75,6 +77,14 @@ const ProtectedRoute = ({
 function App() {
   const { user } = useSelector((state: RootState) => state.user);
   const queryClient = useQueryClient();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (user?.token && !isTokenValid(user.token)) {
+      dispatch(logout());
+    }
+  }, [user, dispatch]);
+
   useEffect(() => {
     if (user?.taiKhoan?.tenDangNhap) {
       socketService.connect(user.taiKhoan.tenDangNhap);
