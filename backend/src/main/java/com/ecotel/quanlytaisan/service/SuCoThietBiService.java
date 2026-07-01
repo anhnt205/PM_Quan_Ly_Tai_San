@@ -5,6 +5,7 @@ import com.ecotel.quanlytaisan.dao.SuCoThietBiChiTietDao;
 import com.ecotel.quanlytaisan.dao.KyTaiLieuDao;
 import com.ecotel.quanlytaisan.model.*;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -169,12 +170,68 @@ public class SuCoThietBiService {
         return list;
     }
 
-    public SuCoThietBi insert(SuCoThietBi entity) throws SQLException {
-        return suCoDao.insert(entity);
+    @Transactional
+    public SuCoThietBi insert(SuCoThietBiDTO dto) throws SQLException {
+        SuCoThietBi entity = new SuCoThietBi();
+        BeanUtils.copyProperties(dto, entity);
+        SuCoThietBi result = suCoDao.insert(entity);
+        if (result != null) {
+            String sucoId = result.getId();
+            
+            // 1. Insert details
+            if (dto.getDanhSachTaiSan() != null && !dto.getDanhSachTaiSan().isEmpty()) {
+                for (SuCoThietBiChiTiet chiTiet : dto.getDanhSachTaiSan()) {
+                    if (chiTiet.getId() == null || chiTiet.getId().isEmpty()) {
+                        chiTiet.setId(chiTietDao.generateNextId());
+                    }
+                    chiTiet.setIdSuCo(sucoId);
+                }
+                chiTietDao.batchInsert(dto.getDanhSachTaiSan());
+            }
+
+            // 2. Insert signers
+            if (dto.getNguoiKyList() != null && !dto.getNguoiKyList().isEmpty()) {
+                for (NguoiKy nk : dto.getNguoiKyList()) {
+                    nk.setIdTaiLieu(sucoId);
+                }
+                kyTaiLieuDao.insertNguoiKyBatch(dto.getNguoiKyList());
+            }
+        }
+        return result;
     }
 
-    public SuCoThietBi update(SuCoThietBi entity) throws SQLException {
-        return suCoDao.update(entity);
+    @Transactional
+    public SuCoThietBi update(SuCoThietBiDTO dto) throws SQLException {
+        SuCoThietBi entity = new SuCoThietBi();
+        BeanUtils.copyProperties(dto, entity);
+        SuCoThietBi result = suCoDao.update(entity);
+        if (result != null) {
+            String sucoId = result.getId();
+
+            // 1. Re-insert details
+            chiTietDao.deleteByIdSuCo(sucoId);
+            if (dto.getDanhSachTaiSan() != null && !dto.getDanhSachTaiSan().isEmpty()) {
+                for (SuCoThietBiChiTiet chiTiet : dto.getDanhSachTaiSan()) {
+                    if (chiTiet.getId() == null || chiTiet.getId().isEmpty()) {
+                        chiTiet.setId(chiTietDao.generateNextId());
+                    }
+                    chiTiet.setIdSuCo(sucoId);
+                }
+                chiTietDao.batchInsert(dto.getDanhSachTaiSan());
+            }
+
+            // 2. Re-insert signers
+            kyTaiLieuDao.delete(sucoId); // Clear existing drawn signatures
+            if (dto.getNguoiKyList() != null) {
+                for (NguoiKy nk : dto.getNguoiKyList()) {
+                    nk.setIdTaiLieu(sucoId);
+                }
+                kyTaiLieuDao.updateNguoiKy(sucoId, dto.getNguoiKyList());
+            } else {
+                kyTaiLieuDao.deleteAllNguoiKy(sucoId);
+            }
+        }
+        return result;
     }
 
     public int updateGhiChu(String id, String ghiChuBienBan) {
@@ -190,13 +247,19 @@ public class SuCoThietBiService {
     @Transactional
     public int delete(String id) throws SQLException {
         chiTietDao.deleteByIdSuCo(id);
+        kyTaiLieuDao.deleteAllNguoiKy(id);
+        kyTaiLieuDao.delete(id);
         return suCoDao.delete(id);
     }
 
     @Transactional
     public void bulkDelete(List<String> ids) {
         if (ids == null || ids.isEmpty()) return;
-        for (String id : ids) chiTietDao.deleteByIdSuCo(id);
+        for (String id : ids) {
+            chiTietDao.deleteByIdSuCo(id);
+            kyTaiLieuDao.deleteAllNguoiKy(id);
+            kyTaiLieuDao.delete(id);
+        }
         suCoDao.batchDelete(ids);
     }
 

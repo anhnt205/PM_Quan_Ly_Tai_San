@@ -134,7 +134,7 @@ public class SuCoThietBiController {
      */
     @PostMapping
     public ResponseEntity<ApiResponse<Object>> create(
-            @Valid @RequestBody SuCoThietBi entity
+            @Valid @RequestBody SuCoThietBiDTO entity
     ) throws SQLException {
         try {
             SuCoThietBi result = suCoService.insert(entity);
@@ -155,11 +155,11 @@ public class SuCoThietBiController {
      */
     @PostMapping("/batch")
     public ResponseEntity<ApiResponse<Object>> createBatch(
-            @RequestBody List<@Valid SuCoThietBi> list
+            @RequestBody List<@Valid SuCoThietBiDTO> list
     ) {
         try {
             int total = 0;
-            for (SuCoThietBi item : list)
+            for (SuCoThietBiDTO item : list)
                 if (suCoService.insert(item) != null) total++;
             if (total > 0) return ResponseEntity.status(HttpStatus.CREATED)
                     .body(ApiResponse.success("Tạo danh sách phiếu sự cố thành công", null, total));
@@ -181,7 +181,7 @@ public class SuCoThietBiController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> update(
             @PathVariable("id") String id,
-            @Valid @RequestBody SuCoThietBi entity
+            @Valid @RequestBody SuCoThietBiDTO entity
     ) throws SQLException {
         try {
             entity.setId(id);
@@ -203,11 +203,11 @@ public class SuCoThietBiController {
      */
     @PutMapping("/batch")
     public ResponseEntity<ApiResponse<Object>> updateBatch(
-            @RequestBody List<@Valid SuCoThietBi> list
+            @RequestBody List<@Valid SuCoThietBiDTO> list
     ) {
         try {
             int total = 0;
-            for (SuCoThietBi item : list)
+            for (SuCoThietBiDTO item : list)
                 if (suCoService.update(item) != null) total++;
             if (total > 0) return ResponseEntity.ok(
                     ApiResponse.success("Cập nhật danh sách phiếu sự cố thành công", null, total));
