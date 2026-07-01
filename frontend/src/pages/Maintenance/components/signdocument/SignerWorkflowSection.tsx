@@ -14,6 +14,7 @@ import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import { getIn } from "formik";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
+import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
 
 interface SignerWorkflowSectionProps {
   formik: any;
@@ -203,39 +204,27 @@ export default function SignerWorkflowSection({
                           gap: 1.5,
                         }}
                       >
-                        <FormControl size="small" fullWidth>
-                          <InputLabel>Phòng ban</InputLabel>
-                          <Select
-                            value={editDeptId}
-                            label="Phòng ban"
-                            onChange={(e) => {
-                              setEditDeptId(e.target.value);
-                              setEditUserId("");
-                            }}
-                          >
-                            {departments.map((d) => (
-                              <MenuItem key={d.id} value={d.id}>
-                                {d.name}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                        <FormControl size="small" fullWidth>
-                          <InputLabel>Người duyệt</InputLabel>
-                          <Select
-                            value={editUserId}
-                            label="Người duyệt"
-                            onChange={(e) => setEditUserId(e.target.value)}
-                          >
-                            {users
-                              .filter((u) => u.departmentId === editDeptId)
-                              .map((u) => (
-                                <MenuItem key={u.id} value={u.id}>
-                                  {u.name}
-                                </MenuItem>
-                              ))}
-                          </Select>
-                        </FormControl>
+                        <FieldAutoCompleted
+                          title="Phòng ban"
+                          data={departments}
+                          labelkey="name"
+                          value={editDeptId}
+                          onChange={(e) => {
+                            setEditDeptId(e.id);
+                            setEditUserId("");
+                          }}
+                        />
+                        <FieldAutoCompleted
+                          title="Người duyệt"
+                          data={users.filter(
+                            (u) => u.departmentId === editDeptId,
+                          )}
+                          labelkey="name"
+                          value={editUserId}
+                          onChange={(e) => {
+                            setEditUserId(e.id);
+                          }}
+                        />
                         <Box sx={{ display: "flex", gap: 1 }}>
                           <Button
                             variant="contained"
@@ -355,44 +344,26 @@ export default function SignerWorkflowSection({
           borderColor: "divider",
         }}
       >
-        <FormControl size="small" fullWidth>
-          <InputLabel>Phòng ban</InputLabel>
-          <Select
-            value={addDeptId}
-            label="Đơn vị"
-            onChange={(e) => {
-              setAddDeptId(e.target.value);
-              setAddUserId("");
-            }}
-          >
-            {departments.map((d) => (
-              <MenuItem key={d.id} value={d.id}>
-                {d.name}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <FieldAutoCompleted
+          title="Phòng ban"
+          data={departments}
+          labelkey="name"
+          value={addDeptId}
+          onChange={(e) => {
+            setAddDeptId(e.id);
+            setAddUserId("");
+          }}
+        />
 
-        <FormControl size="small" fullWidth disabled={!addDeptId}>
-          <InputLabel>Người duyệt</InputLabel>
-          <Select
-            value={addUserId}
-            label="Người duyệt"
-            onChange={(e) => setAddUserId(e.target.value)}
-          >
-            {users
-              .filter((u) => u.departmentId === addDeptId)
-              .map((u) => (
-                <MenuItem
-                  key={u.id}
-                  value={u.id}
-                  disabled={signers.some((s: any) => s.userId === u.id)}
-                >
-                  {u.name} – {u.title}
-                </MenuItem>
-              ))}
-          </Select>
-        </FormControl>
+        <FieldAutoCompleted
+          title="Người duyệt"
+          data={users.filter((u) => u.departmentId === addDeptId && !signers.some((s: any) => s.userId === u.id))}
+          labelkey="name"
+          value={addUserId}
+          onChange={(e) => {
+            setAddUserId(e.id);
+          }}
+        />
 
         <Button
           variant="contained"

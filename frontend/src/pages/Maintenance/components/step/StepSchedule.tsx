@@ -175,6 +175,7 @@ const StepSchedule = ({
                         )
                       }
                       limitOptions={10}
+                      autocompleteSx={{ width: 120 }}
                     />
                   </TableCell>
                   {row.map((level: string, idx: number) => (

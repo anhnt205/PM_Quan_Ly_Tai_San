@@ -331,7 +331,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
               <Box
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: "0.7fr 1.2fr 0.5fr 0.8fr",
+                  gridTemplateColumns: "0.7fr 1.2fr 1fr 0.5fr 0.8fr",
                   gap: 2,
                   alignItems: "end",
                 }}
@@ -345,6 +345,11 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
                   title="Tên kế hoạch"
                   formik={formik}
                   field="tenKeHoach"
+                />
+                <FieldInput
+                  title="Số quyết định"
+                  formik={formik}
+                  field="soQuyetDinh"
                 />
                 <FieldYear title="Năm" formik={formik} field="nam" />
                 <FieldAutoCompleted

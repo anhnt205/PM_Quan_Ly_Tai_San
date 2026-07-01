@@ -172,16 +172,9 @@ const PlanPreview = ({
           sx={{ mt: 0.5, fontStyle: "italic" }}
         >
           (Theo QĐ số{" "}
-          {isCreateMode && formik ? (
-            <FieldInput
-              formik={formik}
-              field="soQuyetDinh"
-              noBorder={true}
-              sx={{ width: "100px" }}
-            />
-          ) : (
-            <span style={{ fontWeight: 500 }}>—</span>
-          )}{" "}
+          <span style={{ fontWeight: 500 }}>
+            {formik?.values?.soQuyetDinh || "—"}
+          </span>{" "}
           /QĐ – TUB ngày {day} tháng {month} năm {year})
         </Typography>
 
