@@ -155,11 +155,15 @@ public class ChiTietDieuDongCCDCVatTuDao {
     }
 
     public int update(ChiTietDieuDongCCDCVatTu obj) {
-        String sql = "UPDATE ChiTietDieuDongCCDCVatTu SET IdDieuDongCCDCVatTu=?, IdCCDCVatTu=?, SoChungTu=?, SoLuong=?, SoLuongXuat=?, GhiChu=?, NgayTao=?, NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?, IsActive=?, IdChiTietCCDCVatTu=?, SoLuongDaBanGiao=?, SoLuongConLai=?, HienTrang=?, MoTa=? WHERE Id=?";
+        String sql = "UPDATE ChiTietDieuDongCCDCVatTu SET IdDieuDongCCDCVatTu=?, IdCCDCVatTu=?, SoChungTu=?, SoLuong=?, SoLuongXuat=?, GhiChu=?, NgayTao=?, NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?, IsActive=?, IdChiTietCCDCVatTu=?, SoLuongDaBanGiao=COALESCE(?, SoLuongDaBanGiao, 0), SoLuongConLai=COALESCE(?, 0) - COALESCE(?, SoLuongDaBanGiao, 0), HienTrang=?, MoTa=? WHERE Id=?";
+        
         return jdbcTemplate.update(sql,
                 obj.getIdDieuDongCCDCVatTu(), obj.getIdCCDCVatTu(), obj.getSoChungTu(), obj.getSoLuong(), obj.getSoLuongXuat(),
                 obj.getGhiChu(), obj.getNgayTao(), obj.getNgayCapNhat(), obj.getNguoiTao(), obj.getNguoiCapNhat(),
-                obj.getIsActive(), obj.getIdChiTietCCDCVatTu(), obj.getSoLuongDaBanGiao(), obj.getSoLuongConLai(), obj.getHienTrang(), obj.getMoTa(), obj.getId());
+                obj.getIsActive(), obj.getIdChiTietCCDCVatTu(), 
+                obj.getSoLuongDaBanGiao(),
+                obj.getSoLuongXuat(), obj.getSoLuongDaBanGiao(),
+                obj.getHienTrang(), obj.getMoTa(), obj.getId());
     }
 
     public int delete(String id) {
@@ -174,7 +178,7 @@ public class ChiTietDieuDongCCDCVatTuDao {
             @Override
             public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
                 ChiTietDieuDongCCDCVatTu obj = list.get(i);
-                Double soLuongXuat = obj.getSoLuongXuat() != null ? obj.getSoLuongXuat() : 0.0;
+                Double soLuongXuat = obj.getSoLuongXuat() != null ? obj.getSoLuongXuat() : 0;
                 Double soLuongDaBanGiao = 0.0;
                 Double soLuongConLai = soLuongXuat;
                 
@@ -206,7 +210,7 @@ public class ChiTietDieuDongCCDCVatTuDao {
 
     public int[] batchUpdate(List<ChiTietDieuDongCCDCVatTu> list) {
         if (list == null || list.isEmpty()) return new int[0];
-        String sql = "UPDATE ChiTietDieuDongCCDCVatTu SET IdDieuDongCCDCVatTu=?, IdCCDCVatTu=?, SoChungTu=?, SoLuong=?, SoLuongXuat=?, GhiChu=?, NgayTao=?, NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?, IsActive=?, IdChiTietCCDCVatTu=?, SoLuongDaBanGiao=?, SoLuongConLai=?, HienTrang=?, MoTa=? WHERE Id=?";
+        String sql = "UPDATE ChiTietDieuDongCCDCVatTu SET IdDieuDongCCDCVatTu=?, IdCCDCVatTu=?, SoChungTu=?, SoLuong=?, SoLuongXuat=?, GhiChu=?, NgayTao=?, NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?, IsActive=?, IdChiTietCCDCVatTu=?, SoLuongDaBanGiao=COALESCE(?, SoLuongDaBanGiao, 0), SoLuongConLai=COALESCE(?, 0) - COALESCE(?, SoLuongDaBanGiao, 0), HienTrang=?, MoTa=? WHERE Id=?";
         return jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
             @Override
             public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
@@ -223,11 +227,14 @@ public class ChiTietDieuDongCCDCVatTuDao {
                 ps.setString(10, obj.getNguoiCapNhat());
                 ps.setObject(11, obj.getIsActive());
                 ps.setString(12, obj.getIdChiTietCCDCVatTu());
+                
                 ps.setObject(13, obj.getSoLuongDaBanGiao());
-                ps.setObject(14, obj.getSoLuongConLai());
-                ps.setString(15, obj.getHienTrang());
-                ps.setString(16, obj.getMoTa());
-                ps.setString(17, obj.getId());
+                ps.setObject(14, obj.getSoLuongXuat());
+                ps.setObject(15, obj.getSoLuongDaBanGiao());
+                
+                ps.setString(16, obj.getHienTrang());
+                ps.setString(17, obj.getMoTa());
+                ps.setString(18, obj.getId());
             }
 
             @Override

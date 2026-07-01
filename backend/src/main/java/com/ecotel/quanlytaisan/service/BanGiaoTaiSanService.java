@@ -320,6 +320,10 @@ public class BanGiaoTaiSanService {
                 }
                 kyTaiLieuDao.insertNguoiKyBatch(obj.getNguoiKyList());
             }
+
+            if (result.getTrangThai() != null && result.getTrangThai() == 3) {
+                handleHoanThanhBanGiao(result.getId());
+            }
         }
         return result;
     }
@@ -412,6 +416,11 @@ public class BanGiaoTaiSanService {
                         }
                     }
                 );
+            }
+
+            if (oldObj != null && oldObj.getTrangThai() != null && oldObj.getTrangThai() != 3 
+                && result.getTrangThai() != null && result.getTrangThai() == 3) {
+                handleHoanThanhBanGiao(result.getId());
             }
         }
         return result;

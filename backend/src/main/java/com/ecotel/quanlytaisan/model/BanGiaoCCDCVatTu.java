@@ -3,6 +3,8 @@ package com.ecotel.quanlytaisan.model;
 import lombok.Data;
 import org.apache.poi.ss.usermodel.Row;
 
+import java.util.List;
+
 
 
 import static com.ecotel.quanlytaisan.utils.ParserHelper.*;
@@ -43,6 +45,9 @@ public class BanGiaoCCDCVatTu {
     private String ngayQuyetDinh;
     private String diaDiemQuyetDinh;
     private String taiLieuBangKe;
+
+    private List<ChiTietBanGiaoCCDCVatTu> chiTietBanGiaoCCDCVatTu;
+    private List<NguoiKy> nguoiKyList;
 
 
     // Custom getters for null safety

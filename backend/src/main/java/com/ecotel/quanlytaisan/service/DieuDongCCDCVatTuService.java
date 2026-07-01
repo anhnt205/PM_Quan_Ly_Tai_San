@@ -118,6 +118,7 @@ public class DieuDongCCDCVatTuService {
         // Filter by chuaBanGiaoHet - chỉ lấy những phiếu chưa bàn giao hết
         if (Boolean.TRUE.equals(chuaBanGiaoHet)) {
             Set<String> idsChuaBanGiaoHet = dao.getIdsChuaBanGiaoHet(idCongTy);
+            System.out.println("idsChuaBanGiaoHet: " + idsChuaBanGiaoHet);
             List<DieuDongCCDCVatTuDTO> chuaBanGiaoHetFiltered = new ArrayList<>();
             for (DieuDongCCDCVatTuDTO item : sourceList) {
                 if (item != null && idsChuaBanGiaoHet.contains(item.getId())) {
