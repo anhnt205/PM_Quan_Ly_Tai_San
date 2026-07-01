@@ -7,7 +7,10 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.List;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 
 @Repository
 public class ChiTietBanGiaoCCDCVatTuDao {
@@ -133,6 +136,44 @@ public class ChiTietBanGiaoCCDCVatTuDao {
             }
             return result;
         }
+    }
+
+    public int[] batchInsert(List<ChiTietBanGiaoCCDCVatTu> list) {
+        String sql = "INSERT INTO ChiTietBanGiaoCCDCVatTu (Id, IdBanGiaoCCDCVatTu, IdCCDCVatTu,SoChungTu, SoLuong, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive, IdChiTietCCDCVatTu, IdChiTietDieuDong, HienTrang, MoTa, GhiChu) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
+        int[] result = jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                ChiTietBanGiaoCCDCVatTu obj = list.get(i);
+                ps.setString(1, obj.getId());
+                ps.setString(2, obj.getIdBanGiaoCCDCVatTu());
+                ps.setString(3, obj.getIdCCDCVatTu());
+                ps.setString(4, obj.getSoChungTu());
+                ps.setDouble(5, obj.getSoLuong() != null ? obj.getSoLuong() : 0.0);
+                ps.setString(6, obj.getNgayTao());
+                ps.setString(7, obj.getNgayCapNhat());
+                ps.setString(8, obj.getNguoiTao());
+                ps.setString(9, obj.getNguoiCapNhat());
+                ps.setObject(10, obj.getIsActive());
+                ps.setString(11, obj.getIdChiTietCCDCVatTu());
+                ps.setString(12, obj.getIdChiTietDieuDong());
+                ps.setString(13, obj.getHienTrang());
+                ps.setString(14, obj.getMoTa());
+                ps.setString(15, obj.getGhiChu());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return list.size();
+            }
+        });
+
+        // Cập nhật SoLuongConLai của ChiTietDieuDongCCDCVatTu
+        for (ChiTietBanGiaoCCDCVatTu obj : list) {
+            if (obj.getIdChiTietDieuDong() != null && !obj.getIdChiTietDieuDong().trim().isEmpty()) {
+                updateSoLuongConLaiDieuDong(obj.getIdChiTietDieuDong(), -(obj.getSoLuong() != null ? obj.getSoLuong() : 0.0));
+            }
+        }
+        return result;
     }
 
     public int update(ChiTietBanGiaoCCDCVatTu obj) {

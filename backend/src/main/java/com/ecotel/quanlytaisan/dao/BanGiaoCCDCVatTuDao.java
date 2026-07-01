@@ -659,7 +659,7 @@ public class BanGiaoCCDCVatTuDao {
         return 0;
     }
 
-    private void updateSoLuongBanGiao(String idDieuDong, String idBanGiao) {
+    public void updateSoLuongBanGiao(String idDieuDong, String idBanGiao) {
         System.out.println("==== updateSoLuongBanGiao START ====");
         System.out.println("Input idDieuDong = " + idDieuDong + ", idBanGiao = " + idBanGiao);
 
