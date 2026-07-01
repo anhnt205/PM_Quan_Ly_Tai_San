@@ -853,7 +853,7 @@ export const generateSuaChuaPdf = async (
         item.capSuaChua || "",
         item.soLuong || 1,
         item.donViQuanLy || "",
-        item.donVibaoTri || "",
+        item.donViBaoTri || "",
         "",
       ];
     },

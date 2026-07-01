@@ -82,7 +82,7 @@ public class SuaChuaController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Object>> create(@Valid @RequestBody SuaChua entity) {
+    public ResponseEntity<ApiResponse<Object>> create(@Valid @RequestBody SuaChuaDTO entity) {
         try {
             SuaChua result = service.insert(entity);
             if (result != null) return ResponseEntity.status(HttpStatus.CREATED)
@@ -96,7 +96,7 @@ public class SuaChuaController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @Valid @RequestBody SuaChua entity) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @Valid @RequestBody SuaChuaDTO entity) {
         try {
             entity.setId(id);
             SuaChua result = service.update(entity);
@@ -111,7 +111,7 @@ public class SuaChuaController {
     }
 
     @PutMapping("/batch")
-    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<SuaChua> entities) {
+    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<SuaChuaDTO> entities) {
         try {
             service.batchUpdate(entities);
             return ResponseEntity.ok(ApiResponse.success("Cập nhật danh sách phiếu sửa chữa thành công", null, entities.size()));
