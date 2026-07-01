@@ -23,6 +23,7 @@ import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import type { PlanSigner } from "../../../../mockdata/mockPlans";
 import type { IncidenDetailData } from "../../types";
+import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
 
 interface Props {
   number?: string;
@@ -168,29 +169,15 @@ const DeptSelectCell = ({
   return (
     <Tooltip title="Nhấn để chọn đơn vị" placement="top" arrow>
       <Box sx={{ minWidth: width }}>
-        <Select
+        <FieldAutoCompleted
+          title={""}
+          data={departments}
+          labelkey="id"
           value={selectedId}
           onChange={(e) => {
-            const dept = departments.find((d) => d.id === e.target.value);
-            if (dept) onChange(dept.id);
-            else onChange("");
+            onChange(e ? e.name || "" : "");
           }}
-          displayEmpty
-          size="small"
-          variant="standard"
-          IconComponent={UnfoldMoreIcon}
-          renderValue={() => (
-            <Typography
-              sx={{
-                fontSize: 11,
-                color: value ? "text.primary" : "text.disabled",
-                fontStyle: value ? "normal" : "italic",
-              }}
-            >
-              {value || placeholder}
-            </Typography>
-          )}
-          sx={{
+          autocompleteSx={{
             width: "100%",
             fontSize: 11,
             "&:before": { borderBottom: "none" },
@@ -205,20 +192,8 @@ const DeptSelectCell = ({
               "&:hover": { bgcolor: "action.hover" },
             },
           }}
-          MenuProps={{ PaperProps: { sx: { maxHeight: 260 } } }}
-        >
-          <MenuItem
-            value=""
-            sx={{ fontSize: 11, fontStyle: "italic", color: "text.disabled" }}
-          >
-            — Chọn đơn vị —
-          </MenuItem>
-          {departments.map((d) => (
-            <MenuItem key={d.id} value={d.id} sx={{ fontSize: 11 }}>
-              {d.id}
-            </MenuItem>
-          ))}
-        </Select>
+          noBorder
+        />
       </Box>
     </Tooltip>
   );
@@ -312,7 +287,12 @@ const IncidentPreview = ({
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
         <Box sx={{ textAlign: "center", flex: 1 }}>
           <Typography
-            sx={{ fontWeight: 700, fontSize: 13, fontFamily: "inherit", textTransform: "uppercase" }}
+            sx={{
+              fontWeight: 700,
+              fontSize: 13,
+              fontFamily: "inherit",
+              textTransform: "uppercase",
+            }}
           >
             CÔNG TY {congty || "............"}
           </Typography>

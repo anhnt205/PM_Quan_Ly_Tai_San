@@ -210,7 +210,7 @@ export default function SignerWorkflowSection({
                           labelkey="name"
                           value={editDeptId}
                           onChange={(e) => {
-                            setEditDeptId(e.id);
+                            setEditDeptId(e ? e.id : "");
                             setEditUserId("");
                           }}
                         />
@@ -222,7 +222,7 @@ export default function SignerWorkflowSection({
                           labelkey="name"
                           value={editUserId}
                           onChange={(e) => {
-                            setEditUserId(e.id);
+                            setEditUserId(e ? e.id : "");
                           }}
                         />
                         <Box sx={{ display: "flex", gap: 1 }}>
@@ -350,18 +350,22 @@ export default function SignerWorkflowSection({
           labelkey="name"
           value={addDeptId}
           onChange={(e) => {
-            setAddDeptId(e.id);
+            setAddDeptId(e ? e.id : "");
             setAddUserId("");
           }}
         />
 
         <FieldAutoCompleted
           title="Người duyệt"
-          data={users.filter((u) => u.departmentId === addDeptId && !signers.some((s: any) => s.userId === u.id))}
+          data={users.filter(
+            (u) =>
+              u.departmentId === addDeptId &&
+              !signers.some((s: any) => s.userId === u.id),
+          )}
           labelkey="name"
           value={addUserId}
           onChange={(e) => {
-            setAddUserId(e.id);
+            setAddUserId(e ? e.id : "");
           }}
         />
 

@@ -3,6 +3,7 @@ package com.ecotel.quanlytaisan.service;
 import com.ecotel.quanlytaisan.dao.*;
 import com.ecotel.quanlytaisan.model.*;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -249,12 +250,68 @@ public class KeHoachSuaChuaService {
         return dto;
     }
 
-    public KeHoachSuaChua insert(KeHoachSuaChua entity) throws SQLException {
-        return keHoachSuaChuaDao.insert(entity);
+    @Transactional
+    public KeHoachSuaChua insert(KeHoachSuaChuaDTO dto) throws SQLException {
+        KeHoachSuaChua entity = new KeHoachSuaChua();
+        BeanUtils.copyProperties(dto, entity);
+        KeHoachSuaChua result = keHoachSuaChuaDao.insert(entity);
+        if (result != null) {
+            String planId = result.getId();
+            
+            // 1. Insert details
+            if (dto.getDanhSachTaiSan() != null && !dto.getDanhSachTaiSan().isEmpty()) {
+                for (KeHoachSuaChuaChiTietTaiSan chiTiet : dto.getDanhSachTaiSan()) {
+                    if (chiTiet.getId() == null || chiTiet.getId().isEmpty()) {
+                        chiTiet.setId(suaChuaChiTietTaiSanDao.generateNextId());
+                    }
+                    chiTiet.setIdKeHoachSuaChua(planId);
+                }
+                suaChuaChiTietTaiSanDao.batchInsert(dto.getDanhSachTaiSan());
+            }
+
+            // 2. Insert signers
+            if (dto.getNguoiKyList() != null && !dto.getNguoiKyList().isEmpty()) {
+                for (NguoiKy nk : dto.getNguoiKyList()) {
+                    nk.setIdTaiLieu(planId);
+                }
+                kyTaiLieuDao.insertNguoiKyBatch(dto.getNguoiKyList());
+            }
+        }
+        return result;
     }
 
-    public KeHoachSuaChua update(KeHoachSuaChua entity) throws SQLException {
-        return keHoachSuaChuaDao.update(entity);
+    @Transactional
+    public KeHoachSuaChua update(KeHoachSuaChuaDTO dto) throws SQLException {
+        KeHoachSuaChua entity = new KeHoachSuaChua();
+        BeanUtils.copyProperties(dto, entity);
+        KeHoachSuaChua result = keHoachSuaChuaDao.update(entity);
+        if (result != null) {
+            String planId = result.getId();
+
+            // 1. Re-insert details
+            suaChuaChiTietTaiSanDao.deleteByIdKeHoach(planId);
+            if (dto.getDanhSachTaiSan() != null && !dto.getDanhSachTaiSan().isEmpty()) {
+                for (KeHoachSuaChuaChiTietTaiSan chiTiet : dto.getDanhSachTaiSan()) {
+                    if (chiTiet.getId() == null || chiTiet.getId().isEmpty()) {
+                        chiTiet.setId(suaChuaChiTietTaiSanDao.generateNextId());
+                    }
+                    chiTiet.setIdKeHoachSuaChua(planId);
+                }
+                suaChuaChiTietTaiSanDao.batchInsert(dto.getDanhSachTaiSan());
+            }
+
+            // 2. Re-insert signers
+            kyTaiLieuDao.delete(planId); // Clear existing drawn signatures
+            if (dto.getNguoiKyList() != null) {
+                for (NguoiKy nk : dto.getNguoiKyList()) {
+                    nk.setIdTaiLieu(planId);
+                }
+                kyTaiLieuDao.updateNguoiKy(planId, dto.getNguoiKyList());
+            } else {
+                kyTaiLieuDao.deleteAllNguoiKy(planId);
+            }
+        }
+        return result;
     }
 
     public int updateGhiChu(String id, String ghiChuBienBan) {
@@ -270,13 +327,19 @@ public class KeHoachSuaChuaService {
     @Transactional
     public int delete(String id) throws SQLException {
         suaChuaChiTietTaiSanDao.deleteByIdKeHoach(id);
+        kyTaiLieuDao.deleteAllNguoiKy(id);
+        kyTaiLieuDao.delete(id);
         return keHoachSuaChuaDao.delete(id);
     }
 
     @Transactional
     public void bulkDelete(List<String> ids) {
         if (ids == null || ids.isEmpty()) return;
-        for (String id : ids) suaChuaChiTietTaiSanDao.deleteByIdKeHoach(id);
+        for (String id : ids) {
+            suaChuaChiTietTaiSanDao.deleteByIdKeHoach(id);
+            kyTaiLieuDao.deleteAllNguoiKy(id);
+            kyTaiLieuDao.delete(id);
+        }
         keHoachSuaChuaDao.batchDelete(ids);
     }
 

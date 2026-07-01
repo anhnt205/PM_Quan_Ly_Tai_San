@@ -113,7 +113,7 @@ public class KeHoachSuaChuaController {
     // ==================== CREATE ====================
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Object>> create(@Valid @RequestBody KeHoachSuaChua entity) throws SQLException {
+    public ResponseEntity<ApiResponse<Object>> create(@Valid @RequestBody KeHoachSuaChuaDTO entity) throws SQLException {
         try {
             KeHoachSuaChua result = keHoachSuaChuaService.insert(entity);
             if (result != null) return ResponseEntity.status(HttpStatus.CREATED)
@@ -129,10 +129,10 @@ public class KeHoachSuaChuaController {
     // ==================== CREATE BATCH ====================
 
     @PostMapping("/batch")
-    public ResponseEntity<ApiResponse<Object>> createBatch(@RequestBody List<@Valid KeHoachSuaChua> list) {
+    public ResponseEntity<ApiResponse<Object>> createBatch(@RequestBody List<@Valid KeHoachSuaChuaDTO> list) {
         try {
             int total = 0;
-            for (KeHoachSuaChua item : list) {
+            for (KeHoachSuaChuaDTO item : list) {
                 if (keHoachSuaChuaService.insert(item) != null) total++;
             }
             if (total > 0) return ResponseEntity.status(HttpStatus.CREATED)
@@ -149,7 +149,7 @@ public class KeHoachSuaChuaController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> update(
-            @PathVariable("id") String id, @Valid @RequestBody KeHoachSuaChua entity) throws SQLException {
+            @PathVariable("id") String id, @Valid @RequestBody KeHoachSuaChuaDTO entity) throws SQLException {
         try {
             entity.setId(id);
             KeHoachSuaChua result = keHoachSuaChuaService.update(entity);
@@ -165,10 +165,10 @@ public class KeHoachSuaChuaController {
     // ==================== UPDATE BATCH ====================
 
     @PutMapping("/batch")
-    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<@Valid KeHoachSuaChua> list) {
+    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<@Valid KeHoachSuaChuaDTO> list) {
         try {
             int total = 0;
-            for (KeHoachSuaChua item : list) {
+            for (KeHoachSuaChuaDTO item : list) {
                 if (keHoachSuaChuaService.update(item) != null) total++;
             }
             if (total > 0) return ResponseEntity.ok(ApiResponse.success("Cập nhật danh sách kế hoạch sửa chữa thành công", null, total));
