@@ -529,105 +529,7 @@ export const useMaintenanceRepairMutation = () => {
   const now = dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss");
   const { user } = useSelector((state: any) => state.user);
 
-  // --- API CHI TIẾT ---
-  const createChiTietManyMutation = useMutation({
-    mutationFn: async (data: any[]) => {
-      return (
-        await api.post(
-          "/suachua-chitiet/batch",
-          data.map((i: any) => ({
-            ...i,
-            nguoiTao: user?.taiKhoan?.tenDangNhap,
-            ngayTao: now,
-          })),
-        )
-      ).data;
-    },
-  });
 
-  const updateChiTietManyMutation = useMutation({
-    mutationFn: async (data: any[]) => {
-      return (
-        await api.put(
-          `/suachua-chitiet/batch`,
-          data.map((i: any) => ({
-            ...i,
-            ngayCapNhat: now,
-            nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
-          })),
-        )
-      ).data;
-    },
-  });
-
-  const deleteChiTietManyMutation = useMutation({
-    mutationFn: async (ids: string[]) => {
-      return (
-        await api.delete(`/suachua-chitiet/batch`, {
-          data: ids,
-        })
-      ).data;
-    },
-  });
-
-  // TÁCH VÀ GỌI CÁC API CON
-  // TÁCH VÀ GỌI CÁC API CON
-  const handleUpdate = async (
-    response: MaintenanceRepairData | any,
-    variables: MaintenanceRepairData,
-  ) => {
-    const repairId = response?.id || response?.data?.id;
-    if (!repairId) return;
-
-    const promises: Promise<any>[] = [];
-
-    // XỬ LÝ CHI TIẾT
-    if (variables.danhSachTaiSan && variables.danhSachTaiSan.length > 0) {
-      const details = variables.danhSachTaiSan;
-      const createItems = details.filter(
-        (i: any) => i.action === Action.CREATE || !i.id,
-      );
-      const updateItems = details.filter(
-        (i: any) => i.action === Action.UPDATE && i.id,
-      );
-      const deleteItems = details.filter(
-        (i: any) => i.action === Action.DELETE && i.id,
-      );
-
-      if (createItems.length > 0)
-        promises.push(
-          createChiTietManyMutation.mutateAsync(
-            createItems.map((i: any) => ({ ...i, idSuaChua: repairId })),
-          ),
-        );
-      if (updateItems.length > 0)
-        promises.push(
-          updateChiTietManyMutation.mutateAsync(
-            updateItems.map((i: any) => ({ ...i, idSuaChua: repairId })),
-          ),
-        );
-      if (deleteItems.length > 0)
-        promises.push(
-          deleteChiTietManyMutation.mutateAsync(
-            deleteItems.map((i: any) => i.id),
-          ),
-        );
-    }
-
-    if (variables.nguoiKyList && variables.nguoiKyList.length > 0) {
-      promises.push(
-        updateSignerMutation.mutateAsync({
-          idTaiLieu: repairId,
-          data: variables.nguoiKyList.map((item) => ({
-            ...item,
-            idTaiLieu: repairId,
-          })),
-        }),
-      );
-    }
-
-    await Promise.all(promises);
-  };
 
   // --- API SỬA CHỮA ---
   const createMutation = useMutation({
@@ -641,7 +543,6 @@ export const useMaintenanceRepairMutation = () => {
       ).data;
     },
     onSuccess: async (response, variables) => {
-      await handleUpdate(response, variables);
       queryClient.invalidateQueries({ queryKey: ["repairPage"] });
       queryClient.invalidateQueries({
         queryKey: ["maintenancePlanningDetailsByMonth"],
@@ -670,7 +571,6 @@ export const useMaintenanceRepairMutation = () => {
       ).data;
     },
     onSuccess: async (response, variables) => {
-      await handleUpdate(response, variables);
       queryClient.invalidateQueries({ queryKey: ["repairPage"] });
       queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
       queryClient.invalidateQueries({
