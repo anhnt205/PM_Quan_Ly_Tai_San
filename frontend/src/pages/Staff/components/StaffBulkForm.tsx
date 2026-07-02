@@ -232,7 +232,12 @@ export default function StaffBulkForm({
                         <Checkbox
                           name={`items.${index}.kyNhay`}
                           checked={item?.kyNhay || false}
-                          onChange={formik.handleChange}
+                          onChange={(e) =>
+                            formik.setFieldValue(
+                              `items.${index}.kyNhay`,
+                              e.target.checked,
+                            )
+                          }
                           sx={{
                             color: "#e2e8f0",
                             "&.Mui-checked": { color: "#0273a3" },
@@ -244,7 +249,12 @@ export default function StaffBulkForm({
                         <Checkbox
                           name={`items.${index}.kyThuong`}
                           checked={item?.kyThuong || false}
-                          onChange={formik.handleChange}
+                          onChange={(e) =>
+                            formik.setFieldValue(
+                              `items.${index}.kyThuong`,
+                              e.target.checked,
+                            )
+                          }
                           sx={{
                             color: "#e2e8f0",
                             "&.Mui-checked": { color: "#0273a3" },
@@ -256,7 +266,12 @@ export default function StaffBulkForm({
                         <Checkbox
                           name={`items.${index}.kySo`}
                           checked={item?.kySo || false}
-                          onChange={formik.handleChange}
+                          onChange={(e) =>
+                            formik.setFieldValue(
+                              `items.${index}.kySo`,
+                              e.target.checked,
+                            )
+                          }
                           sx={{
                             color: "#e2e8f0",
                             "&.Mui-checked": { color: "#0273a3" },

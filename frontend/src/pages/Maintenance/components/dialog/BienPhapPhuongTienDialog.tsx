@@ -397,9 +397,9 @@ const BienPhapPhuongTienDialog = ({
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: "1fr 380px",
+            gridTemplateColumns: "1fr 400px",
             gap: 3,
-            height: "100%",
+            // height: "100%",
           }}
         >
           {/* ── LEFT COLUMN: Input Fields and Parts Table ── */}

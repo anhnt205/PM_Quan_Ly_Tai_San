@@ -286,7 +286,7 @@ const BienPhapMayMocDialog = ({
             display: "grid",
             gridTemplateColumns: "1fr 400px",
             gap: 3,
-            height: "100%",
+            // height: "100%",
           }}
         >
           {/* ── LEFT: Form nhập liệu ── */}

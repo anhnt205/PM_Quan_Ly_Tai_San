@@ -407,7 +407,7 @@ const NghiemThuPhuongTienDialog = ({
             display: "grid",
             gridTemplateColumns: "1fr 380px",
             gap: 3,
-            height: "100%",
+            // height: "100%",
           }}
         >
           {/* ── LEFT COLUMN: Input Fields and Materials Table ── */}
