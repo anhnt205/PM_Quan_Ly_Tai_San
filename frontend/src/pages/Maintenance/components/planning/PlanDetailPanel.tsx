@@ -493,13 +493,17 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
   const { data: acceptanceTestVehicleByGiamDinhRecords = [] } =
     useMaintenanceAcceptanceVehicleByGiamDinhQuery(expandedInspections || "");
 
-  const acceptanceRecords =
+  const acceptanceRecordsRaw =
     plan?.nhomTaiSan === AssetGroup.MAYMOC
       ? [...acceptanceTestRecords, ...acceptanceTestByGiamDinhRecords]
       : [
           ...acceptanceTestVehicleRecords,
           ...acceptanceTestVehicleByGiamDinhRecords,
         ];
+
+  const acceptanceRecords = Array.from(
+    new Map(acceptanceRecordsRaw.map((item: any) => [item.id, item])).values()
+  );
 
   const { data: materialQualityRecords = [] } =
     useMaintenanceMaterialAssessmentByInspectionQuery(
@@ -1219,7 +1223,8 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                                       const bpAcceptances =
                                         acceptanceRecords.filter(
                                           (a: any) =>
-                                            a.idBienPhapMayMoc === bp.id,
+                                            a.idBienPhapMayMoc === bp.id ||
+                                            a.idBienPhapPhuongTien === bp.id,
                                         );
 
                                       return (
@@ -1341,7 +1346,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
 
                                           {/* Depth 4: BB Nghiệm thu */}
                                           {isBPExpanded &&
-                                            acceptanceRecords.map(
+                                            bpAcceptances.map(
                                               (acc: any, accIdx: number) => {
                                                 const isAccLast =
                                                   accIdx ===

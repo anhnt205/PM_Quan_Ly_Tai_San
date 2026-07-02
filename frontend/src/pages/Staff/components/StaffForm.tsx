@@ -273,7 +273,11 @@ export default function StaffForm({
               <Checkbox
                 name="kyNhay"
                 checked={formik.values.kyNhay}
-                onChange={!readOnly ? formik.handleChange : undefined}
+                onChange={
+                  !readOnly
+                    ? (e) => formik.setFieldValue("kyNhay", e.target.checked)
+                    : undefined
+                }
                 disabled={readOnly}
                 sx={{
                   color: "#e2e8f0",
@@ -317,7 +321,11 @@ export default function StaffForm({
               <Checkbox
                 name="kyThuong"
                 checked={formik.values.kyThuong}
-                onChange={!readOnly ? formik.handleChange : undefined}
+                onChange={
+                  !readOnly
+                    ? (e) => formik.setFieldValue("kyThuong", e.target.checked)
+                    : undefined
+                }
                 disabled={readOnly}
                 sx={{
                   color: "#e2e8f0",
@@ -351,7 +359,11 @@ export default function StaffForm({
               <Checkbox
                 name="kySo"
                 checked={formik.values.kySo}
-                onChange={!readOnly ? formik.handleChange : undefined}
+                onChange={
+                  !readOnly
+                    ? (e) => formik.setFieldValue("kySo", e.target.checked)
+                    : undefined
+                }
                 disabled={readOnly}
                 sx={{
                   color: "#e2e8f0",
