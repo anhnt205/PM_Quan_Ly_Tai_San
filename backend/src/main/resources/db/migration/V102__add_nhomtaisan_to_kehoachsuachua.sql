@@ -1,0 +1,1 @@
+ALTER TABLE kehoachsuachua ADD COLUMN NhomTaiSan VARCHAR(50) NULL;

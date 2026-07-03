@@ -1,0 +1,62 @@
+[
+    {
+        "id": "1",
+        "code": "NV001",
+        "name": "Nguyễn Tuấn Đạt",
+        "phone": "0987654321",
+        "email": "dat@gmail.com",
+        "department": "1",
+        "position": "2",
+        "isFlashSign": true,
+        "isNormalSign": true,
+        "isDigitalSign": true
+    },
+    {
+        "id": "2",
+        "code": "NV002",
+        "name": "Trần Hoàng Anh",
+        "phone": "0977622522",
+        "email": "anhth@gmail.com",
+        "department": "1",
+        "position": "3",
+        "isFlashSign": false,
+        "isNormalSign": true,
+        "isDigitalSign": false
+    },
+    {
+        "id": "3",
+        "code": "NV003",
+        "name": "Lê Văn Minh",
+        "phone": "0912345678",
+        "email": "minhlv@gmail.com",
+        "department": "2",
+        "position": "2",
+        "isFlashSign": true,
+        "isNormalSign": false,
+        "isDigitalSign": true
+    },
+    {
+        "id": "4",
+        "code": "NV004",
+        "name": "Phạm Thị Hương",
+        "phone": "0909988776",
+        "email": "huongpt@gmail.com",
+        "department": "2",
+        "position": "4",
+        "isFlashSign": false,
+        "isNormalSign": true,
+        "isDigitalSign": true
+    },
+    {
+        "id": "5",
+        "code": "NV005",
+        "name": "Đỗ Quốc Khánh",
+        "phone": "0933555666",
+        "email": "khanhdq@gmail.com",
+        "department": "3",
+        "position": "5",
+        "isFlashSign": true,
+        "isNormalSign": true,
+        "isDigitalSign": false
+    }
+]

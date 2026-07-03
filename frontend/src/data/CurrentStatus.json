@@ -1,0 +1,27 @@
+[
+  {
+    "id": "1",
+    "code": "1",
+    "name": "Đang sử dụng"
+  },
+  {
+    "id": "2",
+    "code": "2",
+    "name": "Chờ thanh lý"
+  },
+  {
+    "id": "3",
+    "code": "3",
+    "name": "Chưa sử dụng"
+  },
+  {
+    "id": "4",
+    "code": "4",
+    "name": "Ngừng khấu hao"
+  },
+  {
+    "id": "5",
+    "code": "5",
+    "name": "Thanh lý"
+  }
+]

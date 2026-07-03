@@ -1,0 +1,422 @@
+{
+  "info": {
+    "name": "TaiSanController",
+    "description": "API collection for TaiSan management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get All TaiSan",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/taisan?idcongty={{idcongty}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taisan"],
+          "query": [
+            {
+              "key": "idcongty",
+              "value": "{{idcongty}}",
+              "description": "ID của công ty"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get TaiSan by Loai",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/taisan/loaitaisan/?idloataisan={{idloataisan}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taisan", "loaitaisan", ""],
+          "query": [
+            {
+              "key": "idloataisan",
+              "value": "{{idloataisan}}",
+              "description": "ID của loại tài sản"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get TaiSan by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/taisan/{{id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taisan", "{{id}}"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "TS001"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create TaiSan",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"TS001\",\n  \"idLoaiTaiSan\": \"LTS001\",\n  \"tenTaiSan\": \"Máy tính Dell\",\n  \"nguyenGia\": 15000000.0,\n  \"giaTriKhauHaoBanDau\": 15000000.0,\n  \"kyKhauHaoBanDau\": 12,\n  \"giaTriThanhLy\": 1000000.0,\n  \"idMoHinhTaiSan\": \"MHTS001\",\n  \"phuongPhapKhauHao\": 1,\n  \"soKyKhauHao\": 36,\n  \"taiKhoanTaiSan\": 211,\n  \"taiKhoanKhauHao\": 214,\n  \"taiKhoanChiPhi\": 642,\n  \"idNhomTaiSan\": \"NTS001\",\n  \"ngayVaoSo\": \"2024-01-01T00:00:00\",\n  \"ngaySuDung\": \"2024-01-01T00:00:00\",\n  \"idDuDan\": \"DA001\",\n  \"idNguonVon\": \"NV001\",\n  \"kyHieu\": \"DELL001\",\n  \"soKyHieu\": \"S001\",\n  \"congSuat\": \"500W\",\n  \"nuocSanXuat\": \"Trung Quốc\",\n  \"namSanXuat\": 2023,\n  \"lyDoTang\": 1,\n  \"hienTrang\": 1,\n  \"soLuong\": 1,\n  \"donViTinh\": \"Cái\",\n  \"ghiChu\": \"Máy tính văn phòng\",\n  \"idDonViBanDau\": \"DV001\",\n  \"idDonViHienThoi\": \"DV001\",\n  \"moTa\": \"Máy tính Dell OptiPlex\",\n  \"idCongTy\": \"CT001\",\n  \"ngayTao\": \"2024-01-01T00:00:00\",\n  \"ngayCapNhat\": \"2024-01-01T00:00:00\",\n  \"nguoiTao\": \"admin\",\n  \"nguoiCapNhat\": \"admin\",\n  \"isActive\": true,\n  \"isTaiSanCon\": false\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/taisan",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taisan"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Batch TaiSan",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  {\n    \"id\": \"TS001\",\n    \"idLoaiTaiSan\": \"LTS001\",\n    \"tenTaiSan\": \"Máy tính Dell\",\n    \"nguyenGia\": 15000000.0,\n    \"giaTriKhauHaoBanDau\": 15000000.0,\n    \"kyKhauHaoBanDau\": 12,\n    \"giaTriThanhLy\": 1000000.0,\n    \"idMoHinhTaiSan\": \"MHTS001\",\n    \"phuongPhapKhauHao\": 1,\n    \"soKyKhauHao\": 36,\n    \"taiKhoanTaiSan\": 211,\n    \"taiKhoanKhauHao\": 214,\n    \"taiKhoanChiPhi\": 642,\n    \"idNhomTaiSan\": \"NTS001\",\n    \"ngayVaoSo\": \"2024-01-01T00:00:00\",\n    \"ngaySuDung\": \"2024-01-01T00:00:00\",\n    \"idDuDan\": \"DA001\",\n    \"idNguonVon\": \"NV001\",\n    \"kyHieu\": \"DELL001\",\n    \"soKyHieu\": \"S001\",\n    \"congSuat\": \"500W\",\n    \"nuocSanXuat\": \"Trung Quốc\",\n    \"namSanXuat\": 2023,\n    \"lyDoTang\": 1,\n    \"hienTrang\": 1,\n    \"soLuong\": 1,\n    \"donViTinh\": \"Cái\",\n    \"ghiChu\": \"Máy tính văn phòng\",\n    \"idDonViBanDau\": \"DV001\",\n    \"idDonViHienThoi\": \"DV001\",\n    \"moTa\": \"Máy tính Dell OptiPlex\",\n    \"idCongTy\": \"CT001\",\n    \"ngayTao\": \"2024-01-01T00:00:00\",\n    \"ngayCapNhat\": \"2024-01-01T00:00:00\",\n    \"nguoiTao\": \"admin\",\n    \"nguoiCapNhat\": \"admin\",\n    \"isActive\": true,\n    \"isTaiSanCon\": false\n  }\n]"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/taisan/batch",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taisan", "batch"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update TaiSan",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"TS001\",\n  \"idLoaiTaiSan\": \"LTS001\",\n  \"tenTaiSan\": \"Máy tính Dell Updated\",\n  \"nguyenGia\": 16000000.0,\n  \"giaTriKhauHaoBanDau\": 16000000.0,\n  \"kyKhauHaoBanDau\": 12,\n  \"giaTriThanhLy\": 1000000.0,\n  \"idMoHinhTaiSan\": \"MHTS001\",\n  \"phuongPhapKhauHao\": 1,\n  \"soKyKhauHao\": 36,\n  \"taiKhoanTaiSan\": 211,\n  \"taiKhoanKhauHao\": 214,\n  \"taiKhoanChiPhi\": 642,\n  \"idNhomTaiSan\": \"NTS001\",\n  \"ngayVaoSo\": \"2024-01-01T00:00:00\",\n  \"ngaySuDung\": \"2024-01-01T00:00:00\",\n  \"idDuDan\": \"DA001\",\n  \"idNguonVon\": \"NV001\",\n  \"kyHieu\": \"DELL001\",\n  \"soKyHieu\": \"S001\",\n  \"congSuat\": \"500W\",\n  \"nuocSanXuat\": \"Trung Quốc\",\n  \"namSanXuat\": 2023,\n  \"lyDoTang\": 1,\n  \"hienTrang\": 1,\n  \"soLuong\": 1,\n  \"donViTinh\": \"Cái\",\n  \"ghiChu\": \"Máy tính văn phòng đã cập nhật\",\n  \"idDonViBanDau\": \"DV001\",\n  \"idDonViHienThoi\": \"DV001\",\n  \"moTa\": \"Máy tính Dell OptiPlex\",\n  \"idCongTy\": \"CT001\",\n  \"ngayTao\": \"2024-01-01T00:00:00\",\n  \"ngayCapNhat\": \"2024-01-01T00:00:00\",\n  \"nguoiTao\": \"admin\",\n  \"nguoiCapNhat\": \"admin\",\n  \"isActive\": true,\n  \"isTaiSanCon\": false\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/taisan/{{id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taisan", "{{id}}"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "TS001"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Don Vi TaiSan",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  {\n    \"id\": \"TS001\",\n    \"idDonViHienThoi\": \"DV002\"\n  },\n  {\n    \"id\": \"TS002\",\n    \"idDonViHienThoi\": \"DV003\"\n  }\n]"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/taisan/updatedonvi",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taisan", "updatedonvi"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Tai San Con Tai San",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  {\n    \"idTaiSan\": \"TS001\",\n    \"idTaiSanCon\": \"TSC001\",\n    \"trangThai\": 1\n  }\n]"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/taisan/update-tai-san/tai-san-con",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taisan", "update-tai-san", "tai-san-con"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete TaiSan",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/taisan/{{id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taisan", "{{id}}"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "TS001"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Batch TaiSan",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\"TS001\", \"TS002\"]"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/taisan/batch",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taisan", "batch"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create TaiSanCon",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"TSC001\",\n  \"idTaiSan\": \"TS001\",\n  \"tenTaiSanCon\": \"Màn hình Dell\",\n  \"soLuong\": 1,\n  \"donViTinh\": \"Cái\",\n  \"giaTri\": 5000000.0,\n  \"ghiChu\": \"Màn hình đi kèm máy tính\",\n  \"trangThai\": 1,\n  \"ngayTao\": \"2024-01-01T00:00:00\",\n  \"ngayCapNhat\": \"2024-01-01T00:00:00\",\n  \"nguoiTao\": \"admin\",\n  \"nguoiCapNhat\": \"admin\",\n  \"isActive\": true\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/taisan/taisancon/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taisan", "taisancon", ""]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Batch TaiSanCon",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  {\n    \"id\": \"TSC001\",\n    \"idTaiSan\": \"TS001\",\n    \"tenTaiSanCon\": \"Màn hình Dell\",\n    \"soLuong\": 1,\n    \"donViTinh\": \"Cái\",\n    \"giaTri\": 5000000.0,\n    \"ghiChu\": \"Màn hình đi kèm máy tính\",\n    \"trangThai\": 1,\n    \"ngayTao\": \"2024-01-01T00:00:00\",\n    \"ngayCapNhat\": \"2024-01-01T00:00:00\",\n    \"nguoiTao\": \"admin\",\n    \"nguoiCapNhat\": \"admin\",\n    \"isActive\": true\n  }\n]"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/taisan/taisancon/bulk",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taisan", "taisancon", "bulk"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update TaiSanCon",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"TSC001\",\n  \"idTaiSan\": \"TS001\",\n  \"tenTaiSanCon\": \"Màn hình Dell Updated\",\n  \"soLuong\": 2,\n  \"donViTinh\": \"Cái\",\n  \"giaTri\": 6000000.0,\n  \"ghiChu\": \"Màn hình đi kèm máy tính đã cập nhật\",\n  \"trangThai\": 1,\n  \"ngayTao\": \"2024-01-01T00:00:00\",\n  \"ngayCapNhat\": \"2024-01-01T00:00:00\",\n  \"nguoiTao\": \"admin\",\n  \"nguoiCapNhat\": \"admin\",\n  \"isActive\": true\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/taisan/taisancon/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taisan", "taisancon", ""]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get TaiSanCon by TaiSan",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/taisan/taisancon/{{idTaiSan}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taisan", "taisancon", "{{idTaiSan}}"],
+          "variable": [
+            {
+              "key": "idTaiSan",
+              "value": "TS001"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get All TaiSanCon",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/taisan/taisancon/getall",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taisan", "taisancon", "getall"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete TaiSanCon",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/taisan/taisancon/?idTaiSanCon={{idTaiSanCon}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taisan", "taisancon", ""],
+          "query": [
+            {
+              "key": "idTaiSanCon",
+              "value": "{{idTaiSanCon}}",
+              "description": "ID của tài sản con"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Khau Hao Tai San",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/taisan/khauhaotaisan?idcongty={{idcongty}}&thang={{thang}}&nam={{nam}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taisan", "khauhaotaisan"],
+          "query": [
+            {
+              "key": "idcongty",
+              "value": "{{idcongty}}",
+              "description": "ID của công ty"
+            },
+            {
+              "key": "thang",
+              "value": "{{thang}}",
+              "description": "Tháng"
+            },
+            {
+              "key": "nam",
+              "value": "{{nam}}",
+              "description": "Năm"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Upload File TaiSan",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "path/to/file.csv"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/taisan/upload",
+          "host": ["{{base_url}}"],
+          "path": ["api", "taisan", "upload"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "idcongty",
+      "value": "CT001"
+    },
+    {
+      "key": "idloataisan",
+      "value": "LTS001"
+    },
+    {
+      "key": "idTaiSanCon",
+      "value": "TSC001"
+    },
+    {
+      "key": "thang",
+      "value": "1"
+    },
+    {
+      "key": "nam",
+      "value": "2024"
+    }
+  ]
+}

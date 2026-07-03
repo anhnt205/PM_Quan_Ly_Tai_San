@@ -1,0 +1,47 @@
+[
+    {
+        "id": "1",
+        "code": "001",
+        "name": "Thợ lò, nhóm trưởng",
+        "manager_staff": true,
+        "manager_department": true,
+        "manager_project": true,
+        "manager_capital_source": true
+    },
+    {
+        "id": "2",
+        "code": "002",
+        "name": "Giám đốc",
+        "manager_staff": true,
+        "manager_department": true,
+        "manager_project": true,
+        "manager_capital_source": true
+    },
+    {
+        "id": "3",
+        "code": "003",
+        "name": "Phó giám đốc",
+        "manager_staff": true,
+        "manager_department": true,
+        "manager_project": true,
+        "manager_capital_source": true
+    },
+    {
+        "id": "4",
+        "code": "004",
+        "name": "Kế toán trưởng",
+        "manager_staff": true,
+        "manager_department": true,
+        "manager_project": true,
+        "manager_capital_source": true
+    },
+    {
+        "id": "5",
+        "code": "005",
+        "name": "Chủ tịch công đoàn công ty",
+        "manager_staff": true,
+        "manager_department": true,
+        "manager_project": true,
+        "manager_capital_source": true
+    }
+]

@@ -1,0 +1,2 @@
+ALTER TABLE DbConfig ADD IsDefault BIT DEFAULT 0;
+ALTER TABLE DbConfig ADD SyncIntervalHours INT DEFAULT 0;

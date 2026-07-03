@@ -1,0 +1,307 @@
+{
+	"info": {
+		"_postman_id": "loaiccdccon-controller",
+		"name": "LoaiCCDCCon Controller API",
+		"description": "API collection for LoaiCCDCCon CRUD operations",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get All LoaiCCDCCon",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/loaiccdccon",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"loaiccdccon"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get LoaiCCDCCon By ID",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/loaiccdccon/{{loaiccdcconId}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"loaiccdccon",
+						"{{loaiccdcconId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get LoaiCCDCCon By IdLoaiCCDC",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/loaiccdccon/byloaiccdc/{{idLoaiCCDC}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"loaiccdccon",
+						"byloaiccdc",
+						"{{idLoaiCCDC}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create LoaiCCDCCon",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"id\": \"CCDC_CON_001\",\n  \"idLoaiCCDC\": \"CCDC_001\",\n  \"tenLoaiCCDCCon\": \"Bút bi\",\n  \"moTa\": \"Bút bi cho nhân viên văn phòng\",\n  \"isActive\": true\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/loaiccdccon",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"loaiccdccon"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Batch LoaiCCDCCon",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n  {\n    \"id\": \"CCDC_CON_002\",\n    \"idLoaiCCDC\": \"CCDC_001\",\n    \"tenLoaiCCDCCon\": \"Bút chì\",\n    \"moTa\": \"Bút chì cho nhân viên văn phòng\",\n    \"isActive\": true\n  },\n  {\n    \"id\": \"CCDC_CON_003\",\n    \"idLoaiCCDC\": \"CCDC_001\",\n    \"tenLoaiCCDCCon\": \"Tẩy\",\n    \"moTa\": \"Tẩy cho nhân viên văn phòng\",\n    \"isActive\": true\n  }\n]"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/loaiccdccon/batch",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"loaiccdccon",
+						"batch"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update LoaiCCDCCon",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"idLoaiCCDC\": \"CCDC_001\",\n  \"tenLoaiCCDCCon\": \"Bút bi cập nhật\",\n  \"moTa\": \"Bút bi cho nhân viên văn phòng - đã cập nhật\",\n  \"isActive\": true\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/loaiccdccon/{{loaiccdcconId}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"loaiccdccon",
+						"{{loaiccdcconId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete LoaiCCDCCon",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/loaiccdccon/{{loaiccdcconId}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"loaiccdccon",
+						"{{loaiccdcconId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Batch LoaiCCDCCon",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n  \"CCDC_CON_002\",\n  \"CCDC_CON_003\"\n]"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/loaiccdccon/batch",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"loaiccdccon",
+						"batch"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "USER123",
+			"type": "string"
+		},
+		{
+			"key": "loaiccdcconId",
+			"value": "CCDC_CON_001",
+			"type": "string"
+		},
+		{
+			"key": "idLoaiCCDC",
+			"value": "CCDC_001",
+			"type": "string"
+		}
+	]
+}

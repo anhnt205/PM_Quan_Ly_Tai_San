@@ -1,0 +1,208 @@
+{
+	"info": {
+		"_postman_id": "nguonkinhphi-controller",
+		"name": "NguonKinhPhiController",
+		"description": "API collection for NguonKinhPhi management",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get All NguonKinhPhi",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/nguonkinhphi",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"nguonkinhphi"
+					]
+				}
+			}
+		},
+		{
+			"name": "Get NguonKinhPhi by ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/nguonkinhphi/{{id}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"nguonkinhphi",
+						"{{id}}"
+					]
+				}
+			}
+		},
+		{
+			"name": "Create NguonKinhPhi",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"id\": \"nkp001\",\n    \"ten\": \"Nguồn kinh phí 1\",\n    \"note\": \"Ghi chú nguồn kinh phí\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/nguonkinhphi",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"nguonkinhphi"
+					]
+				}
+			}
+		},
+		{
+			"name": "Create Batch NguonKinhPhi",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    {\n        \"id\": \"nkp001\",\n        \"ten\": \"Nguồn kinh phí 1\",\n        \"note\": \"Ghi chú nguồn kinh phí 1\"\n    },\n    {\n        \"id\": \"nkp002\",\n        \"ten\": \"Nguồn kinh phí 2\",\n        \"note\": \"Ghi chú nguồn kinh phí 2\"\n    }\n]"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/nguonkinhphi/batch",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"nguonkinhphi",
+						"batch"
+					]
+				}
+			}
+		},
+		{
+			"name": "Update NguonKinhPhi",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"ten\": \"Nguồn kinh phí đã cập nhật\",\n    \"note\": \"Ghi chú đã cập nhật\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/nguonkinhphi/{{id}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"nguonkinhphi",
+						"{{id}}"
+					]
+				}
+			}
+		},
+		{
+			"name": "Delete NguonKinhPhi",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/nguonkinhphi/{{id}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"nguonkinhphi",
+						"{{id}}"
+					]
+				}
+			}
+		},
+		{
+			"name": "Delete Batch NguonKinhPhi",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\"nkp001\", \"nkp002\"]"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/nguonkinhphi/batch",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"nguonkinhphi",
+						"batch"
+					]
+				}
+			}
+		},
+		{
+			"name": "Upload NguonKinhPhi File",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": []
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/nguonkinhphi/upload",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"nguonkinhphi",
+						"upload"
+					]
+				}
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "id",
+			"value": "nkp001"
+		}
+	]
+}

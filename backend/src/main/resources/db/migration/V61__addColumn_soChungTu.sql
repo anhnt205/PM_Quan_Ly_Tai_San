@@ -1,0 +1,1 @@
+ALTER TABLE ChiTietDonViSoHuu ADD SoChungTu VARCHAR(50);

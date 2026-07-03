@@ -1,0 +1,3 @@
+ALTER TABLE Config
+    ADD COLUMN NgayBaoDangKiem INTEGER,
+    ADD COLUMN NgayBaoHetHan INTEGER

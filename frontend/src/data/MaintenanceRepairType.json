@@ -1,0 +1,22 @@
+[
+  {
+    "id": "SC001",
+    "ten": "Bảo dưỡng định kỳ"
+  },
+  {
+    "id": "SC002",
+    "ten": "Sửa chữa đột xuất"
+  },
+  {
+    "id": "SC003",
+    "ten": "Đại tu"
+  },
+  {
+    "id": "SC004",
+    "ten": "Khắc phục sự cố"
+  },
+  {
+    "id": "SC005",
+    "ten": "Khác"
+  }
+]

@@ -1,0 +1,1 @@
+ALTER TABLE TaiSan DROP COLUMN trangThaiKiemDinh;

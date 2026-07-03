@@ -1,0 +1,3 @@
+id,tenNguonKinhPhi,ghiChu,hieuLuc,idCongTy,ngayTao,ngayCapNhat,nguoiTao,nguoiCapNhat,isActive
+NV01,Ngân sách Nhà nước,Kinh phí cấp từ ngân sách,true,CT01,2025-09-06 08:30:00,2025-09-06 09:00:00,admin,system,true
+NV02,Tài trợ doanh nghiệp,Hỗ trợ từ doanh nghiệp,false,CT01,2025-09-06 09:15:00,2025-09-06 09:45:00,admin,system,true

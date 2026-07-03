@@ -1,0 +1,42 @@
+[
+    {
+        "id": "1",
+        "code": "NV001",
+        "name": "Ngân sách",
+        "note": "Nguồn vốn phân bổ theo ngân sách",
+        "active": true,
+        "status": false
+    },
+    {
+        "id": "2",
+        "code": "NV002",
+        "name": "Nguồn vốn khác",
+        "note": "Khác",
+        "active": false,
+        "status": true
+    },
+    {
+        "id": "3",
+        "code": "NV003",
+        "name": "Vốn tự bổ sung",
+        "note": "Vốn đầu tư được duyệt hàng năm",
+        "active": true,
+        "status": false
+    },
+    {
+        "id": "4",
+        "code": "NV004",
+        "name": "Vốn vay",
+        "note": "Cho dự án phát triển khai thác than mới",
+        "active": false,
+        "status": true
+    },
+    {
+        "id": "5",
+        "code": "NV005",
+        "name": "Vốn vay",
+        "note": "Cho dự án phát triển khai thác than mới",
+        "active": true,
+        "status": false
+    }
+]

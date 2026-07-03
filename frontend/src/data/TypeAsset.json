@@ -1,0 +1,14 @@
+[
+    {
+        "id": "1",
+        "code": "MMTB_BA",
+        "assetParent": "5",
+        "name": "Trạm biến áp"
+    },
+    {
+        "id": "2",
+        "code": "MMTB_CD",
+        "assetParent": "3",
+        "name": "Cầu dao"
+    }
+]

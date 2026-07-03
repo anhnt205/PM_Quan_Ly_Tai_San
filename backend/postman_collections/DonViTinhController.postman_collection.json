@@ -1,0 +1,171 @@
+{
+  "info": {
+    "name": "DonViTinhController",
+    "description": "API collection for DonViTinh management - Quản lý đơn vị tính",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get All DonViTinh",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/donvitinh",
+          "host": ["{{base_url}}"],
+          "path": ["api", "donvitinh"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get DonViTinh by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/donvitinh/{{id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "donvitinh", "{{id}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create DonViTinh",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"DVT001\",\n  \"tenDonVi\": \"Cái\",\n  \"note\": \"Đơn vị tính cơ bản\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/donvitinh",
+          "host": ["{{base_url}}"],
+          "path": ["api", "donvitinh"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Batch DonViTinh",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  {\n    \"id\": \"DVT001\",\n    \"tenDonVi\": \"Cái\",\n    \"note\": \"Đơn vị tính cơ bản\"\n  },\n  {\n    \"id\": \"DVT002\",\n    \"tenDonVi\": \"Bộ\",\n    \"note\": \"Đơn vị tính cho bộ sản phẩm\"\n  }\n]"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/donvitinh/batch",
+          "host": ["{{base_url}}"],
+          "path": ["api", "donvitinh", "batch"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update DonViTinh",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tenDonVi\": \"Cái (Cập nhật)\",\n  \"note\": \"Đơn vị tính cơ bản - đã cập nhật\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/donvitinh/{{id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "donvitinh", "{{id}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete DonViTinh",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/donvitinh/{{id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "donvitinh", "{{id}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Batch DonViTinh",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\"DVT001\", \"DVT002\"]"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/donvitinh/batch",
+          "host": ["{{base_url}}"],
+          "path": ["api", "donvitinh", "batch"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Upload File DonViTinh",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": []
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/donvitinh/upload",
+          "host": ["{{base_url}}"],
+          "path": ["api", "donvitinh", "upload"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "description": "Base URL của API server"
+    },
+    {
+      "key": "id",
+      "value": "DVT001",
+      "description": "ID của đơn vị tính mặc định"
+    }
+  ]
+}

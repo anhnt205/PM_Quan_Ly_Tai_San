@@ -1,0 +1,20 @@
+CREATE TABLE giohoatdong (
+                             Id VARCHAR(50) PRIMARY KEY COMMENT 'ID tự sinh (UUID)',
+                             IdTaiSan VARCHAR(50) NOT NULL COMMENT 'ID tài sản (FK tới taisan.Id)',
+                             Nam INT NOT NULL COMMENT 'Năm',
+                             Thang INT NOT NULL COMMENT 'Tháng (1-12)',
+                             GioHoatDong FLOAT DEFAULT 0 COMMENT 'Giờ hoạt động',
+                             GioSauSCL FLOAT DEFAULT 0 COMMENT 'Giờ sau SCL',
+                             GioSauBcc FLOAT DEFAULT 0 COMMENT 'Giờ sau BCC',
+                             NgaySCT_Vao VARCHAR(20) COMMENT 'Ngày SCT vào',
+                             NgaySCT_Ra VARCHAR(20) COMMENT 'Ngày SCT ra',
+                             NgayBcc_Vao VARCHAR(20) COMMENT 'Ngày BCC vào',
+                             NgayBcc_Ra VARCHAR(20) COMMENT 'Ngày BCC ra',
+                             SoLanBaoDuongCapI INT DEFAULT 0 COMMENT 'Số lần bảo dưỡng cấp I',
+                             SoLanBaoDuongCapII INT DEFAULT 0 COMMENT 'Số lần bảo dưỡng cấp II',
+                             GhiChu TEXT COMMENT 'Ghi chú',
+                             NgayTao VARCHAR(30) COMMENT 'Ngày tạo',
+                             NgayCapNhat VARCHAR(30) COMMENT 'Ngày cập nhật',
+                             INDEX idx_taisan_nam_thang (IdTaiSan, Nam, Thang),
+                             CONSTRAINT fk_giohoatdong_taisan FOREIGN KEY (IdTaiSan) REFERENCES taisan(Id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

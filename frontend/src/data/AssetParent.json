@@ -1,0 +1,22 @@
+[
+    {
+        "id": "1",
+        "name": "Nhà cửa"
+    },
+    {
+        "id": "2",
+        "name": "Vật kiến trúc"
+    },
+    {
+        "id": "3",
+        "name": "Máy móc thiết bị"
+    },
+    {
+        "id": "4",
+        "name": "Máy móc thiết bị công tác"
+    },
+    {
+        "id": "5",
+        "name": "Máy móc thiết bị động lực"
+    }
+]

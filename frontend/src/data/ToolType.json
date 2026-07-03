@@ -1,0 +1,14 @@
+[
+    {
+        "id": "1",
+        "code": "CL1",
+        "toolGroup": "5",
+        "name": "Ghế xoay"
+    },
+    {
+        "id": "2",
+        "code": "CL2",
+        "toolGroup": "3",
+        "name": "Bàn làm việc"
+    }
+]

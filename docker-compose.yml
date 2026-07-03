@@ -1,0 +1,43 @@
+services:
+  qlts_reverse_proxy_service:
+    image: qlts_reverse_proxy_img
+    build:
+      context: ./reverse_proxy
+    ports:
+      # HOST_PORT:CONTAINER_PORT
+      - "8888:8888"
+    stdin_open: true
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+    networks:
+      - backnet
+      - frontnet
+    depends_on:
+      - qlts_frontend_service
+
+
+  qlts_frontend_service:
+    env_file:
+      - ./frontend/.env
+    image: qlts_frontend_img
+    build:
+      context: ./frontend
+    # target: development
+    stdin_open: true
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+    volumes:
+      # For development only, to synced src code to container
+      - /usr/src/app/node_modules
+    # restart: always
+    networks:
+      - frontnet
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "30"
+
+
+networks:
+  frontnet:
