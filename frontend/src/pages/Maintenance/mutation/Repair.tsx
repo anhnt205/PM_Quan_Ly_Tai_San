@@ -1,0 +1,211 @@
+// API sửa chữa
+
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { MaintenanceRepairData, PlanSigner } from "../types";
+import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
+import api from "../../../config/api.config";
+import { useSelector } from "react-redux";
+import { RepairAdapter } from "../Adapter";
+import { CongTy } from "../../../utils/const";
+import dayjs from "dayjs";
+
+export const useMaintenanceRepairPageQuery = (
+  page?: number,
+  pageSize?: number,
+  searchValue?: string,
+  trangThai?: number,
+  idDonViGiao?: string,
+  userid?: string,
+  isSign?: boolean,
+  dateFrom?: string,
+  dateTo?: string,
+  enabled = true,
+) => {
+  return useQuery({
+    queryKey: [
+      "repairPage",
+      page,
+      pageSize,
+      searchValue,
+      trangThai,
+      idDonViGiao,
+      userid,
+      isSign,
+      dateFrom,
+      dateTo,
+    ],
+    queryFn: async () => {
+      const res = await api.get("/suachua/paged", {
+        params: {
+          page: page,
+          size: pageSize,
+          idCongTy: CongTy.CT001,
+          search: searchValue,
+          trangThai: trangThai,
+          userid: userid,
+          isSign: isSign,
+          dateFrom: dateFrom,
+          dateTo: dateTo,
+        },
+      });
+      return res.data.data || res.data;
+    },
+    placeholderData: (previousData) => previousData,
+    enabled,
+  });
+};
+export const useMaintenanceRepairByPlanQuery = (idKeHoach?: string) => {
+  return useQuery({
+    queryKey: ["repairByPlan", idKeHoach],
+    queryFn: async () => {
+      const res = await api.get(`/suachua/kehoach/${idKeHoach}`);
+      return (res.data.data || res.data || []).map((item: any) =>
+        RepairAdapter(item),
+      );
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};
+export const useMaintenanceRepairMutation = () => {
+  const queryClient = useQueryClient();
+  const now = dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss");
+  const { user } = useSelector((state: any) => state.user);
+
+  // --- API SỬA CHỮA ---
+  const createMutation = useMutation({
+    mutationFn: async (data: MaintenanceRepairData) => {
+      return (
+        await api.post("/suachua", {
+          ...data,
+          nguoiTao: user?.taiKhoan?.tenDangNhap,
+          ngayTao: now,
+        })
+      ).data;
+    },
+    onSuccess: async (response, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["repairPage"] });
+      queryClient.invalidateQueries({
+        queryKey: ["maintenancePlanningDetailsByMonth"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["incidentDetailByIncident"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
+      showSuccessAlert("Tạo giấy đề nghị sửa chữa thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message || "Tạo giấy đề nghị sửa chữa thất bại",
+      );
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: MaintenanceRepairData) => {
+      return (
+        await api.put(`/suachua/${data.id}`, {
+          ...data,
+          ngayCapNhat: now,
+          nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
+        })
+      ).data;
+    },
+    onSuccess: async (response, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["repairPage"] });
+      queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
+      queryClient.invalidateQueries({
+        queryKey: ["maintenancePlanningDetailsByMonth"],
+      });
+
+      showSuccessAlert("Cập nhật giấy đề nghị thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message || "Cập nhật giấy đề nghị thất bại",
+      );
+    },
+  });
+
+  const updateManyMutation = useMutation({
+    mutationFn: async (data: MaintenanceRepairData[]) => {
+      const res = await api.put(
+        `/suachua/batch`,
+        data.map((i) => ({
+          ...i,
+          ngayCapNhat: now,
+          nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
+        })),
+      );
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({ queryKey: ["repairPage"] });
+      console.log("Sửa giấy đề nghị thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Sửa giấy đề nghị thất bại",
+      );
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (data: MaintenanceRepairData) => {
+      return (await api.delete(`/suachua/${data.id}`)).data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["repairPage"] });
+      queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
+      queryClient.invalidateQueries({
+        queryKey: ["maintenancePlanningDetailsByMonth"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["maintenancePlanningDetailsByMonth"],
+      });
+      showSuccessAlert("Xóa giấy đề nghị thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message || "Xóa giấy đề nghị thất bại",
+      );
+    },
+  });
+
+  // người kí
+  const updateSignerMutation = useMutation({
+    mutationFn: async ({
+      idTaiLieu,
+      data,
+    }: {
+      idTaiLieu: string;
+      data: PlanSigner[];
+    }) => {
+      const res = await api.put(`/chuky/nguoi-ky/update/${idTaiLieu}`, data);
+      return res.data;
+    },
+    onSuccess: (response, data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["repairPage"],
+      });
+
+      console.log("Cập nhật người ký thành công");
+    },
+    onError: (error: any) => {
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "Cập nhật người ký thất bại",
+      );
+    },
+  });
+
+  return {
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    updateManyMutation,
+    updateSignerMutation,
+  };
+};

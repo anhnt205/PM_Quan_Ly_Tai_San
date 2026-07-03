@@ -26,7 +26,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { useSelector } from "react-redux";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
-import { useBienPhapPhuongTienMutation } from "../../mutation/bienPhapPhuongTien";
+import { useBienPhapPhuongTienMutation } from "../../mutation/VehicleMeasure";
 import {
   BienPhapPhuongTienData,
   BienPhapPhuongTienChiTietData,

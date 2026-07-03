@@ -16,7 +16,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useSelector } from "react-redux";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
-import { useBienPhapMayMocMutation } from "../../mutation/bienPhapMayMoc";
+import { useBienPhapMayMocMutation } from "../../mutation/MachineMeasure";
 import { BienPhapMayMocData } from "../../types";
 import { CongTy, LOAI_BIEN_BAN_TYPE } from "../../../../utils/const";
 import { generateCode } from "../../../../utils/helpers";
@@ -63,7 +63,7 @@ const BienPhapMayMocDialog = ({
   const dispatch = useAppDispatch();
 
   const savedDraft = useAppSelector((state) => {
-    const tab = state.tabs.tabs.find((t:any) => t.path === tabPath);
+    const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
     return tab?.formData?.[`bienPhapMayMocDraft_${idGiamDinhMayMoc}`] ?? null;
   });
   const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =
@@ -97,8 +97,7 @@ const BienPhapMayMocDialog = ({
     giamDocXacNhan: false,
     share: false,
     trangThai: 0,
-    tenMauBienBan:
-      mauMacDinh?.ten || "BIỆN PHÁP SỬA CHỮA MÁY MÓC THIẾT BỊ",
+    tenMauBienBan: mauMacDinh?.ten || "BIỆN PHÁP SỬA CHỮA MÁY MÓC THIẾT BỊ",
     congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
     nguoiKyList: [],
   };

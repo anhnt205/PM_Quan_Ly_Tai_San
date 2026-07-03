@@ -1,18 +1,19 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import {
   Box,
   Typography,
   Chip,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Button,
   Alert,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { getIn } from "formik";
-import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
 
@@ -21,64 +22,62 @@ interface SignerWorkflowSectionProps {
   fieldName?: string; // defaults to "nguoiKyList"
 }
 
-type SimpleDept = { id: string; name: string };
 type SimpleUser = {
   id: string;
-  name: string;
-  departmentId?: string;
-  title?: string;
+  hoTen: string;
+  phongBanId?: string;
+  tenPhongBan?: string;
+  chucVuId?: string;
+  tenChucVu?: string;
 };
 
 export default function SignerWorkflowSection({
   formik,
   fieldName = "nguoiKyList",
 }: SignerWorkflowSectionProps) {
-  const { data: apiDepartments = [] } = useAllDepartmentsQuery();
   const { data: apiUsers = [] } = useAllStaffsQuery();
 
-  const [addDeptId, setAddDeptId] = useState("");
   const [addUserId, setAddUserId] = useState("");
   const [editingSignerId, setEditingSignerId] = useState<string | null>(null);
-  const [editDeptId, setEditDeptId] = useState("");
   const [editUserId, setEditUserId] = useState("");
-
-  const departments: SimpleDept[] = (apiDepartments || []).map((d: any) => ({
-    id: String(d?.id ?? ""),
-    name: String(d?.tenPhongBan ?? d?.name ?? ""),
-  }));
+  const [movingIdx, setMovingIdx] = useState<{
+    from: number;
+    to: number;
+  } | null>(null);
+  const isAnimating = useRef(false);
 
   const users: SimpleUser[] = (apiUsers || [])
     .filter((u: any) => u.hasAccount)
     .map((u: any) => ({
       id: String(u?.id ?? ""),
-      name: String(u?.hoTen ?? u?.name ?? ""),
-      departmentId: String(u?.phongBanId ?? u?.departmentId ?? ""),
-      title: String(u?.tenChucVu ?? u?.chucVu ?? u?.title ?? ""),
+      hoTen: String(u?.hoTen ?? ""),
+      phongBanId: String(u?.phongBanId ?? ""),
+      tenPhongBan: String(u?.tenPhongBan ?? ""),
+      chucVuId: String(u?.chucVuId ?? ""),
+      tenChucVu: String(u?.tenChucVu ?? ""),
     }));
 
   const signers = getIn(formik.values, fieldName) || [];
 
   const handleAddSigner = () => {
-    if (!addUserId || !addDeptId) return;
+    if (!addUserId) return;
     if (signers.some((s: any) => s.userId === addUserId)) return;
     const user = users.find((u) => u.id === addUserId);
-    const dept = departments.find((d) => d.id === addDeptId);
-    if (!user || !dept) return;
+    if (!user) return;
 
     const updated = [
       ...signers,
       {
         userId: user.id,
-        userName: user.name,
-        departmentId: dept.id,
-        departmentName: dept.name,
-        position: user.title ?? "",
+        userName: user.hoTen,
+        departmentId: user.phongBanId,
+        departmentName: user.tenPhongBan,
+        position: user.tenChucVu ?? "",
         order: signers.length + 1,
         signed: false,
       },
     ];
     formik.setFieldValue(fieldName, updated);
-    setAddDeptId("");
     setAddUserId("");
   };
 
@@ -91,26 +90,82 @@ export default function SignerWorkflowSection({
 
   const handleEdit = (signer: any) => {
     setEditingSignerId(signer.userId);
-    setEditDeptId(signer.departmentId);
     setEditUserId(signer.userId);
   };
 
   const handleSaveEdit = () => {
+    const editUser = users.find((u) => u.id === editUserId);
     const updated = signers.map((s: any) =>
       s.userId === editingSignerId
         ? {
             ...s,
             userId: editUserId,
-            userName: users.find((u) => u.id === editUserId)?.name || "",
-            departmentId: editDeptId,
-            position: users.find((u) => u.id === editUserId)?.title || "",
-            departmentName:
-              departments.find((d) => d.id === editDeptId)?.name || "",
+            userName: editUser?.hoTen || "",
+            departmentId: editUser?.phongBanId || "",
+            departmentName: editUser?.tenPhongBan || "",
+            position: editUser?.tenChucVu || "",
           }
         : s,
     );
     formik.setFieldValue(fieldName, updated);
     setEditingSignerId(null);
+  };
+
+  const doSwap = useCallback(
+    (fromIdx: number, toIdx: number) => {
+      const updated = [...signers];
+      [updated[fromIdx], updated[toIdx]] = [updated[toIdx], updated[fromIdx]];
+      formik.setFieldValue(
+        fieldName,
+        updated.map((s: any, i: number) => ({ ...s, order: i + 1 })),
+      );
+    },
+    [signers, formik, fieldName],
+  );
+
+  const handleMoveUp = (idx: number) => {
+    if (idx <= 0 || isAnimating.current) return;
+    isAnimating.current = true;
+    setMovingIdx({ from: idx, to: idx - 1 });
+    setTimeout(() => {
+      doSwap(idx, idx - 1);
+      setMovingIdx(null);
+      isAnimating.current = false;
+    }, 300);
+  };
+
+  const handleMoveDown = (idx: number) => {
+    if (idx >= signers.length - 1 || isAnimating.current) return;
+    isAnimating.current = true;
+    setMovingIdx({ from: idx, to: idx + 1 });
+    setTimeout(() => {
+      doSwap(idx, idx + 1);
+      setMovingIdx(null);
+      isAnimating.current = false;
+    }, 300);
+  };
+
+  const getSlideStyle = (idx: number) => {
+    if (!movingIdx) return {};
+    // Height of each card including margin (~68px)
+    const cardHeight = 68;
+    if (idx === movingIdx.from) {
+      const dir = movingIdx.to > movingIdx.from ? 1 : -1;
+      return {
+        transform: `translateY(${dir * cardHeight}px)`,
+        transition: "transform 0.3s ease",
+        zIndex: 2,
+      };
+    }
+    if (idx === movingIdx.to) {
+      const dir = movingIdx.from > movingIdx.to ? 1 : -1;
+      return {
+        transform: `translateY(${dir * cardHeight}px)`,
+        transition: "transform 0.3s ease",
+        zIndex: 2,
+      };
+    }
+    return {};
   };
 
   return (
@@ -158,7 +213,14 @@ export default function SignerWorkflowSection({
               const user = users.find((u) => u.id === s.userId);
               const isEditingThis = editingSignerId === s.userId;
               return (
-                <Box key={s.userId} sx={{ position: "relative", mb: 1.5 }}>
+                <Box
+                  key={s.userId}
+                  sx={{
+                    position: "relative",
+                    mb: 1.5,
+                    ...getSlideStyle(idx),
+                  }}
+                >
                   <Box
                     sx={{
                       position: "absolute",
@@ -205,21 +267,10 @@ export default function SignerWorkflowSection({
                         }}
                       >
                         <FieldAutoCompleted
-                          title="Phòng ban"
-                          data={departments}
-                          labelkey="name"
-                          value={editDeptId}
-                          onChange={(e) => {
-                            setEditDeptId(e ? e.id : "");
-                            setEditUserId("");
-                          }}
-                        />
-                        <FieldAutoCompleted
                           title="Người duyệt"
-                          data={users.filter(
-                            (u) => u.departmentId === editDeptId,
-                          )}
-                          labelkey="name"
+                          data={users}
+                          labelkey="hoTen"
+                          labelOption="phongBanId"
                           value={editUserId}
                           onChange={(e) => {
                             setEditUserId(e ? e.id : "");
@@ -246,14 +297,17 @@ export default function SignerWorkflowSection({
                         sx={{
                           display: "flex",
                           alignItems: "center",
-                          justifyContent: "space-between",
+                          gap: 1,
                         }}
                       >
+                        {/* Avatar + Info */}
                         <Box
                           sx={{
                             display: "flex",
                             alignItems: "center",
                             gap: 1.5,
+                            flex: 1,
+                            minWidth: 0,
                           }}
                         >
                           <Box
@@ -271,51 +325,85 @@ export default function SignerWorkflowSection({
                               flexShrink: 0,
                             }}
                           >
-                            {(user?.name || s.userName)?.charAt(0) ?? "?"}
+                            {(user?.hoTen || s.userName)?.charAt(0) ?? "?"}
                           </Box>
-                          <Box>
-                            <Typography fontWeight={600} fontSize={13}>
-                              {user?.name || s.userName}
+                          <Box sx={{ minWidth: 0 }}>
+                            <Typography fontWeight={600} fontSize={13} noWrap>
+                              {user?.hoTen || s.userName}
                             </Typography>
                             <Typography
                               variant="caption"
                               color="text.secondary"
+                              noWrap
                             >
-                              {user?.title || s.position || "Cán bộ"}
+                              {user?.tenChucVu || s.position || "Cán bộ"}
                             </Typography>
                             <Box sx={{ mt: 0.5 }}>
                               <Chip
                                 label={
-                                  departments.find(
-                                    (d) => d.id === s.departmentId,
-                                  )?.name || s.departmentName
+                                  user?.tenPhongBan || s.departmentName || ""
                                 }
                                 size="small"
                                 sx={{
                                   fontSize: 10,
                                   height: 18,
                                   bgcolor: "grey.100",
+                                  maxWidth: "100%",
                                 }}
                               />
                             </Box>
                           </Box>
                         </Box>
-                        <Box sx={{ display: "flex", gap: 0.5 }}>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={() => handleEdit(s)}
-                          >
-                            Sửa
-                          </Button>
-                          <Button
-                            size="small"
-                            color="error"
-                            variant="outlined"
-                            onClick={() => handleRemoveSigner(s.userId)}
-                          >
-                            Xóa
-                          </Button>
+
+                        {/* Action buttons - vertical */}
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 0.5,
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Box sx={{ display: "flex", gap: 0.5 }}>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              color="primary"
+                              onClick={() => handleEdit(s)}
+                              sx={{ minWidth: 32, p: "2px 6px" }}
+                            >
+                              <EditIcon sx={{ fontSize: 18 }} />
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              color="error"
+                              onClick={() => handleRemoveSigner(s.userId)}
+                              sx={{ minWidth: 32, p: "2px 6px" }}
+                            >
+                              <DeleteIcon sx={{ fontSize: 18 }} />
+                            </Button>
+                          </Box>
+                          <Box sx={{ display: "flex", gap: 0.5 }}>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              disabled={idx === 0}
+                              onClick={() => handleMoveUp(idx)}
+                              sx={{ minWidth: 32, p: "2px 6px" }}
+                            >
+                              <ArrowUpwardIcon sx={{ fontSize: 18 }} />
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              disabled={idx === signers.length - 1}
+                              onClick={() => handleMoveDown(idx)}
+                              sx={{ minWidth: 32, p: "2px 6px" }}
+                            >
+                              <ArrowDownwardIcon sx={{ fontSize: 18 }} />
+                            </Button>
+                          </Box>
                         </Box>
                       </Box>
                     )}
@@ -345,24 +433,12 @@ export default function SignerWorkflowSection({
         }}
       >
         <FieldAutoCompleted
-          title="Phòng ban"
-          data={departments}
-          labelkey="name"
-          value={addDeptId}
-          onChange={(e) => {
-            setAddDeptId(e ? e.id : "");
-            setAddUserId("");
-          }}
-        />
-
-        <FieldAutoCompleted
           title="Người duyệt"
           data={users.filter(
-            (u) =>
-              u.departmentId === addDeptId &&
-              !signers.some((s: any) => s.userId === u.id),
+            (u) => !signers.some((s: any) => s.userId === u.id),
           )}
-          labelkey="name"
+          labelkey="hoTen"
+          labelOption="phongBanId"
           value={addUserId}
           onChange={(e) => {
             setAddUserId(e ? e.id : "");

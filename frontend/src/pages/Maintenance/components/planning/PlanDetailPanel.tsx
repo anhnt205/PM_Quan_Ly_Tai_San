@@ -66,11 +66,11 @@ import {
 import {
   useBienPhapMayMocByGiamDinhQuery,
   useBienPhapMayMocMutation,
-} from "../../mutation/bienPhapMayMoc";
+} from "../../mutation/MachineMeasure";
 import {
   useBienPhapPhuongTienByGiamDinhQuery,
   useBienPhapPhuongTienMutation,
-} from "../../mutation/bienPhapPhuongTien";
+} from "../../mutation/VehicleMeasure";
 import { showStatus } from "../../config";
 import { DeleteIcon, EditIcon, TrashIcon } from "lucide-react";
 import { showConfirmAlert } from "../../../../components/Alert";
@@ -502,7 +502,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
         ];
 
   const acceptanceRecords = Array.from(
-    new Map(acceptanceRecordsRaw.map((item: any) => [item.id, item])).values()
+    new Map(acceptanceRecordsRaw.map((item: any) => [item.id, item])).values(),
   );
 
   const { data: materialQualityRecords = [] } =

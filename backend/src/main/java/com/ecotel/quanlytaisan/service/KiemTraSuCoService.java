@@ -136,7 +136,10 @@ public class KiemTraSuCoService {
                 entity.getDanhSachChiTiet().forEach(d -> d.setIdKiemTraSuCo(entity.getId()));
                 detailDao.insertBatch(entity.getDanhSachChiTiet());
             }
-            // NguoiKy update is usually handled separately or by batch update
+            if (entity.getNguoiKyList() != null && !entity.getNguoiKyList().isEmpty()) {
+                entity.getNguoiKyList().forEach(nk -> nk.setIdTaiLieu(entity.getId()));
+                kyTaiLieuDao.updateNguoiKy(entity.getId(), entity.getNguoiKyList());
+            }
         }
         return updated;
     }

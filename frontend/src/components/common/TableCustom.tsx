@@ -546,14 +546,16 @@ export default function TableCustom({
                   startIcon={<Edit />}
                   onClick={async (e) => {
                     e.stopPropagation();
-                    handleSignDocuments?.(selectedItem);
-                    handleSignDocument?.(selectedItem[0], user, () =>
+                    const items = [...selectedItem];
+                    handleSignDocuments?.(items);
+                    handleSignDocument?.(items[0], user, () =>
                       onSign?.(
-                        selectedItem[0]?.taiLieuCuoi ||
-                          selectedItem[0]?.taiLieuBangKe,
-                        selectedItem[0],
+                        items[0]?.taiLieuCuoi || items[0]?.taiLieuBangKe,
+                        items[0],
                       ),
                     );
+                    setSelectedItem([]);
+                    onSelectionChange?.([]);
                   }}
                 >
                   Ký biên bản ({selectedItem.length})
