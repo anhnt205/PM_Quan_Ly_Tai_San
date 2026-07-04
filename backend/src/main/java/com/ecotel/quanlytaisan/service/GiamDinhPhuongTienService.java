@@ -28,6 +28,9 @@ public class GiamDinhPhuongTienService {
     @Autowired
     private KyTaiLieuDao kyTaiLieuDao;
 
+    @Autowired
+    private TaiSanService taiSanService;
+
     public List<GiamDinhPhuongTienDTO> findAll(String idCongTy) {
         List<GiamDinhPhuongTienDTO> list = giamDinhPhuongTienDao.findAll(idCongTy);
         for (GiamDinhPhuongTienDTO item : list) {
@@ -62,6 +65,11 @@ public class GiamDinhPhuongTienService {
 
     @Transactional
     public GiamDinhPhuongTien insert(GiamDinhPhuongTien entity) {
+        if (entity.getIdTaiSan() != null && !entity.getIdTaiSan().isEmpty()) {
+            if (taiSanService.getById(entity.getIdTaiSan()) == null) {
+                throw new IllegalArgumentException("Tài sản không tồn tại: " + entity.getIdTaiSan());
+            }
+        }
         GiamDinhPhuongTien parent = giamDinhPhuongTienDao.insert(entity);
         if (parent != null) {
             if (entity.getDanhSachChiTiet() != null && !entity.getDanhSachChiTiet().isEmpty()) {
@@ -79,6 +87,11 @@ public class GiamDinhPhuongTienService {
 
     @Transactional
     public GiamDinhPhuongTien update(GiamDinhPhuongTien entity) {
+        if (entity.getIdTaiSan() != null && !entity.getIdTaiSan().isEmpty()) {
+            if (taiSanService.getById(entity.getIdTaiSan()) == null) {
+                throw new IllegalArgumentException("Tài sản không tồn tại: " + entity.getIdTaiSan());
+            }
+        }
         GiamDinhPhuongTien parent = giamDinhPhuongTienDao.update(entity);
         if (parent != null) {
             giamDinhPhuongTienChiTietDao.deleteByIdGiamDinh(parent.getId());
@@ -178,6 +191,7 @@ public class GiamDinhPhuongTienService {
     @Transactional
     public int delete(String id) {
         giamDinhPhuongTienChiTietDao.deleteByIdGiamDinh(id);
+        kyTaiLieuDao.deleteAllNguoiKy(id);
         kyTaiLieuDao.delete(id);
         return giamDinhPhuongTienDao.delete(id);
     }

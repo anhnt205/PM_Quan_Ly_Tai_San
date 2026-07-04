@@ -669,7 +669,7 @@ const InspectionRecordDialog = ({
                         colSpan={7}
                         sx={{ fontWeight: 700, color: "primary.main" }}
                       >
-                        Thiết bị: {entry.tenTaiSan}
+                        Thiết bị: {entry.tenTaiSan || entry.idTaiSan}
                       </TableCell>
                       <TableCell align="center">
                         <IconButton

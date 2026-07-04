@@ -23,6 +23,9 @@ public class KiemTraSuCoService {
     @Autowired
     private KyTaiLieuDao kyTaiLieuDao;
 
+    @Autowired
+    private TaiSanService taiSanService;
+
     public PageResponse<KiemTraSuCoDTO> findAllPaged(int page, int pageSize, String searchValue, String idCongTy, Integer trangThai, String userid, Boolean isSign, String dateFrom, String dateTo) {
         List<KiemTraSuCoDTO> all = mainDao.findAll(idCongTy);
         
@@ -116,7 +119,14 @@ public class KiemTraSuCoService {
         KiemTraSuCo saved = mainDao.insert(entity);
         if (saved != null) {
             if (entity.getDanhSachChiTiet() != null && !entity.getDanhSachChiTiet().isEmpty()) {
-                entity.getDanhSachChiTiet().forEach(d -> d.setIdKiemTraSuCo(saved.getId()));
+                entity.getDanhSachChiTiet().forEach(d -> {
+                    if (d.getIdTaiSan() != null && !d.getIdTaiSan().isEmpty()) {
+                        if (taiSanService.getById(d.getIdTaiSan()) == null) {
+                            throw new IllegalArgumentException("Tài sản không tồn tại: " + d.getIdTaiSan());
+                        }
+                    }
+                    d.setIdKiemTraSuCo(saved.getId());
+                });
                 detailDao.insertBatch(entity.getDanhSachChiTiet());
             }
             if (entity.getNguoiKyList() != null && !entity.getNguoiKyList().isEmpty()) {
@@ -133,7 +143,14 @@ public class KiemTraSuCoService {
         if (updated != null) {
             detailDao.deleteByIdKiemTraSuCo(entity.getId());
             if (entity.getDanhSachChiTiet() != null && !entity.getDanhSachChiTiet().isEmpty()) {
-                entity.getDanhSachChiTiet().forEach(d -> d.setIdKiemTraSuCo(entity.getId()));
+                entity.getDanhSachChiTiet().forEach(d -> {
+                    if (d.getIdTaiSan() != null && !d.getIdTaiSan().isEmpty()) {
+                        if (taiSanService.getById(d.getIdTaiSan()) == null) {
+                            throw new IllegalArgumentException("Tài sản không tồn tại: " + d.getIdTaiSan());
+                        }
+                    }
+                    d.setIdKiemTraSuCo(entity.getId());
+                });
                 detailDao.insertBatch(entity.getDanhSachChiTiet());
             }
             if (entity.getNguoiKyList() != null && !entity.getNguoiKyList().isEmpty()) {
@@ -168,6 +185,7 @@ public class KiemTraSuCoService {
     @Transactional
     public int delete(String id) {
         detailDao.deleteByIdKiemTraSuCo(id);
+        kyTaiLieuDao.deleteAllNguoiKy(id);
         kyTaiLieuDao.delete(id);
         return mainDao.delete(id);
     }

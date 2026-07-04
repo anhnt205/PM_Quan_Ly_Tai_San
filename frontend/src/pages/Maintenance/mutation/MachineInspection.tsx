@@ -78,186 +78,6 @@ export const useMaintenanceInspectionMutation = () => {
   const now = dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss");
   const { user } = useSelector((state: any) => state.user);
 
-  // --- API CHI TIẾT ---
-  const createChiTietManyMutation = useMutation({
-    mutationFn: async (data: any[]) => {
-      return (
-        await api.post(
-          "/giamdinh-maymoc-chitiet/batch",
-          data.map((i: any) => ({
-            ...i,
-            nguoiTao: user?.taiKhoan?.tenDangNhap,
-            ngayTao: now,
-          })),
-        )
-      ).data;
-    },
-  });
-
-  const updateChiTietManyMutation = useMutation({
-    mutationFn: async (data: any[]) => {
-      return (
-        await api.put(
-          `/giamdinh-maymoc-chitiet/batch`,
-          data.map((i: any) => ({
-            ...i,
-            ngayCapNhat: now,
-            nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
-          })),
-        )
-      ).data;
-    },
-  });
-
-  const deleteChiTietManyMutation = useMutation({
-    mutationFn: async (ids: string[]) => {
-      return (await api.delete(`/giamdinh-maymoc-chitiet/batch`, { data: ids }))
-        .data;
-    },
-  });
-
-  // --- API VẬT TƯ THEO TÀI SẢN ---
-  const batchInsertVatTuMutation = useMutation({
-    mutationFn: async (data: any[]) => {
-      return (await api.post("/giamdinh-maymoc-chitiet/vattu/batch", data))
-        .data;
-    },
-  });
-
-  const deleteVatTuBatchMutation = useMutation({
-    mutationFn: async (ids: string[]) => {
-      return (
-        await api.delete("/giamdinh-maymoc-chitiet/vattu/batch", { data: ids })
-      ).data;
-    },
-  });
-
-  const handleUpdate = (
-    response: InspectionRecordData | any,
-    variables: InspectionRecordData,
-  ) => {
-    const giamDinhId = response?.id || response?.data?.id;
-    if (!giamDinhId) return;
-
-    if (variables.danhSachChiTiet && variables.danhSachChiTiet.length > 0) {
-      const details = variables.danhSachChiTiet;
-      const createItems = details.filter(
-        (i: any) => i.action === Action.CREATE || !i.id,
-      );
-      const updateItems = details.filter(
-        (i: any) => i.action === Action.UPDATE && i.id,
-      );
-      const deleteItems = details.filter(
-        (i: any) => i.action === Action.DELETE && i.id,
-      );
-
-      // 1. Tạo mới tài sản chi tiết
-      if (createItems.length > 0) {
-        createChiTietManyMutation.mutate(
-          createItems.map((i: any) => ({ ...i, idGiamDinhMayMoc: giamDinhId })),
-        );
-
-        // Thu thập tất cả vật tư của tài sản mới để lưu
-        const newVatTu = createItems.reduce((acc: any[], item: any) => {
-          if (item.danhSachVatTu && item.danhSachVatTu.length > 0) {
-            const mapped = item.danhSachVatTu.map((vt: any) => ({
-              ...vt,
-              idChiTietGiamDinhMayMoc: item.id,
-            }));
-            return [...acc, ...mapped];
-          }
-          return acc;
-        }, []);
-
-        if (newVatTu.length > 0) {
-          batchInsertVatTuMutation.mutate(newVatTu);
-        }
-      }
-
-      // 2. Cập nhật tài sản chi tiết cũ
-      if (updateItems.length > 0) {
-        updateChiTietManyMutation.mutate(
-          updateItems.map((i: any) => ({ ...i, idGiamDinhMayMoc: giamDinhId })),
-        );
-
-        // Xử lý lưu/sửa/xóa danh sách vật tư lồng bên dưới từng tài sản cũ
-        updateItems.forEach((item: any) => {
-          if (item.danhSachVatTu && item.danhSachVatTu.length > 0) {
-            const vtCreate = item.danhSachVatTu.filter(
-              (v: any) => v.action === Action.CREATE || !v.id,
-            );
-            const vtUpdate = item.danhSachVatTu.filter(
-              (v: any) => v.action === Action.UPDATE && v.id,
-            );
-            const vtDelete = item.danhSachVatTu.filter(
-              (v: any) => v.action === Action.DELETE && v.id,
-            );
-
-            if (vtCreate.length > 0) {
-              batchInsertVatTuMutation.mutate(
-                vtCreate.map((v: any) => ({
-                  ...v,
-                  idChiTietGiamDinhMayMoc: item.id,
-                })),
-              );
-            }
-            if (vtUpdate.length > 0) {
-              vtUpdate.forEach((v: any) => {
-                api
-                  .put(`/giamdinh-maymoc-chitiet/vattu/${v.id}`, v)
-                  .catch(console.error);
-              });
-            }
-            if (vtDelete.length > 0) {
-              deleteVatTuBatchMutation.mutate(vtDelete.map((v: any) => v.id));
-            }
-          }
-        });
-      }
-
-      // 3. Xóa tài sản chi tiết
-      if (deleteItems.length > 0) {
-        deleteChiTietManyMutation.mutate(deleteItems.map((i: any) => i.id));
-      }
-    }
-
-    if (variables.nguoiKyList && variables.nguoiKyList.length > 0) {
-      updateSignerMutation.mutate({
-        idTaiLieu: giamDinhId,
-        data: variables.nguoiKyList.map((item) => ({
-          ...item,
-          idTaiLieu: giamDinhId,
-        })),
-      });
-    }
-  };
-
-  const updateSignerMutation = useMutation({
-    mutationFn: async ({
-      idTaiLieu,
-      data,
-    }: {
-      idTaiLieu: string;
-      data: any[];
-    }) => {
-      const res = await api.put(`/chuky/nguoi-ky/update/${idTaiLieu}`, data);
-      return res.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
-    },
-  });
-
-  const deleteSignerMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await api.delete(`/chuky/${id}`);
-      return res.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
-    },
-  });
-
   const createMutation = useMutation({
     mutationFn: async (data: InspectionRecordData) => {
       return (
@@ -270,7 +90,6 @@ export const useMaintenanceInspectionMutation = () => {
     },
     onSuccess: async (response, variables) => {
       if (response.success || response.id) {
-        handleUpdate(response, variables);
         queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
         queryClient.invalidateQueries({ queryKey: ["inspectionByBienBan"] });
         queryClient.invalidateQueries({
@@ -307,7 +126,6 @@ export const useMaintenanceInspectionMutation = () => {
     },
     onSuccess: async (response, variables) => {
       if (response.success || response.id) {
-        handleUpdate(response, variables);
         queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
         queryClient.invalidateQueries({ queryKey: ["inspectionByBienBan"] });
         queryClient.invalidateQueries({

@@ -76,21 +76,7 @@ export const useMaintenanceVehicleInspectionMutation = () => {
   const now = dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss");
   const { user } = useSelector((state: any) => state.user);
 
-  const updateSignerMutation = useMutation({
-    mutationFn: async ({
-      idTaiLieu,
-      data,
-    }: {
-      idTaiLieu: string;
-      data: any[];
-    }) => {
-      const res = await api.put(`/chuky/nguoi-ky/update/${idTaiLieu}`, data);
-      return res.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["vehicleInspectionPage"] });
-    },
-  });
+
 
   const createMutation = useMutation({
     mutationFn: async (data: VehicleInspectionRecordData) => {
@@ -104,16 +90,6 @@ export const useMaintenanceVehicleInspectionMutation = () => {
     },
     onSuccess: async (response, variables) => {
       if (response.success || response.id || response.data?.id) {
-        const id = response.id || response.data?.id;
-        if (variables.nguoiKyList && variables.nguoiKyList.length > 0) {
-          updateSignerMutation.mutate({
-            idTaiLieu: id,
-            data: variables.nguoiKyList.map((item) => ({
-              ...item,
-              idTaiLieu: id,
-            })),
-          });
-        }
 
         queryClient.invalidateQueries({ queryKey: ["vehicleInspectionPage"] });
         queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
@@ -156,16 +132,6 @@ export const useMaintenanceVehicleInspectionMutation = () => {
     },
     onSuccess: async (response, variables) => {
       if (response.success || response.id || response.data?.id) {
-        const id = response.id || response.data?.id;
-        if (variables.nguoiKyList && variables.nguoiKyList.length > 0) {
-          updateSignerMutation.mutate({
-            idTaiLieu: id,
-            data: variables.nguoiKyList.map((item) => ({
-              ...item,
-              idTaiLieu: id,
-            })),
-          });
-        }
         queryClient.invalidateQueries({ queryKey: ["vehicleInspectionPage"] });
         queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
         queryClient.invalidateQueries({

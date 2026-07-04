@@ -85,9 +85,7 @@ export const useMaintenanceMaterialAssessmentMutation = () => {
     },
     onSuccess: async (response, variables) => {
       const id = response?.id || response?.data?.id;
-      if (id && variables.nguoiKyList && variables.nguoiKyList.length > 0) {
-        await api.put(`/chuky/nguoi-ky/update/${id}`, variables.nguoiKyList);
-      }
+      // Backend now handles nguoiky list natively
       queryClient.invalidateQueries({
         queryKey: ["nghiemThuMayMocByBienPhap"],
       });
@@ -129,9 +127,7 @@ export const useMaintenanceMaterialAssessmentMutation = () => {
     },
     onSuccess: async (response, variables) => {
       const id = variables.id;
-      if (id && variables.nguoiKyList && variables.nguoiKyList.length > 0) {
-        await api.put(`/chuky/nguoi-ky/update/${id}`, variables.nguoiKyList);
-      }
+      // Backend now handles nguoiky list natively
       queryClient.invalidateQueries({ queryKey: ["materialAssessmentPage"] });
       queryClient.invalidateQueries({
         queryKey: ["nghiemThuMayMocByBienPhap"],
