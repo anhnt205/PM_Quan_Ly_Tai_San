@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Accordion,
   AccordionDetails,
@@ -26,15 +26,13 @@ import ExpandMore from "@mui/icons-material/ExpandMore";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
-import { useCmms } from "../../hooks/CmmsContext";
 import IncidentDialog from "./components/dialog/IncidentDialog";
 
 import CreatePlanDialog from "./components/dialog/PlanDialog";
 import PlanDetailPanel from "./components/planning/PlanDetailPanel";
 import IncidentDetailPanel from "./components/planning/IncidentDetailPanel";
-import { calculatePlanMaterials } from "../../mockdata/mockNorms";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
@@ -43,21 +41,17 @@ import {
   useMaintenanceIncidentByPlanQuery,
   useMaintenancePlanningGroupedQuery,
   useMaintenancePlanningMutation,
-  useMaintenanceRepairMutation,
-  useMaintenanceIncidentInspectionMutation,
-  useMaintenanceIncidentInspectionBySuCoQuery,
 } from "./mutation";
 import { AssetGroup, CongTy } from "../../utils/const";
 import { MaintenancePlanData } from "./types";
 import {
-  handleSendToSigner,
   showServerity,
   showShareStatus,
   showStatus,
 } from "./config";
 import { useDebounce } from "../../hooks/useDebounce";
 import { IncidenData } from "./types";
-import { Edit, Eye, Trash2 } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import { useAllDepartmentsQuery } from "../Department/Mutation";
 import { showConfirmAlert } from "../../components/Alert";
 import { useSelector } from "react-redux";
@@ -66,7 +60,6 @@ import { useAppSelector } from "../../redux/store";
 import DraftIndicator from "../../components/common/DraftIndicator";
 
 export default function MaintenancePlanRepair() {
-  const navigate = useNavigate();
   const { user } = useSelector((state: any) => state.user);
 
   const [selectedPlan, setSelectedPlan] = useState<MaintenancePlanData | null>(
@@ -91,9 +84,6 @@ export default function MaintenancePlanRepair() {
     Set<string>
   >(new Set());
   const [showForm, setShowForm] = useState(false);
-  const [incidentInspectionRecords, setIncidentInspectionRecords] = useState<
-    any[]
-  >([]);
   const { data: allDepartment = [] } = useAllDepartmentsQuery();
   const searchDebounce = useDebounce(searchValue, 500);
   // kehoach
@@ -107,7 +97,7 @@ export default function MaintenancePlanRepair() {
     dateTo,
     nhomTaiSanFilter,
   );
-  const { createMutation, updateMutation, deleteMutation, updateManyMutation } =
+  const { createMutation, updateMutation, deleteMutation } =
     useMaintenancePlanningMutation();
 
   const location = useLocation();
@@ -128,30 +118,12 @@ export default function MaintenancePlanRepair() {
     createMutation: createIncidentMutation,
     updateMutation: updateIncidentMutation,
     deleteMutation: deleteIncidentMutation,
-    updateManyMutation: updateManyIncidentMutation,
   } = useMaintenanceIncidenMutation();
 
   const { data: incidentReports = [] } = useMaintenanceIncidentByPlanQuery(
     expandedIncidentPlanIds.values().next().value,
   );
 
-  const { data: serverIncInspRecords = [] } =
-    useMaintenanceIncidentInspectionBySuCoQuery(selectedIncident?.id);
-
-  React.useEffect(() => {
-    if (serverIncInspRecords.length) {
-      setIncidentInspectionRecords(serverIncInspRecords);
-    }
-  }, [serverIncInspRecords.length]);
-
-  const {
-    inspectionRecords,
-    acceptanceTestRecords,
-    materialQualityRecords,
-    addInspectionRecord,
-    addAcceptanceTestRecord,
-    addMaterialQualityRecord,
-  } = useCmms();
 
   const handleSaveIncident = async (selectedIncident: IncidenData) => {
     if (selectedIncident.id) {
@@ -163,12 +135,6 @@ export default function MaintenancePlanRepair() {
     setSelectedIncident(null);
   };
 
-  const selectedSchedule: Record<string, any> =
-    (selectedPlan as any)?.monthlySchedule ?? {};
-  const yearlyMaterials = useMemo(
-    () => (selectedPlan ? calculatePlanMaterials(selectedSchedule) : []),
-    [selectedPlan, selectedSchedule],
-  );
 
   const allPlans = useMemo(() => {
     if (!groupedData?.data?.data) return [];
@@ -247,33 +213,10 @@ export default function MaintenancePlanRepair() {
     selectedIds.includes(plan.id),
   );
 
-  const selectedIncidents = incidentReports.filter((inc: IncidenData) =>
-    selectedIncidentIds.includes(inc.id),
-  );
-
-  const canSendPlanToSigner =
-    selectedPlans.length > 0 &&
-    selectedPlans.every((p: MaintenancePlanData) => p.trangThai === 0);
-
-  const canSendIncidentToSigner =
-    selectedIncidents.length > 0 &&
-    selectedIncidents.every((inc: IncidenData) => inc.trangThai === 0);
-
   const canCreateIncident =
     selectedPlans.length === 1 && selectedPlans[0].trangThai === 3;
 
   const [showIncidentDialog, setShowIncidentDialog] = useState(false);
-
-  const handleSendIncident = (items: any[]) => {
-    handleSendToSigner(
-      items.map((i) => ({ ...i, soKeHoach: i.soPhieu })), // Map soPhieu to soKeHoach for handleSendToSigner
-      updateManyIncidentMutation.mutateAsync,
-      () => {
-        handleCloseAll();
-        setSelectedIncidentIds([]);
-      },
-    );
-  };
 
   const serverCounts = groupedData?.data?.trangThaiCounts || {};
   const totalCount = Object.values(serverCounts).reduce(
@@ -1383,63 +1326,13 @@ export default function MaintenancePlanRepair() {
               ) : (
                 <PlanDetailPanel
                   plan={selectedPlan}
-                  inspectionRecords={inspectionRecords}
-                  acceptanceTestRecords={acceptanceTestRecords}
-                  materialQualityRecords={materialQualityRecords}
                   onClose={handleCloseAll}
-                  onCreateInspectionRecord={addInspectionRecord}
-                  onCreateAcceptanceRecord={addAcceptanceTestRecord}
-                  onCreateMaterialQualityRecord={addMaterialQualityRecord}
                 />
               )}
             </Paper>
           )}
         </Box>
       </Box>
-
-      {/* Yearly materials summary */}
-      {selectedPlan && !selectedIncident && yearlyMaterials.length > 0 && (
-        <Box
-          sx={{
-            mt: 2,
-            border: "1px solid",
-            borderColor: "divider",
-            borderRadius: 2,
-            p: 2,
-          }}
-        >
-          <Typography variant="subtitle1" fontWeight={700} gutterBottom>
-            Tổng hợp vật tư cần thiết — Kế hoạch năm {selectedPlan.nam} (
-            {selectedPlan.id})
-          </Typography>
-          <TableContainer component={Paper} variant="outlined">
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ bgcolor: "#f5f5f5" }}>
-                  <TableCell sx={{ fontWeight: 700 }}>STT</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Tên vật tư</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }} align="right">
-                    Tổng số lượng
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Đơn vị</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {yearlyMaterials.map((mat, i) => (
-                  <TableRow key={mat.name}>
-                    <TableCell>{i + 1}</TableCell>
-                    <TableCell>{mat.name}</TableCell>
-                    <TableCell align="right">
-                      {mat.quantity.toLocaleString()}
-                    </TableCell>
-                    <TableCell>{mat.unit}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
-      )}
 
       <CreatePlanDialog
         open={showForm}

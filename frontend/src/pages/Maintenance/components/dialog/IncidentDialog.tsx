@@ -19,7 +19,7 @@ import type { PlanSigner } from "../../../../mockdata/mockPlans";
 import { MaintenancePlanData } from "../../types";
 import type { IncidenData, IncidenDetailData } from "../../types/index";
 import dayjs from "dayjs";
-import { Action, CongTy, LOAI_BIEN_BAN_TYPE } from "../../../../utils/const";
+import {  CongTy, LOAI_BIEN_BAN_TYPE } from "../../../../utils/const";
 import { generateCode } from "../../../../utils/helpers";
 import { listSigneInfo } from "../../config";
 import { useFormik } from "formik";
@@ -156,7 +156,6 @@ const IncidentDialog = ({
         departmentId: item.idDonVi,
         departmentName: item.donVi,
         order: idx + 1,
-        action: Action.UPDATE,
       }));
 
       const mappedAssets = (initialIncident.danhSachTaiSan || []).map(
@@ -171,7 +170,6 @@ const IncidentDialog = ({
           viTri: a.viTri,
           quantity: a.soLuong,
           thuocHeThong: a.thuocHeThong,
-          action: Action.UPDATE,
         }),
       );
       setAssets(mappedAssets);
@@ -206,6 +204,22 @@ const IncidentDialog = ({
       return;
     }
 
+    const listInfoFromParent =
+      selectedPlans && selectedPlans.length > 0
+        ? listSigneInfo(selectedPlans[0] as any, apiUsers, apiDepartments)
+        : [];
+    const signersListFromParent = (listInfoFromParent || []).map(
+      (item: any, idx: number) => ({
+        ...item,
+        userId: item.idNhanVien || item.userId,
+        userName: item.hoTen || item.userName,
+        departmentId: item.idDonVi || item.departmentId,
+        departmentName: item.donVi || item.departmentName,
+        position: item.tenChucVu || item.position || "",
+        order: idx + 1,
+      }),
+    );
+
     if (savedDraft) {
       setAssets(savedDraft.assets);
       formik.setValues({
@@ -228,7 +242,9 @@ const IncidentDialog = ({
         tenMauBienBan: savedDraft.tenMauBienBan ?? `PHIẾU BÁO SỰ CỐ THIẾT BỊ`,
         congTy: savedDraft.congTy ?? "THAN UÔNG BÍ - TKV",
         ngayTao: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-        nguoiKyList: savedDraft.nguoiKyList,
+        nguoiKyList: savedDraft.nguoiKyList?.length
+          ? savedDraft.nguoiKyList
+          : signersListFromParent,
         danhSachTaiSan: savedDraft.danhSachTaiSan ?? [],
       });
       return;
@@ -260,7 +276,7 @@ const IncidentDialog = ({
       tenMauBienBan: mauMacDinh?.ten ?? `PHIẾU BÁO SỰ CỐ THIẾT BỊ`,
       congTy: mauMacDinh?.congTy ?? "THAN UÔNG BÍ - TKV",
       ngayTao: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-      nguoiKyList: [],
+      nguoiKyList: signersListFromParent,
       danhSachTaiSan: [],
     });
   }, [
@@ -284,7 +300,6 @@ const IncidentDialog = ({
       thuocHeThong: a.thuocHeThong ?? "",
       idDonViQuanLyKyThuat: a.idDonViQuanLyKyThuat ?? "",
       viTri: a.viTri ?? "",
-      action: a.action ?? Action.CREATE,
     }));
     formik.setFieldValue("danhSachTaiSan", nextList);
   };
@@ -495,9 +510,7 @@ const IncidentDialog = ({
               location={""}
               description={formik.values.moTa}
               severity={formik.values.mucDo}
-              deviceEntries={formik.values.danhSachTaiSan.filter(
-                (item) => item.action !== Action.DELETE,
-              )}
+              deviceEntries={formik.values.danhSachTaiSan}
               onDeviceEntriesChange={(newEntries) => {
                 formik.setFieldValue("danhSachTaiSan", newEntries);
               }}

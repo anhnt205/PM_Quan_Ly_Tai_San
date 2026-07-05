@@ -1,5 +1,10 @@
 // API Kế hoạch sửa chữa
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import api from "../../../config/api.config";
 import { CongTy } from "../../../utils/const";
 import dayjs from "dayjs";
@@ -102,17 +107,19 @@ export const useMaintenancePlanningGroupedQuery = (
 // kế hoạch chi tiết theo tháng
 export const useMaintenancePlanningDetailsByMonthQuery = (
   idKeHoach: string,
-  thang: number,
+  selectMonths: number[],
 ) => {
-  return useQuery({
-    queryKey: ["maintenancePlanningDetailsByMonth", idKeHoach, thang],
-    queryFn: async () => {
-      const res = await api.get(
-        `kehoachsuachua-chitiet-taisan/kehoach/${idKeHoach}/thang/${thang}`,
-      );
-      return res.data.data || res.data || [];
-    },
-    enabled: !!idKeHoach && !!thang,
+  return useQueries({
+    queries: selectMonths.map((thang) => ({
+      queryKey: ["maintenancePlanningDetailsByMonth", idKeHoach, thang],
+      queryFn: async () => {
+        const res = await api.get(
+          `kehoachsuachua-chitiet-taisan/kehoach/${idKeHoach}/thang/${thang}`,
+        );
+        return res.data.data || res.data || [];
+      },
+      enabled: !!idKeHoach && !!thang,
+    })),
   });
 };
 

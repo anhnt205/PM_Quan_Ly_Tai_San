@@ -18,7 +18,7 @@ import { MaintenancePlanData } from "../../types";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
 import { generateCode } from "../../../../utils/helpers";
-import { Action, CongTy, LOAI_BIEN_BAN_TYPE } from "../../../../utils/const";
+import {  CongTy, LOAI_BIEN_BAN_TYPE } from "../../../../utils/const";
 import dayjs from "dayjs";
 import { MaintenanceRepairData } from "../../types";
 import { listSigneInfo } from "../../config";
@@ -74,7 +74,7 @@ const RepairRequestDialog = ({
       idCongTy: CongTy.CT001,
       soPhieu: "",
       idKeHoach: plan?.id || "",
-      thang: selectedMonth + 1,
+      thang: selectedMonth,
       nam: plan?.nam || 2026,
       ghiChu: "",
       idNguoiLap: "",
@@ -148,7 +148,6 @@ const RepairRequestDialog = ({
         departmentId: item.idDonVi,
         departmentName: item.donVi,
         order: idx + 1,
-        action: Action.UPDATE,
       }));
 
       formik.setValues({
@@ -156,8 +155,8 @@ const RepairRequestDialog = ({
         idCongTy: initialData.idCongTy || CongTy.CT001,
         soPhieu: initialData.soPhieu ?? "",
         idKeHoach: initialData.idKeHoach ?? plan?.id ?? "",
-        thang: initialData.thang ?? selectedMonth + 1,
-        nam: plan?.nam ?? 2026,
+        thang: initialData.thang ?? selectedMonth,
+        nam: plan?.nam ?? new Date().getFullYear(),
         ghiChu: initialData.ghiChu ?? "",
         idNguoiLap: initialData.idNguoiLap ?? "",
         nguoiLapXacNhan: initialData.nguoiLapXacNhan ?? false,
@@ -185,7 +184,7 @@ const RepairRequestDialog = ({
     const assetsList = (plan?.danhSachTaiSan || [])
       ?.filter((item) => selectedDeviceIds.includes(item.id ?? ""))
       ?.map((s: any) => {
-        const level = s[`capSuaChuaThang${selectedMonth + 1}`] || "";
+        const level = s[`capSuaChuaThang${selectedMonth}`] || "";
         return {
           idKeHoachChiTiet: s.id || "",
           idTaiSan: s.idTaiSan || "",
@@ -195,7 +194,6 @@ const RepairRequestDialog = ({
           soLuong: s.soLuong,
           donViQuanLy: plan.idDonViGiao || "",
           donViBaoTri: s.idDonViBaoTri || "",
-          action: Action.CREATE,
         };
       });
 
@@ -205,7 +203,7 @@ const RepairRequestDialog = ({
         idCongTy: CongTy.CT001,
         soPhieu: savedDraft.soPhieu,
         idKeHoach: plan?.id || "",
-        thang: selectedMonth + 1,
+        thang: selectedMonth,
         nam: plan?.nam || 2026,
         ghiChu: savedDraft.ghiChu,
         idNguoiLap: "",
@@ -227,12 +225,23 @@ const RepairRequestDialog = ({
       return;
     }
 
+    const listInfoFromPlan = listSigneInfo(plan, apiUsers, apiDepartments);
+    const signersListFromPlan = (listInfoFromPlan || []).map((item: any, idx: number) => ({
+      ...item,
+      userId: item.idNhanVien || item.userId,
+      userName: item.hoTen || item.userName,
+      departmentId: item.idDonVi || item.departmentId,
+      departmentName: item.donVi || item.departmentName,
+      position: item.tenChucVu || item.position || "",
+      order: idx + 1,
+    }));
+
     formik.setValues({
       id: "",
       idCongTy: CongTy.CT001,
       soPhieu: "",
       idKeHoach: plan?.id || "",
-      thang: selectedMonth + 1,
+      thang: selectedMonth,
       nam: plan?.nam || 2026,
       ghiChu: "",
       idNguoiLap: "",
@@ -246,7 +255,7 @@ const RepairRequestDialog = ({
       ngayTao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       ngayCapNhat: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       danhSachTaiSan: assetsList,
-      nguoiKyList: [],
+      nguoiKyList: signersListFromPlan,
     });
   }, [
     open,
@@ -345,7 +354,7 @@ const RepairRequestDialog = ({
                     formik={formik}
                   />
                   <Typography variant="body2" color="text.secondary">
-                    Căn cứ Kế hoạch SCBD tháng <b>{selectedMonth + 1}</b> năm{" "}
+                    Căn cứ Kế hoạch SCBD tháng <b>{selectedMonth}</b> năm{" "}
                     <b>{plan.nam}</b>
                     &nbsp;—&nbsp;Số thiết bị: <b>{selectedDeviceIds.length}</b>
                   </Typography>
@@ -371,7 +380,7 @@ const RepairRequestDialog = ({
             <RepairRequestPreview
               assets={formik.values.danhSachTaiSan}
               month={
-                initialData?.thang ? initialData?.thang : selectedMonth + 1
+                initialData?.thang ? initialData?.thang : selectedMonth
               }
               year={plan.nam}
               number={formik.values.soPhieu}
