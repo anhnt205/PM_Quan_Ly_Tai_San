@@ -23,6 +23,9 @@ public class NghiemThuPhuongTienService {
     @Autowired
     private KyTaiLieuDao kyTaiLieuDao;
 
+    @Autowired
+    private TaiSanService taiSanService;
+
     // ─── Queries ─────────────────────────────────────────────────────────────
 
     public List<NghiemThuPhuongTienDTO> findAll(String idCongTy) {
@@ -59,6 +62,11 @@ public class NghiemThuPhuongTienService {
 
     @Transactional
     public NghiemThuPhuongTien insert(NghiemThuPhuongTien entity) {
+        if (entity.getIdTaiSan() != null && !entity.getIdTaiSan().isEmpty()) {
+            if (taiSanService.getById(entity.getIdTaiSan()) == null) {
+                throw new IllegalArgumentException("Tài sản không tồn tại");
+            }
+        }
         NghiemThuPhuongTien saved = nghiemThuPhuongTienDao.insert(entity);
         if (saved != null) {
             // Insert chi tiết vật tư
@@ -80,6 +88,11 @@ public class NghiemThuPhuongTienService {
 
     @Transactional
     public NghiemThuPhuongTien update(NghiemThuPhuongTien entity) {
+        if (entity.getIdTaiSan() != null && !entity.getIdTaiSan().isEmpty()) {
+            if (taiSanService.getById(entity.getIdTaiSan()) == null) {
+                throw new IllegalArgumentException("Tài sản không tồn tại");
+            }
+        }
         NghiemThuPhuongTien updated = nghiemThuPhuongTienDao.update(entity);
         if (updated != null) {
             // Xoá chi tiết cũ rồi insert lại
@@ -162,6 +175,7 @@ public class NghiemThuPhuongTienService {
     @Transactional
     public int delete(String id) {
         chiTietDao.deleteByIdNghiemThu(id);
+        kyTaiLieuDao.deleteAllNguoiKy(id);
         kyTaiLieuDao.delete(id);
         return nghiemThuPhuongTienDao.delete(id);
     }

@@ -16,8 +16,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useSelector } from "react-redux";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
-import { useBienPhapMayMocMutation } from "../../mutation/bienPhapMayMoc";
-import { BienPhapMayMocData } from "../../types";
+import { useBienPhapMayMocMutation } from "../../mutation/MachineMeasure";
+import { BienPhapMayMocData, InspectionRecordData } from "../../types";
 import { CongTy, LOAI_BIEN_BAN_TYPE } from "../../../../utils/const";
 import { generateCode } from "../../../../utils/helpers";
 import { PlanSigner } from "../../../../mockdata/mockPlans";
@@ -40,16 +40,14 @@ import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
 interface Props {
   open: boolean;
   onClose: () => void;
-  idGiamDinhMayMoc: string;
-  soPhieuGiamDinh?: string;
+  inspectionRecord?: InspectionRecordData | null;
   initData?: BienPhapMayMocData | null;
 }
 
 const BienPhapMayMocDialog = ({
   open,
   onClose,
-  idGiamDinhMayMoc,
-  soPhieuGiamDinh,
+  inspectionRecord,
   initData,
 }: Props) => {
   const { user } = useSelector((state: any) => state.user);
@@ -64,7 +62,9 @@ const BienPhapMayMocDialog = ({
 
   const savedDraft = useAppSelector((state) => {
     const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
-    return tab?.formData?.[`bienPhapMayMocDraft_${idGiamDinhMayMoc}`] ?? null;
+    return (
+      tab?.formData?.[`bienPhapMayMocDraft_${inspectionRecord?.id}`] ?? null
+    );
   });
   const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =
     useBienBanSuaChuaPageQuery(
@@ -79,7 +79,7 @@ const BienPhapMayMocDialog = ({
   const initialValues: BienPhapMayMocData & { nguoiKyList: any[] } = {
     id: "",
     idCongTy: CongTy.CT001,
-    idGiamDinhMayMoc: idGiamDinhMayMoc,
+    idGiamDinhMayMoc: inspectionRecord?.id || "",
     soPhieu: "",
     soDeNghi: "",
     donViSuaChua: "",
@@ -172,10 +172,25 @@ const BienPhapMayMocDialog = ({
       return;
     }
 
+    const listInfoFromParent = inspectionRecord
+      ? listSigneInfo(inspectionRecord, apiUsers, apiDepartments)
+      : [];
+    const signersListFromParent = (listInfoFromParent || []).map(
+      (item: any, idx: number) => ({
+        ...item,
+        userId: item.idNhanVien || item.userId,
+        userName: item.hoTen || item.userName,
+        departmentId: item.idDonVi || item.departmentId,
+        departmentName: item.donVi || item.departmentName,
+        position: item.tenChucVu || item.position || "",
+        order: idx + 1,
+      }),
+    );
+
     if (savedDraft) {
       formik.setValues({
         ...initialValues,
-        idGiamDinhMayMoc,
+        idGiamDinhMayMoc: inspectionRecord?.id || "",
         soPhieu: savedDraft.soPhieu,
         soDeNghi: savedDraft.soDeNghi,
         donViSuaChua: savedDraft.donViSuaChua,
@@ -192,15 +207,18 @@ const BienPhapMayMocDialog = ({
       return;
     }
 
-    formik.setValues({ ...initialValues, idGiamDinhMayMoc });
-  }, [open, initData, idGiamDinhMayMoc, apiUsers, apiDepartments, savedDraft]);
+    formik.setValues({
+      ...initialValues,
+      nguoiKyList: signersListFromParent,
+    });
+  }, [open, initData, inspectionRecord, apiUsers, apiDepartments, savedDraft]);
 
   function handleClose() {
     dispatch(
       updateTabFormData({
         path: tabPath,
         data: {
-          [`bienPhapMayMocDraft_${idGiamDinhMayMoc}`]: null,
+          [`bienPhapMayMocDraft_${inspectionRecord?.id}`]: null,
           lastMinimizedDialog: null,
         },
       }),
@@ -214,8 +232,8 @@ const BienPhapMayMocDialog = ({
       updateTabFormData({
         path: tabPath,
         data: {
-          [`bienPhapMayMocDraft_${idGiamDinhMayMoc}`]: {
-            idGiamDinhMayMoc,
+          [`bienPhapMayMocDraft_${inspectionRecord?.id}`]: {
+            idGiamDinhMayMoc: formik.values.idGiamDinhMayMoc,
             soPhieu: formik.values.soPhieu,
             soDeNghi: formik.values.soDeNghi,
             donViSuaChua: formik.values.donViSuaChua,
@@ -261,9 +279,9 @@ const BienPhapMayMocDialog = ({
             <Typography variant="h6" fontWeight={700}>
               Biên pháp sửa chữa máy móc
             </Typography>
-            {soPhieuGiamDinh && (
+            {inspectionRecord?.soPhieu && (
               <Typography variant="caption" color="text.secondary">
-                Căn cứ BB giám định: {soPhieuGiamDinh}
+                Căn cứ BB giám định: {inspectionRecord?.soPhieu}
               </Typography>
             )}
           </Box>

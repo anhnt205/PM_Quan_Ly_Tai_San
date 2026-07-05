@@ -33,7 +33,6 @@ import {
 import { IncidentInspectionData, MaintenanceRepairData } from "../../types";
 import { useMaintenanceVehicleInspectionMutation } from "../../mutation";
 import {
-  Action,
   CongTy,
   LOAI_BIEN_BAN_TYPE,
   TypeBienBan,
@@ -190,7 +189,6 @@ const InspectionRecordVehicleDialog = ({
             soLuongSuaChua: e.soLuongSuaChua,
             soLuongThayMoi: e.soLuongThayMoi,
             ghiChu: e.ghiChu,
-            action: e.action || Action.CREATE,
           };
         }),
         nguoiKyList: intermediateSigners,
@@ -233,10 +231,8 @@ const InspectionRecordVehicleDialog = ({
           initData.congTy ??
           mauMacDinh?.congTy ??
           "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
-        danhSachChiTiet: (initData.danhSachChiTiet ?? []).map((e: any) => ({
-          ...e,
-          action: Action.UPDATE,
-        })) as VehicleInspectionRecordDetailData[],
+        danhSachChiTiet: (initData.danhSachChiTiet ??
+          []) as VehicleInspectionRecordDetailData[],
         nguoiKyList: (listInfo ?? []).map((item: any) => ({
           userId: item.idNhanVien,
           userName: item.hoTen,
@@ -274,6 +270,22 @@ const InspectionRecordVehicleDialog = ({
       return;
     }
 
+    const parentRecord = incidentInspection || repairRequest;
+    const listInfoFromParent = parentRecord
+      ? listSigneInfo(parentRecord, apiUsers, apiDepartments)
+      : [];
+    const signersListFromParent = (listInfoFromParent || []).map(
+      (item: any, idx: number) => ({
+        ...item,
+        userId: item.idNhanVien || item.userId,
+        userName: item.hoTen || item.userName,
+        departmentId: item.idDonVi || item.departmentId,
+        departmentName: item.donVi || item.departmentName,
+        position: item.tenChucVu || item.position || "",
+        order: idx + 1,
+      }),
+    );
+
     formik.setValues({
       id: "",
       idCongTy: CongTy.CT001,
@@ -297,7 +309,7 @@ const InspectionRecordVehicleDialog = ({
         `BIÊN BẢN GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ ĐƯA VÀO SỬA CHỮA`,
       congTy: mauMacDinh?.congTy || "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
       danhSachChiTiet: [] as VehicleInspectionRecordDetailData[],
-      nguoiKyList: [] as any[],
+      nguoiKyList: signersListFromParent,
     });
   }, [
     open,
@@ -323,7 +335,6 @@ const InspectionRecordVehicleDialog = ({
       ghiChu: "",
       tenVatTu: "",
       donViTinh: "",
-      action: Action.CREATE,
     };
     formik.setFieldValue("danhSachChiTiet", [
       ...formik.values.danhSachChiTiet,
@@ -332,12 +343,9 @@ const InspectionRecordVehicleDialog = ({
   };
 
   const removeMaterialRow = (materialId: string) => {
-    const updated = formik.values.danhSachChiTiet.map((e) => {
-      if (e.id === materialId) {
-        return { ...e, action: Action.DELETE };
-      }
-      return e;
-    });
+    const updated = formik.values.danhSachChiTiet.filter(
+      (e) => e.id !== materialId,
+    );
     formik.setFieldValue("danhSachChiTiet", updated);
   };
 
@@ -363,7 +371,6 @@ const InspectionRecordVehicleDialog = ({
 
   function hasValidationError() {
     for (const vt of formik.values.danhSachChiTiet) {
-      if (vt.action === Action.DELETE) continue;
       const soLuong = vt.soLuong || 0;
       const suaChua = vt.soLuongSuaChua || 0;
       const thayMoi = vt.soLuongThayMoi || 0;
@@ -588,7 +595,6 @@ const InspectionRecordVehicleDialog = ({
               <TableBody>
                 {formik.values.danhSachChiTiet
                   .map((item, origIdx) => ({ item, origIdx }))
-                  .filter(({ item }) => item.action !== Action.DELETE)
                   .map(({ item: vt, origIdx }, idx) => {
                     const validationError =
                       (vt.soLuongSuaChua || 0) + (vt.soLuongThayMoi || 0) >
@@ -636,6 +642,7 @@ const InspectionRecordVehicleDialog = ({
                             }}
                             data={allToolDetail}
                             labelkey="tenTaiSan"
+                            labelOption="idTaiSan"
                             limitOptions={20}
                             noBorder={true}
                           />
@@ -715,9 +722,7 @@ const InspectionRecordVehicleDialog = ({
                       </TableRow>
                     );
                   })}
-                {formik.values.danhSachChiTiet.filter(
-                  (v) => v.action !== Action.DELETE,
-                ).length === 0 && (
+                {formik.values.danhSachChiTiet.length === 0 && (
                   <TableRow>
                     <TableCell
                       colSpan={9}

@@ -52,8 +52,14 @@ public class DanhGiaVatTuService {
     @Transactional
     public DanhGiaVatTu insert(DanhGiaVatTu entity) {
         DanhGiaVatTu result = dao.insert(entity);
-        if (entity.getDanhSachChiTiet() != null && !entity.getDanhSachChiTiet().isEmpty()) {
-            dao.insertDetails(entity.getDanhSachChiTiet(), result.getId());
+        if (result != null) {
+            if (entity.getDanhSachChiTiet() != null && !entity.getDanhSachChiTiet().isEmpty()) {
+                dao.insertDetails(entity.getDanhSachChiTiet(), result.getId());
+            }
+            if (entity.getNguoiKyList() != null) {
+                entity.getNguoiKyList().forEach(nk -> nk.setIdTaiLieu(result.getId()));
+                kyTaiLieuDao.updateNguoiKy(result.getId(), entity.getNguoiKyList());
+            }
         }
         return result;
     }
@@ -61,9 +67,15 @@ public class DanhGiaVatTuService {
     @Transactional
     public DanhGiaVatTu update(DanhGiaVatTu entity) {
         DanhGiaVatTu result = dao.update(entity);
-        dao.deleteDetailsByParentId(entity.getId());
-        if (entity.getDanhSachChiTiet() != null && !entity.getDanhSachChiTiet().isEmpty()) {
-            dao.insertDetails(entity.getDanhSachChiTiet(), entity.getId());
+        if (result != null) {
+            dao.deleteDetailsByParentId(entity.getId());
+            if (entity.getDanhSachChiTiet() != null && !entity.getDanhSachChiTiet().isEmpty()) {
+                dao.insertDetails(entity.getDanhSachChiTiet(), entity.getId());
+            }
+            if (entity.getNguoiKyList() != null) {
+                entity.getNguoiKyList().forEach(nk -> nk.setIdTaiLieu(entity.getId()));
+                kyTaiLieuDao.updateNguoiKy(entity.getId(), entity.getNguoiKyList());
+            }
         }
         return result;
     }
@@ -132,6 +144,9 @@ public class DanhGiaVatTuService {
 
     @Transactional
     public int delete(String id) {
+        dao.deleteDetailsByParentId(id);
+        kyTaiLieuDao.deleteAllNguoiKy(id);
+        kyTaiLieuDao.delete(id);
         return dao.delete(id);
     }
 

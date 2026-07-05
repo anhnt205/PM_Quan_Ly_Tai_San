@@ -23,8 +23,6 @@ import { useAssetByDonViQuery } from "../../../AssetTransfer/Mutation";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
 import FieldInput from "../../../../components/TextField/FieldInput";
 import {
-  Action,
-  ActionType,
   AssetGroup,
   LOAI_BIEN_BAN_TYPE,
 } from "../../../../utils/const";
@@ -57,7 +55,6 @@ interface PlanAsset {
   month10: string;
   month11: string;
   month12: string;
-  action?: ActionType;
 }
 
 interface Props {
@@ -131,7 +128,6 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
         capSuaChuaThang10: a.month10,
         capSuaChuaThang11: a.month11,
         capSuaChuaThang12: a.month12,
-        action: a.action,
       }));
 
       // 2. Phân tách người ký
@@ -205,7 +201,6 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
           departmentId: item.idDonVi,
           departmentName: item.donVi,
           order: idx + 1,
-          action: Action.UPDATE,
         })),
         danhSachTaiSan: (initialData?.danhSachTaiSan || []).map((item) => ({
           ...item,
@@ -224,7 +219,6 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
           month10: item.capSuaChuaThang10 ?? "",
           month11: item.capSuaChuaThang11 ?? "",
           month12: item.capSuaChuaThang12 ?? "",
-          action: Action.UPDATE,
         })),
         idCongTy: initialData?.idCongTy || "CT001",
         idLoaiKeHoach: initialData?.idLoaiKeHoach || "THIET_BI",
@@ -435,9 +429,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
             <Alert severity="info">Vui lòng chọn thiết bị trước</Alert>
           ) : (
             <StepSchedule
-              assets={formik.values.danhSachTaiSan.filter(
-                (a: any) => a.action !== Action.DELETE,
-              )}
+              assets={formik.values.danhSachTaiSan}
               onAssetsChange={(assets) =>
                 formik.setFieldValue("danhSachTaiSan", assets)
               }
@@ -457,9 +449,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
           <StepPreview
             idDonViGiao={formik.values.idDonViGiao}
             idDonViNhan={formik.values.idDonViNhan}
-            assets={formik.values.danhSachTaiSan.filter(
-              (a: any) => a.action !== Action.DELETE,
-            )}
+            assets={formik.values.danhSachTaiSan}
             signers={formik.values.nguoiKyList}
             deptDevices={fullDeptAssets}
             departments={departments}

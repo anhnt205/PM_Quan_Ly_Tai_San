@@ -54,7 +54,6 @@ import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
 interface Props {
   open: boolean;
   onClose: () => void;
-  plan: MaintenancePlanData;
   incidentReport: IncidenData;
   selectedDeviceIds: string[];
   initData?: IncidentInspectionData | null;
@@ -63,7 +62,6 @@ interface Props {
 const IncidentInspectionDialog = ({
   open,
   onClose,
-  plan,
   incidentReport,
   selectedDeviceIds,
   initData,
@@ -248,9 +246,23 @@ const IncidentInspectionDialog = ({
         idTaiSan: d.idTaiSan,
         idSuCoChiTiet: d.id,
         tenTaiSan: d.tenTaiSan || d.idTaiSan,
-        donViTinh: d.donViTinh || "",
         danhSachVatTu: [] as IncidentInspectionVatTuData[],
       }));
+
+    const listInfoFromParent = incidentReport
+      ? listSigneInfo(incidentReport as any, apiUsers, apiDepartments)
+      : [];
+    const signersListFromParent = (listInfoFromParent || []).map(
+      (item: any, idx: number) => ({
+        ...item,
+        userId: item.idNhanVien || item.userId,
+        userName: item.hoTen || item.userName,
+        departmentId: item.idDonVi || item.departmentId,
+        departmentName: item.donVi || item.departmentName,
+        position: item.tenChucVu || item.position || "",
+        order: idx + 1,
+      }),
+    );
 
     if (savedDraft) {
       formik.setValues({
@@ -270,7 +282,9 @@ const IncidentInspectionDialog = ({
         nhanXetKetLuan: savedDraft.nhanXetKetLuan,
         bienPhapXuLy: savedDraft.bienPhapXuLy,
         danhSachChiTiet: savedDraft.danhSachChiTiet,
-        nguoiKyList: savedDraft.nguoiKyList,
+        nguoiKyList: savedDraft.nguoiKyList?.length
+          ? savedDraft.nguoiKyList
+          : signersListFromParent,
         tenMauBienBan: savedDraft.tenMauBienBan,
         congTy: savedDraft.congTy,
       });
@@ -293,7 +307,7 @@ const IncidentInspectionDialog = ({
       trangThai: 0,
       share: false,
       danhSachChiTiet,
-      nguoiKyList: [],
+      nguoiKyList: signersListFromParent,
       tenMauBienBan: mauMacDinh?.ten ?? `KIỂM TRA SỰ CỐ THIẾT BỊ`,
       congTy: mauMacDinh?.congTy ?? "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
     });
@@ -649,7 +663,8 @@ const IncidentInspectionDialog = ({
                                 <FieldAutoCompleted
                                   title=""
                                   data={allToolDetail}
-                                  labelkey="idTaiSan"
+                                  labelkey="tenTaiSan"
+                                  labelOption="idTaiSan"
                                   limitOptions={10}
                                   value={vt.idChiTietVatTu}
                                   noBorder={true}

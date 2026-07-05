@@ -14,10 +14,7 @@ import {
 import { FilterOption } from "../../components/common/FilterStatusGroup";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
-import {
-  useChuKySuaChuaQuery,
-  useMaintenanceHistoryQuery,
-} from "./mutation/chukysuachua";
+import { useChuKySuaChuaQuery, useMaintenanceHistoryQuery } from "./mutation";
 import { useDebounce } from "../../hooks/useDebounce";
 import { maintenanceLevelColors } from "../../mockdata/mockPlans";
 import { GridColDef } from "@mui/x-data-grid";

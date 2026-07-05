@@ -191,9 +191,7 @@ const InspectionRecordDialog = ({
               soLuongSuaChua: vt.soLuongSuaChua,
               soLuongThayMoi: vt.soLuongThayMoi,
               ghiChu: vt.ghiChu,
-              action: vt.action || Action.CREATE,
             })),
-            action: e.action || Action.CREATE,
           };
         }),
         nguoiKyList: intermediateSigners,
@@ -258,14 +256,8 @@ const InspectionRecordDialog = ({
           initData.congTy ??
           mauMacDinh?.congTy ??
           "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
-        danhSachChiTiet: (initData.danhSachChiTiet ?? []).map((e: any) => ({
-          ...e,
-          danhSachVatTu: (e.danhSachVatTu || []).map((vt: any) => ({
-            ...vt,
-            action: Action.UPDATE,
-          })),
-          action: Action.UPDATE,
-        })) as InspectionRecordDetailData[],
+        danhSachChiTiet: (initData.danhSachChiTiet ??
+          []) as InspectionRecordDetailData[],
         nguoiKyList: (listInfo ?? []).map((item: any) => ({
           userId: item.idNhanVien,
           userName: item.hoTen,
@@ -316,6 +308,26 @@ const InspectionRecordDialog = ({
       return;
     }
 
+    const parentRecord = incidentInspection || repairRequest;
+    const listInfoFromParent = parentRecord
+      ? listSigneInfo(
+          parentRecord,
+          apiUsersRef.current,
+          apiDepartmentsRef.current,
+        )
+      : [];
+    const signersListFromParent = (listInfoFromParent || []).map(
+      (item: any, idx: number) => ({
+        ...item,
+        userId: item.idNhanVien || item.userId,
+        userName: item.hoTen || item.userName,
+        departmentId: item.idDonVi || item.departmentId,
+        departmentName: item.donVi || item.departmentName,
+        position: item.tenChucVu || item.position || "",
+        order: idx + 1,
+      }),
+    );
+
     formik.setValues({
       id: "",
       idCongTy: CongTy.CT001,
@@ -340,7 +352,7 @@ const InspectionRecordDialog = ({
         `GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ ĐƯA VÀO SỬA CHỮA`,
       congTy: mauMacDinh?.congTy ?? "THAN KHO VẬN CẨM PHÁ - VINACOMIN",
       danhSachChiTiet,
-      nguoiKyList: [],
+      nguoiKyList: signersListFromParent,
     });
   }, [open, initData, repairRequest, incidentInspection, savedDraft]);
 
@@ -357,7 +369,6 @@ const InspectionRecordDialog = ({
       ghiChu: "",
       tenVatTu: "",
       donViTinh: "",
-      action: Action.CREATE,
     };
     const updatedEntries = formik.values.danhSachChiTiet.map((e, idx) => {
       if (idx === assetIdx) {
@@ -374,12 +385,9 @@ const InspectionRecordDialog = ({
   const removeMaterialRow = (assetIdx: number, materialId: string) => {
     const updatedEntries = formik.values.danhSachChiTiet.map((e, idx) => {
       if (idx === assetIdx) {
-        const updatedVatTu = (e.danhSachVatTu || []).map((m) => {
-          if (m.id === materialId) {
-            return { ...m, action: Action.DELETE };
-          }
-          return m;
-        });
+        const updatedVatTu = (e.danhSachVatTu || []).filter(
+          (m) => m.id !== materialId,
+        );
 
         return {
           ...e,
@@ -424,7 +432,6 @@ const InspectionRecordDialog = ({
     for (const entry of formik.values.danhSachChiTiet) {
       if (entry.danhSachVatTu) {
         for (const vt of entry.danhSachVatTu) {
-          if (vt.action === Action.DELETE) continue;
           const soLuong = vt.soLuong || 0;
           const suaChua = vt.soLuongSuaChua || 0;
           const thayMoi = vt.soLuongThayMoi || 0;
@@ -672,7 +679,7 @@ const InspectionRecordDialog = ({
                         colSpan={7}
                         sx={{ fontWeight: 700, color: "primary.main" }}
                       >
-                        Thiết bị: {entry.tenTaiSan}
+                        Thiết bị: {entry.tenTaiSan || entry.idTaiSan}
                       </TableCell>
                       <TableCell align="center">
                         <IconButton
@@ -688,9 +695,7 @@ const InspectionRecordDialog = ({
 
                     {/* Hàng các vật tư phụ tùng chi tiết (con) */}
                     {!entry.danhSachVatTu ||
-                    entry.danhSachVatTu.filter(
-                      (v) => v.action !== Action.DELETE,
-                    ).length === 0 ? (
+                    entry.danhSachVatTu.length === 0 ? (
                       <TableRow>
                         <TableCell></TableCell>
                         <TableCell
@@ -706,119 +711,118 @@ const InspectionRecordDialog = ({
                         </TableCell>
                       </TableRow>
                     ) : (
-                      entry.danhSachVatTu
-                        .filter((v) => v.action !== Action.DELETE)
-                        .map((vt, vtIdx) => (
-                          <TableRow key={vt.id}>
-                            <TableCell
-                              align="right"
-                              sx={{ color: "text.secondary", pr: 2 }}
-                            >
-                              {assetIdx + 1}.{vtIdx + 1}
-                            </TableCell>
-                            <TableCell sx={{ width: "220px" }}>
-                              <FieldAutoCompleted
-                                title=""
-                                data={allToolDetail}
-                                labelkey="idTaiSan"
-                                limitOptions={10}
-                                value={vt.idChiTietVatTu}
-                                noBorder={true}
-                                onChange={(value) => {
-                                  if (value) {
-                                    updateMaterial(assetIdx, vt.id!, {
-                                      idChiTietVatTu: value.id,
-                                      idVatTu: value.idTaiSan,
-                                      tenVatTu: value.tenTaiSan,
-                                      donViTinh: value.donViTinh,
-                                    });
-                                  } else {
-                                    updateMaterial(assetIdx, vt.id!, {
-                                      idChiTietVatTu: "",
-                                      idVatTu: "",
-                                      tenVatTu: "",
-                                      donViTinh: "",
-                                    });
-                                  }
-                                }}
-                              />
-                            </TableCell>
-                            <TableCell>{vt.donViTinh || "—"}</TableCell>
-                            <TableCell>
-                              <FieldInput
-                                title=""
-                                field={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.soLuong`}
-                                formik={formik}
-                                type="number"
-                                noBorder={true}
-                                disabled={true}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <FieldInput
-                                title=""
-                                field={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.tinhTrang`}
-                                formik={formik}
-                                noBorder={true}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <FieldInput
-                                type="number"
-                                field={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.soLuongSuaChua`}
-                                formik={formik}
-                                noBorder={true}
-                                onChange={(val) => {
-                                  const numRepair = Number(val || 0);
-                                  const numReplace = Number(
-                                    vt.soLuongThayMoi || 0,
-                                  );
+                      entry.danhSachVatTu.map((vt, vtIdx) => (
+                        <TableRow key={vt.id}>
+                          <TableCell
+                            align="right"
+                            sx={{ color: "text.secondary", pr: 2 }}
+                          >
+                            {assetIdx + 1}.{vtIdx + 1}
+                          </TableCell>
+                          <TableCell sx={{ width: "220px" }}>
+                            <FieldAutoCompleted
+                              title=""
+                              data={allToolDetail}
+                              labelkey="tenTaiSan"
+                              labelOption="idTaiSan"
+                              limitOptions={10}
+                              value={vt.idChiTietVatTu}
+                              noBorder={true}
+                              onChange={(value) => {
+                                if (value) {
                                   updateMaterial(assetIdx, vt.id!, {
-                                    soLuongSuaChua: numRepair,
-                                    soLuong: numRepair + numReplace,
+                                    idChiTietVatTu: value.id,
+                                    idVatTu: value.idTaiSan,
+                                    tenVatTu: value.tenTaiSan,
+                                    donViTinh: value.donViTinh,
                                   });
-                                }}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <FieldInput
-                                type="number"
-                                field={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.soLuongThayMoi`}
-                                formik={formik}
-                                noBorder={true}
-                                onChange={(val) => {
-                                  const numRepair = Number(
-                                    vt.soLuongSuaChua || 0,
-                                  );
-                                  const numReplace = Number(val || 0);
+                                } else {
                                   updateMaterial(assetIdx, vt.id!, {
-                                    soLuongThayMoi: numReplace,
-                                    soLuong: numRepair + numReplace,
+                                    idChiTietVatTu: "",
+                                    idVatTu: "",
+                                    tenVatTu: "",
+                                    donViTinh: "",
                                   });
-                                }}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <FieldInput
-                                title=""
-                                field={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.ghiChu`}
-                                formik={formik}
-                                noBorder={true}
-                              />
-                            </TableCell>
-                            <TableCell align="center">
-                              <IconButton
-                                size="small"
-                                onClick={() =>
-                                  removeMaterialRow(assetIdx, vt.id!)
                                 }
-                                color="error"
-                              >
-                                <DeleteIcon fontSize="small" />
-                              </IconButton>
-                            </TableCell>
-                          </TableRow>
-                        ))
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>{vt.donViTinh || "—"}</TableCell>
+                          <TableCell>
+                            <FieldInput
+                              title=""
+                              field={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.soLuong`}
+                              formik={formik}
+                              type="number"
+                              noBorder={true}
+                              disabled={true}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <FieldInput
+                              title=""
+                              field={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.tinhTrang`}
+                              formik={formik}
+                              noBorder={true}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <FieldInput
+                              type="number"
+                              field={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.soLuongSuaChua`}
+                              formik={formik}
+                              noBorder={true}
+                              onChange={(val) => {
+                                const numRepair = Number(val || 0);
+                                const numReplace = Number(
+                                  vt.soLuongThayMoi || 0,
+                                );
+                                updateMaterial(assetIdx, vt.id!, {
+                                  soLuongSuaChua: numRepair,
+                                  soLuong: numRepair + numReplace,
+                                });
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <FieldInput
+                              type="number"
+                              field={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.soLuongThayMoi`}
+                              formik={formik}
+                              noBorder={true}
+                              onChange={(val) => {
+                                const numRepair = Number(
+                                  vt.soLuongSuaChua || 0,
+                                );
+                                const numReplace = Number(val || 0);
+                                updateMaterial(assetIdx, vt.id!, {
+                                  soLuongThayMoi: numReplace,
+                                  soLuong: numRepair + numReplace,
+                                });
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <FieldInput
+                              title=""
+                              field={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.ghiChu`}
+                              formik={formik}
+                              noBorder={true}
+                            />
+                          </TableCell>
+                          <TableCell align="center">
+                            <IconButton
+                              size="small"
+                              onClick={() =>
+                                removeMaterialRow(assetIdx, vt.id!)
+                              }
+                              color="error"
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      ))
                     )}
                   </React.Fragment>
                 ))}

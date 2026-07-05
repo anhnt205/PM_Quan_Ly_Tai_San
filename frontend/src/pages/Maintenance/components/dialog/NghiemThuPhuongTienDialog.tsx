@@ -30,6 +30,7 @@ import {
   NghiemThuPhuongTienData,
   NghiemThuPhuongTienChiTietData,
   BienPhapPhuongTienChiTietData,
+  VehicleInspectionRecordData,
 } from "../../types";
 import { CongTy, LOAI_BIEN_BAN_TYPE } from "../../../../utils/const";
 import { generateCode } from "../../../../utils/helpers";
@@ -54,25 +55,17 @@ import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
 interface Props {
   open: boolean;
   onClose: () => void;
-  idBienPhapPhuongTien: string;
-  idGiamDinhPhuongTien?: string;
-  idTaiSan?: string;
-  tenTaiSan?: string;
-  soBienBanBienPhap?: string;
   initData?: NghiemThuPhuongTienData | null;
   bienPhap?: BienPhapPhuongTienData | null;
+  inspectionRecord?: VehicleInspectionRecordData | null;
 }
 
 const NghiemThuPhuongTienDialog = ({
   open,
   onClose,
-  idBienPhapPhuongTien,
-  idGiamDinhPhuongTien,
-  idTaiSan,
-  tenTaiSan,
-  soBienBanBienPhap,
   initData,
   bienPhap,
+  inspectionRecord,
 }: Props) => {
   const { user } = useSelector((state: any) => state.user);
   const { data: apiDepartments = [] } = useAllDepartmentsQuery();
@@ -86,7 +79,7 @@ const NghiemThuPhuongTienDialog = ({
   const tabPath = location.pathname;
   const dispatch = useAppDispatch();
 
-  const draftId = idBienPhapPhuongTien || idGiamDinhPhuongTien || "new";
+  const draftId = bienPhap?.id || inspectionRecord?.id || "new";
   const savedDraft = useAppSelector((state) => {
     const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
     return tab?.formData?.[`acceptanceVehicleDraft_${draftId}`] ?? null;
@@ -106,9 +99,9 @@ const NghiemThuPhuongTienDialog = ({
   const initialValues: NghiemThuPhuongTienData & { nguoiKyList: any[] } = {
     id: "",
     idCongTy: CongTy.CT001,
-    idBienPhapPhuongTien: idBienPhapPhuongTien || "",
-    idGiamDinhPhuongTien: idGiamDinhPhuongTien || "",
-    idTaiSan: idTaiSan || "",
+    idBienPhapPhuongTien: bienPhap?.id || "",
+    idGiamDinhPhuongTien: inspectionRecord?.id || "",
+    idTaiSan: bienPhap?.idTaiSan || "",
     soPhieu: "",
     noiDung: "",
     tinhTrang: "",
@@ -195,7 +188,7 @@ const NghiemThuPhuongTienDialog = ({
       formik.setValues({
         ...initialValues,
         idBienPhapPhuongTien: bienPhap?.id || "",
-        idGiamDinhPhuongTien: idGiamDinhPhuongTien || "",
+        idGiamDinhPhuongTien: inspectionRecord?.id || "",
         idTaiSan: bienPhap?.idTaiSan || "",
         soPhieu: savedDraft.soPhieu,
         noiDung: savedDraft.noiDung,
@@ -211,10 +204,30 @@ const NghiemThuPhuongTienDialog = ({
       return;
     }
 
-    if (!bienPhap && idGiamDinhPhuongTien) {
-      formik.setValues({ ...initialValues, idGiamDinhPhuongTien });
+    const parentRecord = bienPhap || inspectionRecord;
+    const listInfoFromParent = parentRecord
+      ? listSigneInfo(parentRecord as any, apiUsers, apiDepartments)
+      : [];
+    const signersListFromParent = (listInfoFromParent || []).map(
+      (item: any, idx: number) => ({
+        ...item,
+        userId: item.idNhanVien || item.userId,
+        userName: item.hoTen || item.userName,
+        departmentId: item.idDonVi || item.departmentId,
+        departmentName: item.donVi || item.departmentName,
+        position: item.tenChucVu || item.position || "",
+        order: idx + 1,
+      }),
+    );
+
+    if (!bienPhap && inspectionRecord?.id) {
+      formik.setValues({
+        ...initialValues,
+        idGiamDinhPhuongTien: inspectionRecord.id,
+        nguoiKyList: signersListFromParent,
+      });
       api
-        .get(`/giamdinh-phuongtien/${idGiamDinhPhuongTien}`)
+        .get(`/giamdinh-phuongtien/${inspectionRecord.id}`)
         .then((res) => {
           const data = res.data?.data || res.data;
           setParentInspection(data);
@@ -246,8 +259,9 @@ const NghiemThuPhuongTienDialog = ({
     formik.setValues({
       ...initialValues,
       idBienPhapPhuongTien: bienPhap?.id || "",
-      idGiamDinhPhuongTien: idGiamDinhPhuongTien || "",
+      idGiamDinhPhuongTien: inspectionRecord?.id || "",
       idTaiSan: bienPhap?.idTaiSan || "",
+      nguoiKyList: signersListFromParent,
       danhSachChiTiet: (bienPhap?.danhSachChiTiet || []).map(
         (item: BienPhapPhuongTienChiTietData) => ({
           idChiTietVatTu: item.idChiTietVatTu,
@@ -268,7 +282,8 @@ const NghiemThuPhuongTienDialog = ({
     apiUsers,
     apiDepartments,
     savedDraft,
-    idGiamDinhPhuongTien,
+    savedDraft,
+    inspectionRecord,
   ]);
 
   function handleClose() {
@@ -291,8 +306,8 @@ const NghiemThuPhuongTienDialog = ({
         path: tabPath,
         data: {
           [`acceptanceVehicleDraft_${draftId}`]: {
-            idBienPhapPhuongTien,
-            idGiamDinhPhuongTien,
+            idBienPhapPhuongTien: bienPhap?.id || "",
+            idGiamDinhPhuongTien: formik.values.idGiamDinhPhuongTien,
             soPhieu: formik.values.soPhieu,
             noiDung: formik.values.noiDung,
             tinhTrang: formik.values.tinhTrang,
@@ -378,7 +393,8 @@ const NghiemThuPhuongTienDialog = ({
                 variant="caption"
                 sx={{ color: "rgba(255,255,255,0.85)" }}
               >
-                Căn cứ Biện pháp: {bienPhap.soBienBan} • Thiết bị: {tenTaiSan}
+                Căn cứ Biện pháp: {bienPhap.soBienBan} • Thiết bị:{" "}
+                {bienPhap.tenTaiSan}
               </Typography>
             )}
           </Box>
@@ -586,6 +602,7 @@ const NghiemThuPhuongTienDialog = ({
                             }}
                             data={allToolDetail}
                             labelkey="tenTaiSan"
+                            labelOption="idTaiSan"
                             limitOptions={20}
                             noBorder={true}
                           />
@@ -682,7 +699,7 @@ const NghiemThuPhuongTienDialog = ({
           <AcceptanceVehiclePreview
             row={{
               ...formik.values,
-              tenTaiSan,
+              tenTaiSan: bienPhap?.tenTaiSan || inspectionRecord?.tenTaiSan,
               nguoiKyList: formik.values.nguoiKyList,
             }}
             tieude={formik.values.tenMauBienBan}

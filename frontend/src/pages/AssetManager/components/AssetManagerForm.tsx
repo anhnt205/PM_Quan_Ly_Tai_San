@@ -8,7 +8,6 @@ import {
   Remove,
 } from "@mui/icons-material";
 import {
-  Autocomplete,
   Box,
   Button,
   Grid,
@@ -34,13 +33,11 @@ import CancelBtn from "../../../components/Button/CancelBtn";
 import FieldInput from "../../../components/TextField/FieldInput";
 import { useFormik, FieldArray, FormikProvider } from "formik";
 import EditButton from "../../../components/Button/EditButton";
-import { findById } from "../../../utils/helpers";
 import { useAllTypeAssetByGroupQuery } from "../../TypeAsset/Mutation";
 import { useAssetByTypeQuery, useCountriesQuery } from "../Mutation";
 import { useAllProjectsQuery } from "../../Project/Mutation";
 import dayjs from "dayjs";
 import TextFieldNumber from "../../../components/TextField/TextFieldNumber";
-import { useChuKySuaChuaQuery } from "../Mutation";
 import { CongTy } from "../../../utils/const";
 import FieldDateTime from "../../../components/TextField/FieldDateTime";
 import FieldYearMonth from "../../../components/TextField/FieldYearMonth";

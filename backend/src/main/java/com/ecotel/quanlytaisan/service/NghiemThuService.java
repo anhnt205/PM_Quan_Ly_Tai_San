@@ -27,6 +27,9 @@ public class NghiemThuService {
     @Autowired
     private BienPhapMayMocDao bienPhapDao;
 
+    @Autowired
+    private TaiSanService taiSanService;
+
     public List<NghiemThuDTO> findAll(String idCongTy) {
         List<NghiemThuDTO> list = nghiemThuDao.findAll(idCongTy);
         for (NghiemThuDTO item : list) {
@@ -69,6 +72,11 @@ public class NghiemThuService {
         if (saved != null) {
             if (entity.getDanhSachTaiSan() != null && !entity.getDanhSachTaiSan().isEmpty()) {
                 for (NghiemThuTaiSan ts : entity.getDanhSachTaiSan()) {
+                    if (ts.getIdTaiSan() != null && !ts.getIdTaiSan().isEmpty()) {
+                        if (taiSanService.getById(ts.getIdTaiSan()) == null) {
+                            throw new IllegalArgumentException("Tài sản không tồn tại: " + ts.getIdTaiSan());
+                        }
+                    }
                     ts.setIdBienBan(saved.getId());
                     ts.setId(nghiemThuTaiSanDao.generateNextIdTaiSan());
                     nghiemThuTaiSanDao.insertTaiSan(ts);
@@ -100,6 +108,11 @@ public class NghiemThuService {
             // Insert new ones recursively
             if (entity.getDanhSachTaiSan() != null && !entity.getDanhSachTaiSan().isEmpty()) {
                 for (NghiemThuTaiSan ts : entity.getDanhSachTaiSan()) {
+                    if (ts.getIdTaiSan() != null && !ts.getIdTaiSan().isEmpty()) {
+                        if (taiSanService.getById(ts.getIdTaiSan()) == null) {
+                            throw new IllegalArgumentException("Tài sản không tồn tại: " + ts.getIdTaiSan());
+                        }
+                    }
                     ts.setIdBienBan(entity.getId());
                     ts.setId(nghiemThuTaiSanDao.generateNextIdTaiSan());
                     nghiemThuTaiSanDao.insertTaiSan(ts);
@@ -185,6 +198,7 @@ public class NghiemThuService {
     @Transactional
     public int delete(String id) {
         nghiemThuTaiSanDao.deleteByIdBienBan(id);
+        kyTaiLieuDao.deleteAllNguoiKy(id);
         kyTaiLieuDao.delete(id);
         int r = nghiemThuDao.delete(id);
         if (r > 0) {
