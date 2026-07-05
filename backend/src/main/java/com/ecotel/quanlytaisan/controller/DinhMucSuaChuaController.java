@@ -35,6 +35,15 @@ public class DinhMucSuaChuaController {
         return ResponseEntity.ok(dto);
     }
 
+    @GetMapping("/loai-sua-chua/{idLoaiSuaChua}")
+    public ResponseEntity<DinhMucSuaChuaDTO> getByLoaiSuaChua(@PathVariable("idLoaiSuaChua") String idLoaiSuaChua) {
+        DinhMucSuaChuaDTO dto = service.getByLoaiSuaChuaId(idLoaiSuaChua);
+        if (dto == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(dto);
+    }
+
     @PostMapping
     public ResponseEntity<ApiResponse<DinhMucSuaChuaDTO>> create(
             @RequestBody DinhMucSuaChuaDTO dto,

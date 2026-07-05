@@ -19,13 +19,9 @@ import StepPreview from "../preview/PlanPreview";
 import StepAssets from "../step/StepAssets";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
-import { useAssetByDonViQuery } from "../../../AssetTransfer/Mutation";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
 import FieldInput from "../../../../components/TextField/FieldInput";
-import {
-  AssetGroup,
-  LOAI_BIEN_BAN_TYPE,
-} from "../../../../utils/const";
+import { AssetGroup, LOAI_BIEN_BAN_TYPE } from "../../../../utils/const";
 import { generateCode } from "../../../../utils/helpers";
 import { MaintenancePlanData } from "../../types";
 import { listSigneInfo } from "../../config";
@@ -37,6 +33,7 @@ import { useEffect, useState } from "react";
 import { updateTabFormData } from "../../../../redux/tabsSlice";
 import { Remove } from "@mui/icons-material";
 import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
+import { useAllAssetsByDepartmentQuery } from "../../../AssetManager/Mutation";
 
 interface PlanAsset {
   id?: string;
@@ -69,8 +66,6 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
 
   const { data: departments = [] } = useAllDepartmentsQuery();
   const { data: users = [] } = useAllStaffsQuery();
-
-  const listInfo = listSigneInfo(initialData, users, departments);
 
   const location = useLocation();
   const tabPath = location.pathname;
@@ -177,8 +172,9 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
     },
   });
 
-  const { data: fullDeptAssets = { items: [], totalItems: 0 } } =
-    useAssetByDonViQuery(2, formik.values.idDonViGiao, "");
+  const { data: fullDeptAssets = [] } = useAllAssetsByDepartmentQuery(
+    formik.values.idDonViGiao,
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -407,6 +403,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
                   onAssetsChange={(assets) =>
                     formik.setFieldValue("danhSachTaiSan", assets)
                   }
+                  allDeptDevices={fullDeptAssets}
                 />
               )}
             </Box>

@@ -33,6 +33,7 @@ import { useAppDispatch, useAppSelector } from "../../../../redux/store";
 import { updateTabFormData } from "../../../../redux/tabsSlice";
 import { Remove } from "@mui/icons-material";
 import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
+import { useAllAssetsByDepartmentQuery } from "../../../AssetManager/Mutation";
 
 interface Props {
   open: boolean;
@@ -348,6 +349,10 @@ const IncidentDialog = ({
     onClose();
   };
 
+   const { data: fullDeptAssets = [] } = useAllAssetsByDepartmentQuery(
+     formik.values.idDonViBaoCao,
+   );
+
   return (
     <Dialog
       open={open}
@@ -485,6 +490,7 @@ const IncidentDialog = ({
                       idDonViGiao={formik.values.idDonViBaoCao}
                       assets={assets}
                       onAssetsChange={handleAssetsChange}
+                      allDeptDevices={fullDeptAssets}
                     />
                   )}
                 </Box>

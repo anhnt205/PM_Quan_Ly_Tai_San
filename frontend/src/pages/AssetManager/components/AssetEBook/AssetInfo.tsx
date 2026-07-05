@@ -27,7 +27,7 @@ import FieldInput from "../../../../components/TextField/FieldInput";
 import { useFormik } from "formik";
 import EditButton from "../../../../components/Button/EditButton";
 import { findById, formatDecimal } from "../../../../utils/helpers";
-import { useAssetByTypeQuery, useCountriesQuery } from "../../Mutation";
+import { useAssetByTypeQuery } from "../../Mutation";
 import { useAllTypeAssetByGroupQuery } from "../../../TypeAsset/Mutation";
 import { useAllProjectsQuery } from "../../../Project/Mutation";
 import dayjs from "dayjs";
@@ -229,7 +229,6 @@ export default function AssetInfo({
   const { data: assetsByType = [] } = useAssetByTypeQuery(
     formik.values.idNhomTaiSan,
   );
-  const { data: countries = [] } = useCountriesQuery();
   const { data: typeAssetsByAssetGroup = [] } = useAllTypeAssetByGroupQuery(
     formik.values.idNhomTaiSan,
   );
@@ -1109,25 +1108,11 @@ export default function AssetInfo({
                   </Typography>
                 </Box>
               ) : (
-                <Autocomplete
+                <FieldInput
+                  title="Nước sản xuất"
+                  formik={formik}
+                  field="nuocSanXuat"
                   disabled={readOnly}
-                  fullWidth
-                  options={countries}
-                  getOptionLabel={(option: any) => option.niceName || ""}
-                  isOptionEqualToValue={(option, value) =>
-                    option.niceName === value.niceName
-                  }
-                  value={
-                    countries.find(
-                      (i: any) => i.niceName === formik.values.nuocSanXuat,
-                    ) || null
-                  }
-                  onChange={(e, newValue) => {
-                    formik.setFieldValue("nuocSanXuat", newValue?.niceName);
-                  }}
-                  renderInput={(params) => (
-                    <TextField {...params} label="Nước sản xuất" size="small" />
-                  )}
                 />
               )}
             </Box>

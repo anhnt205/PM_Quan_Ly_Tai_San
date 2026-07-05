@@ -64,8 +64,15 @@ export const useAssetManagerMutation = (
         payload?.chuKySuaChuaList &&
         (payload?.chuKySuaChuaList || []).length > 0
       ) {
-        api.post("/chukysuachua/sync", payload.chuKySuaChuaList.map((i: any) => ({...i, idTaiSan: payload.id})))
-           .catch(e => console.log(e));
+        api
+          .post(
+            "/chukysuachua/sync",
+            payload.chuKySuaChuaList.map((i: any) => ({
+              ...i,
+              idTaiSan: payload.id,
+            })),
+          )
+          .catch((e) => console.log(e));
       }
       queryClient.invalidateQueries({ queryKey: ["assetsPage"], exact: false });
       showSuccessAlert("Tạo tài sản thành công");
@@ -133,8 +140,15 @@ export const useAssetManagerMutation = (
         payload?.chuKySuaChuaList &&
         (payload?.chuKySuaChuaList || []).length > 0
       ) {
-        api.post("/chukysuachua/sync", payload.chuKySuaChuaList.map((i: any) => ({...i, idTaiSan: payload.id})))
-           .catch(e => console.log(e));
+        api
+          .post(
+            "/chukysuachua/sync",
+            payload.chuKySuaChuaList.map((i: any) => ({
+              ...i,
+              idTaiSan: payload.id,
+            })),
+          )
+          .catch((e) => console.log(e));
       }
 
       queryClient.invalidateQueries({ queryKey: ["assetsPage"], exact: false });
@@ -642,7 +656,7 @@ export const useAssetManagerMutation = (
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data || error.message || "Quá trình đồng bộ thất bại"
+        error.response?.data || error.message || "Quá trình đồng bộ thất bại",
       );
     },
   });
@@ -861,18 +875,19 @@ export const useAssetPageQuery = (
   });
 };
 
-export const useAllAssetsQuery = () => {
+export const useAllAssetsByDepartmentQuery = (idDepartment?: string) => {
   return useQuery({
-    queryKey: ["allAssets"], // Key để cache dữ liệu
+    queryKey: ["allAssetsByDepartment", idDepartment], // Key để cache dữ liệu
     queryFn: async () => {
       const res = await api.get("/taisan", {
         params: {
           idcongty: CongTy.CT001,
+          idDonViQuanLy: idDepartment,
         },
       });
       return res.data.data || res.data;
     },
-    placeholderData: (previousData) => previousData,
+    enabled: !!idDepartment,
   });
 };
 
@@ -916,17 +931,6 @@ export const useAssetDepreciationsQuery = (
     },
     enabled: !!date,
     placeholderData: (previousData) => previousData,
-  });
-};
-
-export const useCountriesQuery = () => {
-  return useQuery({
-    queryKey: ["countries"], // Key để cache dữ liệu
-    queryFn: async () => {
-      const res = await axios.get("https://open.oapi.vn/location/countries");
-      return res.data.data;
-    },
-    placeholderData: (placeholderData) => placeholderData,
   });
 };
 
@@ -1001,11 +1005,17 @@ export const useChuKySuaChuaQuery = (idTaiSan?: string) => {
   });
 };
 
-export const useLichTrinhQuery = (idTaiSan?: string, nam?: number, thang?: number) => {
+export const useLichTrinhQuery = (
+  idTaiSan?: string,
+  nam?: number,
+  thang?: number,
+) => {
   return useQuery({
     queryKey: ["lichtrinh", idTaiSan, nam, thang],
     queryFn: async () => {
-      const res = await api.get(`/lichtrinh`, { params: { idTaiSan, nam, thang } });
+      const res = await api.get(`/lichtrinh`, {
+        params: { idTaiSan, nam, thang },
+      });
       const list = res.data.data || res.data || [];
       return list[0] ?? null; // chỉ cần 1 record theo tài sản
     },

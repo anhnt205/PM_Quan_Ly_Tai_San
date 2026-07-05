@@ -15,6 +15,19 @@ export const useDinhMucSuaChuaPageQuery = (page: number, size: number, search: s
     });
 };
 
+export const useDinhMucSuaChuaByLoaiQuery = (idLoaiSuaChua?: string) => {
+    return useQuery({
+        queryKey: ["dinhMucSuaChuaByLoai", idLoaiSuaChua],
+        queryFn: async () => {
+            if (!idLoaiSuaChua) return null;
+            const res = await api.get(`/dinhmucsuachua/loai-sua-chua/${idLoaiSuaChua}`);
+            return res.data;
+        },
+        enabled: !!idLoaiSuaChua,
+        retry: false, // Don't retry if not found
+    });
+};
+
 export const useDinhMucSuaChuaMutation = () => {
     const queryClient = useQueryClient();
 
