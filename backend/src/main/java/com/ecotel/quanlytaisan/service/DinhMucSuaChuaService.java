@@ -49,6 +49,14 @@ public class DinhMucSuaChuaService {
         return dto;
     }
 
+    public DinhMucSuaChuaDTO getByLoaiSuaChuaId(String idLoaiSuaChua) {
+        DinhMucSuaChuaDTO dto = normDao.findDtoByLoaiSuaChuaId(idLoaiSuaChua);
+        if (dto != null) {
+            dto.setDinhMucVatTuList(materialNormDao.findByDinhMucId(dto.getId()));
+        }
+        return dto;
+    }
+
     @Transactional
     public DinhMucSuaChuaDTO save(DinhMucSuaChuaDTO dto, String username) {
         // Check uniqueness of idLoaiSuaChua

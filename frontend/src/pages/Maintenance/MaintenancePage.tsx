@@ -80,6 +80,7 @@ import { findById } from "../../utils/helpers";
 import PageAction from "../../components/common/PageAction";
 import { AssetGroup } from "../../utils/const";
 import { showStatus } from "./config";
+import { useAllAssetsByDepartmentQuery } from "../AssetManager/Mutation";
 
 // ── Summary Card ──────────────────────────────────────────────
 const SummaryCard = ({
@@ -646,8 +647,7 @@ export default function MaintenanceStatPage() {
   });
 
   const { data: departments = [] } = useAllDepartmentsQuery();
-  const { data: assetsData = { items: [] } } = useAssetByDonViQuery(2, donVi);
-  const assets = assetsData?.items || [];
+  const { data: assets = [] } = useAllAssetsByDepartmentQuery(donVi);
 
   // const { data: processPaged = { items: [], totalItems: 0 } } =
   //   useMaintenanceProcessPagedQuery(processPage, 10, selectedId, dateFrom, dateTo, nhomTaiSan);
@@ -1113,6 +1113,7 @@ export default function MaintenanceStatPage() {
                 setValue={setSelectedId}
                 value={selectedId}
                 limitOptions={20}
+                anchorRight={true}
               />
             </Grid>
           </Grid>

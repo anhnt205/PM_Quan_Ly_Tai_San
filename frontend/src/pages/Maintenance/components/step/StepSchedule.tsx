@@ -45,7 +45,7 @@ const StepSchedule = ({
   deptDevices,
   departments,
 }: Props) => {
-  const selectedDevices = deptDevices.items.filter((d: any) =>
+  const selectedDevices = deptDevices.filter((d: any) =>
     assets.some((a) => a.deviceId === d.id),
   );
 
@@ -162,7 +162,8 @@ const StepSchedule = ({
                   <TableCell sx={{ fontSize: "0.75rem" }}>
                     <FieldAutoCompleted
                       data={departments}
-                      labelkey="id"
+                      labelkey="tenPhongBan"
+                      labelOption="id"
                       title=""
                       value={asset?.idDonViBaoTri}
                       noBorder={true}

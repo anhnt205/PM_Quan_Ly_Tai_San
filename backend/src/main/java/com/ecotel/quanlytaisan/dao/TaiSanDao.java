@@ -54,8 +54,25 @@ public class TaiSanDao {
             """;
 
     public List<TaiSanDTO> findAll(String idCongTy) {
-        String sql = SELECT_TAISAN_DTO + " WHERE ts.IdCongTy = ?";
-        List<TaiSanDTO> list = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(TaiSanDTO.class), idCongTy);
+        return findAll(idCongTy, null);
+    }
+
+    public List<TaiSanDTO> findAll(String idCongTy, String idDonViQuanLy) {
+        StringBuilder sql = new StringBuilder(SELECT_TAISAN_DTO + " WHERE ts.IdCongTy = ?");
+        List<Object> params = new ArrayList<>();
+        params.add(idCongTy);
+
+        if (idDonViQuanLy != null && !idDonViQuanLy.trim().isEmpty()) {
+            sql.append(" AND ( ")
+               .append(" (ts.IdDonViHienThoi IS NOT NULL AND ts.IdDonViHienThoi != '' AND ts.IdDonViHienThoi = ?) ")
+               .append(" OR ")
+               .append(" ((ts.IdDonViHienThoi IS NULL OR ts.IdDonViHienThoi = '') AND ts.IdDonViBanDau = ?) ")
+               .append(" )");
+            params.add(idDonViQuanLy);
+            params.add(idDonViQuanLy);
+        }
+
+        List<TaiSanDTO> list = jdbcTemplate.query(sql.toString(), new BeanPropertyRowMapper<>(TaiSanDTO.class), params.toArray());
         attachAdditionalData(list);
         return list;
     }
@@ -171,7 +188,7 @@ public class TaiSanDao {
             whereClause.append(" AND ts.IdDonViBanDau = ?");
             params.add(idDonViBanDau);
         } else {
-            whereClause.append(" AND ts.IdDonViBanDau IN (SELECT Id FROM PhongBan WHERE IdCongTy = ? AND LoaiKho = 1 AND IsKho = 1)");
+            whereClause.append(" AND (ts.IdDonViBanDau IN (SELECT Id FROM PhongBan WHERE IdCongTy = ? AND LoaiKho = 1 AND IsKho = 1) OR ts.IdDonViBanDau IS NULL OR ts.IdDonViBanDau = '')");
             params.add(idCongTy);
         }
         if (search != null && !search.trim().isEmpty()) {
@@ -518,8 +535,8 @@ public class TaiSanDao {
             whereClause.append(" AND ts.IdDonViBanDau = ?");
             params.add(idDonViBanDau);
         } else {
-            // Nếu không có, lấy tất cả phòng ban có loaiKho = 1
-            whereClause.append(" AND ts.IdDonViBanDau IN (SELECT Id FROM PhongBan WHERE IdCongTy = ? AND LoaiKho = 1 AND IsKho = 1)");
+            // Nếu không có, lấy tất cả phòng ban có loaiKho = 1 hoặc rỗng
+            whereClause.append(" AND (ts.IdDonViBanDau IN (SELECT Id FROM PhongBan WHERE IdCongTy = ? AND LoaiKho = 1 AND IsKho = 1) OR ts.IdDonViBanDau IS NULL OR ts.IdDonViBanDau = '')");
             params.add(idCongTy);
         }
         if (search != null && !search.trim().isEmpty()) {

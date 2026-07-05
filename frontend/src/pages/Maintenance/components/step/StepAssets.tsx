@@ -53,9 +53,15 @@ interface Props {
   idDonViGiao: string;
   assets: PlanAsset[];
   onAssetsChange: (assets: PlanAsset[]) => void;
+  allDeptDevices: any[];
 }
 
-const StepAssets = ({ idDonViGiao, assets, onAssetsChange }: Props) => {
+const StepAssets = ({
+  idDonViGiao,
+  assets,
+  onAssetsChange,
+  allDeptDevices,
+}: Props) => {
   const [openTable, setOpenTable] = useState(false);
 
   // State cho Modal phân trang
@@ -67,14 +73,6 @@ const StepAssets = ({ idDonViGiao, assets, onAssetsChange }: Props) => {
   const { data: deptDevices = { items: [], totalItems: 0 } } =
     useAssetByDonViQuery(2, idDonViGiao, debouncedModalSearch, page, pageSize);
 
-  // Lấy toàn bộ thiết bị để hỗ trợ Autocomplete (có thể giới hạn số lượng nếu cần)
-  const { data: allDeptDevices = { items: [] } } = useAssetByDonViQuery(
-    2,
-    idDonViGiao,
-    "",
-    0,
-    99999,
-  );
 
   const [localSelection, setLocalSelection] = useState<string[]>(
     assets.map((a) => a.deviceId),
@@ -138,7 +136,7 @@ const StepAssets = ({ idDonViGiao, assets, onAssetsChange }: Props) => {
       <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
         <FieldAutoCompleted
           title="Thêm thiết bị..."
-          data={allDeptDevices.items}
+          data={allDeptDevices}
           labelkey="tenTaiSan"
           labelOption="id"
           value={assetValue}
@@ -169,7 +167,7 @@ const StepAssets = ({ idDonViGiao, assets, onAssetsChange }: Props) => {
       ) : (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
           {assets.map((asset: any) => {
-            const device = allDeptDevices.items.find(
+            const device = allDeptDevices.find(
               (d: any) => d.id === asset.deviceId,
             );
             return (
@@ -315,7 +313,7 @@ const StepAssets = ({ idDonViGiao, assets, onAssetsChange }: Props) => {
                 }}
               >
                 {localSelection.map((id) => {
-                  const device = allDeptDevices.items.find(
+                  const device = allDeptDevices.find(
                     (d: any) => d.id === id,
                   );
                   return (
