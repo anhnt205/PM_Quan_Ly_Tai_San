@@ -3,6 +3,7 @@ import {
   TextField,
   Box,
   createFilterOptions,
+  Popper,
 } from "@mui/material";
 import { getIn } from "formik";
 import { useMemo } from "react";
@@ -24,6 +25,7 @@ interface Props {
   setValue?: (val: any) => void;
   noBorder?: boolean;
   fontSize?: string;
+  anchorRight?: boolean;
 }
 
 export default function FieldAutoCompleted({
@@ -43,6 +45,7 @@ export default function FieldAutoCompleted({
   setValue: setValueProp,
   noBorder,
   fontSize,
+  anchorRight,
 }: Props) {
   // ... (omitting middle for brevity, but I should provide the full block in a real tool call)
   // actually I'll just use shorter chunks
@@ -95,13 +98,22 @@ export default function FieldAutoCompleted({
         paper: {
           ...componentsProps?.paper,
           sx: {
-            width: "max-content",
-            minWidth: "100%",
-            maxWidth: "1000",
             ...(componentsProps?.paper?.sx || {}),
           },
         },
       }}
+      PopperComponent={(props) => (
+        <Popper
+          {...props}
+          style={{
+            ...props.style,
+            width: "max-content",
+            minWidth: props.style?.width,
+            maxWidth: "1000px",
+          }}
+          placement={anchorRight ? "bottom-end" : "bottom-start"}
+        />
+      )}
       disabled={disabled}
       fullWidth
       options={data}

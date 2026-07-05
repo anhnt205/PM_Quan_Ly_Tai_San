@@ -36,6 +36,7 @@ import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
 import { generateCode } from "../../../../utils/helpers";
 import { useMaintenanceAcceptanceTestMutation } from "../../mutation";
+import api from "../../../../config/api.config";
 import { useSelector } from "react-redux";
 import { PlanSigner } from "../../../../mockdata/mockPlans";
 import dayjs from "dayjs";
@@ -536,9 +537,36 @@ const AcceptanceTestDialog = ({
                     labelkey="ten"
                     data={allLevel}
                     value={formik.values.capSuaChua}
-                    onChange={(value) =>
-                      formik.setFieldValue("capSuaChua", value.id)
-                    }
+                    anchorRight={true}
+                    onChange={async (value) => {
+                      formik.setFieldValue("capSuaChua", value.id);
+                      if (value.id) {
+                        try {
+                          const res = await api.get(`/dinhmucsuachua/loai-sua-chua/${value.id}`);
+                          const normData = res.data;
+                          if (normData && normData.dinhMucVatTuList?.length > 0) {
+                            const danhSachTaiSanUpdated = formik.values.danhSachTaiSan.map((ts, idx) => {
+                              const newVatTuList = normData.dinhMucVatTuList.map(
+                                (vt: any, vtIdx: number) => ({
+                                  id: `NTVT_${Date.now()}_${idx}_${vtIdx}`,
+                                  idBienBanTaiSan: ts.id || "",
+                                  idChiTietVatTu: vt.idChiTietVatTu || "",
+                                  idVatTu: vt.idCCDCVT || "",
+                                  tenVatTu: vt.tenCCDCVT || "",
+                                  donViTinh: vt.donViTinh || "Cái",
+                                  soLuong: vt.soLuong || 1,
+                                  ghiChu: vt.ghiChu || "",
+                                }),
+                              );
+                              return { ...ts, danhSachVatTu: newVatTuList };
+                            });
+                            formik.setFieldValue("danhSachTaiSan", danhSachTaiSanUpdated);
+                          }
+                        } catch (e) {
+                          console.log("Không tìm thấy định mức cho cấp sửa chữa này", e);
+                        }
+                      }
+                    }}
                   />
                 </Box>
                 <FieldInput

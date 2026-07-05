@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Box,
   Card,
@@ -12,16 +11,12 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
 } from "@mui/material";
-import { devices } from "../../../../mockdata/mockDevices";
-// import { departments } from '../../../../mockdata/mockDepartments';
 import {
   months,
   maintenanceLevelColors,
   type PlanSigner,
 } from "../../../../mockdata/mockPlans";
-import FieldInput from "../../../../components/TextField/FieldInput";
 
 interface PlanAsset {
   deviceId: string;
@@ -77,14 +72,13 @@ const PlanPreview = ({
   const isCreateMode = !!assets && Array.isArray(assets);
 
   const sourceDept = departments?.find((d: any) => d.id === idDonViGiao);
-  const execDept = departments?.find((d: any) => d.id === idDonViNhan);
 
   // Lọc thiết bị dựa trên mode
   const selectedDevices = isCreateMode
-    ? (deptDevices?.items || []).filter((d: any) =>
+    ? (deptDevices || []).filter((d: any) =>
         assets!.some((a) => a.deviceId === d.id),
       )
-    : (deptDevices?.items || []).filter((d: any) => assetIds?.includes(d.id));
+    : (deptDevices || []).filter((d: any) => assetIds?.includes(d.id));
 
   const today = new Date();
   const day = today.getDate();

@@ -65,6 +65,12 @@ public class DinhMucSuaChuaDao {
         return list.isEmpty() ? null : list.get(0);
     }
 
+    public DinhMucSuaChuaDTO findDtoByLoaiSuaChuaId(String idLoaiSuaChua) {
+        String sql = SELECT_DTO + " WHERE dm.IdLoaiSuaChua = ?";
+        List<DinhMucSuaChuaDTO> list = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(DinhMucSuaChuaDTO.class), idLoaiSuaChua);
+        return list.isEmpty() ? null : list.get(0);
+    }
+
     public int insert(DinhMucSuaChua dm) {
         if (dm.getId() == null || dm.getId().isEmpty()) {
             dm.setId(UUID.randomUUID().toString());

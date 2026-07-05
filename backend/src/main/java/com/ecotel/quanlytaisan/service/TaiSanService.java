@@ -44,8 +44,12 @@ public class TaiSanService {
 
 
     public List<TaiSanDTO> getAll(String idCongTy) {
-        List<TaiSanDTO> taiSanDTOList = taiSanDao.findAll(idCongTy);
-        enrichTaiSanDTOList(taiSanDTOList);
+        return getAll(idCongTy, null);
+    }
+
+    public List<TaiSanDTO> getAll(String idCongTy, String idDonViQuanLy) {
+        List<TaiSanDTO> taiSanDTOList = taiSanDao.findAll(idCongTy, idDonViQuanLy);
+        // enrichTaiSanDTOList(taiSanDTOList);
         return taiSanDTOList;
     }
 

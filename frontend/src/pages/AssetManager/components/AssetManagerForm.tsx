@@ -34,7 +34,7 @@ import FieldInput from "../../../components/TextField/FieldInput";
 import { useFormik, FieldArray, FormikProvider } from "formik";
 import EditButton from "../../../components/Button/EditButton";
 import { useAllTypeAssetByGroupQuery } from "../../TypeAsset/Mutation";
-import { useAssetByTypeQuery, useCountriesQuery } from "../Mutation";
+import { useAssetByTypeQuery } from "../Mutation";
 import { useAllProjectsQuery } from "../../Project/Mutation";
 import dayjs from "dayjs";
 import TextFieldNumber from "../../../components/TextField/TextFieldNumber";
@@ -109,7 +109,6 @@ interface AssetRowProps {
   allUnits: any[];
   allReasonIncreases: any[];
   allProjects: any[];
-  countries: any[];
   allRepairTypes: any[];
 }
 
@@ -126,7 +125,6 @@ const AssetRow = ({
   allUnits,
   allReasonIncreases,
   allProjects,
-  countries,
   allRepairTypes,
 }: AssetRowProps) => {
   const [isExpanded, setIsExpanded] = useState(index === 0);
@@ -561,12 +559,12 @@ const AssetRow = ({
                 <FieldAutoCompleted
                   title="Kho"
                   data={allDepartments.filter(
-                    (i) => i.id?.toLocaleLowerCase() === "Kty",
+                    (i) => i.loaiKho === 1 && i.isKho,
                   )}
                   labelkey="tenPhongBan"
                   formik={formik}
                   field={`assets.${index}.idDonViBanDau`}
-                  disabled={true}
+                  disabled={readOnly}
                 />
               </Grid>
               <Grid size={{ xs: 12 }}>
@@ -952,7 +950,6 @@ export default function AssetManagerForm({
   initialFormData?: Record<string, any>;
   onMinimize: () => void;
 }) {
-  const { data: countries = [] } = useCountriesQuery();
   const { data: allProjects = [] } = useAllProjectsQuery();
 
   const formik = useFormik({
@@ -1096,7 +1093,6 @@ export default function AssetManagerForm({
                     allUnits={allUnits}
                     allReasonIncreases={allReasonIncreases}
                     allProjects={allProjects}
-                    countries={countries}
                     allRepairTypes={allRepairTypes}
                   />
                 ))}
